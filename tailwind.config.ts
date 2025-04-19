@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,16 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				projectx: {
+					blue: '#0EA5E9',
+					'neon-blue': '#33C3F0',
+					'deep-blue': '#1A1F2C',
+					black: '#000000',
+					'dark-gray': '#222222',
+					pink: '#D946EF',
+					'neon-pink': '#F97316',
+					gold: '#FFC107',
 				}
 			},
 			borderRadius: {
@@ -84,11 +95,34 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'glow': {
+					'0%, 100%': { 
+						textShadow: '0 0 10px rgba(51, 195, 240, 0.8), 0 0 20px rgba(51, 195, 240, 0.5)' 
+					},
+					'50%': { 
+						textShadow: '0 0 15px rgba(217, 70, 239, 0.8), 0 0 30px rgba(217, 70, 239, 0.5)' 
+					}
+				},
+				'pulse-border': {
+					'0%, 100%': { 
+						borderColor: 'rgba(51, 195, 240, 0.8)' 
+					},
+					'50%': { 
+						borderColor: 'rgba(217, 70, 239, 0.8)' 
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'glow': 'glow 4s ease-in-out infinite',
+				'pulse-border': 'pulse-border 4s ease-in-out infinite'
+			},
+			backgroundImage: {
+				'hero-pattern': "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/public/lovable-uploads/e017275b-1b75-4b7c-bab0-1ce246d4bbce.png')",
+				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+				'neon-gradient': 'linear-gradient(90deg, #0EA5E9, #D946EF)'
 			}
 		}
 	},
