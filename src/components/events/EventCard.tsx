@@ -4,9 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import EventDetailsDialog from "./EventDetailsDialog";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 interface EventImage {
   url: string;
+  description: string;
+}
+
+interface MysteryPrize {
+  imageUrl: string;
   description: string;
 }
 
@@ -20,6 +26,7 @@ interface EventCardProps {
   isCurrent?: boolean;
   images: EventImage[];
   detailedDescription: string;
+  mysteryPrizes?: MysteryPrize[];
 }
 
 export const EventCard = ({ 
@@ -31,7 +38,8 @@ export const EventCard = ({
   description,
   isCurrent = false,
   images,
-  detailedDescription
+  detailedDescription,
+  mysteryPrizes
 }: EventCardProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -62,6 +70,31 @@ export const EventCard = ({
             <p className="text-sm text-muted-foreground mb-3">
               {description}
             </p>
+          )}
+          
+          {isCurrent && mysteryPrizes && mysteryPrizes.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold mb-2">Premi Misteriosi in Palio</h3>
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {mysteryPrizes.map((prize, index) => (
+                    <CarouselItem key={index}>
+                      <div className="p-1">
+                        <div 
+                          className="h-32 bg-cover bg-center rounded-lg mb-2" 
+                          style={{ backgroundImage: `url(${prize.imageUrl})` }}
+                        />
+                        <p className="text-xs text-muted-foreground text-center">
+                          {prize.description}
+                        </p>
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
+                <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
+              </Carousel>
+            </div>
           )}
           
           <div className="space-y-2 mb-4">
