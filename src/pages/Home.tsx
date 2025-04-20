@@ -9,28 +9,36 @@ import { Card } from "@/components/ui/card";
 
 const mysteryPrizes = [
   {
-    imageUrl: "/lovable-uploads/781937e4-2515-4cad-8393-c51c1c81d6c9.png",
-    description: "Un oggetto dal valore inestimabile che incarna l'essenza del lusso italiano. Solo i più fortunati potranno possederlo."
+    imageUrl: "/lovable-uploads/5a019ed0-63c1-47f8-a931-de097784d768.png",
+    description: "Regolamento chiaro e trasparente per garantire un'esperienza equa per tutti i partecipanti."
   },
   {
-    imageUrl: "/lovable-uploads/9daa7fae-5be8-482a-8136-7113724b28ad.png",
-    description: "Un capolavoro che sfida l'immaginazione, dove tecnologia e arte si fondono in perfetta armonia."
+    imageUrl: "/lovable-uploads/95a194d0-ba1a-4b76-85e4-6cc95fda46ab.png",
+    description: "Un mese di indizi per svelare il mistero dell'auto in palio."
   },
   {
-    imageUrl: "/lovable-uploads/b79099f5-31ab-44a3-b271-9cde8b7932e1.png",
-    description: "Un tesoro custodito nei più esclusivi vault del mondo, simbolo di potere e prestigio assoluto."
+    imageUrl: "/lovable-uploads/cab356af-f03b-4b55-b5b3-ffc66c25841c.png",
+    description: "Project X: L'esclusiva competizione per auto di lusso che trasforma i sogni in realtà."
   },
   {
-    imageUrl: "/lovable-uploads/ee63e6a9-208d-43f5-8bad-4c94f9c066cd.png",
-    description: "Un premio così esclusivo che la sua vera natura rimarrà segreta fino all'ultimo momento. Solo i vincitori scopriranno il suo vero valore."
+    imageUrl: "/lovable-uploads/b83c1e65-cd66-46ad-937b-60d7fd0c6a63.png",
+    description: "Unisciti a Project X: Il tuo sogno è a portata di mano con accesso anticipato agli indizi."
   },
   {
-    imageUrl: "/lovable-uploads/55b484c2-04bc-4fb2-a650-1910fd650b89.png",
-    description: "Un'esperienza irripetibile che trasformerà la tua vita, avvolta nel mistero fino all'ultimo istante."
+    imageUrl: "/lovable-uploads/a6250e9c-4a94-4357-b39c-e91ce9426e9e.png",
+    description: "Vantaggi esclusivi per i membri premium con contenuti speciali e opportunità uniche."
   },
   {
-    imageUrl: "/lovable-uploads/79b6f8b7-66b3-4dee-a705-0d3f0b1f16b9.png",
-    description: "Un pezzo unico al mondo, creato da maestri artigiani per soddisfare i desideri più esclusivi."
+    imageUrl: "/lovable-uploads/6ec76f7f-0e83-4005-8fb0-582ba83a7d60.png",
+    description: "Il nostro target: appassionati di auto di lusso alla ricerca di emozioni uniche."
+  },
+  {
+    imageUrl: "/lovable-uploads/a96033d6-a86e-4a83-a76a-ec3a24c56adf.png",
+    description: "La nostra promessa: trasparenza e divertimento garantiti in ogni fase del gioco."
+  },
+  {
+    imageUrl: "/lovable-uploads/ddb0368c-4853-49a4-b8e2-70abf7594e0d.png",
+    description: "Registrazione gratuita vs. accesso premium: scegli il tuo livello di partecipazione."
   }
 ];
 
