@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Footer from "./Footer";
 import BottomNavigation from "./BottomNavigation";
@@ -8,6 +8,15 @@ import { Button } from "@/components/ui/button";
 
 const MainLayout = () => {
   const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark mode for Netflix style
+
+  useEffect(() => {
+    // Apply dark mode class on component mount
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);

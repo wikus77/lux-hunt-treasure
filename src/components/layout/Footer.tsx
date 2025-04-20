@@ -1,11 +1,14 @@
 
 import { Instagram, Facebook, Twitter } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Footer = () => {
+  const isMobile = useIsMobile();
+  
   return (
     <footer className="transition-colors duration-200 border-t border-gray-800 py-6 px-4 mt-auto backdrop-blur-xl bg-black/80">
       <div className="container mx-auto max-w-7xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-3'} gap-8`}>
           {/* Company Info */}
           <div>
             <h3 className="font-sans font-semibold text-white mb-4">ProjectX</h3>
