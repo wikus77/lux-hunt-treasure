@@ -1,17 +1,28 @@
-
-import { useState } from "react";
-import { Camera, Edit, User } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Camera, Edit, User, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import ClueCard from "@/components/clues/ClueCard";
+
+interface Clue {
+  id: string;
+  title: string;
+  description: string;
+  week: number;
+  isLocked: boolean;
+  subscriptionType?: "Base" | "Silver" | "Gold" | "Black";
+}
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [bio, setBio] = useState("Appassionato di auto di lusso e collezionista. Amo la velocità e l'adrenalina!");
   const [name, setName] = useState("Mario Rossi");
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [unlockedClues, setUnlockedClues] = useState<Clue[]>([]);
   const { toast } = useToast();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,6 +43,40 @@ const Profile = () => {
       description: "Le modifiche al tuo profilo sono state salvate."
     });
   };
+
+  useEffect(() => {
+    const fetchUnlockedClues = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data: userCluesData, error: userCluesError } = await supabase
+          .from('user_clues')
+          .select('clue_id(id, title, description, week, is_premium, premium_type)')
+          .eq('user_id', user.id)
+          .eq('is_unlocked', true);
+
+        if (userCluesError) {
+          console.error('Error fetching user clues:', userCluesError);
+          return;
+        }
+
+        const clues = userCluesData.map(item => ({
+          id: item.clue_id.id,
+          title: item.clue_id.title,
+          description: item.clue_id.description,
+          week: item.clue_id.week,
+          isLocked: false,
+          subscriptionType: item.clue_id.is_premium ? 
+            (item.clue_id.premium_type as "Base" | "Silver" | "Gold" | "Black") : 
+            "Base"
+        }));
+
+        setUnlockedClues(clues);
+      }
+    };
+
+    fetchUnlockedClues();
+  }, []);
 
   return (
     <div className="pb-20 min-h-screen bg-black">
@@ -172,6 +217,38 @@ const Profile = () => {
           </Button>
         )}
       </section>
+
+      {/* Clues Section */}
+      <div className="glass-card mt-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold flex items-center">
+            <BookOpen className="mr-2 h-5 w-5" /> Indizi
+          </h3>
+          <span className="text-sm text-muted-foreground">
+            {unlockedClues.length} / 10 sbloccati
+          </span>
+        </div>
+        
+        {unlockedClues.length === 0 ? (
+          <div className="text-center py-4 text-muted-foreground">
+            <p>Non hai ancora sbloccato nessun indizio.</p>
+            <p>Esplora gli eventi o usa il pulsante Buzz per ottenerne di nuovi!</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {unlockedClues.map((clue) => (
+              <ClueCard
+                key={clue.id}
+                title={clue.title}
+                description={clue.description}
+                week={clue.week}
+                isLocked={false}
+                subscriptionType={clue.subscriptionType}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Bottom Navigation */}
       <BottomNavigation />
