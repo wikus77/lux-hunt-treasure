@@ -19,53 +19,65 @@ export const BottomNavigation = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-16 bg-black border-t border-projectx-deep-blue flex justify-around items-center px-2 z-50">
+    <div className="fixed bottom-0 left-0 right-0 h-16 bg-black/60 backdrop-blur-lg border-t border-white/10 flex justify-around items-center px-2 z-50">
       <button 
         onClick={() => handleNavigation("/home")}
-        className={`bottom-nav-item ${isActive("/home") ? "active" : ""}`}
+        className={`flex flex-col items-center justify-center p-2 transition-colors ${
+          isActive("/home") ? "text-white" : "text-white/60"
+        }`}
       >
-        <Home className={`w-6 h-6 ${isActive("/home") ? "text-projectx-neon-blue" : ""}`} />
-        <span className="text-xs mt-1">Home</span>
+        <Home className="w-5 h-5" />
+        <span className="text-[10px] mt-1">Home</span>
       </button>
       
       <button 
         onClick={() => handleNavigation("/events")}
-        className={`bottom-nav-item ${isActive("/events") ? "active" : ""}`}
+        className={`flex flex-col items-center justify-center p-2 transition-colors ${
+          isActive("/events") ? "text-white" : "text-white/60"
+        }`}
       >
-        <Calendar className={`w-6 h-6 ${isActive("/events") ? "text-projectx-neon-blue" : ""}`} />
-        <span className="text-xs mt-1">Eventi</span>
+        <Calendar className="w-5 h-5" />
+        <span className="text-[10px] mt-1">Eventi</span>
       </button>
       
       <button 
         onClick={() => handleNavigation("/buzz")}
-        className={`bottom-nav-item ${isActive("/buzz") ? "active" : ""}`}
+        className={`flex flex-col items-center justify-center p-2 transition-colors ${
+          isActive("/buzz") ? "text-white" : "text-white/60"
+        }`}
       >
-        <Zap className={`w-6 h-6 ${isActive("/buzz") ? "text-projectx-pink" : ""}`} />
-        <span className="text-xs mt-1">Buzz</span>
+        <Zap className="w-5 h-5" />
+        <span className="text-[10px] mt-1">Buzz</span>
       </button>
       
       <button 
         onClick={() => handleNavigation("/subscriptions")}
-        className={`bottom-nav-item ${isActive("/subscriptions") ? "active" : ""}`}
+        className={`flex flex-col items-center justify-center p-2 transition-colors ${
+          isActive("/subscriptions") ? "text-white" : "text-white/60"
+        }`}
       >
-        <CreditCard className={`w-6 h-6 ${isActive("/subscriptions") ? "text-projectx-neon-blue" : ""}`} />
-        <span className="text-xs mt-1">Abbonamenti</span>
+        <CreditCard className="w-5 h-5" />
+        <span className="text-[10px] mt-1">Abbonamenti</span>
       </button>
       
       <button 
         onClick={() => handleNavigation("/profile")}
-        className={`bottom-nav-item ${isActive("/profile") ? "active" : ""}`}
+        className={`flex flex-col items-center justify-center p-2 transition-colors ${
+          isActive("/profile") ? "text-white" : "text-white/60"
+        }`}
       >
-        <User className={`w-6 h-6 ${isActive("/profile") ? "text-projectx-neon-blue" : ""}`} />
-        <span className="text-xs mt-1">Profilo</span>
+        <User className="w-5 h-5" />
+        <span className="text-[10px] mt-1">Profilo</span>
       </button>
       
       <button 
         onClick={() => handleNavigation("/settings")}
-        className={`bottom-nav-item ${isActive("/settings") ? "active" : ""}`}
+        className={`flex flex-col items-center justify-center p-2 transition-colors ${
+          isActive("/settings") ? "text-white" : "text-white/60"
+        }`}
       >
-        <Settings className={`w-6 h-6 ${isActive("/settings") ? "text-projectx-neon-blue" : ""}`} />
-        <span className="text-xs mt-1">Impostazioni</span>
+        <Settings className="w-5 h-5" />
+        <span className="text-[10px] mt-1">Impostazioni</span>
       </button>
     </div>
   );
