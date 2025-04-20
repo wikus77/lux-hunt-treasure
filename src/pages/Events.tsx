@@ -7,188 +7,123 @@ const Events = () => {
   const [selectedGender, setSelectedGender] = useState<string>("all");
 
   const currentEvent = {
-    title: "Ferrari 488 GTB",
-    carModel: "488 GTB",
-    carBrand: "Ferrari",
+    title: "Patek Philippe Nautilus",
+    carModel: "Nautilus Ref. 5711",
+    carBrand: "Patek Philippe",
     date: "19 Apr - 15 Mag 2025",
-    imageUrl: "/events/ferrari-488-gtb.jpg",
-    description: "Una supercar che combina potenza e bellezza in un design aerodinamico. Colore rosso fiammante con interni in pelle nera.",
+    imageUrl: "/lovable-uploads/42b25071-8e68-4f8e-8897-06a6b2bdb8f4.png",
+    description: "Un'icona dell'orologeria di lusso, il Nautilus in oro rosa con quadrante blu è il simbolo dell'eleganza senza tempo.",
     isCurrent: true,
     gender: "man",
     images: [
       {
-        url: "/events/ferrari-488-1.jpg",
-        description: "Vista frontale della Ferrari 488 GTB in rosso corsa, che mostra l'iconico design aerodinamico e le prese d'aria laterali scultoree."
+        url: "/lovable-uploads/42b25071-8e68-4f8e-8897-06a6b2bdb8f4.png",
+        description: "Vista frontale del Patek Philippe Nautilus in oro rosa, che mostra il caratteristico quadrante blu con pattern orizzontale."
       },
       {
-        url: "/events/ferrari-488-2.jpg",
-        description: "Dettaglio degli interni in pelle nera con cuciture rosse a contrasto e il caratteristico volante con indicatore LED dei giri motore."
+        url: "/lovable-uploads/55b484c2-04bc-4fb2-a650-1910fd650b89.png",
+        description: "Dettaglio del bracciale integrato in oro rosa, simbolo di lusso ed eleganza."
       },
       {
-        url: "/events/ferrari-488-3.jpg",
-        description: "Vista posteriore che evidenzia il diffusore aerodinamico e i doppi scarichi, elementi caratteristici del design Ferrari."
+        url: "/lovable-uploads/79b6f8b7-66b3-4dee-a705-0d3f0b1f16b9.png",
+        description: "Vista laterale che evidenzia il profilo iconico della cassa Nautilus."
       }
     ],
-    detailedDescription: `La Ferrari 488 GTB rappresenta l'eccellenza del design e dell'ingegneria automobilistica italiana. 
-
-Questa supercar è equipaggiata con un motore V8 biturbo da 3.9 litri che eroga una potenza di 670 CV, permettendo un'accelerazione da 0 a 100 km/h in soli 3 secondi.
-
-Gli interni sono un perfetto connubio tra lusso sportivo e tecnologia avanzata, con sedili avvolgenti in pelle pregiata e un cockpit orientato al pilota.
+    detailedDescription: `Il Patek Philippe Nautilus Ref. 5711 rappresenta il pinnacolo dell'orologeria di lusso.
 
 Caratteristiche principali:
-• Motore V8 biturbo da 3.9 litri
-• 670 CV di potenza
-• 0-100 km/h in 3.0 secondi
-• Velocità massima: 330 km/h
-• Sistema di controllo della dinamica SSC
-• Aerodinamica attiva
-`
+• Cassa in oro rosa 18k
+• Quadrante blu con pattern orizzontale
+• Movimento automatico calibro 26-330 S C
+• Impermeabile fino a 120 metri
+• Bracciale integrato in oro rosa
+• Diametro della cassa: 40mm
+
+Il Nautilus è molto più di un semplice orologio - è un'opera d'arte da polso che combina l'eccellenza tecnica con un design senza tempo.`
   };
   
   const upcomingEvents = [
     {
-      title: "Lamborghini Huracán",
-      carModel: "Huracán",
-      carBrand: "Lamborghini",
+      title: "Hermès Kelly Bag",
+      carModel: "Kelly 28",
+      carBrand: "Hermès",
       date: "16 Mag - 15 Giu 2025",
-      imageUrl: "/events/lamborghini-huracan.jpg",
-      description: "Aggressiva e potente, questa Lamborghini Huracán in verde metallizzato incarna la perfezione del design italiano.",
-      gender: "man",
+      imageUrl: "/lovable-uploads/b349206f-bdf7-42e2-a1a6-b87988bc94f4.png",
+      description: "L'iconica borsa Kelly in verde smeraldo, simbolo di eleganza e raffinatezza.",
+      gender: "woman",
       images: [
         {
-          url: "/events/huracan-1.jpg",
-          description: "Vista frontale della Huracán che mostra l'aggressivo design del frontale e i caratteristici fari LED esagonali."
-        },
-        {
-          url: "/events/huracan-2.jpg",
-          description: "Dettaglio del profilo laterale che evidenzia le linee spigolose e le prese d'aria caratteristiche."
-        },
-        {
-          url: "/events/huracan-3.jpg",
-          description: "Gli interni sportivi con il caratteristico quadro strumenti digitale e i dettagli in carbonio."
+          url: "/lovable-uploads/b349206f-bdf7-42e2-a1a6-b87988bc94f4.png",
+          description: "La Kelly bag in verde smeraldo, un'icona di stile intramontabile."
         }
       ],
-      detailedDescription: `La Lamborghini Huracán è l'incarnazione della potenza e dell'aggressività nel mondo delle supercar.
+      detailedDescription: `La borsa Kelly di Hermès è un'icona senza tempo della moda di lusso.
 
-Dotata di un possente motore V10 aspirato da 5.2 litri, questa belva italiana eroga 640 CV di pura potenza, garantendo prestazioni mozzafiato e un sound inconfondibile.
+Specifiche:
+• Pelle Epsom verde smeraldo
+• Hardware placcato oro
+• Dimensioni: 28 x 22 x 10 cm
+• Tracolla removibile
+• Chiusura con lucchetto e chiavi
+• Fodera in pelle di capra
 
-Il design esterno, caratterizzato da linee taglienti e spigoli vivi, riflette il DNA Lamborghini, mentre gli interni combinano lusso e tecnologia in un cockpit futuristico.
-
-Specifiche tecniche:
-• Motore V10 5.2L aspirato
-• 640 CV di potenza
-• Trazione integrale
-• 0-100 km/h in 2.9 secondi
-• Telaio ibrido in alluminio e fibra di carbonio
-• Sistema di sterzo dinamico`
+Ogni borsa Kelly è realizzata a mano da un singolo artigiano, richiedendo circa 18-25 ore di lavoro.`
     },
     {
-      title: "Porsche 911 Turbo",
-      carModel: "911 Turbo",
-      carBrand: "Porsche",
+      title: "McLaren 720S Spider",
+      carModel: "720S Spider",
+      carBrand: "McLaren",
       date: "16 Giu - 15 Lug 2025",
-      imageUrl: "/events/porsche-911.jpg",
-      description: "Un'icona del design automobilistico, questa Porsche 911 Turbo in argento con cerchi neri rappresenta l'equilibrio perfetto tra potenza e raffinatezza.",
-      gender: "woman",
-      images: [
-        {
-          url: "/events/porsche-911-1.jpg",
-          description: "Vista frontale della Porsche 911 Turbo in argento con cerchi neri, evidenziando il design aerodinamico e le linee taglienti."
-        },
-        {
-          url: "/events/porsche-911-2.jpg",
-          description: "Dettaglio degli interni in pelle nera con il caratteristico volante con indicatore LED dei giri motore."
-        },
-        {
-          url: "/events/porsche-911-3.jpg",
-          description: "Vista posteriore che evidenzia il diffusore aerodinamico e i doppi scarichi, elementi caratteristici del design Porsche."
-        }
-      ],
-      detailedDescription: `La Porsche 911 Turbo è un'icona del design automobilistico e della potenza.
-
-Dotata di un motore V8 biturbo da 3.6 litri, questa supercar eroga 450 CV di potenza, garantendo prestazioni straordinarie e un sound inconfondibile.
-
-Il design esterno, caratterizzato da linee taglienti e spigoli vivi, riflette il DNA Porsche, mentre gli interni combinano lusso e tecnologia in un cockpit futuristico.
-
-Specifiche tecniche:
-• Motore V8 biturbo da 3.6L
-• 450 CV di potenza
-• Trazione integrale
-• 0-100 km/h in 4.2 secondi
-• Velocità massima: 320 km/h
-• Sistema di controllo della dinamica
-• Aerodinamica attiva`
-    },
-    {
-      title: "Tesla Model S Plaid",
-      carModel: "Model S Plaid",
-      carBrand: "Tesla",
-      date: "16 Lug - 15 Ago 2025",
-      imageUrl: "/events/tesla-model-s.jpg",
-      description: "Il futuro elettrico dell'automobilismo. Questa Tesla Model S Plaid in bianco perlato offre prestazioni straordinarie con zero emissioni.",
-      gender: "woman",
-      images: [
-        {
-          url: "/events/tesla-model-s-1.jpg",
-          description: "Vista frontale della Tesla Model S Plaid in bianco perlato, evidenziando il design aerodinamico e le linee taglienti."
-        },
-        {
-          url: "/events/tesla-model-s-2.jpg",
-          description: "Dettaglio degli interni in pelle nera con il caratteristico volante con indicatore LED dei giri motore."
-        },
-        {
-          url: "/events/tesla-model-s-3.jpg",
-          description: "Vista posteriore che evidenzia il diffusore aerodinamico e i doppi scarichi, elementi caratteristici del design Tesla."
-        }
-      ],
-      detailedDescription: `La Tesla Model S Plaid è il futuro elettrico dell'automobilismo.
-
-Dotata di un motore elettrico di 1,000 CV, questa supercar offre prestazioni straordinarie con zero emissioni, garantendo prestazioni mozzafiato e un sound inconfondibile.
-
-Il design esterno, caratterizzato da linee taglienti e spigoli vivi, riflette il DNA Tesla, mentre gli interni combinano lusso e tecnologia in un cockpit futuristico.
-
-Specifiche tecniche:
-• Motore elettrico di 1,000 CV
-• 0-100 km/h in 2.1 secondi
-• Velocità massima: 350 km/h
-• Sistema di controllo della dinamica
-• Aerodinamica attiva`
-    },
-    {
-      title: "Ferrari SF90 Stradale",
-      carModel: "SF90 Stradale",
-      carBrand: "Ferrari",
-      date: "16 Ago - 15 Set 2025",
-      imageUrl: "/events/ferrari-sf90.jpg",
-      description: "L'ibrida più potente di Ferrari. Questa SF90 Stradale in giallo combina un V8 biturbo con tre motori elettrici per prestazioni senza precedenti.",
+      imageUrl: "/lovable-uploads/f6438a3c-d978-47ff-b010-4fd09dc9cc28.png",
+      description: "La supercar britannica che ridefinisce il concetto di prestazioni e design.",
       gender: "man",
       images: [
         {
-          url: "/events/ferrari-sf90-1.jpg",
-          description: "Vista frontale della SF90 Stradale in giallo, evidenziando il design aerodinamico e le linee taglienti."
+          url: "/lovable-uploads/f6438a3c-d978-47ff-b010-4fd09dc9cc28.png",
+          description: "McLaren 720S Spider in nero satinato, un capolavoro di ingegneria automobilistica."
         },
         {
-          url: "/events/ferrari-sf90-2.jpg",
-          description: "Dettaglio degli interni in pelle nera con il caratteristico volante con indicatore LED dei giri motore."
-        },
-        {
-          url: "/events/ferrari-sf90-3.jpg",
-          description: "Vista posteriore che evidenzia il diffusore aerodinamico e i doppi scarichi, elementi caratteristici del design Ferrari."
+          url: "/lovable-uploads/0cf2adbf-7e29-43e4-9028-27a47b8057eb.png",
+          description: "Vista posteriore che mostra l'aerodinamica attiva e il diffusore."
         }
       ],
-      detailedDescription: `La Ferrari SF90 Stradale è l'ibrida più potente di Ferrari.
-
-Dotata di un motore V8 biturbo da 3.9 litri e tre motori elettrici, questa supercar offre prestazioni senza precedenti, garantendo prestazioni mozzafiato e un sound inconfondibile.
-
-Il design esterno, caratterizzato da linee taglienti e spigoli vivi, riflette il DNA Ferrari, mentre gli interni combinano lusso e tecnologia in un cockpit futuristico.
+      detailedDescription: `La McLaren 720S Spider è l'incarnazione della perfezione ingegneristica.
 
 Specifiche tecniche:
-• Motore V8 biturbo da 3.9L
-• 1,000 CV di potenza
-• 0-100 km/h in 2.5 secondi
-• Velocità massima: 350 km/h
-• Sistema di controllo della dinamica
-• Aerodinamica attiva`
+• Motore V8 biturbo da 4.0L
+• 720 CV di potenza
+• 0-100 km/h in 2.9 secondi
+• Velocità massima: 341 km/h
+• Tetto rigido retrattile
+• Telaio in fibra di carbonio MonoCage II-S`
+    },
+    {
+      title: "Porsche Cayenne",
+      carModel: "Cayenne Turbo GT",
+      carBrand: "Porsche",
+      date: "16 Lug - 15 Ago 2025",
+      imageUrl: "/lovable-uploads/7f787e38-d579-4b24-8a57-1ede818cdca3.png",
+      description: "Il SUV che combina lusso e prestazioni estreme.",
+      gender: "woman",
+      images: [
+        {
+          url: "/lovable-uploads/7f787e38-d579-4b24-8a57-1ede818cdca3.png",
+          description: "Porsche Cayenne Turbo GT, il SUV più potente della gamma."
+        },
+        {
+          url: "/lovable-uploads/48b9a28f-59eb-4010-9bb2-37de88a4d7b1.png",
+          description: "Gli interni sportivi con finiture in carbonio e Alcantara."
+        }
+      ],
+      detailedDescription: `Il Porsche Cayenne Turbo GT rappresenta il vertice dei SUV sportivi.
+
+Specifiche tecniche:
+• Motore V8 biturbo da 4.0L
+• 640 CV di potenza
+• 0-100 km/h in 3.3 secondi
+• Velocità massima: 300 km/h
+• Sospensioni pneumatiche adattive
+• Sistema di sterzo integrale`
     }
   ];
 
