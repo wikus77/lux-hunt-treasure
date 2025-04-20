@@ -1,75 +1,96 @@
 
-import { CalendarDays, MapPin } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import EventDetailsDialog from "./EventDetailsDialog";
+
+interface EventImage {
+  url: string;
+  description: string;
+}
 
 interface EventCardProps {
   title: string;
   carModel: string;
   carBrand: string;
   date: string;
-  location: string;
   imageUrl: string;
   description?: string;
   isCurrent?: boolean;
+  images: EventImage[];
+  detailedDescription: string;
 }
 
 export const EventCard = ({ 
   title, 
   carModel, 
   carBrand, 
-  date, 
-  location, 
+  date,
   imageUrl, 
   description,
-  isCurrent = false 
+  isCurrent = false,
+  images,
+  detailedDescription
 }: EventCardProps) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   return (
-    <Card className={`overflow-hidden ${isCurrent ? "neon-border" : "border-projectx-deep-blue"}`}>
-      <div 
-        className="h-40 bg-cover bg-center" 
-        style={{ backgroundImage: `url(${imageUrl})` }}
-      />
-      
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className={`text-lg ${isCurrent ? "neon-text" : ""}`}>{title}</CardTitle>
-            <CardDescription>{carBrand} {carModel}</CardDescription>
-          </div>
-          {isCurrent && (
-            <span className="px-2 py-1 text-xs rounded-full bg-projectx-pink text-white">
-              In corso
-            </span>
-          )}
-        </div>
-      </CardHeader>
-      
-      <CardContent>
-        {description && (
-          <p className="text-sm text-muted-foreground mb-3">
-            {description}
-          </p>
-        )}
+    <>
+      <Card className={`overflow-hidden ${isCurrent ? "neon-border" : "border-projectx-deep-blue"}`}>
+        <div 
+          className="h-40 bg-cover bg-center" 
+          style={{ backgroundImage: `url(${imageUrl})` }}
+        />
         
-        <div className="space-y-2">
-          <div className="flex items-center text-sm">
-            <CalendarDays className="h-4 w-4 mr-2 text-muted-foreground" />
-            <span>{date}</span>
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className={`text-lg ${isCurrent ? "neon-text" : ""}`}>{title}</CardTitle>
+              <CardDescription>{carBrand} {carModel}</CardDescription>
+            </div>
+            {isCurrent && (
+              <span className="px-2 py-1 text-xs rounded-full bg-projectx-pink text-white">
+                In corso
+              </span>
+            )}
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          {description && (
+            <p className="text-sm text-muted-foreground mb-3">
+              {description}
+            </p>
+          )}
+          
+          <div className="space-y-2 mb-4">
+            <div className="flex items-center text-sm">
+              <CalendarDays className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span>{date}</span>
+            </div>
           </div>
           
-          <div className="flex items-center text-sm">
-            <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-            <span>{location}</span>
-          </div>
-        </div>
-        
-        {isCurrent && (
-          <button className="w-full mt-4 py-2 text-sm bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-md">
+          <Button 
+            className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
+            onClick={() => setIsDialogOpen(true)}
+          >
             Visualizza dettagli
-          </button>
-        )}
-      </CardContent>
-    </Card>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <EventDetailsDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        title={title}
+        carModel={carModel}
+        carBrand={carBrand}
+        date={date}
+        description={detailedDescription}
+        images={images}
+      />
+    </>
   );
 };
 
