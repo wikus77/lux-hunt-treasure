@@ -37,9 +37,9 @@ export const EventCard = ({
 
   return (
     <>
-      <Card className={`overflow-hidden ${isCurrent ? "neon-border" : "border-projectx-deep-blue"}`}>
+      <Card className={`overflow-hidden ${isCurrent ? "neon-border" : "border-m1ssion-deep-blue"}`}>
         <div 
-          className="h-40 bg-cover bg-center" 
+          className="h-48 bg-cover bg-center" 
           style={{ backgroundImage: `url(${imageUrl})` }}
         />
         
@@ -50,7 +50,7 @@ export const EventCard = ({
               <CardDescription>{carBrand} {carModel}</CardDescription>
             </div>
             {isCurrent && (
-              <span className="px-2 py-1 text-xs rounded-full bg-projectx-pink text-white">
+              <span className="px-2 py-1 text-xs rounded-full bg-m1ssion-pink text-white">
                 In corso
               </span>
             )}
@@ -72,7 +72,7 @@ export const EventCard = ({
           </div>
           
           <Button 
-            className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
+            className="w-full bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
             onClick={() => setIsDialogOpen(true)}
           >
             Visualizza dettagli

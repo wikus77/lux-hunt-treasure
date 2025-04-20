@@ -1,7 +1,11 @@
+import { useState } from "react";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import EventCard from "@/components/events/EventCard";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Events = () => {
+  const [selectedGender, setSelectedGender] = useState<string>("all");
+
   const currentEvent = {
     title: "Ferrari 488 GTB",
     carModel: "488 GTB",
@@ -10,6 +14,7 @@ const Events = () => {
     imageUrl: "/events/ferrari-488-gtb.jpg",
     description: "Una supercar che combina potenza e bellezza in un design aerodinamico. Colore rosso fiammante con interni in pelle nera.",
     isCurrent: true,
+    gender: "man",
     images: [
       {
         url: "/events/ferrari-488-1.jpg",
@@ -48,6 +53,7 @@ Caratteristiche principali:
       date: "16 Mag - 15 Giu 2025",
       imageUrl: "/events/lamborghini-huracan.jpg",
       description: "Aggressiva e potente, questa Lamborghini Huracán in verde metallizzato incarna la perfezione del design italiano.",
+      gender: "man",
       images: [
         {
           url: "/events/huracan-1.jpg",
@@ -81,9 +87,9 @@ Specifiche tecniche:
       carModel: "911 Turbo",
       carBrand: "Porsche",
       date: "16 Giu - 15 Lug 2025",
-      location: "Napoli, Italia",
       imageUrl: "/events/porsche-911.jpg",
       description: "Un'icona del design automobilistico, questa Porsche 911 Turbo in argento con cerchi neri rappresenta l'equilibrio perfetto tra potenza e raffinatezza.",
+      gender: "woman",
       images: [
         {
           url: "/events/porsche-911-1.jpg",
@@ -118,9 +124,9 @@ Specifiche tecniche:
       carModel: "Model S Plaid",
       carBrand: "Tesla",
       date: "16 Lug - 15 Ago 2025",
-      location: "Torino, Italia",
       imageUrl: "/events/tesla-model-s.jpg",
-      description: "Il futuro elettrico dell'automobilismo. Questa Tesla Model S Plaid in bianco perlato offre prestazioni straordinarie con zero emissioni. Interni minimalisti e tecnologia all'avanguardia.",
+      description: "Il futuro elettrico dell'automobilismo. Questa Tesla Model S Plaid in bianco perlato offre prestazioni straordinarie con zero emissioni.",
+      gender: "woman",
       images: [
         {
           url: "/events/tesla-model-s-1.jpg",
@@ -153,9 +159,9 @@ Specifiche tecniche:
       carModel: "SF90 Stradale",
       carBrand: "Ferrari",
       date: "16 Ago - 15 Set 2025",
-      location: "Firenze, Italia",
       imageUrl: "/events/ferrari-sf90.jpg",
-      description: "L'ibrida più potente di Ferrari. Questa SF90 Stradale in giallo combina un V8 biturbo con tre motori elettrici per prestazioni senza precedenti. La tecnologia Formula 1 incontra la strada.",
+      description: "L'ibrida più potente di Ferrari. Questa SF90 Stradale in giallo combina un V8 biturbo con tre motori elettrici per prestazioni senza precedenti.",
+      gender: "man",
       images: [
         {
           url: "/events/ferrari-sf90-1.jpg",
@@ -186,17 +192,34 @@ Specifiche tecniche:
     }
   ];
 
+  const filteredEvents = upcomingEvents.filter(event => 
+    selectedGender === 'all' || event.gender === selectedGender
+  );
+
   return (
     <div className="pb-20 min-h-screen bg-black">
       {/* Header */}
-      <header className="px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue">
+      <header className="px-4 py-6 flex justify-between items-center border-b border-m1ssion-deep-blue">
         <h1 className="text-2xl font-bold neon-text">Eventi</h1>
       </header>
+
+      {/* Gender Filter */}
+      <div className="p-4">
+        <Select value={selectedGender} onValueChange={setSelectedGender}>
+          <SelectTrigger className="w-full md:w-[200px] bg-black border-m1ssion-deep-blue">
+            <SelectValue placeholder="Filtra per categoria" />
+          </SelectTrigger>
+          <SelectContent className="bg-black border border-m1ssion-deep-blue">
+            <SelectItem value="all">Tutti gli eventi</SelectItem>
+            <SelectItem value="man">Player Man</SelectItem>
+            <SelectItem value="woman">Player Woman</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Current Event */}
       <section className="p-4">
         <h2 className="text-xl font-bold mb-4">Evento Corrente</h2>
-        
         <EventCard
           title={currentEvent.title}
           carModel={currentEvent.carModel}
@@ -213,9 +236,8 @@ Specifiche tecniche:
       {/* Upcoming Events */}
       <section className="p-4">
         <h2 className="text-xl font-bold mb-4">Prossimi Eventi</h2>
-        
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {upcomingEvents.map((event, index) => (
+          {filteredEvents.map((event, index) => (
             <EventCard
               key={index}
               title={event.title}
@@ -235,7 +257,6 @@ Specifiche tecniche:
       <section className="p-4 mt-4">
         <div className="glass-card">
           <h2 className="text-xl font-bold mb-4">Regole degli Eventi</h2>
-          
           <div className="space-y-4 text-sm text-muted-foreground">
             <p>
               Ogni evento dura 4 settimane, durante le quali i partecipanti ricevono indizi per trovare l'auto di lusso in palio.
@@ -256,7 +277,6 @@ Specifiche tecniche:
         </div>
       </section>
 
-      {/* Bottom Navigation */}
       <BottomNavigation />
     </div>
   );
