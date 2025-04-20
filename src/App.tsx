@@ -16,6 +16,10 @@ import Subscriptions from "./pages/Subscriptions";
 import Events from "./pages/Events";
 import Buzz from "./pages/Buzz";
 import NotFound from "./pages/NotFound";
+import PaymentMethods from "./pages/PaymentMethods";
+import PersonalInfo from "./pages/PersonalInfo";
+import PrivacySecurity from "./pages/PrivacySecurity";
+import LanguageSettings from "./pages/LanguageSettings";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +39,10 @@ const App = () => (
             <Route path="/subscriptions" element={<Subscriptions />} />
             <Route path="/events" element={<Events />} />
             <Route path="/buzz" element={<Buzz />} />
+            <Route path="/payment-methods" element={<PaymentMethods />} />
+            <Route path="/personal-info" element={<PersonalInfo />} />
+            <Route path="/privacy-security" element={<PrivacySecurity />} />
+            <Route path="/language-settings" element={<LanguageSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Footer />

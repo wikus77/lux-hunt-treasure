@@ -1,15 +1,16 @@
-
 import { useState, useEffect } from "react";
-import { Bell, ChevronRight, LogOut, Moon, Shield, User, Volume2, Languages, CreditCard, HelpCircle } from "lucide-react";
+import { Bell, ChevronRight, LogOut, Moon, Shield, User, Volume2, Language, CreditCard, HelpCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { useNavigate } from "react-router-dom";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import { useToast } from "@/components/ui/use-toast";
 
 const Settings = () => {
+  const navigate = useNavigate();
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
@@ -87,7 +88,10 @@ const Settings = () => {
         <h2 className="text-xl font-bold mb-4">Account</h2>
         
         <div className="space-y-2">
-          <div className="glass-card flex justify-between items-center p-4">
+          <div 
+            className="glass-card flex justify-between items-center p-4 cursor-pointer"
+            onClick={() => navigate('/personal-info')}
+          >
             <div className="flex items-center">
               <User className="h-5 w-5 mr-3 text-projectx-neon-blue" />
               <span>Informazioni Personali</span>
@@ -95,7 +99,10 @@ const Settings = () => {
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </div>
           
-          <div className="glass-card flex justify-between items-center p-4">
+          <div 
+            className="glass-card flex justify-between items-center p-4 cursor-pointer"
+            onClick={() => navigate('/privacy-security')}
+          >
             <div className="flex items-center">
               <Shield className="h-5 w-5 mr-3 text-projectx-neon-blue" />
               <span>Privacy e Sicurezza</span>
@@ -103,7 +110,10 @@ const Settings = () => {
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </div>
 
-          <div className="glass-card flex justify-between items-center p-4">
+          <div 
+            className="glass-card flex justify-between items-center p-4 cursor-pointer"
+            onClick={() => navigate('/payment-methods')}
+          >
             <div className="flex items-center">
               <CreditCard className="h-5 w-5 mr-3 text-projectx-neon-blue" />
               <span>Metodi di Pagamento</span>
@@ -260,9 +270,12 @@ const Settings = () => {
             </RadioGroup>
           </div>
 
-          <div className="glass-card flex justify-between items-center p-4">
+          <div 
+            className="glass-card flex justify-between items-center p-4 cursor-pointer"
+            onClick={() => navigate('/language-settings')}
+          >
             <div className="flex items-center">
-              <Languages className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+              <Language className="h-5 w-5 mr-3 text-projectx-neon-blue" />
               <span>Lingua</span>
             </div>
             <span className="text-muted-foreground">{language}</span>
