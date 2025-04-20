@@ -19,12 +19,12 @@ export const BottomNavigation = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-16 backdrop-blur-xl bg-black/80 border-t border-gray-800 flex justify-around items-center px-2 z-50">
+    <div className="fixed bottom-0 left-0 right-0 h-16 backdrop-blur-xl bg-white/80 border-t border-gray-200 flex justify-around items-center px-2 z-50 dark:bg-black/80 dark:border-gray-800">
       <button 
         onClick={() => handleNavigation("/home")}
         className={`flex flex-col items-center justify-center p-2 transition-colors ${
           isActive("/home") 
-            ? "text-red-500" 
+            ? "text-[#FEC6A1] dark:text-red-500" 
             : "text-gray-400"
         }`}
       >
@@ -36,7 +36,7 @@ export const BottomNavigation = () => {
         onClick={() => handleNavigation("/events")}
         className={`flex flex-col items-center justify-center p-2 transition-colors ${
           isActive("/events") 
-            ? "text-red-500" 
+            ? "text-[#FEC6A1] dark:text-red-500" 
             : "text-gray-400"
         }`}
       >
@@ -48,7 +48,7 @@ export const BottomNavigation = () => {
         onClick={() => handleNavigation("/buzz")}
         className={`flex flex-col items-center justify-center p-2 transition-colors ${
           isActive("/buzz") 
-            ? "text-red-500" 
+            ? "text-[#FEC6A1] dark:text-red-500" 
             : "text-gray-400"
         }`}
       >
