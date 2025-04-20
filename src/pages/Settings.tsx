@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, ChevronRight, LogOut, Moon, Shield, User, Volume2, Language, CreditCard, HelpCircle } from "lucide-react";
+import { Bell, ChevronRight, LogOut, Moon, Shield, User, Volume2, Languages, CreditCard, HelpCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -20,7 +20,6 @@ const Settings = () => {
   const [buzzSound, setBuzzSound] = useState('default');
   const { toast } = useToast();
 
-  // Load saved sound preference on mount
   useEffect(() => {
     const savedSound = localStorage.getItem('buzzSound');
     if (savedSound) {
@@ -32,7 +31,6 @@ const Settings = () => {
     setBuzzSound(value);
     localStorage.setItem('buzzSound', value);
     
-    // Play sound preview
     const audio = new Audio(getSoundPath(value));
     audio.volume = volume[0] / 100;
     audio.play().catch(e => console.error("Error playing sound:", e));
@@ -59,7 +57,6 @@ const Settings = () => {
   const handleVolumeChange = (newVolume: number[]) => {
     setVolume(newVolume);
     
-    // Play current sound at new volume level for immediate feedback
     const audio = new Audio(getSoundPath(buzzSound));
     audio.volume = newVolume[0] / 100;
     audio.play().catch(e => console.error("Error playing sound:", e));
@@ -78,12 +75,10 @@ const Settings = () => {
 
   return (
     <div className="pb-20 min-h-screen bg-black">
-      {/* Header */}
       <header className="px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue">
         <h1 className="text-2xl font-bold neon-text">Impostazioni</h1>
       </header>
 
-      {/* Account Settings */}
       <section className="p-4">
         <h2 className="text-xl font-bold mb-4">Account</h2>
         
@@ -123,7 +118,6 @@ const Settings = () => {
         </div>
       </section>
 
-      {/* Notification Settings */}
       <section className="p-4">
         <h2 className="text-xl font-bold mb-4">Notifiche</h2>
         
@@ -152,7 +146,6 @@ const Settings = () => {
         </div>
       </section>
 
-      {/* App Settings */}
       <section className="p-4">
         <h2 className="text-xl font-bold mb-4">App</h2>
         
@@ -192,7 +185,6 @@ const Settings = () => {
             />
           </div>
 
-          {/* Buzz Sound Options */}
           <div className="glass-card p-4">
             <div className="flex items-center mb-3">
               <Volume2 className="h-5 w-5 mr-3 text-projectx-neon-blue" />
@@ -275,7 +267,7 @@ const Settings = () => {
             onClick={() => navigate('/language-settings')}
           >
             <div className="flex items-center">
-              <Language className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+              <Languages className="h-5 w-5 mr-3 text-projectx-neon-blue" />
               <span>Lingua</span>
             </div>
             <span className="text-muted-foreground">{language}</span>
@@ -283,7 +275,6 @@ const Settings = () => {
         </div>
       </section>
 
-      {/* Support Section */}
       <section className="p-4">
         <h2 className="text-xl font-bold mb-4">Supporto</h2>
         
@@ -296,7 +287,6 @@ const Settings = () => {
         </div>
       </section>
 
-      {/* Logout Button */}
       <section className="p-4">
         <Button 
           variant="destructive" 
@@ -317,7 +307,6 @@ const Settings = () => {
         </div>
       </section>
 
-      {/* Bottom Navigation */}
       <BottomNavigation />
     </div>
   );
