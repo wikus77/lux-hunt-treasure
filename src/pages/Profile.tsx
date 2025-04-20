@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import BottomNavigation from "@/components/layout/BottomNavigation";
+import ProfileLayout from "@/components/layout/ProfileLayout";
 import { supabase } from "@/integrations/supabase/client";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileBio from "@/components/profile/ProfileBio";
@@ -143,7 +143,7 @@ const Profile = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="pb-20 min-h-screen bg-black">
+    <ProfileLayout>
       <ProfileHeader
         name={name}
         setName={setName}
@@ -181,9 +181,7 @@ const Profile = () => {
           Salva Modifiche
         </Button>
       )}
-
-      <BottomNavigation />
-    </div>
+    </ProfileLayout>
   );
 };
 
