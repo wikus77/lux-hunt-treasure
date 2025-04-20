@@ -1,8 +1,9 @@
 
-import { Moon, Volume2, Languages, ChevronRight } from "lucide-react";
+import { Moon, Volume2, Languages } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import SoundSettings from "./SoundSettings";
+import { useEffect } from "react";
 
 interface AppSectionProps {
   darkMode: boolean;
@@ -29,6 +30,16 @@ const AppSection = ({
 }: AppSectionProps) => {
   const navigate = useNavigate();
 
+  const handleThemeChange = (value: boolean) => {
+    setDarkMode(value);
+    localStorage.setItem('theme', value ? 'dark' : 'light');
+    if (value) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
   return (
     <section className="p-4">
       <h2 className="text-xl font-bold mb-4">App</h2>
@@ -36,18 +47,21 @@ const AppSection = ({
       <div className="space-y-2">
         <div className="glass-card flex justify-between items-center p-4">
           <div className="flex items-center">
-            <Moon className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-            <span>Modalità Scura</span>
+            <Moon className={`h-5 w-5 mr-3 ${darkMode ? 'text-projectx-neon-blue' : 'text-gray-600'}`} />
+            <span className={darkMode ? 'text-white' : 'text-gray-900'}>
+              {darkMode ? 'Modalità Scura' : 'Modalità Chiara'}
+            </span>
           </div>
           <Switch 
             checked={darkMode} 
-            onCheckedChange={setDarkMode} 
+            onCheckedChange={handleThemeChange}
+            className={`${darkMode ? 'bg-projectx-neon-blue' : 'bg-gray-200'}`}
           />
         </div>
 
-        <div className="glass-card flex justify-between items-center p-4">
+        <div className={`glass-card flex justify-between items-center p-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
           <div className="flex items-center">
-            <Volume2 className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+            <Volume2 className={`h-5 w-5 mr-3 ${darkMode ? 'text-projectx-neon-blue' : 'text-gray-600'}`} />
             <span>Effetti Sonori</span>
           </div>
           <Switch 
@@ -64,11 +78,11 @@ const AppSection = ({
         />
 
         <div 
-          className="glass-card flex justify-between items-center p-4 cursor-pointer"
+          className={`glass-card flex justify-between items-center p-4 cursor-pointer ${darkMode ? 'text-white' : 'text-gray-900'}`}
           onClick={() => navigate('/language-settings')}
         >
           <div className="flex items-center">
-            <Languages className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+            <Languages className={`h-5 w-5 mr-3 ${darkMode ? 'text-projectx-neon-blue' : 'text-gray-600'}`} />
             <span>Lingua</span>
           </div>
           <span className="text-muted-foreground">{language}</span>

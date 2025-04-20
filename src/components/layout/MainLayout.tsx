@@ -3,14 +3,16 @@ import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Footer from "./Footer";
 import BottomNavigation from "./BottomNavigation";
-import { Moon, Sun } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const MainLayout = () => {
-  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark mode for Netflix style
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   useEffect(() => {
-    // Apply dark mode class on component mount
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      setIsDarkMode(savedTheme === 'dark');
+    }
+
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
@@ -18,30 +20,11 @@ const MainLayout = () => {
     }
   }, [isDarkMode]);
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
-  };
-
   return (
     <div className={`min-h-screen transition-colors duration-200 ${
       isDarkMode ? 'bg-[#141414] text-white' : 'bg-white text-[#141414]'
     }`}>
-      {/* Theme toggle button - fixed position */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-4 right-4 z-50"
-        onClick={toggleDarkMode}
-      >
-        {isDarkMode ? (
-          <Sun className="h-5 w-5" />
-        ) : (
-          <Moon className="h-5 w-5" />
-        )}
-      </Button>
-
-      {/* Main content area with Netflix-like design */}
+      {/* Main content area with adaptive design */}
       <main className={`flex-1 w-full mx-auto px-4 relative ${
         isDarkMode ? 'bg-[#141414]' : 'bg-white'
       }`}>
