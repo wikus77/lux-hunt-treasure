@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { Camera, Edit, User, BookOpen } from "lucide-react";
+import { Camera, Edit, User, BookOpen, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import BottomNavigation from "@/components/layout/BottomNavigation";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ClueCard from "@/components/clues/ClueCard";
+import NotificationItem from "@/components/notifications/NotificationItem";
 
 interface Clue {
   id: string;
@@ -17,12 +19,21 @@ interface Clue {
   subscriptionType?: "Base" | "Silver" | "Gold" | "Black";
 }
 
+interface Notification {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  read: boolean;
+}
+
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [bio, setBio] = useState("Appassionato di auto di lusso e collezionista. Amo la velocità e l'adrenalina!");
   const [name, setName] = useState("Mario Rossi");
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [unlockedClues, setUnlockedClues] = useState<Clue[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const { toast } = useToast();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,34 +60,94 @@ const Profile = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        const { data: userCluesData, error: userCluesError } = await supabase
-          .from('user_clues')
-          .select('clue_id(id, title, description, week, is_premium, premium_type)')
-          .eq('user_id', user.id)
-          .eq('is_unlocked', true);
+        // In a real app, this would be a Supabase query to fetch clues from the database
+        // For now, we're simulating this with localStorage
+        try {
+          const { data: userCluesData, error: userCluesError } = await supabase
+            .from('user_clues')
+            .select(`
+              clue_id:clue_id (
+                id,
+                title,
+                description,
+                is_premium,
+                premium_type
+              )
+            `)
+            .eq('user_id', user.id)
+            .eq('is_unlocked', true);
 
-        if (userCluesError) {
-          console.error('Error fetching user clues:', userCluesError);
-          return;
+          if (userCluesError) {
+            console.error('Error fetching user clues:', userCluesError);
+            return;
+          }
+
+          // Convert to our Clue interface format
+          const clues = userCluesData.map(item => ({
+            id: item.clue_id.id,
+            title: item.clue_id.title,
+            description: item.clue_id.description,
+            week: 1, // Default to week 1 since we don't have this in the database
+            isLocked: false,
+            subscriptionType: item.clue_id.is_premium ? 
+              (item.clue_id.premium_type as "Base" | "Silver" | "Gold" | "Black") : 
+              "Base"
+          }));
+
+          setUnlockedClues(clues);
+        } catch (error) {
+          console.error("Error fetching clues:", error);
+          // Provide some sample clues for development
+          setUnlockedClues([
+            {
+              id: "1",
+              title: "Primo Indizio",
+              description: "L'auto si trova in una città che inizia con la lettera 'M'.",
+              week: 1,
+              isLocked: false,
+              subscriptionType: "Base"
+            }
+          ]);
         }
+      }
+    };
 
-        const clues = userCluesData.map(item => ({
-          id: item.clue_id.id,
-          title: item.clue_id.title,
-          description: item.clue_id.description,
-          week: item.clue_id.week,
-          isLocked: false,
-          subscriptionType: item.clue_id.is_premium ? 
-            (item.clue_id.premium_type as "Base" | "Silver" | "Gold" | "Black") : 
-            "Base"
-        }));
-
-        setUnlockedClues(clues);
+    // Load notifications from localStorage
+    const loadNotifications = () => {
+      const storedNotifications = localStorage.getItem('notifications');
+      if (storedNotifications) {
+        setNotifications(JSON.parse(storedNotifications));
       }
     };
 
     fetchUnlockedClues();
+    loadNotifications();
+
+    // Set up notification listener
+    const checkForNewNotifications = setInterval(() => {
+      loadNotifications();
+    }, 5000);
+
+    return () => {
+      clearInterval(checkForNewNotifications);
+    };
   }, []);
+
+  const markAllAsRead = () => {
+    const updatedNotifications = notifications.map(notification => ({
+      ...notification,
+      read: true
+    }));
+    setNotifications(updatedNotifications);
+    localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+    
+    toast({
+      title: "Notifiche lette",
+      description: "Tutte le notifiche sono state segnate come lette."
+    });
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <div className="pb-20 min-h-screen bg-black">
@@ -157,6 +228,45 @@ const Profile = () => {
             />
           ) : (
             <p className="text-sm text-muted-foreground">{bio}</p>
+          )}
+        </div>
+
+        {/* Notifications Section */}
+        <div className="glass-card mb-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold flex items-center">
+              <Bell className="mr-2 h-5 w-5" /> Notifiche
+              {unreadCount > 0 && (
+                <span className="ml-2 px-2 py-0.5 text-xs bg-projectx-pink rounded-full">
+                  {unreadCount}
+                </span>
+              )}
+            </h3>
+            
+            {notifications.length > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={markAllAsRead}
+              >
+                Segna tutte come lette
+              </Button>
+            )}
+          </div>
+          
+          {notifications.length === 0 ? (
+            <div className="text-center py-4 text-muted-foreground">
+              <p>Non hai notifiche.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {notifications.map((notification) => (
+                <NotificationItem 
+                  key={notification.id}
+                  notification={notification}
+                />
+              ))}
+            </div>
           )}
         </div>
 

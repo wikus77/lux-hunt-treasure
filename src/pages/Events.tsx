@@ -10,7 +10,8 @@ const Events = () => {
     carBrand: "Ferrari",
     date: "19 Apr - 15 Mag 2025",
     location: "Milano, Italia",
-    imageUrl: "/public/lovable-uploads/781937e4-2515-4cad-8393-c51c1c81d6c9.png",
+    imageUrl: "/events/ferrari-488-gtb.jpg",
+    description: "Una supercar che combina potenza e bellezza in un design aerodinamico. Colore rosso fiammante con interni in pelle nera. Avvistata recentemente nel centro di Milano.",
     isCurrent: true
   };
   
@@ -21,7 +22,8 @@ const Events = () => {
       carBrand: "Lamborghini",
       date: "16 Mag - 15 Giu 2025",
       location: "Roma, Italia",
-      imageUrl: "/public/lovable-uploads/9daa7fae-5be8-482a-8136-7113724b28ad.png"
+      imageUrl: "/events/lamborghini-huracan.jpg",
+      description: "Aggressiva e potente, questa Lamborghini Huracán in verde metallizzato sarà nascosta nelle strade di Roma. Caratterizzata da linee taglienti e prestazioni mozzafiato."
     },
     {
       title: "Porsche 911 Turbo",
@@ -29,7 +31,8 @@ const Events = () => {
       carBrand: "Porsche",
       date: "16 Giu - 15 Lug 2025",
       location: "Napoli, Italia",
-      imageUrl: "/public/lovable-uploads/a987ba21-940e-48cd-b999-c266de3f133c.png"
+      imageUrl: "/events/porsche-911.jpg",
+      description: "Un'icona del design automobilistico, questa Porsche 911 Turbo in argento con cerchi neri rappresenta l'equilibrio perfetto tra potenza e raffinatezza."
     },
     {
       title: "Tesla Model S Plaid",
@@ -37,7 +40,8 @@ const Events = () => {
       carBrand: "Tesla",
       date: "16 Lug - 15 Ago 2025",
       location: "Torino, Italia",
-      imageUrl: "/public/lovable-uploads/ee63e6a9-208d-43f5-8bad-4c94f9c066cd.png"
+      imageUrl: "/events/tesla-model-s.jpg",
+      description: "Il futuro elettrico dell'automobilismo. Questa Tesla Model S Plaid in bianco perlato offre prestazioni straordinarie con zero emissioni. Interni minimalisti e tecnologia all'avanguardia."
     },
     {
       title: "Ferrari SF90 Stradale",
@@ -45,7 +49,8 @@ const Events = () => {
       carBrand: "Ferrari",
       date: "16 Ago - 15 Set 2025",
       location: "Firenze, Italia",
-      imageUrl: "/public/lovable-uploads/b79099f5-31ab-44a3-b271-9cde8b7932e1.png"
+      imageUrl: "/events/ferrari-sf90.jpg",
+      description: "L'ibrida più potente di Ferrari. Questa SF90 Stradale in giallo combina un V8 biturbo con tre motori elettrici per prestazioni senza precedenti. La tecnologia Formula 1 incontra la strada."
     }
   ];
 
@@ -67,6 +72,7 @@ const Events = () => {
           date={currentEvent.date}
           location={currentEvent.location}
           imageUrl={currentEvent.imageUrl}
+          description={currentEvent.description}
           isCurrent={currentEvent.isCurrent}
         />
       </section>
@@ -85,6 +91,7 @@ const Events = () => {
               date={event.date}
               location={event.location}
               imageUrl={event.imageUrl}
+              description={event.description}
             />
           ))}
         </div>

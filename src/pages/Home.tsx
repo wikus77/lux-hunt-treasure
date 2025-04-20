@@ -7,6 +7,12 @@ import ClueCard from "@/components/clues/ClueCard";
 
 const Home = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [remainingTime, setRemainingTime] = useState({
+    days: 14,
+    hours: 23,
+    minutes: 45,
+    seconds: 18
+  });
   
   // Esempio di indizi per demo
   const clues = [
@@ -44,6 +50,40 @@ const Home = () => {
     },
   ];
 
+  // Simula il countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setRemainingTime(prev => {
+        let { days, hours, minutes, seconds } = prev;
+        
+        seconds--;
+        if (seconds < 0) {
+          seconds = 59;
+          minutes--;
+          
+          if (minutes < 0) {
+            minutes = 59;
+            hours--;
+            
+            if (hours < 0) {
+              hours = 23;
+              days--;
+              
+              if (days < 0) {
+                clearInterval(timer);
+                return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+              }
+            }
+          }
+        }
+        
+        return { days, hours, minutes, seconds };
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
+
   const requestNotifications = () => {
     // In un'app reale, qui andrebbe la richiesta di permesso per le notifiche
     setNotificationsEnabled(true);
@@ -53,7 +93,7 @@ const Home = () => {
     <div className="pb-20 min-h-screen bg-black">
       {/* Header */}
       <header className="px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue">
-        <h1 className="text-2xl font-bold neon-text">Project X</h1>
+        <h1 className="text-2xl font-bold neon-text">M1ssion</h1>
         
         <button 
           className={`p-2 rounded-full ${notificationsEnabled ? "bg-projectx-pink" : "bg-projectx-deep-blue"}`}
@@ -75,7 +115,7 @@ const Home = () => {
         <div className="glass-card mb-6">
           <h3 className="text-lg font-bold mb-2">Ferrari 488 GTB</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Trova questa incredibile Ferrari 488 GTB nascosta a Milano per vincerla!
+            Trova questa incredibile Ferrari 488 GTB nascosta a Milano per vincerla! È di colore rosso fiammante con interni in pelle nera e dettagli in fibra di carbonio.
           </p>
           
           <div className="flex space-x-2 mb-4">
@@ -90,27 +130,27 @@ const Home = () => {
             </div>
           </div>
           
-          <div className="h-40 bg-cover bg-center rounded-md mb-4" style={{ backgroundImage: "url('/public/lovable-uploads/781937e4-2515-4cad-8393-c51c1c81d6c9.png')" }} />
+          <div className="h-40 bg-cover bg-center rounded-md mb-4" style={{ backgroundImage: "url('/events/ferrari-488-gtb.jpg')" }} />
           
           <div className="grid grid-cols-4 gap-2">
             <div className="bg-projectx-deep-blue p-2 rounded">
               <div className="text-xs text-muted-foreground">Giorni</div>
-              <div className="text-lg font-bold">14</div>
+              <div className="text-lg font-bold">{remainingTime.days}</div>
             </div>
             
             <div className="bg-projectx-deep-blue p-2 rounded">
               <div className="text-xs text-muted-foreground">Ore</div>
-              <div className="text-lg font-bold">23</div>
+              <div className="text-lg font-bold">{remainingTime.hours}</div>
             </div>
             
             <div className="bg-projectx-deep-blue p-2 rounded">
               <div className="text-xs text-muted-foreground">Minuti</div>
-              <div className="text-lg font-bold">45</div>
+              <div className="text-lg font-bold">{remainingTime.minutes}</div>
             </div>
             
             <div className="bg-projectx-deep-blue p-2 rounded">
               <div className="text-xs text-muted-foreground">Secondi</div>
-              <div className="text-lg font-bold">18</div>
+              <div className="text-lg font-bold">{remainingTime.seconds}</div>
             </div>
           </div>
         </div>

@@ -9,6 +9,7 @@ interface EventCardProps {
   date: string;
   location: string;
   imageUrl: string;
+  description?: string;
   isCurrent?: boolean;
 }
 
@@ -19,6 +20,7 @@ export const EventCard = ({
   date, 
   location, 
   imageUrl, 
+  description,
   isCurrent = false 
 }: EventCardProps) => {
   return (
@@ -43,6 +45,12 @@ export const EventCard = ({
       </CardHeader>
       
       <CardContent>
+        {description && (
+          <p className="text-sm text-muted-foreground mb-3">
+            {description}
+          </p>
+        )}
+        
         <div className="space-y-2">
           <div className="flex items-center text-sm">
             <CalendarDays className="h-4 w-4 mr-2 text-muted-foreground" />

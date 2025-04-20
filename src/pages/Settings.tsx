@@ -1,9 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell, ChevronRight, LogOut, Moon, Shield, User, Volume2, Languages, CreditCard, HelpCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -14,7 +16,53 @@ const Settings = () => {
   const [soundEffects, setSoundEffects] = useState(true);
   const [language, setLanguage] = useState("Italiano");
   const [volume, setVolume] = useState([75]);
+  const [buzzSound, setBuzzSound] = useState('default');
   const { toast } = useToast();
+
+  // Load saved sound preference on mount
+  useEffect(() => {
+    const savedSound = localStorage.getItem('buzzSound');
+    if (savedSound) {
+      setBuzzSound(savedSound);
+    }
+  }, []);
+
+  const handleSoundChange = (value: string) => {
+    setBuzzSound(value);
+    localStorage.setItem('buzzSound', value);
+    
+    // Play sound preview
+    const audio = new Audio(getSoundPath(value));
+    audio.volume = volume[0] / 100;
+    audio.play().catch(e => console.error("Error playing sound:", e));
+    
+    toast({
+      title: "Suono aggiornato",
+      description: "Il suono del pulsante Buzz è stato modificato."
+    });
+  };
+
+  const getSoundPath = (sound: string) => {
+    switch (sound) {
+      case 'chime':
+        return "/sounds/chime.mp3";
+      case 'bell':
+        return "/sounds/bell.mp3";
+      case 'arcade':
+        return "/sounds/arcade.mp3";
+      default:
+        return "/sounds/buzz.mp3";
+    }
+  };
+
+  const handleVolumeChange = (newVolume: number[]) => {
+    setVolume(newVolume);
+    
+    // Play current sound at new volume level for immediate feedback
+    const audio = new Audio(getSoundPath(buzzSound));
+    audio.volume = newVolume[0] / 100;
+    audio.play().catch(e => console.error("Error playing sound:", e));
+  };
 
   const handleLogout = () => {
     toast({
@@ -128,10 +176,88 @@ const Settings = () => {
             </div>
             <Slider
               value={volume}
-              onValueChange={setVolume}
+              onValueChange={handleVolumeChange}
               max={100}
               step={1}
             />
+          </div>
+
+          {/* Buzz Sound Options */}
+          <div className="glass-card p-4">
+            <div className="flex items-center mb-3">
+              <Volume2 className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+              <span>Suono Buzz</span>
+            </div>
+            
+            <RadioGroup value={buzzSound} onValueChange={handleSoundChange}>
+              <div className="flex items-center space-x-2 mb-2">
+                <RadioGroupItem value="default" id="sound-default" />
+                <Label htmlFor="sound-default">Default</Label>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="ml-auto"
+                  onClick={() => {
+                    const audio = new Audio('/sounds/buzz.mp3');
+                    audio.volume = volume[0] / 100;
+                    audio.play();
+                  }}
+                >
+                  <Volume2 className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="flex items-center space-x-2 mb-2">
+                <RadioGroupItem value="chime" id="sound-chime" />
+                <Label htmlFor="sound-chime">Chime</Label>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="ml-auto"
+                  onClick={() => {
+                    const audio = new Audio('/sounds/chime.mp3');
+                    audio.volume = volume[0] / 100;
+                    audio.play();
+                  }}
+                >
+                  <Volume2 className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="flex items-center space-x-2 mb-2">
+                <RadioGroupItem value="bell" id="sound-bell" />
+                <Label htmlFor="sound-bell">Bell</Label>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="ml-auto"
+                  onClick={() => {
+                    const audio = new Audio('/sounds/bell.mp3');
+                    audio.volume = volume[0] / 100;
+                    audio.play();
+                  }}
+                >
+                  <Volume2 className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="arcade" id="sound-arcade" />
+                <Label htmlFor="sound-arcade">Arcade</Label>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="ml-auto"
+                  onClick={() => {
+                    const audio = new Audio('/sounds/arcade.mp3');
+                    audio.volume = volume[0] / 100;
+                    audio.play();
+                  }}
+                >
+                  <Volume2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </RadioGroup>
           </div>
 
           <div className="glass-card flex justify-between items-center p-4">

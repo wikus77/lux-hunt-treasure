@@ -15,7 +15,9 @@ const Buzz = () => {
 
   useEffect(() => {
     // Create audio element for buzz sound
-    audioRef.current = new Audio("/buzz-sound.mp3");
+    const soundPreference = localStorage.getItem('buzzSound') || 'default';
+    const soundPath = getSoundPath(soundPreference);
+    audioRef.current = new Audio(soundPath);
     
     return () => {
       if (audioRef.current) {
@@ -23,6 +25,19 @@ const Buzz = () => {
       }
     };
   }, []);
+
+  const getSoundPath = (preference: string) => {
+    switch (preference) {
+      case 'chime':
+        return "/sounds/chime.mp3";
+      case 'bell':
+        return "/sounds/bell.mp3";
+      case 'arcade':
+        return "/sounds/arcade.mp3";
+      default:
+        return "/sounds/buzz.mp3";
+    }
+  };
 
   const handleBuzzClick = () => {
     // Play sound effect
@@ -34,11 +49,36 @@ const Buzz = () => {
     // Start vault animation
     setIsVaultOpen(true);
     
+    // Send notification
+    sendBuzzNotification();
+    
     // Reset animation after delay
     setTimeout(() => {
       setIsVaultOpen(false);
       setShowDialog(true);
     }, 1500);
+  };
+
+  const sendBuzzNotification = () => {
+    // Display toast notification
+    toast.success("Nuovo indizio disponibile!", {
+      description: "Hai appena sbloccato un indizio premium."
+    });
+    
+    // In a real app with Supabase, you'd also save this to the database
+    // This notification would appear in the profile notifications section
+    const notification = {
+      id: Date.now().toString(),
+      title: "Nuovo indizio disponibile!",
+      description: "Hai sbloccato un indizio premium per Ferrari 488 GTB",
+      date: new Date().toISOString(),
+      read: false
+    };
+    
+    // Store in localStorage for demo purposes
+    const existingNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+    existingNotifications.push(notification);
+    localStorage.setItem('notifications', JSON.stringify(existingNotifications));
   };
 
   const handlePayment = () => {
