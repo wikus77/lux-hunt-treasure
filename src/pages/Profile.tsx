@@ -1,14 +1,12 @@
-
 import { useState, useEffect } from "react";
-import { Camera, Edit, User, BookOpen, Bell } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import BottomNavigation from "@/components/layout/BottomNavigation";
-import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import ClueCard from "@/components/clues/ClueCard";
-import NotificationItem from "@/components/notifications/NotificationItem";
+import ProfileHeader from "@/components/profile/ProfileHeader";
+import ProfileBio from "@/components/profile/ProfileBio";
+import ProfileNotifications from "@/components/profile/ProfileNotifications";
+import ProfileClues from "@/components/profile/ProfileClues";
 
 interface Clue {
   id: string;
@@ -55,13 +53,25 @@ const Profile = () => {
     });
   };
 
+  const markAllAsRead = () => {
+    const updatedNotifications = notifications.map(notification => ({
+      ...notification,
+      read: true
+    }));
+    setNotifications(updatedNotifications);
+    localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+    
+    toast({
+      title: "Notifiche lette",
+      description: "Tutte le notifiche sono state segnate come lette."
+    });
+  };
+
   useEffect(() => {
     const fetchUnlockedClues = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        // In a real app, this would be a Supabase query to fetch clues from the database
-        // For now, we're simulating this with localStorage
         try {
           const { data: userCluesData, error: userCluesError } = await supabase
             .from('user_clues')
@@ -82,12 +92,11 @@ const Profile = () => {
             return;
           }
 
-          // Convert to our Clue interface format
           const clues = userCluesData.map(item => ({
             id: item.clue_id.id,
             title: item.clue_id.title,
             description: item.clue_id.description,
-            week: 1, // Default to week 1 since we don't have this in the database
+            week: 1,
             isLocked: false,
             subscriptionType: item.clue_id.is_premium ? 
               (item.clue_id.premium_type as "Base" | "Silver" | "Gold" | "Black") : 
@@ -97,7 +106,6 @@ const Profile = () => {
           setUnlockedClues(clues);
         } catch (error) {
           console.error("Error fetching clues:", error);
-          // Provide some sample clues for development
           setUnlockedClues([
             {
               id: "1",
@@ -112,7 +120,6 @@ const Profile = () => {
       }
     };
 
-    // Load notifications from localStorage
     const loadNotifications = () => {
       const storedNotifications = localStorage.getItem('notifications');
       if (storedNotifications) {
@@ -123,7 +130,6 @@ const Profile = () => {
     fetchUnlockedClues();
     loadNotifications();
 
-    // Set up notification listener
     const checkForNewNotifications = setInterval(() => {
       loadNotifications();
     }, 5000);
@@ -133,234 +139,65 @@ const Profile = () => {
     };
   }, []);
 
-  const markAllAsRead = () => {
-    const updatedNotifications = notifications.map(notification => ({
-      ...notification,
-      read: true
-    }));
-    setNotifications(updatedNotifications);
-    localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
-    
-    toast({
-      title: "Notifiche lette",
-      description: "Tutte le notifiche sono state segnate come lette."
-    });
-  };
-
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <div className="pb-20 min-h-screen bg-black">
-      {/* Header */}
-      <header className="px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue">
-        <h1 className="text-2xl font-bold neon-text">Profilo</h1>
+      <ProfileHeader
+        name={name}
+        setName={setName}
+        profileImage={profileImage}
+        setProfileImage={setProfileImage}
+        isEditing={isEditing}
+        setIsEditing={setIsEditing}
+      />
+
+      <ProfileBio
+        name={name}
+        setName={setName}
+        bio={bio}
+        setBio={setBio}
+        profileImage={profileImage}
+        handleImageChange={handleImageChange}
+        isEditing={isEditing}
+      />
+
+      <ProfileNotifications
+        notifications={notifications}
+        markAllAsRead={markAllAsRead}
+        unreadCount={unreadCount}
+      />
+
+      <div className="glass-card mb-4">
+        <h3 className="text-lg font-bold mb-2">Stato Abbonamento</h3>
+        
+        <div className="mb-4 p-3 rounded-md bg-gradient-to-r from-projectx-blue to-projectx-neon-blue">
+          <div className="flex justify-between items-center">
+            <span className="font-bold">Base</span>
+            <span className="text-xs px-2 py-1 rounded-full bg-black bg-opacity-30">
+              Gratuito
+            </span>
+          </div>
+        </div>
         
         <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={() => setIsEditing(!isEditing)}
+          className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
         >
-          <Edit className="h-5 w-5" />
+          Aggiorna Abbonamento
         </Button>
-      </header>
-
-      {/* Profile Section */}
-      <section className="p-4">
-        <div className="flex flex-col items-center justify-center mb-8">
-          <div className="relative mb-4">
-            <div className="w-24 h-24 rounded-full overflow-hidden bg-projectx-deep-blue flex items-center justify-center">
-              {profileImage ? (
-                <img 
-                  src={profileImage} 
-                  alt="Profile" 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <User className="w-12 h-12 text-muted-foreground" />
-              )}
-            </div>
-            
-            {isEditing && (
-              <div className="absolute -right-1 bottom-0">
-                <label 
-                  htmlFor="profile-image" 
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-projectx-pink cursor-pointer"
-                >
-                  <Camera className="w-4 h-4" />
-                  <input 
-                    type="file" 
-                    id="profile-image" 
-                    className="hidden" 
-                    accept="image/*"
-                    onChange={handleImageChange}
-                  />
-                </label>
-              </div>
-            )}
-          </div>
-          
-          {isEditing ? (
-            <div className="w-full max-w-xs mb-2">
-              <Input 
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="text-center"
-              />
-            </div>
-          ) : (
-            <h2 className="text-xl font-bold">{name}</h2>
-          )}
-          
-          <div className="text-sm text-muted-foreground">
-            Membro dal 19 Aprile 2025
-          </div>
-        </div>
-
-        {/* Profile Details */}
-        <div className="glass-card mb-4">
-          <h3 className="text-lg font-bold mb-2">Bio</h3>
-          
-          {isEditing ? (
-            <Textarea 
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              className="min-h-[100px]"
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground">{bio}</p>
-          )}
-        </div>
-
-        {/* Notifications Section */}
-        <div className="glass-card mb-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold flex items-center">
-              <Bell className="mr-2 h-5 w-5" /> Notifiche
-              {unreadCount > 0 && (
-                <span className="ml-2 px-2 py-0.5 text-xs bg-projectx-pink rounded-full">
-                  {unreadCount}
-                </span>
-              )}
-            </h3>
-            
-            {notifications.length > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={markAllAsRead}
-              >
-                Segna tutte come lette
-              </Button>
-            )}
-          </div>
-          
-          {notifications.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">
-              <p>Non hai notifiche.</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {notifications.map((notification) => (
-                <NotificationItem 
-                  key={notification.id}
-                  notification={notification}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Subscription Status */}
-        <div className="glass-card mb-4">
-          <h3 className="text-lg font-bold mb-2">Stato Abbonamento</h3>
-          
-          <div className="mb-4 p-3 rounded-md bg-gradient-to-r from-projectx-blue to-projectx-neon-blue">
-            <div className="flex justify-between items-center">
-              <span className="font-bold">Base</span>
-              <span className="text-xs px-2 py-1 rounded-full bg-black bg-opacity-30">
-                Gratuito
-              </span>
-            </div>
-          </div>
-          
-          <Button 
-            className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
-          >
-            Aggiorna Abbonamento
-          </Button>
-        </div>
-
-        {/* Achievements */}
-        <div className="glass-card">
-          <h3 className="text-lg font-bold mb-2">Progressi</h3>
-          
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm">Indizi sbloccati</span>
-                <span className="text-xs">1/4</span>
-              </div>
-              <div className="w-full h-2 bg-projectx-deep-blue rounded-full overflow-hidden">
-                <div className="w-1/4 h-full bg-projectx-neon-blue"></div>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm">Eventi completati</span>
-                <span className="text-xs">0/5</span>
-              </div>
-              <div className="w-full h-2 bg-projectx-deep-blue rounded-full overflow-hidden">
-                <div className="w-0 h-full bg-projectx-neon-blue"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Save Button for Edit Mode */}
-        {isEditing && (
-          <Button 
-            className="w-full mt-6 bg-gradient-to-r from-projectx-blue to-projectx-pink"
-            onClick={handleSaveProfile}
-          >
-            Salva Modifiche
-          </Button>
-        )}
-      </section>
-
-      {/* Clues Section */}
-      <div className="glass-card mt-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold flex items-center">
-            <BookOpen className="mr-2 h-5 w-5" /> Indizi
-          </h3>
-          <span className="text-sm text-muted-foreground">
-            {unlockedClues.length} / 10 sbloccati
-          </span>
-        </div>
-        
-        {unlockedClues.length === 0 ? (
-          <div className="text-center py-4 text-muted-foreground">
-            <p>Non hai ancora sbloccato nessun indizio.</p>
-            <p>Esplora gli eventi o usa il pulsante Buzz per ottenerne di nuovi!</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {unlockedClues.map((clue) => (
-              <ClueCard
-                key={clue.id}
-                title={clue.title}
-                description={clue.description}
-                week={clue.week}
-                isLocked={false}
-                subscriptionType={clue.subscriptionType}
-              />
-            ))}
-          </div>
-        )}
       </div>
 
-      {/* Bottom Navigation */}
+      <ProfileClues unlockedClues={unlockedClues} />
+
+      {isEditing && (
+        <Button 
+          className="w-full mt-6 bg-gradient-to-r from-projectx-blue to-projectx-pink"
+          onClick={handleSaveProfile}
+        >
+          Salva Modifiche
+        </Button>
+      )}
+
       <BottomNavigation />
     </div>
   );
