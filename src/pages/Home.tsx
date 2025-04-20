@@ -1,9 +1,30 @@
-
 import { useState, useEffect } from "react";
 import { Bell, ChevronRight, Map, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import ClueCard from "@/components/clues/ClueCard";
+import { currentEvent } from "./Events";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Card } from "@/components/ui/card";
+
+const mysteryPrizes = [
+  {
+    imageUrl: "/lovable-uploads/781937e4-2515-4cad-8393-c51c1c81d6c9.png",
+    description: "Un esclusivo accessorio di lusso che rappresenta l'eccellenza del design italiano."
+  },
+  {
+    imageUrl: "/lovable-uploads/9daa7fae-5be8-482a-8136-7113724b28ad.png",
+    description: "Un capolavoro dell'ingegneria che combina prestazioni ed eleganza."
+  },
+  {
+    imageUrl: "/lovable-uploads/b79099f5-31ab-44a3-b271-9cde8b7932e1.png",
+    description: "Un oggetto iconico che incarna lo stile senza tempo e il prestigio."
+  },
+  {
+    imageUrl: "/lovable-uploads/ee63e6a9-208d-43f5-8bad-4c94f9c066cd.png",
+    description: "Un premio misterioso che rappresenta il massimo dell'esclusività e del lusso."
+  }
+];
 
 const Home = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -14,7 +35,6 @@ const Home = () => {
     seconds: 18
   });
   
-  // Esempio di indizi per demo
   const clues = [
     {
       id: 1,
@@ -50,7 +70,6 @@ const Home = () => {
     },
   ];
 
-  // Simula il countdown
   useEffect(() => {
     const timer = setInterval(() => {
       setRemainingTime(prev => {
@@ -85,13 +104,11 @@ const Home = () => {
   }, []);
 
   const requestNotifications = () => {
-    // In un'app reale, qui andrebbe la richiesta di permesso per le notifiche
     setNotificationsEnabled(true);
   };
 
   return (
     <div className="pb-20 min-h-screen bg-black">
-      {/* Header */}
       <header className="px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue">
         <h1 className="text-2xl font-bold neon-text">M1ssion</h1>
         
@@ -103,34 +120,31 @@ const Home = () => {
         </button>
       </header>
 
-      {/* Current Event */}
       <section className="p-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Evento Corrente</h2>
-          <Button variant="ghost" size="sm" className="text-projectx-neon-blue">
+          <Button variant="ghost" size="sm" className="text-m1ssion-neon-blue">
             Dettagli <ChevronRight className="ml-1 w-4 h-4" />
           </Button>
         </div>
         
         <div className="glass-card mb-6">
-          <h3 className="text-lg font-bold mb-2">Ferrari 488 GTB</h3>
+          <h3 className="text-lg font-bold mb-2">{currentEvent.title}</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Trova questa incredibile Ferrari 488 GTB nascosta a Milano per vincerla! È di colore rosso fiammante con interni in pelle nera e dettagli in fibra di carbonio.
+            {currentEvent.description}
           </p>
           
           <div className="flex space-x-2 mb-4">
-            <div className="flex items-center text-xs bg-projectx-deep-blue px-3 py-1 rounded-full">
+            <div className="flex items-center text-xs bg-m1ssion-deep-blue px-3 py-1 rounded-full">
               <Calendar className="w-3 h-3 mr-1" />
-              <span>Termina il 15 Maggio</span>
-            </div>
-            
-            <div className="flex items-center text-xs bg-projectx-deep-blue px-3 py-1 rounded-full">
-              <Map className="w-3 h-3 mr-1" />
-              <span>Milano, Italia</span>
+              <span>Termina il {currentEvent.date}</span>
             </div>
           </div>
           
-          <div className="h-40 bg-cover bg-center rounded-md mb-4" style={{ backgroundImage: "url('/events/ferrari-488-gtb.jpg')" }} />
+          <div 
+            className="h-40 bg-cover bg-center rounded-md mb-4" 
+            style={{ backgroundImage: `url(${currentEvent.imageUrl})` }} 
+          />
           
           <div className="grid grid-cols-4 gap-2">
             <div className="bg-projectx-deep-blue p-2 rounded">
@@ -156,7 +170,31 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Clues Section */}
+      <section className="p-4">
+        <h2 className="text-xl font-bold mb-4">Premi Misteriosi dei Prossimi Eventi</h2>
+        <div className="relative">
+          <Carousel>
+            <CarouselContent>
+              {mysteryPrizes.map((prize, index) => (
+                <CarouselItem key={index}>
+                  <Card className="p-1">
+                    <div 
+                      className="h-48 bg-cover bg-center rounded-md" 
+                      style={{ backgroundImage: `url(${prize.imageUrl})` }}
+                    />
+                    <p className="p-4 text-sm text-muted-foreground">
+                      {prize.description}
+                    </p>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
+            <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
+          </Carousel>
+        </div>
+      </section>
+
       <section className="p-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Indizi Disponibili</h2>
@@ -185,7 +223,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Bottom Navigation */}
       <BottomNavigation />
     </div>
   );

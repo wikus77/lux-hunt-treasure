@@ -3,33 +3,30 @@ import BottomNavigation from "@/components/layout/BottomNavigation";
 import EventCard from "@/components/events/EventCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const Events = () => {
-  const [selectedGender, setSelectedGender] = useState<string>("all");
-
-  const currentEvent = {
-    title: "Patek Philippe Nautilus",
-    carModel: "Nautilus Ref. 5711",
-    carBrand: "Patek Philippe",
-    date: "19 Apr - 15 Mag 2025",
-    imageUrl: "/lovable-uploads/42b25071-8e68-4f8e-8897-06a6b2bdb8f4.png",
-    description: "Un'icona dell'orologeria di lusso, il Nautilus in oro rosa con quadrante blu è il simbolo dell'eleganza senza tempo.",
-    isCurrent: true,
-    gender: "man",
-    images: [
-      {
-        url: "/lovable-uploads/42b25071-8e68-4f8e-8897-06a6b2bdb8f4.png",
-        description: "Vista frontale del Patek Philippe Nautilus in oro rosa, che mostra il caratteristico quadrante blu con pattern orizzontale."
-      },
-      {
-        url: "/lovable-uploads/55b484c2-04bc-4fb2-a650-1910fd650b89.png",
-        description: "Dettaglio del bracciale integrato in oro rosa, simbolo di lusso ed eleganza."
-      },
-      {
-        url: "/lovable-uploads/79b6f8b7-66b3-4dee-a705-0d3f0b1f16b9.png",
-        description: "Vista laterale che evidenzia il profilo iconico della cassa Nautilus."
-      }
-    ],
-    detailedDescription: `Il Patek Philippe Nautilus Ref. 5711 rappresenta il pinnacolo dell'orologeria di lusso.
+export const currentEvent = {
+  title: "Patek Philippe Nautilus",
+  carModel: "Nautilus Ref. 5711",
+  carBrand: "Patek Philippe",
+  date: "19 Apr - 15 Mag 2025",
+  imageUrl: "/lovable-uploads/42b25071-8e68-4f8e-8897-06a6b2bdb8f4.png",
+  description: "Un'icona dell'orologeria di lusso, il Nautilus in oro rosa con quadrante blu è il simbolo dell'eleganza senza tempo.",
+  isCurrent: true,
+  gender: "man",
+  images: [
+    {
+      url: "/lovable-uploads/42b25071-8e68-4f8e-8897-06a6b2bdb8f4.png",
+      description: "Vista frontale del Patek Philippe Nautilus in oro rosa, che mostra il caratteristico quadrante blu con pattern orizzontale."
+    },
+    {
+      url: "/lovable-uploads/55b484c2-04bc-4fb2-a650-1910fd650b89.png",
+      description: "Dettaglio del bracciale integrato in oro rosa, simbolo di lusso ed eleganza."
+    },
+    {
+      url: "/lovable-uploads/79b6f8b7-66b3-4dee-a705-0d3f0b1f16b9.png",
+      description: "Vista laterale che evidenzia il profilo iconico della cassa Nautilus."
+    }
+  ],
+  detailedDescription: `Il Patek Philippe Nautilus Ref. 5711 rappresenta il pinnacolo dell'orologeria di lusso.
 
 Caratteristiche principali:
 • Cassa in oro rosa 18k
@@ -40,8 +37,11 @@ Caratteristiche principali:
 • Diametro della cassa: 40mm
 
 Il Nautilus è molto più di un semplice orologio - è un'opera d'arte da polso che combina l'eccellenza tecnica con un design senza tempo.`
-  };
-  
+};
+
+const Events = () => {
+  const [selectedGender, setSelectedGender] = useState<string>("all");
+
   const upcomingEvents = [
     {
       title: "Hermès Kelly Bag",
