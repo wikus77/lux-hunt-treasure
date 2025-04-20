@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Subscriptions from "./pages/Subscriptions";
 import Events from "./pages/Events";
+import Buzz from "./pages/Buzz";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/settings" element={<Settings />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
           <Route path="/events" element={<Events />} />
+          <Route path="/buzz" element={<Buzz />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

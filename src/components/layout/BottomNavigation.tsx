@@ -1,5 +1,5 @@
 
-import { Home, User, Settings, Calendar, CreditCard } from "lucide-react";
+import { Home, User, Settings, Calendar, CreditCard, Zap } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 export const BottomNavigation = () => {
@@ -22,6 +22,14 @@ export const BottomNavigation = () => {
       >
         <Calendar className={`w-6 h-6 ${isActive("/events") ? "text-projectx-neon-blue" : ""}`} />
         <span className="text-xs mt-1">Eventi</span>
+      </Link>
+      
+      <Link 
+        to="/buzz" 
+        className={`bottom-nav-item ${isActive("/buzz") ? "active" : ""}`}
+      >
+        <Zap className={`w-6 h-6 ${isActive("/buzz") ? "text-projectx-pink" : ""}`} />
+        <span className="text-xs mt-1">Buzz</span>
       </Link>
       
       <Link 

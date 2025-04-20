@@ -1,8 +1,9 @@
 
 import { useState } from "react";
-import { Bell, ChevronRight, LogOut, Moon, Shield, User } from "lucide-react";
+import { Bell, ChevronRight, LogOut, Moon, Shield, User, Volume2, Languages, CreditCard, HelpCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -10,6 +11,9 @@ const Settings = () => {
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
+  const [soundEffects, setSoundEffects] = useState(true);
+  const [language, setLanguage] = useState("Italiano");
+  const [volume, setVolume] = useState([75]);
   const { toast } = useToast();
 
   const handleLogout = () => {
@@ -50,6 +54,14 @@ const Settings = () => {
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </div>
+
+          <div className="glass-card flex justify-between items-center p-4">
+            <div className="flex items-center">
+              <CreditCard className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+              <span>Metodi di Pagamento</span>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </div>
         </div>
       </section>
 
@@ -82,19 +94,66 @@ const Settings = () => {
         </div>
       </section>
 
-      {/* Appearance Settings */}
+      {/* App Settings */}
       <section className="p-4">
-        <h2 className="text-xl font-bold mb-4">Aspetto</h2>
+        <h2 className="text-xl font-bold mb-4">App</h2>
+        
+        <div className="space-y-2">
+          <div className="glass-card flex justify-between items-center p-4">
+            <div className="flex items-center">
+              <Moon className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+              <span>Modalità Scura</span>
+            </div>
+            <Switch 
+              checked={darkMode} 
+              onCheckedChange={setDarkMode} 
+            />
+          </div>
+
+          <div className="glass-card flex justify-between items-center p-4">
+            <div className="flex items-center">
+              <Volume2 className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+              <span>Effetti Sonori</span>
+            </div>
+            <Switch 
+              checked={soundEffects} 
+              onCheckedChange={setSoundEffects} 
+            />
+          </div>
+
+          <div className="glass-card p-4">
+            <div className="flex items-center mb-3">
+              <Volume2 className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+              <span>Volume</span>
+            </div>
+            <Slider
+              value={volume}
+              onValueChange={setVolume}
+              max={100}
+              step={1}
+            />
+          </div>
+
+          <div className="glass-card flex justify-between items-center p-4">
+            <div className="flex items-center">
+              <Languages className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+              <span>Lingua</span>
+            </div>
+            <span className="text-muted-foreground">{language}</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Support Section */}
+      <section className="p-4">
+        <h2 className="text-xl font-bold mb-4">Supporto</h2>
         
         <div className="glass-card flex justify-between items-center p-4">
           <div className="flex items-center">
-            <Moon className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-            <span>Modalità Scura</span>
+            <HelpCircle className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+            <span>Aiuto e FAQ</span>
           </div>
-          <Switch 
-            checked={darkMode} 
-            onCheckedChange={setDarkMode} 
-          />
+          <ChevronRight className="h-5 w-5 text-muted-foreground" />
         </div>
       </section>
 
@@ -111,10 +170,10 @@ const Settings = () => {
         
         <div className="mt-6 text-center">
           <p className="text-xs text-muted-foreground">
-            Project X v1.0.0
+            M1ssion v1.0.0
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            © 2025 Project X. Tutti i diritti riservati.
+            © 2025 M1ssion. Tutti i diritti riservati.
           </p>
         </div>
       </section>
