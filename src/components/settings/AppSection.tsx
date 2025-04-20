@@ -41,16 +41,18 @@ const AppSection = ({
   };
 
   return (
-    <section className={`p-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+    <section className={`p-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
       <h2 className="text-xl font-bold mb-4">App</h2>
       
       <div className="space-y-2">
         <div className={`glass-card flex justify-between items-center p-4 ${
-          darkMode ? 'bg-black/10' : 'bg-white/80'
+          darkMode 
+            ? 'bg-black/10 border-white/10' 
+            : 'bg-white shadow-lg border-gray-100'
         }`}>
           <div className="flex items-center">
             <Moon className={`h-5 w-5 mr-3 ${
-              darkMode ? 'text-projectx-neon-blue' : 'text-gray-600'
+              darkMode ? 'text-projectx-neon-blue' : 'text-blue-600'
             }`} />
             <span>
               {darkMode ? 'Passa alla Modalità Chiara' : 'Passa alla Modalità Scura'}
@@ -64,11 +66,13 @@ const AppSection = ({
         </div>
 
         <div className={`glass-card flex justify-between items-center p-4 ${
-          darkMode ? 'bg-black/10' : 'bg-white/80'
+          darkMode 
+            ? 'bg-black/10 border-white/10' 
+            : 'bg-white shadow-lg border-gray-100'
         }`}>
           <div className="flex items-center">
             <Volume2 className={`h-5 w-5 mr-3 ${
-              darkMode ? 'text-projectx-neon-blue' : 'text-gray-600'
+              darkMode ? 'text-projectx-neon-blue' : 'text-blue-600'
             }`} />
             <span>Effetti Sonori</span>
           </div>
@@ -87,11 +91,13 @@ const AppSection = ({
         />
 
         <div className={`glass-card flex justify-between items-center p-4 cursor-pointer ${
-          darkMode ? 'bg-black/10' : 'bg-white/80'
+          darkMode 
+            ? 'bg-black/10 border-white/10' 
+            : 'bg-white shadow-lg border-gray-100'
         }`} onClick={() => navigate('/language-settings')}>
           <div className="flex items-center">
             <Languages className={`h-5 w-5 mr-3 ${
-              darkMode ? 'text-projectx-neon-blue' : 'text-gray-600'
+              darkMode ? 'text-projectx-neon-blue' : 'text-blue-600'
             }`} />
             <span>Lingua</span>
           </div>

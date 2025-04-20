@@ -21,10 +21,10 @@ const MainLayout = () => {
   }, [isDarkMode]);
 
   return (
-    <div className={`min-h-screen transition-colors duration-200 ${
+    <div className={`min-h-screen transition-colors duration-300 ${
       isDarkMode 
         ? 'bg-[#141414] text-white' 
-        : 'bg-gray-50 text-gray-900'
+        : 'bg-white text-gray-800'
     }`}>
       <main className={`flex-1 w-full mx-auto px-4 relative ${
         isDarkMode 
@@ -34,8 +34,8 @@ const MainLayout = () => {
         <div className={`absolute inset-0 ${
           isDarkMode 
             ? 'bg-gradient-to-b from-black/40 to-transparent' 
-            : 'bg-gradient-to-b from-white/60 to-transparent'
-        } opacity-50 pointer-events-none`} />
+            : 'bg-gradient-to-b from-gray-100/60 to-transparent'
+        } opacity-40 pointer-events-none`} />
         <Outlet />
       </main>
       
