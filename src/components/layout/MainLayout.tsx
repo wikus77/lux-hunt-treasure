@@ -22,16 +22,19 @@ const MainLayout = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-200 ${
-      isDarkMode ? 'bg-[#141414] text-white' : 'bg-white text-[#141414]'
+      isDarkMode 
+        ? 'bg-[#141414] text-white' 
+        : 'bg-gray-50 text-gray-900'
     }`}>
-      {/* Main content area with adaptive design */}
       <main className={`flex-1 w-full mx-auto px-4 relative ${
-        isDarkMode ? 'bg-[#141414]' : 'bg-white'
+        isDarkMode 
+          ? 'bg-[#141414]' 
+          : 'bg-gray-50'
       }`}>
         <div className={`absolute inset-0 ${
           isDarkMode 
             ? 'bg-gradient-to-b from-black/40 to-transparent' 
-            : 'bg-gradient-to-b from-gray-50/50 to-transparent'
+            : 'bg-gradient-to-b from-white/60 to-transparent'
         } opacity-50 pointer-events-none`} />
         <Outlet />
       </main>

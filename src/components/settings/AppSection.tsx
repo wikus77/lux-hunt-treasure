@@ -41,32 +41,41 @@ const AppSection = ({
   };
 
   return (
-    <section className="p-4">
+    <section className={`p-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
       <h2 className="text-xl font-bold mb-4">App</h2>
       
       <div className="space-y-2">
-        <div className="glass-card flex justify-between items-center p-4">
+        <div className={`glass-card flex justify-between items-center p-4 ${
+          darkMode ? 'bg-black/10' : 'bg-white/80'
+        }`}>
           <div className="flex items-center">
-            <Moon className={`h-5 w-5 mr-3 ${darkMode ? 'text-projectx-neon-blue' : 'text-gray-600'}`} />
-            <span className={darkMode ? 'text-white' : 'text-gray-900'}>
-              {darkMode ? 'Modalità Scura' : 'Modalità Chiara'}
+            <Moon className={`h-5 w-5 mr-3 ${
+              darkMode ? 'text-projectx-neon-blue' : 'text-gray-600'
+            }`} />
+            <span>
+              {darkMode ? 'Passa alla Modalità Chiara' : 'Passa alla Modalità Scura'}
             </span>
           </div>
           <Switch 
             checked={darkMode} 
             onCheckedChange={handleThemeChange}
-            className={`${darkMode ? 'bg-projectx-neon-blue' : 'bg-gray-200'}`}
+            className={darkMode ? 'bg-projectx-neon-blue' : 'bg-blue-500'}
           />
         </div>
 
-        <div className={`glass-card flex justify-between items-center p-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+        <div className={`glass-card flex justify-between items-center p-4 ${
+          darkMode ? 'bg-black/10' : 'bg-white/80'
+        }`}>
           <div className="flex items-center">
-            <Volume2 className={`h-5 w-5 mr-3 ${darkMode ? 'text-projectx-neon-blue' : 'text-gray-600'}`} />
+            <Volume2 className={`h-5 w-5 mr-3 ${
+              darkMode ? 'text-projectx-neon-blue' : 'text-gray-600'
+            }`} />
             <span>Effetti Sonori</span>
           </div>
           <Switch 
             checked={soundEffects} 
-            onCheckedChange={setSoundEffects} 
+            onCheckedChange={setSoundEffects}
+            className={darkMode ? 'bg-projectx-neon-blue' : 'bg-blue-500'}
           />
         </div>
 
@@ -77,15 +86,16 @@ const AppSection = ({
           onSoundChange={onSoundChange}
         />
 
-        <div 
-          className={`glass-card flex justify-between items-center p-4 cursor-pointer ${darkMode ? 'text-white' : 'text-gray-900'}`}
-          onClick={() => navigate('/language-settings')}
-        >
+        <div className={`glass-card flex justify-between items-center p-4 cursor-pointer ${
+          darkMode ? 'bg-black/10' : 'bg-white/80'
+        }`} onClick={() => navigate('/language-settings')}>
           <div className="flex items-center">
-            <Languages className={`h-5 w-5 mr-3 ${darkMode ? 'text-projectx-neon-blue' : 'text-gray-600'}`} />
+            <Languages className={`h-5 w-5 mr-3 ${
+              darkMode ? 'text-projectx-neon-blue' : 'text-gray-600'
+            }`} />
             <span>Lingua</span>
           </div>
-          <span className="text-muted-foreground">{language}</span>
+          <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>{language}</span>
         </div>
       </div>
     </section>
