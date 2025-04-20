@@ -15,7 +15,9 @@ const MainLayout = () => {
 
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
     } else {
+      document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
@@ -24,17 +26,17 @@ const MainLayout = () => {
     <div className={`min-h-screen transition-colors duration-300 ${
       isDarkMode 
         ? 'bg-[#141414] text-white' 
-        : 'bg-[#F2FCE2] text-gray-800'
+        : 'bg-white text-gray-800'
     }`}>
       <main className={`flex-1 w-full mx-auto px-4 relative ${
         isDarkMode 
           ? 'bg-[#141414]' 
-          : 'bg-[#F2FCE2]'
+          : 'bg-white'
       }`}>
         <div className={`absolute inset-0 ${
           isDarkMode 
             ? 'bg-gradient-to-b from-black/40 to-transparent' 
-            : 'bg-gradient-to-b from-[#FEF7CD]/30 to-transparent'
+            : 'bg-gradient-to-b from-[#F2FCE2]/40 to-transparent'
         } opacity-40 pointer-events-none`} />
         <Outlet />
       </main>

@@ -1,5 +1,5 @@
 
-import { Moon, Volume2, Languages } from "lucide-react";
+import { Moon, Sun, Volume2, Languages } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import SoundSettings from "./SoundSettings";
@@ -34,7 +34,9 @@ const AppSection = ({
     localStorage.setItem('theme', value ? 'dark' : 'light');
     if (value) {
       document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
     } else {
+      document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
     }
   };
@@ -47,12 +49,14 @@ const AppSection = ({
         <div className={`glass-card flex justify-between items-center p-4 ${
           darkMode 
             ? 'bg-black/10 border-white/10' 
-            : 'bg-white shadow-md border border-[#FEC6A1]/20'
+            : 'bg-[#F5F5F7] shadow-md border border-gray-200'
         }`}>
           <div className="flex items-center">
-            <Moon className={`h-5 w-5 mr-3 ${
-              darkMode ? 'text-projectx-neon-blue' : 'text-[#FEC6A1]'
-            }`} />
+            {darkMode ? (
+              <Sun className="h-5 w-5 mr-3 text-yellow-400" />
+            ) : (
+              <Moon className="h-5 w-5 mr-3 text-indigo-600" />
+            )}
             <span>
               {darkMode ? 'Passa alla Modalità Chiara' : 'Passa alla Modalità Scura'}
             </span>
@@ -60,25 +64,25 @@ const AppSection = ({
           <Switch 
             checked={darkMode} 
             onCheckedChange={handleThemeChange}
-            className={darkMode ? 'bg-projectx-neon-blue' : 'bg-[#FEC6A1]'}
+            className={darkMode ? 'bg-projectx-neon-blue' : 'bg-indigo-600'}
           />
         </div>
 
         <div className={`glass-card flex justify-between items-center p-4 ${
           darkMode 
             ? 'bg-black/10 border-white/10' 
-            : 'bg-white shadow-md border border-[#D3E4FD]/20'
+            : 'bg-[#F5F5F7] shadow-md border border-gray-200'
         }`}>
           <div className="flex items-center">
             <Volume2 className={`h-5 w-5 mr-3 ${
-              darkMode ? 'text-projectx-neon-blue' : 'text-[#D3E4FD]'
+              darkMode ? 'text-projectx-neon-blue' : 'text-indigo-600'
             }`} />
             <span>Effetti Sonori</span>
           </div>
           <Switch 
             checked={soundEffects} 
             onCheckedChange={setSoundEffects}
-            className={darkMode ? 'bg-projectx-neon-blue' : 'bg-[#D3E4FD]'}
+            className={darkMode ? 'bg-projectx-neon-blue' : 'bg-indigo-600'}
           />
         </div>
 
@@ -92,11 +96,11 @@ const AppSection = ({
         <div className={`glass-card flex justify-between items-center p-4 cursor-pointer ${
           darkMode 
             ? 'bg-black/10 border-white/10' 
-            : 'bg-white shadow-md border border-[#E5DEFF]/20'
+            : 'bg-[#F5F5F7] shadow-md border border-gray-200'
         }`} onClick={() => navigate('/language-settings')}>
           <div className="flex items-center">
             <Languages className={`h-5 w-5 mr-3 ${
-              darkMode ? 'text-projectx-neon-blue' : 'text-[#E5DEFF]'
+              darkMode ? 'text-projectx-neon-blue' : 'text-indigo-600'
             }`} />
             <span>Lingua</span>
           </div>
