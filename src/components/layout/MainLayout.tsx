@@ -28,16 +28,7 @@ const MainLayout = () => {
         ? 'bg-[#141414] text-white' 
         : 'bg-white text-gray-800'
     }`}>
-      <main className={`flex-1 w-full mx-auto px-4 relative ${
-        isDarkMode 
-          ? 'bg-[#141414]' 
-          : 'bg-white'
-      }`}>
-        <div className={`absolute inset-0 ${
-          isDarkMode 
-            ? 'bg-gradient-to-b from-black/40 to-transparent' 
-            : 'bg-gradient-to-b from-[#F2FCE2]/40 to-transparent'
-        } opacity-40 pointer-events-none`} />
+      <main className="flex-1 w-full mx-auto px-4 relative">
         <Outlet />
       </main>
       

@@ -18,17 +18,11 @@ export const BottomNavigation = () => {
     navigate(path);
   };
 
-  const isDarkMode = document.documentElement.classList.contains('dark');
-
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-16 backdrop-blur-xl border-t flex justify-around items-center px-2 z-50 dark:bg-black/80 dark:border-gray-800 light:bg-white/90 light:border-gray-200">
+    <div className="fixed bottom-0 left-0 right-0 h-16 backdrop-blur-xl border-t flex justify-around items-center px-2 z-50 transition-colors duration-200">
       <button 
         onClick={() => handleNavigation("/home")}
-        className={`flex flex-col items-center justify-center p-2 transition-colors ${
-          isActive("/home") 
-            ? "dark:text-red-500 light:text-indigo-600" 
-            : "dark:text-gray-400 light:text-gray-500"
-        }`}
+        className={`bottom-nav-item ${isActive("/home") ? "active" : ""}`}
       >
         <Home className="w-5 h-5" />
         <span className="text-[10px] mt-1">Home</span>
@@ -36,11 +30,7 @@ export const BottomNavigation = () => {
       
       <button 
         onClick={() => handleNavigation("/events")}
-        className={`flex flex-col items-center justify-center p-2 transition-colors ${
-          isActive("/events") 
-            ? "dark:text-red-500 light:text-indigo-600" 
-            : "dark:text-gray-400 light:text-gray-500"
-        }`}
+        className={`bottom-nav-item ${isActive("/events") ? "active" : ""}`}
       >
         <Calendar className="w-5 h-5" />
         <span className="text-[10px] mt-1">Eventi</span>
@@ -48,11 +38,7 @@ export const BottomNavigation = () => {
       
       <button 
         onClick={() => handleNavigation("/buzz")}
-        className={`flex flex-col items-center justify-center p-2 transition-colors ${
-          isActive("/buzz") 
-            ? "dark:text-red-500 light:text-indigo-600" 
-            : "dark:text-gray-400 light:text-gray-500"
-        }`}
+        className={`bottom-nav-item ${isActive("/buzz") ? "active" : ""}`}
       >
         <Zap className="w-5 h-5" />
         <span className="text-[10px] mt-1">Buzz</span>
@@ -60,11 +46,7 @@ export const BottomNavigation = () => {
       
       <button 
         onClick={() => handleNavigation("/subscriptions")}
-        className={`flex flex-col items-center justify-center p-2 transition-colors ${
-          isActive("/subscriptions") 
-            ? "dark:text-red-500 light:text-indigo-600" 
-            : "dark:text-gray-400 light:text-gray-500"
-        }`}
+        className={`bottom-nav-item ${isActive("/subscriptions") ? "active" : ""}`}
       >
         <CreditCard className="w-5 h-5" />
         <span className="text-[10px] mt-1">Abbonamenti</span>
@@ -72,11 +54,7 @@ export const BottomNavigation = () => {
       
       <button 
         onClick={() => handleNavigation("/profile")}
-        className={`flex flex-col items-center justify-center p-2 transition-colors ${
-          isActive("/profile") 
-            ? "dark:text-red-500 light:text-indigo-600" 
-            : "dark:text-gray-400 light:text-gray-500"
-        }`}
+        className={`bottom-nav-item ${isActive("/profile") ? "active" : ""}`}
       >
         <User className="w-5 h-5" />
         <span className="text-[10px] mt-1">Profilo</span>
@@ -84,11 +62,7 @@ export const BottomNavigation = () => {
       
       <button 
         onClick={() => handleNavigation("/settings")}
-        className={`flex flex-col items-center justify-center p-2 transition-colors ${
-          isActive("/settings") 
-            ? "dark:text-red-500 light:text-indigo-600" 
-            : "dark:text-gray-400 light:text-gray-500"
-        }`}
+        className={`bottom-nav-item ${isActive("/settings") ? "active" : ""}`}
       >
         <Settings className="w-5 h-5" />
         <span className="text-[10px] mt-1">Impostazioni</span>

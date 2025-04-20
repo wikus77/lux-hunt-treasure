@@ -89,59 +89,98 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
+  .dark {
+    background-color: #141414;
+    color: #ffffff;
+  }
+
+  .light {
+    background-color: #ffffff;
+    color: #333333;
+  }
+
+  /* Remove neon effects in light mode */
   .neon-text {
-    @apply text-projectx-neon-blue font-bold;
+    @apply font-bold;
+  }
+
+  .dark .neon-text {
+    @apply text-projectx-neon-blue;
     text-shadow: 0 0 10px rgba(51, 195, 240, 0.8), 0 0 20px rgba(51, 195, 240, 0.5);
   }
 
   .light .neon-text {
-    @apply text-indigo-600 font-bold;
+    @apply text-indigo-600;
     text-shadow: none;
   }
 
   .neon-pink-text {
-    @apply text-projectx-pink font-bold;
+    @apply font-bold;
+  }
+
+  .dark .neon-pink-text {
+    @apply text-projectx-pink;
     text-shadow: 0 0 10px rgba(217, 70, 239, 0.8), 0 0 20px rgba(217, 70, 239, 0.5);
   }
 
   .light .neon-pink-text {
-    @apply text-pink-600 font-bold;
+    @apply text-pink-600;
     text-shadow: none;
   }
 
   .neon-border {
-    @apply border-2 border-projectx-neon-blue rounded-md;
+    @apply border-2 rounded-md;
+  }
+
+  .dark .neon-border {
+    @apply border-projectx-neon-blue;
     box-shadow: 0 0 10px rgba(51, 195, 240, 0.6), inset 0 0 10px rgba(51, 195, 240, 0.4);
   }
 
   .light .neon-border {
-    @apply border-2 border-indigo-600 rounded-md;
+    @apply border-indigo-600;
     box-shadow: none;
   }
 
   .neon-pink-border {
-    @apply border-2 border-projectx-pink rounded-md;
+    @apply border-2 rounded-md;
+  }
+
+  .dark .neon-pink-border {
+    @apply border-projectx-pink;
     box-shadow: 0 0 10px rgba(217, 70, 239, 0.6), inset 0 0 10px rgba(217, 70, 239, 0.4);
   }
 
   .light .neon-pink-border {
-    @apply border-2 border-pink-600 rounded-md;
+    @apply border-pink-600;
     box-shadow: none;
   }
 
   .glass-card {
-    @apply bg-opacity-10 bg-white backdrop-filter backdrop-blur-sm border border-white border-opacity-20 rounded-lg p-6;
+    @apply rounded-lg p-6;
+  }
+
+  .dark .glass-card {
+    @apply bg-opacity-10 bg-white backdrop-filter backdrop-blur-sm border border-white/20;
   }
 
   .light .glass-card {
-    @apply bg-white shadow-md border border-gray-200 rounded-lg p-6;
+    @apply bg-white shadow-md border border-gray-200;
   }
 
   .bottom-nav-item {
-    @apply flex flex-col items-center justify-center text-muted-foreground transition-colors;
+    @apply flex flex-col items-center justify-center transition-colors;
   }
 
-  .bottom-nav-item.active {
+  .dark .bottom-nav-item {
+    @apply text-gray-400;
+  }
+
+  .light .bottom-nav-item {
+    @apply text-gray-600;
+  }
+
+  .dark .bottom-nav-item.active {
     @apply text-projectx-neon-blue;
   }
   

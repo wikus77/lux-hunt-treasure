@@ -4,14 +4,15 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Footer = () => {
   const isMobile = useIsMobile();
+  const isDarkMode = document.documentElement.classList.contains('dark');
   
   return (
-    <footer className="transition-colors duration-200 border-t py-6 px-4 mt-auto backdrop-blur-xl dark:bg-black/80 dark:border-gray-800 dark:text-white light:bg-white/90 light:border-gray-200 light:text-gray-800">
+    <footer className="border-t py-6 px-4 mt-auto transition-colors duration-200">
       <div className="container mx-auto max-w-7xl">
         <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-3'} gap-8`}>
           {/* Company Info */}
           <div>
-            <h3 className="font-sans font-semibold mb-4 dark:text-white light:text-gray-800">ProjectX</h3>
+            <h3 className="font-sans font-semibold mb-4">ProjectX</h3>
             <p className="text-sm dark:text-gray-400 light:text-gray-600">
               La tua piattaforma per scoprire indizi ed eventi esclusivi.
             </p>
@@ -19,7 +20,7 @@ export const Footer = () => {
           
           {/* Quick Links */}
           <div>
-            <h4 className="font-sans font-semibold mb-4 dark:text-white light:text-gray-800">Link Utili</h4>
+            <h4 className="font-sans font-semibold mb-4">Link Utili</h4>
             <ul className="space-y-2">
               <li>
                 <a href="/events" className="text-sm dark:text-gray-400 dark:hover:text-white light:text-gray-600 light:hover:text-gray-800 transition-colors">
@@ -41,7 +42,7 @@ export const Footer = () => {
           
           {/* Social Links */}
           <div>
-            <h4 className="font-sans font-semibold mb-4 dark:text-white light:text-gray-800">Seguici</h4>
+            <h4 className="font-sans font-semibold mb-4">Seguici</h4>
             <div className="flex space-x-4">
               <a href="#" className="dark:text-gray-400 dark:hover:text-white light:text-gray-600 light:hover:text-gray-800 transition-colors">
                 <Instagram className="w-5 h-5" />

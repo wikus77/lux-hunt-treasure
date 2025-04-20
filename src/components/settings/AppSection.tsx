@@ -42,15 +42,11 @@ const AppSection = ({
   };
 
   return (
-    <section className={`p-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+    <section className="p-4">
       <h2 className="text-xl font-bold mb-4">App</h2>
       
       <div className="space-y-2">
-        <div className={`glass-card flex justify-between items-center p-4 ${
-          darkMode 
-            ? 'bg-black/10 border-white/10' 
-            : 'bg-[#F5F5F7] shadow-md border border-gray-200'
-        }`}>
+        <div className="glass-card flex justify-between items-center p-4">
           <div className="flex items-center">
             {darkMode ? (
               <Sun className="h-5 w-5 mr-3 text-yellow-400" />
@@ -68,11 +64,7 @@ const AppSection = ({
           />
         </div>
 
-        <div className={`glass-card flex justify-between items-center p-4 ${
-          darkMode 
-            ? 'bg-black/10 border-white/10' 
-            : 'bg-[#F5F5F7] shadow-md border border-gray-200'
-        }`}>
+        <div className="glass-card flex justify-between items-center p-4">
           <div className="flex items-center">
             <Volume2 className={`h-5 w-5 mr-3 ${
               darkMode ? 'text-projectx-neon-blue' : 'text-indigo-600'
@@ -93,11 +85,8 @@ const AppSection = ({
           onSoundChange={onSoundChange}
         />
 
-        <div className={`glass-card flex justify-between items-center p-4 cursor-pointer ${
-          darkMode 
-            ? 'bg-black/10 border-white/10' 
-            : 'bg-[#F5F5F7] shadow-md border border-gray-200'
-        }`} onClick={() => navigate('/language-settings')}>
+        <div className="glass-card flex justify-between items-center p-4 cursor-pointer" 
+          onClick={() => navigate('/language-settings')}>
           <div className="flex items-center">
             <Languages className={`h-5 w-5 mr-3 ${
               darkMode ? 'text-projectx-neon-blue' : 'text-indigo-600'
