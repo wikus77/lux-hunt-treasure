@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { User, Mail, MoreVertical } from "lucide-react";
+import { User } from "lucide-react";
 import Footer from "./Footer";
 import BottomNavigation from "./BottomNavigation";
 
@@ -9,7 +9,6 @@ const MainLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [showProfileModal, setShowProfileModal] = useState(false);
   
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -21,6 +20,14 @@ const MainLayout = () => {
       setProfileImage(savedProfileImage);
     }
   }, []);
+
+  // Load profile image whenever page changes (in case it was updated on profile page)
+  useEffect(() => {
+    const savedProfileImage = localStorage.getItem('profileImage');
+    if (savedProfileImage) {
+      setProfileImage(savedProfileImage);
+    }
+  }, [location.pathname]);
 
   // Function to determine title based on current route
   const getPageTitle = () => {
@@ -37,14 +44,6 @@ const MainLayout = () => {
     return "M1ssion";
   };
 
-  // Load profile image whenever page changes (in case it was updated on profile page)
-  useEffect(() => {
-    const savedProfileImage = localStorage.getItem('profileImage');
-    if (savedProfileImage) {
-      setProfileImage(savedProfileImage);
-    }
-  }, [location.pathname]);
-
   return (
     <div className="min-h-screen w-full bg-black transition-colors duration-300 text-white relative">
       <header className="fixed top-0 left-0 right-0 z-50 w-full px-4 py-6 flex items-center border-b border-projectx-deep-blue backdrop-blur-lg bg-black/70 transition-colors duration-300">
@@ -53,6 +52,7 @@ const MainLayout = () => {
             <button
               className="flex items-center"
               onClick={() => navigate("/profile")}
+              aria-label="Go to profile"
             >
               <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-projectx-neon-blue bg-projectx-deep-blue flex items-center justify-center">
                 {profileImage ? (
@@ -68,7 +68,16 @@ const MainLayout = () => {
             </button>
           </div>
         )}
-        <h1 className="text-2xl font-bold neon-text flex-1 text-center">{getPageTitle()}</h1>
+        {/* Title with text shadow matching bottom nav icon colors */}
+        <h1
+          className="text-2xl font-bold neon-text flex-1 text-center select-none"
+          style={{
+            textShadow:
+              "0 0 6px #39FF14, 0 0 15px #FFFF00" // Neon green to yellow glow same as gradient used in bottom nav icons
+          }}
+        >
+          {getPageTitle()}
+        </h1>
       </header>
       <main className="flex-1 w-full relative pt-[72px] pb-16">
         <Outlet />
@@ -80,3 +89,4 @@ const MainLayout = () => {
 };
 
 export default MainLayout;
+
