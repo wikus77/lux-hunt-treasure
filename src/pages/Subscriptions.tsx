@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Check } from "lucide-react";
 import BottomNavigation from "@/components/layout/BottomNavigation";
@@ -36,11 +35,13 @@ const Subscriptions = () => {
   ];
 
   return (
-    <div className="pb-20 min-h-screen bg-black">
-      {/* Header */}
-      <header className="px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue">
+    <div className="pb-20 min-h-screen bg-black w-full">
+      {/* Header aggiornato con sticky, glass, width full */}
+      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
         <h1 className="text-2xl font-bold neon-text">Abbonamenti</h1>
       </header>
+      {/* Spacer header */}
+      <div className="h-[72px] w-full" />
 
       {/* Introduction */}
       <section className="px-4 py-6">

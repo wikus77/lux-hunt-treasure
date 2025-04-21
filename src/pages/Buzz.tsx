@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { toast } from "@/components/ui/sonner";
@@ -6,21 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Lock, Zap } from "lucide-react";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-// RIMUOVI import ClueBanner, dato che non più serve qui per il banner dopo pagamento
-// import ClueBanner from "@/components/buzz/ClueBanner";
 
 const EXTRA_CLUE_TEXT = "Strade strette ma la rotta è dritta: cerca dove il muro si colora!";
 
 const Buzz = () => {
   const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
-  // Rimuovi stato ClueBanner
-  // const [showClueBanner, setShowClueBanner] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast: uiToast } = useToast();
 
   useEffect(() => {
-    // Create audio element for buzz sound
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
     const soundPath = getSoundPath(soundPreference);
     audioRef.current = new Audio(soundPath);
@@ -46,19 +40,15 @@ const Buzz = () => {
   };
 
   const handleBuzzClick = () => {
-    // Play sound effect
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(e => console.error("Error playing sound:", e));
     }
 
-    // Start vault animation
     setIsVaultOpen(true);
 
-    // Send notification
     sendBuzzNotification();
 
-    // Reset animation after delay
     setTimeout(() => {
       setIsVaultOpen(false);
       setShowDialog(true);
@@ -66,13 +56,10 @@ const Buzz = () => {
   };
 
   const sendBuzzNotification = () => {
-    // Display toast notification
     toast.success("Nuovo indizio disponibile!", {
       description: "Hai appena sbloccato un indizio premium."
     });
 
-    // In a real app with Supabase, you'd also save this to the database
-    // This notification would appear in the profile notifications section
     const notification = {
       id: Date.now().toString(),
       title: "Nuovo indizio disponibile!",
@@ -81,7 +68,6 @@ const Buzz = () => {
       read: false
     };
 
-    // Store in localStorage for demo purposes
     const existingNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
     existingNotifications.push(notification);
     localStorage.setItem('notifications', JSON.stringify(existingNotifications));
@@ -93,40 +79,27 @@ const Buzz = () => {
       description: "Stai per essere reindirizzato a Stripe per completare l'acquisto."
     });
 
-    // In a real app, this would connect to Stripe
     setTimeout(() => {
       toast.success("Indizio sbloccato!", {
         description: "Controlla la tua sezione indizi per vedere l'indizio extra."
       });
-      // Mostra anche il vero indizio extra esattamente come un toast (identico a quello della notifica "buzz success")
       toast(EXTRA_CLUE_TEXT, {
-        duration: 3000,  // Cambiato da 5000 a 3000 ms
+        duration: 3000,
         position: "bottom-center",
       });
 
-      // Utilizziamo solo il timeout per assicurarci che l'indizio resti visibile per 3 secondi
-      // Non serve chiamare dismiss() perché il toast scomparirà automaticamente dopo 3 secondi (duration: 3000)
-      // Rimuovi logica ClueBanner per banner che scende dall'alto
-      // setShowClueBanner(true);
-      // setTimeout(() => setShowClueBanner(false), 5000);
+      setTimeout(() => setShowDialog(false), 2000);
     }, 2000);
   };
 
   return (
-    <div className="min-h-screen bg-black pb-20">
-      {/* Header */}
-      <header className="px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue">
+    <div className="min-h-screen bg-black pb-20 w-full">
+      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
         <h1 className="text-2xl font-bold neon-text">Buzz</h1>
       </header>
 
-      {/* Clue Banner RIMOSSO */}
-      {/* <ClueBanner
-        open={showClueBanner}
-        message={EXTRA_CLUE_TEXT}
-        onClose={() => setShowClueBanner(false)}
-      /> */}
+      <div className="h-[72px] w-full" />
 
-      {/* Buzz Button Section */}
       <section className="flex flex-col items-center justify-center px-4 py-10 h-[70vh]">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold mb-2">Hai bisogno di un indizio extra?</h2>
@@ -153,7 +126,6 @@ const Buzz = () => {
         </div>
       </section>
 
-      {/* Payment Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
           <DialogHeader>
@@ -184,7 +156,6 @@ const Buzz = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Bottom Navigation */}
       <BottomNavigation />
     </div>
   );

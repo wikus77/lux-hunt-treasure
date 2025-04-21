@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Camera, Edit, Menu } from "lucide-react";
+import { Edit, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -36,9 +36,7 @@ const ProfileHeader = ({
   };
 
   return (
-    <header className="px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue relative">
-      <h1 className="text-2xl font-bold neon-text">Profilo</h1>
-      
+    <div className="flex justify-end items-center px-4 py-6 border-b border-projectx-deep-blue relative">
       <div className="flex gap-2 items-center">
         <Button
           variant="ghost"
@@ -56,9 +54,8 @@ const ProfileHeader = ({
           <Menu className="h-5 w-5" />
         </Button>
       </div>
-
       <InstagramStyleDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-    </header>
+    </div>
   );
 };
 
