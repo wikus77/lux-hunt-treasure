@@ -69,7 +69,8 @@ const Home = () => {
         onMarkAllAsRead={handleMarkAllAsRead}
       />
 
-      <header className="py-6 px-4 flex items-center border-b border-projectx-deep-blue gap-3 w-full">
+      {/* Sticky, glassy header */}
+      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex items-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
         {/* Profile image */}
         <button
           className="flex items-center"
@@ -114,7 +115,8 @@ const Home = () => {
           </button>
         </div>
       </header>
-
+      {/* Compensa l'altezza della header per il contenuto */}
+      <div className="h-[72px] w-full" />
       <div className="w-full">
         <CurrentEventSection />
         <MysteryPrizesSection />

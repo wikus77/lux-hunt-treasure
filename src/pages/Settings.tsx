@@ -73,11 +73,12 @@ const Settings = () => {
   };
 
   return (
-    <div className="pb-20 min-h-screen">
-      <header className="px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue">
+    <div className="pb-20 min-h-screen w-full">
+      {/* Sticky, glassy header */}
+      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
         <h1 className="text-2xl font-bold neon-text">Impostazioni</h1>
       </header>
-
+      <div className="h-[72px] w-full" />
       <AccountSection />
 
       <NotificationSection
