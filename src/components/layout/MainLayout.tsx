@@ -15,7 +15,7 @@ const MainLayout = () => {
       <header className="fixed top-0 left-0 right-0 z-50 w-full px-4 py-6 flex items-center border-b border-projectx-deep-blue backdrop-blur-lg bg-black/70 transition-colors duration-300">
         {/* Header content managed by individual pages */}
       </header>
-      <main className="flex-1 w-full relative pt-[72px]">
+      <main className="flex-1 w-full relative pt-[72px] pb-16">
         <Outlet />
       </main>
       <Footer />

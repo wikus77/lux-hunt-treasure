@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { User, Mail, MoreVertical } from "lucide-react";
-import BottomNavigation from "@/components/layout/BottomNavigation";
 import CurrentEventSection from "@/components/home/CurrentEventSection";
 import MysteryPrizesSection from "@/components/home/MysteryPrizesSection";
 import CluesSection from "@/components/home/CluesSection";
@@ -68,8 +67,8 @@ const Home = () => {
         onMarkAllAsRead={handleMarkAllAsRead}
       />
 
-      {/* Sticky, glassy header */}
-      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex items-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
+      {/* Header content - This will be displayed in the fixed header of MainLayout */}
+      <div className="fixed top-0 left-0 right-0 z-50 w-full px-4 py-6 flex items-center border-b border-projectx-deep-blue backdrop-blur-lg bg-black/70 transition-colors duration-300">
         {/* Profile image */}
         <button
           className="flex items-center"
@@ -113,17 +112,15 @@ const Home = () => {
             <MoreVertical className="w-5 h-5" />
           </button>
         </div>
-      </header>
-      {/* Compensa l'altezza della header per il contenuto */}
-      <div className="h-[72px] w-full" />
-      <div className="w-full">
+      </div>
+
+      {/* Content */}
+      <div className="w-full mt-[72px]">
         {/* FULL WIDTH */}
         <CurrentEventSection />
         <MysteryPrizesSection />
         <CluesSection />
       </div>
-
-      <BottomNavigation />
 
       <BriefProfileModal
         open={showProfileModal}
