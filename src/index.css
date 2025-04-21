@@ -168,6 +168,10 @@
   .gradient-black-purple {
     background: linear-gradient(135deg, #130928 0%, #5E239D 60%, #000000 100%);
   }
+  /* Glassy, sticky header effect */
+  .glass-backdrop {
+    @apply backdrop-blur-lg bg-black/50 border-b border-[#261e3a80];
+  }
 }
 
 #root {
