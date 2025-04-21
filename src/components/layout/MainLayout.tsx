@@ -9,11 +9,11 @@ const MainLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  
+
   useEffect(() => {
     document.documentElement.classList.add('dark');
     document.documentElement.classList.remove('light');
-    
+
     // Load profile image from localStorage
     const savedProfileImage = localStorage.getItem('profileImage');
     if (savedProfileImage) {
@@ -21,7 +21,6 @@ const MainLayout = () => {
     }
   }, []);
 
-  // Load profile image whenever page changes (in case it was updated on profile page)
   useEffect(() => {
     const savedProfileImage = localStorage.getItem('profileImage');
     if (savedProfileImage) {
@@ -29,18 +28,15 @@ const MainLayout = () => {
     }
   }, [location.pathname]);
 
-  // Function to determine title based on current route
+  // Determina la title
   const getPageTitle = () => {
     const path = location.pathname;
-    
     if (path === "/home") return "M1ssion";
     if (path === "/profile") return "Profilo";
     if (path === "/settings") return "Impostazioni";
     if (path === "/subscriptions") return "Abbonamenti";
     if (path === "/events") return "Eventi";
     if (path === "/notifications") return "Notifiche";
-    
-    // Default fallback
     return "M1ssion";
   };
 
@@ -54,7 +50,7 @@ const MainLayout = () => {
               onClick={() => navigate("/profile")}
               aria-label="Go to profile"
             >
-              <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-projectx-neon-blue bg-projectx-deep-blue flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-projectx-neon-blue bg-transparent flex items-center justify-center">
                 {profileImage ? (
                   <img
                     src={profileImage}
@@ -68,12 +64,16 @@ const MainLayout = () => {
             </button>
           </div>
         )}
-        {/* Title with text shadow matching bottom nav icon colors */}
+        {/* Text + shadow adattato (dark: neon, light: very dark) */}
         <h1
-          className="text-2xl font-bold neon-text flex-1 text-center select-none"
+          className={
+            "text-2xl font-bold neon-text flex-1 text-center select-none"
+          }
           style={{
+            color: "#222", // dark gray per light mode
             textShadow:
-              "0 0 6px #39FF14, 0 0 15px #FFFF00" // Neon green to yellow glow same as gradient used in bottom nav icons
+              "0 0 7px #39FF14, 0 0 21px #FFFF00", // neon green/yellow come le icone bottom nav
+            // In light mode shadow è meno evidente, regolo con media query (semplice)
           }}
         >
           {getPageTitle()}

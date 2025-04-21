@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import LoginModal from "./LoginModal";
 
 interface AgeVerificationProps {
   onVerified: () => void;
@@ -14,9 +15,9 @@ export const AgeVerification = ({ onVerified }: AgeVerificationProps) => {
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
   const { toast } = useToast();
+  const [modalOpen, setModalOpen] = useState(false);
 
   const verifyAge = () => {
-    // Validazioni base
     if (!day || !month || !year) {
       toast({
         variant: "destructive",
@@ -28,11 +29,9 @@ export const AgeVerification = ({ onVerified }: AgeVerificationProps) => {
 
     const birthDate = new Date(`${year}-${month}-${day}`);
     const today = new Date();
-    
-    // Calcola età
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
@@ -45,8 +44,6 @@ export const AgeVerification = ({ onVerified }: AgeVerificationProps) => {
       });
       return;
     }
-
-    // Se l'età è maggiore di 18 anni
     onVerified();
   };
 
@@ -56,7 +53,7 @@ export const AgeVerification = ({ onVerified }: AgeVerificationProps) => {
       <p className="mb-4 text-sm text-muted-foreground">
         Per partecipare a Project X devi avere almeno 18 anni. Inserisci la tua data di nascita per continuare.
       </p>
-      
+
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div>
           <Label htmlFor="day">Giorno</Label>
@@ -71,7 +68,6 @@ export const AgeVerification = ({ onVerified }: AgeVerificationProps) => {
             onChange={(e) => setDay(e.target.value)}
           />
         </div>
-        
         <div>
           <Label htmlFor="month">Mese</Label>
           <Input
@@ -85,7 +81,6 @@ export const AgeVerification = ({ onVerified }: AgeVerificationProps) => {
             onChange={(e) => setMonth(e.target.value)}
           />
         </div>
-        
         <div>
           <Label htmlFor="year">Anno</Label>
           <Input
@@ -100,13 +95,25 @@ export const AgeVerification = ({ onVerified }: AgeVerificationProps) => {
           />
         </div>
       </div>
-      
+
       <Button 
         onClick={verifyAge} 
         className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
       >
         Verifica Età
       </Button>
+
+      <div className="mt-4 text-center text-sm text-muted-foreground">
+        Hai già un account?{" "}
+        <button
+          className="text-projectx-neon-blue underline font-medium"
+          type="button"
+          onClick={() => setModalOpen(true)}
+        >
+          Accedi
+        </button>
+      </div>
+      <LoginModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </div>
   );
 };
