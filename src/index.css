@@ -207,7 +207,7 @@
   .instagram-story-ring-gradient::before {
     content: "";
     position: absolute;
-    inset: -18px;
+    inset: -22px;
     border-radius: 50%;
     z-index: 1;
     padding: 0;
@@ -218,13 +218,13 @@
       #285AEB 100%,
       #fdf497 100%
     );
-    filter: blur(12px);
+    filter: blur(20px);
     box-shadow:
-      0 0 0 6px #fff,
-      0 0 34px 11px rgba(255,120,226,0.13),
-      0 0 60px 32px rgba(253,89,144,0.08);
-    width: calc(100% + 36px);
-    height: calc(100% + 36px);
+      0 0 0 0px #fff,
+      0 0 80px 30px #fd594922,
+      0 0 120px 50px #d6249f11;
+    width: calc(100% + 44px);
+    height: calc(100% + 44px);
     animation: spin-gradient 2.8s linear infinite;
     pointer-events: none;
   }
@@ -234,6 +234,7 @@
     box-shadow: 0 0 0 3.5px #fff;
     border-radius: 50%;
     background: #000;
+    overflow: hidden;
   }
 
   @keyframes spin-gradient {
