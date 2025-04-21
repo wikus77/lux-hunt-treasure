@@ -5,7 +5,7 @@ import ProfileLayout from "@/components/layout/ProfileLayout";
 import { supabase } from "@/integrations/supabase/client";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileBio from "@/components/profile/ProfileBio";
-import ProfileNotifications from "@/components/profile/ProfileNotifications";
+// ProfileNotifications RIMOSSO
 import ProfileClues from "@/components/profile/ProfileClues";
 import SubscriptionStatus from "@/components/profile/SubscriptionStatus";
 
@@ -18,21 +18,12 @@ interface Clue {
   subscriptionType?: "Base" | "Silver" | "Gold" | "Black";
 }
 
-interface Notification {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  read: boolean;
-}
-
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [bio, setBio] = useState("Appassionato di auto di lusso e collezionista. Amo la velocità e l'adrenalina!");
   const [name, setName] = useState("Mario Rossi");
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [unlockedClues, setUnlockedClues] = useState<Clue[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const { toast } = useToast();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,24 +45,9 @@ const Profile = () => {
     });
   };
 
-  const markAllAsRead = () => {
-    const updatedNotifications = notifications.map(notification => ({
-      ...notification,
-      read: true
-    }));
-    setNotifications(updatedNotifications);
-    localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
-    
-    toast({
-      title: "Notifiche lette",
-      description: "Tutte le notifiche sono state segnate come lette."
-    });
-  };
-
   useEffect(() => {
     const fetchUnlockedClues = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (user) {
         try {
           const { data: userCluesData, error: userCluesError } = await supabase
@@ -121,26 +97,8 @@ const Profile = () => {
       }
     };
 
-    const loadNotifications = () => {
-      const storedNotifications = localStorage.getItem('notifications');
-      if (storedNotifications) {
-        setNotifications(JSON.parse(storedNotifications));
-      }
-    };
-
     fetchUnlockedClues();
-    loadNotifications();
-
-    const checkForNewNotifications = setInterval(() => {
-      loadNotifications();
-    }, 5000);
-
-    return () => {
-      clearInterval(checkForNewNotifications);
-    };
   }, []);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <ProfileLayout>
@@ -163,11 +121,7 @@ const Profile = () => {
         isEditing={isEditing}
       />
 
-      <ProfileNotifications
-        notifications={notifications}
-        markAllAsRead={markAllAsRead}
-        unreadCount={unreadCount}
-      />
+      {/* SEZIONE NOTIFICHE RIMOSSA */}
 
       <SubscriptionStatus />
 
