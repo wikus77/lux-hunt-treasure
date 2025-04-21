@@ -13,7 +13,6 @@ const Settings = () => {
   const navigate = useNavigate();
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(true);
   const [soundEffects, setSoundEffects] = useState(true);
   const [language, setLanguage] = useState("Italiano");
   const [volume, setVolume] = useState([75]);
@@ -21,12 +20,6 @@ const Settings = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Load theme preference from localStorage on component mount
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      setDarkMode(savedTheme === 'dark');
-    }
-    
     const savedSound = localStorage.getItem('buzzSound');
     if (savedSound) {
       setBuzzSound(savedSound);
@@ -81,7 +74,7 @@ const Settings = () => {
 
   return (
     <div className="pb-20 min-h-screen">
-      <header className="px-4 py-6 flex justify-between items-center border-b dark:border-projectx-deep-blue light:border-gray-200">
+      <header className="px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue">
         <h1 className="text-2xl font-bold neon-text">Impostazioni</h1>
       </header>
 
@@ -95,12 +88,10 @@ const Settings = () => {
       />
 
       <AppSection
-        darkMode={darkMode}
         soundEffects={soundEffects}
         language={language}
         volume={volume}
         buzzSound={buzzSound}
-        setDarkMode={setDarkMode}
         setSoundEffects={setSoundEffects}
         onVolumeChange={handleVolumeChange}
         onSoundChange={handleSoundChange}
