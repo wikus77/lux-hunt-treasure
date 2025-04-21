@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { User, Mail, MoreVertical } from "lucide-react";
 import CurrentEventSection from "@/components/home/CurrentEventSection";
 import MysteryPrizesSection from "@/components/home/MysteryPrizesSection";
@@ -6,38 +6,23 @@ import CluesSection from "@/components/home/CluesSection";
 import BriefProfileModal from "@/components/profile/BriefProfileModal";
 import { useNavigate } from "react-router-dom";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const Home = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotificationsBanner, setShowNotificationsBanner] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Funzione centralizzata di reload delle notifiche (sync per tutte le sezioni)
-  const reloadNotifications = () => {
-    const storedNotifications = localStorage.getItem('notifications');
-    if (storedNotifications) {
-      const parsed = JSON.parse(storedNotifications);
-      setNotifications(parsed);
-      setUnreadCount(parsed.filter((n: any) => !n.read).length);
-    } else {
-      setNotifications([]);
-      setUnreadCount(0);
-    }
-  };
+  // Notifiche centralizzate
+  const {
+    notifications,
+    unreadCount,
+    markAllAsRead,
+    reloadNotifications
+  } = useNotifications();
 
-  // TOGLIAMO intervallo automatico setInterval: la visibilità è ora reattiva e aggiornata via sync
-  useEffect(() => {
-    reloadNotifications();
-    // Load profile image from localStorage
-    const savedProfileImage = localStorage.getItem('profileImage');
-    if (savedProfileImage) {
-      setProfileImage(savedProfileImage);
-    }
-  }, []);
-
+  // Rende il banner immediatamente up-to-date ad apertura
   const handleShowNotifications = () => {
     reloadNotifications();
     setShowNotificationsBanner(true);
@@ -45,18 +30,6 @@ const Home = () => {
 
   const handleCloseNotifications = () => {
     setShowNotificationsBanner(false);
-  };
-
-  // Applica "letto" a tutte le notifiche + sync e refresh immediato
-  const handleMarkAllAsRead = () => {
-    const updatedNotifications = notifications.map((n: any) => ({
-      ...n,
-      read: true
-    }));
-    setNotifications(updatedNotifications);
-    setUnreadCount(0);
-    localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
-    reloadNotifications(); // importante per effetto immediato banner+pagina
   };
 
   return (
@@ -67,8 +40,7 @@ const Home = () => {
         notifications={notifications}
         unreadCount={unreadCount}
         onClose={handleCloseNotifications}
-        onMarkAllAsRead={handleMarkAllAsRead}
-        onRequestReload={reloadNotifications}
+        onMarkAllAsRead={markAllAsRead}
       />
 
       {/* Header controls moved to the fixed header area */}

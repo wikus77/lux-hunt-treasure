@@ -1,25 +1,11 @@
 
-import { useEffect, useState } from "react";
 import { Mail } from "lucide-react";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const Notifications = () => {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const { notifications, reloadNotifications } = useNotifications();
 
-  const reloadNotifications = () => {
-    const storedNotifications = localStorage.getItem('notifications');
-    if (storedNotifications) {
-      setNotifications(JSON.parse(storedNotifications));
-    } else {
-      setNotifications([]);
-    }
-  };
-
-  useEffect(() => {
-    reloadNotifications();
-    const handle = setInterval(reloadNotifications, 2000); // check update ogni 2s per massima reattività
-    return () => clearInterval(handle);
-  }, []);
-
+  // Visualizzazione già ordinata dal più recente
   return (
     <div className="min-h-screen bg-black text-white pt-0 px-0 w-full">
       <div className="rounded-lg bg-projectx-deep-blue bg-opacity-80 p-8 text-center text-white w-full mt-4">

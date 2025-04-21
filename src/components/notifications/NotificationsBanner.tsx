@@ -2,14 +2,7 @@
 import React, { useEffect, useRef } from "react";
 import NotificationItem from "./NotificationItem";
 import { Bell, X } from "lucide-react";
-
-interface Notification {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  read: boolean;
-}
+import type { Notification } from "@/hooks/useNotifications";
 
 interface NotificationsBannerProps {
   open: boolean;
@@ -17,7 +10,6 @@ interface NotificationsBannerProps {
   unreadCount: number;
   onClose: () => void;
   onMarkAllAsRead: () => void;
-  onRequestReload?: () => void; // facoltativo per sync
 }
 
 const SWIPE_THRESHOLD = 64;
@@ -28,68 +20,49 @@ const NotificationsBanner: React.FC<NotificationsBannerProps> = ({
   unreadCount,
   onClose,
   onMarkAllAsRead,
-  onRequestReload
 }) => {
   const bannerRef = useRef<HTMLDivElement>(null);
-  const startY = useRef<number | null>(null);
+  // swipe gesture state
   const dragging = useRef(false);
+  const initialY = useRef<number | null>(null);
 
-  // Aggiornamento in tempo reale se richiesto dalla prop (es: callback per sync)
-  useEffect(() => {
-    if (onRequestReload) {
-      onRequestReload();  // Chiede il refresh ogni volta che open è true
-    }
-  }, [open, onRequestReload]);
-
-  // Auto close dopo 5s
-  useEffect(() => {
-    if (open) {
-      const timeout = setTimeout(() => {
-        onClose();
-      }, 5000);
-      return () => clearTimeout(timeout);
-    }
-  }, [open, onClose]);
-
-  // Gestione touch/mouse per swipe up per chiudere banner
+  // Swipe up per chiusura
   useEffect(() => {
     const banner = bannerRef.current;
-    let initialY: number | null = null;
 
     function handleTouchStart(e: TouchEvent) {
-      initialY = e.touches[0].clientY;
+      initialY.current = e.touches[0].clientY;
       dragging.current = true;
     }
     function handleTouchMove(e: TouchEvent) {
-      if (!dragging.current || initialY == null) return;
-      const distance = initialY - e.touches[0].clientY;
-      if (distance > SWIPE_THRESHOLD) {
+      if (!dragging.current || initialY.current == null) return;
+      const dist = initialY.current - e.touches[0].clientY;
+      if (dist > SWIPE_THRESHOLD) {
         onClose();
-        initialY = null;
         dragging.current = false;
+        initialY.current = null;
       }
     }
     function handleTouchEnd() {
       dragging.current = false;
-      initialY = null;
+      initialY.current = null;
     }
-
     function handleMouseDown(e: MouseEvent) {
-      initialY = e.clientY;
+      initialY.current = e.clientY;
       dragging.current = true;
     }
     function handleMouseMove(e: MouseEvent) {
-      if (!dragging.current || initialY == null) return;
-      const distance = initialY - e.clientY;
-      if (distance > SWIPE_THRESHOLD) {
+      if (!dragging.current || initialY.current == null) return;
+      const dist = initialY.current - e.clientY;
+      if (dist > SWIPE_THRESHOLD) {
         onClose();
-        initialY = null;
         dragging.current = false;
+        initialY.current = null;
       }
     }
     function handleMouseUp() {
       dragging.current = false;
-      initialY = null;
+      initialY.current = null;
     }
 
     if (banner && open) {
