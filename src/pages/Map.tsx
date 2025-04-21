@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { GoogleMap, useLoadScript, Marker, InfoWindow } from "@react-google-maps/api";
 import { MapPin, Pencil, X, Check, MapPinX, StickyNote } from "lucide-react";
@@ -14,7 +13,7 @@ type MapMarker = {
   editing?: boolean;
 };
 
-const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY_HERE"; // Sostituisci con la tua API Key
+const GOOGLE_MAPS_API_KEY = "AIzaSyC5OMBj9T4Si7lQbVU7n3Vs5YsqhfgP8b8";
 
 const mapContainerStyle = {
   width: "100%",
