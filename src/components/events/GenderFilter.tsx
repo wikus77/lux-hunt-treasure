@@ -8,17 +8,15 @@ interface GenderFilterProps {
 
 const GenderFilter = ({ selectedGender, onGenderChange }: GenderFilterProps) => {
   return (
-    <div className="w-screen max-w-none px-0 mx-[-16px] sm:mx-[-32px]">
+    <div className="w-full flex justify-center px-4">
       <Select value={selectedGender} onValueChange={onGenderChange}>
         <SelectTrigger 
-          className="w-screen max-w-none bg-black border-m1ssion-deep-blue h-12 rounded-none text-white"
-          style={{ width: "100vw", minWidth: "100vw", left: "50%", right: "50%", transform: "translateX(-50%)" }}
+          className="w-64 bg-black border-m1ssion-deep-blue h-12 rounded-md text-white"
         >
           <SelectValue placeholder="Filtra per categoria" />
         </SelectTrigger>
         <SelectContent
-          className="w-screen max-w-none bg-black border border-m1ssion-deep-blue z-50 text-white"
-          style={{ width: "100vw", minWidth: "100vw", left: "50%", right: "50%", transform: "translateX(-50%)" }}
+          className="w-64 bg-black border border-m1ssion-deep-blue z-50 text-white"
         >
           <SelectItem value="all">Tutti gli eventi</SelectItem>
           <SelectItem value="man">Player Man</SelectItem>
@@ -30,4 +28,3 @@ const GenderFilter = ({ selectedGender, onGenderChange }: GenderFilterProps) => 
 };
 
 export default GenderFilter;
-
