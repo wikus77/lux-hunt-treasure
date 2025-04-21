@@ -3,31 +3,19 @@ import { useState } from "react";
 import { ArrowLeft, CreditCard, AppleIcon, GlobeIcon } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import CardPaymentForm from "@/components/payments/CardPaymentForm";
+import ApplePayBox from "@/components/payments/ApplePayBox";
+import GooglePayBox from "@/components/payments/GooglePayBox";
 
 const PaymentMethods = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
-  const [cardDetails, setCardDetails] = useState({
-    cardNumber: "",
-    cardholderName: "",
-    expiryDate: "",
-    cvv: ""
-  });
 
   // Recupera l’indizio passato dalla ClueCard, se presente
   const clue = location.state?.clue;
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setCardDetails(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
 
   const handleIndizioDopoPagamento = () => {
     if (clue) {
@@ -62,8 +50,7 @@ const PaymentMethods = () => {
     }, 1200);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCardSubmit = () => {
     handlePaymentCompleted();
   };
 
@@ -129,105 +116,14 @@ const PaymentMethods = () => {
             </button>
           </div>
 
-          {paymentMethod === 'card' && (
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="cardNumber" className="block text-sm font-medium mb-1">
-                    Numero della Carta
-                  </label>
-                  <Input
-                    id="cardNumber"
-                    name="cardNumber"
-                    value={cardDetails.cardNumber}
-                    onChange={handleInputChange}
-                    placeholder="1234 5678 9012 3456"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="cardholderName" className="block text-sm font-medium mb-1">
-                    Nome del Titolare
-                  </label>
-                  <Input
-                    id="cardholderName"
-                    name="cardholderName"
-                    value={cardDetails.cardholderName}
-                    onChange={handleInputChange}
-                    placeholder="Mario Rossi"
-                    required
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="expiryDate" className="block text-sm font-medium mb-1">
-                      Data di Scadenza
-                    </label>
-                    <Input
-                      id="expiryDate"
-                      name="expiryDate"
-                      value={cardDetails.expiryDate}
-                      onChange={handleInputChange}
-                      placeholder="MM/AA"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="cvv" className="block text-sm font-medium mb-1">
-                      CVV
-                    </label>
-                    <Input
-                      id="cvv"
-                      name="cvv"
-                      value={cardDetails.cvv}
-                      onChange={handleInputChange}
-                      placeholder="123"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <Button 
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
-                >
-                  Salva Carta
-                </Button>
-              </div>
-            </form>
+          {paymentMethod === "card" && (
+            <CardPaymentForm onSubmit={handleCardSubmit} />
           )}
-
-          {paymentMethod === 'apple' && (
-            <div className="text-center p-4">
-              <div className="border border-projectx-deep-blue rounded-md p-6 mb-4">
-                <AppleIcon className="h-12 w-12 mx-auto mb-4" />
-                <p className="mb-6">Paga in modo rapido e sicuro con Apple Pay</p>
-                <Button 
-                  onClick={handleApplePay}
-                  className="w-full bg-black text-white border border-white"
-                >
-                  Paga con Apple Pay
-                </Button>
-              </div>
-            </div>
+          {paymentMethod === "apple" && (
+            <ApplePayBox onApplePay={handleApplePay} />
           )}
-
-          {paymentMethod === 'google' && (
-            <div className="text-center p-4">
-              <div className="border border-projectx-deep-blue rounded-md p-6 mb-4">
-                <GlobeIcon className="h-12 w-12 mx-auto mb-4" />
-                <p className="mb-6">Paga in modo rapido e sicuro con Google Pay</p>
-                <Button 
-                  onClick={handleGooglePay}
-                  className="w-full bg-white text-black"
-                >
-                  Paga con Google Pay
-                </Button>
-              </div>
-            </div>
+          {paymentMethod === "google" && (
+            <GooglePayBox onGooglePay={handleGooglePay} />
           )}
         </div>
       </div>
