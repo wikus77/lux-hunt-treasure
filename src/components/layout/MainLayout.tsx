@@ -56,6 +56,7 @@ const MainLayout = () => {
                     src={profileImage}
                     alt="Profile"
                     className="w-full h-full object-cover"
+                    style={{ backgroundColor: 'transparent' }} // elimina cerchio scuro dietro
                   />
                 ) : (
                   <User className="w-5 h-5 text-projectx-neon-blue" />
@@ -64,16 +65,17 @@ const MainLayout = () => {
             </button>
           </div>
         )}
-        {/* Text + shadow adattato (dark: neon, light: very dark) */}
         <h1
           className={
             "text-2xl font-bold neon-text flex-1 text-center select-none"
           }
           style={{
-            color: "#222", // dark gray per light mode
+            color: "transparent",
+            background: "linear-gradient(90deg, #39FF14 0%, #FFFF00 100%)",
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
             textShadow:
-              "0 0 7px #39FF14, 0 0 21px #FFFF00", // neon green/yellow come le icone bottom nav
-            // In light mode shadow è meno evidente, regolo con media query (semplice)
+              "0 0 7px #39FF14, 0 0 21px #FFFF00", // ombra col colore icone bottom nav
           }}
         >
           {getPageTitle()}
@@ -89,4 +91,3 @@ const MainLayout = () => {
 };
 
 export default MainLayout;
-
