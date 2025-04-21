@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ArrowLeft, CreditCard, AppleIcon, GlobeIcon } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -7,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import CardPaymentForm from "@/components/payments/CardPaymentForm";
 import ApplePayBox from "@/components/payments/ApplePayBox";
 import GooglePayBox from "@/components/payments/GooglePayBox";
-import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion"; // nuovo import
+import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
 
 const PaymentMethods = () => {
   const navigate = useNavigate();
@@ -15,15 +14,13 @@ const PaymentMethods = () => {
   const { toast } = useToast();
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
 
-  // mostra explosion FX solo se c'è un indizio in acquisto
   const [showExplosion, setShowExplosion] = useState(false);
+  const [fadeOutExplosion, setFadeOutExplosion] = useState(false);
 
-  // Recupera l’indizio passato dalla ClueCard, se presente
   const clue = location.state?.clue;
 
   const handleIndizioDopoPagamento = () => {
     if (clue) {
-      // Genera notifica con l’indizio acquistato
       const notification = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
         title: "Indizio Sbloccato!",
@@ -37,21 +34,24 @@ const PaymentMethods = () => {
     }
   };
 
-  // Show congratulazioni + explosion, poi toast e navigazione
   const handlePaymentCompleted = () => {
     if (clue) {
       setShowExplosion(true);
+      setFadeOutExplosion(false);
+
       setTimeout(() => {
-        setShowExplosion(false);
-        toast({
-          title: "Pagamento Completato",
-          description: "Hai sbloccato un nuovo indizio! Vieni a leggerlo nella sezione Notifiche.",
-        });
-        handleIndizioDopoPagamento();
+        setFadeOutExplosion(true);
         setTimeout(() => {
+          setShowExplosion(false);
+          setFadeOutExplosion(false);
+          toast({
+            title: "Pagamento Completato",
+            description: "Hai sbloccato un nuovo indizio! Vieni a leggerlo nella sezione Notifiche.",
+          });
+          handleIndizioDopoPagamento();
           navigate("/notifications");
-        }, 1100);
-      }, 2100);
+        }, 1400);
+      }, 1700);
     } else {
       toast({
         title: "Pagamento Completato",
@@ -89,7 +89,11 @@ const PaymentMethods = () => {
 
   return (
     <div className="min-h-screen bg-black pb-6">
-      <ClueUnlockedExplosion open={showExplosion} onFinish={() => setShowExplosion(false)} />
+      <ClueUnlockedExplosion
+        open={showExplosion}
+        fadeOut={fadeOutExplosion}
+        onFadeOutEnd={() => {}}
+      />
       <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue">
         <Button 
           variant="ghost" 

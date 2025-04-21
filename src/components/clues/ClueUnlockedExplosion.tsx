@@ -1,53 +1,96 @@
 
-import React from "react";
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 
 interface Props {
   open: boolean;
-  onFinish: () => void;
+  fadeOut: boolean;
+  onFadeOutEnd: () => void;
 }
 
-// Custom style injected for a slower fade-in effect
-const fadeInStyle = `
-@keyframes slow-fade-in {
+// CSS animazioni personalizzate per fade-in e fade-out graduale della scritta+overlay
+const fadeStyles = `
+@keyframes acid-fade-in {
   0% {
     opacity: 0;
-    transform: translateY(18px) scale(0.97);
-    filter: blur(4px);
+    transform: scale(0.98) translateY(20px);
+    filter: blur(9px);
   }
-  55% {
-    filter: blur(0.5px);
+  34% {
+    opacity: 1;
+    filter: blur(1.1px);
+    transform: scale(1.02) translateY(0px);
   }
-  80% {
+  75% {
     opacity: 1;
     filter: blur(0px);
-    transform: translateY(0px) scale(1.01);
+    transform: scale(1.04) translateY(0px);
   }
   100% {
     opacity: 1;
     filter: blur(0px);
-    transform: translateY(0px) scale(1);
+    transform: scale(1) translateY(0);
   }
 }
-.slow-fade-in {
-  animation: slow-fade-in 1.2s cubic-bezier(0.17, 0.67, 0.83, 0.67) both;
+@keyframes acid-fade-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+  80% {
+    opacity: 1;
+    filter: blur(1.5px);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(10px);
+    transform: scale(0.985) translateY(18px);
+  }
+}
+.clue-acid-fade-in {
+  animation: acid-fade-in 1.7s cubic-bezier(0.19,0.85,0.55,1.08) both;
+}
+.clue-acid-fade-out {
+  animation: acid-fade-out 1.4s cubic-bezier(0.19,0.85,0.55,1.08) both;
 }
 `;
 
-const ClueUnlockedExplosion: React.FC<Props> = ({ open }) => {
+const ClueUnlockedExplosion = forwardRef<HTMLDivElement, Props>(({
+  open,
+  fadeOut,
+  onFadeOutEnd
+}, ref) => {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Quando parte il fadeOut, notifichiamo quando finisce l’animazione
+  useEffect(() => {
+    if (fadeOut && wrapperRef.current) {
+      const node = wrapperRef.current;
+      const handleAnimEnd = () => {
+        onFadeOutEnd?.();
+      };
+      node.addEventListener("animationend", handleAnimEnd);
+      return () => node.removeEventListener("animationend", handleAnimEnd);
+    }
+  }, [fadeOut, onFadeOutEnd]);
+
   if (!open) return null;
 
   return (
     <div
-      className="
+      ref={wrapperRef}
+      className={`
         fixed inset-0 z-[99999] flex items-center justify-center
         bg-black/95 backdrop-blur-sm
-      "
+        transition-all duration-150
+        ${fadeOut ? "clue-acid-fade-out" : "clue-acid-fade-in"}
+      `}
+      style={{ transition: "opacity 400ms cubic-bezier(0.22,1,0.36,1)" }}
     >
-      {/* Only show congratulation text with slow fade-in and green gradient */}
-      <style>{fadeInStyle}</style>
+      <style>{fadeStyles}</style>
       <div className="relative z-[1200] flex flex-col items-center justify-center w-full">
         <span
-          className="slow-fade-in
+          className="
             font-extrabold
             bg-gradient-to-br from-lime-300 via-lime-400 to-green-400
             bg-clip-text text-transparent
@@ -58,28 +101,27 @@ const ClueUnlockedExplosion: React.FC<Props> = ({ open }) => {
             w-full
             px-4
             select-none
-            "
+          "
           style={{
             fontSize: "clamp(2.5rem, 6vw, 5.2rem)",
             lineHeight: 1.08,
             WebkitBackgroundClip: "text" as any,
-            WebkitTextFillColor: "transparent",
+            WebkitTextFillColor: "transparent"
           }}
         >
           Congratulazioni!
         </span>
         <span
-          className="slow-fade-in
+          className="
             block mt-8 font-semibold w-full text-center
             bg-gradient-to-r from-lime-300 via-green-200 to-lime-400
             bg-clip-text text-transparent
             drop-shadow-[0_0_18px_#d4ff44]
-            "
+          "
           style={{
             fontSize: "clamp(1.3rem, 2vw, 2.4rem)",
             WebkitBackgroundClip: "text" as any,
-            WebkitTextFillColor: "transparent",
-            animationDelay: "0.22s",
+            WebkitTextFillColor: "transparent"
           }}
         >
           Hai sbloccato un nuovo indizio
@@ -87,6 +129,7 @@ const ClueUnlockedExplosion: React.FC<Props> = ({ open }) => {
       </div>
     </div>
   );
-};
-
+});
+ClueUnlockedExplosion.displayName = "ClueUnlockedExplosion";
 export default ClueUnlockedExplosion;
+
