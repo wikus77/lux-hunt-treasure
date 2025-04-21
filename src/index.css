@@ -1,20 +1,24 @@
 
+/* === BASE TAILWIND LAYER === */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* =====================
+   CUSTOM PALETTE & ROOT
+===================== */
 @layer base {
   :root {
-    --background: 0 0% 0%; /* nero pieno */
+    --background: 0 0% 0%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 8%;         /* #151515 circa */
+    --card: 0 0% 8%;
     --card-foreground: 0 0% 98%;
 
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 0 0% 0%; /* nero */
+    --primary: 0 0% 0%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 10%;
@@ -60,6 +64,9 @@
   }
 }
 
+/* ==========
+   BASE STYLE
+=========== */
 @layer base {
   * {
     @apply border-border;
@@ -68,7 +75,7 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    background: #000; /* nero pieno */
+    background: #000;
     min-height: 100vh;
   }
 
@@ -81,100 +88,70 @@
     background: #111 !important;
     color: #222;
   }
+}
 
+/* =============
+   NEON & BORDER
+============= */
+@layer base {
   .neon-text {
     @apply font-bold;
   }
-
-  .dark .neon-text {
-    @apply text-white;
-    text-shadow: 0 0 10px #111, 0 0 20px #222;
-  }
-
-  .light .neon-text {
-    @apply text-black;
-    text-shadow: none;
-  }
+  .dark .neon-text { @apply text-white; text-shadow: 0 0 10px #111, 0 0 20px #222; }
+  .light .neon-text { @apply text-black; text-shadow: none; }
 
   .neon-pink-text {
     @apply font-bold;
   }
+  .dark .neon-pink-text { @apply text-white; text-shadow: 0 0 10px #222, 0 0 20px #000; }
+  .light .neon-pink-text { @apply text-black; text-shadow: none; }
 
-  .dark .neon-pink-text {
-    @apply text-white;
-    text-shadow: 0 0 10px #222, 0 0 20px #000;
-  }
-
-  .light .neon-pink-text {
-    @apply text-black;
-    text-shadow: none;
-  }
-
-  .neon-border {
+  .neon-border, .neon-pink-border {
     @apply border-2 rounded-md;
   }
+  .dark .neon-border { @apply border-background; box-shadow: 0 0 10px #111, inset 0 0 10px #222; }
+  .light .neon-border { @apply border-black; box-shadow: none; }
+  .dark .neon-pink-border { @apply border-background; box-shadow: 0 0 10px #222, inset 0 0 10px #111; }
+  .light .neon-pink-border { @apply border-black; box-shadow: none; }
+}
 
-  .dark .neon-border {
-    @apply border-background;
-    box-shadow: 0 0 10px #111, inset 0 0 10px #222;
-  }
-
-  .light .neon-border {
-    @apply border-black;
-    box-shadow: none;
-  }
-
-  .neon-pink-border {
-    @apply border-2 rounded-md;
-  }
-
-  .dark .neon-pink-border {
-    @apply border-background;
-    box-shadow: 0 0 10px #222, inset 0 0 10px #111;
-  }
-
-  .light .neon-pink-border {
-    @apply border-black;
-    box-shadow: none;
-  }
-
+/* =======
+   GLASS
+======== */
+@layer base {
   .glass-card {
     @apply rounded-lg p-6;
     background: #151515;
     border: 1px solid #232323;
   }
+}
 
+/* =========
+   NAVIGATION
+=========== */
+@layer base {
   .bottom-nav-item {
     @apply flex flex-col items-center justify-center transition-colors;
   }
-
-  .dark .bottom-nav-item {
-    @apply text-gray-400;
-  }
-
-  .light .bottom-nav-item {
-    @apply text-gray-600;
-  }
-
-  .dark .bottom-nav-item.active {
-    @apply text-white;
-  }
-
-  .light .bottom-nav-item.active {
-    @apply text-black;
-  }
-
+  .dark .bottom-nav-item { @apply text-gray-400; }
+  .light .bottom-nav-item { @apply text-gray-600; }
+  .dark .bottom-nav-item.active { @apply text-white; }
+  .light .bottom-nav-item.active { @apply text-black; }
   .active-gradient-icon {
     filter: drop-shadow(0 0 6px #9b87f5aa);
     transform: scale(1.2);
     transition: transform 0.2s;
   }
+}
 
+/* =================
+   INSTAGRAM-RING
+================= */
+@layer base {
   .instagram-story-ring {
     position: relative;
     display: inline-block;
   }
-
   .instagram-story-ring::before {
     content: "";
     position: absolute;
@@ -201,6 +178,7 @@
     z-index: 3;
   }
 
+  /* SOTTILE GRADIENT RING */
   .instagram-story-ring-gradient {
     position: relative;
     display: inline-block;
@@ -208,7 +186,7 @@
   .instagram-story-ring-gradient::before {
     content: "";
     position: absolute;
-    /* inset prima era -6px, ora -2px per bordo molto più sottile */
+    /* Bordo più sottile: inset e dimensioni ridotte */
     inset: -2px;
     border-radius: 50%;
     z-index: 1;
@@ -220,13 +198,11 @@
       #285AEB 100%,
       #fdf497 100%
     );
-    /* ridotto effetto blur */
     filter: blur(3px);
     box-shadow:
       0 0 0 0px #fff,
       0 0 8px 4px #fd594922,
       0 0 12px 5px #d6249f11;
-    /* larghezza e altezza molto più piccole per bordo più sottile */
     width: calc(100% + 4px);
     height: calc(100% + 4px);
     animation: spin-gradient 2.8s linear infinite;
@@ -240,12 +216,16 @@
     background: #000;
     overflow: hidden;
   }
+}
 
+/* ===========
+   ANIMATIONS
+============= */
+@layer base {
   @keyframes spin-gradient {
     0% { transform: rotate(0deg);}
     100% { transform: rotate(360deg);}
   }
-
   .gradient-white-text {
     background: linear-gradient(90deg, #ffffff 50%, #f1f1f1 100%);
     -webkit-background-clip: text;
@@ -256,15 +236,17 @@
   }
 }
 
+/* ========
+   UTILITY
+========= */
 @layer utilities {
-  .gradient-black-purple {
-    background: #000; /* eliminato gradiente viola */
-  }
-  .glass-backdrop {
-    @apply backdrop-blur-lg bg-black/50 border-b border-[#232323];
-  }
+  .gradient-black-purple { background: #000; }
+  .glass-backdrop { @apply backdrop-blur-lg bg-black/50 border-b border-[#232323]; }
 }
 
+/* ==========
+   LAYOUT 
+=========== */
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -278,33 +260,18 @@
   will-change: filter;
   transition: filter 300ms;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #232323);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #232323);
-}
+.logo:hover { filter: drop-shadow(0 0 2em #232323); }
+.logo.react:hover { filter: drop-shadow(0 0 2em #232323); }
 
 @keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg);}
+  to { transform: rotate(360deg);}
 }
-
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
   }
 }
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
+.card { padding: 2em; }
+.read-the-docs { color: #888; }
