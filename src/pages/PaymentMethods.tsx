@@ -7,12 +7,16 @@ import { useToast } from "@/hooks/use-toast";
 import CardPaymentForm from "@/components/payments/CardPaymentForm";
 import ApplePayBox from "@/components/payments/ApplePayBox";
 import GooglePayBox from "@/components/payments/GooglePayBox";
+import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion"; // nuovo import
 
 const PaymentMethods = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
+
+  // mostra explosion FX solo se c'è un indizio in acquisto
+  const [showExplosion, setShowExplosion] = useState(false);
 
   // Recupera l’indizio passato dalla ClueCard, se presente
   const clue = location.state?.clue;
@@ -33,21 +37,30 @@ const PaymentMethods = () => {
     }
   };
 
+  // Show congratulazioni + explosion, poi toast e navigazione
   const handlePaymentCompleted = () => {
-    toast({
-      title: "Pagamento Completato",
-      description: clue
-        ? "Hai sbloccato un nuovo indizio! Vieni a leggerlo nella sezione Notifiche."
-        : "Il tuo metodo di pagamento è stato salvato con successo.",
-    });
-    handleIndizioDopoPagamento();
-    setTimeout(() => {
-      if (clue) {
-        navigate("/notifications");
-      } else {
+    if (clue) {
+      setShowExplosion(true);
+      setTimeout(() => {
+        setShowExplosion(false);
+        toast({
+          title: "Pagamento Completato",
+          description: "Hai sbloccato un nuovo indizio! Vieni a leggerlo nella sezione Notifiche.",
+        });
+        handleIndizioDopoPagamento();
+        setTimeout(() => {
+          navigate("/notifications");
+        }, 1100);
+      }, 2100);
+    } else {
+      toast({
+        title: "Pagamento Completato",
+        description: "Il tuo metodo di pagamento è stato salvato con successo.",
+      });
+      setTimeout(() => {
         navigate("/settings");
-      }
-    }, 1200);
+      }, 1200);
+    }
   };
 
   const handleCardSubmit = () => {
@@ -76,6 +89,7 @@ const PaymentMethods = () => {
 
   return (
     <div className="min-h-screen bg-black pb-6">
+      <ClueUnlockedExplosion open={showExplosion} onFinish={() => setShowExplosion(false)} />
       <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue">
         <Button 
           variant="ghost" 
