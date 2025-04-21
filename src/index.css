@@ -4,65 +4,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* =====================
-   CUSTOM PALETTE & ROOT
-===================== */
-@layer base {
-  :root {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 98%;
-
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 0 0% 0%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 70%;
-
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 65% 30%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 0 0% 100%;
-
-    --radius: 0.7rem;
-  }
-
-  .light {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 18%;
-    --muted: 0 0% 90%;
-    --muted-foreground: 0 0% 55%;
-    --popover: 0 0% 99%;
-    --popover-foreground: 0 0% 15%;
-    --border: 0 0% 60%;
-    --input: 0 0% 80%;
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 13%;
-    --primary: 0 0% 0%;
-    --primary-foreground: 0 0% 18%;
-    --secondary: 0 0% 95%;
-    --secondary-foreground: 0 0% 18%;
-    --accent: 0 0% 92%;
-    --accent-foreground: 0 0% 20%;
-    --destructive: 0 85% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --ring: 0 0% 30%;
-    --radius: 0.7rem;
-  }
-}
+/* === Refactored: Import modular styles === */
+@import './styles/theme.css';
+@import './styles/animations.css';
+@import './styles/utilities.css';
 
 /* ==========
    BASE STYLE
@@ -91,62 +36,8 @@
 }
 
 /* =============
-   NEON & BORDER
+   INSTAGRAM-RING + DROPSHADOW
 ============= */
-@layer base {
-  .neon-text {
-    @apply font-bold;
-  }
-  .dark .neon-text { @apply text-white; text-shadow: 0 0 10px #111, 0 0 20px #222; }
-  .light .neon-text { @apply text-black; text-shadow: none; }
-
-  .neon-pink-text {
-    @apply font-bold;
-  }
-  .dark .neon-pink-text { @apply text-white; text-shadow: 0 0 10px #222, 0 0 20px #000; }
-  .light .neon-pink-text { @apply text-black; text-shadow: none; }
-
-  .neon-border, .neon-pink-border {
-    @apply border-2 rounded-md;
-  }
-  .dark .neon-border { @apply border-background; box-shadow: 0 0 10px #111, inset 0 0 10px #222; }
-  .light .neon-border { @apply border-black; box-shadow: none; }
-  .dark .neon-pink-border { @apply border-background; box-shadow: 0 0 10px #222, inset 0 0 10px #111; }
-  .light .neon-pink-border { @apply border-black; box-shadow: none; }
-}
-
-/* =======
-   GLASS
-======== */
-@layer base {
-  .glass-card {
-    @apply rounded-lg p-6;
-    background: #151515;
-    border: 1px solid #232323;
-  }
-}
-
-/* =========
-   NAVIGATION
-=========== */
-@layer base {
-  .bottom-nav-item {
-    @apply flex flex-col items-center justify-center transition-colors;
-  }
-  .dark .bottom-nav-item { @apply text-gray-400; }
-  .light .bottom-nav-item { @apply text-gray-600; }
-  .dark .bottom-nav-item.active { @apply text-white; }
-  .light .bottom-nav-item.active { @apply text-black; }
-  .active-gradient-icon {
-    filter: drop-shadow(0 0 6px #9b87f5aa);
-    transform: scale(1.2);
-    transition: transform 0.2s;
-  }
-}
-
-/* =================
-   INSTAGRAM-RING
-================= */
 @layer base {
   .instagram-story-ring {
     position: relative;
@@ -167,7 +58,6 @@
       #285AEB 100%,
       #fdf497 100%
     );
-    animation: spin-gradient 2.8s linear infinite;
     width: calc(100% + 8px);
     height: calc(100% + 8px);
     box-sizing: border-box;
@@ -178,7 +68,7 @@
     z-index: 3;
   }
 
-  /* SOTTILE GRADIENT RING */
+  /* RING THIN: sottile gradient */
   .instagram-story-ring-gradient {
     position: relative;
     display: inline-block;
@@ -186,7 +76,6 @@
   .instagram-story-ring-gradient::before {
     content: "";
     position: absolute;
-    /* Bordo più sottile: inset e dimensioni ridotte */
     inset: -2px;
     border-radius: 50%;
     z-index: 1;
@@ -205,7 +94,6 @@
       0 0 12px 5px #d6249f11;
     width: calc(100% + 4px);
     height: calc(100% + 4px);
-    animation: spin-gradient 2.8s linear infinite;
     pointer-events: none;
   }
   .instagram-story-ring-gradient > * {
@@ -216,32 +104,6 @@
     background: #000;
     overflow: hidden;
   }
-}
-
-/* ===========
-   ANIMATIONS
-============= */
-@layer base {
-  @keyframes spin-gradient {
-    0% { transform: rotate(0deg);}
-    100% { transform: rotate(360deg);}
-  }
-  .gradient-white-text {
-    background: linear-gradient(90deg, #ffffff 50%, #f1f1f1 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-    text-fill-color: transparent;
-  }
-}
-
-/* ========
-   UTILITY
-========= */
-@layer utilities {
-  .gradient-black-purple { background: #000; }
-  .glass-backdrop { @apply backdrop-blur-lg bg-black/50 border-b border-[#232323]; }
 }
 
 /* ==========

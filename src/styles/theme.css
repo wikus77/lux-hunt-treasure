@@ -1,0 +1,52 @@
+
+/* PALETTE & ROOT VARS */
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 65% 30%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 100%;
+    --radius: 0.7rem;
+  }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 18%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 55%;
+    --popover: 0 0% 99%;
+    --popover-foreground: 0 0% 15%;
+    --border: 0 0% 60%;
+    --input: 0 0% 80%;
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 13%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 18%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 18%;
+    --accent: 0 0% 92%;
+    --accent-foreground: 0 0% 20%;
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --ring: 0 0% 30%;
+    --radius: 0.7rem;
+  }
+}

@@ -1,0 +1,51 @@
+
+/* UTILITIES E COMPONENTI SPECIALI */
+
+@layer base {
+  .neon-text {
+    @apply font-bold;
+  }
+  .dark .neon-text { @apply text-white; text-shadow: 0 0 10px #111, 0 0 20px #222; }
+  .light .neon-text { @apply text-black; text-shadow: none; }
+
+  .neon-pink-text {
+    @apply font-bold;
+  }
+  .dark .neon-pink-text { @apply text-white; text-shadow: 0 0 10px #222, 0 0 20px #000; }
+  .light .neon-pink-text { @apply text-black; text-shadow: none; }
+
+  .neon-border, .neon-pink-border {
+    @apply border-2 rounded-md;
+  }
+  .dark .neon-border { @apply border-background; box-shadow: 0 0 10px #111, inset 0 0 10px #222; }
+  .light .neon-border { @apply border-black; box-shadow: none; }
+  .dark .neon-pink-border { @apply border-background; box-shadow: 0 0 10px #222, inset 0 0 10px #111; }
+  .light .neon-pink-border { @apply border-black; box-shadow: none; }
+
+  .glass-card {
+    @apply rounded-lg p-6;
+    background: #151515;
+    border: 1px solid #232323;
+  }
+}
+
+@layer base {
+  .bottom-nav-item {
+    @apply flex flex-col items-center justify-center transition-colors;
+  }
+  .dark .bottom-nav-item { @apply text-gray-400; }
+  .light .bottom-nav-item { @apply text-gray-600; }
+  .dark .bottom-nav-item.active { @apply text-white; }
+  .light .bottom-nav-item.active { @apply text-black; }
+  .active-gradient-icon {
+    filter: drop-shadow(0 0 6px #9b87f5aa);
+    transform: scale(1.2);
+    transition: transform 0.2s;
+  }
+}
+
+/* GLASS UTILITY */
+@layer utilities {
+  .gradient-black-purple { background: #000; }
+  .glass-backdrop { @apply backdrop-blur-lg bg-black/50 border-b border-[#232323]; }
+}

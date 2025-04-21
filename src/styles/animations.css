@@ -1,0 +1,24 @@
+
+/* ANIMAZIONI E KEYFRAMES */
+@layer base {
+  @keyframes spin-gradient {
+    0% { transform: rotate(0deg);}
+    100% { transform: rotate(360deg);}
+  }
+  .gradient-white-text {
+    background: linear-gradient(90deg, #ffffff 50%, #f1f1f1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    text-fill-color: transparent;
+  }
+}
+
+/* Instagram animation */
+@layer base {
+  .instagram-story-ring::before,
+  .instagram-story-ring-gradient::before {
+    animation: spin-gradient 2.8s linear infinite;
+  }
+}
