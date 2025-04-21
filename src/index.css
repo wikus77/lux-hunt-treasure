@@ -1,81 +1,61 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
+    --background: 268 66% 6%; /* #130928 */
     --foreground: 0 0% 98%;
 
-    --card: 240 10% 3.9%;
+    --card: 268 44% 10%; /* #23113d */
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 10% 3.9%;
+    --popover: 268 44% 10%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 277 75% 84%; /* viola chiaro */
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 240 3.7% 15.9%;
+    --secondary: 277 30% 20%; /* viola scuro */
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 277 20% 22%;
+    --muted-foreground: 277 8% 60%;
 
-    --accent: 240 3.7% 15.9%;
+    --accent: 277 60% 24%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --border: 277 30% 20%;
+    --input: 277 30% 20%;
+    --ring: 277 75% 84%;
 
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --radius: 0.7rem;
   }
   
   .light {
-    --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
-    
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
-    
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
-    
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 210 40% 98%;
-    
-    --ring: 215 20.2% 65.1%;
-    
-    --radius: 0.5rem;
+    --background: 277 75% 96%;
+    --foreground: 277 30% 20%;
+    --muted: 277 75% 90%;
+    --muted-foreground: 277 30% 25%;
+    --popover: 277 75% 96%;
+    --popover-foreground: 277 30% 10%;
+    --border: 277 60% 80%;
+    --input: 277 60% 80%;
+    --card: 277 75% 99%;
+    --card-foreground: 277 30% 20%;
+    --primary: 277 75% 84%;
+    --primary-foreground: 277 30% 20%;
+    --secondary: 277 75% 80%;
+    --secondary-foreground: 277 30% 25%;
+    --accent: 277 75% 86%;
+    --accent-foreground: 277 30% 18%;
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 277 40% 100%;
+    --ring: 277 75% 60%;
+    --radius: 0.7rem;
   }
 }
 
@@ -87,19 +67,20 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    background: linear-gradient(135deg, #110229 0%, #3b0f70 50%, #000000 100%);
+    min-height: 100vh;
   }
 
   .dark {
-    background-color: #141414;
-    color: #ffffff;
+    background: linear-gradient(135deg, #110229 0%, #3b0f70 60%, #000000 100%) !important;
+    color: #fff;
   }
 
   .light {
-    background-color: #ffffff;
-    color: #333333;
+    background: linear-gradient(135deg, #ece6fa 0%, #a789d4 100%) !important;
+    color: #1c1432;
   }
 
-  /* Remove neon effects in light mode */
   .neon-text {
     @apply font-bold;
   }
@@ -158,14 +139,8 @@
 
   .glass-card {
     @apply rounded-lg p-6;
-  }
-
-  .dark .glass-card {
-    @apply bg-opacity-10 bg-white backdrop-filter backdrop-blur-sm border border-white/20;
-  }
-
-  .light .glass-card {
-    @apply bg-white shadow-md border border-gray-200;
+    background: linear-gradient(120deg, #1a0b36 88%, #2b085f 100%);
+    border: 1px solid rgba(140,50,255,0.15);
   }
 
   .bottom-nav-item {
@@ -187,4 +162,53 @@
   .light .bottom-nav-item.active {
     @apply text-indigo-600;
   }
+}
+
+@layer utilities {
+  .gradient-black-purple {
+    background: linear-gradient(135deg, #130928 0%, #5E239D 60%, #000000 100%);
+  }
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
 }
