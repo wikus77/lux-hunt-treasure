@@ -1,70 +1,77 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
+// Palette di esplosione ispirata all'effetto video
+const EXPLOSION_COLORS = [
+  "#F97316", // bright orange
+  "#33C3F0", // sky blue
+  "#D946EF", // magenta pink
+  "#8B5CF6", // vivid purple
+  "#FDE1D3", // peach
+  "#FFDEE2", // soft pink
+  "#FEC6A1", // soft orange
+  "#F2FCE2", // soft green
+  "#D3E4FD", // soft blue
+  "#FEF7CD", // soft yellow
+  "#E5DEFF", // soft purple
+];
+
 interface Props {
   open: boolean;
   onFinish: () => void;
 }
 
-const POWDER_COLORS = [
-  "bg-yellow-300",
-  "bg-green-400",
-  "bg-blue-500",
-  "bg-pink-400",
-  "bg-purple-400",
-  "bg-orange-400",
-  "bg-fuchsia-400",
-  "bg-red-400",
-  "bg-emerald-400",
-  "bg-cyan-400",
-  "bg-rose-400",
-  "bg-lime-300"
-];
-
-type Particle = {
-  left: number;
-  top: number;
-  size: number;
+type PowderRay = {
+  angle: number;
   color: string;
-  angle: number;    // Traiettoria (in radianti)
-  distance: number; // Quanto viaggia
-  delay: number;    // Per effetto "ritardo" all'esplosione
+  scale: number;
+  delay: number;
+  duration: number;
+  startSize: number;
+  endSize: number;
+  blur: number;
+  opacity: number;
 };
 
-const PARTICLE_COUNT = 36;
+const RAY_COUNT = 18;
 
-function generateParticles(): Particle[] {
-  // Particelle generate tutte dal centro, direzioni random su raggio
-  const particles: Particle[] = [];
-  for (let i = 0; i < PARTICLE_COUNT; i++) {
-    const angle = (i / PARTICLE_COUNT) * 2 * Math.PI + (Math.random() - 0.5) * 0.4;
-    const distance = 120 + Math.random() * 64; // px
-    const size = 24 + Math.random() * 32;
-    const left = 50 + Math.cos(angle) * 7; // posizione iniziale: centro + piccola "varianza"
-    const top = 50 + Math.sin(angle) * 5;
-    const color = POWDER_COLORS[Math.floor(Math.random() * POWDER_COLORS.length)];
-    const delay = Math.random() * 0.15; // s
-    particles.push({ left, top, color, angle, distance, size, delay });
+function genPowderRays(): PowderRay[] {
+  // Genera "rays" che simulano la polvere a raggiera, con molta varietà tra i toni e formati per un effetto naturale
+  const rays: PowderRay[] = [];
+  for (let i = 0; i < RAY_COUNT; i++) {
+    const angle = (i / RAY_COUNT) * 360 + Math.random() * 12 - 6;
+    rays.push({
+      angle,
+      color: EXPLOSION_COLORS[i % EXPLOSION_COLORS.length],
+      scale: 0.8 + Math.random() * 0.85,
+      blur: 5 + Math.random() * 10,
+      opacity: 0.48 + Math.random() * 0.27,
+      delay: Math.random() * 0.11,
+      duration: 0.78 + Math.random() * 0.28,
+      startSize: 60 + Math.random() * 40,
+      endSize: 175 + Math.random() * 60,
+    });
   }
-  return particles;
+  return rays;
 }
 
 const ClueUnlockedExplosion: React.FC<Props> = ({ open, onFinish }) => {
   const [showFadeOut, setShowFadeOut] = useState(false);
-  const [particles, setParticles] = useState<Particle[]>([]);
+  const [rays, setRays] = useState<PowderRay[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (open) {
-      setParticles(generateParticles());
+      setRays(genPowderRays());
       setShowFadeOut(false);
-      // Scompare effetto fade dopo ~1.8s (esplosione), poi callback finale
+
+      // Timing: esplosione visibile per 1.4s, fade-out finale 700ms
       timeoutRef.current = setTimeout(() => {
         setShowFadeOut(true);
         setTimeout(() => {
           onFinish();
-        }, 550); // tempo per la fade-out
-      }, 1750);
+        }, 700);
+      }, 1400);
     }
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -75,44 +82,58 @@ const ClueUnlockedExplosion: React.FC<Props> = ({ open, onFinish }) => {
 
   return (
     <div
-      // fade-in all'apertura, fade-out quando showFadeOut è true
-      className={`fixed inset-0 z-[1000] flex items-center justify-center bg-black/90 transition-all duration-500 ${showFadeOut ? "animate-fade-out" : "animate-fade-in"} overflow-hidden`}
+      className={`
+        fixed inset-0 z-[99999] flex items-center justify-center bg-black/95
+        transition-opacity duration-500
+        ${showFadeOut ? "animate-fade-out" : "animate-fade-in"}
+        overflow-hidden 
+      `}
     >
-      {/* Particelle */}
-      <div className="absolute inset-0 pointer-events-none">
-        {particles.map((p, idx) => {
-          // Calcola la destinazione finale
-          const tx = Math.cos(p.angle) * p.distance;
-          const ty = Math.sin(p.angle) * p.distance;
-
-          return (
+      {/* RAYS polvere */}
+      <div className="absolute inset-0 pointer-events-none select-none">
+        {rays.map((ray, idx) => (
+          <span
+            key={idx}
+            className="absolute left-1/2 top-1/2 origin-center"
+            style={{
+              // Spara verso l'esterno lungo l'angolo scelto
+              transform: `
+                rotate(${ray.angle}deg)
+                translateY(-18%)
+                scale(${ray.scale})
+              `,
+              zIndex: 10 + idx,
+              pointerEvents: "none",
+              animation: `
+                powderRayGrow ${ray.duration}s ${ray.delay}s cubic-bezier(.3,.8,.45,1.2) forwards,
+                powderRayFade ${ray.duration + 0.18}s ${ray.delay}s linear forwards
+              `
+            }}
+          >
+            {/* La "polvere" è un blob ellittico che cresce e si dissolve */}
             <span
-              key={idx}
-              className={`
-                absolute rounded-full opacity-70 shadow-lg
-                ${p.color}
-                transition-all
-              `}
+              className=""
               style={{
-                width: `${p.size}px`,
-                height: `${p.size}px`,
-                left: `calc(${p.left}% - ${p.size / 2}px)`,
-                top: `calc(${p.top}% - ${p.size / 2}px)`,
-                filter: "blur(6px)",
-                // Animazione custom: esplode/rimbalza via con dissolvenza
-                transition: "transform 1.15s cubic-bezier(0.49,0.67,0.99,1.01), opacity 0.9s linear",
-                transitionDelay: `${p.delay}s`,
-                transform: showFadeOut
-                  ? `translate(${tx * 1.3}px, ${ty * 1.2}px) scale(0.2)`
-                  : `translate(0,0) scale(1)`,
-                opacity: showFadeOut ? 0 : 0.82
+                display: "block",
+                width: ray.startSize,
+                height: ray.startSize * 0.58,
+                background: `radial-gradient(ellipse 60% 49% at 50% 50%, ${ray.color} 88%, transparent 100%)`,
+                filter: `blur(${ray.blur}px)`,
+                opacity: ray.opacity,
+                borderRadius: "43% 57% 58% 42% / 62% 41% 59% 38%",
+                transition: "none"
               }}
-            />
-          );
-        })}
+            ></span>
+          </span>
+        ))}
       </div>
-      {/* Scritta centrale */}
-      <div className={`relative z-[1010] flex flex-col items-center justify-center`}>
+      {/* Overlay centrale con scale-in e fade */}
+      <div
+        className={`
+            relative z-[1010] flex flex-col items-center justify-center
+            ${showFadeOut ? "animate-fade-out" : "animate-scale-in"}
+        `}
+      >
         <span className="text-4xl md:text-6xl font-extrabold bg-gradient-to-br from-yellow-300 via-fuchsia-400 to-green-500 bg-clip-text text-transparent drop-shadow-[0_0_28px_#39FF14] animate-scale-in">
           Congratulazioni
         </span>
@@ -120,6 +141,33 @@ const ClueUnlockedExplosion: React.FC<Props> = ({ open, onFinish }) => {
           Hai sbloccato un nuovo indizio!
         </span>
       </div>
+      {/* Keyframes powderRayGrow e powderRayFade (solo qui, inline style tag) */}
+      <style>
+        {`
+        @keyframes powderRayGrow {
+          0% {
+            opacity: 0;
+            transform: scale(0.23) translateY(-30%) rotate(0deg);
+          }
+          20% {
+            opacity: 1;
+          }
+          85% {
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1.78) translateY(-145%) rotate(0deg);
+            opacity: 0;
+          }
+        }
+        @keyframes powderRayFade {
+          0% { opacity: 0.5; }
+          13% { opacity: 1; }
+          60% { opacity: 0.78; }
+          100% { opacity: 0; }
+        }
+        `}
+      </style>
     </div>
   );
 };
