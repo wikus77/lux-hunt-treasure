@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { User, Mail, MoreVertical } from "lucide-react";
 import CurrentEventSection from "@/components/home/CurrentEventSection";
@@ -67,9 +66,8 @@ const Home = () => {
         onMarkAllAsRead={handleMarkAllAsRead}
       />
 
-      {/* Header content - This will be displayed in the fixed header of MainLayout */}
-      <div className="fixed top-0 left-0 right-0 z-50 w-full px-4 py-6 flex items-center border-b border-projectx-deep-blue backdrop-blur-lg bg-black/70 transition-colors duration-300">
-        {/* Profile image */}
+      {/* Header controls moved to the fixed header area */}
+      <div className="fixed top-0 left-0 z-50 h-[72px] flex items-center px-4">
         <button
           className="flex items-center"
           onClick={() => setShowProfileModal(true)}
@@ -86,37 +84,34 @@ const Home = () => {
             )}
           </div>
         </button>
-        {/* Title centered */}
-        <h1 className="text-2xl font-bold neon-text flex-1 text-center">M1ssion</h1>
+      </div>
 
-        {/* Mail icon and 3 dots on right */}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="p-2 relative rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors cursor-pointer"
-            onClick={handleShowNotifications}
-          >
-            <Mail className="w-5 h-5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-projectx-pink text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold border-2 border-black">
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            )}
-          </button>
-          <button
-            className="p-2 rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors"
-            onClick={() => navigate("/settings")}
-            aria-label="Impostazioni"
-          >
-            <MoreVertical className="w-5 h-5" />
-          </button>
-        </div>
+      {/* Header controls moved to the right side */}
+      <div className="fixed top-0 right-4 z-50 h-[72px] flex items-center gap-2">
+        <button
+          type="button"
+          aria-label="Notifications"
+          className="p-2 relative rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors cursor-pointer"
+          onClick={handleShowNotifications}
+        >
+          <Mail className="w-5 h-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-projectx-pink text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold border-2 border-black">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </button>
+        <button
+          className="p-2 rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors"
+          onClick={() => navigate("/settings")}
+          aria-label="Impostazioni"
+        >
+          <MoreVertical className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Content */}
-      <div className="w-full mt-[72px]">
-        {/* FULL WIDTH */}
+      <div className="w-full">
         <CurrentEventSection />
         <MysteryPrizesSection />
         <CluesSection />

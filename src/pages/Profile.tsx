@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Edit, Menu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -104,35 +103,27 @@ const Profile = () => {
 
   return (
     <div className="w-full min-h-screen bg-black pb-20">
-      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex items-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
-        <h1 className="text-2xl font-bold neon-text flex-1 text-center">Profilo</h1>
-        <div className="flex gap-2 items-center absolute right-4 top-1/2 -translate-y-1/2">
-          {/* Bottone modifica profilo */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsEditing((v) => !v)}
-            aria-label="Modifica profilo"
-          >
-            <Edit className="h-5 w-5" />
-          </Button>
-          {/* Bottone Centro gestione account */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="ml-2"
-            onClick={() => setDrawerOpen(true)}
-            aria-label="Centro gestione account"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        </div>
-        <InstagramStyleDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-      </header>
-      <div className="h-[72px] w-full" />
+      <div className="fixed top-0 right-4 z-50 h-[72px] flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsEditing((v) => !v)}
+          aria-label="Modifica profilo"
+        >
+          <Edit className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Centro gestione account"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      </div>
+      <InstagramStyleDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
       <div className="w-full">
-        {/* Header custom rimosso, ora tutto è nella sticky header */}
         <ProfileBio
           name={name}
           setName={setName}
