@@ -6,7 +6,6 @@ import ProfileLayout from "@/components/layout/ProfileLayout";
 import { supabase } from "@/integrations/supabase/client";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileBio from "@/components/profile/ProfileBio";
-// ProfileNotifications RIMOSSO
 import ProfileClues from "@/components/profile/ProfileClues";
 import SubscriptionStatus from "@/components/profile/SubscriptionStatus";
 
@@ -102,44 +101,49 @@ const Profile = () => {
   }, []);
 
   return (
-    <ProfileLayout>
-      <ProfileHeader
-        name={name}
-        setName={setName}
-        profileImage={profileImage}
-        setProfileImage={setProfileImage}
-        isEditing={isEditing}
-        setIsEditing={setIsEditing}
-      />
+    <div className="w-full min-h-screen bg-black pb-20">
+      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex items-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
+        <h1 className="text-2xl font-bold neon-text flex-1 text-center">Profilo</h1>
+      </header>
+      <div className="h-[72px] w-full" />
 
-      <ProfileBio
-        name={name}
-        setName={setName}
-        bio={bio}
-        setBio={setBio}
-        profileImage={profileImage}
-        handleImageChange={handleImageChange}
-        isEditing={isEditing}
-        className=""
-      />
+      <div className="w-full">
+        <ProfileHeader
+          name={name}
+          setName={setName}
+          profileImage={profileImage}
+          setProfileImage={setProfileImage}
+          isEditing={isEditing}
+          setIsEditing={setIsEditing}
+        />
 
-      {/* SEZIONE NOTIFICHE RIMOSSA */}
+        <ProfileBio
+          name={name}
+          setName={setName}
+          bio={bio}
+          setBio={setBio}
+          profileImage={profileImage}
+          handleImageChange={handleImageChange}
+          isEditing={isEditing}
+        />
 
-      <SubscriptionStatus />
+        {/* SEZIONE NOTIFICHE RIMOSSA */}
 
-      <ProfileClues unlockedClues={unlockedClues} />
+        <SubscriptionStatus />
 
-      {isEditing && (
-        <Button 
-          className="w-full mt-6 bg-gradient-to-r from-projectx-blue to-projectx-pink"
-          onClick={handleSaveProfile}
-        >
-          Salva Modifiche
-        </Button>
-      )}
-    </ProfileLayout>
+        <ProfileClues unlockedClues={unlockedClues} />
+
+        {isEditing && (
+          <Button 
+            className="w-full mt-6 bg-gradient-to-r from-projectx-blue to-projectx-pink"
+            onClick={handleSaveProfile}
+          >
+            Salva Modifiche
+          </Button>
+        )}
+      </div>
+    </div>
   );
 };
 
 export default Profile;
-

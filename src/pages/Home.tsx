@@ -39,7 +39,6 @@ const Home = () => {
   }, []);
 
   const handleShowNotifications = () => {
-    console.log("Mail button clicked"); // Debug log
     reloadNotifications();
     setShowNotificationsBanner(true);
   };
@@ -118,6 +117,7 @@ const Home = () => {
       {/* Compensa l'altezza della header per il contenuto */}
       <div className="h-[72px] w-full" />
       <div className="w-full">
+        {/* FULL WIDTH */}
         <CurrentEventSection />
         <MysteryPrizesSection />
         <CluesSection />

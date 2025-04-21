@@ -5,16 +5,16 @@ import { mysteryPrizes } from "@/data/mysteryPrizesData";
 
 export const MysteryPrizesSection = () => {
   return (
-    <section className="p-4">
-      <h2 className="text-xl font-bold mb-4">Premi Misteriosi dei Prossimi Eventi</h2>
-      <div className="relative">
+    <section className="w-full px-0 py-4">
+      <h2 className="text-xl font-bold mb-4 px-4">Premi Misteriosi dei Prossimi Eventi</h2>
+      <div className="relative w-full">
         <Carousel>
           <CarouselContent>
             {mysteryPrizes.map((prize, index) => (
-              <CarouselItem key={index}>
-                <Card className="p-1">
+              <CarouselItem key={index} className="w-full max-w-full">
+                <Card className="p-1 w-full">
                   <div 
-                    className="h-48 bg-cover bg-center rounded-md" 
+                    className="h-48 bg-cover bg-center rounded-md w-full" 
                     style={{ backgroundImage: `url(${prize.imageUrl})` }}
                   />
                   <p className="p-4 text-sm text-muted-foreground">
@@ -33,4 +33,3 @@ export const MysteryPrizesSection = () => {
 };
 
 export default MysteryPrizesSection;
-

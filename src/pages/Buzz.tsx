@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { toast } from "@/components/ui/sonner";
@@ -101,8 +100,8 @@ const Buzz = () => {
 
       <div className="h-[72px] w-full" />
 
-      <section className="flex flex-col items-center justify-center py-10 h-[70vh] w-full">
-        <div className="text-center mb-8 w-full max-w-none px-4">
+      <section className="flex flex-col items-center justify-center py-10 h-[70vh] w-full px-0">
+        <div className="text-center mb-8 w-full px-0">
           <h2 className="text-2xl font-bold mb-2">Hai bisogno di un indizio extra?</h2>
           <p className="text-muted-foreground">
             Premi il pulsante Buzz per ottenere un indizio supplementare a soli €1,99
@@ -120,7 +119,7 @@ const Buzz = () => {
           </Button>
         </div>
 
-        <div className="mt-8 text-center w-full px-4 max-w-none">
+        <div className="mt-8 text-center w-full px-0">
           <p className="text-sm text-muted-foreground">
             Limite: 5 indizi supplementari per evento
           </p>
@@ -163,4 +162,3 @@ const Buzz = () => {
 };
 
 export default Buzz;
-
