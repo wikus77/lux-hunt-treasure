@@ -69,7 +69,7 @@ const Home = () => {
         onMarkAllAsRead={handleMarkAllAsRead}
       />
 
-      <header className="py-6 flex items-center border-b border-projectx-deep-blue gap-3 w-full">
+      <header className="py-6 px-4 flex items-center border-b border-projectx-deep-blue gap-3 w-full">
         {/* Profile image */}
         <button
           className="flex items-center"
@@ -115,9 +115,11 @@ const Home = () => {
         </div>
       </header>
 
-      <CurrentEventSection />
-      <MysteryPrizesSection />
-      <CluesSection />
+      <div className="w-full">
+        <CurrentEventSection />
+        <MysteryPrizesSection />
+        <CluesSection />
+      </div>
 
       <BottomNavigation />
 
@@ -130,4 +132,3 @@ const Home = () => {
 };
 
 export default Home;
-

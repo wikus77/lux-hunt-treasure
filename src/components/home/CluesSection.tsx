@@ -5,8 +5,8 @@ import { clues } from "@/data/cluesData";
 
 export const CluesSection = () => {
   return (
-    <section className="p-4">
-      <div className="flex justify-between items-center mb-4">
+    <section className="p-4 w-full">
+      <div className="flex justify-between items-center mb-4 w-full">
         <h2 className="text-xl font-bold">Indizi Disponibili</h2>
         <div className="text-xs px-2 py-1 rounded-full bg-projectx-deep-blue">
           Settimana 1/4
@@ -36,4 +36,3 @@ export const CluesSection = () => {
 };
 
 export default CluesSection;
-
