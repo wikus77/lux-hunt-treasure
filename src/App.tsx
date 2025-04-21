@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +15,7 @@ import Settings from "./pages/Settings";
 import Subscriptions from "./pages/Subscriptions";
 import Events from "./pages/Events";
 import Buzz from "./pages/Buzz";
+import Map from "./pages/Map";
 import NotFound from "./pages/NotFound";
 import PaymentMethods from "./pages/PaymentMethods";
 import PersonalInfo from "./pages/PersonalInfo";
@@ -40,6 +42,7 @@ const App = () => (
               <Route path="/subscriptions" element={<Subscriptions />} />
               <Route path="/events" element={<Events />} />
               <Route path="/buzz" element={<Buzz />} />
+              <Route path="/map" element={<Map />} />
               <Route path="/payment-methods" element={<PaymentMethods />} />
               <Route path="/personal-info" element={<PersonalInfo />} />
               <Route path="/privacy-security" element={<PrivacySecurity />} />

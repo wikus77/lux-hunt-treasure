@@ -1,5 +1,5 @@
 
-import { Home, User, MoreVertical, Calendar, CreditCard, Circle } from "lucide-react";
+import { Home, User, MoreVertical, Calendar, CreditCard, Circle, Map } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
@@ -54,6 +54,16 @@ export const BottomNavigation = () => {
         />
       </button>
       <button
+        onClick={() => handleNavigation("/map")}
+        className={`bottom-nav-item ${isActive("/map") ? "active" : ""}`}
+        aria-label="Mappa"
+      >
+        <Map
+          className={`w-6 h-6 ${isActive("/map") ? gradientIconClass : ""}`}
+          color={isActive("/map") ? "url(#gradient-green-map)" : "#bbb"}
+        />
+      </button>
+      <button
         onClick={() => handleNavigation("/subscriptions")}
         className={`bottom-nav-item ${isActive("/subscriptions") ? "active" : ""}`}
         aria-label="Abbonamenti"
@@ -99,6 +109,10 @@ export const BottomNavigation = () => {
             <stop stopColor="#39FF14" offset="0%" />
             <stop stopColor="#FFFF00" offset="100%" />
           </linearGradient>
+          <linearGradient id="gradient-green-map" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop stopColor="#39FF14" offset="0%" />
+            <stop stopColor="#FFFF00" offset="100%" />
+          </linearGradient>
           <linearGradient id="gradient-green-subscriptions" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop stopColor="#39FF14" offset="0%" />
             <stop stopColor="#FFFF00" offset="100%" />
@@ -118,4 +132,3 @@ export const BottomNavigation = () => {
 };
 
 export default BottomNavigation;
-
