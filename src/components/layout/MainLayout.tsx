@@ -4,6 +4,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
 import Footer from "./Footer";
 import BottomNavigation from "./BottomNavigation";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const MainLayout = () => {
   const location = useLocation();
@@ -20,13 +21,6 @@ const MainLayout = () => {
       setProfileImage(savedProfileImage);
     }
   }, []);
-
-  useEffect(() => {
-    const savedProfileImage = localStorage.getItem('profileImage');
-    if (savedProfileImage) {
-      setProfileImage(savedProfileImage);
-    }
-  }, [location.pathname]);
 
   // Determina la title
   const getPageTitle = () => {
@@ -50,18 +44,12 @@ const MainLayout = () => {
               onClick={() => navigate("/profile")}
               aria-label="Go to profile"
             >
-              <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-projectx-neon-blue bg-transparent flex items-center justify-center">
-                {profileImage ? (
-                  <img
-                    src={profileImage}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                    style={{ backgroundColor: 'transparent' }} // elimina cerchio scuro dietro
-                  />
-                ) : (
+              <Avatar className="w-8 h-8 border-2 border-projectx-neon-blue">
+                <AvatarImage src={profileImage || ""} alt="Profile" />
+                <AvatarFallback className="bg-transparent">
                   <User className="w-5 h-5 text-projectx-neon-blue" />
-                )}
-              </div>
+                </AvatarFallback>
+              </Avatar>
             </button>
           </div>
         )}

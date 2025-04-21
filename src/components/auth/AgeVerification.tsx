@@ -1,20 +1,33 @@
+
 import React, { useState } from "react";
 import LoginModal from "./LoginModal";
 
-// Questo componente ipotetico AgeVerification esiste già? Assumo che esista e ora lo aggiorniamo.
+interface AgeVerificationProps {
+  onVerified?: () => void;
+}
 
-/** 
- * Interfaccia minimale creata per AgeVerification (non fornita nel codice originale). 
- * Aggiungi il link cliccabile "Hai già un account?" sotto e apri la modale LoginModal al click.
- */
-const AgeVerification = () => {
+const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified }) => {
   const [loginOpen, setLoginOpen] = useState(false);
+
+  const handleVerification = () => {
+    if (onVerified) {
+      onVerified();
+    }
+  };
 
   return (
     <div className="max-w-sm mx-auto p-6 glass-card flex flex-col gap-4">
       {/* ... supposizione contenuto verifica età */}
       <h2 className="text-xl font-bold neon-text mb-4">Verifica la tua età</h2>
       {/* ... altri elementi della verifica */}
+      
+      {/* Bottone di verifica */}
+      <button 
+        className="bg-gradient-to-r from-projectx-blue to-projectx-pink px-4 py-2 rounded-md"
+        onClick={handleVerification}
+      >
+        Verifica
+      </button>
       
       {/* Link cliccabile per accedere */}
       <div className="text-center mt-4 text-projectx-neon-blue hover:underline cursor-pointer select-none"
