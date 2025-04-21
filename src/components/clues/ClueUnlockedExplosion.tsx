@@ -23,6 +23,24 @@ const ClueUnlockedExplosion: React.FC<Props> = ({ open, onFinish }) => {
     }
   }, [open, onFinish]);
 
+  // Add the explosion animation keyframes to the document when the component mounts
+  useEffect(() => {
+    const styleElement = document.createElement("style");
+    styleElement.textContent = `
+      @keyframes explode {
+        to {
+          opacity: 0.1;
+          transform: scale(2.6) translateY(-80px);
+        }
+      }
+    `;
+    document.head.appendChild(styleElement);
+
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
+
   if (!open) return null;
 
   return (
@@ -55,14 +73,6 @@ const ClueUnlockedExplosion: React.FC<Props> = ({ open, onFinish }) => {
         </span>
         <span className="block mt-4 text-xl font-semibold text-white animate-fade-in">Hai sbloccato un nuovo indizio!</span>
       </div>
-      <style jsx global>{`
-        @keyframes explode {
-          to {
-            opacity: 0.1;
-            transform: scale(2.6) translateY(-80px);
-          }
-        }
-      `}</style>
     </div>
   );
 };
