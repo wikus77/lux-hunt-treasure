@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Check } from "lucide-react";
 import BottomNavigation from "@/components/layout/BottomNavigation";
@@ -44,7 +45,7 @@ const Subscriptions = () => {
       <div className="h-[72px] w-full" />
 
       {/* Introduction */}
-      <section className="px-4 py-6">
+      <section className="px-4 py-6 w-full max-w-none">
         <h2 className="text-xl font-bold mb-2">Scegli il Tuo Piano</h2>
         <p className="text-sm text-muted-foreground mb-6">
           Sblocca più indizi e aumenta le tue possibilità di vittoria con i nostri pacchetti premium.
@@ -52,7 +53,7 @@ const Subscriptions = () => {
       </section>
 
       {/* Subscription Plans */}
-      <section className="px-4 pb-8">
+      <section className="px-4 pb-8 w-full max-w-none">
         <div className="space-y-8">
           <SubscriptionCard
             title="Base"
@@ -94,7 +95,7 @@ const Subscriptions = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="px-4 py-8 bg-projectx-deep-blue">
+      <section className="px-4 py-8 bg-projectx-deep-blue w-full max-w-none">
         <h2 className="text-xl font-bold mb-6 text-center">Vantaggi dei Piani Premium</h2>
         
         <div className="space-y-4">
@@ -137,7 +138,7 @@ const Subscriptions = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="px-4 py-8">
+      <section className="px-4 py-8 w-full max-w-none">
         <h2 className="text-xl font-bold mb-6">Domande Frequenti</h2>
         
         <div className="space-y-4">
@@ -171,3 +172,4 @@ const Subscriptions = () => {
 };
 
 export default Subscriptions;
+

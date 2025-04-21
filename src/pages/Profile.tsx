@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -119,6 +120,7 @@ const Profile = () => {
         profileImage={profileImage}
         handleImageChange={handleImageChange}
         isEditing={isEditing}
+        className=""
       />
 
       {/* SEZIONE NOTIFICHE RIMOSSA */}
@@ -140,3 +142,4 @@ const Profile = () => {
 };
 
 export default Profile;
+
