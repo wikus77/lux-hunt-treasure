@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { Edit, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import InstagramStyleDrawer from "./InstagramStyleDrawer";
+import { Avatar, AvatarImage, AvatarFallback, User } from "nextui-org";
 
 interface ProfileHeaderProps {
   name: string;
@@ -25,7 +25,6 @@ const ProfileHeader = ({
 }: ProfileHeaderProps) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Load profile image from localStorage on component mount
   useEffect(() => {
     const savedProfileImage = localStorage.getItem('profileImage');
     if (savedProfileImage && !profileImage) {
@@ -47,6 +46,14 @@ const ProfileHeader = ({
   return (
     <div className="flex justify-end items-center px-4 py-6 border-b border-projectx-deep-blue relative">
       <div className="flex gap-2 items-center">
+        <span className="instagram-story-ring">
+          <Avatar className="w-10 h-10 border-2 border-projectx-neon-blue bg-black">
+            <AvatarImage src={profileImage || ""} alt={name} />
+            <AvatarFallback className="bg-transparent">
+              <User className="w-6 h-6 text-projectx-neon-blue" />
+            </AvatarFallback>
+          </Avatar>
+        </span>
         <Button
           variant="ghost"
           size="icon"

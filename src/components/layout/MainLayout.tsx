@@ -1,11 +1,9 @@
-
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
 import Footer from "./Footer";
 import BottomNavigation from "./BottomNavigation";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-// Menu a tendina Shadcn
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -26,21 +24,17 @@ const MainLayout = () => {
     document.documentElement.classList.add('dark');
     document.documentElement.classList.remove('light');
 
-    // Carica immagine profilo da localStorage
     const savedProfileImage = localStorage.getItem('profileImage');
     if (savedProfileImage) {
       setProfileImage(savedProfileImage);
     }
-    // Carica nome
     const savedProfileName = localStorage.getItem('profileName');
     if (savedProfileName) {
       setProfileName(savedProfileName);
     }
-    // Carica tipo abbonamento (nel tuo esempio: sempre Base, altrimenti aggiungi logica)
     setProfileSubscription("Base");
   }, []);
 
-  // Determina la title
   const getPageTitle = () => {
     const path = location.pathname;
     if (path === "/home") return "M1ssion";
@@ -63,12 +57,14 @@ const MainLayout = () => {
                   className="flex items-center outline-none focus-visible:ring-2 focus-visible:ring-projectx-neon-blue"
                   aria-label="Apri menu profilo"
                 >
-                  <Avatar className="w-8 h-8 border-2 border-projectx-neon-blue bg-black">
-                    <AvatarImage src={profileImage || ""} alt="Profile" className="object-cover" />
-                    <AvatarFallback className="bg-transparent">
-                      <User className="w-5 h-5 text-projectx-neon-blue" />
-                    </AvatarFallback>
-                  </Avatar>
+                  <span className="instagram-story-ring">
+                    <Avatar className="w-8 h-8 border-2 border-projectx-neon-blue bg-black">
+                      <AvatarImage src={profileImage || ""} alt="Profile" className="object-cover" />
+                      <AvatarFallback className="bg-transparent">
+                        <User className="w-5 h-5 text-projectx-neon-blue" />
+                      </AvatarFallback>
+                    </Avatar>
+                  </span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="z-[110] bg-[#131a14]/90 min-w-[220px] backdrop-blur-lg border-projectx-neon-blue text-white shadow-lg">
@@ -105,15 +101,12 @@ const MainLayout = () => {
         )}
         <h1
           className={
-            "text-2xl font-bold neon-text flex-1 text-center select-none"
+            "text-2xl font-bold neon-text flex-1 text-center select-none gradient-white-text"
           }
           style={{
-            background: "linear-gradient(90deg, #faff00 20%, #39FF14 60%)",
             WebkitBackgroundClip: "text",
             color: "transparent",
             backgroundClip: "text",
-            textShadow:
-              "0 0 12px #faff00, 0 0 24px #39FF14, 0 0 7px #39FF14, 0 0 21px #FFFF00",
           }}
         >
           {getPageTitle()}

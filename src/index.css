@@ -168,6 +168,51 @@
     transform: scale(1.2);
     transition: transform 0.2s;
   }
+
+  .instagram-story-ring {
+    position: relative;
+    display: inline-block;
+  }
+
+  .instagram-story-ring::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    z-index: 2;
+    border-radius: 9999px;
+    padding: 0;
+    background: conic-gradient(
+      #fdf497 0%,
+      #fdf497 10%,
+      #fd5949 30%,
+      #d6249f 60%,
+      #285AEB 100%,
+      #fdf497 100%
+    );
+    animation: spin-gradient 2.8s linear infinite;
+    width: calc(100% + 8px);
+    height: calc(100% + 8px);
+    box-sizing: border-box;
+  }
+
+  .instagram-story-ring > * {
+    position: relative;
+    z-index: 3;
+  }
+
+  @keyframes spin-gradient {
+    0% { transform: rotate(0deg);}
+    100% { transform: rotate(360deg);}
+  }
+
+  .gradient-white-text {
+    background: linear-gradient(90deg, #ffffff 50%, #f1f1f1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    text-fill-color: transparent;
+  }
 }
 
 @layer utilities {

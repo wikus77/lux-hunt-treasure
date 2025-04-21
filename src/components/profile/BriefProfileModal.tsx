@@ -49,17 +49,19 @@ const BriefProfileModal = ({ open, onClose, profileImage }: BriefProfileModalPro
         </DialogClose>
         
         <div className="flex flex-col items-center mt-4 mb-6">
-          <Avatar className="w-20 h-20 border-2 border-projectx-neon-blue">
-            {profileImage ? (
-              <AvatarImage src={profileImage} alt={name} />
-            ) : (
-              <AvatarFallback className="bg-projectx-deep-blue">
-                <User className="h-10 w-10 text-projectx-neon-blue" />
-              </AvatarFallback>
-            )}
-          </Avatar>
+          <span className="instagram-story-ring">
+            <Avatar className="w-20 h-20 border-2 border-projectx-neon-blue">
+              {profileImage ? (
+                <AvatarImage src={profileImage} alt={name} />
+              ) : (
+                <AvatarFallback className="bg-projectx-deep-blue">
+                  <User className="h-10 w-10 text-projectx-neon-blue" />
+                </AvatarFallback>
+              )}
+            </Avatar>
+          </span>
           
-          <h3 className="text-xl font-bold mt-4">{name}</h3>
+          <h3 className="text-xl font-bold mt-4 gradient-white-text">{name}</h3>
           <p className="text-sm text-muted-foreground mt-1">Membro dal 19 Aprile 2025</p>
           
           {bio && (
