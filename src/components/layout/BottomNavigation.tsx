@@ -1,5 +1,5 @@
 
-import { Home, User, Settings, Calendar, CreditCard, Zap } from "lucide-react";
+import { Home, User, Settings, Calendar, CreditCard, Bell } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
@@ -19,53 +19,54 @@ export const BottomNavigation = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-16 backdrop-blur-xl border-t flex justify-around items-center px-2 z-50 transition-colors duration-200">
-      <button 
+    <div className="fixed bottom-0 left-0 right-0 h-16 backdrop-blur-xl border-t flex justify-around items-center px-2 z-50 transition-colors duration-200 bg-black bg-opacity-95">
+      <button
         onClick={() => handleNavigation("/home")}
         className={`bottom-nav-item ${isActive("/home") ? "active" : ""}`}
+        aria-label="Home"
       >
-        <Home className="w-5 h-5" />
-        <span className="text-[10px] mt-1">Home</span>
+        <Home className="w-6 h-6" />
       </button>
       
-      <button 
+      <button
         onClick={() => handleNavigation("/events")}
         className={`bottom-nav-item ${isActive("/events") ? "active" : ""}`}
+        aria-label="Eventi"
       >
-        <Calendar className="w-5 h-5" />
-        <span className="text-[10px] mt-1">Eventi</span>
+        <Calendar className="w-6 h-6" />
       </button>
       
-      <button 
+      <button
         onClick={() => handleNavigation("/buzz")}
         className={`bottom-nav-item ${isActive("/buzz") ? "active" : ""}`}
+        aria-label="Buzz"
       >
-        <Zap className="w-5 h-5" />
-        <span className="text-[10px] mt-1">Buzz</span>
+        {/* Bell comes closest to a buzzer */}
+        <Bell className="w-6 h-6" />
       </button>
       
-      <button 
+      <button
         onClick={() => handleNavigation("/subscriptions")}
         className={`bottom-nav-item ${isActive("/subscriptions") ? "active" : ""}`}
+        aria-label="Abbonamenti"
       >
-        <CreditCard className="w-5 h-5" />
-        <span className="text-[10px] mt-1">Abbonamenti</span>
+        <CreditCard className="w-6 h-6" />
       </button>
       
-      <button 
+      <button
         onClick={() => handleNavigation("/profile")}
         className={`bottom-nav-item ${isActive("/profile") ? "active" : ""}`}
+        aria-label="Profilo"
       >
-        <User className="w-5 h-5" />
-        <span className="text-[10px] mt-1">Profilo</span>
+        <User className="w-6 h-6" />
       </button>
       
-      <button 
+      <button
         onClick={() => handleNavigation("/settings")}
         className={`bottom-nav-item ${isActive("/settings") ? "active" : ""}`}
+        aria-label="Impostazioni"
       >
-        <Settings className="w-5 h-5" />
-        <span className="text-[10px] mt-1">Impostazioni</span>
+        <Settings className="w-6 h-6" />
       </button>
     </div>
   );
