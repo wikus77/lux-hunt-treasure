@@ -18,7 +18,7 @@ export const BottomNavigation = () => {
     navigate(path);
   };
 
-  // Classe per il gradiente viola sulle icone attive
+  // Classe per l'effetto glow sulle icone attive
   const gradientIconClass = "active-gradient-icon";
 
   return (
@@ -30,7 +30,7 @@ export const BottomNavigation = () => {
       >
         <Home
           className={`w-6 h-6 ${isActive("/home") ? gradientIconClass : ""}`}
-          color={isActive("/home") ? "url(#gradient-home)" : "#bbb"}
+          color={isActive("/home") ? "url(#gradient-green-home)" : "#bbb"}
         />
       </button>
       <button
@@ -40,7 +40,7 @@ export const BottomNavigation = () => {
       >
         <Calendar
           className={`w-6 h-6 ${isActive("/events") ? gradientIconClass : ""}`}
-          color={isActive("/events") ? "url(#gradient-events)" : "#bbb"}
+          color={isActive("/events") ? "url(#gradient-green-events)" : "#bbb"}
         />
       </button>
       <button
@@ -50,7 +50,7 @@ export const BottomNavigation = () => {
       >
         <Circle
           className={`w-6 h-6 ${isActive("/buzz") ? gradientIconClass : ""}`}
-          color={isActive("/buzz") ? "url(#gradient-buzz)" : "#bbb"}
+          color={isActive("/buzz") ? "url(#gradient-green-buzz)" : "#bbb"}
         />
       </button>
       <button
@@ -60,7 +60,7 @@ export const BottomNavigation = () => {
       >
         <CreditCard
           className={`w-6 h-6 ${isActive("/subscriptions") ? gradientIconClass : ""}`}
-          color={isActive("/subscriptions") ? "url(#gradient-subscriptions)" : "#bbb"}
+          color={isActive("/subscriptions") ? "url(#gradient-green-subscriptions)" : "#bbb"}
         />
       </button>
       <button
@@ -70,7 +70,7 @@ export const BottomNavigation = () => {
       >
         <User
           className={`w-6 h-6 ${isActive("/profile") ? gradientIconClass : ""}`}
-          color={isActive("/profile") ? "url(#gradient-profile)" : "#bbb"}
+          color={isActive("/profile") ? "url(#gradient-green-profile)" : "#bbb"}
         />
       </button>
       <button
@@ -80,36 +80,36 @@ export const BottomNavigation = () => {
       >
         <MoreVertical
           className={`w-6 h-6 ${isActive("/settings") ? gradientIconClass : ""}`}
-          color={isActive("/settings") ? "url(#gradient-settings)" : "#bbb"}
+          color={isActive("/settings") ? "url(#gradient-green-settings)" : "#bbb"}
         />
       </button>
 
-      {/* SVG Gradients (iniettati una sola volta per tutta la barra) */}
+      {/* SVG Gradients: Verde Fluo → Giallo Fluo */}
       <svg width="0" height="0">
         <defs>
-          <linearGradient id="gradient-home" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop stopColor="#9b87f5" offset="0%" />
-            <stop stopColor="#7E69AB" offset="100%" />
+          <linearGradient id="gradient-green-home" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop stopColor="#39FF14" offset="0%" /> {/* Verde fluo */}
+            <stop stopColor="#FFFF00" offset="100%" /> {/* Giallo fluo */}
           </linearGradient>
-          <linearGradient id="gradient-events" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop stopColor="#9b87f5" offset="0%" />
-            <stop stopColor="#7E69AB" offset="100%" />
+          <linearGradient id="gradient-green-events" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop stopColor="#39FF14" offset="0%" />
+            <stop stopColor="#FFFF00" offset="100%" />
           </linearGradient>
-          <linearGradient id="gradient-buzz" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop stopColor="#9b87f5" offset="0%" />
-            <stop stopColor="#7E69AB" offset="100%" />
+          <linearGradient id="gradient-green-buzz" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop stopColor="#39FF14" offset="0%" />
+            <stop stopColor="#FFFF00" offset="100%" />
           </linearGradient>
-          <linearGradient id="gradient-subscriptions" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop stopColor="#9b87f5" offset="0%" />
-            <stop stopColor="#7E69AB" offset="100%" />
+          <linearGradient id="gradient-green-subscriptions" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop stopColor="#39FF14" offset="0%" />
+            <stop stopColor="#FFFF00" offset="100%" />
           </linearGradient>
-          <linearGradient id="gradient-profile" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop stopColor="#9b87f5" offset="0%" />
-            <stop stopColor="#7E69AB" offset="100%" />
+          <linearGradient id="gradient-green-profile" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop stopColor="#39FF14" offset="0%" />
+            <stop stopColor="#FFFF00" offset="100%" />
           </linearGradient>
-          <linearGradient id="gradient-settings" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop stopColor="#9b87f5" offset="0%" />
-            <stop stopColor="#7E69AB" offset="100%" />
+          <linearGradient id="gradient-green-settings" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop stopColor="#39FF14" offset="0%" />
+            <stop stopColor="#FFFF00" offset="100%" />
           </linearGradient>
         </defs>
       </svg>
