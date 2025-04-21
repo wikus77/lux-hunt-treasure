@@ -1,13 +1,14 @@
 
 import { useState } from "react";
 import { ArrowLeft, CreditCard, AppleIcon, GlobeIcon } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
 const PaymentMethods = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
   const [cardDetails, setCardDetails] = useState({
@@ -17,6 +18,9 @@ const PaymentMethods = () => {
     cvv: ""
   });
 
+  // Recupera l’indizio passato dalla ClueCard, se presente
+  const clue = location.state?.clue;
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setCardDetails(prev => ({
@@ -25,13 +29,42 @@ const PaymentMethods = () => {
     }));
   };
 
+  const handleIndizioDopoPagamento = () => {
+    if (clue) {
+      // Genera notifica con l’indizio acquistato
+      const notification = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+        title: "Indizio Sbloccato!",
+        description: clue.description,
+        date: new Date().toISOString(),
+        read: false
+      };
+      const existingNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+      existingNotifications.push(notification);
+      localStorage.setItem('notifications', JSON.stringify(existingNotifications));
+    }
+  };
+
+  const handlePaymentCompleted = () => {
+    toast({
+      title: "Pagamento Completato",
+      description: clue
+        ? "Hai sbloccato un nuovo indizio! Vieni a leggerlo nella sezione Notifiche."
+        : "Il tuo metodo di pagamento è stato salvato con successo.",
+    });
+    handleIndizioDopoPagamento();
+    setTimeout(() => {
+      if (clue) {
+        navigate("/notifications");
+      } else {
+        navigate("/settings");
+      }
+    }, 1200);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Pagamento Salvato",
-      description: "Il tuo metodo di pagamento è stato salvato con successo."
-    });
-    navigate("/settings");
+    handlePaymentCompleted();
   };
 
   const handleApplePay = () => {
@@ -40,11 +73,7 @@ const PaymentMethods = () => {
       description: "Pagamento con Apple Pay in elaborazione..."
     });
     setTimeout(() => {
-      toast({
-        title: "Pagamento Completato",
-        description: "Il pagamento con Apple Pay è stato completato con successo."
-      });
-      navigate("/settings");
+      handlePaymentCompleted();
     }, 2000);
   };
 
@@ -54,11 +83,7 @@ const PaymentMethods = () => {
       description: "Pagamento con Google Pay in elaborazione..."
     });
     setTimeout(() => {
-      toast({
-        title: "Pagamento Completato",
-        description: "Il pagamento con Google Pay è stato completato con successo."
-      });
-      navigate("/settings");
+      handlePaymentCompleted();
     }, 2000);
   };
 

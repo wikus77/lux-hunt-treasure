@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface ClueCardProps {
   title: string;
@@ -11,10 +12,11 @@ interface ClueCardProps {
 }
 
 export const ClueCard = ({ title, description, week, isLocked, subscriptionType = "Base" }: ClueCardProps) => {
+  const navigate = useNavigate();
+
   // Determina il colore del bordo in base al tipo di abbonamento
   const getBorderClass = () => {
     if (isLocked) return "border-muted";
-    
     switch (subscriptionType) {
       case "Black":
         return "border-gray-800 bg-gradient-to-r from-gray-900 to-black";
@@ -25,6 +27,15 @@ export const ClueCard = ({ title, description, week, isLocked, subscriptionType 
       default:
         return "border-projectx-blue";
     }
+  };
+
+  const handleUnlockClick = () => {
+    // Trasmetti informazioni sull’indizio per il post-pagamento
+    navigate("/payment-methods", {
+      state: {
+        clue: { title, description, week, subscriptionType }
+      }
+    });
   };
 
   return (
@@ -64,7 +75,10 @@ export const ClueCard = ({ title, description, week, isLocked, subscriptionType 
       
       {isLocked && (
         <CardFooter className="pt-0">
-          <button className="w-full py-2 text-sm bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-md">
+          <button 
+            className="w-full py-2 text-sm bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-md"
+            onClick={handleUnlockClick}
+          >
             Sblocca Indizio
           </button>
         </CardFooter>
