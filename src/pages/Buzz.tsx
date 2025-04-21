@@ -6,14 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Lock, Zap } from "lucide-react";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import ClueBanner from "@/components/buzz/ClueBanner";
+// RIMUOVI import ClueBanner, dato che non più serve qui per il banner dopo pagamento
+// import ClueBanner from "@/components/buzz/ClueBanner";
 
 const EXTRA_CLUE_TEXT = "Strade strette ma la rotta è dritta: cerca dove il muro si colora!";
 
 const Buzz = () => {
   const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
-  const [showClueBanner, setShowClueBanner] = useState(false);
+  // Rimuovi stato ClueBanner
+  // const [showClueBanner, setShowClueBanner] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast: uiToast } = useToast();
 
@@ -96,10 +98,14 @@ const Buzz = () => {
       toast.success("Indizio sbloccato!", {
         description: "Controlla la tua sezione indizi per vedere l'indizio extra."
       });
-      // Mostra banner clue
-      setShowClueBanner(true);
-      // Nascondi dopo 5 secondi
-      setTimeout(() => setShowClueBanner(false), 5000);
+      // Mostra anche il vero indizio extra esattamente come un toast (identico a quello della notifica "buzz success")
+      toast(EXTRA_CLUE_TEXT, {
+        duration: 5000,
+        position: "bottom-center",
+      });
+      // Rimuovi logica ClueBanner per banner che scende dall'alto
+      // setShowClueBanner(true);
+      // setTimeout(() => setShowClueBanner(false), 5000);
     }, 2000);
   };
 
@@ -110,12 +116,12 @@ const Buzz = () => {
         <h1 className="text-2xl font-bold neon-text">Buzz</h1>
       </header>
 
-      {/* Clue Banner */}
-      <ClueBanner
+      {/* Clue Banner RIMOSSO */}
+      {/* <ClueBanner
         open={showClueBanner}
         message={EXTRA_CLUE_TEXT}
         onClose={() => setShowClueBanner(false)}
-      />
+      /> */}
 
       {/* Buzz Button Section */}
       <section className="flex flex-col items-center justify-center px-4 py-10 h-[70vh]">
@@ -182,3 +188,4 @@ const Buzz = () => {
 };
 
 export default Buzz;
+
