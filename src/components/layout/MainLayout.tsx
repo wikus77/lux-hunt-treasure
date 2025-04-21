@@ -12,7 +12,7 @@ const MainLayout = () => {
 
   return (
     <div className="min-h-screen w-full gradient-black-purple transition-colors duration-300 text-white">
-      <main className="flex-1 w-full mx-auto px-4 relative">
+      <main className="flex-1 w-full relative">
         <Outlet />
       </main>
       
@@ -23,3 +23,4 @@ const MainLayout = () => {
 };
 
 export default MainLayout;
+

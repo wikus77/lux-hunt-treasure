@@ -59,7 +59,7 @@ const Home = () => {
   };
 
   return (
-    <div className="pb-20 min-h-screen bg-black">
+    <div className="pb-20 min-h-screen bg-black w-full">
       {/* Notifications Banner */}
       <NotificationsBanner
         open={showNotificationsBanner}
@@ -69,7 +69,7 @@ const Home = () => {
         onMarkAllAsRead={handleMarkAllAsRead}
       />
 
-      <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue gap-3">
+      <header className="py-6 flex items-center border-b border-projectx-deep-blue gap-3 w-full">
         {/* Profile image */}
         <button
           className="flex items-center"
@@ -130,3 +130,4 @@ const Home = () => {
 };
 
 export default Home;
+
