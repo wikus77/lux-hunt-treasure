@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,7 @@ import PaymentMethods from "./pages/PaymentMethods";
 import PersonalInfo from "./pages/PersonalInfo";
 import PrivacySecurity from "./pages/PrivacySecurity";
 import LanguageSettings from "./pages/LanguageSettings";
+import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +44,7 @@ const App = () => (
               <Route path="/personal-info" element={<PersonalInfo />} />
               <Route path="/privacy-security" element={<PrivacySecurity />} />
               <Route path="/language-settings" element={<LanguageSettings />} />
+              <Route path="/notifications" element={<Notifications />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
