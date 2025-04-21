@@ -11,11 +11,13 @@ const MainLayout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-black transition-colors duration-300 text-white">
-      <main className="flex-1 w-full relative">
+    <div className="min-h-screen w-full bg-black transition-colors duration-300 text-white relative">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full px-4 py-6 flex items-center border-b border-projectx-deep-blue backdrop-blur-lg bg-black/70 transition-colors duration-300">
+        {/* La header principale viene gestita dalle singole pagine */}
+      </header>
+      <main className="flex-1 w-full relative pt-[72px]">
         <Outlet />
       </main>
-      
       <Footer />
       <BottomNavigation />
     </div>

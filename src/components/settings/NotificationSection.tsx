@@ -22,23 +22,25 @@ const NotificationSection = ({
       <div className="space-y-2">
         <div className="glass-card flex justify-between items-center p-4">
           <div className="flex items-center">
-            <Bell className="h-5 w-5 mr-3 text-projectx-pink" />
-            <span>Notifiche Push</span>
+            <Bell className="h-5 w-5 mr-3 text-white" />
+            <span className="text-white">Notifiche Push</span>
           </div>
           <Switch 
             checked={pushNotifications} 
-            onCheckedChange={setPushNotifications} 
+            onCheckedChange={setPushNotifications}
+            className="bg-black border border-white data-[state=checked]:bg-white data-[state=checked]:border-white"
           />
         </div>
         
         <div className="glass-card flex justify-between items-center p-4">
           <div className="flex items-center">
-            <Bell className="h-5 w-5 mr-3 text-projectx-pink" />
-            <span>Notifiche Email</span>
+            <Bell className="h-5 w-5 mr-3 text-white" />
+            <span className="text-white">Notifiche Email</span>
           </div>
           <Switch 
             checked={emailNotifications} 
             onCheckedChange={setEmailNotifications} 
+            className="bg-black border border-white data-[state=checked]:bg-white data-[state=checked]:border-white"
           />
         </div>
       </div>
