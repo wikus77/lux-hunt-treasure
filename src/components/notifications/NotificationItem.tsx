@@ -54,7 +54,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification }) => 
         </div>
 
         {!isRead && (
-          <div className="w-2 h-2 rounded-full bg-projectx-pink"></div>
+          <div className="w-2 h-2 rounded-full bg-red-600"></div>
         )}
       </div>
     </div>

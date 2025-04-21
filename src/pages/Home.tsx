@@ -43,6 +43,11 @@ const Home = () => {
         onMarkAllAsRead={markAllAsRead}
       />
 
+      {/* Header logo centrale */}
+      <div className="fixed top-0 left-0 right-0 z-40 flex justify-center items-center h-[72px]">
+        <h1 className="text-2xl font-bold neon-text">M1</h1>
+      </div>
+
       {/* Header controls moved to the right side */}
       <div className="fixed top-0 right-4 z-50 h-[72px] flex items-center gap-2">
         <button

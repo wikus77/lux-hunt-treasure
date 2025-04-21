@@ -9,9 +9,30 @@ interface AgeVerificationProps {
 
 const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified }) => {
   const [loginOpen, setLoginOpen] = useState(false);
+  const [birthdate, setBirthdate] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleVerification = () => {
+    if (!birthdate) {
+      setError("Inserisci la tua data di nascita");
+      return;
+    }
+
+    const today = new Date();
+    const birth = new Date(birthdate);
+    const age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    // Calcola l'età corretta considerando anche mese e giorno
+    const isAdult = age > 18 || (age === 18 && monthDiff >= 0 && today.getDate() >= birth.getDate());
+
+    if (!isAdult) {
+      setError("Devi avere almeno 18 anni per accedere a questo sito");
+      return;
+    }
+
+    setError("");
     if (onVerified) {
       onVerified();
     }
@@ -23,11 +44,26 @@ const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified }) => {
 
   return (
     <div className="max-w-sm mx-auto p-6 glass-card flex flex-col gap-4">
-      {/* ... supposizione contenuto verifica età */}
       <h2 className="text-xl font-bold neon-text mb-4">Verifica la tua età</h2>
-      {/* ... altri elementi della verifica */}
+      <p className="text-sm text-muted-foreground mb-4">
+        Questo sito può essere utilizzato solo da maggiorenni.
+        Inserisci la tua data di nascita per continuare.
+      </p>
       
-      {/* Bottone di verifica */}
+      <div className="mb-4">
+        <label htmlFor="birthdate" className="block text-sm font-medium text-gray-300 mb-1">
+          Data di nascita
+        </label>
+        <input
+          type="date"
+          id="birthdate"
+          value={birthdate}
+          onChange={(e) => setBirthdate(e.target.value)}
+          className="w-full p-2 rounded-md bg-projectx-deep-blue border border-projectx-neon-blue"
+        />
+        {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      </div>
+      
       <button 
         className="bg-gradient-to-r from-projectx-blue to-projectx-pink px-4 py-2 rounded-md"
         onClick={handleVerification}
@@ -35,7 +71,6 @@ const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified }) => {
         Verifica
       </button>
       
-      {/* Link cliccabile per accedere */}
       <div 
         className="text-center mt-4 text-projectx-neon-blue hover:underline cursor-pointer select-none"
         onClick={handleLogin}

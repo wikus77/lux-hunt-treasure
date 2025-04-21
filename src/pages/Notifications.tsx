@@ -36,7 +36,7 @@ const Notifications = () => {
                         <span className="text-xs text-muted-foreground mt-2 block">{new Date(n.date).toLocaleString()}</span>
                       </div>
                       {!n.read && (
-                        <div className="w-2 h-2 rounded-full bg-projectx-pink mt-2"></div>
+                        <div className="w-2 h-2 rounded-full bg-red-600 mt-2"></div>
                       )}
                     </div>
                   </div>
