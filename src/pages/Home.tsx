@@ -19,7 +19,7 @@ const Home = () => {
   // Mock: change with real profileImage
   const profileImage = null;
 
-  // Stato per notifiche lette/non lette
+  // Load notifications from localStorage
   const reloadNotifications = () => {
     const storedNotifications = localStorage.getItem('notifications');
     if (storedNotifications) {
@@ -39,6 +39,7 @@ const Home = () => {
   }, []);
 
   const handleShowNotifications = () => {
+    console.log("Mail button clicked"); // Debug log
     reloadNotifications();
     setShowNotificationsBanner(true);
   };
@@ -59,7 +60,7 @@ const Home = () => {
 
   return (
     <div className="pb-20 min-h-screen bg-black">
-      {/* Banner Notifiche Scorrevole dall'alto */}
+      {/* Notifications Banner */}
       <NotificationsBanner
         open={showNotificationsBanner}
         notifications={notifications}
@@ -69,7 +70,7 @@ const Home = () => {
       />
 
       <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue gap-3">
-        {/* Profile image - ridotta */}
+        {/* Profile image */}
         <button
           className="flex items-center"
           onClick={() => setShowProfileModal(true)}
@@ -89,10 +90,12 @@ const Home = () => {
         {/* Title centered */}
         <h1 className="text-2xl font-bold neon-text flex-1 text-center">M1ssion</h1>
 
-        {/* Mail icon e 3 punti a destra */}
+        {/* Mail icon and 3 dots on right */}
         <div className="flex gap-2">
           <button
-            className="p-2 relative rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors"
+            type="button"
+            aria-label="Notifications"
+            className="p-2 relative rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors cursor-pointer"
             onClick={handleShowNotifications}
           >
             <Mail className="w-5 h-5" />
@@ -122,10 +125,8 @@ const Home = () => {
         open={showProfileModal}
         onClose={() => setShowProfileModal(false)}
       />
-      {/* NotificheDrawer eliminato - ora solo il banner toast */}
     </div>
   );
 };
 
 export default Home;
-

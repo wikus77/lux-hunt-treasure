@@ -28,7 +28,7 @@ const NotificationsBanner: React.FC<NotificationsBannerProps> = ({
 }) => {
   useEffect(() => {
     if (open) {
-      // Chiudi automaticamente il banner dopo 5s
+      // Close automatically after 5 seconds
       const timeout = setTimeout(() => {
         onClose();
       }, 5000);
@@ -39,7 +39,7 @@ const NotificationsBanner: React.FC<NotificationsBannerProps> = ({
   return (
     <div
       className={`fixed left-0 right-0 top-0 z-[9999] flex justify-center transition-all duration-500 ${
-        open ? "translate-y-0 opacity-100" : "-translate-y-32 opacity-0"
+        open ? "translate-y-0 opacity-100" : "-translate-y-32 opacity-0 pointer-events-none"
       }`}
       style={{ transitionProperty: "transform, opacity" }}
     >
@@ -82,4 +82,3 @@ const NotificationsBanner: React.FC<NotificationsBannerProps> = ({
 };
 
 export default NotificationsBanner;
-
