@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Edit, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,14 @@ const ProfileHeader = ({
   setIsEditing
 }: ProfileHeaderProps) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Load profile image from localStorage on component mount
+  useEffect(() => {
+    const savedProfileImage = localStorage.getItem('profileImage');
+    if (savedProfileImage && !profileImage) {
+      setProfileImage(savedProfileImage);
+    }
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

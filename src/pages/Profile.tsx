@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Edit, Menu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -27,6 +28,24 @@ const Profile = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { toast } = useToast();
 
+  // Load profile data from localStorage on component mount
+  useEffect(() => {
+    const savedProfileImage = localStorage.getItem('profileImage');
+    if (savedProfileImage) {
+      setProfileImage(savedProfileImage);
+    }
+    
+    const savedName = localStorage.getItem('profileName');
+    if (savedName) {
+      setName(savedName);
+    }
+    
+    const savedBio = localStorage.getItem('profileBio');
+    if (savedBio) {
+      setBio(savedBio);
+    }
+  }, []);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -39,6 +58,13 @@ const Profile = () => {
   };
 
   const handleSaveProfile = () => {
+    // Save to localStorage for persistence between page navigations
+    if (profileImage) {
+      localStorage.setItem('profileImage', profileImage);
+    }
+    localStorage.setItem('profileName', name);
+    localStorage.setItem('profileBio', bio);
+    
     setIsEditing(false);
     toast({
       title: "Profilo aggiornato",

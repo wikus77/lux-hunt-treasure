@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { User, Mail, MoreVertical } from "lucide-react";
 import CurrentEventSection from "@/components/home/CurrentEventSection";
@@ -12,10 +13,16 @@ const Home = () => {
   const [showNotificationsBanner, setShowNotificationsBanner] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Mock: change with real profileImage
-  const profileImage = null;
+  // Load profile image from localStorage
+  useEffect(() => {
+    const savedProfileImage = localStorage.getItem('profileImage');
+    if (savedProfileImage) {
+      setProfileImage(savedProfileImage);
+    }
+  }, []);
 
   // Load notifications from localStorage
   const reloadNotifications = () => {
@@ -120,6 +127,7 @@ const Home = () => {
       <BriefProfileModal
         open={showProfileModal}
         onClose={() => setShowProfileModal(false)}
+        profileImage={profileImage}
       />
     </div>
   );
