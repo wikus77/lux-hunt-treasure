@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { User, Mail, Settings } from "lucide-react";
+import { User, Mail, MoreVertical, Circle } from "lucide-react";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import CurrentEventSection from "@/components/home/CurrentEventSection";
 import MysteryPrizesSection from "@/components/home/MysteryPrizesSection";
@@ -35,22 +35,21 @@ const Home = () => {
             )}
           </div>
         </button>
-        {/* Mail icon */}
+        {/* Title centered */}
+        <h1 className="text-2xl font-bold neon-text flex-1 text-center">M1ssion</h1>
+        {/* Mail icon and Three dots/settings icon on right */}
         <button
           className="p-2 rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors"
           onClick={() => navigate("/notifications")}
         >
           <Mail className="w-5 h-5" />
         </button>
-        {/* Three dots/settings icon */}
         <button
           className="p-2 rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors"
           onClick={() => navigate("/settings")}
         >
-          <Settings className="w-5 h-5" />
+          <MoreVertical className="w-5 h-5" />
         </button>
-        {/* Titolo centrato */}
-        <h1 className="text-2xl font-bold neon-text flex-1 text-center">M1ssion</h1>
       </header>
 
       <CurrentEventSection />

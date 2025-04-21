@@ -1,5 +1,5 @@
 
-import { Home, User, Settings, Calendar, CreditCard, Bell } from "lucide-react";
+import { Home, User, MoreVertical, Calendar, CreditCard, Circle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
@@ -41,8 +41,7 @@ export const BottomNavigation = () => {
         className={`bottom-nav-item ${isActive("/buzz") ? "active" : ""}`}
         aria-label="Buzz"
       >
-        {/* Bell comes closest to a buzzer */}
-        <Bell className="w-6 h-6" />
+        <Circle className="w-6 h-6" />
       </button>
       
       <button
@@ -66,7 +65,7 @@ export const BottomNavigation = () => {
         className={`bottom-nav-item ${isActive("/settings") ? "active" : ""}`}
         aria-label="Impostazioni"
       >
-        <Settings className="w-6 h-6" />
+        <MoreVertical className="w-6 h-6" />
       </button>
     </div>
   );
