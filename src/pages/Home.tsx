@@ -1,41 +1,73 @@
 
 import { useState, useEffect } from "react";
-import { User, Mail, MoreVertical, Circle } from "lucide-react";
+import { User, Mail, MoreVertical } from "lucide-react";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import CurrentEventSection from "@/components/home/CurrentEventSection";
 import MysteryPrizesSection from "@/components/home/MysteryPrizesSection";
 import CluesSection from "@/components/home/CluesSection";
 import BriefProfileModal from "@/components/profile/BriefProfileModal";
 import { useNavigate } from "react-router-dom";
-import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
+import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 
 const Home = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
+  const [showNotificationsBanner, setShowNotificationsBanner] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
 
   // Mock: change with real profileImage
-  const profileImage = null; // you can use a default image or the one saved
+  const profileImage = null;
 
-  // Stato per badge notifiche non lette
+  // Stato per notifiche lette/non lette
+  const reloadNotifications = () => {
+    const storedNotifications = localStorage.getItem('notifications');
+    if (storedNotifications) {
+      const parsed = JSON.parse(storedNotifications);
+      setNotifications(parsed);
+      setUnreadCount(parsed.filter((n: any) => !n.read).length);
+    } else {
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+  };
+
   useEffect(() => {
-    const checkUnread = () => {
-      const storedNotifications = localStorage.getItem('notifications');
-      if (storedNotifications) {
-        const parsed = JSON.parse(storedNotifications);
-        setUnreadCount(parsed.filter((n: any) => !n.read).length);
-      } else {
-        setUnreadCount(0);
-      }
-    };
-    checkUnread();
-    const interval = setInterval(checkUnread, 5000);
+    reloadNotifications();
+    const interval = setInterval(reloadNotifications, 5000);
     return () => clearInterval(interval);
   }, []);
 
+  const handleShowNotifications = () => {
+    reloadNotifications();
+    setShowNotificationsBanner(true);
+  };
+
+  const handleCloseNotifications = () => {
+    setShowNotificationsBanner(false);
+  };
+
+  const handleMarkAllAsRead = () => {
+    const updatedNotifications = notifications.map((n: any) => ({
+      ...n,
+      read: true
+    }));
+    setNotifications(updatedNotifications);
+    setUnreadCount(0);
+    localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+  };
+
   return (
     <div className="pb-20 min-h-screen bg-black">
+      {/* Banner Notifiche Scorrevole dall'alto */}
+      <NotificationsBanner
+        open={showNotificationsBanner}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        onClose={handleCloseNotifications}
+        onMarkAllAsRead={handleMarkAllAsRead}
+      />
+
       <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue gap-3">
         {/* Profile image - ridotta */}
         <button
@@ -61,7 +93,7 @@ const Home = () => {
         <div className="flex gap-2">
           <button
             className="p-2 relative rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors"
-            onClick={() => setShowNotifications(true)}
+            onClick={handleShowNotifications}
           >
             <Mail className="w-5 h-5" />
             {unreadCount > 0 && (
@@ -90,13 +122,10 @@ const Home = () => {
         open={showProfileModal}
         onClose={() => setShowProfileModal(false)}
       />
-
-      <NotificationsDrawer
-        open={showNotifications}
-        onOpenChange={setShowNotifications}
-      />
+      {/* NotificheDrawer eliminato - ora solo il banner toast */}
     </div>
   );
 };
 
 export default Home;
+
