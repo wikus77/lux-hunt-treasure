@@ -6,10 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Lock, Zap } from "lucide-react";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import ClueBanner from "@/components/buzz/ClueBanner";
+
+const EXTRA_CLUE_TEXT = "Strade strette ma la rotta è dritta: cerca dove il muro si colora!";
 
 const Buzz = () => {
   const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
+  const [showClueBanner, setShowClueBanner] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast: uiToast } = useToast();
 
@@ -18,7 +22,7 @@ const Buzz = () => {
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
     const soundPath = getSoundPath(soundPreference);
     audioRef.current = new Audio(soundPath);
-    
+
     return () => {
       if (audioRef.current) {
         audioRef.current = null;
@@ -45,13 +49,13 @@ const Buzz = () => {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(e => console.error("Error playing sound:", e));
     }
-    
+
     // Start vault animation
     setIsVaultOpen(true);
-    
+
     // Send notification
     sendBuzzNotification();
-    
+
     // Reset animation after delay
     setTimeout(() => {
       setIsVaultOpen(false);
@@ -64,7 +68,7 @@ const Buzz = () => {
     toast.success("Nuovo indizio disponibile!", {
       description: "Hai appena sbloccato un indizio premium."
     });
-    
+
     // In a real app with Supabase, you'd also save this to the database
     // This notification would appear in the profile notifications section
     const notification = {
@@ -74,7 +78,7 @@ const Buzz = () => {
       date: new Date().toISOString(),
       read: false
     };
-    
+
     // Store in localStorage for demo purposes
     const existingNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
     existingNotifications.push(notification);
@@ -86,12 +90,16 @@ const Buzz = () => {
     toast.success("Pagamento in elaborazione", {
       description: "Stai per essere reindirizzato a Stripe per completare l'acquisto."
     });
-    
+
     // In a real app, this would connect to Stripe
     setTimeout(() => {
       toast.success("Indizio sbloccato!", {
         description: "Controlla la tua sezione indizi per vedere l'indizio extra."
       });
+      // Mostra banner clue
+      setShowClueBanner(true);
+      // Nascondi dopo 5 secondi
+      setTimeout(() => setShowClueBanner(false), 5000);
     }, 2000);
   };
 
@@ -102,6 +110,13 @@ const Buzz = () => {
         <h1 className="text-2xl font-bold neon-text">Buzz</h1>
       </header>
 
+      {/* Clue Banner */}
+      <ClueBanner
+        open={showClueBanner}
+        message={EXTRA_CLUE_TEXT}
+        onClose={() => setShowClueBanner(false)}
+      />
+
       {/* Buzz Button Section */}
       <section className="flex flex-col items-center justify-center px-4 py-10 h-[70vh]">
         <div className="text-center mb-8">
@@ -110,7 +125,7 @@ const Buzz = () => {
             Premi il pulsante Buzz per ottenere un indizio supplementare a soli €1,99
           </p>
         </div>
-        
+
         <div className={`transition-all duration-500 ${isVaultOpen ? "scale-125" : "scale-100"}`}>
           <Button
             onClick={handleBuzzClick}
@@ -121,7 +136,7 @@ const Buzz = () => {
             <Zap className="w-24 h-24" />
           </Button>
         </div>
-        
+
         <div className="mt-8 text-center">
           <p className="text-sm text-muted-foreground">
             Limite: 5 indizi supplementari per evento
@@ -138,7 +153,7 @@ const Buzz = () => {
               Ottieni un indizio extra immediatamente per €1,99
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="bg-black/20 p-4 rounded-lg">
               <div className="flex items-center">
@@ -149,7 +164,7 @@ const Buzz = () => {
                 Questo indizio potrebbe essere la chiave per trovare l'auto!
               </p>
             </div>
-            
+
             <Button 
               onClick={handlePayment} 
               className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
