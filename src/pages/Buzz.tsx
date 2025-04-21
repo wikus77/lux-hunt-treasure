@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { toast } from "@/components/ui/sonner";
@@ -5,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Lock, Zap } from "lucide-react";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useNavigate, useLocation } from "react-router-dom";
+import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
 
 const EXTRA_CLUE_TEXT = "Strade strette ma la rotta è dritta: cerca dove il muro si colora!";
 
@@ -13,18 +16,42 @@ const Buzz = () => {
   const [showDialog, setShowDialog] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast: uiToast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { hasPaymentMethod, savePaymentMethod } = useHasPaymentMethod();
 
   useEffect(() => {
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
     const soundPath = getSoundPath(soundPreference);
     audioRef.current = new Audio(soundPath);
 
+    // Se torniamo qui con un pagamento appena completato (verifica location.state)
+    if (location.state?.paymentCompleted) {
+      // Salva carta (mock) solo al primo completamento
+      savePaymentMethod();
+
+      // Sblocca l'indizio e notifica
+      sendBuzzNotification();
+      toast.success("Indizio sbloccato!", {
+        description: "Controlla la sezione Notifiche per vedere l'indizio extra."
+      });
+      toast(EXTRA_CLUE_TEXT, {
+        duration: 3000,
+        position: "bottom-center",
+      });
+
+      setTimeout(() => {
+        // redirige alle notifiche
+        navigate("/notifications", { replace: true });
+      }, 1800);
+    }
+
     return () => {
       if (audioRef.current) {
         audioRef.current = null;
       }
     };
-  }, []);
+  }, [location.state, savePaymentMethod, navigate]);
 
   const getSoundPath = (preference: string) => {
     switch (preference) {
@@ -40,6 +67,21 @@ const Buzz = () => {
   };
 
   const handleBuzzClick = () => {
+    // Se non c'è carta/metodo di pagamento
+    if (!hasPaymentMethod) {
+      // redirigi a PaymentMethods
+      navigate("/payment-methods", {
+        state: {
+          fromBuzz: true,
+          clue: {
+            description: EXTRA_CLUE_TEXT
+          }
+        }
+      });
+      return;
+    }
+
+    // Comportamento classico: suono + vault
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(e => console.error("Error playing sound:", e));
@@ -76,20 +118,19 @@ const Buzz = () => {
   const handlePayment = () => {
     setShowDialog(false);
     toast.success("Pagamento in elaborazione", {
-      description: "Stai per essere reindirizzato a Stripe per completare l'acquisto."
+      description: "Stai per essere reindirizzato alla pagina di pagamento per completare l'acquisto."
     });
 
     setTimeout(() => {
-      toast.success("Indizio sbloccato!", {
-        description: "Controlla la tua sezione indizi per vedere l'indizio extra."
+      navigate("/payment-methods", {
+        state: {
+          fromBuzz: true,
+          clue: {
+            description: EXTRA_CLUE_TEXT
+          }
+        }
       });
-      toast(EXTRA_CLUE_TEXT, {
-        duration: 3000,
-        position: "bottom-center",
-      });
-
-      setTimeout(() => setShowDialog(false), 2000);
-    }, 2000);
+    }, 1500);
   };
 
   return (
@@ -104,7 +145,7 @@ const Buzz = () => {
         <div className="text-center mb-8 w-full px-0">
           <h2 className="text-2xl font-bold mb-2">Hai bisogno di un indizio extra?</h2>
           <p className="text-muted-foreground">
-            Premi il pulsante Buzz per ottenere un indizio supplementare a soli 1,99€
+            Premi il pulsante Buzz per ottenere un indizio supplementare a 1,99€
           </p>
         </div>
 
@@ -131,7 +172,7 @@ const Buzz = () => {
           <DialogHeader>
             <DialogTitle>Sblocca Indizio Extra</DialogTitle>
             <DialogDescription>
-              Ottieni un indizio extra immediatamente per €1,99
+              Ottieni un indizio extra immediatamente per 1,99€
             </DialogDescription>
           </DialogHeader>
 
@@ -150,7 +191,7 @@ const Buzz = () => {
               onClick={handlePayment} 
               className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
             >
-              Paga €1,99
+              Sblocca indizio 1,99€
             </Button>
           </div>
         </DialogContent>
