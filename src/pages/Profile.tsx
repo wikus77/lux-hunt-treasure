@@ -1,13 +1,14 @@
 
 import { useState, useEffect } from "react";
+import { Edit, Menu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import ProfileLayout from "@/components/layout/ProfileLayout";
 import { supabase } from "@/integrations/supabase/client";
-import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileBio from "@/components/profile/ProfileBio";
 import ProfileClues from "@/components/profile/ProfileClues";
 import SubscriptionStatus from "@/components/profile/SubscriptionStatus";
+import InstagramStyleDrawer from "@/components/profile/InstagramStyleDrawer";
 
 interface Clue {
   id: string;
@@ -24,6 +25,7 @@ const Profile = () => {
   const [name, setName] = useState("Mario Rossi");
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [unlockedClues, setUnlockedClues] = useState<Clue[]>([]);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const { toast } = useToast();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,19 +106,33 @@ const Profile = () => {
     <div className="w-full min-h-screen bg-black pb-20">
       <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex items-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
         <h1 className="text-2xl font-bold neon-text flex-1 text-center">Profilo</h1>
+        <div className="flex gap-2 items-center absolute right-4 top-1/2 -translate-y-1/2">
+          {/* Bottone modifica profilo */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsEditing((v) => !v)}
+            aria-label="Modifica profilo"
+          >
+            <Edit className="h-5 w-5" />
+          </Button>
+          {/* Bottone Centro gestione account */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-2"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Centro gestione account"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </div>
+        <InstagramStyleDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
       </header>
       <div className="h-[72px] w-full" />
 
       <div className="w-full">
-        <ProfileHeader
-          name={name}
-          setName={setName}
-          profileImage={profileImage}
-          setProfileImage={setProfileImage}
-          isEditing={isEditing}
-          setIsEditing={setIsEditing}
-        />
-
+        {/* Header custom rimosso, ora tutto è nella sticky header */}
         <ProfileBio
           name={name}
           setName={setName}
@@ -127,15 +143,13 @@ const Profile = () => {
           isEditing={isEditing}
         />
 
-        {/* SEZIONE NOTIFICHE RIMOSSA */}
-
         <SubscriptionStatus />
 
         <ProfileClues unlockedClues={unlockedClues} />
 
         {isEditing && (
           <Button 
-            className="w-full mt-6 bg-gradient-to-r from-projectx-blue to-projectx-pink"
+            className="w-full mt-6 bg-gradient-to-r from-black to-black"
             onClick={handleSaveProfile}
           >
             Salva Modifiche
