@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Mail, MoreVertical } from "lucide-react";
 import CurrentEventSection from "@/components/home/CurrentEventSection";
@@ -43,10 +42,7 @@ const Home = () => {
         onMarkAllAsRead={markAllAsRead}
       />
 
-      {/* Header logo centrale */}
-      <div className="fixed top-0 left-0 right-0 z-40 flex justify-center items-center h-[72px]">
-        <h1 className="text-2xl font-bold neon-text">M1</h1>
-      </div>
+      {/* Header: tolta la scritta doppia "M1" qui, già presente nella MainLayout */}
 
       {/* Header controls moved to the right side */}
       <div className="fixed top-0 right-4 z-50 h-[72px] flex items-center gap-2">
@@ -57,11 +53,13 @@ const Home = () => {
           onClick={handleShowNotifications}
         >
           <Mail className="w-5 h-5" />
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-600 text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold border-2 border-black">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          )}
+          <span className={`absolute -top-1 -right-1 font-bold border-2 border-black w-5 h-5 flex items-center justify-center rounded-full text-xs ${
+            unreadCount > 0
+              ? "bg-red-600 text-white"
+              : "bg-gray-700 text-gray-300"
+          }`}>
+            {unreadCount > 0 ? (unreadCount > 9 ? "9+" : unreadCount) : ""}
+          </span>
         </button>
         <button
           className="p-2 rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors"

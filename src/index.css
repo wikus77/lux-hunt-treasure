@@ -1,4 +1,3 @@
-
 /* === BASE TAILWIND LAYER === */
 @tailwind base;
 @tailwind components;
@@ -32,6 +31,29 @@
   .light {
     background: #111 !important;
     color: #222;
+  }
+
+  /* Custom Profile Ring: utilizza l'immagine caricata come bordo intorno all'avatar */
+  .profile-custom-ring {
+    position: relative;
+    display: inline-block;
+  }
+  .profile-custom-ring::before {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    z-index: 2;
+    border-radius: 9999px;
+    padding: 0;
+    background: url("/lovable-uploads/0cf2adbf-7e29-43e4-9028-27a47b8057eb.png") center/cover no-repeat;
+    width: calc(100% + 12px);
+    height: calc(100% + 12px);
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+  .profile-custom-ring > * {
+    position: relative;
+    z-index: 3;
   }
 }
 
