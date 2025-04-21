@@ -13,16 +13,44 @@ const ClueUnlockedExplosion: React.FC<Props> = ({ open }) => {
     <div
       className="
         fixed inset-0 z-[99999] flex items-center justify-center
-        bg-black/95
-        backdrop-blur-sm
+        bg-black/95 backdrop-blur-sm
+        animate-fade-in
       "
     >
-      {/* Only show congratulation text, no animation */}
-      <div className="relative z-[1200] flex flex-col items-center justify-center">
-        <span className="text-5xl md:text-6xl font-extrabold bg-gradient-to-br from-yellow-200 via-fuchsia-400 to-green-300 bg-clip-text text-transparent drop-shadow-[0_0_28px_#39FF14] mb-2">
+      <div className="relative z-[1200] flex flex-col items-center justify-center w-full">
+        <span
+          className="
+            font-extrabold
+            bg-gradient-to-br from-lime-300 via-lime-400 to-green-400
+            bg-clip-text text-transparent
+            drop-shadow-[0_0_32px_#f3ff14]
+            mb-2
+            text-center
+            leading-tight
+            w-full
+            px-4
+            select-none
+            "
+          style={{
+            fontSize: "clamp(2.5rem, 6vw, 5.2rem)",
+            lineHeight: 1.08,
+            WebkitBackgroundClip: "text" as any,
+            WebkitTextFillColor: "transparent",
+          }}
+        >
           Congratulazioni!
         </span>
-        <span className="block mt-6 text-2xl font-semibold text-white">
+        <span
+          className="
+            block mt-8 font-semibold w-full text-center text-white bg-gradient-to-r from-lime-300 via-green-200 to-lime-400 bg-clip-text text-transparent
+            drop-shadow-[0_0_18px_#d4ff44]
+            "
+          style={{
+            fontSize: "clamp(1.3rem, 2vw, 2.4rem)",
+            WebkitBackgroundClip: "text" as any,
+            WebkitTextFillColor: "transparent",
+          }}
+        >
           Hai sbloccato un nuovo indizio 🎉
         </span>
       </div>
@@ -31,4 +59,3 @@ const ClueUnlockedExplosion: React.FC<Props> = ({ open }) => {
 };
 
 export default ClueUnlockedExplosion;
-
