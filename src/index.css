@@ -208,17 +208,20 @@
   .instagram-story-ring-gradient::before {
     content: "";
     position: absolute;
-    inset: -5px;
+    inset: -10px;
     border-radius: 50%;
     z-index: 1;
     padding: 0;
     background: conic-gradient(
       #ffb301, #ff6a00 16%, #fd3090 33%, #8342f8 51%, #33c6ff 68%, #56ff68 84%, #ffb301 100%
     );
-    box-shadow: 0 0 8px 3px rgba(255, 173, 255, 0.05);
-    width: calc(100% + 10px);
-    height: calc(100% + 10px);
+    box-shadow: 
+      0 0 20px 7px rgba(255, 173, 255, 0.10),
+      0 0 30px 15px rgba(255, 173, 255, 0.05);
+    width: calc(100% + 20px);
+    height: calc(100% + 20px);
     animation: spin-gradient 2.8s linear infinite;
+    filter: blur(4px);
   }
   .instagram-story-ring-gradient > * {
     position: relative;
