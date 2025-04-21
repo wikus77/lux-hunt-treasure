@@ -11,7 +11,7 @@ const Index = () => {
       {/* Hero Section */}
       <section className="h-screen flex flex-col justify-center items-center text-center bg-hero-pattern bg-cover bg-center px-6">
         <h1 className="text-4xl md:text-6xl font-bold mb-4 animate-glow">
-          Project <span className="text-projectx-neon-blue">X</span>
+          M1SSION <span className="text-projectx-neon-blue">X</span>
         </h1>
         
         <p className="text-xl md:text-2xl max-w-2xl mb-8">
@@ -88,7 +88,7 @@ const Index = () => {
           </h2>
           
           <p className="text-center max-w-2xl mx-auto mb-12 text-muted-foreground">
-            Ogni mese, Project X mette in palio un'auto di lusso. Lamborghini, Ferrari, Porsche e altre auto da sogno sono pronte per essere vinte.
+            Ogni mese, M1SSION mette in palio un'auto di lusso. Lamborghini, Ferrari, Porsche e altre auto da sogno sono pronte per essere vinte.
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -112,7 +112,7 @@ const Index = () => {
           </h2>
           
           <p className="text-xl max-w-2xl mx-auto mb-8">
-            Non perdere l'opportunità di trasformare il tuo sogno in realtà. Unisciti a Project X oggi stesso e inizia il tuo viaggio verso l'auto dei tuoi sogni.
+            Non perdere l'opportunità di trasformare il tuo sogno in realtà. Unisciti a M1SSION oggi stesso e inizia il tuo viaggio verso l'auto dei tuoi sogni.
           </p>
           
           <Link to="/register">
@@ -131,7 +131,7 @@ const Index = () => {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              <h2 className="text-2xl font-bold neon-text">Project X</h2>
+              <h2 className="text-2xl font-bold neon-text">M1SSION</h2>
             </div>
             
             <div className="flex space-x-4">
@@ -143,7 +143,7 @@ const Index = () => {
           
           <div className="mt-6 text-center md:text-left">
             <p className="text-sm text-muted-foreground">
-              © 2025 Project X. Tutti i diritti riservati.
+              © 2025 M1SSION. Tutti i diritti riservati.
             </p>
           </div>
         </div>
@@ -153,3 +153,4 @@ const Index = () => {
 };
 
 export default Index;
+
