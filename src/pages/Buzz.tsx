@@ -104,7 +104,7 @@ const Buzz = () => {
         <div className="text-center mb-8 w-full px-0">
           <h2 className="text-2xl font-bold mb-2">Hai bisogno di un indizio extra?</h2>
           <p className="text-muted-foreground">
-            Premi il pulsante Buzz per ottenere un indizio supplementare a soli ���1,99
+            Premi il pulsante Buzz per ottenere un indizio supplementare a soli 1,99€
           </p>
         </div>
 
