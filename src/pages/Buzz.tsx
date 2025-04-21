@@ -99,15 +99,13 @@ const Buzz = () => {
         description: "Controlla la tua sezione indizi per vedere l'indizio extra."
       });
       // Mostra anche il vero indizio extra esattamente come un toast (identico a quello della notifica "buzz success")
-      const banner = toast(EXTRA_CLUE_TEXT, {
+      toast(EXTRA_CLUE_TEXT, {
         duration: 3000,  // Cambiato da 5000 a 3000 ms
         position: "bottom-center",
       });
 
-      // Dopo 3 secondi chiudiamo il toast (anche se dura 3000, assicuriamo la chiusura)
-      setTimeout(() => {
-        banner.dismiss();
-      }, 3000);
+      // Utilizziamo solo il timeout per assicurarci che l'indizio resti visibile per 3 secondi
+      // Non serve chiamare dismiss() perché il toast scomparirà automaticamente dopo 3 secondi (duration: 3000)
       // Rimuovi logica ClueBanner per banner che scende dall'alto
       // setShowClueBanner(true);
       // setTimeout(() => setShowClueBanner(false), 5000);
@@ -193,4 +191,3 @@ const Buzz = () => {
 };
 
 export default Buzz;
-
