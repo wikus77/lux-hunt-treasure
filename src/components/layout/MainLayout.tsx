@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
@@ -37,13 +38,15 @@ const MainLayout = () => {
 
   const getPageTitle = () => {
     const path = location.pathname;
-    if (path === "/home") return "M1ssion";
-    if (path === "/profile") return "Profilo";
-    if (path === "/settings") return "Impostazioni";
-    if (path === "/subscriptions") return "Abbonamenti";
-    if (path === "/events") return "Eventi";
-    if (path === "/notifications") return "Notifiche";
-    return "M1ssion";
+    if (path === "/home") return "M1";
+    if (path === "/profile") return "M1";
+    if (path === "/settings") return "M1";
+    if (path === "/subscriptions") return "M1";
+    if (path === "/events") return "M1";
+    if (path === "/notifications") return "M1";
+    if (path === "/buzz") return "M1";
+    if (path === "/map") return "M1";
+    return "M1";
   };
 
   return (

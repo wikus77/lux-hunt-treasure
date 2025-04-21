@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import LoginModal from "./LoginModal";
 
 interface AgeVerificationProps {
@@ -8,11 +9,16 @@ interface AgeVerificationProps {
 
 const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified }) => {
   const [loginOpen, setLoginOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleVerification = () => {
     if (onVerified) {
       onVerified();
     }
+  };
+
+  const handleLogin = () => {
+    setLoginOpen(true);
   };
 
   return (
@@ -30,8 +36,9 @@ const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified }) => {
       </button>
       
       {/* Link cliccabile per accedere */}
-      <div className="text-center mt-4 text-projectx-neon-blue hover:underline cursor-pointer select-none"
-        onClick={() => setLoginOpen(true)}
+      <div 
+        className="text-center mt-4 text-projectx-neon-blue hover:underline cursor-pointer select-none"
+        onClick={handleLogin}
       >
         Hai già un account? Accedi
       </div>

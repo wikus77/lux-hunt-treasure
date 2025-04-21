@@ -1,6 +1,7 @@
 
-import { Instagram, Facebook, Twitter } from "lucide-react";
+import { Instagram, Facebook, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Link } from "react-router-dom";
 
 export const Footer = () => {
   const isMobile = useIsMobile();
@@ -12,7 +13,7 @@ export const Footer = () => {
         <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-3'} gap-8`}>
           {/* Company Info */}
           <div>
-            <h3 className="font-sans font-semibold mb-4 text-white">ProjectX</h3>
+            <h3 className="font-sans font-semibold mb-4 text-white">M1SSION</h3>
             <p className="text-sm text-gray-400">
               La tua piattaforma per scoprire indizi ed eventi esclusivi.
             </p>
@@ -23,19 +24,19 @@ export const Footer = () => {
             <h4 className="font-sans font-semibold mb-4 text-white">Link Utili</h4>
             <ul className="space-y-2">
               <li>
-                <a href="/events" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link to="/events" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Eventi
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/subscriptions" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link to="/subscriptions" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Abbonamenti
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/buzz" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link to="/buzz" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Buzz
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -44,14 +45,14 @@ export const Footer = () => {
           <div>
             <h4 className="font-sans font-semibold mb-4 text-white">Seguici</h4>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <Twitter className="w-5 h-5" />
+              <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
               </a>
             </div>
           </div>
@@ -59,7 +60,7 @@ export const Footer = () => {
         
         <div className="border-t mt-6 pt-6 text-center border-gray-800">
           <p className="text-sm text-gray-400">
-            © {new Date().getFullYear()} ProjectX. Tutti i diritti riservati.
+            © {new Date().getFullYear()} M1SSION. Tutti i diritti riservati.
           </p>
         </div>
       </div>

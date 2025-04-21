@@ -1,16 +1,28 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import AgeVerificationModal from "@/components/auth/AgeVerificationModal";
 
 const Index = () => {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [showAgeVerification, setShowAgeVerification] = useState(false);
+  const navigate = useNavigate();
+
+  const handleRegisterClick = () => {
+    setShowAgeVerification(true);
+  };
+
+  const handleAgeVerified = () => {
+    setShowAgeVerification(false);
+    navigate("/register");
+  };
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black">
       {/* Sticky, glassy header */}
       <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
-        <h1 className="text-2xl font-bold neon-text">M1SSION X</h1>
+        <h1 className="text-2xl font-bold neon-text">M1SSION</h1>
         {/* Spazio azioni/destra, opzionale */}
         <div />
       </header>
@@ -20,23 +32,21 @@ const Index = () => {
       {/* Hero Section */}
       <section className="w-full flex flex-col justify-center items-center text-center bg-black bg-cover bg-center px-6 py-16">
         <h1 className="text-4xl md:text-6xl font-bold mb-4">
-          M1SSION <span className="text-white">X</span>
+          M1SSION
         </h1>
         <p className="text-xl md:text-2xl max-w-2xl mb-8">
-          Unisciti a Project X: Il Tuo Sogno è a Portata di Mano
+          Unisciti a M1SSION: Il Tuo Sogno è a Portata di Mano
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
-          <Link to="/register">
-            <Button 
-              className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white font-bold px-8 py-6 rounded-md"
-              size="lg"
-            >
-              Registrati Oggi
-            </Button>
-          </Link>
           <Button 
-            variant="outline" 
-            className="border-projectx-neon-blue text-projectx-neon-blue px-8 py-6"
+            className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white font-bold px-8 py-6 rounded-md"
+            size="lg"
+            onClick={handleRegisterClick}
+          >
+            Registrati Oggi
+          </Button>
+          <Button 
+            className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white font-bold px-8 py-6 rounded-md"
             onClick={() => setIsVideoPlaying(true)}
             size="lg"
           >
@@ -50,7 +60,7 @@ const Index = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
           <div className="glass-card text-center w-full">
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-projectx-deep-blue border border-projectx-neon-blue">
-              <span className="text-2xl font-bold text-projectx-neon-blue">1</span>
+              <img src="/lovable-uploads/7f787e38-d579-4b24-8a57-1ede818cdca3.png" alt="Registrati" className="w-10 h-10 object-contain" />
             </div>
             <h3 className="text-xl font-bold mb-2">Registrati</h3>
             <p className="text-muted-foreground">
@@ -59,7 +69,7 @@ const Index = () => {
           </div>
           <div className="glass-card text-center w-full">
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-projectx-deep-blue border border-projectx-neon-blue">
-              <span className="text-2xl font-bold text-projectx-neon-blue">2</span>
+              <img src="/lovable-uploads/a987ba21-940e-48cd-b999-c266de3f133c.png" alt="Indizi" className="w-10 h-10 object-contain" />
             </div>
             <h3 className="text-xl font-bold mb-2">Scopri gli Indizi</h3>
             <p className="text-muted-foreground">
@@ -68,7 +78,7 @@ const Index = () => {
           </div>
           <div className="glass-card text-center w-full">
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-projectx-deep-blue border border-projectx-neon-blue">
-              <span className="text-2xl font-bold text-projectx-neon-blue">3</span>
+              <img src="/lovable-uploads/48b9a28f-59eb-4010-9bb2-37de88a4d7b1.png" alt="Premio" className="w-10 h-10 object-contain" />
             </div>
             <h3 className="text-xl font-bold mb-2">Vinci il Premio</h3>
             <p className="text-muted-foreground">
@@ -107,14 +117,13 @@ const Index = () => {
           Non perdere l'opportunità di trasformare il tuo sogno in realtà. Unisciti a M1SSION oggi stesso e inizia il tuo viaggio verso l'auto dei tuoi sogni.
         </p>
         <div className="flex justify-center">
-          <Link to="/register">
-            <Button 
-              className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white font-bold px-8 py-6 rounded-md"
-              size="lg"
-            >
-              Registrati Ora
-            </Button>
-          </Link>
+          <Button 
+            className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white font-bold px-8 py-6 rounded-md"
+            size="lg"
+            onClick={handleRegisterClick}
+          >
+            Registrati Ora
+          </Button>
         </div>
       </section>
 
@@ -125,9 +134,9 @@ const Index = () => {
             <h2 className="text-2xl font-bold neon-text">M1SSION</h2>
           </div>
           <div className="flex space-x-4">
-            <span className="text-sm text-muted-foreground">Privacy Policy</span>
-            <span className="text-sm text-muted-foreground">Termini e Condizioni</span>
-            <span className="text-sm text-muted-foreground">Contatti</span>
+            <Link to="/privacy-policy" className="text-sm text-muted-foreground hover:text-white">Privacy Policy</Link>
+            <Link to="/terms" className="text-sm text-muted-foreground hover:text-white">Termini e Condizioni</Link>
+            <Link to="/contacts" className="text-sm text-muted-foreground hover:text-white">Contatti</Link>
           </div>
         </div>
         <div className="mt-6 text-center md:text-left">
@@ -136,6 +145,13 @@ const Index = () => {
           </p>
         </div>
       </footer>
+      
+      {/* Age Verification Modal */}
+      <AgeVerificationModal 
+        open={showAgeVerification} 
+        onClose={() => setShowAgeVerification(false)} 
+        onVerified={handleAgeVerified} 
+      />
     </div>
   );
 };

@@ -22,6 +22,9 @@ import PersonalInfo from "./pages/PersonalInfo";
 import PrivacySecurity from "./pages/PrivacySecurity";
 import LanguageSettings from "./pages/LanguageSettings";
 import Notifications from "./pages/Notifications";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
+import Contacts from "./pages/Contacts";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +38,9 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/contacts" element={<Contacts />} />
             <Route element={<MainLayout />}>
               <Route path="/home" element={<Home />} />
               <Route path="/profile" element={<Profile />} />
