@@ -1,4 +1,3 @@
-
 import { Home, User, MoreVertical, Calendar, CreditCard, Circle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
@@ -19,7 +18,7 @@ export const BottomNavigation = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-16 backdrop-blur-xl border-t flex justify-around items-center px-2 z-50 transition-colors duration-200 bg-black bg-opacity-95">
+    <div className="fixed bottom-0 left-0 right-0 h-16 backdrop-blur-xl border-t flex justify-around items-center px-2 z-50 transition-colors duration-200 bg-black">
       <button
         onClick={() => handleNavigation("/home")}
         className={`bottom-nav-item ${isActive("/home") ? "active" : ""}`}

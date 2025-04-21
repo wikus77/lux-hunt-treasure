@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import GenderFilter from "@/components/events/GenderFilter";

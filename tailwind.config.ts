@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -20,52 +21,52 @@ export default {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))'
+          DEFAULT: '#111111',
+          foreground: '#ffffff'
         },
         secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))'
+          DEFAULT: '#222222',
+          foreground: '#ffffff'
         },
         destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))'
+          DEFAULT: '#dc2626',
+          foreground: '#ffffff'
         },
         muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))'
+          DEFAULT: '#333333',
+          foreground: '#bbbbbb'
         },
         accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))'
+          DEFAULT: '#232323',
+          foreground: '#ffffff'
         },
         popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))'
+          DEFAULT: '#161616',
+          foreground: '#ffffff'
         },
         card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))'
+          DEFAULT: '#121212',
+          foreground: '#ffffff'
         },
         sidebar: {
-          DEFAULT: 'hsl(var(--sidebar-background))',
-          foreground: 'hsl(var(--sidebar-foreground))',
-          primary: 'hsl(var(--sidebar-primary))',
-          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-          accent: 'hsl(var(--sidebar-accent))',
-          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-          border: 'hsl(var(--sidebar-border))',
-          ring: 'hsl(var(--sidebar-ring))'
+          DEFAULT: '#121212',
+          foreground: '#ffffff',
+          primary: '#121212',
+          'primary-foreground': '#ffffff',
+          accent: '#232323',
+          'accent-foreground': '#ffffff',
+          border: '#232323',
+          ring: '#333333'
         },
         projectx: {
-          blue: '#0EA5E9',
-          'neon-blue': '#33C3F0',
-          'deep-blue': '#1A1F2C',
+          blue: '#111111', // nero
+          'neon-blue': '#171717', // nero intenso
+          'deep-blue': '#151515', // nero profondo
           black: '#000000',
           'dark-gray': '#222222',
-          pink: '#D946EF',
-          'neon-pink': '#F97316',
-          gold: '#FFC107',
+          pink: '#222222', // scuro
+          'neon-pink': '#181818',
+          gold: '#232323',
         }
       },
       borderRadius: {
@@ -92,18 +93,18 @@ export default {
         },
         'glow': {
           '0%, 100%': { 
-            textShadow: '0 0 10px rgba(51, 195, 240, 0.8), 0 0 20px rgba(51, 195, 240, 0.5)' 
+            textShadow: '0 0 10px #111, 0 0 20px #222' 
           },
           '50%': { 
-            textShadow: '0 0 15px rgba(217, 70, 239, 0.8), 0 0 30px rgba(217, 70, 239, 0.5)' 
+            textShadow: '0 0 15px #181818, 0 0 30px #151515' 
           }
         },
         'pulse-border': {
           '0%, 100%': { 
-            borderColor: 'rgba(51, 195, 240, 0.8)' 
+            borderColor: 'rgba(33, 33, 33, 0.8)' 
           },
           '50%': { 
-            borderColor: 'rgba(217, 70, 239, 0.8)' 
+            borderColor: 'rgba(12, 12, 12, 0.8)' 
           }
         }
       },
@@ -114,11 +115,12 @@ export default {
         'pulse-border': 'pulse-border 4s ease-in-out infinite'
       },
       backgroundImage: {
-        'hero-pattern': "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/public/lovable-uploads/e017275b-1b75-4b7c-bab0-1ce246d4bbce.png')",
+        'hero-pattern': "linear-gradient(rgba(0,0,0,1),rgba(0,0,0,1))",
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'neon-gradient': 'linear-gradient(90deg, #0EA5E9, #D946EF)'
+        'neon-gradient': 'linear-gradient(90deg, #111111, #222222)'
       }
     }
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
+

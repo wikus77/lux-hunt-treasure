@@ -18,9 +18,9 @@ const Index = () => {
       <div className="h-[72px] w-full" />
 
       {/* Hero Section */}
-      <section className="w-full flex flex-col justify-center items-center text-center bg-hero-pattern bg-cover bg-center px-6 py-16">
-        <h1 className="text-4xl md:text-6xl font-bold mb-4 animate-glow">
-          M1SSION <span className="text-projectx-neon-blue">X</span>
+      <section className="w-full flex flex-col justify-center items-center text-center bg-black bg-cover bg-center px-6 py-16">
+        <h1 className="text-4xl md:text-6xl font-bold mb-4">
+          M1SSION <span className="text-white">X</span>
         </h1>
         <p className="text-xl md:text-2xl max-w-2xl mb-8">
           Unisciti a Project X: Il Tuo Sogno è a Portata di Mano
@@ -79,7 +79,7 @@ const Index = () => {
       </section>
 
       {/* Auto in Palio */}
-      <section className="py-16 px-4 bg-gradient-to-b from-black to-projectx-deep-blue w-full">
+      <section className="py-16 px-4 bg-black w-full">
         <h2 className="text-3xl font-bold mb-6 text-center neon-pink-text">
           Auto di Lusso in Palio
         </h2>
@@ -119,7 +119,7 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-4 bg-projectx-deep-blue w-full">
+      <footer className="py-8 px-4 bg-black w-full">
         <div className="flex flex-col md:flex-row justify-between items-center w-full">
           <div className="mb-4 md:mb-0">
             <h2 className="text-2xl font-bold neon-text">M1SSION</h2>
