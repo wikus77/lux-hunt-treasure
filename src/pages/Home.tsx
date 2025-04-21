@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Bell, Menu, User } from "lucide-react";
+import { Menu, User, Plane } from "lucide-react";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import CurrentEventSection from "@/components/home/CurrentEventSection";
 import MysteryPrizesSection from "@/components/home/MysteryPrizesSection";
@@ -37,12 +37,12 @@ const Home = () => {
         </button>
         <h1 className="text-2xl font-bold neon-text flex-1 text-center">M1ssion</h1>
         
-        {/* Notification toggle (right side) */}
+        {/* Paper plane messages toggle (right side) */}
         <button
           className="ml-auto p-2 rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors"
-          onClick={() => navigate("/notifications")}
+          onClick={() => navigate("/messages")}
         >
-          <Bell className="w-5 h-5" />
+          <Plane className="w-5 h-5" />
         </button>
       </header>
 
@@ -61,3 +61,4 @@ const Home = () => {
 };
 
 export default Home;
+
