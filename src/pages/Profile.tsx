@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import ProfileLayout from "@/components/layout/ProfileLayout";
@@ -5,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ProfileBio from "@/components/profile/ProfileBio";
 import ProfileClues from "@/components/profile/ProfileClues";
 import SubscriptionStatus from "@/components/profile/SubscriptionStatus";
-import ProfileHeader from "@/components/profile/ProfileHeader";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
 
 interface Clue {
   id: string;
@@ -42,19 +43,7 @@ const Profile = () => {
     }
   }, []);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setProfileImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSaveProfile = () => {
-    // Save to localStorage for persistence between page navigations
     if (profileImage) {
       localStorage.setItem('profileImage', profileImage);
     }
@@ -125,27 +114,34 @@ const Profile = () => {
 
   return (
     <ProfileLayout>
-      <div className="fixed top-16 left-0 right-0 z-40 bg-black">
-        <ProfileHeader 
-          profileImage={profileImage}
-          name={name}
-          isEditing={isEditing}
-          setIsEditing={setIsEditing}
-          onSave={handleSaveProfile}
-        />
-      </div>
+      <UnifiedHeader
+        enableAvatarUpload
+        profileImage={profileImage}
+        setProfileImage={setProfileImage}
+      />
 
-      <div className="w-full mt-16">
+      <div className="h-[72px] w-full" />
+
+      <div className="w-full">
         <ProfileBio
           name={name}
           setName={setName}
           bio={bio}
           setBio={setBio}
           profileImage={profileImage}
-          handleImageChange={handleImageChange}
+          handleImageChange={() => {}}
           isEditing={isEditing}
           onSave={handleSaveProfile}
         />
+
+        <button
+          className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-blue-500 to-fuchsia-700 text-white font-bold mx-auto flex"
+          onClick={handleSaveProfile}
+          disabled={!isEditing}
+          style={{ opacity: isEditing ? 1 : 0.65, cursor: isEditing ? "pointer" : "not-allowed" }}
+        >
+          Salva Modifiche
+        </button>
 
         <SubscriptionStatus />
 

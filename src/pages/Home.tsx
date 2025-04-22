@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import CurrentEventSection from "@/components/home/CurrentEventSection";
 import MysteryPrizesSection from "@/components/home/MysteryPrizesSection";
 import CluesSection from "@/components/home/CluesSection";
@@ -31,10 +32,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-black w-full">
-      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex flex-col items-center justify-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
-        <h1 className="text-2xl font-bold neon-text">M1SSION</h1>
-        <p className="text-xs text-projectx-neon-blue">it is possible</p>
-      </header>
+      <UnifiedHeader />
       
       <NotificationsBanner
         open={showNotificationsBanner}
