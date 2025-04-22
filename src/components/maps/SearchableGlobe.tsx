@@ -83,8 +83,8 @@ const SearchableGlobe: React.FC = () => {
   return (
     <div className="relative w-full h-full">
       <MapContainer
-        defaultCenter={[41.9028, 12.4964]}
-        defaultZoom={6}
+        center={[41.9028, 12.4964]}
+        zoom={6}
         style={{ width: "100%", height: "40vh", borderRadius: "1rem" }}
         scrollWheelZoom={true}
         className="mb-4"
