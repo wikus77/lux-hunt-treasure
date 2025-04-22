@@ -116,12 +116,37 @@ const Profile = () => {
           bio={bio}
           setBio={setBio}
           profileImage={profileImage}
-          handleImageChange={() => {}}
+          handleImageChange={isEditing ? (e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (ev) => {
+                const src = ev.target?.result as string;
+                setProfileImage(src);
+              };
+              reader.readAsDataURL(file);
+            }
+          } : () => {}}
           isEditing={isEditing}
           onSave={handleSaveProfile}
         />
 
-        {/* Eliminato il tasto "Salva Modifiche" esterno, ora è presente solo in ProfileBio */}
+        {/* Tasto "Salva Modifiche" esterno visibile solo se si è in modalità modifica */}
+        {isEditing && (
+          <div className="px-4 mb-8">
+            <button
+              className="w-full flex items-center justify-center px-6 py-3 rounded-full font-bold text-white bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 transition
+                shadow-lg mt-3"
+              style={{ opacity: isEditing ? 1 : 0.65, cursor: isEditing ? "pointer" : "not-allowed" }}
+              onClick={handleSaveProfile}
+              disabled={!isEditing}
+              type="button"
+              aria-label="Salva le modifiche"
+            >
+              Salva Modifiche
+            </button>
+          </div>
+        )}
 
         <SubscriptionStatus />
 
@@ -132,3 +157,4 @@ const Profile = () => {
 };
 
 export default Profile;
+
