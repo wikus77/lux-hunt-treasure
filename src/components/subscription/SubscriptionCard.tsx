@@ -30,29 +30,29 @@ export const SubscriptionCard = ({
       case "Black":
         return {
           border: "border-gray-800",
-          gradient: "bg-gradient-to-b from-gray-900 to-black",
-          shadow: "shadow-lg shadow-gray-900/50",
+          background: "bg-gradient-to-b from-zinc-900 to-black",
+          shadow: "shadow-xl shadow-black/20",
           button: "bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full"
         };
       case "Gold":
         return {
-          border: "border-yellow-600",
-          gradient: "bg-gradient-to-b from-yellow-700 to-yellow-900",
-          shadow: "shadow-lg shadow-yellow-600/50",
+          border: "border-yellow-700/30",
+          background: "bg-gradient-to-b from-zinc-800 to-zinc-900",
+          shadow: "shadow-xl shadow-yellow-900/10",
           button: "bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full"
         };
       case "Silver":
         return {
-          border: "border-gray-400",
-          gradient: "bg-gradient-to-b from-gray-600 to-gray-800",
-          shadow: "shadow-lg shadow-gray-400/50",
+          border: "border-zinc-700/30",
+          background: "bg-gradient-to-b from-zinc-800 to-zinc-900",
+          shadow: "shadow-xl shadow-zinc-900/20",
           button: "bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full"
         };
       default:
         return {
-          border: "border-projectx-blue",
-          gradient: "bg-gradient-to-b from-projectx-blue to-projectx-neon-blue",
-          shadow: "shadow-lg shadow-blue-500/50",
+          border: "border-zinc-800/30",
+          background: "bg-gradient-to-b from-zinc-900 to-black",
+          shadow: "shadow-xl shadow-black/20",
           button: "bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full"
         };
     }
@@ -61,15 +61,15 @@ export const SubscriptionCard = ({
   const styles = getTypeStyles();
 
   return (
-    <div className={`rounded-xl p-0.5 ${styles.border} ${isPopular ? 'animate-pulse-border' : ''} backdrop-blur-lg`}>
-      <div className="rounded-lg overflow-hidden">
+    <div className={`rounded-xl ${styles.border} ${isPopular ? 'ring-2 ring-[#7209b7]/50' : ''} overflow-hidden backdrop-blur-lg transition-transform hover:transform hover:scale-[1.01] ${styles.shadow}`}>
+      <div className="h-full flex flex-col">
         {isPopular && (
-          <div className="py-1.5 px-4 bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white text-xs text-center font-medium">
+          <div className="py-1.5 px-4 bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-xs text-center font-medium text-white">
             Più Popolare
           </div>
         )}
         
-        <div className={`p-6 ${styles.gradient} bg-opacity-90`}>
+        <div className={`p-6 ${styles.background} flex-grow`}>
           <h3 className="text-xl font-bold mb-1">{title}</h3>
           
           <div className="mt-4 mb-6">
@@ -77,17 +77,17 @@ export const SubscriptionCard = ({
             {period && <span className="text-sm opacity-80">/{period}</span>}
           </div>
           
-          <ul className="mb-6 space-y-2.5">
+          <ul className="mb-6 space-y-3">
             {features.map((feature, index) => (
               <li key={index} className="flex items-start">
                 <Check className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0 text-[#4361ee]" />
-                <span className="text-sm">{feature.text}</span>
+                <span className="text-sm text-white/80">{feature.text}</span>
               </li>
             ))}
           </ul>
           
           <Button 
-            className={`w-full ${styles.button} ${styles.shadow}`}
+            className={`w-full mt-auto ${styles.button}`}
           >
             {ctaText}
           </Button>

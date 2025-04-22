@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Mail, MoreVertical } from "lucide-react";
 import CurrentEventSection from "@/components/home/CurrentEventSection";
@@ -30,7 +31,7 @@ const Home = () => {
   };
 
   return (
-    <div className="pb-20 min-h-screen bg-black w-full">
+    <div className="min-h-screen bg-black w-full">
       <NotificationsBanner
         open={showNotificationsBanner}
         notifications={notifications}
@@ -39,35 +40,19 @@ const Home = () => {
         onMarkAllAsRead={markAllAsRead}
       />
 
-      <div className="fixed top-0 right-4 z-50 h-[72px] flex items-center gap-3">
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="p-2.5 relative rounded-full bg-black/40 backdrop-blur-lg border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
-          onClick={handleShowNotifications}
-        >
-          <Mail className="w-5 h-5" />
-          <span className={`absolute -top-1 -right-1 font-bold border-2 border-black w-5 h-5 flex items-center justify-center rounded-full text-xs ${
-            unreadCount > 0
-              ? "bg-red-600 text-white"
-              : "bg-gray-700 text-gray-300"
-          }`}>
-            {unreadCount > 0 ? (unreadCount > 9 ? "9+" : unreadCount) : ""}
-          </span>
-        </button>
-        <button
-          className="p-2.5 rounded-full bg-black/40 backdrop-blur-lg border border-white/10 hover:bg-white/10 transition-colors"
-          onClick={() => navigate("/settings")}
-          aria-label="Impostazioni"
-        >
-          <MoreVertical className="w-5 h-5" />
-        </button>
-      </div>
-
-      <div className="w-full space-y-6 pt-[72px]">
-        <CurrentEventSection />
-        <MysteryPrizesSection />
-        <CluesSection />
+      <div className="max-w-screen-xl mx-auto">
+        <div className="w-full space-y-8 pt-6 px-4">
+          <div className="flex flex-col sm:flex-row gap-6">
+            <div className="w-full sm:w-2/3">
+              <CurrentEventSection />
+            </div>
+            <div className="w-full sm:w-1/3">
+              <MysteryPrizesSection />
+            </div>
+          </div>
+          
+          <CluesSection />
+        </div>
       </div>
 
       <BriefProfileModal

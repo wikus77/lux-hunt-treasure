@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,12 +22,12 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col w-full bg-black">
       {/* Sticky header */}
-      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
-        <h1 className="text-2xl font-bold neon-text">M1SSION</h1>
+      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex justify-between items-center backdrop-blur-xl bg-black/40 border-b border-white/10 transition-all duration-300">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">M1SSION</h1>
         <Link to="/login">
           <Button 
             variant="outline" 
-            className="flex items-center gap-2 bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full px-5 py-2"
+            className="flex items-center gap-2 bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full px-5 py-2 border-none"
           >
             <LogIn className="w-4 h-4" />
             Accedi
@@ -38,23 +39,23 @@ const Index = () => {
       <div className="h-[72px] w-full" />
 
       {/* Hero Section */}
-      <section className="w-full flex flex-col justify-center items-center text-center bg-black bg-cover bg-center px-6 py-16">
-        <h1 className="text-4xl md:text-6xl font-bold mb-4">
+      <section className="w-full flex flex-col justify-center items-center text-center px-6 py-24 md:py-32">
+        <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">
           M1SSION
         </h1>
-        <p className="text-xl md:text-2xl max-w-2xl mb-8">
+        <p className="text-xl md:text-2xl max-w-2xl mb-10 text-white/80 leading-relaxed">
           Unisciti a M1SSION: Il Tuo Sogno è a Portata di Mano
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
           <Button 
-            className="bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white font-bold px-8 py-6 rounded-full"
+            className="bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white font-bold px-8 py-6 rounded-full transform transition-transform hover:scale-105"
             size="lg"
             onClick={handleRegisterClick}
           >
             Registrati Oggi
           </Button>
           <Button 
-            className="bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white font-bold px-8 py-6 rounded-full"
+            className="backdrop-blur-md bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold px-8 py-6 rounded-full transition-all"
             onClick={() => setIsVideoPlaying(true)}
             size="lg"
           >
@@ -64,43 +65,46 @@ const Index = () => {
       </section>
 
       {/* Come Funziona */}
-      <section className="py-16 px-4 bg-black w-full">
+      <section className="py-20 px-4 bg-black w-full max-w-screen-xl mx-auto">
+        <h2 className="text-3xl font-bold mb-12 text-center bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">
+          Come Funziona
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
-          <div className="glass-card text-center w-full relative">
+          <div className="glass-card hover-lift text-center w-full relative">
             <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">
               1
             </div>
-            <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-projectx-deep-blue border border-projectx-neon-blue">
+            <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border border-white/10">
               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">1</div>
             </div>
-            <h3 className="text-xl font-bold mb-2">Registrati</h3>
-            <p className="text-muted-foreground">
+            <h3 className="text-xl font-bold mb-3">Registrati</h3>
+            <p className="text-white/70">
               Crea un account gratuito per iniziare il tuo viaggio verso l'auto dei tuoi sogni.
             </p>
           </div>
           
-          <div className="glass-card text-center w-full relative">
+          <div className="glass-card hover-lift text-center w-full relative">
             <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">
               2
             </div>
-            <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-projectx-deep-blue border border-projectx-neon-blue">
+            <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border border-white/10">
               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">2</div>
             </div>
-            <h3 className="text-xl font-bold mb-2">Scopri gli Indizi</h3>
-            <p className="text-muted-foreground">
+            <h3 className="text-xl font-bold mb-3">Scopri gli Indizi</h3>
+            <p className="text-white/70">
               Ogni settimana ricevi indizi che ti avvicinano al premio finale.
             </p>
           </div>
 
-          <div className="glass-card text-center w-full relative">
+          <div className="glass-card hover-lift text-center w-full relative">
             <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">
               3
             </div>
-            <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-projectx-deep-blue border border-projectx-neon-blue">
+            <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border border-white/10">
               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">3</div>
             </div>
-            <h3 className="text-xl font-bold mb-2">Vinci il Premio</h3>
-            <p className="text-muted-foreground">
+            <h3 className="text-xl font-bold mb-3">Vinci il Premio</h3>
+            <p className="text-white/70">
               Segui gli indizi, risolvi il mistero e vinci un'auto di lusso ogni mese.
             </p>
           </div>
@@ -108,18 +112,18 @@ const Index = () => {
       </section>
 
       {/* Auto in Palio */}
-      <section className="py-16 px-4 bg-black w-full">
-        <h2 className="text-3xl font-bold mb-6 text-center neon-pink-text">
+      <section className="py-20 px-4 bg-black w-full max-w-screen-xl mx-auto">
+        <h2 className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">
           Auto di Lusso in Palio
         </h2>
-        <p className="text-center max-w-2xl mx-auto mb-12 text-muted-foreground">
+        <p className="text-center max-w-2xl mx-auto mb-12 text-white/70">
           Ogni mese, M1SSION mette in palio un'auto di lusso. Lamborghini, Ferrari, Porsche e altre auto da sogno sono pronte per essere vinte.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
           {['Ferrari', 'Lamborghini', 'Porsche', 'Tesla'].map((brand, index) => (
-            <div key={index} className="glass-card text-center hover:neon-border transition-all duration-300 w-full">
+            <div key={index} className="glass-card hover-lift text-center">
               <h3 className="text-xl font-bold mb-2">{brand}</h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-white/70">
                 Una delle auto più prestigiose al mondo potrebbe essere tua.
               </p>
             </div>
@@ -128,40 +132,44 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 bg-black w-full">
-        <h2 className="text-3xl font-bold mb-4 animate-glow text-center">
-          Trasforma il Tuo Sogno in Realtà
-        </h2>
-        <p className="text-xl max-w-2xl mx-auto mb-8 text-center">
-          Non perdere l'opportunità di trasformare il tuo sogno in realtà. Unisciti a M1SSION oggi stesso e inizia il tuo viaggio verso l'auto dei tuoi sogni.
-        </p>
-        <div className="flex justify-center">
-          <Button 
-            className="bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white font-bold px-8 py-6 rounded-full"
-            size="lg"
-            onClick={handleRegisterClick}
-          >
-            Registrati Ora
-          </Button>
+      <section className="py-20 px-4 bg-gradient-to-b from-black to-[#120d1d] w-full">
+        <div className="max-w-screen-xl mx-auto">
+          <h2 className="text-4xl font-bold mb-6 text-center bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">
+            Trasforma il Tuo Sogno in Realtà
+          </h2>
+          <p className="text-xl max-w-2xl mx-auto mb-10 text-center text-white/80">
+            Non perdere l'opportunità di trasformare il tuo sogno in realtà. Unisciti a M1SSION oggi stesso e inizia il tuo viaggio verso l'auto dei tuoi sogni.
+          </p>
+          <div className="flex justify-center">
+            <Button 
+              className="bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white font-bold px-8 py-6 rounded-full transform transition-transform hover:scale-105"
+              size="lg"
+              onClick={handleRegisterClick}
+            >
+              Registrati Ora
+            </Button>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-4 bg-black w-full">
-        <div className="flex flex-col md:flex-row justify-between items-center w-full">
-          <div className="mb-4 md:mb-0">
-            <h2 className="text-2xl font-bold neon-text">M1SSION</h2>
+      <footer className="py-12 px-4 bg-black w-full border-t border-white/10">
+        <div className="max-w-screen-xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center w-full mb-8">
+            <div className="mb-6 md:mb-0">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">M1SSION</h2>
+            </div>
+            <div className="flex space-x-6">
+              <Link to="/privacy-policy" className="text-sm text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
+              <Link to="/terms" className="text-sm text-white/60 hover:text-white transition-colors">Termini e Condizioni</Link>
+              <Link to="/contacts" className="text-sm text-white/60 hover:text-white transition-colors">Contatti</Link>
+            </div>
           </div>
-          <div className="flex space-x-4">
-            <Link to="/privacy-policy" className="text-sm text-muted-foreground hover:text-white">Privacy Policy</Link>
-            <Link to="/terms" className="text-sm text-muted-foreground hover:text-white">Termini e Condizioni</Link>
-            <Link to="/contacts" className="text-sm text-muted-foreground hover:text-white">Contatti</Link>
+          <div className="border-t border-white/10 pt-6 text-center md:text-left">
+            <p className="text-sm text-white/50">
+              © 2025 M1SSION. Tutti i diritti riservati.
+            </p>
           </div>
-        </div>
-        <div className="mt-6 text-center md:text-left">
-          <p className="text-sm text-muted-foreground">
-            © 2025 M1SSION. Tutti i diritti riservati.
-          </p>
         </div>
       </footer>
       

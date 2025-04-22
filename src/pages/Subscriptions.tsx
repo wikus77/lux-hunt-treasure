@@ -41,100 +41,108 @@ const Subscriptions = () => {
   };
 
   return (
-    <div className="pb-20 min-h-screen bg-black w-full">
-      {/* Introduction */}
-      <section className="w-full py-6">
-        <h2 className="text-xl font-bold mb-2 px-4 text-center">Scegli il Tuo Piano</h2>
-        <p className="text-sm text-muted-foreground mb-6 px-4 text-center">
-          Sblocca più indizi e aumenta le tue possibilità di vittoria con i nostri pacchetti premium.
-        </p>
-      </section>
+    <div className="min-h-screen bg-black w-full">
+      <div className="max-w-screen-xl mx-auto">
+        {/* Introduction */}
+        <section className="w-full py-8">
+          <h2 className="text-2xl font-bold mb-3 px-4 text-center bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">Scegli il Tuo Piano</h2>
+          <p className="text-base text-white/70 mb-8 px-4 text-center max-w-2xl mx-auto">
+            Sblocca più indizi e aumenta le tue possibilità di vittoria con i nostri pacchetti premium.
+          </p>
+        </section>
 
-      {/* Subscription Plans */}
-      <section className="w-full px-4 pb-8">
-        <div className="space-y-4">
-          <SubscriptionCard
-            title="Base"
-            price="Gratis"
-            period="mese"
-            features={getSubscriptionFeatures("Base")}
-            isPopular={false}
-            ctaText="Piano Attuale"
-            type="Base"
-          />
-          <SubscriptionCard
-            title="Silver"
-            price="€3,99"
-            period="mese"
-            features={getSubscriptionFeatures("Silver")}
-            isPopular={false}
-            ctaText={selected === "Silver" ? "Piano Attuale" : "Passa a Silver"}
-            type="Silver"
-          />
-          <SubscriptionCard
-            title="Gold"
-            price="€6,99"
-            period="mese"
-            features={getSubscriptionFeatures("Gold")}
-            isPopular={true}
-            ctaText={selected === "Gold" ? "Piano Attuale" : "Passa a Gold"}
-            type="Gold"
-          />
-          <SubscriptionCard
-            title="Black"
-            price="€9,99"
-            period="mese"
-            features={getSubscriptionFeatures("Black")}
-            isPopular={false}
-            ctaText={selected === "Black" ? "Piano Attuale" : "Passa a Black"}
-            type="Black"
-          />
-        </div>
-      </section>
+        {/* Subscription Plans */}
+        <section className="w-full px-4 pb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <SubscriptionCard
+              title="Base"
+              price="Gratis"
+              period="mese"
+              features={getSubscriptionFeatures("Base")}
+              isPopular={false}
+              ctaText="Piano Attuale"
+              type="Base"
+            />
+            <SubscriptionCard
+              title="Silver"
+              price="€3,99"
+              period="mese"
+              features={getSubscriptionFeatures("Silver")}
+              isPopular={false}
+              ctaText={selected === "Silver" ? "Piano Attuale" : "Passa a Silver"}
+              type="Silver"
+            />
+            <SubscriptionCard
+              title="Gold"
+              price="€6,99"
+              period="mese"
+              features={getSubscriptionFeatures("Gold")}
+              isPopular={true}
+              ctaText={selected === "Gold" ? "Piano Attuale" : "Passa a Gold"}
+              type="Gold"
+            />
+            <SubscriptionCard
+              title="Black"
+              price="€9,99"
+              period="mese"
+              features={getSubscriptionFeatures("Black")}
+              isPopular={false}
+              ctaText={selected === "Black" ? "Piano Attuale" : "Passa a Black"}
+              type="Black"
+            />
+          </div>
+        </section>
 
-      {/* Benefits Section */}
-      <section className="w-full py-8 px-4 bg-gradient-to-r from-[#4361ee]/10 to-[#7209b7]/10 border-y border-[#4361ee]/20 rounded-lg mx-auto max-w-3xl">
-        <h2 className="text-xl font-bold mb-6 text-center bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">Vantaggi dei Piani Premium</h2>
-        <div className="space-y-4">
-          <div className="flex items-center">
-            <Check className="mr-2 text-[#4361ee]" />
-            <span>Più indizi per aumentare le possibilità di vittoria</span>
+        {/* Benefits Section */}
+        <section className="w-full py-10 px-4 backdrop-blur-lg bg-white/5 border border-white/10 rounded-xl mx-auto max-w-3xl mb-12">
+          <h2 className="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">Vantaggi dei Piani Premium</h2>
+          <div className="space-y-4 max-w-xl mx-auto">
+            <div className="flex items-center p-3 bg-white/5 rounded-lg">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center mr-4 flex-shrink-0">
+                <Check className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-white/90">Più indizi per aumentare le possibilità di vittoria</span>
+            </div>
+            <div className="flex items-center p-3 bg-white/5 rounded-lg">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center mr-4 flex-shrink-0">
+                <Check className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-white/90">Accesso anticipato a nuovi eventi e premi esclusivi</span>
+            </div>
+            <div className="flex items-center p-3 bg-white/5 rounded-lg">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center mr-4 flex-shrink-0">
+                <Check className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-white/90">Badge speciale nel profilo utente</span>
+            </div>
           </div>
-          <div className="flex items-center">
-            <Check className="mr-2 text-[#7209b7]" />
-            <span>Accesso anticipato a nuovi eventi e premi esclusivi</span>
-          </div>
-          <div className="flex items-center">
-            <Check className="mr-2 text-[#4361ee]" />
-            <span>Badge speciale nel profilo utente</span>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      {/* FAQ Section */}
-      <section className="w-full py-8">
-        <h2 className="text-xl font-bold mb-6 px-4 text-center">Domande Frequenti</h2>
-        <div className="space-y-4 px-4">
-          <div className="glass-card p-4">
-            <h3 className="font-semibold">Cosa succede dopo aver acquistato un abbonamento?</h3>
-            <p className="text-muted-foreground">
-              Subito dopo l'acquisto avrai accesso ai vantaggi del piano selezionato.
-            </p>
+        {/* FAQ Section */}
+        <section className="w-full py-10 px-4 mb-12">
+          <h2 className="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">Domande Frequenti</h2>
+          <div className="space-y-4 max-w-3xl mx-auto">
+            <div className="glass-card">
+              <h3 className="font-semibold text-lg mb-2">Cosa succede dopo aver acquistato un abbonamento?</h3>
+              <p className="text-white/70">
+                Subito dopo l'acquisto avrai accesso ai vantaggi del piano selezionato.
+              </p>
+            </div>
+            <div className="glass-card">
+              <h3 className="font-semibold text-lg mb-2">Posso cambiare piano in qualsiasi momento?</h3>
+              <p className="text-white/70">
+                Sì, puoi cambiare o annullare il tuo abbonamento in qualsiasi momento dalle impostazioni del profilo.
+              </p>
+            </div>
+            <div className="glass-card">
+              <h3 className="font-semibold text-lg mb-2">Come vengono gestiti i pagamenti?</h3>
+              <p className="text-white/70">
+                I pagamenti sono gestiti in totale sicurezza tramite Stripe.
+              </p>
+            </div>
           </div>
-          <div className="glass-card p-4">
-            <h3 className="font-semibold">Posso cambiare piano in qualsiasi momento?</h3>
-            <p className="text-muted-foreground">
-              Sì, puoi cambiare o annullare il tuo abbonamento in qualsiasi momento dalle impostazioni del profilo.
-            </p>
-          </div>
-          <div className="glass-card p-4">
-            <h3 className="font-semibold">Come vengono gestiti i pagamenti?</h3>
-            <p className="text-muted-foreground">
-              I pagamenti sono gestiti in totale sicurezza tramite Stripe.
-            </p>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 };
