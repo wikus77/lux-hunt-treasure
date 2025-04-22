@@ -81,7 +81,7 @@ const UnifiedHeader = ({
           </h1>
           <span
             className="text-xs font-bold italic leading-tight mt-0.5 select-none
-            bg-gradient-to-r from-[#8E9196] via-[#9b87f5] to-[#6E59A5] bg-clip-text text-transparent tracking-widest font-mono uppercase"
+              bg-gradient-to-r from-[#00a3ff] via-white to-[#9b87f5] bg-clip-text text-transparent tracking-widest font-mono uppercase"
             style={{
               fontFamily: '"Orbitron", "Playfair Display", "monospace", Arial, sans-serif',
               letterSpacing: "0.27em"
