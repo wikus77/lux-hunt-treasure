@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -38,8 +37,7 @@ const PaymentGold = () => {
   };
 
   const handleApplePay = () => {
-    toast({
-      title: "Apple Pay",
+    toast.success("Apple Pay", {
       description: "Pagamento con Apple Pay in elaborazione..."
     });
     setTimeout(() => {
@@ -48,8 +46,7 @@ const PaymentGold = () => {
   };
 
   const handleGooglePay = () => {
-    toast({
-      title: "Google Pay",
+    toast.success("Google Pay", {
       description: "Pagamento con Google Pay in elaborazione..."
     });
     setTimeout(() => {
