@@ -6,8 +6,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import L from "leaflet";
 
+// Fix leaflet icon issues
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
 // Componente controllo zoom per spostamento e ricerca città
-const ZoomToCity = ({ city }) => {
+interface ZoomToCityProps {
+  city: { lat: number; lng: number } | null;
+}
+
+const ZoomToCity: React.FC<ZoomToCityProps> = ({ city }) => {
   const map = useMap();
   useEffect(() => {
     if (city && city.lat && city.lng) {
@@ -17,7 +34,13 @@ const ZoomToCity = ({ city }) => {
   return null;
 };
 
-const italianCities = [
+interface City {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
+const italianCities: City[] = [
   { name: "Roma", lat: 41.9028, lng: 12.4964 },
   { name: "Milano", lat: 45.4642, lng: 9.1900 },
   { name: "Napoli", lat: 40.8518, lng: 14.2681 },
@@ -39,13 +62,13 @@ const italianCities = [
   { name: "Reggio di Calabria", lat: 38.1144, lng: 15.6500 },
 ];
 
-const defaultCenter = { lat: 41.9028, lng: 12.4964 }; // Roma di default
+const defaultCenter: [number, number] = [41.9028, 12.4964]; // Roma di default
 
-const SearchableGlobe = () => {
+const SearchableGlobe: React.FC = () => {
   const [search, setSearch] = useState("");
-  const [foundCity, setFoundCity] = useState(null);
+  const [foundCity, setFoundCity] = useState<City | null>(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const query = search.trim().toLowerCase();
     const city =
@@ -62,7 +85,7 @@ const SearchableGlobe = () => {
   return (
     <div className="relative w-full h-full">
       <MapContainer
-        center={foundCity ? [foundCity.lat, foundCity.lng] : [defaultCenter.lat, defaultCenter.lng]}
+        center={defaultCenter}
         zoom={6}
         style={{ width: "100%", height: "40vh", borderRadius: "1rem" }}
         scrollWheelZoom={true}
@@ -76,13 +99,6 @@ const SearchableGlobe = () => {
           <Marker
             key={city.name + idx}
             position={[city.lat, city.lng]}
-            icon={L.icon({
-              iconUrl: "https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/images/marker-icon.png",
-              iconAnchor: [12, 41],
-              popupAnchor: [1, -34],
-              shadowUrl: "https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/images/marker-shadow.png",
-              shadowAnchor: [12, 41],
-            })}
           >
             <Popup>
               <span className="font-bold">{city.name}</span>
