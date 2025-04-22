@@ -10,17 +10,17 @@ import { MapMarkers, type MapMarker, type SearchArea } from "@/components/maps/M
 import MapNoteList from "@/components/maps/MapNoteList";
 import EditModeToggle from "@/components/profile/EditModeToggle";
 import InteractiveGlobe from "@/components/maps/InteractiveGlobe";
+import { useUserLocationPermission } from "@/hooks/useUserLocationPermission";
 
-// Google Maps API Key - Use your own key for production
 const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
+
+const DEFAULT_CENTER = { lat: 45.4642, lng: 9.19 };
 
 const Map = () => {
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  
-  // Map state
   const [markers, setMarkers] = useState<MapMarker[]>([]);
   const [searchAreas, setSearchAreas] = useState<SearchArea[]>([]);
   const [activeMarker, setActiveMarker] = useState<string | null>(null);
@@ -29,33 +29,35 @@ const Map = () => {
   const [isAddingSearchArea, setIsAddingSearchArea] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [mapView, setMapView] = useState<"apple" | "google" | "globe">("google");
-
-  // Dialog state
   const [helpDialogOpen, setHelpDialogOpen] = useState(false);
-  
+
+  const { 
+    permission: geoPermission, 
+    userLocation, 
+    askPermission: askGeoPermission, 
+    loading: geoLoading,
+    error: geoError
+  } = useUserLocationPermission();
+
+  useEffect(() => {
+    if (geoPermission === "granted" && userLocation) {
+      setCurrentLocation(userLocation);
+      setLoading(false);
+      setError(null);
+    } else if (geoPermission === "denied") {
+      setCurrentLocation(null);
+      setLoading(false);
+      setError("Permesso per la posizione negato.");
+    } else if (geoPermission === "prompt") {
+      setCurrentLocation(null);
+      setLoading(false);
+    }
+  }, [geoPermission, userLocation]);
+
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
   }, []);
 
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setCurrentLocation([position.coords.latitude, position.coords.longitude]);
-          setLoading(false);
-        },
-        (err) => {
-          setError("Impossibile ottenere la tua posizione. Verifica di aver concesso i permessi di geolocalizzazione.");
-          setLoading(false);
-        }
-      );
-    } else {
-      setError("Il tuo browser non supporta la geolocalizzazione.");
-      setLoading(false);
-    }
-  }, []);
-
-  // Load saved markers and search areas from localStorage
   useEffect(() => {
     const savedMarkers = localStorage.getItem('mapMarkers');
     if (savedMarkers) {
@@ -76,7 +78,6 @@ const Map = () => {
     }
   }, []);
 
-  // Save markers and search areas to localStorage when they change
   useEffect(() => {
     if (markers.length > 0) {
       localStorage.setItem('mapMarkers', JSON.stringify(markers));
@@ -89,9 +90,7 @@ const Map = () => {
     }
   }, [searchAreas]);
 
-  // Funzione per generare l'URL di Apple Maps (visualizzabile sia su Mac che iOS, e "degenera" su web se non c'è supporto)
-  const getAppleMapsUrl = (lat: number, lon: number) =>
-    `https://maps.apple.com/?ll=${lat},${lon}&z=15`;
+  const getAppleMapsUrl = (lat: number, lon: number) => `https://maps.apple.com/?ll=${lat},${lon}&z=15`;
 
   const handleMapClick = (e: google.maps.MapMouseEvent) => {
     if (!e.latLng) return;
@@ -99,7 +98,6 @@ const Map = () => {
     const lat = e.latLng.lat();
     const lng = e.latLng.lng();
 
-    // If adding a marker, create a new marker
     if (isAddingMarker) {
       const newMarker: MapMarker = {
         id: uuidv4(),
@@ -114,13 +112,12 @@ const Map = () => {
       toast.success("Segnaposto aggiunto! Aggiungi una nota ora.");
     }
     
-    // If adding a search area, create a new search area
     if (isAddingSearchArea) {
       const newSearchArea: SearchArea = {
         id: uuidv4(),
         lat,
         lng,
-        radius: 500, // Default radius in meters
+        radius: 500,
         label: "Area di ricerca",
         editing: true
       };
@@ -137,7 +134,6 @@ const Map = () => {
     const lat = e.latLng.lat();
     const lng = e.latLng.lng();
 
-    // Create a new marker on double click
     const newMarker: MapMarker = {
       id: uuidv4(),
       lat,
@@ -205,7 +201,6 @@ const Map = () => {
   };
 
   const handleSaveChanges = () => {
-    // Nothing to save in edit mode currently
     setIsEditing(false);
     toast.success("Mappa salvata!");
   };
@@ -236,7 +231,7 @@ const Map = () => {
     }
   };
 
-  if (loading) {
+  if (loading || geoLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-projectx-neon-blue"></div>
@@ -249,17 +244,42 @@ const Map = () => {
       <UnifiedHeader profileImage={profileImage} />
       <div className="h-[72px] w-full" />
       
-      {error ? (
+      {geoPermission === "prompt" && (
+        <Dialog open>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Vuoi centrare la mappa sulla tua posizione?</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 text-sm">
+              <p>Per offrirti la migliore esperienza mostriamo la mappa a partire dalla tua posizione attuale (il permesso viene richiesto una sola volta).</p>
+              {geoError && (
+                <div className="text-red-500">{geoError}</div>
+              )}
+              <div className="flex gap-2 mt-6">
+                <Button onClick={askGeoPermission} disabled={geoLoading}>
+                  Consenti
+                </Button>
+                <Button variant="outline" onClick={() => localStorage.setItem("geo_permission_granted", "denied")}>
+                  Nega
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {error && (
         <div className="p-4 text-center">
           <p className="text-red-500 mb-4">{error}</p>
           <Button onClick={() => window.location.reload()}>Riprova</Button>
         </div>
-      ) : (
+      )}
+
+      {!error && (
         <div className="w-full px-4 py-6 flex flex-col max-w-5xl mx-auto">
           <h1 className="text-2xl font-bold mb-4 text-white">Mappa Interattiva</h1>
           
           <div className="flex flex-wrap gap-2 mb-4">
-            {/* Map type switcher */}
             <Button 
               variant={mapView === "google" ? "default" : "outline"} 
               onClick={() => setMapView("google")}
@@ -274,12 +294,7 @@ const Map = () => {
             >
               Globo 3D
             </Button>
-            {/* Removed Apple Maps button */}
-            
-            {/* Spacer */}
             <div className="flex-grow"></div>
-            
-            {/* Map controls */}
             <Button 
               variant="outline" 
               size="sm"
@@ -361,11 +376,16 @@ const Map = () => {
                   editSearchArea={editSearchArea}
                   deleteMarker={deleteMarker}
                   deleteSearchArea={deleteSearchArea}
+                  center={
+                    currentLocation
+                      ? { lat: currentLocation[0], lng: currentLocation[1] }
+                      : DEFAULT_CENTER
+                  }
                 />
               </LoadScript>
             )}
           </div>
-          {/* ... keep rest of the code the same (legends, note lists, search areas, etc.) ... */}
+          
           {mapView === "google" && (
             <>
               <div className="flex justify-between mt-4 mb-2">

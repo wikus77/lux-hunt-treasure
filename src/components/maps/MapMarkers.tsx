@@ -1,3 +1,4 @@
+
 import React, { useRef } from "react";
 import { GoogleMap, Marker, InfoWindow, Circle } from "@react-google-maps/api";
 import { MapPin, Pencil, X, Check, MapPinX, Circle as CircleIcon } from "lucide-react";
@@ -42,6 +43,7 @@ type MapMarkersProps = {
   editSearchArea: (id: string) => void;
   deleteMarker: (id: string) => void;
   deleteSearchArea: (id: string) => void;
+  center?: { lat: number; lng: number }; // 👈 nuovo prop opzionale
 };
 
 const mapContainerStyle = {
@@ -52,7 +54,7 @@ const mapContainerStyle = {
   borderRadius: "1rem"
 };
 
-const center = { lat: 45.4642, lng: 9.19 }; // Milano
+const defaultCenter = { lat: 45.4642, lng: 9.19 }; // Milano
 
 export const MapMarkers = ({
   isLoaded,
@@ -72,6 +74,7 @@ export const MapMarkers = ({
   editSearchArea,
   deleteMarker,
   deleteSearchArea,
+  center, // 👈 supporto nuovo prop
 }: any) => {
   const newNoteRef = useRef<HTMLTextAreaElement>(null);
   const newLabelRef = useRef<HTMLInputElement>(null);
@@ -83,7 +86,7 @@ export const MapMarkers = ({
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
           zoom={13}
-          center={center}
+          center={center ?? defaultCenter} {/* 👈 ora il centro può cambiare */}
           onClick={onMapClick}
           onDblClick={onMapDoubleClick}
           options={{
