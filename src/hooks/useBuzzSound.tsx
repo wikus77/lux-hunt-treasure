@@ -9,13 +9,28 @@ export const useBuzzSound = () => {
     audioRef.current = new Audio(soundPath);
     if (audioRef.current) {
       audioRef.current.volume = volume;
+      // Preload the audio to ensure it plays instantly when needed
+      audioRef.current.load();
     }
   };
 
   const playSound = () => {
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(e => console.error("Error playing sound:", e));
+      const playPromise = audioRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch(e => {
+          console.error("Error playing sound:", e);
+          // Try to play again with user interaction
+          document.addEventListener('click', function playOnClick() {
+            if (audioRef.current) {
+              audioRef.current.play().catch(err => console.error("Error playing on click:", err));
+            }
+            document.removeEventListener('click', playOnClick);
+          }, { once: true });
+        });
+      }
     }
   };
 

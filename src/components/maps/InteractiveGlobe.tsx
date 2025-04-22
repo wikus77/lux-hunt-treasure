@@ -41,14 +41,32 @@ const InteractiveGlobe = () => {
         { lat: -33.8688, lng: 151.2093, name: 'Sydney' },
         { lat: -22.9068, lng: -43.1729, name: 'Rio de Janeiro' },
         { lat: 19.4326, lng: -99.1332, name: 'Mexico City' },
-        { lat: 37.7749, lng: -122.4194, name: 'San Francisco' }
+        { lat: 37.7749, lng: -122.4194, name: 'San Francisco' },
+        { lat: 45.4642, lng: 9.1900, name: 'Milan' },
+        { lat: 43.7696, lng: 11.2558, name: 'Florence' },
+        { lat: 40.8518, lng: 14.2681, name: 'Naples' },
+        { lat: 45.0703, lng: 7.6869, name: 'Turin' },
+        { lat: 43.7228, lng: 10.4017, name: 'Pisa' },
+        { lat: 44.4056, lng: 8.9463, name: 'Genoa' },
+        { lat: 45.6495, lng: 13.7768, name: 'Trieste' },
+        { lat: 45.4408, lng: 12.3155, name: 'Venice' },
+        { lat: 41.1171, lng: 16.8719, name: 'Bari' },
+        { lat: 37.5079, lng: 15.0830, name: 'Catania' }
       ];
       
       globe.pointsData(cities)
         .pointColor(() => 'rgba(255, 255, 255, 0.8)')
         .pointAltitude(0.01)
         .pointRadius(0.12)
-        .pointsMerge(true);
+        .pointsMerge(true)
+        .pointLabel(d => d.name)
+        .onPointClick(point => {
+          globe.pointOfView({
+            lat: point.lat,
+            lng: point.lng,
+            altitude: 0.5
+          }, 1000);
+        });
 
       // Auto-rotation
       let currentLong = 0;
@@ -98,10 +116,10 @@ const InteractiveGlobe = () => {
     
     const currentAltitude = globeInstanceRef.current.pointOfView().altitude;
     const newAltitude = zoomIn ? 
-      Math.max(currentAltitude * 0.7, 0.5) : // Allow zooming in closer for city-level detail
+      Math.max(currentAltitude * 0.7, 0.1) : // Allow zooming in much closer for city-level detail
       Math.min(currentAltitude * 1.3, 5);
     
-    globeInstanceRef.current.pointOfView({ altitude: newAltitude });
+    globeInstanceRef.current.pointOfView({ altitude: newAltitude }, 300);
   };
 
   const toggleRotation = () => {
