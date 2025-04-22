@@ -1,6 +1,7 @@
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import NotificationItem from "./NotificationItem";
+import NotificationDialog from "./NotificationDialog";
 import { Bell, X } from "lucide-react";
 import type { Notification } from "@/hooks/useNotifications";
 
@@ -25,6 +26,7 @@ const NotificationsBanner: React.FC<NotificationsBannerProps> = ({
   // swipe gesture state
   const dragging = useRef(false);
   const initialY = useRef<number | null>(null);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
 
   // Swipe up per chiusura
   useEffect(() => {
@@ -85,6 +87,10 @@ const NotificationsBanner: React.FC<NotificationsBannerProps> = ({
     };
   }, [open, onClose]);
 
+  const handleSelectNotification = (notification: Notification) => {
+    setSelectedNotification(notification);
+  };
+
   return (
     <div
       ref={bannerRef}
@@ -112,7 +118,11 @@ const NotificationsBanner: React.FC<NotificationsBannerProps> = ({
         ) : (
           <div className="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
             {notifications.map((notification) => (
-              <NotificationItem key={notification.id} notification={notification} />
+              <NotificationItem 
+                key={notification.id} 
+                notification={notification} 
+                onSelect={() => handleSelectNotification(notification)}
+              />
             ))}
           </div>
         )}
@@ -130,6 +140,12 @@ const NotificationsBanner: React.FC<NotificationsBannerProps> = ({
           Chiudi con <b>Swipe Up</b> su mobile/tablet o trascina con il mouse.
         </div>
       </div>
+      
+      <NotificationDialog 
+        notification={selectedNotification}
+        open={!!selectedNotification}
+        onClose={() => setSelectedNotification(null)}
+      />
     </div>
   );
 };
