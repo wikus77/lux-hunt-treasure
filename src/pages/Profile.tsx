@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Edit, Menu, Save } from "lucide-react";
+import { Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import ProfileLayout from "@/components/layout/ProfileLayout";
@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ProfileBio from "@/components/profile/ProfileBio";
 import ProfileClues from "@/components/profile/ProfileClues";
 import SubscriptionStatus from "@/components/profile/SubscriptionStatus";
-import InstagramStyleDrawer from "@/components/profile/InstagramStyleDrawer";
+import ProfileHeader from "@/components/profile/ProfileHeader";
 
 interface Clue {
   id: string;
@@ -25,7 +25,6 @@ const Profile = () => {
   const [name, setName] = useState("Mario Rossi");
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [unlockedClues, setUnlockedClues] = useState<Clue[]>([]);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const { toast } = useToast();
 
   // Load profile data from localStorage on component mount
@@ -128,37 +127,15 @@ const Profile = () => {
   }, []);
 
   return (
-    <div className="w-full min-h-screen bg-black pb-20">
-      <div className="fixed top-0 right-4 z-50 h-[72px] flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsEditing((v) => !v)}
-          aria-label="Modifica profilo"
-        >
-          <Edit className="h-5 w-5" />
-        </Button>
-        {isEditing && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleSaveProfile}
-            aria-label="Salva modifiche"
-            className="bg-green-600/20 hover:bg-green-600/40"
-          >
-            <Save className="h-5 w-5" />
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setDrawerOpen(true)}
-          aria-label="Centro gestione account"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
+    <ProfileLayout>
+      <div className="fixed top-0 left-0 right-0 z-40 bg-black">
+        <ProfileHeader 
+          profileImage={profileImage}
+          name={name}
+          isEditing={isEditing}
+          setIsEditing={setIsEditing}
+        />
       </div>
-      <InstagramStyleDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
       <div className="w-full">
         <ProfileBio
@@ -177,14 +154,14 @@ const Profile = () => {
 
         {isEditing && (
           <Button 
-            className="w-full mt-6 bg-gradient-to-r from-green-500 to-green-700"
+            className="w-full mt-6 bg-gradient-to-r from-green-500 to-green-700 mb-6 mx-4"
             onClick={handleSaveProfile}
           >
             Salva Modifiche
           </Button>
         )}
       </div>
-    </div>
+    </ProfileLayout>
   );
 };
 
