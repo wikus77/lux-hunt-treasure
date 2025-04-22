@@ -65,6 +65,8 @@ const italianCities: City[] = [
 const SearchableGlobe: React.FC = () => {
   const [search, setSearch] = useState("");
   const [foundCity, setFoundCity] = useState<City | null>(null);
+  const [initialPosition] = useState<[number, number]>([41.9028, 12.4964]);
+  const [initialZoom] = useState<number>(6);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,8 +85,8 @@ const SearchableGlobe: React.FC = () => {
   return (
     <div className="relative w-full h-full">
       <MapContainer
-        center={[41.9028, 12.4964]}
-        zoom={6}
+        center={initialPosition}
+        zoom={initialZoom}
         style={{ width: "100%", height: "40vh", borderRadius: "1rem" }}
         scrollWheelZoom={true}
         className="mb-4"
