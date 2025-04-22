@@ -107,7 +107,7 @@ const Profile = () => {
 
     const loadFallbackClues = () => {
       // Indizi di esempio per lo sviluppo/dimostrazione
-      const fallbackClues = [
+      const fallbackClues: Clue[] = [
         {
           id: "1",
           title: "Primo Indizio",
@@ -150,7 +150,7 @@ const Profile = () => {
     // Controlla se abbiamo indizi salvati nel localStorage
     const savedClues = localStorage.getItem('fallbackClues');
     if (savedClues) {
-      setUnlockedClues(JSON.parse(savedClues));
+      setUnlockedClues(JSON.parse(savedClues) as Clue[]);
     } else {
       fetchUnlockedClues();
     }
