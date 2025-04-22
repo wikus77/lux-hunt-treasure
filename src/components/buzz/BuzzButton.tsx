@@ -1,8 +1,9 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Zap } from "lucide-react";
-import useBuzzSound from '@/hooks/useBuzzSound';
+import { useBuzzSound } from '@/hooks/useBuzzSound';
+import { useSound } from '@/contexts/SoundContext';
 
 interface BuzzButtonProps {
   onBuzzClick: () => void;
@@ -10,7 +11,13 @@ interface BuzzButtonProps {
 
 const BuzzButton = ({ onBuzzClick }: BuzzButtonProps) => {
   const [isVaultOpen, setIsVaultOpen] = useState(false);
-  const { playSound } = useBuzzSound();
+  const { soundPreference, volume } = useSound();
+  const { playSound, initializeSound } = useBuzzSound();
+  
+  useEffect(() => {
+    // Initialize the sound with the current preferences
+    initializeSound(soundPreference, volume[0] / 100);
+  }, [soundPreference, volume, initializeSound]);
 
   const handleClick = () => {
     playSound();

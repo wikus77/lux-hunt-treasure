@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -14,51 +15,7 @@ const Settings = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [soundEffects, setSoundEffects] = useState(true);
   const [language, setLanguage] = useState("Italiano");
-  const [volume, setVolume] = useState([75]);
-  const [buzzSound, setBuzzSound] = useState('default');
   const { toast } = useToast();
-
-  useEffect(() => {
-    const savedSound = localStorage.getItem('buzzSound');
-    if (savedSound) {
-      setBuzzSound(savedSound);
-    }
-  }, []);
-
-  const handleSoundChange = (value: string) => {
-    setBuzzSound(value);
-    localStorage.setItem('buzzSound', value);
-    
-    const audio = new Audio(getSoundPath(value));
-    audio.volume = volume[0] / 100;
-    audio.play().catch(e => console.error("Error playing sound:", e));
-    
-    toast({
-      title: "Suono aggiornato",
-      description: "Il suono del pulsante Buzz è stato modificato."
-    });
-  };
-
-  const getSoundPath = (sound: string) => {
-    switch (sound) {
-      case 'chime':
-        return "/sounds/chime.mp3";
-      case 'bell':
-        return "/sounds/bell.mp3";
-      case 'arcade':
-        return "/sounds/arcade.mp3";
-      default:
-        return "/sounds/buzz.mp3";
-    }
-  };
-
-  const handleVolumeChange = (newVolume: number[]) => {
-    setVolume(newVolume);
-    
-    const audio = new Audio(getSoundPath(buzzSound));
-    audio.volume = newVolume[0] / 100;
-    audio.play().catch(e => console.error("Error playing sound:", e));
-  };
 
   const handleLogout = () => {
     toast({
@@ -85,11 +42,7 @@ const Settings = () => {
       <AppSection
         soundEffects={soundEffects}
         language={language}
-        volume={volume}
-        buzzSound={buzzSound}
         setSoundEffects={setSoundEffects}
-        onVolumeChange={handleVolumeChange}
-        onSoundChange={handleSoundChange}
       />
 
       <SupportSection />
