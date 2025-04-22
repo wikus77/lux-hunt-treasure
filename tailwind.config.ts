@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -10,69 +9,47 @@ export default {
     "./src/**/*.{ts,tsx}",
   ],
   theme: {
-    extend: {
-      fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
       },
+    },
+    extend: {
       colors: {
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        projectx: {
+          'dark': '#0c0c12',
+          'blue': '#00a3ff',
+          'purple': '#a855f7',
+          'pink': '#ec4899',
+          'card': '#111124'
+        },
         primary: {
-          DEFAULT: '#111111',
-          foreground: '#ffffff'
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: '#222222',
-          foreground: '#ffffff'
-        },
-        destructive: {
-          DEFAULT: '#dc2626',
-          foreground: '#ffffff'
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
         },
         muted: {
-          DEFAULT: '#333333',
-          foreground: '#bbbbbb'
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: '#232323',
-          foreground: '#ffffff'
-        },
-        popover: {
-          DEFAULT: '#161616',
-          foreground: '#ffffff'
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
         },
         card: {
-          DEFAULT: '#121212',
-          foreground: '#ffffff'
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
         },
-        sidebar: {
-          DEFAULT: '#121212',
-          foreground: '#ffffff',
-          primary: '#121212',
-          'primary-foreground': '#ffffff',
-          accent: '#232323',
-          'accent-foreground': '#ffffff',
-          border: '#232323',
-          ring: '#333333'
-        },
-        projectx: {
-          blue: '#111111', // nero
-          'neon-blue': '#171717', // nero intenso
-          'deep-blue': '#151515', // nero profondo
-          black: '#000000',
-          'dark-gray': '#222222',
-          pink: '#222222', // scuro
-          'neon-pink': '#181818',
-          gold: '#232323',
-        }
-      },
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)'
       },
       keyframes: {
         'accordion-down': {
@@ -92,11 +69,15 @@ export default {
           }
         },
         'glow': {
+          '0%, 100%': { boxShadow: '0 0 8px 2px rgba(0, 163, 255, 0.6)' },
+          '50%': { boxShadow: '0 0 16px 4px rgba(0, 163, 255, 0.8)' }
+        },
+        'neon-pulse': {
           '0%, 100%': { 
-            textShadow: '0 0 10px #111, 0 0 20px #222' 
+            textShadow: '0 0 4px rgba(0, 163, 255, 0.6), 0 0 11px rgba(0, 163, 255, 0.6), 0 0 19px rgba(0, 163, 255, 0.6)' 
           },
           '50%': { 
-            textShadow: '0 0 15px #181818, 0 0 30px #151515' 
+            textShadow: '0 0 4px rgba(0, 163, 255, 0.8), 0 0 11px rgba(0, 163, 255, 0.8), 0 0 19px rgba(0, 163, 255, 0.8)' 
           }
         },
         'pulse-border': {
@@ -111,7 +92,8 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'glow': 'glow 4s ease-in-out infinite',
+        'glow': 'glow 2s ease-in-out infinite',
+        'neon-pulse': 'neon-pulse 2s ease-in-out infinite',
         'pulse-border': 'pulse-border 4s ease-in-out infinite'
       },
       backgroundImage: {
@@ -123,4 +105,3 @@ export default {
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-

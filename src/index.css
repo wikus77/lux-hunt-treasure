@@ -1,161 +1,70 @@
-/* === BASE TAILWIND LAYER === */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* === Refactored: Import modular styles === */
-@import './styles/theme.css';
-@import './styles/animations.css';
-@import './styles/utilities.css';
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 196 100% 50%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 270 95% 65%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --border: 220 13% 69%;
+  }
 
-/* ==========
-   BASE STYLE
-=========== */
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 210 40% 98%;
+    --primary: 196 100% 50%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 270 95% 65%;
+    --secondary-foreground: 210 40% 98%;
+    --border: 220 13% 69%;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-background text-foreground;
+    @apply bg-projectx-dark text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    background: #000;
-    min-height: 100vh;
-  }
-
-  .dark {
-    background: #000 !important;
-    color: #fff;
-  }
-
-  .light {
-    background: #111 !important;
-    color: #222;
-  }
-
-  /* Custom Profile Ring: utilizza l'immagine caricata come bordo intorno all'avatar */
-  .profile-custom-ring {
-    position: relative;
-    display: inline-block;
-  }
-  .profile-custom-ring::before {
-    content: "";
-    position: absolute;
-    inset: -6px;
-    z-index: 2;
-    border-radius: 9999px;
-    padding: 0;
-    background: url("/lovable-uploads/0cf2adbf-7e29-43e4-9028-27a47b8057eb.png") center/cover no-repeat;
-    width: calc(100% + 12px);
-    height: calc(100% + 12px);
-    box-sizing: border-box;
-    pointer-events: none;
-  }
-  .profile-custom-ring > * {
-    position: relative;
-    z-index: 3;
   }
 }
 
-/* =============
-   INSTAGRAM-RING + DROPSHADOW
-============= */
-@layer base {
-  .instagram-story-ring {
-    position: relative;
-    display: inline-block;
-  }
-  .instagram-story-ring::before {
-    content: "";
-    position: absolute;
-    inset: -4px;
-    z-index: 2;
-    border-radius: 9999px;
-    padding: 0;
-    background: conic-gradient(
-      #fdf497 0%,
-      #fdf497 10%,
-      #fd5949 30%,
-      #d6249f 60%,
-      #285AEB 100%,
-      #fdf497 100%
-    );
-    width: calc(100% + 8px);
-    height: calc(100% + 8px);
-    box-sizing: border-box;
-  }
-
-  .instagram-story-ring > * {
-    position: relative;
-    z-index: 3;
-  }
-
-  /* RING THIN: sottile gradient */
-  .instagram-story-ring-gradient {
-    position: relative;
-    display: inline-block;
-  }
-  .instagram-story-ring-gradient::before {
-    content: "";
-    position: absolute;
-    inset: -2px;
-    border-radius: 50%;
-    z-index: 1;
-    padding: 0;
-    background: conic-gradient(
-      #fdf497 0%, #fdf497 10%,
-      #fd5949 30%,
-      #d6249f 60%,
-      #285AEB 100%,
-      #fdf497 100%
-    );
-    filter: blur(3px);
-    box-shadow:
-      0 0 0 0px #fff,
-      0 0 8px 4px #fd594922,
-      0 0 12px 5px #d6249f11;
-    width: calc(100% + 4px);
-    height: calc(100% + 4px);
-    pointer-events: none;
-  }
-  .instagram-story-ring-gradient > * {
-    position: relative;
-    z-index: 2;
-    box-shadow: 0 0 0 2px #fff;
-    border-radius: 50%;
-    background: #000;
-    overflow: hidden;
-  }
+/* Glass Effects */
+.glass-card {
+  @apply bg-projectx-card/30 backdrop-blur-sm border border-white/10 shadow-lg rounded-lg;
 }
 
-/* ==========
-   LAYOUT 
-=========== */
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* Neon Effects */
+.neon-text {
+  @apply text-projectx-blue font-bold animate-neon-pulse;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover { filter: drop-shadow(0 0 2em #232323); }
-.logo.react:hover { filter: drop-shadow(0 0 2em #232323); }
-
-@keyframes logo-spin {
-  from { transform: rotate(0deg);}
-  to { transform: rotate(360deg);}
-}
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.neon-border {
+  @apply border border-projectx-blue animate-glow;
 }
 
-.card { padding: 2em; }
-.read-the-docs { color: #888; }
+.neon-button {
+  @apply bg-gradient-to-r from-projectx-blue to-projectx-purple 
+         text-white font-bold py-2 px-4 rounded-md transition-all duration-300 
+         hover:shadow-[0_0_10px_rgba(0,163,255,0.7)] active:scale-95;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-projectx-dark;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-projectx-blue/30 rounded-full;
+}
+
