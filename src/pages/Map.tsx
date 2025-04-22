@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { Button } from "@/components/ui/button";
@@ -269,19 +268,13 @@ const Map = () => {
               Google Maps
             </Button>
             <Button 
-              variant={mapView === "apple" ? "default" : "outline"} 
-              onClick={() => setMapView("apple")}
-              className="text-xs"
-            >
-              Apple Maps
-            </Button>
-            <Button 
               variant={mapView === "globe" ? "default" : "outline"} 
               onClick={() => setMapView("globe")}
               className="text-xs"
             >
               Globo 3D
             </Button>
+            {/* Removed Apple Maps button */}
             
             {/* Spacer */}
             <div className="flex-grow"></div>
@@ -329,7 +322,6 @@ const Map = () => {
               </Button>
             </div>
           )}
-          
           {isAddingSearchArea && (
             <div className="p-2 bg-green-500/20 rounded-md mb-4">
               <p className="text-green-400 text-sm">Clicca sulla mappa per aggiungere un'area di ricerca</p>
@@ -345,25 +337,7 @@ const Map = () => {
           )}
           
           <div className="bg-black/50 border border-projectx-deep-blue/40 rounded-xl overflow-hidden shadow-xl p-4">
-            {mapView === "apple" && currentLocation ? (
-              <div className="flex-1 flex flex-col items-center justify-center">
-                <iframe
-                  title="Apple Map"
-                  src={getAppleMapsUrl(currentLocation[0], currentLocation[1])}
-                  allowFullScreen
-                  className="w-full max-w-2xl h-[60vh] shadow-xl rounded-md border border-projectx-neon-blue"
-                  style={{ background: "#000", minHeight: 350 }}
-                ></iframe>
-                <a
-                  href={getAppleMapsUrl(currentLocation[0], currentLocation[1])}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-5 px-5 py-2 rounded bg-projectx-neon-blue text-white font-bold hover:bg-blue-700 transition"
-                >
-                  Apri in Apple Maps
-                </a>
-              </div>
-            ) : mapView === "globe" ? (
+            {mapView === "globe" ? (
               <div className="w-full h-[60vh]">
                 <InteractiveGlobe />
               </div>
@@ -391,7 +365,7 @@ const Map = () => {
               </LoadScript>
             )}
           </div>
-          
+          {/* ... keep rest of the code the same (legends, note lists, search areas, etc.) ... */}
           {mapView === "google" && (
             <>
               <div className="flex justify-between mt-4 mb-2">
