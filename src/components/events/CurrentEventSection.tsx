@@ -1,3 +1,4 @@
+
 import { Event } from "@/data/eventData";
 import EventCard from "./EventCard";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
@@ -11,7 +12,7 @@ const CurrentEventSection = ({ currentEvent }: CurrentEventSectionProps) => {
     <section className="p-4">
       <h2 className="text-xl font-bold mb-4">Evento Corrente</h2>
       <div className="mb-4">
-        {/* Carousel con tutte le immagini (slideshow) del Nautilus */}
+        {/* Carousel slideshow di supercar */}
         <Carousel>
           <CarouselContent>
             {currentEvent.images.map((img, idx) => (
@@ -20,7 +21,7 @@ const CurrentEventSection = ({ currentEvent }: CurrentEventSectionProps) => {
                   <img
                     src={img.url}
                     alt={img.description}
-                    className="rounded-md w-full max-w-xs h-44 object-cover border-2 border-projectx-neon-blue shadow-lg"
+                    className="rounded-md w-full max-w-xs h-44 object-cover border-2 border-projectx-blue shadow-lg"
                   />
                 </div>
                 <p className="mt-2 text-sm text-center text-muted-foreground">{img.description}</p>

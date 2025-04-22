@@ -1,4 +1,3 @@
-
 export interface EventImage {
   url: string;
   description: string;
@@ -18,47 +17,40 @@ export interface Event {
 }
 
 export const currentEvent: Event = {
-  title: "Patek Philippe Nautilus",
-  carModel: "Nautilus Ref. 5711",
-  carBrand: "Patek Philippe",
+  title: "Auto Supercar Showdown",
+  carModel: "",
+  carBrand: "",
   date: "19 Apr - 15 Mag 2025",
-  imageUrl: "/lovable-uploads/42b25071-8e68-4f8e-8897-06a6b2bdb8f4.png",
-  description: "Un'icona dell'orologeria di lusso, il Nautilus in oro rosa con quadrante blu è il simbolo dell'eleganza senza tempo.",
+  imageUrl: "/lovable-uploads/159027e7-9756-49fa-a771-b886e6c8f8e9.png", // Lamborghini Huracán image
+  description: "Slideshow esclusiva: Lamborghini Huracán, Ferrari 488 GTB, Porsche 911 (992), Ferrari SF90 Stradale. Performance ed eleganza uniche in una sola esperienza!",
   isCurrent: true,
   gender: "man",
   images: [
     {
-      url: "/lovable-uploads/42b25071-8e68-4f8e-8897-06a6b2bdb8f4.png",
-      description: "Vista frontale del Patek Philippe Nautilus in oro rosa, che mostra il caratteristico quadrante blu con pattern orizzontale."
-    },
-    {
-      url: "/lovable-uploads/159027e7-9756-49fa-a771-b886e6c8f8e9.png", // Lamborghini Huracan
+      url: "/lovable-uploads/159027e7-9756-49fa-a771-b886e6c8f8e9.png",
       description: "Lamborghini Huracán EVO, potenza pura V10 con 640 CV, 0-100 km/h in 2.9 secondi."
     },
     {
-      url: "/lovable-uploads/d6dc12b2-928f-4448-b728-f5e59b6175a8.png", // Ferrari 488
+      url: "/lovable-uploads/d6dc12b2-928f-4448-b728-f5e59b6175a8.png",
       description: "Ferrari 488 GTB, V8 biturbo da 670 CV, un capolavoro di ingegneria italiana."
     },
     {
-      url: "/lovable-uploads/6839ccb5-1ce7-485c-93e9-f2096e14774b.png", // Tesla Model S
-      description: "Tesla Model S Plaid, 1.020 CV elettrici, 0-100 km/h in 2.1 secondi."
+      url: "/lovable-uploads/441b250e-b843-489a-9664-0b1f971fbc59.png",
+      description: "Porsche 911 (992) Turbo S: l'essenza della sportività tedesca."
     },
     {
-      url: "/lovable-uploads/507c2f6d-4ed0-46dc-b53c-79e1d5b7515e.png", // Ferrari SF 90
+      url: "/lovable-uploads/507c2f6d-4ed0-46dc-b53c-79e1d5b7515e.png",
       description: "Ferrari SF90 Stradale, V8 ibrido plug-in da 1.000 CV, il futuro è qui."
     }
   ],
-  detailedDescription: `Il Patek Philippe Nautilus Ref. 5711 rappresenta il pinnacolo dell'orologeria di lusso.
+  detailedDescription: `Auto Supercar Showdown riunisce le più iconiche sportive del mondo:
 
-Caratteristiche principali:
-• Cassa in oro rosa 18k
-• Quadrante blu con pattern orizzontale
-• Movimento automatico calibro 26-330 S C
-• Impermeabile fino a 120 metri
-• Bracciale integrato in oro rosa
-• Diametro della cassa: 40mm
+• Lamborghini Huracán EVO: V10 aspirato, trazione integrale e design inconfondibile.
+• Ferrari 488 GTB: Prestazioni da pista, eleganza italiana e motore V8 biturbo.
+• Porsche 911 (992) Turbo S: Precisione tedesca e potenza senza rivali.
+• Ferrari SF90 Stradale: Tecnologia ibrida plug-in e 1.000 CV.
 
-Il Nautilus è molto più di un semplice orologio - è un'opera d'arte da polso che combina l'eccellenza tecnica con un design senza tempo.`
+Un evento da non perdere per tutti gli appassionati di auto e performance estreme!`
 };
 
 export const upcomingEvents: Event[] = [
@@ -145,4 +137,3 @@ Specifiche tecniche:
 • Sistema di sterzo integrale`
   }
 ];
-
