@@ -1,34 +1,10 @@
 
-import { BookOpen, MapPin, Car, Image, Folder } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import ClueCard from "@/components/clues/ClueCard";
 import React, { useState, useRef } from "react";
-
-// Categoria e gradienti associati
-const CATEGORY_STYLES: Record<
-  string,
-  { gradient: string; textColor: string }
-> = {
-  Luoghi: {
-    gradient:
-      "bg-gradient-to-r from-[#00a3ff] via-[#1eaedb] to-[#8b5cf6]", // blue-violet
-    textColor: "text-white",
-  },
-  Car: {
-    gradient:
-      "bg-gradient-to-r from-[#a855f7] via-[#00a3ff] to-[#ec4899]", // purple-pink
-    textColor: "text-white",
-  },
-  Photo: {
-    gradient:
-      "bg-gradient-to-r from-[#8b5cf6] via-[#00a3ff] to-[#22d3ee]", // blue-cyan
-    textColor: "text-white",
-  },
-  General: {
-    gradient:
-      "bg-gradient-to-r from-[#35346a] via-[#7e69ab] to-[#1a1f2c]", // minimal dark
-    textColor: "text-white",
-  },
-};
+import CategoryBanner from "./CategoryBanner";
+import { CATEGORY_STYLES, getClueCategory } from "./cluesCategories";
+import groupCluesByCategory from "./groupCluesByCategory";
 
 interface Clue {
   id: string;
@@ -43,93 +19,7 @@ interface ProfileCluesProps {
   unlockedClues: Clue[];
 }
 
-// Funzione di categorizzazione: keywords facilmente aggiornabili
-const clueCategories = [
-  {
-    name: "Luoghi",
-    icon: MapPin,
-    matcher: (clue: Clue) =>
-      /città|luogo|parcheggi|parcheggiata|monumento|posizion|localizz|place|location|indirizzo|dove|map|via/i.test(
-        clue.title + " " + clue.description
-      ),
-  },
-  {
-    name: "Car",
-    icon: Car,
-    matcher: (clue: Clue) =>
-      /auto|car|modello|marca|veicolo|interno|esterno|motore|carrozzeria|carrozzerie|motori/i.test(
-        clue.title + " " + clue.description
-      ),
-  },
-  {
-    name: "Photo",
-    icon: Image,
-    matcher: (clue: Clue) =>
-      /foto|immagine|immagini|scatto|phot|picture|jpg|png|selfie/i.test(
-        clue.title + " " + clue.description
-      ),
-  },
-];
-
-// Categoria Generica per indizi che non combaciano con le altre
-const getClueCategory = (clue: Clue) => {
-  for (const cat of clueCategories) {
-    if (cat.matcher(clue)) return cat;
-  }
-  return { name: "General", icon: Folder };
-};
-
-// Organizza gli indizi per categoria
-const groupCluesByCategory = (clues: Clue[]) => {
-  const grouped: Record<string, { icon: any; clues: Clue[] }> = {};
-  for (const clue of clues) {
-    const cat = getClueCategory(clue);
-    if (!grouped[cat.name]) grouped[cat.name] = { icon: cat.icon, clues: [] };
-    grouped[cat.name].clues.push(clue);
-  }
-  return grouped;
-};
-
 const MAX_CLUES = 100;
-
-// Banner visuale per la categoria
-function CategoryBanner({
-  open,
-  category,
-  style,
-  onClose,
-  children,
-}: {
-  open: boolean;
-  category: string | null;
-  style: { gradient: string; textColor: string };
-  onClose: () => void;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div
-      className={`fixed top-0 left-0 right-0 z-50 flex justify-center transition-all duration-400 pointer-events-none ${open ? "translate-y-0 opacity-100" : "-translate-y-36 opacity-0"}`}
-      style={{ transitionProperty: "transform, opacity" }}
-    >
-      <div
-        className={`rounded-b-xl px-6 py-4 shadow-lg max-w-md w-full flex flex-col items-center ${style.gradient} ${style.textColor} pointer-events-auto animate-fade-in`}
-      >
-        <div className="flex items-center gap-2 text-xl mb-2 font-orbitron font-bold uppercase">
-          {category}
-        </div>
-        <div className="text-sm text-white opacity-90 text-center mb-2">
-          {children}
-        </div>
-        <button
-          onClick={onClose}
-          className="bg-white/10 border border-white/20 rounded px-3 py-1 text-sm mt-2 transition hover:bg-white/20 pointer-events-auto"
-        >
-          Chiudi
-        </button>
-      </div>
-    </div>
-  );
-}
 
 const ProfileClues = ({ unlockedClues }: ProfileCluesProps) => {
   const groupedClues = groupCluesByCategory(unlockedClues);
@@ -138,13 +28,14 @@ const ProfileClues = ({ unlockedClues }: ProfileCluesProps) => {
   const [bannerOpen, setBannerOpen] = useState(false);
   const [bannerCategory, setBannerCategory] = useState<null | string>(null);
 
-  // Gestione messaggio della categoria (può essere personalizzato)
+  // Messaggio per le categorie
   const getBannerContent = (category: string) => {
     switch (category) {
       case "Luoghi":
         return (
           <>
-            Indizi relativi ai LUOGHI: Trova tutte le località e posizioni che avvicineranno alla soluzione del mistero!<br />
+            Indizi relativi ai LUOGHI: Trova tutte le località e posizioni che avvicineranno alla soluzione del mistero!
+            <br />
             Tocca "Chiudi" per tornare indietro.
           </>
         );
@@ -171,7 +62,7 @@ const ProfileClues = ({ unlockedClues }: ProfileCluesProps) => {
     }
   };
 
-  // Long press handler per categoria
+  // Long press handler
   const pressTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const handlePressStart = (category: string) => {
@@ -185,7 +76,7 @@ const ProfileClues = ({ unlockedClues }: ProfileCluesProps) => {
     if (pressTimeout.current) clearTimeout(pressTimeout.current);
   };
 
-  // Clic quick (desktop): mostro comunque il banner
+  // Click desktop
   const handleCategoryClick = (category: string) => {
     setBannerCategory(category);
     setBannerOpen(true);
@@ -241,7 +132,7 @@ const ProfileClues = ({ unlockedClues }: ProfileCluesProps) => {
                 <span className="ml-2 text-xs opacity-80">{clues.length} indizi</span>
               </div>
               <div className="space-y-4">
-                {clues.map((clue) => (
+                {clues.map((clue: Clue) => (
                   <ClueCard
                     key={clue.id}
                     title={clue.title}
