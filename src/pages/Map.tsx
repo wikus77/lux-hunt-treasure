@@ -1,13 +1,14 @@
+
 import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer as LeafletMap, TileLayer as LeafletTileLayer, Marker as LeafletMarker, Popup as LeafletPopup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 
-// Fix for default marker icon in Leaflet with React
+// Fix per l'icona di default
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
@@ -25,15 +26,13 @@ const Map = () => {
     { position: [45.4654, 9.1865], name: "Indizio #2: Galleria Vittorio Emanuele", found: false },
     { position: [45.4668, 9.1905], name: "Indizio #3: Teatro alla Scala", found: false },
   ]);
-  
-  // propagate profile image for header
+
   const [profileImage, setProfileImage] = useState<string | null>(null);
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
   }, []);
 
   useEffect(() => {
-    // Get user's current location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -41,21 +40,17 @@ const Map = () => {
           setLoading(false);
         },
         (err) => {
-          console.error("Error getting location:", err);
           setError("Impossibile ottenere la tua posizione. Verifica di aver concesso i permessi di geolocalizzazione.");
           setLoading(false);
-          // Default to Milan if location access is denied
           setCurrentLocation([45.4642, 9.1900]);
         }
       );
     } else {
       setError("Il tuo browser non supporta la geolocalizzazione.");
       setLoading(false);
-      // Default to Milan
       setCurrentLocation([45.4642, 9.1900]);
     }
 
-    // Load previously found clues from localStorage
     const foundClues = JSON.parse(localStorage.getItem("foundClues") || "[]");
     if (foundClues.length > 0) {
       setClueLocations((prevLocations) =>
@@ -68,20 +63,15 @@ const Map = () => {
   }, []);
 
   const handleClueFound = (clueName: string) => {
-    // Mark clue as found
     setClueLocations((prevLocations) =>
       prevLocations.map((loc) =>
         loc.name === clueName ? { ...loc, found: true } : loc
       )
     );
-
-    // Save to localStorage
     const foundClues = JSON.parse(localStorage.getItem("foundClues") || "[]");
     if (!foundClues.includes(clueName)) {
       foundClues.push(clueName);
       localStorage.setItem("foundClues", JSON.stringify(foundClues));
-
-      // Add notification
       const notification = {
         id: Date.now().toString(),
         title: "Nuovo indizio trovato!",
@@ -92,8 +82,6 @@ const Map = () => {
       const notifications = JSON.parse(localStorage.getItem("notifications") || "[]");
       notifications.push(notification);
       localStorage.setItem("notifications", JSON.stringify(notifications));
-
-      // Show toast
       toast.success("Indizio trovato!", {
         description: `Hai trovato ${clueName}`,
       });
@@ -112,38 +100,34 @@ const Map = () => {
     <div className="min-h-screen bg-black w-full">
       <UnifiedHeader profileImage={profileImage} />
       <div className="h-[72px] w-full" />
-      
       {error ? (
         <div className="p-4 text-center">
           <p className="text-red-500 mb-4">{error}</p>
           <Button onClick={() => window.location.reload()}>Riprova</Button>
         </div>
       ) : (
-        <div className="h-[calc(100vh-72px)] w-full">
+        // la mappa ora usa tutta l'area disponibile in modo responsivo
+        <div className="w-full h-[calc(100vh-72px)] flex flex-col">
           {currentLocation && (
-            <MapContainer
+            <LeafletMap
               center={currentLocation}
               zoom={15}
-              style={{ height: "100%", width: "100%" }}
+              style={{ flex: 1, width: "100%" }}
             >
-              <TileLayer
+              <LeafletTileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              
-              {/* User's current location */}
-              <Marker position={currentLocation}>
-                <Popup>Tu sei qui</Popup>
-              </Marker>
-              
-              {/* Clue locations */}
+              <LeafletMarker position={currentLocation}>
+                <LeafletPopup>Tu sei qui</LeafletPopup>
+              </LeafletMarker>
               {clueLocations.map((clue, index) => (
-                <Marker 
-                  key={index} 
+                <LeafletMarker
+                  key={index}
                   position={clue.position}
                   icon={new L.Icon({
-                    iconUrl: clue.found 
-                      ? "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png" 
+                    iconUrl: clue.found
+                      ? "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png"
                       : "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
                     shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
                     iconSize: [25, 41],
@@ -152,14 +136,14 @@ const Map = () => {
                     shadowSize: [41, 41]
                   })}
                 >
-                  <Popup>
+                  <LeafletPopup>
                     <div className="p-2">
                       <h3 className="font-bold">{clue.name}</h3>
                       {clue.found ? (
                         <p className="text-green-500 text-sm">Indizio già trovato!</p>
                       ) : (
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="mt-2 bg-projectx-neon-blue"
                           onClick={() => handleClueFound(clue.name)}
                         >
@@ -167,10 +151,10 @@ const Map = () => {
                         </Button>
                       )}
                     </div>
-                  </Popup>
-                </Marker>
+                  </LeafletPopup>
+                </LeafletMarker>
               ))}
-            </MapContainer>
+            </LeafletMap>
           )}
         </div>
       )}
@@ -179,3 +163,4 @@ const Map = () => {
 };
 
 export default Map;
+

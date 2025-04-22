@@ -22,7 +22,7 @@ const UnifiedHeader = ({
   const navigate = useNavigate();
   const [inputRef, setInputRef] = useState<HTMLInputElement | null>(null);
 
-  // Photo is always read from localStorage to guarantee sync
+  // Legge sempre dal localStorage (sincronizzazione)
   const [profileImage, setProfileImage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -80,13 +80,17 @@ const UnifiedHeader = ({
           )}
         </button>
         <div className="flex flex-col items-center w-1/2 min-w-max">
-          <h1 className="text-2xl text-center font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">
+          {/* Titolo e sottotitolo come nella home originale */}
+          <h1 className="text-2xl text-center font-bold bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent font-extrabold select-none drop-shadow-[0_1.5px_12px_rgba(98,115,255,0.51)]">
             M1SSION
           </h1>
           <span
-            className="text-[15px] font-extrabold tracking-wide italic leading-tight mt-0.5 select-none
-              bg-gradient-to-r from-[#19fff7] via-[#54ffb4] via-55% to-[#9f5cff] bg-clip-text text-transparent animate-gradient-x font-mono uppercase drop-shadow-[0_2px_15px_rgba(60,255,255,0.29)]"
-            style={{ letterSpacing: "0.18em", fontFamily: "Orbitron, monospace, 'Arial Black'" }}
+            className="text-xs font-bold italic leading-tight mt-0.5 select-none
+            bg-gradient-to-r from-[#8E9196] via-[#9b87f5] to-[#6E59A5] bg-clip-text text-transparent tracking-widest font-mono uppercase"
+            style={{
+              fontFamily: '"Orbitron", "Playfair Display", "monospace", Arial, sans-serif',
+              letterSpacing: "0.27em"
+            }}
           >
             it is possible
           </span>
@@ -114,3 +118,4 @@ const UnifiedHeader = ({
 };
 
 export default UnifiedHeader;
+
