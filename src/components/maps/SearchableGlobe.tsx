@@ -65,8 +65,8 @@ const italianCities: City[] = [
 const SearchableGlobe: React.FC = () => {
   const [search, setSearch] = useState("");
   const [foundCity, setFoundCity] = useState<City | null>(null);
-  const [initialPosition] = useState<[number, number]>([41.9028, 12.4964]);
-  const [initialZoom] = useState<number>(6);
+  const initialPosition: [number, number] = [41.9028, 12.4964];
+  const initialZoom = 6;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
