@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from "react";
 import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
@@ -41,8 +40,7 @@ const containerStyle = {
 const defaultCenter = { lat: 41.9028, lng: 12.4964 }; // Roma
 const defaultZoom = 6;
 
-// <<<< INSERISCI QUI LA TUA GOOGLE MAPS API KEY ↓↓↓↓↓↓↓↓ >>>>
-const GOOGLE_MAPS_API_KEY = "INSERISCI-LA-TUA-API-KEY-QUI"; // SOSTITUISCI QUESTO VALORE
+const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
 
 const SearchableGlobe: React.FC = () => {
   const { isLoaded } = useLoadScript({
