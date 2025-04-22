@@ -1,3 +1,4 @@
+
 export interface EventImage {
   url: string;
   description: string;
@@ -31,19 +32,19 @@ export const currentEvent: Event = {
       description: "Vista frontale del Patek Philippe Nautilus in oro rosa, che mostra il caratteristico quadrante blu con pattern orizzontale."
     },
     {
-      url: "/public/events/lamborghini-huracan.jpg",
+      url: "/lovable-uploads/159027e7-9756-49fa-a771-b886e6c8f8e9.png", // Lamborghini Huracan
       description: "Lamborghini Huracán EVO, potenza pura V10 con 640 CV, 0-100 km/h in 2.9 secondi."
     },
     {
-      url: "/public/events/ferrari-488-gtb.jpg",
+      url: "/lovable-uploads/d6dc12b2-928f-4448-b728-f5e59b6175a8.png", // Ferrari 488
       description: "Ferrari 488 GTB, V8 biturbo da 670 CV, un capolavoro di ingegneria italiana."
     },
     {
-      url: "/public/events/tesla-model-s.jpg",
+      url: "/lovable-uploads/6839ccb5-1ce7-485c-93e9-f2096e14774b.png", // Tesla Model S
       description: "Tesla Model S Plaid, 1.020 CV elettrici, 0-100 km/h in 2.1 secondi."
     },
     {
-      url: "/public/events/ferrari-sf90.jpg",
+      url: "/lovable-uploads/507c2f6d-4ed0-46dc-b53c-79e1d5b7515e.png", // Ferrari SF 90
       description: "Ferrari SF90 Stradale, V8 ibrido plug-in da 1.000 CV, il futuro è qui."
     }
   ],
@@ -144,3 +145,4 @@ Specifiche tecniche:
 • Sistema di sterzo integrale`
   }
 ];
+

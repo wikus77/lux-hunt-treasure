@@ -6,23 +6,23 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 // Substitute prizes with more realistic "event prizes", include detailed gallery
 const prizeOptions = [
   {
-    imageUrl: "/events/ferrari-488-gtb.jpg",
+    imageUrl: "/lovable-uploads/d6dc12b2-928f-4448-b728-f5e59b6175a8.png", // Ferrari 488
     description: "Ferrari 488 GTB - V8 biturbo da 670 CV, 0-100 km/h in 3 secondi."
   },
   {
-    imageUrl: "/events/lamborghini-huracan.jpg",
+    imageUrl: "/lovable-uploads/159027e7-9756-49fa-a771-b886e6c8f8e9.png", // Lamborghini Huracan
     description: "Lamborghini Huracán - V10 aspirato da 640 CV, design aggressivo e esclusivo."
   },
   {
-    imageUrl: "/events/porsche-911.jpg",
+    imageUrl: "/lovable-uploads/ada1e8fe-3f53-4dd3-bfbe-ae57b80a641d.png", // Porsche 992
     description: "Porsche 911 (992) - Leggendaria sportiva con 450 CV di potenza pura."
   },
   {
-    imageUrl: "/events/tesla-model-s.jpg",
+    imageUrl: "/lovable-uploads/6839ccb5-1ce7-485c-93e9-f2096e14774b.png", // Tesla Model S
     description: "Tesla Model S Plaid - Auto elettrica con 1.020 CV e accelerazione fulminea."
   },
   {
-    imageUrl: "/events/ferrari-sf90.jpg",
+    imageUrl: "/lovable-uploads/507c2f6d-4ed0-46dc-b53c-79e1d5b7515e.png", // Ferrari SF 90
     description: "Ferrari SF90 Stradale - Ibrida con 1.000 CV, gioiello tecnologico di Maranello."
   },
   {
@@ -70,3 +70,4 @@ const CurrentEventSection = ({ currentEvent }: CurrentEventSectionProps) => {
 };
 
 export default CurrentEventSection;
+
