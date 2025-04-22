@@ -1,6 +1,6 @@
 
 import { useState, useEffect, ChangeEvent } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Mail, MoreVertical } from "lucide-react";
 
@@ -28,9 +28,8 @@ const UnifiedHeader = ({
   useEffect(() => {
     const savedProfileImage = localStorage.getItem('profileImage');
     setProfileImage(savedProfileImage);
-  }, [propProfileImage]); // update if changed from outside too
+  }, [propProfileImage]);
 
-  // Avatar click per upload solo su enableAvatarUpload/profilo, altrimenti profilo
   const handleAvatarClick = () => {
     if (enableAvatarUpload && inputRef) inputRef.click();
     else navigate("/profile");
@@ -50,7 +49,6 @@ const UnifiedHeader = ({
     }
   };
 
-  // Si assicura che ogni pagina abbia logo, slogan, mail, settings uguali
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full px-4 py-4 flex flex-col items-center justify-center border-b border-projectx-deep-blue bg-black backdrop-blur-xl transition-all duration-300">
       <div className="flex w-full max-w-screen-xl justify-between items-center">
@@ -85,7 +83,11 @@ const UnifiedHeader = ({
           <h1 className="text-2xl text-center font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">
             M1SSION
           </h1>
-          <span className="text-sm font-orbitron tracking-widest text-transparent bg-gradient-to-r from-[#8B5CF6] via-[#1EAEDB] to-[#33C3F0] bg-clip-text mt-0.5 select-none transition-colors">
+          <span
+            className="text-[15px] font-extrabold tracking-wide italic leading-tight mt-0.5 select-none
+              bg-gradient-to-r from-[#19fff7] via-[#54ffb4] via-55% to-[#9f5cff] bg-clip-text text-transparent animate-gradient-x font-mono uppercase drop-shadow-[0_2px_15px_rgba(60,255,255,0.29)]"
+            style={{ letterSpacing: "0.18em", fontFamily: "Orbitron, monospace, 'Arial Black'" }}
+          >
             it is possible
           </span>
         </div>

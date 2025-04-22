@@ -1,312 +1,179 @@
-
-import React, { useState, useEffect } from "react";
-import { StickyNote, Plus, X, Circle, MapPin } from "lucide-react";
-import { MapNoteList } from "@/components/maps/MapNoteList";
-import SearchableGlobe from "@/components/maps/SearchableGlobe";
+import { useState, useEffect } from "react";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { MapMarkers, type MapMarker, type SearchArea } from "@/components/maps/MapMarkers";
-import { useLoadScript } from "@react-google-maps/api";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/sonner";
 
-const libraries: ["places"] = ["places"];
-const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
+// Fix for default marker icon in Leaflet with React
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+});
 
 const Map = () => {
-  const [markers, setMarkers] = useState<MapMarker[]>(() => {
-    const savedMarkers = localStorage.getItem('mapMarkers');
-    return savedMarkers ? JSON.parse(savedMarkers) : [];
-  });
+  const navigate = useNavigate();
+  const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [clueLocations, setClueLocations] = useState<Array<{ position: [number, number]; name: string; found: boolean }>>([
+    { position: [45.4642, 9.1900], name: "Indizio #1: Duomo di Milano", found: false },
+    { position: [45.4654, 9.1865], name: "Indizio #2: Galleria Vittorio Emanuele", found: false },
+    { position: [45.4668, 9.1905], name: "Indizio #3: Teatro alla Scala", found: false },
+  ]);
   
-  const [searchAreas, setSearchAreas] = useState<SearchArea[]>(() => {
-    const savedAreas = localStorage.getItem('mapSearchAreas');
-    return savedAreas ? JSON.parse(savedAreas) : [];
-  });
-  
-  const [activeMarker, setActiveMarker] = useState<string | null>(null);
-  const [activeSearchArea, setActiveSearchArea] = useState<string | null>(null);
-  const [showNoteForm, setShowNoteForm] = useState(false);
-  const [newNote, setNewNote] = useState('');
-  const [isAddingMarker, setIsAddingMarker] = useState(false);
-  const [isAddingSearchArea, setIsAddingSearchArea] = useState(false);
-  const { toast } = useToast();
-  
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries,
-  });
-
-  // Save markers and search areas to localStorage when they change
+  // propagate profile image for header
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   useEffect(() => {
-    localStorage.setItem('mapMarkers', JSON.stringify(markers));
-  }, [markers]);
-  
+    setProfileImage(localStorage.getItem('profileImage'));
+  }, []);
+
   useEffect(() => {
-    localStorage.setItem('mapSearchAreas', JSON.stringify(searchAreas));
-  }, [searchAreas]);
-
-  const handleAddNote = () => {
-    if (!newNote.trim()) {
-      toast({
-        title: "Nota vuota",
-        description: "Inserisci del testo per la tua nota.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const newMarker: MapMarker = {
-      id: `marker-${Date.now()}`,
-      lat: 0,
-      lng: 0,
-      note: newNote,
-    };
-
-    const updatedMarkers = [...markers, newMarker];
-    setMarkers(updatedMarkers);
-    setNewNote('');
-    setShowNoteForm(false);
-
-    toast({
-      title: "Nota aggiunta",
-      description: "La tua nota è stata salvata con successo.",
-    });
-  };
-  
-  const handleMapClick = () => {
-    // Close active markers/areas when clicking elsewhere on the map
-    if (activeMarker) setActiveMarker(null);
-    if (activeSearchArea) setActiveSearchArea(null);
-  };
-  
-  const handleMapDoubleClick = (e: google.maps.MapMouseEvent) => {
-    if (!e.latLng) return;
-    
-    const lat = e.latLng.lat();
-    const lng = e.latLng.lng();
-    
-    if (isAddingSearchArea) {
-      const newArea: SearchArea = {
-        id: `area-${Date.now()}`,
-        lat,
-        lng,
-        radius: 500,
-        label: "Area di ricerca",
-        editing: true
-      };
-      
-      setSearchAreas([...searchAreas, newArea]);
-      setActiveSearchArea(newArea.id);
-      setIsAddingSearchArea(false);
-      
-      toast({
-        title: "Area di ricerca aggiunta",
-        description: "Clicca sull'area per modificarla."
-      });
+    // Get user's current location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation([position.coords.latitude, position.coords.longitude]);
+          setLoading(false);
+        },
+        (err) => {
+          console.error("Error getting location:", err);
+          setError("Impossibile ottenere la tua posizione. Verifica di aver concesso i permessi di geolocalizzazione.");
+          setLoading(false);
+          // Default to Milan if location access is denied
+          setCurrentLocation([45.4642, 9.1900]);
+        }
+      );
     } else {
-      // Default to adding a marker
-      const newMarker: MapMarker = {
-        id: `marker-${Date.now()}`,
-        lat,
-        lng,
-        note: "",
-        editing: true
+      setError("Il tuo browser non supporta la geolocalizzazione.");
+      setLoading(false);
+      // Default to Milan
+      setCurrentLocation([45.4642, 9.1900]);
+    }
+
+    // Load previously found clues from localStorage
+    const foundClues = JSON.parse(localStorage.getItem("foundClues") || "[]");
+    if (foundClues.length > 0) {
+      setClueLocations((prevLocations) =>
+        prevLocations.map((loc) => ({
+          ...loc,
+          found: foundClues.includes(loc.name),
+        }))
+      );
+    }
+  }, []);
+
+  const handleClueFound = (clueName: string) => {
+    // Mark clue as found
+    setClueLocations((prevLocations) =>
+      prevLocations.map((loc) =>
+        loc.name === clueName ? { ...loc, found: true } : loc
+      )
+    );
+
+    // Save to localStorage
+    const foundClues = JSON.parse(localStorage.getItem("foundClues") || "[]");
+    if (!foundClues.includes(clueName)) {
+      foundClues.push(clueName);
+      localStorage.setItem("foundClues", JSON.stringify(foundClues));
+
+      // Add notification
+      const notification = {
+        id: Date.now().toString(),
+        title: "Nuovo indizio trovato!",
+        description: `Hai trovato ${clueName}`,
+        date: new Date().toISOString(),
+        read: false,
       };
-      
-      setMarkers([...markers, newMarker]);
-      setActiveMarker(newMarker.id);
-      
-      toast({
-        title: "Segnaposto aggiunto",
-        description: "Aggiungi una nota al segnaposto."
+      const notifications = JSON.parse(localStorage.getItem("notifications") || "[]");
+      notifications.push(notification);
+      localStorage.setItem("notifications", JSON.stringify(notifications));
+
+      // Show toast
+      toast.success("Indizio trovato!", {
+        description: `Hai trovato ${clueName}`,
       });
     }
   };
-  
-  const editMarker = (id: string) => {
-    setMarkers(markers.map(marker => 
-      marker.id === id ? { ...marker, editing: !marker.editing } : marker
-    ));
-  };
-  
-  const editSearchArea = (id: string) => {
-    setSearchAreas(areas => areas.map(area => 
-      area.id === id ? { ...area, editing: !area.editing } : area
-    ));
-  };
-  
-  const saveMarkerNote = (id: string, note: string) => {
-    setMarkers(markers.map(marker => 
-      marker.id === id ? { ...marker, note, editing: false } : marker
-    ));
-    
-    setActiveMarker(null);
-    
-    toast({
-      title: "Nota salvata",
-      description: "La nota è stata salvata con successo."
-    });
-  };
-  
-  const saveSearchArea = (id: string, label: string, radius: number) => {
-    setSearchAreas(areas => areas.map(area => 
-      area.id === id ? { ...area, label, radius, editing: false } : area
-    ));
-    
-    setActiveSearchArea(null);
-    
-    toast({
-      title: "Area salvata",
-      description: "L'area di ricerca è stata salvata con successo."
-    });
-  };
-  
-  const deleteMarker = (id: string) => {
-    setMarkers(markers.filter(marker => marker.id !== id));
-    setActiveMarker(null);
-    
-    toast({
-      title: "Segnaposto eliminato",
-      description: "Il segnaposto è stato eliminato con successo."
-    });
-  };
-  
-  const deleteSearchArea = (id: string) => {
-    setSearchAreas(areas => areas.filter(area => area.id !== id));
-    setActiveSearchArea(null);
-    
-    toast({
-      title: "Area eliminata",
-      description: "L'area di ricerca è stata eliminata con successo."
-    });
-  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-projectx-neon-blue"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="pb-20 min-h-screen bg-black w-full p-4">
-      <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-xl font-bold text-projectx-neon-blue">Mappa Interattiva</h2>
-        <div className="flex gap-2">
-          <Button 
-            size="sm" 
-            variant={isAddingMarker ? "default" : "outline"}
-            className="flex items-center gap-1"
-            onClick={() => {
-              setIsAddingMarker(!isAddingMarker);
-              setIsAddingSearchArea(false);
-              toast({
-                title: isAddingMarker ? "Modalità normale" : "Aggiungi segnaposto",
-                description: isAddingMarker ? "Torna alla navigazione normale" : "Clicca due volte sulla mappa per aggiungere un segnaposto",
-              });
-            }}
-          >
-            <MapPin className="h-4 w-4" />
-            {isAddingMarker ? 'Annulla' : 'Segnaposto'}
-          </Button>
-          
-          <Button 
-            size="sm" 
-            variant={isAddingSearchArea ? "default" : "outline"}
-            className="flex items-center gap-1"
-            onClick={() => {
-              setIsAddingSearchArea(!isAddingSearchArea);
-              setIsAddingMarker(false);
-              toast({
-                title: isAddingSearchArea ? "Modalità normale" : "Aggiungi area",
-                description: isAddingSearchArea ? "Torna alla navigazione normale" : "Clicca due volte sulla mappa per aggiungere un'area di ricerca",
-              });
-            }}
-          >
-            <Circle className="h-4 w-4" />
-            {isAddingSearchArea ? 'Annulla' : 'Area'}
-          </Button>
+    <div className="min-h-screen bg-black w-full">
+      <UnifiedHeader profileImage={profileImage} />
+      <div className="h-[72px] w-full" />
+      
+      {error ? (
+        <div className="p-4 text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Riprova</Button>
         </div>
-      </div>
-
-      <Alert className="mb-4 border-blue-500/30 bg-blue-500/10">
-        <MapPin className="h-4 w-4 text-blue-500" />
-        <AlertTitle>Mappa interattiva</AlertTitle>
-        <AlertDescription>
-          Fai doppio click sulla mappa per aggiungere un segnaposto o un'area di ricerca.
-        </AlertDescription>
-      </Alert>
-
-      <Tabs defaultValue="map" className="w-full">
-        <TabsList className="mb-4 grid w-full grid-cols-2">
-          <TabsTrigger value="map">Mappa Italia</TabsTrigger>
-          <TabsTrigger value="markers">Mappa Personalizzata</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="map" className="rounded-lg overflow-hidden">
-          <div className="w-full h-[50vh] rounded-lg overflow-hidden border border-projectx-deep-blue glass-card mb-4 relative">
-            <SearchableGlobe />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="markers" className="w-full rounded-lg overflow-hidden">
-          <div className="w-full bg-projectx-deep-blue/20 rounded-lg overflow-hidden border border-projectx-deep-blue mb-4 relative">
-            {isLoaded && (
-              <MapMarkers
-                isLoaded={isLoaded}
-                markers={markers}
-                searchAreas={searchAreas}
-                isAddingMarker={isAddingMarker}
-                isAddingSearchArea={isAddingSearchArea}
-                activeMarker={activeMarker}
-                activeSearchArea={activeSearchArea}
-                onMapClick={handleMapClick}
-                onMapDoubleClick={handleMapDoubleClick}
-                setActiveMarker={setActiveMarker}
-                setActiveSearchArea={setActiveSearchArea}
-                saveMarkerNote={saveMarkerNote}
-                saveSearchArea={saveSearchArea}
-                editMarker={editMarker}
-                editSearchArea={editSearchArea}
-                deleteMarker={deleteMarker}
-                deleteSearchArea={deleteSearchArea}
+      ) : (
+        <div className="h-[calc(100vh-72px)] w-full">
+          {currentLocation && (
+            <MapContainer
+              center={currentLocation}
+              zoom={15}
+              style={{ height: "100%", width: "100%" }}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2 text-projectx-neon-blue">
-          <StickyNote className="w-5 h-5" /> Note Salvate
-        </h3>
-        <Button 
-          size="sm" 
-          variant="outline" 
-          className="flex items-center gap-1"
-          onClick={() => setShowNoteForm(!showNoteForm)}
-        >
-          {showNoteForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          {showNoteForm ? 'Annulla' : 'Aggiungi Nota'}
-        </Button>
-      </div>
-
-      {showNoteForm && (
-        <div className="mb-6 p-4 bg-projectx-deep-blue/40 backdrop-blur-sm rounded-md">
-          <Textarea
-            value={newNote}
-            onChange={(e) => setNewNote(e.target.value)}
-            placeholder="Scrivi la tua nota qui..."
-            className="mb-3 resize-none bg-black/50 border-projectx-deep-blue"
-            rows={3}
-          />
-          <div className="flex justify-end">
-            <Button onClick={handleAddNote} size="sm">
-              Salva Nota
-            </Button>
-          </div>
+              
+              {/* User's current location */}
+              <Marker position={currentLocation}>
+                <Popup>Tu sei qui</Popup>
+              </Marker>
+              
+              {/* Clue locations */}
+              {clueLocations.map((clue, index) => (
+                <Marker 
+                  key={index} 
+                  position={clue.position}
+                  icon={new L.Icon({
+                    iconUrl: clue.found 
+                      ? "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png" 
+                      : "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+                    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                  })}
+                >
+                  <Popup>
+                    <div className="p-2">
+                      <h3 className="font-bold">{clue.name}</h3>
+                      {clue.found ? (
+                        <p className="text-green-500 text-sm">Indizio già trovato!</p>
+                      ) : (
+                        <Button 
+                          size="sm" 
+                          className="mt-2 bg-projectx-neon-blue"
+                          onClick={() => handleClueFound(clue.name)}
+                        >
+                          Raccogli Indizio
+                        </Button>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          )}
         </div>
       )}
-
-      <MapNoteList
-        markers={markers}
-        setActiveMarker={setActiveMarker}
-      />
     </div>
   );
 };

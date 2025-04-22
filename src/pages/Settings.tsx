@@ -1,5 +1,5 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -16,13 +16,16 @@ const Settings = () => {
   const [soundEffects, setSoundEffects] = useState(true);
   const [language, setLanguage] = useState("Italiano");
   const { toast } = useToast();
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  useEffect(() => {
+    setProfileImage(localStorage.getItem('profileImage'));
+  }, []);
 
   const handleLogout = () => {
     toast({
       title: "Logout effettuato",
       description: "La tua sessione è stata chiusa con successo."
     });
-    
     setTimeout(() => {
       window.location.href = "/";
     }, 1500);
@@ -30,6 +33,8 @@ const Settings = () => {
 
   return (
     <div className="pb-20 min-h-screen w-full">
+      <UnifiedHeader profileImage={profileImage} />
+      <div className="h-[72px] w-full" />
       <AccountSection />
 
       <NotificationSection

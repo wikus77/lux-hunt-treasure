@@ -1,10 +1,14 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { Check } from "lucide-react";
 import SubscriptionCard from "@/components/subscription/SubscriptionCard";
 
 const Subscriptions = () => {
   const [selected, setSelected] = useState<string>("Base");
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  useEffect(() => {
+    setProfileImage(localStorage.getItem('profileImage'));
+  }, []);
 
   const getSubscriptionFeatures = (type: string) => {
     switch (type) {
@@ -42,6 +46,8 @@ const Subscriptions = () => {
 
   return (
     <div className="min-h-screen bg-black w-full">
+      <UnifiedHeader profileImage={profileImage} />
+      <div className="h-[72px] w-full" />
       <div className="max-w-screen-xl mx-auto">
         {/* Introduction */}
         <section className="w-full py-8">

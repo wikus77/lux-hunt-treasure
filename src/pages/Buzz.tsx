@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
@@ -9,6 +8,7 @@ import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
 import BuzzButton from "@/components/buzz/BuzzButton";
 import useBuzzSound from "@/hooks/useBuzzSound";
 import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
 
 const EXTRA_CLUE_TEXT = "Strade strette ma la rotta è dritta: cerca dove il muro si colora!";
 
@@ -25,34 +25,33 @@ const Buzz = () => {
   const { hasPaymentMethod, savePaymentMethod } = useHasPaymentMethod();
   const { initializeSound } = useBuzzSound();
   const explosionTimerRef = useRef<number | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load saved clues count from localStorage
+    setProfileImage(localStorage.getItem('profileImage'));
+  }, []);
+
+  useEffect(() => {
     const savedClues = localStorage.getItem('unlockedCluesCount');
     if (savedClues) {
       setUnlockedClues(parseInt(savedClues));
     }
 
-    // Initialize sound
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
     const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
     initializeSound(soundPreference, volume);
 
-    // Handle payment completion from redirect
     if (location.state?.paymentCompleted) {
       savePaymentMethod();
       sendBuzzNotification();
       incrementUnlockedClues();
       
-      // Show explosion animation
       setShowExplosion(true);
       
-      // Start timer to fade out the explosion after 2.5 seconds
       explosionTimerRef.current = window.setTimeout(() => {
         setExplosionFadeOut(true);
       }, 2500);
       
-      // Clean up timer on unmount
       return () => {
         if (explosionTimerRef.current) {
           clearTimeout(explosionTimerRef.current);
@@ -65,7 +64,6 @@ const Buzz = () => {
     setShowExplosion(false);
     setExplosionFadeOut(false);
     
-    // Show toasts after animation is done
     toast.success("Indizio sbloccato!", {
       description: "Controlla la sezione Notifiche per vedere l'indizio extra."
     });
@@ -75,7 +73,6 @@ const Buzz = () => {
       position: "bottom-center",
     });
 
-    // Redirect to notifications after a delay
     setTimeout(() => {
       navigate("/notifications", { replace: true });
     }, 1800);
@@ -137,11 +134,7 @@ const Buzz = () => {
 
   return (
     <div className="min-h-screen bg-black pb-20 w-full">
-      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex flex-col items-center justify-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
-        <h1 className="text-2xl font-bold neon-text">Buzz</h1>
-        <p className="text-xs text-projectx-neon-blue">it is possible</p>
-      </header>
-
+      <UnifiedHeader profileImage={profileImage} />
       <div className="h-[72px] w-full" />
 
       <section className="flex flex-col items-center justify-center py-10 h-[70vh] w-full px-0">
