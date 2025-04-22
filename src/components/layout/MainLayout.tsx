@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { User, Menu } from "lucide-react";
+import { User, Menu, Mail, MoreVertical } from "lucide-react";
 import Footer from "./Footer";
 import BottomNavigation from "./BottomNavigation";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -16,6 +16,7 @@ import {
 
 // Nuova importazione per la voce "Come Funziona"
 import HowItWorksModal from "../modals/HowItWorksModal";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const MainLayout = () => {
   const location = useLocation();
@@ -24,6 +25,16 @@ const MainLayout = () => {
   const [profileName, setProfileName] = useState<string>("Utente");
   const [profileSubscription, setProfileSubscription] = useState<string>("Base");
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  
+  // Notifiche centralizzate
+  const {
+    notifications,
+    unreadCount,
+    markAllAsRead,
+    reloadNotifications
+  } = useNotifications();
+
+  const [showNotificationsBanner, setShowNotificationsBanner] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -40,13 +51,20 @@ const MainLayout = () => {
     setProfileSubscription("Base");
   }, []);
 
-  // Logo testuale sempre "M1"
-  const getPageTitle = () => "M1";
+  // Rende il banner immediatamente up-to-date ad apertura
+  const handleShowNotifications = () => {
+    reloadNotifications();
+    setShowNotificationsBanner(true);
+  };
+
+  const handleCloseNotifications = () => {
+    setShowNotificationsBanner(false);
+  };
 
   return (
     <div className="min-h-screen w-full bg-black transition-colors duration-300 text-white relative">
-      <header className="fixed top-0 left-0 right-0 z-50 w-full px-4 py-6 flex items-center border-b border-projectx-deep-blue backdrop-blur-lg bg-black/70 transition-colors duration-300">
-        <div className="absolute left-4 flex items-center gap-2">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue backdrop-blur-lg bg-black/70 transition-colors duration-300">
+        <div className="flex items-center gap-2">
           {/* Cornice custom intorno all'avatar */}
           <span className="profile-custom-ring">
             <Avatar className="w-8 h-8 border-2 border-projectx-neon-blue bg-black">
@@ -85,16 +103,43 @@ const MainLayout = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
         <h1
-          className="text-2xl font-bold neon-text flex-1 text-center select-none gradient-white-text"
+          className="text-2xl font-bold text-center select-none"
           style={{
+            background: "linear-gradient(to right, #4361ee, #7209b7)",
             WebkitBackgroundClip: "text",
             color: "transparent",
             backgroundClip: "text",
           }}
         >
-          {getPageTitle()}
+          M1SSION
         </h1>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="p-2 relative rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors cursor-pointer"
+            onClick={handleShowNotifications}
+          >
+            <Mail className="w-5 h-5" />
+            <span className={`absolute -top-1 -right-1 font-bold border-2 border-black w-5 h-5 flex items-center justify-center rounded-full text-xs ${
+              unreadCount > 0
+                ? "bg-red-600 text-white"
+                : "bg-gray-700 text-gray-300"
+            }`}>
+              {unreadCount > 0 ? (unreadCount > 9 ? "9+" : unreadCount) : ""}
+            </span>
+          </button>
+          <button
+            className="p-2 rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors"
+            onClick={() => navigate("/settings")}
+            aria-label="Impostazioni"
+          >
+            <MoreVertical className="w-5 h-5" />
+          </button>
+        </div>
       </header>
       <main className="flex-1 w-full relative pt-[72px] pb-16">
         <Outlet />

@@ -33,28 +33,28 @@ export const SubscriptionCard = ({
           border: "border-gray-800",
           gradient: "bg-gradient-to-b from-gray-900 to-black",
           shadow: "shadow-lg shadow-gray-900/50",
-          button: "bg-black hover:bg-gray-900 text-white"
+          button: "bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full"
         };
       case "Gold":
         return {
           border: "border-projectx-gold",
           gradient: "bg-gradient-to-b from-yellow-700 to-projectx-gold",
           shadow: "shadow-lg shadow-yellow-600/50",
-          button: "bg-projectx-gold hover:bg-yellow-600 text-black"
+          button: "bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full"
         };
       case "Silver":
         return {
           border: "border-gray-400",
           gradient: "bg-gradient-to-b from-gray-500 to-gray-300",
           shadow: "shadow-lg shadow-gray-400/50",
-          button: "bg-gray-400 hover:bg-gray-500 text-black"
+          button: "bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full"
         };
       default:
         return {
           border: "border-projectx-blue",
           gradient: "bg-gradient-to-b from-projectx-blue to-projectx-neon-blue",
           shadow: "shadow-lg shadow-blue-500/50",
-          button: "bg-projectx-blue hover:bg-blue-600 text-white"
+          button: "bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full"
         };
     }
   };
@@ -65,7 +65,7 @@ export const SubscriptionCard = ({
     <div className={`rounded-xl p-0.5 ${styles.border} ${isPopular ? 'animate-pulse-border' : ''}`}>
       <div className="rounded-lg overflow-hidden">
         {isPopular && (
-          <div className="py-1.5 px-4 bg-projectx-pink text-white text-xs text-center font-medium">
+          <div className="py-1.5 px-4 bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white text-xs text-center font-medium">
             Più Popolare
           </div>
         )}

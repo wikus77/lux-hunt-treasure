@@ -15,7 +15,10 @@ const Map = () => {
   const [isAddingMarker, setIsAddingMarker] = useState(false);
   const [activeMarker, setActiveMarker] = useState<string | null>(null);
 
-  const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY });
+  const { isLoaded, loadError } = useLoadScript({ 
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: ["places"]
+  });
 
   useEffect(() => {
     const savedMarkers = localStorage.getItem('huntMap_markers');
@@ -79,6 +82,17 @@ const Map = () => {
     });
   };
 
+  if (loadError) {
+    return (
+      <div className="pb-20 min-h-screen bg-black w-full p-4 flex flex-col items-center justify-center">
+        <div className="text-red-500 mb-4">Errore di caricamento della mappa</div>
+        <Button onClick={() => window.location.reload()} variant="outline">
+          Riprova
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="pb-20 min-h-screen bg-black w-full p-4">
       <div className="mb-4 flex justify-between items-center">
@@ -86,7 +100,7 @@ const Map = () => {
         <Button
           onClick={() => setIsAddingMarker(!isAddingMarker)}
           variant={isAddingMarker ? "destructive" : "default"}
-          className="gap-2"
+          className="gap-2 bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full"
           size="sm"
         >
           {isAddingMarker ? (
@@ -106,17 +120,19 @@ const Map = () => {
         </div>
       )}
 
-      <MapMarkers
-        isLoaded={isLoaded}
-        markers={markers}
-        isAddingMarker={isAddingMarker}
-        activeMarker={activeMarker}
-        onMapClick={handleMapClick}
-        setActiveMarker={setActiveMarker}
-        saveMarkerNote={saveMarkerNote}
-        editMarker={editMarker}
-        deleteMarker={deleteMarker}
-      />
+      <div className="w-full h-[50vh] rounded-lg overflow-hidden border border-projectx-deep-blue glass-card mb-4">
+        <MapMarkers
+          isLoaded={isLoaded}
+          markers={markers}
+          isAddingMarker={isAddingMarker}
+          activeMarker={activeMarker}
+          onMapClick={handleMapClick}
+          setActiveMarker={setActiveMarker}
+          saveMarkerNote={saveMarkerNote}
+          editMarker={editMarker}
+          deleteMarker={deleteMarker}
+        />
+      </div>
 
       <MapNoteList
         markers={markers}

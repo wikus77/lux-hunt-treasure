@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -26,7 +27,7 @@ const Index = () => {
         <Link to="/login">
           <Button 
             variant="outline" 
-            className="flex items-center gap-2 bg-gradient-to-r from-projectx-blue to-projectx-pink text-white hover:opacity-90"
+            className="flex items-center gap-2 bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full px-5 py-2"
           >
             <LogIn className="w-4 h-4" />
             Accedi
@@ -46,14 +47,14 @@ const Index = () => {
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
           <Button 
-            className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white font-bold px-8 py-6 rounded-md"
+            className="bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white font-bold px-8 py-6 rounded-full"
             size="lg"
             onClick={handleRegisterClick}
           >
             Registrati Oggi
           </Button>
           <Button 
-            className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white font-bold px-8 py-6 rounded-md"
+            className="bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white font-bold px-8 py-6 rounded-full"
             onClick={() => setIsVideoPlaying(true)}
             size="lg"
           >
@@ -66,11 +67,11 @@ const Index = () => {
       <section className="py-16 px-4 bg-black w-full">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
           <div className="glass-card text-center w-full relative">
-            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-projectx-blue to-projectx-pink flex items-center justify-center text-white font-bold">
+            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">
               1
             </div>
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-projectx-deep-blue border border-projectx-neon-blue">
-              <img src="/lovable-uploads/7f787e38-d579-4b24-8a57-1ede818cdca3.png" alt="Registrati" className="w-10 h-10 object-contain" />
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">1</div>
             </div>
             <h3 className="text-xl font-bold mb-2">Registrati</h3>
             <p className="text-muted-foreground">
@@ -79,11 +80,11 @@ const Index = () => {
           </div>
           
           <div className="glass-card text-center w-full relative">
-            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-projectx-blue to-projectx-pink flex items-center justify-center text-white font-bold">
+            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">
               2
             </div>
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-projectx-deep-blue border border-projectx-neon-blue">
-              <img src="/lovable-uploads/a987ba21-940e-48cd-b999-c266de3f133c.png" alt="Indizi" className="w-10 h-10 object-contain" />
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">2</div>
             </div>
             <h3 className="text-xl font-bold mb-2">Scopri gli Indizi</h3>
             <p className="text-muted-foreground">
@@ -92,11 +93,11 @@ const Index = () => {
           </div>
 
           <div className="glass-card text-center w-full relative">
-            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-projectx-blue to-projectx-pink flex items-center justify-center text-white font-bold">
+            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">
               3
             </div>
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-projectx-deep-blue border border-projectx-neon-blue">
-              <img src="/lovable-uploads/48b9a28f-59eb-4010-9bb2-37de88a4d7b1.png" alt="Premio" className="w-10 h-10 object-contain" />
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">3</div>
             </div>
             <h3 className="text-xl font-bold mb-2">Vinci il Premio</h3>
             <p className="text-muted-foreground">
@@ -136,7 +137,7 @@ const Index = () => {
         </p>
         <div className="flex justify-center">
           <Button 
-            className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white font-bold px-8 py-6 rounded-md"
+            className="bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white font-bold px-8 py-6 rounded-full"
             size="lg"
             onClick={handleRegisterClick}
           >

@@ -98,7 +98,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({
                   placeholder="GG"
                   value={day}
                   onChange={(e) => setDay(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-600 bg-black rounded-md"
+                  className="w-full px-3 py-2 border border-gray-600 bg-black text-white rounded-md"
                 />
               </div>
               <div className="space-y-1">
@@ -111,7 +111,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({
                   placeholder="MM"
                   value={month}
                   onChange={(e) => setMonth(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-600 bg-black rounded-md"
+                  className="w-full px-3 py-2 border border-gray-600 bg-black text-white rounded-md"
                 />
               </div>
               <div className="space-y-1">
@@ -124,14 +124,14 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({
                   placeholder="AAAA"
                   value={year}
                   onChange={(e) => setYear(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-600 bg-black rounded-md"
+                  className="w-full px-3 py-2 border border-gray-600 bg-black text-white rounded-md"
                 />
               </div>
             </div>
             
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
+              className="w-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white rounded-full"
             >
               Verifica
             </Button>
