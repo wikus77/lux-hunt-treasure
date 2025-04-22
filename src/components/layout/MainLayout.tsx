@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { User, Menu, Mail, MoreVertical } from "lucide-react";
@@ -14,7 +13,6 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 
-// Nuova importazione per la voce "Come Funziona"
 import HowItWorksModal from "../modals/HowItWorksModal";
 import { useNotifications } from "@/hooks/useNotifications";
 
@@ -26,7 +24,6 @@ const MainLayout = () => {
   const [profileSubscription, setProfileSubscription] = useState<string>("Base");
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   
-  // Notifiche centralizzate
   const {
     notifications,
     unreadCount,
@@ -51,7 +48,6 @@ const MainLayout = () => {
     setProfileSubscription("Base");
   }, []);
 
-  // Rende il banner immediatamente up-to-date ad apertura
   const handleShowNotifications = () => {
     reloadNotifications();
     setShowNotificationsBanner(true);
@@ -65,7 +61,6 @@ const MainLayout = () => {
     <div className="min-h-screen w-full bg-black transition-colors duration-300 text-white relative">
       <header className="fixed top-0 left-0 right-0 z-50 w-full px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue backdrop-blur-lg bg-black/70 transition-colors duration-300">
         <div className="flex items-center gap-2">
-          {/* Cornice custom intorno all'avatar */}
           <span className="profile-custom-ring">
             <Avatar className="w-8 h-8 border-2 border-projectx-neon-blue bg-black">
               <AvatarImage src={profileImage || ""} alt="Profile" className="object-cover" />
@@ -74,7 +69,6 @@ const MainLayout = () => {
               </AvatarFallback>
             </Avatar>
           </span>
-          {/* Menu dropdown del profilo */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -84,7 +78,7 @@ const MainLayout = () => {
                 <Menu className="w-5 h-5 text-projectx-neon-blue" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="z-[110] bg-[#131a14]/90 min-w-[220px] backdrop-blur-lg border-projectx-neon-blue text-white shadow-lg">
+            <DropdownMenuContent className="z-[110] bg-[#131a14]/90 backdrop-blur-lg border-projectx-neon-blue text-white">
               <DropdownMenuLabel className="font-bold text-projectx-neon-blue">Menu profilo</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -104,19 +98,11 @@ const MainLayout = () => {
           </DropdownMenu>
         </div>
 
-        <h1
-          className="text-2xl font-bold text-center select-none"
-          style={{
-            background: "linear-gradient(to right, #4361ee, #7209b7)",
-            WebkitBackgroundClip: "text",
-            color: "transparent",
-            backgroundClip: "text",
-          }}
-        >
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">
           M1SSION
         </h1>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             aria-label="Notifications"
@@ -144,7 +130,6 @@ const MainLayout = () => {
       <main className="flex-1 w-full relative pt-[72px] pb-16">
         <Outlet />
       </main>
-      {/* Modal "Come Funziona" */}
       {showHowItWorks && (
         <HowItWorksModal open={showHowItWorks} onClose={() => setShowHowItWorks(false)} />
       )}

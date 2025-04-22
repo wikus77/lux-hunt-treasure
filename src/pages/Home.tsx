@@ -13,7 +13,6 @@ const Home = () => {
   const [showNotificationsBanner, setShowNotificationsBanner] = useState(false);
   const navigate = useNavigate();
 
-  // Notifiche centralizzate
   const {
     notifications,
     unreadCount,
@@ -21,7 +20,6 @@ const Home = () => {
     reloadNotifications
   } = useNotifications();
 
-  // Rende il banner immediatamente up-to-date ad apertura
   const handleShowNotifications = () => {
     reloadNotifications();
     setShowNotificationsBanner(true);
@@ -33,7 +31,6 @@ const Home = () => {
 
   return (
     <div className="pb-20 min-h-screen bg-black w-full">
-      {/* Notifications Banner */}
       <NotificationsBanner
         open={showNotificationsBanner}
         notifications={notifications}
@@ -42,14 +39,11 @@ const Home = () => {
         onMarkAllAsRead={markAllAsRead}
       />
 
-      {/* Header: tolta la scritta doppia "M1" qui, già presente nella MainLayout */}
-
-      {/* Header controls moved to the right side */}
-      <div className="fixed top-0 right-4 z-50 h-[72px] flex items-center gap-2">
+      <div className="fixed top-0 right-4 z-50 h-[72px] flex items-center gap-3">
         <button
           type="button"
           aria-label="Notifications"
-          className="p-2 relative rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors cursor-pointer"
+          className="p-2.5 relative rounded-full bg-black/40 backdrop-blur-lg border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
           onClick={handleShowNotifications}
         >
           <Mail className="w-5 h-5" />
@@ -62,7 +56,7 @@ const Home = () => {
           </span>
         </button>
         <button
-          className="p-2 rounded-full bg-projectx-deep-blue hover:bg-projectx-neon-blue transition-colors"
+          className="p-2.5 rounded-full bg-black/40 backdrop-blur-lg border border-white/10 hover:bg-white/10 transition-colors"
           onClick={() => navigate("/settings")}
           aria-label="Impostazioni"
         >
@@ -70,8 +64,7 @@ const Home = () => {
         </button>
       </div>
 
-      {/* Content */}
-      <div className="w-full">
+      <div className="w-full space-y-6 pt-[72px]">
         <CurrentEventSection />
         <MysteryPrizesSection />
         <CluesSection />

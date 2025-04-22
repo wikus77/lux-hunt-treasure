@@ -1,3 +1,4 @@
+
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -35,15 +36,15 @@ export const SubscriptionCard = ({
         };
       case "Gold":
         return {
-          border: "border-projectx-gold",
-          gradient: "bg-gradient-to-b from-yellow-700 to-projectx-gold",
+          border: "border-yellow-600",
+          gradient: "bg-gradient-to-b from-yellow-700 to-yellow-900",
           shadow: "shadow-lg shadow-yellow-600/50",
           button: "bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full"
         };
       case "Silver":
         return {
           border: "border-gray-400",
-          gradient: "bg-gradient-to-b from-gray-500 to-gray-300",
+          gradient: "bg-gradient-to-b from-gray-600 to-gray-800",
           shadow: "shadow-lg shadow-gray-400/50",
           button: "bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full"
         };
@@ -60,7 +61,7 @@ export const SubscriptionCard = ({
   const styles = getTypeStyles();
 
   return (
-    <div className={`rounded-xl p-0.5 ${styles.border} ${isPopular ? 'animate-pulse-border' : ''}`}>
+    <div className={`rounded-xl p-0.5 ${styles.border} ${isPopular ? 'animate-pulse-border' : ''} backdrop-blur-lg`}>
       <div className="rounded-lg overflow-hidden">
         {isPopular && (
           <div className="py-1.5 px-4 bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white text-xs text-center font-medium">
@@ -68,7 +69,7 @@ export const SubscriptionCard = ({
           </div>
         )}
         
-        <div className={`p-6 ${styles.gradient}`}>
+        <div className={`p-6 ${styles.gradient} bg-opacity-90`}>
           <h3 className="text-xl font-bold mb-1">{title}</h3>
           
           <div className="mt-4 mb-6">
@@ -76,10 +77,10 @@ export const SubscriptionCard = ({
             {period && <span className="text-sm opacity-80">/{period}</span>}
           </div>
           
-          <ul className="mb-6 space-y-2">
+          <ul className="mb-6 space-y-2.5">
             {features.map((feature, index) => (
               <li key={index} className="flex items-start">
-                <Check className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+                <Check className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0 text-[#4361ee]" />
                 <span className="text-sm">{feature.text}</span>
               </li>
             ))}
