@@ -1,12 +1,13 @@
 
 import React, { useState } from "react";
-import { StickyNote, Plus, X } from "lucide-react";
+import { StickyNote, Plus, X, Map as MapIcon } from "lucide-react";
 import { MapNoteList } from "@/components/maps/MapNoteList";
 import SearchableGlobe from "@/components/maps/SearchableGlobe";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import type { MapMarker } from "@/components/maps/MapMarkers";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Map = () => {
   const [markers, setMarkers] = useState<MapMarker[]>(() => {
@@ -52,6 +53,14 @@ const Map = () => {
       <div className="mb-4 flex justify-between items-center">
         <h2 className="text-xl font-bold text-projectx-neon-blue">Mappa Interattiva</h2>
       </div>
+
+      <Alert className="mb-4 border-blue-500/30 bg-blue-500/10">
+        <MapIcon className="h-4 w-4 text-blue-500" />
+        <AlertTitle>Mappa delle città italiane</AlertTitle>
+        <AlertDescription>
+          Cerca una città o clicca direttamente sui marker per visualizzare le località.
+        </AlertDescription>
+      </Alert>
 
       <div className="w-full h-[50vh] rounded-lg overflow-hidden border border-projectx-deep-blue glass-card mb-4 relative">
         <SearchableGlobe />

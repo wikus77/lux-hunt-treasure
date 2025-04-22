@@ -1,7 +1,9 @@
-import React, { useState, useCallback } from "react";
-import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
+
+import React, { useState, useCallback, useEffect } from "react";
+import { GoogleMap, useLoadScript } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 interface City {
   name: string;
@@ -43,16 +45,52 @@ const defaultZoom = 6;
 const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
 
 const SearchableGlobe: React.FC = () => {
-  const { isLoaded } = useLoadScript({
+  const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: ["places"],
   });
+  
   const [search, setSearch] = useState("");
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [markers, setMarkers] = useState<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const { toast } = useToast();
 
   const onLoad = useCallback((mapInstance: google.maps.Map) => {
     setMap(mapInstance);
+    console.log("Map loaded successfully");
   }, []);
+  
+  // Create markers for cities when map is loaded
+  useEffect(() => {
+    if (isLoaded && map) {
+      try {
+        // Clear any existing markers
+        markers.forEach(marker => marker.map = null);
+        setMarkers([]);
+        
+        const newMarkers = italianCities.map(city => {
+          const marker = new google.maps.marker.AdvancedMarkerElement({
+            map,
+            position: { lat: city.lat, lng: city.lng },
+            title: city.name,
+          });
+          
+          marker.addListener("click", () => {
+            setSelectedCity(city);
+            map.panTo({ lat: city.lat, lng: city.lng });
+            map.setZoom(12);
+          });
+          
+          return marker;
+        });
+        
+        setMarkers(newMarkers);
+      } catch (error) {
+        console.error("Error creating markers:", error);
+      }
+    }
+  }, [isLoaded, map]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,17 +98,35 @@ const SearchableGlobe: React.FC = () => {
     const city =
       italianCities.find((c) => c.name.toLowerCase() === query) ||
       italianCities.find((c) => c.name.toLowerCase().includes(query));
+    
     if (city) {
       setSelectedCity(city);
       if (map) {
         map.panTo({ lat: city.lat, lng: city.lng });
-        map.setZoom(15);
+        map.setZoom(12);
+        toast({
+          title: "Città trovata",
+          description: `Centrata la mappa su ${city.name}`,
+        });
       }
     } else {
-      alert(`Nessuna città trovata per: ${search}`);
+      toast({
+        title: "Città non trovata",
+        description: `Nessuna città trovata per: ${search}`,
+        variant: "destructive",
+      });
       setSelectedCity(null);
     }
   };
+
+  if (loadError) {
+    return (
+      <div className="text-center py-8 bg-red-500/10 rounded-lg border border-red-500/30 p-4">
+        <p className="text-red-500">Errore nel caricamento della mappa: {loadError.message}</p>
+        <p className="text-sm mt-2">Verifica che l'API Google Maps sia attivata nella console Google Cloud.</p>
+      </div>
+    );
+  }
 
   if (!isLoaded) {
     return <div className="text-center py-8">Caricamento mappa...</div>;
@@ -81,7 +137,7 @@ const SearchableGlobe: React.FC = () => {
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={selectedCity ? { lat: selectedCity.lat, lng: selectedCity.lng } : defaultCenter}
-        zoom={selectedCity ? 15 : defaultZoom}
+        zoom={selectedCity ? 12 : defaultZoom}
         onLoad={onLoad}
         options={{
           fullscreenControl: true,
@@ -90,13 +146,7 @@ const SearchableGlobe: React.FC = () => {
           zoomControl: true,
         }}
       >
-        {(selectedCity ? [selectedCity] : italianCities).map((city, idx) => (
-          <MarkerF
-            key={city.name + idx}
-            position={{ lat: city.lat, lng: city.lng }}
-            title={city.name}
-          />
-        ))}
+        {/* I marker sono gestiti tramite l'useEffect */}
       </GoogleMap>
       <form onSubmit={handleSubmit} className="flex gap-2 mt-2">
         <Input
