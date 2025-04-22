@@ -225,7 +225,7 @@ const SearchableGlobe: React.FC = () => {
 
   // Filter options when search changes
   useEffect(() => {
-    if (search.trim() === '') {
+    if (!search || search.trim() === '') {
       setFilteredProvinces([]);
       setFilteredCities([]);
       return;
@@ -251,7 +251,7 @@ const SearchableGlobe: React.FC = () => {
     setFilteredCities(cities);
   }, [search]);
 
-  const handleOptionSelect = (option: { label: string, value: string, type: string, lat?: number, lng?: number }) => {
+  const handleOptionSelect = (option: { label: string, value: string, type: "province" | "city", lat?: number, lng?: number }) => {
     setSearch(option.label);
     setSearching(false);
 
@@ -291,7 +291,7 @@ const SearchableGlobe: React.FC = () => {
   // Lascia il form per compatibilità mobile/tastiera/minor fallback
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!search.trim()) {
+    if (!search || !search.trim()) {
       toast({
         title: "Campo vuoto",
         description: "Seleziona o scrivi il nome di una città o provincia",
@@ -356,43 +356,43 @@ const SearchableGlobe: React.FC = () => {
               onBlur={() => setTimeout(() => setSearching(false), 200)} // chiudi la lista col click fuori
             />
             {(searching && !!search) && (
-            <div className="absolute left-0 mt-1 w-full z-50 bg-background rounded-md border max-h-52 overflow-y-auto shadow-lg">
-              <CommandList>
-                {filteredProvinces.length > 0 && (
-                  <CommandGroup heading="Province">
-                    {filteredProvinces.map(opt => (
-                      <CommandItem
-                        key={"pr_"+opt.value}
-                        onSelect={() => handleOptionSelect(opt)}
-                        className="cursor-pointer"
-                      >
-                        {opt.label}
-                        <span className="ml-2 text-xs text-muted-foreground">Provincia</span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
-                
-                {filteredCities.length > 0 && (
-                  <CommandGroup heading="Città">
-                    {filteredCities.map(opt => (
-                      <CommandItem
-                        key={"ct_"+opt.value}
-                        onSelect={() => handleOptionSelect(opt)}
-                        className="cursor-pointer"
-                      >
-                        {opt.label}
-                        <span className="ml-2 text-xs text-muted-foreground">Città</span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
-                
-                {filteredProvinces.length === 0 && filteredCities.length === 0 && (
-                  <CommandEmpty>Nessun risultato trovato</CommandEmpty>
-                )}
-              </CommandList>
-            </div>
+              <div className="absolute left-0 mt-1 w-full z-50 bg-background rounded-md border max-h-52 overflow-y-auto shadow-lg">
+                <CommandList>
+                  {filteredProvinces.length > 0 && (
+                    <CommandGroup heading="Province">
+                      {filteredProvinces.map(opt => (
+                        <CommandItem
+                          key={"pr_"+opt.value}
+                          onSelect={() => handleOptionSelect(opt)}
+                          className="cursor-pointer"
+                        >
+                          {opt.label}
+                          <span className="ml-2 text-xs text-muted-foreground">Provincia</span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
+                  
+                  {filteredCities.length > 0 && (
+                    <CommandGroup heading="Città">
+                      {filteredCities.map(opt => (
+                        <CommandItem
+                          key={"ct_"+opt.value}
+                          onSelect={() => handleOptionSelect(opt)}
+                          className="cursor-pointer"
+                        >
+                          {opt.label}
+                          <span className="ml-2 text-xs text-muted-foreground">Città</span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
+                  
+                  {filteredProvinces.length === 0 && filteredCities.length === 0 && (
+                    <CommandEmpty>Nessun risultato trovato</CommandEmpty>
+                  )}
+                </CommandList>
+              </div>
             )}
           </Command>
         </div>
