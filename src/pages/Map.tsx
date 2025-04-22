@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import { MapContainer as LeafletMap, TileLayer as LeafletTileLayer, Marker as LeafletMarker, Popup as LeafletPopup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { Button } from "@/components/ui/button";
@@ -109,20 +109,20 @@ const Map = () => {
         // la mappa ora usa tutta l'area disponibile in modo responsivo
         <div className="w-full h-[calc(100vh-72px)] flex flex-col">
           {currentLocation && (
-            <LeafletMap
-              center={currentLocation}
+            <MapContainer
+              className="flex-1 w-full h-full"
               zoom={15}
-              style={{ flex: 1, width: "100%" }}
+              center={currentLocation}
             >
-              <LeafletTileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
-              <LeafletMarker position={currentLocation}>
-                <LeafletPopup>Tu sei qui</LeafletPopup>
-              </LeafletMarker>
+              <Marker position={currentLocation}>
+                <Popup>Tu sei qui</Popup>
+              </Marker>
               {clueLocations.map((clue, index) => (
-                <LeafletMarker
+                <Marker
                   key={index}
                   position={clue.position}
                   icon={new L.Icon({
@@ -136,7 +136,7 @@ const Map = () => {
                     shadowSize: [41, 41]
                   })}
                 >
-                  <LeafletPopup>
+                  <Popup>
                     <div className="p-2">
                       <h3 className="font-bold">{clue.name}</h3>
                       {clue.found ? (
@@ -151,10 +151,10 @@ const Map = () => {
                         </Button>
                       )}
                     </div>
-                  </LeafletPopup>
-                </LeafletMarker>
+                  </Popup>
+                </Marker>
               ))}
-            </LeafletMap>
+            </MapContainer>
           )}
         </div>
       )}
@@ -163,4 +163,3 @@ const Map = () => {
 };
 
 export default Map;
-
