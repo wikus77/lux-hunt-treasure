@@ -7,6 +7,7 @@ import {
   CommandList,
   CommandItem,
   CommandGroup,
+  CommandEmpty,
 } from "@/components/ui/command";
 import { useFilteredLocations } from "./useFilteredLocations";
 
@@ -16,6 +17,7 @@ type OptionType = {
   type: "province" | "city";
   lat?: number;
   lng?: number;
+  id: string; // Add id for unique keys
 };
 
 type Props = {
@@ -36,6 +38,8 @@ const SearchBar: React.FC<Props> = ({
   onSubmit,
 }) => {
   const { filteredProvinces = [], filteredCities = [] } = useFilteredLocations(search);
+  
+  const hasResults = filteredProvinces.length > 0 || filteredCities.length > 0;
 
   return (
     <form onSubmit={onSubmit} className="flex gap-2 mt-2 items-center z-10">
@@ -52,15 +56,16 @@ const SearchBar: React.FC<Props> = ({
             onFocus={() => setSearching(true)}
             onBlur={() => setTimeout(() => setSearching(false), 200)}
           />
+          
           {searching && !!search && (
             <div className="absolute left-0 mt-1 w-full z-50 bg-background rounded-md border max-h-52 overflow-y-auto shadow-lg">
-              {filteredProvinces.length > 0 || filteredCities.length > 0 ? (
+              {hasResults ? (
                 <CommandList>
-                  {filteredProvinces.length > 0 && Array.isArray(filteredProvinces) && (
+                  {filteredProvinces.length > 0 && (
                     <CommandGroup heading="Province">
                       {filteredProvinces.map((opt) => (
                         <CommandItem
-                          key={"pr_" + opt.value}
+                          key={opt.id} // Use unique id as key
                           onSelect={() => onSelect(opt)}
                           className="cursor-pointer"
                         >
@@ -72,11 +77,12 @@ const SearchBar: React.FC<Props> = ({
                       ))}
                     </CommandGroup>
                   )}
-                  {filteredCities.length > 0 && Array.isArray(filteredCities) && (
+                  
+                  {filteredCities.length > 0 && (
                     <CommandGroup heading="Città">
                       {filteredCities.map((opt) => (
                         <CommandItem
-                          key={"ct_" + opt.value}
+                          key={opt.id} // Use unique id as key
                           onSelect={() => onSelect(opt)}
                           className="cursor-pointer"
                         >
@@ -90,7 +96,9 @@ const SearchBar: React.FC<Props> = ({
                   )}
                 </CommandList>
               ) : (
-                <div className="py-6 text-center text-sm">Nessun risultato trovato</div>
+                <CommandEmpty className="py-6 text-center text-sm">
+                  Nessun risultato trovato
+                </CommandEmpty>
               )}
             </div>
           )}
@@ -108,4 +116,3 @@ const SearchBar: React.FC<Props> = ({
 };
 
 export default SearchBar;
-

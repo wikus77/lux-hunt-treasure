@@ -1,17 +1,9 @@
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { GoogleMap, useLoadScript } from "@react-google-maps/api";
 import { useToast } from "@/hooks/use-toast";
 import SearchBar from "./SearchBar";
 import { allOptions, italianCities } from "./useFilteredLocations";
-
-interface City {
-  name: string;
-  lat: number;
-  lng: number;
-  region?: string;
-  province?: string;
-}
 
 const containerStyle = {
   width: "100%",
@@ -22,8 +14,8 @@ const containerStyle = {
 const defaultCenter = { lat: 41.9028, lng: 12.4964 };
 const defaultZoom = 6;
 
-// Correggi qui secondo @react-google-maps/api tipizzato ora
-const mapLibraries = ["places"] as ("places")[];
+// Define libraries outside component to prevent unnecessary re-renders
+const mapLibraries: ["places"] = ["places"];
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
 
@@ -47,59 +39,84 @@ const SearchableGlobe: React.FC = () => {
     console.log("Map loaded successfully");
   }, []);
 
+  // Create markers when map is loaded
   useEffect(() => {
-    if (isLoaded && map) {
-      try {
-        markers.forEach(marker => marker.map = null);
-        setMarkers([]);
+    if (!isLoaded || !map || !window.google?.maps?.marker?.AdvancedMarkerElement) {
+      return;
+    }
 
-        const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
-        
-        if (italianCities && italianCities.length > 0) {
-          italianCities.forEach(city => {
-            try {
-              if (city && city.lat && city.lng) {
-                const marker = new google.maps.marker.AdvancedMarkerElement({
-                  map,
-                  position: { lat: city.lat, lng: city.lng },
-                  title: city.name,
-                });
-
-                marker.addListener("click", () => {
-                  setSelectedCity(city);
-                  map.panTo({ lat: city.lat, lng: city.lng });
-                  map.setZoom(12);
-                });
-
-                newMarkers.push(marker);
-              }
-            } catch (error) {
-              console.error(`Error creating marker for city ${city?.name}:`, error);
-            }
-          });
+    try {
+      // Clear existing markers
+      markers.forEach(marker => {
+        if (marker && marker.map) {
+          marker.map = null;
         }
+      });
+      setMarkers([]);
 
-        setMarkers(newMarkers);
-      } catch (error) {
-        console.error("Error creating markers:", error);
+      const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
+      
+      // Create markers for each city
+      if (italianCities && italianCities.length > 0) {
+        italianCities.forEach(city => {
+          try {
+            if (city && typeof city.lat === 'number' && typeof city.lng === 'number') {
+              const marker = new google.maps.marker.AdvancedMarkerElement({
+                map,
+                position: { lat: city.lat, lng: city.lng },
+                title: city.name,
+              });
+
+              marker.addListener("click", () => {
+                setSelectedCity(city);
+                map.panTo({ lat: city.lat, lng: city.lng });
+                map.setZoom(12);
+              });
+
+              newMarkers.push(marker);
+            }
+          } catch (error) {
+            console.error(`Error creating marker for city ${city?.name}:`, error);
+          }
+        });
       }
+
+      setMarkers(newMarkers);
+    } catch (error) {
+      console.error("Error creating markers:", error);
     }
   }, [isLoaded, map]);
 
-  const handleOptionSelect = (option: { label: string, value: string, type: "province" | "city", lat?: number, lng?: number }) => {
+  const handleOptionSelect = (option: typeof allOptions[0]) => {
     if (!option) return;
 
     setSearch(option.label);
     setSearching(false);
 
-    let cityFound: { name: string; lat: number; lng: number; } | undefined;
+    // Find city by direct match or province match
+    let cityFound = null;
 
     if (option.type === "city" && option.lat && option.lng) {
-      cityFound = italianCities.find(city => city.name.toLowerCase() === option.value);
+      cityFound = {
+        name: option.label,
+        lat: option.lat,
+        lng: option.lng
+      };
     } else if (option.type === "province") {
-      cityFound = italianCities.find(city =>
-        city.name.toLowerCase() === option.label.toLowerCase()
+      // Find capital city of province
+      const provinceName = option.label;
+      const capitalCity = italianCities.find(city => 
+        city.name.toLowerCase() === provinceName.toLowerCase() ||
+        (city.province && city.province.toLowerCase() === provinceName.toLowerCase())
       );
+      
+      if (capitalCity) {
+        cityFound = {
+          name: capitalCity.name,
+          lat: capitalCity.lat,
+          lng: capitalCity.lng
+        };
+      }
     }
 
     if (cityFound && map) {
@@ -136,6 +153,7 @@ const SearchableGlobe: React.FC = () => {
       return;
     }
     
+    // Find option by label (case insensitive)
     const option = allOptions.find(
       opt => opt.label.toLowerCase() === search.trim().toLowerCase()
     );
@@ -191,4 +209,3 @@ const SearchableGlobe: React.FC = () => {
 };
 
 export default SearchableGlobe;
-

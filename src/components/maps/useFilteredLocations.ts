@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 
 interface City {
@@ -118,36 +119,41 @@ const italianCities: City[] = [
   { name: "Viterbo", lat: 42.4207, lng: 12.1054, region: "Lazio" },
 ];
 
-// Province italiane (denominazione ufficiale)
+// Province italiane (denominazione ufficiale) - Fixed to deduplicate and ensure unique values
 const italianProvinces: string[] = [
   "Agrigento", "Alessandria", "Ancona", "Aosta", "Arezzo", "Ascoli Piceno", "Asti", "Avellino", "Bari",
   "Barletta-Andria-Trani", "Belluno", "Benevento", "Bergamo", "Biella", "Bologna", "Bolzano", "Brescia",
   "Brindisi", "Cagliari", "Caltanissetta", "Campobasso", "Caserta", "Catanzaro", "Chieti", "Como", "Cosenza",
   "Cremona", "Crotone", "Cuneo", "Enna", "Fermo", "Ferrara", "Firenze", "Foggia", "Forlì-Cesena", "Frosinone",
   "Genova", "Gorizia", "Grosseto", "Imperia", "Isernia", "L'Aquila", "La Spezia", "Latina", "Lecce", "Lecco",
-  "Livorno", "Lodi", "Lucca", "Macerata", "Mantova", "Massa-Carrara", "Matera", "Medio Campidano", "Messina",
-  "Milano", "Modena", "Monza e Brianza", "Napoli", "Novara", "Nuoro", "Ogliastra", "Olbia-Tempio", "Oristano",
+  "Livorno", "Lodi", "Lucca", "Macerata", "Mantova", "Massa-Carrara", "Matera", "Messina",
+  "Milano", "Modena", "Monza e Brianza", "Napoli", "Novara", "Nuoro", "Oristano",
   "Padova", "Palermo", "Parma", "Pavia", "Perugia", "Pesaro e Urbino", "Pescara", "Piacenza", "Pisa",
   "Pistoia", "Pordenone", "Potenza", "Prato", "Ragusa", "Ravenna", "Reggio Calabria", "Reggio Emilia",
-  "Rieti", "Rimini", "Roma", "Rovigo", "Salerno", "Medio Campidano", "Sassari", "Savona", "Siena",
-  "Siracusa", "Sondrio", "Taranto", "Teramo", "Terni", "Torino", "Trapani", "Trento", "Treviso",
+  "Rieti", "Rimini", "Roma", "Rovigo", "Salerno", "Sassari", "Savona", "Siena",
+  "Siracusa", "Sondrio", "Sud Sardegna", "Taranto", "Teramo", "Terni", "Torino", "Trapani", "Trento", "Treviso",
   "Trieste", "Udine", "Varese", "Venezia", "Verbano-Cusio-Ossola", "Vercelli", "Verona", "Vibo Valentia",
   "Vicenza", "Viterbo"
 ];
 
-// Opzioni: solo province e città definite sopra (niente 30 città per regione)
-export const allOptions: { label: string; value: string; type: "province" | "city"; lat?: number; lng?: number }[] = [
-  ...italianProvinces.map(prov => ({
-    label: prov,
-    value: prov.toLowerCase(),
-    type: "province" as const
+// Create options with unique keys and correct data
+export const allOptions = [
+  // Add provinces first
+  ...italianProvinces.map((province, index) => ({
+    label: province,
+    value: province.toLowerCase().replace(/[^\w]/g, '-'), // Create URL-safe value for keys
+    type: "province" as const,
+    id: `prov-${index}` // Add unique id for React keys
   })),
-  ...italianCities.map(city => ({
+  
+  // Add cities second
+  ...italianCities.map((city, index) => ({
     label: city.name,
-    value: city.name.toLowerCase(),
+    value: city.name.toLowerCase().replace(/[^\w]/g, '-'), // Create URL-safe value for keys
     type: "city" as const,
     lat: city.lat,
-    lng: city.lng
+    lng: city.lng,
+    id: `city-${index}` // Add unique id for React keys
   }))
 ];
 
@@ -156,26 +162,34 @@ export function useFilteredLocations(search: string) {
   const [filteredCities, setFilteredCities] = useState<typeof allOptions>([]);
 
   useEffect(() => {
+    // Always initialize to empty arrays
     if (!search || search.trim() === '') {
       setFilteredProvinces([]);
       setFilteredCities([]);
       return;
     }
 
-    const searchLower = search.toLowerCase();
+    const searchLower = search.toLowerCase().trim();
 
+    // Filter provinces
     const provinces = allOptions.filter(
       opt => opt.type === "province" && opt.label.toLowerCase().includes(searchLower)
     );
+    
+    // Filter cities
     const cities = allOptions.filter(
       opt => opt.type === "city" && opt.label.toLowerCase().includes(searchLower)
     );
 
-    setFilteredProvinces(provinces);
-    setFilteredCities(cities);
+    // Set the filtered results
+    setFilteredProvinces(provinces || []);
+    setFilteredCities(cities || []);
   }, [search]);
 
-  return { filteredProvinces, filteredCities };
+  return { 
+    filteredProvinces: filteredProvinces || [], 
+    filteredCities: filteredCities || [] 
+  };
 }
 
 export { italianCities, italianProvinces };
