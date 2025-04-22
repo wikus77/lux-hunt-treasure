@@ -135,22 +135,20 @@ const italianProvinces: string[] = [
   "Vicenza", "Viterbo"
 ];
 
-// Opzioni unite
+// Opzioni: solo province e città definite sopra (niente 30 città per regione)
 export const allOptions: { label: string; value: string; type: "province" | "city"; lat?: number; lng?: number }[] = [
   ...italianProvinces.map(prov => ({
     label: prov,
     value: prov.toLowerCase(),
     type: "province" as const
   })),
-  ...italianCities
-    .filter(city => !italianProvinces.some(p => p.toLowerCase() === city.name.toLowerCase()))
-    .map(city => ({
-      label: city.name,
-      value: city.name.toLowerCase(),
-      type: "city" as const,
-      lat: city.lat,
-      lng: city.lng
-    }))
+  ...italianCities.map(city => ({
+    label: city.name,
+    value: city.name.toLowerCase(),
+    type: "city" as const,
+    lat: city.lat,
+    lng: city.lng
+  }))
 ];
 
 export function useFilteredLocations(search: string) {

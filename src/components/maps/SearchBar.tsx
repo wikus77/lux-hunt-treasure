@@ -1,10 +1,22 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Command, CommandInput, CommandList, CommandItem, CommandGroup, CommandEmpty } from "@/components/ui/command";
-import { useFilteredLocations, allOptions } from "./useFilteredLocations";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandItem,
+  CommandGroup,
+} from "@/components/ui/command";
+import { useFilteredLocations } from "./useFilteredLocations";
 
-type OptionType = { label: string; value: string; type: "province" | "city"; lat?: number; lng?: number };
+type OptionType = {
+  label: string;
+  value: string;
+  type: "province" | "city";
+  lat?: number;
+  lng?: number;
+};
 
 type Props = {
   search: string;
@@ -16,9 +28,14 @@ type Props = {
 };
 
 const SearchBar: React.FC<Props> = ({
-  search, setSearch, searching, setSearching, onSelect, onSubmit
+  search,
+  setSearch,
+  searching,
+  setSearching,
+  onSelect,
+  onSubmit,
 }) => {
-  const { filteredProvinces, filteredCities } = useFilteredLocations(search);
+  const { filteredProvinces = [], filteredCities = [] } = useFilteredLocations(search);
 
   return (
     <form onSubmit={onSubmit} className="flex gap-2 mt-2 items-center z-10">
@@ -26,40 +43,47 @@ const SearchBar: React.FC<Props> = ({
         <Command shouldFilter={false} className="bg-black/70 rounded-md">
           <CommandInput
             value={search}
-            onValueChange={v => { setSearch(v); setSearching(true); }}
+            onValueChange={(v) => {
+              setSearch(v);
+              setSearching(true);
+            }}
             placeholder="Cerca una città o provincia italiana..."
             className="bg-black/70 border-projectx-deep-blue py-2"
             onFocus={() => setSearching(true)}
             onBlur={() => setTimeout(() => setSearching(false), 200)}
           />
-          {(searching && !!search) && (
+          {searching && !!search && (
             <div className="absolute left-0 mt-1 w-full z-50 bg-background rounded-md border max-h-52 overflow-y-auto shadow-lg">
               {filteredProvinces.length > 0 || filteredCities.length > 0 ? (
                 <CommandList>
-                  {filteredProvinces.length > 0 && (
+                  {filteredProvinces.length > 0 && Array.isArray(filteredProvinces) && (
                     <CommandGroup heading="Province">
-                      {filteredProvinces.map(opt => (
+                      {filteredProvinces.map((opt) => (
                         <CommandItem
-                          key={"pr_"+opt.value}
+                          key={"pr_" + opt.value}
                           onSelect={() => onSelect(opt)}
                           className="cursor-pointer"
                         >
                           {opt.label}
-                          <span className="ml-2 text-xs text-muted-foreground">Provincia</span>
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            Provincia
+                          </span>
                         </CommandItem>
                       ))}
                     </CommandGroup>
                   )}
-                  {filteredCities.length > 0 && (
+                  {filteredCities.length > 0 && Array.isArray(filteredCities) && (
                     <CommandGroup heading="Città">
-                      {filteredCities.map(opt => (
+                      {filteredCities.map((opt) => (
                         <CommandItem
-                          key={"ct_"+opt.value}
+                          key={"ct_" + opt.value}
                           onSelect={() => onSelect(opt)}
                           className="cursor-pointer"
                         >
                           {opt.label}
-                          <span className="ml-2 text-xs text-muted-foreground">Città</span>
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            Città
+                          </span>
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -84,3 +108,4 @@ const SearchBar: React.FC<Props> = ({
 };
 
 export default SearchBar;
+

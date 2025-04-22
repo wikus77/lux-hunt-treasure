@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { GoogleMap, useLoadScript } from "@react-google-maps/api";
 import { useToast } from "@/hooks/use-toast";
 import SearchBar from "./SearchBar";
@@ -22,8 +22,8 @@ const containerStyle = {
 const defaultCenter = { lat: 41.9028, lng: 12.4964 };
 const defaultZoom = 6;
 
-// Definire le librerie come costante esterna
-const mapLibraries = ["places"];
+// Correggi qui secondo @react-google-maps/api tipizzato ora
+const mapLibraries = ["places"] as ("places")[];
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
 
@@ -55,7 +55,6 @@ const SearchableGlobe: React.FC = () => {
 
         const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
         
-        // Aggiungiamo i marker solo se italianCities è definito
         if (italianCities && italianCities.length > 0) {
           italianCities.forEach(city => {
             try {
@@ -89,12 +88,12 @@ const SearchableGlobe: React.FC = () => {
 
   const handleOptionSelect = (option: { label: string, value: string, type: "province" | "city", lat?: number, lng?: number }) => {
     if (!option) return;
-    
+
     setSearch(option.label);
     setSearching(false);
 
     let cityFound: { name: string; lat: number; lng: number; } | undefined;
-    
+
     if (option.type === "city" && option.lat && option.lng) {
       cityFound = italianCities.find(city => city.name.toLowerCase() === option.value);
     } else if (option.type === "province") {
@@ -192,3 +191,4 @@ const SearchableGlobe: React.FC = () => {
 };
 
 export default SearchableGlobe;
+
