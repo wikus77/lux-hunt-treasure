@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import LoginModal from "./LoginModal";
+import { LoginModal } from "./LoginModal";
 
 interface AgeVerificationProps {
   onVerified?: () => void;
@@ -78,7 +78,7 @@ const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified }) => {
         Hai già un account? Accedi
       </div>
 
-      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onSuccess={() => {}} />
     </div>
   );
 };

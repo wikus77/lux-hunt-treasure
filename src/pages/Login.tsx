@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import LoginModal from "@/components/auth/LoginModal";
+import { LoginModal } from "@/components/auth/LoginModal";
 
 const Login = () => {
   const [email, setEmail] = useState("");

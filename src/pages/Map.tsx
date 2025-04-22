@@ -31,9 +31,9 @@ const Map = () => {
 
     const newMarker: MapMarker = {
       id: `marker-${Date.now()}`,
-      position: { lat: 0, lng: 0 },
+      lat: 0,
+      lng: 0,
       note: newNote,
-      createdAt: new Date().toISOString(),
     };
 
     const updatedMarkers = [...markers, newMarker];
