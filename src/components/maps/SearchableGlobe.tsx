@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from "react";
 import { GoogleMap, useLoadScript } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
@@ -144,19 +145,19 @@ const italianProvinces: string[] = [
 
 // Unione province (senza duplicati rispetto alle città)
 const allOptions: { label: string, value: string, type: "province" | "city", lat?: number, lng?: number }[] = [
-  // Province
+  // Province - explicitly define the type as "province"
   ...italianProvinces.map(prov => ({
     label: prov,
     value: prov.toLowerCase(),
-    type: "province"
+    type: "province" as const
   })),
-  // Città (solo una per nome, senza duplicati delle province già inserite)
+  // Città - explicitly define the type as "city"
   ...italianCities
     .filter(city => !italianProvinces.some(p => p.toLowerCase() === city.name.toLowerCase()))
     .map(city => ({
       label: city.name,
       value: city.name.toLowerCase(),
-      type: "city",
+      type: "city" as const,
       lat: city.lat,
       lng: city.lng
     }))
