@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,7 +20,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black">
-      {/* Sticky, glassy header with login button */}
+      {/* Sticky header */}
       <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
         <h1 className="text-2xl font-bold neon-text">M1SSION</h1>
         <Link to="/login">
@@ -34,6 +33,7 @@ const Index = () => {
           </Button>
         </Link>
       </header>
+
       {/* Spacer per header */}
       <div className="h-[72px] w-full" />
 

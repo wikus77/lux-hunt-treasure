@@ -1,4 +1,3 @@
-
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -25,7 +24,6 @@ export const SubscriptionCard = ({
   ctaText,
   type
 }: SubscriptionCardProps) => {
-  // Determina le classi in base al tipo di abbonamento
   const getTypeStyles = () => {
     switch (type) {
       case "Black":
