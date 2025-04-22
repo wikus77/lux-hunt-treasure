@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 // Import Combobox di shadcn
-import { Command, CommandInput, CommandList, CommandItem, CommandGroup } from "@/components/ui/command";
+import { Command, CommandInput, CommandList, CommandItem, CommandGroup, CommandEmpty } from "@/components/ui/command";
 
 interface City {
   name: string;
@@ -186,6 +186,8 @@ const SearchableGlobe: React.FC = () => {
   const [markers, setMarkers] = useState<google.maps.marker.AdvancedMarkerElement[]>([]);
   const { toast } = useToast();
   const [searching, setSearching] = useState(false);
+  const [filteredProvinces, setFilteredProvinces] = useState<typeof allOptions>([]);
+  const [filteredCities, setFilteredCities] = useState<typeof allOptions>([]);
 
   const onLoad = useCallback((mapInstance: google.maps.Map) => {
     setMap(mapInstance);
@@ -220,6 +222,34 @@ const SearchableGlobe: React.FC = () => {
       }
     }
   }, [isLoaded, map]);
+
+  // Filter options when search changes
+  useEffect(() => {
+    if (search.trim() === '') {
+      setFilteredProvinces([]);
+      setFilteredCities([]);
+      return;
+    }
+
+    const searchLower = search.toLowerCase();
+    
+    // Filter provinces
+    const provinces = allOptions
+      .filter(opt => 
+        opt.type === "province" && 
+        opt.label.toLowerCase().includes(searchLower)
+      );
+    
+    // Filter cities
+    const cities = allOptions
+      .filter(opt => 
+        opt.type === "city" && 
+        opt.label.toLowerCase().includes(searchLower)
+      );
+
+    setFilteredProvinces(provinces);
+    setFilteredCities(cities);
+  }, [search]);
 
   const handleOptionSelect = (option: { label: string, value: string, type: string, lat?: number, lng?: number }) => {
     setSearch(option.label);
@@ -316,7 +346,7 @@ const SearchableGlobe: React.FC = () => {
       <form onSubmit={handleSubmit} className="flex gap-2 mt-2 items-center z-10">
         <div className="w-full relative">
           {/* Barra intelligente con ricerca */}
-          <Command shouldFilter={true}>
+          <Command shouldFilter={false}>
             <CommandInput
               value={search}
               onValueChange={v => { setSearch(v); setSearching(true); }}
@@ -328,10 +358,9 @@ const SearchableGlobe: React.FC = () => {
             {(searching && !!search) && (
             <div className="absolute left-0 mt-1 w-full z-50 bg-background rounded-md border max-h-52 overflow-y-auto shadow-lg">
               <CommandList>
-                <CommandGroup heading="Province">
-                  {allOptions
-                    .filter(opt => opt.type === "province" && opt.label.toLowerCase().includes(search.toLowerCase()))
-                    .map(opt => (
+                {filteredProvinces.length > 0 && (
+                  <CommandGroup heading="Province">
+                    {filteredProvinces.map(opt => (
                       <CommandItem
                         key={"pr_"+opt.value}
                         onSelect={() => handleOptionSelect(opt)}
@@ -341,11 +370,12 @@ const SearchableGlobe: React.FC = () => {
                         <span className="ml-2 text-xs text-muted-foreground">Provincia</span>
                       </CommandItem>
                     ))}
-                </CommandGroup>
-                <CommandGroup heading="Città">
-                  {allOptions
-                    .filter(opt => opt.type === "city" && opt.label.toLowerCase().includes(search.toLowerCase()))
-                    .map(opt => (
+                  </CommandGroup>
+                )}
+                
+                {filteredCities.length > 0 && (
+                  <CommandGroup heading="Città">
+                    {filteredCities.map(opt => (
                       <CommandItem
                         key={"ct_"+opt.value}
                         onSelect={() => handleOptionSelect(opt)}
@@ -355,7 +385,12 @@ const SearchableGlobe: React.FC = () => {
                         <span className="ml-2 text-xs text-muted-foreground">Città</span>
                       </CommandItem>
                     ))}
-                </CommandGroup>
+                  </CommandGroup>
+                )}
+                
+                {filteredProvinces.length === 0 && filteredCities.length === 0 && (
+                  <CommandEmpty>Nessun risultato trovato</CommandEmpty>
+                )}
               </CommandList>
             </div>
             )}
