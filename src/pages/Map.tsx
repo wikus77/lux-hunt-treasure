@@ -106,55 +106,56 @@ const Map = () => {
           <Button onClick={() => window.location.reload()}>Riprova</Button>
         </div>
       ) : (
-        // la mappa ora usa tutta l'area disponibile in modo responsivo
         <div className="w-full h-[calc(100vh-72px)] flex flex-col">
           {currentLocation && (
-            <MapContainer
-              className="flex-1 w-full h-full"
-              zoom={15}
-              center={currentLocation}
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              />
-              <Marker position={currentLocation}>
-                <Popup>Tu sei qui</Popup>
-              </Marker>
-              {clueLocations.map((clue, index) => (
-                <Marker
-                  key={index}
-                  position={clue.position}
-                  icon={new L.Icon({
-                    iconUrl: clue.found
-                      ? "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png"
-                      : "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
-                    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-                    iconSize: [25, 41],
-                    iconAnchor: [12, 41],
-                    popupAnchor: [1, -34],
-                    shadowSize: [41, 41]
-                  })}
-                >
-                  <Popup>
-                    <div className="p-2">
-                      <h3 className="font-bold">{clue.name}</h3>
-                      {clue.found ? (
-                        <p className="text-green-500 text-sm">Indizio già trovato!</p>
-                      ) : (
-                        <Button
-                          size="sm"
-                          className="mt-2 bg-projectx-neon-blue"
-                          onClick={() => handleClueFound(clue.name)}
-                        >
-                          Raccogli Indizio
-                        </Button>
-                      )}
-                    </div>
-                  </Popup>
+            <div className="flex-1 w-full h-full">
+              <MapContainer 
+                className="w-full h-full" 
+                center={currentLocation}
+                zoom={15}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <Marker position={currentLocation}>
+                  <Popup>Tu sei qui</Popup>
                 </Marker>
-              ))}
-            </MapContainer>
+                {clueLocations.map((clue, index) => (
+                  <Marker
+                    key={index}
+                    position={clue.position}
+                    icon={L.icon({
+                      iconUrl: clue.found
+                        ? "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png"
+                        : "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+                      shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+                      iconSize: [25, 41],
+                      iconAnchor: [12, 41],
+                      popupAnchor: [1, -34],
+                      shadowSize: [41, 41]
+                    })}
+                  >
+                    <Popup>
+                      <div className="p-2">
+                        <h3 className="font-bold">{clue.name}</h3>
+                        {clue.found ? (
+                          <p className="text-green-500 text-sm">Indizio già trovato!</p>
+                        ) : (
+                          <Button
+                            size="sm"
+                            className="mt-2 bg-projectx-neon-blue"
+                            onClick={() => handleClueFound(clue.name)}
+                          >
+                            Raccogli Indizio
+                          </Button>
+                        )}
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            </div>
           )}
         </div>
       )}
