@@ -19,20 +19,23 @@ const Index = () => {
     navigate("/register");
   };
 
+  const handleLoginClick = () => {
+    navigate("/login");
+  };
+
   return (
     <div className="min-h-screen flex flex-col w-full bg-black">
       {/* Sticky header */}
       <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex justify-between items-center backdrop-blur-xl bg-black/40 border-b border-white/10 transition-all duration-300">
         <h1 className="text-2xl font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">M1SSION</h1>
-        <Link to="/login">
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2 bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full px-5 py-2 border-none"
-          >
-            <LogIn className="w-4 h-4" />
-            Accedi
-          </Button>
-        </Link>
+        <Button 
+          onClick={handleLoginClick}
+          variant="outline" 
+          className="flex items-center gap-2 bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full px-5 py-2 border-none"
+        >
+          <LogIn className="w-4 h-4" />
+          Accedi
+        </Button>
       </header>
 
       {/* Spacer per header */}

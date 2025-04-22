@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLoadScript } from "@react-google-maps/api";
 import { MapPin, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { MapMarkers, MapMarker } from "@/components/maps/MapMarkers";
 import { MapNoteList } from "@/components/maps/MapNoteList";
+import InteractiveGlobe from "@/components/maps/InteractiveGlobe";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyC5OMBj9T4Si7lQbVU7n3Vs5YsqhfgP8b8";
 
@@ -14,6 +15,7 @@ const Map = () => {
   const [markers, setMarkers] = useState<MapMarker[]>([]);
   const [isAddingMarker, setIsAddingMarker] = useState(false);
   const [activeMarker, setActiveMarker] = useState<string | null>(null);
+  const [showGoogleMap, setShowGoogleMap] = useState(false);
 
   const { isLoaded, loadError } = useLoadScript({ 
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -82,7 +84,11 @@ const Map = () => {
     });
   };
 
-  if (loadError) {
+  const toggleMapView = () => {
+    setShowGoogleMap(!showGoogleMap);
+  };
+
+  if (loadError && showGoogleMap) {
     return (
       <div className="pb-20 min-h-screen bg-black w-full p-4 flex flex-col items-center justify-center">
         <div className="text-red-500 mb-4">Errore di caricamento della mappa</div>
@@ -97,41 +103,59 @@ const Map = () => {
     <div className="pb-20 min-h-screen bg-black w-full p-4">
       <div className="mb-4 flex justify-between items-center">
         <h2 className="text-xl font-bold text-projectx-neon-blue">Mappa Interattiva</h2>
-        <Button
-          onClick={() => setIsAddingMarker(!isAddingMarker)}
-          variant={isAddingMarker ? "destructive" : "default"}
-          className="gap-2 bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full"
-          size="sm"
-        >
-          {isAddingMarker ? (
-            <>
-              <X className="w-4 h-4" /> Annulla
-            </>
-          ) : (
-            <>
-              <MapPin className="w-4 h-4" /> Aggiungi Punto
-            </>
+        <div className="flex gap-2">
+          <Button
+            onClick={toggleMapView}
+            variant="outline"
+            className="gap-2 text-white border-projectx-neon-blue text-sm"
+            size="sm"
+          >
+            {showGoogleMap ? "Visualizza Globo 3D" : "Visualizza Mappa 2D"}
+          </Button>
+          
+          {showGoogleMap && (
+            <Button
+              onClick={() => setIsAddingMarker(!isAddingMarker)}
+              variant={isAddingMarker ? "destructive" : "default"}
+              className="gap-2 bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white hover:opacity-90 rounded-full"
+              size="sm"
+            >
+              {isAddingMarker ? (
+                <>
+                  <X className="w-4 h-4" /> Annulla
+                </>
+              ) : (
+                <>
+                  <MapPin className="w-4 h-4" /> Aggiungi Punto
+                </>
+              )}
+            </Button>
           )}
-        </Button>
+        </div>
       </div>
-      {isAddingMarker && (
+      
+      {isAddingMarker && showGoogleMap && (
         <div className="rounded-md bg-projectx-deep-blue/40 backdrop-blur-sm p-2 mb-4 text-sm text-center">
           Clicca sulla mappa per aggiungere un segnaposto
         </div>
       )}
 
       <div className="w-full h-[50vh] rounded-lg overflow-hidden border border-projectx-deep-blue glass-card mb-4">
-        <MapMarkers
-          isLoaded={isLoaded}
-          markers={markers}
-          isAddingMarker={isAddingMarker}
-          activeMarker={activeMarker}
-          onMapClick={handleMapClick}
-          setActiveMarker={setActiveMarker}
-          saveMarkerNote={saveMarkerNote}
-          editMarker={editMarker}
-          deleteMarker={deleteMarker}
-        />
+        {showGoogleMap ? (
+          <MapMarkers
+            isLoaded={isLoaded}
+            markers={markers}
+            isAddingMarker={isAddingMarker}
+            activeMarker={activeMarker}
+            onMapClick={handleMapClick}
+            setActiveMarker={setActiveMarker}
+            saveMarkerNote={saveMarkerNote}
+            editMarker={editMarker}
+            deleteMarker={deleteMarker}
+          />
+        ) : (
+          <InteractiveGlobe />
+        )}
       </div>
 
       <MapNoteList

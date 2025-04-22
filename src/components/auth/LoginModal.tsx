@@ -1,10 +1,11 @@
 
 import React, { useState } from "react";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { LogIn } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Supporto WebAuthn (FaceID/biometrico) solo se browser supporta
 const canBiometric =
@@ -24,6 +25,7 @@ const LoginModal = ({ open, onClose }: LoginModalProps) => {
   const [pw, setPw] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Finta login - qui inserire la logica reale quando la backend auth è integrata
   const handleLogin = async (biometric = false) => {
@@ -51,7 +53,7 @@ const LoginModal = ({ open, onClose }: LoginModalProps) => {
       // Chiudi la modale
       setTimeout(() => onClose(), 1000);
       // Naviga sulla home page
-      setTimeout(() => window.location.assign("/home"), 1600);
+      setTimeout(() => navigate("/home"), 1600);
     }, 1100);
   };
 
@@ -66,13 +68,13 @@ const LoginModal = ({ open, onClose }: LoginModalProps) => {
       // Chiudi la modale
       setTimeout(() => onClose(), 1000);
       // Naviga sulla home page
-      setTimeout(() => window.location.assign("/home"), 1600);
+      setTimeout(() => navigate("/home"), 1600);
     }, 1100);
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <div className="glass-card max-w-sm mx-auto mt-16 p-6 flex flex-col items-center gap-3">
+      <DialogContent className="glass-card max-w-sm mx-auto p-6 flex flex-col items-center gap-3">
         <h2 className="font-bold text-xl mb-2 text-center neon-text">Accedi al tuo account</h2>
         
         <Button
@@ -138,7 +140,7 @@ const LoginModal = ({ open, onClose }: LoginModalProps) => {
           </Button>
         </form>
         <Button variant="link" onClick={onClose} className="mt-1 text-projectx-neon-blue">Chiudi</Button>
-      </div>
+      </DialogContent>
     </Dialog>
   );
 };

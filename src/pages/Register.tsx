@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import AgeVerification from "@/components/auth/AgeVerification";
-import LoginModal from "@/components/auth/LoginModal";
 
 const Register = () => {
   const [step, setStep] = useState<'age-verification' | 'registration'>('age-verification');
@@ -14,7 +13,6 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -143,15 +141,13 @@ const Register = () => {
             <Button 
               variant="link" 
               className="text-projectx-neon-blue p-0 hover:underline"
-              onClick={() => setShowLoginModal(true)}
+              onClick={() => navigate("/login")}
             >
               Accedi
             </Button>
           </p>
         </div>
       </div>
-
-      <LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} />
     </div>
   );
 };

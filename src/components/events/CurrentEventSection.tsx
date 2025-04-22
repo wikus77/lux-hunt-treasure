@@ -1,25 +1,7 @@
 
 import { Event } from "@/data/eventData";
 import EventCard from "./EventCard";
-
-const mysteryPrizes = [
-  {
-    imageUrl: "/lovable-uploads/781937e4-2515-4cad-8393-c51c1c81d6c9.png",
-    description: "Un oggetto dal valore inestimabile che incarna l'essenza del lusso italiano. Solo i più fortunati potranno possederlo."
-  },
-  {
-    imageUrl: "/lovable-uploads/9daa7fae-5be8-482a-8136-7113724b28ad.png",
-    description: "Un capolavoro che sfida l'immaginazione, dove tecnologia e arte si fondono in perfetta armonia."
-  },
-  {
-    imageUrl: "/lovable-uploads/b79099f5-31ab-44a3-b271-9cde8b7932e1.png",
-    description: "Un tesoro custodito nei più esclusivi vault del mondo, simbolo di potere e prestigio assoluto."
-  },
-  {
-    imageUrl: "/lovable-uploads/ee63e6a9-208d-43f5-8bad-4c94f9c066cd.png",
-    description: "Un premio così esclusivo che la sua vera natura rimarrà segreta fino all'ultimo momento. Solo i vincitori scopriranno il suo vero valore."
-  }
-];
+import { mysteryPrizes } from "@/data/mysteryPrizesData";
 
 interface CurrentEventSectionProps {
   currentEvent: Event;
