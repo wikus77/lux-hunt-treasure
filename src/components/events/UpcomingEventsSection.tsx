@@ -1,30 +1,7 @@
 
 import { Event } from "@/data/eventData";
 import EventCard from "./EventCard";
-import { upcomingMysteryPrizes } from "@/data/mysteryPrizesData";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-
-// Premi associati per i prossimi eventi
-const upcomingPrizes = [
-  [
-    {
-      imageUrl: "/lovable-uploads/b349206f-bdf7-42e2-a1a6-b87988bc94f4.png",
-      description: "Hermès Kelly Bag - Borsa Kelly 28 verde smeraldo, icona di eleganza e raffinatezza."
-    }
-  ],
-  [
-    {
-      imageUrl: "/lovable-uploads/f6438a3c-d978-47ff-b010-4fd09dc9cc28.png",
-      description: "McLaren 720S Spider - Supercar V8, 720 CV, 0-100 km/h in 2.9 secondi."
-    }
-  ],
-  [
-    {
-      imageUrl: "/lovable-uploads/7f787e38-d579-4b24-8a57-1ede818cdca3.png",
-      description: "Porsche Cayenne Turbo GT - Il SUV sportivo di Porsche, prestazioni estreme e lusso."
-    }
-  ],
-];
 
 interface UpcomingEventsSectionProps {
   events: Event[];
@@ -39,12 +16,16 @@ const UpcomingEventsSection = ({ events }: UpcomingEventsSectionProps) => {
           <div key={index}>
             <Carousel>
               <CarouselContent>
-                {(upcomingPrizes[index] || []).map((prize, idx) => (
+                {event.images.map((img, idx) => (
                   <CarouselItem key={idx} className="flex flex-col items-center justify-center">
                     <div className="w-full flex justify-center">
-                      <img src={prize.imageUrl} alt={prize.description} className="rounded-md w-full max-w-xs h-44 object-cover border-2 border-projectx-neon-blue shadow-lg"/>
+                      <img
+                        src={img.url}
+                        alt={img.description}
+                        className="rounded-md w-full max-w-xs h-44 object-cover border-2 border-projectx-neon-blue shadow-lg"
+                      />
                     </div>
-                    <p className="mt-2 text-sm text-center text-muted-foreground">{prize.description}</p>
+                    <p className="mt-2 text-sm text-center text-muted-foreground">{img.description}</p>
                   </CarouselItem>
                 ))}
               </CarouselContent>
@@ -58,7 +39,8 @@ const UpcomingEventsSection = ({ events }: UpcomingEventsSectionProps) => {
               description={event.description}
               images={event.images}
               detailedDescription={event.detailedDescription}
-              mysteryPrizes={upcomingMysteryPrizes}
+              isCurrent={false}
+              mysteryPrizes={undefined}
             />
           </div>
         ))}
