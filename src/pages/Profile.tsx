@@ -121,14 +121,7 @@ const Profile = () => {
           onSave={handleSaveProfile}
         />
 
-        <button
-          className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-blue-500 to-fuchsia-700 text-white font-bold mx-auto flex"
-          onClick={handleSaveProfile}
-          disabled={!isEditing}
-          style={{ opacity: isEditing ? 1 : 0.65, cursor: isEditing ? "pointer" : "not-allowed" }}
-        >
-          Salva Modifiche
-        </button>
+        {/* Eliminato il tasto "Salva Modifiche" esterno, ora è presente solo in ProfileBio */}
 
         <SubscriptionStatus />
 
