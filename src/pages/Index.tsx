@@ -1,7 +1,7 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
+import { LogIn } from "lucide-react";
 import AgeVerificationModal from "@/components/auth/AgeVerificationModal";
 
 const Index = () => {
@@ -20,11 +20,18 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black">
-      {/* Sticky, glassy header */}
+      {/* Sticky, glassy header with login button */}
       <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
         <h1 className="text-2xl font-bold neon-text">M1SSION</h1>
-        {/* Spazio azioni/destra, opzionale */}
-        <div />
+        <Link to="/login">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2 bg-gradient-to-r from-projectx-blue to-projectx-pink text-white hover:opacity-90"
+          >
+            <LogIn className="w-4 h-4" />
+            Accedi
+          </Button>
+        </Link>
       </header>
       {/* Spacer per header */}
       <div className="h-[72px] w-full" />
@@ -58,7 +65,10 @@ const Index = () => {
       {/* Come Funziona */}
       <section className="py-16 px-4 bg-black w-full">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
-          <div className="glass-card text-center w-full">
+          <div className="glass-card text-center w-full relative">
+            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-projectx-blue to-projectx-pink flex items-center justify-center text-white font-bold">
+              1
+            </div>
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-projectx-deep-blue border border-projectx-neon-blue">
               <img src="/lovable-uploads/7f787e38-d579-4b24-8a57-1ede818cdca3.png" alt="Registrati" className="w-10 h-10 object-contain" />
             </div>
@@ -67,7 +77,11 @@ const Index = () => {
               Crea un account gratuito per iniziare il tuo viaggio verso l'auto dei tuoi sogni.
             </p>
           </div>
-          <div className="glass-card text-center w-full">
+          
+          <div className="glass-card text-center w-full relative">
+            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-projectx-blue to-projectx-pink flex items-center justify-center text-white font-bold">
+              2
+            </div>
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-projectx-deep-blue border border-projectx-neon-blue">
               <img src="/lovable-uploads/a987ba21-940e-48cd-b999-c266de3f133c.png" alt="Indizi" className="w-10 h-10 object-contain" />
             </div>
@@ -76,7 +90,11 @@ const Index = () => {
               Ogni settimana ricevi indizi che ti avvicinano al premio finale.
             </p>
           </div>
-          <div className="glass-card text-center w-full">
+
+          <div className="glass-card text-center w-full relative">
+            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-projectx-blue to-projectx-pink flex items-center justify-center text-white font-bold">
+              3
+            </div>
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-projectx-deep-blue border border-projectx-neon-blue">
               <img src="/lovable-uploads/48b9a28f-59eb-4010-9bb2-37de88a4d7b1.png" alt="Premio" className="w-10 h-10 object-contain" />
             </div>
