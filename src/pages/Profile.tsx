@@ -56,8 +56,10 @@ const Profile = () => {
   useEffect(() => {
     const fetchUnlockedClues = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        try {
+      
+      try {
+        // Tentativo di ottenere indizi da Supabase se l'utente è loggato
+        if (user) {
           const { data: userCluesData, error: userCluesError } = await supabase
             .from('user_clues')
             .select(`
@@ -74,39 +76,84 @@ const Profile = () => {
 
           if (userCluesError) {
             console.error('Error fetching user clues:', userCluesError);
+            loadFallbackClues();
             return;
           }
 
-          const clues = userCluesData.map(item => ({
-            id: item.clue_id.id,
-            title: item.clue_id.title,
-            description: item.clue_id.description,
-            week: 1,
-            isLocked: false,
-            subscriptionType: item.clue_id.is_premium ?
-              (item.clue_id.premium_type as "Base" | "Silver" | "Gold" | "Black") :
-              "Base"
-          }));
-
-          setUnlockedClues(clues);
-        } catch (error) {
-          console.error("Error fetching clues:", error);
-          // Fallback clue for development
-          setUnlockedClues([
-            {
-              id: "1",
-              title: "Primo Indizio",
-              description: "L'auto si trova in una città che inizia con la lettera 'M'.",
+          if (userCluesData && userCluesData.length > 0) {
+            const clues = userCluesData.map(item => ({
+              id: item.clue_id.id,
+              title: item.clue_id.title,
+              description: item.clue_id.description,
               week: 1,
               isLocked: false,
-              subscriptionType: "Base"
-            }
-          ]);
+              subscriptionType: item.clue_id.is_premium ?
+                (item.clue_id.premium_type as "Base" | "Silver" | "Gold" | "Black") :
+                "Base"
+            }));
+
+            setUnlockedClues(clues);
+          } else {
+            loadFallbackClues();
+          }
+        } else {
+          loadFallbackClues();
         }
+      } catch (error) {
+        console.error("Error fetching clues:", error);
+        loadFallbackClues();
       }
     };
 
-    fetchUnlockedClues();
+    const loadFallbackClues = () => {
+      // Indizi di esempio per lo sviluppo/dimostrazione
+      const fallbackClues = [
+        {
+          id: "1",
+          title: "Primo Indizio",
+          description: "L'auto si trova in una città che inizia con la lettera 'M'.",
+          week: 1,
+          isLocked: false,
+          subscriptionType: "Base"
+        },
+        {
+          id: "2",
+          title: "Indizio sul veicolo",
+          description: "L'auto ha un interno in pelle rossa e un motore V12.",
+          week: 1,
+          isLocked: false,
+          subscriptionType: "Silver"
+        },
+        {
+          id: "3",
+          title: "Foto scattata",
+          description: "Una foto mostra l'auto parcheggiata vicino a una fontana famosa.",
+          week: 1,
+          isLocked: false,
+          subscriptionType: "Gold"
+        },
+        {
+          id: "4",
+          title: "Localizzazione precisa",
+          description: "L'auto è stata avvistata in un parcheggio sotterraneo in via Roma.",
+          week: 2,
+          isLocked: false,
+          subscriptionType: "Black"
+        }
+      ];
+      
+      // Salva gli indizi nel localStorage per persistenza in sviluppo
+      localStorage.setItem('fallbackClues', JSON.stringify(fallbackClues));
+      setUnlockedClues(fallbackClues);
+    };
+
+    // Controlla se abbiamo indizi salvati nel localStorage
+    const savedClues = localStorage.getItem('fallbackClues');
+    if (savedClues) {
+      setUnlockedClues(JSON.parse(savedClues));
+    } else {
+      fetchUnlockedClues();
+    }
   }, []);
 
   return (

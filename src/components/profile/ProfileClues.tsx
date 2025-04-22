@@ -66,6 +66,9 @@ const MAX_CLUES = 100;
 
 const ProfileClues = ({ unlockedClues }: ProfileCluesProps) => {
   const groupedClues = groupCluesByCategory(unlockedClues);
+  
+  console.log("Unlocked clues:", unlockedClues);
+  console.log("Grouped clues:", groupedClues);
 
   return (
     <div className="glass-card mt-4">
