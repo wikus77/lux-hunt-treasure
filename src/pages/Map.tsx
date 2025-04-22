@@ -11,7 +11,7 @@ const Map = () => {
         <h2 className="text-xl font-bold text-projectx-neon-blue">Mappa Interattiva</h2>
       </div>
 
-      <div className="w-full h-[50vh] rounded-lg overflow-hidden border border-projectx-deep-blue glass-card mb-4">
+      <div className="w-full h-[50vh] rounded-lg overflow-hidden border border-projectx-deep-blue glass-card mb-4 relative">
         <InteractiveGlobe />
       </div>
 

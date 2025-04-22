@@ -1,11 +1,15 @@
 
+import { useState } from "react";
 import { Mail } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
+import NotificationDialog from "@/components/notifications/NotificationDialog";
+import NotificationItem from "@/components/notifications/NotificationItem";
+import { Notification } from "@/hooks/useNotifications";
 
 const Notifications = () => {
   const { notifications, reloadNotifications } = useNotifications();
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
 
-  // Visualizzazione già ordinata dal più recente
   return (
     <div className="min-h-screen bg-black text-white pt-0 px-0 w-full">
       <div className="rounded-lg bg-projectx-deep-blue bg-opacity-80 p-8 text-center text-white w-full mt-4">
@@ -19,32 +23,21 @@ const Notifications = () => {
           <ul className="space-y-4">
             {notifications
               .sort((a, b) => (b.date > a.date ? 1 : -1))
-              .map((n) => (
-                <li key={n.id}>
-                  <div className={`p-3 rounded-md transition-colors ${
-                    n.read ? "bg-projectx-deep-blue bg-opacity-30" : "bg-projectx-deep-blue"
-                  }`}>
-                    <div className="flex items-start">
-                      <div className={`p-2 rounded-full mr-3 ${
-                        n.read ? 'bg-gray-700' : 'bg-projectx-pink'
-                      }`}>
-                        <Mail className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <h4 className="text-sm font-medium">{n.title}</h4>
-                        <p className="text-xs text-muted-foreground mt-1">{n.description}</p>
-                        <span className="text-xs text-muted-foreground mt-2 block">{new Date(n.date).toLocaleString()}</span>
-                      </div>
-                      {!n.read && (
-                        <div className="w-2 h-2 rounded-full bg-red-600 mt-2"></div>
-                      )}
-                    </div>
-                  </div>
-                </li>
-            ))}
+              .map((notification) => (
+                <NotificationItem
+                  key={notification.id}
+                  notification={notification}
+                  onSelect={() => setSelectedNotification(notification)}
+                />
+              ))}
           </ul>
         )}
       </div>
+      <NotificationDialog
+        notification={selectedNotification}
+        open={!!selectedNotification}
+        onClose={() => setSelectedNotification(null)}
+      />
     </div>
   );
 };

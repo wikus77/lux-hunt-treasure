@@ -1,4 +1,3 @@
-
 export interface EventImage {
   url: string;
   description: string;
@@ -32,12 +31,20 @@ export const currentEvent: Event = {
       description: "Vista frontale del Patek Philippe Nautilus in oro rosa, che mostra il caratteristico quadrante blu con pattern orizzontale."
     },
     {
-      url: "/lovable-uploads/55b484c2-04bc-4fb2-a650-1910fd650b89.png",
-      description: "Dettaglio del bracciale integrato in oro rosa, simbolo di lusso ed eleganza."
+      url: "/public/events/lamborghini-huracan.jpg",
+      description: "Lamborghini Huracán EVO, potenza pura V10 con 640 CV, 0-100 km/h in 2.9 secondi."
     },
     {
-      url: "/lovable-uploads/79b6f8b7-66b3-4dee-a705-0d3f0b1f16b9.png",
-      description: "Vista laterale che evidenzia il profilo iconico della cassa Nautilus."
+      url: "/public/events/ferrari-488-gtb.jpg",
+      description: "Ferrari 488 GTB, V8 biturbo da 670 CV, un capolavoro di ingegneria italiana."
+    },
+    {
+      url: "/public/events/tesla-model-s.jpg",
+      description: "Tesla Model S Plaid, 1.020 CV elettrici, 0-100 km/h in 2.1 secondi."
+    },
+    {
+      url: "/public/events/ferrari-sf90.jpg",
+      description: "Ferrari SF90 Stradale, V8 ibrido plug-in da 1.000 CV, il futuro è qui."
     }
   ],
   detailedDescription: `Il Patek Philippe Nautilus Ref. 5711 rappresenta il pinnacolo dell'orologeria di lusso.
@@ -137,4 +144,3 @@ Specifiche tecniche:
 • Sistema di sterzo integrale`
   }
 ];
-

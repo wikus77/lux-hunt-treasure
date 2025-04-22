@@ -3,13 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Calendar, ChevronRight } from "lucide-react";
 import { currentEvent } from "@/pages/Events";
 import CountdownTimer from "./CountdownTimer";
+import { useNavigate } from "react-router-dom";
 
 export const CurrentEventSection = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="w-full px-0 py-4">
       <div className="flex justify-between items-center mb-4 px-4 w-full">
         <h2 className="text-xl font-bold">Evento Corrente</h2>
-        <Button variant="ghost" size="sm" className="text-m1ssion-neon-blue">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-m1ssion-neon-blue"
+          onClick={() => navigate('/events')}
+        >
           Dettagli <ChevronRight className="ml-1 w-4 h-4" />
         </Button>
       </div>

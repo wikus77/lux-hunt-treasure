@@ -1,5 +1,4 @@
-
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -7,6 +6,7 @@ const InteractiveGlobe = () => {
   const globeRef = useRef<HTMLDivElement>(null);
   const globeInstanceRef = useRef<any>(null);
   const isRotatingRef = useRef(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -26,6 +26,7 @@ const InteractiveGlobe = () => {
         (globeRef.current);
 
       globeInstanceRef.current = globe;
+      setIsLoading(false);
 
       // Auto-rotation
       let currentLong = 0;
@@ -111,9 +112,11 @@ const InteractiveGlobe = () => {
           <Minus className="h-4 w-4" />
         </Button>
       </div>
-      <div className="absolute inset-0 flex items-center justify-center text-white bg-black bg-opacity-50 z-10 animate-pulse">
-        Caricamento Globo 3D...
-      </div>
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center text-white bg-black bg-opacity-50 z-10 animate-pulse">
+          Caricamento Globo 3D...
+        </div>
+      )}
     </div>
   );
 };
