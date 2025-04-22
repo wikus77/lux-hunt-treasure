@@ -13,9 +13,12 @@ const UpcomingEventsSection = ({ events }: UpcomingEventsSectionProps) => {
       <h2 className="text-xl font-bold mb-4">Prossimi Eventi</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {events.map((event, index) => (
-          <div key={index}>
+          <section
+            key={index}
+            className="glass-card mb-6 w-full px-0 border-2 border-projectx-blue rounded-lg animate-fade-in"
+          >
             <div className="mb-4">
-              {/* Carousel slideshow, stile identico a Evento Corrente */}
+              {/* Carousel slideshow di supercar */}
               <Carousel>
                 <CarouselContent>
                   {event.images.map((img, idx) => (
@@ -45,7 +48,7 @@ const UpcomingEventsSection = ({ events }: UpcomingEventsSectionProps) => {
               isCurrent={event.isCurrent || false}
               mysteryPrizes={undefined}
             />
-          </div>
+          </section>
         ))}
       </div>
     </section>

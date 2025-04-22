@@ -31,7 +31,7 @@ export const EventDetailsDialog = ({
 }: EventDetailsDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-y-auto bg-black border border-m1ssion-deep-blue">
+      <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-y-auto bg-black border-2 border-projectx-blue">
         <DialogHeader>
           <DialogTitle className="text-2xl neon-text">{title}</DialogTitle>
         </DialogHeader>
@@ -46,15 +46,16 @@ export const EventDetailsDialog = ({
             <CarouselContent>
               {images.map((image, index) => (
                 <CarouselItem key={index}>
-                  <div className="p-1">
-                    <Card className="overflow-hidden">
-                      <div 
-                        className="h-[300px] bg-cover bg-center" 
-                        style={{ backgroundImage: `url(${image.url})` }}
+                  <div className="p-1 flex flex-col items-center">
+                    <Card className="overflow-hidden flex items-center justify-center">
+                      {/* Use object-contain and a max-height for car images */}
+                      <img 
+                        src={image.url} 
+                        alt={image.description}
+                        className="object-contain w-full max-h-[380px] rounded-md bg-black"
+                        style={{ backgroundColor: "#000" }}
                       />
-                      <p className="p-4 text-sm text-muted-foreground">
-                        {image.description}
-                      </p>
+                      <p className="p-4 text-sm text-muted-foreground text-center">{image.description}</p>
                     </Card>
                   </div>
                 </CarouselItem>

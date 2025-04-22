@@ -14,10 +14,15 @@ export const MysteryPrizesSection = () => {
               <CarouselItem key={index} className="w-full max-w-full">
                 <Card className="p-1 w-full">
                   <div 
-                    className="h-48 bg-cover bg-center rounded-md w-full" 
-                    style={{ backgroundImage: `url(${prize.imageUrl})` }}
-                  />
-                  <p className="p-4 text-sm text-muted-foreground">
+                    className="h-48 flex items-center justify-center bg-black rounded-md w-full overflow-hidden"
+                  >
+                    <img
+                      src={prize.imageUrl}
+                      alt={prize.description}
+                      className="object-contain h-full w-full"
+                    />
+                  </div>
+                  <p className="p-4 text-sm text-muted-foreground text-center">
                     {prize.description}
                   </p>
                 </Card>

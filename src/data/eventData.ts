@@ -1,3 +1,4 @@
+
 export interface EventImage {
   url: string;
   description: string;
@@ -16,6 +17,7 @@ export interface Event {
   isCurrent?: boolean;
 }
 
+// Aggiorniamo tutti gli eventi, nessun Patek Philippe orologio, solo auto & borse
 export const currentEvent: Event = {
   title: "Auto Supercar Showdown",
   carModel: "",
