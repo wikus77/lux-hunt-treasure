@@ -1,4 +1,3 @@
-
 import { useState, useEffect, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,7 +21,6 @@ const UnifiedHeader = ({
   const navigate = useNavigate();
   const [inputRef, setInputRef] = useState<HTMLInputElement | null>(null);
 
-  // Legge sempre dal localStorage (sincronizzazione)
   const [profileImage, setProfileImage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -52,7 +50,6 @@ const UnifiedHeader = ({
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full px-4 py-4 flex flex-col items-center justify-center border-b border-projectx-deep-blue bg-black backdrop-blur-xl transition-all duration-300">
       <div className="flex w-full max-w-screen-xl justify-between items-center">
-        {/* Avatar/profile menu */}
         <button
           type="button"
           aria-label="Profilo"
@@ -67,7 +64,6 @@ const UnifiedHeader = ({
               </AvatarFallback>
             </Avatar>
           </span>
-          {/* Input file solo nella pagina profilo, nascosto */}
           {enableAvatarUpload && (
             <input
               ref={setInputRef}
@@ -80,8 +76,7 @@ const UnifiedHeader = ({
           )}
         </button>
         <div className="flex flex-col items-center w-1/2 min-w-max">
-          {/* Titolo e sottotitolo come nella home originale */}
-          <h1 className="text-2xl text-center font-bold bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent font-extrabold select-none drop-shadow-[0_1.5px_12px_rgba(98,115,255,0.51)]">
+          <h1 className="text-2xl text-center font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent font-extrabold select-none drop-shadow-[0_1.5px_12px_rgba(98,115,255,0.51)]">
             M1SSION
           </h1>
           <span
@@ -118,4 +113,3 @@ const UnifiedHeader = ({
 };
 
 export default UnifiedHeader;
-
