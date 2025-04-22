@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Calendar, ChevronRight } from "lucide-react";
-import { currentEvent } from "@/pages/Events";
+import { currentEvent } from "@/data/eventData";
 import CountdownTimer from "./CountdownTimer";
 import { useNavigate } from "react-router-dom";
 
