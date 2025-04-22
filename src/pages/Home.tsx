@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import CurrentEventSection from "@/components/home/CurrentEventSection";
 import MysteryPrizesSection from "@/components/home/MysteryPrizesSection";
@@ -30,9 +30,15 @@ const Home = () => {
     setShowNotificationsBanner(false);
   };
 
+  // Aggiorna la profileImage in caso venga modificata altrove
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  useEffect(() => {
+    setProfileImage(localStorage.getItem('profileImage'));
+  }, []);
+
   return (
     <div className="min-h-screen bg-black w-full">
-      <UnifiedHeader />
+      <UnifiedHeader profileImage={profileImage} />
       
       <NotificationsBanner
         open={showNotificationsBanner}
@@ -62,7 +68,7 @@ const Home = () => {
       <BriefProfileModal
         open={showProfileModal}
         onClose={() => setShowProfileModal(false)}
-        profileImage={localStorage.getItem('profileImage')}
+        profileImage={profileImage}
       />
     </div>
   );

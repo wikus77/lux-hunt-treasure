@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import ProfileLayout from "@/components/layout/ProfileLayout";
-import { supabase } from "@/integrations/supabase/client";
-import ProfileBio from "@/components/profile/ProfileBio";
-import ProfileClues from "@/components/profile/ProfileClues";
 import SubscriptionStatus from "@/components/profile/SubscriptionStatus";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
+import ProfileBio from "@/components/profile/ProfileBio";
+import ProfileClues from "@/components/profile/ProfileClues";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Clue {
   id: string;
@@ -25,22 +24,15 @@ const Profile = () => {
   const [unlockedClues, setUnlockedClues] = useState<Clue[]>([]);
   const { toast } = useToast();
 
-  // Load profile data from localStorage on component mount
   useEffect(() => {
     const savedProfileImage = localStorage.getItem('profileImage');
-    if (savedProfileImage) {
-      setProfileImage(savedProfileImage);
-    }
-    
+    if (savedProfileImage) setProfileImage(savedProfileImage);
+
     const savedName = localStorage.getItem('profileName');
-    if (savedName) {
-      setName(savedName);
-    }
-    
+    if (savedName) setName(savedName);
+
     const savedBio = localStorage.getItem('profileBio');
-    if (savedBio) {
-      setBio(savedBio);
-    }
+    if (savedBio) setBio(savedBio);
   }, []);
 
   const handleSaveProfile = () => {
@@ -49,7 +41,7 @@ const Profile = () => {
     }
     localStorage.setItem('profileName', name);
     localStorage.setItem('profileBio', bio);
-    
+
     setIsEditing(false);
     toast({
       title: "Profilo aggiornato",
@@ -87,8 +79,8 @@ const Profile = () => {
             description: item.clue_id.description,
             week: 1,
             isLocked: false,
-            subscriptionType: item.clue_id.is_premium ? 
-              (item.clue_id.premium_type as "Base" | "Silver" | "Gold" | "Black") : 
+            subscriptionType: item.clue_id.is_premium ?
+              (item.clue_id.premium_type as "Base" | "Silver" | "Gold" | "Black") :
               "Base"
           }));
 
@@ -113,13 +105,8 @@ const Profile = () => {
   }, []);
 
   return (
-    <ProfileLayout>
-      <UnifiedHeader
-        enableAvatarUpload
-        profileImage={profileImage}
-        setProfileImage={setProfileImage}
-      />
-
+    <div className="pb-20 min-h-screen bg-black w-full">
+      <UnifiedHeader enableAvatarUpload profileImage={profileImage} setProfileImage={setProfileImage} />
       <div className="h-[72px] w-full" />
 
       <div className="w-full">
@@ -147,7 +134,7 @@ const Profile = () => {
 
         <ProfileClues unlockedClues={unlockedClues} />
       </div>
-    </ProfileLayout>
+    </div>
   );
 };
 
