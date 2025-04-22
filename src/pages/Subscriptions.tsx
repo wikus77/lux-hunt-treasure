@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { Check } from "lucide-react";
@@ -6,8 +7,29 @@ import SubscriptionCard from "@/components/subscription/SubscriptionCard";
 const Subscriptions = () => {
   const [selected, setSelected] = useState<string>("Base");
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
+    
+    // Carica l'abbonamento corrente
+    const currentPlan = localStorage.getItem('subscription_plan');
+    if (currentPlan) {
+      setSelected(currentPlan);
+    }
+    
+    // Ascolta cambiamenti nell'abbonamento
+    const handleStorageChange = () => {
+      const updatedPlan = localStorage.getItem('subscription_plan');
+      if (updatedPlan) {
+        setSelected(updatedPlan);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const getSubscriptionFeatures = (type: string) => {

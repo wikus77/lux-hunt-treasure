@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +28,8 @@ const PaymentSilver = () => {
           description: "Il tuo abbonamento Silver è stato attivato con successo!",
         });
         localStorage.setItem("subscription_plan", "Silver");
+        // Forziamo l'aggiornamento della localStorage per attivare l'evento
+        window.dispatchEvent(new Event('storage'));
         navigate("/subscriptions");
       }, 1400);
     }, 1700);

@@ -37,6 +37,18 @@ const SubscriptionStatus = () => {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  // Aggiungiamo anche un controllo periodico per catturare eventuali modifiche
+  useEffect(() => {
+    const checkInterval = setInterval(() => {
+      const saved = localStorage.getItem("subscription_plan");
+      if (saved && planMap[saved] && saved !== plan) {
+        setPlan(saved);
+      }
+    }, 2000); // Controlla ogni 2 secondi
+    
+    return () => clearInterval(checkInterval);
+  }, [plan]);
+
   const handleUpgradeSubscription = () => {
     navigate('/subscriptions');
   };

@@ -3,6 +3,7 @@ import { Check, Badge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { toast } from "@/components/ui/sonner";
 
 interface SubscriptionFeature {
   text: string;
@@ -48,9 +49,18 @@ const SubscriptionCard = ({
     }
     
     if (type === "Base") {
-      return; // Base plan doesn't need payment
+      // Per il piano Base, aggiorniamo direttamente senza richiedere pagamento
+      localStorage.setItem("subscription_plan", "Base");
+      setCurrentPlan("Base");
+      toast.success("Piano Base attivato", {
+        description: "Il tuo piano è stato aggiornato a Base"
+      });
+      // Forziamo l'aggiornamento della localStorage per attivare l'evento
+      window.dispatchEvent(new Event('storage'));
+      return;
     }
     
+    // Per gli altri piani, andiamo alla pagina di pagamento
     navigate(`/payment/${type.toLowerCase()}`);
   };
   
@@ -99,12 +109,14 @@ const SubscriptionCard = ({
         className={`w-full transition-colors ${
           isPlanActive
             ? "bg-gradient-to-r from-green-700 to-green-600 cursor-default"
-            : type === "Base" || buttonText.includes("Piano Attuale")
-            ? "bg-gradient-to-r from-gray-800 to-gray-700 cursor-default"
-            : "bg-gradient-to-r from-projectx-blue to-projectx-pink hover:opacity-90"
+            : type === "Base" 
+              ? (currentPlan === "Base" 
+                ? "bg-gradient-to-r from-gray-800 to-gray-700 cursor-default"
+                : "bg-gradient-to-r from-gray-700 to-gray-600 hover:opacity-90")
+              : "bg-gradient-to-r from-projectx-blue to-projectx-pink hover:opacity-90"
         }`}
         onClick={handleSubscriptionAction}
-        disabled={isPlanActive || type === "Base"}
+        disabled={isPlanActive}
       >
         {buttonText}
       </Button>
