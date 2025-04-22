@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,15 @@ L.Icon.Default.mergeOptions({
   iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
 });
+
+// Helper component to set view
+const SetViewOnLoad = ({ center, zoom }: { center: [number, number]; zoom: number }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, map, zoom]);
+  return null;
+};
 
 const Map = () => {
   const navigate = useNavigate();
@@ -109,51 +118,57 @@ const Map = () => {
         <div className="w-full h-[calc(100vh-72px)] flex flex-col">
           {currentLocation && (
             <div className="flex-1 w-full h-full">
-              <MapContainer 
-                className="w-full h-full" 
-                center={currentLocation}
-                zoom={15}
-              >
+              <MapContainer className="w-full h-full">
+                {/* Use SetViewOnLoad instead of direct props */}
+                <SetViewOnLoad center={currentLocation} zoom={15} />
+                
                 <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
+                
                 <Marker position={currentLocation}>
                   <Popup>Tu sei qui</Popup>
                 </Marker>
-                {clueLocations.map((clue, index) => (
-                  <Marker
-                    key={index}
-                    position={clue.position}
-                    icon={L.icon({
-                      iconUrl: clue.found
-                        ? "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png"
-                        : "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
-                      shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-                      iconSize: [25, 41],
-                      iconAnchor: [12, 41],
-                      popupAnchor: [1, -34],
-                      shadowSize: [41, 41]
-                    })}
-                  >
-                    <Popup>
-                      <div className="p-2">
-                        <h3 className="font-bold">{clue.name}</h3>
-                        {clue.found ? (
-                          <p className="text-green-500 text-sm">Indizio già trovato!</p>
-                        ) : (
-                          <Button
-                            size="sm"
-                            className="mt-2 bg-projectx-neon-blue"
-                            onClick={() => handleClueFound(clue.name)}
-                          >
-                            Raccogli Indizio
-                          </Button>
-                        )}
-                      </div>
-                    </Popup>
-                  </Marker>
-                ))}
+                
+                {clueLocations.map((clue, index) => {
+                  // Create the icon outside JSX
+                  const markerIcon = L.icon({
+                    iconUrl: clue.found
+                      ? "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png"
+                      : "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+                    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                  });
+                  
+                  return (
+                    <Marker
+                      key={index}
+                      position={clue.position}
+                      icon={markerIcon}
+                    >
+                      <Popup>
+                        <div className="p-2">
+                          <h3 className="font-bold">{clue.name}</h3>
+                          {clue.found ? (
+                            <p className="text-green-500 text-sm">Indizio già trovato!</p>
+                          ) : (
+                            <Button
+                              size="sm"
+                              className="mt-2 bg-projectx-neon-blue"
+                              onClick={() => handleClueFound(clue.name)}
+                            >
+                              Raccogli Indizio
+                            </Button>
+                          )}
+                        </div>
+                      </Popup>
+                    </Marker>
+                  );
+                })}
               </MapContainer>
             </div>
           )}
