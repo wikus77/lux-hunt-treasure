@@ -8,24 +8,28 @@ import { useSound } from '@/contexts/SoundContext';
 interface BuzzButtonProps {
   onBuzzClick: () => void;
   unlockedClues: number;
+  updateUnlockedClues?: (val: number) => void;
 }
 
-const BuzzButton = ({ onBuzzClick, unlockedClues }: BuzzButtonProps) => {
+const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues }: BuzzButtonProps) => {
   const [isVaultOpen, setIsVaultOpen] = useState(false);
   const { soundPreference, volume } = useSound();
   const { playSound, initializeSound } = useBuzzSound();
-  
+
   useEffect(() => {
-    // Reinitialize sound when preferences change
     initializeSound(soundPreference, volume[0] / 100);
   }, [soundPreference, volume, initializeSound]);
 
   const handleClick = () => {
-    playSound();
+    playSound(); // Emette il suono al click
     setIsVaultOpen(true);
-    
+
     setTimeout(() => {
       setIsVaultOpen(false);
+      // Incrementa il contatore locale (sincronizza con parent via props)
+      if (typeof updateUnlockedClues === 'function') {
+        updateUnlockedClues(unlockedClues + 1);
+      }
       onBuzzClick();
     }, 1500);
   };
@@ -42,7 +46,7 @@ const BuzzButton = ({ onBuzzClick, unlockedClues }: BuzzButtonProps) => {
           <Zap className="w-24 h-24" />
         </Button>
       </div>
-      
+
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
           Limite: 100 indizi supplementari per evento

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
@@ -13,7 +12,10 @@ const EXTRA_CLUE_TEXT = "Strade strette ma la rotta è dritta: cerca dove il mur
 
 const Buzz = () => {
   const [showDialog, setShowDialog] = useState(false);
-  const [unlockedClues, setUnlockedClues] = useState(0);
+  const [unlockedClues, setUnlockedClues] = useState(() => {
+    const savedClues = localStorage.getItem('unlockedCluesCount');
+    return savedClues ? parseInt(savedClues) : 0;
+  });
   const navigate = useNavigate();
   const location = useLocation();
   const { hasPaymentMethod, savePaymentMethod } = useHasPaymentMethod();
@@ -127,7 +129,11 @@ const Buzz = () => {
           </p>
         </div>
 
-        <BuzzButton onBuzzClick={handleBuzzClick} unlockedClues={unlockedClues} />
+        <BuzzButton 
+          onBuzzClick={handleBuzzClick} 
+          unlockedClues={unlockedClues}
+          updateUnlockedClues={incrementUnlockedClues}
+        />
       </section>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
