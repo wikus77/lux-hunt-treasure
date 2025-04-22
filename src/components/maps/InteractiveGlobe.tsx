@@ -1,17 +1,19 @@
 
 import React, { useEffect, useRef } from 'react';
+import { Plus, Minus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const InteractiveGlobe = () => {
   const globeRef = useRef<HTMLDivElement>(null);
+  const globeInstanceRef = useRef<any>(null);
+  const isRotatingRef = useRef(true);
 
   useEffect(() => {
-    // Carica lo script di Globe.GL quando il componente viene montato
     const script = document.createElement('script');
     script.src = 'https://unpkg.com/globe.gl';
     script.async = true;
     document.body.appendChild(script);
 
-    // Configura il globo 3D quando lo script è caricato
     script.onload = () => {
       if (!globeRef.current || !window.Globe) return;
       
@@ -23,21 +25,25 @@ const InteractiveGlobe = () => {
         .height(globeRef.current.clientHeight)
         (globeRef.current);
 
-      // Auto-rotazione
+      globeInstanceRef.current = globe;
+
+      // Auto-rotation
       let currentLong = 0;
       const rotationSpeed = 0.3;
       
       (function rotateCam() {
-        globe.pointOfView({
-          lat: 30, 
-          lng: currentLong,
-          altitude: 2.5
-        });
-        currentLong += rotationSpeed;
+        if (isRotatingRef.current) {
+          globe.pointOfView({
+            lat: 30,
+            lng: currentLong,
+            altitude: 2.5
+          });
+          currentLong += rotationSpeed;
+        }
         requestAnimationFrame(rotateCam);
       })();
 
-      // Gestione del ridimensionamento
+      // Handle resize
       const handleResize = () => {
         if (globeRef.current) {
           globe
@@ -48,7 +54,7 @@ const InteractiveGlobe = () => {
 
       window.addEventListener('resize', handleResize);
 
-      // Pulizia quando il componente viene smontato
+      // Cleanup
       return () => {
         window.removeEventListener('resize', handleResize);
         if (globeRef.current) {
@@ -60,17 +66,51 @@ const InteractiveGlobe = () => {
     };
 
     return () => {
-      // Rimuovi lo script quando il componente viene smontato
       document.body.removeChild(script);
     };
   }, []);
 
+  const handleZoom = (zoomIn: boolean) => {
+    if (!globeInstanceRef.current) return;
+    
+    const currentAltitude = globeInstanceRef.current.pointOfView().altitude;
+    const newAltitude = zoomIn ? 
+      Math.max(currentAltitude * 0.7, 1.5) : 
+      Math.min(currentAltitude * 1.3, 4);
+    
+    globeInstanceRef.current.pointOfView({ altitude: newAltitude });
+  };
+
+  const toggleRotation = () => {
+    isRotatingRef.current = !isRotatingRef.current;
+  };
+
   return (
-    <div 
-      ref={globeRef} 
-      className="w-full h-full relative bg-black"
-      style={{ cursor: 'grab' }}
-    >
+    <div className="w-full h-full relative">
+      <div 
+        ref={globeRef} 
+        className="w-full h-full relative bg-black"
+        onClick={toggleRotation}
+        style={{ cursor: 'grab' }}
+      />
+      <div className="absolute right-4 top-4 flex flex-col gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => handleZoom(true)}
+          className="bg-black/50 hover:bg-black/70"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => handleZoom(false)}
+          className="bg-black/50 hover:bg-black/70"
+        >
+          <Minus className="h-4 w-4" />
+        </Button>
+      </div>
       <div className="absolute inset-0 flex items-center justify-center text-white bg-black bg-opacity-50 z-10 animate-pulse">
         Caricamento Globo 3D...
       </div>

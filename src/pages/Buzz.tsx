@@ -1,10 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import BottomNavigation from "@/components/layout/BottomNavigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
 import BuzzButton from "@/components/buzz/BuzzButton";
@@ -14,12 +12,18 @@ const EXTRA_CLUE_TEXT = "Strade strette ma la rotta è dritta: cerca dove il mur
 
 const Buzz = () => {
   const [showDialog, setShowDialog] = useState(false);
+  const [unlockedClues, setUnlockedClues] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
   const { hasPaymentMethod, savePaymentMethod } = useHasPaymentMethod();
   const { initializeSound } = useBuzzSound();
 
   useEffect(() => {
+    const savedClues = localStorage.getItem('unlockedCluesCount');
+    if (savedClues) {
+      setUnlockedClues(parseInt(savedClues));
+    }
+
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
     const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
     initializeSound(soundPreference, volume);
@@ -27,6 +31,7 @@ const Buzz = () => {
     if (location.state?.paymentCompleted) {
       savePaymentMethod();
       sendBuzzNotification();
+      incrementUnlockedClues();
       toast.success("Indizio sbloccato!", {
         description: "Controlla la sezione Notifiche per vedere l'indizio extra."
       });
@@ -40,6 +45,12 @@ const Buzz = () => {
       }, 1800);
     }
   }, [location.state, savePaymentMethod, navigate, initializeSound]);
+
+  const incrementUnlockedClues = () => {
+    const newCount = unlockedClues + 1;
+    setUnlockedClues(newCount);
+    localStorage.setItem('unlockedCluesCount', newCount.toString());
+  };
 
   const handleBuzzClick = () => {
     if (!hasPaymentMethod) {
@@ -109,13 +120,7 @@ const Buzz = () => {
           </p>
         </div>
 
-        <BuzzButton onBuzzClick={handleBuzzClick} />
-
-        <div className="mt-8 text-center w-full px-0">
-          <p className="text-sm text-muted-foreground">
-            Limite: 100 indizi supplementari per evento
-          </p>
-        </div>
+        <BuzzButton onBuzzClick={handleBuzzClick} unlockedClues={unlockedClues} />
       </section>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
@@ -147,8 +152,6 @@ const Buzz = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      <BottomNavigation />
     </div>
   );
 };
