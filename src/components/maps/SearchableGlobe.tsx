@@ -85,7 +85,7 @@ const SearchableGlobe: React.FC = () => {
   return (
     <div className="relative w-full h-full">
       <MapContainer
-        center={initialPosition}
+        center={initialPosition as L.LatLngExpression}
         zoom={initialZoom}
         style={{ width: "100%", height: "40vh", borderRadius: "1rem" }}
         scrollWheelZoom={true}
@@ -97,7 +97,7 @@ const SearchableGlobe: React.FC = () => {
         {(foundCity ? [foundCity] : italianCities).map((city, idx) => (
           <Marker
             key={city.name + idx}
-            position={[city.lat, city.lng]}
+            position={[city.lat, city.lng] as L.LatLngExpression}
           >
             <Popup>
               <span className="font-bold">{city.name}</span>
