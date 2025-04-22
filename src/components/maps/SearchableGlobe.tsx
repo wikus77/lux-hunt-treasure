@@ -31,6 +31,23 @@ const italianCities: City[] = [
   { name: "Parma", lat: 44.8015, lng: 10.3279 },
   { name: "Prato", lat: 43.8777, lng: 11.1022 },
   { name: "Reggio di Calabria", lat: 38.1144, lng: 15.65 },
+  // Aggiungiamo più città italiane per migliorare la ricerca
+  { name: "Bologna", lat: 44.4949, lng: 11.3426 },
+  { name: "Cagliari", lat: 39.2238, lng: 9.1217 },
+  { name: "Livorno", lat: 43.5485, lng: 10.3099 },
+  { name: "Perugia", lat: 43.1107, lng: 12.3897 },
+  { name: "Bolzano", lat: 46.4983, lng: 11.3548 },
+  { name: "Ancona", lat: 43.6158, lng: 13.5189 },
+  { name: "Bergamo", lat: 45.6983, lng: 9.6773 },
+  { name: "Modena", lat: 44.6458, lng: 10.9256 },
+  { name: "Salerno", lat: 40.6824, lng: 14.7680 },
+  { name: "Siena", lat: 43.3186, lng: 11.3306 },
+  { name: "Como", lat: 45.8080, lng: 9.0852 },
+  { name: "Imperia", lat: 43.8890, lng: 8.0398 },
+  { name: "Lecce", lat: 40.3515, lng: 18.1750 },
+  { name: "Sassari", lat: 40.7259, lng: 8.5556 },
+  { name: "Pescara", lat: 42.4618, lng: 14.2159 },
+  { name: "Pisa", lat: 43.7228, lng: 10.4017 },
 ];
 
 const containerStyle = {
@@ -92,21 +109,41 @@ const SearchableGlobe: React.FC = () => {
     }
   }, [isLoaded, map]);
 
+  // Migliorata la funzione di ricerca per essere più flessibile
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const query = search.trim().toLowerCase();
-    const city =
-      italianCities.find((c) => c.name.toLowerCase() === query) ||
-      italianCities.find((c) => c.name.toLowerCase().includes(query));
     
-    if (city) {
-      setSelectedCity(city);
+    if (!search.trim()) {
+      toast({
+        title: "Campo vuoto",
+        description: "Inserisci il nome di una città italiana",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const searchNormalized = search.trim().toLowerCase();
+    
+    // Cerchiamo corrispondenze esatte prima, poi corrispondenze parziali
+    const exactMatch = italianCities.find(
+      city => city.name.toLowerCase() === searchNormalized
+    );
+    
+    const partialMatch = !exactMatch && italianCities.find(
+      city => city.name.toLowerCase().includes(searchNormalized)
+    );
+    
+    const cityFound = exactMatch || partialMatch;
+    
+    if (cityFound) {
+      setSelectedCity(cityFound);
       if (map) {
-        map.panTo({ lat: city.lat, lng: city.lng });
+        map.panTo({ lat: cityFound.lat, lng: cityFound.lng });
         map.setZoom(12);
+        
         toast({
           title: "Città trovata",
-          description: `Centrata la mappa su ${city.name}`,
+          description: `Centrata la mappa su ${cityFound.name}`,
         });
       }
     } else {
