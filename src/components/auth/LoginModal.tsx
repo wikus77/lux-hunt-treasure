@@ -1,148 +1,122 @@
-
-import React, { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { LogIn } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-
-// Supporto WebAuthn (FaceID/biometrico) solo se browser supporta
-const canBiometric =
-  window.PublicKeyCredential &&
-  typeof window.PublicKeyCredential === "function" &&
-  (window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable
-    ? true
-    : false);
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Eye, EyeOff } from "lucide-react";
 
 interface LoginModalProps {
   open: boolean;
   onClose: () => void;
+  onSuccess: () => void;
 }
 
-const LoginModal = ({ open, onClose }: LoginModalProps) => {
+export function LoginModal({ open, onClose, onSuccess }: LoginModalProps) {
   const [email, setEmail] = useState("");
-  const [pw, setPw] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
-  // Finta login - qui inserire la logica reale quando la backend auth è integrata
-  const handleLogin = async (biometric = false) => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      if (!biometric && (!email || !pw)) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      if (email === "demo@example.com" && password === "password") {
+        toast({
+          title: "Accesso effettuato",
+          description: "Benvenuto nel tuo account.",
+        });
+        onSuccess();
+      } else {
         toast({
           variant: "destructive",
-          title: "Dati mancanti",
-          description: "Inserisci email e password"
+          title: "Errore di accesso",
+          description: "Email o password non validi. Riprova.",
         });
-        return;
       }
-      // Accesso riuscito (qui metteresti la verifica reale)
+    } catch (error) {
       toast({
-        title: biometric
-          ? "Login biometrico riuscito!"
-          : "Login riuscito!",
-        description:
-          biometric
-            ? "FaceID/biometria attivata."
-            : "Accesso effettuato.",
+        variant: "destructive",
+        title: "Errore di accesso",
+        description: "Si è verificato un errore. Riprova più tardi.",
       });
-      // Chiudi la modale
-      setTimeout(() => onClose(), 1000);
-      // Naviga sulla home page
-      setTimeout(() => navigate("/home"), 1600);
-    }, 1100);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleLogin = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast({
-        title: "Login con Google riuscito!",
-        description: "Accesso effettuato tramite Google.",
-      });
-      // Chiudi la modale
-      setTimeout(() => onClose(), 1000);
-      // Naviga sulla home page
-      setTimeout(() => navigate("/home"), 1600);
-    }, 1100);
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="glass-card max-w-sm mx-auto p-6 flex flex-col items-center gap-3">
-        <h2 className="font-bold text-xl mb-2 text-center neon-text">Accedi al tuo account</h2>
-        
-        <Button
-          onClick={handleGoogleLogin}
-          className="w-full mb-2 flex items-center justify-center gap-2 bg-white text-gray-800 hover:bg-gray-100"
-        >
-          <img src="/lovable-uploads/8c806eb0-3018-4787-a87e-ad0ce5c4ae7c.png" alt="Google" className="w-4 h-4" />
-          Accedi con Google
-        </Button>
-        
-        {canBiometric && (
-          <Button
-            onClick={() => handleLogin(true)}
-            className="w-full mb-2 bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white rounded-full"
-          >
-            Accedi con FaceID / Biometria
-          </Button>
-        )}
-        
-        <div className="relative w-full my-3">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-600"></div>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Accedi al tuo Account</DialogTitle>
+          <DialogDescription>
+            Inserisci le tue credenziali per accedere alla piattaforma.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="nome@esempio.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="text-white"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="text-white pr-10"
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="relative flex justify-center">
-            <span className="bg-black px-2 text-xs text-gray-400">OPPURE</span>
-          </div>
-        </div>
-        
-        <form
-          onSubmit={e => {
-            e.preventDefault();
-            handleLogin(false);
-          }}
-          className="w-full"
-        >
-          <div className="mb-3">
-            <Input
-              type="email"
-              autoComplete="username"
-              placeholder="Email o username"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="mt-1 text-white"
-            />
-          </div>
-          <div className="mb-4">
-            <Input
-              type="password"
-              autoComplete="current-password"
-              placeholder="Password"
-              value={pw}
-              onChange={e => setPw(e.target.value)}
-              className="mt-1 text-white"
-            />
-          </div>
-          <Button 
-            className="w-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white rounded-full flex items-center gap-2" 
-            type="submit" 
-            disabled={loading}
-          >
-            <LogIn className="w-4 h-4" />
-            Accedi
-          </Button>
+          <DialogFooter>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Accesso in corso..." : "Accedi"}
+            </Button>
+          </DialogFooter>
         </form>
-        <Button variant="link" onClick={onClose} className="mt-1 text-projectx-neon-blue">Chiudi</Button>
       </DialogContent>
     </Dialog>
   );
-};
-
-export default LoginModal;
+}

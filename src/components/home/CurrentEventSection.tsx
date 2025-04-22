@@ -33,8 +33,9 @@ export const CurrentEventSection = () => {
           </div>
         </div>
         <div 
-          className="h-40 bg-cover bg-center rounded-md mb-4 w-full"
+          className="h-40 bg-cover bg-center rounded-md mb-4 w-full cursor-pointer"
           style={{ backgroundImage: `url(${currentEvent.imageUrl})` }} 
+          onClick={() => navigate('/events')}
         />
         <CountdownTimer />
       </div>

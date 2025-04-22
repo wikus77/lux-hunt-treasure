@@ -1,7 +1,14 @@
 
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const SubscriptionStatus = () => {
+  const navigate = useNavigate();
+  
+  const handleUpgradeSubscription = () => {
+    navigate('/subscriptions');
+  };
+  
   return (
     <div className="glass-card mb-4">
       <h3 className="text-lg font-bold mb-2">Stato Abbonamento</h3>
@@ -17,6 +24,7 @@ const SubscriptionStatus = () => {
       
       <Button 
         className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
+        onClick={handleUpgradeSubscription}
       >
         Aggiorna Abbonamento
       </Button>

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Edit, Menu } from "lucide-react";
+import { Edit, Menu, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import ProfileLayout from "@/components/layout/ProfileLayout";
@@ -138,6 +138,17 @@ const Profile = () => {
         >
           <Edit className="h-5 w-5" />
         </Button>
+        {isEditing && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleSaveProfile}
+            aria-label="Salva modifiche"
+            className="bg-green-600/20 hover:bg-green-600/40"
+          >
+            <Save className="h-5 w-5" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"
@@ -166,7 +177,7 @@ const Profile = () => {
 
         {isEditing && (
           <Button 
-            className="w-full mt-6 bg-gradient-to-r from-black to-black"
+            className="w-full mt-6 bg-gradient-to-r from-green-500 to-green-700"
             onClick={handleSaveProfile}
           >
             Salva Modifiche

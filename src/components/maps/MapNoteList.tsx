@@ -10,9 +10,6 @@ type MapNoteListProps = {
 
 export const MapNoteList = ({ markers, setActiveMarker }: MapNoteListProps) => (
   <div className="mt-6">
-    <h3 className="text-lg font-semibold flex items-center gap-2 mb-3 text-projectx-neon-blue">
-      <StickyNote className="w-5 h-5" /> Note Salvate
-    </h3>
     <div className="space-y-3">
       {markers.length === 0 ? (
         <div className="text-center py-4 text-gray-400">
@@ -22,7 +19,7 @@ export const MapNoteList = ({ markers, setActiveMarker }: MapNoteListProps) => (
         markers.map((marker) => (
           <div 
             key={`note-${marker.id}`}
-            className="p-3 rounded-md bg-projectx-deep-blue/40 backdrop-blur-sm cursor-pointer"
+            className="p-3 rounded-md bg-projectx-deep-blue/40 backdrop-blur-sm cursor-pointer hover:bg-projectx-deep-blue/60 transition-colors"
             onClick={() => setActiveMarker(marker.id)}
           >
             <div className="flex items-start gap-2">
@@ -37,3 +34,5 @@ export const MapNoteList = ({ markers, setActiveMarker }: MapNoteListProps) => (
     </div>
   </div>
 );
+
+export default MapNoteList;

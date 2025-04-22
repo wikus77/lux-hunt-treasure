@@ -1,12 +1,14 @@
+
 import React, { useEffect, useRef, useState } from 'react';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Pause, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const InteractiveGlobe = () => {
   const globeRef = useRef<HTMLDivElement>(null);
   const globeInstanceRef = useRef<any>(null);
-  const isRotatingRef = useRef(true);
+  const [isRotating, setIsRotating] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const isRotatingRef = useRef(true);
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -27,6 +29,26 @@ const InteractiveGlobe = () => {
 
       globeInstanceRef.current = globe;
       setIsLoading(false);
+
+      // Add city points (for visibility at high zoom)
+      const cities = [
+        { lat: 40.7128, lng: -74.0060, name: 'New York' },
+        { lat: 48.8566, lng: 2.3522, name: 'Paris' },
+        { lat: 35.6762, lng: 139.6503, name: 'Tokyo' },
+        { lat: 51.5074, lng: -0.1278, name: 'London' },
+        { lat: 41.9028, lng: 12.4964, name: 'Rome' },
+        { lat: 55.7558, lng: 37.6173, name: 'Moscow' },
+        { lat: -33.8688, lng: 151.2093, name: 'Sydney' },
+        { lat: -22.9068, lng: -43.1729, name: 'Rio de Janeiro' },
+        { lat: 19.4326, lng: -99.1332, name: 'Mexico City' },
+        { lat: 37.7749, lng: -122.4194, name: 'San Francisco' }
+      ];
+      
+      globe.pointsData(cities)
+        .pointColor(() => 'rgba(255, 255, 255, 0.8)')
+        .pointAltitude(0.01)
+        .pointRadius(0.12)
+        .pointsMerge(true);
 
       // Auto-rotation
       let currentLong = 0;
@@ -76,14 +98,15 @@ const InteractiveGlobe = () => {
     
     const currentAltitude = globeInstanceRef.current.pointOfView().altitude;
     const newAltitude = zoomIn ? 
-      Math.max(currentAltitude * 0.7, 1.5) : 
-      Math.min(currentAltitude * 1.3, 4);
+      Math.max(currentAltitude * 0.7, 0.5) : // Allow zooming in closer for city-level detail
+      Math.min(currentAltitude * 1.3, 5);
     
     globeInstanceRef.current.pointOfView({ altitude: newAltitude });
   };
 
   const toggleRotation = () => {
     isRotatingRef.current = !isRotatingRef.current;
+    setIsRotating(!isRotating);
   };
 
   return (
@@ -91,7 +114,6 @@ const InteractiveGlobe = () => {
       <div 
         ref={globeRef} 
         className="w-full h-full relative bg-black"
-        onClick={toggleRotation}
         style={{ cursor: 'grab' }}
       />
       <div className="absolute right-4 top-4 flex flex-col gap-2">
@@ -110,6 +132,14 @@ const InteractiveGlobe = () => {
           className="bg-black/50 hover:bg-black/70"
         >
           <Minus className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={toggleRotation}
+          className="bg-black/50 hover:bg-black/70"
+        >
+          {isRotating ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         </Button>
       </div>
       {isLoading && (

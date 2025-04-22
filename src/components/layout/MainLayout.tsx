@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { User, Mail, MoreVertical } from "lucide-react";
@@ -15,6 +16,7 @@ import {
 
 import HowItWorksModal from "../modals/HowItWorksModal";
 import { useNotifications } from "@/hooks/useNotifications";
+import NotificationsDrawer from "../notifications/NotificationsDrawer";
 
 const MainLayout = () => {
   const location = useLocation();
@@ -23,6 +25,7 @@ const MainLayout = () => {
   const [profileName, setProfileName] = useState<string>("Utente");
   const [profileSubscription, setProfileSubscription] = useState<string>("Base");
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   
   const {
     notifications,
@@ -30,8 +33,6 @@ const MainLayout = () => {
     markAllAsRead,
     reloadNotifications
   } = useNotifications();
-
-  const [showNotificationsBanner, setShowNotificationsBanner] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -50,11 +51,7 @@ const MainLayout = () => {
 
   const handleShowNotifications = () => {
     reloadNotifications();
-    setShowNotificationsBanner(true);
-  };
-
-  const handleCloseNotifications = () => {
-    setShowNotificationsBanner(false);
+    setShowNotifications(true);
   };
 
   return (
@@ -131,6 +128,12 @@ const MainLayout = () => {
       {showHowItWorks && (
         <HowItWorksModal open={showHowItWorks} onClose={() => setShowHowItWorks(false)} />
       )}
+      
+      <NotificationsDrawer
+        open={showNotifications}
+        onOpenChange={setShowNotifications}
+      />
+      
       <Footer />
       <BottomNavigation />
     </div>
