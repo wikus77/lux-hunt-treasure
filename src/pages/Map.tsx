@@ -1,10 +1,9 @@
 
 import React, { useState } from "react";
-import { MapPin, StickyNote, Plus, X } from "lucide-react";
+import { StickyNote, Plus, X } from "lucide-react";
 import { MapNoteList } from "@/components/maps/MapNoteList";
-import InteractiveGlobe from "@/components/maps/InteractiveGlobe";
+import SearchableGlobe from "@/components/maps/SearchableGlobe";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import type { MapMarker } from "@/components/maps/MapMarkers";
@@ -55,7 +54,7 @@ const Map = () => {
       </div>
 
       <div className="w-full h-[50vh] rounded-lg overflow-hidden border border-projectx-deep-blue glass-card mb-4 relative">
-        <InteractiveGlobe />
+        <SearchableGlobe />
       </div>
 
       <div className="flex justify-between items-center mb-4">

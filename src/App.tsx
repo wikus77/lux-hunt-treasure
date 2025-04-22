@@ -27,6 +27,9 @@ import Notifications from "./pages/Notifications";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
 import Contacts from "./pages/Contacts";
+import PaymentSilver from "./pages/PaymentSilver";
+import PaymentGold from "./pages/PaymentGold";
+import PaymentBlack from "./pages/PaymentBlack";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +62,9 @@ const App = () => {
                   <Route path="/privacy-security" element={<PrivacySecurity />} />
                   <Route path="/language-settings" element={<LanguageSettings />} />
                   <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/payment/silver" element={<PaymentSilver />} />
+                  <Route path="/payment/gold" element={<PaymentGold />} />
+                  <Route path="/payment/black" element={<PaymentBlack />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

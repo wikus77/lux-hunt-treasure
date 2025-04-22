@@ -6,6 +6,13 @@ export const useBuzzSound = () => {
 
   const initializeSound = (soundPreference: string, volume: number) => {
     const soundPath = getSoundPath(soundPreference);
+    
+    // Create a new audio instance to ensure it's fresh
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    
     audioRef.current = new Audio(soundPath);
     if (audioRef.current) {
       audioRef.current.volume = volume;
@@ -16,12 +23,17 @@ export const useBuzzSound = () => {
 
   const playSound = () => {
     if (audioRef.current) {
+      // Reset the audio to the beginning
       audioRef.current.currentTime = 0;
+      
+      // Play with error handling
       const playPromise = audioRef.current.play();
       
       if (playPromise !== undefined) {
         playPromise.catch(e => {
           console.error("Error playing sound:", e);
+          
+          // Due to browser autoplay policies, we need user interaction
           // Try to play again with user interaction
           document.addEventListener('click', function playOnClick() {
             if (audioRef.current) {

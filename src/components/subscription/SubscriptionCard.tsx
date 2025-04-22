@@ -2,6 +2,7 @@
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 interface SubscriptionFeature {
   text: string;
@@ -28,10 +29,25 @@ const SubscriptionCard = ({
   type,
 }: SubscriptionCardProps) => {
   const navigate = useNavigate();
+  const [currentPlan, setCurrentPlan] = useState<string>("Base");
+  
+  useEffect(() => {
+    const savedPlan = localStorage.getItem("subscription_plan");
+    if (savedPlan) {
+      setCurrentPlan(savedPlan);
+    }
+  }, []);
+  
+  const isPlanActive = currentPlan === type;
+  const buttonText = isPlanActive ? "Piano Attuale" : ctaText;
   
   const handleSubscriptionAction = () => {
-    if (type === "Base" || ctaText.includes("Piano Attuale")) {
+    if (isPlanActive) {
       return; // Already on this plan
+    }
+    
+    if (type === "Base") {
+      return; // Base plan doesn't need payment
     }
     
     navigate(`/payment/${type.toLowerCase()}`);
@@ -41,11 +57,17 @@ const SubscriptionCard = ({
     <div
       className={`glass-card relative overflow-hidden ${
         isPopular ? "ring-2 ring-projectx-neon-blue" : ""
-      }`}
+      } ${isPlanActive ? "ring-2 ring-green-500" : ""}`}
     >
       {isPopular && (
         <div className="absolute top-0 right-0 bg-projectx-neon-blue text-black font-bold px-3 py-1 text-xs transform translate-x-2 translate-y-0 rotate-45 origin-top-right">
           Popolare
+        </div>
+      )}
+      
+      {isPlanActive && (
+        <div className="absolute top-2 left-2 bg-green-500 text-black font-bold px-2 py-0.5 text-xs rounded-full">
+          Attivo
         </div>
       )}
 
@@ -68,14 +90,16 @@ const SubscriptionCard = ({
 
       <Button
         className={`w-full transition-colors ${
-          type === "Base" || ctaText.includes("Piano Attuale")
+          isPlanActive
+            ? "bg-gradient-to-r from-green-700 to-green-600 cursor-default"
+            : type === "Base" || buttonText.includes("Piano Attuale")
             ? "bg-gradient-to-r from-gray-800 to-gray-700 cursor-default"
             : "bg-gradient-to-r from-projectx-blue to-projectx-pink hover:opacity-90"
         }`}
         onClick={handleSubscriptionAction}
-        disabled={type === "Base" || ctaText.includes("Piano Attuale")}
+        disabled={isPlanActive || type === "Base"}
       >
-        {ctaText}
+        {buttonText}
       </Button>
     </div>
   );

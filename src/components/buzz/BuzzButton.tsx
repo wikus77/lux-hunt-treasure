@@ -16,6 +16,7 @@ const BuzzButton = ({ onBuzzClick, unlockedClues }: BuzzButtonProps) => {
   const { playSound, initializeSound } = useBuzzSound();
   
   useEffect(() => {
+    // Reinitialize sound when preferences change
     initializeSound(soundPreference, volume[0] / 100);
   }, [soundPreference, volume, initializeSound]);
 

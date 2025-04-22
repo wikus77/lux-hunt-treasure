@@ -20,27 +20,33 @@ const Buzz = () => {
   const { initializeSound } = useBuzzSound();
 
   useEffect(() => {
+    // Load saved clues count from localStorage
     const savedClues = localStorage.getItem('unlockedCluesCount');
     if (savedClues) {
       setUnlockedClues(parseInt(savedClues));
     }
 
+    // Initialize sound
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
     const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
     initializeSound(soundPreference, volume);
 
+    // Handle payment completion from redirect
     if (location.state?.paymentCompleted) {
       savePaymentMethod();
       sendBuzzNotification();
       incrementUnlockedClues();
+      
       toast.success("Indizio sbloccato!", {
         description: "Controlla la sezione Notifiche per vedere l'indizio extra."
       });
+      
       toast(EXTRA_CLUE_TEXT, {
         duration: 3000,
         position: "bottom-center",
       });
 
+      // Redirect to notifications after a delay
       setTimeout(() => {
         navigate("/notifications", { replace: true });
       }, 1800);
