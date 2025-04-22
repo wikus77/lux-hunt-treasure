@@ -3,27 +3,21 @@ import { Volume2, Languages } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import SoundSettings from "./SoundSettings";
+import { useSound } from "@/contexts/SoundContext";
 
 interface AppSectionProps {
   soundEffects: boolean;
   language: string;
-  volume: number[];
-  buzzSound: string;
   setSoundEffects: (value: boolean) => void;
-  onVolumeChange: (value: number[]) => void;
-  onSoundChange: (value: string) => void;
 }
 
 const AppSection = ({
   soundEffects,
   language,
-  volume,
-  buzzSound,
   setSoundEffects,
-  onVolumeChange,
-  onSoundChange
 }: AppSectionProps) => {
   const navigate = useNavigate();
+  const { volume, soundPreference, updateSound, updateVolume } = useSound();
 
   return (
     <section className="p-4">
@@ -44,15 +38,9 @@ const AppSection = ({
 
         <SoundSettings
           volume={volume}
-          buzzSound={buzzSound}
-          onVolumeChange={(newVolume) => {
-            onVolumeChange(newVolume);
-            localStorage.setItem('buzzVolume', newVolume[0].toString());
-          }}
-          onSoundChange={(newSound) => {
-            onSoundChange(newSound);
-            localStorage.setItem('buzzSound', newSound);
-          }}
+          buzzSound={soundPreference}
+          onVolumeChange={updateVolume}
+          onSoundChange={updateSound}
         />
 
         <div className="glass-card flex justify-between items-center p-4 cursor-pointer" 

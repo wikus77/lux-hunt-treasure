@@ -1,33 +1,28 @@
-import { useState, useEffect, useRef } from "react";
-import { useToast } from "@/components/ui/use-toast";
+
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
+import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Lock, Zap } from "lucide-react";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useNavigate, useLocation } from "react-router-dom";
 import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
+import BuzzButton from "@/components/buzz/BuzzButton";
+import useBuzzSound from "@/hooks/useBuzzSound";
 
 const EXTRA_CLUE_TEXT = "Strade strette ma la rotta è dritta: cerca dove il muro si colora!";
 
 const Buzz = () => {
-  const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const { toast: uiToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const { hasPaymentMethod, savePaymentMethod } = useHasPaymentMethod();
+  const { initializeSound } = useBuzzSound();
 
   useEffect(() => {
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
     const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
-    const soundPath = getSoundPath(soundPreference);
-    
-    audioRef.current = new Audio(soundPath);
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
+    initializeSound(soundPreference, volume);
 
     if (location.state?.paymentCompleted) {
       savePaymentMethod();
@@ -44,26 +39,7 @@ const Buzz = () => {
         navigate("/notifications", { replace: true });
       }, 1800);
     }
-
-    return () => {
-      if (audioRef.current) {
-        audioRef.current = null;
-      }
-    };
-  }, [location.state, savePaymentMethod, navigate]);
-
-  const getSoundPath = (preference: string) => {
-    switch (preference) {
-      case 'chime':
-        return "/sounds/chime.mp3";
-      case 'bell':
-        return "/sounds/bell.mp3";
-      case 'arcade':
-        return "/sounds/arcade.mp3";
-      default:
-        return "/sounds/buzz.mp3";
-    }
-  };
+  }, [location.state, savePaymentMethod, navigate, initializeSound]);
 
   const handleBuzzClick = () => {
     if (!hasPaymentMethod) {
@@ -78,19 +54,7 @@ const Buzz = () => {
       return;
     }
 
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(e => console.error("Error playing sound:", e));
-    }
-
-    setIsVaultOpen(true);
-
-    sendBuzzNotification();
-
-    setTimeout(() => {
-      setIsVaultOpen(false);
-      setShowDialog(true);
-    }, 1500);
+    setShowDialog(true);
   };
 
   const sendBuzzNotification = () => {
@@ -145,16 +109,7 @@ const Buzz = () => {
           </p>
         </div>
 
-        <div className={`transition-all duration-500 ${isVaultOpen ? "scale-125" : "scale-100"}`}>
-          <Button
-            onClick={handleBuzzClick}
-            className={`w-48 h-48 rounded-full bg-gradient-to-r from-projectx-blue to-projectx-pink flex items-center justify-center text-4xl font-bold shadow-[0_0_40px_rgba(217,70,239,0.5)] transition-all duration-300 hover:shadow-[0_0_60px_rgba(217,70,239,0.7)] ${
-              isVaultOpen ? "animate-pulse" : ""
-            }`}
-          >
-            <Zap className="w-24 h-24" />
-          </Button>
-        </div>
+        <BuzzButton onBuzzClick={handleBuzzClick} />
 
         <div className="mt-8 text-center w-full px-0">
           <p className="text-sm text-muted-foreground">
