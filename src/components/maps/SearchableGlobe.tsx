@@ -62,8 +62,6 @@ const italianCities: City[] = [
   { name: "Reggio di Calabria", lat: 38.1144, lng: 15.6500 },
 ];
 
-const defaultCenter: [number, number] = [41.9028, 12.4964]; // Roma di default
-
 const SearchableGlobe: React.FC = () => {
   const [search, setSearch] = useState("");
   const [foundCity, setFoundCity] = useState<City | null>(null);
@@ -85,8 +83,8 @@ const SearchableGlobe: React.FC = () => {
   return (
     <div className="relative w-full h-full">
       <MapContainer
-        defaultCenter={defaultCenter}
-        defaultZoom={6}
+        center={[41.9028, 12.4964]} // Roma come centro predefinito
+        zoom={6}
         style={{ width: "100%", height: "40vh", borderRadius: "1rem" }}
         scrollWheelZoom={true}
         className="mb-4"
