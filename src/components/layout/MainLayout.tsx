@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { User, Menu, Mail, MoreVertical } from "lucide-react";
+import { User, Mail, MoreVertical } from "lucide-react";
 import Footer from "./Footer";
 import BottomNavigation from "./BottomNavigation";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -62,22 +61,18 @@ const MainLayout = () => {
     <div className="min-h-screen w-full bg-projectx-dark transition-colors duration-300 text-white relative">
       <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-projectx-card/40 border-b border-white/10 transition-all duration-300">
         <div className="max-w-screen-xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <span className="profile-custom-ring">
-              <Avatar className="w-8 h-8 border border-white/20 bg-black">
-                <AvatarImage src={profileImage || ""} alt="Profile" className="object-cover" />
-                <AvatarFallback className="bg-transparent">
-                  <User className="w-5 h-5 text-white/70" />
-                </AvatarFallback>
-              </Avatar>
-            </span>
+          <div className="flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button
-                  className="flex items-center outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-                  aria-label="Apri menu profilo"
-                >
-                  <Menu className="w-5 h-5 text-white/70 hover:text-white transition-colors" />
+                <button className="outline-none focus-visible:ring-2 focus-visible:ring-white/30" aria-label="Menu profilo">
+                  <span className="profile-custom-ring">
+                    <Avatar className="w-8 h-8 border border-white/20 bg-black hover:border-white/40 transition-colors cursor-pointer">
+                      <AvatarImage src={profileImage || ""} alt="Profile" className="object-cover" />
+                      <AvatarFallback className="bg-transparent">
+                        <User className="w-5 h-5 text-white/70" />
+                      </AvatarFallback>
+                    </Avatar>
+                  </span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="z-[110] bg-black/90 backdrop-blur-lg border-white/10 text-white">

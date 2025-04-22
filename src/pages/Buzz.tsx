@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { toast } from "@/components/ui/sonner";
@@ -22,15 +21,16 @@ const Buzz = () => {
 
   useEffect(() => {
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
+    const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
     const soundPath = getSoundPath(soundPreference);
+    
     audioRef.current = new Audio(soundPath);
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
 
-    // Se torniamo qui con un pagamento appena completato (verifica location.state)
     if (location.state?.paymentCompleted) {
-      // Salva carta (mock) solo al primo completamento
       savePaymentMethod();
-
-      // Sblocca l'indizio e notifica
       sendBuzzNotification();
       toast.success("Indizio sbloccato!", {
         description: "Controlla la sezione Notifiche per vedere l'indizio extra."
@@ -41,7 +41,6 @@ const Buzz = () => {
       });
 
       setTimeout(() => {
-        // redirige alle notifiche
         navigate("/notifications", { replace: true });
       }, 1800);
     }
@@ -67,9 +66,7 @@ const Buzz = () => {
   };
 
   const handleBuzzClick = () => {
-    // Se non c'è carta/metodo di pagamento
     if (!hasPaymentMethod) {
-      // redirigi a PaymentMethods
       navigate("/payment-methods", {
         state: {
           fromBuzz: true,
@@ -81,7 +78,6 @@ const Buzz = () => {
       return;
     }
 
-    // Comportamento classico: suono + vault
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(e => console.error("Error playing sound:", e));

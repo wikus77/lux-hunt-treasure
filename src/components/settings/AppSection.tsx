@@ -45,8 +45,14 @@ const AppSection = ({
         <SoundSettings
           volume={volume}
           buzzSound={buzzSound}
-          onVolumeChange={onVolumeChange}
-          onSoundChange={onSoundChange}
+          onVolumeChange={(newVolume) => {
+            onVolumeChange(newVolume);
+            localStorage.setItem('buzzVolume', newVolume[0].toString());
+          }}
+          onSoundChange={(newSound) => {
+            onSoundChange(newSound);
+            localStorage.setItem('buzzSound', newSound);
+          }}
         />
 
         <div className="glass-card flex justify-between items-center p-4 cursor-pointer" 
@@ -63,4 +69,3 @@ const AppSection = ({
 };
 
 export default AppSection;
-
