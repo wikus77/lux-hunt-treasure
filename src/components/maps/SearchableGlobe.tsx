@@ -1,7 +1,6 @@
-import React, { useState, useCallback, useEffect } from "react";
+
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { GoogleMap, useLoadScript } from "@react-google-maps/api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import SearchBar from "./SearchBar";
 import { allOptions, italianCities } from "./useFilteredLocations";
@@ -23,12 +22,15 @@ const containerStyle = {
 const defaultCenter = { lat: 41.9028, lng: 12.4964 };
 const defaultZoom = 6;
 
+// Definire le librerie come costante esterna
+const mapLibraries = ["places"];
+
 const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
 
 const SearchableGlobe: React.FC = () => {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries: ["places"],
+    libraries: mapLibraries,
   });
 
   const [search, setSearch] = useState("");
@@ -51,21 +53,32 @@ const SearchableGlobe: React.FC = () => {
         markers.forEach(marker => marker.map = null);
         setMarkers([]);
 
-        const newMarkers = italianCities.map(city => {
-          const marker = new google.maps.marker.AdvancedMarkerElement({
-            map,
-            position: { lat: city.lat, lng: city.lng },
-            title: city.name,
-          });
+        const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
+        
+        // Aggiungiamo i marker solo se italianCities è definito
+        if (italianCities && italianCities.length > 0) {
+          italianCities.forEach(city => {
+            try {
+              if (city && city.lat && city.lng) {
+                const marker = new google.maps.marker.AdvancedMarkerElement({
+                  map,
+                  position: { lat: city.lat, lng: city.lng },
+                  title: city.name,
+                });
 
-          marker.addListener("click", () => {
-            setSelectedCity(city);
-            map.panTo({ lat: city.lat, lng: city.lng });
-            map.setZoom(12);
-          });
+                marker.addListener("click", () => {
+                  setSelectedCity(city);
+                  map.panTo({ lat: city.lat, lng: city.lng });
+                  map.setZoom(12);
+                });
 
-          return marker;
-        });
+                newMarkers.push(marker);
+              }
+            } catch (error) {
+              console.error(`Error creating marker for city ${city?.name}:`, error);
+            }
+          });
+        }
 
         setMarkers(newMarkers);
       } catch (error) {
@@ -75,12 +88,13 @@ const SearchableGlobe: React.FC = () => {
   }, [isLoaded, map]);
 
   const handleOptionSelect = (option: { label: string, value: string, type: "province" | "city", lat?: number, lng?: number }) => {
+    if (!option) return;
+    
     setSearch(option.label);
     setSearching(false);
 
-    let cityFound:
-      | { name: string; lat: number; lng: number; }
-      | undefined;
+    let cityFound: { name: string; lat: number; lng: number; } | undefined;
+    
     if (option.type === "city" && option.lat && option.lng) {
       cityFound = italianCities.find(city => city.name.toLowerCase() === option.value);
     } else if (option.type === "province") {
@@ -122,9 +136,11 @@ const SearchableGlobe: React.FC = () => {
       });
       return;
     }
+    
     const option = allOptions.find(
       opt => opt.label.toLowerCase() === search.trim().toLowerCase()
     );
+    
     if (option) {
       handleOptionSelect(option);
     } else {

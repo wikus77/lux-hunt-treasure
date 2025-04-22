@@ -23,7 +23,7 @@ const SearchBar: React.FC<Props> = ({
   return (
     <form onSubmit={onSubmit} className="flex gap-2 mt-2 items-center z-10">
       <div className="w-full relative">
-        <Command shouldFilter={false}>
+        <Command shouldFilter={false} className="bg-black/70 rounded-md">
           <CommandInput
             value={search}
             onValueChange={v => { setSearch(v); setSearching(true); }}
@@ -34,39 +34,40 @@ const SearchBar: React.FC<Props> = ({
           />
           {(searching && !!search) && (
             <div className="absolute left-0 mt-1 w-full z-50 bg-background rounded-md border max-h-52 overflow-y-auto shadow-lg">
-              <CommandList>
-                {filteredProvinces.length > 0 && (
-                  <CommandGroup heading="Province">
-                    {filteredProvinces.map(opt => (
-                      <CommandItem
-                        key={"pr_"+opt.value}
-                        onSelect={() => onSelect(opt)}
-                        className="cursor-pointer"
-                      >
-                        {opt.label}
-                        <span className="ml-2 text-xs text-muted-foreground">Provincia</span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
-                {filteredCities.length > 0 && (
-                  <CommandGroup heading="Città">
-                    {filteredCities.map(opt => (
-                      <CommandItem
-                        key={"ct_"+opt.value}
-                        onSelect={() => onSelect(opt)}
-                        className="cursor-pointer"
-                      >
-                        {opt.label}
-                        <span className="ml-2 text-xs text-muted-foreground">Città</span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
-                {filteredProvinces.length === 0 && filteredCities.length === 0 && (
-                  <CommandEmpty>Nessun risultato trovato</CommandEmpty>
-                )}
-              </CommandList>
+              {filteredProvinces.length > 0 || filteredCities.length > 0 ? (
+                <CommandList>
+                  {filteredProvinces.length > 0 && (
+                    <CommandGroup heading="Province">
+                      {filteredProvinces.map(opt => (
+                        <CommandItem
+                          key={"pr_"+opt.value}
+                          onSelect={() => onSelect(opt)}
+                          className="cursor-pointer"
+                        >
+                          {opt.label}
+                          <span className="ml-2 text-xs text-muted-foreground">Provincia</span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
+                  {filteredCities.length > 0 && (
+                    <CommandGroup heading="Città">
+                      {filteredCities.map(opt => (
+                        <CommandItem
+                          key={"ct_"+opt.value}
+                          onSelect={() => onSelect(opt)}
+                          className="cursor-pointer"
+                        >
+                          {opt.label}
+                          <span className="ml-2 text-xs text-muted-foreground">Città</span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
+                </CommandList>
+              ) : (
+                <div className="py-6 text-center text-sm">Nessun risultato trovato</div>
+              )}
             </div>
           )}
         </Command>
@@ -79,7 +80,7 @@ const SearchBar: React.FC<Props> = ({
         Cerca
       </Button>
     </form>
-  )
+  );
 };
 
 export default SearchBar;
