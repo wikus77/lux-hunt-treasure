@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import SubscriptionStatus from "@/components/profile/SubscriptionStatus";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import ProfileBio from "@/components/profile/ProfileBio";
 import ProfileClues from "@/components/profile/ProfileClues";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,8 +23,8 @@ const Profile = () => {
   const [unlockedClues, setUnlockedClues] = useState<Clue[]>([]);
   const { toast } = useToast();
 
-  // Nuovo: Ref per input file per upload foto dal click sulla foto
-  const fileInputRef = useState<HTMLInputElement | null>(null)[0];
+  // Fixed: Using useRef instead of useState for the file input reference
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const savedProfileImage = localStorage.getItem('profileImage');
@@ -134,8 +134,8 @@ const Profile = () => {
                 <div
                   className="w-24 h-24 rounded-full overflow-hidden bg-projectx-deep-blue flex items-center justify-center hover:opacity-90 transition-opacity"
                   onClick={() => {
-                    if (isEditing && fileInputRef) {
-                      (fileInputRef as HTMLInputElement).click();
+                    if (isEditing && fileInputRef.current) {
+                      fileInputRef.current.click();
                     }
                   }}
                   style={{ cursor: isEditing ? "pointer" : "default" }}
@@ -165,7 +165,7 @@ const Profile = () => {
               </label>
               {/* Input file per selezione immagine, attivato cliccando la foto */}
               <input
-                ref={ref => (fileInputRef as any) = ref}
+                ref={fileInputRef}
                 type="file"
                 id="profile-image-upload-local"
                 className="hidden"
