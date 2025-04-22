@@ -1,8 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 import ProfileLayout from "@/components/layout/ProfileLayout";
 import { supabase } from "@/integrations/supabase/client";
 import ProfileBio from "@/components/profile/ProfileBio";
@@ -128,16 +125,17 @@ const Profile = () => {
 
   return (
     <ProfileLayout>
-      <div className="fixed top-0 left-0 right-0 z-40 bg-black">
+      <div className="fixed top-16 left-0 right-0 z-40 bg-black">
         <ProfileHeader 
           profileImage={profileImage}
           name={name}
           isEditing={isEditing}
           setIsEditing={setIsEditing}
+          onSave={handleSaveProfile}
         />
       </div>
 
-      <div className="w-full">
+      <div className="w-full mt-16">
         <ProfileBio
           name={name}
           setName={setName}
@@ -146,20 +144,12 @@ const Profile = () => {
           profileImage={profileImage}
           handleImageChange={handleImageChange}
           isEditing={isEditing}
+          onSave={handleSaveProfile}
         />
 
         <SubscriptionStatus />
 
         <ProfileClues unlockedClues={unlockedClues} />
-
-        {isEditing && (
-          <Button 
-            className="w-full mt-6 bg-gradient-to-r from-green-500 to-green-700 mb-6 mx-4"
-            onClick={handleSaveProfile}
-          >
-            Salva Modifiche
-          </Button>
-        )}
       </div>
     </ProfileLayout>
   );

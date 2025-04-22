@@ -1,5 +1,5 @@
 
-import { Check } from "lucide-react";
+import { Check, Badge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -40,6 +40,7 @@ const SubscriptionCard = ({
   
   const isPlanActive = currentPlan === type;
   const buttonText = isPlanActive ? "Piano Attuale" : ctaText;
+  const isMostRequested = type === "Gold";
   
   const handleSubscriptionAction = () => {
     if (isPlanActive) {
@@ -62,6 +63,12 @@ const SubscriptionCard = ({
       {isPopular && (
         <div className="absolute top-0 right-0 bg-projectx-neon-blue text-black font-bold px-3 py-1 text-xs transform translate-x-2 translate-y-0 rotate-45 origin-top-right">
           Popolare
+        </div>
+      )}
+      
+      {isMostRequested && (
+        <div className="absolute top-3 left-3 bg-amber-500 text-black font-bold px-2 py-0.5 text-xs rounded-full flex items-center gap-1">
+          <Badge className="h-3 w-3" /> Il più richiesto
         </div>
       )}
       

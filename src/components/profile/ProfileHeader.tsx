@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Edit, Menu, User } from "lucide-react";
+import { Edit, Menu, User, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import InstagramStyleDrawer from "./InstagramStyleDrawer";
@@ -35,13 +35,23 @@ const ProfileHeader = ({
             </AvatarFallback>
           </Avatar>
         </span>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsEditing(!isEditing)}
-        >
-          <Edit className="h-5 w-5" />
-        </Button>
+        {isEditing ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onSave}
+          >
+            <Save className="h-5 w-5 text-green-500" />
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsEditing(!isEditing)}
+          >
+            <Edit className="h-5 w-5" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"

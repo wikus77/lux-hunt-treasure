@@ -62,7 +62,7 @@ const ClueUnlockedExplosion = forwardRef<HTMLDivElement, Props>(({
 }, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Quando parte il fadeOut, notifichiamo quando finisce l’animazione
+  // Quando parte il fadeOut, notifichiamo quando finisce l'animazione
   useEffect(() => {
     if (fadeOut && wrapperRef.current) {
       const node = wrapperRef.current;
@@ -132,4 +132,3 @@ const ClueUnlockedExplosion = forwardRef<HTMLDivElement, Props>(({
 });
 ClueUnlockedExplosion.displayName = "ClueUnlockedExplosion";
 export default ClueUnlockedExplosion;
-

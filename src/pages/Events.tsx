@@ -17,13 +17,21 @@ const Events = () => {
 
   return (
     <div className="pb-20 min-h-screen bg-black w-full">
-      {/* Moved filter under the main header */}
+      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex flex-col items-center justify-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
+        <h1 className="text-2xl font-bold neon-text">Eventi</h1>
+        <p className="text-xs text-projectx-neon-blue">it is possible</p>
+      </header>
+      
+      <div className="h-[72px] w-full" />
+      
+      {/* Moved current event section to the top */}
+      <CurrentEventSection currentEvent={currentEvent} />
+      
+      {/* Filters */}
       <GenderFilter 
         selectedGender={selectedGender} 
         onGenderChange={setSelectedGender}
       />
-      
-      <CurrentEventSection currentEvent={currentEvent} />
       
       <UpcomingEventsSection events={filteredEvents} />
       

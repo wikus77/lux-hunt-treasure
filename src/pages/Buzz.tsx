@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { Lock } from "lucide-react";
@@ -7,11 +8,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
 import BuzzButton from "@/components/buzz/BuzzButton";
 import useBuzzSound from "@/hooks/useBuzzSound";
+import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
 
 const EXTRA_CLUE_TEXT = "Strade strette ma la rotta è dritta: cerca dove il muro si colora!";
 
 const Buzz = () => {
   const [showDialog, setShowDialog] = useState(false);
+  const [showExplosion, setShowExplosion] = useState(false);
+  const [explosionFadeOut, setExplosionFadeOut] = useState(false);
   const [unlockedClues, setUnlockedClues] = useState(() => {
     const savedClues = localStorage.getItem('unlockedCluesCount');
     return savedClues ? parseInt(savedClues) : 0;
@@ -20,6 +24,7 @@ const Buzz = () => {
   const location = useLocation();
   const { hasPaymentMethod, savePaymentMethod } = useHasPaymentMethod();
   const { initializeSound } = useBuzzSound();
+  const explosionTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Load saved clues count from localStorage
@@ -39,21 +44,42 @@ const Buzz = () => {
       sendBuzzNotification();
       incrementUnlockedClues();
       
-      toast.success("Indizio sbloccato!", {
-        description: "Controlla la sezione Notifiche per vedere l'indizio extra."
-      });
+      // Show explosion animation
+      setShowExplosion(true);
       
-      toast(EXTRA_CLUE_TEXT, {
-        duration: 3000,
-        position: "bottom-center",
-      });
-
-      // Redirect to notifications after a delay
-      setTimeout(() => {
-        navigate("/notifications", { replace: true });
-      }, 1800);
+      // Start timer to fade out the explosion after 2.5 seconds
+      explosionTimerRef.current = window.setTimeout(() => {
+        setExplosionFadeOut(true);
+      }, 2500);
+      
+      // Clean up timer on unmount
+      return () => {
+        if (explosionTimerRef.current) {
+          clearTimeout(explosionTimerRef.current);
+        }
+      };
     }
   }, [location.state, savePaymentMethod, navigate, initializeSound]);
+
+  const handleExplosionFadeOutComplete = () => {
+    setShowExplosion(false);
+    setExplosionFadeOut(false);
+    
+    // Show toasts after animation is done
+    toast.success("Indizio sbloccato!", {
+      description: "Controlla la sezione Notifiche per vedere l'indizio extra."
+    });
+    
+    toast(EXTRA_CLUE_TEXT, {
+      duration: 3000,
+      position: "bottom-center",
+    });
+
+    // Redirect to notifications after a delay
+    setTimeout(() => {
+      navigate("/notifications", { replace: true });
+    }, 1800);
+  };
 
   const incrementUnlockedClues = () => {
     const newCount = unlockedClues + 1;
@@ -78,10 +104,6 @@ const Buzz = () => {
   };
 
   const sendBuzzNotification = () => {
-    toast.success("Nuovo indizio disponibile!", {
-      description: "Hai appena sbloccato un indizio premium."
-    });
-
     const notification = {
       id: Date.now().toString(),
       title: "Nuovo indizio disponibile!",
@@ -115,8 +137,9 @@ const Buzz = () => {
 
   return (
     <div className="min-h-screen bg-black pb-20 w-full">
-      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex justify-between items-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
+      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex flex-col items-center justify-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
         <h1 className="text-2xl font-bold neon-text">Buzz</h1>
+        <p className="text-xs text-projectx-neon-blue">it is possible</p>
       </header>
 
       <div className="h-[72px] w-full" />
@@ -165,6 +188,12 @@ const Buzz = () => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      <ClueUnlockedExplosion 
+        open={showExplosion} 
+        fadeOut={explosionFadeOut}
+        onFadeOutEnd={handleExplosionFadeOutComplete}
+      />
     </div>
   );
 };
