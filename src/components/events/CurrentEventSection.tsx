@@ -2,6 +2,7 @@
 import { Event } from "@/data/eventData";
 import EventCard from "./EventCard";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { upcomingMysteryPrizes } from "@/data/mysteryPrizesData";
 
 interface CurrentEventSectionProps {
   currentEvent: Event;
@@ -40,7 +41,7 @@ const CurrentEventSection = ({ currentEvent }: CurrentEventSectionProps) => {
         isCurrent={currentEvent.isCurrent}
         images={currentEvent.images}
         detailedDescription={currentEvent.detailedDescription}
-        mysteryPrizes={undefined}
+        mysteryPrizes={upcomingMysteryPrizes}
       />
     </section>
   );

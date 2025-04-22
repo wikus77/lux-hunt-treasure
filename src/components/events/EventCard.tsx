@@ -1,12 +1,12 @@
 
 import { useState } from "react";
-import { CalendarDays } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import EventDetailsDialog from "./EventDetailsDialog";
 import EventCardHeader from "./EventCardHeader";
 import EventPrizeCarousel from "./EventPrizeCarousel";
 import EventDateInfo from "./EventDateInfo";
+import { upcomingMysteryPrizes } from "@/data/mysteryPrizesData";
 
 interface EventImage {
   url: string;
@@ -44,6 +44,9 @@ export const EventCard = ({
   mysteryPrizes
 }: EventCardProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Use upcomingMysteryPrizes from the data file if no mysteryPrizes are provided
+  const prizes = mysteryPrizes || upcomingMysteryPrizes;
 
   return (
     <>
@@ -67,8 +70,8 @@ export const EventCard = ({
             </p>
           )}
           
-          {isCurrent && mysteryPrizes && mysteryPrizes.length > 0 && (
-            <EventPrizeCarousel prizes={mysteryPrizes} />
+          {prizes && prizes.length > 0 && (
+            <EventPrizeCarousel prizes={prizes} />
           )}
           
           <EventDateInfo date={date} />

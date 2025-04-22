@@ -48,12 +48,11 @@ export const EventDetailsDialog = ({
                 <CarouselItem key={index}>
                   <div className="p-1 flex flex-col items-center">
                     <Card className="overflow-hidden flex items-center justify-center">
-                      {/* Use object-contain and a max-height for car images */}
+                      {/* Set fixed height and improved object-fit for car images */}
                       <img 
                         src={image.url} 
                         alt={image.description}
-                        className="object-contain w-full max-h-[380px] rounded-md bg-black"
-                        style={{ backgroundColor: "#000" }}
+                        className="object-contain w-full h-[200px] md:h-[300px] lg:h-[380px] rounded-md bg-black"
                       />
                       <p className="p-4 text-sm text-muted-foreground text-center">{image.description}</p>
                     </Card>
