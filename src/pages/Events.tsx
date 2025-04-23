@@ -1,3 +1,4 @@
+
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useState, useEffect } from "react";
 import ProfileClues from "@/components/profile/ProfileClues";
@@ -7,11 +8,13 @@ import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
 
 const Events = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { unlockedClues, incrementUnlockedCluesAndAddClue, MAX_CLUES } = useBuzzClues();
-  const { addNotification, notifications } = useNotifications();
+  const { addNotification, notifications, unreadCount, reloadNotifications } = useNotifications();
   
   useEffect(() => {
     // Get profile image on mount
@@ -29,10 +32,13 @@ const Events = () => {
     } else {
       console.log("Not adding test clues, current count:", currentUnlockedClues);
     }
+    
+    // Aggiorniamo le notifiche all'avvio
+    reloadNotifications();
   }, []);
 
   const generateRandomNotification = () => {
-    const notifications = [
+    const notificationTemplates = [
       { 
         title: "Indizio Extra", 
         description: "Hai sbloccato un nuovo dettaglio sul mistero!" 
@@ -51,14 +57,32 @@ const Events = () => {
       }
     ];
 
-    const randomNotification = notifications[Math.floor(Math.random() * notifications.length)];
-    const success = addNotification(randomNotification);
+    const randomNotification = notificationTemplates[Math.floor(Math.random() * notificationTemplates.length)];
     
-    if (success) {
-      toast.success("Notifica creata con successo!");
-    } else {
-      toast.error("Errore nella creazione della notifica");
+    try {
+      const success = addNotification(randomNotification);
+      
+      if (success) {
+        toast.success("Notifica creata con successo!", {
+          duration: 2000,
+        });
+        // Ricarica le notifiche per aggiornare il contatore
+        reloadNotifications();
+      } else {
+        toast.error("Errore nella creazione della notifica", {
+          duration: 2000,
+        });
+      }
+    } catch (error) {
+      console.error("Errore durante la creazione della notifica:", error);
+      toast.error("Si è verificato un errore imprevisto", {
+        duration: 2000,
+      });
     }
+  };
+
+  const toggleNotifications = () => {
+    setNotificationsOpen(!notificationsOpen);
   };
 
   return (
@@ -83,13 +107,28 @@ const Events = () => {
           </div>
         </div>
 
-        <Button 
-          onClick={generateRandomNotification} 
-          className="mb-4 w-full flex items-center gap-2"
-          variant="outline"
-        >
-          <Bell className="w-4 h-4" /> Genera Notifica Casuale ({notifications?.length || 0})
-        </Button>
+        <div className="flex flex-col gap-4 mb-6">
+          <Button 
+            onClick={generateRandomNotification} 
+            className="w-full flex items-center gap-2 bg-projectx-blue hover:bg-projectx-deep-blue"
+          >
+            <Bell className="w-4 h-4" /> Genera Notifica Casuale
+          </Button>
+          
+          <Button 
+            onClick={toggleNotifications} 
+            className="w-full flex items-center gap-2" 
+            variant="outline"
+          >
+            <Bell className="w-4 h-4" /> 
+            Visualizza Notifiche 
+            {unreadCount > 0 && (
+              <span className="ml-2 px-2 py-0.5 text-xs bg-projectx-pink rounded-full text-white">
+                {unreadCount}
+              </span>
+            )}
+          </Button>
+        </div>
 
         <div className="glass-card p-4 backdrop-blur-md border border-projectx-blue/10 rounded-xl">
           <ProfileClues 
@@ -105,6 +144,12 @@ const Events = () => {
           />
         </div>
       </div>
+      
+      {/* Drawer per le notifiche */}
+      <NotificationsDrawer 
+        open={notificationsOpen} 
+        onOpenChange={setNotificationsOpen} 
+      />
     </div>
   );
 };
