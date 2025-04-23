@@ -14,7 +14,7 @@ export type MapMarker = {
   lng: number;
   note: string;
   editing?: boolean;
-  position?: { lat: number; lng: number }; // Include position for compatibility
+  position?: { lat: number; lng: number }; // Including position for compatibility
   createdAt?: Date;     // Added for MapLogicProvider
 };
 
@@ -26,7 +26,7 @@ export type SearchArea = {
   label: string;
   editing?: boolean;
   isAI?: boolean;
-  position?: { lat: number; lng: number }; // Include position for compatibility
+  position?: { lat: number; lng: number }; // Including position for compatibility
   color?: string;      // Added for MapLogicProvider
 };
 
