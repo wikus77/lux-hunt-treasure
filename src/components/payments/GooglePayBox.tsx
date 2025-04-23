@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { GlobeIcon } from "lucide-react";
+import { CreditCardIcon } from "lucide-react";
 
 interface GooglePayBoxProps {
   onGooglePay: () => void;
@@ -9,13 +9,13 @@ interface GooglePayBoxProps {
 const GooglePayBox = ({ onGooglePay }: GooglePayBoxProps) => (
   <div className="text-center p-4">
     <div className="border border-projectx-deep-blue rounded-md p-6 mb-4">
-      <GlobeIcon className="h-12 w-12 mx-auto mb-4" />
-      <p className="mb-6">Paga in modo rapido e sicuro con Google Pay</p>
+      <CreditCardIcon className="h-12 w-12 mx-auto mb-4" />
+      <p className="mb-6">Metodo di pagamento alternativo</p>
       <Button
         onClick={onGooglePay}
-        className="w-full bg-white text-black"
+        className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
       >
-        Paga con Google Pay
+        Procedi al pagamento
       </Button>
     </div>
   </div>

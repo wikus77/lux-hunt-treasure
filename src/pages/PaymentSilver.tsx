@@ -40,8 +40,8 @@ const PaymentSilver = () => {
   };
 
   const handleApplePay = () => {
-    toast.success("Apple Pay", {
-      description: "Pagamento con Apple Pay in elaborazione..."
+    toast.success("Pagamento Rapido", {
+      description: "Pagamento in elaborazione..."
     });
     setTimeout(() => {
       handlePaymentCompleted();
@@ -49,8 +49,8 @@ const PaymentSilver = () => {
   };
 
   const handleGooglePay = () => {
-    toast.success("Google Pay", {
-      description: "Pagamento con Google Pay in elaborazione..."
+    toast.success("Metodo Alternativo", {
+      description: "Pagamento in elaborazione..."
     });
     setTimeout(() => {
       handlePaymentCompleted();
@@ -113,14 +113,14 @@ const PaymentSilver = () => {
               className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
               onClick={() => setPaymentMethod('apple')}
             >
-              <span className="text-sm">Apple Pay</span>
+              <span className="text-sm">Pagamento Rapido</span>
             </button>
             
             <button 
               className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
               onClick={() => setPaymentMethod('google')}
             >
-              <span className="text-sm">Google Pay</span>
+              <span className="text-sm">Altro metodo</span>
             </button>
           </div>
 

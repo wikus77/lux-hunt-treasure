@@ -13,6 +13,7 @@ const PaymentMethods = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [backPath, setBackPath] = useState('/settings');
+  const [paymentMethod, setPaymentMethod] = useState<string>("card");
   
   // Estrai parametri dalla location state
   const fromBuzz = location.state?.fromBuzz || false;
@@ -95,21 +96,38 @@ const PaymentMethods = () => {
             </div>
           ) : (
             <>
-              <CardPaymentForm onSubmit={handlePaymentSuccess} />
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-800"></div>
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="px-2 bg-black text-muted-foreground">
-                    oppure paga con
-                  </span>
-                </div>
+              <div className="flex justify-between mb-6">
+                <button 
+                  className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'card' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+                  onClick={() => setPaymentMethod('card')}
+                >
+                  <span className="text-sm">Carta</span>
+                </button>
+                
+                <button 
+                  className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+                  onClick={() => setPaymentMethod('apple')}
+                >
+                  <span className="text-sm">Pagamento Rapido</span>
+                </button>
+                
+                <button 
+                  className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+                  onClick={() => setPaymentMethod('google')}
+                >
+                  <span className="text-sm">Altro metodo</span>
+                </button>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+
+              {paymentMethod === "card" && (
+                <CardPaymentForm onSubmit={handlePaymentSuccess} />
+              )}
+              {paymentMethod === "apple" && (
                 <ApplePayBox onApplePay={handlePaymentSuccess} />
+              )}
+              {paymentMethod === "google" && (
                 <GooglePayBox onGooglePay={handlePaymentSuccess} />
-              </div>
+              )}
             </>
           )}
         </div>
