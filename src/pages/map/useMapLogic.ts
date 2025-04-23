@@ -1,9 +1,9 @@
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
-import { MapMarker, SearchArea } from "@/components/maps/MapMarkers";
-import { v4 as uuidv4 } from "uuid";
+import { useUserCurrentLocation } from "./useUserCurrentLocation";
+import { useMapMarkersLogic } from "./useMapMarkersLogic";
+import { useSearchAreasLogic } from "./useSearchAreasLogic";
 
 type UseMapLogicResult = {
   isLoading: boolean;
@@ -11,8 +11,8 @@ type UseMapLogicResult = {
   showCluePopup: boolean;
   clueMessage: string;
   location: ReturnType<typeof useLocation>;
-  markers: MapMarker[];
-  searchAreas: SearchArea[];
+  markers: ReturnType<typeof useMapMarkersLogic>["markers"];
+  searchAreas: ReturnType<typeof useSearchAreasLogic>["searchAreas"];
   activeMarker: string | null;
   activeSearchArea: string | null;
   isAddingMarker: boolean;
@@ -46,24 +46,17 @@ export const useMapLogic = (): UseMapLogicResult => {
   const [showCluePopup, setShowCluePopup] = useState(false);
   const [clueMessage, setClueMessage] = useState("");
   const location = useLocation();
+  const currentLocation = useUserCurrentLocation();
 
-  const [markers, setMarkers] = useState<MapMarker[]>([]);
-  const [searchAreas, setSearchAreas] = useState<SearchArea[]>([]);
-  const [activeMarker, setActiveMarker] = useState<string | null>(null);
-  const [activeSearchArea, setActiveSearchArea] = useState<string | null>(null);
-  const [isAddingMarker, setIsAddingMarker] = useState(false);
-  const [isAddingSearchArea, setIsAddingSearchArea] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
-  const [buzzMapPrice] = useState<number>(1.99);
+  // Marker management
+  const markerLogic = useMapMarkersLogic();
+  // Area management (pass currentLocation for clue generation)
+  const areaLogic = useSearchAreasLogic(currentLocation);
+
+  const buzzMapPrice = 1.99;
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 2000);
-
-    navigator.geolocation.getCurrentPosition(
-      position => setCurrentLocation([position.coords.latitude, position.coords.longitude]),
-      error => console.log("Errore nell'ottenere la posizione:", error.message)
-    );
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -77,7 +70,7 @@ export const useMapLogic = (): UseMapLogicResult => {
           setShowCluePopup(true);
 
           if (location.state?.generateMapArea) {
-            generateSearchArea();
+            areaLogic.generateSearchArea();
             toast.success("Nuova area di ricerca generata!", {
               description: "Controlla la mappa per vedere la nuova area di ricerca."
             });
@@ -86,112 +79,22 @@ export const useMapLogic = (): UseMapLogicResult => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.state]);
-
-  // For clue popup area generation
-  const generateSearchArea = () => {
-    if (currentLocation) {
-      const newArea: SearchArea = {
-        id: uuidv4(),
-        lat: currentLocation[0],
-        lng: currentLocation[1],
-        radius: 500,
-        label: "Area generata",
-        color: "#4361ee",
-        position: { lat: currentLocation[0], lng: currentLocation[1] }
-      };
-      setSearchAreas(prev => [...prev, newArea]);
-      setActiveSearchArea(newArea.id);
-    }
-  };
+  }, [location.state, areaLogic, setClueMessage, setShowCluePopup]);
 
   const handleMapReady = () => setMapReady(true);
 
-  // Map controls and logic as defined previously
-  const handleAddMarker = () => {
-    setIsAddingMarker(true);
-    setIsAddingSearchArea(false);
-    toast.info("Clicca sulla mappa per aggiungere un nuovo punto");
-  };
-
-  const handleAddArea = () => {
-    setIsAddingSearchArea(true);
-    setIsAddingMarker(false);
-    toast.info("Clicca sulla mappa per aggiungere una nuova area di ricerca");
-  };
-
-  const handleMapClick = (e: google.maps.MapMouseEvent) => {
-    if (isAddingMarker && e.latLng) {
-      const lat = e.latLng.lat();
-      const lng = e.latLng.lng();
-      const newMarker: MapMarker = {
-        id: uuidv4(),
-        lat: lat,
-        lng: lng,
-        note: "",
-        position: { lat, lng },
-        createdAt: new Date()
-      };
-      setMarkers(prev => [...prev, newMarker]);
-      setActiveMarker(newMarker.id);
-      setIsAddingMarker(false);
-      toast.success("Punto aggiunto alla mappa");
-    } else if (isAddingSearchArea && e.latLng) {
-      const lat = e.latLng.lat();
-      const lng = e.latLng.lng();
-      const newArea: SearchArea = {
-        id: uuidv4(),
-        lat: lat, 
-        lng: lng,
-        radius: 500,
-        label: "Area di ricerca",
-        color: "#7209b7",
-        position: { lat, lng }
-      };
-      setSearchAreas(prev => [...prev, newArea]);
-      setActiveSearchArea(newArea.id);
-      setIsAddingSearchArea(false);
-      toast.success("Area di ricerca aggiunta alla mappa");
+  // Wire up click: delegate to marker or area logic as appropriate
+  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
+    if (markerLogic.isAddingMarker) {
+      markerLogic.handleMapClickMarker(e);
+      areaLogic.setIsAddingSearchArea(false);
+    } else if (areaLogic.isAddingSearchArea) {
+      areaLogic.handleMapClickArea(e);
+      markerLogic.setIsAddingMarker(false);
     }
-  };
+  }, [markerLogic, areaLogic]);
 
-  const handleMapDoubleClick = (_e: google.maps.MapMouseEvent) => {
-    // No custom logic, add as needed
-  };
-
-  const saveMarkerNote = (id: string, note: string) => {
-    setMarkers(markers.map(marker =>
-      marker.id === id ? { ...marker, note } : marker
-    ));
-  };
-
-  const saveSearchArea = (id: string, label: string, radius: number) => {
-    setSearchAreas(searchAreas.map(area =>
-      area.id === id ? { ...area, label, radius } : area
-    ));
-  };
-
-  const deleteMarker = (id: string) => {
-    setMarkers(markers.filter(marker => marker.id !== id));
-    if (activeMarker === id) setActiveMarker(null);
-    toast.success("Punto rimosso dalla mappa");
-  };
-
-  const deleteSearchArea = (id: string) => {
-    setSearchAreas(searchAreas.filter(area => area.id !== id));
-    if (activeSearchArea === id) setActiveSearchArea(null);
-    toast.success("Area di ricerca rimossa");
-  };
-
-  const editMarker = (id: string) => setActiveMarker(id);
-
-  const editSearchArea = (id: string) => setActiveSearchArea(id);
-
-  const clearAllMarkers = () => {
-    setMarkers([]);
-    setActiveMarker(null);
-    toast.success("Tutti i punti sono stati rimossi");
-  };
+  const handleMapDoubleClick = (_e: google.maps.MapMouseEvent) => { /* No logic yet */ };
 
   const handleBuzz = () => {
     toast.info(`Buzz Mappa: ${buzzMapPrice.toFixed(2)}€`, {
@@ -211,32 +114,32 @@ export const useMapLogic = (): UseMapLogicResult => {
     showCluePopup,
     clueMessage,
     location,
-    markers,
-    searchAreas,
-    activeMarker,
-    activeSearchArea,
-    isAddingMarker,
-    isAddingSearchArea,
+    markers: markerLogic.markers,
+    searchAreas: areaLogic.searchAreas,
+    activeMarker: markerLogic.activeMarker,
+    activeSearchArea: areaLogic.activeSearchArea,
+    isAddingMarker: markerLogic.isAddingMarker,
+    isAddingSearchArea: areaLogic.isAddingSearchArea,
     currentLocation,
     buzzMapPrice,
     setShowCluePopup,
     setClueMessage,
-    setActiveMarker,
-    setActiveSearchArea,
+    setActiveMarker: markerLogic.setActiveMarker,
+    setActiveSearchArea: areaLogic.setActiveSearchArea,
     handleMapReady,
-    handleAddMarker,
-    handleAddArea,
+    handleAddMarker: markerLogic.handleAddMarker,
+    handleAddArea: areaLogic.handleAddArea,
     handleMapClick,
     handleMapDoubleClick,
-    saveMarkerNote,
-    saveSearchArea,
-    deleteMarker,
-    deleteSearchArea,
-    editMarker,
-    editSearchArea,
-    clearAllMarkers,
+    saveMarkerNote: markerLogic.saveMarkerNote,
+    saveSearchArea: areaLogic.saveSearchArea,
+    deleteMarker: markerLogic.deleteMarker,
+    deleteSearchArea: areaLogic.deleteSearchArea,
+    editMarker: markerLogic.editMarker,
+    editSearchArea: areaLogic.editSearchArea,
+    clearAllMarkers: markerLogic.clearAllMarkers,
     handleBuzz,
     handleHelp,
-    generateSearchArea
+    generateSearchArea: areaLogic.generateSearchArea,
   };
 };
