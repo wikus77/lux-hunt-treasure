@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import AgeVerification from "@/components/auth/AgeVerification";
 
 const Register = () => {
@@ -26,9 +26,7 @@ const Register = () => {
 
     // Basic validations
     if (!email || !password || !confirmPassword || !fullName) {
-      toast({
-        variant: "destructive",
-        title: "Errore",
+      toast.error("Errore", {
         description: "Completa tutti i campi per continuare."
       });
       setIsSubmitting(false);
@@ -36,9 +34,7 @@ const Register = () => {
     }
 
     if (password !== confirmPassword) {
-      toast({
-        variant: "destructive",
-        title: "Errore",
+      toast.error("Errore", {
         description: "Le password non corrispondono."
       });
       setIsSubmitting(false);
@@ -46,9 +42,7 @@ const Register = () => {
     }
 
     if (password.length < 6) {
-      toast({
-        variant: "destructive",
-        title: "Errore",
+      toast.error("Errore", {
         description: "La password deve contenere almeno 6 caratteri."
       });
       setIsSubmitting(false);
@@ -62,8 +56,7 @@ const Register = () => {
       localStorage.setItem("userName", fullName);
 
       // Simulate a successful registration
-      toast({
-        title: "Registrazione completata!",
+      toast.success("Registrazione completata!", {
         description: "Il tuo account è stato creato con successo."
       });
 
@@ -72,9 +65,7 @@ const Register = () => {
         navigate("/home");
       }, 1500);
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Errore",
+      toast.error("Errore", {
         description: "Si è verificato un errore durante la registrazione."
       });
       setIsSubmitting(false);

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -18,9 +18,7 @@ const Login = () => {
 
     // Basic validations
     if (!email || !password) {
-      toast({
-        variant: "destructive",
-        title: "Errore",
+      toast.error("Errore", {
         description: "Completa tutti i campi per continuare."
       });
       setIsSubmitting(false);
@@ -33,8 +31,7 @@ const Login = () => {
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userEmail", email);
 
-      toast({
-        title: "Login completato!",
+      toast.success("Login completato!", {
         description: "Accesso effettuato con successo."
       });
 
@@ -43,9 +40,7 @@ const Login = () => {
         navigate("/home");
       }, 1500);
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Errore",
+      toast.error("Errore", {
         description: "Si è verificato un errore durante il login."
       });
       setIsSubmitting(false);

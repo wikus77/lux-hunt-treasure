@@ -4,7 +4,7 @@ import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import AccountSection from "@/components/settings/AccountSection";
 import NotificationSection from "@/components/settings/NotificationSection";
 import AppSection from "@/components/settings/AppSection";
@@ -22,9 +22,7 @@ const Settings = () => {
     // Check if user is logged in
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     if (!isLoggedIn) {
-      toast({
-        variant: "destructive",
-        title: "Accesso richiesto",
+      toast.error("Accesso richiesto", {
         description: "Devi effettuare l'accesso per visualizzare questa pagina."
       });
       navigate('/login');
@@ -70,8 +68,7 @@ const Settings = () => {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userEmail');
 
-    toast({
-      title: "Logout effettuato",
+    toast.success("Logout effettuato", {
       description: "La tua sessione è stata chiusa con successo."
     });
 
