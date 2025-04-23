@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import NotificationItem from "./NotificationItem";
 import NotificationDialog from "./NotificationDialog";
@@ -7,6 +7,7 @@ import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/useNotifications";
 import type { Notification } from "@/hooks/useNotifications";
+import { useState } from "react";
 
 interface NotificationsDrawerProps {
   open: boolean;
@@ -15,13 +16,23 @@ interface NotificationsDrawerProps {
 
 const NotificationsDrawer = ({ open, onOpenChange }: NotificationsDrawerProps) => {
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
-  const { notifications, unreadCount, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, markAllAsRead, reloadNotifications } = useNotifications();
+
+  // Reload notifications when the drawer opens
+  useEffect(() => {
+    if (open) {
+      console.log("Drawer opened, reloading notifications");
+      reloadNotifications();
+    }
+  }, [open, reloadNotifications]);
 
   const handleMarkAllAsRead = () => {
+    console.log("Marking all notifications as read");
     markAllAsRead();
   };
 
   const handleSelectNotification = (notification: Notification) => {
+    console.log("Selected notification:", notification);
     setSelectedNotification(notification);
   };
 

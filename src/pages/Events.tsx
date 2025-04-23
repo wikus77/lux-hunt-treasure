@@ -14,7 +14,7 @@ const Events = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { unlockedClues, incrementUnlockedCluesAndAddClue, MAX_CLUES } = useBuzzClues();
-  const { addNotification, notifications, unreadCount, reloadNotifications } = useNotifications();
+  const { addNotification, notifications, unreadCount, markAllAsRead, reloadNotifications } = useNotifications();
   
   useEffect(() => {
     // Get profile image on mount
@@ -35,7 +35,7 @@ const Events = () => {
     
     // Aggiorniamo le notifiche all'avvio
     reloadNotifications();
-  }, []);
+  }, [incrementUnlockedCluesAndAddClue, reloadNotifications]);
 
   const generateRandomNotification = () => {
     const notificationTemplates = [
@@ -58,9 +58,11 @@ const Events = () => {
     ];
 
     const randomNotification = notificationTemplates[Math.floor(Math.random() * notificationTemplates.length)];
+    console.log("Generating random notification:", randomNotification);
     
     try {
       const success = addNotification(randomNotification);
+      console.log("Notification creation result:", success);
       
       if (success) {
         toast.success("Notifica creata con successo!", {
@@ -82,6 +84,7 @@ const Events = () => {
   };
 
   const toggleNotifications = () => {
+    console.log("Toggling notifications drawer, current state:", notificationsOpen);
     setNotificationsOpen(!notificationsOpen);
   };
 
@@ -145,7 +148,6 @@ const Events = () => {
         </div>
       </div>
       
-      {/* Drawer per le notifiche */}
       <NotificationsDrawer 
         open={notificationsOpen} 
         onOpenChange={setNotificationsOpen} 

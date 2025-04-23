@@ -39,6 +39,7 @@ export function useNotifications() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       const notifs: Notification[] = stored ? JSON.parse(stored) : [];
+      console.log("Loaded notifications from storage:", notifs);
       setNotifications(notifs);
       setUnreadCount(notifs.filter(n => !n.read).length);
     } catch (e) {
@@ -110,6 +111,7 @@ export function useNotifications() {
     };
     
     try {
+      console.log("Adding new notification:", newNotification);
       // Ottieni prima le notifiche attuali per assicurarci di avere i dati più recenti
       const stored = localStorage.getItem(STORAGE_KEY);
       const currentNotifs: Notification[] = stored ? JSON.parse(stored) : [];
@@ -125,12 +127,12 @@ export function useNotifications() {
         
         // Notifica altri listener
         listeners.forEach(fn => fn());
-        console.log("Notifica aggiunta con successo:", newNotification);
+        console.log("Notification added successfully:", newNotification);
       }
       
       return saved;
     } catch (error) {
-      console.error("Errore nell'aggiunta della notifica:", error);
+      console.error("Error adding notification:", error);
       return false;
     }
   }, [saveNotifications]);
