@@ -8,6 +8,8 @@ import NotesSection from "./NotesSection";
 import { useMapLogic } from "./useMapLogic";
 import CluePopup from "./CluePopup";
 import BuzzMapBanner from "@/components/buzz/BuzzMapBanner";
+import BuzzButton from "@/components/buzz/BuzzButton";
+import { useBuzzClues } from "@/hooks/useBuzzClues";
 
 const MapLogicProvider = () => {
   const {
@@ -41,6 +43,9 @@ const MapLogicProvider = () => {
     clearAllMarkers,
     location,
   } = useMapLogic();
+
+  // Initialize buzz clues
+  const { unlockedClues } = useBuzzClues();
   
   // Effetto per controllare se torniamo dalla pagina di pagamento
   useEffect(() => {
@@ -89,7 +94,7 @@ const MapLogicProvider = () => {
         />
       )}
 
-      {/* Mappa sopra - Updated container sizing */}
+      {/* Mappa sopra */}
       <div className="w-full h-[65vh] md:h-[70vh]">
         <MapArea 
           onMapReady={handleMapReady}
@@ -113,7 +118,16 @@ const MapLogicProvider = () => {
         />
       </div>
 
-      {/* Notes sotto la mappa, sempre in colonna unica */}
+      {/* Sezione Buzz */}
+      <div className="w-full flex justify-center py-4 bg-black/50 rounded-xl border border-projectx-deep-blue/40 shadow-xl">
+        <BuzzButton
+          onBuzzClick={handleBuzz}
+          unlockedClues={unlockedClues}
+          isMapBuzz={true}
+        />
+      </div>
+
+      {/* Notes sotto la mappa */}
       <div className="w-full bg-black/50 rounded-xl p-4 border border-projectx-deep-blue/40 shadow-xl">
         <NotesSection />
       </div>
