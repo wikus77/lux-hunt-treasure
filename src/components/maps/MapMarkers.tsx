@@ -1,10 +1,6 @@
 
 import React, { useRef } from "react";
 import { GoogleMap, Marker, InfoWindow, Circle } from "@react-google-maps/api";
-import { MapPin, Pencil, X, Check, MapPinX, Circle as CircleIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import MapUserMarkers from "./MapUserMarkers";
 import MapSearchAreas from "./MapSearchAreas";
 
@@ -14,7 +10,7 @@ export type MapMarker = {
   lng: number;
   note: string;
   editing?: boolean;
-  position?: { lat: number; lng: number }; // Including position for compatibility
+  position: { lat: number; lng: number }; // Mandatory for compatibility
   createdAt?: Date;     // Added for MapLogicProvider
 };
 
@@ -26,7 +22,7 @@ export type SearchArea = {
   label: string;
   editing?: boolean;
   isAI?: boolean;
-  position?: { lat: number; lng: number }; // Including position for compatibility
+  position: { lat: number; lng: number }; // Mandatory for compatibility
   color?: string;      // Added for MapLogicProvider
 };
 
@@ -48,7 +44,7 @@ type MapMarkersProps = {
   editSearchArea: (id: string) => void;
   deleteMarker: (id: string) => void;
   deleteSearchArea: (id: string) => void;
-  center?: { lat: number; lng: number }; // nuovo prop opzionale
+  center?: { lat: number; lng: number };
 };
 
 const mapContainerStyle = {
@@ -79,19 +75,15 @@ export const MapMarkers = ({
   editSearchArea,
   deleteMarker,
   deleteSearchArea,
-  center, // supporto nuovo prop
-}: any) => {
-  const newNoteRef = useRef<HTMLTextAreaElement>(null);
-  const newLabelRef = useRef<HTMLInputElement>(null);
-  const newRadiusRef = useRef<HTMLInputElement>(null);
-
+  center,
+}: MapMarkersProps) => {
   return (
     <div className="relative w-full flex justify-center">
       {isLoaded ? (
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
           zoom={13}
-          center={center ?? defaultCenter} /* ora il centro può cambiare */
+          center={center ?? defaultCenter}
           onClick={onMapClick}
           onDblClick={onMapDoubleClick}
           options={{

@@ -4,15 +4,11 @@ import MapArea from "./MapArea";
 import MapHeader from "./MapHeader";
 import LoadingScreen from "./LoadingScreen";
 import NotesSection from "./NotesSection";
-import CluePopup from "./CluePopup";
 import { useMapLogic } from "./useMapLogic";
 
 const MapLogicProvider = () => {
   const {
     isLoading,
-    mapReady,
-    showCluePopup,
-    clueMessage,
     markers,
     searchAreas,
     activeMarker,
@@ -21,7 +17,6 @@ const MapLogicProvider = () => {
     isAddingSearchArea,
     currentLocation,
     buzzMapPrice,
-    setShowCluePopup,
     setActiveMarker,
     setActiveSearchArea,
     handleMapReady,
@@ -86,12 +81,6 @@ const MapLogicProvider = () => {
           />
         </div>
       </div>
-      <CluePopup
-        open={showCluePopup && mapReady}
-        clueMessage={clueMessage}
-        showBanner={true}
-        onClose={() => setShowCluePopup(false)}
-      />
     </div>
   );
 };

@@ -97,7 +97,8 @@ export const useMapLogic = (): UseMapLogicResult => {
         lng: currentLocation[1],
         radius: 500,
         label: "Area generata",
-        color: "#4361ee"
+        color: "#4361ee",
+        position: { lat: currentLocation[0], lng: currentLocation[1] }
       };
       setSearchAreas(prev => [...prev, newArea]);
       setActiveSearchArea(newArea.id);
@@ -121,11 +122,14 @@ export const useMapLogic = (): UseMapLogicResult => {
 
   const handleMapClick = (e: google.maps.MapMouseEvent) => {
     if (isAddingMarker && e.latLng) {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
       const newMarker: MapMarker = {
         id: uuidv4(),
-        lat: e.latLng.lat(),
-        lng: e.latLng.lng(),
+        lat: lat,
+        lng: lng,
         note: "",
+        position: { lat, lng },
         createdAt: new Date()
       };
       setMarkers(prev => [...prev, newMarker]);
@@ -133,13 +137,16 @@ export const useMapLogic = (): UseMapLogicResult => {
       setIsAddingMarker(false);
       toast.success("Punto aggiunto alla mappa");
     } else if (isAddingSearchArea && e.latLng) {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
       const newArea: SearchArea = {
         id: uuidv4(),
-        lat: e.latLng.lat(),
-        lng: e.latLng.lng(),
+        lat: lat, 
+        lng: lng,
         radius: 500,
         label: "Area di ricerca",
-        color: "#7209b7"
+        color: "#7209b7",
+        position: { lat, lng }
       };
       setSearchAreas(prev => [...prev, newArea]);
       setActiveSearchArea(newArea.id);
