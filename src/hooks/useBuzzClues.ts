@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "@/components/ui/sonner";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -17,6 +18,7 @@ export const useBuzzClues = () => {
   const [unlockedClues, setUnlockedClues] = useState<number>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
+      // Default to 0 if no saved value exists
       return saved ? Math.min(parseInt(saved, 10), MAX_CLUES) : 0;
     } catch (e) {
       console.error("Error loading unlocked clues count:", e);

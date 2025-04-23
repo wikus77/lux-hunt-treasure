@@ -1,3 +1,4 @@
+
 import { BookOpen } from "lucide-react";
 import ClueCard from "@/components/clues/ClueCard";
 import React, { useState } from "react";
@@ -110,7 +111,7 @@ const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
           <BookOpen className="mr-2 h-5 w-5" /> Indizi
         </h3>
         <span className="text-sm text-muted-foreground">
-          {totalUnlockedClues} / 1000 sbloccati
+          {totalUnlockedClues} / {MAX_CLUES} sbloccati
         </span>
       </div>
 

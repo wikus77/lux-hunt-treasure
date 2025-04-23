@@ -1,4 +1,3 @@
-
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useState, useEffect, useCallback } from "react";
 import ProfileClues from "@/components/profile/ProfileClues";
@@ -26,22 +25,10 @@ const Events = () => {
     // Get profile image on mount
     setProfileImage(localStorage.getItem('profileImage'));
     
-    // Solo aggiungi indizi di test se non ne abbiamo ancora - controlla localStorage direttamente
-    const currentUnlockedClues = localStorage.getItem('unlockedCluesCount');
-    
-    if (!currentUnlockedClues || currentUnlockedClues === '0') {
-      console.log("Adding initial test clues");
-      // Aggiungi solo 3 indizi di test in totale, non uno per render
-      incrementUnlockedCluesAndAddClue();
-      incrementUnlockedCluesAndAddClue();
-      incrementUnlockedCluesAndAddClue();
-    } else {
-      console.log("Not adding test clues, current count:", currentUnlockedClues);
-    }
-    
-    // Aggiorniamo le notifiche all'avvio
+    // Non aggiungiamo più indizi di test automaticamente all'avvio
+    // Aggiorniamo solo le notifiche all'avvio
     reloadNotifications();
-  }, [incrementUnlockedCluesAndAddClue, reloadNotifications]);
+  }, [reloadNotifications]);
 
   const generateRandomNotification = useCallback(() => {
     console.log("Generating random notification...");

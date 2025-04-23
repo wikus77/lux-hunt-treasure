@@ -51,7 +51,7 @@ const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz
 
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
-          Limite: 1000 indizi supplementari per evento
+          Limite: {MAX_CLUES} indizi supplementari per evento
         </p>
         <p className="text-sm mt-1 font-medium">
           {unlockedClues}/{MAX_CLUES} indizi sbloccati
