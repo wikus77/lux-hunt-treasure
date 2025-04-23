@@ -19,13 +19,13 @@ export const useBuzzClues = () => {
   const [unlockedClues, setUnlockedClues] = useState<number>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? parseInt(saved, 10) : 0;
+      return saved ? Math.min(parseInt(saved, 10), MAX_CLUES) : 0;
     } catch (e) {
       console.error("Error loading unlocked clues count:", e);
       return 0;
     }
   });
-  
+
   const [usedVagueClues, setUsedVagueClues] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(USED_CLUES_KEY);
@@ -35,7 +35,7 @@ export const useBuzzClues = () => {
       return [];
     }
   });
-  
+
   const [lastVagueClue, setLastVagueClue] = useState<string | null>(null);
 
   const { addNotification } = useNotifications();
@@ -48,7 +48,7 @@ export const useBuzzClues = () => {
       console.error("Failed to save unlockedCluesCount to localStorage", e);
     }
   }, [unlockedClues]);
-  
+
   // Save used clues to localStorage whenever they change
   useEffect(() => {
     try {
@@ -58,45 +58,50 @@ export const useBuzzClues = () => {
     }
   }, [usedVagueClues]);
 
-  // Fixed incrementUnlockedCluesAndAddClue function to properly update the count
+  // Use functional updates and handle state properly
   const incrementUnlockedCluesAndAddClue = useCallback(() => {
-    // Only allow incrementing if we haven't reached MAX_CLUES
-    if (unlockedClues >= MAX_CLUES) {
-      toast("Hai già sbloccato tutti gli indizi disponibili!", { 
-        duration: 3000,
-        position: "top-center"
-      });
-      return unlockedClues;
-    }
-    
+    let updatedCount = 0;
     setUnlockedClues(prevCount => {
-      const newCount = Math.min(prevCount + 1, MAX_CLUES);
-      return newCount;
+      if (prevCount >= MAX_CLUES) {
+        toast("Hai già sbloccato tutti gli indizi disponibili!", {
+          duration: 3000,
+          position: "top-center"
+        });
+        updatedCount = prevCount;
+        return prevCount;
+      }
+      updatedCount = Math.min(prevCount + 1, MAX_CLUES);
+      return updatedCount;
     });
-    
-    const nextClue = getNextVagueClue(usedVagueClues);
-    setLastVagueClue(nextClue);
-    
-    setUsedVagueClues(prev => [...prev, nextClue]);
 
-    // Try to push notification, fallback to toast if storage full
-    const success = addNotification?.({
-      title: "Nuovo indizio extra!",
-      description: nextClue
-    });
-    
-    if (!success) {
-      toast("Nuovo indizio extra! " + nextClue, { duration: 5000 });
+    // Only proceed to add new clue if we actually incremented
+    if (updatedCount && updatedCount <= MAX_CLUES) {
+      setUsedVagueClues(prevUsed => {
+        const nextClue = getNextVagueClue(prevUsed);
+        setLastVagueClue(nextClue);
+        const newUsed = [...prevUsed, nextClue];
+
+        // Try to push notification, fallback to toast if storage full
+        const success = addNotification?.({
+          title: "Nuovo indizio extra!",
+          description: nextClue
+        });
+
+        if (!success) {
+          toast("Nuovo indizio extra! " + nextClue, { duration: 5000 });
+        }
+
+        return newUsed;
+      });
     }
-
-    return unlockedClues + 1;
-  }, [unlockedClues, usedVagueClues, addNotification]);
+    return updatedCount;
+  }, [addNotification]);
 
   const resetUnlockedClues = useCallback(() => {
     setUnlockedClues(0);
     setUsedVagueClues([]);
     setLastVagueClue(null);
-    
+
     // Clear localStorage values
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(USED_CLUES_KEY);
