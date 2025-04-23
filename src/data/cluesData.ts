@@ -11,7 +11,7 @@ export interface Clue {
 export const clues: Clue[] = [
   {
     id: 1,
-    title: "Primo Indizio",
+    title: "Posizione Attuale",
     description: "L'auto si trova in una città che inizia con la lettera 'M'.",
     week: 1,
     isLocked: false,
@@ -19,24 +19,32 @@ export const clues: Clue[] = [
   },
   {
     id: 2,
-    title: "Colore e Dettagli",
-    description: "L'auto è di colore rosso con dettagli in fibra di carbonio.",
+    title: "Specifiche Veicolo",
+    description: "L'auto ha un motore V8 biturbo.",
     week: 1,
     isLocked: true,
     subscriptionType: "Silver"
   },
   {
     id: 3,
-    title: "Localizzazione",
-    description: "L'auto è parcheggiata vicino a un famoso monumento.",
+    title: "Dettagli Interni",
+    description: "Gli interni sono in pelle nera con cuciture rosse.",
     week: 1,
     isLocked: true,
     subscriptionType: "Gold"
   },
   {
     id: 4,
-    title: "Coordinate Precise",
-    description: "Coordinate GPS precise della posizione dell'auto.",
+    title: "Vista Esterna",
+    description: "La carrozzeria presenta dettagli in fibra di carbonio.",
+    week: 1,
+    isLocked: true,
+    subscriptionType: "Black"
+  },
+  {
+    id: 5,
+    title: "Optional Speciali",
+    description: "L'auto è equipaggiata con un sistema audio premium.",
     week: 1,
     isLocked: true,
     subscriptionType: "Black"
