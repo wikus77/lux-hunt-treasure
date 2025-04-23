@@ -1,6 +1,7 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Plus } from "lucide-react";
+import { MapPin, Plus, X } from "lucide-react";
 import MapNoteList from "@/components/maps/MapNoteList";
 
 type Importance = "high" | "medium" | "low";
@@ -10,25 +11,31 @@ type LocalNote = {
   importance: Importance;
 };
 
-type NotesSectionProps = {};
-
-const importanceColors: Record<Importance, string> = {
-  high: "#ea384c",
-  medium: "#F97316",
-  low: "#22c55e"
-};
-
 const NotesSection: React.FC = () => {
   const [notes, setNotes] = useState<LocalNote[]>([]);
   const [showInput, setShowInput] = useState(false);
   const [noteText, setNoteText] = useState("");
+  const [editingNote, setEditingNote] = useState<LocalNote | null>(null);
 
   const addNote = () => {
     if (noteText.trim().length === 0) return;
-    setNotes([
-      ...notes,
-      { id: Date.now().toString(), note: noteText.trim(), importance: "medium" }
-    ]);
+    
+    if (editingNote) {
+      // Update existing note
+      setNotes(notes.map(note => 
+        note.id === editingNote.id 
+          ? { ...note, note: noteText.trim() }
+          : note
+      ));
+      setEditingNote(null);
+    } else {
+      // Add new note
+      setNotes([
+        ...notes,
+        { id: Date.now().toString(), note: noteText.trim(), importance: "medium" }
+      ]);
+    }
+    
     setNoteText("");
     setShowInput(false);
   };
@@ -49,6 +56,12 @@ const NotesSection: React.FC = () => {
             }
       )
     );
+  };
+
+  const handleEditNote = (note: LocalNote) => {
+    setEditingNote(note);
+    setNoteText(note.note);
+    setShowInput(true);
   };
 
   const clearAllNotes = () => setNotes([]);
@@ -75,10 +88,16 @@ const NotesSection: React.FC = () => {
             size="icon"
             variant="secondary"
             className="ml-2"
-            onClick={() => setShowInput(v => !v)}
-            aria-label="Aggiungi nota"
+            onClick={() => {
+              if (!showInput) {
+                setEditingNote(null);
+                setNoteText("");
+              }
+              setShowInput(v => !v);
+            }}
+            aria-label={editingNote ? "Annulla modifica" : "Aggiungi nota"}
           >
-            <Plus className="w-5 h-5" />
+            {showInput ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
           </Button>
         </div>
       </div>
@@ -88,7 +107,7 @@ const NotesSection: React.FC = () => {
             className="flex-1 rounded bg-background/80 px-3 py-2 mr-2 text-white border border-projectx-deep-blue/50 focus:outline-none"
             maxLength={120}
             value={noteText}
-            placeholder="Scrivi una nota..."
+            placeholder={editingNote ? "Modifica nota..." : "Scrivi una nota..."}
             onChange={e => setNoteText(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") addNote() }}
             autoFocus
@@ -99,13 +118,14 @@ const NotesSection: React.FC = () => {
             onClick={addNote}
             disabled={noteText.trim().length === 0}
           >
-            Salva
+            {editingNote ? "Modifica" : "Salva"}
           </Button>
         </div>
       )}
       <MapNoteList
         notes={notes}
         toggleImportance={toggleImportance}
+        onEditNote={handleEditNote}
       />
     </>
   );

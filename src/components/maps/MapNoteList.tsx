@@ -1,32 +1,36 @@
 
 import React from "react";
-import { CircleDot } from "lucide-react";
+import { CircleDot, Pencil } from "lucide-react";
 
-// Usa la stessa tipologia delle note con importanza
 type Importance = "high" | "medium" | "low";
 type LocalNote = {
   id: string;
   note: string;
   importance: Importance;
 };
+
 type MapNoteListProps = {
   notes: LocalNote[];
   toggleImportance: (id: string) => void;
+  onEditNote: (note: LocalNote) => void;
 };
 
-// Colori associati alle importanze
 const importanceColors: Record<Importance, string> = {
   high: "#ea384c",
   medium: "#F97316",
   low: "#22c55e"
 };
 
-const MapNoteList = ({ notes, toggleImportance }: MapNoteListProps) => {
+const MapNoteList = ({ notes, toggleImportance, onEditNote }: MapNoteListProps) => {
   // Sort notes by importance
   const sortedNotes = [...notes].sort((a, b) => {
     const importanceOrder = { high: 0, medium: 1, low: 2 };
     return importanceOrder[a.importance] - importanceOrder[b.importance];
   });
+
+  const handleLongPress = (note: LocalNote) => {
+    onEditNote(note);
+  };
 
   return (
     <div className="mt-6">
@@ -39,17 +43,21 @@ const MapNoteList = ({ notes, toggleImportance }: MapNoteListProps) => {
           sortedNotes.map((note) => (
             <div
               key={`note-${note.id}`}
-              className="p-3 rounded-md bg-projectx-deep-blue/40 backdrop-blur-sm flex gap-2 items-center"
+              className="p-3 rounded-md bg-projectx-deep-blue/40 backdrop-blur-sm flex gap-2 items-center cursor-pointer"
+              onClick={() => handleLongPress(note)}
             >
               <button
                 aria-label="Cambia importanza"
-                onClick={() => toggleImportance(note.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleImportance(note.id);
+                }}
                 className="flex-shrink-0 mr-3 focus:outline-none"
                 style={{ background: "none", border: "none", padding: 0 }}
                 type="button"
               >
                 <CircleDot
-                  className="w-4 h-4" // Reduced from w-6 h-6 to w-4 h-4 (20% smaller)
+                  className="w-4 h-4"
                   style={{
                     color: importanceColors[note.importance],
                     fill: importanceColors[note.importance]
@@ -61,6 +69,7 @@ const MapNoteList = ({ notes, toggleImportance }: MapNoteListProps) => {
                   <span className="text-gray-400 italic">Nessuna nota</span>
                 )}
               </div>
+              <Pencil className="w-4 h-4 text-gray-400" />
             </div>
           ))
         )}
