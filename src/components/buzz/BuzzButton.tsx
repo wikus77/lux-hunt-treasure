@@ -9,7 +9,7 @@ interface BuzzButtonProps {
   onBuzzClick: () => void;
   unlockedClues: number;
   updateUnlockedClues?: (val: number) => void;
-  isMapBuzz?: boolean; // Nuovo parametro per distinguere il tipo di buzz
+  isMapBuzz?: boolean; // Parametro per distinguere il tipo di buzz
 }
 
 const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz = false }: BuzzButtonProps) => {
@@ -27,8 +27,8 @@ const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz
 
     setTimeout(() => {
       setIsVaultOpen(false);
-      // Incrementa il contatore locale (sincronizza con parent via props)
-      if (typeof updateUnlockedClues === 'function') {
+      // Incrementa il contatore locale solo se necessario
+      if (typeof updateUnlockedClues === 'function' && !isMapBuzz) {
         updateUnlockedClues(unlockedClues + 1);
       }
       onBuzzClick();

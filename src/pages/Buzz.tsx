@@ -56,8 +56,8 @@ const Buzz = () => {
     const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
     initializeSound(soundPreference, volume);
 
-    // Solo per caso pagamento completato da dialog (NON mappa!)
-    if (location.state?.paymentCompleted && !location.state?.mapBuzz) {
+    // Verifica se il pagamento è stato completato e proviene dalla pagina standard (non mappa)
+    if (location.state?.paymentCompleted && location.state?.fromRegularBuzz === true) {
       savePaymentMethod();
       incrementUnlockedCluesAndAddClue();
       setShowExplosion(true);
@@ -109,9 +109,6 @@ const Buzz = () => {
     localStorage.setItem('usedVagueBuzzClues', JSON.stringify(updated));
 
     sendBuzzNotification(nextClue);
-    
-    // IMPORTANTE: Rimuoviamo completamente qualsiasi funzionalità che potrebbe generare aree sulla mappa da questa sezione
-    // Non chiamiamo nessuna funzione che generi aree sulla mappa qui
   }
 
   const handleBuzzClick = () => {
@@ -119,7 +116,9 @@ const Buzz = () => {
       navigate("/payment-methods", {
         state: {
           fromBuzz: true,
-          clue: { description: getNextVagueClue(usedVagueClues) }
+          fromRegularBuzz: true, // Flag per indicare che proviene dalla sezione Buzz standard
+          clue: { description: getNextVagueClue(usedVagueClues) },
+          generateMapArea: false // Assicura che non vengano generate aree sulla mappa
         }
       });
       return;
@@ -151,9 +150,9 @@ const Buzz = () => {
       navigate("/payment-methods", {
         state: {
           fromBuzz: true,
+          fromRegularBuzz: true, // Flag per indicare che proviene dalla sezione Buzz standard
           clue: { description: getNextVagueClue(usedVagueClues) },
-          // Assicuriamoci di NON inviare nessun flag per la generazione di aree sulla mappa
-          generateMapArea: false
+          generateMapArea: false // Assicura che non vengano generate aree sulla mappa
         }
       });
     }, 1500);
@@ -175,8 +174,7 @@ const Buzz = () => {
         <BuzzButton
           onBuzzClick={handleBuzzClick}
           unlockedClues={unlockedClues}
-          updateUnlockedClues={incrementUnlockedCluesAndAddClue}
-          // Assicuriamoci che il pulsante Buzz in questa sezione non generi aree sulla mappa
+          updateUnlockedClues={setUnlockedClues}
           isMapBuzz={false}
         />
       </section>
