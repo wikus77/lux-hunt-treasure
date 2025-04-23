@@ -27,12 +27,9 @@ interface ProfileCluesProps {
   onClueUnlocked?: () => void;
 }
 
-// Define the MAX_CLUES constant for consistency
-const MAX_CLUES = 1000;
-
 const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
   const groupedClues = groupCluesByCategory(unlockedClues);
-  const { unlockedClues: totalUnlockedClues } = useBuzzClues();
+  const { unlockedClues: totalUnlockedClues, MAX_CLUES } = useBuzzClues();
 
   // Banner stato
   const [bannerOpen, setBannerOpen] = useState(false);

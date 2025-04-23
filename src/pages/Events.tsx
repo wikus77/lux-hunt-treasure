@@ -8,18 +8,18 @@ import { useBuzzClues } from "@/hooks/useBuzzClues";
 
 const Events = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const { unlockedClues, incrementUnlockedCluesAndAddClue } = useBuzzClues();
+  const { unlockedClues, incrementUnlockedCluesAndAddClue, MAX_CLUES } = useBuzzClues();
   
   useEffect(() => {
     // Get profile image on mount
     setProfileImage(localStorage.getItem('profileImage'));
     
-    // Only add test clues if we have none yet - check localStorage directly
+    // Solo aggiungi indizi di test se non ne abbiamo ancora - controlla localStorage direttamente
     const currentUnlockedClues = localStorage.getItem('unlockedCluesCount');
     
     if (!currentUnlockedClues || currentUnlockedClues === '0') {
       console.log("Adding initial test clues");
-      // Add only 3 test clues in total, not one per render
+      // Aggiungi solo 3 indizi di test in totale, non uno per render
       incrementUnlockedCluesAndAddClue();
       incrementUnlockedCluesAndAddClue();
       incrementUnlockedCluesAndAddClue();
@@ -67,8 +67,5 @@ const Events = () => {
     </div>
   );
 };
-
-// Add the MAX_CLUES constant to the file
-const MAX_CLUES = 1000;
 
 export default Events;

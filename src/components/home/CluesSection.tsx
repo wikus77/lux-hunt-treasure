@@ -4,11 +4,8 @@ import ClueCard from "@/components/clues/ClueCard";
 import { clues } from "@/data/cluesData";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
 
-// Define the MAX_CLUES constant here too for consistency
-const MAX_CLUES = 1000;
-
 export const CluesSection = () => {
-  const { unlockedClues, incrementUnlockedCluesAndAddClue } = useBuzzClues();
+  const { unlockedClues, incrementUnlockedCluesAndAddClue, MAX_CLUES } = useBuzzClues();
   
   return (
     <section className="p-4 w-full">
