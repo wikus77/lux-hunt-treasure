@@ -66,13 +66,13 @@ export const useMapLogic = () => {
 
             if (location.state?.generateMapArea && currentLocation) {
               const generatedArea = areaLogic.generateSearchArea();
+              // The error was here - don't use the return value in a condition
+              // Instead, just call the function
+              
               // Center map on the new area
-              if (generatedArea) {
-                // This will be centered when the area is created
-                toast.success("Nuova area di ricerca generata!", {
-                  description: "Controlla la mappa per vedere la nuova area di ricerca."
-                });
-              }
+              toast.success("Nuova area di ricerca generata!", {
+                description: "Controlla la mappa per vedere la nuova area di ricerca."
+              });
             }
           }, 1000);
         }
