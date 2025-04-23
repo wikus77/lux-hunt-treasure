@@ -20,7 +20,7 @@ type SearchArea = {
   radius: number;
   label: string;
   editing?: boolean;
-  isAI?: boolean; // <--- nuova proprietà
+  isAI?: boolean;
 };
 
 type Props = {
@@ -59,19 +59,6 @@ const MapSearchAreas: React.FC<Props> = ({
     }
   };
 
-  const handleAreaTouchStart = (area: SearchArea) => {
-    if (!area.isAI) return;
-    timerRef.current = setTimeout(() => {
-      setLongPressArea(area);
-    }, LONG_PRESS_MS);
-  };
-  const handleAreaTouchEnd = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-
   const handleAIEdit = () => {
     if (longPressArea) {
       editSearchArea(longPressArea.id);
@@ -96,11 +83,11 @@ const MapSearchAreas: React.FC<Props> = ({
             radius={area.radius}
             options={{
               fillColor: area.isAI
-                ? "rgba(67,97,238,0.43)" // [#4361ee] più visibile/translucido per aree AI
+                ? "rgba(115,82,255,0.25)" // Colore più vicino al Buzz gradient
                 : "rgba(67, 97, 238, 0.24)",
-              fillOpacity: area.isAI ? 0.75 : 0.8,
+              fillOpacity: area.isAI ? 0.6 : 0.8,
               strokeColor: area.isAI
-                ? "rgba(0,163,255,0.85)" // [#00a3ff] esterna luminosa per aree AI
+                ? "rgba(126,105,171,0.85)" // Secondary Purple
                 : "rgba(114, 9, 183, 0.9)",
               strokeOpacity: area.isAI ? 1 : 1,
               strokeWeight: area.isAI ? 4 : 3,
@@ -108,8 +95,6 @@ const MapSearchAreas: React.FC<Props> = ({
             onClick={() => setActiveSearchArea(area.id)}
             onMouseDown={area.isAI ? () => handleAreaMouseDown(area) : undefined}
             onMouseUp={area.isAI ? handleAreaMouseUp : undefined}
-            onTouchStart={area.isAI ? () => handleAreaTouchStart(area) : undefined}
-            onTouchEnd={area.isAI ? handleAreaTouchEnd : undefined}
           />
           <Marker
             position={{ lat: area.lat, lng: area.lng }}
