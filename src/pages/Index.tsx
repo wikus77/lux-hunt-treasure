@@ -32,17 +32,18 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="w-full flex flex-col justify-center items-center text-center px-6 py-24 md:py-32 relative">
-        {/* Bottone ACCEDI in alto a destra */}
+        {/* Bottone ACCEDI in alto a destra, più piccolo e colorato come da screenshot */}
         <div className="absolute top-4 right-4 md:top-10 md:right-10 z-20">
           <Button
             onClick={handleLoginClick}
-            className="flex items-center px-7 py-3 rounded-xl font-semibold text-lg shadow-lg bg-gradient-to-r from-[#7E69AB] to-[#9b87f5] text-white hover:scale-105 transition-all duration-150"
+            className="flex items-center rounded-lg font-semibold text-base shadow-lg transition-all duration-150 px-4 py-2"
             style={{
-              background: "linear-gradient(90deg, #7E69AB 0%, #9b87f5 100%)",
-              boxShadow: "0 2px 16px 0 rgba(0,0,0,0.25)"
+              background: "linear-gradient(90deg, #FFB142 0%, #FF7846 100%)",
+              color: "#232323",
+              boxShadow: "0 1px 6px 0 rgba(0,0,0,0.18), 0 0.5px 2px #ffcba4"
             }}
           >
-            <ArrowRight className="mr-2" size={22} />
+            <ArrowRight className="mr-1" size={18} />
             Accedi
           </Button>
         </div>
@@ -53,14 +54,14 @@ const Index = () => {
           Unisciti a M1SSION: Il Tuo Sogno è a Portata di Mano
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
-          <Button 
+          <Button
             className="bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white font-bold px-8 py-6 rounded-full transform transition-transform hover:scale-105"
             size="lg"
             onClick={handleRegisterClick}
           >
             Registrati Oggi
           </Button>
-          <Button 
+          <Button
             className="backdrop-blur-md bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold px-8 py-6 rounded-full transition-all"
             onClick={() => setIsVideoPlaying(true)}
             size="lg"
@@ -85,7 +86,7 @@ const Index = () => {
               Crea un account gratuito per iniziare il tuo viaggio verso l'auto dei tuoi sogni.
             </p>
           </div>
-          
+
           <div className="glass-card hover-lift text-center w-full relative">
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border border-white/10">
               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold text-xl">2</div>
@@ -138,7 +139,7 @@ const Index = () => {
             Non perdere l'opportunità di trasformare il tuo sogno in realtà. Unisciti a M1SSION oggi stesso e inizia il tuo viaggio verso l'auto dei tuoi sogni.
           </p>
           <div className="flex justify-center">
-            <Button 
+            <Button
               className="bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white font-bold px-8 py-6 rounded-full transform transition-transform hover:scale-105"
               size="lg"
               onClick={handleRegisterClick}
@@ -169,12 +170,12 @@ const Index = () => {
           </div>
         </div>
       </footer>
-      
+
       {/* Age Verification Modal */}
-      <AgeVerificationModal 
-        open={showAgeVerification} 
-        onClose={() => setShowAgeVerification(false)} 
-        onVerified={handleAgeVerified} 
+      <AgeVerificationModal
+        open={showAgeVerification}
+        onClose={() => setShowAgeVerification(false)}
+        onVerified={handleAgeVerified}
       />
     </div>
   );

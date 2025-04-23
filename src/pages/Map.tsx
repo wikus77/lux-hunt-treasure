@@ -3,7 +3,7 @@ import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MapPin, Circle } from "lucide-react";
+import { MapPin, Circle, Info } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { LoadScript } from "@react-google-maps/api";
 import { MapMarkers, type MapMarker, type SearchArea } from "@/components/maps/MapMarkers";
@@ -319,8 +319,10 @@ const Map = () => {
               variant="outline"
               size="sm"
               onClick={() => setHelpDialogOpen(true)}
+              className="flex gap-1 items-center"
             >
-              ?
+              <Info className="h-4 w-4" />
+              <span className="hidden sm:inline">Informazioni</span>
             </Button>
           </div>
           
