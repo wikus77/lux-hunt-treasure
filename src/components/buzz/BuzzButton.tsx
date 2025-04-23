@@ -12,7 +12,7 @@ interface BuzzButtonProps {
   isMapBuzz?: boolean;
 }
 
-const MAX_CLUES = 1000; // Aggiornato il limite visualizzato
+const MAX_CLUES = 1000; // Consistent max clues limit
 
 const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz = false }: BuzzButtonProps) => {
   const [isVaultOpen, setIsVaultOpen] = useState(false);
@@ -62,4 +62,3 @@ const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz
 };
 
 export default BuzzButton;
-

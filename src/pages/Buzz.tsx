@@ -33,8 +33,8 @@ const Buzz = () => {
 
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
-    // Optional: Reset clues on page load or as needed
-    resetUnlockedClues();
+    // Don't reset clues on every page load to maintain the counter
+    // resetUnlockedClues(); // Remove this line to maintain the counter
   }, []);
 
   useEffect(() => {
