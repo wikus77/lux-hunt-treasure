@@ -45,7 +45,7 @@ const MapLogicProvider = () => {
   }
 
   return (
-    <div className="relative h-screen w-full p-4">
+    <div className="relative min-h-screen w-full p-4 flex flex-col gap-4">
       <MapHeader 
         onAddMarker={handleAddMarker}
         onAddArea={handleAddArea}
@@ -55,7 +55,7 @@ const MapLogicProvider = () => {
         isAddingArea={isAddingSearchArea}
         buzzMapPrice={buzzMapPrice}
       />
-      
+
       {/* Notification Area - Only one popup shows at a time */}
       {showCluePopup ? (
         <CluePopup 
@@ -78,40 +78,41 @@ const MapLogicProvider = () => {
         />
       )}
 
-      {/* Main Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-        <div className="col-span-1 md:col-span-2">
-          <MapArea 
-            onMapReady={handleMapReady}
-            markers={markers}
-            searchAreas={searchAreas}
-            isAddingMarker={isAddingMarker}
-            isAddingSearchArea={isAddingSearchArea}
-            activeMarker={activeMarker}
-            activeSearchArea={activeSearchArea}
-            onMapClick={handleMapClick}
-            onMapDoubleClick={handleMapDoubleClick}
-            setActiveMarker={setActiveMarker}
-            setActiveSearchArea={setActiveSearchArea}
-            saveMarkerNote={saveMarkerNote}
-            saveSearchArea={saveSearchArea}
-            editMarker={editMarker}
-            editSearchArea={editSearchArea}
-            deleteMarker={deleteMarker}
-            deleteSearchArea={deleteSearchArea}
-            currentLocation={currentLocation}
-          />
-        </div>
-        <div className="col-span-1 bg-black/50 rounded-xl p-4 border border-projectx-deep-blue/40 shadow-xl">
-          <NotesSection 
-            markers={markers} 
-            setActiveMarker={setActiveMarker} 
-            clearAllMarkers={clearAllMarkers}
-          />
-        </div>
+      {/* Mappa sopra */}
+      <div className="w-full">
+        <MapArea 
+          onMapReady={handleMapReady}
+          markers={markers}
+          searchAreas={searchAreas}
+          isAddingMarker={isAddingMarker}
+          isAddingSearchArea={isAddingSearchArea}
+          activeMarker={activeMarker}
+          activeSearchArea={activeSearchArea}
+          onMapClick={handleMapClick}
+          onMapDoubleClick={handleMapDoubleClick}
+          setActiveMarker={setActiveMarker}
+          setActiveSearchArea={setActiveSearchArea}
+          saveMarkerNote={saveMarkerNote}
+          saveSearchArea={saveSearchArea}
+          editMarker={editMarker}
+          editSearchArea={editSearchArea}
+          deleteMarker={deleteMarker}
+          deleteSearchArea={deleteSearchArea}
+          currentLocation={currentLocation}
+        />
+      </div>
+
+      {/* Notes sotto la mappa, sempre in colonna unica */}
+      <div className="w-full bg-black/50 rounded-xl p-4 border border-projectx-deep-blue/40 shadow-xl">
+        <NotesSection 
+          markers={markers} 
+          setActiveMarker={setActiveMarker} 
+          clearAllMarkers={clearAllMarkers}
+        />
       </div>
     </div>
   );
 };
 
 export default MapLogicProvider;
+
