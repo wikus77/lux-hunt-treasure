@@ -56,16 +56,30 @@ const MapLogicProvider = () => {
         buzzMapPrice={buzzMapPrice}
       />
       
-      {/* Clue Popup - Shown when a clue is available */}
-      <CluePopup 
-        open={showCluePopup} 
-        clueMessage={clueMessage} 
-        showBanner={!!activeSearchArea} 
-        onClose={() => setShowCluePopup(false)}
-      />
+      {/* Notification Area - Only one popup shows at a time */}
+      {showCluePopup ? (
+        <CluePopup 
+          open={showCluePopup} 
+          clueMessage={clueMessage} 
+          showBanner={false} 
+          onClose={() => setShowCluePopup(false)}
+        />
+      ) : (
+        <BuzzMapBanner 
+          open={!!activeSearchArea} 
+          area={activeSearchArea ? {
+            lat: searchAreas.find(a => a.id === activeSearchArea)?.lat || 0,
+            lng: searchAreas.find(a => a.id === activeSearchArea)?.lng || 0,
+            radius: searchAreas.find(a => a.id === activeSearchArea)?.radius || 0,
+            label: searchAreas.find(a => a.id === activeSearchArea)?.label || '',
+            confidence: 'Alta'
+          } : null} 
+          onClose={() => setActiveSearchArea(null)}
+        />
+      )}
 
       {/* Main Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
         <div className="col-span-1 md:col-span-2">
           <MapArea 
             onMapReady={handleMapReady}

@@ -23,7 +23,7 @@ const CluePopup: React.FC<CluePopupProps> = ({
         transform -translate-x-1/2 transition-all duration-500
         ${open ? "translate-y-0 opacity-100" : "-translate-y-32 opacity-0"}
       `}
-      style={{ width: "795px", maxWidth: "95vw" }} // Increased width by 15%
+      style={{ width: "795px", maxWidth: "95vw" }}
     >
       <div
         className="relative pointer-events-auto
