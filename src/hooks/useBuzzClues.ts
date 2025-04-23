@@ -1,11 +1,9 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "@/components/ui/sonner";
 import { useNotifications } from "@/hooks/useNotifications";
 import { vagueBuzzClues } from "@/data/vagueBuzzClues";
 
-// Una costante più realistica per il massimo numero di indizi
-const MAX_CLUES = 4; // Ridotto da 1000 a 4 per riflettere il numero reale di indizi disponibili
+const MAX_CLUES = 1000;
 const STORAGE_KEY = 'unlockedCluesCount';
 const USED_CLUES_KEY = 'usedVagueBuzzClues';
 
@@ -16,7 +14,6 @@ function getNextVagueClue(usedClues: string[]) {
 }
 
 export const useBuzzClues = () => {
-  // Inizializza lo stato con i valori da localStorage, defaulting a 0 se non presenti
   const [unlockedClues, setUnlockedClues] = useState<number>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -41,7 +38,6 @@ export const useBuzzClues = () => {
 
   const { addNotification } = useNotifications();
 
-  // Salva il conteggio sbloccato in localStorage ogni volta che cambia
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, unlockedClues.toString());
@@ -50,7 +46,6 @@ export const useBuzzClues = () => {
     }
   }, [unlockedClues]);
 
-  // Salva gli indizi usati in localStorage ogni volta che cambiano
   useEffect(() => {
     try {
       localStorage.setItem(USED_CLUES_KEY, JSON.stringify(usedVagueClues));
@@ -59,7 +54,6 @@ export const useBuzzClues = () => {
     }
   }, [usedVagueClues]);
 
-  // Usa aggiornamenti funzionali e gestisci correttamente lo stato
   const incrementUnlockedCluesAndAddClue = useCallback(() => {
     let updatedCount = 0;
     setUnlockedClues(prevCount => {
@@ -75,14 +69,12 @@ export const useBuzzClues = () => {
       return updatedCount;
     });
 
-    // Procedi solo per aggiungere un nuovo indizio se abbiamo effettivamente incrementato
     if (updatedCount && updatedCount <= MAX_CLUES) {
       setUsedVagueClues(prevUsed => {
         const nextClue = getNextVagueClue(prevUsed);
         setLastVagueClue(nextClue);
         const newUsed = [...prevUsed, nextClue];
 
-        // Prova a inviare una notifica, fallback a toast se lo storage è pieno
         const success = addNotification?.({
           title: "Nuovo indizio extra!",
           description: nextClue
@@ -103,7 +95,6 @@ export const useBuzzClues = () => {
     setUsedVagueClues([]);
     setLastVagueClue(null);
 
-    // Cancella i valori di localStorage
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(USED_CLUES_KEY);
   }, []);
@@ -117,6 +108,6 @@ export const useBuzzClues = () => {
     incrementUnlockedCluesAndAddClue,
     resetUnlockedClues,
     getNextVagueClue: () => getNextVagueClue(usedVagueClues),
-    MAX_CLUES // Esponi MAX_CLUES per garantire consistenza
+    MAX_CLUES
   };
 };
