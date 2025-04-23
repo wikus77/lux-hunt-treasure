@@ -1,6 +1,6 @@
 
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ProfileClues from "@/components/profile/ProfileClues";
 import { clues } from "@/data/cluesData";
 import { FileSearch, Bell } from "lucide-react";
@@ -14,7 +14,13 @@ const Events = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { unlockedClues, incrementUnlockedCluesAndAddClue, MAX_CLUES } = useBuzzClues();
-  const { addNotification, notifications, unreadCount, markAllAsRead, reloadNotifications } = useNotifications();
+  const { 
+    addNotification, 
+    notifications, 
+    unreadCount, 
+    markAllAsRead, 
+    reloadNotifications 
+  } = useNotifications();
   
   useEffect(() => {
     // Get profile image on mount
@@ -37,7 +43,7 @@ const Events = () => {
     reloadNotifications();
   }, [incrementUnlockedCluesAndAddClue, reloadNotifications]);
 
-  const generateRandomNotification = () => {
+  const generateRandomNotification = useCallback(() => {
     const notificationTemplates = [
       { 
         title: "Indizio Extra", 
@@ -81,12 +87,12 @@ const Events = () => {
         duration: 2000,
       });
     }
-  };
+  }, [addNotification, reloadNotifications]);
 
-  const toggleNotifications = () => {
+  const toggleNotifications = useCallback(() => {
     console.log("Toggling notifications drawer, current state:", notificationsOpen);
-    setNotificationsOpen(!notificationsOpen);
-  };
+    setNotificationsOpen(prevState => !prevState);
+  }, [notificationsOpen]);
 
   return (
     <div className="pb-20 min-h-screen bg-black w-full">

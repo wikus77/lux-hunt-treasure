@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { User, Mail, MoreVertical } from "lucide-react";
@@ -25,21 +26,23 @@ const MainLayout = () => {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   
-  // Use try/catch to prevent crashes with notifications
-  let notifications = [];
-  let unreadCount = 0;
-  let markAllAsRead = () => {};
-  let reloadNotifications = () => {};
+  // Use safe initialization to prevent crashes
+  const [notificationData, setNotificationData] = useState({
+    notifications: [],
+    unreadCount: 0,
+    markAllAsRead: () => {},
+    reloadNotifications: () => {}
+  });
 
-  try {
-    const notificationsData = useNotifications();
-    notifications = notificationsData.notifications || [];
-    unreadCount = notificationsData.unreadCount || 0;
-    markAllAsRead = notificationsData.markAllAsRead || (() => {});
-    reloadNotifications = notificationsData.reloadNotifications || (() => {});
-  } catch (e) {
-    console.error("Error loading notifications in MainLayout:", e);
-  }
+  useEffect(() => {
+    try {
+      // Safely initialize notification data
+      const { notifications = [], unreadCount = 0, markAllAsRead = () => {}, reloadNotifications = () => {} } = useNotifications();
+      setNotificationData({ notifications, unreadCount, markAllAsRead, reloadNotifications });
+    } catch (e) {
+      console.error("Error loading notifications in MainLayout:", e);
+    }
+  }, [location.pathname]); // Re-initialize when route changes
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -57,7 +60,7 @@ const MainLayout = () => {
 
   const handleShowNotifications = () => {
     try {
-      reloadNotifications();
+      notificationData.reloadNotifications();
       setShowNotifications(true);
     } catch (e) {
       console.error("Error showing notifications:", e);
@@ -115,11 +118,11 @@ const MainLayout = () => {
             >
               <Mail className="w-5 h-5" />
               <span className={`absolute -top-1 -right-1 font-bold border border-black w-5 h-5 flex items-center justify-center rounded-full text-xs ${
-                unreadCount > 0
+                notificationData.unreadCount > 0
                   ? "bg-red-600 text-white"
                   : "bg-gray-700 text-gray-300"
               }`}>
-                {unreadCount > 0 ? (unreadCount > 9 ? "9+" : unreadCount) : ""}
+                {notificationData.unreadCount > 0 ? (notificationData.unreadCount > 9 ? "9+" : notificationData.unreadCount) : ""}
               </span>
             </button>
             <button
