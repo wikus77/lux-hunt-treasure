@@ -1,20 +1,17 @@
 
 import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MapPin, Circle, Info, Zap } from "lucide-react";
-import { v4 as uuidv4 } from "uuid";
-import { LoadScript } from "@react-google-maps/api";
-import { MapMarkers, type MapMarker, type SearchArea } from "@/components/maps/MapMarkers";
-import MapNoteList from "@/components/maps/MapNoteList";
 import EditModeToggle from "@/components/profile/EditModeToggle";
+import { toast } from "@/components/ui/sonner";
 import { useUserLocationPermission } from "@/hooks/useUserLocationPermission";
 import { useNavigate } from "react-router-dom";
 import { clues } from "@/data/cluesData";
-
-const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
+import MapHeader from "./map/MapHeader";
+import MapArea from "./map/MapArea";
+import NotesSection from "./map/NotesSection";
+import SearchAreasSection from "./map/SearchAreasSection";
+import HelpDialog from "./map/HelpDialog";
+import LoadingScreen from "./map/LoadingScreen";
 
 const DEFAULT_CENTER = { lat: 45.4642, lng: 9.19 };
 
@@ -23,8 +20,8 @@ const Map = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [markers, setMarkers] = useState<MapMarker[]>([]);
-  const [searchAreas, setSearchAreas] = useState<SearchArea[]>([]);
+  const [markers, setMarkers] = useState<any[]>([]);
+  const [searchAreas, setSearchAreas] = useState<any[]>([]);
   const [activeMarker, setActiveMarker] = useState<string | null>(null);
   const [activeSearchArea, setActiveSearchArea] = useState<string | null>(null);
   const [isAddingMarker, setIsAddingMarker] = useState(false);
@@ -34,10 +31,10 @@ const Map = () => {
   const [buzzClickCount, setBuzzClickCount] = useState(0);
   const navigate = useNavigate();
 
-  const { 
-    permission: geoPermission, 
-    userLocation, 
-    askPermission: askGeoPermission, 
+  const {
+    permission: geoPermission,
+    userLocation,
+    askPermission: askGeoPermission,
     loading: geoLoading,
     error: geoError
   } = useUserLocationPermission();
@@ -70,22 +67,16 @@ const Map = () => {
         console.error("Error loading saved markers:", e);
       }
     }
-
     const savedSearchAreas = localStorage.getItem('mapSearchAreas');
     if (savedSearchAreas) {
       try {
-        // Carica solo l'area AI più recente, se presente
-        const parsedAreas: SearchArea[] = JSON.parse(savedSearchAreas);
-        const regularAreas = parsedAreas.filter(area => !area.isAI);
-        const aiAreas = parsedAreas.filter(area => area.isAI);
-        
-        // Mantiene solo l'ultima area AI e tutte le aree regolari
-        const areasToKeep = [...regularAreas];
-        if (aiAreas.length > 0) {
-          areasToKeep.push(aiAreas[aiAreas.length - 1]);
+        // Mantieni SOLO l'ultima area
+        const parsedAreas = JSON.parse(savedSearchAreas);
+        if (Array.isArray(parsedAreas) && parsedAreas.length > 0) {
+          setSearchAreas([parsedAreas[parsedAreas.length - 1]]);
+        } else {
+          setSearchAreas([]);
         }
-        
-        setSearchAreas(areasToKeep);
       } catch (e) {
         console.error("Error loading saved search areas:", e);
       }
@@ -99,20 +90,23 @@ const Map = () => {
   }, [markers]);
 
   useEffect(() => {
+    // Salva SOLO l'ultima area (se presente)
     if (searchAreas.length > 0) {
-      localStorage.setItem('mapSearchAreas', JSON.stringify(searchAreas));
+      localStorage.setItem('mapSearchAreas', JSON.stringify([searchAreas[searchAreas.length - 1]]));
+    } else {
+      localStorage.removeItem('mapSearchAreas');
     }
   }, [searchAreas]);
 
   const handleMapClick = (e: google.maps.MapMouseEvent) => {
     if (!e.latLng) return;
-    
+
     const lat = e.latLng.lat();
     const lng = e.latLng.lng();
 
     if (isAddingMarker) {
-      const newMarker: MapMarker = {
-        id: uuidv4(),
+      const newMarker = {
+        id: crypto.randomUUID(),
         lat,
         lng,
         note: "",
@@ -123,17 +117,17 @@ const Map = () => {
       setIsAddingMarker(false);
       toast.success("Segnaposto aggiunto! Aggiungi una nota ora.");
     }
-    
+
     if (isAddingSearchArea) {
-      const newSearchArea: SearchArea = {
-        id: uuidv4(),
+      const newSearchArea = {
+        id: crypto.randomUUID(),
         lat,
         lng,
         radius: 500,
         label: "Area di ricerca",
         editing: true
       };
-      setSearchAreas([...searchAreas, newSearchArea]);
+      setSearchAreas([newSearchArea]);
       setActiveSearchArea(newSearchArea.id);
       setIsAddingSearchArea(false);
       toast.success("Area di ricerca aggiunta!");
@@ -142,12 +136,11 @@ const Map = () => {
 
   const handleMapDoubleClick = (e: google.maps.MapMouseEvent) => {
     if (!e.latLng) return;
-    
     const lat = e.latLng.lat();
     const lng = e.latLng.lng();
 
-    const newMarker: MapMarker = {
-      id: uuidv4(),
+    const newMarker = {
+      id: crypto.randomUUID(),
       lat,
       lng,
       note: "",
@@ -181,8 +174,8 @@ const Map = () => {
     const lng = currentLocation ? currentLocation[1] : DEFAULT_CENTER.lng;
 
     const randomOffset = (Math.random() - 0.5) * 0.05;
-    const newSearchArea: SearchArea = {
-      id: uuidv4(),
+    const newSearchArea = {
+      id: crypto.randomUUID(),
       lat: lat + randomOffset,
       lng: lng + randomOffset,
       radius: radius,
@@ -191,30 +184,27 @@ const Map = () => {
       isAI: true,
     };
 
-    // Rimuovi eventuali aree AI precedenti
-    const filteredAreas = searchAreas.filter(area => !area.isAI);
-    setSearchAreas([...filteredAreas, newSearchArea]);
+    setSearchAreas([newSearchArea]);
     setActiveSearchArea(newSearchArea.id);
-    
-    toast.success(`Area di ricerca aggiunta! Raggio: ${radius/1000}km`);
+
+    toast.success(`Area di ricerca aggiunta! Raggio: ${radius / 1000}km`);
   };
 
   useEffect(() => {
     const buzzRequest = localStorage.getItem('buzzRequest');
     const paymentCompleted = localStorage.getItem('paymentCompleted');
-    
+
     if (buzzRequest === 'map' && paymentCompleted === 'true') {
       localStorage.removeItem('buzzRequest');
       localStorage.removeItem('paymentCompleted');
-      
       processCluesAndAddSearchArea();
     }
   }, []);
 
   const saveMarkerNote = (id: string, note: string) => {
-    const updatedMarkers = markers.map(marker => 
-      marker.id === id 
-        ? { ...marker, note, editing: false } 
+    const updatedMarkers = markers.map(marker =>
+      marker.id === id
+        ? { ...marker, note, editing: false }
         : marker
     );
     setMarkers(updatedMarkers);
@@ -223,9 +213,9 @@ const Map = () => {
   };
 
   const saveSearchArea = (id: string, label: string, radius: number) => {
-    const updatedSearchAreas = searchAreas.map(area => 
-      area.id === id 
-        ? { ...area, label, radius, editing: false } 
+    const updatedSearchAreas = searchAreas.map(area =>
+      area.id === id
+        ? { ...area, label, radius, editing: false }
         : area
     );
     setSearchAreas(updatedSearchAreas);
@@ -234,18 +224,18 @@ const Map = () => {
   };
 
   const editMarker = (id: string) => {
-    const updatedMarkers = markers.map(marker => 
-      marker.id === id 
-        ? { ...marker, editing: true } 
+    const updatedMarkers = markers.map(marker =>
+      marker.id === id
+        ? { ...marker, editing: true }
         : marker
     );
     setMarkers(updatedMarkers);
   };
 
   const editSearchArea = (id: string) => {
-    const updatedSearchAreas = searchAreas.map(area => 
-      area.id === id 
-        ? { ...area, editing: true } 
+    const updatedSearchAreas = searchAreas.map(area =>
+      area.id === id
+        ? { ...area, editing: true }
         : area
     );
     setSearchAreas(updatedSearchAreas);
@@ -259,16 +249,8 @@ const Map = () => {
   };
 
   const deleteSearchArea = (id: string) => {
-    const areaToDelete = searchAreas.find(area => area.id === id);
-    if (areaToDelete && areaToDelete.isAI) {
-      const updatedSearchAreas = searchAreas.filter(area => area.id !== id);
-      setSearchAreas(updatedSearchAreas);
-      setActiveSearchArea(null);
-      toast.success("Area AI eliminata!");
-      return;
-    }
-    const updatedSearchAreas = searchAreas.filter(area => area.id !== id);
-    setSearchAreas(updatedSearchAreas);
+    // Ora tutte le aree sono singole
+    setSearchAreas([]);
     setActiveSearchArea(null);
     toast.success("Area di ricerca eliminata!");
   };
@@ -283,7 +265,7 @@ const Map = () => {
       toast.info("Non ci sono segnaposti da cancellare.");
       return;
     }
-    
+
     if (confirm("Sei sicuro di voler cancellare tutti i segnaposti?")) {
       setMarkers([]);
       localStorage.removeItem('mapMarkers');
@@ -292,26 +274,19 @@ const Map = () => {
   };
 
   const clearAllSearchAreas = () => {
-    const nonAIareas = searchAreas.filter(area => !area.isAI);
-    if (nonAIareas.length === 0) {
+    if (searchAreas.length === 0) {
       toast.info("Non ci sono aree di ricerca da cancellare.");
       return;
     }
-
     if (confirm("Sei sicuro di voler cancellare tutte le aree di ricerca?")) {
-      const onlyAIAreas = searchAreas.filter(area => area.isAI);
-      setSearchAreas(onlyAIAreas);
-      localStorage.setItem('mapSearchAreas', JSON.stringify(onlyAIAreas));
-      toast.success("Tutte le aree di ricerca sono state eliminate (eccetto quelle AI).");
+      setSearchAreas([]);
+      localStorage.removeItem('mapSearchAreas');
+      toast.success("Tutte le aree di ricerca sono state eliminate.");
     }
   };
 
   if (loading || geoLoading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-projectx-neon-blue"></div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -319,248 +294,101 @@ const Map = () => {
       <UnifiedHeader profileImage={profileImage} />
       <div className="h-[72px] w-full" />
 
+      {/* Dialog permessi */}
       {geoPermission === "prompt" && (
-        <Dialog open>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Vuoi centrare la mappa sulla tua posizione?</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 text-sm">
-              <p>Per offrirti la migliore esperienza mostriamo la mappa a partire dalla tua posizione attuale (il permesso viene richiesto una sola volta).</p>
-              {geoError && (
-                <div className="text-red-500">{geoError}</div>
-              )}
-              <div className="flex gap-2 mt-6">
-                <Button onClick={askGeoPermission} disabled={geoLoading}>
-                  Consenti
-                </Button>
-                <Button variant="outline" onClick={() => localStorage.setItem("geo_permission_granted", "denied")}>
-                  Nega
-                </Button>
-              </div>
+        <div className="fixed z-50 inset-0 flex items-center justify-center bg-black/90 backdrop-blur-lg">
+          <div className="bg-black/70 rounded-2xl p-8 w-full max-w-md shadow-2xl border border-projectx-neon-blue flex flex-col gap-6">
+            <h2 className="text-xl font-semibold text-white">Vuoi centrare la mappa sulla tua posizione?</h2>
+            <p className="text-sm text-gray-300">Per offrirti la migliore esperienza mostriamo la mappa a partire dalla tua posizione attuale (il permesso viene richiesto una sola volta).</p>
+            {geoError && <div className="text-red-500">{geoError}</div>}
+            <div className="flex gap-2 mt-4">
+              <button onClick={askGeoPermission} disabled={geoLoading} className="flex-1 bg-projectx-blue rounded-md text-white py-2 font-medium shadow hover:bg-projectx-neon-blue focus:outline-none transition">Consenti</button>
+              <button onClick={() => localStorage.setItem("geo_permission_granted", "denied")} className="flex-1 bg-gray-700 rounded-md text-white py-2 font-medium hover:bg-gray-800 border border-gray-600 focus:outline-none transition">Nega</button>
             </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        </div>
       )}
 
       {error && (
         <div className="p-4 text-center">
           <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>Riprova</Button>
+          <button onClick={() => window.location.reload()} className="bg-projectx-blue text-white px-4 py-2 rounded">Riprova</button>
         </div>
       )}
 
       {!error && (
         <div className="w-full px-4 py-6 flex flex-col max-w-5xl mx-auto relative">
           <h1 className="text-2xl font-bold mb-4 text-white">Mappa Interattiva</h1>
-          
-          <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setIsAddingMarker(true)}
-                disabled={isAddingMarker || isAddingSearchArea}
-                className="flex gap-1 items-center"
-              >
-                <MapPin className="h-4 w-4" />
-                <span className="hidden sm:inline">Aggiungi punto</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setIsAddingSearchArea(true)}
-                disabled={isAddingMarker || isAddingSearchArea}
-                className="flex gap-1 items-center"
-              >
-                <Circle className="h-4 w-4" />
-                <span className="hidden sm:inline">Aggiungi area</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setHelpDialogOpen(true)}
-                className="bg-black/60 border border-white/10 hover:bg-black/80"
-              >
-                <Info className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="flex items-center justify-center sm:justify-end">
-              <button
-                onClick={handleBuzzClick}
-                title="Buzz €5,99"
-                className="
-                  rounded-full
-                  w-10 h-10
-                  flex justify-center items-center
-                  bg-gradient-to-tr from-[#4361ee] via-[#7209b7] to-[#00a3ff]
-                  shadow-[0_0_20px_2px_rgba(67,97,238,0.4)]
-                  hover:shadow-[0_0_32px_6px_rgba(67,97,238,0.60)]
-                  hover:scale-105
-                  transition-all
-                  border-2 border-[#4361ee]/70
-                  focus:outline-none
-                  ring-2 ring-[#00a3ff]/30
-                  active:scale-95
-                "
-              >
-                <Zap className="h-5 w-5 text-white drop-shadow-lg" />
-              </button>
-            </div>
-          </div>
+
+          <MapHeader
+            onAddMarker={() => setIsAddingMarker(true)}
+            onAddArea={() => setIsAddingSearchArea(true)}
+            onHelp={() => setHelpDialogOpen(true)}
+            onBuzz={handleBuzzClick}
+            isAddingMarker={isAddingMarker}
+            isAddingArea={isAddingSearchArea}
+          />
 
           {isAddingMarker && (
             <div className="p-2 bg-green-500/20 rounded-md mb-4">
               <p className="text-green-400 text-sm">Clicca sulla mappa per aggiungere un segnaposto</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <button
                 onClick={() => setIsAddingMarker(false)}
-                className="mt-2"
+                className="mt-2 px-3 py-1 rounded bg-gray-800 text-white"
               >
                 Annulla
-              </Button>
+              </button>
             </div>
           )}
           {isAddingSearchArea && (
             <div className="p-2 bg-green-500/20 rounded-md mb-4">
               <p className="text-green-400 text-sm">Clicca sulla mappa per aggiungere un'area di ricerca</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <button
                 onClick={() => setIsAddingSearchArea(false)}
-                className="mt-2"
+                className="mt-2 px-3 py-1 rounded bg-gray-800 text-white"
               >
                 Annulla
-              </Button>
+              </button>
             </div>
           )}
-          
-          <div className="bg-black/50 border border-projectx-deep-blue/40 rounded-xl overflow-hidden shadow-xl p-4">
-            <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} loadingElement={<div>Caricamento mappa...</div>}>
-              <MapMarkers
-                isLoaded={true}
-                markers={markers}
-                searchAreas={searchAreas}
-                isAddingMarker={isAddingMarker}
-                isAddingSearchArea={isAddingSearchArea}
-                activeMarker={activeMarker}
-                activeSearchArea={activeSearchArea}
-                onMapClick={handleMapClick}
-                onMapDoubleClick={handleMapDoubleClick}
-                setActiveMarker={setActiveMarker}
-                setActiveSearchArea={setActiveSearchArea}
-                saveMarkerNote={saveMarkerNote}
-                saveSearchArea={saveSearchArea}
-                editMarker={editMarker}
-                editSearchArea={editSearchArea}
-                deleteMarker={deleteMarker}
-                deleteSearchArea={deleteSearchArea}
-                center={
-                  currentLocation
-                    ? { lat: currentLocation[0], lng: currentLocation[1] }
-                    : DEFAULT_CENTER
-                }
-              />
-            </LoadScript>
-          </div>
-          
-          <div className="flex justify-between mt-4 mb-2">
-            <h2 className="text-lg font-medium text-white flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-lime-400" />
-              Le tue note
-            </h2>
-            {markers.length > 0 && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={clearAllMarkers}
-                className="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20"
-              >
-                Cancella tutto
-              </Button>
-            )}
-          </div>
-          
-          <MapNoteList markers={markers} setActiveMarker={setActiveMarker} />
-          
-          <div className="flex justify-between mt-6 mb-2">
-            <h2 className="text-lg font-medium text-white flex items-center gap-2">
-              <Circle className="h-4 w-4 text-lime-400" />
-              Aree di interesse
-            </h2>
-            {searchAreas.length > 0 && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={clearAllSearchAreas}
-                className="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20"
-              >
-                Cancella tutto
-              </Button>
-            )}
-          </div>
-          
-          <div className="space-y-3 mt-2">
-            {searchAreas.length === 0 ? (
-              <div className="text-center py-4 text-gray-400">
-                Nessuna area di interesse. Aggiungi un'area sulla mappa per iniziare.
-              </div>
-            ) : (
-              searchAreas.map((area) => (
-                <div 
-                  key={`area-list-${area.id}`}
-                  className={`p-3 rounded-md backdrop-blur-sm cursor-pointer transition-colors
-                    ${area.isAI 
-                      ? "bg-[#7E69AB]/40 hover:bg-[#7E69AB]/60 border-l-4 border-[#9b87f5]" 
-                      : "bg-projectx-deep-blue/40 hover:bg-projectx-deep-blue/60"
-                    }`}
-                  onClick={() => setActiveSearchArea(area.id)}
-                >
-                  <div className="flex items-start gap-2">
-                    <Circle className={`w-5 h-5 flex-shrink-0 ${area.isAI ? "text-[#9b87f5]" : "text-lime-400"}`} />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">{area.label}</div>
-                      <div className="text-xs text-gray-400">Raggio: {area.radius/1000}km</div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+
+          <MapArea
+            markers={markers}
+            searchAreas={searchAreas}
+            isAddingMarker={isAddingMarker}
+            isAddingSearchArea={isAddingSearchArea}
+            activeMarker={activeMarker}
+            activeSearchArea={activeSearchArea}
+            onMapClick={handleMapClick}
+            onMapDoubleClick={handleMapDoubleClick}
+            setActiveMarker={setActiveMarker}
+            setActiveSearchArea={setActiveSearchArea}
+            saveMarkerNote={saveMarkerNote}
+            saveSearchArea={saveSearchArea}
+            editMarker={editMarker}
+            editSearchArea={editSearchArea}
+            deleteMarker={deleteMarker}
+            deleteSearchArea={deleteSearchArea}
+            currentLocation={currentLocation}
+          />
+
+          <NotesSection
+            markers={markers}
+            setActiveMarker={setActiveMarker}
+            clearAllMarkers={clearAllMarkers}
+          />
+
+          <SearchAreasSection
+            searchAreas={searchAreas}
+            setActiveSearchArea={setActiveSearchArea}
+            clearAllSearchAreas={clearAllSearchAreas}
+          />
         </div>
       )}
 
-      <Dialog open={helpDialogOpen} onOpenChange={setHelpDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Come usare la mappa interattiva</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 text-sm">
-            <div>
-              <h3 className="font-medium">Aggiungere un punto</h3>
-              <p className="text-muted-foreground">Fai doppio click sulla mappa o usa il pulsante "Aggiungi punto" e poi clicca sulla mappa.</p>
-            </div>
-            <div>
-              <h3 className="font-medium">Aggiungere un'area</h3>
-              <p className="text-muted-foreground">Clicca sul pulsante "Aggiungi area" e poi clicca sulla mappa dove vuoi creare l'area.</p>
-            </div>
-            <div>
-              <h3 className="font-medium">Modificare o eliminare</h3>
-              <p className="text-muted-foreground">Clicca su un punto o un'area per aprire le opzioni di modifica o eliminazione.</p>
-            </div>
-            <div>
-              <h3 className="font-medium">Funzione Buzz</h3>
-              <p className="text-muted-foreground">Il pulsante Buzz analizza tutti gli indizi raccolti e aggiunge un'area di ricerca ottimizzata sulla mappa. Ogni click successivo riduce il raggio di 5km (minimo 50km).</p>
-              <p className="text-muted-foreground mt-1">L'area Buzz può essere modificata o eliminata con una pressione prolungata su di essa.</p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      <EditModeToggle 
+      <HelpDialog open={helpDialogOpen} setOpen={setHelpDialogOpen} />
+
+      <EditModeToggle
         isEditing={isEditing}
         setIsEditing={setIsEditing}
         onSave={handleSaveChanges}
