@@ -20,13 +20,17 @@ const GooglePayLogo = () => (
 );
 
 interface GooglePayBoxProps {
-  // onGooglePay è deprecato, azione automatica/redirect reale
   onGooglePay?: () => void;
 }
 
-const GooglePayBox = () => {
-  const openGooglePayInfo = () => {
-    window.open("https://pay.google.com/about/", "_blank", "noopener,noreferrer");
+const GooglePayBox = ({ onGooglePay }: GooglePayBoxProps) => {
+  const handleGooglePayClick = () => {
+    if (onGooglePay) {
+      onGooglePay();
+    } else {
+      // Comportamento predefinito se non viene fornita una callback
+      window.open("https://pay.google.com/about/", "_blank", "noopener,noreferrer");
+    }
   };
 
   return (
@@ -35,7 +39,7 @@ const GooglePayBox = () => {
         <GooglePayLogo />
         <p className="mb-6 text-black">Paga in modo rapido e sicuro con <b>Google Pay</b></p>
         <Button
-          onClick={openGooglePayInfo}
+          onClick={handleGooglePayClick}
           className="w-full bg-white text-black border border-gray-300 flex items-center justify-center gap-2"
           aria-label="Procedi con Google Pay"
         >

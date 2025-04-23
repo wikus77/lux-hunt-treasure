@@ -12,13 +12,17 @@ const ApplePayLogo = () => (
 );
 
 interface ApplePayBoxProps {
-  // onApplePay è deprecato, azione automatica/redirect reale
   onApplePay?: () => void;
 }
 
-const ApplePayBox = () => {
-  const openApplePayInfo = () => {
-    window.open("https://support.apple.com/it-it/HT201469", "_blank", "noopener,noreferrer");
+const ApplePayBox = ({ onApplePay }: ApplePayBoxProps) => {
+  const handleApplePayClick = () => {
+    if (onApplePay) {
+      onApplePay();
+    } else {
+      // Comportamento predefinito se non viene fornita una callback
+      window.open("https://support.apple.com/it-it/HT201469", "_blank", "noopener,noreferrer");
+    }
   };
 
   return (
@@ -27,7 +31,7 @@ const ApplePayBox = () => {
         <ApplePayLogo />
         <p className="mb-6 text-white">Paga in modo rapido e sicuro con <b>Apple Pay</b></p>
         <Button
-          onClick={openApplePayInfo}
+          onClick={handleApplePayClick}
           className="w-full bg-black text-white border border-white flex items-center justify-center gap-2"
           aria-label="Procedi con Apple Pay"
         >
