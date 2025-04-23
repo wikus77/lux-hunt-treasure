@@ -1,23 +1,23 @@
 
-import { MapPin, Car, Image, Settings, Folder } from "lucide-react";
+import { MapPin, Car, Image, Settings } from "lucide-react";
 
 export const CATEGORY_STYLES: Record<
   string,
   { gradient: string; textColor: string }
 > = {
-  "Photo Luoghi": {
+  "Luoghi": {
     gradient: "bg-gradient-to-r from-[#00a3ff] via-[#1eaedb] to-[#8b5cf6]",
     textColor: "text-white",
   },
-  "Photo Interni": {
+  "Interior Photos": {
     gradient: "bg-gradient-to-r from-[#a855f7] via-[#ec4899] to-[#f43f5e]",
     textColor: "text-white",
   },
-  "Photo Esterni": {
+  "Exterior Photos": {
     gradient: "bg-gradient-to-r from-[#8b5cf6] via-[#00a3ff] to-[#22d3ee]",
     textColor: "text-white",
   },
-  "Configurazione": {
+  "Configuration": {
     gradient: "bg-gradient-to-r from-[#f59e0b] via-[#f97316] to-[#ef4444]",
     textColor: "text-white",
   },
@@ -33,15 +33,15 @@ export const CATEGORY_STYLES: Record<
 
 export const clueCategories = [
   {
-    name: "Photo Luoghi",
-    icon: Image,
+    name: "Luoghi",
+    icon: MapPin,
     matcher: (clue: any) =>
       /luoghi|posizione|location|place|dove|map|via|città/i.test(
         clue.title + " " + clue.description
       ),
   },
   {
-    name: "Photo Interni",
+    name: "Interior Photos",
     icon: Image,
     matcher: (clue: any) =>
       /interni|interno|abitacolo|sedili|cruscotto|cockpit|dashboard/i.test(
@@ -49,7 +49,7 @@ export const clueCategories = [
       ),
   },
   {
-    name: "Photo Esterni",
+    name: "Exterior Photos",
     icon: Image,
     matcher: (clue: any) =>
       /esterni|esterno|carrozzeria|foto|immagine|scatto|photo|picture/i.test(
@@ -57,7 +57,7 @@ export const clueCategories = [
       ),
   },
   {
-    name: "Configurazione",
+    name: "Configuration",
     icon: Settings,
     matcher: (clue: any) =>
       /config|setup|impostazioni|optional|accessori|dotazione/i.test(
@@ -79,5 +79,6 @@ export const getClueCategory = (clue: any) => {
   for (const cat of clueCategories) {
     if (cat.matcher(clue)) return cat;
   }
-  return { name: "General", icon: Folder };
+  return { name: "General", icon: MapPin };
 };
+
