@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MapPin, Plus, X } from "lucide-react";
 import MapNoteList from "@/components/maps/MapNoteList";
+import NoteColorBanner from "@/components/maps/NoteColorBanner";
 
 type Importance = "high" | "medium" | "low";
 type LocalNote = {
@@ -16,12 +17,13 @@ const NotesSection: React.FC = () => {
   const [showInput, setShowInput] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [editingNote, setEditingNote] = useState<LocalNote | null>(null);
+  const [showColorBanner, setShowColorBanner] = useState(false);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
 
   const addNote = () => {
     if (noteText.trim().length === 0) return;
     
     if (editingNote) {
-      // Update existing note
       setNotes(notes.map(note => 
         note.id === editingNote.id 
           ? { ...note, note: noteText.trim() }
@@ -29,7 +31,6 @@ const NotesSection: React.FC = () => {
       ));
       setEditingNote(null);
     } else {
-      // Add new note
       setNotes([
         ...notes,
         { id: Date.now().toString(), note: noteText.trim(), importance: "medium" }
@@ -40,28 +41,27 @@ const NotesSection: React.FC = () => {
     setShowInput(false);
   };
 
-  const toggleImportance = (id: string) => {
-    setNotes(notes =>
-      notes.map(n =>
-        n.id !== id
-          ? n
-          : {
-              ...n,
-              importance:
-                n.importance === "low"
-                  ? "medium"
-                  : n.importance === "medium"
-                  ? "high"
-                  : "low"
-            }
-      )
-    );
-  };
-
   const handleEditNote = (note: LocalNote) => {
     setEditingNote(note);
     setNoteText(note.note);
     setShowInput(true);
+  };
+
+  const handleImportanceClick = (id: string) => {
+    setSelectedNoteId(id);
+    setShowColorBanner(true);
+  };
+
+  const handleColorSelect = (importance: Importance) => {
+    if (selectedNoteId) {
+      setNotes(notes.map(note =>
+        note.id === selectedNoteId
+          ? { ...note, importance }
+          : note
+      ));
+      setShowColorBanner(false);
+      setSelectedNoteId(null);
+    }
   };
 
   const clearAllNotes = () => setNotes([]);
@@ -124,8 +124,13 @@ const NotesSection: React.FC = () => {
       )}
       <MapNoteList
         notes={notes}
-        toggleImportance={toggleImportance}
+        onImportanceClick={handleImportanceClick}
         onEditNote={handleEditNote}
+      />
+      <NoteColorBanner
+        open={showColorBanner}
+        onClose={() => setShowColorBanner(false)}
+        onSelectColor={handleColorSelect}
       />
     </>
   );
