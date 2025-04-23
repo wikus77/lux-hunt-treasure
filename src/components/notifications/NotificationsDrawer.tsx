@@ -5,6 +5,7 @@ import NotificationItem from "./NotificationItem";
 import NotificationDialog from "./NotificationDialog";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNotifications } from "@/hooks/useNotifications";
 import type { Notification } from "@/hooks/useNotifications";
 
 interface NotificationsDrawerProps {
@@ -13,35 +14,11 @@ interface NotificationsDrawerProps {
 }
 
 const NotificationsDrawer = ({ open, onOpenChange }: NotificationsDrawerProps) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
-
-  useEffect(() => {
-    const loadNotifications = () => {
-      const storedNotifications = localStorage.getItem('notifications');
-      if (storedNotifications) {
-        const parsed = JSON.parse(storedNotifications);
-        setNotifications(parsed);
-        setUnreadCount(parsed.filter((n: Notification) => !n.read).length);
-      } else {
-        setNotifications([]);
-        setUnreadCount(0);
-      }
-    };
-    if (open) {
-      loadNotifications();
-    }
-  }, [open]);
+  const { notifications, unreadCount, markAllAsRead } = useNotifications();
 
   const handleMarkAllAsRead = () => {
-    const updatedNotifications = notifications.map(notification => ({
-      ...notification,
-      read: true
-    }));
-    setNotifications(updatedNotifications);
-    setUnreadCount(0);
-    localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+    markAllAsRead();
   };
 
   const handleSelectNotification = (notification: Notification) => {

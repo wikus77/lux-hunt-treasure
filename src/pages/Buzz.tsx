@@ -11,6 +11,8 @@ import useBuzzSound from "@/hooks/useBuzzSound";
 import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { vagueBuzzClues } from "@/data/vagueBuzzClues";
+import ClueBanner from "@/components/buzz/ClueBanner";
+import { useNotifications } from "@/hooks/useNotifications";
 
 function getNextVagueClue(usedClues: string[]) {
   // Restituisci un indizio casuale NON già usato
@@ -35,10 +37,13 @@ const Buzz = () => {
     return saved ? JSON.parse(saved) : [];
   });
   const [lastVagueClue, setLastVagueClue] = useState<string | null>(null);
+  const [showClueBanner, setShowClueBanner] = useState(false);
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { hasPaymentMethod, savePaymentMethod } = useHasPaymentMethod();
   const { initializeSound } = useBuzzSound();
+  const { addNotification } = useNotifications();
   const explosionTimerRef = useRef<number | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
 
@@ -54,17 +59,27 @@ const Buzz = () => {
 
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
     const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
-    initializeSound(soundPreference, volume);
+    
+    try {
+      initializeSound(soundPreference, volume);
+    } catch (error) {
+      console.error("Errore nell'inizializzazione del suono:", error);
+    }
 
     // Verifica se il pagamento è stato completato e proviene dalla pagina standard (non mappa)
     if (location.state?.paymentCompleted && location.state?.fromRegularBuzz === true) {
-      savePaymentMethod();
-      incrementUnlockedCluesAndAddClue();
-      setShowExplosion(true);
+      try {
+        savePaymentMethod();
+        incrementUnlockedCluesAndAddClue();
+        setShowExplosion(true);
 
-      explosionTimerRef.current = window.setTimeout(() => {
-        setExplosionFadeOut(true);
-      }, 2500);
+        explosionTimerRef.current = window.setTimeout(() => {
+          setExplosionFadeOut(true);
+        }, 2500);
+      } catch (error) {
+        console.error("Errore durante il processo di sblocco indizi:", error);
+        toast.error("Si è verificato un errore. Riprova più tardi.");
+      }
 
       return () => {
         if (explosionTimerRef.current) {
@@ -84,31 +99,41 @@ const Buzz = () => {
     });
 
     if (lastVagueClue) {
-      toast(lastVagueClue, {
-        duration: 3200,
-        position: "bottom-center",
-      });
+      setShowClueBanner(true);
     }
+    
     setTimeout(() => {
       navigate("/notifications", { replace: true });
     }, 1800);
   };
 
   function incrementUnlockedCluesAndAddClue() {
-    const newCount = unlockedClues + 1;
-    setUnlockedClues(newCount);
-    localStorage.setItem('unlockedCluesCount', newCount.toString());
+    try {
+      const newCount = unlockedClues + 1;
+      setUnlockedClues(newCount);
+      localStorage.setItem('unlockedCluesCount', newCount.toString());
 
-    // Trova nuovo indizio vago
-    const nextClue = getNextVagueClue(usedVagueClues);
-    setLastVagueClue(nextClue);
+      // Trova nuovo indizio vago
+      const nextClue = getNextVagueClue(usedVagueClues);
+      setLastVagueClue(nextClue);
 
-    // aggiorna lista usati
-    const updated = [...usedVagueClues, nextClue];
-    setUsedVagueClues(updated);
-    localStorage.setItem('usedVagueBuzzClues', JSON.stringify(updated));
+      // aggiorna lista usati
+      const updated = [...usedVagueClues, nextClue];
+      setUsedVagueClues(updated);
+      
+      // Salva in modo più sicuro
+      try {
+        localStorage.setItem('usedVagueBuzzClues', JSON.stringify(updated));
+      } catch (e) {
+        console.error("Errore nel salvataggio degli indizi usati:", e);
+        // Continua comunque con l'esecuzione
+      }
 
-    sendBuzzNotification(nextClue);
+      sendBuzzNotification(nextClue);
+    } catch (error) {
+      console.error("Errore nell'incremento degli indizi sbloccati:", error);
+      toast.error("Si è verificato un errore. Riprova più tardi.");
+    }
   }
 
   const handleBuzzClick = () => {
@@ -127,17 +152,21 @@ const Buzz = () => {
   };
 
   function sendBuzzNotification(clueText: string) {
-    const notification = {
-      id: Date.now().toString(),
+    // Utilizza il nuovo hook per aggiungere notifiche in modo sicuro
+    const success = addNotification({
       title: "Nuovo indizio extra!",
-      description: clueText,
-      date: new Date().toISOString(),
-      read: false
-    };
-
-    const existingNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
-    existingNotifications.push(notification);
-    localStorage.setItem('notifications', JSON.stringify(existingNotifications));
+      description: clueText
+    });
+    
+    if (!success) {
+      console.warn("Impossibile salvare la notifica. Potrebbe essere stato raggiunto il limite di storage.");
+      // Mostriamo lo stesso un toast all'utente
+      toast({
+        title: "Nuovo indizio extra!",
+        description: clueText,
+        duration: 5000,
+      });
+    }
   }
 
   const handlePayment = () => {
@@ -162,6 +191,12 @@ const Buzz = () => {
     <div className="min-h-screen bg-black pb-20 w-full">
       <UnifiedHeader profileImage={profileImage} />
       <div className="h-[72px] w-full" />
+
+      <ClueBanner 
+        open={showClueBanner} 
+        message={lastVagueClue || ""} 
+        onClose={() => setShowClueBanner(false)} 
+      />
 
       <section className="flex flex-col items-center justify-center py-10 h-[70vh] w-full px-0">
         <div className="text-center mb-8 w-full px-0">
