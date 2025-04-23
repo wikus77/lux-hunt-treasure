@@ -1,5 +1,5 @@
 
-import { Car, MapPin, Image, Trophy, Award, Medal } from "lucide-react";
+import { Car, MapPin, Image, Trophy, Award, Medal, LucideIcon } from "lucide-react";
 
 export type AchievementCategory = "luoghi" | "auto" | "foto" | "detective" | "completamento";
 
@@ -8,7 +8,7 @@ export interface Achievement {
   title: string;
   description: string;
   category: AchievementCategory;
-  iconComponent: any;
+  iconComponent: LucideIcon;
   requiredCount: number;
   badgeColor: string;
   unlockedAt?: string;

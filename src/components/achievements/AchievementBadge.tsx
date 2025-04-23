@@ -4,6 +4,7 @@ import { Achievement } from "@/data/achievementsData";
 import { cn } from "@/lib/utils";
 import { useSound } from "@/contexts/SoundContext";
 import useSoundEffects from "@/hooks/use-sound-effects";
+import { LucideIcon } from "lucide-react";
 
 interface AchievementBadgeProps {
   achievement: Achievement;
@@ -43,7 +44,7 @@ const AchievementBadge = ({
     }
   };
 
-  // Get the icon component from the achievement
+  // Store the IconComponent in a variable first
   const IconComponent = achievement.iconComponent;
 
   return (
@@ -71,6 +72,7 @@ const AchievementBadge = ({
               : "border-gray-600 text-gray-500"
           )}
         >
+          {/* Render the IconComponent directly as a React component */}
           <IconComponent />
         </div>
       </div>

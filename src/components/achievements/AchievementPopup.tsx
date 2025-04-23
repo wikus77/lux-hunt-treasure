@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import useSoundEffects from "@/hooks/use-sound-effects";
+import { LucideIcon } from "lucide-react";
 
 interface AchievementPopupProps {
   achievement: Achievement | null;
@@ -63,7 +64,7 @@ const AchievementPopup = ({
   
   if (!achievement || !isVisible) return null;
   
-  // Get the icon component from the achievement
+  // Store the icon component in a variable
   const IconComponent = achievement.iconComponent;
   
   return (
