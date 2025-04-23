@@ -1,10 +1,8 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MapPin, Plus } from "lucide-react";
 import MapNoteList from "@/components/maps/MapNoteList";
 
-// Nuova tipologia per la nota locale (con importanza)
 type Importance = "high" | "medium" | "low";
 type LocalNote = {
   id: string;
@@ -12,9 +10,7 @@ type LocalNote = {
   importance: Importance;
 };
 
-type NotesSectionProps = {
-  // markers e clearAllMarkers non più necessari qui
-};
+type NotesSectionProps = {};
 
 const importanceColors: Record<Importance, string> = {
   high: "#ea384c",
@@ -27,7 +23,6 @@ const NotesSection: React.FC = () => {
   const [showInput, setShowInput] = useState(false);
   const [noteText, setNoteText] = useState("");
 
-  // Aggiunta nota
   const addNote = () => {
     if (noteText.trim().length === 0) return;
     setNotes([
@@ -38,7 +33,6 @@ const NotesSection: React.FC = () => {
     setShowInput(false);
   };
 
-  // Cambio importanza
   const toggleImportance = (id: string) => {
     setNotes(notes =>
       notes.map(n =>
@@ -57,7 +51,6 @@ const NotesSection: React.FC = () => {
     );
   };
 
-  // Cancella tutte le note
   const clearAllNotes = () => setNotes([]);
 
   return (
