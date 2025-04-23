@@ -1,7 +1,8 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
 import BuzzButton from "@/components/buzz/BuzzButton";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
@@ -10,6 +11,8 @@ import useBuzzSound from "@/hooks/useBuzzSound";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
 import BuzzUnlockDialog from "@/components/buzz/BuzzUnlockDialog";
 import BuzzExplosionHandler from "@/components/buzz/BuzzExplosionHandler";
+import { useNotifications } from "@/hooks/useNotifications";
+import { Bell, LightbulbIcon } from "lucide-react";
 
 const Buzz = () => {
   const [showDialog, setShowDialog] = useState(false);
@@ -18,8 +21,9 @@ const Buzz = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { hasPaymentMethod, savePaymentMethod } = useHasPaymentMethod();
-  const { initializeSound } = useBuzzSound();
+  const { initializeSound, playSound } = useBuzzSound();
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const { addNotification, reloadNotifications } = useNotifications();
 
   const {
     unlockedClues,
@@ -33,8 +37,6 @@ const Buzz = () => {
 
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
-    // Don't reset clues on every page load to maintain the counter
-    // resetUnlockedClues(); // Remove this line to maintain the counter
   }, []);
 
   useEffect(() => {
@@ -94,6 +96,60 @@ const Buzz = () => {
     }, 1800);
   }
 
+  const handleClueButtonClick = useCallback(() => {
+    // Play sound
+    playSound();
+    
+    // Show payment dialog
+    setShowDialog(true);
+    
+    // Simulate payment completed (in real app this would check actual payment)
+    const simulatePaymentSuccess = () => {
+      // Generate a random clue from the vague clues
+      const newClue = getNextVagueClue();
+      setLastVagueClue(newClue);
+      
+      // Increase unlocked clue count and show explosion/animation
+      incrementUnlockedCluesAndAddClue();
+      
+      // Add notification for the new clue
+      const success = addNotification({
+        title: "Nuovo Indizio Extra!",
+        description: newClue
+      });
+      
+      if (success) {
+        // Reload notifications to update the counter
+        reloadNotifications();
+        
+        // Show success message
+        toast.success("Hai ricevuto un nuovo indizio!", {
+          duration: 3000,
+        });
+        
+        // Show explosion animation
+        setShowExplosion(true);
+      } else {
+        toast.error("Errore nel salvataggio dell'indizio", {
+          duration: 3000,
+        });
+      }
+    };
+    
+    // Close dialog after button click
+    setTimeout(() => {
+      setShowDialog(false);
+      simulatePaymentSuccess();
+    }, 1500);
+  }, [
+    playSound, 
+    getNextVagueClue, 
+    setLastVagueClue, 
+    incrementUnlockedCluesAndAddClue, 
+    addNotification, 
+    reloadNotifications
+  ]);
+
   return (
     <div className="min-h-screen bg-black pb-20 w-full">
       <UnifiedHeader profileImage={profileImage} />
@@ -103,20 +159,38 @@ const Buzz = () => {
         message={lastVagueClue || ""} 
         onClose={() => setShowClueBanner(false)} 
       />
-      <section className="flex flex-col items-center justify-center py-10 h-[70vh] w-full px-0">
-        <div className="text-center mb-8 w-full px-0">
+      
+      <section className="flex flex-col items-center justify-center py-10 h-[70vh] w-full px-4">
+        <div className="text-center mb-8 w-full">
           <h2 className="text-2xl font-bold mb-2">Hai bisogno di un indizio extra?</h2>
           <p className="text-muted-foreground">
             Premi il pulsante Buzz per ottenere un indizio supplementare a 1,99€
           </p>
         </div>
+        
+        {/* Pulsante principale BUZZ */}
         <BuzzButton
           onBuzzClick={handleBuzzClick}
           unlockedClues={unlockedClues}
           updateUnlockedClues={setUnlockedClues}
           isMapBuzz={false}
         />
+        
+        {/* Nuovo pulsante Indizio Istantaneo */}
+        <div className="mt-12 w-full max-w-md">
+          <Button 
+            onClick={handleClueButtonClick}
+            className="w-full py-6 text-lg flex items-center justify-center gap-3 bg-gradient-to-r from-projectx-blue to-projectx-pink hover:opacity-90"
+          >
+            <LightbulbIcon className="w-6 h-6" />
+            Ottieni Indizio Istantaneo (1,99€)
+          </Button>
+          <p className="text-sm text-center mt-2 text-muted-foreground">
+            Ricevi subito una notifica con un nuovo indizio esclusivo
+          </p>
+        </div>
       </section>
+      
       <BuzzUnlockDialog open={showDialog} onOpenChange={setShowDialog} handlePayment={handlePayment} />
       <BuzzExplosionHandler show={showExplosion} onCompleted={handleExplosionCompleted} />
     </div>
