@@ -1,3 +1,4 @@
+
 import React, { useRef } from "react";
 import { GoogleMap, Marker, InfoWindow, Circle } from "@react-google-maps/api";
 import { MapPin, Pencil, X, Check, MapPinX, Circle as CircleIcon } from "lucide-react";
@@ -13,6 +14,8 @@ export type MapMarker = {
   lng: number;
   note: string;
   editing?: boolean;
+  position?: { lat: number; lng: number }; // Include position for compatibility
+  createdAt?: Date;     // Added for MapLogicProvider
 };
 
 export type SearchArea = {
@@ -23,6 +26,8 @@ export type SearchArea = {
   label: string;
   editing?: boolean;
   isAI?: boolean;
+  position?: { lat: number; lng: number }; // Include position for compatibility
+  color?: string;      // Added for MapLogicProvider
 };
 
 type MapMarkersProps = {

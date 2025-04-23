@@ -95,7 +95,7 @@ const PaymentMethods = () => {
             </div>
           ) : (
             <>
-              <CardPaymentForm onSuccess={handlePaymentSuccess} />
+              <CardPaymentForm onSubmit={handlePaymentSuccess} />
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-800"></div>
@@ -107,8 +107,8 @@ const PaymentMethods = () => {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <ApplePayBox onSuccess={handlePaymentSuccess} />
-                <GooglePayBox onSuccess={handlePaymentSuccess} />
+                <ApplePayBox onApplePay={handlePaymentSuccess} />
+                <GooglePayBox onGooglePay={handlePaymentSuccess} />
               </div>
             </>
           )}

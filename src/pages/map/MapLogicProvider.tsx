@@ -82,7 +82,8 @@ const MapLogicProvider = () => {
     if (currentLocation) {
       const newArea: SearchArea = {
         id: uuidv4(),
-        position: { lat: currentLocation[0], lng: currentLocation[1] },
+        lat: currentLocation[0],
+        lng: currentLocation[1],
         radius: 500,
         label: "Area generata",
         color: "#4361ee"
@@ -120,7 +121,8 @@ const MapLogicProvider = () => {
     if (isAddingMarker && e.latLng) {
       const newMarker: MapMarker = {
         id: uuidv4(),
-        position: { lat: e.latLng.lat(), lng: e.latLng.lng() },
+        lat: e.latLng.lat(),
+        lng: e.latLng.lng(),
         note: "",
         createdAt: new Date()
       };
@@ -132,7 +134,8 @@ const MapLogicProvider = () => {
     } else if (isAddingSearchArea && e.latLng) {
       const newArea: SearchArea = {
         id: uuidv4(),
-        position: { lat: e.latLng.lat(), lng: e.latLng.lng() },
+        lat: e.latLng.lat(),
+        lng: e.latLng.lng(),
         radius: 500,
         label: "Area di ricerca",
         color: "#7209b7"
@@ -253,8 +256,9 @@ const MapLogicProvider = () => {
       </div>
       
       <BuzzMapBanner 
-        open={showCluePopup && mapReady} 
-        message={clueMessage} 
+        open={showCluePopup && mapReady}
+        message={clueMessage}
+        area={null}
         onClose={handleCloseCluePopup} 
       />
     </div>
