@@ -29,7 +29,7 @@ const MapHeader: React.FC<MapHeaderProps> = ({
         size="sm"
         onClick={onAddMarker}
         disabled={isAddingMarker || isAddingArea}
-        className="flex gap-1 items-center"
+        className={`flex gap-1 items-center ${isAddingMarker ? 'bg-projectx-blue/20' : ''}`}
       >
         <MapPin className="h-4 w-4" />
         <span className="hidden sm:inline">Aggiungi punto</span>
@@ -39,7 +39,7 @@ const MapHeader: React.FC<MapHeaderProps> = ({
         size="sm"
         onClick={onAddArea}
         disabled={isAddingMarker || isAddingArea}
-        className="flex gap-1 items-center"
+        className={`flex gap-1 items-center ${isAddingArea ? 'bg-projectx-blue/20' : ''}`}
       >
         <Circle className="h-4 w-4" />
         <span className="hidden sm:inline">Aggiungi area</span>

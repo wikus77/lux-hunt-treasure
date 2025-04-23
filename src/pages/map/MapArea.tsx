@@ -7,6 +7,7 @@ const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
 const DEFAULT_CENTER = { lat: 45.4642, lng: 9.19 };
 
 type MapAreaProps = {
+  onMapReady?: () => void;
   markers: MapMarker[];
   searchAreas: SearchArea[];
   isAddingMarker: boolean;
@@ -26,31 +27,50 @@ type MapAreaProps = {
   currentLocation: [number, number] | null;
 };
 
-const MapArea: React.FC<MapAreaProps> = (props) => {
+const MapArea: React.FC<MapAreaProps> = ({
+  onMapReady,
+  markers = [],
+  searchAreas = [],
+  isAddingMarker,
+  isAddingSearchArea,
+  activeMarker,
+  activeSearchArea,
+  onMapClick,
+  onMapDoubleClick,
+  setActiveMarker,
+  setActiveSearchArea,
+  saveMarkerNote,
+  saveSearchArea,
+  editMarker,
+  editSearchArea,
+  deleteMarker,
+  deleteSearchArea,
+  currentLocation
+}) => {
   return (
-    <div className="bg-black/50 border border-projectx-deep-blue/40 rounded-xl overflow-hidden shadow-xl p-4">
-      <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} loadingElement={<div>Caricamento mappa...</div>}>
+    <div className="bg-black/50 border border-projectx-deep-blue/40 rounded-xl overflow-hidden shadow-xl h-[70vh] md:h-[80vh]">
+      <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} loadingElement={<div className="h-full flex items-center justify-center">Caricamento mappa...</div>}>
         <MapMarkers
           isLoaded={true}
-          markers={props.markers}
-          searchAreas={props.searchAreas}
-          isAddingMarker={props.isAddingMarker}
-          isAddingSearchArea={props.isAddingSearchArea}
-          activeMarker={props.activeMarker}
-          activeSearchArea={props.activeSearchArea}
-          onMapClick={props.onMapClick}
-          onMapDoubleClick={props.onMapDoubleClick}
-          setActiveMarker={props.setActiveMarker}
-          setActiveSearchArea={props.setActiveSearchArea}
-          saveMarkerNote={props.saveMarkerNote}
-          saveSearchArea={props.saveSearchArea}
-          editMarker={props.editMarker}
-          editSearchArea={props.editSearchArea}
-          deleteMarker={props.deleteMarker}
-          deleteSearchArea={props.deleteSearchArea}
+          markers={markers}
+          searchAreas={searchAreas}
+          isAddingMarker={isAddingMarker}
+          isAddingSearchArea={isAddingSearchArea}
+          activeMarker={activeMarker}
+          activeSearchArea={activeSearchArea}
+          onMapClick={onMapClick}
+          onMapDoubleClick={onMapDoubleClick}
+          setActiveMarker={setActiveMarker}
+          setActiveSearchArea={setActiveSearchArea}
+          saveMarkerNote={saveMarkerNote}
+          saveSearchArea={saveSearchArea}
+          editMarker={editMarker}
+          editSearchArea={editSearchArea}
+          deleteMarker={deleteMarker}
+          deleteSearchArea={deleteSearchArea}
           center={
-            props.currentLocation
-              ? { lat: props.currentLocation[0], lng: props.currentLocation[1] }
+            currentLocation
+              ? { lat: currentLocation[0], lng: currentLocation[1] }
               : DEFAULT_CENTER
           }
         />
