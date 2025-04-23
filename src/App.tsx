@@ -4,7 +4,7 @@ import { Outlet } from 'react-router-dom'
 import './App.css'
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as SonnerToaster } from "sonner"
-import LoginModal from './components/auth/LoginModal'
+import { LoginModal } from './components/auth/LoginModal'
 import AgeVerificationModal from './components/auth/AgeVerificationModal'
 import { SoundProvider } from './contexts/SoundContext'
 
@@ -45,8 +45,8 @@ function App({ children }: { children?: React.ReactNode }) {
     <SoundProvider>
       <div className="app">
         {children || <Outlet />}
-        {isAgeVerificationModalOpen && <AgeVerificationModal onVerify={handleAgeVerification} />}
-        {isVerified && isLoginModalOpen && <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />}
+        {isAgeVerificationModalOpen && <AgeVerificationModal open={isAgeVerificationModalOpen} onClose={() => setIsAgeVerificationModalOpen(false)} onVerified={handleAgeVerification} />}
+        {isVerified && isLoginModalOpen && <LoginModal open={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} onSuccess={() => {}} />}
         <SonnerToaster position="top-center" richColors />
         <Toaster />
       </div>
