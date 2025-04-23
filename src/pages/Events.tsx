@@ -14,19 +14,13 @@ const Events = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { unlockedClues, incrementUnlockedCluesAndAddClue, resetUnlockedClues, MAX_CLUES } = useBuzzClues();
-  const { 
-    notifications,
-    unreadCount,
-    markAllAsRead, 
-    reloadNotifications,
-    addNotification
-  } = useNotifications();
+  const { notifications, unreadCount, markAllAsRead, reloadNotifications, addNotification } = useNotifications();
   
   useEffect(() => {
     // Get profile image on mount
     setProfileImage(localStorage.getItem('profileImage'));
     
-    // Aggiorniamo solo le notifiche all'avvio
+    // Update notifications on mount
     reloadNotifications();
   }, [reloadNotifications]);
 
@@ -63,7 +57,7 @@ const Events = () => {
         toast.success("Notifica creata con successo!", {
           duration: 2000,
         });
-        // Ricarica le notifiche per aggiornare il contatore
+        // Reload notifications to update the counter
         reloadNotifications();
       } else {
         toast.error("Errore nella creazione della notifica", {
@@ -78,14 +72,9 @@ const Events = () => {
     }
   }, [addNotification, reloadNotifications]);
 
-  const toggleNotifications = useCallback(() => {
-    console.log("Toggling notifications drawer, current state:", notificationsOpen);
-    setNotificationsOpen(prevState => !prevState);
-    // Reload notifications when opening the drawer
-    if (!notificationsOpen) {
-      reloadNotifications();
-    }
-  }, [notificationsOpen, reloadNotifications]);
+  const handleShowNotifications = useCallback(() => {
+    setNotificationsOpen(true);
+  }, []);
 
   const handleResetClues = useCallback(() => {
     resetUnlockedClues();
@@ -96,7 +85,10 @@ const Events = () => {
 
   return (
     <div className="pb-20 min-h-screen bg-black w-full">
-      <UnifiedHeader profileImage={profileImage} />
+      <UnifiedHeader 
+        profileImage={profileImage} 
+        onClickMail={handleShowNotifications}
+      />
       
       <div className="h-[72px] w-full" />
       
@@ -125,7 +117,7 @@ const Events = () => {
           </Button>
           
           <Button 
-            onClick={toggleNotifications} 
+            onClick={handleShowNotifications} 
             className="w-full flex items-center gap-2" 
             variant="outline"
           >

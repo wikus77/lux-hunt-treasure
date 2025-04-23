@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import HowItWorksModal from "../modals/HowItWorksModal";
-import { useNotifications } from "@/hooks/useNotifications";
 import NotificationsDrawer from "../notifications/NotificationsDrawer";
+import { Badge } from "@/components/ui/badge";
 
 const MainLayout = () => {
   const location = useLocation();
@@ -25,34 +25,21 @@ const MainLayout = () => {
   const [profileName, setProfileName] = useState<string>("Utente");
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  
-  // Set up notification state with defaults
   const [unreadCount, setUnreadCount] = useState(0);
-
-  // Use the hook in a safe way inside a useEffect
-  useEffect(() => {
+  
+  // Get notifications from localStorage
+  const updateUnreadCount = () => {
     try {
-      const { reloadNotifications, unreadCount } = useNotifications();
-      reloadNotifications();
-      setUnreadCount(unreadCount);
-    } catch (e) {
-      console.error("Error loading notifications in MainLayout:", e);
-    }
-  }, [location.pathname]); // Re-initialize when route changes
-
-  // Update unread count periodically
-  useEffect(() => {
-    const interval = setInterval(() => {
-      try {
-        const { unreadCount } = useNotifications();
-        setUnreadCount(unreadCount);
-      } catch (e) {
-        console.error("Error updating unread count:", e);
+      const stored = localStorage.getItem('notifications');
+      if (stored) {
+        const notifications = JSON.parse(stored);
+        const count = notifications.filter((n: any) => !n.read).length;
+        setUnreadCount(count);
       }
-    }, 5000); // Check every 5 seconds
-
-    return () => clearInterval(interval);
-  }, []);
+    } catch (e) {
+      console.error("Error updating unread count:", e);
+    }
+  };
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -66,16 +53,30 @@ const MainLayout = () => {
     if (savedProfileName) {
       setProfileName(savedProfileName);
     }
-  }, []);
+    
+    // Update unread count on mount and when location changes
+    updateUnreadCount();
+    
+    // Set up an interval to check for new notifications
+    const interval = setInterval(updateUnreadCount, 5000);
+    
+    // Listen for storage events (if notifications are modified in another tab)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'notifications') {
+        updateUnreadCount();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [location.pathname]);
 
   const handleShowNotifications = () => {
-    try {
-      const { reloadNotifications } = useNotifications();
-      reloadNotifications();
-      setShowNotifications(true);
-    } catch (e) {
-      console.error("Error showing notifications:", e);
-    }
+    setShowNotifications(true);
   };
 
   return (
@@ -128,13 +129,11 @@ const MainLayout = () => {
               onClick={handleShowNotifications}
             >
               <Mail className="w-5 h-5" />
-              <span className={`absolute -top-1 -right-1 font-bold border border-black w-5 h-5 flex items-center justify-center rounded-full text-xs ${
-                unreadCount > 0
-                  ? "bg-red-600 text-white"
-                  : "bg-gray-700 text-gray-300"
-              }`}>
-                {unreadCount > 0 ? (unreadCount > 9 ? "9+" : unreadCount) : ""}
-              </span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 font-bold border border-black w-5 h-5 flex items-center justify-center rounded-full text-xs bg-red-600 text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </button>
             <button
               className="p-2 rounded-full bg-black/60 hover:bg-white/10 border border-white/10 transition-colors"
@@ -155,12 +154,10 @@ const MainLayout = () => {
         <HowItWorksModal open={showHowItWorks} onClose={() => setShowHowItWorks(false)} />
       )}
       
-      {showNotifications && (
-        <NotificationsDrawer
-          open={showNotifications}
-          onOpenChange={setShowNotifications}
-        />
-      )}
+      <NotificationsDrawer
+        open={showNotifications}
+        onOpenChange={setShowNotifications}
+      />
       
       <Footer />
       <BottomNavigation />

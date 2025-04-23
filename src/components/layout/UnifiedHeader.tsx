@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,10 +23,39 @@ const UnifiedHeader = ({
   const [inputRef, setInputRef] = useState<HTMLInputElement | null>(null);
 
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const savedProfileImage = localStorage.getItem('profileImage');
     setProfileImage(savedProfileImage);
+    
+    // Get unread notifications count
+    try {
+      const stored = localStorage.getItem('notifications');
+      if (stored) {
+        const notifications = JSON.parse(stored);
+        const count = notifications.filter((n: any) => !n.read).length;
+        setUnreadCount(count);
+      }
+    } catch (e) {
+      console.error("Error loading notification count:", e);
+    }
+    
+    // Update count periodically
+    const interval = setInterval(() => {
+      try {
+        const stored = localStorage.getItem('notifications');
+        if (stored) {
+          const notifications = JSON.parse(stored);
+          const count = notifications.filter((n: any) => !n.read).length;
+          setUnreadCount(count);
+        }
+      } catch (e) {
+        console.error("Error updating notification count:", e);
+      }
+    }, 5000);
+    
+    return () => clearInterval(interval);
   }, [propProfileImage]);
 
   const handleAvatarClick = () => {
@@ -94,10 +124,15 @@ const UnifiedHeader = ({
           <button
             type="button"
             aria-label="Mail"
-            className="p-2 rounded-full bg-black/60 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
+            className="p-2 rounded-full bg-black/60 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer relative"
             onClick={() => (onClickMail ? onClickMail() : navigate("/notifications"))}
           >
             <Mail className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 font-bold border border-black w-5 h-5 flex items-center justify-center rounded-full text-xs bg-red-600 text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
           </button>
           <button
             className="p-2 rounded-full bg-black/60 hover:bg-white/10 border border-white/10 transition-colors"
