@@ -9,8 +9,10 @@ interface BuzzButtonProps {
   onBuzzClick: () => void;
   unlockedClues: number;
   updateUnlockedClues?: (val: number) => void;
-  isMapBuzz?: boolean; // Parametro per distinguere il tipo di buzz
+  isMapBuzz?: boolean;
 }
+
+const MAX_CLUES = 1000; // Aggiornato il limite visualizzato
 
 const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz = false }: BuzzButtonProps) => {
   const [isVaultOpen, setIsVaultOpen] = useState(false);
@@ -22,14 +24,13 @@ const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz
   }, [soundPreference, volume, initializeSound]);
 
   const handleClick = () => {
-    playSound(); // Emette il suono al click
+    playSound();
     setIsVaultOpen(true);
 
     setTimeout(() => {
       setIsVaultOpen(false);
-      // Incrementa il contatore locale solo se necessario
       if (typeof updateUnlockedClues === 'function' && !isMapBuzz) {
-        updateUnlockedClues(unlockedClues + 1);
+        updateUnlockedClues(unlockedClues + 1 > MAX_CLUES ? MAX_CLUES : unlockedClues + 1);
       }
       onBuzzClick();
     }, 1500);
@@ -50,10 +51,10 @@ const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz
 
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
-          Limite: 100 indizi supplementari per evento
+          Limite: 1000 indizi supplementari per evento
         </p>
         <p className="text-sm mt-1 font-medium">
-          {unlockedClues}/100 indizi sbloccati
+          {unlockedClues}/{MAX_CLUES} indizi sbloccati
         </p>
       </div>
     </div>
@@ -61,3 +62,4 @@ const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz
 };
 
 export default BuzzButton;
+
