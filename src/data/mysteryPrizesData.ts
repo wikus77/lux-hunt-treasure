@@ -1,5 +1,5 @@
 
-export interface MysteryPrize {
+interface MysteryPrize {
   imageUrl: string;
   description: string;
 }
@@ -24,7 +24,7 @@ export const mysteryPrizes: MysteryPrize[] = [
 export const upcomingMysteryPrizes: MysteryPrize[] = [
   {
     imageUrl: "/lovable-uploads/32a96c45-2a5d-4579-bbb8-8bff4a195655.png",
-    description: "Ferrari 488 GTB, l'eccellenza sportiva del Made in Italy."
+    description: "Ferrari 488 GTB, l’eccellenza sportiva del Made in Italy."
   },
   {
     imageUrl: "/lovable-uploads/b9b5db19-1879-4050-866e-6cb044f50764.png",

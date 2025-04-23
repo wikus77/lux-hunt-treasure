@@ -9,10 +9,9 @@ interface BuzzButtonProps {
   onBuzzClick: () => void;
   unlockedClues: number;
   updateUnlockedClues?: (val: number) => void;
-  isMapBuzz?: boolean; // Parametro per distinguere il tipo di buzz
 }
 
-const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz = false }: BuzzButtonProps) => {
+const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues }: BuzzButtonProps) => {
   const [isVaultOpen, setIsVaultOpen] = useState(false);
   const { soundPreference, volume } = useSound();
   const { playSound, initializeSound } = useBuzzSound();
@@ -27,8 +26,8 @@ const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz
 
     setTimeout(() => {
       setIsVaultOpen(false);
-      // Incrementa il contatore locale solo se necessario
-      if (typeof updateUnlockedClues === 'function' && !isMapBuzz) {
+      // Incrementa il contatore locale (sincronizza con parent via props)
+      if (typeof updateUnlockedClues === 'function') {
         updateUnlockedClues(unlockedClues + 1);
       }
       onBuzzClick();

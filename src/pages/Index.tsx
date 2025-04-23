@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -33,20 +32,18 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="w-full flex flex-col justify-center items-center text-center px-6 py-24 md:py-32 relative">
-        {/* Bottone ACCEDI in alto a destra, ridimensionato del 30% e colori aggiornati */}
-        <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20">
+        {/* Bottone ACCEDI in alto a destra, più piccolo e colorato come da screenshot */}
+        <div className="absolute top-4 right-4 md:top-10 md:right-10 z-20">
           <Button
             onClick={handleLoginClick}
-            className="flex items-center rounded-lg font-semibold text-xs shadow-lg transition-all duration-150 px-3 py-1.5 scale-70 transform origin-right"
+            className="flex items-center rounded-lg font-semibold text-base shadow-lg transition-all duration-150 px-4 py-2"
             style={{
-              background: "linear-gradient(90deg, #FEBD5C 0%, #F57E42 100%)",
+              background: "linear-gradient(90deg, #FFB142 0%, #FF7846 100%)",
               color: "#232323",
-              boxShadow: "0 1px 6px 0 rgba(0,0,0,0.18), 0 0.5px 2px #ffcba4",
-              transform: "scale(0.7)",
-              transformOrigin: "right"
+              boxShadow: "0 1px 6px 0 rgba(0,0,0,0.18), 0 0.5px 2px #ffcba4"
             }}
           >
-            <ArrowRight className="mr-1" size={14} />
+            <ArrowRight className="mr-1" size={18} />
             Accedi
           </Button>
         </div>
@@ -82,7 +79,7 @@ const Index = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
           <div className="glass-card hover-lift text-center w-full relative">
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border border-white/10">
-              {/* Rimosso il badge con il numero */}
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold text-xl">1</div>
             </div>
             <h3 className="text-xl font-bold mb-3">Registrati</h3>
             <p className="text-white/70">
@@ -92,7 +89,7 @@ const Index = () => {
 
           <div className="glass-card hover-lift text-center w-full relative">
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border border-white/10">
-              {/* Rimosso il badge con il numero */}
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold text-xl">2</div>
             </div>
             <h3 className="text-xl font-bold mb-3">Scopri gli Indizi</h3>
             <p className="text-white/70">
@@ -102,7 +99,7 @@ const Index = () => {
 
           <div className="glass-card hover-lift text-center w-full relative">
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border border-white/10">
-              {/* Rimosso il badge con il numero */}
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold text-xl">3</div>
             </div>
             <h3 className="text-xl font-bold mb-3">Vinci il Premio</h3>
             <p className="text-white/70">

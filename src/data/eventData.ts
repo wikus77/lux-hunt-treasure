@@ -1,4 +1,3 @@
-import { MysteryPrize } from "./mysteryPrizesData";
 
 export interface EventImage {
   url: string;
@@ -16,7 +15,6 @@ export interface Event {
   images: EventImage[];
   detailedDescription: string;
   isCurrent?: boolean;
-  mysteryPrizes?: MysteryPrize[];
 }
 
 // Aggiorniamo tutti gli eventi, nessun Patek Philippe orologio, solo auto & borse

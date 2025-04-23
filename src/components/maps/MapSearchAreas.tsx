@@ -1,17 +1,7 @@
 
-import React, { useRef, useState } from "react";
+import React from "react";
 import { Circle, Marker, InfoWindow } from "@react-google-maps/api";
 import SearchAreaInfoWindow from "./SearchAreaInfoWindow";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogTitle,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogDescription,
-} from "@/components/ui/alert-dialog";
 
 type SearchArea = {
   id: string;
@@ -20,7 +10,6 @@ type SearchArea = {
   radius: number;
   label: string;
   editing?: boolean;
-  isAI?: boolean;
 };
 
 type Props = {
@@ -32,8 +21,6 @@ type Props = {
   deleteSearchArea: (id: string) => void;
 };
 
-const LONG_PRESS_MS = 700;
-
 const MapSearchAreas: React.FC<Props> = ({
   searchAreas,
   activeSearchArea,
@@ -41,116 +28,54 @@ const MapSearchAreas: React.FC<Props> = ({
   saveSearchArea,
   editSearchArea,
   deleteSearchArea
-}) => {
-  const [longPressArea, setLongPressArea] = useState<SearchArea | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Gestisci la pressione prolungata SOLO per le aree AI
-  const handleAreaMouseDown = (area: SearchArea) => {
-    if (!area.isAI) return;
-    timerRef.current = setTimeout(() => {
-      setLongPressArea(area);
-    }, LONG_PRESS_MS);
-  };
-  const handleAreaMouseUp = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-
-  const handleAIEdit = () => {
-    if (longPressArea) {
-      editSearchArea(longPressArea.id);
-      setActiveSearchArea(longPressArea.id);
-      setLongPressArea(null);
-    }
-  };
-
-  const handleAIDelete = () => {
-    if (longPressArea) {
-      deleteSearchArea(longPressArea.id); // ora consentito: il pulsante gestisce l'eccezione
-      setLongPressArea(null);
-    }
-  };
-
-  return (
-    <>
-      {searchAreas.map(area => (
-        <React.Fragment key={`area-${area.id}`}>
-          <Circle
-            center={{ lat: area.lat, lng: area.lng }}
-            radius={area.radius}
-            options={{
-              fillColor: area.isAI
-                ? "rgba(115,82,255,0.25)" // Colore più vicino al Buzz gradient
-                : "rgba(67, 97, 238, 0.24)",
-              fillOpacity: area.isAI ? 0.6 : 0.8,
-              strokeColor: area.isAI
-                ? "rgba(126,105,171,0.85)" // Secondary Purple
-                : "rgba(114, 9, 183, 0.9)",
-              strokeOpacity: area.isAI ? 1 : 1,
-              strokeWeight: area.isAI ? 4 : 3,
-            }}
-            onClick={() => setActiveSearchArea(area.id)}
-            onMouseDown={area.isAI ? () => handleAreaMouseDown(area) : undefined}
-            onMouseUp={area.isAI ? handleAreaMouseUp : undefined}
-          />
-          <Marker
+}) => (
+  <>
+    {searchAreas.map(area => (
+      <React.Fragment key={`area-${area.id}`}>
+        <Circle 
+          center={{ lat: area.lat, lng: area.lng }}
+          radius={area.radius}
+          options={{
+            fillColor: "#39FF144D",
+            fillOpacity: 0.2,
+            strokeColor: "#39FF14",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+          }}
+          onClick={() => setActiveSearchArea(area.id)}
+        />
+        <Marker 
+          position={{ lat: area.lat, lng: area.lng }}
+          icon={{
+            path: "M10 10 L10 10 Z",
+            scale: 0,
+          }}
+          label={{
+            text: area.label,
+            color: "#FFFFFF",
+            fontWeight: "bold",
+            className: "map-label"
+          }}
+          onClick={() => setActiveSearchArea(area.id)}
+        />
+        {activeSearchArea === area.id && (
+          <InfoWindow
+            key={`area-info-${area.id}`}
             position={{ lat: area.lat, lng: area.lng }}
-            icon={{
-              path: "M10 10 L10 10 Z",
-              scale: 0,
-            }}
-            label={{
-              text: area.label,
-              color: "#FFFFFF",
-              fontWeight: "bold",
-              className: "map-label"
-            }}
-            onClick={() => setActiveSearchArea(area.id)}
-          />
-          {activeSearchArea === area.id && (
-            <InfoWindow
-              key={`area-info-${area.id}`}
-              position={{ lat: area.lat, lng: area.lng }}
-              onCloseClick={() => setActiveSearchArea(null)}
-            >
-              <SearchAreaInfoWindow
-                area={area}
-                setActiveSearchArea={setActiveSearchArea}
-                saveSearchArea={saveSearchArea}
-                editSearchArea={editSearchArea}
-                deleteSearchArea={deleteSearchArea}
-              />
-            </InfoWindow>
-          )}
-        </React.Fragment>
-      ))}
-
-      {/* Banner di azione su pressione prolungata per le aree AI */}
-      <AlertDialog open={Boolean(longPressArea)} onOpenChange={open => !open && setLongPressArea(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {/* icona informativa too: */}
-              Modifica o elimina area Buzz
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Vuoi modificare o eliminare questa area di ricerca Buzz?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setLongPressArea(null)}>Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAIEdit}>Modifica</AlertDialogAction>
-            <AlertDialogAction onClick={handleAIDelete} className="bg-red-500 text-white hover:bg-red-700">
-              Elimina area
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-};
+            onCloseClick={() => setActiveSearchArea(null)}
+          >
+            <SearchAreaInfoWindow
+              area={area}
+              setActiveSearchArea={setActiveSearchArea}
+              saveSearchArea={saveSearchArea}
+              editSearchArea={editSearchArea}
+              deleteSearchArea={deleteSearchArea}
+            />
+          </InfoWindow>
+        )}
+      </React.Fragment>
+    ))}
+  </>
+);
 
 export default MapSearchAreas;

@@ -61,7 +61,6 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-1"
-                style={{ color: "black" }} // Testi di input in nero
               />
             </div>
 
@@ -74,7 +73,6 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1"
-                style={{ color: "black" }} // Testi di input in nero
               />
             </div>
           </div>
