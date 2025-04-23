@@ -32,7 +32,7 @@ const Events = () => {
           </div>
           <div className="text-sm px-3 py-1 rounded-full bg-projectx-deep-blue/50 backdrop-blur-sm border border-projectx-blue/20">
             <span className="text-projectx-blue font-mono">
-              {unlockedClues} / 1000 
+              0 / 1000 
             </span>
             <span className="text-gray-400 ml-1">sbloccati</span>
           </div>
