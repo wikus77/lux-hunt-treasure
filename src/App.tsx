@@ -28,16 +28,14 @@ function App({ children }: { children?: React.ReactNode }) {
     }
   }, []);
 
-  const handleAgeVerification = (verified: boolean) => {
-    if (verified) {
-      localStorage.setItem('ageVerified', 'true');
-      setIsAgeVerificationModalOpen(false);
-      setIsVerified(true);
-      
-      const isLoggedIn = localStorage.getItem('isLoggedIn');
-      if (!isLoggedIn) {
-        setIsLoginModalOpen(true);
-      }
+  const handleAgeVerification = () => {
+    localStorage.setItem('ageVerified', 'true');
+    setIsAgeVerificationModalOpen(false);
+    setIsVerified(true);
+    
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (!isLoggedIn) {
+      setIsLoginModalOpen(true);
     }
   };
 
