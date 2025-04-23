@@ -26,23 +26,33 @@ const MainLayout = () => {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   
-  // Use safe initialization to prevent crashes
-  const [notificationData, setNotificationData] = useState({
-    notifications: [],
-    unreadCount: 0,
-    markAllAsRead: () => {},
-    reloadNotifications: () => {}
-  });
+  // Set up notification state with defaults
+  const [unreadCount, setUnreadCount] = useState(0);
 
+  // Use the hook in a safe way inside a useEffect
   useEffect(() => {
     try {
-      // Safely initialize notification data
-      const { notifications = [], unreadCount = 0, markAllAsRead = () => {}, reloadNotifications = () => {} } = useNotifications();
-      setNotificationData({ notifications, unreadCount, markAllAsRead, reloadNotifications });
+      const { reloadNotifications, unreadCount } = useNotifications();
+      reloadNotifications();
+      setUnreadCount(unreadCount);
     } catch (e) {
       console.error("Error loading notifications in MainLayout:", e);
     }
   }, [location.pathname]); // Re-initialize when route changes
+
+  // Update unread count periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      try {
+        const { unreadCount } = useNotifications();
+        setUnreadCount(unreadCount);
+      } catch (e) {
+        console.error("Error updating unread count:", e);
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -60,7 +70,8 @@ const MainLayout = () => {
 
   const handleShowNotifications = () => {
     try {
-      notificationData.reloadNotifications();
+      const { reloadNotifications } = useNotifications();
+      reloadNotifications();
       setShowNotifications(true);
     } catch (e) {
       console.error("Error showing notifications:", e);
@@ -118,11 +129,11 @@ const MainLayout = () => {
             >
               <Mail className="w-5 h-5" />
               <span className={`absolute -top-1 -right-1 font-bold border border-black w-5 h-5 flex items-center justify-center rounded-full text-xs ${
-                notificationData.unreadCount > 0
+                unreadCount > 0
                   ? "bg-red-600 text-white"
                   : "bg-gray-700 text-gray-300"
               }`}>
-                {notificationData.unreadCount > 0 ? (notificationData.unreadCount > 9 ? "9+" : notificationData.unreadCount) : ""}
+                {unreadCount > 0 ? (unreadCount > 9 ? "9+" : unreadCount) : ""}
               </span>
             </button>
             <button

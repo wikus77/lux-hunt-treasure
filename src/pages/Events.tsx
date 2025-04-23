@@ -15,11 +15,11 @@ const Events = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { unlockedClues, incrementUnlockedCluesAndAddClue, MAX_CLUES } = useBuzzClues();
   const { 
-    addNotification, 
-    notifications, 
-    unreadCount, 
+    notifications,
+    unreadCount,
     markAllAsRead, 
-    reloadNotifications 
+    reloadNotifications,
+    addNotification
   } = useNotifications();
   
   useEffect(() => {
@@ -44,6 +44,8 @@ const Events = () => {
   }, [incrementUnlockedCluesAndAddClue, reloadNotifications]);
 
   const generateRandomNotification = useCallback(() => {
+    console.log("Generating random notification...");
+    
     const notificationTemplates = [
       { 
         title: "Indizio Extra", 
@@ -64,7 +66,7 @@ const Events = () => {
     ];
 
     const randomNotification = notificationTemplates[Math.floor(Math.random() * notificationTemplates.length)];
-    console.log("Generating random notification:", randomNotification);
+    console.log("Selected notification template:", randomNotification);
     
     try {
       const success = addNotification(randomNotification);
@@ -92,7 +94,11 @@ const Events = () => {
   const toggleNotifications = useCallback(() => {
     console.log("Toggling notifications drawer, current state:", notificationsOpen);
     setNotificationsOpen(prevState => !prevState);
-  }, [notificationsOpen]);
+    // Reload notifications when opening the drawer
+    if (!notificationsOpen) {
+      reloadNotifications();
+    }
+  }, [notificationsOpen, reloadNotifications]);
 
   return (
     <div className="pb-20 min-h-screen bg-black w-full">
