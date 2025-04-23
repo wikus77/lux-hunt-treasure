@@ -17,7 +17,7 @@ const Settings = () => {
   const [soundEffects, setSoundEffects] = useState(true);
   const [language, setLanguage] = useState("Italiano");
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  
+
   useEffect(() => {
     // Check if user is logged in
     const isLoggedIn = localStorage.getItem('isLoggedIn');
@@ -30,33 +30,33 @@ const Settings = () => {
       navigate('/login');
       return;
     }
-    
+
     // Load profile image
     const savedProfileImage = localStorage.getItem('profileImage');
     setProfileImage(savedProfileImage);
-    
+
     // Load saved settings if available
     const savedPushNotifications = localStorage.getItem('pushNotifications');
     if (savedPushNotifications) {
       setPushNotifications(savedPushNotifications === 'true');
     }
-    
+
     const savedEmailNotifications = localStorage.getItem('emailNotifications');
     if (savedEmailNotifications) {
       setEmailNotifications(savedEmailNotifications === 'true');
     }
-    
+
     const savedSoundEffects = localStorage.getItem('soundEffects');
     if (savedSoundEffects) {
       setSoundEffects(savedSoundEffects === 'true');
     }
-    
+
     const savedLanguage = localStorage.getItem('language');
     if (savedLanguage) {
       setLanguage(savedLanguage);
     }
   }, [navigate]);
-  
+
   useEffect(() => {
     // Save settings whenever they change
     localStorage.setItem('pushNotifications', pushNotifications.toString());
@@ -69,12 +69,12 @@ const Settings = () => {
     // Clear relevant localStorage items
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userEmail');
-    
+
     toast({
       title: "Logout effettuato",
       description: "La tua sessione è stata chiusa con successo."
     });
-    
+
     setTimeout(() => {
       navigate('/login');
     }, 1500);
@@ -110,7 +110,7 @@ const Settings = () => {
           <LogOut className="h-5 w-5 mr-2" />
           Logout
         </Button>
-        
+
         <div className="mt-6 text-center">
           <p className="text-xs text-muted-foreground">
             M1ssion v1.0.0

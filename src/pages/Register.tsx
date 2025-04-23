@@ -23,7 +23,7 @@ const Register = () => {
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     // Basic validations
     if (!email || !password || !confirmPassword || !fullName) {
       toast({
@@ -112,7 +112,7 @@ const Register = () => {
                   disabled={isSubmitting}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -125,7 +125,7 @@ const Register = () => {
                   disabled={isSubmitting}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -138,7 +138,7 @@ const Register = () => {
                   disabled={isSubmitting}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="confirmPassword">Conferma Password</Label>
                 <Input
@@ -152,7 +152,7 @@ const Register = () => {
                 />
               </div>
             </div>
-            
+
             <Button 
               type="submit" 
               className="w-full mt-6 bg-gradient-to-r from-projectx-blue to-projectx-pink"
@@ -160,13 +160,13 @@ const Register = () => {
             >
               {isSubmitting ? "Registrazione in corso..." : "Registrati"}
             </Button>
-            
+
             <div className="mt-4 text-center text-sm text-muted-foreground">
               Registrandoti, accetti i nostri Termini e Condizioni e la nostra Informativa sulla Privacy.
             </div>
           </form>
         )}
-        
+
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
             Hai già un account?{" "}

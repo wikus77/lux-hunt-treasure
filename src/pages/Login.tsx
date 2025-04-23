@@ -32,7 +32,7 @@ const Login = () => {
       // Storing a dummy user state in localStorage for demonstration
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userEmail", email);
-      
+
       toast({
         title: "Login completato!",
         description: "Accesso effettuato con successo."
