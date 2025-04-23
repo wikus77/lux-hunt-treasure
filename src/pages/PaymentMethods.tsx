@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/sonner";
@@ -6,6 +5,7 @@ import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import CardPaymentForm from '@/components/payments/CardPaymentForm';
 import ApplePayBox from '@/components/payments/ApplePayBox';
 import GooglePayBox from '@/components/payments/GooglePayBox';
+import CheckoutWithStripeButton from "@/components/payments/CheckoutWithStripeButton";
 
 const PaymentMethods = () => {
   const location = useLocation();
@@ -14,7 +14,6 @@ const PaymentMethods = () => {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [backPath, setBackPath] = useState('/settings');
   
-  // Estrai parametri dalla location state
   const fromBuzz = location.state?.fromBuzz || false;
   const fromRegularBuzz = location.state?.fromRegularBuzz || false;
   const clue = location.state?.clue;
@@ -23,7 +22,6 @@ const PaymentMethods = () => {
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
     
-    // Determina il percorso di ritorno
     if (fromBuzz) {
       setBackPath('/buzz');
     }
@@ -32,7 +30,6 @@ const PaymentMethods = () => {
   const handlePaymentSuccess = () => {
     setPaymentProcessing(true);
     
-    // Simula elaborazione pagamento
     setTimeout(() => {
       localStorage.setItem('hasPaymentMethod', 'true');
       
@@ -40,10 +37,8 @@ const PaymentMethods = () => {
         description: "Il tuo metodo di pagamento è stato registrato.",
       });
       
-      // Reindirizza in base alla fonte
       if (fromBuzz) {
         if (fromRegularBuzz) {
-          // Se proviene dalla sezione Buzz standard
           navigate('/buzz', {
             replace: true,
             state: { 
@@ -53,7 +48,6 @@ const PaymentMethods = () => {
             }
           });
         } else {
-          // Se proviene dalla mappa interattiva
           navigate('/map', {
             replace: true,
             state: { 
@@ -65,7 +59,6 @@ const PaymentMethods = () => {
           });
         }
       } else {
-        // Altrimenti torna alle impostazioni
         navigate('/settings', { replace: true });
       }
     }, 2000);
@@ -106,10 +99,7 @@ const PaymentMethods = () => {
                   </span>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <ApplePayBox onApplePay={handlePaymentSuccess} />
-                <GooglePayBox onGooglePay={handlePaymentSuccess} />
-              </div>
+              <CheckoutWithStripeButton label="Paga subito con Stripe" />
             </>
           )}
         </div>
