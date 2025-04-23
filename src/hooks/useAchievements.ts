@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { achievements, Achievement, AchievementCategory } from "@/data/achievementsData";
 import { toast } from "sonner";
 import { useNotifications } from "@/hooks/useNotifications";
-import { cluesCategories } from "@/components/profile/cluesCategories";
+import { clueCategories } from "@/components/profile/cluesCategories";
 
 const STORAGE_KEY = 'userAchievements';
 
