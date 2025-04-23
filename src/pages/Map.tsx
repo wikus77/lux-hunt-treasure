@@ -8,6 +8,7 @@ import HelpDialog from "./map/HelpDialog";
 import LoadingScreen from "./map/LoadingScreen";
 import { clues } from "@/data/cluesData";
 import { useUserLocationPermission } from "@/hooks/useUserLocationPermission";
+import { analyzeCluesForLocation } from "@/utils/clueAnalyzer";
 
 const DEFAULT_CENTER = { lat: 45.4642, lng: 9.19 }; // Milano
 
@@ -25,6 +26,18 @@ const Map = () => {
   // Get user location
   const { userLocation } = useUserLocationPermission();
   const currentLocation = userLocation;
+
+  // Check for payment completion
+  useEffect(() => {
+    const paymentCompleted = localStorage.getItem('paymentCompleted');
+    
+    if (paymentCompleted === 'true') {
+      // Reset the payment flag
+      localStorage.removeItem('paymentCompleted');
+      // Process the intelligent search area
+      createIntelligentSearchArea();
+    }
+  }, []);
 
   const addMarker = (e: google.maps.MapMouseEvent) => {
     if (!e.latLng) return;
@@ -123,35 +136,53 @@ const Map = () => {
   const handleMapDoubleClick = (e: google.maps.MapMouseEvent) => {
     addMarker(e);
   };
+  
+  // Nuova funzione per creare un'area di ricerca intelligente basata sugli indizi
+  const createIntelligentSearchArea = () => {
+    const newClickCount = buzzClickCount + 1;
+    setBuzzClickCount(newClickCount);
+    
+    // Recupera tutti gli indizi sbloccati
+    const unlockedClues = clues.filter(clue => !clue.isLocked);
+    // Recupera anche tutte le notifiche che potrebbero contenere indizi
+    const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+    
+    // Utilizza la funzione di analisi per determinare la posizione ottimale
+    const locationInfo = analyzeCluesForLocation(unlockedClues, notifications);
+    
+    // Utilizza la posizione determinata o il centro predefinito/posizione utente come fallback
+    const lat = locationInfo.lat || (currentLocation ? currentLocation[0] : DEFAULT_CENTER.lat);
+    const lng = locationInfo.lng || (currentLocation ? currentLocation[1] : DEFAULT_CENTER.lng);
+    
+    // L'area di ricerca ha un raggio di 500km (500.000 metri)
+    const newSearchArea = {
+      id: crypto.randomUUID(),
+      lat,
+      lng,
+      radius: 500000, // 500km in metri
+      label: `Area suggerita (Analisi ${newClickCount})`,
+      editing: false,
+      isAI: true,
+      confidence: locationInfo.confidence || "bassa"
+    };
+    
+    // Sostituisci tutte le aree di ricerca AI precedenti con questa nuova
+    const filteredAreas = searchAreas.filter(area => !area.isAI);
+    setSearchAreas([...filteredAreas, newSearchArea]);
+    setActiveSearchArea(newSearchArea.id);
+    
+    toast.success(`Area di ricerca aggiunta!`);
+  };
 
+  // Funzione esistente per il bottone Buzz che ora è semplificata
   const processCluesAndAddSearchArea = () => {
     const newClickCount = buzzClickCount + 1;
     setBuzzClickCount(newClickCount);
 
-    const baseRadius = 100000;
-    const reduction = Math.min(newClickCount - 1, 10) * 5000;
-    const radius = Math.max(baseRadius - reduction, 50000);
-
-    const unlockedClues = clues.filter(clue => !clue.isLocked);
-
-    const lat = currentLocation ? currentLocation[0] : DEFAULT_CENTER.lat;
-    const lng = currentLocation ? currentLocation[1] : DEFAULT_CENTER.lng;
-
-    const randomOffset = (Math.random() - 0.5) * 0.05;
-    const newSearchArea = {
-      id: crypto.randomUUID(),
-      lat: lat + randomOffset,
-      lng: lng + randomOffset,
-      radius: radius,
-      label: `Area di ricerca AI (Tentativo ${newClickCount})`,
-      editing: false,
-      isAI: true,
-    };
-
-    setSearchAreas([newSearchArea]);
-    setActiveSearchArea(newSearchArea.id);
-
-    toast.success(`Area di ricerca aggiunta!`);
+    // Salviamo in localStorage un flag per indicare che stiamo per fare un pagamento per la mappa
+    localStorage.setItem('buzzRequest', 'map');
+    // Reindirizziamo alla pagina di pagamento
+    window.location.href = '/payment-methods';
   };
 
   return (

@@ -1,20 +1,20 @@
 
-import React, { useRef } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pencil, X, Check } from "lucide-react";
-
-type SearchArea = {
-  id: string;
-  lat: number;
-  lng: number;
-  radius: number;
-  label: string;
-  editing?: boolean;
-};
+import { Pencil, Trash2, Save, X, Circle } from "lucide-react";
 
 type Props = {
-  area: SearchArea;
+  area: {
+    id: string;
+    lat: number;
+    lng: number;
+    radius: number;
+    label: string;
+    editing?: boolean;
+    isAI?: boolean;
+    confidence?: "alta" | "media" | "bassa";
+  };
   setActiveSearchArea: (id: string | null) => void;
   saveSearchArea: (id: string, label: string, radius: number) => void;
   editSearchArea: (id: string) => void;
@@ -28,80 +28,114 @@ const SearchAreaInfoWindow: React.FC<Props> = ({
   editSearchArea,
   deleteSearchArea
 }) => {
-  const newLabelRef = useRef<HTMLInputElement>(null);
-  const newRadiusRef = useRef<HTMLInputElement>(null);
-
+  const [label, setLabel] = useState(area.label);
+  const [radius, setRadius] = useState(area.radius);
+  const labelRef = useRef<HTMLInputElement>(null);
+  const radiusRef = useRef<HTMLInputElement>(null);
+  
+  const handleSave = () => {
+    const newLabel = labelRef.current?.value || area.label;
+    const newRadius = radiusRef.current?.value ? 
+      parseInt(radiusRef.current.value, 10) : area.radius;
+    
+    saveSearchArea(area.id, newLabel, newRadius);
+  };
+  
+  const getConfidenceColor = () => {
+    if (!area.confidence) return "text-gray-300";
+    
+    switch(area.confidence) {
+      case "alta": return "text-green-400";
+      case "media": return "text-yellow-400";
+      case "bassa": return "text-red-400";
+      default: return "text-gray-300";
+    }
+  };
+  
   return (
-    <div className="min-w-[200px]">
+    <div className="bg-black/90 text-white p-3 rounded-md min-w-[260px]">
       {area.editing ? (
-        <div className="flex flex-col gap-2">
-          <div className="mb-2">
-            <label className="text-xs text-gray-500">Nome area</label>
+        <>
+          <div className="mb-3">
+            <label className="block text-xs mb-1">Nome area</label>
             <Input
-              ref={newLabelRef}
-              defaultValue={area.label}
-              placeholder="Nome area di ricerca"
-              className="text-sm"
+              ref={labelRef}
+              type="text"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              className="bg-gray-800 border-gray-700"
             />
           </div>
-          <div className="mb-2">
-            <label className="text-xs text-gray-500">Raggio (metri)</label>
+          <div className="mb-3">
+            <label className="block text-xs mb-1">Raggio (metri)</label>
             <Input
-              ref={newRadiusRef}
+              ref={radiusRef}
               type="number"
-              defaultValue={area.radius}
-              min={50}
-              max={5000}
-              className="text-sm"
+              min={1000}
+              max={1000000}
+              step={1000}
+              value={radius}
+              onChange={(e) => setRadius(parseInt(e.target.value, 10))}
+              className="bg-gray-800 border-gray-700"
             />
           </div>
-          <div className="flex gap-2 justify-end">
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => {
-                deleteSearchArea(area.id);
-                setActiveSearchArea(null);
-              }}
+          <div className="flex justify-between">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => setActiveSearchArea(null)}
+              className="text-gray-300"
             >
-              <X className="w-4 h-4" />
+              <X size={16} className="mr-1" /> Annulla
             </Button>
-            <Button
+            <Button 
               size="sm"
-              variant="default"
-              onClick={() => {
-                const label = newLabelRef.current?.value || "Area di ricerca";
-                const radius = Number(newRadiusRef.current?.value) || 500;
-                saveSearchArea(area.id, label, radius);
-              }}
+              onClick={handleSave}
+              className="bg-projectx-blue hover:bg-projectx-blue/80"
             >
-              <Check className="w-4 h-4" />
+              <Save size={16} className="mr-1" /> Salva
             </Button>
           </div>
-        </div>
+        </>
       ) : (
-        <div className="flex flex-col gap-2">
-          <div>
-            <h3 className="font-medium text-sm">{area.label}</h3>
-            <p className="text-xs text-gray-500">Raggio: {area.radius}m</p>
+        <>
+          <h3 className="font-bold mb-1 flex items-center gap-2">
+            <Circle className="h-4 w-4 text-projectx-blue" />
+            {area.label}
+          </h3>
+          
+          <div className="text-xs text-gray-300 mb-3">
+            <div>Coordinate: {area.lat.toFixed(4)}, {area.lng.toFixed(4)}</div>
+            <div>Raggio: {(area.radius / 1000).toFixed(1)} km</div>
+            
+            {area.isAI && area.confidence && (
+              <div className="mt-1">
+                Confidenza: <span className={getConfidenceColor()}>
+                  {area.confidence.charAt(0).toUpperCase() + area.confidence.slice(1)}
+                </span>
+              </div>
+            )}
           </div>
+          
           <div className="flex gap-2 justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => editSearchArea(area.id)}
+              className="text-xs"
+            >
+              <Pencil size={14} className="mr-1" /> Modifica
+            </Button>
             <Button
               size="sm"
               variant="destructive"
               onClick={() => deleteSearchArea(area.id)}
+              className="text-xs"
             >
-              <X className="w-4 h-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="default"
-              onClick={() => editSearchArea(area.id)}
-            >
-              <Pencil className="w-4 h-4" />
+              <Trash2 size={14} className="mr-1" /> Elimina
             </Button>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
