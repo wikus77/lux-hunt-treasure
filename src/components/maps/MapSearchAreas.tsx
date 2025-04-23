@@ -36,11 +36,11 @@ const MapSearchAreas: React.FC<Props> = ({
           center={{ lat: area.lat, lng: area.lng }}
           radius={area.radius}
           options={{
-            fillColor: "#39FF144D",
-            fillOpacity: 0.2,
-            strokeColor: "#39FF14",
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
+            fillColor: "rgba(67, 97, 238, 0.24)", // [#4361ee] translucido - blu/violet
+            fillOpacity: 0.8,
+            strokeColor: "rgba(114, 9, 183, 0.9)", // [#7209b7] - violetto
+            strokeOpacity: 1,
+            strokeWeight: 3,
           }}
           onClick={() => setActiveSearchArea(area.id)}
         />
