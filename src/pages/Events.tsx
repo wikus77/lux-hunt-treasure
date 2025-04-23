@@ -1,3 +1,4 @@
+
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useState, useEffect } from "react";
 import ProfileClues from "@/components/profile/ProfileClues";
@@ -6,11 +7,12 @@ import { FileSearch, Bell } from "lucide-react";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Events = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const { unlockedClues, incrementUnlockedCluesAndAddClue, MAX_CLUES } = useBuzzClues();
-  const { addNotification } = useNotifications();
+  const { addNotification, notifications } = useNotifications();
   
   useEffect(() => {
     // Get profile image on mount
@@ -51,7 +53,13 @@ const Events = () => {
     ];
 
     const randomNotification = notifications[Math.floor(Math.random() * notifications.length)];
-    addNotification(randomNotification);
+    const success = addNotification(randomNotification);
+    
+    if (success) {
+      toast.success("Notifica creata con successo!");
+    } else {
+      toast.error("Errore nella creazione della notifica");
+    }
   };
 
   return (
@@ -79,8 +87,9 @@ const Events = () => {
         <Button 
           onClick={generateRandomNotification} 
           className="mb-4 w-full flex items-center gap-2"
+          variant="outline"
         >
-          <Bell className="w-4 h-4" /> Genera Notifica Casuale
+          <Bell className="w-4 h-4" /> Genera Notifica Casuale ({notifications?.length || 0})
         </Button>
 
         <div className="glass-card p-4 backdrop-blur-md border border-projectx-blue/10 rounded-xl">

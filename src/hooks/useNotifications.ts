@@ -95,10 +95,12 @@ export function useNotifications() {
       setUnreadCount(updated.filter(n => !n.read).length);
       listeners.forEach(fn => fn());
     }
+    return saved;
   }, [notifications, saveNotifications]);
 
   // Aggiungi una nuova notifica
-  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'date' | 'read'>) => {
+  const addNotification = useCallback((notification: {title: string, description: string}) => {
+    // Crea un nuovo oggetto notifica con ID, data e stato di lettura
     const newNotification = {
       id: Date.now().toString(),
       title: notification.title,
@@ -107,17 +109,31 @@ export function useNotifications() {
       read: false
     };
     
-    const updated = [...notifications, newNotification];
-    const saved = saveNotifications(updated);
-    
-    if (saved) {
-      setNotifications(updated);
-      setUnreadCount(unreadCount + 1);
-      listeners.forEach(fn => fn());
+    try {
+      // Ottieni prima le notifiche attuali per assicurarci di avere i dati più recenti
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const currentNotifs: Notification[] = stored ? JSON.parse(stored) : [];
+      
+      // Aggiungi la nuova notifica
+      const updated = [...currentNotifs, newNotification];
+      const saved = saveNotifications(updated);
+      
+      if (saved) {
+        // Aggiorna lo stato locale
+        setNotifications(updated);
+        setUnreadCount(prev => prev + 1);
+        
+        // Notifica altri listener
+        listeners.forEach(fn => fn());
+        console.log("Notifica aggiunta con successo:", newNotification);
+      }
+      
+      return saved;
+    } catch (error) {
+      console.error("Errore nell'aggiunta della notifica:", error);
+      return false;
     }
-    
-    return saved;
-  }, [notifications, unreadCount, saveNotifications]);
+  }, [saveNotifications]);
 
   return {
     notifications,
