@@ -17,7 +17,7 @@ export const useMapLogic = () => {
   
   const location = useLocation();
   const currentLocation = useUserCurrentLocation();
-  const { unlockedClues, incrementUnlockedCluesAndAddClue } = useBuzzClues();
+  const { unlockedClues, incrementUnlockedCluesAndAddClue, getNextVagueClue } = useBuzzClues();
 
   // Marker management
   const markerLogic = useMapMarkersLogic();
@@ -60,21 +60,28 @@ export const useMapLogic = () => {
       // Payment/Clue popup side effect
       if (location.state?.paymentCompleted && location.state?.mapBuzz) {
         const clue = location.state?.clue;
+        
+        // Increment the unlocked clues counter if not already done
+        incrementUnlockedCluesAndAddClue();
+        
         if (clue && clue.description) {
           setTimeout(() => {
             setClueMessage(clue.description);
             setShowCluePopup(true);
 
-            if (location.state?.generateMapArea && currentLocation) {
-              // Generate a new search area with dynamically calculated radius
-              const generatedAreaId = areaLogic.generateSearchArea();
+            // Genera sempre l'area di ricerca basata sugli indizi disponibili
+            const generatedAreaId = areaLogic.generateSearchArea();
+            
+            if (generatedAreaId) {
+              // Center map on the new area and show a notification
+              toast.success("Area di ricerca generata!", {
+                description: "Controlla la mappa per vedere la nuova area basata sugli indizi disponibili."
+              });
               
-              if (generatedAreaId) {
-                // Center map on the new area
-                toast.success("Nuova area di ricerca generata!", {
-                  description: "Controlla la mappa per vedere la nuova area di ricerca."
-                });
-              }
+              // Imposta l'area generata come attiva dopo un breve ritardo
+              setTimeout(() => {
+                areaLogic.setActiveSearchArea(generatedAreaId);
+              }, 2000);
             }
           }, 1000);
         }
@@ -82,7 +89,7 @@ export const useMapLogic = () => {
     } catch (e) {
       console.error("Errore nell'elaborazione dello stato:", e);
     }
-  }, [location.state, areaLogic, currentLocation]);
+  }, [location.state, areaLogic, incrementUnlockedCluesAndAddClue]);
 
   const handleMapReady = () => {
     try {
@@ -115,27 +122,19 @@ export const useMapLogic = () => {
 
   const handleBuzz = () => {
     // In a real implementation this would trigger payment flow
-    // For now, we'll simulate successful payment
+    // Redirect to payment page with the correct state
+    window.location.href = `/payment-methods?from=map&price=${buzzMapPrice.toFixed(2)}`;
+    
+    // Questo codice in realtà non viene eseguito a causa del reindirizzamento
+    // ma è qui come riferimento per cosa accadrebbe se non ci fosse il reindirizzamento
     setIsMapBuzzActive(true);
-    
-    // Increment the unlocked clues counter
     const newClueCount = incrementUnlockedCluesAndAddClue();
-    
-    // Generate a search area with the updated radius precision
-    const generatedAreaId = areaLogic.generateSearchArea();
-    
-    if (generatedAreaId) {
-      toast.success(`Buzz Mappa attivato: ${buzzMapPrice.toFixed(2)}€`, {
-        description: `Area generata con precisione di ${Math.round(areaLogic.calculateBuzzRadius()/1000)}km`
-      });
-    } else {
-      toast.error("Non è stato possibile generare l'area");
-    }
+    console.log(`Nuovi indizi sbloccati: ${newClueCount}`);
   };
 
   const handleHelp = () => {
     toast.info("Guida Mappa", {
-      description: "Utilizza i pulsanti in alto per aggiungere punti e aree di ricerca sulla mappa. Il Buzz Mappa ti aiuta a restringere l'area di ricerca."
+      description: "Utilizza i pulsanti in alto per aggiungere punti e aree di ricerca sulla mappa. Il Buzz Mappa ti aiuta a restringere l'area di ricerca basandosi sugli indizi disponibili."
     });
   };
 

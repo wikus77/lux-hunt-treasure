@@ -1,4 +1,6 @@
-import React from "react";
+
+import React, { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import MapArea from "./MapArea";
 import MapHeader from "./MapHeader";
 import LoadingScreen from "./LoadingScreen";
@@ -37,7 +39,17 @@ const MapLogicProvider = () => {
     deleteMarker,
     deleteSearchArea,
     clearAllMarkers,
+    location,
   } = useMapLogic();
+  
+  // Effetto per controllare se torniamo dalla pagina di pagamento
+  useEffect(() => {
+    if (location?.state?.paymentCompleted && location?.state?.mapBuzz) {
+      console.log("Pagamento BuzzMap completato, generando area di ricerca...");
+      
+      // L'area è generata automaticamente in useMapLogic, qui gestiamo solo l'UI
+    }
+  }, [location?.state]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -71,7 +83,7 @@ const MapLogicProvider = () => {
             lng: searchAreas.find(a => a.id === activeSearchArea)?.lng || 0,
             radius: searchAreas.find(a => a.id === activeSearchArea)?.radius || 0,
             label: searchAreas.find(a => a.id === activeSearchArea)?.label || '',
-            confidence: 'Alta'
+            confidence: searchAreas.find(a => a.id === activeSearchArea)?.confidence || 'Media'
           } : null} 
           onClose={() => setActiveSearchArea(null)}
         />

@@ -19,6 +19,7 @@ type SearchArea = {
   lng: number;
   radius: number;
   label: string;
+  confidence?: string;
   editing?: boolean;
   isAI?: boolean;
 };
@@ -74,6 +75,15 @@ const MapSearchAreas: React.FC<Props> = ({
     }
   };
 
+  // Colore basato sul livello di confidenza
+  const getConfidenceColor = (area: SearchArea) => {
+    if (!area.isAI || !area.confidence) return "rgba(67, 97, 238, 0.24)";
+    
+    if (area.confidence === "Alta") return "rgba(74, 222, 128, 0.3)"; // Verde per alta confidenza
+    if (area.confidence === "Media") return "rgba(250, 204, 21, 0.3)"; // Giallo per media confidenza
+    return "rgba(248, 113, 113, 0.3)"; // Rosso per bassa confidenza
+  };
+
   return (
     <>
       {searchAreas.map(area => (
@@ -82,12 +92,16 @@ const MapSearchAreas: React.FC<Props> = ({
             center={{ lat: area.lat, lng: area.lng }}
             radius={area.radius}
             options={{
-              fillColor: area.isAI
-                ? "rgba(115,82,255,0.25)" // Colore più vicino al Buzz gradient
+              fillColor: area.isAI 
+                ? getConfidenceColor(area) 
                 : "rgba(67, 97, 238, 0.24)",
-              fillOpacity: area.isAI ? 0.6 : 0.8,
+              fillOpacity: area.isAI ? 0.7 : 0.8,
               strokeColor: area.isAI
-                ? "rgba(126,105,171,0.85)" // Secondary Purple
+                ? area.confidence === "Alta" 
+                  ? "rgba(34, 197, 94, 0.9)" // Verde per alta confidenza
+                  : area.confidence === "Media" 
+                    ? "rgba(234, 179, 8, 0.9)" // Giallo per media confidenza
+                    : "rgba(239, 68, 68, 0.9)" // Rosso per bassa confidenza
                 : "rgba(114, 9, 183, 0.9)",
               strokeOpacity: area.isAI ? 1 : 1,
               strokeWeight: area.isAI ? 4 : 3,
@@ -133,11 +147,21 @@ const MapSearchAreas: React.FC<Props> = ({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {/* icona informativa too: */}
               Modifica o elimina area Buzz
             </AlertDialogTitle>
             <AlertDialogDescription>
               Vuoi modificare o eliminare questa area di ricerca Buzz?
+              {longPressArea?.confidence && (
+                <div className="mt-2">
+                  <span className="font-bold">Confidenza: </span>
+                  <span className={
+                    longPressArea.confidence === "Alta" ? "text-green-500" :
+                    longPressArea.confidence === "Media" ? "text-yellow-500" : "text-red-500"
+                  }>
+                    {longPressArea.confidence}
+                  </span>
+                </div>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

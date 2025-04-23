@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { analyzeCluesForLocation } from "@/utils/clueAnalyzer";
 import { useNotifications } from "@/hooks/useNotifications";
+import { clues } from "@/data/cluesData";
 
 export function useSearchAreasLogic(currentLocation: [number, number] | null) {
   const [searchAreas, setSearchAreas] = useState<SearchArea[]>([]);
@@ -46,45 +47,35 @@ export function useSearchAreasLogic(currentLocation: [number, number] | null) {
 
   // Calculate radius based on unlocked clues count (more clues = smaller radius = more precision)
   const calculateBuzzRadius = (): number => {
-    // Base radius is 250km (250000m)
-    // Minimum radius is 10km (10000m)
-    if (unlockedClues <= 0) return 250000;
-    
-    // Linear interpolation between 250km and 10km based on clues count
-    const maxRadius = 250000; // 250km in meters
-    const minRadius = 10000;  // 10km in meters
-    const maxClues = 1000;    // Max number of clues
-    
-    // Calculate the radius with inverse proportion to clue count
-    // More clues = smaller radius = more precision
-    const reduction = Math.min(unlockedClues, maxClues) / maxClues;
-    const radius = maxRadius - (reduction * (maxRadius - minRadius));
-    
-    return Math.round(radius);
+    return 500000; // 500km fissi come richiesto
   };
 
   // Generate area from clue with dynamic radius
   const generateSearchArea = () => {
     try {
-      // Use currentLocation as fallback if no clues provide location data
-      let targetLat = currentLocation ? currentLocation[0] : 45.4642;
-      let targetLng = currentLocation ? currentLocation[1] : 9.19;
-      let label = "Area generata";
-      let isAI = true;
+      // Utilizza l'analizzatore di indizi per determinare la posizione
+      const locationInfo = analyzeCluesForLocation(clues, notifications || []);
       
-      // Try to analyze clues for a more precise location if available
-      const locationInfo = analyzeCluesForLocation([], notifications || []);
+      let targetLat = 42.5047; // Default al centro dell'Italia
+      let targetLng = 12.5679;
+      let label = "Area generata";
+      let confidenceValue: string = "Media"; 
       
       if (locationInfo.lat && locationInfo.lng) {
         targetLat = locationInfo.lat;
         targetLng = locationInfo.lng;
         label = locationInfo.description || "Area basata su indizi";
+        
+        // Converti la confidenza in italiano
+        if (locationInfo.confidence === "alta") confidenceValue = "Alta";
+        else if (locationInfo.confidence === "media") confidenceValue = "Media";
+        else confidenceValue = "Bassa";
       }
 
-      // Calculate the radius based on the number of unlocked clues
+      // Il raggio è fisso a 500km come richiesto dall'utente
       const radius = calculateBuzzRadius();
 
-      // Create the search area with dynamic radius
+      // Crea l'area di ricerca
       const newArea: SearchArea = {
         id: uuidv4(),
         lat: targetLat,
@@ -93,11 +84,20 @@ export function useSearchAreasLogic(currentLocation: [number, number] | null) {
         label: label,
         color: "#4361ee",
         position: { lat: targetLat, lng: targetLng },
-        isAI: isAI
+        isAI: true,
+        confidence: confidenceValue
       };
       
       setSearchAreas(prev => [...prev, newArea]);
       setActiveSearchArea(newArea.id);
+      
+      // Log dei dettagli per debug
+      console.log("Area generata:", {
+        posizione: `${targetLat}, ${targetLng}`,
+        label,
+        confidence: confidenceValue,
+        radius: radius / 1000 + " km"
+      });
       
       // Return the ID for the caller if needed
       return newArea.id;
