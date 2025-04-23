@@ -4,11 +4,14 @@ import { CreditCard } from "lucide-react";
 
 interface CardPaymentFormProps {
   onSuccess?: () => void;
+  onSubmit?: () => void;
 }
 
-const CardPaymentForm = ({ onSuccess }: CardPaymentFormProps) => {
+const CardPaymentForm = ({ onSuccess, onSubmit }: CardPaymentFormProps) => {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // Call both callbacks if they exist for compatibility
+    if (onSubmit) onSubmit();
     if (onSuccess) onSuccess();
   };
 
