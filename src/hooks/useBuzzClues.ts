@@ -15,7 +15,7 @@ function getNextVagueClue(usedClues: string[]) {
 }
 
 export const useBuzzClues = () => {
-  // Initialize state with localStorage values
+  // Initialize state with localStorage values, defaulting to 0 if not present
   const [unlockedClues, setUnlockedClues] = useState<number>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -58,7 +58,17 @@ export const useBuzzClues = () => {
     }
   }, [usedVagueClues]);
 
+  // Fixed incrementUnlockedCluesAndAddClue function to properly update the count
   const incrementUnlockedCluesAndAddClue = useCallback(() => {
+    // Only allow incrementing if we haven't reached MAX_CLUES
+    if (unlockedClues >= MAX_CLUES) {
+      toast("Hai già sbloccato tutti gli indizi disponibili!", { 
+        duration: 3000,
+        position: "top-center"
+      });
+      return unlockedClues;
+    }
+    
     setUnlockedClues(prevCount => {
       const newCount = Math.min(prevCount + 1, MAX_CLUES);
       return newCount;

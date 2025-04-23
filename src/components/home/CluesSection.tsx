@@ -4,6 +4,9 @@ import ClueCard from "@/components/clues/ClueCard";
 import { clues } from "@/data/cluesData";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
 
+// Define the MAX_CLUES constant here too for consistency
+const MAX_CLUES = 1000;
+
 export const CluesSection = () => {
   const { unlockedClues, incrementUnlockedCluesAndAddClue } = useBuzzClues();
   
@@ -12,7 +15,7 @@ export const CluesSection = () => {
       <div className="flex justify-between items-center mb-4 w-full">
         <h2 className="text-xl font-bold">Indizi Disponibili</h2>
         <div className="text-xs px-2 py-1 rounded-full bg-projectx-deep-blue">
-          <span className="text-projectx-blue font-mono">{unlockedClues} / 1000</span>
+          <span className="text-projectx-blue font-mono">{unlockedClues} / {MAX_CLUES}</span>
           <span className="text-gray-400 ml-1">sbloccati</span>
         </div>
       </div>

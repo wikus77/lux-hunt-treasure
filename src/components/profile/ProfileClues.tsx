@@ -27,6 +27,7 @@ interface ProfileCluesProps {
   onClueUnlocked?: () => void;
 }
 
+// Define the MAX_CLUES constant for consistency
 const MAX_CLUES = 1000;
 
 const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {

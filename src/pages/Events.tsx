@@ -8,23 +8,24 @@ import { useBuzzClues } from "@/hooks/useBuzzClues";
 
 const Events = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const { unlockedClues, resetUnlockedClues, incrementUnlockedCluesAndAddClue } = useBuzzClues();
+  const { unlockedClues, incrementUnlockedCluesAndAddClue } = useBuzzClues();
   
   useEffect(() => {
     // Get profile image on mount
     setProfileImage(localStorage.getItem('profileImage'));
     
-    // Add some test clues - only on initial mount
-    const addTestClues = () => {
-      incrementUnlockedCluesAndAddClue();
-      incrementUnlockedCluesAndAddClue();
-      incrementUnlockedCluesAndAddClue();
-    };
+    // Only add test clues if we have none yet - check localStorage directly
+    const currentUnlockedClues = localStorage.getItem('unlockedCluesCount');
     
-    addTestClues();
-    
-    // We're removing the resetUnlockedClues call as it's causing the infinite loop
-    // when combined with incrementUnlockedCluesAndAddClue
+    if (!currentUnlockedClues || currentUnlockedClues === '0') {
+      console.log("Adding initial test clues");
+      // Add only 3 test clues in total, not one per render
+      incrementUnlockedCluesAndAddClue();
+      incrementUnlockedCluesAndAddClue();
+      incrementUnlockedCluesAndAddClue();
+    } else {
+      console.log("Not adding test clues, current count:", currentUnlockedClues);
+    }
   }, []); // Empty dependency array to run only once
 
   return (
@@ -43,7 +44,7 @@ const Events = () => {
           </div>
           <div className="text-sm px-3 py-1 rounded-full bg-projectx-deep-blue/50 backdrop-blur-sm border border-projectx-blue/20">
             <span className="text-projectx-blue font-mono">
-              {unlockedClues} / 1000 
+              {unlockedClues} / {MAX_CLUES} 
             </span>
             <span className="text-gray-400 ml-1">sbloccati</span>
           </div>
@@ -66,5 +67,8 @@ const Events = () => {
     </div>
   );
 };
+
+// Add the MAX_CLUES constant to the file
+const MAX_CLUES = 1000;
 
 export default Events;
