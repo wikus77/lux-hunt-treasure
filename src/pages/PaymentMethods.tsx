@@ -12,7 +12,7 @@ const PaymentMethods = () => {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [backPath, setBackPath] = useState('/settings');
   
-  // Estrai parametri dalla location state
+  // Extract parameters from location state
   const fromBuzz = location.state?.fromBuzz || false;
   const fromRegularBuzz = location.state?.fromRegularBuzz || false;
   const clue = location.state?.clue;
@@ -21,7 +21,7 @@ const PaymentMethods = () => {
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
     
-    // Determina il percorso di ritorno
+    // Determine return path
     if (fromBuzz) {
       setBackPath('/buzz');
     }
@@ -30,7 +30,7 @@ const PaymentMethods = () => {
   const handlePaymentSuccess = () => {
     setPaymentProcessing(true);
     
-    // Simula elaborazione pagamento
+    // Simulate payment processing
     setTimeout(() => {
       localStorage.setItem('hasPaymentMethod', 'true');
       
@@ -38,10 +38,10 @@ const PaymentMethods = () => {
         description: "Il tuo metodo di pagamento è stato registrato.",
       });
       
-      // Reindirizza in base alla fonte
+      // Redirect based on source
       if (fromBuzz) {
         if (fromRegularBuzz) {
-          // Se proviene dalla sezione Buzz standard
+          // If from standard Buzz section
           navigate('/buzz', {
             replace: true,
             state: { 
@@ -51,7 +51,7 @@ const PaymentMethods = () => {
             }
           });
         } else {
-          // Se proviene dalla mappa interattiva
+          // If from interactive map
           navigate('/map', {
             replace: true,
             state: { 

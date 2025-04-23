@@ -13,7 +13,7 @@ const planMap: Record<string, { label: string; badge: string }> = {
 const SubscriptionStatus = () => {
   const navigate = useNavigate();
 
-  // Stato del piano attivo
+  // Active plan state
   const [plan, setPlan] = useState<string>("Base");
 
   useEffect(() => {
@@ -23,30 +23,42 @@ const SubscriptionStatus = () => {
     } else {
       setPlan("Base");
     }
-  }, []);
-
-  // Aggiorna lo stato dopo ogni pagamento completato
-  useEffect(() => {
-    const onStorage = () => {
+    
+    // Add window storage event listener
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'subscription_plan') {
+        const savedPlan = localStorage.getItem("subscription_plan");
+        if (savedPlan && planMap[savedPlan]) {
+          setPlan(savedPlan);
+        }
+      }
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Also add a manual event for component-level updates
+    const customStorageHandler = () => {
       const saved = localStorage.getItem("subscription_plan");
       if (saved && planMap[saved]) {
         setPlan(saved);
       }
     };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-
-  // Aggiungiamo anche un controllo periodico per catturare eventuali modifiche
-  useEffect(() => {
+    
+    window.addEventListener("storage", customStorageHandler);
+    
+    // Add periodic check for subscription changes
     const checkInterval = setInterval(() => {
       const saved = localStorage.getItem("subscription_plan");
       if (saved && planMap[saved] && saved !== plan) {
         setPlan(saved);
       }
-    }, 2000); // Controlla ogni 2 secondi
+    }, 2000);
     
-    return () => clearInterval(checkInterval);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("storage", customStorageHandler);
+      clearInterval(checkInterval);
+    };
   }, [plan]);
 
   const handleUpgradeSubscription = () => {
@@ -54,7 +66,7 @@ const SubscriptionStatus = () => {
   };
 
   return (
-    <div className="glass-card mb-4">
+    <div className="glass-card mb-4 mx-4">
       <h3 className="text-lg font-bold mb-2">Stato Abbonamento</h3>
       <div className="mb-4 p-3 rounded-md bg-gradient-to-r from-projectx-blue to-projectx-neon-blue">
         <div className="flex justify-between items-center">

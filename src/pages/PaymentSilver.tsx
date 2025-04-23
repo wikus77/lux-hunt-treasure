@@ -11,8 +11,10 @@ const PaymentSilver = () => {
   const navigate = useNavigate();
   const [showExplosion, setShowExplosion] = useState(false);
   const [fadeOutExplosion, setFadeOutExplosion] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handlePaymentCompleted = () => {
+    setIsProcessing(true);
     setShowExplosion(true);
     setFadeOutExplosion(false);
 
@@ -26,6 +28,7 @@ const PaymentSilver = () => {
         });
         localStorage.setItem("subscription_plan", "Silver");
         window.dispatchEvent(new Event('storage'));
+        setIsProcessing(false);
         navigate("/subscriptions");
       }, 1400);
     }, 1700);
@@ -48,6 +51,7 @@ const PaymentSilver = () => {
           size="icon" 
           className="mr-2"
           onClick={() => navigate(-1)}
+          disabled={isProcessing}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -88,7 +92,14 @@ const PaymentSilver = () => {
             </button>
           </div>
 
-          <CardPaymentForm onSuccess={handleCardSubmit} />
+          {isProcessing ? (
+            <div className="bg-black/20 p-6 rounded-lg text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-projectx-pink mx-auto mb-4"></div>
+              <p>Elaborazione del pagamento in corso...</p>
+            </div>
+          ) : (
+            <CardPaymentForm onSuccess={handleCardSubmit} />
+          )}
         </div>
       </div>
     </div>

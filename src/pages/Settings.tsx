@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/sonner";
 import AccountSection from "@/components/settings/AccountSection";
 import NotificationSection from "@/components/settings/NotificationSection";
 import AppSection from "@/components/settings/AppSection";
@@ -15,19 +16,67 @@ const Settings = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [soundEffects, setSoundEffects] = useState(true);
   const [language, setLanguage] = useState("Italiano");
-  const { toast } = useToast();
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  
   useEffect(() => {
-    setProfileImage(localStorage.getItem('profileImage'));
-  }, []);
+    // Check if user is logged in
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (!isLoggedIn) {
+      toast({
+        variant: "destructive",
+        title: "Accesso richiesto",
+        description: "Devi effettuare l'accesso per visualizzare questa pagina."
+      });
+      navigate('/login');
+      return;
+    }
+    
+    // Load profile image
+    const savedProfileImage = localStorage.getItem('profileImage');
+    setProfileImage(savedProfileImage);
+    
+    // Load saved settings if available
+    const savedPushNotifications = localStorage.getItem('pushNotifications');
+    if (savedPushNotifications) {
+      setPushNotifications(savedPushNotifications === 'true');
+    }
+    
+    const savedEmailNotifications = localStorage.getItem('emailNotifications');
+    if (savedEmailNotifications) {
+      setEmailNotifications(savedEmailNotifications === 'true');
+    }
+    
+    const savedSoundEffects = localStorage.getItem('soundEffects');
+    if (savedSoundEffects) {
+      setSoundEffects(savedSoundEffects === 'true');
+    }
+    
+    const savedLanguage = localStorage.getItem('language');
+    if (savedLanguage) {
+      setLanguage(savedLanguage);
+    }
+  }, [navigate]);
+  
+  useEffect(() => {
+    // Save settings whenever they change
+    localStorage.setItem('pushNotifications', pushNotifications.toString());
+    localStorage.setItem('emailNotifications', emailNotifications.toString());
+    localStorage.setItem('soundEffects', soundEffects.toString());
+    localStorage.setItem('language', language);
+  }, [pushNotifications, emailNotifications, soundEffects, language]);
 
   const handleLogout = () => {
+    // Clear relevant localStorage items
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userEmail');
+    
     toast({
       title: "Logout effettuato",
       description: "La tua sessione è stata chiusa con successo."
     });
+    
     setTimeout(() => {
-      window.location.href = "/";
+      navigate('/login');
     }, 1500);
   };
 
