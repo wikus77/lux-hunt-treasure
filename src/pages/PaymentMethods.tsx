@@ -4,8 +4,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/sonner";
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import CardPaymentForm from '@/components/payments/CardPaymentForm';
-import ApplePayBox from '@/components/payments/ApplePayBox';
-import GooglePayBox from '@/components/payments/GooglePayBox';
 
 const PaymentMethods = () => {
   const location = useLocation();
@@ -94,23 +92,7 @@ const PaymentMethods = () => {
               <p>Elaborazione del pagamento in corso...</p>
             </div>
           ) : (
-            <>
-              <CardPaymentForm onSuccess={handlePaymentSuccess} />
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-800"></div>
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="px-2 bg-black text-muted-foreground">
-                    oppure paga con
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <ApplePayBox onSuccess={handlePaymentSuccess} />
-                <GooglePayBox onSuccess={handlePaymentSuccess} />
-              </div>
-            </>
+            <CardPaymentForm onSuccess={handlePaymentSuccess} />
           )}
         </div>
       </div>

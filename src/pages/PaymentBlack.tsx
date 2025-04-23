@@ -5,13 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import CardPaymentForm from "@/components/payments/CardPaymentForm";
-import ApplePayBox from "@/components/payments/ApplePayBox";
-import GooglePayBox from "@/components/payments/GooglePayBox";
 import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
 
 const PaymentBlack = () => {
   const navigate = useNavigate();
-  const [paymentMethod, setPaymentMethod] = useState<string>("card");
   const [showExplosion, setShowExplosion] = useState(false);
   const [fadeOutExplosion, setFadeOutExplosion] = useState(false);
 
@@ -36,24 +33,6 @@ const PaymentBlack = () => {
 
   const handleCardSubmit = () => {
     handlePaymentCompleted();
-  };
-
-  const handleApplePay = () => {
-    toast.success("Apple Pay", {
-      description: "Pagamento con Apple Pay in elaborazione..."
-    });
-    setTimeout(() => {
-      handlePaymentCompleted();
-    }, 2000);
-  };
-
-  const handleGooglePay = () => {
-    toast.success("Google Pay", {
-      description: "Pagamento con Google Pay in elaborazione..."
-    });
-    setTimeout(() => {
-      handlePaymentCompleted();
-    }, 2000);
   };
 
   return (
@@ -100,38 +79,16 @@ const PaymentBlack = () => {
             </ul>
           </div>
 
-          <div className="flex justify-between mb-6">
+          <div className="mb-6">
             <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'card' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
-              onClick={() => setPaymentMethod('card')}
+              className="flex flex-col items-center justify-center p-4 rounded-md w-full bg-projectx-deep-blue"
+              disabled
             >
               <span className="text-sm">Carta</span>
             </button>
-            
-            <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
-              onClick={() => setPaymentMethod('apple')}
-            >
-              <span className="text-sm">Apple Pay</span>
-            </button>
-            
-            <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
-              onClick={() => setPaymentMethod('google')}
-            >
-              <span className="text-sm">Google Pay</span>
-            </button>
           </div>
 
-          {paymentMethod === "card" && (
-            <CardPaymentForm onSuccess={handleCardSubmit} />
-          )}
-          {paymentMethod === "apple" && (
-            <ApplePayBox onApplePay={handleApplePay} />
-          )}
-          {paymentMethod === "google" && (
-            <GooglePayBox onGooglePay={handleGooglePay} />
-          )}
+          <CardPaymentForm onSuccess={handleCardSubmit} />
         </div>
       </div>
     </div>
