@@ -21,4 +21,9 @@ export const vagueBuzzClues = [
   "Il luogo ha una storia legata alle corse.",
   "Nelle vicinanze si trova un castello.",
   "Il clima qui è spesso continentale.",
+  "Il modello dell'auto nascosta è famoso per la sua velocità.",
+  "Il veicolo è parcheggiato vicino a un edificio storico.",
+  "Il colore dell'auto è molto popolare per questo modello.",
+  "La targa dell'auto contiene una vocale ripetuta.",
+  "Il proprietario dell'auto è un appassionato di musica classica."
 ];

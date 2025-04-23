@@ -109,6 +109,9 @@ const Buzz = () => {
     localStorage.setItem('usedVagueBuzzClues', JSON.stringify(updated));
 
     sendBuzzNotification(nextClue);
+    
+    // IMPORTANTE: Rimuoviamo completamente qualsiasi funzionalità che potrebbe generare aree sulla mappa da questa sezione
+    // Non chiamiamo nessuna funzione che generi aree sulla mappa qui
   }
 
   const handleBuzzClick = () => {
@@ -148,7 +151,9 @@ const Buzz = () => {
       navigate("/payment-methods", {
         state: {
           fromBuzz: true,
-          clue: { description: getNextVagueClue(usedVagueClues) }
+          clue: { description: getNextVagueClue(usedVagueClues) },
+          // Assicuriamoci di NON inviare nessun flag per la generazione di aree sulla mappa
+          generateMapArea: false
         }
       });
     }, 1500);
@@ -171,6 +176,8 @@ const Buzz = () => {
           onBuzzClick={handleBuzzClick}
           unlockedClues={unlockedClues}
           updateUnlockedClues={incrementUnlockedCluesAndAddClue}
+          // Assicuriamoci che il pulsante Buzz in questa sezione non generi aree sulla mappa
+          isMapBuzz={false}
         />
       </section>
 

@@ -9,9 +9,10 @@ interface BuzzButtonProps {
   onBuzzClick: () => void;
   unlockedClues: number;
   updateUnlockedClues?: (val: number) => void;
+  isMapBuzz?: boolean; // Nuovo parametro per distinguere il tipo di buzz
 }
 
-const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues }: BuzzButtonProps) => {
+const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz = false }: BuzzButtonProps) => {
   const [isVaultOpen, setIsVaultOpen] = useState(false);
   const { soundPreference, volume } = useSound();
   const { playSound, initializeSound } = useBuzzSound();
