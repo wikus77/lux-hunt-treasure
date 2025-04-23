@@ -1,14 +1,16 @@
-
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useState, useEffect } from "react";
 import ProfileClues from "@/components/profile/ProfileClues";
 import { clues } from "@/data/cluesData";
-import { FileSearch } from "lucide-react";
+import { FileSearch, Bell } from "lucide-react";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
+import { useNotifications } from "@/hooks/useNotifications";
+import { Button } from "@/components/ui/button";
 
 const Events = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const { unlockedClues, incrementUnlockedCluesAndAddClue, MAX_CLUES } = useBuzzClues();
+  const { addNotification } = useNotifications();
   
   useEffect(() => {
     // Get profile image on mount
@@ -27,6 +29,30 @@ const Events = () => {
       console.log("Not adding test clues, current count:", currentUnlockedClues);
     }
   }, []); // Empty dependency array to run only once
+
+  const generateRandomNotification = () => {
+    const notifications = [
+      { 
+        title: "Indizio Extra", 
+        description: "Hai sbloccato un nuovo dettaglio sul mistero!" 
+      },
+      { 
+        title: "Buzz Attivo", 
+        description: "Un nuovo suggerimento è disponibile per te!" 
+      },
+      { 
+        title: "Aggiornamento Evento", 
+        description: "Nuove informazioni sono state aggiunte all'evento corrente." 
+      },
+      { 
+        title: "Scoperta", 
+        description: "Un nuovo elemento è stato rivelato nel tuo percorso investigativo." 
+      }
+    ];
+
+    const randomNotification = notifications[Math.floor(Math.random() * notifications.length)];
+    addNotification(randomNotification);
+  };
 
   return (
     <div className="pb-20 min-h-screen bg-black w-full">
@@ -49,6 +75,13 @@ const Events = () => {
             <span className="text-gray-400 ml-1">sbloccati</span>
           </div>
         </div>
+
+        <Button 
+          onClick={generateRandomNotification} 
+          className="mb-4 w-full flex items-center gap-2"
+        >
+          <Bell className="w-4 h-4" /> Genera Notifica Casuale
+        </Button>
 
         <div className="glass-card p-4 backdrop-blur-md border border-projectx-blue/10 rounded-xl">
           <ProfileClues 
