@@ -1,10 +1,10 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 export const useBuzzSound = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const initializeSound = (soundPreference: string, volume: number) => {
+  const initializeSound = useCallback((soundPreference: string, volume: number) => {
     const soundPath = getSoundPath(soundPreference);
     
     // Create a new audio instance to ensure it's fresh
@@ -19,9 +19,9 @@ export const useBuzzSound = () => {
       // Preload the audio to ensure it plays instantly when needed
       audioRef.current.load();
     }
-  };
+  }, []);
 
-  const playSound = () => {
+  const playSound = useCallback(() => {
     if (audioRef.current) {
       // Reset the audio to the beginning
       audioRef.current.currentTime = 0;
@@ -44,7 +44,7 @@ export const useBuzzSound = () => {
         });
       }
     }
-  };
+  }, []);
 
   const getSoundPath = (preference: string) => {
     switch (preference) {
