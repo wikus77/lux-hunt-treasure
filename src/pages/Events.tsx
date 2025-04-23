@@ -4,23 +4,15 @@ import { useState, useEffect } from "react";
 import ProfileClues from "@/components/profile/ProfileClues";
 import { clues } from "@/data/cluesData";
 import { FileSearch } from "lucide-react";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { useBuzzClues } from "@/hooks/useBuzzClues";
 
 const Events = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [unlockedCluesCount, setUnlockedCluesCount] = useState(0);
+  const { unlockedClues } = useBuzzClues();
 
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
-    // Load unlocked clues count from localStorage
-    const savedCount = localStorage.getItem('unlockedCluesCount');
-    setUnlockedCluesCount(savedCount ? parseInt(savedCount) : 0);
   }, []);
-
-  // Update clues count whenever new clues are unlocked
-  useEffect(() => {
-    localStorage.setItem('unlockedCluesCount', unlockedCluesCount.toString());
-  }, [unlockedCluesCount]);
 
   return (
     <div className="pb-20 min-h-screen bg-black w-full">
@@ -38,7 +30,7 @@ const Events = () => {
           </div>
           <div className="text-sm px-3 py-1 rounded-full bg-projectx-deep-blue/50 backdrop-blur-sm border border-projectx-blue/20">
             <span className="text-projectx-blue font-mono">
-              {unlockedCluesCount} / 1000 
+              {unlockedClues} / 1000 
             </span>
             <span className="text-gray-400 ml-1">sbloccati</span>
           </div>
@@ -54,9 +46,7 @@ const Events = () => {
               isLocked: clue.isLocked,
               subscriptionType: clue.subscriptionType
             }))}
-            onClueUnlocked={() => {
-              setUnlockedCluesCount(prev => Math.min(prev + 1, 1000));
-            }}
+            onClueUnlocked={() => {}}
           />
         </div>
       </div>

@@ -1,9 +1,17 @@
+
 import { BookOpen } from "lucide-react";
 import ClueCard from "@/components/clues/ClueCard";
 import React, { useState, useRef } from "react";
 import CategoryBanner from "./CategoryBanner";
 import { CATEGORY_STYLES, getClueCategory } from "./cluesCategories";
 import groupCluesByCategory from "./groupCluesByCategory";
+import { useBuzzClues } from "@/hooks/useBuzzClues";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from "@/components/ui/accordion";
 
 interface Clue {
   id: string;
@@ -19,10 +27,11 @@ interface ProfileCluesProps {
   onClueUnlocked?: () => void;
 }
 
-const MAX_CLUES = 100;
+const MAX_CLUES = 1000;
 
 const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
   const groupedClues = groupCluesByCategory(unlockedClues);
+  const { unlockedClues: totalUnlockedClues, incrementUnlockedCluesAndAddClue } = useBuzzClues();
 
   // Banner stato
   const [bannerOpen, setBannerOpen] = useState(false);
@@ -48,7 +57,7 @@ const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
       case "Photo":
         return (
           <>
-            Indizi fotografici: Raccogli e analizza le immagini per risolvere l’enigma!
+            Indizi fotografici: Raccogli e analizza le immagini per risolvere l'enigma!
           </>
         );
       case "General":
@@ -62,26 +71,6 @@ const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
     }
   };
 
-  // Long press handler
-  const pressTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  const handlePressStart = (category: string) => {
-    if (pressTimeout.current) clearTimeout(pressTimeout.current);
-    pressTimeout.current = setTimeout(() => {
-      setBannerCategory(category);
-      setBannerOpen(true);
-    }, 500); // 500ms: long press
-  };
-  const handlePressEnd = () => {
-    if (pressTimeout.current) clearTimeout(pressTimeout.current);
-  };
-
-  // Click desktop
-  const handleCategoryClick = (category: string) => {
-    setBannerCategory(category);
-    setBannerOpen(true);
-  };
-
   // Chiudi banner
   const closeBanner = () => setBannerOpen(false);
 
@@ -90,6 +79,8 @@ const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
     if (onClueUnlocked) {
       onClueUnlocked();
     }
+    // Incrementa il contatore globale degli indizi
+    incrementUnlockedCluesAndAddClue();
   };
 
   return (
@@ -112,7 +103,7 @@ const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
           <BookOpen className="mr-2 h-5 w-5" /> Indizi
         </h3>
         <span className="text-sm text-muted-foreground">
-          {unlockedClues.length} / {MAX_CLUES} sbloccati
+          {totalUnlockedClues} / {MAX_CLUES} sbloccati
         </span>
       </div>
 
@@ -122,37 +113,39 @@ const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
           <p>Esplora gli eventi o usa il pulsante Buzz per ottenerne di nuovi!</p>
         </div>
       ) : (
-        <div className="space-y-7">
+        <Accordion type="single" collapsible className="space-y-4">
           {Object.entries(groupedClues).map(([category, { icon: Icon, clues }]) => (
-            <div key={category}>
-              <div
-                className={`flex items-center gap-2 mb-2 rounded-lg px-4 py-2 cursor-pointer select-none ${CATEGORY_STYLES[category]?.gradient || CATEGORY_STYLES["General"].gradient} hover:scale-105 transition-transform`}
-                onPointerDown={e => handlePressStart(category)}
-                onPointerUp={handlePressEnd}
-                onPointerLeave={handlePressEnd}
-                onTouchStart={e => handlePressStart(category)}
-                onTouchEnd={handlePressEnd}
-                onClick={() => handleCategoryClick(category)}
-              >
-                <Icon className="h-5 w-5 text-white drop-shadow" />
-                <span className={`font-semibold ${CATEGORY_STYLES[category]?.textColor || "text-white"}`}>{category}</span>
-                <span className="ml-2 text-xs opacity-80">{clues.length} indizi</span>
-              </div>
-              <div className="space-y-4">
-                {clues.map((clue: Clue) => (
-                  <ClueCard
-                    key={clue.id}
-                    title={clue.title}
-                    description={clue.description}
-                    week={clue.week}
-                    isLocked={false}
-                    subscriptionType={clue.subscriptionType}
-                  />
-                ))}
-              </div>
-            </div>
+            <AccordionItem 
+              key={category} 
+              value={category}
+              className="border border-projectx-blue/20 rounded-lg overflow-hidden"
+            >
+              <AccordionTrigger className={`px-4 py-2 ${CATEGORY_STYLES[category]?.gradient || CATEGORY_STYLES["General"].gradient}`}>
+                <div className="flex items-center gap-2">
+                  <Icon className="h-5 w-5 text-white drop-shadow" />
+                  <span className={`font-semibold ${CATEGORY_STYLES[category]?.textColor || "text-white"}`}>
+                    {category}
+                  </span>
+                  <span className="ml-2 text-xs opacity-80">{clues.length} indizi</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="bg-black/40 backdrop-blur-sm p-4">
+                <div className="space-y-4">
+                  {clues.map((clue: Clue) => (
+                    <ClueCard
+                      key={clue.id}
+                      title={clue.title}
+                      description={clue.description}
+                      week={clue.week}
+                      isLocked={false}
+                      subscriptionType={clue.subscriptionType}
+                    />
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
           ))}
-        </div>
+        </Accordion>
       )}
     </div>
   );
