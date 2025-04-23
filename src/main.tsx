@@ -13,7 +13,8 @@ import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import Subscriptions from './pages/Subscriptions'
 import Notifications from './pages/Notifications'
-import Buzz from './pages/Buzz' // Importiamo il componente Buzz
+import Buzz from './pages/Buzz'
+import PaymentMethods from './pages/PaymentMethods' // Importiamo il componente PaymentMethods
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -27,8 +28,9 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
-          <Route path="/buzz" element={<Buzz />} /> {/* Utilizziamo il componente Buzz invece del messaggio placeholder */}
+          <Route path="/buzz" element={<Buzz />} />
           <Route path="/notifications" element={<Notifications />} />
+          <Route path="/payment-methods" element={<PaymentMethods />} /> {/* Aggiungiamo la rotta per PaymentMethods */}
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
