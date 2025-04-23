@@ -15,6 +15,7 @@ import Subscriptions from './pages/Subscriptions'
 import Notifications from './pages/Notifications'
 import Buzz from './pages/Buzz'
 import PaymentMethods from './pages/PaymentMethods'
+import Achievements from './pages/Achievements'
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -31,6 +32,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/buzz" element={<Buzz />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/payment-methods" element={<PaymentMethods />} />
+          <Route path="/achievements" element={<Achievements />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
