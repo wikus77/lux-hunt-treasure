@@ -1,7 +1,7 @@
 
 import { BookOpen } from "lucide-react";
 import ClueCard from "@/components/clues/ClueCard";
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import CategoryBanner from "./CategoryBanner";
 import { CATEGORY_STYLES, getClueCategory } from "./cluesCategories";
 import groupCluesByCategory from "./groupCluesByCategory";
@@ -31,7 +31,7 @@ const MAX_CLUES = 1000;
 
 const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
   const groupedClues = groupCluesByCategory(unlockedClues);
-  const { unlockedClues: totalUnlockedClues, incrementUnlockedCluesAndAddClue } = useBuzzClues();
+  const { unlockedClues: totalUnlockedClues } = useBuzzClues();
 
   // Banner stato
   const [bannerOpen, setBannerOpen] = useState(false);
@@ -54,10 +54,22 @@ const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
             Indizi sulla vettura: Scopri dettagli tecnici e curiosità sulla macchina misteriosa!
           </>
         );
-      case "Photo":
+      case "Interior Photos":
         return (
           <>
-            Indizi fotografici: Raccogli e analizza le immagini per risolvere l'enigma!
+            Indizi fotografici interni: Scopri dettagli degli interni del veicolo!
+          </>
+        );
+      case "Exterior Photos":
+        return (
+          <>
+            Indizi fotografici esterni: Esamina la carrozzeria e l'aspetto esterno!
+          </>
+        );
+      case "Configuration":
+        return (
+          <>
+            Indizi sulla configurazione: Analizza le specifiche tecniche del veicolo!
           </>
         );
       case "General":
@@ -79,8 +91,6 @@ const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
     if (onClueUnlocked) {
       onClueUnlocked();
     }
-    // Incrementa il contatore globale degli indizi
-    incrementUnlockedCluesAndAddClue();
   };
 
   return (

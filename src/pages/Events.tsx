@@ -11,15 +11,21 @@ const Events = () => {
   const { unlockedClues, resetUnlockedClues, incrementUnlockedCluesAndAddClue } = useBuzzClues();
   
   useEffect(() => {
-    // Reset clues counter on component mount
-    resetUnlockedClues();
+    // Get profile image on mount
     setProfileImage(localStorage.getItem('profileImage'));
-
-    // Test unlocking some clues
-    incrementUnlockedCluesAndAddClue();
-    incrementUnlockedCluesAndAddClue();
-    incrementUnlockedCluesAndAddClue();
-  }, [resetUnlockedClues, incrementUnlockedCluesAndAddClue]);
+    
+    // Add some test clues - only on initial mount
+    const addTestClues = () => {
+      incrementUnlockedCluesAndAddClue();
+      incrementUnlockedCluesAndAddClue();
+      incrementUnlockedCluesAndAddClue();
+    };
+    
+    addTestClues();
+    
+    // We're removing the resetUnlockedClues call as it's causing the infinite loop
+    // when combined with incrementUnlockedCluesAndAddClue
+  }, []); // Empty dependency array to run only once
 
   return (
     <div className="pb-20 min-h-screen bg-black w-full">
