@@ -1,5 +1,5 @@
 
-import { MapPin, Car, Image, Tool } from "lucide-react";
+import { MapPin, Car, Image, Wrench } from "lucide-react";
 
 export const CATEGORY_STYLES: Record<
   string,
@@ -66,7 +66,7 @@ export const clueCategories = [
   },
   {
     name: "Equipaggiamento",
-    icon: Tool,
+    icon: Wrench,
     matcher: (clue: any) =>
       /config|setup|impostazioni|optional|accessori|dotazione/i.test(
         clue.title + " " + clue.description
