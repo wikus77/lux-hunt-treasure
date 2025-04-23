@@ -15,11 +15,12 @@ function getNextVagueClue(usedClues: string[]) {
 }
 
 export const useBuzzClues = () => {
+  // Initialize with 0 unlocked clues as default
   const [unlockedClues, setUnlockedClues] = useState<number>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      // Default to 0 if no saved value exists
-      return saved ? Math.min(parseInt(saved, 10), MAX_CLUES) : 0;
+      // Default to 0 if no saved value exists or if it's null
+      return saved ? parseInt(saved, 10) : 0;
     } catch (e) {
       console.error("Error loading unlocked clues count:", e);
       return 0;

@@ -1,3 +1,4 @@
+
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useState, useEffect, useCallback } from "react";
 import ProfileClues from "@/components/profile/ProfileClues";
@@ -12,7 +13,7 @@ import NotificationsDrawer from "@/components/notifications/NotificationsDrawer"
 const Events = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const { unlockedClues, incrementUnlockedCluesAndAddClue, MAX_CLUES } = useBuzzClues();
+  const { unlockedClues, incrementUnlockedCluesAndAddClue, resetUnlockedClues, MAX_CLUES } = useBuzzClues();
   const { 
     notifications,
     unreadCount,
@@ -25,7 +26,6 @@ const Events = () => {
     // Get profile image on mount
     setProfileImage(localStorage.getItem('profileImage'));
     
-    // Non aggiungiamo più indizi di test automaticamente all'avvio
     // Aggiorniamo solo le notifiche all'avvio
     reloadNotifications();
   }, [reloadNotifications]);
@@ -87,6 +87,13 @@ const Events = () => {
     }
   }, [notificationsOpen, reloadNotifications]);
 
+  const handleResetClues = useCallback(() => {
+    resetUnlockedClues();
+    toast.success("Tutti gli indizi sono stati azzerati", {
+      duration: 3000,
+    });
+  }, [resetUnlockedClues]);
+
   return (
     <div className="pb-20 min-h-screen bg-black w-full">
       <UnifiedHeader profileImage={profileImage} />
@@ -129,6 +136,14 @@ const Events = () => {
                 {unreadCount}
               </span>
             )}
+          </Button>
+          
+          <Button 
+            onClick={handleResetClues}
+            variant="destructive"
+            className="w-full flex items-center gap-2"
+          >
+            <Bell className="w-4 h-4" /> Azzera Tutti gli Indizi
           </Button>
         </div>
 
