@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
@@ -9,8 +10,17 @@ import BuzzButton from "@/components/buzz/BuzzButton";
 import useBuzzSound from "@/hooks/useBuzzSound";
 import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
+import { vagueBuzzClues } from "@/data/vagueBuzzClues";
 
-const EXTRA_CLUE_TEXT = "Strade strette ma la rotta è dritta: cerca dove il muro si colora!";
+function getNextVagueClue(usedClues: string[]) {
+  // Restituisci un indizio casuale NON già usato
+  const available = vagueBuzzClues.filter(clue => !usedClues.includes(clue));
+  if (available.length === 0) {
+    // Tutti usati: ricomincia dal primo
+    return vagueBuzzClues[0];
+  }
+  return available[Math.floor(Math.random() * available.length)];
+}
 
 const Buzz = () => {
   const [showDialog, setShowDialog] = useState(false);
@@ -20,6 +30,11 @@ const Buzz = () => {
     const savedClues = localStorage.getItem('unlockedCluesCount');
     return savedClues ? parseInt(savedClues) : 0;
   });
+  const [usedVagueClues, setUsedVagueClues] = useState<string[]>(() => {
+    const saved = localStorage.getItem('usedVagueBuzzClues');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [lastVagueClue, setLastVagueClue] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { hasPaymentMethod, savePaymentMethod } = useHasPaymentMethod();
@@ -41,70 +56,79 @@ const Buzz = () => {
     const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
     initializeSound(soundPreference, volume);
 
-    if (location.state?.paymentCompleted) {
+    // Solo per caso pagamento completato da dialog (NON mappa!)
+    if (location.state?.paymentCompleted && !location.state?.mapBuzz) {
       savePaymentMethod();
-      sendBuzzNotification();
-      incrementUnlockedClues();
-      
+      incrementUnlockedCluesAndAddClue();
       setShowExplosion(true);
-      
+
       explosionTimerRef.current = window.setTimeout(() => {
         setExplosionFadeOut(true);
       }, 2500);
-      
+
       return () => {
         if (explosionTimerRef.current) {
           clearTimeout(explosionTimerRef.current);
         }
       };
     }
+    // eslint-disable-next-line
   }, [location.state, savePaymentMethod, navigate, initializeSound]);
 
   const handleExplosionFadeOutComplete = () => {
     setShowExplosion(false);
     setExplosionFadeOut(false);
-    
+
     toast.success("Indizio sbloccato!", {
       description: "Controlla la sezione Notifiche per vedere l'indizio extra."
     });
-    
-    toast(EXTRA_CLUE_TEXT, {
-      duration: 3000,
-      position: "bottom-center",
-    });
 
+    if (lastVagueClue) {
+      toast(lastVagueClue, {
+        duration: 3200,
+        position: "bottom-center",
+      });
+    }
     setTimeout(() => {
       navigate("/notifications", { replace: true });
     }, 1800);
   };
 
-  const incrementUnlockedClues = () => {
+  function incrementUnlockedCluesAndAddClue() {
     const newCount = unlockedClues + 1;
     setUnlockedClues(newCount);
     localStorage.setItem('unlockedCluesCount', newCount.toString());
-  };
+
+    // Trova nuovo indizio vago
+    const nextClue = getNextVagueClue(usedVagueClues);
+    setLastVagueClue(nextClue);
+
+    // aggiorna lista usati
+    const updated = [...usedVagueClues, nextClue];
+    setUsedVagueClues(updated);
+    localStorage.setItem('usedVagueBuzzClues', JSON.stringify(updated));
+
+    sendBuzzNotification(nextClue);
+  }
 
   const handleBuzzClick = () => {
     if (!hasPaymentMethod) {
       navigate("/payment-methods", {
         state: {
           fromBuzz: true,
-          clue: {
-            description: EXTRA_CLUE_TEXT
-          }
+          clue: { description: getNextVagueClue(usedVagueClues) }
         }
       });
       return;
     }
-
     setShowDialog(true);
   };
 
-  const sendBuzzNotification = () => {
+  function sendBuzzNotification(clueText: string) {
     const notification = {
       id: Date.now().toString(),
-      title: "Nuovo indizio disponibile!",
-      description: "Hai sbloccato un indizio premium per Ferrari 488 GTB",
+      title: "Nuovo indizio extra!",
+      description: clueText,
       date: new Date().toISOString(),
       read: false
     };
@@ -112,7 +136,7 @@ const Buzz = () => {
     const existingNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
     existingNotifications.push(notification);
     localStorage.setItem('notifications', JSON.stringify(existingNotifications));
-  };
+  }
 
   const handlePayment = () => {
     setShowDialog(false);
@@ -124,9 +148,7 @@ const Buzz = () => {
       navigate("/payment-methods", {
         state: {
           fromBuzz: true,
-          clue: {
-            description: EXTRA_CLUE_TEXT
-          }
+          clue: { description: getNextVagueClue(usedVagueClues) }
         }
       });
     }, 1500);
@@ -145,10 +167,10 @@ const Buzz = () => {
           </p>
         </div>
 
-        <BuzzButton 
-          onBuzzClick={handleBuzzClick} 
+        <BuzzButton
+          onBuzzClick={handleBuzzClick}
           unlockedClues={unlockedClues}
-          updateUnlockedClues={incrementUnlockedClues}
+          updateUnlockedClues={incrementUnlockedCluesAndAddClue}
         />
       </section>
 
@@ -172,8 +194,8 @@ const Buzz = () => {
               </p>
             </div>
 
-            <Button 
-              onClick={handlePayment} 
+            <Button
+              onClick={handlePayment}
               className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
             >
               Sblocca indizio 1,99€
@@ -181,9 +203,9 @@ const Buzz = () => {
           </div>
         </DialogContent>
       </Dialog>
-      
-      <ClueUnlockedExplosion 
-        open={showExplosion} 
+
+      <ClueUnlockedExplosion
+        open={showExplosion}
         fadeOut={explosionFadeOut}
         onFadeOutEnd={handleExplosionFadeOutComplete}
       />
