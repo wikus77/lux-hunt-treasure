@@ -12,6 +12,13 @@ const MapLogicProvider = () => {
   const [mapReady, setMapReady] = useState(false);
   const [showCluePopup, setShowCluePopup] = useState(false);
   const [clueMessage, setClueMessage] = useState("");
+  const [searchArea, setSearchArea] = useState<{
+    lat: number;
+    lng: number;
+    radius: number;
+    label: string;
+    confidence?: string;
+  } | null>(null);
   const [isAddingMarker, setIsAddingMarker] = useState(false);
   const [isAddingArea, setIsAddingArea] = useState(false);
   const [markers, setMarkers] = useState([]);
@@ -45,8 +52,8 @@ const MapLogicProvider = () => {
           
           // Solo se è esplicitamente richiesto di generare un'area sulla mappa
           if (location.state?.generateMapArea) {
-            // Qui aggiungi la logica per generare l'area sulla mappa se necessario
-            generateSearchArea();
+            // Qui aggiungi la logica per generare l'area sulla mappa
+            generateRandomSearchArea();
             
             toast.success("Nuova area di ricerca generata!", {
               description: "Controlla la mappa per vedere la nuova area di ricerca."
@@ -58,10 +65,22 @@ const MapLogicProvider = () => {
   }, [location.state]);
 
   // Funzione per generare un'area di ricerca sulla mappa
-  const generateSearchArea = () => {
-    // Logica per generare un'area di ricerca
-    console.log("Generazione area di ricerca sulla mappa");
-    // Implementazione reale qui...
+  const generateRandomSearchArea = () => {
+    // Genera coordinate casuali per un'area in Italia (approssimativa)
+    const lat = 41.9 + (Math.random() - 0.5) * 6; // Area approssimativa dell'Italia
+    const lng = 12.5 + (Math.random() - 0.5) * 8;
+    const radius = 5000 + Math.random() * 50000; // Da 5 a 55 km
+    
+    const newArea = {
+      lat,
+      lng,
+      radius,
+      label: "Area di ricerca generata",
+      confidence: Math.round(60 + Math.random() * 40) + "%", // 60-100%
+    };
+    
+    setSearchArea(newArea);
+    // Qui potresti anche aggiungere l'area a searchAreas se desideri accumularle
   };
 
   const handleMapReady = () => {
@@ -70,6 +89,7 @@ const MapLogicProvider = () => {
 
   const handleCloseCluePopup = () => {
     setShowCluePopup(false);
+    setSearchArea(null);
   };
 
   const handleAddMarker = () => {
@@ -168,6 +188,7 @@ const MapLogicProvider = () => {
       />
       <BuzzMapBanner 
         open={showCluePopup && mapReady} 
+        area={searchArea}
         message={clueMessage} 
         onClose={handleCloseCluePopup} 
       />
