@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useAchievements } from "@/hooks/useAchievements";
 import AchievementHeader from "@/components/achievements/AchievementHeader";
