@@ -2,13 +2,10 @@
 import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import GenderFilter from "@/components/events/GenderFilter";
-import CurrentEventSection from "@/components/events/CurrentEventSection";
 import UpcomingEventsSection from "@/components/events/UpcomingEventsSection";
 import EventRules from "@/components/events/EventRules";
-import { currentEvent, upcomingEvents } from "@/data/eventData";
-
-// Sposta in primo piano la CurrentEventSection (section "Auto Supercar Showdown")
-// e mostra UpcomingEventsSection subito dopo
+import { upcomingEvents } from "@/data/eventData";
+import CurrentEventSection from "@/components/events/CurrentEventSection"; // Reintrodotto
 
 const Events = () => {
   const [selectedGender, setSelectedGender] = useState<string>("all");
@@ -17,7 +14,10 @@ const Events = () => {
     selectedGender === 'all' || event.gender === selectedGender
   );
 
-  // Per aggiornare profileImage anche qui direttamente
+  // Individuiamo l'evento corrente per visualizzarlo nella sezione dedicata
+  const currentEvent = upcomingEvents.find(event => event.isCurrent) || upcomingEvents[0];
+
+  // Per aggiornare profileImage
   const [profileImage, setProfileImage] = useState<string | null>(null);
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
@@ -29,16 +29,17 @@ const Events = () => {
 
       <div className="h-[72px] w-full" />
 
-      {/* Moved current event section to the top */}
-      <CurrentEventSection currentEvent={currentEvent} />
-
       {/* Filters */}
       <GenderFilter
         selectedGender={selectedGender}
         onGenderChange={setSelectedGender}
       />
 
-      <UpcomingEventsSection events={filteredEvents} />
+      {/* Riaggiunta la sezione CurrentEventSection per prima */}
+      <CurrentEventSection currentEvent={currentEvent} />
+
+      {/* UpcomingEventsSection torna ad essere la seconda */}
+      <UpcomingEventsSection events={filteredEvents.filter(event => !event.isCurrent)} />
 
       <EventRules />
     </div>

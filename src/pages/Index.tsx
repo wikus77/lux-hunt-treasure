@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import AgeVerificationModal from "@/components/auth/AgeVerificationModal";
+import { ArrowRight } from "lucide-react";
 
 const Index = () => {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -30,7 +32,24 @@ const Index = () => {
       <div className="h-[72px] w-full" />
 
       {/* Hero Section */}
-      <section className="w-full flex flex-col justify-center items-center text-center px-6 py-24 md:py-32">
+      <section className="w-full flex flex-col justify-center items-center text-center px-6 py-24 md:py-32 relative">
+        {/* Bottone ACCEDI in alto a destra, ridimensionato del 30% e colori aggiornati */}
+        <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20">
+          <Button
+            onClick={handleLoginClick}
+            className="flex items-center rounded-lg font-semibold text-xs shadow-lg transition-all duration-150 px-3 py-1.5 scale-70 transform origin-right"
+            style={{
+              background: "linear-gradient(90deg, #FEBD5C 0%, #F57E42 100%)",
+              color: "#232323",
+              boxShadow: "0 1px 6px 0 rgba(0,0,0,0.18), 0 0.5px 2px #ffcba4",
+              transform: "scale(0.7)",
+              transformOrigin: "right"
+            }}
+          >
+            <ArrowRight className="mr-1" size={14} />
+            Accedi
+          </Button>
+        </div>
         <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">
           M1SSION
         </h1>
@@ -38,14 +57,14 @@ const Index = () => {
           Unisciti a M1SSION: Il Tuo Sogno è a Portata di Mano
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
-          <Button 
+          <Button
             className="bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white font-bold px-8 py-6 rounded-full transform transition-transform hover:scale-105"
             size="lg"
             onClick={handleRegisterClick}
           >
             Registrati Oggi
           </Button>
-          <Button 
+          <Button
             className="backdrop-blur-md bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold px-8 py-6 rounded-full transition-all"
             onClick={() => setIsVideoPlaying(true)}
             size="lg"
@@ -62,24 +81,18 @@ const Index = () => {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
           <div className="glass-card hover-lift text-center w-full relative">
-            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">
-              1
-            </div>
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">1</div>
+              {/* Rimosso il badge con il numero */}
             </div>
             <h3 className="text-xl font-bold mb-3">Registrati</h3>
             <p className="text-white/70">
               Crea un account gratuito per iniziare il tuo viaggio verso l'auto dei tuoi sogni.
             </p>
           </div>
-          
+
           <div className="glass-card hover-lift text-center w-full relative">
-            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">
-              2
-            </div>
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">2</div>
+              {/* Rimosso il badge con il numero */}
             </div>
             <h3 className="text-xl font-bold mb-3">Scopri gli Indizi</h3>
             <p className="text-white/70">
@@ -88,11 +101,8 @@ const Index = () => {
           </div>
 
           <div className="glass-card hover-lift text-center w-full relative">
-            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">
-              3
-            </div>
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">3</div>
+              {/* Rimosso il badge con il numero */}
             </div>
             <h3 className="text-xl font-bold mb-3">Vinci il Premio</h3>
             <p className="text-white/70">
@@ -132,7 +142,7 @@ const Index = () => {
             Non perdere l'opportunità di trasformare il tuo sogno in realtà. Unisciti a M1SSION oggi stesso e inizia il tuo viaggio verso l'auto dei tuoi sogni.
           </p>
           <div className="flex justify-center">
-            <Button 
+            <Button
               className="bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white font-bold px-8 py-6 rounded-full transform transition-transform hover:scale-105"
               size="lg"
               onClick={handleRegisterClick}
@@ -163,12 +173,12 @@ const Index = () => {
           </div>
         </div>
       </footer>
-      
+
       {/* Age Verification Modal */}
-      <AgeVerificationModal 
-        open={showAgeVerification} 
-        onClose={() => setShowAgeVerification(false)} 
-        onVerified={handleAgeVerified} 
+      <AgeVerificationModal
+        open={showAgeVerification}
+        onClose={() => setShowAgeVerification(false)}
+        onVerified={handleAgeVerified}
       />
     </div>
   );
