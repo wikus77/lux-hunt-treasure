@@ -15,7 +15,7 @@ const Login = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     // Validazioni base
     if (!email || !password) {
       toast({
@@ -53,7 +53,7 @@ const Login = () => {
         <form onSubmit={handleLogin} className="glass-card">
           <div className="space-y-4">
             <div>
-              <Label htmlFor="email" className="text-black">Email</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -63,9 +63,9 @@ const Login = () => {
                 className="mt-1"
               />
             </div>
-
+            
             <div>
-              <Label htmlFor="password" className="text-black">Password</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -76,17 +76,17 @@ const Login = () => {
               />
             </div>
           </div>
-
-          <Button
-            type="submit"
+          
+          <Button 
+            type="submit" 
             className="w-full mt-6 bg-gradient-to-r from-projectx-blue to-projectx-pink"
           >
             Accedi
           </Button>
-
+          
           <div className="mt-4 text-center">
-            <Button
-              variant="link"
+            <Button 
+              variant="link" 
               className="text-projectx-neon-blue p-0 hover:underline"
               onClick={() => navigate("/register")}
             >
@@ -94,7 +94,7 @@ const Login = () => {
             </Button>
           </div>
         </form>
-
+        
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
             Accedendo accetti i nostri Termini e Condizioni e la nostra Informativa sulla Privacy.

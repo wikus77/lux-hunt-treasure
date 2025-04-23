@@ -2,11 +2,13 @@
 import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import GenderFilter from "@/components/events/GenderFilter";
+import CurrentEventSection from "@/components/events/CurrentEventSection";
 import UpcomingEventsSection from "@/components/events/UpcomingEventsSection";
 import EventRules from "@/components/events/EventRules";
-import { upcomingEvents } from "@/data/eventData";
+import { currentEvent, upcomingEvents } from "@/data/eventData";
 
-// Abbiamo eliminato l'import di CurrentEventSection e currentEvent
+// Sposta in primo piano la CurrentEventSection (section "Auto Supercar Showdown")
+// e mostra UpcomingEventsSection subito dopo
 
 const Events = () => {
   const [selectedGender, setSelectedGender] = useState<string>("all");
@@ -27,13 +29,15 @@ const Events = () => {
 
       <div className="h-[72px] w-full" />
 
+      {/* Moved current event section to the top */}
+      <CurrentEventSection currentEvent={currentEvent} />
+
       {/* Filters */}
       <GenderFilter
         selectedGender={selectedGender}
         onGenderChange={setSelectedGender}
       />
 
-      {/* La sezione UpcomingEventsSection ora è la prima */}
       <UpcomingEventsSection events={filteredEvents} />
 
       <EventRules />
