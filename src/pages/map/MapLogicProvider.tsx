@@ -167,7 +167,6 @@ const MapLogicProvider = () => {
         buzzMapPrice={buzzMapPrice}
       />
       <MapArea 
-        onMapReady={handleMapReady}
         markers={markers}
         searchAreas={searchAreas}
         isAddingMarker={isAddingMarker}
@@ -185,12 +184,13 @@ const MapLogicProvider = () => {
         deleteMarker={deleteMarker}
         deleteSearchArea={deleteSearchArea}
         currentLocation={currentLocation}
+        onMapReady={handleMapReady}
       />
       <BuzzMapBanner 
-        open={showCluePopup && mapReady} 
+        open={showCluePopup && mapReady}
         area={searchArea}
-        message={clueMessage} 
-        onClose={handleCloseCluePopup} 
+        message={clueMessage}
+        onClose={handleCloseCluePopup}
       />
     </div>
   );

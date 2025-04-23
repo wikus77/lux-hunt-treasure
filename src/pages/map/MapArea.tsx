@@ -5,6 +5,7 @@ import { MapMarkers, type MapMarker, type SearchArea } from "@/components/maps/M
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
 const DEFAULT_CENTER = { lat: 45.4642, lng: 9.19 };
+const mapLibraries: ["places"] = ["places"];
 
 type MapAreaProps = {
   markers: MapMarker[];

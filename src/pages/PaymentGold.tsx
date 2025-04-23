@@ -88,11 +88,11 @@ const PaymentGold = () => {
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-projectx-neon-blue"></div>
-                <span>Indizi illimitati durante l'evento</span>
+                <span>Indizi premium illimitati</span>
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-projectx-neon-blue"></div>
-                <span>Partecipazione alle estrazioni Gold</span>
+                <span>Accesso alle sessioni di gameplay esclusive</span>
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-projectx-neon-blue"></div>
@@ -125,7 +125,7 @@ const PaymentGold = () => {
           </div>
 
           {paymentMethod === "card" && (
-            <CardPaymentForm onSubmit={handleCardSubmit} />
+            <CardPaymentForm onSuccess={handleCardSubmit} />
           )}
           {paymentMethod === "apple" && (
             <ApplePayBox onApplePay={handleApplePay} />

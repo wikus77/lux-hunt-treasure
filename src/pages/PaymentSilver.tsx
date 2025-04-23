@@ -125,7 +125,7 @@ const PaymentSilver = () => {
           </div>
 
           {paymentMethod === "card" && (
-            <CardPaymentForm onSubmit={handleCardSubmit} />
+            <CardPaymentForm onSuccess={handleCardSubmit} />
           )}
           {paymentMethod === "apple" && (
             <ApplePayBox onApplePay={handleApplePay} />
