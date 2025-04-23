@@ -1,5 +1,4 @@
-
-import { Home, User, MoreVertical, Calendar, CreditCard, Circle, Map } from "lucide-react";
+import { Home, User, MoreVertical, FileSearch, CreditCard, Circle, Map } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
@@ -18,7 +17,6 @@ export const BottomNavigation = () => {
     navigate(path);
   };
 
-  // Classe per l'effetto glow sulle icone attive
   const gradientIconClass = "active-gradient-icon";
 
   return (
@@ -36,9 +34,9 @@ export const BottomNavigation = () => {
       <button
         onClick={() => handleNavigation("/events")}
         className={`bottom-nav-item ${isActive("/events") ? "active" : ""}`}
-        aria-label="Eventi"
+        aria-label="Indizi"
       >
-        <Calendar
+        <FileSearch
           className={`w-6 h-6 ${isActive("/events") ? gradientIconClass : ""}`}
           color={isActive("/events") ? "url(#gradient-green-events)" : "#bbb"}
         />
@@ -94,12 +92,11 @@ export const BottomNavigation = () => {
         />
       </button>
 
-      {/* SVG Gradients: Verde Fluo → Giallo Fluo */}
       <svg width="0" height="0">
         <defs>
           <linearGradient id="gradient-green-home" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop stopColor="#39FF14" offset="0%" /> {/* Verde fluo */}
-            <stop stopColor="#FFFF00" offset="100%" /> {/* Giallo fluo */}
+            <stop stopColor="#39FF14" offset="0%" />
+            <stop stopColor="#FFFF00" offset="100%" />
           </linearGradient>
           <linearGradient id="gradient-green-events" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop stopColor="#39FF14" offset="0%" />

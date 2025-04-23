@@ -1,4 +1,3 @@
-
 import { BookOpen } from "lucide-react";
 import ClueCard from "@/components/clues/ClueCard";
 import React, { useState, useRef } from "react";
@@ -17,11 +16,12 @@ interface Clue {
 
 interface ProfileCluesProps {
   unlockedClues: Clue[];
+  onClueUnlocked?: () => void;
 }
 
 const MAX_CLUES = 100;
 
-const ProfileClues = ({ unlockedClues }: ProfileCluesProps) => {
+const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
   const groupedClues = groupCluesByCategory(unlockedClues);
 
   // Banner stato
@@ -84,6 +84,13 @@ const ProfileClues = ({ unlockedClues }: ProfileCluesProps) => {
 
   // Chiudi banner
   const closeBanner = () => setBannerOpen(false);
+
+  // Update the clue unlock logic to call the callback
+  const handleClueUnlock = () => {
+    if (onClueUnlocked) {
+      onClueUnlocked();
+    }
+  };
 
   return (
     <div className="glass-card mt-4 relative">
