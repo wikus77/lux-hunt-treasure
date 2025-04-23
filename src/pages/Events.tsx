@@ -1,4 +1,3 @@
-
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useState, useEffect } from "react";
 import ProfileClues from "@/components/profile/ProfileClues";
@@ -30,7 +29,7 @@ const Events = () => {
     } else {
       console.log("Not adding test clues, current count:", currentUnlockedClues);
     }
-  }, []); // Empty dependency array to run only once
+  }, []);
 
   const generateRandomNotification = () => {
     const notifications = [
