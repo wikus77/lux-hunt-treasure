@@ -162,8 +162,7 @@ const Buzz = () => {
       console.warn("Impossibile salvare la notifica. Potrebbe essere stato raggiunto il limite di storage.");
       // Mostriamo lo stesso un toast all'utente
       toast({
-        title: "Nuovo indizio extra!",
-        description: clueText,
+        description: "Nuovo indizio extra! " + clueText,
         duration: 5000,
       });
     }
