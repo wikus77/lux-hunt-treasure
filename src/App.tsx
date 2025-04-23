@@ -1,18 +1,57 @@
 
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/sonner"
+import { useState, useEffect } from 'react'
+import { Outlet } from 'react-router-dom'
+import './App.css'
+import { Toaster } from "@/components/ui/toaster"
+import { Toaster as SonnerToaster } from "sonner"
+import LoginModal from './components/auth/LoginModal'
+import AgeVerificationModal from './components/auth/AgeVerificationModal'
+import { SoundProvider } from './contexts/SoundContext'
 
-export function App({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+function App({ children }: { children?: React.ReactNode }) {
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isAgeVerificationModalOpen, setIsAgeVerificationModalOpen] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+
+  useEffect(() => {
+    const hasVerifiedAge = localStorage.getItem('ageVerified');
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+
+    if (!hasVerifiedAge) {
+      setIsAgeVerificationModalOpen(true);
+    } else {
+      setIsVerified(true);
+    }
+
+    if (!isLoggedIn && hasVerifiedAge) {
+      setIsLoginModalOpen(true);
+    }
+  }, []);
+
+  const handleAgeVerification = (verified: boolean) => {
+    if (verified) {
+      localStorage.setItem('ageVerified', 'true');
+      setIsAgeVerificationModalOpen(false);
+      setIsVerified(true);
+      
+      const isLoggedIn = localStorage.getItem('isLoggedIn');
+      if (!isLoggedIn) {
+        setIsLoginModalOpen(true);
+      }
+    }
+  };
+
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      {children}
-      <Toaster position="top-center" richColors />
-    </ThemeProvider>
+    <SoundProvider>
+      <div className="app">
+        {children || <Outlet />}
+        {isAgeVerificationModalOpen && <AgeVerificationModal onVerify={handleAgeVerification} />}
+        {isVerified && isLoginModalOpen && <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />}
+        <SonnerToaster position="top-center" richColors />
+        <Toaster />
+      </div>
+    </SoundProvider>
   )
 }
 
-export default App;
+export default App
