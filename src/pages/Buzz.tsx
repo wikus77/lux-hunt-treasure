@@ -12,7 +12,7 @@ import { useBuzzClues } from "@/hooks/useBuzzClues";
 import BuzzUnlockDialog from "@/components/buzz/BuzzUnlockDialog";
 import BuzzExplosionHandler from "@/components/buzz/BuzzExplosionHandler";
 import { useNotifications } from "@/hooks/useNotifications";
-import { Bell, LightbulbIcon } from "lucide-react";
+import { Bell, LightbulbIcon, Trash } from "lucide-react";
 
 const Buzz = () => {
   const [showDialog, setShowDialog] = useState(false);
@@ -146,6 +146,13 @@ const Buzz = () => {
     reloadNotifications
   ]);
 
+  const handleResetClues = () => {
+    resetUnlockedClues();
+    toast.success("Tutti gli indizi sono stati azzerati", {
+      duration: 3000,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-black pb-20 w-full">
       <UnifiedHeader profileImage={profileImage} />
@@ -184,6 +191,18 @@ const Buzz = () => {
           <p className="text-sm text-center mt-2 text-muted-foreground">
             Ricevi subito una notifica con un nuovo indizio esclusivo
           </p>
+        </div>
+        
+        {/* Pulsante Reset */}
+        <div className="mt-6 w-full max-w-md">
+          <Button 
+            onClick={handleResetClues}
+            variant="destructive"
+            className="w-full flex items-center justify-center gap-2"
+          >
+            <Trash className="w-4 h-4" />
+            Azzera Tutti gli Indizi
+          </Button>
         </div>
       </section>
       

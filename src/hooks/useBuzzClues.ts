@@ -99,6 +99,10 @@ export const useBuzzClues = () => {
 
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(USED_CLUES_KEY);
+    
+    toast.info("Contatore degli indizi azzerato", { 
+      duration: 3000 
+    });
   }, []);
 
   return {
