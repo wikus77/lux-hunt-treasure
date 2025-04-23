@@ -10,6 +10,7 @@ type MapHeaderProps = {
   onBuzz: () => void;
   isAddingMarker: boolean;
   isAddingArea: boolean;
+  buzzMapPrice: number;
 };
 
 const MapHeader: React.FC<MapHeaderProps> = ({
@@ -18,7 +19,8 @@ const MapHeader: React.FC<MapHeaderProps> = ({
   onHelp,
   onBuzz,
   isAddingMarker,
-  isAddingArea
+  isAddingArea,
+  buzzMapPrice
 }) => (
   <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
     <div className="flex items-center gap-2">
@@ -51,26 +53,29 @@ const MapHeader: React.FC<MapHeaderProps> = ({
         <Info className="h-4 w-4" />
       </Button>
     </div>
-    <div className="flex items-center justify-center sm:justify-end">
+    <div className="flex items-center justify-center sm:justify-end gap-1">
+      <div className="bg-gradient-to-tr from-[#1eaedb] via-[#9b87f5] to-[#d946ef] text-white text-sm px-4 py-1 rounded-full pointer-events-none select-none font-bold mr-2 tracking-wide shadow-lg border border-[#7209b7]/70">
+        Buzz Mappa: {buzzMapPrice.toFixed(2)}€
+      </div>
       <button
         onClick={onBuzz}
-        title="Buzz €5,99"
+        title={`Buzz Mappa • ${buzzMapPrice.toFixed(2)}€`}
         className="
           rounded-full
-          w-10 h-10
+          w-12 h-12
           flex justify-center items-center
-          bg-gradient-to-tr from-[#4361ee] via-[#7209b7] to-[#00a3ff]
-          shadow-[0_0_20px_2px_rgba(67,97,238,0.4)]
-          hover:shadow-[0_0_32px_6px_rgba(67,97,238,0.60)]
-          hover:scale-105
+          bg-gradient-to-tr from-[#1eaedb] via-[#7209b7] to-[#d946ef]
+          shadow-[0_0_32px_8px_rgba(114,9,183,0.30)]
+          hover:shadow-[0_0_52px_14px_rgba(114,9,183,0.50)]
+          hover:scale-110
           transition-all
-          border-2 border-[#4361ee]/70
+          border-2 border-[#9b87f5]/90
           focus:outline-none
           ring-2 ring-[#00a3ff]/30
           active:scale-95
         "
       >
-        <Zap className="h-5 w-5 text-white drop-shadow-lg" />
+        <Zap className="h-6 w-6 text-white drop-shadow-lg" />
       </button>
     </div>
   </div>

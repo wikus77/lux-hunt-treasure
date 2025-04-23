@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import MapHeader from "./MapHeader";
 import MapArea from "./MapArea";
@@ -9,11 +8,35 @@ import LoadingScreen from "./LoadingScreen";
 import { clues } from "@/data/cluesData";
 import { useUserLocationPermission } from "@/hooks/useUserLocationPermission";
 import { analyzeCluesForLocation } from "@/utils/clueAnalyzer";
+import BuzzMapBanner from "@/components/buzz/BuzzMapBanner";
 
 const DEFAULT_CENTER = { lat: 45.4642, lng: 9.19 }; // Milano
 
+const buzzPricingSteps = [
+  { min: 1, max: 5, price: 2.99 },
+  { min: 6, max: 10, price: 5.99 },
+  { min: 11, max: 15, price: 11.99 },
+  { min: 16, max: 20, price: 15.99 },
+  { min: 21, max: 30, price: 19.99 },
+  { min: 31, max: 40, price: 25.99 },
+  { min: 41, max: 45, price: 27.99 },
+  { min: 46, max: 50, price: 29.99 },
+  { min: 51, max: 55, price: 35.99 },
+  { min: 56, max: 60, price: 39.99 },
+  { min: 61, max: 65, price: 45.99 },
+  { min: 66, max: 70, price: 50.99 }
+];
+
+function getBuzzMapPrice(clueCount: number) {
+  const found = buzzPricingSteps.find(
+    s => clueCount >= s.min && clueCount <= s.max
+  );
+  if (found) return found.price;
+  if (clueCount > 70) return 99.99;
+  return 2.99;
+}
+
 const MapLogicProvider: React.FC = () => {
-  // Map state
   const [markers, setMarkers] = useState<any[]>([]);
   const [searchAreas, setSearchAreas] = useState<any[]>([]);
   const [isAddingMarker, setIsAddingMarker] = useState(false);
@@ -23,11 +46,17 @@ const MapLogicProvider: React.FC = () => {
   const [helpOpen, setHelpOpen] = useState(false);
   const [buzzClickCount, setBuzzClickCount] = useState(0);
 
-  // Get user location
+  const [showBuzzBanner, setShowBuzzBanner] = useState(false);
+  const buzzAreaPosition = useRef<{lat:number, lng:number} | null>(null);
+
   const { userLocation } = useUserLocationPermission();
   const currentLocation = userLocation;
 
-  // Check for payment completion
+  const unlockedClues = clues.filter(clue => !clue.isLocked);
+  const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+  const totalClues = unlockedClues.length + notifications.length;
+  const buzzMapPrice = getBuzzMapPrice(totalClues);
+
   useEffect(() => {
     const paymentCompleted = localStorage.getItem('paymentCompleted');
     if (paymentCompleted === 'true') {
@@ -129,50 +158,58 @@ const MapLogicProvider: React.FC = () => {
     addMarker(e);
   };
 
-  // Nuova funzione per creare un'area di ricerca intelligente basata sugli indizi
   const createIntelligentSearchArea = () => {
     const newClickCount = buzzClickCount + 1;
     setBuzzClickCount(newClickCount);
 
-    // Recupera tutti gli indizi sbloccati
-    const unlockedClues = clues.filter(clue => !clue.isLocked);
-    // Recupera anche tutte le notifiche che potrebbero contenere indizi
-    const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+    const locationInfo = analyzeCluesForLocation(
+      clues.filter(clue => !clue.isLocked),
+      JSON.parse(localStorage.getItem('notifications') || '[]')
+    );
 
-    // Utilizza la funzione di analisi per determinare la posizione ottimale
-    const locationInfo = analyzeCluesForLocation(unlockedClues, notifications);
-
-    // Utilizza la posizione determinata o il centro predefinito/posizione utente come fallback
     const lat = locationInfo.lat || (currentLocation ? currentLocation[0] : DEFAULT_CENTER.lat);
     const lng = locationInfo.lng || (currentLocation ? currentLocation[1] : DEFAULT_CENTER.lng);
 
-    // L'area di ricerca ha un raggio di 500km (500.000 metri)
+    buzzAreaPosition.current = {lat, lng};
+
     const newSearchArea = {
       id: crypto.randomUUID(),
       lat,
       lng,
-      radius: 500000, // 500km in metri
+      radius: 500000, // 500km
       label: `Area suggerita (Analisi ${newClickCount})`,
       editing: false,
       isAI: true,
       confidence: locationInfo.confidence || "bassa"
     };
 
-    // Sostituisci tutte le aree di ricerca AI precedenti con questa nuova
     const filteredAreas = searchAreas.filter(area => !area.isAI);
     setSearchAreas([...filteredAreas, newSearchArea]);
     setActiveSearchArea(newSearchArea.id);
 
+    setShowBuzzBanner(true);
+
     toast.success(`Area di ricerca aggiunta!`);
   };
 
-  // Funzione per il bottone Buzz: reindirizza ed imposta flag
   const processCluesAndAddSearchArea = () => {
     const newClickCount = buzzClickCount + 1;
     setBuzzClickCount(newClickCount);
 
     localStorage.setItem('buzzRequest', 'map');
+    localStorage.setItem('buzzMapPrice', buzzMapPrice.toString());
     window.location.href = '/payment-methods';
+  };
+
+  const handleBuzzBannerClose = () => {
+    setShowBuzzBanner(false);
+    if (buzzAreaPosition.current) {
+      setTimeout(() => {
+        setActiveSearchArea(
+          searchAreas.find(area => area.isAI)?.id || null
+        );
+      }, 100);
+    }
   };
 
   return (
@@ -186,8 +223,8 @@ const MapLogicProvider: React.FC = () => {
           onBuzz={processCluesAndAddSearchArea}
           isAddingMarker={isAddingMarker}
           isAddingArea={isAddingSearchArea}
+          buzzMapPrice={buzzMapPrice}
         />
-
         <MapArea
           markers={markers}
           searchAreas={searchAreas}
@@ -206,6 +243,12 @@ const MapLogicProvider: React.FC = () => {
           deleteMarker={deleteMarker}
           deleteSearchArea={deleteSearchArea}
           currentLocation={currentLocation}
+        />
+
+        <BuzzMapBanner
+          open={showBuzzBanner}
+          onClose={handleBuzzBannerClose}
+          area={searchAreas.find(area => area.isAI) || null}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
