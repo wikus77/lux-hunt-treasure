@@ -23,16 +23,24 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileName, setProfileName] = useState<string>("Utente");
-  const [profileSubscription, setProfileSubscription] = useState<string>("Base");
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   
-  const {
-    notifications,
-    unreadCount,
-    markAllAsRead,
-    reloadNotifications
-  } = useNotifications();
+  // Use try/catch to prevent crashes with notifications
+  let notifications = [];
+  let unreadCount = 0;
+  let markAllAsRead = () => {};
+  let reloadNotifications = () => {};
+
+  try {
+    const notificationsData = useNotifications();
+    notifications = notificationsData.notifications || [];
+    unreadCount = notificationsData.unreadCount || 0;
+    markAllAsRead = notificationsData.markAllAsRead || (() => {});
+    reloadNotifications = notificationsData.reloadNotifications || (() => {});
+  } catch (e) {
+    console.error("Error loading notifications in MainLayout:", e);
+  }
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -46,12 +54,15 @@ const MainLayout = () => {
     if (savedProfileName) {
       setProfileName(savedProfileName);
     }
-    setProfileSubscription("Base");
   }, []);
 
   const handleShowNotifications = () => {
-    reloadNotifications();
-    setShowNotifications(true);
+    try {
+      reloadNotifications();
+      setShowNotifications(true);
+    } catch (e) {
+      console.error("Error showing notifications:", e);
+    }
   };
 
   return (
@@ -122,17 +133,21 @@ const MainLayout = () => {
           </div>
         </div>
       </header>
+      
       <main className="flex-1 w-full relative pt-[72px] pb-16 max-w-screen-xl mx-auto">
         <Outlet />
       </main>
+      
       {showHowItWorks && (
         <HowItWorksModal open={showHowItWorks} onClose={() => setShowHowItWorks(false)} />
       )}
       
-      <NotificationsDrawer
-        open={showNotifications}
-        onOpenChange={setShowNotifications}
-      />
+      {showNotifications && (
+        <NotificationsDrawer
+          open={showNotifications}
+          onOpenChange={setShowNotifications}
+        />
+      )}
       
       <Footer />
       <BottomNavigation />

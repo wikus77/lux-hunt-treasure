@@ -26,13 +26,15 @@ const HomeLayout = ({
     <div className="min-h-screen bg-black w-full">
       <UnifiedHeader profileImage={profileImage} />
       
-      <NotificationsBanner
-        open={showNotificationsBanner}
-        notifications={notifications}
-        unreadCount={unreadCount}
-        onClose={onCloseNotifications}
-        onMarkAllAsRead={onMarkAllAsRead}
-      />
+      {showNotificationsBanner && (
+        <NotificationsBanner
+          open={showNotificationsBanner}
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onClose={onCloseNotifications}
+          onMarkAllAsRead={onMarkAllAsRead}
+        />
+      )}
 
       <div className="h-[72px] w-full" />
 

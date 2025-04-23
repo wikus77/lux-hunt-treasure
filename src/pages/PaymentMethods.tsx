@@ -22,7 +22,10 @@ const PaymentMethods = () => {
   const generateMapArea = location.state?.generateMapArea;
   
   useEffect(() => {
-    setProfileImage(localStorage.getItem('profileImage'));
+    const savedProfileImage = localStorage.getItem('profileImage');
+    if (savedProfileImage) {
+      setProfileImage(savedProfileImage);
+    }
     
     // Determina il percorso di ritorno
     if (fromBuzz) {
@@ -31,45 +34,54 @@ const PaymentMethods = () => {
   }, [fromBuzz]);
   
   const handlePaymentSuccess = () => {
-    setPaymentProcessing(true);
-    
-    // Simula elaborazione pagamento
-    setTimeout(() => {
-      localStorage.setItem('hasPaymentMethod', 'true');
+    try {
+      console.log("Payment success triggered");
+      setPaymentProcessing(true);
       
-      toast.success("Pagamento completato", {
-        description: "Il tuo metodo di pagamento è stato registrato.",
-      });
-      
-      // Reindirizza in base alla fonte
-      if (fromBuzz) {
-        if (fromRegularBuzz) {
-          // Se proviene dalla sezione Buzz standard
-          navigate('/buzz', {
-            replace: true,
-            state: { 
-              paymentCompleted: true,
-              fromRegularBuzz: true,
-              clue: clue
-            }
-          });
+      // Simula elaborazione pagamento
+      setTimeout(() => {
+        localStorage.setItem('hasPaymentMethod', 'true');
+        
+        toast.success("Pagamento completato", {
+          description: "Il tuo metodo di pagamento è stato registrato.",
+        });
+        
+        // Reindirizza in base alla fonte
+        if (fromBuzz) {
+          if (fromRegularBuzz) {
+            // Se proviene dalla sezione Buzz standard
+            navigate('/buzz', {
+              replace: true,
+              state: { 
+                paymentCompleted: true,
+                fromRegularBuzz: true,
+                clue: clue
+              }
+            });
+          } else {
+            // Se proviene dalla mappa interattiva
+            navigate('/map', {
+              replace: true,
+              state: { 
+                paymentCompleted: true,
+                mapBuzz: true,
+                clue: clue,
+                generateMapArea: generateMapArea
+              }
+            });
+          }
         } else {
-          // Se proviene dalla mappa interattiva
-          navigate('/map', {
-            replace: true,
-            state: { 
-              paymentCompleted: true,
-              mapBuzz: true,
-              clue: clue,
-              generateMapArea: generateMapArea
-            }
-          });
+          // Altrimenti torna alle impostazioni
+          navigate('/settings', { replace: true });
         }
-      } else {
-        // Altrimenti torna alle impostazioni
-        navigate('/settings', { replace: true });
-      }
-    }, 2000);
+      }, 2000);
+    } catch (error) {
+      console.error("Payment processing error:", error);
+      toast.error("Errore durante il pagamento", {
+        description: "Si è verificato un errore. Riprova più tardi.",
+      });
+      setPaymentProcessing(false);
+    }
   };
 
   return (

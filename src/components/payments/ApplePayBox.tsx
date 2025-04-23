@@ -6,19 +6,26 @@ interface ApplePayBoxProps {
   onApplePay: () => void;
 }
 
-const ApplePayBox = ({ onApplePay }: ApplePayBoxProps) => (
-  <div className="text-center p-4">
-    <div className="border border-projectx-deep-blue rounded-md p-6 mb-4">
-      <CreditCardIcon className="h-12 w-12 mx-auto mb-4" />
-      <p className="mb-6">Metodo di pagamento rapido</p>
-      <Button
-        onClick={onApplePay}
-        className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
-      >
-        Procedi al pagamento
-      </Button>
+const ApplePayBox = ({ onApplePay }: ApplePayBoxProps) => {
+  const handleClick = () => {
+    console.log("Apple Pay button clicked");
+    onApplePay();
+  };
+
+  return (
+    <div className="text-center p-4">
+      <div className="border border-projectx-deep-blue rounded-md p-6 mb-4">
+        <CreditCardIcon className="h-12 w-12 mx-auto mb-4" />
+        <p className="mb-6">Metodo di pagamento rapido</p>
+        <Button
+          onClick={handleClick}
+          className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
+        >
+          Procedi al pagamento
+        </Button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default ApplePayBox;
