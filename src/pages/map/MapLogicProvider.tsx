@@ -5,6 +5,8 @@ import MapHeader from "./MapHeader";
 import LoadingScreen from "./LoadingScreen";
 import NotesSection from "./NotesSection";
 import { useMapLogic } from "./useMapLogic";
+import CluePopup from "./CluePopup";
+import BuzzMapBanner from "@/components/buzz/BuzzMapBanner";
 
 const MapLogicProvider = () => {
   const {
@@ -17,6 +19,9 @@ const MapLogicProvider = () => {
     isAddingSearchArea,
     currentLocation,
     buzzMapPrice,
+    showCluePopup,
+    clueMessage,
+    setShowCluePopup,
     setActiveMarker,
     setActiveSearchArea,
     handleMapReady,
@@ -50,6 +55,16 @@ const MapLogicProvider = () => {
         isAddingArea={isAddingSearchArea}
         buzzMapPrice={buzzMapPrice}
       />
+      
+      {/* Clue Popup - Shown when a clue is available */}
+      <CluePopup 
+        open={showCluePopup} 
+        clueMessage={clueMessage} 
+        showBanner={!!activeSearchArea} 
+        onClose={() => setShowCluePopup(false)}
+      />
+
+      {/* Main Layout */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="col-span-1 md:col-span-2">
           <MapArea 

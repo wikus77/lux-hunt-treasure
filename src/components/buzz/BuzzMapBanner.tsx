@@ -67,17 +67,17 @@ const BuzzMapBanner: React.FC<BuzzMapBannerProps> = ({ open, area, message, onCl
         transform -translate-x-1/2 transition-all duration-500
         ${open ? "translate-y-0 opacity-100" : "-translate-y-32 opacity-0"}
       `}
-      style={{ width: "690px", maxWidth: "95vw" }} // Increased width by 15%
+      style={{ width: "795px", maxWidth: "95vw" }} // Increased width by 15%
     >
       <div
         className="relative pointer-events-auto
-        px-14 py-10 rounded-2xl border
+        px-16 py-12 rounded-2xl border
         shadow-[0_0_60px_rgba(30,174,219,0.4)]
         glass-card
         bg-gradient-to-br from-[#181641] via-[#7E69AB] to-[#1EAEDB]
         border-[#9b87f5]/60
         flex flex-col items-center animate-fade-in"
-        style={{ fontSize: "1.3rem", minWidth: "368px", minHeight: "138px", maxWidth: "100vw" }}
+        style={{ fontSize: "1.4rem", minWidth: "423px", minHeight: "159px", maxWidth: "100vw" }}
       >
         <button
           className="absolute top-3 right-3 text-xl p-1 text-[#d946ef] hover:text-white focus:outline-none transition-all"
