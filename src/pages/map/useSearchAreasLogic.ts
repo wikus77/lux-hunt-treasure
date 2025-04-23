@@ -3,11 +3,16 @@ import { useState } from "react";
 import { toast } from "@/components/ui/sonner";
 import { SearchArea } from "@/components/maps/MapMarkers";
 import { v4 as uuidv4 } from "uuid";
+import { useBuzzClues } from "@/hooks/useBuzzClues";
+import { analyzeCluesForLocation } from "@/utils/clueAnalyzer";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export function useSearchAreasLogic(currentLocation: [number, number] | null) {
   const [searchAreas, setSearchAreas] = useState<SearchArea[]>([]);
   const [activeSearchArea, setActiveSearchArea] = useState<string | null>(null);
   const [isAddingSearchArea, setIsAddingSearchArea] = useState(false);
+  const { unlockedClues } = useBuzzClues();
+  const { notifications } = useNotifications();
 
   const handleAddArea = () => {
     setIsAddingSearchArea(true);
@@ -39,27 +44,67 @@ export function useSearchAreasLogic(currentLocation: [number, number] | null) {
     }
   };
 
-  // Generate area from clue - con gestione più sicura
+  // Calculate radius based on unlocked clues count (more clues = smaller radius = more precision)
+  const calculateBuzzRadius = (): number => {
+    // Base radius is 250km (250000m)
+    // Minimum radius is 10km (10000m)
+    if (unlockedClues <= 0) return 250000;
+    
+    // Linear interpolation between 250km and 10km based on clues count
+    const maxRadius = 250000; // 250km in meters
+    const minRadius = 10000;  // 10km in meters
+    const maxClues = 1000;    // Max number of clues
+    
+    // Calculate the radius with inverse proportion to clue count
+    // More clues = smaller radius = more precision
+    const reduction = Math.min(unlockedClues, maxClues) / maxClues;
+    const radius = maxRadius - (reduction * (maxRadius - minRadius));
+    
+    return Math.round(radius);
+  };
+
+  // Generate area from clue with dynamic radius
   const generateSearchArea = () => {
-    if (currentLocation) {
-      try {
-        const newArea: SearchArea = {
-          id: uuidv4(),
-          lat: currentLocation[0],
-          lng: currentLocation[1],
-          radius: 500,
-          label: "Area generata",
-          color: "#4361ee",
-          position: { lat: currentLocation[0], lng: currentLocation[1] }
-        };
-        setSearchAreas(prev => [...prev, newArea]);
-        setActiveSearchArea(newArea.id);
-      } catch (error) {
-        console.error("Errore nella generazione dell'area:", error);
-        toast.error("Impossibile generare l'area di ricerca");
+    try {
+      // Use currentLocation as fallback if no clues provide location data
+      let targetLat = currentLocation ? currentLocation[0] : 45.4642;
+      let targetLng = currentLocation ? currentLocation[1] : 9.19;
+      let label = "Area generata";
+      let isAI = true;
+      
+      // Try to analyze clues for a more precise location if available
+      const locationInfo = analyzeCluesForLocation([], notifications || []);
+      
+      if (locationInfo.lat && locationInfo.lng) {
+        targetLat = locationInfo.lat;
+        targetLng = locationInfo.lng;
+        label = locationInfo.description || "Area basata su indizi";
       }
-    } else {
-      toast.error("Posizione non disponibile per generare l'area");
+
+      // Calculate the radius based on the number of unlocked clues
+      const radius = calculateBuzzRadius();
+
+      // Create the search area with dynamic radius
+      const newArea: SearchArea = {
+        id: uuidv4(),
+        lat: targetLat,
+        lng: targetLng,
+        radius: radius,
+        label: label,
+        color: "#4361ee",
+        position: { lat: targetLat, lng: targetLng },
+        isAI: isAI
+      };
+      
+      setSearchAreas(prev => [...prev, newArea]);
+      setActiveSearchArea(newArea.id);
+      
+      // Return the ID for the caller if needed
+      return newArea.id;
+    } catch (error) {
+      console.error("Errore nella generazione dell'area:", error);
+      toast.error("Impossibile generare l'area di ricerca");
+      return null;
     }
   };
 
@@ -89,6 +134,7 @@ export function useSearchAreasLogic(currentLocation: [number, number] | null) {
     saveSearchArea,
     deleteSearchArea,
     editSearchArea,
-    generateSearchArea
+    generateSearchArea,
+    calculateBuzzRadius
   };
 }

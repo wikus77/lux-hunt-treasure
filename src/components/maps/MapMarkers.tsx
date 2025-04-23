@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import { GoogleMap, Marker, InfoWindow, Circle } from "@react-google-maps/api";
 import MapUserMarkers from "./MapUserMarkers";
@@ -20,10 +19,9 @@ export type SearchArea = {
   lng: number;
   radius: number;
   label: string;
-  editing?: boolean;
+  color?: string;
+  position?: { lat: number; lng: number };
   isAI?: boolean;
-  position: { lat: number; lng: number }; // Mandatory for compatibility
-  color?: string;      // Added for MapLogicProvider
 };
 
 type MapMarkersProps = {

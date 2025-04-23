@@ -48,7 +48,7 @@ const MapArea: React.FC<MapAreaProps> = ({
   currentLocation
 }) => {
   return (
-    <div className="bg-black/50 border border-projectx-deep-blue/40 rounded-xl overflow-hidden shadow-xl h-[70vh] md:h-[80vh]">
+    <div className="bg-black/50 border border-projectx-deep-blue/40 rounded-xl overflow-hidden shadow-xl h-full">
       <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} loadingElement={<div className="h-full flex items-center justify-center">Caricamento mappa...</div>}>
         <MapMarkers
           isLoaded={true}

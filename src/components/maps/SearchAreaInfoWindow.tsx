@@ -1,142 +1,123 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pencil, Trash2, Save, X, Circle } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 
-type Props = {
-  area: {
-    id: string;
-    lat: number;
-    lng: number;
-    radius: number;
-    label: string;
-    editing?: boolean;
-    isAI?: boolean;
-    confidence?: "alta" | "media" | "bassa";
-  };
+type SearchArea = {
+  id: string;
+  label: string;
+  radius: number;
+  isAI?: boolean;
+};
+
+type SearchAreaInfoWindowProps = {
+  area: SearchArea;
   setActiveSearchArea: (id: string | null) => void;
   saveSearchArea: (id: string, label: string, radius: number) => void;
   editSearchArea: (id: string) => void;
   deleteSearchArea: (id: string) => void;
 };
 
-const SearchAreaInfoWindow: React.FC<Props> = ({
+const SearchAreaInfoWindow: React.FC<SearchAreaInfoWindowProps> = ({
   area,
   setActiveSearchArea,
   saveSearchArea,
   editSearchArea,
-  deleteSearchArea
+  deleteSearchArea,
 }) => {
   const [label, setLabel] = useState(area.label);
   const [radius, setRadius] = useState(area.radius);
-  const labelRef = useRef<HTMLInputElement>(null);
-  const radiusRef = useRef<HTMLInputElement>(null);
-  
+  const [editing, setEditing] = useState(false);
+
   const handleSave = () => {
-    const newLabel = labelRef.current?.value || area.label;
-    const newRadius = radiusRef.current?.value ? 
-      parseInt(radiusRef.current.value, 10) : area.radius;
-    
-    saveSearchArea(area.id, newLabel, newRadius);
+    saveSearchArea(area.id, label, radius);
+    setEditing(false);
   };
-  
-  const getConfidenceColor = () => {
-    if (!area.confidence) return "text-gray-300";
-    
-    switch(area.confidence) {
-      case "alta": return "text-green-400";
-      case "media": return "text-yellow-400";
-      case "bassa": return "text-red-400";
-      default: return "text-gray-300";
+
+  const handleDelete = () => {
+    if (window.confirm("Sicuro di voler eliminare quest'area di ricerca?")) {
+      deleteSearchArea(area.id);
     }
   };
-  
+
   return (
-    <div className="bg-black/90 text-white p-3 rounded-md min-w-[260px]">
-      {area.editing ? (
-        <>
-          <div className="mb-3">
-            <label className="block text-xs mb-1">Nome area</label>
-            <Input
-              ref={labelRef}
-              type="text"
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              className="bg-gray-800 border-gray-700"
-            />
-          </div>
-          <div className="mb-3">
-            <label className="block text-xs mb-1">Raggio (metri)</label>
-            <Input
-              ref={radiusRef}
-              type="number"
-              min={1000}
-              max={1000000}
-              step={1000}
-              value={radius}
-              onChange={(e) => setRadius(parseInt(e.target.value, 10))}
-              className="bg-gray-800 border-gray-700"
-            />
-          </div>
-          <div className="flex justify-between">
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={() => setActiveSearchArea(null)}
-              className="text-gray-300"
-            >
-              <X size={16} className="mr-1" /> Annulla
-            </Button>
-            <Button 
-              size="sm"
-              onClick={handleSave}
-              className="bg-projectx-blue hover:bg-projectx-blue/80"
-            >
-              <Save size={16} className="mr-1" /> Salva
-            </Button>
-          </div>
-        </>
+    <div className="p-2 w-[240px]">
+      <div className="text-center mb-2">
+        {editing ? (
+          <Input
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            className="mb-2"
+          />
+        ) : (
+          <h3 className="font-medium">{area.label}</h3>
+        )}
+      </div>
+
+      {editing ? (
+        <div className="mb-3">
+          <p className="text-xs mb-1">Raggio: {(radius / 1000).toFixed(1)} km</p>
+          <Slider
+            value={[radius]}
+            min={100}
+            max={area.isAI ? 250000 : 10000}
+            step={100}
+            onValueChange={(v) => setRadius(v[0])}
+          />
+        </div>
       ) : (
-        <>
-          <h3 className="font-bold mb-1 flex items-center gap-2">
-            <Circle className="h-4 w-4 text-projectx-blue" />
-            {area.label}
-          </h3>
-          
-          <div className="text-xs text-gray-300 mb-3">
-            <div>Coordinate: {area.lat.toFixed(4)}, {area.lng.toFixed(4)}</div>
-            <div>Raggio: {(area.radius / 1000).toFixed(1)} km</div>
-            
-            {area.isAI && area.confidence && (
-              <div className="mt-1">
-                Confidenza: <span className={getConfidenceColor()}>
-                  {area.confidence.charAt(0).toUpperCase() + area.confidence.slice(1)}
-                </span>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex gap-2 justify-end">
+        <p className="text-sm mb-2">
+          Raggio: {(area.radius / 1000).toFixed(1)} km
+          {area.isAI && (
+            <span className="ml-1 text-xs text-projectx-blue">
+              (Buzz)
+            </span>
+          )}
+        </p>
+      )}
+
+      <div className="flex justify-between gap-2">
+        {editing ? (
+          <>
             <Button
               size="sm"
               variant="outline"
-              onClick={() => editSearchArea(area.id)}
-              className="text-xs"
+              className="flex-1"
+              onClick={() => setEditing(false)}
             >
-              <Pencil size={14} className="mr-1" /> Modifica
+              Annulla
+            </Button>
+            <Button 
+              size="sm" 
+              className="flex-1" 
+              onClick={handleSave}
+            >
+              Salva
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1"
+              onClick={() => setEditing(true)}
+            >
+              Modifica
             </Button>
             <Button
               size="sm"
               variant="destructive"
-              onClick={() => deleteSearchArea(area.id)}
-              className="text-xs"
+              className="flex-1"
+              onClick={handleDelete}
+              disabled={area.isAI && !editing} // Disable initial delete for AI areas
             >
-              <Trash2 size={14} className="mr-1" /> Elimina
+              Elimina
             </Button>
-          </div>
-        </>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

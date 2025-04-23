@@ -103,7 +103,7 @@ const MapSearchAreas: React.FC<Props> = ({
               scale: 0,
             }}
             label={{
-              text: area.label,
+              text: `${area.label} (${(area.radius/1000).toFixed(0)}km)`,
               color: "#FFFFFF",
               fontWeight: "bold",
               className: "map-label"

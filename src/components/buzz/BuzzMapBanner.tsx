@@ -1,103 +1,79 @@
 
 import React from "react";
-import { X } from "lucide-react";
+import { AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { MapPin } from "lucide-react";
+
+interface Area {
+  lat: number;
+  lng: number;
+  radius: number;
+  label: string;
+  confidence: string;
+}
 
 interface BuzzMapBannerProps {
   open: boolean;
-  area?: {
-    lat: number;
-    lng: number;
-    radius: number;
-    label: string;
-    confidence?: string;
-  } | null;
-  message?: string;
+  area: Area | null;
   onClose: () => void;
 }
 
-const BuzzMapBanner: React.FC<BuzzMapBannerProps> = ({ open, area, message, onClose }) => {
-  if (!open) return null;
+const BuzzMapBanner = ({ open, area, onClose }: BuzzMapBannerProps) => {
+  if (!open || !area) return null;
+
+  // Format coordinates to be more readable
+  const formatCoord = (coord: number) => coord.toFixed(4);
   
-  // If we have a message, show a simplified banner with just the message
-  if (message && !area) {
-    return (
-      <div
-        className={`
-          fixed top-6 left-1/2 z-[120] flex justify-center pointer-events-none
-          transform -translate-x-1/2 transition-all duration-500
-          ${open ? "translate-y-0 opacity-100" : "-translate-y-32 opacity-0"}
-        `}
-        style={{ width: "795px", maxWidth: "95vw" }} // Increased width by 15%
-      >
-        <div
-          className="relative pointer-events-auto
-          px-16 py-12 rounded-2xl border
-          shadow-[0_0_60px_rgba(30,174,219,0.4)]
-          glass-card
-          bg-gradient-to-br from-[#181641] via-[#7E69AB] to-[#1EAEDB]
-          border-[#9b87f5]/60
-          flex flex-col items-center animate-fade-in"
-          style={{ fontSize: "1.4rem", minWidth: "423px", minHeight: "159px", maxWidth: "100vw" }}
-        >
-          <button
-            className="absolute top-3 right-3 text-xl p-1 text-[#d946ef] hover:text-white focus:outline-none transition-all"
-            onClick={onClose}
-          >
-            <X className="w-8 h-8" />
-          </button>
-          <div className="mb-3 text-3xl font-extrabold bg-gradient-to-r from-[#d946ef] via-[#9b87f5] to-[#33c3f0] text-transparent bg-clip-text [text-fill-color:transparent] drop-shadow-lg flex items-center justify-center gap-2 tracking-tight">
-            Buzz Mappa
-          </div>
-          <div className="text-lg text-white/90 flex flex-col items-center text-center max-w-2xl">
-            {message}
-          </div>
-          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-40 h-3 bg-gradient-to-r from-[#d946ef]/70 via-[#8b5cf6]/70 to-[#33c3f0]/70 rounded-full blur-sm opacity-75"></div>
+  // Convert radius from meters to km for display
+  const radiusInKm = (area.radius / 1000).toFixed(1);
+
+  return (
+    <div className="fixed inset-x-0 top-[10%] mx-auto z-50 w-[95%] md:max-w-md bg-gradient-to-tr from-[#1eaedb]/80 via-[#9b87f5]/80 to-[#d946ef]/80 p-4 rounded-xl shadow-xl backdrop-blur-md border border-[#7209b7]/70 animate-fade-in-up">
+      <div className="flex gap-3 items-start">
+        <div className="bg-gradient-to-tr from-[#1eaedb] to-[#7209b7] rounded-full p-2">
+          <MapPin className="h-5 w-5 text-white" />
+        </div>
+        <div className="flex-1">
+          <AlertDialogTitle className="text-lg text-white mb-2">
+            {area.label}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-white/90">
+            <div className="space-y-2 text-sm">
+              <p>
+                <span className="opacity-70">Coordinate:</span>{" "}
+                <span className="font-mono">
+                  {formatCoord(area.lat)}, {formatCoord(area.lng)}
+                </span>
+              </p>
+              <p>
+                <span className="opacity-70">Raggio di ricerca:</span>{" "}
+                <span className="font-mono font-semibold">{radiusInKm} km</span>
+              </p>
+              <p>
+                <span className="opacity-70">Confidenza:</span>{" "}
+                <Badge 
+                  className={
+                    area.confidence === 'Alta' 
+                      ? 'bg-green-500/80' 
+                      : area.confidence === 'Media' 
+                        ? 'bg-yellow-500/80' 
+                        : 'bg-red-500/80'
+                  }
+                >
+                  {area.confidence}
+                </Badge>
+              </p>
+            </div>
+          </AlertDialogDescription>
         </div>
       </div>
-    );
-  }
-  
-  // Banner based on area
-  if (!area) return null;
-  
-  return (
-    <div
-      className={`
-        fixed top-6 left-1/2 z-[120] flex justify-center pointer-events-none
-        transform -translate-x-1/2 transition-all duration-500
-        ${open ? "translate-y-0 opacity-100" : "-translate-y-32 opacity-0"}
-      `}
-      style={{ width: "795px", maxWidth: "95vw" }} // Increased width by 15%
-    >
-      <div
-        className="relative pointer-events-auto
-        px-16 py-12 rounded-2xl border
-        shadow-[0_0_60px_rgba(30,174,219,0.4)]
-        glass-card
-        bg-gradient-to-br from-[#181641] via-[#7E69AB] to-[#1EAEDB]
-        border-[#9b87f5]/60
-        flex flex-col items-center animate-fade-in"
-        style={{ fontSize: "1.4rem", minWidth: "423px", minHeight: "159px", maxWidth: "100vw" }}
-      >
+      <div className="mt-4 flex justify-end">
         <button
-          className="absolute top-3 right-3 text-xl p-1 text-[#d946ef] hover:text-white focus:outline-none transition-all"
+          className="px-4 py-2 bg-white/20 hover:bg-white/30 transition-colors rounded text-sm text-white font-medium"
           onClick={onClose}
         >
-          <X className="w-8 h-8" />
+          Chiudi
         </button>
-        <div className="mb-3 text-3xl font-extrabold bg-gradient-to-r from-[#d946ef] via-[#9b87f5] to-[#33c3f0] text-transparent bg-clip-text [text-fill-color:transparent] drop-shadow-lg flex items-center justify-center gap-2 tracking-tight">
-          Area di Ricerca Buzz Generata!
-        </div>
-        <div className="text-lg text-white/90 flex flex-col items-center text-center max-w-2xl">
-          <div className="text-xl">
-            {area.label} <br />
-            <span className="font-bold text-xl">{"Raggio: "}{Math.round(area.radius/1000)} km</span>
-          </div>
-          <div className="text-[#ffcefe] text-sm mt-2">
-            {area.confidence && <>Confidence: <b>{area.confidence}</b></>}
-          </div>
-        </div>
-        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-40 h-3 bg-gradient-to-r from-[#d946ef]/70 via-[#8b5cf6]/70 to-[#33c3f0]/70 rounded-full blur-sm opacity-75"></div>
       </div>
     </div>
   );

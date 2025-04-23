@@ -13,10 +13,11 @@ export const useMapLogic = () => {
   const [showCluePopup, setShowCluePopup] = useState(false);
   const [clueMessage, setClueMessage] = useState("");
   const [loadError, setLoadError] = useState<Error | null>(null);
+  const [isMapBuzzActive, setIsMapBuzzActive] = useState(false);
   
   const location = useLocation();
   const currentLocation = useUserCurrentLocation();
-  const { unlockedClues } = useBuzzClues();
+  const { unlockedClues, incrementUnlockedCluesAndAddClue } = useBuzzClues();
 
   // Marker management
   const markerLogic = useMapMarkersLogic();
@@ -65,14 +66,15 @@ export const useMapLogic = () => {
             setShowCluePopup(true);
 
             if (location.state?.generateMapArea && currentLocation) {
-              const generatedArea = areaLogic.generateSearchArea();
-              // The error was here - don't use the return value in a condition
-              // Instead, just call the function
+              // Generate a new search area with dynamically calculated radius
+              const generatedAreaId = areaLogic.generateSearchArea();
               
-              // Center map on the new area
-              toast.success("Nuova area di ricerca generata!", {
-                description: "Controlla la mappa per vedere la nuova area di ricerca."
-              });
+              if (generatedAreaId) {
+                // Center map on the new area
+                toast.success("Nuova area di ricerca generata!", {
+                  description: "Controlla la mappa per vedere la nuova area di ricerca."
+                });
+              }
             }
           }, 1000);
         }
@@ -112,14 +114,28 @@ export const useMapLogic = () => {
   const handleMapDoubleClick = (_e: google.maps.MapMouseEvent) => { /* No logic yet */ };
 
   const handleBuzz = () => {
-    toast.info(`Buzz Mappa: ${buzzMapPrice.toFixed(2)}€`, {
-      description: "Funzionalità attualmente in sviluppo."
-    });
+    // In a real implementation this would trigger payment flow
+    // For now, we'll simulate successful payment
+    setIsMapBuzzActive(true);
+    
+    // Increment the unlocked clues counter
+    const newClueCount = incrementUnlockedCluesAndAddClue();
+    
+    // Generate a search area with the updated radius precision
+    const generatedAreaId = areaLogic.generateSearchArea();
+    
+    if (generatedAreaId) {
+      toast.success(`Buzz Mappa attivato: ${buzzMapPrice.toFixed(2)}€`, {
+        description: `Area generata con precisione di ${Math.round(areaLogic.calculateBuzzRadius()/1000)}km`
+      });
+    } else {
+      toast.error("Non è stato possibile generare l'area");
+    }
   };
 
   const handleHelp = () => {
     toast.info("Guida Mappa", {
-      description: "Utilizza i pulsanti in alto per aggiungere punti e aree di ricerca sulla mappa."
+      description: "Utilizza i pulsanti in alto per aggiungere punti e aree di ricerca sulla mappa. Il Buzz Mappa ti aiuta a restringere l'area di ricerca."
     });
   };
 
@@ -137,6 +153,7 @@ export const useMapLogic = () => {
     isAddingSearchArea: areaLogic.isAddingSearchArea,
     currentLocation,
     buzzMapPrice,
+    isMapBuzzActive,
     loadError,
     setShowCluePopup,
     setClueMessage,
