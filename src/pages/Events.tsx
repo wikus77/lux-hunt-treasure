@@ -5,8 +5,7 @@ import GenderFilter from "@/components/events/GenderFilter";
 import UpcomingEventsSection from "@/components/events/UpcomingEventsSection";
 import EventRules from "@/components/events/EventRules";
 import { upcomingEvents } from "@/data/eventData";
-
-// Abbiamo eliminato l'import di CurrentEventSection e currentEvent
+import CurrentEventSection from "@/components/events/CurrentEventSection"; // Reintrodotto
 
 const Events = () => {
   const [selectedGender, setSelectedGender] = useState<string>("all");
@@ -15,7 +14,10 @@ const Events = () => {
     selectedGender === 'all' || event.gender === selectedGender
   );
 
-  // Per aggiornare profileImage anche qui direttamente
+  // Individuiamo l'evento corrente per visualizzarlo nella sezione dedicata
+  const currentEvent = upcomingEvents.find(event => event.isCurrent) || upcomingEvents[0];
+
+  // Per aggiornare profileImage
   const [profileImage, setProfileImage] = useState<string | null>(null);
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
@@ -33,8 +35,11 @@ const Events = () => {
         onGenderChange={setSelectedGender}
       />
 
-      {/* La sezione UpcomingEventsSection ora è la prima */}
-      <UpcomingEventsSection events={filteredEvents} />
+      {/* Riaggiunta la sezione CurrentEventSection per prima */}
+      <CurrentEventSection currentEvent={currentEvent} />
+
+      {/* UpcomingEventsSection torna ad essere la seconda */}
+      <UpcomingEventsSection events={filteredEvents.filter(event => !event.isCurrent)} />
 
       <EventRules />
     </div>

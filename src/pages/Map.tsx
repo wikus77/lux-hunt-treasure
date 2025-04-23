@@ -3,7 +3,7 @@ import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MapPin, Circle, Info } from "lucide-react";
+import { MapPin, Circle, Info, Zap } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { LoadScript } from "@react-google-maps/api";
 import { MapMarkers, type MapMarker, type SearchArea } from "@/components/maps/MapMarkers";
@@ -11,6 +11,8 @@ import MapNoteList from "@/components/maps/MapNoteList";
 import EditModeToggle from "@/components/profile/EditModeToggle";
 import InteractiveGlobe from "@/components/maps/InteractiveGlobe";
 import { useUserLocationPermission } from "@/hooks/useUserLocationPermission";
+import { useNavigate } from "react-router-dom";
+import { clues } from "@/data/cluesData";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
 
@@ -30,6 +32,8 @@ const Map = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [mapView, setMapView] = useState<"apple" | "google" | "globe">("google");
   const [helpDialogOpen, setHelpDialogOpen] = useState(false);
+  const [buzzClickCount, setBuzzClickCount] = useState(0);
+  const navigate = useNavigate();
 
   const { 
     permission: geoPermission, 
@@ -145,6 +149,57 @@ const Map = () => {
     setActiveMarker(newMarker.id);
     toast.success("Segnaposto aggiunto! Aggiungi una nota ora.");
   };
+
+  const handleBuzzClick = () => {
+    localStorage.setItem('buzzRequest', 'map');
+    navigate("/payment-methods");
+  };
+
+  const processCluesAndAddSearchArea = () => {
+    const newClickCount = buzzClickCount + 1;
+    setBuzzClickCount(newClickCount);
+    
+    const baseRadius = 100000;
+    const reduction = Math.min(newClickCount - 1, 10) * 5000;
+    const radius = Math.max(baseRadius - reduction, 50000);
+    
+    const unlockedClues = clues.filter(clue => !clue.isLocked);
+    
+    if (unlockedClues.length === 0) {
+      toast.warning("Non hai ancora sbloccato indizi. Il raggio sarà più ampio.");
+    }
+    
+    const lat = currentLocation ? currentLocation[0] : DEFAULT_CENTER.lat;
+    const lng = currentLocation ? currentLocation[1] : DEFAULT_CENTER.lng;
+    
+    const randomOffset = (Math.random() - 0.5) * 0.05;
+    const newSearchArea: SearchArea = {
+      id: uuidv4(),
+      lat: lat + randomOffset,
+      lng: lng + randomOffset,
+      radius: radius,
+      label: `Area di ricerca AI (Tentativo ${newClickCount})`,
+      editing: false
+    };
+    
+    setSearchAreas(prev => [...prev, newSearchArea]);
+    setActiveSearchArea(newSearchArea.id);
+    setMapView("google");
+    
+    toast.success(`Area di ricerca aggiunta! Raggio: ${radius/1000}km`);
+  };
+
+  useEffect(() => {
+    const buzzRequest = localStorage.getItem('buzzRequest');
+    const paymentCompleted = localStorage.getItem('paymentCompleted');
+    
+    if (buzzRequest === 'map' && paymentCompleted === 'true') {
+      localStorage.removeItem('buzzRequest');
+      localStorage.removeItem('paymentCompleted');
+      
+      processCluesAndAddSearchArea();
+    }
+  }, []);
 
   const saveMarkerNote = (id: string, note: string) => {
     const updatedMarkers = markers.map(marker => 
@@ -324,6 +379,16 @@ const Map = () => {
               <Info className="h-4 w-4" />
               <span className="hidden sm:inline">Informazioni</span>
             </Button>
+            
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleBuzzClick}
+              className="flex gap-1 items-center bg-gradient-to-r from-[#4361ee] to-[#7209b7] animate-pulse"
+            >
+              <Zap className="h-4 w-4" />
+              <span className="sm:inline">Buzz €5,99</span>
+            </Button>
           </div>
           
           {isAddingMarker && (
@@ -442,7 +507,7 @@ const Map = () => {
                         <Circle className="w-5 h-5 flex-shrink-0 text-lime-400" />
                         <div className="flex-1">
                           <div className="text-sm font-medium">{area.label}</div>
-                          <div className="text-xs text-gray-400">Raggio: {area.radius}m</div>
+                          <div className="text-xs text-gray-400">Raggio: {area.radius/1000}km</div>
                         </div>
                       </div>
                     </div>
@@ -471,6 +536,10 @@ const Map = () => {
             <div>
               <h3 className="font-medium">Modificare o eliminare</h3>
               <p className="text-muted-foreground">Clicca su un punto o un'area per aprire le opzioni di modifica o eliminazione.</p>
+            </div>
+            <div>
+              <h3 className="font-medium">Funzione Buzz</h3>
+              <p className="text-muted-foreground">Il pulsante Buzz analizza tutti gli indizi raccolti e aggiunge un'area di ricerca ottimizzata sulla mappa. Ogni click successivo riduce il raggio di 5km (minimo 50km).</p>
             </div>
           </div>
         </DialogContent>

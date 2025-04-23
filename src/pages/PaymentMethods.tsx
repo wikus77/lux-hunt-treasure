@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ArrowLeft, CreditCard, AppleIcon, GlobeIcon } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -18,6 +19,7 @@ const PaymentMethods = () => {
   const [fadeOutExplosion, setFadeOutExplosion] = useState(false);
 
   const clue = location.state?.clue;
+  const isBuzzMapPayment = localStorage.getItem('buzzRequest') === 'map';
 
   const handleIndizioDopoPagamento = () => {
     if (clue) {
@@ -35,7 +37,18 @@ const PaymentMethods = () => {
   };
 
   const handlePaymentCompleted = () => {
-    if (clue) {
+    if (isBuzzMapPayment) {
+      // Se è un pagamento per il Buzz della mappa
+      localStorage.setItem('paymentCompleted', 'true');
+      toast({
+        title: "Pagamento Completato",
+        description: "Analisi degli indizi in corso...",
+      });
+      setTimeout(() => {
+        navigate("/map");
+      }, 1200);
+    } else if (clue) {
+      // Se è un pagamento per sbloccare un indizio
       setShowExplosion(true);
       setFadeOutExplosion(false);
 
@@ -53,6 +66,7 @@ const PaymentMethods = () => {
         }, 1400);
       }, 1700);
     } else {
+      // Pagamento generico per salvare metodo di pagamento
       toast({
         title: "Pagamento Completato",
         description: "Il tuo metodo di pagamento è stato salvato con successo.",
@@ -108,6 +122,16 @@ const PaymentMethods = () => {
 
       <div className="p-4">
         <div className="glass-card mb-6">
+          {isBuzzMapPayment && (
+            <div className="mb-4 p-3 bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 rounded-md border border-[#7209b7]/40 text-center">
+              <h2 className="text-lg font-bold mb-2">Funzione Buzz per la Mappa</h2>
+              <p className="text-sm text-white/80">
+                Stai per sbloccare la funzionalità di analisi AI degli indizi che ti aiuterà a 
+                trovare le aree più probabili sulla mappa. Costo: €5,99
+              </p>
+            </div>
+          )}
+          
           <div className="flex justify-between mb-6">
             <button 
               className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'card' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
