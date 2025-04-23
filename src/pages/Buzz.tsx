@@ -27,11 +27,14 @@ const Buzz = () => {
     lastVagueClue,
     setLastVagueClue,
     incrementUnlockedCluesAndAddClue,
+    resetUnlockedClues,
     getNextVagueClue
   } = useBuzzClues();
 
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
+    // Optional: Reset clues on page load or as needed
+    resetUnlockedClues();
   }, []);
 
   useEffect(() => {
@@ -119,4 +122,5 @@ const Buzz = () => {
     </div>
   );
 };
+
 export default Buzz;
