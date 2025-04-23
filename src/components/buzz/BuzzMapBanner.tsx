@@ -4,7 +4,8 @@ import { X } from "lucide-react";
 
 interface BuzzMapBannerProps {
   open: boolean;
-  area: {
+  message?: string;
+  area?: {
     lat: number;
     lng: number;
     radius: number;
@@ -14,8 +15,9 @@ interface BuzzMapBannerProps {
   onClose: () => void;
 }
 
-const BuzzMapBanner: React.FC<BuzzMapBannerProps> = ({ open, area, onClose }) => {
-  if (!open || !area) return null;
+const BuzzMapBanner: React.FC<BuzzMapBannerProps> = ({ open, area, message, onClose }) => {
+  if (!open || (!area && !message)) return null;
+  
   return (
     <div
       className={`
@@ -46,16 +48,20 @@ const BuzzMapBanner: React.FC<BuzzMapBannerProps> = ({ open, area, onClose }) =>
           <X className="w-7 h-7" />
         </button>
         <div className="mb-3 text-2xl font-extrabold bg-gradient-to-r from-[#d946ef] via-[#9b87f5] to-[#33c3f0] text-transparent bg-clip-text [text-fill-color:transparent] drop-shadow-lg flex items-center justify-center gap-2 tracking-tight">
-          Area di Ricerca Buzz Generata!
+          {area ? "Area di Ricerca Buzz Generata!" : "Indizio Sbloccato!"}
         </div>
         <div className="text-md text-white/90 flex flex-col items-center text-center max-w-2xl">
-          <div>
-            {area.label} <br />
-            <span className="font-bold">{"Raggio: "}{Math.round(area.radius/1000)} km</span>
-          </div>
-          <div className="text-[#ffcefe] text-xs mt-2">
-            {area.confidence && <>Confidence: <b>{area.confidence}</b></>}
-          </div>
+          {area ? (
+            <div>
+              {area.label} <br />
+              <span className="font-bold">{"Raggio: "}{Math.round(area.radius/1000)} km</span>
+              <div className="text-[#ffcefe] text-xs mt-2">
+                {area.confidence && <>Confidence: <b>{area.confidence}</b></>}
+              </div>
+            </div>
+          ) : (
+            <div>{message}</div>
+          )}
         </div>
         <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-32 h-2 bg-gradient-to-r from-[#d946ef]/70 via-[#8b5cf6]/70 to-[#33c3f0]/70 rounded-full blur-sm opacity-75"></div>
       </div>

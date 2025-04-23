@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import React, { useState } from "react";
 
 interface CardPaymentFormProps {
-  onSubmit: (card: { cardNumber: string; cardholderName: string; expiryDate: string; cvv: string }) => void;
+  onSubmit?: (card: { cardNumber: string; cardholderName: string; expiryDate: string; cvv: string }) => void;
+  onSuccess?: () => void;
 }
 
-const CardPaymentForm: React.FC<CardPaymentFormProps> = ({ onSubmit }) => {
+const CardPaymentForm: React.FC<CardPaymentFormProps> = ({ onSubmit, onSuccess }) => {
   const [cardDetails, setCardDetails] = useState({
     cardNumber: "",
     cardholderName: "",
@@ -25,7 +26,12 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({ onSubmit }) => {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(cardDetails);
+    if (onSubmit) {
+      onSubmit(cardDetails);
+    }
+    if (onSuccess) {
+      onSuccess();
+    }
   };
 
   return (
@@ -97,4 +103,3 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({ onSubmit }) => {
 };
 
 export default CardPaymentForm;
-
