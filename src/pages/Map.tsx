@@ -158,20 +158,20 @@ const Map = () => {
   const processCluesAndAddSearchArea = () => {
     const newClickCount = buzzClickCount + 1;
     setBuzzClickCount(newClickCount);
-    
+
     const baseRadius = 100000;
     const reduction = Math.min(newClickCount - 1, 10) * 5000;
     const radius = Math.max(baseRadius - reduction, 50000);
-    
+
     const unlockedClues = clues.filter(clue => !clue.isLocked);
-    
+
     if (unlockedClues.length === 0) {
       toast.warning("Non hai ancora sbloccato indizi. Il raggio sarà più ampio.");
     }
-    
+
     const lat = currentLocation ? currentLocation[0] : DEFAULT_CENTER.lat;
     const lng = currentLocation ? currentLocation[1] : DEFAULT_CENTER.lng;
-    
+
     const randomOffset = (Math.random() - 0.5) * 0.05;
     const newSearchArea: SearchArea = {
       id: uuidv4(),
@@ -179,13 +179,14 @@ const Map = () => {
       lng: lng + randomOffset,
       radius: radius,
       label: `Area di ricerca AI (Tentativo ${newClickCount})`,
-      editing: false
+      editing: false,
+      isAI: true,
     };
-    
+
     setSearchAreas(prev => [...prev, newSearchArea]);
     setActiveSearchArea(newSearchArea.id);
     setMapView("google");
-    
+
     toast.success(`Area di ricerca aggiunta! Raggio: ${radius/1000}km`);
   };
 
@@ -249,6 +250,10 @@ const Map = () => {
   };
 
   const deleteSearchArea = (id: string) => {
+    const areaToDelete = searchAreas.find(area => area.id === id);
+    if (areaToDelete && areaToDelete.isAI) {
+      return;
+    }
     const updatedSearchAreas = searchAreas.filter(area => area.id !== id);
     setSearchAreas(updatedSearchAreas);
     setActiveSearchArea(null);
@@ -274,15 +279,17 @@ const Map = () => {
   };
 
   const clearAllSearchAreas = () => {
-    if (searchAreas.length === 0) {
+    const nonAIareas = searchAreas.filter(area => !(area as any).isAI);
+    if (nonAIareas.length === 0) {
       toast.info("Non ci sono aree di ricerca da cancellare.");
       return;
     }
-    
+
     if (confirm("Sei sicuro di voler cancellare tutte le aree di ricerca?")) {
-      setSearchAreas([]);
-      localStorage.removeItem('mapSearchAreas');
-      toast.success("Tutte le aree di ricerca sono state eliminate.");
+      const onlyAIAreas = searchAreas.filter(area => (area as any).isAI);
+      setSearchAreas(onlyAIAreas);
+      localStorage.setItem('mapSearchAreas', JSON.stringify(onlyAIAreas));
+      toast.success("Tutte le aree di ricerca sono state eliminate (eccetto quelle AI).");
     }
   };
 
