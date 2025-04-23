@@ -1,5 +1,5 @@
 
-import { MapPin, Car, Image, Settings } from "lucide-react";
+import { MapPin, Car, Image, Settings, Folder } from "lucide-react";
 
 export const CATEGORY_STYLES: Record<
   string,
