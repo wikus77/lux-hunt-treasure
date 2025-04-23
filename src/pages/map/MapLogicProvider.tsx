@@ -6,6 +6,7 @@ import MapHeader from "./MapHeader";
 import LoadingScreen from "./LoadingScreen";
 import BuzzMapBanner from "@/components/buzz/BuzzMapBanner";
 import { toast } from "@/components/ui/sonner";
+import { v4 as uuidv4 } from 'uuid';
 
 const MapLogicProvider = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -80,7 +81,17 @@ const MapLogicProvider = () => {
     };
     
     setSearchArea(newArea);
-    // Qui potresti anche aggiungere l'area a searchAreas se desideri accumularle
+    
+    // Aggiungi l'area anche all'elenco delle aree di ricerca
+    const areaId = uuidv4();
+    setSearchAreas(prevAreas => [...prevAreas, {
+      id: areaId,
+      lat: newArea.lat,
+      lng: newArea.lng,
+      radius: newArea.radius,
+      label: newArea.label,
+      isAI: true // Flag per indicare che è stata generata da AI
+    }]);
   };
 
   const handleMapReady = () => {
@@ -114,41 +125,53 @@ const MapLogicProvider = () => {
         fromBuzz: true,
         fromRegularBuzz: false,
         mapBuzz: true,
-        generateMapArea: true
+        generateMapArea: true,
+        clue: {
+          description: "Hai sbloccato un indizio per l'area di ricerca!"
+        }
       }
     });
   };
 
   const handleMapClick = (e) => {
     // Gestire il click sulla mappa
+    console.log("Map clicked", e.latLng.lat(), e.latLng.lng());
   };
 
   const handleMapDoubleClick = (e) => {
     // Gestire il doppio click sulla mappa
+    console.log("Map double clicked", e.latLng.lat(), e.latLng.lng());
   };
 
   const saveMarkerNote = (id, note) => {
     // Salvare la nota del marker
+    console.log("Saving note for marker", id, note);
   };
 
   const saveSearchArea = (id, label, radius) => {
     // Salvare l'area di ricerca
+    console.log("Saving search area", id, label, radius);
   };
 
   const editMarker = (id) => {
     // Modificare il marker
+    console.log("Editing marker", id);
   };
 
   const editSearchArea = (id) => {
     // Modificare l'area di ricerca
+    console.log("Editing search area", id);
   };
 
   const deleteMarker = (id) => {
     // Eliminare il marker
+    console.log("Deleting marker", id);
   };
 
   const deleteSearchArea = (id) => {
     // Eliminare l'area di ricerca
+    setSearchAreas(prevAreas => prevAreas.filter(area => area.id !== id));
+    console.log("Deleted search area", id);
   };
 
   if (isLoading) {
