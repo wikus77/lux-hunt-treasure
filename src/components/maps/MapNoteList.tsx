@@ -15,22 +15,18 @@ type MapNoteListProps = {
   onEditNote: (note: LocalNote) => void;
 };
 
-const importanceColors: Record<Importance, string> = {
-  high: "#ea384c",
-  medium: "#F97316",
-  low: "#22c55e"
+// Updated colors with gradient effects
+const importanceColors: Record<Importance, { from: string; to: string }> = {
+  high: { from: "#FF4D6B", to: "#FF193C" },
+  medium: { from: "#FF9466", to: "#FF6B1E" },
+  low: { from: "#4ADE80", to: "#22c55e" }
 };
 
 const MapNoteList = ({ notes, toggleImportance, onEditNote }: MapNoteListProps) => {
-  // Sort notes by importance
   const sortedNotes = [...notes].sort((a, b) => {
     const importanceOrder = { high: 0, medium: 1, low: 2 };
     return importanceOrder[a.importance] - importanceOrder[b.importance];
   });
-
-  const handleLongPress = (note: LocalNote) => {
-    onEditNote(note);
-  };
 
   return (
     <div className="mt-6">
@@ -44,7 +40,7 @@ const MapNoteList = ({ notes, toggleImportance, onEditNote }: MapNoteListProps) 
             <div
               key={`note-${note.id}`}
               className="p-3 rounded-md bg-projectx-deep-blue/40 backdrop-blur-sm flex gap-2 items-center cursor-pointer"
-              onClick={() => handleLongPress(note)}
+              onClick={() => onEditNote(note)}
             >
               <button
                 aria-label="Cambia importanza"
@@ -57,10 +53,11 @@ const MapNoteList = ({ notes, toggleImportance, onEditNote }: MapNoteListProps) 
                 type="button"
               >
                 <CircleDot
-                  className="w-4 h-4"
+                  className="w-3 h-3"
                   style={{
-                    color: importanceColors[note.importance],
-                    fill: importanceColors[note.importance]
+                    color: importanceColors[note.importance].to,
+                    fill: importanceColors[note.importance].from,
+                    filter: 'drop-shadow(0 0 2px rgba(255,255,255,0.3))'
                   }}
                 />
               </button>

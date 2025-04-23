@@ -1,4 +1,3 @@
-
 import React from "react";
 import MapArea from "./MapArea";
 import MapHeader from "./MapHeader";
@@ -78,8 +77,8 @@ const MapLogicProvider = () => {
         />
       )}
 
-      {/* Mappa sopra */}
-      <div className="w-full">
+      {/* Mappa sopra - Updated container sizing */}
+      <div className="w-full h-[65vh] md:h-[70vh]">
         <MapArea 
           onMapReady={handleMapReady}
           markers={markers}
@@ -104,15 +103,10 @@ const MapLogicProvider = () => {
 
       {/* Notes sotto la mappa, sempre in colonna unica */}
       <div className="w-full bg-black/50 rounded-xl p-4 border border-projectx-deep-blue/40 shadow-xl">
-        <NotesSection 
-          markers={markers} 
-          setActiveMarker={setActiveMarker} 
-          clearAllMarkers={clearAllMarkers}
-        />
+        <NotesSection />
       </div>
     </div>
   );
 };
 
 export default MapLogicProvider;
-
