@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 
 interface LoginModalProps {
   open: boolean;
@@ -25,7 +25,6 @@ export function LoginModal({ open, onClose, onSuccess }: LoginModalProps) {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,9 +33,7 @@ export function LoginModal({ open, onClose, onSuccess }: LoginModalProps) {
     try {
       // Basic validation
       if (!email || !password) {
-        toast({
-          variant: "destructive",
-          title: "Errore",
+        toast.error("Errore", {
           description: "Completa tutti i campi per continuare."
         });
         setIsLoading(false);
@@ -47,9 +44,8 @@ export function LoginModal({ open, onClose, onSuccess }: LoginModalProps) {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       if (email === "demo@example.com" && password === "password") {
-        toast({
-          title: "Accesso effettuato",
-          description: "Benvenuto nel tuo account.",
+        toast.success("Accesso effettuato", {
+          description: "Benvenuto nel tuo account."
         });
         // Store login state
         localStorage.setItem("isLoggedIn", "true");
@@ -57,17 +53,13 @@ export function LoginModal({ open, onClose, onSuccess }: LoginModalProps) {
         
         onSuccess();
       } else {
-        toast({
-          variant: "destructive",
-          title: "Errore di accesso",
-          description: "Email o password non validi. Riprova.",
+        toast.error("Errore di accesso", {
+          description: "Email o password non validi. Riprova."
         });
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Errore di accesso",
-        description: "Si è verificato un errore. Riprova più tardi.",
+      toast.error("Errore di accesso", {
+        description: "Si è verificato un errore. Riprova più tardi."
       });
     } finally {
       setIsLoading(false);
