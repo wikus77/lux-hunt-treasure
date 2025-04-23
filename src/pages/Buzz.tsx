@@ -41,32 +41,23 @@ const Buzz = () => {
   const { initializeSound } = useBuzzSound();
   const explosionTimerRef = useRef<number | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const locationProcessedRef = useRef(false);
 
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
   }, []);
 
   useEffect(() => {
-    const soundPreference = localStorage.getItem('buzzSound') || 'default';
-    const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
-    initializeSound(soundPreference, volume);
-  }, [initializeSound]);
-
-  useEffect(() => {
-    // Carica il numero di indizi sbloccati
     const savedClues = localStorage.getItem('unlockedCluesCount');
     if (savedClues) {
       setUnlockedClues(parseInt(savedClues));
     }
-  }, []);
 
-  // Gestisci il completamento del pagamento in un effect separato con un ref per evitare loop
-  useEffect(() => {
-    // Verifica che non abbiamo già elaborato questo location state
-    if (location.state?.paymentCompleted && location.state?.fromRegularBuzz === true && !locationProcessedRef.current) {
-      locationProcessedRef.current = true; // Marca come elaborato
-      
+    const soundPreference = localStorage.getItem('buzzSound') || 'default';
+    const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
+    initializeSound(soundPreference, volume);
+
+    // Verifica se il pagamento è stato completato e proviene dalla pagina standard (non mappa)
+    if (location.state?.paymentCompleted && location.state?.fromRegularBuzz === true) {
       savePaymentMethod();
       incrementUnlockedCluesAndAddClue();
       setShowExplosion(true);
@@ -81,7 +72,8 @@ const Buzz = () => {
         }
       };
     }
-  }, [location.state, savePaymentMethod]);
+    // eslint-disable-next-line
+  }, [location.state, savePaymentMethod, navigate, initializeSound]);
 
   const handleExplosionFadeOutComplete = () => {
     setShowExplosion(false);

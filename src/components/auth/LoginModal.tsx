@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,8 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
-import { toast } from "sonner";
 
 interface LoginModalProps {
   open: boolean;
@@ -25,41 +24,34 @@ export function LoginModal({ open, onClose, onSuccess }: LoginModalProps) {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Basic validation
-      if (!email || !password) {
-        toast.error("Errore", {
-          description: "Completa tutti i campi per continuare."
-        });
-        setIsLoading(false);
-        return;
-      }
-
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       if (email === "demo@example.com" && password === "password") {
-        toast.success("Accesso effettuato", {
-          description: "Benvenuto nel tuo account."
+        toast({
+          title: "Accesso effettuato",
+          description: "Benvenuto nel tuo account.",
         });
-        // Store login state
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("userEmail", email);
-        
         onSuccess();
       } else {
-        toast.error("Errore di accesso", {
-          description: "Email o password non validi. Riprova."
+        toast({
+          variant: "destructive",
+          title: "Errore di accesso",
+          description: "Email o password non validi. Riprova.",
         });
       }
     } catch (error) {
-      toast.error("Errore di accesso", {
-        description: "Si è verificato un errore. Riprova più tardi."
+      toast({
+        variant: "destructive",
+        title: "Errore di accesso",
+        description: "Si è verificato un errore. Riprova più tardi.",
       });
     } finally {
       setIsLoading(false);
@@ -91,7 +83,6 @@ export function LoginModal({ open, onClose, onSuccess }: LoginModalProps) {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="text-white"
-                disabled={isLoading}
               />
             </div>
             <div className="grid gap-2">
@@ -104,13 +95,11 @@ export function LoginModal({ open, onClose, onSuccess }: LoginModalProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="text-white pr-10"
-                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                   onClick={togglePasswordVisibility}
-                  disabled={isLoading}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />

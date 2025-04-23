@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from "react";
 import { Check, Badge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/sonner";
 
 interface SubscriptionFeature {
@@ -37,20 +37,7 @@ const SubscriptionCard = ({
     if (savedPlan) {
       setCurrentPlan(savedPlan);
     }
-    
-    // Listen for storage changes to update the UI
-    const handleStorageChange = () => {
-      const updatedPlan = localStorage.getItem("subscription_plan");
-      if (updatedPlan && updatedPlan !== currentPlan) {
-        setCurrentPlan(updatedPlan);
-      }
-    };
-    
-    window.addEventListener("storage", handleStorageChange);
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, [currentPlan]);
+  }, []);
   
   const isPlanActive = currentPlan === type;
   const buttonText = isPlanActive ? "Piano Attuale" : ctaText;
@@ -62,18 +49,18 @@ const SubscriptionCard = ({
     }
     
     if (type === "Base") {
-      // For Base plan, update directly without payment
+      // Per il piano Base, aggiorniamo direttamente senza richiedere pagamento
       localStorage.setItem("subscription_plan", "Base");
       setCurrentPlan("Base");
       toast.success("Piano Base attivato", {
         description: "Il tuo piano è stato aggiornato a Base"
       });
-      // Force localStorage event to trigger event listeners
+      // Forziamo l'aggiornamento della localStorage per attivare l'evento
       window.dispatchEvent(new Event('storage'));
       return;
     }
     
-    // For other plans, go to payment page
+    // Per gli altri piani, andiamo alla pagina di pagamento
     navigate(`/payment/${type.toLowerCase()}`);
   };
   

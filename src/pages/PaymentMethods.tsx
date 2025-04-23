@@ -4,6 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/sonner";
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import CardPaymentForm from '@/components/payments/CardPaymentForm';
+import ApplePayBox from '@/components/payments/ApplePayBox';
+import GooglePayBox from '@/components/payments/GooglePayBox';
 
 const PaymentMethods = () => {
   const location = useLocation();
@@ -12,7 +14,7 @@ const PaymentMethods = () => {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [backPath, setBackPath] = useState('/settings');
   
-  // Extract parameters from location state
+  // Estrai parametri dalla location state
   const fromBuzz = location.state?.fromBuzz || false;
   const fromRegularBuzz = location.state?.fromRegularBuzz || false;
   const clue = location.state?.clue;
@@ -21,7 +23,7 @@ const PaymentMethods = () => {
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
     
-    // Determine return path
+    // Determina il percorso di ritorno
     if (fromBuzz) {
       setBackPath('/buzz');
     }
@@ -30,7 +32,7 @@ const PaymentMethods = () => {
   const handlePaymentSuccess = () => {
     setPaymentProcessing(true);
     
-    // Simulate payment processing
+    // Simula elaborazione pagamento
     setTimeout(() => {
       localStorage.setItem('hasPaymentMethod', 'true');
       
@@ -38,10 +40,10 @@ const PaymentMethods = () => {
         description: "Il tuo metodo di pagamento è stato registrato.",
       });
       
-      // Redirect based on source
+      // Reindirizza in base alla fonte
       if (fromBuzz) {
         if (fromRegularBuzz) {
-          // If from standard Buzz section
+          // Se proviene dalla sezione Buzz standard
           navigate('/buzz', {
             replace: true,
             state: { 
@@ -51,7 +53,7 @@ const PaymentMethods = () => {
             }
           });
         } else {
-          // If from interactive map
+          // Se proviene dalla mappa interattiva
           navigate('/map', {
             replace: true,
             state: { 
@@ -92,7 +94,23 @@ const PaymentMethods = () => {
               <p>Elaborazione del pagamento in corso...</p>
             </div>
           ) : (
-            <CardPaymentForm onSuccess={handlePaymentSuccess} />
+            <>
+              <CardPaymentForm onSuccess={handlePaymentSuccess} />
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-800"></div>
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="px-2 bg-black text-muted-foreground">
+                    oppure paga con
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <ApplePayBox onSuccess={handlePaymentSuccess} />
+                <GooglePayBox onSuccess={handlePaymentSuccess} />
+              </div>
+            </>
           )}
         </div>
       </div>

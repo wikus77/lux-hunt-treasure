@@ -1,11 +1,10 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { LoadScript } from "@react-google-maps/api";
 import { MapMarkers, type MapMarker, type SearchArea } from "@/components/maps/MapMarkers";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
 const DEFAULT_CENTER = { lat: 45.4642, lng: 9.19 };
-const mapLibraries: ["places"] = ["places"];
 
 type MapAreaProps = {
   markers: MapMarker[];
@@ -25,17 +24,9 @@ type MapAreaProps = {
   deleteMarker: (id: string) => void;
   deleteSearchArea: (id: string) => void;
   currentLocation: [number, number] | null;
-  onMapReady?: () => void;
 };
 
 const MapArea: React.FC<MapAreaProps> = (props) => {
-  // Chiamiamo onMapReady quando il componente è montato
-  useEffect(() => {
-    if (props.onMapReady) {
-      props.onMapReady();
-    }
-  }, [props.onMapReady]);
-
   return (
     <div className="bg-black/50 border border-projectx-deep-blue/40 rounded-xl overflow-hidden shadow-xl p-4">
       <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} loadingElement={<div>Caricamento mappa...</div>}>

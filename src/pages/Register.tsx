@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { useToast } from "@/components/ui/use-toast";
 import AgeVerification from "@/components/auth/AgeVerification";
 
 const Register = () => {
@@ -13,8 +13,8 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleAgeVerified = () => {
     setStep('registration');
@@ -22,54 +22,36 @@ const Register = () => {
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    // Basic validations
+    
+    // Validazioni base
     if (!email || !password || !confirmPassword || !fullName) {
-      toast.error("Errore", {
+      toast({
+        variant: "destructive",
+        title: "Errore",
         description: "Completa tutti i campi per continuare."
       });
-      setIsSubmitting(false);
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error("Errore", {
+      toast({
+        variant: "destructive",
+        title: "Errore",
         description: "Le password non corrispondono."
       });
-      setIsSubmitting(false);
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("Errore", {
-        description: "La password deve contenere almeno 6 caratteri."
-      });
-      setIsSubmitting(false);
-      return;
-    }
+    // Simuliamo una registrazione riuscita
+    toast({
+      title: "Registrazione completata!",
+      description: "Il tuo account è stato creato con successo."
+    });
 
-    try {
-      // Store dummy user data for demonstration
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userEmail", email);
-      localStorage.setItem("userName", fullName);
-
-      // Simulate a successful registration
-      toast.success("Registrazione completata!", {
-        description: "Il tuo account è stato creato con successo."
-      });
-
-      // Redirect to home page
-      setTimeout(() => {
-        navigate("/home");
-      }, 1500);
-    } catch (error) {
-      toast.error("Errore", {
-        description: "Si è verificato un errore durante la registrazione."
-      });
-      setIsSubmitting(false);
-    }
+    // Redirect alla home page
+    setTimeout(() => {
+      navigate("/home");
+    }, 1500);
   };
 
   return (
@@ -100,10 +82,9 @@ const Register = () => {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   className="mt-1"
-                  disabled={isSubmitting}
                 />
               </div>
-
+              
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -113,10 +94,9 @@ const Register = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="mt-1"
-                  disabled={isSubmitting}
                 />
               </div>
-
+              
               <div>
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -126,10 +106,9 @@ const Register = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="mt-1"
-                  disabled={isSubmitting}
                 />
               </div>
-
+              
               <div>
                 <Label htmlFor="confirmPassword">Conferma Password</Label>
                 <Input
@@ -139,25 +118,23 @@ const Register = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="mt-1"
-                  disabled={isSubmitting}
                 />
               </div>
             </div>
-
+            
             <Button 
               type="submit" 
               className="w-full mt-6 bg-gradient-to-r from-projectx-blue to-projectx-pink"
-              disabled={isSubmitting}
             >
-              {isSubmitting ? "Registrazione in corso..." : "Registrati"}
+              Registrati
             </Button>
-
+            
             <div className="mt-4 text-center text-sm text-muted-foreground">
               Registrandoti, accetti i nostri Termini e Condizioni e la nostra Informativa sulla Privacy.
             </div>
           </form>
         )}
-
+        
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
             Hai già un account?{" "}
@@ -165,7 +142,6 @@ const Register = () => {
               variant="link" 
               className="text-projectx-neon-blue p-0 hover:underline"
               onClick={() => navigate("/login")}
-              disabled={isSubmitting}
             >
               Accedi
             </Button>

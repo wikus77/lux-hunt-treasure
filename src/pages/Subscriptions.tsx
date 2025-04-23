@@ -9,40 +9,28 @@ const Subscriptions = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   
   useEffect(() => {
-    // Load profile image
     setProfileImage(localStorage.getItem('profileImage'));
     
-    // Load current subscription
+    // Carica l'abbonamento corrente
     const currentPlan = localStorage.getItem('subscription_plan');
     if (currentPlan) {
       setSelected(currentPlan);
     }
     
-    // Listen for subscription changes
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'subscription_plan') {
-        const updatedPlan = localStorage.getItem('subscription_plan');
-        if (updatedPlan) {
-          setSelected(updatedPlan);
-        }
+    // Ascolta cambiamenti nell'abbonamento
+    const handleStorageChange = () => {
+      const updatedPlan = localStorage.getItem('subscription_plan');
+      if (updatedPlan) {
+        setSelected(updatedPlan);
       }
     };
     
     window.addEventListener('storage', handleStorageChange);
     
-    // Also add a manual storage event listener for local updates
-    const checkInterval = setInterval(() => {
-      const savedPlan = localStorage.getItem('subscription_plan');
-      if (savedPlan && savedPlan !== selected) {
-        setSelected(savedPlan);
-      }
-    }, 2000);
-    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(checkInterval);
     };
-  }, [selected]);
+  }, []);
 
   const getSubscriptionFeatures = (type: string) => {
     switch (type) {

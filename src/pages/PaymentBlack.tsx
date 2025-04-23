@@ -5,16 +5,17 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import CardPaymentForm from "@/components/payments/CardPaymentForm";
+import ApplePayBox from "@/components/payments/ApplePayBox";
+import GooglePayBox from "@/components/payments/GooglePayBox";
 import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
 
 const PaymentBlack = () => {
   const navigate = useNavigate();
+  const [paymentMethod, setPaymentMethod] = useState<string>("card");
   const [showExplosion, setShowExplosion] = useState(false);
   const [fadeOutExplosion, setFadeOutExplosion] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const handlePaymentCompleted = () => {
-    setIsProcessing(true);
     setShowExplosion(true);
     setFadeOutExplosion(false);
 
@@ -27,8 +28,8 @@ const PaymentBlack = () => {
           description: "Il tuo abbonamento Black è stato attivato con successo!",
         });
         localStorage.setItem("subscription_plan", "Black");
+        // Forziamo l'aggiornamento della localStorage per attivare l'evento
         window.dispatchEvent(new Event('storage'));
-        setIsProcessing(false);
         navigate("/subscriptions");
       }, 1400);
     }, 1700);
@@ -36,6 +37,24 @@ const PaymentBlack = () => {
 
   const handleCardSubmit = () => {
     handlePaymentCompleted();
+  };
+
+  const handleApplePay = () => {
+    toast.success("Apple Pay", {
+      description: "Pagamento con Apple Pay in elaborazione..."
+    });
+    setTimeout(() => {
+      handlePaymentCompleted();
+    }, 2000);
+  };
+
+  const handleGooglePay = () => {
+    toast.success("Google Pay", {
+      description: "Pagamento con Google Pay in elaborazione..."
+    });
+    setTimeout(() => {
+      handlePaymentCompleted();
+    }, 2000);
   };
 
   return (
@@ -51,7 +70,6 @@ const PaymentBlack = () => {
           size="icon" 
           className="mr-2"
           onClick={() => navigate(-1)}
-          disabled={isProcessing}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -83,22 +101,37 @@ const PaymentBlack = () => {
             </ul>
           </div>
 
-          <div className="mb-6">
+          <div className="flex justify-between mb-6">
             <button 
-              className="flex flex-col items-center justify-center p-4 rounded-md w-full bg-projectx-deep-blue"
-              disabled
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'card' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              onClick={() => setPaymentMethod('card')}
             >
               <span className="text-sm">Carta</span>
             </button>
+            
+            <button 
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              onClick={() => setPaymentMethod('apple')}
+            >
+              <span className="text-sm">Apple Pay</span>
+            </button>
+            
+            <button 
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              onClick={() => setPaymentMethod('google')}
+            >
+              <span className="text-sm">Google Pay</span>
+            </button>
           </div>
 
-          {isProcessing ? (
-            <div className="bg-black/20 p-6 rounded-lg text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-projectx-pink mx-auto mb-4"></div>
-              <p>Elaborazione del pagamento in corso...</p>
-            </div>
-          ) : (
-            <CardPaymentForm onSuccess={handleCardSubmit} />
+          {paymentMethod === "card" && (
+            <CardPaymentForm onSubmit={handleCardSubmit} />
+          )}
+          {paymentMethod === "apple" && (
+            <ApplePayBox onApplePay={handleApplePay} />
+          )}
+          {paymentMethod === "google" && (
+            <GooglePayBox onGooglePay={handleGooglePay} />
           )}
         </div>
       </div>

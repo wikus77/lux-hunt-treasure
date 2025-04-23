@@ -4,47 +4,38 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { useToast } from "@/components/ui/use-toast";
+import { LoginModal } from "@/components/auth/LoginModal";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    // Basic validations
+    // Validazioni base
     if (!email || !password) {
-      toast.error("Errore", {
+      toast({
+        variant: "destructive",
+        title: "Errore",
         description: "Completa tutti i campi per continuare."
       });
-      setIsSubmitting(false);
       return;
     }
 
-    // Simulate a successful login
-    try {
-      // Storing a dummy user state in localStorage for demonstration
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userEmail", email);
+    // Simuliamo un login riuscito
+    toast({
+      title: "Login completato!",
+      description: "Accesso effettuato con successo."
+    });
 
-      toast.success("Login completato!", {
-        description: "Accesso effettuato con successo."
-      });
-
-      // Redirect to home page
-      setTimeout(() => {
-        navigate("/home");
-      }, 1500);
-    } catch (error) {
-      toast.error("Errore", {
-        description: "Si è verificato un errore durante il login."
-      });
-      setIsSubmitting(false);
-    }
+    // Redirect alla home page
+    setTimeout(() => {
+      navigate("/home");
+    }, 1500);
   };
 
   return (
@@ -62,7 +53,7 @@ const Login = () => {
         <form onSubmit={handleLogin} className="glass-card">
           <div className="space-y-4">
             <div>
-              <Label htmlFor="email" className="text-white">Email</Label>
+              <Label htmlFor="email" className="text-black">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -70,12 +61,12 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-1"
-                disabled={isSubmitting}
+                style={{ color: "black" }} // Testi di input in nero
               />
             </div>
 
             <div>
-              <Label htmlFor="password" className="text-white">Password</Label>
+              <Label htmlFor="password" className="text-black">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -83,7 +74,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1"
-                disabled={isSubmitting}
+                style={{ color: "black" }} // Testi di input in nero
               />
             </div>
           </div>
@@ -91,9 +82,8 @@ const Login = () => {
           <Button
             type="submit"
             className="w-full mt-6 bg-gradient-to-r from-projectx-blue to-projectx-pink"
-            disabled={isSubmitting}
           >
-            {isSubmitting ? "Accesso in corso..." : "Accedi"}
+            Accedi
           </Button>
 
           <div className="mt-4 text-center">
@@ -101,7 +91,6 @@ const Login = () => {
               variant="link"
               className="text-projectx-neon-blue p-0 hover:underline"
               onClick={() => navigate("/register")}
-              disabled={isSubmitting}
             >
               Non hai un account? Registrati
             </Button>
