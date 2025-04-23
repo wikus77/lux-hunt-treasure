@@ -16,19 +16,25 @@ export function useMapMarkersLogic() {
 
   const handleMapClickMarker = (e: google.maps.MapMouseEvent) => {
     if (isAddingMarker && e.latLng) {
-      const lat = e.latLng.lat();
-      const lng = e.latLng.lng();
-      const newMarker: MapMarker = {
-        id: uuidv4(),
-        lat, lng,
-        note: "",
-        position: { lat, lng },
-        createdAt: new Date(),
-      };
-      setMarkers(prev => [...prev, newMarker]);
-      setActiveMarker(newMarker.id);
-      setIsAddingMarker(false);
-      toast.success("Punto aggiunto alla mappa");
+      try {
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
+        const newMarker: MapMarker = {
+          id: uuidv4(),
+          lat, lng,
+          note: "",
+          position: { lat, lng },
+          createdAt: new Date(),
+        };
+        setMarkers(prev => [...prev, newMarker]);
+        setActiveMarker(newMarker.id);
+        setIsAddingMarker(false);
+        toast.success("Punto aggiunto alla mappa");
+      } catch (error) {
+        console.error("Errore nell'aggiunta del marker:", error);
+        setIsAddingMarker(false);
+        toast.error("Si è verificato un errore durante l'aggiunta del punto");
+      }
     }
   };
 

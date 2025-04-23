@@ -11,6 +11,8 @@ export const useMapLogic = () => {
   const [mapReady, setMapReady] = useState(false);
   const [showCluePopup, setShowCluePopup] = useState(false);
   const [clueMessage, setClueMessage] = useState("");
+  const [loadError, setLoadError] = useState<Error | null>(null);
+  
   const location = useLocation();
   const currentLocation = useUserCurrentLocation();
 
@@ -22,41 +24,65 @@ export const useMapLogic = () => {
   const buzzMapPrice = 1.99;
 
   useEffect(() => {
-    // Riduzione del tempo di caricamento per test
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
+    try {
+      // Tempo di caricamento breve per test
+      const timer = setTimeout(() => setIsLoading(false), 1000);
+      return () => clearTimeout(timer);
+    } catch (e) {
+      console.error("Errore durante il caricamento:", e);
+      setIsLoading(false);
+      setLoadError(e instanceof Error ? e : new Error("Errore sconosciuto"));
+    }
   }, []);
 
   useEffect(() => {
-    // Payment/Clue popup side effect
-    if (location.state?.paymentCompleted && location.state?.mapBuzz) {
-      const clue = location.state?.clue;
-      if (clue && clue.description) {
-        setTimeout(() => {
-          setClueMessage(clue.description);
-          setShowCluePopup(true);
+    try {
+      // Payment/Clue popup side effect
+      if (location.state?.paymentCompleted && location.state?.mapBuzz) {
+        const clue = location.state?.clue;
+        if (clue && clue.description) {
+          setTimeout(() => {
+            setClueMessage(clue.description);
+            setShowCluePopup(true);
 
-          if (location.state?.generateMapArea && currentLocation) {
-            areaLogic.generateSearchArea();
-            toast.success("Nuova area di ricerca generata!", {
-              description: "Controlla la mappa per vedere la nuova area di ricerca."
-            });
-          }
-        }, 1000);
+            if (location.state?.generateMapArea && currentLocation) {
+              areaLogic.generateSearchArea();
+              toast.success("Nuova area di ricerca generata!", {
+                description: "Controlla la mappa per vedere la nuova area di ricerca."
+              });
+            }
+          }, 1000);
+        }
       }
+    } catch (e) {
+      console.error("Errore nell'elaborazione dello stato:", e);
     }
   }, [location.state, areaLogic, currentLocation]);
 
-  const handleMapReady = () => setMapReady(true);
+  const handleMapReady = () => {
+    try {
+      setMapReady(true);
+      console.log("Mappa pronta e caricata correttamente");
+    } catch (e) {
+      console.error("Errore nel segnare la mappa come pronta:", e);
+    }
+  };
 
   // Wire up click: delegate to marker or area logic as appropriate
   const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
-    if (markerLogic.isAddingMarker) {
-      markerLogic.handleMapClickMarker(e);
-      areaLogic.setIsAddingSearchArea(false);
-    } else if (areaLogic.isAddingSearchArea) {
-      areaLogic.handleMapClickArea(e);
+    try {
+      if (markerLogic.isAddingMarker) {
+        markerLogic.handleMapClickMarker(e);
+        areaLogic.setIsAddingSearchArea(false);
+      } else if (areaLogic.isAddingSearchArea) {
+        areaLogic.handleMapClickArea(e);
+        markerLogic.setIsAddingMarker(false);
+      }
+    } catch (error) {
+      console.error("Errore nel gestire il click sulla mappa:", error);
+      toast.error("Si è verificato un errore nel processare il click");
       markerLogic.setIsAddingMarker(false);
+      areaLogic.setIsAddingSearchArea(false);
     }
   }, [markerLogic, areaLogic]);
 
@@ -88,6 +114,7 @@ export const useMapLogic = () => {
     isAddingSearchArea: areaLogic.isAddingSearchArea,
     currentLocation,
     buzzMapPrice,
+    loadError,
     setShowCluePopup,
     setClueMessage,
     setActiveMarker: markerLogic.setActiveMarker,

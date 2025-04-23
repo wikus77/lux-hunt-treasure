@@ -16,37 +16,50 @@ export function useSearchAreasLogic(currentLocation: [number, number] | null) {
 
   const handleMapClickArea = (e: google.maps.MapMouseEvent) => {
     if (isAddingSearchArea && e.latLng) {
-      const lat = e.latLng.lat();
-      const lng = e.latLng.lng();
-      const newArea: SearchArea = {
-        id: uuidv4(),
-        lat, lng,
-        radius: 500,
-        label: "Area di ricerca",
-        color: "#7209b7",
-        position: { lat, lng }
-      };
-      setSearchAreas(prev => [...prev, newArea]);
-      setActiveSearchArea(newArea.id);
-      setIsAddingSearchArea(false);
-      toast.success("Area di ricerca aggiunta alla mappa");
+      try {
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
+        const newArea: SearchArea = {
+          id: uuidv4(),
+          lat, lng,
+          radius: 500,
+          label: "Area di ricerca",
+          color: "#7209b7",
+          position: { lat, lng }
+        };
+        setSearchAreas(prev => [...prev, newArea]);
+        setActiveSearchArea(newArea.id);
+        setIsAddingSearchArea(false);
+        toast.success("Area di ricerca aggiunta alla mappa");
+      } catch (error) {
+        console.error("Errore nell'aggiunta dell'area:", error);
+        setIsAddingSearchArea(false);
+        toast.error("Si è verificato un errore durante l'aggiunta dell'area");
+      }
     }
   };
 
-  // Generate area from clue
+  // Generate area from clue - con gestione più sicura
   const generateSearchArea = () => {
     if (currentLocation) {
-      const newArea: SearchArea = {
-        id: uuidv4(),
-        lat: currentLocation[0],
-        lng: currentLocation[1],
-        radius: 500,
-        label: "Area generata",
-        color: "#4361ee",
-        position: { lat: currentLocation[0], lng: currentLocation[1] }
-      };
-      setSearchAreas(prev => [...prev, newArea]);
-      setActiveSearchArea(newArea.id);
+      try {
+        const newArea: SearchArea = {
+          id: uuidv4(),
+          lat: currentLocation[0],
+          lng: currentLocation[1],
+          radius: 500,
+          label: "Area generata",
+          color: "#4361ee",
+          position: { lat: currentLocation[0], lng: currentLocation[1] }
+        };
+        setSearchAreas(prev => [...prev, newArea]);
+        setActiveSearchArea(newArea.id);
+      } catch (error) {
+        console.error("Errore nella generazione dell'area:", error);
+        toast.error("Impossibile generare l'area di ricerca");
+      }
+    } else {
+      toast.error("Posizione non disponibile per generare l'area");
     }
   };
 
