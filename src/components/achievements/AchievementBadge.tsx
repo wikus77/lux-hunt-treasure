@@ -43,6 +43,9 @@ const AchievementBadge = ({
     }
   };
 
+  // Get the icon component from the achievement
+  const IconComponent = achievement.iconComponent;
+
   return (
     <div 
       className={cn("relative group", className)}
@@ -68,7 +71,7 @@ const AchievementBadge = ({
               : "border-gray-600 text-gray-500"
           )}
         >
-          <achievement.iconComponent />
+          <IconComponent />
         </div>
       </div>
 

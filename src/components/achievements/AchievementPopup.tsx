@@ -63,7 +63,8 @@ const AchievementPopup = ({
   
   if (!achievement || !isVisible) return null;
   
-  const Icon = achievement.iconComponent;
+  // Get the icon component from the achievement
+  const IconComponent = achievement.iconComponent;
   
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm">
@@ -94,7 +95,7 @@ const AchievementPopup = ({
               achievement.badgeColor || "bg-gradient-to-r from-projectx-blue to-projectx-pink"
             )}
           >
-            <Icon className="w-12 h-12 text-white" />
+            <IconComponent className="w-12 h-12 text-white" />
           </div>
           
           <h4 className="text-xl font-bold mb-2">{achievement.title}</h4>
