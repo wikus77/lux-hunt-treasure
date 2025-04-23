@@ -8,13 +8,18 @@ import { useBuzzClues } from "@/hooks/useBuzzClues";
 
 const Events = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const { unlockedClues, resetUnlockedClues } = useBuzzClues();
+  const { unlockedClues, resetUnlockedClues, incrementUnlockedCluesAndAddClue } = useBuzzClues();
   
   useEffect(() => {
     // Reset clues counter on component mount
     resetUnlockedClues();
     setProfileImage(localStorage.getItem('profileImage'));
-  }, [resetUnlockedClues]);
+
+    // Test unlocking some clues
+    incrementUnlockedCluesAndAddClue();
+    incrementUnlockedCluesAndAddClue();
+    incrementUnlockedCluesAndAddClue();
+  }, [resetUnlockedClues, incrementUnlockedCluesAndAddClue]);
 
   return (
     <div className="pb-20 min-h-screen bg-black w-full">
@@ -32,7 +37,7 @@ const Events = () => {
           </div>
           <div className="text-sm px-3 py-1 rounded-full bg-projectx-deep-blue/50 backdrop-blur-sm border border-projectx-blue/20">
             <span className="text-projectx-blue font-mono">
-              0 / 1000 
+              {unlockedClues} / 1000 
             </span>
             <span className="text-gray-400 ml-1">sbloccati</span>
           </div>
@@ -48,7 +53,7 @@ const Events = () => {
               isLocked: clue.isLocked,
               subscriptionType: clue.subscriptionType
             }))}
-            onClueUnlocked={() => {}}
+            onClueUnlocked={incrementUnlockedCluesAndAddClue}
           />
         </div>
       </div>
