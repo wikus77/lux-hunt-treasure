@@ -1,6 +1,6 @@
 
 import React from "react";
-import { AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { MapPin } from "lucide-react";
 
@@ -28,54 +28,51 @@ const BuzzMapBanner = ({ open, area, onClose }: BuzzMapBannerProps) => {
   const radiusInKm = (area.radius / 1000).toFixed(1);
 
   return (
-    <div className="fixed inset-x-0 top-[10%] mx-auto z-50 w-[95%] md:max-w-md bg-gradient-to-tr from-[#1eaedb]/80 via-[#9b87f5]/80 to-[#d946ef]/80 p-4 rounded-xl shadow-xl backdrop-blur-md border border-[#7209b7]/70 animate-fade-in-up">
-      <div className="flex gap-3 items-start">
-        <div className="bg-gradient-to-tr from-[#1eaedb] to-[#7209b7] rounded-full p-2">
-          <MapPin className="h-5 w-5 text-white" />
+    <Dialog open={open} onOpenChange={(value) => {
+      if (!value) onClose();
+    }}>
+      <DialogContent className="bg-gradient-to-tr from-[#1eaedb]/80 via-[#9b87f5]/80 to-[#d946ef]/80 p-4 rounded-xl shadow-xl backdrop-blur-md border border-[#7209b7]/70">
+        <DialogTitle className="text-lg text-white mb-2">
+          {area.label}
+        </DialogTitle>
+        <DialogDescription className="text-white/90">
+          <div className="space-y-2 text-sm">
+            <p>
+              <span className="opacity-70">Coordinate:</span>{" "}
+              <span className="font-mono">
+                {formatCoord(area.lat)}, {formatCoord(area.lng)}
+              </span>
+            </p>
+            <p>
+              <span className="opacity-70">Raggio di ricerca:</span>{" "}
+              <span className="font-mono font-semibold">{radiusInKm} km</span>
+            </p>
+            <p>
+              <span className="opacity-70">Confidenza:</span>{" "}
+              <Badge 
+                className={
+                  area.confidence === 'Alta' 
+                    ? 'bg-green-500/80' 
+                    : area.confidence === 'Media' 
+                      ? 'bg-yellow-500/80' 
+                      : 'bg-red-500/80'
+                }
+              >
+                {area.confidence}
+              </Badge>
+            </p>
+          </div>
+        </DialogDescription>
+        <div className="mt-4 flex justify-end">
+          <button
+            className="px-4 py-2 bg-white/20 hover:bg-white/30 transition-colors rounded text-sm text-white font-medium"
+            onClick={onClose}
+          >
+            Chiudi
+          </button>
         </div>
-        <div className="flex-1">
-          <AlertDialogTitle className="text-lg text-white mb-2">
-            {area.label}
-          </AlertDialogTitle>
-          <AlertDialogDescription className="text-white/90">
-            <div className="space-y-2 text-sm">
-              <p>
-                <span className="opacity-70">Coordinate:</span>{" "}
-                <span className="font-mono">
-                  {formatCoord(area.lat)}, {formatCoord(area.lng)}
-                </span>
-              </p>
-              <p>
-                <span className="opacity-70">Raggio di ricerca:</span>{" "}
-                <span className="font-mono font-semibold">{radiusInKm} km</span>
-              </p>
-              <p>
-                <span className="opacity-70">Confidenza:</span>{" "}
-                <Badge 
-                  className={
-                    area.confidence === 'Alta' 
-                      ? 'bg-green-500/80' 
-                      : area.confidence === 'Media' 
-                        ? 'bg-yellow-500/80' 
-                        : 'bg-red-500/80'
-                  }
-                >
-                  {area.confidence}
-                </Badge>
-              </p>
-            </div>
-          </AlertDialogDescription>
-        </div>
-      </div>
-      <div className="mt-4 flex justify-end">
-        <button
-          className="px-4 py-2 bg-white/20 hover:bg-white/30 transition-colors rounded text-sm text-white font-medium"
-          onClick={onClose}
-        >
-          Chiudi
-        </button>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
