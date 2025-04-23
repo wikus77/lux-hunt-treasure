@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
@@ -5,42 +6,7 @@ import { useUserCurrentLocation } from "./useUserCurrentLocation";
 import { useMapMarkersLogic } from "./useMapMarkersLogic";
 import { useSearchAreasLogic } from "./useSearchAreasLogic";
 
-type UseMapLogicResult = {
-  isLoading: boolean;
-  mapReady: boolean;
-  showCluePopup: boolean;
-  clueMessage: string;
-  location: ReturnType<typeof useLocation>;
-  markers: ReturnType<typeof useMapMarkersLogic>["markers"];
-  searchAreas: ReturnType<typeof useSearchAreasLogic>["searchAreas"];
-  activeMarker: string | null;
-  activeSearchArea: string | null;
-  isAddingMarker: boolean;
-  isAddingSearchArea: boolean;
-  currentLocation: [number, number] | null;
-  buzzMapPrice: number;
-  setShowCluePopup: (o: boolean) => void;
-  setClueMessage: (m: string) => void;
-  setActiveMarker: (id: string | null) => void;
-  setActiveSearchArea: (id: string | null) => void;
-  handleMapReady: () => void;
-  handleAddMarker: () => void;
-  handleAddArea: () => void;
-  handleMapClick: (e: google.maps.MapMouseEvent) => void;
-  handleMapDoubleClick: (e: google.maps.MapMouseEvent) => void;
-  saveMarkerNote: (id: string, note: string) => void;
-  saveSearchArea: (id: string, label: string, radius: number) => void;
-  deleteMarker: (id: string) => void;
-  deleteSearchArea: (id: string) => void;
-  editMarker: (id: string) => void;
-  editSearchArea: (id: string) => void;
-  clearAllMarkers: () => void;
-  handleBuzz: () => void;
-  handleHelp: () => void;
-  generateSearchArea: () => void;
-};
-
-export const useMapLogic = (): UseMapLogicResult => {
+export const useMapLogic = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const [showCluePopup, setShowCluePopup] = useState(false);
@@ -56,7 +22,8 @@ export const useMapLogic = (): UseMapLogicResult => {
   const buzzMapPrice = 1.99;
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 2000);
+    // Riduzione del tempo di caricamento per test
+    const timer = setTimeout(() => setIsLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -69,7 +36,7 @@ export const useMapLogic = (): UseMapLogicResult => {
           setClueMessage(clue.description);
           setShowCluePopup(true);
 
-          if (location.state?.generateMapArea) {
+          if (location.state?.generateMapArea && currentLocation) {
             areaLogic.generateSearchArea();
             toast.success("Nuova area di ricerca generata!", {
               description: "Controlla la mappa per vedere la nuova area di ricerca."
@@ -78,8 +45,7 @@ export const useMapLogic = (): UseMapLogicResult => {
         }, 1000);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.state, areaLogic, setClueMessage, setShowCluePopup]);
+  }, [location.state, areaLogic, currentLocation]);
 
   const handleMapReady = () => setMapReady(true);
 
