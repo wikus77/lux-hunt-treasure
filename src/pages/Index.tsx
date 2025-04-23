@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import AgeVerificationModal from "@/components/auth/AgeVerificationModal";
+import { ArrowRight } from "lucide-react";
 
 const Index = () => {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -30,7 +31,21 @@ const Index = () => {
       <div className="h-[72px] w-full" />
 
       {/* Hero Section */}
-      <section className="w-full flex flex-col justify-center items-center text-center px-6 py-24 md:py-32">
+      <section className="w-full flex flex-col justify-center items-center text-center px-6 py-24 md:py-32 relative">
+        {/* Bottone ACCEDI in alto a destra */}
+        <div className="absolute top-4 right-4 md:top-10 md:right-10 z-20">
+          <Button
+            onClick={handleLoginClick}
+            className="flex items-center px-7 py-3 rounded-xl font-semibold text-lg shadow-lg bg-gradient-to-r from-[#7E69AB] to-[#9b87f5] text-white hover:scale-105 transition-all duration-150"
+            style={{
+              background: "linear-gradient(90deg, #7E69AB 0%, #9b87f5 100%)",
+              boxShadow: "0 2px 16px 0 rgba(0,0,0,0.25)"
+            }}
+          >
+            <ArrowRight className="mr-2" size={22} />
+            Accedi
+          </Button>
+        </div>
         <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">
           M1SSION
         </h1>
@@ -62,11 +77,8 @@ const Index = () => {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
           <div className="glass-card hover-lift text-center w-full relative">
-            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">
-              1
-            </div>
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">1</div>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold text-xl">1</div>
             </div>
             <h3 className="text-xl font-bold mb-3">Registrati</h3>
             <p className="text-white/70">
@@ -75,11 +87,8 @@ const Index = () => {
           </div>
           
           <div className="glass-card hover-lift text-center w-full relative">
-            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">
-              2
-            </div>
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">2</div>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold text-xl">2</div>
             </div>
             <h3 className="text-xl font-bold mb-3">Scopri gli Indizi</h3>
             <p className="text-white/70">
@@ -88,11 +97,8 @@ const Index = () => {
           </div>
 
           <div className="glass-card hover-lift text-center w-full relative">
-            <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">
-              3
-            </div>
             <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 rounded-full bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border border-white/10">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold">3</div>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center text-white font-bold text-xl">3</div>
             </div>
             <h3 className="text-xl font-bold mb-3">Vinci il Premio</h3>
             <p className="text-white/70">
