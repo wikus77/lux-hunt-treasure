@@ -22,6 +22,7 @@ export type SearchArea = {
   color?: string;
   position?: { lat: number; lng: number };
   isAI?: boolean;
+  confidence?: string; // Added confidence property
 };
 
 type MapMarkersProps = {
