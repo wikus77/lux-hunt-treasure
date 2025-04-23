@@ -11,14 +11,14 @@ interface BuzzMapBannerProps {
     label: string;
     confidence?: string;
   } | null;
-  message?: string;  // Added message prop as optional
+  message?: string;  // Definiamo chiaramente la proprietà message come opzionale
   onClose: () => void;
 }
 
 const BuzzMapBanner: React.FC<BuzzMapBannerProps> = ({ open, area, message, onClose }) => {
   if (!open) return null;
   
-  // If we have a message, show a simpler banner with just the message
+  // Se abbiamo un messaggio, mostriamo una banner semplificata con solo il messaggio
   if (message && !area) {
     return (
       <div
@@ -61,7 +61,7 @@ const BuzzMapBanner: React.FC<BuzzMapBannerProps> = ({ open, area, message, onCl
     );
   }
   
-  // Original area-based banner
+  // Banner originale basata su area
   if (!area) return null;
   
   return (

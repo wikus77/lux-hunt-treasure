@@ -6,7 +6,6 @@ import LoadingScreen from "./LoadingScreen";
 import NotesSection from "./NotesSection";
 import CluePopup from "./CluePopup";
 import { useMapLogic } from "./useMapLogic";
-import BuzzMapBanner from "@/components/buzz/BuzzMapBanner";
 
 const MapLogicProvider = () => {
   const {
@@ -98,4 +97,3 @@ const MapLogicProvider = () => {
 };
 
 export default MapLogicProvider;
-
