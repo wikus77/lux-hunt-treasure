@@ -5,6 +5,7 @@ import { toast } from "@/components/ui/sonner";
 import { useUserCurrentLocation } from "./useUserCurrentLocation";
 import { useMapMarkersLogic } from "./useMapMarkersLogic";
 import { useSearchAreasLogic } from "./useSearchAreasLogic";
+import { useBuzzClues } from "@/hooks/useBuzzClues";
 
 export const useMapLogic = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -15,13 +16,31 @@ export const useMapLogic = () => {
   
   const location = useLocation();
   const currentLocation = useUserCurrentLocation();
+  const { unlockedClues } = useBuzzClues();
 
   // Marker management
   const markerLogic = useMapMarkersLogic();
   // Area management (pass currentLocation for clue generation)
   const areaLogic = useSearchAreasLogic(currentLocation);
 
-  const buzzMapPrice = 1.99;
+  // Dynamic pricing based on unlocked clues
+  const calculateBuzzMapPrice = useCallback(() => {
+    if (unlockedClues >= 0 && unlockedClues <= 5) return 2.99;
+    if (unlockedClues <= 10) return 5.99;
+    if (unlockedClues <= 15) return 11.99;
+    if (unlockedClues <= 20) return 15.99;
+    if (unlockedClues <= 30) return 19.99;
+    if (unlockedClues <= 40) return 25.99;
+    if (unlockedClues <= 45) return 27.99;
+    if (unlockedClues <= 50) return 29.99;
+    if (unlockedClues <= 55) return 35.99;
+    if (unlockedClues <= 60) return 39.99;
+    if (unlockedClues <= 65) return 45.99;
+    if (unlockedClues <= 70) return 50.99;
+    return 99.99; // After 70 clues
+  }, [unlockedClues]);
+
+  const buzzMapPrice = calculateBuzzMapPrice();
 
   useEffect(() => {
     try {
@@ -46,10 +65,14 @@ export const useMapLogic = () => {
             setShowCluePopup(true);
 
             if (location.state?.generateMapArea && currentLocation) {
-              areaLogic.generateSearchArea();
-              toast.success("Nuova area di ricerca generata!", {
-                description: "Controlla la mappa per vedere la nuova area di ricerca."
-              });
+              const generatedArea = areaLogic.generateSearchArea();
+              // Center map on the new area
+              if (generatedArea) {
+                // This will be centered when the area is created
+                toast.success("Nuova area di ricerca generata!", {
+                  description: "Controlla la mappa per vedere la nuova area di ricerca."
+                });
+              }
             }
           }, 1000);
         }
