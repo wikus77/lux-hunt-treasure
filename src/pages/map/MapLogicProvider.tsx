@@ -1,13 +1,13 @@
 
 import React, { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import MapArea from "./MapArea";
 import MapHeader from "./MapHeader";
 import LoadingScreen from "./LoadingScreen";
 import NotesSection from "./NotesSection";
 import { useMapLogic } from "./useMapLogic";
-import { useBuzzClues } from "@/hooks/useBuzzClues";
-import MapContainer from "./components/MapContainer";
-import MapNotifications from "./components/MapNotifications";
-import BuzzSection from "./components/BuzzSection";
+import CluePopup from "./CluePopup";
+import BuzzMapBanner from "@/components/buzz/BuzzMapBanner";
 
 const MapLogicProvider = () => {
   const {
@@ -38,14 +38,16 @@ const MapLogicProvider = () => {
     editSearchArea,
     deleteMarker,
     deleteSearchArea,
+    clearAllMarkers,
     location,
   } = useMapLogic();
-
-  const { unlockedClues } = useBuzzClues();
   
+  // Effetto per controllare se torniamo dalla pagina di pagamento
   useEffect(() => {
     if (location?.state?.paymentCompleted && location?.state?.mapBuzz) {
       console.log("Pagamento BuzzMap completato, generando area di ricerca...");
+      
+      // L'area è generata automaticamente in useMapLogic, qui gestiamo solo l'UI
     }
   }, [location?.state]);
 
@@ -65,41 +67,53 @@ const MapLogicProvider = () => {
         buzzMapPrice={buzzMapPrice}
       />
 
-      <MapNotifications 
-        showCluePopup={showCluePopup}
-        clueMessage={clueMessage}
-        activeSearchArea={activeSearchArea}
-        searchAreas={searchAreas}
-        onCloseClue={() => setShowCluePopup(false)}
-        onCloseArea={() => setActiveSearchArea(null)}
-      />
+      {/* Notification Area - Only one popup shows at a time */}
+      {showCluePopup ? (
+        <CluePopup 
+          open={showCluePopup} 
+          clueMessage={clueMessage} 
+          showBanner={false} 
+          onClose={() => setShowCluePopup(false)}
+        />
+      ) : (
+        <BuzzMapBanner 
+          open={!!activeSearchArea} 
+          area={activeSearchArea ? {
+            lat: searchAreas.find(a => a.id === activeSearchArea)?.lat || 0,
+            lng: searchAreas.find(a => a.id === activeSearchArea)?.lng || 0,
+            radius: searchAreas.find(a => a.id === activeSearchArea)?.radius || 0,
+            label: searchAreas.find(a => a.id === activeSearchArea)?.label || '',
+            confidence: searchAreas.find(a => a.id === activeSearchArea)?.confidence || 'Media'
+          } : null} 
+          onClose={() => setActiveSearchArea(null)}
+        />
+      )}
 
-      <MapContainer 
-        onMapReady={handleMapReady}
-        markers={markers}
-        searchAreas={searchAreas}
-        isAddingMarker={isAddingMarker}
-        isAddingSearchArea={isAddingSearchArea}
-        activeMarker={activeMarker}
-        activeSearchArea={activeSearchArea}
-        onMapClick={handleMapClick}
-        onMapDoubleClick={handleMapDoubleClick}
-        setActiveMarker={setActiveMarker}
-        setActiveSearchArea={setActiveSearchArea}
-        saveMarkerNote={saveMarkerNote}
-        saveSearchArea={saveSearchArea}
-        editMarker={editMarker}
-        editSearchArea={editSearchArea}
-        deleteMarker={deleteMarker}
-        deleteSearchArea={deleteSearchArea}
-        currentLocation={currentLocation}
-      />
+      {/* Mappa sopra - Updated container sizing */}
+      <div className="w-full h-[65vh] md:h-[70vh]">
+        <MapArea 
+          onMapReady={handleMapReady}
+          markers={markers}
+          searchAreas={searchAreas}
+          isAddingMarker={isAddingMarker}
+          isAddingSearchArea={isAddingSearchArea}
+          activeMarker={activeMarker}
+          activeSearchArea={activeSearchArea}
+          onMapClick={handleMapClick}
+          onMapDoubleClick={handleMapDoubleClick}
+          setActiveMarker={setActiveMarker}
+          setActiveSearchArea={setActiveSearchArea}
+          saveMarkerNote={saveMarkerNote}
+          saveSearchArea={saveSearchArea}
+          editMarker={editMarker}
+          editSearchArea={editSearchArea}
+          deleteMarker={deleteMarker}
+          deleteSearchArea={deleteSearchArea}
+          currentLocation={currentLocation}
+        />
+      </div>
 
-      <BuzzSection 
-        onBuzzClick={handleBuzz}
-        unlockedClues={unlockedClues}
-      />
-
+      {/* Notes sotto la mappa, sempre in colonna unica */}
       <div className="w-full bg-black/50 rounded-xl p-4 border border-projectx-deep-blue/40 shadow-xl">
         <NotesSection />
       </div>
