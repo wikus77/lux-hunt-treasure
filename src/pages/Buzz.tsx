@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -102,7 +103,7 @@ const Buzz = () => {
     // Show payment dialog
     setShowDialog(true);
     
-    // Simulate payment completed (in real app this would check actual payment)
+    // Simulate payment completed
     setTimeout(() => {
       setShowDialog(false);
       
