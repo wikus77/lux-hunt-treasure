@@ -1,5 +1,5 @@
 
-import { MapPin, Car, Image, Folder } from "lucide-react";
+import { MapPin, Car, Image, Settings } from "lucide-react";
 
 export const CATEGORY_STYLES: Record<
   string,
@@ -9,12 +9,20 @@ export const CATEGORY_STYLES: Record<
     gradient: "bg-gradient-to-r from-projectx-blue via-[#1eaedb] to-[#8b5cf6]",
     textColor: "text-white",
   },
-  Car: {
-    gradient: "bg-gradient-to-r from-[#a855f7] via-[#00a3ff] to-[#ec4899]",
+  "Photo Interni": {
+    gradient: "bg-gradient-to-r from-[#a855f7] via-[#ec4899] to-[#f43f5e]",
     textColor: "text-white",
   },
-  Photo: {
+  "Photo Esterni": {
     gradient: "bg-gradient-to-r from-[#8b5cf6] via-[#00a3ff] to-[#22d3ee]",
+    textColor: "text-white",
+  },
+  Configurazione: {
+    gradient: "bg-gradient-to-r from-[#f59e0b] via-[#f97316] to-[#ef4444]",
+    textColor: "text-white",
+  },
+  Car: {
+    gradient: "bg-gradient-to-r from-[#a855f7] via-[#00a3ff] to-[#ec4899]",
     textColor: "text-white",
   },
   General: {
@@ -33,18 +41,34 @@ export const clueCategories = [
       ),
   },
   {
-    name: "Car",
-    icon: Car,
+    name: "Photo Interni",
+    icon: Image,
     matcher: (clue: any) =>
-      /auto|car|modello|marca|veicolo|interno|esterno|motore|carrozzeria|carrozzerie|motori/i.test(
+      /interni|interno|abitacolo|sedili|cruscotto|cockpit|dashboard/i.test(
         clue.title + " " + clue.description
       ),
   },
   {
-    name: "Photo",
+    name: "Photo Esterni",
     icon: Image,
     matcher: (clue: any) =>
-      /foto|immagine|immagini|scatto|phot|picture|jpg|png|selfie/i.test(
+      /esterni|esterno|carrozzeria|foto|immagine|scatto|photo|picture/i.test(
+        clue.title + " " + clue.description
+      ),
+  },
+  {
+    name: "Configurazione",
+    icon: Settings,
+    matcher: (clue: any) =>
+      /config|setup|impostazioni|optional|accessori|dotazione/i.test(
+        clue.title + " " + clue.description
+      ),
+  },
+  {
+    name: "Car",
+    icon: Car,
+    matcher: (clue: any) =>
+      /auto|car|modello|marca|veicolo|motore|carrozzeria|motori/i.test(
         clue.title + " " + clue.description
       ),
   },

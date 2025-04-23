@@ -8,11 +8,13 @@ import { useBuzzClues } from "@/hooks/useBuzzClues";
 
 const Events = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const { unlockedClues } = useBuzzClues();
-
+  const { unlockedClues, resetUnlockedClues } = useBuzzClues();
+  
   useEffect(() => {
+    // Reset clues counter on component mount
+    resetUnlockedClues();
     setProfileImage(localStorage.getItem('profileImage'));
-  }, []);
+  }, [resetUnlockedClues]);
 
   return (
     <div className="pb-20 min-h-screen bg-black w-full">
