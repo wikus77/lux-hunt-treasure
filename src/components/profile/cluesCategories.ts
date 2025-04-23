@@ -1,5 +1,6 @@
 
 import { MapPin, Car, Image, Wrench } from "lucide-react";
+import type { LucideIcon } from 'lucide-react';
 
 export const CATEGORY_STYLES: Record<
   string,

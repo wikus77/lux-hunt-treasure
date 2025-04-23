@@ -31,11 +31,11 @@ const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
   const groupedClues = groupCluesByCategory(unlockedClues);
   const { unlockedClues: totalUnlockedClues, MAX_CLUES } = useBuzzClues();
 
-  // Banner stato
+  // Banner state
   const [bannerOpen, setBannerOpen] = useState(false);
   const [bannerCategory, setBannerCategory] = useState<null | string>(null);
 
-  // Messaggio per le categorie
+  // Message for categories
   const getBannerContent = (category: string) => {
     switch (category) {
       case "Luoghi":
@@ -81,7 +81,7 @@ const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
     }
   };
 
-  // Chiudi banner
+  // Close banner
   const closeBanner = () => setBannerOpen(false);
 
   // Update the clue unlock logic to call the callback
@@ -126,37 +126,42 @@ const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
         </div>
       ) : (
         <Accordion type="single" collapsible className="space-y-4">
-          {Object.entries(groupedClues).map(([category, { icon: Icon, clues }]) => (
-            <AccordionItem 
-              key={category} 
-              value={category}
-              className="border border-projectx-blue/20 rounded-lg overflow-hidden"
-            >
-              <AccordionTrigger className={`px-4 py-2 ${CATEGORY_STYLES[category]?.gradient || CATEGORY_STYLES["General"].gradient}`}>
-                <div className="flex items-center gap-2">
-                  <Icon className="h-5 w-5 text-white drop-shadow" />
-                  <span className={`font-semibold ${CATEGORY_STYLES[category]?.textColor || "text-white"}`}>
-                    {category}
-                  </span>
-                  <span className="ml-2 text-xs opacity-80">{clues.length} indizi</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="bg-black/40 backdrop-blur-sm p-4">
-                <div className="space-y-4">
-                  {clues.map((clue: Clue) => (
-                    <ClueCard
-                      key={clue.id}
-                      title={clue.title}
-                      description={clue.description}
-                      week={clue.week}
-                      isLocked={false}
-                      subscriptionType={clue.subscriptionType}
-                    />
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
+          {Object.entries(groupedClues).map(([category, { icon, clues }]) => {
+            // Properly handle the dynamic icon component
+            const IconComponent = icon;
+            
+            return (
+              <AccordionItem 
+                key={category} 
+                value={category}
+                className="border border-projectx-blue/20 rounded-lg overflow-hidden"
+              >
+                <AccordionTrigger className={`px-4 py-2 ${CATEGORY_STYLES[category]?.gradient || CATEGORY_STYLES["General"].gradient}`}>
+                  <div className="flex items-center gap-2">
+                    <IconComponent className="h-5 w-5 text-white drop-shadow" />
+                    <span className={`font-semibold ${CATEGORY_STYLES[category]?.textColor || "text-white"}`}>
+                      {category}
+                    </span>
+                    <span className="ml-2 text-xs opacity-80">{clues.length} indizi</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="bg-black/40 backdrop-blur-sm p-4">
+                  <div className="space-y-4">
+                    {clues.map((clue: Clue) => (
+                      <ClueCard
+                        key={clue.id}
+                        title={clue.title}
+                        description={clue.description}
+                        week={clue.week}
+                        isLocked={false}
+                        subscriptionType={clue.subscriptionType}
+                      />
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
         </Accordion>
       )}
     </div>

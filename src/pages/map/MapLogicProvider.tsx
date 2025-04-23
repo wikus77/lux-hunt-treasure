@@ -42,12 +42,12 @@ const MapLogicProvider = () => {
     location,
   } = useMapLogic();
   
-  // Effetto per controllare se torniamo dalla pagina di pagamento
+  // Effect to check if we're returning from payment page
   useEffect(() => {
     if (location?.state?.paymentCompleted && location?.state?.mapBuzz) {
-      console.log("Pagamento BuzzMap completato, generando area di ricerca...");
+      console.log("BuzzMap payment completed, generating search area...");
       
-      // L'area è generata automaticamente in useMapLogic, qui gestiamo solo l'UI
+      // The area is automatically generated in useMapLogic, we just handle the UI here
     }
   }, [location?.state]);
 
@@ -89,7 +89,7 @@ const MapLogicProvider = () => {
         />
       )}
 
-      {/* Mappa sopra - Updated container sizing */}
+      {/* Map above - Updated container sizing */}
       <div className="w-full h-[65vh] md:h-[70vh]">
         <MapArea 
           onMapReady={handleMapReady}
@@ -113,7 +113,7 @@ const MapLogicProvider = () => {
         />
       </div>
 
-      {/* Notes sotto la mappa, sempre in colonna unica */}
+      {/* Notes below the map, always in a single column */}
       <div className="w-full bg-black/50 rounded-xl p-4 border border-projectx-deep-blue/40 shadow-xl">
         <NotesSection />
       </div>
