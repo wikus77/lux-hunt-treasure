@@ -28,7 +28,6 @@ const PaymentBlack = () => {
           description: "Il tuo abbonamento Black è stato attivato con successo!",
         });
         localStorage.setItem("subscription_plan", "Black");
-        // Forziamo l'aggiornamento della localStorage per attivare l'evento
         window.dispatchEvent(new Event('storage'));
         navigate("/subscriptions");
       }, 1400);
