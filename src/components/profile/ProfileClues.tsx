@@ -52,19 +52,19 @@ const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
             Indizi sulla vettura: Scopri dettagli tecnici e curiosità sulla macchina misteriosa!
           </>
         );
-      case "Interior Photos":
+      case "Foto Interni":
         return (
           <>
             Indizi fotografici interni: Scopri dettagli degli interni del veicolo!
           </>
         );
-      case "Exterior Photos":
+      case "Foto Esterni":
         return (
           <>
             Indizi fotografici esterni: Esamina la carrozzeria e l'aspetto esterno!
           </>
         );
-      case "Configuration":
+      case "Equipaggiamento":
         return (
           <>
             Indizi sulla configurazione: Analizza le specifiche tecniche del veicolo!
@@ -90,6 +90,10 @@ const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
       onClueUnlocked();
     }
   };
+
+  // Log for debugging
+  console.log("Grouped Clues:", groupedClues);
+  console.log("Available Categories:", Object.keys(groupedClues));
 
   return (
     <div className="glass-card mt-4 relative">

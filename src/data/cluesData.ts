@@ -22,7 +22,7 @@ export const clues: Clue[] = [
     title: "Specifiche Veicolo",
     description: "L'auto ha un motore V8 biturbo.",
     week: 1,
-    isLocked: true,
+    isLocked: false,
     subscriptionType: "Silver"
   },
   {
@@ -30,7 +30,7 @@ export const clues: Clue[] = [
     title: "Dettagli Interni",
     description: "Gli interni sono in pelle nera con cuciture rosse.",
     week: 1,
-    isLocked: true,
+    isLocked: false,
     subscriptionType: "Gold"
   },
   {
@@ -38,7 +38,7 @@ export const clues: Clue[] = [
     title: "Vista Esterna",
     description: "La carrozzeria presenta dettagli in fibra di carbonio.",
     week: 1,
-    isLocked: true,
+    isLocked: false,
     subscriptionType: "Black"
   },
   {
@@ -46,8 +46,7 @@ export const clues: Clue[] = [
     title: "Optional Speciali",
     description: "L'auto è equipaggiata con un sistema audio premium.",
     week: 1,
-    isLocked: true,
+    isLocked: false,
     subscriptionType: "Black"
   }
 ];
-

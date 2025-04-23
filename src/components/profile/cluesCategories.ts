@@ -81,4 +81,3 @@ export const getClueCategory = (clue: any) => {
   }
   return { name: "General", icon: MapPin };
 };
-
