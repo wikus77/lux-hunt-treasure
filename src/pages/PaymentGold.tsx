@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +8,6 @@ import CardPaymentForm from "@/components/payments/CardPaymentForm";
 import ApplePayBox from "@/components/payments/ApplePayBox";
 import GooglePayBox from "@/components/payments/GooglePayBox";
 import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
-import CheckoutWithStripeButton from "@/components/payments/CheckoutWithStripeButton";
 
 const PaymentGold = () => {
   const navigate = useNavigate();
@@ -100,9 +100,39 @@ const PaymentGold = () => {
               </li>
             </ul>
           </div>
+
           <div className="flex justify-between mb-6">
-            <CheckoutWithStripeButton label="Abbonati con Stripe" description="Abbonamento Gold" amountCents={699} />
+            <button 
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'card' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              onClick={() => setPaymentMethod('card')}
+            >
+              <span className="text-sm">Carta</span>
+            </button>
+            
+            <button 
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              onClick={() => setPaymentMethod('apple')}
+            >
+              <span className="text-sm">Apple Pay</span>
+            </button>
+            
+            <button 
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              onClick={() => setPaymentMethod('google')}
+            >
+              <span className="text-sm">Google Pay</span>
+            </button>
           </div>
+
+          {paymentMethod === "card" && (
+            <CardPaymentForm onSubmit={handleCardSubmit} />
+          )}
+          {paymentMethod === "apple" && (
+            <ApplePayBox onApplePay={handleApplePay} />
+          )}
+          {paymentMethod === "google" && (
+            <GooglePayBox onGooglePay={handleGooglePay} />
+          )}
         </div>
       </div>
     </div>
