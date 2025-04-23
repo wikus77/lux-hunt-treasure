@@ -1,149 +1,67 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { toast } from "@/components/ui/sonner";
-import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
 import BuzzButton from "@/components/buzz/BuzzButton";
-import useBuzzSound from "@/hooks/useBuzzSound";
-import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import { vagueBuzzClues } from "@/data/vagueBuzzClues";
 import ClueBanner from "@/components/buzz/ClueBanner";
-import { useNotifications } from "@/hooks/useNotifications";
-
-function getNextVagueClue(usedClues: string[]) {
-  // Restituisci un indizio casuale NON già usato
-  const available = vagueBuzzClues.filter(clue => !usedClues.includes(clue));
-  if (available.length === 0) {
-    // Tutti usati: ricomincia dal primo
-    return vagueBuzzClues[0];
-  }
-  return available[Math.floor(Math.random() * available.length)];
-}
+import useBuzzSound from "@/hooks/useBuzzSound";
+import { useBuzzClues } from "@/hooks/useBuzzClues";
+import BuzzUnlockDialog from "@/components/buzz/BuzzUnlockDialog";
+import BuzzExplosionHandler from "@/components/buzz/BuzzExplosionHandler";
 
 const Buzz = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [showExplosion, setShowExplosion] = useState(false);
-  const [explosionFadeOut, setExplosionFadeOut] = useState(false);
-  const [unlockedClues, setUnlockedClues] = useState(() => {
-    const savedClues = localStorage.getItem('unlockedCluesCount');
-    return savedClues ? parseInt(savedClues) : 0;
-  });
-  const [usedVagueClues, setUsedVagueClues] = useState<string[]>(() => {
-    const saved = localStorage.getItem('usedVagueBuzzClues');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [lastVagueClue, setLastVagueClue] = useState<string | null>(null);
   const [showClueBanner, setShowClueBanner] = useState(false);
-  
   const navigate = useNavigate();
   const location = useLocation();
   const { hasPaymentMethod, savePaymentMethod } = useHasPaymentMethod();
   const { initializeSound } = useBuzzSound();
-  const { addNotification } = useNotifications();
-  const explosionTimerRef = useRef<number | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+
+  const {
+    unlockedClues,
+    setUnlockedClues,
+    lastVagueClue,
+    setLastVagueClue,
+    incrementUnlockedCluesAndAddClue,
+    getNextVagueClue
+  } = useBuzzClues();
 
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
   }, []);
 
   useEffect(() => {
-    const savedClues = localStorage.getItem('unlockedCluesCount');
-    if (savedClues) {
-      setUnlockedClues(parseInt(savedClues));
-    }
-
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
     const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
-    
     try {
       initializeSound(soundPreference, volume);
     } catch (error) {
-      console.error("Errore nell'inizializzazione del suono:", error);
+      // Can ignore
     }
-
-    // Verifica se il pagamento è stato completato e proviene dalla pagina standard (non mappa)
-    if (location.state?.paymentCompleted && location.state?.fromRegularBuzz === true) {
+    if (location.state?.paymentCompleted && location.state?.fromRegularBuzz) {
       try {
         savePaymentMethod();
         incrementUnlockedCluesAndAddClue();
         setShowExplosion(true);
-
-        explosionTimerRef.current = window.setTimeout(() => {
-          setExplosionFadeOut(true);
-        }, 2500);
       } catch (error) {
-        console.error("Errore durante il processo di sblocco indizi:", error);
-        toast.error("Si è verificato un errore. Riprova più tardi.");
+        // Ignore
       }
-
-      return () => {
-        if (explosionTimerRef.current) {
-          clearTimeout(explosionTimerRef.current);
-        }
-      };
     }
     // eslint-disable-next-line
   }, [location.state, savePaymentMethod, navigate, initializeSound]);
-
-  const handleExplosionFadeOutComplete = () => {
-    setShowExplosion(false);
-    setExplosionFadeOut(false);
-
-    toast.success("Indizio sbloccato!", {
-      description: "Controlla la sezione Notifiche per vedere l'indizio extra."
-    });
-
-    if (lastVagueClue) {
-      setShowClueBanner(true);
-    }
-    
-    setTimeout(() => {
-      navigate("/notifications", { replace: true });
-    }, 1800);
-  };
-
-  function incrementUnlockedCluesAndAddClue() {
-    try {
-      const newCount = unlockedClues + 1;
-      setUnlockedClues(newCount);
-      localStorage.setItem('unlockedCluesCount', newCount.toString());
-
-      // Trova nuovo indizio vago
-      const nextClue = getNextVagueClue(usedVagueClues);
-      setLastVagueClue(nextClue);
-
-      // aggiorna lista usati
-      const updated = [...usedVagueClues, nextClue];
-      setUsedVagueClues(updated);
-      
-      // Salva in modo più sicuro
-      try {
-        localStorage.setItem('usedVagueBuzzClues', JSON.stringify(updated));
-      } catch (e) {
-        console.error("Errore nel salvataggio degli indizi usati:", e);
-        // Continua comunque con l'esecuzione
-      }
-
-      sendBuzzNotification(nextClue);
-    } catch (error) {
-      console.error("Errore nell'incremento degli indizi sbloccati:", error);
-      toast.error("Si è verificato un errore. Riprova più tardi.");
-    }
-  }
 
   const handleBuzzClick = () => {
     if (!hasPaymentMethod) {
       navigate("/payment-methods", {
         state: {
           fromBuzz: true,
-          fromRegularBuzz: true, // Flag per indicare che proviene dalla sezione Buzz standard
-          clue: { description: getNextVagueClue(usedVagueClues) },
-          generateMapArea: false // Assicura che non vengano generate aree sulla mappa
+          fromRegularBuzz: true,
+          clue: { description: getNextVagueClue() },
+          generateMapArea: false
         }
       });
       return;
@@ -151,52 +69,37 @@ const Buzz = () => {
     setShowDialog(true);
   };
 
-  function sendBuzzNotification(clueText: string) {
-    // Utilizza il nuovo hook per aggiungere notifiche in modo sicuro
-    const success = addNotification({
-      title: "Nuovo indizio extra!",
-      description: clueText
-    });
-    
-    if (!success) {
-      console.warn("Impossibile salvare la notifica. Potrebbe essere stato raggiunto il limite di storage.");
-      // Mostriamo lo stesso un toast all'utente
-      toast({
-        description: "Nuovo indizio extra! " + clueText,
-        duration: 5000,
-      });
-    }
-  }
-
   const handlePayment = () => {
     setShowDialog(false);
-    toast.success("Pagamento in elaborazione", {
-      description: "Stai per essere reindirizzato alla pagina di pagamento per completare l'acquisto."
-    });
-
     setTimeout(() => {
       navigate("/payment-methods", {
         state: {
           fromBuzz: true,
-          fromRegularBuzz: true, // Flag per indicare che proviene dalla sezione Buzz standard
-          clue: { description: getNextVagueClue(usedVagueClues) },
-          generateMapArea: false // Assicura che non vengano generate aree sulla mappa
+          fromRegularBuzz: true,
+          clue: { description: getNextVagueClue() },
+          generateMapArea: false
         }
       });
-    }, 1500);
+    }, 1200);
   };
+
+  function handleExplosionCompleted() {
+    setShowExplosion(false);
+    setShowClueBanner(true);
+    setTimeout(() => {
+      navigate("/notifications", { replace: true });
+    }, 1800);
+  }
 
   return (
     <div className="min-h-screen bg-black pb-20 w-full">
       <UnifiedHeader profileImage={profileImage} />
       <div className="h-[72px] w-full" />
-
       <ClueBanner 
         open={showClueBanner} 
         message={lastVagueClue || ""} 
         onClose={() => setShowClueBanner(false)} 
       />
-
       <section className="flex flex-col items-center justify-center py-10 h-[70vh] w-full px-0">
         <div className="text-center mb-8 w-full px-0">
           <h2 className="text-2xl font-bold mb-2">Hai bisogno di un indizio extra?</h2>
@@ -204,7 +107,6 @@ const Buzz = () => {
             Premi il pulsante Buzz per ottenere un indizio supplementare a 1,99€
           </p>
         </div>
-
         <BuzzButton
           onBuzzClick={handleBuzzClick}
           unlockedClues={unlockedClues}
@@ -212,44 +114,9 @@ const Buzz = () => {
           isMapBuzz={false}
         />
       </section>
-
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Sblocca Indizio Extra</DialogTitle>
-            <DialogDescription>
-              Ottieni un indizio extra immediatamente per 1,99€
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="bg-black/20 p-4 rounded-lg">
-              <div className="flex items-center">
-                <Lock className="mr-2 h-4 w-4 text-projectx-pink" />
-                <span>Indizio Esclusivo</span>
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Questo indizio potrebbe essere la chiave per trovare l'auto!
-              </p>
-            </div>
-
-            <Button
-              onClick={handlePayment}
-              className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
-            >
-              Sblocca indizio 1,99€
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <ClueUnlockedExplosion
-        open={showExplosion}
-        fadeOut={explosionFadeOut}
-        onFadeOutEnd={handleExplosionFadeOutComplete}
-      />
+      <BuzzUnlockDialog open={showDialog} onOpenChange={setShowDialog} handlePayment={handlePayment} />
+      <BuzzExplosionHandler show={showExplosion} onCompleted={handleExplosionCompleted} />
     </div>
   );
 };
-
 export default Buzz;
