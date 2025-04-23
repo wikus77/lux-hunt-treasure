@@ -29,9 +29,7 @@ const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz
 
     setTimeout(() => {
       setIsVaultOpen(false);
-      if (typeof updateUnlockedClues === 'function' && !isMapBuzz) {
-        updateUnlockedClues(unlockedClues + 1 > MAX_CLUES ? MAX_CLUES : unlockedClues + 1);
-      }
+      // We'll handle clue incrementing elsewhere
       onBuzzClick();
     }, 1500);
   };

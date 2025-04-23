@@ -27,7 +27,6 @@ const Buzz = () => {
 
   const {
     unlockedClues,
-    setUnlockedClues,
     lastVagueClue,
     setLastVagueClue,
     incrementUnlockedCluesAndAddClue,
@@ -47,11 +46,15 @@ const Buzz = () => {
     } catch (error) {
       // Can ignore
     }
+    
+    // Only handle payment completed from location state
     if (location.state?.paymentCompleted && location.state?.fromRegularBuzz) {
       try {
         savePaymentMethod();
-        incrementUnlockedCluesAndAddClue();
+        // Show explosion animation
         setShowExplosion(true);
+        // Don't automatically increment clues - wait for the animation to complete
+        // This prevents immediately jumping to 1000/1000
       } catch (error) {
         // Ignore
       }
@@ -90,7 +93,14 @@ const Buzz = () => {
 
   function handleExplosionCompleted() {
     setShowExplosion(false);
+    
+    // Increment ONE clue when the explosion animation completes
+    incrementUnlockedCluesAndAddClue();
+    
+    // Show the banner with the clue
     setShowClueBanner(true);
+    
+    // Navigate to notifications after a delay
     setTimeout(() => {
       navigate("/notifications", { replace: true });
     }, 1800);
@@ -175,7 +185,6 @@ const Buzz = () => {
         <BuzzButton
           onBuzzClick={handleBuzzClick}
           unlockedClues={unlockedClues}
-          updateUnlockedClues={setUnlockedClues}
           isMapBuzz={false}
         />
         

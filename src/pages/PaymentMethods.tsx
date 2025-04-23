@@ -146,6 +146,3 @@ const PaymentMethods = () => {
       </div>
     </div>
   );
-};
-
-export default PaymentMethods;

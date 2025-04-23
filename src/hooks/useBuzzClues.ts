@@ -39,7 +39,19 @@ export const useBuzzClues = () => {
 
   const [lastVagueClue, setLastVagueClue] = useState<string | null>(null);
 
-  const { addNotification } = useNotifications();
+  // Use a function to get notifications to avoid the "Invalid hook call" error
+  const getNotifications = () => {
+    try {
+      return useNotifications();
+    } catch (e) {
+      // Return a default object if called outside a component
+      return {
+        addNotification: null
+      };
+    }
+  };
+
+  const { addNotification } = getNotifications();
 
   useEffect(() => {
     try {
@@ -60,6 +72,7 @@ export const useBuzzClues = () => {
   const incrementUnlockedCluesAndAddClue = useCallback(() => {
     let updatedCount = 0;
     setUnlockedClues(prevCount => {
+      // Ensure we don't exceed MAX_CLUES
       if (prevCount >= MAX_CLUES) {
         toast("Hai già sbloccato tutti gli indizi disponibili!", {
           duration: 3000,
@@ -78,12 +91,17 @@ export const useBuzzClues = () => {
         setLastVagueClue(nextClue);
         const newUsed = [...prevUsed, nextClue];
 
-        const success = addNotification?.({
-          title: "Nuovo indizio extra!",
-          description: nextClue
-        });
+        // Only try to add notification if addNotification is available
+        if (addNotification) {
+          const success = addNotification({
+            title: "Nuovo indizio extra!",
+            description: nextClue
+          });
 
-        if (!success) {
+          if (!success) {
+            toast("Nuovo indizio extra! " + nextClue, { duration: 5000 });
+          }
+        } else {
           toast("Nuovo indizio extra! " + nextClue, { duration: 5000 });
         }
 
