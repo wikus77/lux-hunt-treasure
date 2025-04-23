@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -104,7 +103,9 @@ const Buzz = () => {
     setShowDialog(true);
     
     // Simulate payment completed (in real app this would check actual payment)
-    const simulatePaymentSuccess = () => {
+    setTimeout(() => {
+      setShowDialog(false);
+      
       // Generate a random clue from the vague clues
       const newClue = getNextVagueClue();
       setLastVagueClue(newClue);
@@ -134,12 +135,6 @@ const Buzz = () => {
           duration: 3000,
         });
       }
-    };
-    
-    // Close dialog after button click
-    setTimeout(() => {
-      setShowDialog(false);
-      simulatePaymentSuccess();
     }, 1500);
   }, [
     playSound, 
