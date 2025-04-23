@@ -13,6 +13,7 @@ import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import Subscriptions from './pages/Subscriptions'
 import Notifications from './pages/Notifications'
+import Buzz from './pages/Buzz' // Importiamo il componente Buzz
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -26,7 +27,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
-          <Route path="/buzz" element={<div className="p-8 text-center">La funzionalità Buzz sarà disponibile presto!</div>} />
+          <Route path="/buzz" element={<Buzz />} /> {/* Utilizziamo il componente Buzz invece del messaggio placeholder */}
           <Route path="/notifications" element={<Notifications />} />
           <Route path="*" element={<NotFound />} />
         </Route>
