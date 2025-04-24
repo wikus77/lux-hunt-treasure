@@ -40,11 +40,11 @@ export function SocialShareButtons({
   };
 
   return (
-    <div className={`flex flex-wrap gap-2 ${className}`}>
+    <div className={`flex flex-wrap gap-1 ${className}`}>
       <Button
-        variant="outline"
+        variant="ghost"
         size="icon"
-        className="bg-[#3b5998] hover:bg-[#3b5998]/80 text-white rounded-full press-effect"
+        className="hover:bg-[#3b5998]/10 text-[#3b5998] rounded-full press-effect w-8 h-8"
         onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedTitle}`, '_blank')}
       >
         <Facebook className="h-4 w-4" />
@@ -52,9 +52,9 @@ export function SocialShareButtons({
       </Button>
 
       <Button
-        variant="outline"
+        variant="ghost"
         size="icon"
-        className="bg-[#1DA1F2] hover:bg-[#1DA1F2]/80 text-white rounded-full press-effect"
+        className="hover:bg-[#1DA1F2]/10 text-[#1DA1F2] rounded-full press-effect w-8 h-8"
         onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`, '_blank')}
       >
         <Twitter className="h-4 w-4" />
@@ -62,9 +62,9 @@ export function SocialShareButtons({
       </Button>
 
       <Button
-        variant="outline"
+        variant="ghost"
         size="icon"
-        className="bg-gradient-to-r from-[#C13584] to-[#E1306C] hover:opacity-80 text-white rounded-full press-effect"
+        className="hover:bg-[#E1306C]/10 text-[#E1306C] rounded-full press-effect w-8 h-8"
         onClick={() => {
           toast("Instagram", {
             description: "Apri Instagram e condividi nelle tue storie",
@@ -76,9 +76,9 @@ export function SocialShareButtons({
       </Button>
 
       <Button
-        variant="outline"
+        variant="ghost"
         size="icon"
-        className="bg-[#0077B5] hover:bg-[#0077B5]/80 text-white rounded-full press-effect"
+        className="hover:bg-[#0077B5]/10 text-[#0077B5] rounded-full press-effect w-8 h-8"
         onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, '_blank')}
       >
         <Linkedin className="h-4 w-4" />
@@ -86,9 +86,9 @@ export function SocialShareButtons({
       </Button>
 
       <Button
-        variant="outline"
+        variant="ghost"
         size="icon"
-        className="bg-black/40 hover:bg-black/60 text-white rounded-full press-effect"
+        className="hover:bg-black/10 text-black rounded-full press-effect w-8 h-8"
         onClick={handleShare}
       >
         <Share2 className="h-4 w-4" />
