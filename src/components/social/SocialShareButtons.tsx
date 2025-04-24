@@ -56,7 +56,7 @@ export function SocialShareButtons({
         className="hover:bg-black/10 text-black rounded-full press-effect w-8 h-8"
         onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`, '_blank')}
       >
-        <X className="h-4 w-4" strokeWidth={2.5} />
+        <X className="h-4 w-4" color="#FFFFFF" strokeWidth={2.75} />
         <span className="sr-only">Share on X</span>
       </Button>
 
