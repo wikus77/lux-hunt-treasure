@@ -10,6 +10,8 @@ export default function BottomNavigation() {
     return location.pathname === path;
   };
 
+  const gradientClass = "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text";
+
   return (
     <div className="fixed bottom-0 left-0 z-40 w-full h-16 bg-black/80 backdrop-blur-sm border-t border-projectx-deep-blue/30">
       <div className="grid h-full grid-cols-6 mx-auto">
@@ -19,19 +21,10 @@ export default function BottomNavigation() {
           className="flex flex-col items-center justify-center press-effect"
         >
           <Home
-            className={`w-6 h-6 mb-1 ${
-              isActive("/") || isActive("/home")
-                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
-                : "text-gray-400"
-            }`}
+            className={isActive("/") || isActive("/home") ? gradientClass : "text-gray-400"}
+            strokeWidth={1.5}
           />
-          <span
-            className={`text-xs ${
-              isActive("/") || isActive("/home")
-                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
-                : "text-gray-400"
-            }`}
-          >
+          <span className={isActive("/") || isActive("/home") ? gradientClass : "text-gray-400"}>
             Home
           </span>
         </button>
@@ -41,19 +34,10 @@ export default function BottomNavigation() {
           className="flex flex-col items-center justify-center press-effect"
         >
           <Map
-            className={`w-6 h-6 mb-1 ${
-              isActive("/map") 
-                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
-                : "text-gray-400"
-            }`}
+            className={isActive("/map") ? gradientClass : "text-gray-400"}
+            strokeWidth={1.5}
           />
-          <span
-            className={`text-xs ${
-              isActive("/map") 
-                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
-                : "text-gray-400"
-            }`}
-          >
+          <span className={isActive("/map") ? gradientClass : "text-gray-400"}>
             Map
           </span>
         </button>
@@ -63,13 +47,9 @@ export default function BottomNavigation() {
           className="flex flex-col items-center justify-center press-effect"
         >
           <Circle
-            className={`w-6 h-6 mb-1 ${
-              isActive("/buzz") 
-                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text" 
-                : "text-gray-400"
-            }`}
+            className={isActive("/buzz") ? gradientClass : "text-gray-400"}
             fill={isActive("/buzz") ? "url(#gradient)" : "none"}
-            strokeWidth={isActive("/buzz") ? 1 : 2}
+            strokeWidth={1.5}
           />
           <svg width="0" height="0" className="hidden">
             <defs>
@@ -79,13 +59,7 @@ export default function BottomNavigation() {
               </linearGradient>
             </defs>
           </svg>
-          <span
-            className={`text-xs ${
-              isActive("/buzz") 
-                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text" 
-                : "text-gray-400"
-            }`}
-          >
+          <span className={isActive("/buzz") ? gradientClass : "text-gray-400"}>
             Buzz
           </span>
         </button>
@@ -95,19 +69,10 @@ export default function BottomNavigation() {
           className="flex flex-col items-center justify-center press-effect"
         >
           <Award
-            className={`w-6 h-6 mb-1 ${
-              isActive("/stats") 
-                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
-                : "text-gray-400"
-            }`}
+            className={isActive("/stats") ? gradientClass : "text-gray-400"}
+            strokeWidth={1.5}
           />
-          <span
-            className={`text-xs ${
-              isActive("/stats") 
-                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
-                : "text-gray-400"
-            }`}
-          >
+          <span className={isActive("/stats") ? gradientClass : "text-gray-400"}>
             Stats
           </span>
         </button>
@@ -117,19 +82,10 @@ export default function BottomNavigation() {
           className="flex flex-col items-center justify-center press-effect"
         >
           <Bell
-            className={`w-6 h-6 mb-1 ${
-              isActive("/notifications")
-                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
-                : "text-gray-400"
-            }`}
+            className={isActive("/notifications") ? gradientClass : "text-gray-400"}
+            strokeWidth={1.5}
           />
-          <span
-            className={`text-xs ${
-              isActive("/notifications")
-                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
-                : "text-gray-400"
-            }`}
-          >
+          <span className={isActive("/notifications") ? gradientClass : "text-gray-400"}>
             Notifiche
           </span>
         </button>
@@ -139,19 +95,10 @@ export default function BottomNavigation() {
           className="flex flex-col items-center justify-center press-effect"
         >
           <User
-            className={`w-6 h-6 mb-1 ${
-              isActive("/profile") 
-                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
-                : "text-gray-400"
-            }`}
+            className={isActive("/profile") ? gradientClass : "text-gray-400"}
+            strokeWidth={1.5}
           />
-          <span
-            className={`text-xs ${
-              isActive("/profile") 
-                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
-                : "text-gray-400"
-            }`}
-          >
+          <span className={isActive("/profile") ? gradientClass : "text-gray-400"}>
             Profilo
           </span>
         </button>
