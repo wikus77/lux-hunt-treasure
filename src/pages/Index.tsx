@@ -19,17 +19,22 @@ const Index = () => {
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const navigate = useNavigate();
 
-  // Impostazione della data per il countdown (un mese da oggi)
+  // Set date for countdown (one month from today)
   const nextEventDate = new Date();
   nextEventDate.setMonth(nextEventDate.getMonth() + 1);
 
   // Check if intro was shown before
   useEffect(() => {
+    // Reset localStorage for testing (comment out in production)
+    // localStorage.removeItem('introShown');
+    
     const introShown = localStorage.getItem('introShown');
     if (introShown) {
       setShowIntro(false);
       setIntroCompleted(true);
     } else {
+      // First viewing, show intro
+      setShowIntro(true);
       // Set after first viewing
       localStorage.setItem('introShown', 'true');
     }
