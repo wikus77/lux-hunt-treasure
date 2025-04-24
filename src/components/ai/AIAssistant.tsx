@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Circle } from 'lucide-react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -57,11 +56,9 @@ export function AIAssistant() {
     'Riassumi la situazione',
   ];
 
-  // Generate personalized answers based on user progress
   const generateResponse = (userMessage: string) => {
     setIsTyping(true);
     
-    // In a real implementation, this would use a proper AI service
     setTimeout(() => {
       let response = '';
       const lowerMessage = userMessage.toLowerCase();
@@ -143,9 +140,9 @@ export function AIAssistant() {
       {/* Floating button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-yellow-300 to-green-400 flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-300 animate-spin-slow"
+        className="fixed bottom-24 right-6 z-50 w-12 h-12 rounded-full bg-gradient-to-r from-yellow-300 to-green-400 flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-300 animate-spin-slow border-2 border-white/30 bg-opacity-30 backdrop-blur-sm"
       >
-        <Circle className="w-8 h-8 text-white" />
+        <Circle className="w-6 h-6 text-white/70" />
       </button>
 
       {/* Chat Dialog */}
