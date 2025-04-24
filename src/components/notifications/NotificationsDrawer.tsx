@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import NotificationItem from "./NotificationItem";
 import NotificationDialog from "./NotificationDialog";
-import { Bell, MapPin, Car, Home, Briefcase, Tool } from "lucide-react";
+import { Bell, MapPin, Car, Home, Briefcase, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/useNotifications";
 import type { Notification } from "@/hooks/useNotifications";
@@ -100,7 +100,7 @@ const NotificationsDrawer = ({ open, onOpenChange }: NotificationsDrawerProps) =
                   <span className="sr-only sm:not-sr-only sm:ml-1">Esterni</span>
                 </TabsTrigger>
                 <TabsTrigger value="equipment" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
-                  <Tool className="h-3 w-3" />
+                  <Wrench className="h-3 w-3" />
                   <span className="sr-only sm:not-sr-only sm:ml-1">Equip.</span>
                 </TabsTrigger>
               </TabsList>

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Mail, MapPin, Car, Briefcase, Tool, Home } from "lucide-react";
+import { Mail, MapPin, Car, Briefcase, Home, Wrench } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationDialog from "@/components/notifications/NotificationDialog";
 import NotificationItem from "@/components/notifications/NotificationItem";
@@ -98,7 +98,7 @@ const Notifications = () => {
                   value="equipment"
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink data-[state=active]:text-white"
                 >
-                  <Tool className="h-4 w-4 mr-1" />
+                  <Wrench className="h-4 w-4 mr-1" />
                   <span>Equipaggiamento</span>
                 </TabsTrigger>
               </TabsList>
