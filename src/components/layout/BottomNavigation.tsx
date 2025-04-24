@@ -21,14 +21,14 @@ export default function BottomNavigation() {
           <Home
             className={`w-6 h-6 mb-1 ${
               isActive("/") || isActive("/home")
-                ? "text-projectx-neon-blue"
+                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
                 : "text-gray-400"
             }`}
           />
           <span
             className={`text-xs ${
               isActive("/") || isActive("/home")
-                ? "text-projectx-neon-blue"
+                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
                 : "text-gray-400"
             }`}
           >
@@ -42,12 +42,16 @@ export default function BottomNavigation() {
         >
           <Map
             className={`w-6 h-6 mb-1 ${
-              isActive("/map") ? "text-projectx-neon-blue" : "text-gray-400"
+              isActive("/map") 
+                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
+                : "text-gray-400"
             }`}
           />
           <span
             className={`text-xs ${
-              isActive("/map") ? "text-projectx-neon-blue" : "text-gray-400"
+              isActive("/map") 
+                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
+                : "text-gray-400"
             }`}
           >
             Map
@@ -92,12 +96,16 @@ export default function BottomNavigation() {
         >
           <Award
             className={`w-6 h-6 mb-1 ${
-              isActive("/stats") ? "text-projectx-neon-blue" : "text-gray-400"
+              isActive("/stats") 
+                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
+                : "text-gray-400"
             }`}
           />
           <span
             className={`text-xs ${
-              isActive("/stats") ? "text-projectx-neon-blue" : "text-gray-400"
+              isActive("/stats") 
+                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
+                : "text-gray-400"
             }`}
           >
             Stats
@@ -111,14 +119,14 @@ export default function BottomNavigation() {
           <Bell
             className={`w-6 h-6 mb-1 ${
               isActive("/notifications")
-                ? "text-projectx-neon-blue"
+                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
                 : "text-gray-400"
             }`}
           />
           <span
             className={`text-xs ${
               isActive("/notifications")
-                ? "text-projectx-neon-blue"
+                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
                 : "text-gray-400"
             }`}
           >
@@ -132,12 +140,16 @@ export default function BottomNavigation() {
         >
           <User
             className={`w-6 h-6 mb-1 ${
-              isActive("/profile") ? "text-projectx-neon-blue" : "text-gray-400"
+              isActive("/profile") 
+                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
+                : "text-gray-400"
             }`}
           />
           <span
             className={`text-xs ${
-              isActive("/profile") ? "text-projectx-neon-blue" : "text-gray-400"
+              isActive("/profile") 
+                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text"
+                : "text-gray-400"
             }`}
           >
             Profilo
