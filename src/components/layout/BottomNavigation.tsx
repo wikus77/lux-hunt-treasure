@@ -1,4 +1,3 @@
-
 import { useLocation, useNavigate } from "react-router-dom";
 import { Home, Map, Bell, User, Circle, Award } from "lucide-react";
 
@@ -58,15 +57,15 @@ export default function BottomNavigation() {
         </button>
         <button
           type="button"
-          onClick={() => navigate("/stats")}
+          onClick={() => navigate("/subscriptions")}
           className="flex flex-col items-center justify-center press-effect"
         >
           <Award
-            className={`${isActive("/stats") ? "stroke-[url(#gradient)]" : "text-gray-400"}`}
+            className={`${isActive("/subscriptions") ? "stroke-[url(#gradient)]" : "text-gray-400"}`}
             strokeWidth={1.5}
           />
-          <span className={isActive("/stats") ? activeTextClass : "text-gray-400"}>
-            Stats
+          <span className={isActive("/subscriptions") ? activeTextClass : "text-gray-400"}>
+            Abbonamenti
           </span>
         </button>
         <button
