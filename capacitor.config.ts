@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   appName: 'lux-hunt-treasure',
   webDir: 'dist',
   server: {
-    url: 'https://2716f91b-957c-47ba-91e0-6f572f3ce00d.lovableproject.com?forceHideBadge=true',
+    url: '',
     cleartext: true
   },
   bundledWebRuntime: false
