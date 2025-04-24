@@ -1,6 +1,6 @@
 
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Map, Bell, User, Zap, Award } from "lucide-react";
+import { Home, Map, Bell, User, Circle, Award } from "lucide-react";
 
 export default function BottomNavigation() {
   const location = useLocation();
@@ -58,14 +58,28 @@ export default function BottomNavigation() {
           onClick={() => navigate("/buzz")}
           className="flex flex-col items-center justify-center press-effect"
         >
-          <Zap
+          <Circle
             className={`w-6 h-6 mb-1 ${
-              isActive("/buzz") ? "text-projectx-neon-blue" : "text-gray-400"
+              isActive("/buzz") 
+                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text" 
+                : "text-gray-400"
             }`}
+            fill={isActive("/buzz") ? "url(#gradient)" : "none"}
+            strokeWidth={isActive("/buzz") ? 1 : 2}
           />
+          <svg width="0" height="0" className="hidden">
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{stopColor:'#FFC300', stopOpacity:1}} />
+                <stop offset="100%" style={{stopColor:'#00FF87', stopOpacity:1}} />
+              </linearGradient>
+            </defs>
+          </svg>
           <span
             className={`text-xs ${
-              isActive("/buzz") ? "text-projectx-neon-blue" : "text-gray-400"
+              isActive("/buzz") 
+                ? "bg-gradient-to-r from-yellow-300 to-green-400 text-transparent bg-clip-text" 
+                : "text-gray-400"
             }`}
           >
             Buzz
