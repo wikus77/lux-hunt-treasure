@@ -19,7 +19,7 @@
   border: 4px solid #00E5FF;
   box-shadow: 0 0 20px #00E5FF, inset 0 0 20px #00E5FF;
   opacity: 0;
-  animation: fadeInN 7s forwards;
+  animation: fadeInN 7s forwards, glowPulse 2s infinite;
 }
 
 /* Neon letter L */
@@ -30,7 +30,7 @@
   border: 4px solid #FFC107;
   box-shadow: 0 0 20px #FFC107, inset 0 0 20px #FFC107;
   opacity: 0;
-  animation: fadeInL 7s forwards;
+  animation: fadeInL 7s forwards, glowPulse 2s infinite;
   left: 70px;
 }
 
@@ -43,49 +43,78 @@
   border: 4px solid #FF00FF;
   box-shadow: 0 0 20px #FF00FF, inset 0 0 20px #FF00FF;
   opacity: 0;
-  animation: fadeInDot 7s forwards;
+  animation: fadeInDot 7s forwards, glowPulse 2s infinite;
   left: 130px;
   top: 0;
 }
 
-/* Logo text */
-.logo-text {
+/* Mission text */
+.mission-text {
   position: absolute;
-  bottom: -40px;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 2.5rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  letter-spacing: 4px;
   color: #00E5FF;
   text-shadow: 0 0 10px #00E5FF;
   opacity: 0;
-  animation: fadeInText 7s forwards;
-  font-family: 'Inter', sans-serif;
-  font-weight: 300;
-  letter-spacing: 2px;
+  animation: fadeInText 7s forwards, textGlow 2s infinite;
 }
 
+/* Animations */
 @keyframes fadeInN {
-  0% { opacity: 0; transform: scale(0.8); }
-  30% { opacity: 0; transform: scale(0.8); }
-  40% { opacity: 1; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1); }
+  0% { opacity: 0; transform: scale(0.8) translateY(-20px); }
+  30% { opacity: 0; transform: scale(0.8) translateY(-20px); }
+  40% { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes fadeInL {
-  0% { opacity: 0; transform: scale(0.8); }
-  40% { opacity: 0; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1); }
+  0% { opacity: 0; transform: scale(0.8) translateY(-20px); }
+  40% { opacity: 0; transform: scale(0.8) translateY(-20px); }
+  50% { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes fadeInDot {
-  0% { opacity: 0; transform: scale(0.8); }
-  50% { opacity: 0; transform: scale(0.8); }
-  60% { opacity: 1; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1); }
+  0% { opacity: 0; transform: scale(0.8) translateY(-20px); }
+  50% { opacity: 0; transform: scale(0.8) translateY(-20px); }
+  60% { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes fadeInText {
-  0% { opacity: 0; transform: translateY(20px); }
-  60% { opacity: 0; transform: translateY(20px); }
-  70% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  60% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  70% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}
+
+@keyframes textGlow {
+  0%, 100% { text-shadow: 0 0 10px #00E5FF, 0 0 20px #00E5FF; }
+  50% { text-shadow: 0 0 15px #00E5FF, 0 0 30px #00E5FF; }
+}
+
+/* Scanning line effect */
+.scan-line {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #00E5FF, transparent);
+  top: 0;
+  animation: scanEffect 2s linear infinite;
+}
+
+@keyframes scanEffect {
+  0% { transform: translateY(0); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(300px); opacity: 0; }
 }

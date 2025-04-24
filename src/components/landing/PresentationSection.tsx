@@ -33,7 +33,12 @@ const PresentationSection = ({ visible }: PresentationSectionProps) => {
       initial="hidden"
       animate={visible ? "visible" : "hidden"}
     >
-      {/* Logo at the top */}
+      {/* Animated horizontal lines */}
+      <div className="absolute w-full h-[1px] bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent top-0 left-0 overflow-hidden">
+        <div className="absolute w-full h-full bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent animate-[moveLight_2s_linear_infinite]"></div>
+      </div>
+
+      {/* Logo */}
       <motion.div 
         className="mb-12"
         variants={itemVariants}
@@ -93,9 +98,10 @@ const PresentationSection = ({ visible }: PresentationSectionProps) => {
         <p className="text-[#FFC107] text-lg uppercase">and really win.</p>
       </motion.div>
 
-      {/* Linee decorative orizzontali */}
-      <div className="absolute w-full h-[1px] bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent top-0 left-0"></div>
-      <div className="absolute w-full h-[1px] bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent bottom-0 left-0"></div>
+      {/* Bottom animated line */}
+      <div className="absolute w-full h-[1px] bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent bottom-0 left-0 overflow-hidden">
+        <div className="absolute w-full h-full bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent animate-[moveLight_2s_linear_infinite]"></div>
+      </div>
     </motion.div>
   );
 };

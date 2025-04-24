@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -91,6 +90,10 @@ export default {
           '50%': { 
             borderColor: 'rgba(12, 12, 12, 0.8)' 
           }
+        },
+        'moveLight': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' }
         }
       },
       animation: {
@@ -98,7 +101,8 @@ export default {
         'accordion-up': 'accordion-up 0.2s ease-out',
         'glow': 'glow 2s ease-in-out infinite',
         'neon-pulse': 'neon-pulse 2s ease-in-out infinite',
-        'pulse-border': 'pulse-border 4s ease-in-out infinite'
+        'pulse-border': 'pulse-border 4s ease-in-out infinite',
+        'moveLight': 'moveLight 2s linear infinite',
       },
       backgroundImage: {
         'hero-pattern': "linear-gradient(rgba(0,0,0,1),rgba(0,0,0,1))",
