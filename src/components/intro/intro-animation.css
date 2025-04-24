@@ -8,99 +8,99 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 40px;
+  background-color: black;
+}
+
+/* Logo text */
+.mission-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 500;
+  letter-spacing: 4px;
+  color: #00E5FF;
+  text-shadow: 0 0 10px #00E5FF;
+  opacity: 0;
+  animation: fadeInText 7s forwards;
 }
 
 /* Neon letter N */
 .neon-n {
-  position: absolute;
+  position: relative;
   width: 60px;
   height: 80px;
-  border: 4px solid #00E5FF;
-  box-shadow: 0 0 20px #00E5FF, inset 0 0 20px #00E5FF;
+  background: #00E5FF;
+  border-radius: 30px;
+  box-shadow: 0 0 20px #00E5FF;
   opacity: 0;
   animation: fadeInN 7s forwards, glowPulse 2s infinite;
 }
 
 /* Neon letter L */
 .neon-l {
-  position: absolute;
+  position: relative;
   width: 50px;
   height: 80px;
-  border: 4px solid #FFC107;
-  box-shadow: 0 0 20px #FFC107, inset 0 0 20px #FFC107;
+  background: #FFC107;
+  border-radius: 30px;
+  box-shadow: 0 0 20px #FFC107;
   opacity: 0;
   animation: fadeInL 7s forwards, glowPulse 2s infinite;
-  left: 70px;
 }
 
 /* Neon dot */
 .neon-dot {
-  position: absolute;
+  position: relative;
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 4px solid #FF00FF;
-  box-shadow: 0 0 20px #FF00FF, inset 0 0 20px #FF00FF;
+  background: #FF00FF;
+  box-shadow: 0 0 20px #FF00FF;
   opacity: 0;
   animation: fadeInDot 7s forwards, glowPulse 2s infinite;
-  left: 130px;
-  top: 0;
 }
 
-/* Mission text */
-.mission-text {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 2.5rem;
-  font-family: 'Inter', sans-serif;
-  font-weight: 300;
-  letter-spacing: 4px;
-  color: #00E5FF;
-  text-shadow: 0 0 10px #00E5FF;
-  opacity: 0;
-  animation: fadeInText 7s forwards, textGlow 2s infinite;
+/* Logo layout container */
+.logo-symbols {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  height: 100px;
+  position: relative;
 }
 
 /* Animations */
 @keyframes fadeInN {
-  0% { opacity: 0; transform: scale(0.8) translateY(-20px); }
-  30% { opacity: 0; transform: scale(0.8) translateY(-20px); }
-  40% { opacity: 1; transform: scale(1) translateY(0); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
+  0% { opacity: 0; transform: scale(0.8); }
+  30% { opacity: 0; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 @keyframes fadeInL {
-  0% { opacity: 0; transform: scale(0.8) translateY(-20px); }
-  40% { opacity: 0; transform: scale(0.8) translateY(-20px); }
-  50% { opacity: 1; transform: scale(1) translateY(0); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
+  0% { opacity: 0; transform: scale(0.8); }
+  40% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 @keyframes fadeInDot {
-  0% { opacity: 0; transform: scale(0.8) translateY(-20px); }
-  50% { opacity: 0; transform: scale(0.8) translateY(-20px); }
-  60% { opacity: 1; transform: scale(1) translateY(0); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 0; transform: scale(0.8); }
+  60% { opacity: 1; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 @keyframes fadeInText {
-  0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
-  60% { opacity: 0; transform: translateX(-50%) translateY(20px); }
-  70% { opacity: 1; transform: translateX(-50%) translateY(0); }
-  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  0% { opacity: 0; transform: translateY(20px); }
+  60% { opacity: 0; transform: translateY(20px); }
+  70% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes glowPulse {
   0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.3); }
-}
-
-@keyframes textGlow {
-  0%, 100% { text-shadow: 0 0 10px #00E5FF, 0 0 20px #00E5FF; }
-  50% { text-shadow: 0 0 15px #00E5FF, 0 0 30px #00E5FF; }
+  50% { filter: brightness(1.2); }
 }
 
 /* Scanning line effect */
@@ -108,7 +108,7 @@
   position: absolute;
   width: 100%;
   height: 2px;
-  background: linear-gradient(to right, transparent, #00E5FF, transparent);
+  background: linear-gradient(to right, transparent, rgba(0, 229, 255, 0.8), transparent);
   top: 0;
   animation: scanEffect 2s linear infinite;
 }
@@ -118,3 +118,4 @@
   50% { opacity: 1; }
   100% { transform: translateY(300px); opacity: 0; }
 }
+

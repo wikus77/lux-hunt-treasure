@@ -11,7 +11,7 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       onComplete();
-    }, 7000); // Set to 7 seconds as requested
+    }, 7000);
 
     return () => clearTimeout(timer);
   }, [onComplete]);
@@ -24,13 +24,17 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
       exit={{ opacity: 0, transition: { duration: 1 } }}
     >
       <div className="logo-container">
-        <div className="neon-n"></div>
-        <div className="neon-l"></div>
-        <div className="neon-dot"></div>
-        <div className="logo-text">M1SSION</div>
+        <div className="scan-line" />
+        <div className="logo-symbols">
+          <div className="neon-n" />
+          <div className="neon-l" />
+          <div className="neon-dot" />
+        </div>
+        <div className="mission-text">M1SSION</div>
       </div>
     </motion.div>
   );
 };
 
 export default IntroAnimation;
+
