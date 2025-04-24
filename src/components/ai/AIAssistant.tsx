@@ -1,9 +1,9 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Circle } from 'lucide-react';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Bot, User, X, Send, ChevronDown } from "lucide-react";
-import { ExpandingMenu } from "@/components/ui/expanding-menu";
+import { Bot, User, Send } from "lucide-react";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
 
 interface Message {
@@ -139,90 +139,99 @@ export function AIAssistant() {
   };
   
   return (
-    <div className={`fixed bottom-16 right-4 z-40 transition-all duration-300 ${isOpen ? '' : 'translate-y-[calc(100%-3.5rem)]'}`}>
-      <div 
-        className="flex items-center justify-between bg-black/70 backdrop-blur-sm p-2 border border-projectx-deep-blue/40 rounded-t-lg cursor-pointer"
-        onClick={() => setIsOpen(prev => !prev)}
+    <>
+      {/* Floating button */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-24 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-yellow-300 to-green-400 flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-300 animate-spin-slow"
       >
-        <div className="flex items-center gap-2">
-          <div className="rounded-full bg-projectx-blue p-1">
-            <Bot className="h-4 w-4" />
-          </div>
-          <span className="font-medium">Assistente AI</span>
-        </div>
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </div>
-      
-      <Card className="w-[350px] max-h-[500px] border border-projectx-deep-blue/40 rounded-t-none shadow-lg">
-        <CardContent className="p-0 flex flex-col h-[450px]">
-          <div className="flex-grow overflow-y-auto p-3 space-y-3">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+        <Circle className="w-8 h-8 text-white" />
+      </button>
+
+      {/* Chat Dialog */}
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-[400px] p-0 bg-black/90 border border-white/10">
+          <div className="flex flex-col h-[600px]">
+            {/* Header */}
+            <div className="flex items-center gap-3 p-4 border-b border-white/10">
+              <div className="rounded-full bg-gradient-to-r from-yellow-300 to-green-400 p-2">
+                <Bot className="h-5 w-5 text-black" />
+              </div>
+              <span className="font-medium">Assistente AI</span>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-grow overflow-y-auto p-4 space-y-4">
+              {messages.map((msg) => (
                 <div
-                  className={`max-w-[80%] px-3 py-2 rounded-lg ${
-                    msg.role === 'user'
-                      ? 'bg-projectx-blue text-white'
-                      : 'bg-black/40 border border-projectx-deep-blue/40'
-                  }`}
+                  key={msg.id}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className="text-sm">{msg.content}</div>
-                  <div className="text-right text-xs text-gray-400 mt-1">
-                    {formatTimestamp(msg.timestamp)}
+                  <div
+                    className={`max-w-[80%] px-4 py-2 rounded-2xl ${
+                      msg.role === 'user'
+                        ? 'bg-gradient-to-r from-yellow-300 to-green-400 text-black'
+                        : 'bg-white/10'
+                    }`}
+                  >
+                    <div className="text-sm">{msg.content}</div>
+                    <div className="text-right text-xs opacity-70 mt-1">
+                      {formatTimestamp(msg.timestamp)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-            
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="max-w-[80%] px-4 py-2 rounded-lg bg-black/40 border border-projectx-deep-blue/40">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                    <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                    <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </div>
-          
-          <div className="p-3 pt-2 border-t border-gray-800">
-            <div className="flex flex-wrap gap-2 mb-2">
-              {suggestions.map((suggestion) => (
-                <Suggestion
-                  key={suggestion}
-                  text={suggestion}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                />
               ))}
+              
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="max-w-[80%] px-4 py-2 rounded-2xl bg-white/10">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
             </div>
-            
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Scrivi un messaggio..."
-                className="flex-grow bg-black/40 border border-projectx-deep-blue/40 rounded-md px-3 py-2 text-sm"
-              />
-              <Button
-                size="icon"
-                onClick={handleSendMessage}
-                disabled={!input.trim() || isTyping}
-                className="bg-projectx-blue hover:bg-projectx-blue/80"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+
+            {/* Quick Suggestions */}
+            <div className="p-4 border-t border-white/10">
+              <div className="flex flex-wrap gap-2 mb-4">
+                {suggestions.map((suggestion) => (
+                  <Suggestion
+                    key={suggestion}
+                    text={suggestion}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                  />
+                ))}
+              </div>
+
+              {/* Input */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder="Scrivi un messaggio..."
+                  className="flex-grow bg-white/10 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300/50"
+                />
+                <Button
+                  size="icon"
+                  onClick={handleSendMessage}
+                  disabled={!input.trim() || isTyping}
+                  className="rounded-full bg-gradient-to-r from-yellow-300 to-green-400 hover:opacity-90"
+                >
+                  <Send className="h-4 w-4 text-black" />
+                </Button>
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
