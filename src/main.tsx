@@ -15,14 +15,15 @@ import Subscriptions from './pages/Subscriptions'
 import Notifications from './pages/Notifications'
 import Buzz from './pages/Buzz'
 import PaymentMethods from './pages/PaymentMethods'
-import Stats from './pages/Stats' // Add the new Stats page
+import Stats from './pages/Stats'
+import Index from './pages/Index'
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <App>
       <Routes>
+        <Route path="/" element={<Index />} />
         <Route path="/" element={<MainLayout />}>
-          <Route index element={<Home />} />
           <Route path="/home" element={<Home />} />
           <Route path="/events" element={<Events />} />
           <Route path="/map" element={<Map />} />

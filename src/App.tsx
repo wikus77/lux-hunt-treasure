@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import './App.css'
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as SonnerToaster } from "sonner"
@@ -12,8 +12,14 @@ function App({ children }: { children?: React.ReactNode }) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAgeVerificationModalOpen, setIsAgeVerificationModalOpen] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
+    // Don't show modals on landing page
+    if (location.pathname === '/') {
+      return;
+    }
+
     const hasVerifiedAge = localStorage.getItem('ageVerified');
     const isLoggedIn = localStorage.getItem('isLoggedIn');
 
@@ -26,7 +32,7 @@ function App({ children }: { children?: React.ReactNode }) {
     if (!isLoggedIn && hasVerifiedAge) {
       setIsLoginModalOpen(true);
     }
-  }, []);
+  }, [location]);
 
   const handleAgeVerification = () => {
     localStorage.setItem('ageVerified', 'true');
