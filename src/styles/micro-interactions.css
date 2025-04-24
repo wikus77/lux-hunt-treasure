@@ -1,0 +1,55 @@
+
+@layer utilities {
+  /* Pulsante con effetto di pressione */
+  .press-effect {
+    @apply transition-all duration-200 active:scale-95 hover:scale-[1.02];
+  }
+
+  /* Effetto di espansione menu */
+  .menu-expand {
+    @apply transition-all duration-300;
+  }
+  .menu-expand-enter {
+    @apply opacity-0 -translate-y-2;
+  }
+  .menu-expand-enter-active {
+    @apply opacity-100 translate-y-0;
+  }
+
+  /* Toggle switch personalizzato con animazione */
+  .toggle-slide {
+    @apply transition-transform duration-300 ease-in-out;
+  }
+  
+  /* Feedback visivo per interazioni */
+  .interaction-feedback {
+    @apply relative overflow-hidden;
+  }
+  .interaction-feedback::after {
+    content: '';
+    @apply absolute inset-0 bg-white/10 opacity-0 transition-opacity duration-200;
+  }
+  .interaction-feedback:active::after {
+    @apply opacity-100;
+  }
+
+  /* Effetto ripple per i click */
+  .ripple-effect {
+    @apply relative overflow-hidden;
+  }
+  .ripple {
+    @apply absolute bg-white/20 rounded-full 
+           animate-[ripple_0.6s_ease-in-out] opacity-0;
+  }
+
+  @keyframes ripple {
+    0% {
+      transform: scale(0);
+      opacity: 0.5;
+    }
+    100% {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+}
