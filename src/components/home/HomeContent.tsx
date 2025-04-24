@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import CurrentEventSection from './CurrentEventSection';
 import MysteryPrizesSection from './MysteryPrizesSection';
 import CluesSection from './CluesSection';
+import { SocialShareButtons } from "@/components/social/SocialShareButtons";
+import { AIAssistant } from '@/components/ai/AIAssistant';
 
 export default function HomeContent() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -26,9 +28,12 @@ export default function HomeContent() {
         <p className="text-muted-foreground">
           Visualizza e modifica le tue informazioni personali.
         </p>
-        <Button onClick={() => setIsProfileModalOpen(true)}>
-          Visualizza Profilo
-        </Button>
+        <div className="flex flex-wrap gap-3 items-center">
+          <Button onClick={() => setIsProfileModalOpen(true)}>
+            Visualizza Profilo
+          </Button>
+          <SocialShareButtons />
+        </div>
         <BriefProfileModal open={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
       </section>
 
@@ -37,10 +42,22 @@ export default function HomeContent() {
         <p className="text-muted-foreground">
           Configura le tue preferenze e personalizza l'app.
         </p>
-        <Button onClick={() => navigate('/settings')}>
-          Impostazioni
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={() => navigate('/settings')}>
+            Impostazioni
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/stats')} 
+            className="bg-black/40 border-projectx-deep-blue/40"
+          >
+            Statistiche e Classifiche
+          </Button>
+        </div>
       </section>
+
+      {/* AI Assistant (always visible on all pages) */}
+      <AIAssistant />
     </div>
   );
 }

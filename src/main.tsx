@@ -14,7 +14,8 @@ import Settings from './pages/Settings'
 import Subscriptions from './pages/Subscriptions'
 import Notifications from './pages/Notifications'
 import Buzz from './pages/Buzz'
-import PaymentMethods from './pages/PaymentMethods' // Importiamo il componente PaymentMethods
+import PaymentMethods from './pages/PaymentMethods'
+import Stats from './pages/Stats' // Add the new Stats page
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -30,7 +31,8 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/subscriptions" element={<Subscriptions />} />
           <Route path="/buzz" element={<Buzz />} />
           <Route path="/notifications" element={<Notifications />} />
-          <Route path="/payment-methods" element={<PaymentMethods />} /> {/* Aggiungiamo la rotta per PaymentMethods */}
+          <Route path="/payment-methods" element={<PaymentMethods />} />
+          <Route path="/stats" element={<Stats />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
