@@ -79,7 +79,7 @@ const UnifiedHeader = ({
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full px-4 py-4 flex flex-col items-center justify-center border-b border-projectx-deep-blue bg-black/50 backdrop-blur-xl transition-all duration-300">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full px-4 py-2 flex flex-col items-center justify-center border-b border-projectx-deep-blue bg-black/50 backdrop-blur-xl transition-all duration-300">
       <div className="flex w-full max-w-screen-xl justify-between items-center">
         <button
           type="button"
