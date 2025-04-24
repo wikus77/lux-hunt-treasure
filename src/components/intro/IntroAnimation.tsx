@@ -37,4 +37,3 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
 };
 
 export default IntroAnimation;
-

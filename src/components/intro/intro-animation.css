@@ -12,61 +12,71 @@
   background-color: black;
 }
 
-/* Logo text */
-.mission-text {
-  font-family: 'Inter', sans-serif;
-  font-size: 2.5rem;
-  font-weight: 500;
-  letter-spacing: 4px;
-  color: #00E5FF;
-  text-shadow: 0 0 10px #00E5FF;
-  opacity: 0;
-  animation: fadeInText 7s forwards;
-}
-
-/* Neon letter N */
-.neon-n {
-  position: relative;
-  width: 60px;
-  height: 80px;
-  background: #00E5FF;
-  border-radius: 30px;
-  box-shadow: 0 0 20px #00E5FF;
-  opacity: 0;
-  animation: fadeInN 7s forwards, glowPulse 2s infinite;
-}
-
-/* Neon letter L */
-.neon-l {
-  position: relative;
-  width: 50px;
-  height: 80px;
-  background: #FFC107;
-  border-radius: 30px;
-  box-shadow: 0 0 20px #FFC107;
-  opacity: 0;
-  animation: fadeInL 7s forwards, glowPulse 2s infinite;
-}
-
-/* Neon dot */
-.neon-dot {
-  position: relative;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #FF00FF;
-  box-shadow: 0 0 20px #FF00FF;
-  opacity: 0;
-  animation: fadeInDot 7s forwards, glowPulse 2s infinite;
-}
-
-/* Logo layout container */
+/* Logo symbols container */
 .logo-symbols {
   display: flex;
   align-items: flex-start;
   gap: 10px;
   height: 100px;
   position: relative;
+}
+
+/* Neon letter N */
+.neon-n {
+  width: 60px;
+  height: 80px;
+  background: linear-gradient(90deg, #00E5FF, #1EAEDB);
+  border-radius: 10px;
+  box-shadow: 0 0 20px #00E5FF, inset 0 0 10px rgba(255,255,255,0.5);
+  opacity: 0;
+  animation: fadeInN 7s forwards, glowPulse 2s infinite;
+}
+
+/* Neon letter L */
+.neon-l {
+  width: 50px;
+  height: 80px;
+  background: linear-gradient(90deg, #FFC107, #FF9800);
+  border-radius: 10px;
+  box-shadow: 0 0 20px #FFC107, inset 0 0 10px rgba(255,255,255,0.5);
+  opacity: 0;
+  animation: fadeInL 7s forwards, glowPulse 2s infinite;
+}
+
+/* Neon dot */
+.neon-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #FF00FF, #D946EF);
+  box-shadow: 0 0 20px #FF00FF, inset 0 0 10px rgba(255,255,255,0.5);
+  opacity: 0;
+  animation: fadeInDot 7s forwards, glowPulse 2s infinite;
+}
+
+/* Mission text */
+.mission-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 500;
+  letter-spacing: 4px;
+  background: linear-gradient(90deg, #00E5FF, #1EAEDB);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+  opacity: 0;
+  animation: fadeInText 7s forwards;
+}
+
+/* Scan line effect */
+.scan-line {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00E5FF, transparent);
+  top: 0;
+  animation: scanEffect 2s linear infinite;
 }
 
 /* Animations */
@@ -103,19 +113,8 @@
   50% { filter: brightness(1.2); }
 }
 
-/* Scanning line effect */
-.scan-line {
-  position: absolute;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(to right, transparent, rgba(0, 229, 255, 0.8), transparent);
-  top: 0;
-  animation: scanEffect 2s linear infinite;
-}
-
 @keyframes scanEffect {
   0% { transform: translateY(0); opacity: 0; }
   50% { opacity: 1; }
   100% { transform: translateY(300px); opacity: 0; }
 }
-
