@@ -1,9 +1,10 @@
+
 import { useState } from 'react';
 import { InteractiveButton } from "@/components/ui/interactive-button";
 import { ExpandingMenu } from "@/components/ui/expanding-menu";
 import { AnimatedToggle } from "@/components/ui/animated-toggle";
-import { BriefProfileModal } from "@/components/profile/BriefProfileModal";
-import { InstagramStyleDrawer } from "@/components/profile/InstagramStyleDrawer";
+import BriefProfileModal from "@/components/profile/BriefProfileModal";
+import InstagramStyleDrawer from "@/components/profile/InstagramStyleDrawer";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSound } from "@/contexts/SoundContext";
@@ -16,6 +17,7 @@ export default function HomeContent() {
   const [notificationEnabled, setNotificationEnabled] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [unlockedClues, setUnlockedClues] = useState(0);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -74,6 +76,20 @@ export default function HomeContent() {
               />
               <span>Notifiche {notificationEnabled ? 'attive' : 'disattivate'}</span>
             </div>
+          </div>
+
+          <div className="glass-card p-4 space-y-4">
+            <h3 className="text-lg font-semibold">Menu Stile Instagram</h3>
+            <Button 
+              onClick={() => setIsDrawerOpen(true)}
+              className="bg-gradient-to-r from-projectx-pink to-projectx-neon-blue"
+            >
+              Apri Menu Instagram
+            </Button>
+            <InstagramStyleDrawer 
+              open={isDrawerOpen} 
+              onClose={() => setIsDrawerOpen(false)} 
+            />
           </div>
         </div>
       </section>
