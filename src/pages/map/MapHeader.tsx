@@ -73,11 +73,10 @@ const MapHeader = ({
 
           <button
             onClick={onBuzz}
-            className="bg-gradient-to-r from-projectx-blue to-projectx-pink py-1.5 px-3 rounded-md flex items-center gap-1.5 hover:opacity-90 text-sm press-effect"
+            className="bg-gradient-to-r from-projectx-blue to-projectx-pink w-10 h-10 rounded-full flex items-center justify-center hover:opacity-90 text-sm press-effect shadow-[0_0_10px_rgba(217,70,239,0.5)]"
           >
-            <Zap className="h-4 w-4" />
-            <span className="hidden sm:inline">Buzz Mappa</span>
-            <span className="border-l border-white/20 pl-2 ml-1">{buzzMapPrice.toFixed(2)}€</span>
+            <Zap className="h-5 w-5" />
+            <span className="sr-only">Buzz Map - {buzzMapPrice.toFixed(2)}€</span>
           </button>
         </div>
       </div>

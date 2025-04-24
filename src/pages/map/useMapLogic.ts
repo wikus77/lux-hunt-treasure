@@ -6,6 +6,7 @@ import { useUserCurrentLocation } from "./useUserCurrentLocation";
 import { useMapMarkersLogic } from "./useMapMarkersLogic";
 import { useSearchAreasLogic } from "./useSearchAreasLogic";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export const useMapLogic = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -18,6 +19,7 @@ export const useMapLogic = () => {
   const location = useLocation();
   const currentLocation = useUserCurrentLocation();
   const { unlockedClues, incrementUnlockedCluesAndAddClue, getNextVagueClue } = useBuzzClues();
+  const { addNotification } = useNotifications();
 
   // Marker management
   const markerLogic = useMapMarkersLogic();
@@ -69,6 +71,12 @@ export const useMapLogic = () => {
             setClueMessage(clue.description);
             setShowCluePopup(true);
 
+            // Add notification for the clue
+            addNotification({
+              title: "Nuovo indizio sbloccato",
+              description: clue.description,
+            });
+
             // Genera sempre l'area di ricerca basata sugli indizi disponibili
             const generatedAreaId = areaLogic.generateSearchArea();
             
@@ -89,7 +97,7 @@ export const useMapLogic = () => {
     } catch (e) {
       console.error("Errore nell'elaborazione dello stato:", e);
     }
-  }, [location.state, areaLogic, incrementUnlockedCluesAndAddClue]);
+  }, [location.state, areaLogic, incrementUnlockedCluesAndAddClue, addNotification]);
 
   const handleMapReady = () => {
     try {
@@ -121,8 +129,7 @@ export const useMapLogic = () => {
   const handleMapDoubleClick = (_e: google.maps.MapMouseEvent) => { /* No logic yet */ };
 
   const handleBuzz = () => {
-    // In a real implementation this would trigger payment flow
-    // Redirect to payment page with the correct state
+    // Direct redirect to payment page with the correct state
     window.location.href = `/payment-methods?from=map&price=${buzzMapPrice.toFixed(2)}`;
     
     // Questo codice in realtà non viene eseguito a causa del reindirizzamento
