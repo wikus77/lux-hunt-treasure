@@ -1,6 +1,6 @@
 
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Map, Bell, User, Award } from "lucide-react";
+import { Home, Map, Bell, User, Zap, Award } from "lucide-react";
 
 export default function BottomNavigation() {
   const location = useLocation();
@@ -12,7 +12,7 @@ export default function BottomNavigation() {
 
   return (
     <div className="fixed bottom-0 left-0 z-40 w-full h-16 bg-black/80 backdrop-blur-sm border-t border-projectx-deep-blue/30">
-      <div className="grid h-full grid-cols-5 mx-auto">
+      <div className="grid h-full grid-cols-6 mx-auto">
         <button
           type="button"
           onClick={() => navigate("/")}
@@ -51,6 +51,24 @@ export default function BottomNavigation() {
             }`}
           >
             Map
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate("/buzz")}
+          className="flex flex-col items-center justify-center press-effect"
+        >
+          <Zap
+            className={`w-6 h-6 mb-1 ${
+              isActive("/buzz") ? "text-projectx-neon-blue" : "text-gray-400"
+            }`}
+          />
+          <span
+            className={`text-xs ${
+              isActive("/buzz") ? "text-projectx-neon-blue" : "text-gray-400"
+            }`}
+          >
+            Buzz
           </span>
         </button>
         <button
