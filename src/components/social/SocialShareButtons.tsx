@@ -1,3 +1,4 @@
+
 import { Facebook, X, Instagram, Linkedin, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -43,11 +44,45 @@ export function SocialShareButtons({
       <Button
         variant="ghost"
         size="icon"
+        className="hover:bg-[#3b5998]/10 text-[#3b5998] rounded-full press-effect w-8 h-8"
+        onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedTitle}`, '_blank')}
+      >
+        <Facebook className="h-4 w-4" />
+        <span className="sr-only">Share on Facebook</span>
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
         className="hover:bg-black/10 text-black rounded-full press-effect w-8 h-8"
         onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`, '_blank')}
       >
         <X className="h-4 w-4" />
         <span className="sr-only">Share on X</span>
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="hover:bg-[#E1306C]/10 text-[#E1306C] rounded-full press-effect w-8 h-8"
+        onClick={() => {
+          toast("Instagram", {
+            description: "Apri Instagram e condividi nelle tue storie",
+          });
+        }}
+      >
+        <Instagram className="h-4 w-4" />
+        <span className="sr-only">Share on Instagram</span>
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="hover:bg-[#0077B5]/10 text-[#0077B5] rounded-full press-effect w-8 h-8"
+        onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, '_blank')}
+      >
+        <Linkedin className="h-4 w-4" />
+        <span className="sr-only">Share on LinkedIn</span>
       </Button>
 
       <Button

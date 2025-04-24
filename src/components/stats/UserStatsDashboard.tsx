@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { MapPin, Clock, Search, Star, Trophy, Target } from "lucide-react";
+import { SocialShareButtons } from "@/components/social/SocialShareButtons";
 
 interface UserStats {
   areasExplored: number;
@@ -43,7 +44,14 @@ export function UserStatsDashboard() {
   return (
     <div className="w-full space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold gradient-text">Le Tue Statistiche</h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-bold gradient-text">Le Tue Statistiche</h2>
+          <SocialShareButtons
+            title="Guarda i miei progressi nella Mystery Hunt!"
+            description={`Ho trovato ${stats.cluesFound} indizi su ${stats.totalClues} e sono al posto ${stats.rank} in classifica!`}
+            className="scale-75"
+          />
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
