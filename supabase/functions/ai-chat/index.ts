@@ -21,7 +21,7 @@ serve(async (req) => {
     }
 
     const systemPrompt = `Sei un assistente AI esperto nella caccia al tesoro ProjectX.
-    L'utente ha attualmente sbloccato ${unlockedClues} indizi.
+    L'utente ha attualmente sbloccato ${unlockedClues || 0} indizi.
     Il tuo compito è aiutare l'utente a:
     - Interpretare gli indizi che ha trovato
     - Suggerire dove cercare nuovi indizi
@@ -30,6 +30,8 @@ serve(async (req) => {
 
     Rispondi sempre in italiano in modo conciso, amichevole e incoraggiante.
     Non rivelare mai informazioni su indizi che l'utente non ha ancora sbloccato.`
+
+    console.log(`Processing chat request with ${messages.length} messages and ${unlockedClues} unlocked clues`)
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -47,6 +49,11 @@ serve(async (req) => {
     })
 
     const data = await response.json()
+    
+    if (!response.ok) {
+      console.error('OpenAI API error:', data)
+      throw new Error(data.error?.message || 'Error contacting OpenAI API')
+    }
     
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

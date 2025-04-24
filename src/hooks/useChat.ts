@@ -38,6 +38,8 @@ export const useChat = () => {
         content: userMessage
       });
 
+      console.log("Sending chat messages to AI assistant with unlocked clues:", unlockedClues);
+
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           messages: chatMessages,
@@ -45,7 +47,15 @@ export const useChat = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw new Error(`Error invoking AI chat: ${error.message}`);
+      }
+
+      if (!data || !data.choices || !data.choices[0] || !data.choices[0].message) {
+        console.error("Unexpected response format:", data);
+        throw new Error("Risposta AI non valida");
+      }
 
       const response = data.choices[0].message.content;
       
