@@ -1,3 +1,4 @@
+
 /* Base styles */
 .logo-container {
   position: relative;
@@ -9,15 +10,6 @@
   justify-content: center;
   gap: 40px;
   background-color: black;
-}
-
-/* Logo symbols container */
-.logo-symbols {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  height: 100px;
-  position: relative;
 }
 
 /* Mission text */
@@ -46,37 +38,11 @@
 }
 
 /* Animations */
-@keyframes fadeInN {
-  0% { opacity: 0; transform: scale(0.8); }
-  30% { opacity: 0; transform: scale(0.8); }
-  40% { opacity: 1; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-@keyframes fadeInL {
-  0% { opacity: 0; transform: scale(0.8); }
-  40% { opacity: 0; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-@keyframes fadeInDot {
-  0% { opacity: 0; transform: scale(0.8); }
-  50% { opacity: 0; transform: scale(0.8); }
-  60% { opacity: 1; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
 @keyframes fadeInText {
   0% { opacity: 0; transform: translateY(20px); }
   60% { opacity: 0; transform: translateY(20px); }
   70% { opacity: 1; transform: translateY(0); }
   100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes glowPulse {
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.2); }
 }
 
 @keyframes scanEffect {
