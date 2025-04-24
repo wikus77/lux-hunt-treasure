@@ -57,26 +57,24 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {introCompleted && (
-          <>
-            <UnifiedHeader />
-            <div className="h-[72px] w-full" />
-            <LandingHeader />
-            <PresentationSection visible={introCompleted} />
-            <NextEventCountdown targetDate={nextEventDate} />
-            <HowItWorks onRegisterClick={handleRegisterClick} />
-            <LuxuryCarsSection />
-            <CTASection onRegisterClick={handleRegisterClick} />
-            <LandingFooter />
-            <AgeVerificationModal
-              open={showAgeVerification}
-              onClose={() => setShowAgeVerification(false)}
-              onVerified={handleAgeVerified}
-            />
-          </>
-        )}
-      </AnimatePresence>
+      {introCompleted && (
+        <>
+          <UnifiedHeader />
+          <div className="h-[72px] w-full" />
+          <LandingHeader />
+          <PresentationSection visible={introCompleted} />
+          <NextEventCountdown targetDate={nextEventDate} />
+          <HowItWorks onRegisterClick={handleRegisterClick} />
+          <LuxuryCarsSection />
+          <CTASection onRegisterClick={handleRegisterClick} />
+          <LandingFooter />
+          <AgeVerificationModal
+            open={showAgeVerification}
+            onClose={() => setShowAgeVerification(false)}
+            onVerified={handleAgeVerified}
+          />
+        </>
+      )}
     </div>
   );
 };

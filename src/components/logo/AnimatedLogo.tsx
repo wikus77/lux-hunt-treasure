@@ -16,7 +16,7 @@ const AnimatedLogo = () => {
   const { View } = useLottie(options);
 
   return (
-    <div className="w-32 h-auto flex items-center justify-center">
+    <div className="relative w-32 h-10 flex items-center justify-center">
       {View}
       <h1 className="absolute text-2xl font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent font-extrabold select-none drop-shadow-[0_1.5px_12px_rgba(98,115,255,0.51)]">
         M1SSION

@@ -106,7 +106,7 @@ const UnifiedHeader = ({
             />
           )}
         </button>
-        <div className="flex flex-col items-center w-1/2 min-w-max">
+        <div className="flex flex-col items-center">
           <AnimatedLogo />
           <span
             className="text-xs font-bold italic leading-tight mt-0.5 select-none
