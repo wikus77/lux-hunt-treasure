@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -106,7 +105,7 @@ const UnifiedHeader = ({
           )}
         </button>
         <div className="flex flex-col items-center w-1/2 min-w-max">
-          <h1 className="text-2xl text-center font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent font-extrabold select-none drop-shadow-[0_1.5px_12px_rgba(98,115,255,0.51)]">
+          <h1 className="text-2xl text-center font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent font-extrabold select-none drop-shadow-[0_1.5px_12px_rgba(98,115,255,0.51)] animate-neon-pulse">
             M1SSION
           </h1>
           <span

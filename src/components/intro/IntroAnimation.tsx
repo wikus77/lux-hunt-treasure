@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import "./intro-animation.css";
@@ -25,11 +24,6 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
     >
       <div className="logo-container">
         <div className="scan-line" />
-        <div className="logo-symbols">
-          <div className="neon-n" />
-          <div className="neon-l" />
-          <div className="neon-dot" />
-        </div>
         <div className="mission-text">M1SSION</div>
       </div>
     </motion.div>
