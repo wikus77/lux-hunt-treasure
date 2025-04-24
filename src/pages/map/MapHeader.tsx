@@ -1,7 +1,7 @@
 
 import { PlusCircle, Filter, Map, HelpCircle, Zap } from "lucide-react";
 import { MapFilters } from "@/components/maps/MapFilters";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 interface MapHeaderProps {
   onAddMarker: () => void;
@@ -25,8 +25,7 @@ const MapHeader = ({
   // Handle filter changes
   const handleFilterChange = (filters: any) => {
     console.log("Filters changed:", filters);
-    toast({
-      title: "Filtri applicati",
+    toast("Filtri applicati", {
       description: `Hai aggiornato i filtri della mappa`,
       duration: 3000,
     });

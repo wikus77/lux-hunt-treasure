@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, ThumbsUp, UserCheck, Clock } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 interface User {
   id: string;
@@ -40,8 +40,7 @@ export function UserReputationSystem() {
     if (!selectedUser) return;
     
     // In a real implementation, this would be an API call
-    toast({
-      title: "Valutazione inviata",
+    toast("Valutazione inviata", {
       description: `Hai valutato ${selectedUser.name} con ${ratingValue} stelle!`,
     });
     

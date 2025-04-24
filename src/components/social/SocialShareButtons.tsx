@@ -1,7 +1,7 @@
 
 import { Facebook, Twitter, Instagram, Linkedin, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 interface SocialShareButtonsProps {
   title?: string;
@@ -28,15 +28,12 @@ export function SocialShareButtons({
         url: url,
       }).catch(err => {
         console.error("Error sharing:", err);
-        toast({
-          title: "Errore",
+        toast("Errore", {
           description: "Non è stato possibile condividere il contenuto",
-          variant: "destructive",
         });
       });
     } else {
-      toast({
-        title: "Condivisione",
+      toast("Condivisione", {
         description: "Usa i pulsanti social per condividere",
       });
     }
@@ -69,8 +66,7 @@ export function SocialShareButtons({
         size="icon"
         className="bg-gradient-to-r from-[#C13584] to-[#E1306C] hover:opacity-80 text-white rounded-full press-effect"
         onClick={() => {
-          toast({
-            title: "Instagram",
+          toast("Instagram", {
             description: "Apri Instagram e condividi nelle tue storie",
           });
         }}
