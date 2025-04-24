@@ -1,0 +1,113 @@
+
+/* Animazione del logo */
+.neon-n {
+  position: absolute;
+  width: 50px;
+  height: 100px;
+  border-radius: 10px;
+  border: 4px solid #00E5FF;
+  box-shadow: 0 0 10px #00E5FF, 0 0 20px rgba(0, 229, 255, 0.5);
+  left: 10px;
+  animation: pulse 2s infinite;
+}
+
+.neon-i {
+  position: absolute;
+  width: 50px;
+  height: 100px;
+  border-radius: 10px;
+  border: 4px solid #FFC107;
+  box-shadow: 0 0 10px #FFC107, 0 0 20px rgba(255, 193, 7, 0.5);
+  right: 10px;
+  animation: pulse 2s infinite 0.3s;
+}
+
+.neon-circle {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid #FF00FF;
+  box-shadow: 0 0 10px #FF00FF, 0 0 20px rgba(255, 0, 255, 0.5);
+  right: 25px;
+  top: -15px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.neon-line-horizontal {
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0), #00E5FF, rgba(0, 229, 255, 0));
+  box-shadow: 0 0 10px #00E5FF, 0 0 20px rgba(0, 229, 255, 0.5);
+  animation: pulse 2s infinite;
+}
+
+.neon-text-blue {
+  color: #00E5FF;
+  text-shadow: 0 0 10px #00E5FF, 0 0 20px rgba(0, 229, 255, 0.5);
+  animation: pulse 2s infinite;
+}
+
+/* Particles */
+.particles-container {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+}
+
+.particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background-color: #00E5FF;
+  border-radius: 50%;
+  opacity: 0.6;
+  box-shadow: 0 0 5px #00E5FF;
+  animation: float-particle 5s infinite linear;
+}
+
+.particle:nth-child(3n) {
+  background-color: #FFC107;
+  box-shadow: 0 0 5px #FFC107;
+}
+
+.particle:nth-child(3n+1) {
+  background-color: #FF00FF;
+  box-shadow: 0 0 5px #FF00FF;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.8;
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes float-particle {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(20px - 40px * var(--random, 0.5)), calc(20px - 40px * var(--random, 0.5)));
+    opacity: 0.6;
+  }
+}
