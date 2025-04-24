@@ -1,6 +1,4 @@
-
 import { motion } from "framer-motion";
-import { ArrowRight, Car } from "lucide-react";
 
 interface PresentationSectionProps {
   visible: boolean;
@@ -34,6 +32,24 @@ const PresentationSection = ({ visible }: PresentationSectionProps) => {
       initial="hidden"
       animate={visible ? "visible" : "hidden"}
     >
+      {/* Logo at the top */}
+      <motion.div 
+        className="mb-12"
+        variants={itemVariants}
+      >
+        <div className="flex items-center justify-center gap-2">
+          <div className="w-12 h-12 relative">
+            <div className="absolute inset-0 border-4 border-[#00E5FF] shadow-[0_0_20px_#00E5FF]"></div>
+          </div>
+          <div className="w-10 h-12 relative">
+            <div className="absolute inset-0 border-4 border-[#FFC107] shadow-[0_0_20px_#FFC107]"></div>
+          </div>
+          <div className="w-4 h-4 relative mt-[-2rem]">
+            <div className="absolute inset-0 rounded-full border-4 border-[#FF00FF] shadow-[0_0_20px_#FF00FF]"></div>
+          </div>
+        </div>
+      </motion.div>
+
       <motion.h1 
         className="text-5xl md:text-7xl font-light mb-6 text-[#00E5FF]"
         variants={itemVariants}
