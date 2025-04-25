@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChatMessages } from './ChatMessages';
@@ -19,31 +18,22 @@ export function AIAssistant() {
         className="fixed bottom-24 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center"
         whileHover={{ scale: 1.05 }}
       >
-        {/* Outer gradient ring */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#6A00FF] to-[#00E0FF] p-[2px] ai-button-glow">
-          {/* Inner black circle for hollow effect */}
+        {/* Outer donut shape with gradient */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#6A00FF] via-[#1C6AFF] to-[#00E0FF] p-[3px] ai-button-glow">
+          {/* Inner circle creating the donut hole */}
           <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
-            {/* Central ring with gradient border */}
-            <div className="w-[70%] h-[70%] rounded-full flex items-center justify-center 
-                          border-[1.5px] border-transparent bg-clip-border"
-                 style={{
-                   backgroundImage: 'linear-gradient(black, black), linear-gradient(to bottom right, #6A00FF, #00E0FF)',
-                   backgroundOrigin: 'border-box',
-                   backgroundClip: 'content-box, border-box'
-                 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 21C16.4183 21 20 17.4183 20 13C20 8.58172 16.4183 5 12 5C7.58172 5 4 8.58172 4 13C4 17.4183 7.58172 21 12 21Z" 
-                      stroke="url(#ai-gradient)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 15V13M12 11H12.01" 
-                      stroke="url(#ai-gradient)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <defs>
-                  <linearGradient id="ai-gradient" x1="4" y1="5" x2="20" y2="21" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#6A00FF" />
-                    <stop offset="1" stopColor="#00E0FF" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
+            {/* Information icon in gradient */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 16V12M12 8H12.01" 
+                    stroke="url(#ai-gradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <defs>
+                <linearGradient id="ai-gradient" x1="4" y1="5" x2="20" y2="21" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#6A00FF" />
+                  <stop offset="0.5" stopColor="#1C6AFF" />
+                  <stop offset="1" stopColor="#00E0FF" />
+                </linearGradient>
+              </defs>
+            </svg>
           </div>
         </div>
       </motion.button>
