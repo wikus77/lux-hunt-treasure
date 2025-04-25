@@ -12,30 +12,34 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function HomeContent() {
   // Usa step baseline su localStorage, simile a landing (slash route)
   const [step, setStep] = useState<number>(() => {
-    // Se intro già vista, non mostrarla
-    if (typeof window !== "undefined" && localStorage.getItem("homeIntroShown") === "true") {
-      return 1;
-    }
-    return 0;
+    const introAlready = typeof window !== "undefined" && localStorage.getItem("homeIntroShown") === "true";
+    console.log("[HomeContent] INIT step – homeIntroShown", introAlready);
+    return introAlready ? 1 : 0;
   });
   const [musicOn, setMusicOn] = useState(false);
 
   useEffect(() => {
+    console.log("[HomeContent] useEffect: step value", step);
     // Solo dopo aver visto l'intro, setta la flag in localStorage
     if (step === 1 && typeof window !== "undefined") {
       localStorage.setItem("homeIntroShown", "true");
+      console.log("[HomeContent] Set homeIntroShown=true in localStorage");
     }
   }, [step]);
 
   // Avanza dopo intro
-  const handleIntroEnd = () => setStep(1);
+  const handleIntroEnd = () => {
+    console.log("[HomeContent] handleIntroEnd fired");
+    setStep(1);
+  };
 
   return (
     <div className="relative">
-      {/* Animated intro solo se NON già vista */}
       <AnimatePresence>
         {step === 0 && (
-          <AnimatedIntroSection onEnd={handleIntroEnd} />
+          <AnimatedIntroSection
+            onEnd={handleIntroEnd}
+          />
         )}
       </AnimatePresence>
 
@@ -47,7 +51,6 @@ export default function HomeContent() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          {/* Countdown + Classifica + Musica */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 mt-4">
             <CountdownBanner />
             <div className="flex gap-2">
@@ -68,25 +71,18 @@ export default function HomeContent() {
               </Button>
             </div>
           </div>
-
-          {/* EVENTO CORRENTE: auto del mese */}
           <section className="mt-2">
             <h2 className="text-2xl font-orbitron neon-text-cyan mb-4">Missione Corrente</h2>
             <FuturisticCarsCarousel />
           </section>
-
-          {/* MISSIONI FUTURE */}
           <section>
             <h2 className="text-2xl font-orbitron neon-text-magenta mb-4">Prossime Missioni</h2>
             <FuturePrizesCarousel />
           </section>
-
-          {/* MAPPA LIVE (prossimamente) */}
           <section className="flex flex-col items-center py-5">
             <Button
               variant="secondary"
               className="text-white glass-card px-6 py-3 rounded-xl flex items-center gap-2 hover:scale-105"
-              // attiva live mappa se implementata, ora placeholder
               onClick={() => alert("Mappa LIVE: presto disponibile")}
             >
               <Map className="w-5 h-5" /> Mappa LIVE (prossimamente)
@@ -95,8 +91,6 @@ export default function HomeContent() {
               (Sarà visibile chi trova indizi in tempo reale)
             </span>
           </section>
-
-          {/* INVITA UN AMICO */}
           <InviteFriendSection />
         </motion.main>
       )}
