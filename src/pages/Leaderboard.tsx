@@ -1,20 +1,19 @@
-
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion'; // Add this import
+import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
-import { Users, Trophy } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import { TeamCard } from '@/components/leaderboard/TeamCard';
 import { CreateTeamDialog } from '@/components/leaderboard/CreateTeamDialog';
 import { LeaderboardTopUsers } from '@/components/leaderboard/LeaderboardTopUsers';
 import { LeaderboardHeader } from '@/components/leaderboard/LeaderboardHeader';
 import { LeaderboardSearch } from '@/components/leaderboard/LeaderboardSearch';
 import { PlayersList } from '@/components/leaderboard/PlayersList';
+import { LeaderboardProgress } from '@/components/leaderboard/LeaderboardProgress';
+import { useLeaderboardData } from '@/hooks/useLeaderboardData';
+import { Users, Trophy } from 'lucide-react';
 
-// Dati di esempio - Questi verranno sostituiti con dati reali dall'API
 const samplePlayers = Array.from({ length: 50 }, (_, i) => ({
   id: i + 1,
   name: `Giocatore ${i + 1}`,
@@ -29,7 +28,6 @@ const samplePlayers = Array.from({ length: 50 }, (_, i) => ({
   dailyChange: i % 3 === 0 ? Math.floor(Math.random() * 3) + 1 : i % 7 === 0 ? -Math.floor(Math.random() * 3) - 1 : 0,
 }));
 
-// Dati di esempio per le squadre
 const sampleTeams = [
   { id: 1, name: "Team Alpha", members: 12, totalPoints: 42500, rank: 1, badges: ["top"] },
   { id: 2, name: "Team Omega", members: 8, totalPoints: 38700, rank: 2, badges: ["top"] },
@@ -39,46 +37,24 @@ const sampleTeams = [
 ];
 
 const Leaderboard = () => {
-  // Stati e hooks
-  const [filter, setFilter] = useState<'all' | 'team' | 'country' | '7days'>('all');
   const [activeTab, setActiveTab] = useState<'players' | 'teams'>('players');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [visiblePlayers, setVisiblePlayers] = useState(50); // Impostiamo visiblePlayers a 50 per mostrare più giocatori inizialmente
-  const [isLoading, setIsLoading] = useState(false);
   const [showCreateTeamDialog, setShowCreateTeamDialog] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   const { playSound } = useBuzzSound();
 
-  // Filtraggio giocatori in base ai criteri
-  const filteredPlayers = samplePlayers.filter(player => {
-    // Applica il filtro di ricerca
-    if (searchQuery && !player.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
-    }
-    
-    // Applica filtri specifici
-    if (filter === 'team' && !player.team) return false;
-    if (filter === 'country' && player.country !== "🇮🇹") return false; // Esempio: mostra solo italiani
-    if (filter === '7days') {
-      // Logica per i giocatori attivi negli ultimi 7 giorni (esempio)
-      return player.cluesFound > 10;
-    }
-    
-    return true;
-  }).slice(0, visiblePlayers);
+  const {
+    filter,
+    setFilter,
+    searchQuery,
+    setSearchQuery,
+    filteredPlayers,
+    isLoading,
+    handleLoadMore,
+    hasMorePlayers
+  } = useLeaderboardData(samplePlayers);
 
-  // Gestione caricamento paginato
-  const handleLoadMore = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setVisiblePlayers(prev => Math.min(prev + 15, samplePlayers.length));
-      setIsLoading(false);
-    }, 800);
-  };
-
-  // Gestione invito giocatore
   const handleInvite = (player: any) => {
     setSelectedPlayer(player);
     toast({
@@ -88,13 +64,11 @@ const Leaderboard = () => {
     playSound();
   };
 
-  // Gestione creazione nuova squadra e invito
   const handleCreateTeamAndInvite = (player: any) => {
     setSelectedPlayer(player);
     setShowCreateTeamDialog(true);
   };
-  
-  // Funzione per simulare l'animazione di un cambio di posizione in classifica
+
   const simulateRankChange = () => {
     const randomIndex = Math.floor(Math.random() * 10);
     const direction = Math.random() > 0.5 ? 1 : -1;
@@ -110,7 +84,6 @@ const Leaderboard = () => {
       description: message
     });
     
-    // Se entra nella top 10, effetti speciali
     if (player.rank - change <= 10 && player.rank > 10) {
       playSound();
       addNotification({
@@ -120,9 +93,7 @@ const Leaderboard = () => {
     }
   };
 
-  // Esempio di simulazione di cambiamenti nella classifica
   useEffect(() => {
-    // Simula cambiamenti ogni 15-30 secondi
     const timer = setInterval(() => {
       if (Math.random() > 0.7) {
         simulateRankChange();
@@ -142,7 +113,7 @@ const Leaderboard = () => {
           className="space-y-6"
         >
           <LeaderboardHeader 
-            onSimulateRankChange={simulateRankChange} 
+            onSimulateRankChange={simulateRankChange}
             onFilterChange={setFilter}
           />
           <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
@@ -167,7 +138,7 @@ const Leaderboard = () => {
                 onLoadMore={handleLoadMore}
                 onInvite={handleInvite}
                 onCreateTeam={handleCreateTeamAndInvite}
-                hasMorePlayers={visiblePlayers < samplePlayers.length}
+                hasMorePlayers={hasMorePlayers}
               />
             </TabsContent>
             
@@ -180,20 +151,7 @@ const Leaderboard = () => {
             </TabsContent>
           </Tabs>
           
-          <div className="mt-8 bg-black/40 p-4 rounded-lg border border-white/5">
-            <div className="flex justify-between mb-2">
-              <span className="text-sm text-gray-400">La tua posizione:</span>
-              <span className="font-bold text-cyan-400">42/100</span>
-            </div>
-            <Progress value={58} className="h-2 bg-gray-900">
-              <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full" style={{ width: '58%' }} />
-            </Progress>
-            <div className="flex justify-between mt-2 text-xs text-gray-500">
-              <span>Top 100</span>
-              <span>Top 10</span>
-              <span>Top 3</span>
-            </div>
-          </div>
+          <LeaderboardProgress currentPosition={42} totalPlayers={100} />
         </motion.div>
       </div>
       
