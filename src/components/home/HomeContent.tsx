@@ -10,6 +10,9 @@ import { Trophy, Map, Music } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function HomeContent() {
+  // DEBUG: entry inizio componente
+  console.log("[HomeContent] COMPONENT MOUNTED!");
+
   // Debug: tenta di leggere da localStorage appena disponibile
   const [step, setStep] = useState<number>(() => {
     try {
@@ -38,7 +41,6 @@ export default function HomeContent() {
   };
 
   // DEBUG overlay per vedere a che step siamo
-  // (solo in DEV)
   const renderDebug = () => (
     <div className="fixed top-0 left-0 z-[99] bg-black/60 text-yellow-300 px-3 py-1 rounded-br-lg text-xs font-mono">
       <div>step: {step}</div>
@@ -49,6 +51,10 @@ export default function HomeContent() {
 
   return (
     <div className="relative">
+      {/* DEBUG output sempre visibile */}
+      <div className="fixed top-4 left-4 bg-red-700 text-white z-[9999] px-4 py-2 font-bold rounded-xl shadow-xl border-2 border-white">
+        DEBUG: HomeContent caricata
+      </div>
       {renderDebug()}
       <AnimatePresence>
         {step === 0 && (
@@ -57,7 +63,6 @@ export default function HomeContent() {
           />
         )}
       </AnimatePresence>
-
       {step === 1 && (
         <motion.main 
           className="space-y-10" 
@@ -110,3 +115,4 @@ export default function HomeContent() {
     </div>
   );
 }
+
