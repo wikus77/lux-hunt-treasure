@@ -38,7 +38,8 @@ export const usePaymentEffects = (generateSearchArea: (radius: number) => string
               description: clue.description,
             });
 
-            const generatedAreaId = generateSearchArea();
+            // Fix: Pass a default radius value (e.g. 50000 for 50km) to generateSearchArea
+            const generatedAreaId = generateSearchArea(50000);
             
             if (generatedAreaId) {
               toast.success("Area di ricerca generata!", {
