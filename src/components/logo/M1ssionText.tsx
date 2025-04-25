@@ -7,7 +7,7 @@ const M1ssionText = () => {
   return (
     <button 
       onClick={() => navigate('/home')}
-      className="text-xl md:text-2xl font-orbitron font-semibold"
+      className="text-xl md:text-2xl font-orbitron font-semibold tracking-wide"
       aria-label="Homepage"
     >
       <span className="text-cyan-400">M1</span>
