@@ -1,127 +1,31 @@
-
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { toast } from "@/components/ui/sonner";
+import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { useUserCurrentLocation } from "./useUserCurrentLocation";
 import { useMapMarkersLogic } from "./useMapMarkersLogic";
 import { useSearchAreasLogic } from "./useSearchAreasLogic";
-import { useBuzzClues } from "@/hooks/useBuzzClues";
-import { useNotifications } from "@/hooks/useNotifications";
+import { usePricingLogic } from "./hooks/usePricingLogic";
+import { usePaymentEffects } from "./hooks/usePaymentEffects";
+import { useMapInteractions } from "./hooks/useMapInteractions";
 
 export const useMapLogic = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
-  const [showCluePopup, setShowCluePopup] = useState(false);
-  const [clueMessage, setClueMessage] = useState("");
   const [loadError, setLoadError] = useState<Error | null>(null);
-  const [isMapBuzzActive, setIsMapBuzzActive] = useState(false);
-  const [processedSessionIds, setProcessedSessionIds] = useState<Set<string>>(new Set());
   
   const location = useLocation();
   const currentLocation = useUserCurrentLocation();
-  const { unlockedClues, incrementUnlockedCluesAndAddClue, getNextVagueClue } = useBuzzClues();
-  const { addNotification } = useNotifications();
+  const { getNextVagueClue } = useBuzzClues();
 
-  // Marker management
+  // Hook composition
   const markerLogic = useMapMarkersLogic();
-  // Area management (pass currentLocation for clue generation)
   const areaLogic = useSearchAreasLogic(currentLocation);
-
-  // Dynamic pricing based on unlocked clues
-  const calculateBuzzMapPrice = useCallback(() => {
-    if (unlockedClues >= 0 && unlockedClues <= 10) return 4.99;
-    if (unlockedClues <= 15) return 4.99 * 1.2; // +20%
-    if (unlockedClues <= 20) return 4.99 * 1.2 * 1.2; // +20% again
-    if (unlockedClues <= 25) return 4.99 * 1.2 * 1.2 * 1.2;
-    if (unlockedClues <= 30) return 4.99 * 1.2 * 1.2 * 1.2 * 1.2;
-    if (unlockedClues <= 35) return 4.99 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2;
-    if (unlockedClues <= 40) return 4.99 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2;
-    return 4.99 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2; // Maximum price
-  }, [unlockedClues]);
-
-  // Calculate search area radius based on unlocked clues
-  const calculateSearchAreaRadius = useCallback(() => {
-    let radius = 300000; // 300km - Base radius
-    
-    // Apply 5% reduction for each tier above the first
-    if (unlockedClues > 10 && unlockedClues <= 15) radius *= 0.95;
-    if (unlockedClues > 15 && unlockedClues <= 20) radius *= 0.95 * 0.95;
-    if (unlockedClues > 20 && unlockedClues <= 25) radius *= 0.95 * 0.95 * 0.95;
-    if (unlockedClues > 25 && unlockedClues <= 30) radius *= 0.95 * 0.95 * 0.95 * 0.95;
-    if (unlockedClues > 30 && unlockedClues <= 35) radius *= 0.95 * 0.95 * 0.95 * 0.95 * 0.95;
-    if (unlockedClues > 35 && unlockedClues <= 40) radius *= 0.95 * 0.95 * 0.95 * 0.95 * 0.95 * 0.95;
-    if (unlockedClues > 40) radius *= 0.95 * 0.95 * 0.95 * 0.95 * 0.95 * 0.95 * 0.95;
-    
-    // Ensure minimum radius of 5km
-    return Math.max(radius, 5000); // 5km minimum
-  }, [unlockedClues]);
-
-  const buzzMapPrice = calculateBuzzMapPrice();
-
-  useEffect(() => {
-    try {
-      // Tempo di caricamento breve per test
-      const timer = setTimeout(() => setIsLoading(false), 1000);
-      return () => clearTimeout(timer);
-    } catch (e) {
-      console.error("Errore durante il caricamento:", e);
-      setIsLoading(false);
-      setLoadError(e instanceof Error ? e : new Error("Errore sconosciuto"));
-    }
-  }, []);
-
-  useEffect(() => {
-    try {
-      // Payment/Clue popup side effect - Fix per prevenire notifiche duplicate e garantire la generazione dell'area
-      if (
-        location.state?.paymentCompleted && 
-        location.state?.mapBuzz &&
-        location.state?.sessionId && 
-        !processedSessionIds.has(location.state.sessionId)
-      ) {
-        // Segna questa sessione come elaborata per prevenire duplicati
-        setProcessedSessionIds(prev => new Set(prev).add(location.state.sessionId));
-        
-        const clue = location.state?.clue;
-        
-        // Incrementa il contatore degli indizi sbloccati (solo una volta)
-        incrementUnlockedCluesAndAddClue();
-        
-        if (clue && clue.description) {
-          setTimeout(() => {
-            setClueMessage(clue.description);
-            setShowCluePopup(true);
-
-            // Aggiungi notifica per l'indizio (una sola volta)
-            addNotification({
-              title: "Nuovo indizio sbloccato",
-              description: clue.description,
-            });
-
-            // Genera area di ricerca basata sugli indizi disponibili
-            const radius = calculateSearchAreaRadius();
-            console.log(`Generazione area di ricerca con raggio: ${radius/1000}km`);
-            
-            const generatedAreaId = areaLogic.generateSearchArea(radius);
-            
-            if (generatedAreaId) {
-              // Centra la mappa sulla nuova area e mostra una notifica
-              toast.success("Area di ricerca generata!", {
-                description: "Controlla la mappa per vedere la nuova area basata sugli indizi disponibili."
-              });
-              
-              // Imposta l'area generata come attiva dopo un breve ritardo
-              setTimeout(() => {
-                areaLogic.setActiveSearchArea(generatedAreaId);
-              }, 2000);
-            }
-          }, 1000);
-        }
-      }
-    } catch (e) {
-      console.error("Errore nell'elaborazione dello stato:", e);
-    }
-  }, [location.state, areaLogic, incrementUnlockedCluesAndAddClue, addNotification, calculateSearchAreaRadius, processedSessionIds]);
+  const { buzzMapPrice, calculateSearchAreaRadius } = usePricingLogic();
+  const mapInteractions = useMapInteractions(markerLogic, areaLogic);
+  
+  const paymentEffects = usePaymentEffects((radius?: number) => 
+    areaLogic.generateSearchArea(radius || calculateSearchAreaRadius())
+  );
 
   const handleMapReady = () => {
     try {
@@ -132,82 +36,66 @@ export const useMapLogic = () => {
     }
   };
 
-  // Wire up click: delegate to marker or area logic as appropriate
-  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
-    try {
-      if (markerLogic.isAddingMarker) {
-        markerLogic.handleMapClickMarker(e);
-        areaLogic.setIsAddingSearchArea(false);
-      } else if (areaLogic.isAddingSearchArea) {
-        areaLogic.handleMapClickArea(e);
-        markerLogic.setIsAddingMarker(false);
-      }
-    } catch (error) {
-      console.error("Errore nel gestire il click sulla mappa:", error);
-      toast.error("Si è verificato un errore nel processare il click");
-      markerLogic.setIsAddingMarker(false);
-      areaLogic.setIsAddingSearchArea(false);
-    }
-  }, [markerLogic, areaLogic]);
-
-  const handleMapDoubleClick = (_e: google.maps.MapMouseEvent) => { /* No logic yet */ };
-
   const handleBuzz = () => {
-    // Crea un ID di sessione univoco per questo flusso di pagamento
     const sessionId = `map_buzz_${Date.now()}`;
-    
-    // Reindirizzamento diretto alla pagina di pagamento con lo stato corretto
     const price = buzzMapPrice.toFixed(2);
-    const nextClue = getNextVagueClue();
     
-    // Passa l'ID di sessione per tracciare questo flusso di pagamento e prevenire duplicati
     window.location.href = `/payment-methods?from=map&price=${price}&session=${sessionId}`;
-    
-    // Il resto viene gestito dalla pagina di pagamento e dall'effetto sopra quando si ritorna
-    setIsMapBuzzActive(true);
+    paymentEffects.setIsMapBuzzActive(true);
   };
 
-  const handleHelp = () => {
-    toast.info("Guida Mappa", {
-      description: "Utilizza i pulsanti in alto per aggiungere punti e aree di ricerca sulla mappa. Il Buzz Mappa ti aiuta a restringere l'area di ricerca basandosi sugli indizi disponibili."
-    });
-  };
+  // Initial loading effect
+  useState(() => {
+    try {
+      const timer = setTimeout(() => setIsLoading(false), 1000);
+      return () => clearTimeout(timer);
+    } catch (e) {
+      console.error("Errore durante il caricamento:", e);
+      setIsLoading(false);
+      setLoadError(e instanceof Error ? e : new Error("Errore sconosciuto"));
+    }
+  });
 
   return {
+    // State
     isLoading,
     mapReady,
-    showCluePopup,
-    clueMessage,
+    loadError,
     location,
-    markers: markerLogic.markers,
-    searchAreas: areaLogic.searchAreas,
-    activeMarker: markerLogic.activeMarker,
-    activeSearchArea: areaLogic.activeSearchArea,
-    isAddingMarker: markerLogic.isAddingMarker,
-    isAddingSearchArea: areaLogic.isAddingSearchArea,
     currentLocation,
     buzzMapPrice,
-    isMapBuzzActive,
-    loadError,
-    setShowCluePopup,
-    setClueMessage,
+    
+    // Marker Logic
+    markers: markerLogic.markers,
+    activeMarker: markerLogic.activeMarker,
+    isAddingMarker: markerLogic.isAddingMarker,
     setActiveMarker: markerLogic.setActiveMarker,
-    setActiveSearchArea: areaLogic.setActiveSearchArea,
-    handleMapReady,
     handleAddMarker: markerLogic.handleAddMarker,
-    handleAddArea: areaLogic.handleAddArea,
-    handleMapClick,
-    handleMapDoubleClick,
     saveMarkerNote: markerLogic.saveMarkerNote,
-    saveSearchArea: areaLogic.saveSearchArea,
     deleteMarker: markerLogic.deleteMarker,
-    deleteSearchArea: areaLogic.deleteSearchArea,
     editMarker: markerLogic.editMarker,
-    editSearchArea: areaLogic.editSearchArea,
     clearAllMarkers: markerLogic.clearAllMarkers,
-    handleBuzz,
-    handleHelp,
+
+    // Search Areas Logic
+    searchAreas: areaLogic.searchAreas,
+    activeSearchArea: areaLogic.activeSearchArea,
+    isAddingSearchArea: areaLogic.isAddingSearchArea,
+    setActiveSearchArea: areaLogic.setActiveSearchArea,
+    handleAddArea: areaLogic.handleAddArea,
+    saveSearchArea: areaLogic.saveSearchArea,
+    deleteSearchArea: areaLogic.deleteSearchArea,
+    editSearchArea: areaLogic.editSearchArea,
     generateSearchArea: areaLogic.generateSearchArea,
+
+    // Payment Effects
+    ...paymentEffects,
+
+    // Map Interactions
+    ...mapInteractions,
+
+    // Map Ready Handler
+    handleMapReady,
+    handleBuzz,
     calculateSearchAreaRadius,
   };
 };
