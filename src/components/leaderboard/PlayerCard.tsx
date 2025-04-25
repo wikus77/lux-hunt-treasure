@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserRankBadge } from './UserRankBadge';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, TrendingUp, TrendingDown, Users, Plus } from 'lucide-react';
@@ -94,7 +94,7 @@ export function PlayerCard({ player, onInvite, onCreateTeam }: PlayerCardProps) 
                 ? 'ring-amber-700'
                 : ''
             }`}>
-              <img src={player.avatar} alt={player.name} className="object-cover" />
+              <AvatarImage src={player.avatar} alt={player.name} className="object-cover" />
               <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
             </Avatar>
             
