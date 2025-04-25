@@ -4,7 +4,6 @@ import { User, Mail, MoreVertical } from "lucide-react";
 import Footer from "./Footer";
 import BottomNavigation from "./BottomNavigation";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { NeonButton } from "@/components/ui/neon-button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -80,10 +79,41 @@ const MainLayout = () => {
       <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-projectx-card/40 border-b border-white/10 transition-all duration-300">
         <div className="max-w-screen-xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <NeonButton onClick={() => navigate("/home")}>
-              M1SSION
-            </NeonButton>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="outline-none focus-visible:ring-2 focus-visible:ring-white/30" aria-label="Menu profilo">
+                  <span className="profile-custom-ring">
+                    <Avatar className="w-8 h-8 border border-white/20 bg-black hover:border-white/40 transition-colors cursor-pointer">
+                      <AvatarImage src={profileImage || ""} alt="Profile" className="object-cover" />
+                      <AvatarFallback className="bg-transparent">
+                        <User className="w-5 h-5 text-white/70" />
+                      </AvatarFallback>
+                    </Avatar>
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="z-[110] bg-black/90 backdrop-blur-lg border-white/10 text-white">
+                <DropdownMenuLabel className="font-bold text-white/90">Menu profilo</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-white/10" />
+                <DropdownMenuItem
+                  onClick={() => navigate("/profile")}
+                  className="cursor-pointer text-white/80 hover:text-white hover:bg-white/10 font-medium transition-colors"
+                >
+                  Vai al profilo
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/10" />
+                <DropdownMenuItem
+                  onClick={() => setShowHowItWorks(true)}
+                  className="cursor-pointer text-white/80 hover:text-white hover:bg-white/10 font-medium transition-colors"
+                >
+                  Come Funziona
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <AnimatedLogo size="sm" className="hidden md:flex" />
           </div>
+
+          <AnimatedLogo size="md" className="md:hidden" />
 
           <div className="flex items-center gap-3">
             <button
@@ -113,9 +143,6 @@ const MainLayout = () => {
       </header>
       
       <main className="flex-1 w-full relative pt-[72px] pb-16 max-w-screen-xl mx-auto">
-        <div className="flex justify-center mb-8">
-          <AnimatedLogo size="lg" />
-        </div>
         <Outlet />
       </main>
       

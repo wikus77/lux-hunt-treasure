@@ -1,9 +1,9 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Menu, X, Settings, LogOut } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { motion } from "framer-motion";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -39,28 +40,32 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     <header className="fixed top-0 left-0 right-0 z-40 w-full glass-backdrop">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
-          <Button
-            onClick={() => navigate("/home")}
-            className="flex items-center rounded-lg font-semibold text-xs shadow-lg transition-all duration-150 px-3 py-1.5 scale-70 transform origin-right"
-            style={{
-              background: "linear-gradient(90deg, #00E5FF 0%, #007BFF 100%)",
-              color: "#000",
-              boxShadow: "0 1px 6px 0 rgba(0,229,255,0.4), 0 0.5px 2px #00E5FF",
-              transform: "scale(0.7)",
-              transformOrigin: "right"
-            }}
-          >
-            M1SSION
-          </Button>
+          {/* Logo */}
+          <div className="flex items-center logo-hover">
+            <button 
+              onClick={() => navigate('/home')}
+              className="flex items-center space-x-2"
+              aria-label="Homepage"
+            >
+              <div className="flex items-center">
+                <span className="text-cyan-400 text-xl md:text-2xl font-orbitron font-semibold">
+                  M1<span className="text-white">SSION</span>
+                </span>
+              </div>
+            </button>
+          </div>
 
+          {/* Desktop menu */}
           <div className="hidden md:flex items-center space-x-8">
             <div className="text-xs text-yellow-400 font-orbitron">
               IT IS POSSIBLE
             </div>
           </div>
 
+          {/* User menu and mobile menu button */}
           <div className="flex items-center">
             <div className="flex items-center space-x-3">
+              {/* User dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
@@ -103,6 +108,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              {/* Mobile menu button */}
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -120,6 +126,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         </div>
       </div>
 
+      {/* Mobile menu */}
       {isMobileMenuOpen && (
         <motion.div 
           className="md:hidden glass-card border-t border-white/5 shadow-lg"
@@ -161,6 +168,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         </motion.div>
       )}
 
+      {/* Horizontal line with animation */}
       <div className="line-glow"></div>
     </header>
   );
