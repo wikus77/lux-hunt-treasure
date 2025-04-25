@@ -90,7 +90,7 @@ const Leaderboard = () => {
       title: "Invito inviato!",
       description: `Hai invitato ${player.name} a unirsi alla tua squadra.`
     });
-    playSound('chime'); // Suono di notifica
+    playSound(); // Fixed: removed argument
   };
 
   // Gestione creazione nuova squadra e invito
@@ -117,7 +117,7 @@ const Leaderboard = () => {
     
     // Se entra nella top 10, effetti speciali
     if (player.rank - change <= 10 && player.rank > 10) {
-      playSound("arcade");
+      playSound(); // Fixed: removed argument
       addNotification({
         title: "🏆 Traguardo Importante!",
         description: `${player.name} è entrato nella TOP 10!`
