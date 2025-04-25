@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AnimatedIntroSection from "./AnimatedIntroSection";
 import FuturisticCarsCarousel from "./FuturisticCarsCarousel";
 import FuturePrizesCarousel from "./FuturePrizesCarousel";
@@ -10,22 +10,36 @@ import { Music, Trophy, Map } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function HomeContent() {
-  const [step, setStep] = useState(0); // step: 0=Intro, 1=main page
+  // Usa step baseline su localStorage, simile a landing (slash route)
+  const [step, setStep] = useState<number>(() => {
+    // Se intro già vista, non mostrarla
+    if (typeof window !== "undefined" && localStorage.getItem("homeIntroShown") === "true") {
+      return 1;
+    }
+    return 0;
+  });
   const [musicOn, setMusicOn] = useState(false);
 
-  // Advance after intro
+  useEffect(() => {
+    // Solo dopo aver visto l'intro, setta la flag in localStorage
+    if (step === 1 && typeof window !== "undefined") {
+      localStorage.setItem("homeIntroShown", "true");
+    }
+  }, [step]);
+
+  // Avanza dopo intro
   const handleIntroEnd = () => setStep(1);
 
   return (
     <div className="relative">
-      {/* Animated intro first */}
+      {/* Animated intro solo se NON già vista */}
       <AnimatePresence>
         {step === 0 && (
           <AnimatedIntroSection onEnd={handleIntroEnd} />
         )}
       </AnimatePresence>
 
-      {/* Main page content */}
+      {/* Main page content - mostra tutto se step 1 */}
       {step === 1 && (
         <motion.main 
           className="space-y-10" 
@@ -43,7 +57,7 @@ export default function HomeContent() {
               >
                 <Trophy className="w-5 h-5 mr-1" /> Classifica LIVE
               </Button>
-              {/* Ambient music toggle */}
+              {/* Ambient music toggle (resta extra, ma visibile) */}
               <Button
                 size="icon"
                 className="ml-2 bg-black/70 neon-border text-yellow-300 hover:bg-yellow-400/10"
