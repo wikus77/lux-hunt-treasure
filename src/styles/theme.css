@@ -1,4 +1,8 @@
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* PALETTE & ROOT VARS */
 @layer base {
   :root {
