@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChatMessages } from './ChatMessages';
@@ -16,31 +15,23 @@ export function AIAssistant() {
     <>
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center 
-                   shadow-lg hover:scale-105 transition-transform duration-300 border-2 border-white/20 
-                   bg-gradient-to-br from-violet-500 to-indigo-600 p-[3px]"
+        className="fixed bottom-24 right-6 z-50 w-11 h-11 rounded-full flex items-center justify-center 
+                   shadow-lg hover:scale-105 transition-transform duration-300
+                   bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 p-[2px]
+                   ai-button-glow float-animation"
         whileHover={{ 
-          boxShadow: "0 0 15px rgba(139, 92, 246, 0.7)",
+          boxShadow: "0 0 15px rgba(250, 204, 21, 0.7)",
           scale: 1.05
         }}
-        animate={{ 
-          y: [0, -5, 0],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          repeatType: "reverse",
-          ease: "easeInOut"
-        }}
       >
-        {/* Inner white circle for "hollow" effect */}
+        {/* Inner black circle for "hollow" effect */}
         <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
-          <div className="w-[70%] h-[70%] rounded-full border-2 border-violet-400/80 flex items-center justify-center">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <div className="w-[70%] h-[70%] rounded-full border-2 border-yellow-400/80 flex items-center justify-center">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z" 
-                    stroke="#C4B5FD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    stroke="#FDE047" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M10 12.5V10M10 7.5H10.01" 
-                    stroke="#C4B5FD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    stroke="#FDE047" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
         </div>

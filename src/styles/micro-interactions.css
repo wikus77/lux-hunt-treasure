@@ -1,4 +1,3 @@
-
 @layer utilities {
   /* Pulsante con effetto di pressione */
   .press-effect {
@@ -95,18 +94,20 @@
     filter: drop-shadow(0 0 5px rgba(255, 193, 7, 0.5));
   }
   
-  /* WhatsApp-style AI button glow effect */
+  /* WhatsApp-style AI button glow effect with yellow color */
   .ai-button-glow {
-    box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
     animation: pulse-glow 2s infinite ease-in-out;
   }
   
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+      box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+      transform: scale(1);
     }
     50% {
-      box-shadow: 0 0 20px rgba(139, 92, 246, 0.7);
+      box-shadow: 0 0 20px rgba(250, 204, 21, 0.7);
+      transform: scale(1.05);
     }
   }
   
