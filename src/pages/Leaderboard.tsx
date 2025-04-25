@@ -48,7 +48,7 @@ const Leaderboard = () => {
   const [filter, setFilter] = useState<'all' | 'team' | 'country' | '7days'>('all');
   const [activeTab, setActiveTab] = useState<'players' | 'teams'>('players');
   const [searchQuery, setSearchQuery] = useState('');
-  const [visiblePlayers, setVisiblePlayers] = useState(20); // Per caricamento paginato
+  const [visiblePlayers, setVisiblePlayers] = useState(50); // Impostiamo visiblePlayers a 50 per mostrare più giocatori inizialmente
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateTeamDialog, setShowCreateTeamDialog] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
@@ -90,7 +90,7 @@ const Leaderboard = () => {
       title: "Invito inviato!",
       description: `Hai invitato ${player.name} a unirsi alla tua squadra.`
     });
-    playSound(); // Fixed: removed argument
+    playSound();
   };
 
   // Gestione creazione nuova squadra e invito
@@ -117,7 +117,7 @@ const Leaderboard = () => {
     
     // Se entra nella top 10, effetti speciali
     if (player.rank - change <= 10 && player.rank > 10) {
-      playSound(); // Fixed: removed argument
+      playSound();
       addNotification({
         title: "🏆 Traguardo Importante!",
         description: `${player.name} è entrato nella TOP 10!`
@@ -202,7 +202,7 @@ const Leaderboard = () => {
             </TabsList>
             
             <TabsContent value="players" className="mt-0">
-              <ScrollArea className="max-h-[60vh] pr-4 -mr-4">
+              <ScrollArea className="h-[60vh] pr-4 -mr-4">
                 <div className="space-y-4">
                   <AnimatePresence>
                     {filteredPlayers.map((player) => (
