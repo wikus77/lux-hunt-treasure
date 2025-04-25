@@ -1,3 +1,4 @@
+
 import React from "react";
 import { LoadScript } from "@react-google-maps/api";
 import { MapMarkers, type MapMarker, type SearchArea } from "@/components/maps/MapMarkers";

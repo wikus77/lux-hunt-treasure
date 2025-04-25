@@ -15,6 +15,7 @@ export const useMapLogic = () => {
   const [clueMessage, setClueMessage] = useState("");
   const [loadError, setLoadError] = useState<Error | null>(null);
   const [isMapBuzzActive, setIsMapBuzzActive] = useState(false);
+  const [processedSessionIds, setProcessedSessionIds] = useState<Set<string>>(new Set());
   
   const location = useLocation();
   const currentLocation = useUserCurrentLocation();
@@ -71,11 +72,19 @@ export const useMapLogic = () => {
 
   useEffect(() => {
     try {
-      // Payment/Clue popup side effect
-      if (location.state?.paymentCompleted && location.state?.mapBuzz) {
+      // Payment/Clue popup side effect - Fix to prevent duplicate notifications and ensure area generation
+      if (
+        location.state?.paymentCompleted && 
+        location.state?.mapBuzz &&
+        location.state?.sessionId && 
+        !processedSessionIds.has(location.state.sessionId)
+      ) {
+        // Mark this session as processed to prevent duplicates
+        setProcessedSessionIds(prev => new Set(prev).add(location.state.sessionId));
+        
         const clue = location.state?.clue;
         
-        // Increment the unlocked clues counter if not already done
+        // Increment the unlocked clues counter if not already done (only once)
         incrementUnlockedCluesAndAddClue();
         
         if (clue && clue.description) {
@@ -83,14 +92,17 @@ export const useMapLogic = () => {
             setClueMessage(clue.description);
             setShowCluePopup(true);
 
-            // Add notification for the clue
+            // Add notification for the clue (once)
             addNotification({
               title: "Nuovo indizio sbloccato",
               description: clue.description,
             });
 
-            // Genera sempre l'area di ricerca basata sugli indizi disponibili
-            const generatedAreaId = areaLogic.generateSearchArea(calculateSearchAreaRadius());
+            // Generate search area based on available clues
+            const radius = calculateSearchAreaRadius();
+            console.log(`Generating search area with radius: ${radius/1000}km`);
+            
+            const generatedAreaId = areaLogic.generateSearchArea(radius);
             
             if (generatedAreaId) {
               // Center map on the new area and show a notification
@@ -98,7 +110,7 @@ export const useMapLogic = () => {
                 description: "Controlla la mappa per vedere la nuova area basata sugli indizi disponibili."
               });
               
-              // Imposta l'area generata come attiva dopo un breve ritardo
+              // Set the generated area as active after a short delay
               setTimeout(() => {
                 areaLogic.setActiveSearchArea(generatedAreaId);
               }, 2000);
@@ -109,7 +121,7 @@ export const useMapLogic = () => {
     } catch (e) {
       console.error("Errore nell'elaborazione dello stato:", e);
     }
-  }, [location.state, areaLogic, incrementUnlockedCluesAndAddClue, addNotification, calculateSearchAreaRadius]);
+  }, [location.state, areaLogic, incrementUnlockedCluesAndAddClue, addNotification, calculateSearchAreaRadius, processedSessionIds]);
 
   const handleMapReady = () => {
     try {
@@ -141,15 +153,18 @@ export const useMapLogic = () => {
   const handleMapDoubleClick = (_e: google.maps.MapMouseEvent) => { /* No logic yet */ };
 
   const handleBuzz = () => {
+    // Create a unique session ID for this payment flow
+    const sessionId = `map_buzz_${Date.now()}`;
+    
     // Direct redirect to payment page with the correct state
     const price = buzzMapPrice.toFixed(2);
-    window.location.href = `/payment-methods?from=map&price=${price}`;
+    const nextClue = getNextVagueClue();
     
-    // Questo codice in realtà non viene eseguito a causa del reindirizzamento
-    // ma è qui come riferimento per cosa accadrebbe se non ci fosse il reindirizzamento
+    // Pass sessionId to track this payment flow and prevent duplicates
+    window.location.href = `/payment-methods?from=map&price=${price}&session=${sessionId}`;
+    
+    // The rest is handled by the payment page and the useEffect above when returning
     setIsMapBuzzActive(true);
-    const newClueCount = incrementUnlockedCluesAndAddClue();
-    console.log(`Nuovi indizi sbloccati: ${newClueCount}`);
   };
 
   const handleHelp = () => {

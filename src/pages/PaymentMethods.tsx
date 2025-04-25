@@ -19,20 +19,27 @@ const PaymentMethods = () => {
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
   const [isMapBuzz, setIsMapBuzz] = useState(false);
   const [price, setPrice] = useState("1.99");
+  const [sessionId, setSessionId] = useState<string>("");
 
   useEffect(() => {
     // Check if we're coming from the map page
     const fromMap = queryParams.get("from") === "map";
     const queryPrice = queryParams.get("price");
+    const querySession = queryParams.get("session");
     
     if (fromMap) {
       setIsMapBuzz(true);
       if (queryPrice) {
         setPrice(queryPrice);
       }
+      if (querySession) {
+        setSessionId(querySession);
+      }
     } else {
       // Regular buzz price
       setPrice("1.99");
+      // Generate a unique session ID for regular buzz payments
+      setSessionId(`buzz_${Date.now()}`);
     }
   }, [queryParams]);
 
@@ -54,6 +61,7 @@ const PaymentMethods = () => {
         state: {
           paymentCompleted: true, 
           mapBuzz: true,
+          sessionId: sessionId, // Include session ID to prevent duplicates
           clue: { description: clueMessage },
           createdAt: new Date().toISOString()
         },
@@ -65,6 +73,7 @@ const PaymentMethods = () => {
         state: {
           paymentCompleted: true, 
           fromRegularBuzz: true,
+          sessionId: sessionId, // Include session ID to prevent duplicates
           clue: { description: clueMessage },
           createdAt: new Date().toISOString()
         },
