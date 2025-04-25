@@ -8,7 +8,8 @@ import BigCountdownTimer from "./BigCountdownTimer";
 import { Button } from "@/components/ui/button";
 import { Trophy, Map, Music } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import InviteOptionsDialog from "./InviteOptionsDialog";
+import AnimatedIntroText from "./AnimatedIntroText";
+import InviteMissionText from "./InviteMissionText";
 
 export default function HomeContent() {
   console.log("[HomeContent] COMPONENT MOUNTED!");
@@ -68,43 +69,10 @@ export default function HomeContent() {
           <section className="flex flex-col items-center justify-center pt-2 pb-6">
             <BigCountdownTimer />
           </section>
-          <section
-            className="flex flex-col items-center justify-center fade-in"
-          >
-            <motion.div
-              className="glass-card px-8 py-6 rounded-2xl max-w-2xl text-lg md:text-xl text-center neon-text-cyan shadow-lg"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.1, delay: 0.3 }}
-              style={{
-                background: "rgba(19,33,52,0.65)",
-                border: "1.5px solid #00e5ff88",
-                boxShadow: "0 8px 38px 0 rgba(30,174,219,0.20), 0 0px 64px 0 #00e5ff21"
-              }}
-            >
-              “Nel futuro, la caccia al tesoro non è più un gioco… è una sfida globale.<br />
-              Ogni mese, una nuova auto di lusso scompare.<br />
-              Solo i più intuitivi, strategici e veloci sapranno interpretare gli indizi e scoprire dove si nasconde il premio.<br />
-              Entra in <span className="font-bold neon-text-magenta">M1SSION</span>. Vivi l’avventura. Trova il premio. Cambia il tuo destino.”
-            </motion.div>
+          <section className="flex flex-col items-center justify-center fade-in mb-2 mt-0">
+            <AnimatedIntroText />
           </section>
-          <section className="flex flex-col items-center justify-center mb-8">
-            <span
-              role="button"
-              className="mt-6 text-2xl md:text-3xl font-orbitron neon-text-cyan glass-card px-10 py-4 rounded-2xl shadow-xl cursor-pointer select-none hover:scale-105 transition-all"
-              style={{
-                textShadow:
-                  "0 0 15px #00e5ff, 0 0 30px #00e5ff66, 0 0 24px #fff",
-                background: "rgba(19,33,52,0.65)",
-                border: "1.5px solid #00e5ff88",
-                boxShadow:
-                  "0 8px 38px 0 rgba(30,174,219,0.24), 0 0px 64px 0 #00e5ff33"
-              }}
-              onClick={() => alert("Qui apparirà il popup con i loghi social (Step C)")}
-            >
-              Invita un amico
-            </span>
-          </section>
+          <InviteMissionText />
           <div className="flex flex-row items-center justify-center gap-4 px-2 mt-2">
             <Button
               className="neon-border bg-gradient-to-r from-yellow-400 to-pink-500 text-black shadow-lg hover:scale-105"
@@ -140,9 +108,6 @@ export default function HomeContent() {
             <span className="mt-2 text-xs text-yellow-200 opacity-70 italic">
               (Sarà visibile chi trova indizi in tempo reale)
             </span>
-          </section>
-          <section className="flex flex-col items-center py-8 px-4 mt-2">
-            <InviteOptionsDialog />
           </section>
         </motion.main>
       )}

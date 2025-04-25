@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Share } from "lucide-react";
@@ -43,24 +42,35 @@ const shareLinks = [
   }
 ];
 
-export default function InviteOptionsDialog() {
-  const [open, setOpen] = useState(false);
+interface InviteOptionsDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showIconsOnly?: boolean;
+}
+
+export default function InviteOptionsDialog({ open, onOpenChange, showIconsOnly }: InviteOptionsDialogProps) {
+  // Modal aperta controllata via props solo se showIconsOnly==true
+  const controlled = showIconsOnly && typeof open === "boolean" && typeof onOpenChange === "function";
+  const actualOpen = controlled ? open : undefined;
+  const actualOnOpenChange = controlled ? onOpenChange : undefined;
 
   return (
     <>
-      <Button 
-        variant="accent"
-        className="w-full max-w-xs mx-auto px-7 py-5 rounded-2xl text-xl font-bold flex items-center gap-2 shadow-xl neon-button-cyan hover:scale-105 transition-all"
-        onClick={() => setOpen(true)}
-      >
-        <Share className="w-7 h-7" />
-        Invita un amico
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
+      {!showIconsOnly && (
+        <Button 
+          variant="accent"
+          className="w-full max-w-xs mx-auto px-7 py-5 rounded-2xl text-xl font-bold flex items-center gap-2 shadow-xl neon-button-cyan hover:scale-105 transition-all"
+          onClick={() => actualOnOpenChange && actualOnOpenChange(true)}
+        >
+          <Share className="w-7 h-7" />
+          Invita un amico
+        </Button>
+      )}
+      <Dialog open={actualOpen} onOpenChange={actualOnOpenChange}>
         <DialogContent className="max-w-md bg-gradient-to-b from-black/90 via-zinc-900/90 to-cyan-950/90 border-cyan-500/40 glass-card p-8 animate-fade-in">
           <DialogHeader>
             <DialogTitle className="text-2xl text-yellow-400 flex items-center gap-3 mx-auto justify-center font-orbitron neon-text-cyan mb-2">
-              <Share className="w-7 h-7" /> Scegli App di Condivisione
+              <Share className="w-7 h-7" /> {showIconsOnly ? "Condividi M1SSION" : "Scegli App di Condivisione"}
             </DialogTitle>
           </DialogHeader>
           <div className="flex flex-wrap items-center justify-center gap-6 px-2 mt-2">
@@ -73,7 +83,7 @@ export default function InviteOptionsDialog() {
                 className={`rounded-full p-4 shadow-xl glass-card ${link.color} hover:scale-125 transition-all duration-200 cursor-pointer flex items-center justify-center`}
                 style={{
                   width: 72, height: 72,
-                  boxShadow: "0 0 25px rgba(0,229,255,0.22), 0 4px 18px #151c3870"
+                  boxShadow: "0 0 25px rgba(0,229,255,0.18), 0 4px 18px #151c3870"
                 }}
                 aria-label={link.name}
               >
@@ -90,7 +100,6 @@ export default function InviteOptionsDialog() {
             ))}
           </div>
           <div className="flex mt-7 flex-col items-center justify-center gap-2">
-            <span className="text-xs text-yellow-100/80 italic">Invia direttamente dai loghi social!</span>
             <DialogClose asChild>
               <Button variant="ghost" className="mt-2">
                 Chiudi
