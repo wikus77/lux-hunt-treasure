@@ -1,4 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion'; // Add this import
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
@@ -139,7 +141,10 @@ const Leaderboard = () => {
           transition={{ duration: 0.6 }}
           className="space-y-6"
         >
-          <LeaderboardHeader onSimulateRankChange={simulateRankChange} />
+          <LeaderboardHeader 
+            onSimulateRankChange={simulateRankChange} 
+            onFilterChange={setFilter}
+          />
           <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
           <LeaderboardTopUsers players={samplePlayers.slice(0, 3)} />
           

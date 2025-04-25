@@ -7,9 +7,10 @@ import { CalendarDays } from 'lucide-react';
 
 interface LeaderboardHeaderProps {
   onSimulateRankChange: () => void;
+  onFilterChange: (filter: 'all' | 'team' | 'country' | '7days') => void;
 }
 
-export const LeaderboardHeader = ({ onSimulateRankChange }: LeaderboardHeaderProps) => {
+export const LeaderboardHeader = ({ onSimulateRankChange, onFilterChange }: LeaderboardHeaderProps) => {
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
@@ -25,7 +26,7 @@ export const LeaderboardHeader = ({ onSimulateRankChange }: LeaderboardHeaderPro
       </div>
       
       <div className="flex gap-2">
-        <LeaderboardFilters />
+        <LeaderboardFilters onFilterChange={onFilterChange} />
         <Button 
           variant="outline" 
           size="sm" 
