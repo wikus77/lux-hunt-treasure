@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { User, Mail, MoreVertical } from "lucide-react";
@@ -18,6 +17,7 @@ import HowItWorksModal from "../modals/HowItWorksModal";
 import NotificationsDrawer from "../notifications/NotificationsDrawer";
 import { Badge } from "@/components/ui/badge";
 import M1ssionText from "@/components/logo/M1ssionText";
+import { AIAssistant } from '@/components/ai/AIAssistant';
 
 const MainLayout = () => {
   const location = useLocation();
@@ -28,7 +28,6 @@ const MainLayout = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   
-  // Get notifications from localStorage
   const updateUnreadCount = () => {
     try {
       const stored = localStorage.getItem('notifications');
@@ -55,13 +54,10 @@ const MainLayout = () => {
       setProfileName(savedProfileName);
     }
     
-    // Update unread count on mount and when location changes
     updateUnreadCount();
     
-    // Set up an interval to check for new notifications
     const interval = setInterval(updateUnreadCount, 5000);
     
-    // Listen for storage events (if notifications are modified in another tab)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'notifications') {
         updateUnreadCount();
@@ -159,6 +155,8 @@ const MainLayout = () => {
         open={showNotifications}
         onOpenChange={setShowNotifications}
       />
+      
+      <AIAssistant />
       
       <Footer />
       <BottomNavigation />
