@@ -20,7 +20,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 
 // Dati di esempio - Questi verranno sostituiti con dati reali dall'API
-const samplePlayers = Array.from({ length: 100 }, (_, i) => ({
+const samplePlayers = Array.from({ length: 50 }, (_, i) => ({
   id: i + 1,
   name: `Giocatore ${i + 1}`,
   avatar: `https://avatar.vercel.sh/player${i + 1}`,
