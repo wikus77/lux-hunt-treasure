@@ -3,16 +3,13 @@ import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TeamCard } from '@/components/leaderboard/TeamCard';
 import { CreateTeamDialog } from '@/components/leaderboard/CreateTeamDialog';
 import { LeaderboardTopUsers } from '@/components/leaderboard/LeaderboardTopUsers';
 import { LeaderboardHeader } from '@/components/leaderboard/LeaderboardHeader';
 import { LeaderboardSearch } from '@/components/leaderboard/LeaderboardSearch';
-import { PlayersList } from '@/components/leaderboard/PlayersList';
 import { LeaderboardProgress } from '@/components/leaderboard/LeaderboardProgress';
+import { LeaderboardTabs } from '@/components/leaderboard/LeaderboardTabs';
 import { useLeaderboardData } from '@/hooks/useLeaderboardData';
-import { Users, Trophy } from 'lucide-react';
 
 const samplePlayers = Array.from({ length: 50 }, (_, i) => ({
   id: i + 1,
@@ -119,37 +116,16 @@ const Leaderboard = () => {
           <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
           <LeaderboardTopUsers players={samplePlayers.slice(0, 3)} />
           
-          <Tabs defaultValue="players" className="w-full" onValueChange={(v) => setActiveTab(v as any)}>
-            <TabsList className="grid grid-cols-2 mb-6 bg-black/50">
-              <TabsTrigger value="players" className="data-[state=active]:bg-cyan-900/30 data-[state=active]:text-cyan-300">
-                <Users className="h-4 w-4 mr-2" />
-                Giocatori
-              </TabsTrigger>
-              <TabsTrigger value="teams" className="data-[state=active]:bg-purple-900/30 data-[state=active]:text-purple-300">
-                <Trophy className="h-4 w-4 mr-2" />
-                Squadre
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="players" className="mt-0">
-              <PlayersList 
-                players={filteredPlayers}
-                isLoading={isLoading}
-                onLoadMore={handleLoadMore}
-                onInvite={handleInvite}
-                onCreateTeam={handleCreateTeamAndInvite}
-                hasMorePlayers={hasMorePlayers}
-              />
-            </TabsContent>
-            
-            <TabsContent value="teams" className="mt-0">
-              <div className="space-y-4">
-                {sampleTeams.map((team) => (
-                  <TeamCard key={team.id} team={team} />
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
+          <LeaderboardTabs 
+            filteredPlayers={filteredPlayers}
+            isLoading={isLoading}
+            hasMorePlayers={hasMorePlayers}
+            sampleTeams={sampleTeams}
+            onLoadMore={handleLoadMore}
+            onInvite={handleInvite}
+            onCreateTeam={handleCreateTeamAndInvite}
+            onTabChange={setActiveTab}
+          />
           
           <LeaderboardProgress currentPosition={42} totalPlayers={100} />
         </motion.div>
