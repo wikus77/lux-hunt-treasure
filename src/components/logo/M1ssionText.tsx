@@ -5,9 +5,13 @@ import { useNavigate } from 'react-router-dom';
 const M1ssionText = () => {
   const navigate = useNavigate();
 
+  const handleClick = () => {
+    navigate('/home');
+  };
+
   return (
     <button 
-      onClick={() => navigate('/home')}
+      onClick={handleClick}
       className="flex items-center font-orbitron text-xl md:text-2xl font-bold transition-opacity hover:opacity-80"
       aria-label="Go to homepage"
     >
