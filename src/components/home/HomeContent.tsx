@@ -10,10 +10,8 @@ import { Trophy, Map, Music } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function HomeContent() {
-  // DEBUG: entry inizio componente
   console.log("[HomeContent] COMPONENT MOUNTED!");
 
-  // Debug: tenta di leggere da localStorage appena disponibile
   const [step, setStep] = useState<number>(() => {
     try {
       const introAlready = typeof window !== "undefined" && localStorage.getItem("homeIntroShown") === "true";
@@ -49,18 +47,37 @@ export default function HomeContent() {
     </div>
   );
 
+  // GRANDE PULSANTE DI TEST (per debug)
+  const renderTestBtn = () => (
+    <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[99999]">
+      <button
+        className="bg-green-600 text-white font-bold p-4 text-base rounded-2xl shadow-2xl border-4 border-yellow-300 animate-bounce hover:scale-110 transition-all"
+        onClick={()=>{
+          setStep(1);
+          console.log("[DEBUG] Forzato step=1!");
+        }}
+      >
+        FORZA STEP = 1 (mostra contenuto)
+      </button>
+    </div>
+  );
+
   return (
     <div className="relative">
       {/* DEBUG output sempre visibile */}
       <div className="fixed top-4 left-4 bg-red-700 text-white z-[9999] px-4 py-2 font-bold rounded-xl shadow-xl border-2 border-white">
         DEBUG: HomeContent caricata
       </div>
+      {renderTestBtn()}
       {renderDebug()}
       <AnimatePresence>
         {step === 0 && (
-          <AnimatedIntroSection
-            onEnd={handleIntroEnd}
-          />
+          <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"auto"}}>
+            <div className="absolute top-5 left-1/2 -translate-x-1/2 bg-yellow-400 text-black py-2 px-4 rounded-full font-bold z-[2010] shadow">
+              DEBUG: AnimatedIntroSection visibile – premi il tasto sopra per forzare la visualizzazione del contenuto
+            </div>
+            <AnimatedIntroSection onEnd={handleIntroEnd} />
+          </div>
         )}
       </AnimatePresence>
       {step === 1 && (
@@ -115,4 +132,3 @@ export default function HomeContent() {
     </div>
   );
 }
-
