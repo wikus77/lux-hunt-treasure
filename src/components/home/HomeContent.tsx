@@ -6,21 +6,25 @@ import FuturePrizesCarousel from "./FuturePrizesCarousel";
 import InviteFriendSection from "./InviteFriendSection";
 import CountdownBanner from "./CountdownBanner";
 import { Button } from "@/components/ui/button";
-import { Music, Trophy, Map } from "lucide-react";
+import { Trophy, Map, Music } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function HomeContent() {
-  // Usa step baseline su localStorage, simile a landing (slash route)
+  // Debug: tenta di leggere da localStorage appena disponibile
   const [step, setStep] = useState<number>(() => {
-    const introAlready = typeof window !== "undefined" && localStorage.getItem("homeIntroShown") === "true";
-    console.log("[HomeContent] INIT step – homeIntroShown", introAlready);
-    return introAlready ? 1 : 0;
+    try {
+      const introAlready = typeof window !== "undefined" && localStorage.getItem("homeIntroShown") === "true";
+      console.log("[HomeContent] INIT step – homeIntroShown", introAlready);
+      return introAlready ? 1 : 0;
+    } catch (err) {
+      console.warn("[HomeContent] init error", err);
+      return 0;
+    }
   });
   const [musicOn, setMusicOn] = useState(false);
 
   useEffect(() => {
     console.log("[HomeContent] useEffect: step value", step);
-    // Solo dopo aver visto l'intro, setta la flag in localStorage
     if (step === 1 && typeof window !== "undefined") {
       localStorage.setItem("homeIntroShown", "true");
       console.log("[HomeContent] Set homeIntroShown=true in localStorage");
@@ -33,8 +37,19 @@ export default function HomeContent() {
     setStep(1);
   };
 
+  // DEBUG overlay per vedere a che step siamo
+  // (solo in DEV)
+  const renderDebug = () => (
+    <div className="fixed top-0 left-0 z-[99] bg-black/60 text-yellow-300 px-3 py-1 rounded-br-lg text-xs font-mono">
+      <div>step: {step}</div>
+      <Button size="sm" className="my-1" onClick={()=>setStep(1)}>Forza step=1</Button>
+      <Button size="sm" className="my-1" onClick={()=>setStep(0)}>Forza step=0</Button>
+    </div>
+  );
+
   return (
     <div className="relative">
+      {renderDebug()}
       <AnimatePresence>
         {step === 0 && (
           <AnimatedIntroSection
@@ -43,7 +58,6 @@ export default function HomeContent() {
         )}
       </AnimatePresence>
 
-      {/* Main page content - mostra tutto se step 1 */}
       {step === 1 && (
         <motion.main 
           className="space-y-10" 
@@ -60,7 +74,6 @@ export default function HomeContent() {
               >
                 <Trophy className="w-5 h-5 mr-1" /> Classifica LIVE
               </Button>
-              {/* Ambient music toggle (resta extra, ma visibile) */}
               <Button
                 size="icon"
                 className="ml-2 bg-black/70 neon-border text-yellow-300 hover:bg-yellow-400/10"
