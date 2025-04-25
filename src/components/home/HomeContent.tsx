@@ -49,7 +49,6 @@ export default function HomeContent() {
   return (
     <div className="relative">
       {/* DEBUG: barra rossa rimossa! */}
-
       {/* {renderDebug()} -- la lasciamo solo se serve debug, ora la rimuoviamo */}
 
       <AnimatePresence>
@@ -68,6 +67,23 @@ export default function HomeContent() {
         >
           <section className="flex flex-col items-center justify-center pt-2 pb-6">
             <BigCountdownTimer />
+          </section>
+          <section className="flex flex-col items-center justify-center mb-8">
+            <span
+              role="button"
+              className="mt-6 text-2xl md:text-3xl font-orbitron neon-text-cyan glass-card px-10 py-4 rounded-2xl shadow-xl cursor-pointer select-none hover:scale-105 transition-all"
+              style={{
+                textShadow:
+                  "0 0 15px #00e5ff, 0 0 30px #00e5ff66, 0 0 24px #fff",
+                background: "rgba(19,33,52,0.65)",
+                border: "1.5px solid #00e5ff88",
+                boxShadow:
+                  "0 8px 38px 0 rgba(30,174,219,0.24), 0 0px 64px 0 #00e5ff33"
+              }}
+              onClick={() => alert("Qui apparirà il popup con i loghi social (Step C)")}
+            >
+              Invita un amico
+            </span>
           </section>
           <div className="flex flex-row items-center justify-center gap-4 px-2 mt-2">
             <Button
