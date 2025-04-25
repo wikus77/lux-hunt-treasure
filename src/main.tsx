@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import App from './App.tsx'
@@ -20,25 +21,27 @@ import Index from './pages/Index'
 import Register from './pages/Register'
 
 createRoot(document.getElementById("root")!).render(
-  <BrowserRouter>
-    <App>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/" element={<MainLayout />}>
-          <Route path="/home" element={<Home />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/map" element={<Map />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/subscriptions" element={<Subscriptions />} />
-          <Route path="/buzz" element={<Buzz />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/payment-methods" element={<PaymentMethods />} />
-          <Route path="/stats" element={<Stats />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
-    </App>
-  </BrowserRouter>
+  <React.StrictMode>
+    <BrowserRouter>
+      <App>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/" element={<MainLayout />}>
+            <Route path="/home" element={<Home />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/map" element={<Map />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/subscriptions" element={<Subscriptions />} />
+            <Route path="/buzz" element={<Buzz />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/payment-methods" element={<PaymentMethods />} />
+            <Route path="/stats" element={<Stats />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </App>
+    </BrowserRouter>
+  </React.StrictMode>
 );
