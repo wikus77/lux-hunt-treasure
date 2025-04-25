@@ -1,4 +1,3 @@
-
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { motion } from "framer-motion";
 import { Calendar } from "lucide-react";
@@ -68,23 +67,29 @@ export default function FutureMissionsCarousel() {
           {futurePrizes.map((prize, idx) => (
             <CarouselItem key={idx} className="flex flex-col items-center">
               <motion.div
-                className="relative rounded-2xl overflow-hidden shadow-lg border-2 border-purple-400/40 bg-black/60"
+                className="group relative rounded-2xl overflow-hidden shadow-xl border-4 border-purple-400/80 bg-gradient-to-br from-black/80 to-purple-900/20 cursor-pointer hover:scale-105"
                 initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.09 * idx }}
+                whileHover={{ scale: 1.07, rotateY: 2 }}
+                style={{perspective:"800px"}}
               >
                 <img
                   src={prize.image}
                   alt={prize.name}
-                  className="w-full h-44 sm:h-48 object-cover rounded-xl"
+                  className="w-full h-44 sm:h-48 object-cover rounded-xl group-hover:scale-110 transition-transform duration-300"
                   style={{
-                    filter: "drop-shadow(0 0 22px #9b87f577)"
+                    filter: "drop-shadow(0 0 32px #9b87f5f7)",
+                    transform: "perspective(600px) rotateY(4deg)"
                   }}
                 />
-                <div className="absolute bottom-0 w-full px-4 py-2 bg-gradient-to-t from-purple-900/70 to-transparent">
-                  <span className="block text-lg text-purple-300 font-bold">{prize.name}</span>
-                  <span className="block text-sm text-white italic mb-1">{prize.description}</span>
-                  <span className="inline-flex items-center gap-1 text-xs text-cyan-300 font-mono bg-white/5 px-2 py-0.5 rounded-lg">
+                <div className="absolute bottom-0 w-full px-4 py-2 bg-gradient-to-t from-purple-900/90 to-transparent">
+                  <span className="block text-lg text-purple-300 font-bold animate-fade-in">{prize.name}</span>
+                  <span className="block text-sm text-white italic mb-1 animate-fade-in">{prize.description}</span>
+                  <span className="inline-flex items-center gap-1 text-xs text-cyan-300 font-mono bg-white/10 px-2 py-0.5 rounded-lg">
                     <Calendar className="w-3 h-3" /> {prize.date}
                   </span>
+                </div>
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute inset-0 rounded-2xl border-4 border-purple-400 neon-border animate-neon-pulse" />
                 </div>
               </motion.div>
             </CarouselItem>

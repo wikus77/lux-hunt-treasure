@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 
 interface TimeRemaining {
@@ -50,25 +49,22 @@ export const CountdownTimer = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-4 gap-2">
-      <div className="bg-projectx-deep-blue p-2 rounded">
-        <div className="text-xs text-muted-foreground">Giorni</div>
-        <div className="text-lg font-bold">{remainingTime.days}</div>
+    <div className="grid grid-cols-4 gap-3 text-center">
+      <div className="bg-black/60 neon-border px-2 py-1 rounded-lg">
+        <div className="text-[11px] text-cyan-200 pb-0.5">Giorni</div>
+        <div className="text-lg font-bold font-orbitron text-cyan-300 animate-neon-pulse">{remainingTime.days}</div>
       </div>
-      
-      <div className="bg-projectx-deep-blue p-2 rounded">
-        <div className="text-xs text-muted-foreground">Ore</div>
-        <div className="text-lg font-bold">{remainingTime.hours}</div>
+      <div className="bg-black/60 neon-border px-2 py-1 rounded-lg">
+        <div className="text-[11px] text-cyan-200 pb-0.5">Ore</div>
+        <div className="text-lg font-bold font-orbitron text-cyan-300 animate-neon-pulse">{remainingTime.hours}</div>
       </div>
-      
-      <div className="bg-projectx-deep-blue p-2 rounded">
-        <div className="text-xs text-muted-foreground">Minuti</div>
-        <div className="text-lg font-bold">{remainingTime.minutes}</div>
+      <div className="bg-black/60 neon-border px-2 py-1 rounded-lg">
+        <div className="text-[11px] text-cyan-200 pb-0.5">Minuti</div>
+        <div className="text-lg font-bold font-orbitron text-cyan-300 animate-neon-pulse">{remainingTime.minutes}</div>
       </div>
-      
-      <div className="bg-projectx-deep-blue p-2 rounded">
-        <div className="text-xs text-muted-foreground">Secondi</div>
-        <div className="text-lg font-bold">{remainingTime.seconds}</div>
+      <div className="bg-black/60 neon-border px-2 py-1 rounded-lg">
+        <div className="text-[11px] text-cyan-200 pb-0.5">Secondi</div>
+        <div className="text-lg font-bold font-orbitron text-cyan-300 animate-neon-pulse">{remainingTime.seconds}</div>
       </div>
     </div>
   );
