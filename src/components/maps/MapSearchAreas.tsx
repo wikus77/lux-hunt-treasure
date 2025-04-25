@@ -22,6 +22,7 @@ type SearchArea = {
   confidence?: string;
   editing?: boolean;
   isAI?: boolean;
+  color?: string;
 };
 
 type Props = {
@@ -77,7 +78,7 @@ const MapSearchAreas: React.FC<Props> = ({
 
   // Colore basato sul livello di confidenza
   const getConfidenceColor = (area: SearchArea) => {
-    if (!area.isAI || !area.confidence) return "rgba(67, 97, 238, 0.24)";
+    if (!area.isAI || !area.confidence) return area.color || "rgba(67, 97, 238, 0.24)";
     
     if (area.confidence === "Alta") return "rgba(74, 222, 128, 0.3)"; // Verde per alta confidenza
     if (area.confidence === "Media") return "rgba(250, 204, 21, 0.3)"; // Giallo per media confidenza
@@ -93,16 +94,16 @@ const MapSearchAreas: React.FC<Props> = ({
             radius={area.radius}
             options={{
               fillColor: area.isAI 
-                ? getConfidenceColor(area) 
-                : "rgba(67, 97, 238, 0.24)",
-              fillOpacity: area.isAI ? 0.7 : 0.8,
+                ? area.color || "#9b87f5" // Default to neon purple for AI areas
+                : getConfidenceColor(area),
+              fillOpacity: area.isAI ? 0.7 : 0.6,
               strokeColor: area.isAI
-                ? area.confidence === "Alta" 
+                ? area.color || "#9b87f5"
+                : area.confidence === "Alta" 
                   ? "rgba(34, 197, 94, 0.9)" // Verde per alta confidenza
                   : area.confidence === "Media" 
                     ? "rgba(234, 179, 8, 0.9)" // Giallo per media confidenza
-                    : "rgba(239, 68, 68, 0.9)" // Rosso per bassa confidenza
-                : "rgba(114, 9, 183, 0.9)",
+                    : "rgba(239, 68, 68, 0.9)", // Rosso per bassa confidenza
               strokeOpacity: area.isAI ? 1 : 1,
               strokeWeight: area.isAI ? 4 : 3,
             }}

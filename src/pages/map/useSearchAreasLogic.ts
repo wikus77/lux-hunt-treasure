@@ -45,13 +45,8 @@ export function useSearchAreasLogic(currentLocation: [number, number] | null) {
     }
   };
 
-  // Calculate radius based on unlocked clues count (more clues = smaller radius = more precision)
-  const calculateBuzzRadius = (): number => {
-    return 500000; // 500km fissi come richiesto
-  };
-
   // Generate area from clue with dynamic radius
-  const generateSearchArea = () => {
+  const generateSearchArea = (radius?: number) => {
     try {
       // Utilizza l'analizzatore di indizi per determinare la posizione
       const locationInfo = analyzeCluesForLocation(clues, notifications || []);
@@ -72,17 +67,17 @@ export function useSearchAreasLogic(currentLocation: [number, number] | null) {
         else confidenceValue = "Bassa";
       }
 
-      // Il raggio è fisso a 500km come richiesto dall'utente
-      const radius = calculateBuzzRadius();
+      // Usa il raggio fornito o il valore di default di 500km
+      const finalRadius = radius || 500000;
 
-      // Crea l'area di ricerca
+      // Crea l'area di ricerca con stile viola neon
       const newArea: SearchArea = {
         id: uuidv4(),
         lat: targetLat,
         lng: targetLng,
-        radius: radius,
+        radius: finalRadius,
         label: label,
-        color: "#4361ee",
+        color: "#9b87f5", // Viola neon
         position: { lat: targetLat, lng: targetLng },
         isAI: true,
         confidence: confidenceValue
@@ -96,7 +91,7 @@ export function useSearchAreasLogic(currentLocation: [number, number] | null) {
         posizione: `${targetLat}, ${targetLng}`,
         label,
         confidence: confidenceValue,
-        radius: radius / 1000 + " km"
+        radius: finalRadius / 1000 + " km"
       });
       
       // Return the ID for the caller if needed
@@ -135,6 +130,5 @@ export function useSearchAreasLogic(currentLocation: [number, number] | null) {
     deleteSearchArea,
     editSearchArea,
     generateSearchArea,
-    calculateBuzzRadius
   };
 }

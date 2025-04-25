@@ -1,146 +1,173 @@
 
-import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import UnifiedHeader from '@/components/layout/UnifiedHeader';
-import CardPaymentForm from '@/components/payments/CardPaymentForm';
-import ApplePayBox from '@/components/payments/ApplePayBox';
-import GooglePayBox from '@/components/payments/GooglePayBox';
+import CardPaymentForm from "@/components/payments/CardPaymentForm";
+import ApplePayBox from "@/components/payments/ApplePayBox";
+import GooglePayBox from "@/components/payments/GooglePayBox";
+import { useNavigate as useRouterNavigate } from "react-router-dom";
+import { useQueryParams } from "@/hooks/useQueryParams";
+import { useToast } from "@/hooks/use-toast";
 
 const PaymentMethods = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [paymentProcessing, setPaymentProcessing] = useState(false);
-  const [backPath, setBackPath] = useState('/settings');
+  const location = useLocation();
+  const queryParams = useQueryParams();
+  const { toast: toastHandler } = useToast();
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
-  
-  // Estrai parametri dalla location state
-  const fromBuzz = location.state?.fromBuzz || false;
-  const fromRegularBuzz = location.state?.fromRegularBuzz || false;
-  const clue = location.state?.clue;
-  const generateMapArea = location.state?.generateMapArea;
-  
+  const [isMapBuzz, setIsMapBuzz] = useState(false);
+  const [price, setPrice] = useState("1.99");
+
   useEffect(() => {
-    const savedProfileImage = localStorage.getItem('profileImage');
-    if (savedProfileImage) {
-      setProfileImage(savedProfileImage);
-    }
+    // Check if we're coming from the map page
+    const fromMap = queryParams.get("from") === "map";
+    const queryPrice = queryParams.get("price");
     
-    // Determina il percorso di ritorno
-    if (fromBuzz) {
-      setBackPath('/buzz');
+    if (fromMap) {
+      setIsMapBuzz(true);
+      if (queryPrice) {
+        setPrice(queryPrice);
+      }
+    } else {
+      // Regular buzz price
+      setPrice("1.99");
     }
-  }, [fromBuzz]);
-  
-  const handlePaymentSuccess = () => {
-    try {
-      console.log("Payment success triggered");
-      setPaymentProcessing(true);
-      
-      // Simula elaborazione pagamento
-      setTimeout(() => {
-        localStorage.setItem('hasPaymentMethod', 'true');
-        
-        toast.success("Pagamento completato", {
-          description: "Il tuo metodo di pagamento è stato registrato.",
-        });
-        
-        // Reindirizza in base alla fonte
-        if (fromBuzz) {
-          if (fromRegularBuzz) {
-            // Se proviene dalla sezione Buzz standard
-            navigate('/buzz', {
-              replace: true,
-              state: { 
-                paymentCompleted: true,
-                fromRegularBuzz: true,
-                clue: clue
-              }
-            });
-          } else {
-            // Se proviene dalla mappa interattiva
-            navigate('/map', {
-              replace: true,
-              state: { 
-                paymentCompleted: true,
-                mapBuzz: true,
-                clue: clue,
-                generateMapArea: generateMapArea
-              }
-            });
-          }
-        } else {
-          // Altrimenti torna alle impostazioni
-          navigate('/settings', { replace: true });
-        }
-      }, 2000);
-    } catch (error) {
-      console.error("Payment processing error:", error);
-      toast.error("Errore durante il pagamento", {
-        description: "Si è verificato un errore. Riprova più tardi.",
+  }, [queryParams]);
+
+  const handlePaymentCompleted = () => {
+    // Generate clue message
+    const clueMessage = isMapBuzz 
+      ? "Questo indizio ti porta in una zona specifica dell'Italia centrale." 
+      : "Nuovo indizio extra sbloccato!";
+
+    // Show success notification
+    toast.success("Pagamento completato", {
+      description: "Il tuo pagamento è stato elaborato con successo!",
+    });
+
+    // Set appropriate state based on payment type
+    if (isMapBuzz) {
+      // Redirect to map with state
+      navigate("/map", {
+        state: {
+          paymentCompleted: true, 
+          mapBuzz: true,
+          clue: { description: clueMessage },
+          createdAt: new Date().toISOString()
+        },
+        replace: true
       });
-      setPaymentProcessing(false);
+    } else {
+      // Regular buzz, redirect to buzz page
+      navigate("/buzz", {
+        state: {
+          paymentCompleted: true, 
+          fromRegularBuzz: true,
+          clue: { description: clueMessage },
+          createdAt: new Date().toISOString()
+        },
+        replace: true
+      });
     }
   };
 
-  return (
-    <div className="min-h-screen bg-black pb-20">
-      <UnifiedHeader profileImage={profileImage} />
-      <div className="h-[72px]"></div>
-      
-      <div className="max-w-md mx-auto px-4 pt-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Metodi di Pagamento</h1>
-          <button
-            onClick={() => navigate(backPath)}
-            className="text-sm text-muted-foreground"
-          >
-            Annulla
-          </button>
-        </div>
-        
-        <div className="space-y-6">
-          {paymentProcessing ? (
-            <div className="bg-black/20 p-6 rounded-lg text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-projectx-pink mx-auto mb-4"></div>
-              <p>Elaborazione del pagamento in corso...</p>
-            </div>
-          ) : (
-            <>
-              <div className="flex justify-between mb-6">
-                <button 
-                  className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'card' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
-                  onClick={() => setPaymentMethod('card')}
-                >
-                  <span className="text-sm">Carta</span>
-                </button>
-                
-                <button 
-                  className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
-                  onClick={() => setPaymentMethod('apple')}
-                >
-                  <span className="text-sm">Pagamento Rapido</span>
-                </button>
-                
-                <button 
-                  className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
-                  onClick={() => setPaymentMethod('google')}
-                >
-                  <span className="text-sm">Altro metodo</span>
-                </button>
-              </div>
+  const handleCardSubmit = () => {
+    toast.info("Elaborazione pagamento...", {
+      duration: 2000,
+    });
+    
+    setTimeout(() => {
+      handlePaymentCompleted();
+    }, 2000);
+  };
 
-              {paymentMethod === "card" && (
-                <CardPaymentForm onSubmit={handlePaymentSuccess} />
-              )}
-              {paymentMethod === "apple" && (
-                <ApplePayBox onApplePay={handlePaymentSuccess} />
-              )}
-              {paymentMethod === "google" && (
-                <GooglePayBox onGooglePay={handlePaymentSuccess} />
-              )}
-            </>
+  const handleApplePay = () => {
+    toast.success("Pagamento Rapido", {
+      description: "Pagamento in elaborazione..."
+    });
+    setTimeout(() => {
+      handlePaymentCompleted();
+    }, 2000);
+  };
+
+  const handleGooglePay = () => {
+    toast.success("Metodo Alternativo", {
+      description: "Pagamento in elaborazione..."
+    });
+    setTimeout(() => {
+      handlePaymentCompleted();
+    }, 2000);
+  };
+
+  return (
+    <div className="min-h-screen bg-black pb-6">
+      <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="mr-2"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-xl font-bold">
+          {isMapBuzz ? `Buzz Map - €${price}` : `Indizio Extra - €1,99`}
+        </h1>
+      </header>
+
+      <div className="p-4">
+        <div className="glass-card mb-6">
+          <div className="flex flex-col gap-4 mb-6">
+            <h2 className="text-xl font-semibold">
+              {isMapBuzz ? "Buzz Map" : "Indizio Extra"}
+            </h2>
+            <p className="text-muted-foreground">
+              {isMapBuzz 
+                ? "Genera un'area di ricerca sulla mappa basata sugli indizi che possiedi."
+                : "Sblocca un indizio extra che potrebbe essere la chiave per trovare l'auto!"}
+            </p>
+            <div className="bg-projectx-deep-blue/30 p-4 rounded-md border border-projectx-deep-blue/50">
+              <p className="text-sm text-cyan-400">
+                {isMapBuzz
+                  ? "L'area generata sulla mappa ti aiuterà a restringere la zona di ricerca in base agli indizi attuali."
+                  : "Gli indizi extra forniscono informazioni aggiuntive non disponibili nel percorso standard."}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-between mb-6">
+            <button 
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'card' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              onClick={() => setPaymentMethod('card')}
+            >
+              <span className="text-sm">Carta</span>
+            </button>
+            
+            <button 
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              onClick={() => setPaymentMethod('apple')}
+            >
+              <span className="text-sm">Pagamento Rapido</span>
+            </button>
+            
+            <button 
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              onClick={() => setPaymentMethod('google')}
+            >
+              <span className="text-sm">Altro metodo</span>
+            </button>
+          </div>
+
+          {paymentMethod === "card" && (
+            <CardPaymentForm onSubmit={handleCardSubmit} />
+          )}
+          {paymentMethod === "apple" && (
+            <ApplePayBox onApplePay={handleApplePay} />
+          )}
+          {paymentMethod === "google" && (
+            <GooglePayBox onGooglePay={handleGooglePay} />
           )}
         </div>
       </div>

@@ -1,3 +1,4 @@
+
 import React, { useRef } from "react";
 import { GoogleMap, Marker, InfoWindow, Circle } from "@react-google-maps/api";
 import MapUserMarkers from "./MapUserMarkers";
@@ -56,6 +57,60 @@ const mapContainerStyle = {
 
 const defaultCenter = { lat: 45.4642, lng: 9.19 }; // Milano
 
+// Custom map styles resembling "Risiko" board game
+const risikoMapStyles = [
+  {
+    featureType: "all",
+    elementType: "labels.text",
+    stylers: [{ color: "#f9f9f9" }, { weight: "0.50" }, { visibility: "on" }]
+  },
+  {
+    featureType: "administrative",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#444444" }, { weight: 2 }, { visibility: "on" }]
+  },
+  {
+    featureType: "administrative.country",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#444444" }, { weight: 2 }, { visibility: "on" }]
+  },
+  {
+    featureType: "administrative.province",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#5a5a5a" }, { weight: 1.5 }, { visibility: "on" }]
+  },
+  {
+    featureType: "landscape",
+    elementType: "geometry.fill",
+    stylers: [{ color: "#283046" }, { visibility: "on" }]
+  },
+  {
+    featureType: "poi",
+    elementType: "all",
+    stylers: [{ visibility: "off" }]
+  },
+  {
+    featureType: "road",
+    elementType: "geometry.fill",
+    stylers: [{ color: "#555555" }, { weight: 1 }, { visibility: "simplified" }]
+  },
+  {
+    featureType: "road",
+    elementType: "labels",
+    stylers: [{ visibility: "simplified" }]
+  },
+  {
+    featureType: "water",
+    elementType: "geometry.fill",
+    stylers: [{ color: "#12172a" }, { visibility: "on" }]
+  },
+  {
+    featureType: "water",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#0c2340" }, { weight: 1 }, { visibility: "on" }]
+  }
+];
+
 export const MapMarkers = ({
   isLoaded,
   markers,
@@ -89,13 +144,7 @@ export const MapMarkers = ({
             disableDefaultUI: true,
             zoomControl: true,
             gestureHandling: "auto",
-            styles: [
-              {
-                featureType: "poi",
-                elementType: "labels",
-                stylers: [{ visibility: "off" }],
-              }
-            ]
+            styles: risikoMapStyles
           }}
         >
           {/* Search Areas */}

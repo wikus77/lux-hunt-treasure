@@ -32,7 +32,8 @@ const BuzzMapBanner = ({ open, area, onClose }: BuzzMapBannerProps) => {
       if (!value) onClose();
     }}>
       <DialogContent className="bg-gradient-to-tr from-[#1eaedb]/80 via-[#9b87f5]/80 to-[#d946ef]/80 p-4 rounded-xl shadow-xl backdrop-blur-md border border-[#7209b7]/70">
-        <DialogTitle className="text-lg text-white mb-2">
+        <DialogTitle className="text-lg text-white mb-2 flex items-center gap-2">
+          <MapPin className="h-5 w-5 text-white" />
           {area.label}
         </DialogTitle>
         <DialogDescription className="text-white/90">

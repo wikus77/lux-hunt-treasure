@@ -28,19 +28,31 @@ export const useMapLogic = () => {
 
   // Dynamic pricing based on unlocked clues
   const calculateBuzzMapPrice = useCallback(() => {
-    if (unlockedClues >= 0 && unlockedClues <= 5) return 2.99;
-    if (unlockedClues <= 10) return 5.99;
-    if (unlockedClues <= 15) return 11.99;
-    if (unlockedClues <= 20) return 15.99;
-    if (unlockedClues <= 30) return 19.99;
-    if (unlockedClues <= 40) return 25.99;
-    if (unlockedClues <= 45) return 27.99;
-    if (unlockedClues <= 50) return 29.99;
-    if (unlockedClues <= 55) return 35.99;
-    if (unlockedClues <= 60) return 39.99;
-    if (unlockedClues <= 65) return 45.99;
-    if (unlockedClues <= 70) return 50.99;
-    return 99.99; // After 70 clues
+    if (unlockedClues >= 0 && unlockedClues <= 10) return 4.99;
+    if (unlockedClues <= 15) return 4.99 * 1.2; // +20%
+    if (unlockedClues <= 20) return 4.99 * 1.2 * 1.2; // +20% again
+    if (unlockedClues <= 25) return 4.99 * 1.2 * 1.2 * 1.2;
+    if (unlockedClues <= 30) return 4.99 * 1.2 * 1.2 * 1.2 * 1.2;
+    if (unlockedClues <= 35) return 4.99 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2;
+    if (unlockedClues <= 40) return 4.99 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2;
+    return 4.99 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2 * 1.2; // Maximum price
+  }, [unlockedClues]);
+
+  // Calculate search area radius based on unlocked clues
+  const calculateSearchAreaRadius = useCallback(() => {
+    let radius = 300000; // 300km - Base radius
+    
+    // Apply 5% reduction for each tier above the first
+    if (unlockedClues > 10 && unlockedClues <= 15) radius *= 0.95;
+    if (unlockedClues > 15 && unlockedClues <= 20) radius *= 0.95 * 0.95;
+    if (unlockedClues > 20 && unlockedClues <= 25) radius *= 0.95 * 0.95 * 0.95;
+    if (unlockedClues > 25 && unlockedClues <= 30) radius *= 0.95 * 0.95 * 0.95 * 0.95;
+    if (unlockedClues > 30 && unlockedClues <= 35) radius *= 0.95 * 0.95 * 0.95 * 0.95 * 0.95;
+    if (unlockedClues > 35 && unlockedClues <= 40) radius *= 0.95 * 0.95 * 0.95 * 0.95 * 0.95 * 0.95;
+    if (unlockedClues > 40) radius *= 0.95 * 0.95 * 0.95 * 0.95 * 0.95 * 0.95 * 0.95;
+    
+    // Ensure minimum radius of 5km
+    return Math.max(radius, 5000); // 5km minimum
   }, [unlockedClues]);
 
   const buzzMapPrice = calculateBuzzMapPrice();
@@ -78,7 +90,7 @@ export const useMapLogic = () => {
             });
 
             // Genera sempre l'area di ricerca basata sugli indizi disponibili
-            const generatedAreaId = areaLogic.generateSearchArea();
+            const generatedAreaId = areaLogic.generateSearchArea(calculateSearchAreaRadius());
             
             if (generatedAreaId) {
               // Center map on the new area and show a notification
@@ -97,7 +109,7 @@ export const useMapLogic = () => {
     } catch (e) {
       console.error("Errore nell'elaborazione dello stato:", e);
     }
-  }, [location.state, areaLogic, incrementUnlockedCluesAndAddClue, addNotification]);
+  }, [location.state, areaLogic, incrementUnlockedCluesAndAddClue, addNotification, calculateSearchAreaRadius]);
 
   const handleMapReady = () => {
     try {
@@ -130,7 +142,8 @@ export const useMapLogic = () => {
 
   const handleBuzz = () => {
     // Direct redirect to payment page with the correct state
-    window.location.href = `/payment-methods?from=map&price=${buzzMapPrice.toFixed(2)}`;
+    const price = buzzMapPrice.toFixed(2);
+    window.location.href = `/payment-methods?from=map&price=${price}`;
     
     // Questo codice in realtà non viene eseguito a causa del reindirizzamento
     // ma è qui come riferimento per cosa accadrebbe se non ci fosse il reindirizzamento
@@ -180,5 +193,6 @@ export const useMapLogic = () => {
     handleBuzz,
     handleHelp,
     generateSearchArea: areaLogic.generateSearchArea,
+    calculateSearchAreaRadius,
   };
 };
