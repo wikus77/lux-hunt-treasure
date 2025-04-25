@@ -1,62 +1,67 @@
-
-import { useState, useEffect } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
-import './App.css'
-import './styles/theme.css'
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from "@/components/ui/toaster"
-import { Toaster as SonnerToaster } from "sonner"
-import { LoginModal } from './components/auth/LoginModal'
-import AgeVerificationModal from './components/auth/AgeVerificationModal'
-import { SoundProvider } from './contexts/SoundContext'
 
-function App({ children }: { children?: React.ReactNode }) {
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isAgeVerificationModalOpen, setIsAgeVerificationModalOpen] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
-  const location = useLocation();
+import { ThemeProvider } from './components/ThemeProvider';
+import Index from './pages/Index';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Home from './pages/Home';
+import Events from './pages/Events';
+import Buzz from './pages/Buzz';
+import Map from './pages/Map';
+import Profile from './pages/Profile';
+import Settings from './pages/Settings';
+import Notifications from './pages/Notifications';
+import NotFound from './pages/NotFound';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
+import Subscriptions from './pages/Subscriptions';
+import PaymentSilver from './pages/PaymentSilver';
+import PaymentGold from './pages/PaymentGold';
+import PaymentBlack from './pages/PaymentBlack';
+import PaymentMethods from './pages/PaymentMethods';
+import MainLayout from './components/layout/MainLayout';
+import Leaderboard from './pages/Leaderboard';
 
-  useEffect(() => {
-    // Don't show modals on landing page
-    if (location.pathname === '/') {
-      return;
-    }
+const queryClient = new QueryClient();
 
-    const hasVerifiedAge = localStorage.getItem('ageVerified');
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-
-    if (!hasVerifiedAge) {
-      setIsAgeVerificationModalOpen(true);
-    } else {
-      setIsVerified(true);
-    }
-
-    if (!isLoggedIn && hasVerifiedAge) {
-      setIsLoginModalOpen(true);
-    }
-  }, [location]);
-
-  const handleAgeVerification = () => {
-    localStorage.setItem('ageVerified', 'true');
-    setIsAgeVerificationModalOpen(false);
-    setIsVerified(true);
-    
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    if (!isLoggedIn) {
-      setIsLoginModalOpen(true);
-    }
-  };
-
+function App() {
   return (
-    <SoundProvider>
-      <div className="app bg-black min-h-screen w-full text-white">
-        {children || <Outlet />}
-        {isAgeVerificationModalOpen && <AgeVerificationModal open={isAgeVerificationModalOpen} onClose={() => setIsAgeVerificationModalOpen(false)} onVerified={handleAgeVerification} />}
-        {isVerified && isLoginModalOpen && <LoginModal open={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} onSuccess={() => {}} />}
-        <SonnerToaster position="top-center" richColors />
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
         <Toaster />
-      </div>
-    </SoundProvider>
-  )
+        <ThemeProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
+            <Route path="/" element={<MainLayout />}>
+              <Route path="/home" element={<Home />} />
+              <Route path="/events" element={<Events />} />
+              <Route path="/buzz" element={<Buzz />} />
+              <Route path="/map" element={<Map />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+            
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/subscriptions" element={<Subscriptions />} />
+            <Route path="/payment-silver" element={<PaymentSilver />} />
+            <Route path="/payment-gold" element={<PaymentGold />} />
+            <Route path="/payment-black" element={<PaymentBlack />} />
+            <Route path="/payment-methods" element={<PaymentMethods />} />
+          </Routes>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

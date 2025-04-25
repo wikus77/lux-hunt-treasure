@@ -1,3 +1,4 @@
+
 @layer utilities {
   /* Pulsante con effetto di pressione */
   .press-effect {
@@ -125,6 +126,95 @@
     }
     50% {
       transform: translateY(-10px);
+    }
+  }
+  
+  /* Animation for rank changes */
+  .rank-up {
+    animation: rankChangeUp 2s ease-out;
+    color: #4ade80;
+  }
+  
+  .rank-down {
+    animation: rankChangeDown 2s ease-out;
+    color: #f87171;
+  }
+  
+  @keyframes rankChangeUp {
+    0%, 100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    50% {
+      transform: translateY(-4px);
+      opacity: 0.8;
+    }
+  }
+  
+  @keyframes rankChangeDown {
+    0%, 100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    50% {
+      transform: translateY(4px);
+      opacity: 0.8;
+    }
+  }
+  
+  /* Leaderboard position highlight */
+  .position-highlight {
+    @apply relative overflow-hidden;
+  }
+  .position-highlight::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 100%;
+    width: 5px;
+    background: linear-gradient(90deg, rgba(155, 135, 245, 0.8) 0%, rgba(155, 135, 245, 0) 100%);
+    animation: highlightPulse 2s infinite ease-in-out;
+  }
+  
+  @keyframes highlightPulse {
+    0%, 100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 0.3;
+    }
+  }
+  
+  /* Trophy shine effect */
+  .trophy-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .trophy-shine::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(45deg);
+    animation: trophyShine 3s infinite;
+  }
+  
+  @keyframes trophyShine {
+    0% {
+      transform: rotate(45deg) translateX(-100%);
+    }
+    15%, 100% {
+      transform: rotate(45deg) translateX(100%);
     }
   }
 }
