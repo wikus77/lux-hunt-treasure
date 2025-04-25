@@ -1,6 +1,6 @@
 
-import { useEffect } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const textLines = [
   "Nel futuro, la caccia al tesoro non è più un gioco… è una sfida globale.",
@@ -10,8 +10,18 @@ const textLines = [
 ];
 
 export default function AnimatedIntroSection({ onEnd }: { onEnd: () => void }) {
+  const [visibleLine, setVisibleLine] = useState(0);
+
   useEffect(() => {
-    // Timeout automatico come fallback (ad esempio 7 secondi)
+    // Mostra la storia progressivamente
+    if (visibleLine < textLines.length) {
+      const t = setTimeout(() => setVisibleLine(visibleLine + 1), 920); // Mostra una frase ogni ~1s
+      return () => clearTimeout(t);
+    }
+  }, [visibleLine]);
+
+  useEffect(() => {
+    // Timeout automatico (7s come fallback)
     const timer = setTimeout(() => {
       onEnd();
     }, 7000);
@@ -63,15 +73,15 @@ export default function AnimatedIntroSection({ onEnd }: { onEnd: () => void }) {
       >
         M1SSION
       </motion.h1>
-      {/* Storytelling testo riga per riga con effetti */}
-      <div className="space-y-5 max-w-2xl mx-auto relative z-10">
-        {textLines.map((line, idx) => (
+      {/* Storytelling testo riga per riga progressiva */}
+      <div className="space-y-5 max-w-2xl mx-auto relative z-10 min-h-[200px] flex flex-col justify-center">
+        {textLines.slice(0, visibleLine).map((line, idx) => (
           <motion.p
             key={idx}
             className="text-white font-light text-lg sm:text-2xl tracking-wide"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 + idx * 1, duration: 1 }}
+            transition={{ delay: 0.2, duration: 1 }}
           >
             {line}
           </motion.p>

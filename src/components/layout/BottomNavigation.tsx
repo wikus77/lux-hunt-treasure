@@ -23,7 +23,7 @@ const BottomNavigation = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
-      <div className="glass-backdrop py-2 px-4 sm:py-3">
+      <div className="glass-backdrop py-2 px-4 sm:py-3 bg-black/60 backdrop-blur-md border-t border-white/10">
         <nav className="flex justify-around items-center max-w-screen-xl mx-auto">
           {navigationItems.map((item) => (
             <button

@@ -7,6 +7,7 @@ import CountdownBanner from "./CountdownBanner";
 import { Button } from "@/components/ui/button";
 import { Trophy, Map, Music } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import InviteOptionsDialog from "./InviteOptionsDialog";
 
 export default function HomeContent() {
   console.log("[HomeContent] COMPONENT MOUNTED!");
@@ -48,17 +49,13 @@ export default function HomeContent() {
 
   return (
     <div className="relative">
-      {/* DEBUG output sempre visibile */}
-      <div className="fixed top-4 left-4 bg-red-700 text-white z-[9999] px-4 py-2 font-bold rounded-xl shadow-xl border-2 border-white">
-        DEBUG: HomeContent caricata
-      </div>
-      {renderDebug()}
+      {/* DEBUG: barra rossa rimossa! */}
+
+      {/* {renderDebug()} -- la lasciamo solo se serve debug, ora la rimuoviamo */}
+
       <AnimatePresence>
         {step === 0 && (
           <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"auto"}}>
-            <div className="absolute top-5 left-1/2 -translate-x-1/2 bg-yellow-400 text-black py-2 px-4 rounded-full font-bold z-[2010] shadow">
-              DEBUG: AnimatedIntroSection visibile – premi il tasto sopra per forzare la visualizzazione del contenuto
-            </div>
             <AnimatedIntroSection onEnd={handleIntroEnd} />
           </div>
         )}
@@ -109,7 +106,10 @@ export default function HomeContent() {
               (Sarà visibile chi trova indizi in tempo reale)
             </span>
           </section>
-          <InviteFriendSection />
+          {/* Nuova sezione invita un amico (solo bottone, popup sotto) */}
+          <section className="flex flex-col items-center py-8 px-4 mt-2">
+            <InviteOptionsDialog />
+          </section>
         </motion.main>
       )}
     </div>
