@@ -75,3 +75,30 @@
 .float-animation {
   animation: float 4s ease-in-out infinite;
 }
+
+/* Neon logo animations */
+@keyframes neon-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px rgba(67, 97, 238, 0.5))
+           drop-shadow(0 0 10px rgba(114, 9, 183, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(67, 97, 238, 0.7))
+           drop-shadow(0 0 15px rgba(114, 9, 183, 0.5));
+  }
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 3s ease-in-out infinite;
+}
+
+/* Logo hover effect */
+.logo-hover {
+  transition: all 0.3s ease;
+}
+
+.logo-hover:hover {
+  filter: drop-shadow(0 0 8px rgba(67, 97, 238, 0.7))
+         drop-shadow(0 0 15px rgba(114, 9, 183, 0.5));
+  transform: scale(1.05);
+}
