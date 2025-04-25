@@ -1,8 +1,8 @@
 
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import M1ssionText from "@/components/logo/M1ssionText";
 
 const LandingHeader = () => {
   const navigate = useNavigate();
@@ -12,12 +12,8 @@ const LandingHeader = () => {
   };
 
   return (
-    <motion.div 
-      className="absolute top-4 right-4 md:top-6 md:right-6 z-20"
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.5, duration: 0.5 }}
-    >
+    <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20 flex justify-between items-center w-full px-4">
+      <M1ssionText />
       <Button
         onClick={handleLoginClick}
         className="flex items-center rounded-lg font-semibold text-xs shadow-lg transition-all duration-150 px-3 py-1.5 scale-70 transform origin-right"
@@ -32,7 +28,7 @@ const LandingHeader = () => {
         <ArrowRight className="mr-1" size={14} />
         Accedi
       </Button>
-    </motion.div>
+    </div>
   );
 };
 
