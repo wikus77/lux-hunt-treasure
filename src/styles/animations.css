@@ -1,23 +1,104 @@
-
+/* ANIMAZIONI E KEYFRAMES */
 @layer base {
-  @keyframes neon-pulse {
-    0%, 100% {
-      filter: 
-        brightness(1) 
-        drop-shadow(0 0 5px rgba(0, 229, 255, 0.5)) 
-        drop-shadow(0 0 10px rgba(255, 165, 0, 0.3)) 
-        drop-shadow(0 0 15px rgba(255, 0, 255, 0.3));
-    }
-    50% {
-      filter: 
-        brightness(1.2) 
-        drop-shadow(0 0 8px rgba(0, 229, 255, 0.7)) 
-        drop-shadow(0 0 15px rgba(255, 165, 0, 0.5)) 
-        drop-shadow(0 0 20px rgba(255, 0, 255, 0.5));
-    }
+  @keyframes spin-gradient {
+    0% { transform: rotate(0deg);}
+    100% { transform: rotate(360deg);}
   }
+  .gradient-white-text {
+    background: linear-gradient(90deg, #ffffff 50%, #f1f1f1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    text-fill-color: transparent;
+  }
+}
 
-  .animate-neon-pulse {
-    animation: neon-pulse 3s ease-in-out infinite;
+/* Instagram animation */
+@layer base {
+  .instagram-story-ring::before,
+  .instagram-story-ring-gradient::before {
+    animation: spin-gradient 2.8s linear infinite;
   }
+}
+
+/* Nuove animazioni per M1SSION */
+@keyframes float-particle {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(20px, -10px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 5px rgba(0, 163, 255, 0.5)) 
+           drop-shadow(0 0 10px rgba(0, 163, 255, 0.3));
+  }
+  50% {
+    filter: brightness(1.2) drop-shadow(0 0 8px rgba(0, 163, 255, 0.7)) 
+           drop-shadow(0 0 15px rgba(0, 163, 255, 0.5));
+  }
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 3s ease-in-out infinite;
+}
+
+@keyframes text-glow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(0, 229, 255, 0.7), 0 0 10px rgba(0, 229, 255, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(0, 229, 255, 0.9), 0 0 25px rgba(0, 229, 255, 0.7);
+  }
+}
+
+.text-glow {
+  animation: text-glow 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float-animation {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Neon logo animations */
+@keyframes neon-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px rgba(67, 97, 238, 0.5))
+           drop-shadow(0 0 10px rgba(114, 9, 183, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(67, 97, 238, 0.7))
+           drop-shadow(0 0 15px rgba(114, 9, 183, 0.5));
+  }
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 3s ease-in-out infinite;
+}
+
+/* Logo hover effect */
+.logo-hover {
+  transition: all 0.3s ease;
+}
+
+.logo-hover:hover {
+  filter: drop-shadow(0 0 8px rgba(67, 97, 238, 0.7))
+         drop-shadow(0 0 15px rgba(114, 9, 183, 0.5));
+  transform: scale(1.05);
 }

@@ -1,5 +1,6 @@
 
 import { useLottie } from "lottie-react";
+import neonLogoAnimation from "./neon-logo-animation.json";
 import { cn } from "@/lib/utils";
 
 interface AnimatedLogoProps {
@@ -10,25 +11,35 @@ interface AnimatedLogoProps {
 
 const AnimatedLogo = ({ className, size = "md", withText = true }: AnimatedLogoProps) => {
   const sizeClasses = {
-    sm: "w-24 h-24",
-    md: "w-32 h-32",
-    lg: "w-40 h-40"
+    sm: "w-24 h-8",
+    md: "w-32 h-10",
+    lg: "w-40 h-12"
   };
+
+  const options = {
+    animationData: neonLogoAnimation,
+    loop: true,
+    autoplay: true,
+    rendererSettings: {
+      preserveAspectRatio: "xMidYMid meet",
+      className: cn("lottie-svg-class", sizeClasses[size])
+    }
+  };
+
+  const { View } = useLottie(options);
 
   return (
     <div className={cn(
-      "relative flex items-center justify-center",
+      "relative flex items-center justify-center group",
       sizeClasses[size],
       className
     )}>
-      <img 
-        src="/lovable-uploads/1fa307f8-c441-4f10-b335-6d843e7172f8.png"
-        alt="M1SSION Logo"
-        className={cn(
-          "w-full h-full object-contain animate-neon-pulse",
-          "transition-all duration-300 group-hover:scale-105"
-        )}
-      />
+      {View}
+      {withText && (
+        <h1 className="absolute text-2xl font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent font-extrabold select-none transition-all duration-300 group-hover:from-[#7209b7] group-hover:to-[#4361ee] drop-shadow-[0_1.5px_12px_rgba(98,115,255,0.51)]">
+          M1SSION
+        </h1>
+      )}
     </div>
   );
 };
