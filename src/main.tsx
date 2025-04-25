@@ -17,12 +17,14 @@ import Buzz from './pages/Buzz'
 import PaymentMethods from './pages/PaymentMethods'
 import Stats from './pages/Stats'
 import Index from './pages/Index'
+import Register from './pages/Register'
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <App>
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/" element={<MainLayout />}>
           <Route path="/home" element={<Home />} />
           <Route path="/events" element={<Events />} />
