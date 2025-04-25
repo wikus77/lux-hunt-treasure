@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
 
 @tailwind base;
@@ -68,4 +69,72 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
   @apply bg-projectx-blue/30 rounded-full;
+}
+
+/* Interactive elements */
+.press-effect {
+  @apply transform transition-transform active:scale-95;
+}
+
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: ripple-animation 0.6s linear;
+}
+
+@keyframes ripple-animation {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Hover effect for cards and buttons */
+.interaction-feedback {
+  @apply transition-all duration-200;
+}
+
+.interaction-feedback:hover {
+  @apply shadow-[0_0_15px_rgba(0,163,255,0.3)];
+}
+
+/* Pulse animation for decorative elements */
+.pulse-animation {
+  animation: pulse 3s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* Floating particles animation */
+@keyframes float-particle {
+  0% { transform: translateY(0) translateX(0); }
+  25% { transform: translateY(-10px) translateX(5px); }
+  50% { transform: translateY(0) translateX(10px); }
+  75% { transform: translateY(10px) translateX(5px); }
+  100% { transform: translateY(0) translateX(0); }
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-[#00E5FF] to-[#D946EF] bg-clip-text text-transparent;
+}
+
+/* Glass backdrop for headers */
+.glass-backdrop {
+  @apply bg-black/60 backdrop-blur-md border-b border-white/10;
+}
+
+/* Shadow for neon elements */
+.neon-shadow {
+  filter: drop-shadow(0 0 8px rgba(0, 163, 255, 0.5));
 }

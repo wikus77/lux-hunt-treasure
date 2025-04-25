@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import './App.css'
+import './styles/theme.css'
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as SonnerToaster } from "sonner"
 import { LoginModal } from './components/auth/LoginModal'
@@ -47,7 +48,7 @@ function App({ children }: { children?: React.ReactNode }) {
 
   return (
     <SoundProvider>
-      <div className="app">
+      <div className="app bg-black min-h-screen w-full text-white">
         {children || <Outlet />}
         {isAgeVerificationModalOpen && <AgeVerificationModal open={isAgeVerificationModalOpen} onClose={() => setIsAgeVerificationModalOpen(false)} onVerified={handleAgeVerification} />}
         {isVerified && isLoginModalOpen && <LoginModal open={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} onSuccess={() => {}} />}

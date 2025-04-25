@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -28,9 +29,12 @@ export default {
         foreground: "hsl(var(--foreground))",
         projectx: {
           'dark': '#0c0c12',
+          'deep-blue': '#151c38',
           'blue': '#00a3ff',
+          'neon-blue': '#1EAEDB',
           'purple': '#a855f7',
           'pink': '#ec4899',
+          'neon-pink': '#D946EF',
           'card': '#111124'
         },
         primary: {
@@ -94,6 +98,14 @@ export default {
         'moveLight': {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' }
+        },
+        'fade-in': {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' }
+        },
+        'scale-in': {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' }
         }
       },
       animation: {
@@ -103,6 +115,8 @@ export default {
         'neon-pulse': 'neon-pulse 2s ease-in-out infinite',
         'pulse-border': 'pulse-border 4s ease-in-out infinite',
         'moveLight': 'moveLight 2s linear infinite',
+        'fade-in': 'fade-in 0.3s ease-out',
+        'scale-in': 'scale-in 0.2s ease-out',
       },
       backgroundImage: {
         'hero-pattern': "linear-gradient(rgba(0,0,0,1),rgba(0,0,0,1))",
