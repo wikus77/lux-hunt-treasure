@@ -68,6 +68,26 @@ export default function HomeContent() {
           <section className="flex flex-col items-center justify-center pt-2 pb-6">
             <BigCountdownTimer />
           </section>
+          <section
+            className="flex flex-col items-center justify-center fade-in"
+          >
+            <motion.div
+              className="glass-card px-8 py-6 rounded-2xl max-w-2xl text-lg md:text-xl text-center neon-text-cyan shadow-lg"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.1, delay: 0.3 }}
+              style={{
+                background: "rgba(19,33,52,0.65)",
+                border: "1.5px solid #00e5ff88",
+                boxShadow: "0 8px 38px 0 rgba(30,174,219,0.20), 0 0px 64px 0 #00e5ff21"
+              }}
+            >
+              “Nel futuro, la caccia al tesoro non è più un gioco… è una sfida globale.<br />
+              Ogni mese, una nuova auto di lusso scompare.<br />
+              Solo i più intuitivi, strategici e veloci sapranno interpretare gli indizi e scoprire dove si nasconde il premio.<br />
+              Entra in <span className="font-bold neon-text-magenta">M1SSION</span>. Vivi l’avventura. Trova il premio. Cambia il tuo destino.”
+            </motion.div>
+          </section>
           <section className="flex flex-col items-center justify-center mb-8">
             <span
               role="button"
