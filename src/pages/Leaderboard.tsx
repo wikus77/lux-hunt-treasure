@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { PlayerCard } from '@/components/leaderboard/PlayerCard';
 import { LeaderboardFilters } from '@/components/leaderboard/LeaderboardFilters';
-import { useToast } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 
 // Sample data - Da sostituire con dati reali dall'API
 const samplePlayers = [
