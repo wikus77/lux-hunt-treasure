@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import AnimatedIntroSection from "./AnimatedIntroSection";
 import FuturisticCarsCarousel from "./FuturisticCarsCarousel";
@@ -49,8 +48,7 @@ export default function HomeContent() {
 
   // GRANDE PULSANTE DI TEST (per debug)
   const renderTestBtn = () => (
--    <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[99999]">
-+    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[99999]">
+    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[99999]">
       <button
         className="bg-green-600 text-white font-bold p-4 text-base rounded-2xl shadow-2xl border-4 border-yellow-300 animate-bounce hover:scale-110 transition-all"
         onClick={()=>{
