@@ -1,23 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
-import { Award, Filter, Users, Map, CalendarDays, Trophy, Search } from 'lucide-react';
-import { LoadingSpinner } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
+import { Users, Trophy } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { PlayerCard } from '@/components/leaderboard/PlayerCard';
-import { LeaderboardFilters } from '@/components/leaderboard/LeaderboardFilters';
-import { LeaderboardTopUsers } from '@/components/leaderboard/LeaderboardTopUsers';
-import { UserRankBadge } from '@/components/leaderboard/UserRankBadge';
 import { TeamCard } from '@/components/leaderboard/TeamCard';
 import { CreateTeamDialog } from '@/components/leaderboard/CreateTeamDialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import { LeaderboardTopUsers } from '@/components/leaderboard/LeaderboardTopUsers';
+import { LeaderboardHeader } from '@/components/leaderboard/LeaderboardHeader';
+import { LeaderboardSearch } from '@/components/leaderboard/LeaderboardSearch';
+import { PlayersList } from '@/components/leaderboard/PlayersList';
 
 // Dati di esempio - Questi verranno sostituiti con dati reali dall'API
 const samplePlayers = Array.from({ length: 50 }, (_, i) => ({
@@ -146,49 +139,10 @@ const Leaderboard = () => {
           transition={{ duration: 0.6 }}
           className="space-y-6"
         >
-          {/* Header con titolo e filtri */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">
-                <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                  M1SSION
-                </span>
-              </h1>
-              <div className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-purple-500" />
-                <p className="text-cyan-400 text-lg font-light tracking-wider">CLASSIFICA</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-2">
-              <LeaderboardFilters onFilterChange={setFilter} />
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="bg-black/40 border-white/10"
-                onClick={() => simulateRankChange()}
-              >
-                <CalendarDays className="h-4 w-4 mr-2" />
-                SIMULA
-              </Button>
-            </div>
-          </div>
-          
-          {/* Barra di ricerca */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              className="pl-10 bg-black/60 border-cyan-800/30 focus:border-cyan-400/50 rounded-lg"
-              placeholder="Cerca giocatore..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          {/* Top 3 giocatori in evidenza */}
+          <LeaderboardHeader onSimulateRankChange={simulateRankChange} />
+          <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
           <LeaderboardTopUsers players={samplePlayers.slice(0, 3)} />
           
-          {/* Tabs per alternare tra giocatori e squadre */}
           <Tabs defaultValue="players" className="w-full" onValueChange={(v) => setActiveTab(v as any)}>
             <TabsList className="grid grid-cols-2 mb-6 bg-black/50">
               <TabsTrigger value="players" className="data-[state=active]:bg-cyan-900/30 data-[state=active]:text-cyan-300">
@@ -202,42 +156,14 @@ const Leaderboard = () => {
             </TabsList>
             
             <TabsContent value="players" className="mt-0">
-              <ScrollArea className="h-[60vh] pr-4 -mr-4">
-                <div className="space-y-4">
-                  <AnimatePresence>
-                    {filteredPlayers.map((player) => (
-                      <motion.div
-                        key={player.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        transition={{ duration: 0.3 }}
-                        className={player.rank <= 10 ? "animate-pulse-slow" : ""}
-                      >
-                        <PlayerCard
-                          player={player}
-                          onInvite={() => handleInvite(player)}
-                          onCreateTeam={() => handleCreateTeamAndInvite(player)}
-                        />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                  
-                  {/* Pulsante "Carica altri" */}
-                  {visiblePlayers < samplePlayers.length && (
-                    <div className="py-4 flex justify-center">
-                      <Button
-                        variant="outline"
-                        className="w-full max-w-xs bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-cyan-500/50"
-                        disabled={isLoading}
-                        onClick={handleLoadMore}
-                      >
-                        {isLoading ? <LoadingSpinner size="sm" /> : "Carica altri giocatori"}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
+              <PlayersList 
+                players={filteredPlayers}
+                isLoading={isLoading}
+                onLoadMore={handleLoadMore}
+                onInvite={handleInvite}
+                onCreateTeam={handleCreateTeamAndInvite}
+                hasMorePlayers={visiblePlayers < samplePlayers.length}
+              />
             </TabsContent>
             
             <TabsContent value="teams" className="mt-0">
@@ -249,7 +175,6 @@ const Leaderboard = () => {
             </TabsContent>
           </Tabs>
           
-          {/* Indicazione progresso in classifica */}
           <div className="mt-8 bg-black/40 p-4 rounded-lg border border-white/5">
             <div className="flex justify-between mb-2">
               <span className="text-sm text-gray-400">La tua posizione:</span>
@@ -267,7 +192,6 @@ const Leaderboard = () => {
         </motion.div>
       </div>
       
-      {/* Dialog per creazione squadra */}
       <CreateTeamDialog
         open={showCreateTeamDialog}
         onClose={() => setShowCreateTeamDialog(false)}
