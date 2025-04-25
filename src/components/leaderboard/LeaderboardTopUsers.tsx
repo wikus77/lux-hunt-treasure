@@ -1,149 +1,139 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Medal, Award, Star } from 'lucide-react';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { UserRankBadge } from '@/components/leaderboard/UserRankBadge';
+import { Avatar } from '@/components/ui/avatar';
+import { Trophy, Star, Award } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
-// Dati di esempio per i primi 3 utenti
-const topUsers = [
-  { 
-    id: "1", 
-    name: "Marco B.", 
-    avatar: "", 
-    score: 780, 
-    cluesFound: 35, 
-    areasExplored: 12, 
-    reputation: 4.9 
-  },
-  { 
-    id: "2", 
-    name: "Giulia S.", 
-    avatar: "", 
-    score: 750, 
-    cluesFound: 32, 
-    areasExplored: 14, 
-    reputation: 4.8 
-  },
-  { 
-    id: "3", 
-    name: "Alessandro R.", 
-    avatar: "", 
-    score: 720, 
-    cluesFound: 30, 
-    areasExplored: 15, 
-    reputation: 4.7 
-  }
-];
+interface Player {
+  id: number;
+  name: string;
+  avatar: string;
+  points: number;
+  rank: number;
+  cluesFound: number;
+  areasExplored: number;
+}
 
-export const LeaderboardTopUsers = () => {
-  // Elemento centrale (primo classificato) ha un layout diverso
+interface LeaderboardTopUsersProps {
+  players: Player[];
+}
+
+export function LeaderboardTopUsers({ players }: LeaderboardTopUsersProps) {
+  const { toast } = useToast();
+
+  const handleInvite = (player: Player) => {
+    toast({
+      title: "Invito inviato!",
+      description: `Hai invitato ${player.name} a unirsi alla tua squadra.`
+    });
+  };
+
+  if (players.length < 3) return null;
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      {topUsers.map((user, index) => {
-        // Per determinare il posizionamento e lo stile in base alla posizione
-        const isFirst = index === 0;
-        const medalColor = index === 0 ? "text-projectx-gold" : 
-                           index === 1 ? "text-slate-300" : 
-                           "text-amber-600";
-        
-        const medalSize = isFirst ? 'h-10 w-10' : 'h-8 w-8';
-        
-        // Animation variants
-        const cardVariants = {
-          hidden: { opacity: 0, y: 20 },
-          show: { 
-            opacity: 1, 
-            y: 0,
-            transition: { 
-              delay: index * 0.15,
-              duration: 0.6 
-            }
-          }
-        };
+    <div className="relative my-6">
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-500/10 via-transparent to-transparent opacity-30" />
 
-        return (
-          <motion.div
-            key={user.id}
-            variants={cardVariants}
-            initial="hidden"
-            animate="show"
-            className={`glass-card relative overflow-hidden ${
-              isFirst ? 'md:order-2 border-projectx-gold glow-yellow' : 
-              index === 1 ? 'md:order-1 border-slate-300' : 'md:order-3 border-amber-600'
-            } ${isFirst ? 'p-6' : 'p-4'}`}
+      <div className="grid grid-cols-3 gap-2 lg:gap-4 relative">
+        {/* Secondo posto */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="flex flex-col items-center text-center pt-6"
+        >
+          <div className="relative mb-2">
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-300/20 to-transparent rounded-full blur-md -z-10" />
+            <Avatar className="w-16 h-16 lg:w-20 lg:h-20 ring-2 ring-slate-300 ring-offset-2 ring-offset-black/50">
+              <img src={players[1].avatar} alt={players[1].name} className="object-cover" />
+            </Avatar>
+            <div className="absolute -bottom-2 right-0">
+              <UserRankBadge rank={2} size="md" animate />
+            </div>
+          </div>
+          
+          <h3 className="text-slate-200 font-bold text-sm mt-2 truncate max-w-full">{players[1].name}</h3>
+          <p className="text-slate-300 text-xs">{players[1].points} pts</p>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleInvite(players[1])}
+            className="mt-1 text-xs h-6 px-2 text-slate-300 hover:text-slate-100"
           >
-            {/* Badge posizione */}
-            <div 
-              className={`absolute top-4 right-4 rounded-full w-8 h-8 flex items-center justify-center ${
-                index === 0 ? 'bg-projectx-gold text-black' :
-                index === 1 ? 'bg-slate-300 text-black' :
-                'bg-amber-600 text-white'
-              }`}
-            >
-              {index + 1}
+            Invita
+          </Button>
+        </motion.div>
+
+        {/* Primo posto */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col items-center text-center -mt-4"
+        >
+          <div className="relative">
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 -translate-y-full">
+              <Trophy className="h-8 w-8 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.7)]" />
             </div>
-            
-            {/* Contenuto card */}
-            <div className={`flex flex-col items-center text-center ${isFirst ? 'gap-4' : 'gap-2'}`}>
-              {/* Medaglia o icona di posizione */}
-              {index === 0 ? (
-                <Medal className={`${medalColor} ${medalSize} mb-1`} />
-              ) : index === 1 ? (
-                <Award className={`${medalColor} ${medalSize} mb-1`} />
-              ) : (
-                <Star className={`${medalColor} ${medalSize} mb-1`} />
-              )}
-              
-              {/* Avatar */}
-              <div className={`relative ${isFirst ? 'mb-3' : 'mb-2'}`}>
-                <Avatar className={`${isFirst ? 'w-24 h-24' : 'w-16 h-16'} border-2 ${
-                  index === 0 ? 'border-projectx-gold' :
-                  index === 1 ? 'border-slate-300' :
-                  'border-amber-600'
-                }`}>
-                  <AvatarImage
-                    src={user.avatar || `https://avatar.vercel.sh/${user.name}`}
-                    alt={user.name}
-                  />
-                  <AvatarFallback className="bg-black/50">
-                    {user.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-              
-              {/* Nome e punteggio */}
-              <div>
-                <h3 className={`font-bold ${isFirst ? 'text-xl' : 'text-lg'} ${medalColor}`}>
-                  {user.name}
-                </h3>
-                <p className={`${isFirst ? 'text-2xl' : 'text-xl'} font-bold mt-1`}>
-                  {user.score} punti
-                </p>
-                
-                {/* Statistiche aggiuntive */}
-                <div className="text-xs text-gray-400 mt-2">
-                  <div className="flex justify-center items-center gap-2">
-                    <div>
-                      <p className="font-medium">{user.cluesFound}</p>
-                      <p>indizi</p>
-                    </div>
-                    <div className="h-6 w-px bg-white/10" />
-                    <div>
-                      <p className="font-medium">{user.areasExplored}</p>
-                      <p>aree</p>
-                    </div>
-                    <div className="h-6 w-px bg-white/10" />
-                    <div>
-                      <p className="font-medium">{user.reputation}</p>
-                      <p>rep.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="absolute -inset-2 bg-gradient-to-b from-yellow-400/30 to-transparent rounded-full blur-md -z-10" />
+            <Avatar className="w-20 h-20 lg:w-24 lg:h-24 ring-2 ring-yellow-400 ring-offset-2 ring-offset-black/50">
+              <img src={players[0].avatar} alt={players[0].name} className="object-cover" />
+            </Avatar>
+            <div className="absolute -bottom-2 right-0">
+              <UserRankBadge rank={1} size="lg" animate />
             </div>
-          </motion.div>
-        );
-      })}
+          </div>
+          
+          <h3 className="text-yellow-400 font-bold mt-2 truncate max-w-full">{players[0].name}</h3>
+          <p className="text-yellow-500 text-sm font-mono">{players[0].points} pts</p>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleInvite(players[0])}
+            className="mt-2 border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
+          >
+            Invita
+          </Button>
+        </motion.div>
+
+        {/* Terzo posto */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="flex flex-col items-center text-center pt-6"
+        >
+          <div className="relative mb-2">
+            <div className="absolute inset-0 bg-gradient-to-b from-amber-700/20 to-transparent rounded-full blur-md -z-10" />
+            <Avatar className="w-16 h-16 lg:w-20 lg:h-20 ring-2 ring-amber-700 ring-offset-2 ring-offset-black/50">
+              <img src={players[2].avatar} alt={players[2].name} className="object-cover" />
+            </Avatar>
+            <div className="absolute -bottom-2 right-0">
+              <UserRankBadge rank={3} size="md" animate />
+            </div>
+          </div>
+          
+          <h3 className="text-amber-200 font-bold text-sm mt-2 truncate max-w-full">{players[2].name}</h3>
+          <p className="text-amber-300/80 text-xs">{players[2].points} pts</p>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleInvite(players[2])}
+            className="mt-1 text-xs h-6 px-2 text-amber-300 hover:text-amber-200"
+          >
+            Invita
+          </Button>
+        </motion.div>
+      </div>
+      
+      {/* Linea separatrice decorativa */}
+      <div className="mt-6 horizontal-line"></div>
     </div>
   );
-};
+}
