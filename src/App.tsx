@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster";
 
 import { ThemeProvider } from '@/components/theme-provider';
+import { SoundProvider } from '@/contexts/SoundContext';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -34,31 +35,33 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <Toaster />
         <ThemeProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            
-            <Route path="/" element={<MainLayout />}>
-              <Route path="/home" element={<Home />} />
-              <Route path="/events" element={<Events />} />
-              <Route path="/buzz" element={<Buzz />} />
-              <Route path="/map" element={<Map />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-            
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/subscriptions" element={<Subscriptions />} />
-            <Route path="/payment-silver" element={<PaymentSilver />} />
-            <Route path="/payment-gold" element={<PaymentGold />} />
-            <Route path="/payment-black" element={<PaymentBlack />} />
-            <Route path="/payment-methods" element={<PaymentMethods />} />
-          </Routes>
+          <SoundProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              
+              <Route path="/" element={<MainLayout />}>
+                <Route path="/home" element={<Home />} />
+                <Route path="/events" element={<Events />} />
+                <Route path="/buzz" element={<Buzz />} />
+                <Route path="/map" element={<Map />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+              
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/subscriptions" element={<Subscriptions />} />
+              <Route path="/payment-silver" element={<PaymentSilver />} />
+              <Route path="/payment-gold" element={<PaymentGold />} />
+              <Route path="/payment-black" element={<PaymentBlack />} />
+              <Route path="/payment-methods" element={<PaymentMethods />} />
+            </Routes>
+          </SoundProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </BrowserRouter>
