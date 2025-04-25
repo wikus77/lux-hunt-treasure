@@ -29,8 +29,8 @@ type MapAreaProps = {
 
 const mapContainerStyle = {
   width: "100%",
-  height: "78vh", // Increased by 30% from 60vh
-  minHeight: "390px", // Increased by 30% from 300px
+  height: "100%",
+  minHeight: "390px",
   borderRadius: "1rem"
 };
 

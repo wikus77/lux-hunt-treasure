@@ -7,7 +7,6 @@ import { toast } from "@/components/ui/sonner";
 import CardPaymentForm from "@/components/payments/CardPaymentForm";
 import ApplePayBox from "@/components/payments/ApplePayBox";
 import GooglePayBox from "@/components/payments/GooglePayBox";
-import { useNavigate as useRouterNavigate } from "react-router-dom";
 import { useQueryParams } from "@/hooks/useQueryParams";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,6 +19,7 @@ const PaymentMethods = () => {
   const [isMapBuzz, setIsMapBuzz] = useState(false);
   const [price, setPrice] = useState("1.99");
   const [sessionId, setSessionId] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     // Check if we're coming from the map page
@@ -44,6 +44,9 @@ const PaymentMethods = () => {
   }, [queryParams]);
 
   const handlePaymentCompleted = () => {
+    if (isProcessing) return; // Evita doppi invii
+    setIsProcessing(true);
+    
     // Generate clue message
     const clueMessage = isMapBuzz 
       ? "Questo indizio ti porta in una zona specifica dell'Italia centrale." 

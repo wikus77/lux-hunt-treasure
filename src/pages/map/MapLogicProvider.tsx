@@ -1,7 +1,7 @@
 
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import MapArea from "./MapArea";
+import MapArea from "@/components/maps/MapArea";
 import MapHeader from "./MapHeader";
 import LoadingScreen from "./LoadingScreen";
 import NotesSection from "./NotesSection";
@@ -89,8 +89,8 @@ const MapLogicProvider = () => {
         />
       )}
 
-      {/* Map above - Updated container sizing */}
-      <div className="w-full h-[65vh] md:h-[70vh]">
+      {/* Map container with flexible height */}
+      <div className="w-full h-[70vh]">
         <MapArea 
           onMapReady={handleMapReady}
           markers={markers}

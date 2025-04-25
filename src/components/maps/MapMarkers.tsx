@@ -49,9 +49,7 @@ type MapMarkersProps = {
 
 const mapContainerStyle = {
   width: "100%",
-  height: "60vw",
-  maxHeight: "60vh",
-  minHeight: "300px",
+  height: "100%",
   borderRadius: "1rem"
 };
 
@@ -132,7 +130,7 @@ export const MapMarkers = ({
   center,
 }: MapMarkersProps) => {
   return (
-    <div className="relative w-full flex justify-center">
+    <div className="relative w-full h-full flex justify-center">
       {isLoaded ? (
         <GoogleMap
           mapContainerStyle={mapContainerStyle}

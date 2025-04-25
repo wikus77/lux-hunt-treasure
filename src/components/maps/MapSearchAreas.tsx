@@ -94,18 +94,20 @@ const MapSearchAreas: React.FC<Props> = ({
             radius={area.radius}
             options={{
               fillColor: area.isAI 
-                ? area.color || "#9b87f5" // Default to neon purple for AI areas
+                ? "#9b87f5" // Viola neon per aree AI
                 : getConfidenceColor(area),
-              fillOpacity: area.isAI ? 0.7 : 0.6,
+              fillOpacity: area.isAI ? 0.5 : 0.4,
               strokeColor: area.isAI
-                ? area.color || "#9b87f5"
+                ? "#7e69ab" // Bordo viola più scuro per aree AI
                 : area.confidence === "Alta" 
                   ? "rgba(34, 197, 94, 0.9)" // Verde per alta confidenza
                   : area.confidence === "Media" 
                     ? "rgba(234, 179, 8, 0.9)" // Giallo per media confidenza
                     : "rgba(239, 68, 68, 0.9)", // Rosso per bassa confidenza
-              strokeOpacity: area.isAI ? 1 : 1,
-              strokeWeight: area.isAI ? 4 : 3,
+              strokeOpacity: 1,
+              strokeWeight: area.isAI ? 3 : 2,
+              // Effetto glow per le aree AI
+              strokeDasharray: area.isAI ? "5,5" : undefined
             }}
             onClick={() => setActiveSearchArea(area.id)}
             onMouseDown={area.isAI ? () => handleAreaMouseDown(area) : undefined}

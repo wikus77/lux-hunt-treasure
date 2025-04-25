@@ -72,19 +72,19 @@ export const useMapLogic = () => {
 
   useEffect(() => {
     try {
-      // Payment/Clue popup side effect - Fix to prevent duplicate notifications and ensure area generation
+      // Payment/Clue popup side effect - Fix per prevenire notifiche duplicate e garantire la generazione dell'area
       if (
         location.state?.paymentCompleted && 
         location.state?.mapBuzz &&
         location.state?.sessionId && 
         !processedSessionIds.has(location.state.sessionId)
       ) {
-        // Mark this session as processed to prevent duplicates
+        // Segna questa sessione come elaborata per prevenire duplicati
         setProcessedSessionIds(prev => new Set(prev).add(location.state.sessionId));
         
         const clue = location.state?.clue;
         
-        // Increment the unlocked clues counter if not already done (only once)
+        // Incrementa il contatore degli indizi sbloccati (solo una volta)
         incrementUnlockedCluesAndAddClue();
         
         if (clue && clue.description) {
@@ -92,25 +92,25 @@ export const useMapLogic = () => {
             setClueMessage(clue.description);
             setShowCluePopup(true);
 
-            // Add notification for the clue (once)
+            // Aggiungi notifica per l'indizio (una sola volta)
             addNotification({
               title: "Nuovo indizio sbloccato",
               description: clue.description,
             });
 
-            // Generate search area based on available clues
+            // Genera area di ricerca basata sugli indizi disponibili
             const radius = calculateSearchAreaRadius();
-            console.log(`Generating search area with radius: ${radius/1000}km`);
+            console.log(`Generazione area di ricerca con raggio: ${radius/1000}km`);
             
             const generatedAreaId = areaLogic.generateSearchArea(radius);
             
             if (generatedAreaId) {
-              // Center map on the new area and show a notification
+              // Centra la mappa sulla nuova area e mostra una notifica
               toast.success("Area di ricerca generata!", {
                 description: "Controlla la mappa per vedere la nuova area basata sugli indizi disponibili."
               });
               
-              // Set the generated area as active after a short delay
+              // Imposta l'area generata come attiva dopo un breve ritardo
               setTimeout(() => {
                 areaLogic.setActiveSearchArea(generatedAreaId);
               }, 2000);
@@ -153,17 +153,17 @@ export const useMapLogic = () => {
   const handleMapDoubleClick = (_e: google.maps.MapMouseEvent) => { /* No logic yet */ };
 
   const handleBuzz = () => {
-    // Create a unique session ID for this payment flow
+    // Crea un ID di sessione univoco per questo flusso di pagamento
     const sessionId = `map_buzz_${Date.now()}`;
     
-    // Direct redirect to payment page with the correct state
+    // Reindirizzamento diretto alla pagina di pagamento con lo stato corretto
     const price = buzzMapPrice.toFixed(2);
     const nextClue = getNextVagueClue();
     
-    // Pass sessionId to track this payment flow and prevent duplicates
+    // Passa l'ID di sessione per tracciare questo flusso di pagamento e prevenire duplicati
     window.location.href = `/payment-methods?from=map&price=${price}&session=${sessionId}`;
     
-    // The rest is handled by the payment page and the useEffect above when returning
+    // Il resto viene gestito dalla pagina di pagamento e dall'effetto sopra quando si ritorna
     setIsMapBuzzActive(true);
   };
 
