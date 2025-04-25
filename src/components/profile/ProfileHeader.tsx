@@ -4,6 +4,7 @@ import { Edit, Menu, User, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import InstagramStyleDrawer from "./InstagramStyleDrawer";
+import M1ssionText from "@/components/logo/M1ssionText";
 
 interface ProfileHeaderProps {
   profileImage: string | null;
@@ -24,7 +25,7 @@ const ProfileHeader = ({
 
   return (
     <div className="flex justify-between items-center px-4 py-4 border-b border-projectx-deep-blue relative">
-      <h2 className="text-xl font-bold gradient-white-text">{name}</h2>
+      <M1ssionText />
       
       <div className="flex gap-2 items-center">
         <span className="instagram-story-ring-gradient">

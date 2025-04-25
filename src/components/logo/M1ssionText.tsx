@@ -14,9 +14,10 @@ const M1ssionText = () => {
       onClick={handleClick}
       className="flex items-center font-orbitron text-xl md:text-2xl font-bold transition-opacity hover:opacity-80"
       aria-label="Go to homepage"
+      style={{ cursor: 'pointer' }}
     >
-      <span className="text-cyan-400">M1</span>
-      <span className="text-white">SSION</span>
+      <span style={{ color: '#00E5FF' }} className="text-cyan-400">M1</span>
+      <span style={{ color: '#FFFFFF' }} className="text-white">SSION</span>
     </button>
   );
 };

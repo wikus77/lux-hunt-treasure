@@ -17,6 +17,7 @@ import {
 import HowItWorksModal from "../modals/HowItWorksModal";
 import NotificationsDrawer from "../notifications/NotificationsDrawer";
 import { Badge } from "@/components/ui/badge";
+import M1ssionText from "@/components/logo/M1ssionText";
 
 const MainLayout = () => {
   const location = useLocation();
@@ -117,9 +118,9 @@ const MainLayout = () => {
             </DropdownMenu>
           </div>
 
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">
-            M1SSION
-          </h1>
+          <div className="text-2xl font-bold">
+            <M1ssionText />
+          </div>
 
           <div className="flex items-center gap-3">
             <button
