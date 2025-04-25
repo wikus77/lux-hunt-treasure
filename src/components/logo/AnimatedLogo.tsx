@@ -22,7 +22,10 @@ const AnimatedLogo = ({ className, size = "md", withText = true }: AnimatedLogoP
     autoplay: true,
     rendererSettings: {
       preserveAspectRatio: "xMidYMid meet",
-      className: cn("lottie-svg-class", sizeClasses[size])
+      className: cn(
+        "lottie-svg-class animate-neon-pulse", 
+        sizeClasses[size]
+      )
     }
   };
 
@@ -36,7 +39,7 @@ const AnimatedLogo = ({ className, size = "md", withText = true }: AnimatedLogoP
     )}>
       {View}
       {withText && (
-        <h1 className="absolute text-2xl font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent font-extrabold select-none transition-all duration-300 group-hover:from-[#7209b7] group-hover:to-[#4361ee] drop-shadow-[0_1.5px_12px_rgba(98,115,255,0.51)]">
+        <h1 className="absolute text-2xl font-bold text-cyan-400 bg-clip-text text-transparent font-extrabold select-none transition-all duration-300 group-hover:text-opacity-80 drop-shadow-[0_1.5px_12px_rgba(0,229,255,0.51)]">
           M1SSION
         </h1>
       )}
