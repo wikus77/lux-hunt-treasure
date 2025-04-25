@@ -1,9 +1,9 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Menu, X, Settings, LogOut } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import MissionButton from "@/components/ui/mission-button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -12,7 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { motion } from "framer-motion";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -40,20 +39,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     <header className="fixed top-0 left-0 right-0 z-40 w-full glass-backdrop">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
-          <div className="flex items-center logo-hover">
-            <button 
-              onClick={() => navigate('/home')}
-              className="flex items-center space-x-2"
-              aria-label="Homepage"
-            >
-              <div className="flex items-center">
-                <span className="text-cyan-400 text-xl md:text-2xl font-orbitron font-semibold">
-                  M1<span className="text-white">SSION</span>
-                </span>
-              </div>
-            </button>
-          </div>
+          <MissionButton onClick={() => navigate('/home')} />
 
           {/* Desktop menu */}
           <div className="hidden md:flex items-center space-x-8">

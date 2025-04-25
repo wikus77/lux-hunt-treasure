@@ -4,6 +4,7 @@ import { User, Mail, MoreVertical } from "lucide-react";
 import Footer from "./Footer";
 import BottomNavigation from "./BottomNavigation";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import MissionButton from "@/components/ui/mission-button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -14,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import HowItWorksModal from "../modals/HowItWorksModal";
 import NotificationsDrawer from "../notifications/NotificationsDrawer";
-import { Badge } from "@/components/ui/badge";
 import AnimatedLogo from "../logo/AnimatedLogo";
 
 const MainLayout = () => {
@@ -110,10 +110,8 @@ const MainLayout = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <AnimatedLogo size="sm" className="hidden md:flex" />
+            <MissionButton onClick={() => navigate('/home')} />
           </div>
-
-          <AnimatedLogo size="md" className="md:hidden" />
 
           <div className="flex items-center gap-3">
             <button
@@ -143,6 +141,9 @@ const MainLayout = () => {
       </header>
       
       <main className="flex-1 w-full relative pt-[72px] pb-16 max-w-screen-xl mx-auto">
+        <div className="flex justify-center mb-8">
+          <AnimatedLogo size="md" />
+        </div>
         <Outlet />
       </main>
       
