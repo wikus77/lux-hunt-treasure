@@ -1,4 +1,5 @@
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 
 const textLines = [
@@ -9,6 +10,15 @@ const textLines = [
 ];
 
 export default function AnimatedIntroSection({ onEnd }: { onEnd: () => void }) {
+  useEffect(() => {
+    // Timeout automatico come fallback (ad esempio 7 secondi)
+    const timer = setTimeout(() => {
+      onEnd();
+    }, 7000);
+
+    return () => clearTimeout(timer);
+  }, [onEnd]);
+
   return (
     <motion.section
       className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-[#161845] via-[#181641] to-[#111124] text-center"
