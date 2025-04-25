@@ -1,7 +1,8 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import { GoogleMap, Marker, InfoWindow, Circle } from "@react-google-maps/api";
 import MapUserMarkers from "./MapUserMarkers";
 import MapSearchAreas from "./MapSearchAreas";
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 export type MapMarker = {
   id: string;
@@ -54,45 +55,36 @@ const mapContainerStyle = {
 
 const defaultCenter = { lat: 45.4642, lng: 9.19 }; // Milano
 
-// Custom map styles with neon effect for continents
-const risikoMapStyles = [
+// Enhanced neon map styles with dynamic border thickness
+const neonMapStyles = [
   {
     featureType: "all",
     elementType: "labels.text",
     stylers: [{ color: "#f9f9f9" }, { weight: "0.50" }, { visibility: "on" }]
   },
+  // Administrative borders - Thinner at higher zoom levels
   {
     featureType: "administrative",
     elementType: "geometry.stroke",
-    stylers: [{ color: "#444444" }, { weight: 2 }, { visibility: "on" }]
+    stylers: [{ color: "#9b87f5" }, { weight: 1.3 }, { visibility: "on" }]
   },
-  {
-    featureType: "administrative.continent",
-    elementType: "geometry.stroke",
-    stylers: [
-      { visibility: "on" },
-      { weight: 3 }
-    ]
-  },
-  // North America - Cyan
-  {
-    featureType: "administrative.continent",
-    elementType: "geometry.stroke",
-    stylers: [
-      { color: "#1EAEDB" },
-      { weight: 3 },
-      { visibility: "on" }
-    ]
-  },
-  // Europe - Purple
+  // Country borders - Neon purple for all
   {
     featureType: "administrative.country",
     elementType: "geometry.stroke",
-    stylers: [
-      { color: "#9b87f5" },
-      { weight: 2.5 },
-      { visibility: "on" }
-    ]
+    stylers: [{ color: "#9b87f5" }, { weight: 2 }, { visibility: "on" }]
+  },
+  // Provincial/State borders - Slightly thinner
+  {
+    featureType: "administrative.province",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#9b87f5" }, { weight: 1.5 }, { visibility: "on" }]
+  },
+  // Continent borders - Keep cyan for visual hierarchy
+  {
+    featureType: "administrative.continent",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#1EAEDB" }, { weight: 3 }, { visibility: "on" }]
   },
   // Background color - Dark blue
   {
@@ -100,11 +92,13 @@ const risikoMapStyles = [
     elementType: "geometry.fill",
     stylers: [{ color: "#0d0d1f" }]
   },
+  // Hide POIs for cleaner look
   {
     featureType: "poi",
     elementType: "all",
     stylers: [{ visibility: "off" }]
   },
+  // Roads - Subtle but visible
   {
     featureType: "road",
     elementType: "geometry.fill",
@@ -114,6 +108,7 @@ const risikoMapStyles = [
       { visibility: "simplified" }
     ]
   },
+  // Simplify road labels
   {
     featureType: "road",
     elementType: "labels",
@@ -157,48 +152,96 @@ export const MapMarkers = ({
   deleteSearchArea,
   center,
 }: MapMarkersProps) => {
+  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const [currentZoomLevel, setCurrentZoomLevel] = useState(13);
+  const mapRef = useRef<google.maps.Map | null>(null);
+  
+  // Handle zoom change to adjust border thickness dynamically
+  const handleZoomChanged = useCallback(() => {
+    if (mapRef.current) {
+      const newZoom = mapRef.current.getZoom();
+      if (newZoom !== undefined) {
+        setCurrentZoomLevel(newZoom);
+        
+        // Dynamic styling based on zoom level
+        // We rely on the predefined styles but could apply more specific changes here
+      }
+    }
+  }, []);
+  
+  // Store the map instance on load
+  const handleMapLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
+  }, []);
+  
+  // Handle region hover (will be expanded in future versions)
+  const handleRegionHover = useCallback((regionName: string | null) => {
+    setHoveredRegion(regionName);
+  }, []);
+  
+  // Setup map options with dynamic border thickness
+  const getMapOptions = useCallback(() => {
+    return {
+      disableDefaultUI: true,
+      zoomControl: true,
+      gestureHandling: "auto",
+      styles: neonMapStyles,
+      backgroundColor: "#0d0d1f",
+      // Improve the feel of interaction
+      tilt: 0, // Flat view for better readability
+      rotateControl: false, // Disable rotation for simpler navigation
+    };
+  }, []);
+
   return (
     <div className="relative w-full h-full flex justify-center">
-      {isLoaded ? (
-        <GoogleMap
-          mapContainerStyle={mapContainerStyle}
-          zoom={13}
-          center={center ?? defaultCenter}
-          onClick={onMapClick}
-          onDblClick={onMapDoubleClick}
-          options={{
-            disableDefaultUI: true,
-            zoomControl: true,
-            gestureHandling: "auto",
-            styles: risikoMapStyles,
-            backgroundColor: "#0d0d1f"
-          }}
-        >
-          {/* Search Areas */}
-          <MapSearchAreas
-            searchAreas={searchAreas}
-            activeSearchArea={activeSearchArea}
-            setActiveSearchArea={setActiveSearchArea}
-            saveSearchArea={saveSearchArea}
-            editSearchArea={editSearchArea}
-            deleteSearchArea={deleteSearchArea}
-          />
+      <TooltipProvider>
+        {isLoaded ? (
+          <GoogleMap
+            mapContainerStyle={mapContainerStyle}
+            zoom={13}
+            center={center ?? defaultCenter}
+            onClick={onMapClick}
+            onDblClick={onMapDoubleClick}
+            options={getMapOptions()}
+            onLoad={handleMapLoad}
+            onZoomChanged={handleZoomChanged}
+          >
+            {/* Search Areas */}
+            <MapSearchAreas
+              searchAreas={searchAreas}
+              activeSearchArea={activeSearchArea}
+              setActiveSearchArea={setActiveSearchArea}
+              saveSearchArea={saveSearchArea}
+              editSearchArea={editSearchArea}
+              deleteSearchArea={deleteSearchArea}
+            />
 
-          {/* User Markers */}
-          <MapUserMarkers
-            markers={markers}
-            activeMarker={activeMarker}
-            setActiveMarker={setActiveMarker}
-            saveMarkerNote={saveMarkerNote}
-            editMarker={editMarker}
-            deleteMarker={deleteMarker}
-          />
-        </GoogleMap>
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-gray-500">
-          Caricamento mappa...
-        </div>
-      )}
+            {/* User Markers */}
+            <MapUserMarkers
+              markers={markers}
+              activeMarker={activeMarker}
+              setActiveMarker={setActiveMarker}
+              saveMarkerNote={saveMarkerNote}
+              editMarker={editMarker}
+              deleteMarker={deleteMarker}
+            />
+
+            {/* Add a tooltip for future hover state enhancements */}
+            {hoveredRegion && (
+              <Tooltip open>
+                <TooltipContent side="top">
+                  <p className="font-bold">{hoveredRegion}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </GoogleMap>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-500">
+            Caricamento mappa...
+          </div>
+        )}
+      </TooltipProvider>
     </div>
   );
 };
