@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Menu, X, Settings, LogOut } from "lucide-react";
@@ -11,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import M1ssionText from "@/components/logo/M1ssionText";
+import { motion } from "framer-motion";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -39,7 +40,20 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     <header className="fixed top-0 left-0 right-0 z-40 w-full glass-backdrop">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
-          <M1ssionText />
+          {/* Logo */}
+          <div className="flex items-center logo-hover">
+            <button 
+              onClick={() => navigate('/home')}
+              className="flex items-center space-x-2"
+              aria-label="Homepage"
+            >
+              <div className="flex items-center">
+                <span className="text-cyan-400 text-xl md:text-2xl font-orbitron font-semibold">
+                  M1<span className="text-white">SSION</span>
+                </span>
+              </div>
+            </button>
+          </div>
 
           {/* Desktop menu */}
           <div className="hidden md:flex items-center space-x-8">
@@ -114,7 +128,13 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
       {/* Mobile menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden glass-card border-t border-white/5 shadow-lg">
+        <motion.div 
+          className="md:hidden glass-card border-t border-white/5 shadow-lg"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.2 }}
+        >
           <div className="px-4 py-5 space-y-3">
             <Button 
               variant="ghost" 
@@ -139,13 +159,13 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             </Button>
             <Button 
               variant="ghost" 
-              className="w-full justify-start text-white hover:bg-white/5"
+              className="w-full justify-start text-pink-500 hover:bg-white/5"
               onClick={() => { handleSignOut(); setIsMobileMenuOpen(false); }}
             >
               Esci
             </Button>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Horizontal line with animation */}

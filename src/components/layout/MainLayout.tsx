@@ -1,10 +1,10 @@
+
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { User, Mail, MoreVertical } from "lucide-react";
 import Footer from "./Footer";
 import BottomNavigation from "./BottomNavigation";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -13,10 +13,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+
 import HowItWorksModal from "../modals/HowItWorksModal";
 import NotificationsDrawer from "../notifications/NotificationsDrawer";
 import { Badge } from "@/components/ui/badge";
-import AnimatedLogo from "../logo/AnimatedLogo";
 
 const MainLayout = () => {
   const location = useLocation();
@@ -27,6 +27,7 @@ const MainLayout = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   
+  // Get notifications from localStorage
   const updateUnreadCount = () => {
     try {
       const stored = localStorage.getItem('notifications');
@@ -53,10 +54,13 @@ const MainLayout = () => {
       setProfileName(savedProfileName);
     }
     
+    // Update unread count on mount and when location changes
     updateUnreadCount();
     
+    // Set up an interval to check for new notifications
     const interval = setInterval(updateUnreadCount, 5000);
     
+    // Listen for storage events (if notifications are modified in another tab)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'notifications') {
         updateUnreadCount();
@@ -79,7 +83,7 @@ const MainLayout = () => {
     <div className="min-h-screen w-full bg-projectx-dark transition-colors duration-300 text-white relative">
       <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-projectx-card/40 border-b border-white/10 transition-all duration-300">
         <div className="max-w-screen-xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="outline-none focus-visible:ring-2 focus-visible:ring-white/30" aria-label="Menu profilo">
@@ -111,10 +115,11 @@ const MainLayout = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <AnimatedLogo size="sm" className="hidden md:flex" />
           </div>
 
-          <AnimatedLogo size="md" className="md:hidden" />
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent">
+            M1SSION
+          </h1>
 
           <div className="flex items-center gap-3">
             <button
@@ -138,8 +143,6 @@ const MainLayout = () => {
               <MoreVertical className="w-5 h-5" />
             </button>
           </div>
-
-          <div className="line-glow"></div>
         </div>
       </header>
       

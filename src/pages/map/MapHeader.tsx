@@ -1,7 +1,7 @@
+
 import { PlusCircle, Filter, Map, HelpCircle, Zap } from "lucide-react";
 import { MapFilters } from "@/components/maps/MapFilters";
 import { toast } from "sonner";
-import M1ssionText from "@/components/logo/M1ssionText";
 
 interface MapHeaderProps {
   onAddMarker: () => void;
@@ -22,6 +22,7 @@ const MapHeader = ({
   isAddingArea,
   buzzMapPrice,
 }: MapHeaderProps) => {
+  // Handle filter changes
   const handleFilterChange = (filters: any) => {
     console.log("Filters changed:", filters);
     toast("Filtri applicati", {
@@ -33,35 +34,32 @@ const MapHeader = ({
   return (
     <div className="sticky top-16 z-10 w-full bg-black/50 backdrop-blur-sm py-3 px-4 border-b border-projectx-deep-blue/30">
       <div className="flex flex-wrap gap-2 justify-between items-center">
-        <div className="flex items-center gap-4">
-          <M1ssionText />
-          <div className="flex gap-2">
-            <button
-              onClick={onAddMarker}
-              className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-sm ${
-                isAddingMarker
-                  ? "bg-projectx-blue text-white"
-                  : "bg-black/40 border border-projectx-deep-blue/40 hover:bg-black/60 press-effect"
-              }`}
-            >
-              <PlusCircle className="h-4 w-4" />
-              <span>Punto</span>
-            </button>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={onAddMarker}
+            className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-sm ${
+              isAddingMarker
+                ? "bg-projectx-blue text-white"
+                : "bg-black/40 border border-projectx-deep-blue/40 hover:bg-black/60 press-effect"
+            }`}
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>Punto</span>
+          </button>
 
-            <button
-              onClick={onAddArea}
-              className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-sm ${
-                isAddingArea
-                  ? "bg-projectx-blue text-white"
-                  : "bg-black/40 border border-projectx-deep-blue/40 hover:bg-black/60 press-effect"
-              }`}
-            >
-              <Map className="h-4 w-4" />
-              <span>Area</span>
-            </button>
+          <button
+            onClick={onAddArea}
+            className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-sm ${
+              isAddingArea
+                ? "bg-projectx-blue text-white"
+                : "bg-black/40 border border-projectx-deep-blue/40 hover:bg-black/60 press-effect"
+            }`}
+          >
+            <Map className="h-4 w-4" />
+            <span>Area</span>
+          </button>
 
-            <MapFilters onFilterChange={handleFilterChange} />
-          </div>
+          <MapFilters onFilterChange={handleFilterChange} />
         </div>
 
         <div className="flex gap-2">
