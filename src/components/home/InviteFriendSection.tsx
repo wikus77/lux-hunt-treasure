@@ -2,7 +2,6 @@
 import { motion } from "framer-motion";
 import { Share2 } from "lucide-react";
 
-// Aggiorna link con referral diretto a Store
 const shareLinks = [
   {
     name: "WhatsApp",
