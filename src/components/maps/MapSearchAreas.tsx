@@ -106,13 +106,28 @@ const MapSearchAreas: React.FC<Props> = ({
                     : "rgba(239, 68, 68, 0.9)", // Rosso per bassa confidenza
               strokeOpacity: 1,
               strokeWeight: area.isAI ? 3 : 2,
-              // Effetto glow per le aree AI
-              strokeDasharray: area.isAI ? "5,5" : undefined
+              // Rimuoviamo strokeDasharray poiché non è supportato
+              // e usiamo un approccio diverso per le aree AI
+              zIndex: area.isAI ? 10 : 5 // Diamo priorità alle aree AI
             }}
             onClick={() => setActiveSearchArea(area.id)}
             onMouseDown={area.isAI ? () => handleAreaMouseDown(area) : undefined}
             onMouseUp={area.isAI ? handleAreaMouseUp : undefined}
           />
+          {/* Per le aree AI, aggiungiamo un secondo cerchio leggermente più grande con puntini per simulare il bordo tratteggiato */}
+          {area.isAI && (
+            <Circle
+              center={{ lat: area.lat, lng: area.lng }}
+              radius={area.radius + 20} // Leggermente più grande del cerchio principale
+              options={{
+                strokeColor: "#9b87f5",
+                strokeOpacity: 0.7,
+                strokeWeight: 1,
+                fillOpacity: 0,
+                zIndex: 9 // Sotto il cerchio principale
+              }}
+            />
+          )}
           <Marker
             position={{ lat: area.lat, lng: area.lng }}
             icon={{
