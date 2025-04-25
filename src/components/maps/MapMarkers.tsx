@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import { GoogleMap, Marker, InfoWindow, Circle } from "@react-google-maps/api";
 import MapUserMarkers from "./MapUserMarkers";
@@ -55,7 +54,7 @@ const mapContainerStyle = {
 
 const defaultCenter = { lat: 45.4642, lng: 9.19 }; // Milano
 
-// Custom map styles resembling "Risiko" board game
+// Custom map styles with neon effect for continents
 const risikoMapStyles = [
   {
     featureType: "all",
@@ -68,19 +67,38 @@ const risikoMapStyles = [
     stylers: [{ color: "#444444" }, { weight: 2 }, { visibility: "on" }]
   },
   {
+    featureType: "administrative.continent",
+    elementType: "geometry.stroke",
+    stylers: [
+      { visibility: "on" },
+      { weight: 3 }
+    ]
+  },
+  // North America - Cyan
+  {
+    featureType: "administrative.continent",
+    elementType: "geometry.stroke",
+    stylers: [
+      { color: "#1EAEDB" },
+      { weight: 3 },
+      { visibility: "on" }
+    ]
+  },
+  // Europe - Purple
+  {
     featureType: "administrative.country",
     elementType: "geometry.stroke",
-    stylers: [{ color: "#444444" }, { weight: 2 }, { visibility: "on" }]
+    stylers: [
+      { color: "#9b87f5" },
+      { weight: 2.5 },
+      { visibility: "on" }
+    ]
   },
-  {
-    featureType: "administrative.province",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#5a5a5a" }, { weight: 1.5 }, { visibility: "on" }]
-  },
+  // Background color - Dark blue
   {
     featureType: "landscape",
     elementType: "geometry.fill",
-    stylers: [{ color: "#283046" }, { visibility: "on" }]
+    stylers: [{ color: "#0d0d1f" }]
   },
   {
     featureType: "poi",
@@ -90,22 +108,32 @@ const risikoMapStyles = [
   {
     featureType: "road",
     elementType: "geometry.fill",
-    stylers: [{ color: "#555555" }, { weight: 1 }, { visibility: "simplified" }]
+    stylers: [
+      { color: "#1a1a3a" },
+      { weight: 1 },
+      { visibility: "simplified" }
+    ]
   },
   {
     featureType: "road",
     elementType: "labels",
     stylers: [{ visibility: "simplified" }]
   },
+  // Water areas - Darker blue
   {
     featureType: "water",
     elementType: "geometry.fill",
-    stylers: [{ color: "#12172a" }, { visibility: "on" }]
+    stylers: [{ color: "#070714" }]
   },
+  // Water borders - Light effect
   {
     featureType: "water",
     elementType: "geometry.stroke",
-    stylers: [{ color: "#0c2340" }, { weight: 1 }, { visibility: "on" }]
+    stylers: [
+      { color: "#1EAEDB" },
+      { weight: 0.5 },
+      { visibility: "on" }
+    ]
   }
 ];
 
@@ -142,7 +170,8 @@ export const MapMarkers = ({
             disableDefaultUI: true,
             zoomControl: true,
             gestureHandling: "auto",
-            styles: risikoMapStyles
+            styles: risikoMapStyles,
+            backgroundColor: "#0d0d1f"
           }}
         >
           {/* Search Areas */}
