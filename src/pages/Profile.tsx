@@ -49,10 +49,10 @@ const Profile = () => {
   return (
     <div className="pb-20 min-h-screen bg-black w-full">
       <UnifiedHeader 
-        enableAvatarUpload 
-        profileImage={profileImage} 
-        setProfileImage={setProfileImage} 
+        profileImage={profileImage}
+        setProfileImage={setProfileImage}
         onClickMail={handleShowNotifications}
+        enableAvatarUpload={true}
       />
       <div className="h-[72px] w-full" />
 

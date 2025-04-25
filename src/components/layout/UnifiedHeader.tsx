@@ -16,12 +16,16 @@ import { motion } from "framer-motion";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
+  setProfileImage?: React.Dispatch<React.SetStateAction<string | null>>;
   onClickMail?: () => void;
+  enableAvatarUpload?: boolean;
 }
 
 const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   profileImage,
+  setProfileImage,
   onClickMail,
+  enableAvatarUpload,
 }) => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
