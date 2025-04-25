@@ -4,6 +4,7 @@ import FuturisticCarsCarousel from "./FuturisticCarsCarousel";
 import FuturePrizesCarousel from "./FuturePrizesCarousel";
 import InviteFriendSection from "./InviteFriendSection";
 import CountdownBanner from "./CountdownBanner";
+import BigCountdownTimer from "./BigCountdownTimer";
 import { Button } from "@/components/ui/button";
 import { Trophy, Map, Music } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,13 +33,11 @@ export default function HomeContent() {
     }
   }, [step]);
 
-  // Avanza dopo intro
   const handleIntroEnd = () => {
     console.log("[HomeContent] handleIntroEnd fired");
     setStep(1);
   };
 
-  // DEBUG overlay per vedere a che step siamo
   const renderDebug = () => (
     <div className="fixed top-0 left-0 z-[99] bg-black/60 text-yellow-300 px-3 py-1 rounded-br-lg text-xs font-mono">
       <div>step: {step}</div>
@@ -67,24 +66,24 @@ export default function HomeContent() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 mt-4">
-            <CountdownBanner />
-            <div className="flex gap-2">
-              <Button
-                className="neon-border bg-gradient-to-r from-yellow-400 to-pink-500 text-black shadow-lg hover:scale-105"
-                onClick={() => window.location.href = "/leaderboard"}
-              >
-                <Trophy className="w-5 h-5 mr-1" /> Classifica LIVE
-              </Button>
-              <Button
-                size="icon"
-                className="ml-2 bg-black/70 neon-border text-yellow-300 hover:bg-yellow-400/10"
-                aria-label={musicOn ? "Disattiva musica" : "Attiva musica"}
-                onClick={() => setMusicOn(v => !v)}
-              >
-                <Music className={musicOn ? "text-green-400 animate-neon-pulse w-6 h-6" : "text-yellow-300 w-6 h-6"} />
-              </Button>
-            </div>
+          <section className="flex flex-col items-center justify-center pt-2 pb-6">
+            <BigCountdownTimer />
+          </section>
+          <div className="flex flex-row items-center justify-center gap-4 px-2 mt-2">
+            <Button
+              className="neon-border bg-gradient-to-r from-yellow-400 to-pink-500 text-black shadow-lg hover:scale-105"
+              onClick={() => window.location.href = "/leaderboard"}
+            >
+              <Trophy className="w-5 h-5 mr-1" /> Classifica LIVE
+            </Button>
+            <Button
+              size="icon"
+              className="ml-2 bg-black/70 neon-border text-yellow-300 hover:bg-yellow-400/10"
+              aria-label={musicOn ? "Disattiva musica" : "Attiva musica"}
+              onClick={() => setMusicOn(v => !v)}
+            >
+              <Music className={musicOn ? "text-green-400 animate-neon-pulse w-6 h-6" : "text-yellow-300 w-6 h-6"} />
+            </Button>
           </div>
           <section className="mt-2">
             <h2 className="text-2xl font-orbitron neon-text-cyan mb-4">Missione Corrente</h2>
@@ -106,7 +105,6 @@ export default function HomeContent() {
               (Sarà visibile chi trova indizi in tempo reale)
             </span>
           </section>
-          {/* Nuova sezione invita un amico (solo bottone, popup sotto) */}
           <section className="flex flex-col items-center py-8 px-4 mt-2">
             <InviteOptionsDialog />
           </section>
