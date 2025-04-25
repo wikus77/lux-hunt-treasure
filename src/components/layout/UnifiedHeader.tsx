@@ -159,7 +159,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             </Button>
             <Button 
               variant="ghost" 
-              className="w-full justify-start text-pink-500 hover:bg-white/5"
+              className="w-full justify-start text-white hover:bg-white/5"
               onClick={() => { handleSignOut(); setIsMobileMenuOpen(false); }}
             >
               Esci

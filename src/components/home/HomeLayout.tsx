@@ -2,6 +2,7 @@
 import { ReactNode } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
+import { Button } from "@/components/ui/button";
 
 interface HomeLayoutProps {
   children: ReactNode;
