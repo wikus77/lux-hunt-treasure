@@ -1,67 +1,135 @@
 
-/* Base styles */
 .logo-container {
   position: relative;
-  width: 300px;
+  width: 100%;
+  max-width: 600px;
   height: 300px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  gap: 40px;
-  background-color: black;
+  align-items: center;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-/* Mission text */
 .mission-text {
-  font-family: 'Inter', sans-serif;
-  font-size: 2.5rem;
-  font-weight: 500;
-  letter-spacing: 4px;
-  background: linear-gradient(-45deg, #00a3ff, #1EAEDB, #007BFF);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 0 10px rgba(0, 163, 255, 0.5);
-  opacity: 0;
-  animation: fadeInText 7s forwards, neonPulse 2s infinite;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 3rem;
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  animation: fadeIn 2s forwards, glow 2s infinite alternate;
 }
 
-/* Scan line effect */
+.mission-text::before {
+  content: 'M1SSION';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.8), transparent);
+  animation: scan 2s ease-in-out forwards 0.5s;
+}
+
 .scan-line {
   position: absolute;
   width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #00a3ff, transparent);
-  top: 0;
-  animation: scanEffect 2s linear infinite;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #00E5FF, transparent);
+  animation: scan 2s ease-in-out infinite;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
-/* Animations */
-@keyframes fadeInText {
-  0% { opacity: 0; transform: translateY(20px); }
-  60% { opacity: 0; transform: translateY(20px); }
-  70% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 1; transform: translateY(0); }
+@keyframes scan {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
-@keyframes scanEffect {
-  0% { transform: translateY(0); opacity: 0; }
-  50% { opacity: 1; }
-  100% { transform: translateY(300px); opacity: 0; }
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
-@keyframes neonPulse {
-  0%, 100% {
-    text-shadow: 
-      0 0 7px rgba(0, 163, 255, 0.5),
-      0 0 10px rgba(0, 163, 255, 0.5),
-      0 0 21px rgba(0, 163, 255, 0.5);
+@keyframes glow {
+  0% {
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.7), 0 0 20px rgba(0, 229, 255, 0.5);
+  }
+  100% {
+    text-shadow: 0 0 15px rgba(0, 229, 255, 0.9), 0 0 30px rgba(0, 229, 255, 0.7), 0 0 45px rgba(0, 229, 255, 0.5);
+  }
+}
+
+/* Animated particles */
+.logo-container::after {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: #00E5FF;
+  border-radius: 50%;
+  box-shadow: 0 0 10px 2px rgba(0, 229, 255, 0.7);
+  top: 30%;
+  left: 60%;
+  animation: float 4s infinite ease-in-out;
+}
+
+.logo-container::before {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #FF00FF;
+  border-radius: 50%;
+  box-shadow: 0 0 10px 2px rgba(255, 0, 255, 0.7);
+  top: 70%;
+  left: 30%;
+  animation: float 5s infinite ease-in-out reverse;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0) translateX(0);
   }
   50% {
-    text-shadow: 
-      0 0 10px rgba(0, 163, 255, 0.7),
-      0 0 20px rgba(0, 163, 255, 0.7),
-      0 0 30px rgba(0, 163, 255, 0.7);
+    transform: translateY(-20px) translateX(10px);
+  }
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+}
+
+/* IT IS POSSIBLE text appears after main logo */
+.mission-text::after {
+  content: 'IT IS POSSIBLE';
+  position: absolute;
+  bottom: -2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1rem;
+  color: #FFC300;
+  text-shadow: 0 0 10px rgba(255, 195, 0, 0.7);
+  opacity: 0;
+  animation: fadeInMotto 0.5s forwards 3s;
+}
+
+@keyframes fadeInMotto {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0);
   }
 }
