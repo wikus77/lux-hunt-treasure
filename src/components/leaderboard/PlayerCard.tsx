@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { UserRankBadge } from './UserRankBadge';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+import BriefProfileModal from '@/components/profile/BriefProfileModal';
 
 interface PlayerCardProps {
   player: {
@@ -34,6 +34,7 @@ interface PlayerCardProps {
 
 export function PlayerCard({ player, onInvite, onCreateTeam }: PlayerCardProps) {
   const isTopPlayer = player.rank <= 10;
+  const [showProfile, setShowProfile] = useState(false);
   
   const getBadgeElement = (badge: string) => {
     switch (badge) {
@@ -81,7 +82,7 @@ export function PlayerCard({ player, onInvite, onCreateTeam }: PlayerCardProps) 
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent 
                       translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"/>
         <div className="flex items-center gap-4 p-4">
-          <div className="relative">
+          <div className="relative cursor-pointer" onClick={() => setShowProfile(true)}>
             <Avatar className={`w-12 h-12 ${player.rank <= 3 
               ? 'ring-2 ring-offset-2 ring-offset-black/50' 
               : 'ring-1 ring-white/10'} ${
@@ -94,6 +95,7 @@ export function PlayerCard({ player, onInvite, onCreateTeam }: PlayerCardProps) 
                 : ''
             }`}>
               <img src={player.avatar} alt={player.name} className="object-cover" />
+              <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
             </Avatar>
             
             <div className="absolute -bottom-1 -right-1">
@@ -115,9 +117,9 @@ export function PlayerCard({ player, onInvite, onCreateTeam }: PlayerCardProps) 
           <div className="flex-1">
             <div className="flex items-center justify-between flex-wrap gap-y-1">
               <div className="flex items-center gap-2">
-                <h3 className={`text-lg font-bold ${
+                <h3 className={`text-lg font-bold cursor-pointer hover:text-cyan-400 transition-colors ${
                   player.rank <= 3 ? 'text-cyan-400' : 'text-white'
-                }`}>{player.name}</h3>
+                }`} onClick={() => setShowProfile(true)}>{player.name}</h3>
                 <span className="text-xs">{player.country}</span>
               </div>
               <span className={`text-purple-400 font-mono ${
@@ -154,13 +156,21 @@ export function PlayerCard({ player, onInvite, onCreateTeam }: PlayerCardProps) 
             <DropdownMenuContent className="bg-black/90 border-white/10">
               <DropdownMenuItem 
                 className="hover:bg-white/10 cursor-pointer"
+                onClick={() => setShowProfile(true)}
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Esplora profilo
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator className="bg-white/10" />
+              
+              <DropdownMenuItem 
+                className="hover:bg-white/10 cursor-pointer"
                 onClick={() => onInvite?.(player)}
               >
                 <Users className="h-4 w-4 mr-2" />
                 Invita alla tua squadra
               </DropdownMenuItem>
-              
-              <DropdownMenuSeparator className="bg-white/10" />
               
               <DropdownMenuItem 
                 className="hover:bg-white/10 cursor-pointer"
@@ -173,6 +183,12 @@ export function PlayerCard({ player, onInvite, onCreateTeam }: PlayerCardProps) 
           </DropdownMenu>
         </div>
       </div>
+
+      <BriefProfileModal
+        open={showProfile}
+        onClose={() => setShowProfile(false)}
+        profileImage={player.avatar}
+      />
     </motion.div>
   );
 }
