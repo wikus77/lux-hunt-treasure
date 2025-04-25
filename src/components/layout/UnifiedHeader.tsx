@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { User, Menu, X, Settings, LogOut } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";  // Add this import
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -118,13 +117,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
       {/* Mobile menu */}
       {isMobileMenuOpen && (
-        <motion.div 
-          className="md:hidden glass-card border-t border-white/5 shadow-lg"
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.2 }}
-        >
+        <div className="md:hidden glass-card border-t border-white/5 shadow-lg">
           <div className="px-4 py-5 space-y-3">
             <Button 
               variant="ghost" 
@@ -155,7 +148,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               Esci
             </Button>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Horizontal line with animation */}

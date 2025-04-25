@@ -1,7 +1,7 @@
+
 import { PlusCircle, Filter, Map, HelpCircle, Zap } from "lucide-react";
 import { MapFilters } from "@/components/maps/MapFilters";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import M1ssionText from "@/components/logo/M1ssionText";
 
 interface MapHeaderProps {
