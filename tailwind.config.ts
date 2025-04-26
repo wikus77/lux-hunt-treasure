@@ -1,9 +1,8 @@
 
-import { defineConfig } from 'tailwindcss';
 import type { Config } from 'tailwindcss';
 import animate from 'tailwindcss-animate';
 
-const config = {
+const config: Config = {
   darkMode: ['class'],
   content: [
     './pages/**/*.{ts,tsx}',
@@ -108,6 +107,10 @@ const config = {
         'lineMove': {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' }
+        },
+        'ripple': {
+          '0%': { transform: 'scale(0)', opacity: '0.5' },
+          '100%': { transform: 'scale(4)', opacity: '0' }
         }
       },
       animation: {
@@ -117,7 +120,8 @@ const config = {
         'float-particle': 'float-particle 15s infinite ease-in-out',
         'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
         'pulse-animation': 'pulse 3s infinite ease-in-out',
-        'line-move': 'lineMove 2s infinite linear'
+        'line-move': 'lineMove 2s infinite linear',
+        'ripple': 'ripple 0.6s ease-in-out'
       },
       fontFamily: {
         'inter': ['Inter', 'sans-serif'],
@@ -126,6 +130,6 @@ const config = {
     },
   },
   plugins: [animate],
-} satisfies Config;
+};
 
-export default defineConfig(config);
+export default config;
