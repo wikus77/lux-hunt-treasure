@@ -217,4 +217,133 @@
       transform: rotate(45deg) translateX(100%);
     }
   }
+
+  /* ---- Awwwards-inspired Interactions ---- */
+  
+  /* Magnetic buttons */
+  .btn-magnetic {
+    transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  
+  /* Text reveal on hover */
+  .text-reveal-container {
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .text-reveal {
+    transform: translateY(100%);
+    opacity: 0;
+    transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), 
+                opacity 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  
+  .text-reveal-container:hover .text-reveal {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
+  /* Image distortion effect */
+  .img-distort {
+    filter: blur(0);
+    transition: filter 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  
+  .img-distort:hover {
+    filter: blur(5px) brightness(1.1);
+  }
+  
+  /* Text scramble effect */
+  @keyframes scramble {
+    0%, 100% {
+      opacity: 1;
+      transform: translateY(0) rotate(0);
+    }
+    50% {
+      opacity: 0.8;
+      transform: translateY(2px) rotate(1deg);
+    }
+  }
+  
+  .text-scramble span {
+    display: inline-block;
+    animation: scramble 0.4s ease-in-out;
+    animation-play-state: paused;
+  }
+  
+  .text-scramble:hover span {
+    animation-play-state: running;
+  }
+  
+  /* Image skew hover */
+  .img-skew-hover {
+    transition: transform 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  
+  .img-skew-hover:hover {
+    transform: scale(1.05) skewX(-2deg);
+  }
+  
+  /* Smooth scrolling view transitions */
+  .scroll-transition {
+    transition: opacity 0.8s cubic-bezier(0.19, 1, 0.22, 1), 
+                transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  
+  /* Cursor effects */
+  .custom-cursor-target {
+    cursor: none;
+  }
+  
+  .custom-cursor {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    position: fixed;
+    pointer-events: none;
+    mix-blend-mode: difference;
+    z-index: 9999;
+    transition: transform 0.2s ease-out, width 0.3s ease, height 0.3s ease;
+    transform: translate(-50%, -50%);
+  }
+  
+  .custom-cursor.hover {
+    width: 60px;
+    height: 60px;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Letter spacing hover effect */
+  .letter-spacing-hover {
+    transition: letter-spacing 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  
+  .letter-spacing-hover:hover {
+    letter-spacing: 0.2em;
+  }
+  
+  /* Mask hover effect */
+  .mask-hover {
+    clip-path: inset(0 0 0 0);
+    transition: clip-path 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  
+  .mask-hover:hover {
+    clip-path: inset(10% 10% 10% 10%);
+  }
+  
+  /* Scroll reveal with delay */
+  .reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 1s ease, transform 1s ease;
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  
+  .reveal-on-scroll.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

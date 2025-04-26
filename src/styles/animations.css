@@ -5,6 +5,7 @@
     0% { transform: rotate(0deg);}
     100% { transform: rotate(360deg);}
   }
+  
   .gradient-white-text {
     background: linear-gradient(90deg, #ffffff 50%, #f1f1f1 100%);
     -webkit-background-clip: text;
@@ -75,4 +76,178 @@
 
 .float-animation {
   animation: float 4s ease-in-out infinite;
+}
+
+/* ---- Advanced Awwwards-style Animations ---- */
+@keyframes reveal-text {
+  0% {
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+  }
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+}
+
+.reveal-text {
+  animation: reveal-text 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+}
+
+@keyframes reveal-block {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(101%);
+  }
+}
+
+.reveal-block {
+  animation: reveal-block 1.1s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+@keyframes magnetic-effect {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  20% {
+    transform: translateX(2px) translateY(-2px);
+  }
+  40% {
+    transform: translateX(-2px) translateY(2px);
+  }
+  60% {
+    transform: translateX(1px) translateY(1px);
+  }
+  80% {
+    transform: translateX(-1px) translateY(-1px);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+}
+
+.magnetic-animation {
+  animation: magnetic-effect 8s ease-in-out infinite;
+}
+
+@keyframes rotate-3d {
+  0% {
+    transform: perspective(1000px) rotateX(0) rotateY(0);
+  }
+  25% {
+    transform: perspective(1000px) rotateX(2deg) rotateY(2deg);
+  }
+  50% {
+    transform: perspective(1000px) rotateX(0) rotateY(4deg);
+  }
+  75% {
+    transform: perspective(1000px) rotateX(-2deg) rotateY(2deg);
+  }
+  100% {
+    transform: perspective(1000px) rotateX(0) rotateY(0);
+  }
+}
+
+.rotate-3d-animation {
+  animation: rotate-3d 12s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.marquee-animation {
+  animation: marquee 20s linear infinite;
+}
+
+/* Scroll reveal animations */
+.fade-up-animation {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.fade-up-animation.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.stagger-animation {
+  transition-delay: var(--stagger-delay, 0ms);
+}
+
+/* Split text animations */
+.split-parent {
+  overflow: hidden;
+  display: block;
+}
+
+.split-child {
+  display: block;
+  transform: translateY(100%);
+  transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.is-visible .split-child {
+  transform: translateY(0);
+}
+
+/* Distortion effects */
+.wave-text {
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes wave-text-effect {
+  0% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-8px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(8px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.wave-text span {
+  display: inline-block;
+  animation: wave-text-effect 2.5s ease-in-out infinite;
+  animation-delay: calc(0.1s * var(--char-index, 0));
+}
+
+/* Image hover effects */
+.img-hover-zoom {
+  overflow: hidden;
+}
+
+.img-hover-zoom img {
+  transition: transform 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.img-hover-zoom:hover img {
+  transform: scale(1.1);
+}
+
+/* Button animations */
+.btn-magnetic {
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* Smooth parallax */
+.parallax-element {
+  will-change: transform;
+  transform: translateY(var(--parallax-y, 0));
 }

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { motion } from "framer-motion";
+import { SmoothScroll } from "@/components/ui/smooth-scroll";
 
 const Home = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -46,9 +47,9 @@ const Home = () => {
   };
 
   // Random floating particles for futuristic look
-  const particles = Array.from({ length: 10 }, (_, i) => ({
+  const particles = Array.from({ length: 20 }, (_, i) => ({
     id: i,
-    size: Math.random() * 4 + 2,
+    size: Math.random() * 5 + 2,
     top: Math.random() * 100,
     left: Math.random() * 100,
     delay: Math.random() * 5,
@@ -73,7 +74,7 @@ const Home = () => {
   }
 
   return (
-    <>
+    <SmoothScroll options={{ lerp: 0.07, smartphone: { smooth: false } }}>
       {/* Background particles */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         {particles.map(particle => (
@@ -89,9 +90,9 @@ const Home = () => {
               left: `${particle.left}%`,
             }}
             animate={{
-              y: [0, -20, 0, 20, 0],
-              x: [0, 10, 20, 10, 0],
-              opacity: [0.4, 0.8, 0.6, 0.9, 0.4],
+              y: [0, -30, 0, 30, 0],
+              x: [0, 20, 40, 20, 0],
+              opacity: [0.3, 0.7, 0.5, 0.8, 0.3],
             }}
             transition={{
               duration: particle.duration,
@@ -102,6 +103,21 @@ const Home = () => {
             }}
           />
         ))}
+
+        {/* Animated gradient overlay */}
+        <div 
+          className="absolute inset-0 bg-gradient-to-b from-[#06071b]/80 via-transparent to-[#06071b]/80 z-[-1]" 
+          style={{ 
+            backgroundImage: "radial-gradient(ellipse at top, rgba(0,229,255,0.15) 0%, rgba(0,0,0,0) 60%), radial-gradient(ellipse at bottom, rgba(155,135,245,0.15) 0%, rgba(0,0,0,0) 60%)" 
+          }}
+        />
+
+        {/* Light beams */}
+        <div className="absolute top-0 left-1/4 w-[200px] h-[500px] bg-[#00a3ff] opacity-[0.02] blur-[80px] transform rotate-[-45deg]" />
+        <div className="absolute bottom-0 right-1/4 w-[200px] h-[500px] bg-[#9b87f5] opacity-[0.02] blur-[80px] transform rotate-[45deg]" />
+
+        {/* Grid lines */}
+        <div className="absolute inset-0 bg-[url('/grid-pattern.png')] bg-repeat opacity-[0.05]" />
       </div>
 
       <motion.div
@@ -118,19 +134,22 @@ const Home = () => {
           onCloseNotifications={handleCloseNotifications}
           onMarkAllAsRead={markAllAsRead}
         >
-          <div className="w-full mx-auto max-w-4xl">
-            {/* Welcome banner with "IT IS POSSIBLE" motto */}
+          <div className="w-full mx-auto max-w-4xl" data-scroll-section>
+            {/* Welcome banner with "IT IS POSSIBLE" motto - now with reveal animation */}
             <motion.div 
-              className="glass-card p-6 mb-8 relative overflow-hidden"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
+              className="glass-card p-6 mb-8 relative overflow-hidden backdrop-blur-xl bg-black/40 border border-white/10"
+              initial={{ y: 40, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2, duration: 0.7, ease: [0.19, 1, 0.22, 1] }}
+              data-scroll
+              data-scroll-speed="0.2"
             >
               <motion.div 
-                className="absolute -right-4 -bottom-10 opacity-10"
+                className="absolute -right-16 -bottom-16 opacity-10"
                 animate={{ 
-                  y: [0, -5, 0, -5, 0],
-                  rotate: [0, 2, 0, -2, 0],
+                  y: [0, -8, 0, -8, 0],
+                  rotate: [0, 3, 0, -3, 0],
                 }}
                 transition={{ 
                   duration: 10, 
@@ -141,16 +160,50 @@ const Home = () => {
                 <img 
                   src="/lovable-uploads/ed5de774-31bd-4930-8b16-7af05790ab50.png" 
                   alt="M1SSION Logo" 
-                  className="w-40 h-40 object-contain"
+                  className="w-60 h-60 object-contain"
                 />
               </motion.div>
               
-              <h1 className="mission-heading">WELCOME TO M1SSION</h1>
-              <p className="text-white/80 mb-4">The prize contest that changes the rules</p>
-              <div className="mission-motto">IT IS POSSIBLE</div>
+              <div className="overflow-hidden mb-2">
+                <motion.h1 
+                  className="mission-heading"
+                  initial={{ y: "100%" }}
+                  whileInView={{ y: "0%" }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, ease: [0.19, 1, 0.22, 1], delay: 0.3 }}
+                >
+                  WELCOME TO M1SSION
+                </motion.h1>
+              </div>
+              
+              <div className="overflow-hidden">
+                <motion.p 
+                  className="text-white/80 mb-4"
+                  initial={{ y: "100%" }}
+                  whileInView={{ y: "0%" }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, ease: [0.19, 1, 0.22, 1], delay: 0.4 }}
+                >
+                  The prize contest that changes the rules
+                </motion.p>
+              </div>
+              
+              <motion.div 
+                className="mission-motto"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.2, delay: 0.7 }}
+              >
+                <span className="wave-text">
+                  {Array.from("IT IS POSSIBLE").map((char, i) => (
+                    <span key={i} style={{"--char-index": i} as React.CSSProperties}>{char}</span>
+                  ))}
+                </span>
+              </motion.div>
             </motion.div>
             
-            {/* Main content */}
+            {/* Main content with optimized animation triggers */}
             <HomeContent />
           </div>
         </HomeLayout>
@@ -161,7 +214,7 @@ const Home = () => {
         onClose={() => setShowProfileModal(false)}
         profileImage={profileImage}
       />
-    </>
+    </SmoothScroll>
   );
 };
 
