@@ -80,20 +80,6 @@
   text-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
 }
 
-/* Aggiunta animazione neon pulse */
-@keyframes neon-pulse {
-  0%, 100% {
-    text-shadow: 0 0 5px rgba(0, 229, 255, 0.7), 0 0 10px rgba(0, 229, 255, 0.5);
-  }
-  50% {
-    text-shadow: 0 0 15px rgba(0, 229, 255, 0.8), 0 0 25px rgba(0, 229, 255, 0.6), 0 0 35px rgba(0, 229, 255, 0.4);
-  }
-}
-
-.animate-neon-pulse {
-  animation: neon-pulse 2s infinite ease-in-out;
-}
-
 /* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
@@ -117,13 +103,6 @@
   overflow: hidden;
 }
 
-@keyframes ripple-animation {
-  to {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
-
 /* Hover effect for cards and buttons */
 .interaction-feedback {
   @apply transition-all duration-200;
@@ -131,16 +110,6 @@
 
 .interaction-feedback:hover {
   @apply shadow-[0_0_15px_rgba(0,163,255,0.3)];
-}
-
-/* Pulse animation for decorative elements */
-.pulse-animation {
-  animation: pulse 3s infinite ease-in-out;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.8; }
 }
 
 /* Gradient text */
@@ -169,11 +138,6 @@
   animation: lineMove 2s infinite linear;
 }
 
-@keyframes lineMove {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
 /* Logo animation on hover */
 .logo-hover {
   @apply transition-all duration-300;
@@ -183,28 +147,11 @@
   filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.7));
 }
 
-/* Animation for entering elements */
-.fade-in-up {
-  animation: fadeInUp 0.5s ease-out forwards;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* Particle background */
 .particle {
   position: absolute;
   border-radius: 50%;
   @apply bg-cyan-400;
-  animation: float-particle 15s infinite ease-in-out;
 }
 
 /* Mission heading style */
