@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -53,28 +52,26 @@ const Login = () => {
         <form onSubmit={handleLogin} className="glass-card">
           <div className="space-y-4">
             <div>
-              <Label htmlFor="email" className="text-black">Email</Label>
+              <Label htmlFor="email" className="text-white">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="Inserisci la tua email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1"
-                style={{ color: "black" }} // Testi di input in nero
+                className="mt-1 text-white bg-black/50 border-white/20 placeholder-white/50"
               />
             </div>
 
             <div>
-              <Label htmlFor="password" className="text-black">Password</Label>
+              <Label htmlFor="password" className="text-white">Password</Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="Inserisci la password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1"
-                style={{ color: "black" }} // Testi di input in nero
+                className="mt-1 text-white bg-black/50 border-white/20 placeholder-white/50"
               />
             </div>
           </div>
@@ -98,7 +95,7 @@ const Login = () => {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-white/70">
             Accedendo accetti i nostri Termini e Condizioni e la nostra Informativa sulla Privacy.
           </p>
         </div>
