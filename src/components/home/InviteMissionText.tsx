@@ -15,9 +15,17 @@ export default function InviteMissionText() {
         tabIndex={0}
         initial={{ opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
+        transition={{ 
+          duration: 0.6, 
+          delay: 0.1,
+          ease: "easeOut" 
+        }}
         onClick={() => setDialogOpen(true)}
         onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setDialogOpen(true); }}
+        whileHover={{ 
+          scale: 1.03,
+          transition: { duration: 0.2 }
+        }}
         style={{
           textShadow: "0 0 18px #00e5ff, 0 0 28px #00e5ff55, 0 0 24px #fff"
         }}
@@ -34,7 +42,15 @@ export default function InviteMissionText() {
         className="text-sm md:text-base text-cyan-100 mt-4 bg-black/40 px-6 py-3 rounded-lg font-inter font-semibold max-w-xl shadow border-cyan-400/30 border"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.65 }}
+        transition={{ 
+          duration: 0.6, 
+          delay: 0.65,
+          ease: "easeOut" 
+        }}
+        whileHover={{
+          boxShadow: "0 0 20px rgba(0, 229, 255, 0.25)",
+          transition: { duration: 0.3 }
+        }}
       >
         Invita un amico in <span className="font-bold neon-text-cyan">M1SSION</span> e ottieni indizi esclusivi e 5 pressioni gratuite del <span className="font-bold text-yellow-300">tasto Buzz</span>!
       </motion.div>
