@@ -26,6 +26,7 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
 
     // Create a Locomotive Scroll instance with proper type handling
     const scrollInstance = new LocomotiveScroll({
+      // @ts-ignore - TypeScript definitions might be outdated
       el: scrollContainerRef.current,
       smooth: options.smooth ?? true,
       multiplier: 1,
