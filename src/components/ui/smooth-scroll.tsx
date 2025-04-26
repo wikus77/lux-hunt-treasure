@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { useRouter } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import LocomotiveScroll from "locomotive-scroll";
 
 interface SmoothScrollProps {
@@ -18,14 +18,14 @@ interface SmoothScrollProps {
 export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [locomotiveScroll, setLocomotiveScroll] = useState<LocomotiveScroll | null>(null);
-  const router = useRouter();
+  const location = useLocation();
 
   // Initialize Locomotive Scroll with options
   useEffect(() => {
     if (!scrollContainerRef.current) return;
 
+    // Create a Locomotive Scroll instance with proper type handling
     const scrollInstance = new LocomotiveScroll({
-      el: scrollContainerRef.current,
       smooth: true,
       lerp: 0.08, // Linear Interpolation factor (0 = instant, 1 = smooth)
       smartphone: { smooth: true },
@@ -33,11 +33,19 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
       ...options,
     });
 
+    // Store the instance reference
     setLocomotiveScroll(scrollInstance);
+
+    // Set the container manually
+    if (scrollContainerRef.current) {
+      scrollInstance.scrollTo(scrollContainerRef.current);
+    }
 
     // Cleanup on unmount
     return () => {
-      scrollInstance.destroy();
+      if (scrollInstance) {
+        scrollInstance.destroy();
+      }
     };
   }, [options]);
 
@@ -47,7 +55,10 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
 
     const handleRouteChange = () => {
       setTimeout(() => {
-        locomotiveScroll.update();
+        // Use type assertion to safely call update method
+        if (locomotiveScroll && typeof (locomotiveScroll as any).update === 'function') {
+          (locomotiveScroll as any).update();
+        }
       }, 500);
     };
 
@@ -57,7 +68,7 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
     return () => {
       window.removeEventListener("popstate", handleRouteChange);
     };
-  }, [locomotiveScroll, router]);
+  }, [locomotiveScroll, location]);
 
   // Update scroll when content changes
   useEffect(() => {
@@ -65,7 +76,9 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
 
     // Allow some time for content to render before updating scroll
     const timeoutId = setTimeout(() => {
-      locomotiveScroll.update();
+      if (typeof (locomotiveScroll as any).update === 'function') {
+        (locomotiveScroll as any).update();
+      }
     }, 200);
 
     return () => clearTimeout(timeoutId);
