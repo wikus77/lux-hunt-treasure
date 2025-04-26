@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import AnimatedIntroSection from "./AnimatedIntroSection";
 import FuturisticCarsCarousel from "./FuturisticCarsCarousel";
-import FuturePrizesCarousel from "./FuturePrizesCarousel";
+import FutureMissionsCarousel from "./FutureMissionsCarousel";
 import InviteFriendSection from "./InviteFriendSection";
 import CountdownBanner from "./CountdownBanner";
 import BigCountdownTimer from "./BigCountdownTimer";
@@ -10,6 +11,7 @@ import { Trophy, Map, Music } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AnimatedIntroText from "./AnimatedIntroText";
 import InviteMissionText from "./InviteMissionText";
+import CurrentEventSection from "./CurrentEventSection";
 
 export default function HomeContent() {
   console.log("[HomeContent] COMPONENT MOUNTED!");
@@ -39,19 +41,8 @@ export default function HomeContent() {
     setStep(1);
   };
 
-  const renderDebug = () => (
-    <div className="fixed top-0 left-0 z-[99] bg-black/60 text-yellow-300 px-3 py-1 rounded-br-lg text-xs font-mono">
-      <div>step: {step}</div>
-      <Button size="sm" className="my-1" onClick={()=>setStep(1)}>Forza step=1</Button>
-      <Button size="sm" className="my-1" onClick={()=>setStep(0)}>Forza step=0</Button>
-    </div>
-  );
-
   return (
     <div className="relative">
-      {/* DEBUG: barra rossa rimossa! */}
-      {/* {renderDebug()} -- la lasciamo solo se serve debug, ora la rimuoviamo */}
-
       <AnimatePresence>
         {step === 0 && (
           <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"auto"}}>
@@ -89,14 +80,15 @@ export default function HomeContent() {
               <Music className={musicOn ? "text-green-400 animate-neon-pulse w-6 h-6" : "text-yellow-300 w-6 h-6"} />
             </Button>
           </div>
-          <section className="mt-2">
-            <h2 className="text-2xl font-orbitron neon-text-cyan mb-4">Missione Corrente</h2>
-            <FuturisticCarsCarousel />
-          </section>
+          
+          {/* Sezione Missione Corrente con nuovo componente animato */}
+          <CurrentEventSection />
+          
+          {/* Sezione Prossime Missioni con nuovo componente animato */}
           <section>
-            <h2 className="text-2xl font-orbitron neon-text-magenta mb-4">Prossime Missioni</h2>
-            <FuturePrizesCarousel />
+            <FutureMissionsCarousel />
           </section>
+          
           <section className="flex flex-col items-center py-5">
             <Button
               variant="secondary"

@@ -53,6 +53,16 @@
   text-shadow: 0 0 10px rgba(0, 229, 255, 0.7), 0 0 20px rgba(0, 229, 255, 0.5);
 }
 
+.neon-text-cyan {
+  @apply text-cyan-400 font-bold;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.7), 0 0 20px rgba(0, 229, 255, 0.5);
+}
+
+.neon-text-magenta {
+  @apply text-magenta-400 font-bold;
+  text-shadow: 0 0 10px rgba(255, 0, 255, 0.7), 0 0 20px rgba(255, 0, 255, 0.5);
+}
+
 .neon-border {
   @apply border border-cyan-400;
   box-shadow: 0 0 10px rgba(0, 229, 255, 0.6), inset 0 0 5px rgba(0, 229, 255, 0.3);
@@ -62,6 +72,26 @@
   @apply bg-gradient-to-r from-cyan-400 to-blue-600 
          text-black font-bold py-2 px-4 rounded-full transition-all duration-300 
          hover:shadow-[0_0_15px_rgba(0,229,255,0.7)] active:scale-95;
+}
+
+/* Gradient text */
+.gradient-text-cyan {
+  @apply bg-gradient-to-r from-cyan-300 to-blue-500 bg-clip-text text-transparent;
+  text-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+}
+
+/* Aggiunta animazione neon pulse */
+@keyframes neon-pulse {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(0, 229, 255, 0.7), 0 0 10px rgba(0, 229, 255, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(0, 229, 255, 0.8), 0 0 25px rgba(0, 229, 255, 0.6), 0 0 35px rgba(0, 229, 255, 0.4);
+  }
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 2s infinite ease-in-out;
 }
 
 /* Custom Scrollbar */
@@ -175,4 +205,21 @@
   border-radius: 50%;
   @apply bg-cyan-400;
   animation: float-particle 15s infinite ease-in-out;
+}
+
+/* Mission heading style */
+.mission-heading {
+  @apply text-xl md:text-3xl font-bold font-orbitron mb-2;
+  background: linear-gradient(to right, #00e5ff, #8A2BE2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+  letter-spacing: 1px;
+}
+
+.mission-motto {
+  @apply text-lg md:text-2xl font-orbitron font-bold text-yellow-300 mt-4;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+  letter-spacing: 2px;
 }

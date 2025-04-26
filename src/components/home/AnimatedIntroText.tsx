@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 const LINES = [
   "Nel futuro, la caccia al tesoro non è più un gioco… è una sfida globale.",
   "Ogni mese, una nuova auto di lusso scompare.",
-  "Solo i più intuitivi, strategici e veloci sapranno interpretare gli indizi e scoprire dove si nasconde il ",
+  "Solo i più intuitivi, strategici e veloci sapranno interpretare gli indizi e scoprire dove si nasconde il premio.",
   "Entra in M1SSION. Vivi l'avventura. Trova il premio. Cambia il tuo destino.",
 ];
 
@@ -18,7 +18,7 @@ const keywordEffect = (text: string) => {
 export default function AnimatedIntroText() {
   return (
     <div 
-      className="glass-card px-8 py-7 rounded-2xl max-w-2xl text-lg md:text-xl text-center shadow-lg flex flex-col gap-2"
+      className="glass-card px-8 py-7 rounded-2xl max-w-2xl text-lg md:text-xl text-center shadow-lg flex flex-col gap-2 transform-gpu"
       style={{
         background: "rgba(19,33,52,0.7)",
         border: "1.5px solid #00e5ff88",

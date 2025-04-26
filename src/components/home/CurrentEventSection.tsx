@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Calendar, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { currentEvent } from "@/data/eventData";
 import CountdownTimer from "./CountdownTimer";
 import { useNavigate } from "react-router-dom";
@@ -38,7 +38,7 @@ export const CurrentEventSection = () => {
         variants={fadeInUpVariants}
         custom={0}
       >
-        <FuturisticSectionTitle>Evento Corrente</FuturisticSectionTitle>
+        <FuturisticSectionTitle>Missione Corrente</FuturisticSectionTitle>
       </motion.div>
       
       <motion.div 
