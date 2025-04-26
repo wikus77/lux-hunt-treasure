@@ -26,20 +26,23 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
 
     // Create a Locomotive Scroll instance with proper type handling
     const scrollInstance = new LocomotiveScroll({
-      smooth: true,
-      lerp: 0.08, // Linear Interpolation factor (0 = instant, 1 = smooth)
-      smartphone: { smooth: true },
-      tablet: { smooth: true },
-      ...options,
+      el: scrollContainerRef.current,
+      smooth: options.smooth ?? true,
+      multiplier: 1,
+      class: "is-inview",
+      getDirection: true,
+      getSpeed: true,
+      lerp: options.lerp ?? 0.08,
+      smartphone: {
+        smooth: options.smartphone?.smooth ?? true,
+      },
+      tablet: {
+        smooth: options.tablet?.smooth ?? true,
+      }
     });
 
     // Store the instance reference
     setLocomotiveScroll(scrollInstance);
-
-    // Set the container manually
-    if (scrollContainerRef.current) {
-      scrollInstance.scrollTo(scrollContainerRef.current);
-    }
 
     // Cleanup on unmount
     return () => {
