@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import HomeLayout from "@/components/home/HomeLayout";
 import HomeContent from "@/components/home/HomeContent";
