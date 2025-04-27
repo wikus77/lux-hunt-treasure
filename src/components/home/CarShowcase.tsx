@@ -8,47 +8,47 @@ import { ParallaxImage } from "@/components/ui/parallax-image";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 import { Info } from "lucide-react";
 
-// Car data
+// Car data with the uploaded images
 const LUXURY_CARS = [
   {
     id: 1,
     name: "Lamborghini Huracán",
     description: "Potenza pura e design audace, una supercar che ridefinisce il concetto di velocità.",
     specs: "5.2L V10 • 640 CV • 0-100 km/h in 2.9s",
-    image: "/public/events/lamborghini-huracan.jpg",
+    image: "/lovable-uploads/90cbccd3-a237-404e-be56-89d82f6a9838.png",
     color: "#FFC107"
   },
   {
     id: 2,
-    name: "Ferrari SF90 Stradale",
-    description: "La prima supercar ibrida plug-in della storia Ferrari, un capolavoro di ingegneria e design italiano.",
-    specs: "4.0L V8 + 3 motori elettrici • 1000 CV • 0-100 km/h in 2.5s",
-    image: "/public/events/ferrari-sf90.jpg",
-    color: "#FF0000"
-  },
-  {
-    id: 3,
     name: "Porsche 911 GT3",
     description: "Precisione ingegneristica tedesca, il simbolo della perfezione su strada e in pista.",
     specs: "4.0L Flat-6 • 510 CV • 0-100 km/h in 3.4s",
-    image: "/public/events/porsche-911.jpg",
+    image: "/lovable-uploads/f890fc27-9f45-43c8-beeb-cccc7c1e8a9d.png",
     color: "#00E5FF"
   },
   {
-    id: 4,
-    name: "Tesla Model S Plaid",
-    description: "La berlina elettrica più veloce al mondo, dove tecnologia e prestazioni ridefiniscono il futuro.",
-    specs: "Tri-motor • 1020 CV • 0-100 km/h in 2.1s",
-    image: "/public/events/tesla-model-s.jpg",
+    id: 3,
+    name: "Aston Martin Vantage",
+    description: "Eleganza britannica e prestazioni mozzafiato in un capolavoro di design automobilistico.",
+    specs: "4.0L Twin-Turbo V8 • 503 CV • 0-100 km/h in 3.6s",
+    image: "/lovable-uploads/58a727dc-f6b1-4e51-9fdb-a76260dd6607.png",
     color: "#FFFFFF"
   },
   {
-    id: 5,
+    id: 4,
     name: "Ferrari 488 GTB",
     description: "Eleganza dinamica e prestazioni da corsa, un simbolo dell'eccellenza automobilistica italiana.",
     specs: "3.9L V8 Twin-Turbo • 670 CV • 0-100 km/h in 3.0s",
-    image: "/public/events/ferrari-488-gtb.jpg",
+    image: "/lovable-uploads/ef3cb1c4-5fb4-4291-8191-720d84a8e7f3.png",
     color: "#FF0000"
+  },
+  {
+    id: 5,
+    name: "Audi RS7",
+    description: "Tecnologia all'avanguardia e prestazioni da supercar in una berlina di straordinario lusso.",
+    specs: "4.0L V8 Twin-Turbo • 600 CV • 0-100 km/h in 3.6s",
+    image: "/lovable-uploads/7e65d385-baf8-446c-b320-4fc6467e3957.png",
+    color: "#AAAAAA"
   }
 ];
 

@@ -17,7 +17,7 @@ interface SmoothScrollProps {
 
 export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [locomotiveScroll, setLocomotiveScroll] = useState<LocomotiveScroll | null>(null);
+  const [locomotiveScroll, setLocomotiveScroll] = useState<any>(null);
   const location = useLocation();
 
   // Initialize Locomotive Scroll with options
@@ -25,8 +25,8 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
     if (!scrollContainerRef.current) return;
 
     // Create a Locomotive Scroll instance with proper type handling
+    // @ts-ignore - Ignoring type issues with LocomotiveScroll
     const scrollInstance = new LocomotiveScroll({
-      // @ts-ignore - TypeScript definitions might be outdated
       el: scrollContainerRef.current,
       smooth: options.smooth ?? true,
       multiplier: 1,
@@ -60,8 +60,8 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
     const handleRouteChange = () => {
       setTimeout(() => {
         // Use type assertion to safely call update method
-        if (locomotiveScroll && typeof (locomotiveScroll as any).update === 'function') {
-          (locomotiveScroll as any).update();
+        if (locomotiveScroll && typeof locomotiveScroll.update === 'function') {
+          locomotiveScroll.update();
         }
       }, 500);
     };
@@ -80,8 +80,8 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
 
     // Allow some time for content to render before updating scroll
     const timeoutId = setTimeout(() => {
-      if (typeof (locomotiveScroll as any).update === 'function') {
-        (locomotiveScroll as any).update();
+      if (typeof locomotiveScroll.update === 'function') {
+        locomotiveScroll.update();
       }
     }, 200);
 

@@ -11,11 +11,11 @@ const HeroSection = () => {
       className="min-h-screen w-full relative flex items-center justify-center overflow-hidden py-24 px-4"
       data-scroll-section
     >
-      {/* Background image with parallax effect */}
+      {/* Luxury car background with parallax effect */}
       <div className="absolute inset-0 z-0">
         <ParallaxImage
-          src="/lovable-uploads/ee63e6a9-208d-43f5-8bad-4c94f9c066cd.png"
-          alt="Futuristic cityscape"
+          src="/lovable-uploads/49a73ae5-c836-4c5d-8e07-0555edac931d.png"
+          alt="Luxury car background"
           speed={0.2}
           className="w-full h-full"
           imageClassName="w-full h-full object-cover opacity-40"

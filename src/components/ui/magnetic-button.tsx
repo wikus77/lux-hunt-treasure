@@ -1,64 +1,51 @@
 
-"use client";
-
-import React, { useRef, useState, MouseEvent } from "react";
+import React, { useState, useRef, MouseEvent } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-interface MagneticButtonProps {
+interface MagneticButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   className?: string;
   strength?: number;
-  onClick?: () => void;
 }
 
-export function MagneticButton({
-  children,
-  className,
-  strength = 40,
-  onClick,
-  ...props
-}: MagneticButtonProps & React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  const buttonRef = useRef<HTMLButtonElement>(null);
+export const MagneticButton = ({ 
+  children, 
+  className, 
+  strength = 25, 
+  ...props 
+}: MagneticButtonProps) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
-
+  const ref = useRef<HTMLButtonElement>(null);
+  
   const handleMouseMove = (e: MouseEvent<HTMLButtonElement>) => {
-    if (!buttonRef.current) return;
+    if (!ref.current) return;
     
-    const rect = buttonRef.current.getBoundingClientRect();
+    const { clientX, clientY } = e;
+    const { left, top, width, height } = ref.current.getBoundingClientRect();
     
-    // Calculate center of the button
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
+    const x = (clientX - left - width / 2) / (width / 2) * strength;
+    const y = (clientY - top - height / 2) / (height / 2) * strength;
     
-    // Calculate distance from center
-    const distanceX = e.clientX - rect.left - centerX;
-    const distanceY = e.clientY - rect.top - centerY;
-    
-    // Apply strength factor
-    const magneticX = (distanceX / centerX) * strength;
-    const magneticY = (distanceY / centerY) * strength;
-
-    setPosition({ x: magneticX, y: magneticY });
+    setPosition({ x, y });
   };
-
+  
   const handleMouseLeave = () => {
     setPosition({ x: 0, y: 0 });
   };
 
   return (
-    <button
-      ref={buttonRef}
-      className={cn("transition-transform duration-300", className)}
+    <motion.button
+      ref={ref}
+      className={cn("relative inline-block", className)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      onClick={onClick}
-      style={{
-        transform: `translate(${position.x}px, ${position.y}px)`,
-        transition: "transform 0.3s cubic-bezier(0.19, 1, 0.22, 1)",
-      }}
+      animate={{ x: position.x, y: position.y }}
+      transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
+      whileTap={{ scale: 0.97 }}
       {...props}
     >
       {children}
-    </button>
+    </motion.button>
   );
-}
+};

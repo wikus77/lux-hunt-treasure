@@ -1,12 +1,20 @@
+
 import { useState, useEffect } from "react";
 import HomeLayout from "@/components/home/HomeLayout";
-import HomeContent from "@/components/home/HomeContent";
-import BriefProfileModal from "@/components/profile/BriefProfileModal";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { motion } from "framer-motion";
 import { SmoothScroll } from "@/components/ui/smooth-scroll";
+import BriefProfileModal from "@/components/profile/BriefProfileModal";
+
+// Import new components
+import HeroSection from "@/components/home/HeroSection";
+import CarShowcase from "@/components/home/CarShowcase";
+import AwardsCeremony from "@/components/home/AwardsCeremony";
+import VideoExplainer from "@/components/home/VideoExplainer";
+import CallToAction from "@/components/home/CallToAction";
+import HomeHeader from "@/components/home/HomeHeader";
 
 const Home = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -125,87 +133,21 @@ const Home = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <HomeLayout 
+        {/* Custom header implementation */}
+        <HomeHeader 
           profileImage={profileImage}
-          showNotificationsBanner={showNotificationsBanner}
-          notifications={notifications}
           unreadCount={unreadCount}
-          onCloseNotifications={handleCloseNotifications}
-          onMarkAllAsRead={markAllAsRead}
-        >
-          <div className="w-full mx-auto max-w-4xl" data-scroll-section>
-            {/* Welcome banner with "IT IS POSSIBLE" motto - now with reveal animation */}
-            <motion.div 
-              className="glass-card p-6 mb-8 relative overflow-hidden backdrop-blur-xl bg-black/40 border border-white/10"
-              initial={{ y: 40, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2, duration: 0.7, ease: [0.19, 1, 0.22, 1] }}
-              data-scroll
-              data-scroll-speed="0.2"
-            >
-              <motion.div 
-                className="absolute -right-16 -bottom-16 opacity-10"
-                animate={{ 
-                  y: [0, -8, 0, -8, 0],
-                  rotate: [0, 3, 0, -3, 0],
-                }}
-                transition={{ 
-                  duration: 10, 
-                  ease: "easeInOut", 
-                  repeat: Infinity,
-                }}
-              >
-                <img 
-                  src="/lovable-uploads/ed5de774-31bd-4930-8b16-7af05790ab50.png" 
-                  alt="M1SSION Logo" 
-                  className="w-60 h-60 object-contain"
-                />
-              </motion.div>
-              
-              <div className="overflow-hidden mb-2">
-                <motion.h1 
-                  className="mission-heading"
-                  initial={{ y: "100%" }}
-                  whileInView={{ y: "0%" }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.7, ease: [0.19, 1, 0.22, 1], delay: 0.3 }}
-                >
-                  WELCOME TO M1SSION
-                </motion.h1>
-              </div>
-              
-              <div className="overflow-hidden">
-                <motion.p 
-                  className="text-white/80 mb-4"
-                  initial={{ y: "100%" }}
-                  whileInView={{ y: "0%" }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.7, ease: [0.19, 1, 0.22, 1], delay: 0.4 }}
-                >
-                  The prize contest that changes the rules
-                </motion.p>
-              </div>
-              
-              <motion.div 
-                className="mission-motto"
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1.2, delay: 0.7 }}
-              >
-                <span className="wave-text">
-                  {Array.from("IT IS POSSIBLE").map((char, i) => (
-                    <span key={i} style={{"--char-index": i} as React.CSSProperties}>{char}</span>
-                  ))}
-                </span>
-              </motion.div>
-            </motion.div>
-            
-            {/* Main content with optimized animation triggers */}
-            <HomeContent />
-          </div>
-        </HomeLayout>
+          onShowNotifications={handleShowNotifications}
+        />
+        
+        {/* Main content sections */}
+        <main className="pt-16"> {/* Add padding top to account for the fixed header */}
+          <HeroSection />
+          <CarShowcase />
+          <AwardsCeremony />
+          <VideoExplainer />
+          <CallToAction />
+        </main>
       </motion.div>
 
       <BriefProfileModal
