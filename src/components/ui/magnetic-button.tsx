@@ -34,6 +34,7 @@ export const MagneticButton = ({
     setPosition({ x: 0, y: 0 });
   };
 
+  // Use custom motion component to avoid TypeScript errors with event handlers
   return (
     <motion.button
       ref={ref}
@@ -43,7 +44,12 @@ export const MagneticButton = ({
       animate={{ x: position.x, y: position.y }}
       transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
       whileTap={{ scale: 0.97 }}
-      {...props}
+      // Remove any props that might conflict with motion.button
+      {...((() => {
+        // Create a new object without properties that might cause type conflicts
+        const { onDrag, ...safeProps } = props;
+        return safeProps;
+      })())}
     >
       {children}
     </motion.button>

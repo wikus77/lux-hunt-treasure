@@ -36,6 +36,8 @@ const HomeLayout: React.FC<HomeLayoutProps> = ({
           >
             <NotificationsBanner
               notifications={notifications}
+              open={showNotificationsBanner}
+              unreadCount={unreadCount}
               onClose={onCloseNotifications}
               onMarkAllAsRead={onMarkAllAsRead}
             />
