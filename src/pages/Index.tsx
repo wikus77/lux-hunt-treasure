@@ -19,13 +19,14 @@ const Index = () => {
   const [showIntro, setShowIntro] = useState(false);
   const [contentReady, setContentReady] = useState(false);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Set date for countdown (one month from today)
   const nextEventDate = new Date();
   nextEventDate.setMonth(nextEventDate.getMonth() + 1);
 
-  // Gestione sicura del caricamento iniziale con timeouts di sicurezza
+  // Gestione sicura del caricamento iniziale con sistema migliorato
   useEffect(() => {
     try {
       console.log("Inizializzazione Index page");
@@ -33,62 +34,94 @@ const Index = () => {
       // Mostra immediatamente un contenuto per evitare pagina bianca
       setContentReady(true);
       
-      // Rendere il body visibile subito
+      // Assicura che il body sia sempre visibile
       document.body.style.visibility = 'visible';
       document.body.style.opacity = '1';
+      document.body.style.display = 'block';
       
-      // Verifica esplicita del refresh dalla sessionStorage impostata in main.tsx
-      const wasRefreshed = sessionStorage.getItem('wasRefreshed') === 'true';
-      console.log("Rilevato refresh da sessionStorage:", wasRefreshed ? "Sì" : "No");
+      // Gestione più affidabile del rilevamento del refresh
+      const wasRefreshed = sessionStorage.getItem('wasRefreshed') === 'true' || 
+                          (window.performance && 
+                           window.performance.getEntriesByType &&
+                           window.performance.getEntriesByType('navigation').length > 0 &&
+                           (window.performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming).type === 'reload');
       
-      // Verifica dell'intro già mostrato (con fallback che forza a true in caso di problemi)
+      console.log("Stato refresh rilevato:", wasRefreshed ? "Sì" : "No");
+      
+      // Sistema di gestione dell'intro più robusto
       const introShownRaw = localStorage.getItem('introShown');
       const introShown = introShownRaw === 'true' || wasRefreshed;
       console.log("Intro già mostrato?", introShown ? "Sì" : "No");
       
-      // Mostra l'intro solo se non è già stato mostrato E non siamo in refresh
-      if (!introShown && !wasRefreshed) {
-        console.log("Mostrando l'intro per la prima volta");
+      // Se è un refresh, forziamo la visibilità e skippiamo l'intro
+      if (wasRefreshed) {
+        console.log("Refresh rilevato: mostro direttamente il contenuto e salto l'intro");
+        setShowIntro(false);
+        // Garantiamo la visibilità del body in caso di refresh
+        document.body.style.visibility = 'visible';
+        document.body.style.opacity = '1';
+      } 
+      // Se l'intro non è stato mostrato e non è un refresh
+      else if (!introShown) {
+        console.log("Prima visita: mostro l'intro");
         setShowIntro(true);
         // Impostiamo subito il flag per evitare ripetizioni in caso di problemi
         localStorage.setItem('introShown', 'true');
-        
-        // Timeout di sicurezza che forza la conclusione dell'intro dopo 4 secondi
-        // se per qualche motivo l'animazione non si concludesse
-        const safetyIntroTimeout = setTimeout(() => {
-          console.log("Timeout di sicurezza: forzatura conclusione intro");
-          setShowIntro(false);
-        }, 4000);
-        
-        return () => clearTimeout(safetyIntroTimeout);
-      } else {
-        console.log("Intro già mostrato o refresh rilevato - mostrando direttamente il contenuto");
+      } 
+      // In ogni altro caso, saltiamo l'intro 
+      else {
+        console.log("Intro già mostrato: mostro direttamente il contenuto");
         setShowIntro(false);
       }
     } catch (error) {
       console.error("Errore durante l'inizializzazione:", error);
-      // Assicuriamoci che il contenuto sia visibile anche in caso di errore
+      // Salviamo l'errore ma mostriamo comunque un contenuto
+      setLoadError(error instanceof Error ? error.message : "Errore sconosciuto");
       setContentReady(true);
       setShowIntro(false);
+      // Anche in caso di errore, garantiamo la visibilità
+      document.body.style.visibility = 'visible';
+      document.body.style.opacity = '1';
+      document.body.style.display = 'block';
     }
-    
-    // Al montaggio, assicuriamoci che l'applicazione sia visibile
-    document.body.style.visibility = 'visible';
-    document.body.style.opacity = '1';
-    
-    // Timer di sicurezza aggiuntivo
+  }, []);
+
+  // Timer di sicurezza per garantire la visibilità della pagina ogni 500ms
+  useEffect(() => {
     const visibilityTimer = setInterval(() => {
       if (document.body.style.visibility !== 'visible' || 
           document.body.style.opacity !== '1') {
-        console.log("Correzione visibilità periodica");
+        console.log("Forzatura visibilità periodica");
         document.body.style.visibility = 'visible';
         document.body.style.opacity = '1';
+        document.body.style.display = 'block';
+      }
+    }, 500);
+    
+    // Timer di sicurezza che forza contentReady a true dopo 1 secondo
+    const contentReadyTimer = setTimeout(() => {
+      if (!contentReady) {
+        console.log("Forzatura contentReady dopo timeout");
+        setContentReady(true);
       }
     }, 1000);
     
-    return () => clearInterval(visibilityTimer);
-  }, []);
+    // Timer di sicurezza che forza la fine dell'intro dopo 5 secondi
+    const introTimer = setTimeout(() => {
+      if (showIntro) {
+        console.log("Forzatura fine intro dopo timeout di sicurezza");
+        setShowIntro(false);
+      }
+    }, 5000);
+    
+    return () => {
+      clearInterval(visibilityTimer);
+      clearTimeout(contentReadyTimer);
+      clearTimeout(introTimer);
+    };
+  }, [showIntro, contentReady]);
 
+  // Gestisce il completamento dell'intro animation
   const handleIntroComplete = () => {
     console.log("Intro completato, nascondendo animazione");
     setShowIntro(false);
@@ -103,31 +136,36 @@ const Index = () => {
     navigate("/register");
   };
 
-  // Componente fallback durante il caricamento con un timeout di sicurezza
-  useEffect(() => {
-    // Se dopo 800ms contentReady è ancora false, lo forziamo a true
-    const safetyTimeout = setTimeout(() => {
-      if (!contentReady) {
-        console.log("Timeout di sicurezza: forzatura contentReady");
-        setContentReady(true);
-        setShowIntro(false);
-      }
-    }, 800);
-    
-    return () => clearTimeout(safetyTimeout);
-  }, [contentReady]);
-
+  // Componente di loading migliorato
   if (!contentReady) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.3 }}
         >
           <h1 className="text-3xl font-orbitron text-center mb-4">M1SSION</h1>
           <p className="text-center">Caricamento in corso...</p>
         </motion.div>
+      </div>
+    );
+  }
+
+  // Componente di errore migliorato
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="text-center p-6 rounded-lg border border-red-500/30 bg-red-900/20">
+          <h1 className="text-3xl font-orbitron mb-4">Errore di caricamento</h1>
+          <p className="mb-4">{loadError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-red-600/80 hover:bg-red-700 rounded-md transition-colors"
+          >
+            Ricarica la pagina
+          </button>
+        </div>
       </div>
     );
   }
@@ -141,8 +179,11 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Mostra sempre il contenuto principale, ma nascosto solo se l'intro è attivo */}
-      <div className={`transition-opacity duration-500 ${showIntro ? "opacity-0" : "opacity-100"}`}>
+      {/* Mostra sempre il contenuto principale */}
+      <div 
+        className={`transition-opacity duration-500 ${showIntro ? "opacity-0" : "opacity-100"}`}
+        style={{ visibility: showIntro ? 'hidden' : 'visible' }}
+      >
         <UnifiedHeader />
         <div className="h-[72px] w-full" />
         <LandingHeader />
