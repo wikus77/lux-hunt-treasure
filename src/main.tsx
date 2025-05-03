@@ -45,16 +45,27 @@ const showErrorFallback = (message = 'Si è verificato un errore. Ricarica la pa
 // Rilevamento più affidabile del tipo di navigazione (refresh o nuovo caricamento)
 const detectPageRefresh = () => {
   try {
-    // Metodo legacy
+    // Impostazione iniziale di un flag per il futuro controllo del refresh
+    if (sessionStorage.getItem('wasLoaded') === null) {
+      sessionStorage.setItem('wasLoaded', 'true');
+      console.log("Prima visita in questa sessione");
+      return false;
+    }
+    
+    // Metodo legacy con type assertion per TypeScript
     if (window.performance.navigation && window.performance.navigation.type === 1) {
+      console.log("Refresh rilevato via performance.navigation");
       return true;
     }
     
-    // Metodo moderno con sicurezza per i tipi
+    // Metodo moderno con type assertion per TypeScript
     const entries = window.performance.getEntriesByType('navigation');
     if (entries.length > 0) {
       const navType = (entries[0] as PerformanceNavigationTiming).type;
-      return navType === 'reload';
+      if (navType === 'reload') {
+        console.log("Refresh rilevato via PerformanceNavigationTiming");
+        return true;
+      }
     }
     
     // Fallback: controlla sessionStorage per determinare se è un ricaricamento
@@ -65,22 +76,45 @@ const detectPageRefresh = () => {
   }
 };
 
+// Imposta un flag per garantire che il documento sia visibile in ogni caso
+const ensureVisibility = () => {
+  setTimeout(() => {
+    if (document.body.style.visibility === 'hidden' || 
+        document.body.style.opacity === '0' || 
+        document.body.style.display === 'none') {
+      console.log("Forzatura visibilità del body dopo timeout");
+      document.body.style.visibility = 'visible';
+      document.body.style.opacity = '1';
+      document.body.style.display = 'block';
+    }
+  }, 2000); // 2 secondi di timeout di sicurezza
+};
+
 const isPageRefresh = detectPageRefresh();
 
 if (isPageRefresh) {
   console.log("Refresh rilevato in main.tsx - garantiremo un rendering sicuro");
   
-  // Impostiamo una variabile nello storage che sarà letta da Index.tsx
+  // Impostiamo più variabili nello storage che saranno lette dagli altri componenti
   sessionStorage.setItem('wasRefreshed', 'true');
   
-  // Se rilevato refresh, impostiamo l'intro come già mostrato per evitare problemi
+  // Se rilevato refresh, impostiamo tutti i flag di intro come già mostrati
   localStorage.setItem('introShown', 'true');
+  localStorage.setItem('appIntroShown', 'true');
+  
+  // Garantiamo la visibilità
+  ensureVisibility();
 } else {
   // Prima visita in questa sessione
   console.log("Primo caricamento della pagina rilevato");
   sessionStorage.setItem('pageLoaded', 'true');
   sessionStorage.removeItem('wasRefreshed');
 }
+
+// Evento DOMContentLoaded per garantire visibilità
+document.addEventListener('DOMContentLoaded', () => {
+  ensureVisibility();
+});
 
 // Gestione errori globale
 window.addEventListener('error', (event) => {
@@ -103,13 +137,13 @@ window.addEventListener('unhandledrejection', (event) => {
   }
 });
 
-// Timer di sicurezza: se dopo 3 secondi non viene renderizzato nulla, mostriamo il fallback
+// Timer di sicurezza più breve: se dopo 2 secondi non viene renderizzato nulla, mostriamo il fallback
 const safetyTimer = setTimeout(() => {
   if (!appRendered) {
     console.error("Timeout di sicurezza attivato: nessun rendering avvenuto");
     showErrorFallback('Timeout di caricamento. Ricarica la pagina.');
   }
-}, 3000);
+}, 2000);
 
 try {
   const rootElement = document.getElementById("root");
@@ -123,6 +157,10 @@ try {
     
     // Segnaliamo che la pagina è stata caricata in questa sessione
     sessionStorage.setItem('pageLoaded', 'true');
+    
+    // Assicuriamo che il body sia visibile subito
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = '1';
     
     const root = createRoot(rootElement);
     root.render(<App />);

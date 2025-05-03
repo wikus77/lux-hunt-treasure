@@ -33,59 +33,34 @@ const Index = () => {
       // Mostra immediatamente un contenuto per evitare pagina bianca
       setContentReady(true);
       
+      // Rendere il body visibile subito
+      document.body.style.visibility = 'visible';
+      document.body.style.opacity = '1';
+      
       // Verifica esplicita del refresh dalla sessionStorage impostata in main.tsx
       const wasRefreshed = sessionStorage.getItem('wasRefreshed') === 'true';
       console.log("Rilevato refresh da sessionStorage:", wasRefreshed ? "Sì" : "No");
       
-      // Backup: rileva refresh tramite performance API
-      const isPageRefreshFromAPI = (() => {
-        try {
-          // Metodo legacy
-          if (window.performance.navigation && window.performance.navigation.type === 1) {
-            return true;
-          }
-          
-          // Metodo moderno con sicurezza per i tipi
-          const entries = window.performance.getEntriesByType('navigation');
-          if (entries.length > 0) {
-            return (entries[0] as PerformanceNavigationTiming).type === 'reload';
-          }
-          
-          return false;
-        } catch (error) {
-          console.error("Errore nel rilevamento refresh da performance API:", error);
-          return false;
-        }
-      })();
-      
-      console.log("Rilevato refresh da Performance API:", isPageRefreshFromAPI ? "Sì" : "No");
-      
-      // Decisione finale: è un refresh se uno dei due metodi lo rileva
-      const isPageRefresh = wasRefreshed || isPageRefreshFromAPI;
-      console.log("È un refresh della pagina (decisione finale)?", isPageRefresh ? "Sì" : "No");
-      
       // Verifica dell'intro già mostrato (con fallback che forza a true in caso di problemi)
       const introShownRaw = localStorage.getItem('introShown');
-      const introShown = introShownRaw === 'true' || isPageRefresh;
+      const introShown = introShownRaw === 'true' || wasRefreshed;
       console.log("Intro già mostrato?", introShown ? "Sì" : "No");
       
       // Mostra l'intro solo se non è già stato mostrato E non siamo in refresh
-      if (!introShown && !isPageRefresh) {
+      if (!introShown && !wasRefreshed) {
         console.log("Mostrando l'intro per la prima volta");
         setShowIntro(true);
         // Impostiamo subito il flag per evitare ripetizioni in caso di problemi
         localStorage.setItem('introShown', 'true');
         
-        // Timeout di sicurezza che forza la conclusione dell'intro dopo 5 secondi
+        // Timeout di sicurezza che forza la conclusione dell'intro dopo 4 secondi
         // se per qualche motivo l'animazione non si concludesse
-        setTimeout(() => {
-          if (document.hidden) {
-            console.log("Pagina non visibile, forzatura conclusione intro ritardata");
-            return;
-          }
+        const safetyIntroTimeout = setTimeout(() => {
           console.log("Timeout di sicurezza: forzatura conclusione intro");
           setShowIntro(false);
-        }, 5000);
+        }, 4000);
+        
+        return () => clearTimeout(safetyIntroTimeout);
       } else {
         console.log("Intro già mostrato o refresh rilevato - mostrando direttamente il contenuto");
         setShowIntro(false);
@@ -101,6 +76,17 @@ const Index = () => {
     document.body.style.visibility = 'visible';
     document.body.style.opacity = '1';
     
+    // Timer di sicurezza aggiuntivo
+    const visibilityTimer = setInterval(() => {
+      if (document.body.style.visibility !== 'visible' || 
+          document.body.style.opacity !== '1') {
+        console.log("Correzione visibilità periodica");
+        document.body.style.visibility = 'visible';
+        document.body.style.opacity = '1';
+      }
+    }, 1000);
+    
+    return () => clearInterval(visibilityTimer);
   }, []);
 
   const handleIntroComplete = () => {
@@ -119,14 +105,14 @@ const Index = () => {
 
   // Componente fallback durante il caricamento con un timeout di sicurezza
   useEffect(() => {
-    // Se dopo 1 secondo contentReady è ancora false, lo forziamo a true
+    // Se dopo 800ms contentReady è ancora false, lo forziamo a true
     const safetyTimeout = setTimeout(() => {
       if (!contentReady) {
         console.log("Timeout di sicurezza: forzatura contentReady");
         setContentReady(true);
         setShowIntro(false);
       }
-    }, 1000);
+    }, 800);
     
     return () => clearTimeout(safetyTimeout);
   }, [contentReady]);

@@ -9,16 +9,20 @@ interface IntroAnimationProps {
 
 const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
   const [isVisible, setIsVisible] = useState(true);
-  const [timeRemaining, setTimeRemaining] = useState(5); // Ridotto a 5 secondi per maggiore reattività
+  const [timeRemaining, setTimeRemaining] = useState(4); // Ridotto a 4 secondi per maggiore reattività
 
   useEffect(() => {
     console.log("IntroAnimation montato, avvio timer");
     
-    // Timer principale per completare l'animazione dopo 5 secondi (ridotto da 7)
+    // Assicurati che il body sia visibile (per evitare problemi con flash di pagina bianca)
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = '1';
+    
+    // Timer principale per completare l'animazione dopo 4 secondi (ridotto da 5)
     const timer = setTimeout(() => {
       console.log("Timer dell'animazione intro scaduto, completando...");
       handleComplete();
-    }, 5000);
+    }, 4000);
 
     // Timer per il countdown
     const countdownInterval = setInterval(() => {
@@ -31,11 +35,11 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
       });
     }, 1000);
 
-    // Timer di sicurezza che si attiva comunque dopo 6 secondi
+    // Timer di sicurezza che si attiva comunque dopo 5 secondi
     const safetyTimer = setTimeout(() => {
       console.log("Timer di sicurezza attivato, forzando completamento...");
       handleComplete();
-    }, 6000);
+    }, 5000);
 
     // Funzione di pulizia
     return () => {
@@ -46,6 +50,7 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
       // Assicuriamoci che l'app sia visibile quando l'intro viene smontato
       document.body.style.visibility = 'visible';
       document.body.style.opacity = '1';
+      console.log("IntroAnimation smontato, visibilità garantita");
     };
   }, []);
 
@@ -61,6 +66,10 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
       try {
         console.log("Chiamata onComplete dopo animazione di uscita");
         onComplete();
+        
+        // Assicuriamoci che l'interfaccia utente sia visibile
+        document.body.style.visibility = 'visible';
+        document.body.style.opacity = '1';
       } catch (error) {
         console.error("Errore durante il completamento dell'intro:", error);
         // Assicuriamoci che l'app rimanga visibile anche in caso di errore
@@ -83,6 +92,7 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
       animate={{ opacity: isVisible ? 1 : 0 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
+      style={{ pointerEvents: isVisible ? 'auto' : 'none' }}
     >
       <div className="logo-container">
         <div className="scan-line" />
