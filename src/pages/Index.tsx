@@ -25,15 +25,18 @@ const Index = () => {
 
   // Check if intro was shown before
   useEffect(() => {
+    console.log("Index component mounted");
     // Uncomment this line to test the intro animation again
     // localStorage.removeItem('introShown');
     
     const introShown = localStorage.getItem('introShown');
     if (introShown) {
+      console.log("Intro was shown before, skipping animation");
       setShowIntro(false);
       setIntroCompleted(true);
     } else {
       // First viewing, show intro
+      console.log("First viewing, showing intro animation");
       setShowIntro(true);
       // Set after first viewing
       localStorage.setItem('introShown', 'true');
@@ -41,6 +44,7 @@ const Index = () => {
   }, []);
 
   const handleIntroComplete = () => {
+    console.log("Intro animation completed");
     setIntroCompleted(true);
     setShowIntro(false);
   };
