@@ -74,22 +74,20 @@ export default function NeonSplitCountdown() {
     
     return (
       <div className="flex flex-col items-center">
-        <div className="text-xs uppercase font-orbitron tracking-wider text-cyan-300/70 mb-1 select-none">
+        <div className="text-xs uppercase font-orbitron tracking-wider text-cyan-300/70 mb-2 select-none">
           {label}
         </div>
         
         <div 
           className={cn(
-            "relative bg-black/60 backdrop-blur-lg border rounded-lg overflow-hidden",
-            "w-16 h-20 sm:w-20 sm:h-24 md:w-24 md:h-28 lg:w-28 lg:h-32",
-            "flex items-center justify-center",
+            "relative bg-black/50 backdrop-blur-lg border rounded-lg w-16 h-20 sm:w-20 sm:h-24 md:w-24 md:h-28 flex items-center justify-center overflow-hidden",
             pulseTrigger ? "animate-neon-pulse" : "",
-            showFinalMessage ? "border-yellow-400" : "border-cyan-400/30"
+            showFinalMessage ? "border-yellow-400" : "border-cyan-400/80"
           )}
           style={{
             boxShadow: pulseTrigger 
-              ? "0 0 20px rgba(46, 196, 243, 0.8), 0 0 35px rgba(46, 196, 243, 0.5)"
-              : "0 0 12px rgba(46, 196, 243, 0.4), 0 0 25px rgba(46, 196, 243, 0.2)"
+              ? "0 0 20px rgba(46, 196, 243, 0.9), 0 0 35px rgba(46, 196, 243, 0.6)"
+              : "0 0 12px rgba(46, 196, 243, 0.6), 0 0 25px rgba(46, 196, 243, 0.3)"
           }}
         >
           {/* Enhanced light reflection effect */}
@@ -106,7 +104,7 @@ export default function NeonSplitCountdown() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -40, opacity: 0 }}
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
-              className="font-orbitron text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white select-none"
+              className="font-orbitron text-3xl sm:text-4xl md:text-5xl font-bold text-cyan-300 select-none"
               style={{
                 textShadow: "0 0 8px rgba(0, 229, 255, 0.8), 0 0 12px rgba(0, 229, 255, 0.4)"
               }}
@@ -121,14 +119,14 @@ export default function NeonSplitCountdown() {
 
   // Separator component with pulsing animation
   const Separator = () => (
-    <div className="text-2xl md:text-4xl lg:text-5xl font-orbitron font-bold text-cyan-500/80 mx-1 md:mx-2 mt-6 select-none">
+    <div className="text-2xl md:text-4xl font-orbitron font-bold text-cyan-500 mx-1 md:mx-2 mt-6 select-none">
       <span className="inline-block animate-pulse-animation">:</span>
     </div>
   );
 
   return (
     <motion.div 
-      className="relative w-full py-12 px-4 backdrop-blur-sm"
+      className="relative w-full py-8 px-4 backdrop-blur-sm"
       style={{
         backgroundImage: "linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5)), url('/lovable-uploads/ee63e6a9-208d-43f5-8bad-4c94f9c066cd.png')",
         backgroundSize: "cover",
@@ -141,7 +139,7 @@ export default function NeonSplitCountdown() {
     >
       <div className="container mx-auto">
         <h2 
-          className="font-orbitron text-xl sm:text-2xl mb-8 text-center tracking-wider uppercase select-none"
+          className="font-orbitron text-xl sm:text-2xl mb-6 text-center tracking-wider uppercase select-none"
           style={{
             background: "linear-gradient(to right, #00e5ff, #2ec4f3)",
             WebkitBackgroundClip: "text",
@@ -149,14 +147,14 @@ export default function NeonSplitCountdown() {
             textShadow: "0 0 10px rgba(46, 196, 243, 0.5)"
           }}
         >
-          TEMPO RIMASTO ALLA PROSSIMA MISSIONE
+          Tempo rimasto alla prossima missione
         </h2>
         
         <div className="flex justify-center items-center">
           <div
             className={cn(
               "bg-black/60 px-6 py-8 rounded-2xl shadow-2xl",
-              "flex items-center justify-center gap-4 md:gap-6",
+              "flex items-center justify-center",
               "backdrop-blur-xl border",
               pulseTrigger ? "border-cyan-400" : "border-cyan-800/50",
               showFinalMessage ? "border-yellow-400" : ""
@@ -167,13 +165,13 @@ export default function NeonSplitCountdown() {
                 : "0 8px 32px rgba(46, 196, 243, 0.2), 0 0 64px rgba(46, 196, 243, 0.1)"
             }}
           >
-            <TimeUnit value={remainingTime.days} label="DAYS" />
+            <TimeUnit value={remainingTime.days} label="giorni" />
             <Separator />
-            <TimeUnit value={remainingTime.hours} label="HOURS" />
+            <TimeUnit value={remainingTime.hours} label="ore" />
             <Separator />
-            <TimeUnit value={remainingTime.minutes} label="MINUTES" />
+            <TimeUnit value={remainingTime.minutes} label="minuti" />
             <Separator />
-            <TimeUnit value={remainingTime.seconds} label="SECONDS" />
+            <TimeUnit value={remainingTime.seconds} label="secondi" />
             
             {/* Enhanced final message overlay */}
             <AnimatePresence>
