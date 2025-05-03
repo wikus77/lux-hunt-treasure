@@ -27,19 +27,35 @@ const Index = () => {
 
   // Gestione sicura del caricamento iniziale
   useEffect(() => {
-    // Mostra immediatamente un contenuto di fallback
-    setContentReady(true);
-    
-    // Controlla se mostrare l'intro
-    const introShown = localStorage.getItem('introShown');
-    
-    // Mostra l'intro solo se non è già stato mostrato
-    if (!introShown) {
-      console.log("Mostrando l'intro per la prima volta");
-      setShowIntro(true);
-      localStorage.setItem('introShown', 'true');
-    } else {
-      console.log("Intro già mostrato in precedenza");
+    try {
+      console.log("Inizializzazione Index page");
+      
+      // Mostra immediatamente un contenuto per evitare pagina bianca
+      setContentReady(true);
+      
+      // Controlla se mostrare l'intro
+      const introShown = localStorage.getItem('introShown');
+      console.log("Intro già mostrato?", introShown ? "Sì" : "No");
+      
+      // Mostra l'intro solo se non è già stato mostrato
+      // Ma solo se non siamo in una sessione di refresh (controlliamo sessionStorage)
+      const isPageRefresh = sessionStorage.getItem('pageLoaded');
+      
+      if (!introShown && !isPageRefresh) {
+        console.log("Mostrando l'intro per la prima volta");
+        setShowIntro(true);
+        localStorage.setItem('introShown', 'true');
+      } else {
+        console.log("Intro già mostrato o refresh rilevato");
+        setShowIntro(false);
+      }
+      
+      // Segna che la pagina è stata caricata in questa sessione
+      sessionStorage.setItem('pageLoaded', 'true');
+    } catch (error) {
+      console.error("Errore durante l'inizializzazione:", error);
+      // Assicuriamoci che il contenuto sia visibile anche in caso di errore
+      setContentReady(true);
       setShowIntro(false);
     }
   }, []);
@@ -83,8 +99,8 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Mostra sempre il contenuto principale indipendentemente dall'intro */}
-      <div className={showIntro ? "opacity-0" : "opacity-100 transition-opacity duration-500"}>
+      {/* Mostra sempre il contenuto principale, ma nascosto solo se l'intro è attivo */}
+      <div className={`transition-opacity duration-500 ${showIntro ? "opacity-0" : "opacity-100"}`}>
         <UnifiedHeader />
         <div className="h-[72px] w-full" />
         <LandingHeader />

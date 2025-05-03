@@ -28,7 +28,7 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
       clearTimeout(timer);
       clearTimeout(safetyTimer);
     };
-  }, [onComplete]);
+  }, []);
 
   // Funzione per gestire il completamento dell'animazione
   const handleComplete = () => {
@@ -38,7 +38,11 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
     
     // Piccolo ritardo prima di chiamare onComplete per permettere l'animazione di uscita
     setTimeout(() => {
-      onComplete();
+      try {
+        onComplete();
+      } catch (error) {
+        console.error("Errore durante il completamento dell'intro:", error);
+      }
     }, 300);
   };
 
