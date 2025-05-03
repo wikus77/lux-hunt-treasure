@@ -1,4 +1,4 @@
-/* Questa direttiva è necessaria per utilizzare @layer in Tailwind */
+
 @tailwind utilities;
 
 @layer utilities {

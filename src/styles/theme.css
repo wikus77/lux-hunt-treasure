@@ -1,8 +1,4 @@
 
-/* Questa direttiva è necessaria per utilizzare @layer in Tailwind */
-@tailwind base;
-@tailwind components;
-
 /* Tema globale e variabili CSS */
 :root {
   --background: 240 10% 4%;
