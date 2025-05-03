@@ -28,29 +28,22 @@ import PaymentMethods from './pages/PaymentMethods';
 import MainLayout from './components/layout/MainLayout';
 import Leaderboard from './pages/Leaderboard';
 
-// Initialize QueryClient
 const queryClient = new QueryClient();
-
-console.log("App.tsx loaded");
 
 function App() {
   const [showIntro, setShowIntro] = useState<boolean>(() => {
     // Only show intro if it hasn't been shown before or if explicitly requested
-    const appIntroShown = localStorage.getItem('appIntroShown');
-    console.log("appIntroShown:", appIntroShown);
-    return !appIntroShown;
+    return !localStorage.getItem('appIntroShown');
   });
 
   // Handle intro completion
   const handleIntroComplete = () => {
-    console.log("App intro animation completed");
     setShowIntro(false);
     localStorage.setItem('appIntroShown', 'true');
   };
 
   // Skip intro in development mode for faster reloads (can be removed in production)
   useEffect(() => {
-    console.log("App component mounted");
     if (import.meta.env.DEV && false) { // Set to true to always skip in dev
       setShowIntro(false);
       localStorage.setItem('appIntroShown', 'true');

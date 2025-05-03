@@ -1,6 +1,4 @@
 
-@tailwind utilities;
-
 @layer utilities {
   /* Pulsante con effetto di pressione */
   .press-effect {

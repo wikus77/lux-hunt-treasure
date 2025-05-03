@@ -1,24 +1,172 @@
 
-/* Tema globale e variabili CSS */
-:root {
-  --background: 240 10% 4%;
-  --foreground: 0 0% 98%;
-  --card: 240 10% 4%;
-  --card-foreground: 0 0% 98%;
-  --popover: 240 10% 4%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 217.2 91.2% 59.8%;
-  --primary-foreground: 210 20% 98%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
-  --radius: 0.5rem;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* PALETTE & ROOT VARS */
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 196 100% 50%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 270 95% 65%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 39 100% 50%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 65% 30%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 196 100% 50%;
+    --radius: 0.7rem;
+  }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 18%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 55%;
+    --popover: 0 0% 99%;
+    --popover-foreground: 0 0% 15%;
+    --border: 0 0% 60%;
+    --input: 0 0% 80%;
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 13%;
+    --primary: 196 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 270 95% 65%;
+    --secondary-foreground: 0 0% 0%;
+    --accent: 39 100% 50%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --ring: 196 100% 50%;
+    --radius: 0.7rem;
+  }
+}
+
+/* Glass Effects */
+.glass-card {
+  @apply bg-black/40 backdrop-blur-sm border border-white/10 shadow-lg rounded-lg;
+  box-shadow: 0 8px 32px rgb(0 0 0 / 20%), inset 0 0 2px 0 rgb(255 255 255 / 5%);
+}
+
+/* Neon text effects */
+.neon-text-cyan {
+  @apply text-cyan-400 font-bold;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.7), 0 0 20px rgba(0, 229, 255, 0.5);
+}
+
+.neon-text-magenta {
+  @apply text-pink-500 font-bold;
+  text-shadow: 0 0 10px rgba(217, 70, 239, 0.7), 0 0 20px rgba(217, 70, 239, 0.5);
+}
+
+.neon-text-yellow {
+  @apply text-yellow-400 font-bold;
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.7), 0 0 20px rgba(250, 204, 21, 0.5);
+}
+
+/* Mission heading */
+.mission-heading {
+  @apply text-cyan-400 text-3xl sm:text-5xl font-light mb-4;
+  text-shadow: 0 0 15px rgba(0, 229, 255, 0.7), 0 0 30px rgba(0, 229, 255, 0.3);
+  letter-spacing: 0.05em;
+}
+
+/* Button styles */
+.neon-button-cyan {
+  @apply bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-semibold px-6 py-2 rounded-full 
+         hover:shadow-[0_0_15px_rgba(0,229,255,0.6)] transition-all duration-300 hover:scale-105;
+}
+
+.neon-button-magenta {
+  @apply bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold px-6 py-2 rounded-full 
+         hover:shadow-[0_0_15px_rgba(217,70,239,0.6)] transition-all duration-300 hover:scale-105;
+}
+
+.neon-button-yellow {
+  @apply bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-semibold px-6 py-2 rounded-full 
+         hover:shadow-[0_0_15px_rgba(250,204,21,0.6)] transition-all duration-300 hover:scale-105;
+}
+
+/* Glowing border */
+.glow-border-cyan {
+  @apply border border-cyan-400;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.5), inset 0 0 5px rgba(0, 229, 255, 0.2);
+}
+
+.glow-border-magenta {
+  @apply border border-pink-500;
+  box-shadow: 0 0 10px rgba(217, 70, 239, 0.5), inset 0 0 5px rgba(217, 70, 239, 0.2);
+}
+
+/* Animated horizontal lines */
+.horizontal-line {
+  @apply w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent relative overflow-hidden;
+}
+
+.horizontal-line::after {
+  content: '';
+  @apply absolute w-full h-full bg-gradient-to-r from-transparent via-cyan-400 to-transparent;
+  animation: moveLight 2s linear infinite;
+}
+
+@keyframes moveLight {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Floating particles animation */
+@keyframes float-particle {
+  0% { transform: translateY(0) translateX(0); }
+  25% { transform: translateY(-10px) translateX(5px); }
+  50% { transform: translateY(0) translateX(10px); }
+  75% { transform: translateY(10px) translateX(5px); }
+  100% { transform: translateY(0) translateX(0); }
+}
+
+.floating-particle {
+  animation: float-particle 10s infinite ease-in-out;
+}
+
+/* Gradient text */
+.gradient-text-cyan {
+  @apply bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent;
+  text-shadow: 0 0 2px rgba(0, 229, 255, 0.3);
+}
+
+.gradient-text-multi {
+  @apply bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent;
+  text-shadow: 0 0 2px rgba(0, 229, 255, 0.3);
+}
+
+/* Page sections */
+.page-section {
+  @apply p-4 md:p-6 mb-8 glass-card;
+}
+
+.section-title {
+  @apply text-2xl font-bold mb-4 gradient-text-cyan;
+}
+
+/* Card styles */
+.feature-card {
+  @apply glass-card p-5 hover:bg-white/5 transition-all duration-300 hover:-translate-y-1;
+}
+
+/* IT IS POSSIBLE motto */
+.mission-motto {
+  @apply text-xl sm:text-2xl text-yellow-400 font-light tracking-wider;
+  text-shadow: 0 0 15px rgba(250, 204, 21, 0.6), 0 0 30px rgba(250, 204, 21, 0.3);
 }

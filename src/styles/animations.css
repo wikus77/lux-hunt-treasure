@@ -1,6 +1,4 @@
 
-@tailwind base;
-
 /* ANIMAZIONI E KEYFRAMES */
 @layer base {
   @keyframes spin-gradient {
