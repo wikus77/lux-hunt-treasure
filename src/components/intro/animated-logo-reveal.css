@@ -112,3 +112,9 @@
     transform: translate(20px, -15px);
   }
 }
+
+/* Enhanced animation for the countdown timer */
+@keyframes line-move {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
