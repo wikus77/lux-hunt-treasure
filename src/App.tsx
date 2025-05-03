@@ -32,43 +32,29 @@ const queryClient = new QueryClient();
 
 function App() {
   const [showIntro, setShowIntro] = useState<boolean>(false);
-  const [appReady, setAppReady] = useState<boolean>(false);
+  const [appReady, setAppReady] = useState<boolean>(true); // Inizializzato a true per accelerare
   
-  // Gestione sicura del preloader dell'app
   useEffect(() => {
-    // Imposta immediatamente l'app come pronta
-    setAppReady(true);
-    
-    // Controlla se mostrare l'animazione del logo solo se non è già stata mostrata
+    // Controllo semplificato
+    const wasRefreshed = sessionStorage.getItem('wasRefreshed') === 'true';
     const appIntroShown = localStorage.getItem('appIntroShown');
-    
-    // Se siamo in development, salta l'intro
     const skipInDev = import.meta.env.DEV;
     
-    if (!appIntroShown && !skipInDev) {
-      console.log("Mostrando l'animazione del logo");
+    if (!appIntroShown && !skipInDev && !wasRefreshed) {
       setShowIntro(true);
     } else {
-      console.log("Animazione del logo già mostrata o saltata in dev mode");
       setShowIntro(false);
     }
+    
+    // Assicuriamo sempre la visibilità
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = '1';
   }, []);
 
-  // Gestione del completamento dell'intro
   const handleIntroComplete = () => {
-    console.log("Animazione del logo completata");
     setShowIntro(false);
     localStorage.setItem('appIntroShown', 'true');
   };
-
-  // Componente di fallback durante il caricamento
-  if (!appReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <h1 className="text-2xl">Caricamento...</h1>
-      </div>
-    );
-  }
 
   return (
     <BrowserRouter>
