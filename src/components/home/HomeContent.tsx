@@ -3,8 +3,6 @@ import { useState, useEffect } from "react";
 import AnimatedIntroSection from "./AnimatedIntroSection";
 import FuturisticCarsCarousel from "./FuturisticCarsCarousel";
 import FutureMissionsCarousel from "./FutureMissionsCarousel";
-import CountdownBanner from "./CountdownBanner";
-import BigCountdownTimer from "./BigCountdownTimer";
 import { Button } from "@/components/ui/button";
 import { Trophy, Map, Music } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,6 +12,7 @@ import CurrentEventSection from "./CurrentEventSection";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 import { ParallaxImage } from "@/components/ui/parallax-image";
 import { AnimatedSection } from "@/components/ui/animated-section";
+import NeonSplitCountdown from "./NeonSplitCountdown"; // Import the new countdown component
 
 export default function HomeContent() {
   console.log("[HomeContent] COMPONENT MOUNTED!");
@@ -73,9 +72,9 @@ export default function HomeContent() {
           variants={containerVariants}
           data-scroll-section
         >
-          {/* Countdown Timer Section */}
+          {/* Countdown Timer Section - Replaced with new NeonSplitCountdown */}
           <AnimatedSection className="flex flex-col items-center justify-center pt-2" delay={0.1}>
-            <BigCountdownTimer />
+            <NeonSplitCountdown />
           </AnimatedSection>
           
           {/* Intro Text Section */}
