@@ -106,7 +106,7 @@ const config: Config = {
         },
         'lineMove': {
           '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(300%)' }
+          '100%': { transform: 'translateX(100%)' }
         },
         'ripple': {
           '0%': { transform: 'scale(0)', opacity: '0.5' },
@@ -161,10 +161,6 @@ const config: Config = {
           '50%': { transform: 'translateY(0)' },
           '75%': { transform: 'translateY(8px)' },
           '100%': { transform: 'translateY(0)' }
-        },
-        'line-move': {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(100%)' }
         }
       },
       animation: {
@@ -174,7 +170,7 @@ const config: Config = {
         'float-particle': 'float-particle 15s infinite ease-in-out',
         'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
         'pulse-animation': 'pulse 3s infinite ease-in-out',
-        'line-move': 'line-move 3s infinite linear',
+        'line-move': 'lineMove 2s infinite linear',
         'ripple': 'ripple 0.6s ease-in-out',
         'float-animation': 'float 4s infinite ease-in-out',
         'text-glow': 'text-glow 3s infinite ease-in-out',

@@ -73,14 +73,14 @@ export default function NeonSplitCountdown() {
     const formattedValue = value.toString().padStart(2, "0");
     
     return (
-      <div className="flex flex-col items-center">
-        <div className="text-xs uppercase font-orbitron tracking-wider text-cyan-300/70 mb-2 select-none">
+      <div className="flex flex-col items-center mx-1 md:mx-2">
+        <div className="text-xs md:text-sm font-orbitron text-cyan-300/70 tracking-wider uppercase mb-1 select-none">
           {label}
         </div>
         
         <div 
           className={cn(
-            "relative bg-black/50 backdrop-blur-lg border rounded-lg w-16 h-20 sm:w-20 sm:h-24 md:w-24 md:h-28 flex items-center justify-center overflow-hidden",
+            "relative bg-black/50 backdrop-blur-lg border rounded-lg w-16 h-20 sm:w-20 sm:h-24 md:w-28 md:h-32 flex items-center justify-center overflow-hidden",
             pulseTrigger ? "animate-neon-pulse" : "",
             showFinalMessage ? "border-yellow-400" : "border-cyan-400/80"
           )}
@@ -117,116 +117,105 @@ export default function NeonSplitCountdown() {
     );
   };
 
-  // Separator component with pulsing animation
-  const Separator = () => (
-    <div className="text-2xl md:text-4xl font-orbitron font-bold text-cyan-500 mx-1 md:mx-2 mt-6 select-none">
-      <span className="inline-block animate-pulse-animation">:</span>
-    </div>
-  );
-
   return (
-    <motion.div 
-      className="relative w-full py-8 px-4 backdrop-blur-sm"
-      style={{
-        backgroundImage: "linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5)), url('/lovable-uploads/ee63e6a9-208d-43f5-8bad-4c94f9c066cd.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat"
-      }}
+    <motion.div
+      className="flex flex-col items-center justify-center w-full mt-8 mb-12 relative z-10"
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.7, 0.2, 0.2, 1] }}
     >
-      <div className="container mx-auto">
-        <h2 
-          className="font-orbitron text-xl sm:text-2xl mb-6 text-center tracking-wider uppercase select-none"
-          style={{
-            background: "linear-gradient(to right, #00e5ff, #2ec4f3)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            textShadow: "0 0 10px rgba(46, 196, 243, 0.5)"
-          }}
-        >
-          Tempo rimasto alla prossima missione
-        </h2>
+      <h2 
+        className="font-orbitron text-xl sm:text-2xl mb-6 text-center tracking-widest select-none"
+        style={{
+          background: "linear-gradient(to right, #00e5ff, #2ec4f3)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          textShadow: "0 0 10px rgba(46, 196, 243, 0.5)"
+        }}
+      >
+        Tempo rimasto alla prossima missione
+      </h2>
+      
+      <div
+        className={cn(
+          "bg-black/70 px-4 py-8 rounded-3xl shadow-2xl",
+          "flex gap-2 md:gap-6 justify-center items-center",
+          "relative backdrop-blur-xl border",
+          pulseTrigger ? "border-cyan-400" : "border-cyan-800/50",
+          showFinalMessage ? "border-yellow-400" : ""
+        )}
+        style={{
+          boxShadow: showFinalMessage
+            ? "0 8px 32px rgba(255, 215, 0, 0.3), 0 0 64px rgba(255, 215, 0, 0.2)"
+            : "0 8px 32px rgba(46, 196, 243, 0.2), 0 0 64px rgba(46, 196, 243, 0.1)"
+        }}
+      >
+        <TimeUnit value={remainingTime.days} label="giorni" />
         
-        <div className="flex justify-center items-center">
-          <div
-            className={cn(
-              "bg-black/60 px-6 py-8 rounded-2xl shadow-2xl",
-              "flex items-center justify-center",
-              "backdrop-blur-xl border",
-              pulseTrigger ? "border-cyan-400" : "border-cyan-800/50",
-              showFinalMessage ? "border-yellow-400" : ""
-            )}
-            style={{
-              boxShadow: showFinalMessage
-                ? "0 8px 32px rgba(255, 215, 0, 0.3), 0 0 64px rgba(255, 215, 0, 0.2)"
-                : "0 8px 32px rgba(46, 196, 243, 0.2), 0 0 64px rgba(46, 196, 243, 0.1)"
-            }}
-          >
-            <TimeUnit value={remainingTime.days} label="giorni" />
-            <Separator />
-            <TimeUnit value={remainingTime.hours} label="ore" />
-            <Separator />
-            <TimeUnit value={remainingTime.minutes} label="minuti" />
-            <Separator />
-            <TimeUnit value={remainingTime.seconds} label="secondi" />
-            
-            {/* Enhanced final message overlay */}
-            <AnimatePresence>
-              {showFinalMessage && (
-                <motion.div 
-                  className="absolute inset-0 bg-black/90 backdrop-blur-xl rounded-2xl flex flex-col items-center justify-center z-20"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 1.5 }}
-                >
-                  <motion.img
-                    src="/lovable-uploads/b349206f-bdf7-42e2-a1a6-b87988bc94f4.png" 
-                    alt="M1SSION Logo"
-                    className="w-40 h-auto mb-8" 
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ 
-                      scale: 1,
-                      opacity: 1,
-                      filter: ["drop-shadow(0 0 0px rgba(255,255,255,0))", "drop-shadow(0 0 15px rgba(255,255,255,0.8))", "drop-shadow(0 0 5px rgba(255,255,255,0.5))"]
-                    }}
-                    transition={{ 
-                      delay: 0.5, 
-                      duration: 1,
-                      filter: {
-                        repeat: Infinity,
-                        duration: 3
-                      }
-                    }}
-                  />
-                  
-                  <motion.div
-                    className="text-2xl md:text-4xl font-orbitron tracking-wider text-center"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ 
-                      opacity: 1, 
-                      y: 0,
-                      textShadow: [
-                        "0 0 5px rgba(255,255,255,0.5), 0 0 10px rgba(255,255,255,0.3)",
-                        "0 0 15px rgba(255,255,255,0.8), 0 0 30px rgba(255,255,255,0.5)",
-                        "0 0 5px rgba(255,255,255,0.5), 0 0 10px rgba(255,255,255,0.3)"
-                      ]
-                    }}
-                    transition={{ 
-                      delay: 1.2, 
-                      duration: 2,
-                      textShadow: { repeat: Infinity, duration: 3 }
-                    }}
-                  >
-                    IT IS POSSIBLE
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
+        <div className="text-2xl md:text-4xl font-orbitron text-cyan-500 animate-pulse">:</div>
+        
+        <TimeUnit value={remainingTime.hours} label="ore" />
+        
+        <div className="text-2xl md:text-4xl font-orbitron text-cyan-500 animate-pulse">:</div>
+        
+        <TimeUnit value={remainingTime.minutes} label="minuti" />
+        
+        <div className="text-2xl md:text-4xl font-orbitron text-cyan-500 animate-pulse">:</div>
+        
+        <TimeUnit value={remainingTime.seconds} label="secondi" />
+        
+        {/* Enhanced final message overlay */}
+        <AnimatePresence>
+          {showFinalMessage && (
+            <motion.div 
+              className="absolute inset-0 bg-black/90 backdrop-blur-xl rounded-3xl flex flex-col items-center justify-center z-20"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1.5 }}
+            >
+              <motion.img
+                src="/lovable-uploads/b349206f-bdf7-42e2-a1a6-b87988bc94f4.png" 
+                alt="M1SSION Logo"
+                className="w-40 h-auto mb-8" 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ 
+                  scale: 1,
+                  opacity: 1,
+                  filter: ["drop-shadow(0 0 0px rgba(255,255,255,0))", "drop-shadow(0 0 15px rgba(255,255,255,0.8))", "drop-shadow(0 0 5px rgba(255,255,255,0.5))"]
+                }}
+                transition={{ 
+                  delay: 0.5, 
+                  duration: 1,
+                  filter: {
+                    repeat: Infinity,
+                    duration: 3
+                  }
+                }}
+              />
+              
+              <motion.div
+                className="text-2xl md:text-4xl font-orbitron tracking-wider text-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0,
+                  textShadow: [
+                    "0 0 5px rgba(255,255,255,0.5), 0 0 10px rgba(255,255,255,0.3)",
+                    "0 0 15px rgba(255,255,255,0.8), 0 0 30px rgba(255,255,255,0.5)",
+                    "0 0 5px rgba(255,255,255,0.5), 0 0 10px rgba(255,255,255,0.3)"
+                  ]
+                }}
+                transition={{ 
+                  delay: 1.2, 
+                  duration: 2,
+                  textShadow: { repeat: Infinity, duration: 3 }
+                }}
+              >
+                IT IS POSSIBLE
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );
