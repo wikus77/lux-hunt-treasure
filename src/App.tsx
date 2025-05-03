@@ -31,24 +31,44 @@ import Leaderboard from './pages/Leaderboard';
 const queryClient = new QueryClient();
 
 function App() {
-  const [showIntro, setShowIntro] = useState<boolean>(() => {
-    // Only show intro if it hasn't been shown before or if explicitly requested
-    return !localStorage.getItem('appIntroShown');
-  });
+  const [showIntro, setShowIntro] = useState<boolean>(false);
+  const [appReady, setAppReady] = useState<boolean>(false);
+  
+  // Gestione sicura del preloader dell'app
+  useEffect(() => {
+    // Imposta immediatamente l'app come pronta
+    setAppReady(true);
+    
+    // Controlla se mostrare l'animazione del logo solo se non è già stata mostrata
+    const appIntroShown = localStorage.getItem('appIntroShown');
+    
+    // Se siamo in development, salta l'intro
+    const skipInDev = import.meta.env.DEV;
+    
+    if (!appIntroShown && !skipInDev) {
+      console.log("Mostrando l'animazione del logo");
+      setShowIntro(true);
+    } else {
+      console.log("Animazione del logo già mostrata o saltata in dev mode");
+      setShowIntro(false);
+    }
+  }, []);
 
-  // Handle intro completion
+  // Gestione del completamento dell'intro
   const handleIntroComplete = () => {
+    console.log("Animazione del logo completata");
     setShowIntro(false);
     localStorage.setItem('appIntroShown', 'true');
   };
 
-  // Skip intro in development mode for faster reloads (can be removed in production)
-  useEffect(() => {
-    if (import.meta.env.DEV && false) { // Set to true to always skip in dev
-      setShowIntro(false);
-      localStorage.setItem('appIntroShown', 'true');
-    }
-  }, []);
+  // Componente di fallback durante il caricamento
+  if (!appReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <h1 className="text-2xl">Caricamento...</h1>
+      </div>
+    );
+  }
 
   return (
     <BrowserRouter>

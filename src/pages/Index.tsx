@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import AgeVerificationModal from "@/components/auth/AgeVerificationModal";
 import IntroAnimation from "@/components/intro/IntroAnimation";
@@ -14,8 +15,9 @@ import LandingFooter from "@/components/landing/LandingFooter";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const [showIntro, setShowIntro] = useState(true);
-  const [introCompleted, setIntroCompleted] = useState(false);
+  // Stato per il controllo del contenuto da visualizzare
+  const [showIntro, setShowIntro] = useState(false);
+  const [contentReady, setContentReady] = useState(false);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const navigate = useNavigate();
 
@@ -23,25 +25,27 @@ const Index = () => {
   const nextEventDate = new Date();
   nextEventDate.setMonth(nextEventDate.getMonth() + 1);
 
-  // Check if intro was shown before
+  // Gestione sicura del caricamento iniziale
   useEffect(() => {
-    // Uncomment this line to test the intro animation again
-    // localStorage.removeItem('introShown');
+    // Mostra immediatamente un contenuto di fallback
+    setContentReady(true);
     
+    // Controlla se mostrare l'intro
     const introShown = localStorage.getItem('introShown');
-    if (introShown) {
-      setShowIntro(false);
-      setIntroCompleted(true);
-    } else {
-      // First viewing, show intro
+    
+    // Mostra l'intro solo se non è già stato mostrato
+    if (!introShown) {
+      console.log("Mostrando l'intro per la prima volta");
       setShowIntro(true);
-      // Set after first viewing
       localStorage.setItem('introShown', 'true');
+    } else {
+      console.log("Intro già mostrato in precedenza");
+      setShowIntro(false);
     }
   }, []);
 
   const handleIntroComplete = () => {
-    setIntroCompleted(true);
+    console.log("Intro completato, nascondendo animazione");
     setShowIntro(false);
   };
 
@@ -54,32 +58,48 @@ const Index = () => {
     navigate("/register");
   };
 
+  // Componente fallback durante il caricamento
+  if (!contentReady) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="text-3xl font-orbitron text-center mb-4">M1SSION</h1>
+          <p className="text-center">Caricamento in corso...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
+      {/* Mostra l'animazione intro solo se necessario */}
       <AnimatePresence>
         {showIntro && (
           <IntroAnimation onComplete={handleIntroComplete} />
         )}
       </AnimatePresence>
 
-      {introCompleted && (
-        <>
-          <UnifiedHeader />
-          <div className="h-[72px] w-full" />
-          <LandingHeader />
-          <PresentationSection visible={introCompleted} />
-          <NextEventCountdown targetDate={nextEventDate} />
-          <HowItWorks onRegisterClick={handleRegisterClick} />
-          <LuxuryCarsSection />
-          <CTASection onRegisterClick={handleRegisterClick} />
-          <LandingFooter />
-          <AgeVerificationModal
-            open={showAgeVerification}
-            onClose={() => setShowAgeVerification(false)}
-            onVerified={handleAgeVerified}
-          />
-        </>
-      )}
+      {/* Mostra sempre il contenuto principale indipendentemente dall'intro */}
+      <div className={showIntro ? "opacity-0" : "opacity-100 transition-opacity duration-500"}>
+        <UnifiedHeader />
+        <div className="h-[72px] w-full" />
+        <LandingHeader />
+        <PresentationSection visible={!showIntro} />
+        <NextEventCountdown targetDate={nextEventDate} />
+        <HowItWorks onRegisterClick={handleRegisterClick} />
+        <LuxuryCarsSection />
+        <CTASection onRegisterClick={handleRegisterClick} />
+        <LandingFooter />
+        <AgeVerificationModal
+          open={showAgeVerification}
+          onClose={() => setShowAgeVerification(false)}
+          onVerified={handleAgeVerified}
+        />
+      </div>
     </div>
   );
 };
