@@ -9,7 +9,7 @@ interface TimeBlockProps {
   highlight?: boolean;
 }
 
-// Component for each time block (days, hours, minutes, seconds)
+// Componente per ogni blocco di tempo (giorni, ore, minuti, secondi)
 export default function TimeBlock({ value, label, pulsing = false, highlight = false }: TimeBlockProps) {
   const formattedValue = value.toString().padStart(2, "0");
   
@@ -46,7 +46,7 @@ export default function TimeBlock({ value, label, pulsing = false, highlight = f
           translateY: { duration: 3, repeat: Infinity, ease: "easeInOut" }
         }}
       >
-        {/* 3D glossy reflection effect */}
+        {/* Effetto di riflessione lucido 3D */}
         <div 
           className="absolute inset-0 opacity-20"
           style={{
@@ -54,16 +54,16 @@ export default function TimeBlock({ value, label, pulsing = false, highlight = f
           }}
         />
         
-        {/* Light edge reflection */}
+        {/* Riflesso del bordo luminoso */}
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent"></div>
         
-        {/* Ambient light glow */}
+        {/* Bagliore della luce ambientale */}
         <div className="absolute inset-0 rounded-lg" style={{
           boxShadow: "inset 0 0 20px rgba(0, 229, 255, 0.2)",
           opacity: highlight ? 0.6 : 0.3
         }}></div>
         
-        {/* Number display with animation */}
+        {/* Display numerico con animazione */}
         <AnimatePresence mode="popLayout">
           <motion.div
             key={formattedValue}
@@ -82,19 +82,19 @@ export default function TimeBlock({ value, label, pulsing = false, highlight = f
                 : "0 0 8px rgba(124, 58, 237, 0.7), 0 0 16px rgba(124, 58, 237, 0.4), 0 5px 10px rgba(0, 0, 0, 0.8)",
             }}
           >
-            {/* 3D number effect with gradient */}
+            {/* Effetto numeri 3D con gradiente */}
             <span className="bg-gradient-to-b from-cyan-200 via-cyan-400 to-blue-600 bg-clip-text text-transparent">
               {formattedValue}
             </span>
             
-            {/* Text shadow for 3D effect */}
+            {/* Ombra del testo per effetto 3D */}
             <span className="absolute inset-0 blur-[1px] text-cyan-600/20 translate-z-[-2px] translate-y-[2px]" aria-hidden="true">
               {formattedValue}
             </span>
           </motion.div>
         </AnimatePresence>
         
-        {/* Floating particles for ambient effect */}
+        {/* Particelle fluttuanti per effetto ambiente */}
         {highlight && (
           <>
             <motion.div 

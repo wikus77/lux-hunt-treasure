@@ -21,7 +21,7 @@ export default function MissionComplete({ showFinalMessage }: MissionCompletePro
         background: "radial-gradient(circle at center, rgba(29, 5, 84, 0.9) 0%, rgba(0, 0, 0, 0.95) 80%)"
       }}
     >
-      {/* 3D floating logo */}
+      {/* Logo fluttuante 3D */}
       <motion.div
         className="relative"
         animate={{
@@ -50,7 +50,7 @@ export default function MissionComplete({ showFinalMessage }: MissionCompletePro
           }}
         />
         
-        {/* 3D glowing effect for the logo */}
+        {/* Effetto luminoso 3D per il logo */}
         <motion.div
           className="absolute -inset-4 rounded-full z-0 blur-xl"
           style={{
@@ -68,7 +68,7 @@ export default function MissionComplete({ showFinalMessage }: MissionCompletePro
         />
       </motion.div>
       
-      {/* 3D Floating Text */}
+      {/* Testo fluttuante 3D */}
       <motion.div 
         className="relative"
         initial={{ opacity: 0, y: 20 }}
@@ -102,7 +102,7 @@ export default function MissionComplete({ showFinalMessage }: MissionCompletePro
           IT IS POSSIBLE
         </motion.div>
         
-        {/* Ambient light reflection */}
+        {/* Riflessione della luce ambientale */}
         <div 
           className="absolute -inset-4 -z-10 opacity-40 blur-xl"
           style={{
@@ -111,7 +111,7 @@ export default function MissionComplete({ showFinalMessage }: MissionCompletePro
         />
       </motion.div>
 
-      {/* Ambient floating particles */}
+      {/* Particelle ambientali fluttuanti */}
       {[...Array(8)].map((_, i) => (
         <motion.div
           key={i}

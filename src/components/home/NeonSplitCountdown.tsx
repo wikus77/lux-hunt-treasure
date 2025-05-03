@@ -12,27 +12,39 @@ export default function NeonSplitCountdown() {
   const [pulseTrigger, setPulseTrigger] = useState(false);
   const [showFinalMessage, setShowFinalMessage] = useState(false);
   const prevSecondsRef = useRef(remainingTime.seconds);
+  const timerRef = useRef<number | null>(null);
 
-  // Main countdown timer effect
+  // Effetto principale per il timer del countdown
   useEffect(() => {
-    const timer = setInterval(() => {
+    // Funzione di aggiornamento del timer
+    const updateTimer = () => {
       const newTime = getTimeRemaining();
       setRemainingTime(newTime);
       
       if (isCountdownComplete(newTime) && !showFinalMessage) {
         setShowFinalMessage(true);
       }
-    }, 1000);
+    };
+
+    // Impostazione iniziale e intervallo
+    updateTimer(); // Aggiorna immediatamente
+    timerRef.current = window.setInterval(updateTimer, 1000);
     
-    return () => clearInterval(timer);
+    // Pulizia quando il componente viene smontato
+    return () => {
+      if (timerRef.current !== null) {
+        clearInterval(timerRef.current);
+      }
+    };
   }, [showFinalMessage]);
   
-  // Enhanced pulse animation effect triggered every 10 seconds
+  // Effetto migliorato per l'animazione di impulso ogni 10 secondi
   useEffect(() => {
     const currentSeconds = remainingTime.seconds;
     if (currentSeconds % 10 === 0 && currentSeconds !== prevSecondsRef.current) {
       setPulseTrigger(true);
-      setTimeout(() => setPulseTrigger(false), 1000);
+      const timeout = setTimeout(() => setPulseTrigger(false), 1000);
+      return () => clearTimeout(timeout); // Pulizia del timeout
     }
     prevSecondsRef.current = currentSeconds;
   }, [remainingTime.seconds]);
@@ -44,34 +56,34 @@ export default function NeonSplitCountdown() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
     >
-      {/* Futuristic title with glow effect */}
+      {/* Titolo futuristico con effetto luminoso */}
       <CountdownTitle text="Tempo rimasto alla prossima missione" />
 
       <CountdownContainer pulseTrigger={pulseTrigger}>
-        {/* Digital display grid */}
+        {/* Griglia del display digitale */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 md:gap-6 w-full max-w-3xl mx-auto">
-          {/* Time unit blocks - Days */}
+          {/* Blocchi delle unità di tempo - Giorni */}
           <TimeBlock 
             value={remainingTime.days} 
             label="GIORNI"
             pulsing={pulseTrigger}
           />
 
-          {/* Time unit blocks - Hours */}
+          {/* Blocchi delle unità di tempo - Ore */}
           <TimeBlock 
             value={remainingTime.hours} 
             label="ORE"
             pulsing={pulseTrigger}
           />
 
-          {/* Time unit blocks - Minutes */}
+          {/* Blocchi delle unità di tempo - Minuti */}
           <TimeBlock 
             value={remainingTime.minutes} 
             label="MINUTI"
             pulsing={pulseTrigger}
           />
 
-          {/* Time unit blocks - Seconds */}
+          {/* Blocchi delle unità di tempo - Secondi */}
           <TimeBlock 
             value={remainingTime.seconds} 
             label="SECONDI"
@@ -80,7 +92,7 @@ export default function NeonSplitCountdown() {
           />
         </div>
 
-        {/* Mission complete overlay */}
+        {/* Overlay per il completamento della missione */}
         <AnimatePresence>
           <MissionComplete showFinalMessage={showFinalMessage} />
         </AnimatePresence>

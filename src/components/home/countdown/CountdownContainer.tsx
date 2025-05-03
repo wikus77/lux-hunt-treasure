@@ -11,7 +11,7 @@ interface CountdownContainerProps {
 export default function CountdownContainer({ children, pulseTrigger }: CountdownContainerProps) {
   return (
     <div className="relative max-w-5xl mx-auto">
-      {/* 3D Floating holographic effect */}
+      {/* Effetto olografico fluttuante 3D */}
       <motion.div 
         className="absolute inset-0 -z-10"
         animate={{
@@ -33,7 +33,7 @@ export default function CountdownContainer({ children, pulseTrigger }: Countdown
         </div>
       </motion.div>
 
-      {/* Main countdown container with 3D effect */}
+      {/* Contenitore principale del countdown con effetto 3D */}
       <motion.div 
         className={cn(
           "bg-black/40 backdrop-blur-lg rounded-xl px-4 py-6 md:p-8", 
@@ -59,7 +59,7 @@ export default function CountdownContainer({ children, pulseTrigger }: Countdown
           ease: "easeInOut"
         }}
       >
-        {/* Enhanced 3D Glowing lines */}
+        {/* Linee luminescenti 3D migliorate */}
         <motion.div 
           className="absolute top-0 left-0 right-0 h-[2px]"
           style={{
@@ -90,7 +90,7 @@ export default function CountdownContainer({ children, pulseTrigger }: Countdown
           }}
         />
         
-        {/* Enhanced moving light beam */}
+        {/* Raggio di luce in movimento migliorato */}
         <div className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none overflow-hidden">
           <motion.div 
             className="absolute h-full w-[200px] skew-x-12 bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"
@@ -100,12 +100,13 @@ export default function CountdownContainer({ children, pulseTrigger }: Countdown
             transition={{
               duration: 3,
               repeat: Infinity,
-              ease: "easeInOut"
+              ease: "easeInOut",
+              repeatDelay: 1
             }}
           />
         </div>
 
-        {/* 3D floating effect for the entire container content */}
+        {/* Effetto fluttuante 3D per tutto il contenuto del container */}
         <motion.div
           className="w-full"
           animate={{
@@ -123,7 +124,7 @@ export default function CountdownContainer({ children, pulseTrigger }: Countdown
         </motion.div>
       </motion.div>
 
-      {/* Enhanced 3D circuit board patterns */}
+      {/* Pattern di circuiti 3D migliorati */}
       <div className="absolute inset-0 -z-20 opacity-10">
         <motion.div 
           className="w-full h-full" 
@@ -143,7 +144,7 @@ export default function CountdownContainer({ children, pulseTrigger }: Countdown
         />
       </div>
 
-      {/* Ambient 3D floating particles */}
+      {/* Particelle fluttuanti 3D ambientali */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
         {[...Array(6)].map((_, i) => (
           <motion.div

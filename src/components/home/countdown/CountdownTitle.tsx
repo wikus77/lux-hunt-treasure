@@ -30,7 +30,7 @@ export default function CountdownTitle({ text }: CountdownTitleProps) {
         ease: "easeInOut"
       }}
     >
-      {/* 3D floating effect */}
+      {/* Effetto fluttuante 3D */}
       <motion.span
         className="relative inline-block"
         animate={{ 
@@ -47,7 +47,7 @@ export default function CountdownTitle({ text }: CountdownTitleProps) {
         {text}
       </motion.span>
       
-      {/* Ambient glow */}
+      {/* Bagliore ambientale */}
       <motion.div
         className="absolute inset-0 -z-10 blur-xl opacity-30 rounded-full"
         style={{
