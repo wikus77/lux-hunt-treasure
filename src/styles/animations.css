@@ -1,3 +1,5 @@
+/* Questa direttiva è necessaria per utilizzare @layer in Tailwind */
+@tailwind base;
 
 /* ANIMAZIONI E KEYFRAMES */
 @layer base {

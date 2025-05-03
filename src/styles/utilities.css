@@ -1,3 +1,7 @@
+/* Questa direttiva è necessaria per utilizzare @layer in Tailwind */
+@tailwind base;
+@tailwind utilities;
+
 /* UTILITIES E COMPONENTI SPECIALI */
 
 @layer base {
