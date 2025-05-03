@@ -176,7 +176,6 @@ export default function NeonSplitCountdown() {
                   duration: 2,
                   textShadow: { repeat: Infinity, duration: 3 }
                 }}
-                className="mission-motto"
               >
                 IT IS POSSIBLE
               </motion.div>
