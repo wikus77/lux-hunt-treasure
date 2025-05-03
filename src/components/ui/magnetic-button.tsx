@@ -34,7 +34,34 @@ export const MagneticButton = ({
     setPosition({ x: 0, y: 0 });
   };
 
-  // Use custom motion component to avoid TypeScript errors with event handlers
+  // Extract motionProps for framer-motion and remove HTML button event handlers that conflict
+  const extractSafeProps = () => {
+    // List of props that should be excluded due to type conflicts
+    const excludedProps = [
+      'onDrag', 
+      'onAnimationStart', 
+      'onDragStart', 
+      'onDragEnd', 
+      'onDragEnter', 
+      'onDragExit', 
+      'onDragLeave', 
+      'onDragOver', 
+      'onAnimationEnd', 
+      'onAnimationIteration'
+    ];
+    
+    // Create a new object without the excluded properties
+    const safeProps: any = {};
+    
+    Object.keys(props).forEach(key => {
+      if (!excludedProps.includes(key)) {
+        safeProps[key] = (props as any)[key];
+      }
+    });
+    
+    return safeProps;
+  };
+
   return (
     <motion.button
       ref={ref}
@@ -44,12 +71,7 @@ export const MagneticButton = ({
       animate={{ x: position.x, y: position.y }}
       transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
       whileTap={{ scale: 0.97 }}
-      // Remove any props that might conflict with motion.button
-      {...((() => {
-        // Create a new object without properties that might cause type conflicts
-        const { onDrag, ...safeProps } = props;
-        return safeProps;
-      })())}
+      {...extractSafeProps()}
     >
       {children}
     </motion.button>
