@@ -25,7 +25,7 @@ const Index = () => {
   const nextEventDate = new Date();
   nextEventDate.setMonth(nextEventDate.getMonth() + 1);
 
-  // Gestione sicura del caricamento iniziale
+  // Gestione sicura del caricamento iniziale con timeouts di sicurezza
   useEffect(() => {
     try {
       console.log("Inizializzazione Index page");
@@ -33,25 +33,35 @@ const Index = () => {
       // Mostra immediatamente un contenuto per evitare pagina bianca
       setContentReady(true);
       
-      // Controlla se mostrare l'intro
-      const introShown = localStorage.getItem('introShown');
+      // Caso speciale: Se l'utente arriva qui da un refresh, 
+      // garantiamo che veda il contenuto immediatamente
+      const isPageRefresh = performance.navigation && 
+        (performance.navigation.type === 1 || 
+        window.performance.getEntriesByType('navigation')[0]?.type === 'reload');
+      
+      console.log("È un refresh della pagina?", isPageRefresh ? "Sì" : "No");
+      
+      // Verifica più sicura dell'intro già mostrato
+      const introShown = localStorage.getItem('introShown') === 'true';
       console.log("Intro già mostrato?", introShown ? "Sì" : "No");
       
-      // Mostra l'intro solo se non è già stato mostrato
-      // Ma solo se non siamo in una sessione di refresh (controlliamo sessionStorage)
-      const isPageRefresh = sessionStorage.getItem('pageLoaded');
-      
+      // Mostra l'intro solo se non è già stato mostrato E non siamo in refresh
       if (!introShown && !isPageRefresh) {
         console.log("Mostrando l'intro per la prima volta");
         setShowIntro(true);
+        // Impostiamo subito il flag per evitare ripetizioni in caso di problemi
         localStorage.setItem('introShown', 'true');
+        
+        // Timeout di sicurezza che forza la conclusione dell'intro dopo 7 secondi
+        // se per qualche motivo l'animazione non si concludesse
+        setTimeout(() => {
+          console.log("Timeout di sicurezza: forzatura conclusione intro");
+          setShowIntro(false);
+        }, 7000);
       } else {
-        console.log("Intro già mostrato o refresh rilevato");
+        console.log("Intro già mostrato o refresh rilevato - mostrando direttamente il contenuto");
         setShowIntro(false);
       }
-      
-      // Segna che la pagina è stata caricata in questa sessione
-      sessionStorage.setItem('pageLoaded', 'true');
     } catch (error) {
       console.error("Errore durante l'inizializzazione:", error);
       // Assicuriamoci che il contenuto sia visibile anche in caso di errore
@@ -74,7 +84,20 @@ const Index = () => {
     navigate("/register");
   };
 
-  // Componente fallback durante il caricamento
+  // Componente fallback durante il caricamento con un timeout di sicurezza
+  useEffect(() => {
+    // Se dopo 2 secondi contentReady è ancora false, lo forziamo a true
+    const safetyTimeout = setTimeout(() => {
+      if (!contentReady) {
+        console.log("Timeout di sicurezza: forzatura contentReady");
+        setContentReady(true);
+        setShowIntro(false);
+      }
+    }, 2000);
+    
+    return () => clearTimeout(safetyTimeout);
+  }, [contentReady]);
+
   if (!contentReady) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
@@ -93,7 +116,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
       {/* Mostra l'animazione intro solo se necessario */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {showIntro && (
           <IntroAnimation onComplete={handleIntroComplete} />
         )}
