@@ -33,11 +33,14 @@ const Index = () => {
       // Mostra immediatamente un contenuto per evitare pagina bianca
       setContentReady(true);
       
-      // Caso speciale: Se l'utente arriva qui da un refresh, 
-      // garantiamo che veda il contenuto immediatamente
-      const isPageRefresh = performance.navigation && 
-        (performance.navigation.type === 1 || 
-        window.performance.getEntriesByType('navigation')[0]?.type === 'reload');
+      // Determina se è un refresh della pagina
+      const isPageRefresh = 
+        (window.performance.navigation && window.performance.navigation.type === 1) || 
+        (() => {
+          const entries = window.performance.getEntriesByType('navigation');
+          return entries.length > 0 && 
+            (entries[0] as PerformanceNavigationTiming).type === 'reload';
+        })();
       
       console.log("È un refresh della pagina?", isPageRefresh ? "Sì" : "No");
       

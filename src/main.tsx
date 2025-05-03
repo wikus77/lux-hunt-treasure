@@ -44,8 +44,12 @@ const showErrorFallback = (message = 'Si è verificato un errore. Ricarica la pa
 
 // Rilevamento iniziale del tipo di navigazione (refresh o nuovo caricamento)
 const isPageRefresh = window.performance && 
-  (window.performance.navigation && window.performance.navigation.type === 1) ||
-  (window.performance.getEntriesByType('navigation')[0]?.type === 'reload');
+  (window.performance.navigation && window.performance.navigation.type === 1) || 
+  (() => {
+    const entries = window.performance.getEntriesByType('navigation');
+    return entries.length > 0 && 
+      (entries[0] as PerformanceNavigationTiming).type === 'reload';
+  })();
 
 if (isPageRefresh) {
   console.log("Refresh rilevato in main.tsx - garantiremo un rendering sicuro");
