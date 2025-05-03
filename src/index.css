@@ -1,172 +1,54 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap');
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@import './styles/theme.css';
+@import './styles/utilities.css';
+@import './styles/animations.css';
+@import './styles/micro-interactions.css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  :root {
-    --background: 0 0% 0%;
-    --foreground: 222.2 84% 4.9%;
-    --primary: 196 100% 50%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 270 95% 65%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --border: 220 13% 69%;
-  }
-
-  body {
-    @apply bg-black text-white font-inter;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #000;
+  color: #fff;
 }
 
-@layer base {
-  /* Improved typography settings */
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-orbitron tracking-wide;
-  }
-
-  h1 {
-    @apply text-3xl md:text-5xl font-light;
-  }
-
-  h2 {
-    @apply text-2xl md:text-4xl font-light;
-  }
-
-  h3 {
-    @apply text-xl md:text-2xl;
-  }
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
 }
 
-/* Glass Effects */
-.glass-card {
-  @apply bg-black/40 backdrop-blur-sm border border-white/10 shadow-lg rounded-lg;
-  box-shadow: 0 8px 32px rgb(0 0 0 / 20%), inset 0 0 2px 0 rgb(255 255 255 / 5%);
+/* Globally apply dark mode */
+html, body {
+  background-color: #000;
+  color: #fff;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
 }
 
-/* Neon Effects */
-.neon-text {
-  @apply text-cyan-400 font-bold;
-  text-shadow: 0 0 10px rgba(0, 229, 255, 0.7), 0 0 20px rgba(0, 229, 255, 0.5);
+/* Fix for hidden scrollbars in Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
 }
 
-.neon-text-cyan {
-  @apply text-cyan-400 font-bold;
-  text-shadow: 0 0 10px rgba(0, 229, 255, 0.7), 0 0 20px rgba(0, 229, 255, 0.5);
+/* Fix for hidden scrollbars in Chrome/Safari */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }
 
-.neon-text-magenta {
-  @apply text-magenta-400 font-bold;
-  text-shadow: 0 0 10px rgba(255, 0, 255, 0.7), 0 0 20px rgba(255, 0, 255, 0.5);
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.neon-border {
-  @apply border border-cyan-400;
-  box-shadow: 0 0 10px rgba(0, 229, 255, 0.6), inset 0 0 5px rgba(0, 229, 255, 0.3);
-}
-
-.neon-button {
-  @apply bg-gradient-to-r from-cyan-400 to-blue-600 
-         text-black font-bold py-2 px-4 rounded-full transition-all duration-300 
-         hover:shadow-[0_0_15px_rgba(0,229,255,0.7)] active:scale-95;
-}
-
-/* Gradient text */
-.gradient-text-cyan {
-  @apply bg-gradient-to-r from-cyan-300 to-blue-500 bg-clip-text text-transparent;
-  text-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
-}
-
-/* Custom Scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  @apply bg-black;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-cyan-400/30 rounded-full;
-}
-
-/* Interactive elements */
-.press-effect {
-  @apply transform transition-transform active:scale-95;
-}
-
-.ripple-effect {
-  position: relative;
-  overflow: hidden;
-}
-
-/* Hover effect for cards and buttons */
-.interaction-feedback {
-  @apply transition-all duration-200;
-}
-
-.interaction-feedback:hover {
-  @apply shadow-[0_0_15px_rgba(0,163,255,0.3)];
-}
-
-/* Gradient text */
-.gradient-text {
-  @apply bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent;
-}
-
-.gradient-text-multi {
-  @apply bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent;
-}
-
-/* Glass backdrop for headers */
-.glass-backdrop {
-  @apply bg-black/60 backdrop-blur-md border-b border-white/10;
-}
-
-/* Animated lines */
-.line-glow {
-  height: 1px;
-  @apply w-full bg-gradient-to-r from-transparent via-cyan-400 to-transparent relative overflow-hidden;
-}
-
-.line-glow::after {
-  content: '';
-  @apply absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent;
-  animation: lineMove 2s infinite linear;
-}
-
-/* Logo animation on hover */
-.logo-hover {
-  @apply transition-all duration-300;
-}
-
-.logo-hover:hover {
-  filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.7));
-}
-
-/* Particle background */
-.particle {
-  position: absolute;
-  border-radius: 50%;
-  @apply bg-cyan-400;
-}
-
-/* Mission heading style */
-.mission-heading {
-  @apply text-xl md:text-3xl font-bold font-orbitron mb-2;
-  background: linear-gradient(to right, #00e5ff, #8A2BE2);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
-  letter-spacing: 1px;
-}
-
-.mission-motto {
-  @apply text-lg md:text-2xl font-orbitron font-bold text-yellow-300 mt-4;
-  text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
-  letter-spacing: 2px;
+::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 100, 100, 0.5);
+  border-radius: 20px;
 }
