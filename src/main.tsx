@@ -1,4 +1,3 @@
-
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
@@ -146,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ensureVisibility();
   
   // Impostazione di un flag che conferma che il DOM è stato caricato
-  window.__domLoaded = true;
+  window.__domLoaded = true; // Ora TypeScript riconosce questa proprietà grazie alla dichiarazione nel file .d.ts
 });
 
 // Gestione errori globale migliorata
