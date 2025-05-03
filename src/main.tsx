@@ -42,26 +42,44 @@ const showErrorFallback = (message = 'Si è verificato un errore. Ricarica la pa
   `;
 };
 
-// Rilevamento iniziale del tipo di navigazione (refresh o nuovo caricamento)
-const isPageRefresh = window.performance && 
-  (window.performance.navigation && window.performance.navigation.type === 1) || 
-  (() => {
+// Rilevamento più affidabile del tipo di navigazione (refresh o nuovo caricamento)
+const detectPageRefresh = () => {
+  try {
+    // Metodo legacy
+    if (window.performance.navigation && window.performance.navigation.type === 1) {
+      return true;
+    }
+    
+    // Metodo moderno con sicurezza per i tipi
     const entries = window.performance.getEntriesByType('navigation');
-    return entries.length > 0 && 
-      (entries[0] as PerformanceNavigationTiming).type === 'reload';
-  })();
+    if (entries.length > 0) {
+      const navType = (entries[0] as PerformanceNavigationTiming).type;
+      return navType === 'reload';
+    }
+    
+    // Fallback: controlla sessionStorage per determinare se è un ricaricamento
+    return sessionStorage.getItem('pageLoaded') === 'true';
+  } catch (error) {
+    console.error("Errore nel rilevamento del refresh:", error);
+    return false;
+  }
+};
+
+const isPageRefresh = detectPageRefresh();
 
 if (isPageRefresh) {
   console.log("Refresh rilevato in main.tsx - garantiremo un rendering sicuro");
   
-  // Pulizia sessionStorage in caso di refresh per evitare stati incoerenti
-  sessionStorage.removeItem('pageLoaded');
+  // Impostiamo una variabile nello storage che sarà letta da Index.tsx
+  sessionStorage.setItem('wasRefreshed', 'true');
   
-  // Se rilevato refresh, impostiamo l'intro come già mostrato
-  const introShown = localStorage.getItem('introShown');
-  if (!introShown) {
-    localStorage.setItem('introShown', 'true');
-  }
+  // Se rilevato refresh, impostiamo l'intro come già mostrato per evitare problemi
+  localStorage.setItem('introShown', 'true');
+} else {
+  // Prima visita in questa sessione
+  console.log("Primo caricamento della pagina rilevato");
+  sessionStorage.setItem('pageLoaded', 'true');
+  sessionStorage.removeItem('wasRefreshed');
 }
 
 // Gestione errori globale
@@ -85,13 +103,13 @@ window.addEventListener('unhandledrejection', (event) => {
   }
 });
 
-// Timer di sicurezza: se dopo 5 secondi non viene renderizzato nulla, mostriamo il fallback
+// Timer di sicurezza: se dopo 3 secondi non viene renderizzato nulla, mostriamo il fallback
 const safetyTimer = setTimeout(() => {
   if (!appRendered) {
     console.error("Timeout di sicurezza attivato: nessun rendering avvenuto");
     showErrorFallback('Timeout di caricamento. Ricarica la pagina.');
   }
-}, 5000);
+}, 3000);
 
 try {
   const rootElement = document.getElementById("root");

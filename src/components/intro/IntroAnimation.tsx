@@ -9,16 +9,16 @@ interface IntroAnimationProps {
 
 const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
   const [isVisible, setIsVisible] = useState(true);
-  const [timeRemaining, setTimeRemaining] = useState(7); // Secondi rimanenti per lo skip automatico
+  const [timeRemaining, setTimeRemaining] = useState(5); // Ridotto a 5 secondi per maggiore reattività
 
   useEffect(() => {
     console.log("IntroAnimation montato, avvio timer");
     
-    // Timer principale per completare l'animazione dopo 7 secondi
+    // Timer principale per completare l'animazione dopo 5 secondi (ridotto da 7)
     const timer = setTimeout(() => {
       console.log("Timer dell'animazione intro scaduto, completando...");
       handleComplete();
-    }, 7000);
+    }, 5000);
 
     // Timer per il countdown
     const countdownInterval = setInterval(() => {
@@ -31,17 +31,21 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
       });
     }, 1000);
 
-    // Timer di sicurezza che si attiva comunque dopo 8 secondi
+    // Timer di sicurezza che si attiva comunque dopo 6 secondi
     const safetyTimer = setTimeout(() => {
       console.log("Timer di sicurezza attivato, forzando completamento...");
       handleComplete();
-    }, 8000);
+    }, 6000);
 
     // Funzione di pulizia
     return () => {
       clearTimeout(timer);
       clearTimeout(safetyTimer);
       clearInterval(countdownInterval);
+      
+      // Assicuriamoci che l'app sia visibile quando l'intro viene smontato
+      document.body.style.visibility = 'visible';
+      document.body.style.opacity = '1';
     };
   }, []);
 
@@ -59,6 +63,9 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
         onComplete();
       } catch (error) {
         console.error("Errore durante il completamento dell'intro:", error);
+        // Assicuriamoci che l'app rimanga visibile anche in caso di errore
+        document.body.style.visibility = 'visible';
+        document.body.style.opacity = '1';
       }
     }, 300);
   };
