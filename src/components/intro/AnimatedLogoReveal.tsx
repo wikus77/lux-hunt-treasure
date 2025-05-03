@@ -5,121 +5,113 @@ import "./animated-logo-reveal.css";
 
 interface AnimatedLogoRevealProps {
   onComplete: () => void;
+  duration?: number;
 }
 
-const AnimatedLogoReveal: React.FC<AnimatedLogoRevealProps> = ({ onComplete }) => {
-  const [showTyping, setShowTyping] = useState(false);
-  const [typedText, setTypedText] = useState("");
-  const textToType = "SSION";
-  const [showTagline, setShowTagline] = useState(false);
-  const [showContinueButton, setShowContinueButton] = useState(false);
-
+const AnimatedLogoReveal = ({ onComplete, duration = 5000 }: AnimatedLogoRevealProps) => {
+  const [animationStep, setAnimationStep] = useState(0);
+  
   useEffect(() => {
-    // Start M1 animation and then show typing effect
-    const timer1 = setTimeout(() => {
-      setShowTyping(true);
-      typeText();
-    }, 1500);
-
-    // Function to simulate typing animation
-    const typeText = () => {
-      let i = 0;
-      const typingInterval = setInterval(() => {
-        if (i < textToType.length) {
-          setTypedText((prev) => prev + textToType.charAt(i));
-          i++;
-        } else {
-          clearInterval(typingInterval);
-          // Show tagline after typing completes
-          setTimeout(() => {
-            setShowTagline(true);
-            // Show continue button after tagline
-            setTimeout(() => {
-              setShowContinueButton(true);
-            }, 1000);
-          }, 500);
-        }
-      }, 150); // Speed of typing
-    };
-
-    // Auto-complete after 8 seconds total
-    const autoCompleteTimer = setTimeout(() => {
+    // First animation step - M1 appears
+    const step1 = setTimeout(() => setAnimationStep(1), 500);
+    
+    // Second animation step - SSION appears
+    const step2 = setTimeout(() => setAnimationStep(2), 1800);
+    
+    // Third animation step - "IT IS POSSIBLE" tagline appears
+    const step3 = setTimeout(() => setAnimationStep(3), 3200);
+    
+    // Complete animation and trigger callback
+    const completionTimer = setTimeout(() => {
       onComplete();
-    }, 8000);
-
+    }, duration);
+    
     return () => {
-      clearTimeout(timer1);
-      clearTimeout(autoCompleteTimer);
+      clearTimeout(step1);
+      clearTimeout(step2);
+      clearTimeout(step3);
+      clearTimeout(completionTimer);
     };
-  }, [onComplete]);
-
+  }, [onComplete, duration]);
+  
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black"
+    <motion.div 
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-m1ssion-deep-blue"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.5 } }}
+      exit={{ opacity: 0, transition: { duration: 1 } }}
     >
-      {/* Particles background */}
-      <div className="particles-container">
-        {[...Array(15)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="particle"
-            style={{
-              width: `${Math.random() * 3 + 1}px`,
-              height: `${Math.random() * 3 + 1}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDuration: `${Math.random() * 10 + 10}s`,
-              animationDelay: `${Math.random() * 2}s`,
+      <div className="logo-reveal-container relative">
+        {/* Grid overlay effect */}
+        <div className="absolute inset-0 grid-overlay"></div>
+        
+        {/* Logo container with scanning effect */}
+        <div className="logo-reveal-content relative">
+          <div className="scan-line"></div>
+          
+          <div className="flex items-center justify-center">
+            {/* M1 part with neon effect */}
+            <motion.span 
+              className="text-m1-cyan relative"
+              initial={{ opacity: 0, filter: "blur(10px)" }}
+              animate={{ 
+                opacity: animationStep >= 1 ? 1 : 0, 
+                filter: animationStep >= 1 ? "blur(0px)" : "blur(10px)" 
+              }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            >
+              M<span className="text-white">1</span>
+            </motion.span>
+            
+            {/* SSION part with typing effect */}
+            <motion.span 
+              className="mission-text-typing"
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ 
+                width: animationStep >= 2 ? "auto" : 0,
+                opacity: animationStep >= 2 ? 1 : 0,
+              }}
+              transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
+            >
+              SSION
+            </motion.span>
+          </div>
+          
+          {/* Tagline */}
+          <motion.div 
+            className="absolute -bottom-12 left-0 right-0 text-center"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ 
+              opacity: animationStep >= 3 ? 1 : 0,
+              y: animationStep >= 3 ? 0 : 10 
             }}
-          />
-        ))}
-      </div>
-
-      {/* Grid overlay */}
-      <div className="absolute inset-0 grid-overlay" />
-
-      {/* Scanning line */}
-      <div className="scan-line" />
-
-      {/* Logo reveal content */}
-      <div className="logo-reveal-container">
-        <div className="logo-reveal-content">
-          <span className="text-m1-cyan animate-neon-pulse">M1</span>
-          {showTyping && (
-            <div className="mission-text-typing">
-              {typedText}
-            </div>
-          )}
+            transition={{ duration: 0.5 }}
+          >
+            <span className="text-yellow-300 text-sm font-orbitron tracking-widest">
+              IT IS POSSIBLE
+            </span>
+          </motion.div>
+        </div>
+        
+        {/* Particles elements */}
+        <div className="particles-container">
+          {[...Array(8)].map((_, i) => (
+            <div 
+              key={i} 
+              className="particle"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                width: `${Math.random() * 4 + 2}px`,
+                height: `${Math.random() * 4 + 2}px`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${Math.random() * 5 + 3}s`,
+                opacity: Math.random() * 0.5 + 0.3
+              }}
+            />
+          ))}
         </div>
       </div>
-
-      {/* Tagline */}
-      {showTagline && (
-        <motion.p
-          className="mt-6 text-xl text-yellow-400"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
-        >
-          IT IS POSSIBLE
-        </motion.p>
-      )}
-
-      {/* Continue button */}
-      {showContinueButton && (
-        <motion.button
-          onClick={onComplete}
-          className="mt-12 px-6 py-2 rounded-full bg-cyan-600 text-black font-bold hover:bg-cyan-700 transition-colors"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          CONTINUE
-        </motion.button>
-      )}
     </motion.div>
   );
 };
