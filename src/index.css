@@ -1,11 +1,7 @@
 
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
-@import './styles/theme.css';
-@import './styles/utilities.css';
-@import './styles/animations.css';
-@import './styles/micro-interactions.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 body {
   margin: 0;
@@ -23,7 +19,6 @@ code {
     monospace;
 }
 
-/* Globally apply dark mode */
 html, body {
   background-color: #000;
   color: #fff;
@@ -32,13 +27,11 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Fix for hidden scrollbars in Firefox */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
 }
 
-/* Fix for hidden scrollbars in Chrome/Safari */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster";
+import './App.css';
 
 import { ThemeProvider } from '@/components/theme-provider';
 import { SoundProvider } from '@/contexts/SoundContext';
@@ -30,6 +31,8 @@ import Leaderboard from './pages/Leaderboard';
 
 const queryClient = new QueryClient();
 
+console.log("App component is rendering");
+
 function App() {
   const [showIntro, setShowIntro] = useState<boolean>(() => {
     // Only show intro if it hasn't been shown before or if explicitly requested
@@ -44,10 +47,18 @@ function App() {
 
   // Skip intro in development mode for faster reloads (can be removed in production)
   useEffect(() => {
-    if (import.meta.env.DEV && false) { // Set to true to always skip in dev
+    console.log("App useEffect running, showIntro:", showIntro);
+    
+    if (import.meta.env.DEV) { // Always skip in dev mode for troubleshooting
       setShowIntro(false);
       localStorage.setItem('appIntroShown', 'true');
     }
+    
+    // Force dark mode
+    document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('light');
+    document.body.style.backgroundColor = "#000";
+    document.body.style.color = "#fff";
   }, []);
 
   return (
