@@ -1,0 +1,52 @@
+
+/* Matrix Effect Animation */
+.matrix-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.matrix-code {
+  background: linear-gradient(180deg, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 0.3) 75%, rgba(0, 229, 255, 0) 100%);
+  color: #00e5ff;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 14px;
+  text-shadow: 0 0 5px #00e5ff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: translateY(0);
+  animation: matrixRain 10s linear infinite;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  z-index: 1;
+}
+
+.matrix-code::before {
+  content: "01001101 00110001 01010011 01010011 01001001 01001111 01001110";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 229, 255, 0.2),
+      rgba(0, 229, 255, 0.2) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+}
+
+@keyframes matrixRain {
+  0% {
+    background-position: 0% -100%;
+  }
+  100% {
+    background-position: 0% 100%;
+  }
+}

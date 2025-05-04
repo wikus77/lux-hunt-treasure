@@ -1,0 +1,29 @@
+
+/* Base styles */
+.text-glow {
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.7), 0 0 20px rgba(0, 229, 255, 0.5);
+}
+
+/* Skip button shared across animations */
+.skip-button {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 5px 15px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.skip-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* Font imports shared across animations */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');

@@ -1,0 +1,130 @@
+
+/* Scanner Effect Animation */
+.scanner-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.target-grid {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  background-image: 
+    linear-gradient(rgba(0, 229, 255, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.3) 1px, transparent 1px);
+  background-size: 20px 20px;
+  animation: gridPulse 4s infinite;
+}
+
+.target-square {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  border: 2px solid #00e5ff;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.7);
+  animation: targetPulse 2s infinite;
+}
+
+.target-square::before, .target-square::after {
+  content: '';
+  position: absolute;
+  background-color: #00e5ff;
+}
+
+.target-square::before {
+  top: 50%;
+  left: -10px;
+  right: -10px;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.target-square::after {
+  left: 50%;
+  top: -10px;
+  bottom: -10px;
+  width: 2px;
+  transform: translateX(-50%);
+}
+
+.scan-line {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(to bottom, 
+    transparent 49.9%, 
+    #00e5ff 50%, 
+    transparent 50.1%
+  );
+  animation: scanLine 4s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+.scan-text {
+  position: absolute;
+  bottom: -40px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-family: monospace;
+  color: #00e5ff;
+}
+
+.typing-text {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typing 2.5s steps(30) forwards, cursor 0.5s step-end infinite alternate;
+  border-right: 3px solid #00e5ff;
+}
+
+@keyframes gridPulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes targetPulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.8);
+  }
+}
+
+@keyframes scanLine {
+  0% {
+    transform: translateY(-50%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(50%);
+    opacity: 0;
+  }
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes cursor {
+  50% { border-color: transparent; }
+}

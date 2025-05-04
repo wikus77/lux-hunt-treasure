@@ -1,7 +1,12 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import "./intro-animation-options.css";
+import "./styles/base-intro-styles.css";
+import "./styles/matrix-animation.css";
+import "./styles/glitch-animation.css";
+import "./styles/particle-animation.css";
+import "./styles/scanner-animation.css";
+import "./styles/3d-animation.css";
 
 // Animation Option 1: Tech Matrix Effect
 const MatrixAnimation = ({ onComplete }: { onComplete: () => void }) => {
