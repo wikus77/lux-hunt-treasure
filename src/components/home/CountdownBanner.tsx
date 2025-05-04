@@ -19,7 +19,9 @@ export default function CountdownBanner() {
   const [time, setTime] = useState(getTimeLeft());
 
   useEffect(() => {
-    const timer = setInterval(() => setTime(getTimeLeft()), 10000);
+    // Update immediately and then every second instead of every 10 seconds
+    setTime(getTimeLeft());
+    const timer = setInterval(() => setTime(getTimeLeft()), 1000);
     return () => clearInterval(timer);
   }, []);
 

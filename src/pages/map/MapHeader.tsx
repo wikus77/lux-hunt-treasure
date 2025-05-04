@@ -34,9 +34,6 @@ const MapHeader = ({
     });
   };
 
-  // Target date from utility
-  const targetDate = getMissionDeadline();
-
   return (
     <div className="sticky top-16 z-10 w-full bg-black/50 backdrop-blur-sm py-3 px-4 border-b border-projectx-deep-blue/30">
       <div className="flex flex-col">
@@ -93,7 +90,7 @@ const MapHeader = ({
         
         {/* Countdown Timer - centered */}
         <div className="flex justify-center mt-2">
-          <CountdownTimer targetDate={targetDate} />
+          <CountdownTimer targetDate={getMissionDeadline()} />
         </div>
       </div>
     </div>

@@ -37,11 +37,12 @@ export const CountdownTimer = () => {
       return { days, hours, minutes, seconds };
     };
     
+    // Update immediately when component mounts
     setRemainingTime(calculateTimeLeft());
     
     const timer = setInterval(() => {
       setRemainingTime(calculateTimeLeft());
-    }, 1000);
+    }, 1000); // Update every second
     
     return () => clearInterval(timer);
   }, []);

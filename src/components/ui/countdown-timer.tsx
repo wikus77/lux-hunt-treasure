@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format, formatDuration, intervalToDuration } from 'date-fns';
+import { getMissionDeadline } from "@/utils/countdownDate";
 
 // Define the Duration interface since it's not directly exportable from date-fns
 interface Duration {
@@ -14,12 +14,15 @@ interface Duration {
 }
 
 interface CountdownTimerProps {
-  targetDate: Date;
+  targetDate?: Date;
   onComplete?: () => void;
   className?: string;
 }
 
-const CountdownTimer = ({ targetDate, onComplete, className = "" }: CountdownTimerProps) => {
+const CountdownTimer = ({ targetDate: propTargetDate, onComplete, className = "" }: CountdownTimerProps) => {
+  // Use the provided targetDate or fall back to the mission deadline
+  const targetDate = propTargetDate || getMissionDeadline();
+  
   const [timeLeft, setTimeLeft] = useState<Duration>({
     days: 0,
     hours: 0,
@@ -34,8 +37,10 @@ const CountdownTimer = ({ targetDate, onComplete, className = "" }: CountdownTim
       const now = new Date();
       
       if (targetDate.getTime() <= now.getTime()) {
-        setIsComplete(true);
-        onComplete?.();
+        if (!isComplete) {
+          setIsComplete(true);
+          onComplete?.();
+        }
         return {
           days: 0,
           hours: 0,
@@ -44,22 +49,25 @@ const CountdownTimer = ({ targetDate, onComplete, className = "" }: CountdownTim
         };
       }
       
-      const duration = intervalToDuration({
-        start: now,
-        end: targetDate
-      });
+      const diff = targetDate.getTime() - now.getTime();
       
-      return duration;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      return { days, hours, minutes, seconds };
     };
     
+    // Update immediately when component mounts
     setTimeLeft(calculateTimeLeft());
     
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
-    }, 1000);
+    }, 1000); // Update every second
     
     return () => clearInterval(timer);
-  }, [targetDate, onComplete]);
+  }, [targetDate, onComplete, isComplete]);
   
   // Format numbers to always show two digits (e.g., 09 instead of 9)
   const formatNumber = (num: number | undefined) => {

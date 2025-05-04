@@ -10,6 +10,7 @@ import LuxuryCarsSection from "@/components/landing/LuxuryCarsSection";
 import CTASection from "@/components/landing/CTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
 import { useNavigate } from "react-router-dom";
+import { getMissionDeadline } from "@/utils/countdownDate";
 
 const Index = () => {
   // Skip the intro animation entirely
@@ -17,11 +18,10 @@ const Index = () => {
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const navigate = useNavigate();
 
-  // Set date for countdown (one month from today)
-  const nextEventDate = new Date();
-  nextEventDate.setMonth(nextEventDate.getMonth() + 1);
+  // Get target date from utility function
+  const nextEventDate = getMissionDeadline();
 
-  // Set loaded as true immediately
+  // Set loaded as true immediately and ensure page is visible
   useEffect(() => {
     // Force visibility of main content
     document.body.style.opacity = "1";

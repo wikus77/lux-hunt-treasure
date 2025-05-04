@@ -7,8 +7,12 @@ import './styles/animations.css'
 import './styles/micro-interactions.css'
 import App from './App.tsx'
 
-// Wrap render in a setTimeout to ensure DOM is fully loaded
-setTimeout(() => {
-  const rootElement = document.getElementById("root")!;
-  createRoot(rootElement).render(<App />);
-}, 0);
+// Ensure DOM is fully rendered before mounting
+document.addEventListener('DOMContentLoaded', () => {
+  const rootElement = document.getElementById("root");
+  if (rootElement) {
+    createRoot(rootElement).render(<App />);
+  } else {
+    console.error("Root element not found");
+  }
+});
