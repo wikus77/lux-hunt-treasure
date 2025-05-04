@@ -9,50 +9,48 @@ interface UseIntroAnimationReturn {
 }
 
 export function useIntroAnimation(): UseIntroAnimationReturn {
-  const [showIntro, setShowIntro] = useState(false);
-  const [introCompleted, setIntroCompleted] = useState(true); // Default a true
+  // Impostiamo tutti i valori su stato finale corretto per mostrare subito il contenuto
+  const [showIntro] = useState(false);
+  const [introCompleted, setIntroCompleted] = useState(true);
   const [renderError, setRenderError] = useState<Error | null>(null);
   
   useEffect(() => {
-    // FALLBACK IMMEDIATO: mostra sempre il contenuto immediatamente
-    // Settiamo introCompleted a true di default per saltare l'animazione
-    console.log("FALLBACK FORZATO: Contenuto mostrato immediatamente");
+    console.log("useIntroAnimation: forzatura visibilità contenuto");
+    
+    // Forza stili per rendere visibili i contenuti
+    document.body.style.backgroundColor = "#000";
+    document.body.style.display = "block";
+    document.body.style.visibility = "visible";
+    document.body.style.opacity = "1";
     
     try {
-      // In caso di problemi di rendering, garantisce che il contenuto sia visibile
-      document.body.style.backgroundColor = "#000"; // Sfondo nero come fallback
-      
-      // Forza visualizzazione immediata del contenuto
-      localStorage.setItem('introShown', 'true');
-      setShowIntro(false);
-      setIntroCompleted(true);
-      
-      // Forza visibilità del contenuto dopo un breve ritardo
+      // Forza visibilità del contenuto principale
       setTimeout(() => {
-        const content = document.querySelector('.landing-content');
-        if (content) {
-          (content as HTMLElement).style.opacity = '1';
-          (content as HTMLElement).style.display = 'block';
-        }
-      }, 100);
+        const contentElements = document.querySelectorAll('.landing-content, .landing-content-wrapper');
+        contentElements.forEach(element => {
+          if (element instanceof HTMLElement) {
+            element.style.display = "block";
+            element.style.visibility = "visible";
+            element.style.opacity = "1";
+          }
+        });
+        
+        console.log("useIntroAnimation: forzatura visibilità elementi completata");
+      }, 0);
     } catch (error) {
-      console.error("Errore nel controllo intro:", error);
-      // In caso di errore, salta l'intro e mostra il contenuto
-      setShowIntro(false);
-      setIntroCompleted(true);
+      console.error("Errore nella forzatura visibilità:", error);
       setRenderError(error instanceof Error ? error : new Error(String(error)));
     }
   }, []);
 
   const handleIntroComplete = () => {
-    console.log("Intro animation completed");
+    console.log("Intro completato (forzato)");
     setIntroCompleted(true);
-    setShowIntro(false);
   };
 
   return {
-    showIntro: false, // Sempre false per saltare l'intro
-    introCompleted: true, // Sempre true per mostrare il contenuto
+    showIntro: false, // Mai mostrare l'intro
+    introCompleted: true, // Sempre considerare l'intro come completato
     handleIntroComplete,
     renderError
   };

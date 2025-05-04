@@ -25,21 +25,48 @@ const LandingContent: React.FC<LandingContentProps> = ({
   onAgeVerified,
   visible
 }) => {
-  // Garantisce che il contenuto sia immediatamente visibile
+  // Garantisce visibilità immediata con molteplici fallback
   useEffect(() => {
-    // Forza visibilità immediata
-    const element = document.querySelector('.landing-content-wrapper');
-    if (element) {
-      console.log("Forzatura visibilità landing content");
-      (element as HTMLElement).style.opacity = '1';
-      (element as HTMLElement).style.display = 'block';
-    }
+    console.log("LandingContent: forzatura visibilità diretta");
+    
+    // Forza visibilità con diverse tecniche
+    const forceVisibility = () => {
+      const element = document.querySelector('.landing-content-wrapper');
+      if (element) {
+        (element as HTMLElement).style.display = "block";
+        (element as HTMLElement).style.visibility = "visible";
+        (element as HTMLElement).style.opacity = "1";
+        console.log("LandingContent: visibilità forzata con successo");
+      }
+      
+      // Forza anche visibilità dell'elemento principale
+      document.body.style.backgroundColor = "#000";
+      document.body.style.visibility = "visible";
+      document.body.style.opacity = "1";
+    };
+    
+    // Esegui subito e ripeti dopo un breve delay per garantire visibilità
+    forceVisibility();
+    const timer = setTimeout(forceVisibility, 10);
+    const timer2 = setTimeout(forceVisibility, 100);
+    const timer3 = setTimeout(forceVisibility, 500);
+    
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
   }, []);
 
   return (
     <div 
-      className="landing-content-wrapper landing-content opacity-100"
-      style={{opacity: 1, display: 'block'}}
+      className="landing-content-wrapper landing-content"
+      style={{
+        display: 'block',
+        visibility: 'visible',
+        opacity: 1,
+        backgroundColor: "#000"
+      }}
     >
       <Navbar onRegisterClick={onRegisterClick} />
       <HeroSection onRegisterClick={onRegisterClick} />

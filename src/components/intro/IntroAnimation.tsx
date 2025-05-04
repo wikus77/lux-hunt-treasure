@@ -1,37 +1,28 @@
 
 import React, { useEffect } from "react";
-import AnimationContainer from "./components/AnimationContainer";
-import LogoTransition from "./components/LogoTransition";
-import useAnimationSequence from "./hooks/useAnimationSequence";
 
 interface IntroAnimationProps {
   onComplete: () => void;
 }
 
 const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
-  // Sicurezza aggiuntiva: forza il completamento dopo un tempo molto breve
+  // Chiamata immediata e incondizionata a onComplete
   useEffect(() => {
-    const safetyTimer = setTimeout(() => {
-      console.log("FALLBACK ULTRA-SICURO: forzatura completamento");
-      onComplete();
-    }, 1000); // Ridotto a 1 secondo
+    console.log("IntroAnimation: chiamata immediata a onComplete");
+    // Chiamata immediata del callback
+    onComplete();
     
-    return () => clearTimeout(safetyTimer);
+    // Backup ulteriore con timeout breve (100ms)
+    const timer = setTimeout(() => {
+      console.log("IntroAnimation: chiamata di backup a onComplete");
+      onComplete();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [onComplete]);
 
-  // Implementazione minima - solo logo senza animazione dell'occhio
-  try {
-    return (
-      <AnimationContainer>
-        <LogoTransition visible={true} />
-      </AnimationContainer>
-    );
-  } catch (error) {
-    console.error("Errore critico nell'animazione di intro:", error);
-    // Chiamata onComplete per garantire che l'app continui a funzionare
-    setTimeout(onComplete, 0);
-    return null;
-  }
+  // Non rendiamo nulla, passiamo subito al contenuto principale
+  return null;
 };
 
 export default IntroAnimation;
