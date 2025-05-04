@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import Navbar from "@/components/landing/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
 import PrizeShowcase from "@/components/landing/PrizeShowcase";
@@ -25,8 +25,20 @@ const LandingContent: React.FC<LandingContentProps> = ({
   onAgeVerified,
   visible
 }) => {
+  // Garantisce che il contenuto sia visibile indipendentemente dall'animazione
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const element = document.querySelector('.landing-content-wrapper');
+      if (element) {
+        (element as HTMLElement).style.opacity = '1';
+      }
+    }, 800);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className={`transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`landing-content-wrapper landing-content transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
       <Navbar onRegisterClick={onRegisterClick} />
       <HeroSection onRegisterClick={onRegisterClick} />
       <PrizeShowcase />

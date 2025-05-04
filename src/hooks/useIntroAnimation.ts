@@ -14,14 +14,18 @@ export function useIntroAnimation(): UseIntroAnimationReturn {
   const [renderError, setRenderError] = useState<Error | null>(null);
   
   useEffect(() => {
-    // Fallback timeout: always show content after a brief delay
+    // FALLBACK IMMEDIATO: mostra sempre il contenuto dopo un breve ritardo
+    // Ridotto a 800ms per essere più veloce e garantire che il contenuto sia visibile
     const forcedTimeout = setTimeout(() => {
-      console.log("FALLBACK FORZATO: Attivazione visualizzazione contenuto");
+      console.log("FALLBACK FORZATO ATTIVATO: Contenuto mostrato automaticamente");
       setIntroCompleted(true);
       setShowIntro(false);
-    }, 1000); // Very short, 1 second
+    }, 800);
     
     try {
+      // In caso di problemi di rendering, garantisce che il contenuto sia visibile
+      document.body.style.backgroundColor = "#000"; // Sfondo nero come fallback
+      
       const introShown = localStorage.getItem('introShown');
       
       if (introShown) {
@@ -29,14 +33,14 @@ export function useIntroAnimation(): UseIntroAnimationReturn {
         setShowIntro(false);
         setIntroCompleted(true);
       } else {
-        // First visit, show intro
+        // Prima visita, mostra intro ma con timeout di sicurezza
         console.log("Prima visita, mostriamo intro");
         setShowIntro(true);
         localStorage.setItem('introShown', 'true');
       }
     } catch (error) {
       console.error("Errore nel controllo intro:", error);
-      // In case of error, skip intro and show content
+      // In caso di errore, salta l'intro e mostra il contenuto
       setShowIntro(false);
       setIntroCompleted(true);
       setRenderError(error instanceof Error ? error : new Error(String(error)));

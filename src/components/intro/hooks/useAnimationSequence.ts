@@ -6,50 +6,57 @@ interface UseAnimationSequenceProps {
   fallbackTime?: number;
 }
 
-const useAnimationSequence = ({ onComplete, fallbackTime = 3000 }: UseAnimationSequenceProps) => {
+const useAnimationSequence = ({ onComplete, fallbackTime = 2000 }: UseAnimationSequenceProps) => {
   const [animationStage, setAnimationStage] = useState(0);
   const [hasError, setHasError] = useState(false);
   
-  // SUPER FALLBACK: Always call onComplete after a short period
+  // SUPER FALLBACK: Chiamare sempre onComplete dopo un breve periodo
+  // Ridotto a 2 secondi per essere più veloce
   useEffect(() => {
+    console.log("Inizializzazione sequence con fallback sicuro");
     const fallbackTimer = setTimeout(() => {
-      console.log("Safety fallback: forcing animation completion");
+      console.log("FALLBACK SICUREZZA: forzatura completamento animazione");
       onComplete();
     }, fallbackTime);
     
     return () => clearTimeout(fallbackTimer);
   }, [onComplete, fallbackTime]);
   
-  // Animation sequence with error handling
+  // Sequenza di animazione con gestione errori
   useEffect(() => {
     try {
+      console.log("Avvio sequenza animazione");
       const timers = [
-        // Stage 1: Initial pulsation
+        // Fase 1: Pulsazione iniziale
         setTimeout(() => {
+          console.log("Animazione: fase 1");
           setAnimationStage(1);
-        }, 400),
+        }, 300),
         
-        // Stage 2: Eye begins to open
+        // Fase 2: L'occhio inizia ad aprirsi
         setTimeout(() => {
+          console.log("Animazione: fase 2");
           setAnimationStage(2);
-        }, 800),
+        }, 600),
         
-        // Stage 3: Eye fully open, show logo
+        // Fase 3: Occhio completamente aperto, mostra logo
         setTimeout(() => {
+          console.log("Animazione: fase 3");
           setAnimationStage(3);
-        }, 1400),
+        }, 1000),
         
-        // Complete animation
+        // Completa animazione
         setTimeout(() => {
+          console.log("Animazione: completata");
           onComplete();
-        }, 2500)
+        }, 1800)
       ];
       
       return () => timers.forEach(timer => clearTimeout(timer));
     } catch (error) {
-      console.error("Error in animation sequence:", error);
+      console.error("Errore nella sequenza di animazione:", error);
       setHasError(true);
-      onComplete(); // Call onComplete to not block the user
+      onComplete(); // Chiama onComplete per non bloccare l'utente
     }
   }, [onComplete]);
 
