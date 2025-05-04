@@ -26,10 +26,8 @@ const Index = () => {
 
   // Controlla se l'intro è già stato mostrato
   useEffect(() => {
-    // Rimuovi questo commento per testare l'animazione intro
+    // For testing purposes, you might want to uncomment these lines to always show the intro
     // localStorage.removeItem('introShown');
-    
-    // Per test: uncomment to always show the cinematic
     // localStorage.removeItem('cinematicShown');
     
     const introShown = localStorage.getItem('introShown');
@@ -82,7 +80,7 @@ const Index = () => {
         <CinematicIntro onComplete={handleCinematicComplete} />
       )}
 
-      {introCompleted && (
+      {introCompleted && !showCinematicIntro && (
         <>
           <Navbar onRegisterClick={handleRegisterClick} />
           <HeroSection onRegisterClick={handleRegisterClick} />
