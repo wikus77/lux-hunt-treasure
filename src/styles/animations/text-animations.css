@@ -1,0 +1,63 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  .gradient-white-text {
+    background: linear-gradient(90deg, #ffffff 50%, #f1f1f1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    text-fill-color: transparent;
+  }
+  
+  .text-glow {
+    animation: text-glow 3s ease-in-out infinite;
+  }
+
+  /* Advanced text reveal animations */
+  @keyframes reveal-text {
+    0% {
+      clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+    }
+    100% {
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    }
+  }
+
+  .reveal-text {
+    animation: reveal-text 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+  }
+
+  /* Wave text effect */
+  @keyframes wave-text-effect {
+    0% {
+      transform: translateY(0);
+    }
+    25% {
+      transform: translateY(-8px);
+    }
+    50% {
+      transform: translateY(0);
+    }
+    75% {
+      transform: translateY(8px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  .wave-text {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .wave-text span {
+    display: inline-block;
+    animation: wave-text-effect 2.5s ease-in-out infinite;
+    animation-delay: calc(0.1s * var(--char-index, 0));
+  }
+}

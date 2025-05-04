@@ -1,0 +1,58 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Floating animations */
+  .float-animation {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .animate-neon-pulse {
+    animation: neon-pulse 3s ease-in-out infinite;
+  }
+
+  /* 3D rotation effects */
+  @keyframes rotate-3d {
+    0% {
+      transform: perspective(1000px) rotateX(0) rotateY(0);
+    }
+    25% {
+      transform: perspective(1000px) rotateX(2deg) rotateY(2deg);
+    }
+    50% {
+      transform: perspective(1000px) rotateX(0) rotateY(4deg);
+    }
+    75% {
+      transform: perspective(1000px) rotateX(-2deg) rotateY(2deg);
+    }
+    100% {
+      transform: perspective(1000px) rotateX(0) rotateY(0);
+    }
+  }
+
+  .rotate-3d-animation {
+    animation: rotate-3d 12s ease-in-out infinite;
+  }
+
+  /* Motion effects */
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  .marquee-animation {
+    animation: marquee 20s linear infinite;
+  }
+
+  /* Parallax effect */
+  .parallax-element {
+    will-change: transform;
+    transform: translateY(var(--parallax-y, 0));
+  }
+}
