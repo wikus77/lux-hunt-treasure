@@ -78,3 +78,76 @@
 .eye-container::after {
   bottom: 40%;
 }
+
+/* Enhanced energy rays with varied colors and sizes */
+.energy-rays {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.energy-ray {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  height: 2px;
+  transform-origin: 0 50%;
+}
+
+/* Varied ray colors and lengths */
+.energy-ray:nth-child(1),
+.energy-ray:nth-child(5),
+.energy-ray:nth-child(9) {
+  width: 100px;
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0.9), transparent);
+}
+
+.energy-ray:nth-child(2),
+.energy-ray:nth-child(6),
+.energy-ray:nth-child(10) {
+  width: 85px;
+  background: linear-gradient(90deg, rgba(155, 89, 182, 0.8), transparent);
+}
+
+.energy-ray:nth-child(3),
+.energy-ray:nth-child(7),
+.energy-ray:nth-child(11) {
+  width: 70px;
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.8), transparent);
+  height: 1.5px;
+}
+
+.energy-ray:nth-child(4),
+.energy-ray:nth-child(8),
+.energy-ray:nth-child(12) {
+  width: 90px;
+  background: linear-gradient(90deg, rgba(236, 64, 122, 0.8), transparent);
+  height: 1px;
+}
+
+/* Energy ring enhancements */
+.energy-ring {
+  position: absolute;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+}
+
+.energy-ring-1 {
+  border: 2px solid rgba(0, 229, 255, 0.7);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+}
+
+.energy-ring-2 {
+  border: 1.5px solid rgba(155, 89, 182, 0.6);
+  box-shadow: 0 0 8px rgba(155, 89, 182, 0.3);
+}
+
+.energy-ring-3 {
+  border: 1px solid rgba(250, 204, 21, 0.5);
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.3);
+}
