@@ -31,6 +31,7 @@ const FloatingParticles = ({ count = 15 }: ParticleProps) => {
             boxShadow: `0 0 8px ${particle.color}`,
             top: `${particle.top}%`,
             left: `${particle.left}%`,
+            filter: "blur(1.5px)"
           }}
           animate={{
             y: [0, -20, 0, 20, 0],
