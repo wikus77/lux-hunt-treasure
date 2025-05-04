@@ -1,4 +1,5 @@
-import React, { Suspense, ErrorBoundary } from 'react';
+
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster";
@@ -6,25 +7,27 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme-provider';
 import { SoundProvider } from '@/contexts/SoundContext';
 import Index from './pages/Index';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Home from './pages/Home';
-import Events from './pages/Events';
-import Buzz from './pages/Buzz';
-import Map from './pages/Map';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import Notifications from './pages/Notifications';
-import NotFound from './pages/NotFound';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import Terms from './pages/Terms';
-import Subscriptions from './pages/Subscriptions';
-import PaymentSilver from './pages/PaymentSilver';
-import PaymentGold from './pages/PaymentGold';
-import PaymentBlack from './pages/PaymentBlack';
-import PaymentMethods from './pages/PaymentMethods';
 import MainLayout from './components/layout/MainLayout';
-import Leaderboard from './pages/Leaderboard';
+
+// Lazy-load components
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Home = lazy(() => import('./pages/Home'));
+const Events = lazy(() => import('./pages/Events'));
+const Buzz = lazy(() => import('./pages/Buzz'));
+const Map = lazy(() => import('./pages/Map'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Subscriptions = lazy(() => import('./pages/Subscriptions'));
+const PaymentSilver = lazy(() => import('./pages/PaymentSilver'));
+const PaymentGold = lazy(() => import('./pages/PaymentGold'));
+const PaymentBlack = lazy(() => import('./pages/PaymentBlack'));
+const PaymentMethods = lazy(() => import('./pages/PaymentMethods'));
+const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 
 const queryClient = new QueryClient();
 
@@ -71,10 +74,10 @@ function App() {
                 <div className="bg-black min-h-screen" style={{ opacity: 1, visibility: "visible" }}>
                   <Routes>
                     <Route path="/" element={<Index />} />
-                    <Route path="/login" element={<React.lazy(() => import('./pages/Login'))} />
-                    <Route path="/register" element={<React.lazy(() => import('./pages/Register'))} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
                     
-                    <Route path="/" element={<React.lazy(() => import('./components/layout/MainLayout'))}>
+                    <Route path="/" element={<MainLayout />}>
                       <Route path="/home" element={<Home />} />
                       <Route path="/events" element={<Events />} />
                       <Route path="/buzz" element={<Buzz />} />
