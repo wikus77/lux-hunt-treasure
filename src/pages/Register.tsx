@@ -110,7 +110,10 @@ const Register = () => {
       >
         {/* Header with logo */}
         <div className="text-center mb-8 relative">
-          <h1 className="mission-heading">M1SSION</h1>
+          <h1 className="mission-heading">
+            <span style={{ color: '#00E5FF' }} className="text-[#00E5FF]">M1</span>
+            <span style={{ color: '#FFFFFF' }} className="text-white">SSION</span>
+          </h1>
           <p className="text-white/70 mb-2">Crea il tuo account</p>
           <div className="line-glow"></div>
           <div className="mission-motto mt-2">IT IS POSSIBLE</div>
