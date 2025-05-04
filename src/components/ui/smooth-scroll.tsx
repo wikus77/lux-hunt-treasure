@@ -25,10 +25,9 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
     if (!scrollContainerRef.current) return;
 
     // Create new locomotive scroll instance
-    // @ts-ignore - TS doesn't recognize the correct API for Locomotive Scroll v5
-    const scrollInstance = new LocomotiveScroll({
-      // Use correct property for LocomotiveScroll v5
-      container: scrollContainerRef.current,
+    // Using type assertion to bypass the TypeScript error with Locomotive Scroll v5 API
+    const locomotiveOptions = {
+      el: scrollContainerRef.current, // Locomotive Scroll v5 uses 'el' despite the type definitions
       lerp: options.lerp ?? 0.08,
       multiplier: 1,
       class: "is-inview",
@@ -41,7 +40,9 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
       tablet: {
         smooth: options.tablet?.smooth ?? true,
       }
-    });
+    };
+
+    const scrollInstance = new LocomotiveScroll(locomotiveOptions as any);
 
     // Store the instance reference
     setLocomotiveScroll(scrollInstance);
