@@ -1,7 +1,17 @@
 
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import "./black-hole-styles.css";
+
+// Import dei componenti rifattorizzati
+import SpaceDust from "./effects/SpaceDust";
+import GravitationalRings from "./effects/GravitationalRings";
+import BlackHoleFormation from "./effects/BlackHoleFormation";
+import GravitationalLensing from "./effects/GravitationalLensing";
+import EnergyFlash from "./effects/EnergyFlash";
+import ParticleConvergence from "./effects/ParticleConvergence";
+import LogoReveal from "./effects/LogoReveal";
+import SkipButton from "./effects/SkipButton";
 
 interface BlackHoleRevealIntroProps {
   onComplete: () => void;
@@ -113,45 +123,6 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       return () => clearTimeout(fadeOutTimeout);
     }
   }, [stage, onComplete]);
-  
-  // Generate space dust particles for background effect
-  const renderSpaceDust = () => {
-    return Array.from({ length: 60 }).map((_, i) => (
-      <motion.div
-        key={`dust-${i}`}
-        className="space-dust"
-        initial={{ 
-          x: `${Math.random() * 100}%`, 
-          y: `${Math.random() * 100}%`,
-          opacity: Math.random() * 0.5,
-          scale: Math.random() * 0.8 + 0.2
-        }}
-        animate={{ 
-          opacity: [
-            Math.random() * 0.3, 
-            Math.random() * 0.6, 
-            Math.random() * 0.3
-          ],
-          scale: [
-            Math.random() * 0.8 + 0.2,
-            Math.random() * 0.9 + 0.5,
-            Math.random() * 0.8 + 0.2
-          ]
-        }}
-        transition={{ 
-          duration: Math.random() * 4 + 3,
-          repeat: Infinity,
-          repeatType: "reverse"
-        }}
-        style={{
-          width: `${Math.random() * 3 + 1}px`,
-          height: `${Math.random() * 3 + 1}px`,
-          background: i % 3 === 0 ? "#00BFFF" : i % 3 === 1 ? "#FFFFFF" : "#AAAAAA",
-          borderRadius: "50%"
-        }}
-      />
-    ));
-  };
 
   console.log("BlackHoleRevealIntro - rendering, stage:", stage);
 
@@ -163,224 +134,20 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       transition={{ duration: stage === 6 ? 1.5 : 0 }}
     >
       {/* Background space dust */}
-      {renderSpaceDust()}
+      <SpaceDust />
       
-      {/* Gravitational rings - Stage 1 */}
-      {stage >= 1 && (
-        <div className="gravitational-rings">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <motion.div
-              key={`ring-${i}`}
-              className="gravity-ring"
-              initial={{ 
-                opacity: 0, 
-                scale: 0.2,
-              }}
-              animate={{ 
-                opacity: [0, 0.6, 0.3],
-                scale: [0.2, 0.6 + (i * 0.3), 0.9 + (i * 0.4)],
-                rotateZ: [0, i % 2 === 0 ? 45 : -45]
-              }}
-              transition={{ 
-                duration: 2.5,
-                times: [0, 0.6, 1],
-                ease: "easeInOut"
-              }}
-            />
-          ))}
-        </div>
-      )}
-      
-      {/* Black hole center formation - Stage 2 */}
-      {stage >= 2 && (
-        <div className="black-hole-formation">
-          <motion.div
-            className="accretion-disk"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ 
-              opacity: stage >= 3 ? [0.8, 1, 0] : [0, 0.8, 0.6],
-              scale: stage >= 3 ? [1, 1.2, 0.1] : [0, 1, 1]
-            }}
-            transition={{ 
-              duration: stage >= 3 ? 1.5 : 2,
-              times: stage >= 3 ? [0, 0.4, 1] : [0, 0.5, 1]
-            }}
-          />
-          
-          <motion.div
-            className="event-horizon"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ 
-              opacity: stage >= 3 ? [1, 0.5, 0] : [0, 1, 0.8],
-              scale: stage >= 3 ? [0.8, 0.5, 0] : [0, 0.8, 0.7]
-            }}
-            transition={{ 
-              duration: stage >= 3 ? 1.5 : 2,
-              times: stage >= 3 ? [0, 0.4, 1] : [0, 0.5, 1]
-            }}
-          />
-        </div>
-      )}
-      
-      {/* Energy flash - Stage 3 */}
-      {stage >= 3 && (
-        <motion.div
-          className="energy-flash"
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ 
-            opacity: [0, 0.9, 0.2], 
-            scale: [0.2, 1.5, 2]
-          }}
-          transition={{ 
-            duration: 1.5, 
-            times: [0, 0.3, 1],
-            ease: "easeOut"
-          }}
-        />
-      )}
-      
-      {/* Gravitational lensing effect - visible during stages 2-3 */}
-      {(stage === 2 || stage === 3) && (
-        <div className="gravitational-lensing">
-          {Array.from({ length: 24 }).map((_, i) => (
-            <motion.div
-              key={`lens-${i}`}
-              className="lens-streak"
-              initial={{ 
-                opacity: 0,
-                rotate: (i * 15) % 360,
-                scaleX: 0
-              }}
-              animate={{ 
-                opacity: [0, 0.7, 0],
-                scaleX: [0, 1, 0]
-              }}
-              transition={{ 
-                duration: 2,
-                delay: Math.random() * 0.5,
-                repeatType: "loop",
-                repeat: 1
-              }}
-              style={{
-                rotate: `${i * 15}deg`,
-              }}
-            />
-          ))}
-        </div>
-      )}
-      
-      {/* Particle convergence for logo formation - Stage 4 */}
-      {stage >= 4 && (
-        <div className="particle-convergence">
-          {Array.from({ length: 80 }).map((_, i) => (
-            <motion.div
-              key={`particle-${i}`}
-              className="converging-particle"
-              initial={{ 
-                x: `${Math.random() * 200 - 100}%`, 
-                y: `${Math.random() * 200 - 100}%`,
-                opacity: 0,
-                scale: 0
-              }}
-              animate={{ 
-                x: 0,
-                y: 0,
-                opacity: [0, 0.8, 0],
-                scale: [0, 0.8, 0]
-              }}
-              transition={{ 
-                duration: 2 + Math.random() * 1,
-                delay: Math.random() * 0.5,
-                ease: "easeInOut",
-                times: [0, 0.7, 1]
-              }}
-              style={{
-                backgroundColor: i % 5 === 0 ? "#00BFFF" : 
-                               i % 5 === 1 ? "#FFFFFF" : 
-                               i % 5 === 2 ? "#87CEFA" :
-                               i % 5 === 3 ? "#E0FFFF" : "#AAAAAA",
-                width: `${2 + Math.random() * 4}px`,
-                height: `${2 + Math.random() * 4}px`,
-                borderRadius: "50%"
-              }}
-            />
-          ))}
-        </div>
-      )}
+      {/* Effetti del buco nero e della distorsione gravitazionale */}
+      <GravitationalRings stage={stage} />
+      <BlackHoleFormation stage={stage} />
+      <GravitationalLensing stage={stage} />
+      <EnergyFlash stage={stage} />
+      <ParticleConvergence stage={stage} />
       
       {/* Logo reveal */}
-      <div className="logo-container">
-        {/* M1 part */}
-        <AnimatePresence>
-          {stage >= 4 && (
-            <motion.div
-              className="logo-part m1-part"
-              initial={{ opacity: 0, filter: "blur(20px)" }}
-              animate={{ 
-                opacity: 1, 
-                filter: "blur(0px)",
-                y: stage >= 6 ? [0, 10] : 0,
-                scale: stage >= 6 ? [1, 0.95] : 1,
-              }}
-              transition={{ 
-                duration: stage >= 6 ? 1.5 : 1.2, 
-                delay: stage >= 5 ? 0 : 0.2 
-              }}
-            >
-              <span className="text-cyan-400">M1</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        {/* SSION part */}
-        <AnimatePresence>
-          {stage >= 4 && (
-            <motion.div
-              className="logo-part ssion-part"
-              initial={{ opacity: 0, filter: "blur(20px)" }}
-              animate={{ 
-                opacity: 1, 
-                filter: "blur(0px)",
-                y: stage >= 6 ? [0, 10] : 0,
-                scale: stage >= 6 ? [1, 0.95] : 1,
-              }}
-              transition={{ 
-                duration: stage >= 6 ? 1.5 : 1.2, 
-                delay: stage >= 5 ? 0.1 : 0.8 
-              }}
-            >
-              SSION
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        {/* Enhanced glow effect */}
-        {stage >= 4 && (
-          <motion.div 
-            className="logo-glow"
-            initial={{ opacity: 0 }}
-            animate={{ 
-              opacity: stage >= 6 ? [0.8, 0] : [0, 0.8],
-              scale: stage >= 6 ? [1, 1.2] : [0.8, 1]
-            }}
-            transition={{ 
-              duration: stage >= 6 ? 1.5 : 1.2
-            }}
-          />
-        )}
-      </div>
+      <LogoReveal stage={stage} />
       
       {/* Skip button */}
-      <motion.button
-        className="skip-button"
-        onClick={onComplete}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.7 }}
-        whileHover={{ opacity: 1 }}
-        transition={{ delay: 2 }}
-      >
-        SKIP
-      </motion.button>
+      <SkipButton onClick={onComplete} />
     </motion.div>
   );
 };
