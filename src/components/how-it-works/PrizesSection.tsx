@@ -56,7 +56,7 @@ const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
               />
               <div className="absolute inset-0 rounded-full bg-transparent border border-[#0284c7] opacity-50 animate-ping"></div>
             </div>
-            <p className="text-white/60 text-sm">765LT Spider</p>
+            <p className="text-white/60 text-sm">Huracán STO</p>
           </div>
           <div className="text-center">
             <div className="car-logo-container porsche-logo-container mx-auto rounded-full flex items-center justify-center mb-3">
@@ -78,7 +78,7 @@ const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
               />
               <div className="absolute inset-0 rounded-full bg-transparent border border-[#FFC107] opacity-50 animate-ping"></div>
             </div>
-            <p className="text-white/60 text-sm">Huracán STO</p>
+            <p className="text-white/60 text-sm">765LT Spider</p>
           </div>
           <div className="text-center">
             <div className="car-logo-container aston-logo-container mx-auto rounded-full flex items-center justify-center mb-3">
