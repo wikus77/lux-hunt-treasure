@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap');
 
 @tailwind base;
@@ -70,6 +71,21 @@
   @apply bg-gradient-to-r from-cyan-400 to-blue-600 
          text-black font-bold py-2 px-4 rounded-full transition-all duration-300 
          hover:shadow-[0_0_15px_rgba(0,229,255,0.7)] active:scale-95;
+}
+
+/* Ferrari logo specific styles */
+.ferrari-logo-container {
+  @apply relative;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 0 0 30px rgba(255, 0, 0, 0.5);
+}
+
+.ferrari-logo {
+  @apply transition-all duration-300;
+}
+
+.ferrari-logo:hover {
+  filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.8));
+  transform: scale(1.05);
 }
 
 /* Gradient text */

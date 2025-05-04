@@ -214,13 +214,14 @@ const HowItWorks = () => {
               <h3 className="text-xl font-semibold text-white mb-2 text-center">Auto in Palio Quest'Anno</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-4">
                 <div className="text-center">
-                  <div className="w-full h-16 rounded bg-gradient-to-r from-red-600/40 to-red-700/40 flex items-center justify-center mb-2 border border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.3)]">
-                    <div className="w-12 h-12 flex items-center justify-center">
-                      <svg viewBox="0 0 100 40" className="w-full h-full">
-                        <path d="M95 20c0 8.284-6.716 15-15 15H20C11.716 35 5 28.284 5 20S11.716 5 20 5h60c8.284 0 15 6.716 15 15z" fill="#FF0000" />
-                        <path d="M17.5 15h65v10h-65z" fill="#FF0000" />
-                        <path d="M30 11.5L26 28h8l4-16.5h-8zM45 11.5L41 28h8l4-16.5h-8zM60 11.5L56 28h8l4-16.5h-8zM75 11.5L71 28h8l4-16.5h-8z" fill="#FFDF00" />
-                      </svg>
+                  <div className="w-16 h-16 mx-auto rounded-full bg-[#FF0000] flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(239,68,68,0.7)]">
+                    <div className="w-12 h-12 flex items-center justify-center relative group">
+                      <img 
+                        src="/lovable-uploads/85332ca5-c65b-45b2-a615-f082fa033670.png" 
+                        alt="Ferrari Logo" 
+                        className="w-10 h-10 object-contain"
+                      />
+                      <div className="absolute inset-0 rounded-full bg-transparent border-2 border-[#FF0000] opacity-50 animate-ping"></div>
                     </div>
                   </div>
                   <p className="text-white/60 text-sm">SF90 Stradale</p>
