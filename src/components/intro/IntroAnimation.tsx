@@ -64,6 +64,27 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
           <div className="eye-outer-ring"></div>
           <div className="eye-middle-ring"></div>
           <div className="eye-inner-ring"></div>
+          
+          {/* Iris segments - new addition */}
+          <div className="iris-segments">
+            <div className="iris-segment"></div>
+            <div className="iris-segment"></div>
+            <div className="iris-segment"></div>
+            <div className="iris-segment"></div>
+            <div className="iris-segment"></div>
+            <div className="iris-segment"></div>
+            <div className="iris-segment"></div>
+            <div className="iris-segment"></div>
+          </div>
+          
+          {/* Circuit lines - new addition */}
+          <div className="circuit-lines">
+            <div className="circuit-line"></div>
+            <div className="circuit-line"></div>
+            <div className="circuit-line"></div>
+            <div className="circuit-line"></div>
+          </div>
+          
           <div className="eye-pupil">
             {animationStage >= 3 && (
               <div className="pupil-reflection"></div>

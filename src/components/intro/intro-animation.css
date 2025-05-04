@@ -38,6 +38,23 @@
   border: 4px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Add a rotating gear to the outer ring */
+.eye-outer-ring::before {
+  content: '';
+  position: absolute;
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    rgba(0, 229, 255, 0.1) 0deg 10deg,
+    transparent 10deg 20deg
+  );
+  animation: rotate-reverse 20s linear infinite;
 }
 
 .eye-middle-ring {
@@ -47,6 +64,31 @@
   border: 3px solid rgba(255, 255, 255, 0.5);
   border-radius: 50%;
   animation: rotate 15s linear infinite;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Add notches to the middle ring */
+.eye-middle-ring::before,
+.eye-middle-ring::after {
+  content: '';
+  position: absolute;
+  background-color: rgba(0, 229, 255, 0.4);
+}
+
+.eye-middle-ring::before {
+  width: 4px;
+  height: 15px;
+  top: -8px;
+  border-radius: 2px;
+}
+
+.eye-middle-ring::after {
+  width: 4px;
+  height: 15px;
+  bottom: -8px;
+  border-radius: 2px;
 }
 
 .eye-inner-ring {
@@ -56,6 +98,103 @@
   border: 2px solid rgba(255, 255, 255, 0.7);
   border-radius: 50%;
   animation: rotate-reverse 10s linear infinite;
+  overflow: hidden;
+}
+
+/* Add circuit patterns to the inner ring */
+.eye-inner-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 30% 30%, rgba(0, 229, 255, 0.15) 0%, transparent 10%),
+    radial-gradient(circle at 70% 70%, rgba(0, 229, 255, 0.15) 0%, transparent 10%),
+    radial-gradient(circle at 30% 70%, rgba(0, 229, 255, 0.15) 0%, transparent 10%),
+    radial-gradient(circle at 70% 30%, rgba(0, 229, 255, 0.15) 0%, transparent 10%);
+}
+
+/* Add iris segments */
+.iris-segments {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  overflow: hidden;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 1s ease-in-out;
+}
+
+.mechanical-eye.opening .iris-segments {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.iris-segment {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 50% 100%);
+  background-color: rgba(0, 229, 255, 0.1);
+  transform-origin: center;
+}
+
+.iris-segment:nth-child(1) { transform: rotate(0deg); }
+.iris-segment:nth-child(2) { transform: rotate(45deg); }
+.iris-segment:nth-child(3) { transform: rotate(90deg); }
+.iris-segment:nth-child(4) { transform: rotate(135deg); }
+.iris-segment:nth-child(5) { transform: rotate(180deg); }
+.iris-segment:nth-child(6) { transform: rotate(225deg); }
+.iris-segment:nth-child(7) { transform: rotate(270deg); }
+.iris-segment:nth-child(8) { transform: rotate(315deg); }
+
+/* Circuit lines that appear when the eye opens */
+.circuit-lines {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 1.5s ease;
+  pointer-events: none;
+}
+
+.mechanical-eye.opening .circuit-lines {
+  opacity: 0.5;
+}
+
+.circuit-line {
+  position: absolute;
+  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.7), transparent);
+  height: 1px;
+}
+
+.circuit-line:nth-child(1) {
+  width: 80px;
+  top: 40%;
+  left: 10%;
+  transform: rotate(30deg);
+}
+
+.circuit-line:nth-child(2) {
+  width: 60px;
+  top: 60%;
+  left: 15%;
+  transform: rotate(-20deg);
+}
+
+.circuit-line:nth-child(3) {
+  width: 70px;
+  top: 50%;
+  right: 10%;
+  transform: rotate(15deg);
+}
+
+.circuit-line:nth-child(4) {
+  width: 50px;
+  top: 30%;
+  right: 15%;
+  transform: rotate(-25deg);
 }
 
 .eye-pupil {
@@ -70,6 +209,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 10;
 }
 
 .mechanical-eye.opening .eye-pupil {
