@@ -26,16 +26,16 @@ const LuxuryCarsSection = () => {
       description: 'Lo stemma di Stoccarda, sinonimo di prestazioni e precisione tedesca.'
     },
     { 
-      brand: 'McLaren', 
-      color: '#FF5500', 
-      logo: '/lovable-uploads/6df12de9-c68f-493b-ac32-4dd934ed79a2.png',
-      description: 'L\'eredità della Formula 1 in una supercar stradale di lusso britannica.'
-    },
-    { 
       brand: 'Lamborghini', 
       color: '#FFC107', 
       logo: '/lovable-uploads/794fb55d-30c8-462e-81e7-e72cc89815d4.png',
       description: 'Il toro, simbolo di forza e audacia del marchio di Sant\'Agata Bolognese.'
+    },
+    { 
+      brand: 'McLaren', 
+      color: '#FF5500', 
+      logo: '/lovable-uploads/6df12de9-c68f-493b-ac32-4dd934ed79a2.png',
+      description: 'L\'eredità della Formula 1 in una supercar stradale di lusso britannica.'
     },
     { 
       brand: 'Aston Martin', 
