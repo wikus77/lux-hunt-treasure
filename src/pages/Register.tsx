@@ -1,8 +1,6 @@
 
-import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useToast } from "@/components/ui/use-toast";
 
 import RegisterForm from "../components/register/RegisterForm";
 import RegisterHeader from "../components/register/RegisterHeader";
@@ -11,7 +9,6 @@ import TermsNotice from "../components/register/TermsNotice";
 
 const Register = () => {
   const location = useLocation();
-  const { toast } = useToast();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black px-4 py-12 relative overflow-hidden">
