@@ -36,7 +36,7 @@ const LuxuryCarsSection = () => {
           { 
             brand: 'Ferrari', 
             color: '#FF0000', 
-            logo: '/lovable-uploads/d9569617-c827-4391-9a8a-5a5bec8b3552.png',
+            logo: '/lovable-uploads/72f29ba6-d993-48a2-87ee-49f277ac4054.png',
             description: 'L\'emblema del cavallino rampante, simbolo di potenza ed eccellenza italiana.'
           },
           { 
