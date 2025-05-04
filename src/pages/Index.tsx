@@ -7,6 +7,7 @@ import ErrorFallback from "@/components/errors/ErrorFallback";
 import { useIntroAnimation } from "@/hooks/useIntroAnimation";
 
 const Index = () => {
+  // Updated comment to verify changes are working
   const { showIntro, introCompleted, handleIntroComplete, renderError } = useIntroAnimation();
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const navigate = useNavigate();
