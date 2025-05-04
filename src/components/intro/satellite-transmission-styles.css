@@ -1,0 +1,176 @@
+
+/* Base container */
+.satellite-intro-container {
+  position: fixed;
+  inset: 0;
+  background-color: black;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 9999;
+  font-family: 'Courier New', monospace;
+}
+
+/* Noise overlay */
+.noise-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.07;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* Scan lines effect */
+.scan-lines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 2px,
+    rgba(32, 32, 32, 0.2) 2px,
+    rgba(32, 32, 32, 0.2) 4px
+  );
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+/* Glitch effect */
+.glitch-effect {
+  position: absolute;
+  inset: 0;
+  background: black;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.glitch-effect.active {
+  animation: glitch 2s ease-in-out;
+}
+
+@keyframes glitch {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  10% {
+    opacity: 0.6;
+    transform: translateX(-5px);
+    background: rgba(0, 255, 255, 0.1);
+  }
+  20% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  30% {
+    opacity: 0.4;
+    transform: translateX(3px);
+    background: rgba(255, 0, 255, 0.1);
+  }
+  40%, 100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+}
+
+/* Terminal text formatting */
+.encrypted-text {
+  font-family: 'VT323', 'Courier New', monospace;
+  font-size: 1.8rem;
+  color: #00ff00;
+  letter-spacing: 1px;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.7);
+  margin-bottom: 3rem;
+}
+
+/* Blinking cursor */
+.cursor {
+  animation: blink 1s infinite;
+  font-weight: bold;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Logo container */
+.mission-logo-container {
+  position: relative;
+  margin-top: 20px;
+  text-align: center;
+}
+
+/* Scan reveal effect */
+.scan-reveal {
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-reveal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 229, 255, 0.8),
+    transparent
+  );
+  z-index: 1;
+  animation: scanEffect 1.5s ease-in-out;
+}
+
+@keyframes scanEffect {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+/* M1SSION logo styling */
+.mission-logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 4rem;
+  font-weight: 300;
+  color: #00e5ff;
+  letter-spacing: 0.2em;
+  text-shadow: 0 0 15px rgba(0, 229, 255, 0.8), 0 0 30px rgba(0, 229, 255, 0.4);
+}
+
+/* IT IS POSSIBLE motto */
+.mission-motto {
+  color: #FFDD00;
+  font-size: 1.5rem;
+  margin-top: 15px;
+  letter-spacing: 0.15em;
+  text-shadow: 0 0 10px rgba(255, 221, 0, 0.7);
+}
+
+/* Skip button */
+.skip-button {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 5px 15px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.skip-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* Font import for terminal text */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@300;400;700&display=swap');
