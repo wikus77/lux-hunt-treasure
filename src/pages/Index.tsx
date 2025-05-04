@@ -10,7 +10,7 @@ import CTASection from "@/components/landing/CTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
 import { useNavigate } from "react-router-dom";
 import { getMissionDeadline } from "@/utils/countdownDate";
-import SatelliteTransmissionIntro from "@/components/intro/SatelliteTransmissionIntro";
+import LaserRevealIntro from "@/components/intro/LaserRevealIntro";
 
 const Index = () => {
   // Control the intro animation visibility
@@ -61,7 +61,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
       {!introCompleted && (
-        <SatelliteTransmissionIntro onComplete={handleIntroComplete} />
+        <LaserRevealIntro onComplete={handleIntroComplete} />
       )}
       
       {introCompleted && (

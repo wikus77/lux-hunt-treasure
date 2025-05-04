@@ -1,0 +1,125 @@
+
+/* Base container */
+.laser-intro-container {
+  position: fixed;
+  inset: 0;
+  background-color: black;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+/* Laser beam effect */
+.laser-beam {
+  position: absolute;
+  top: 50%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 191, 255, 0),
+    rgba(0, 191, 255, 0.8),
+    rgba(0, 191, 255, 0)
+  );
+  transform: translateY(-50%);
+  box-shadow: 
+    0 0 5px rgba(0, 191, 255, 0.8),
+    0 0 15px rgba(0, 191, 255, 0.5),
+    0 0 25px rgba(0, 191, 255, 0.3);
+  z-index: 5;
+}
+
+/* Logo container */
+.logo-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  z-index: 10;
+}
+
+/* Logo parts styling */
+.logo-part {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 5rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.m1-part {
+  color: #00BFFF;
+  text-shadow: 
+    0 0 10px rgba(0, 191, 255, 0.7),
+    0 0 20px rgba(0, 191, 255, 0.5);
+}
+
+.ssion-part {
+  color: white;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Logo glow effect */
+.logo-glow {
+  position: absolute;
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(
+    circle,
+    rgba(0, 191, 255, 0.2) 0%,
+    rgba(0, 191, 255, 0.1) 25%,
+    rgba(0, 191, 255, 0) 60%
+  );
+  z-index: -1;
+  filter: blur(15px);
+}
+
+/* Additional laser particles */
+.laser-intro-container::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 191, 255, 0.05),
+    rgba(0, 191, 255, 0.1),
+    rgba(0, 191, 255, 0.05),
+    transparent
+  );
+  z-index: 3;
+  animation: pulseWidth 3s ease-in-out infinite;
+}
+
+@keyframes pulseWidth {
+  0%, 100% { transform: translateY(-50%) scaleY(1); }
+  50% { transform: translateY(-50%) scaleY(2); }
+}
+
+/* Skip button */
+.skip-button {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 5px 15px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.skip-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* Font import for text */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
