@@ -23,6 +23,9 @@ const Index = () => {
   
   // Check if we should show the intro animation
   useEffect(() => {
+    // Reset the intro animation by clearing localStorage
+    localStorage.removeItem('introShown');
+    
     // Check if we've shown the intro before
     const hasSeenIntro = localStorage.getItem('introShown') === 'true';
     
