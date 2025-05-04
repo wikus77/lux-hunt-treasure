@@ -1,6 +1,6 @@
 
 import { motion } from "framer-motion";
-import { Car } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const LuxuryCarsSection = () => {
   return (
@@ -33,28 +33,61 @@ const LuxuryCarsSection = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
         {[
-          { brand: 'Ferrari', color: '#FF0000', icon: <Car /> },
-          { brand: 'Lamborghini', color: '#FFC107', icon: <Car /> },
-          { brand: 'Porsche', color: '#00E5FF', icon: <Car /> },
-          { brand: 'Tesla', color: '#FFFFFF', icon: <Car /> }
+          { 
+            brand: 'Ferrari', 
+            color: '#FF0000', 
+            logo: '/lovable-uploads/d9569617-c827-4391-9a8a-5a5bec8b3552.png',
+            description: 'L\'emblema del cavallino rampante, simbolo di potenza ed eccellenza italiana.'
+          },
+          { 
+            brand: 'Lamborghini', 
+            color: '#FFC107', 
+            logo: '/lovable-uploads/5cf7989e-9669-4746-b385-b1a1f71c3911.png',
+            description: 'Il toro, simbolo di forza e audacia del marchio di Sant\'Agata Bolognese.'
+          },
+          { 
+            brand: 'Porsche', 
+            color: '#00E5FF', 
+            logo: '/lovable-uploads/a83b5c6d-75d0-4cb1-9e13-695850f887d5.png',
+            description: 'Lo stemma di Stoccarda, sinonimo di prestazioni e precisione tedesca.'
+          },
+          { 
+            brand: 'McLaren', 
+            color: '#FF5500', 
+            logo: '/lovable-uploads/2b15a4d9-835b-49cd-aa61-ea0ee5cc0bcf.png',
+            description: 'L\'eredità della Formula 1 in una supercar stradale di lusso britannica.'
+          }
         ].map((car, index) => (
           <motion.div 
             key={index}
-            className="glass-card hover:bg-white/10 transition-all relative overflow-hidden group"
+            className="glass-card hover:bg-white/10 transition-all relative overflow-hidden group p-6"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
             viewport={{ once: true }}
             whileHover={{ y: -5, transition: { duration: 0.2 } }}
           >
-            <div className="absolute -right-4 -bottom-4 opacity-20 group-hover:opacity-30 transition-opacity" style={{ color: car.color }}>
-              {car.icon}
-              <Car size={80} />
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="mb-4 w-full aspect-square flex items-center justify-center">
+                <img 
+                  src={car.logo} 
+                  alt={`${car.brand} logo`} 
+                  className="w-full h-full object-contain transition-transform group-hover:scale-110 duration-300"
+                />
+              </div>
+              
+              <h3 className="text-xl font-bold mb-2 text-center" style={{ color: car.color }}>{car.brand}</h3>
+              
+              <p className="text-sm text-white/70 text-center">
+                {car.description}
+              </p>
+              
+              <Badge 
+                className="mt-4 bg-black/40 hover:bg-black/60 text-white border border-white/20 backdrop-blur-sm"
+              >
+                Scopri di più
+              </Badge>
             </div>
-            <h3 className="text-xl font-bold mb-2" style={{ color: car.color }}>{car.brand}</h3>
-            <p className="text-sm text-white/70 relative z-10">
-              Una delle auto più prestigiose al mondo potrebbe essere tua.
-            </p>
           </motion.div>
         ))}
       </div>
