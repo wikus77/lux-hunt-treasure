@@ -2,12 +2,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
+import StyledInput from "@/components/ui/styled-input";
+import { Mail, Lock } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -60,49 +61,53 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleLogin} className="glass-card">
-          <div className="space-y-4">
+          <div className="space-y-4 p-6">
             <div>
               <Label htmlFor="email" className="text-white">Email</Label>
-              <Input
+              <StyledInput
                 id="email"
                 type="email"
                 placeholder="Inserisci la tua email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 text-white bg-black/50 border-white/20 placeholder-white/50"
+                className="mt-1"
+                icon={<Mail size={16} />}
               />
             </div>
 
             <div>
               <Label htmlFor="password" className="text-white">Password</Label>
-              <Input
+              <StyledInput
                 id="password"
                 type="password"
                 placeholder="Inserisci la password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 text-white bg-black/50 border-white/20 placeholder-white/50"
+                className="mt-1"
+                icon={<Lock size={16} />}
               />
             </div>
           </div>
 
-          <Button
-            type="submit"
-            className="w-full mt-6 bg-gradient-to-r from-projectx-blue to-projectx-pink font-medium"
-            disabled={isLoading}
-          >
-            {isLoading ? "Accesso in corso..." : "Accedi"}
-          </Button>
-
-          <div className="mt-4 text-center">
+          <div className="p-6 pt-2">
             <Button
-              variant="link"
-              className="text-projectx-neon-blue p-0 hover:underline"
-              onClick={() => navigate("/register")}
-              type="button"
+              type="submit"
+              className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink font-medium"
+              disabled={isLoading}
             >
-              Non hai un account? Registrati
+              {isLoading ? "Accesso in corso..." : "Accedi"}
             </Button>
+
+            <div className="mt-4 text-center">
+              <Button
+                variant="link"
+                className="text-projectx-neon-blue p-0 hover:underline"
+                onClick={() => navigate("/register")}
+                type="button"
+              >
+                Non hai un account? Registrati
+              </Button>
+            </div>
           </div>
         </form>
 
