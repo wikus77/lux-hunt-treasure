@@ -1,0 +1,194 @@
+
+/* Base container */
+.black-hole-container {
+  position: fixed;
+  inset: 0;
+  background-color: black;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+/* Black hole center effect */
+.black-hole-center {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+}
+
+/* Gravitational distortion effect */
+.gravitational-distortion {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(0, 0, 0, 0.9) 10%,
+    rgba(0, 191, 255, 0.15) 60%,
+    rgba(0, 191, 255, 0.05) 80%,
+    transparent 100%
+  );
+  filter: blur(8px);
+  box-shadow: 
+    0 0 30px rgba(0, 191, 255, 0.2),
+    0 0 60px rgba(0, 191, 255, 0.1);
+  animation: pulsateDistortion 3s ease-in-out infinite alternate;
+  z-index: 6;
+}
+
+/* Energy flash effect */
+.energy-flash {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(0, 191, 255, 0.8) 20%,
+    rgba(0, 191, 255, 0.2) 50%,
+    transparent 75%
+  );
+  filter: blur(5px);
+  opacity: 0;
+  z-index: 7;
+}
+
+/* Cosmic particles container */
+.cosmic-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 8;
+}
+
+/* Individual cosmic particle */
+.particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9;
+  pointer-events: none;
+}
+
+/* Logo container */
+.logo-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  z-index: 10;
+}
+
+/* Logo parts styling */
+.logo-part {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 5rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.m1-part {
+  color: #00BFFF;
+  text-shadow: 
+    0 0 10px rgba(0, 191, 255, 0.7),
+    0 0 20px rgba(0, 191, 255, 0.5);
+  z-index: 15;
+}
+
+.ssion-part {
+  color: white;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  z-index: 15;
+}
+
+/* Logo glow effect */
+.logo-glow {
+  position: absolute;
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(
+    ellipse,
+    rgba(0, 191, 255, 0.2) 0%,
+    rgba(0, 191, 255, 0.1) 25%,
+    rgba(0, 191, 255, 0) 60%
+  );
+  z-index: -1;
+  filter: blur(15px);
+}
+
+.black-hole-glow {
+  animation: pulsateGlow 3s ease-in-out infinite alternate;
+}
+
+/* Skip button */
+.skip-button {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 5px 15px;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 20;
+}
+
+.skip-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* Space dust background elements */
+.black-hole-container::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.01) 40%,
+    transparent 70%
+  );
+  opacity: 0.4;
+  z-index: 2;
+}
+
+/* Animations */
+@keyframes pulsateDistortion {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.05) rotate(180deg);
+  }
+}
+
+@keyframes pulsateGlow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+/* Font import for text */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
