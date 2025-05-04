@@ -1,227 +1,85 @@
 
-import React, { useEffect } from "react";
+import { useState, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
+import AgeVerificationModal from "@/components/auth/AgeVerificationModal";
+import IntroAnimation from "@/components/intro/IntroAnimation";
+import PresentationSection from "@/components/landing/PresentationSection";
+import NextEventCountdown from "@/components/landing/NextEventCountdown";
+import HowItWorks from "@/components/landing/HowItWorks";
+import LandingHeader from "@/components/landing/LandingHeader";
+import LuxuryCarsSection from "@/components/landing/LuxuryCarsSection";
+import CTASection from "@/components/landing/CTASection";
+import LandingFooter from "@/components/landing/LandingFooter";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 
-/**
- * Nuova pagina Index ultra-semplificata
- * Solo HTML puro e stili inline minimali 
- */
 const Index = () => {
+  const [showIntro, setShowIntro] = useState(true);
+  const [introCompleted, setIntroCompleted] = useState(false);
+  const [showAgeVerification, setShowAgeVerification] = useState(false);
   const navigate = useNavigate();
-  
-  // Applicare stili direttamente al body per garantire visibilità
+
+  // Set date for countdown (one month from today)
+  const nextEventDate = new Date();
+  nextEventDate.setMonth(nextEventDate.getMonth() + 1);
+
+  // Check if intro was shown before
   useEffect(() => {
-    document.body.style.margin = "0";
-    document.body.style.padding = "0";
-    document.body.style.backgroundColor = "#000000";
-    document.body.style.color = "#ffffff";
-    document.body.style.fontFamily = "system-ui, sans-serif";
-    document.body.style.display = "block";
-    document.body.style.visibility = "visible";
-    document.body.style.opacity = "1";
+    // Uncomment this line to test the intro animation again
+    // localStorage.removeItem('introShown');
+    
+    const introShown = localStorage.getItem('introShown');
+    if (introShown) {
+      setShowIntro(false);
+      setIntroCompleted(true);
+    } else {
+      // First viewing, show intro
+      setShowIntro(true);
+      // Set after first viewing
+      localStorage.setItem('introShown', 'true');
+    }
   }, []);
-  
-  // Funzioni di navigazione
-  const handleRegisterClick = () => navigate("/register");
-  const handleLoginClick = () => navigate("/login");
-  
+
+  const handleIntroComplete = () => {
+    setIntroCompleted(true);
+    setShowIntro(false);
+  };
+
+  const handleRegisterClick = () => {
+    setShowAgeVerification(true);
+  };
+
+  const handleAgeVerified = () => {
+    setShowAgeVerification(false);
+    navigate("/register");
+  };
+
   return (
-    <div style={{
-      display: "block",
-      visibility: "visible",
-      opacity: 1,
-      backgroundColor: "#000000",
-      color: "#ffffff",
-      minHeight: "100vh",
-      width: "100%",
-      position: "relative"
-    }}>
-      {/* Header minimale */}
-      <header style={{
-        padding: "20px",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}>
-        <div style={{
-          fontWeight: "bold",
-          fontSize: "24px"
-        }}>
-          <span style={{ color: "#00E5FF" }}>M1</span>
-          <span style={{ color: "#FFFFFF" }}>SSION</span>
-        </div>
-        
-        <button
-          onClick={handleLoginClick}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: "transparent",
-            color: "white",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          Accedi
-        </button>
-      </header>
+    <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
+      <AnimatePresence>
+        {showIntro && (
+          <IntroAnimation onComplete={handleIntroComplete} />
+        )}
+      </AnimatePresence>
 
-      {/* Hero section ultra-semplificata */}
-      <main style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        textAlign: "center",
-        padding: "80px 20px",
-      }}>
-        <h1 style={{
-          fontSize: "48px",
-          fontWeight: "bold",
-          marginBottom: "24px",
-          color: "#00E5FF"
-        }}>
-          M1SSION
-        </h1>
-        
-        <p style={{
-          fontSize: "18px",
-          marginBottom: "32px",
-          maxWidth: "600px",
-        }}>
-          La caccia al tesoro più esclusiva d'Italia. 
-          Ogni mese, una nuova missione, una nuova auto di lusso da vincere.
-        </p>
-        
-        <button 
-          onClick={handleRegisterClick}
-          style={{
-            padding: "12px 24px",
-            backgroundColor: "#00E5FF",
-            color: "black",
-            border: "none",
-            borderRadius: "4px",
-            fontSize: "16px",
-            fontWeight: "bold",
-            cursor: "pointer"
-          }}
-        >
-          Inizia ora
-        </button>
-      </main>
-
-      {/* Features section semplificata */}
-      <section style={{
-        padding: "60px 20px",
-        backgroundColor: "#000000"
-      }}>
-        <div style={{
-          maxWidth: "1000px",
-          margin: "0 auto"
-        }}>
-          <h2 style={{
-            fontSize: "32px",
-            fontWeight: "bold",
-            marginBottom: "40px",
-            textAlign: "center",
-            color: "#00E5FF"
-          }}>
-            Come funziona
-          </h2>
-          
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
-            gap: "20px"
-          }}>
-            <div style={{
-              padding: "20px",
-              backgroundColor: "rgba(255, 255, 255, 0.05)",
-              borderRadius: "8px"
-            }}>
-              <div style={{
-                color: "#00E5FF",
-                fontSize: "24px",
-                fontWeight: "bold",
-                marginBottom: "16px"
-              }}>01</div>
-              <h3 style={{
-                fontSize: "20px",
-                fontWeight: "bold",
-                marginBottom: "8px"
-              }}>Registrati</h3>
-              <p style={{
-                opacity: 0.7
-              }}>Crea il tuo account M1SSION e preparati all'avventura.</p>
-            </div>
-            
-            <div style={{
-              padding: "20px",
-              backgroundColor: "rgba(255, 255, 255, 0.05)",
-              borderRadius: "8px"
-            }}>
-              <div style={{
-                color: "#00E5FF",
-                fontSize: "24px",
-                fontWeight: "bold",
-                marginBottom: "16px"
-              }}>02</div>
-              <h3 style={{
-                fontSize: "20px",
-                fontWeight: "bold",
-                marginBottom: "8px"
-              }}>Trova Indizi</h3>
-              <p style={{
-                opacity: 0.7
-              }}>Scopri gli indizi nelle città italiane e decifrali.</p>
-            </div>
-            
-            <div style={{
-              padding: "20px",
-              backgroundColor: "rgba(255, 255, 255, 0.05)",
-              borderRadius: "8px"
-            }}>
-              <div style={{
-                color: "#00E5FF",
-                fontSize: "24px",
-                fontWeight: "bold",
-                marginBottom: "16px"
-              }}>03</div>
-              <h3 style={{
-                fontSize: "20px",
-                fontWeight: "bold",
-                marginBottom: "8px"
-              }}>Vinci Premi</h3>
-              <p style={{
-                opacity: 0.7
-              }}>Arriva per primo e vinci auto di lusso e premi esclusivi.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      {/* Footer semplificato */}
-      <footer style={{
-        padding: "40px 20px",
-        backgroundColor: "#000000",
-        borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-        textAlign: "center"
-      }}>
-        <div style={{
-          fontWeight: "bold",
-          fontSize: "24px",
-          marginBottom: "16px"
-        }}>
-          <span style={{ color: "#00E5FF" }}>M1</span>
-          <span style={{ color: "#FFFFFF" }}>SSION</span>
-        </div>
-        <p style={{
-          fontSize: "14px",
-          opacity: 0.4
-        }}>
-          © {new Date().getFullYear()} M1SSION. Tutti i diritti riservati.
-        </p>
-      </footer>
+      {introCompleted && (
+        <>
+          <UnifiedHeader />
+          <div className="h-[72px] w-full" />
+          <LandingHeader />
+          <PresentationSection visible={introCompleted} />
+          <NextEventCountdown targetDate={nextEventDate} />
+          <HowItWorks onRegisterClick={handleRegisterClick} />
+          <LuxuryCarsSection />
+          <CTASection onRegisterClick={handleRegisterClick} />
+          <LandingFooter />
+          <AgeVerificationModal
+            open={showAgeVerification}
+            onClose={() => setShowAgeVerification(false)}
+            onVerified={handleAgeVerified}
+          />
+        </>
+      )}
     </div>
   );
 };

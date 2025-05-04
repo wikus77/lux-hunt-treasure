@@ -1,28 +1,37 @@
 
 import React, { useEffect } from "react";
+import { motion } from "framer-motion";
+import "./intro-animation.css";
 
 interface IntroAnimationProps {
   onComplete: () => void;
 }
 
 const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
-  // Chiamata immediata e incondizionata a onComplete
   useEffect(() => {
-    console.log("IntroAnimation: chiamata immediata a onComplete");
-    // Chiamata immediata del callback
-    onComplete();
-    
-    // Backup ulteriore con timeout breve (100ms)
     const timer = setTimeout(() => {
-      console.log("IntroAnimation: chiamata di backup a onComplete");
       onComplete();
-    }, 100);
-    
+    }, 7000);
+
     return () => clearTimeout(timer);
   }, [onComplete]);
 
-  // Non rendiamo nulla, passiamo subito al contenuto principale
-  return null;
+  return (
+    <motion.div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+      initial={{ opacity: 1 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 1 } }}
+    >
+      <div className="logo-container">
+        <div className="scan-line" />
+        <div className="mission-text">
+          <span className="text-[#00E5FF]">M1</span>
+          <span className="text-white">SSION</span>
+        </div>
+      </div>
+    </motion.div>
+  );
 };
 
 export default IntroAnimation;

@@ -1,8 +1,4 @@
-
 /* UTILITIES E COMPONENTI SPECIALI */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @layer base {
   .neon-text {
