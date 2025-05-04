@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from "react";
+import { getMissionDeadline } from "@/utils/countdownDate";
 
 interface TimeRemaining {
   days: number;
@@ -10,37 +11,38 @@ interface TimeRemaining {
 
 export const CountdownTimer = () => {
   const [remainingTime, setRemainingTime] = useState<TimeRemaining>({
-    days: 14,
-    hours: 23,
-    minutes: 45,
-    seconds: 18
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
   });
 
   useEffect(() => {
+    // Get target date from utility
+    const targetDate = getMissionDeadline();
+    
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const diff = targetDate.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+      }
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      return { days, hours, minutes, seconds };
+    };
+    
+    setRemainingTime(calculateTimeLeft());
+    
     const timer = setInterval(() => {
-      setRemainingTime(prev => {
-        let { days, hours, minutes, seconds } = prev;
-        
-        seconds--;
-        if (seconds < 0) {
-          seconds = 59;
-          minutes--;
-          if (minutes < 0) {
-            minutes = 59;
-            hours--;
-            if (hours < 0) {
-              hours = 23;
-              days--;
-              if (days < 0) {
-                clearInterval(timer);
-                return { days: 0, hours: 0, minutes: 0, seconds: 0 };
-              }
-            }
-          }
-        }
-        return { days, hours, minutes, seconds };
-      });
+      setRemainingTime(calculateTimeLeft());
     }, 1000);
+    
     return () => clearInterval(timer);
   }, []);
 
