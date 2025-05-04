@@ -3,6 +3,16 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, formatDuration, intervalToDuration } from 'date-fns';
 
+// Define the Duration interface since it's not directly exportable from date-fns
+interface Duration {
+  years?: number;
+  months?: number;
+  days?: number;
+  hours?: number;
+  minutes?: number;
+  seconds?: number;
+}
+
 interface CountdownTimerProps {
   targetDate: Date;
   onComplete?: () => void;
