@@ -9,19 +9,19 @@ const LuxuryCarsSection = () => {
     { 
       brand: 'Ferrari', 
       color: '#FF0000', 
-      logo: '/lovable-uploads/198d5ba2-ce63-4426-abcf-adcf390d26b0.png',
+      logo: 'https://cdn.freebiesupply.com/logos/large/2x/ferrari-3-logo-png-transparent.png',
       description: 'L\'emblema del cavallino rampante, simbolo di potenza ed eccellenza italiana.'
     },
     { 
       brand: 'Lamborghini', 
       color: '#FFC107', 
-      logo: '/lovable-uploads/899aadd7-7ab5-4acc-839d-891f1ba034b3.png',
+      logo: 'https://cdn.freebiesupply.com/logos/large/2x/lamborghini-logo-png-transparent.png',
       description: 'Il toro, simbolo di forza e audacia del marchio di Sant\'Agata Bolognese.'
     },
     { 
       brand: 'Porsche', 
       color: '#00E5FF', 
-      logo: 'https://cdn.freebiesupply.com/logos/large/2x/porsche-logo-png-transparent.png',
+      logo: 'https://cdn.freebiesupply.com/logos/large/2x/porsche-1-logo-png-transparent.png',
       description: 'Lo stemma di Stoccarda, sinonimo di prestazioni e precisione tedesca.'
     },
     { 
