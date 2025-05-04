@@ -72,11 +72,11 @@
          hover:shadow-[0_0_15px_rgba(0,229,255,0.7)] active:scale-95;
 }
 
-/* Car logo containers - UPDATED SIZE BY 30% */
+/* Car logo containers - DOUBLED SIZE */
 .car-logo-container {
   @apply relative;
-  width: 31px !important; /* Increased by 30% from 24px */
-  height: 31px !important; /* Increased by 30% from 24px */
+  width: 62px !important; /* Doubled from 31px */
+  height: 62px !important; /* Doubled from 31px */
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 255, 255, 0.5);
 }
 
@@ -104,11 +104,11 @@
   box-shadow: 0 0 20px rgba(128, 128, 128, 0.8), 0 0 30px rgba(128, 128, 128, 0.5);
 }
 
-/* Car logo animation - UPDATED SIZE BY 30% AND ADDED HOVER EFFECT */
+/* Car logo animation - DOUBLED SIZE AND HOVER EFFECT */
 .car-logo {
   @apply transition-all duration-300;
-  width: 23px !important; /* Increased by 30% from 18px */
-  height: 23px !important; /* Increased by 30% from 18px */
+  width: 46px !important; /* Doubled from 23px */
+  height: 46px !important; /* Doubled from 23px */
 }
 
 .car-logo:hover {
