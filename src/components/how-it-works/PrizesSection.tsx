@@ -48,15 +48,15 @@ const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
             <p className="text-white/60 text-sm">SF90 Stradale</p>
           </div>
           <div className="text-center">
-            <div className="car-logo-container lambo-logo-container mx-auto rounded-full flex items-center justify-center mb-3">
+            <div className="car-logo-container mclaren-logo-container mx-auto rounded-full flex items-center justify-center mb-3">
               <img 
-                src="/lovable-uploads/1ae73dae-49f8-4541-8b68-4526a0d1d4cf.png" 
-                alt="Lamborghini Logo" 
+                src="/lovable-uploads/b78bdba7-b7f1-446a-918b-44479c0a572f.png" 
+                alt="McLaren Logo" 
                 className="car-logo object-contain"
               />
-              <div className="absolute inset-0 rounded-full bg-transparent border border-[#FFC107] opacity-50 animate-ping"></div>
+              <div className="absolute inset-0 rounded-full bg-transparent border border-[#0284c7] opacity-50 animate-ping"></div>
             </div>
-            <p className="text-white/60 text-sm">Huracán STO</p>
+            <p className="text-white/60 text-sm">765LT Spider</p>
           </div>
           <div className="text-center">
             <div className="car-logo-container porsche-logo-container mx-auto rounded-full flex items-center justify-center mb-3">
@@ -70,15 +70,15 @@ const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
             <p className="text-white/60 text-sm">911 GT3 RS</p>
           </div>
           <div className="text-center">
-            <div className="car-logo-container mclaren-logo-container mx-auto rounded-full flex items-center justify-center mb-3">
+            <div className="car-logo-container lambo-logo-container mx-auto rounded-full flex items-center justify-center mb-3">
               <img 
-                src="/lovable-uploads/b78bdba7-b7f1-446a-918b-44479c0a572f.png" 
-                alt="McLaren Logo" 
+                src="/lovable-uploads/1ae73dae-49f8-4541-8b68-4526a0d1d4cf.png" 
+                alt="Lamborghini Logo" 
                 className="car-logo object-contain"
               />
-              <div className="absolute inset-0 rounded-full bg-transparent border border-[#0284c7] opacity-50 animate-ping"></div>
+              <div className="absolute inset-0 rounded-full bg-transparent border border-[#FFC107] opacity-50 animate-ping"></div>
             </div>
-            <p className="text-white/60 text-sm">765LT Spider</p>
+            <p className="text-white/60 text-sm">Huracán STO</p>
           </div>
           <div className="text-center">
             <div className="car-logo-container aston-logo-container mx-auto rounded-full flex items-center justify-center mb-3">

@@ -104,7 +104,7 @@
   box-shadow: 0 0 20px rgba(128, 128, 128, 0.8), 0 0 30px rgba(128, 128, 128, 0.5);
 }
 
-/* Car logo animation - DOUBLED SIZE AND HOVER EFFECT */
+/* Car logo animation - DOUBLED SIZE AND HOVER EFFECT WITH 30% ENLARGEMENT */
 .car-logo {
   @apply transition-all duration-300;
   width: 46px !important; /* Doubled from 23px */
@@ -113,7 +113,7 @@
 
 .car-logo:hover {
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
-  transform: scale(1.1); /* 10% enlargement on hover */
+  transform: scale(1.3); /* 30% enlargement on hover (changed from 1.1) */
 }
 
 /* Enhanced luxury car showcase with simplified neon effect */
