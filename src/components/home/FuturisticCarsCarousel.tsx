@@ -23,15 +23,21 @@ const cars = [
     trailer: "https://www.youtube.com/watch?v=OQe58UZAPdU"
   },
   {
+    name: "McLaren 720S",
+    image: "/lovable-uploads/6df12de9-c68f-493b-ac32-4dd934ed79a2.png",
+    description: "Tecnologia da Formula 1 su strada",
+    trailer: null
+  },
+  {
     name: "Lamborghini Huracán",
     image: "/lovable-uploads/794fb55d-30c8-462e-81e7-e72cc89815d4.png",
     description: "Potenza e stile, sfida senza limiti",
     trailer: null
   },
   {
-    name: "McLaren 720S",
-    image: "/lovable-uploads/6df12de9-c68f-493b-ac32-4dd934ed79a2.png",
-    description: "Tecnologia da Formula 1 su strada",
+    name: "Aston Martin",
+    image: "/lovable-uploads/c52a635b-2c3c-4c4c-8dcf-c83776fea9d8.png",
+    description: "L'eleganza britannica in ogni curva",
     trailer: null
   }
 ];

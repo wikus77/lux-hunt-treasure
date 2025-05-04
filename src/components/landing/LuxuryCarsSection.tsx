@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 const LuxuryCarsSection = () => {
-  // Definiamo i nuovi loghi delle auto con i path aggiornati
+  // Definiamo i nuovi loghi delle auto con i path aggiornati e ordine modificato
   const carLogos = [
     { 
       brand: 'Ferrari', 
@@ -26,16 +26,22 @@ const LuxuryCarsSection = () => {
       description: 'Lo stemma di Stoccarda, sinonimo di prestazioni e precisione tedesca.'
     },
     { 
+      brand: 'McLaren', 
+      color: '#FF5500', 
+      logo: '/lovable-uploads/6df12de9-c68f-493b-ac32-4dd934ed79a2.png',
+      description: 'L\'eredità della Formula 1 in una supercar stradale di lusso britannica.'
+    },
+    { 
       brand: 'Lamborghini', 
       color: '#FFC107', 
       logo: '/lovable-uploads/794fb55d-30c8-462e-81e7-e72cc89815d4.png',
       description: 'Il toro, simbolo di forza e audacia del marchio di Sant\'Agata Bolognese.'
     },
     { 
-      brand: 'McLaren', 
-      color: '#FF5500', 
-      logo: '/lovable-uploads/6df12de9-c68f-493b-ac32-4dd934ed79a2.png',
-      description: 'L\'eredità della Formula 1 in una supercar stradale di lusso britannica.'
+      brand: 'Aston Martin', 
+      color: '#FFD700', 
+      logo: '/lovable-uploads/c52a635b-2c3c-4c4c-8dcf-c83776fea9d8.png',
+      description: 'Le ali leggendarie, emblema di lusso ed eleganza britannica dal 1913.'
     }
   ];
 
@@ -104,7 +110,7 @@ const LuxuryCarsSection = () => {
       </motion.p>
 
       {isDesktop ? (
-        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-8 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-8 w-full">
           {carLogos.map((car, index) => (
             <motion.div 
               key={index}
