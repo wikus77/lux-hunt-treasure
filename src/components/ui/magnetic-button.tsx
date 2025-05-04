@@ -1,9 +1,10 @@
 
 import React, { useState, useRef, MouseEvent } from "react";
-import { motion } from "framer-motion";
+import { motion, HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-interface MagneticButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface MagneticButtonProps 
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, keyof HTMLMotionProps<"button">> {
   children: React.ReactNode;
   className?: string;
   strength?: number;
@@ -34,15 +35,19 @@ export const MagneticButton = ({
     setPosition({ x: 0, y: 0 });
   };
 
+  const motionProps: HTMLMotionProps<"button"> = {
+    animate: { x: position.x, y: position.y },
+    transition: { type: "spring", stiffness: 150, damping: 15, mass: 0.1 },
+    whileTap: { scale: 0.97 }
+  };
+
   return (
     <motion.button
       ref={ref}
       className={cn("relative inline-block", className)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      animate={{ x: position.x, y: position.y }}
-      transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
-      whileTap={{ scale: 0.97 }}
+      {...motionProps}
       {...props}
     >
       {children}
