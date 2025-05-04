@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import AgeVerificationModal from "@/components/auth/AgeVerificationModal";
 import PresentationSection from "@/components/landing/PresentationSection";
-import NextEventCountdown from "@/components/landing/NextEventCountdown";
 import HowItWorks from "@/components/landing/HowItWorks";
 import LandingHeader from "@/components/landing/LandingHeader";
 import LuxuryCarsSection from "@/components/landing/LuxuryCarsSection";
@@ -47,10 +46,11 @@ const Index = () => {
         <div className="h-[72px] w-full" />
         <LandingHeader />
         <PresentationSection visible={true} />
-        <NextEventCountdown targetDate={nextEventDate} />
+        {/* Removed NextEventCountdown and placed CTASection here */}
+        <CTASection onRegisterClick={handleRegisterClick} />
         <HowItWorks onRegisterClick={handleRegisterClick} />
         <LuxuryCarsSection />
-        <CTASection onRegisterClick={handleRegisterClick} />
+        {/* Removed duplicate CTASection that was here before */}
         <LandingFooter />
         <AgeVerificationModal
           open={showAgeVerification}
