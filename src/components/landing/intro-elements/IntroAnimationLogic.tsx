@@ -15,26 +15,26 @@ const IntroAnimationLogic: React.FC<IntroAnimationLogicProps> = ({
   
   // Progress through animation stages
   useEffect(() => {
-    // Initial black screen with electrical crackle
+    // Initial black screen
     const timer1 = setTimeout(() => {
-      setStage(1); // Start glitchy lines and code fragments
+      setStage(1); // Electrical discharge across screen
       play();
-    }, 800);
+    }, 1000);
     
-    // Systems power up - sections light up
+    // Glitch visuals and code fragments
     const timer2 = setTimeout(() => {
-      setStage(2); // Show more elements powering up
+      setStage(2); // Glitch effects and binary code
     }, 2500);
     
-    // Energy surge and logo appears
+    // Central white glow with logo
     const timer3 = setTimeout(() => {
-      setStage(3); // Show logo with energy pulse
+      setStage(3); // Show logo with light surge
     }, 4000);
     
-    // Slogan appears for transition
+    // Add "IT IS POSSIBLE" slogan
     const timer4 = setTimeout(() => {
       setStage(4); // Show slogan
-    }, 5500);
+    }, 5000);
     
     // Complete animation
     const timer5 = setTimeout(() => {

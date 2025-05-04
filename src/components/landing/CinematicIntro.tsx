@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import "../landing/glitch-intro.css";
+import "./glitch-intro.css";
 
 // Import refactored components
 import ElectricalCrackle from "./intro-elements/ElectricalCrackle";
