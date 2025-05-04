@@ -60,6 +60,7 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
         audioRef.current.pause();
         audioRef.current = null;
       }
+      console.log("BlackHoleRevealIntro - cleanup effect");
     };
   }, [onComplete]);
   
@@ -67,12 +68,16 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
   useEffect(() => {
     console.log("BlackHoleRevealIntro - stage corrente:", stage);
     
+    if (stage === 0) {
+      return; // Initial black stage, wait for the first timeout
+    }
+    
     if (stage === 1) {
       // Gravitational distortion phase
       const timeout = setTimeout(() => {
         console.log("BlackHoleRevealIntro - avvio stage 2");
         setStage(2); // Black hole formation
-      }, 2000);
+      }, 1500);
       
       return () => clearTimeout(timeout);
     }
@@ -102,7 +107,7 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       const timeout = setTimeout(() => {
         console.log("BlackHoleRevealIntro - avvio stage 5");
         setStage(5); // Final stabilization with glow
-      }, 1500);
+      }, 1000);
       
       return () => clearTimeout(timeout);
     }
@@ -122,13 +127,20 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       const fadeOutTimeout = setTimeout(() => {
         console.log("BlackHoleRevealIntro - animazione completata");
         onComplete();
-      }, 1500);
+      }, 1000);
       
       return () => clearTimeout(fadeOutTimeout);
     }
   }, [stage, onComplete]);
 
-  console.log("BlackHoleRevealIntro - rendering, stage:", stage);
+  // Forza il debug per vedere su quale stage siamo
+  useEffect(() => {
+    const debugInterval = setInterval(() => {
+      console.log("DEBUG - Current stage:", stage, "show3D:", show3DEffect);
+    }, 2000);
+    
+    return () => clearInterval(debugInterval);
+  }, [stage, show3DEffect]);
 
   return (
     <motion.div 
@@ -140,8 +152,8 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       {/* Background space dust */}
       <SpaceDust />
       
-      {/* 3D Black Hole Effect - ora usa la versione CSS/SVG */}
-      <BlackHole3DEffect stage={stage} visible={show3DEffect} />
+      {/* 3D Black Hole Effect */}
+      {show3DEffect && <BlackHole3DEffect stage={stage} visible={show3DEffect} />}
       
       {/* Effetti del buco nero e della distorsione gravitazionale */}
       <GravitationalRings stage={stage} />
@@ -155,6 +167,19 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       
       {/* Skip button */}
       <SkipButton onClick={onComplete} />
+      
+      {/* Debug info */}
+      <div style={{ 
+        position: 'absolute', 
+        bottom: '10px', 
+        left: '10px', 
+        color: 'white', 
+        fontSize: '10px',
+        zIndex: 100,
+        opacity: 0.5
+      }}>
+        Stage: {stage}
+      </div>
     </motion.div>
   );
 };

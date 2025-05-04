@@ -23,14 +23,17 @@ const Index = () => {
   
   // Check if we should show the intro animation
   useEffect(() => {
-    // Verifica se abbiamo mostrato l'intro prima
+    // Per test e debug, forziamo l'animazione
+    const forceIntroAnimation = true; // Cambia in false per vedere il comportamento normale
     const hasSeenIntro = localStorage.getItem('introShown') === 'true';
     
-    if (hasSeenIntro) {
+    if (hasSeenIntro && !forceIntroAnimation) {
       // Skip intro if already seen
+      console.log("Intro già mostrato, saltiamo...");
       setIntroCompleted(true);
     } else {
       // Preparazione per l'animazione
+      console.log("Preparazione intro animation...");
       document.body.style.overflow = "hidden"; // Prevent scrolling during intro
     }
   }, []);
@@ -39,6 +42,7 @@ const Index = () => {
     // Mark intro as shown
     localStorage.setItem('introShown', 'true');
     setIntroCompleted(true);
+    console.log("Intro completato, mostriamo la landing page");
     
     // Restore scrolling
     document.body.style.overflow = "auto";
@@ -53,14 +57,12 @@ const Index = () => {
     navigate("/register");
   };
 
-  // Forza la visualizzazione dell'animazione per debugging
-  // Rimuovi questa riga una volta che funziona tutto
-  // const introCompleted = false;
+  console.log("Index rendering, introCompleted:", introCompleted);
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
       {!introCompleted && (
-        <div className="fixed inset-0 z-[9999]">
+        <div className="fixed inset-0 z-[9999] bg-black">
           <BlackHoleRevealIntro onComplete={handleIntroComplete} />
         </div>
       )}
