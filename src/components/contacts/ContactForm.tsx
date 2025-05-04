@@ -4,64 +4,91 @@ import { Mail, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import StyledInput from "@/components/ui/styled-input";
+import { supabase } from "@/integrations/supabase/client";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Textarea } from "@/components/ui/textarea";
+
+// Define form validation schema using Zod
+const formSchema = z.object({
+  name: z.string().min(2, { message: "Il nome deve essere di almeno 2 caratteri." }),
+  email: z.string().email({ message: "Inserisci un indirizzo email valido." }),
+  subject: z.string().optional(),
+  message: z.string().min(10, { message: "Il messaggio deve essere di almeno 10 caratteri." }),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 const ContactForm = () => {
   const { toast } = useToast();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [subject, setSubject] = useState("");
-  const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Initialize react-hook-form with zod resolver
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      subject: "",
+      message: "",
+    },
+  });
+
+  const handleSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     
-    // Validation
-    if (!name || !email || !subject || !message) {
-      toast({
-        variant: "destructive",
-        title: "Errore",
-        description: "Completa tutti i campi per inviare il messaggio."
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
-      // Send email to contact@m1ssion.com
-      const emailData = {
-        to: "contact@m1ssion.com",
-        from: email,
-        subject: `[Contatto dal sito] ${subject}`,
-        message: `Nome: ${name}\nEmail: ${email}\n\nMessaggio:\n${message}`,
-      };
-      
       // Log attempt
-      console.log("Tentativo di invio email:", emailData);
+      console.log("Tentativo di invio email:", {
+        to: "contact@m1ssion.com",
+        from: data.email,
+        subject: `[Contatto dal sito] ${data.subject || 'Nessun oggetto'}`,
+        message: `Nome: ${data.name}\nEmail: ${data.email}\n\nMessaggio:\n${data.message}`,
+      });
       
-      // Here we would normally implement a real email sending service
-      // For demonstration purposes, we'll simulate a successful email send
-      
-      setTimeout(() => {
-        toast({
-          title: "Messaggio inviato",
-          description: "Grazie per averci contattato. Ti risponderemo al più presto."
-        });
-        setIsSubmitting(false);
-        setName("");
-        setEmail("");
-        setSubject("");
-        setMessage("");
-      }, 1500);
-      
+      // Call our Supabase Edge Function
+      const { data: responseData, error } = await supabase.functions.invoke("send-contact-email", {
+        body: {
+          name: data.name,
+          email: data.email,
+          subject: data.subject || "Contatto dal sito M1SSION",
+          message: data.message,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // Success notification
+      toast({
+        title: "Messaggio inviato",
+        description: "Grazie per averci contattato. Ti risponderemo al più presto.",
+      });
+
+      // Reset form
+      form.reset();
     } catch (error) {
       console.error("Errore nell'invio dell'email:", error);
+      
+      // Error notification
       toast({
         variant: "destructive",
         title: "Errore",
-        description: "Si è verificato un problema durante l'invio del messaggio. Riprova più tardi."
+        description: error instanceof Error 
+          ? error.message 
+          : "Si è verificato un problema durante l'invio del messaggio. Riprova più tardi."
       });
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -70,73 +97,111 @@ const ContactForm = () => {
     <div className="glass-card">
       <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyan-400">Inviaci un Messaggio</h2>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="name" className="block text-white mb-2">Nome</label>
-            <StyledInput
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Il tuo nome"
-              icon={<Mail size={16} />}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Name Field */}
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white mb-2">Nome</FormLabel>
+                  <FormControl>
+                    <StyledInput
+                      id="name"
+                      type="text"
+                      placeholder="Il tuo nome"
+                      icon={<Mail size={16} />}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-400 text-sm mt-1" />
+                </FormItem>
+              )}
+            />
+            
+            {/* Email Field */}
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white mb-2">Email</FormLabel>
+                  <FormControl>
+                    <StyledInput
+                      id="email"
+                      type="email"
+                      placeholder="La tua email"
+                      icon={<Mail size={16} />}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-400 text-sm mt-1" />
+                </FormItem>
+              )}
             />
           </div>
           
-          <div>
-            <label htmlFor="email" className="block text-white mb-2">Email</label>
-            <StyledInput
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="La tua email"
-              icon={<Mail size={16} />}
-            />
-          </div>
-        </div>
-        
-        <div>
-          <label htmlFor="subject" className="block text-white mb-2">Oggetto</label>
-          <StyledInput
-            id="subject"
-            type="text"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            placeholder="Oggetto del messaggio"
-            icon={<Mail size={16} />}
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="message" className="block text-white mb-2">Messaggio</label>
-          <textarea
-            id="message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Il tuo messaggio"
-            className="w-full bg-black/50 border-white/10 rounded-md border px-3 py-2 min-h-36 text-white"
-            rows={6}
-          />
-        </div>
-        
-        <div>
-          <Button
-            type="submit"
-            className="bg-gradient-to-r from-cyan-400 to-blue-600 text-black px-6 py-2 rounded-full font-medium flex items-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              "Invio in corso..."
-            ) : (
-              <>
-                Invia Messaggio <Send size={16} />
-              </>
+          {/* Subject Field */}
+          <FormField
+            control={form.control}
+            name="subject"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-white mb-2">Oggetto</FormLabel>
+                <FormControl>
+                  <StyledInput
+                    id="subject"
+                    type="text"
+                    placeholder="Oggetto del messaggio"
+                    icon={<Mail size={16} />}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-red-400 text-sm mt-1" />
+              </FormItem>
             )}
-          </Button>
-        </div>
-      </form>
+          />
+          
+          {/* Message Field */}
+          <FormField
+            control={form.control}
+            name="message"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-white mb-2">Messaggio</FormLabel>
+                <FormControl>
+                  <textarea
+                    id="message"
+                    placeholder="Il tuo messaggio"
+                    className="w-full bg-black/50 border-white/10 rounded-md border px-3 py-2 min-h-36 text-white"
+                    rows={6}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-red-400 text-sm mt-1" />
+              </FormItem>
+            )}
+          />
+          
+          <div>
+            <Button
+              type="submit"
+              className="bg-gradient-to-r from-cyan-400 to-blue-600 text-black px-6 py-2 rounded-full font-medium flex items-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>Invio in corso...</>
+              ) : (
+                <>
+                  Invia Messaggio <Send size={16} />
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 };
