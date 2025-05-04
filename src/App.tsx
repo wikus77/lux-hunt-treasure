@@ -1,4 +1,3 @@
-
 import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -6,9 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme-provider';
 import { SoundProvider } from '@/contexts/SoundContext';
 
-// Importazione diretta senza lazy loading per la pagina Index
+// Importazione diretta della nuova pagina Index semplificata
 import Index from './pages/Index';
-import ErrorFallback from './components/errors/ErrorFallback';
 
 // Lazy load delle altre pagine per performance
 const Login = React.lazy(() => import('./pages/Login'));
@@ -57,7 +55,7 @@ function App() {
         <ThemeProvider>
           <SoundProvider>
             <Routes>
-              {/* Pagina index caricata direttamente senza Suspense per massima affidabilità */}
+              {/* Pagina index completamente riscritta */}
               <Route path="/" element={<Index />} />
               
               {/* Tutte le altre rotte con Suspense */}
