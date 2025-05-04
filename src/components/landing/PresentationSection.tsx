@@ -1,4 +1,5 @@
 
+import React from "react";
 import { motion } from "framer-motion";
 
 interface PresentationSectionProps {
@@ -6,103 +7,47 @@ interface PresentationSectionProps {
 }
 
 const PresentationSection = ({ visible }: PresentationSectionProps) => {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.3,
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 30, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.8, ease: "easeOut" }
-    }
-  };
-
   return (
-    <motion.div
-      className="max-w-4xl mx-auto px-4 py-16 text-center relative"
-      variants={containerVariants}
-      initial="hidden"
-      animate={visible ? "visible" : "hidden"}
-    >
-      {/* Animated horizontal lines */}
-      <div className="absolute w-full h-[1px] bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent top-0 left-0 overflow-hidden">
-        <div className="absolute w-full h-full bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent animate-[moveLight_2s_linear_infinite]"></div>
+    <section className="relative py-20 px-4 bg-black">
+      <div className="max-w-6xl mx-auto">
+        <motion.div 
+          className="glass-card p-8 md:p-12 text-center relative overflow-hidden"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          viewport={{ once: true }}
+        >
+          <h2 className="text-3xl md:text-4xl font-orbitron mb-8">
+            WELCOME TO{" "}
+            <span>
+              <span style={{ color: '#00E5FF' }} className="text-[#00E5FF]">M1</span>
+              <span style={{ color: '#FFFFFF' }} className="text-white">SSION</span>
+            </span>
+          </h2>
+          
+          <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
+            In the future, treasure hunting isn't just a game... it's a global challenge. Every month, 
+            a luxury car vanishes. Only the most intuitive, strategic, and quick-minded will decipher 
+            the clues and find where the prize is hidden.
+          </p>
+          
+          <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
+            Join <span className="text-[#00E5FF] font-bold">M1</span><span className="text-white font-bold">SSION</span>. Live the adventure. 
+            Find the prize. Change your destiny.
+          </p>
+
+          {/* Animated accent line */}
+          <motion.div 
+            className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent"
+            animate={{
+              opacity: [0.3, 0.7, 0.3],
+              filter: ["blur(1px)", "blur(3px)", "blur(1px)"]
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </motion.div>
       </div>
-
-      {/* Logo */}
-      <motion.div 
-        className="mb-12"
-        variants={itemVariants}
-      >
-        <div className="flex items-center justify-center gap-2">
-          <div className="w-12 h-12 relative">
-            <div className="absolute inset-0 border-4 border-[#00E5FF] shadow-[0_0_20px_#00E5FF]"></div>
-          </div>
-          <div className="w-10 h-12 relative">
-            <div className="absolute inset-0 border-4 border-[#FFC107] shadow-[0_0_20px_#FFC107]"></div>
-          </div>
-          <div className="w-4 h-4 relative mt-[-2rem]">
-            <div className="absolute inset-0 rounded-full border-4 border-[#FF00FF] shadow-[0_0_20px_#FF00FF]"></div>
-          </div>
-        </div>
-      </motion.div>
-
-      <motion.h1 
-        className="text-5xl md:text-7xl font-light mb-6 text-[#00E5FF]"
-        variants={itemVariants}
-      >
-        WELCOME TO MISSION
-      </motion.h1>
-
-      <motion.p 
-        className="text-xl md:text-2xl mb-8 text-white/90 font-light"
-        variants={itemVariants}
-      >
-        The prize contest that changes the rules
-      </motion.p>
-
-      <motion.div
-        className="space-y-4 mb-12"
-        variants={itemVariants}
-      >
-        <p className="text-lg text-white/80 font-light">Each month a new challenge</p>
-        <p className="text-lg text-white/80 font-light">With luxury cars to win like</p>
-        <p className="text-lg text-white/80 font-light">
-          <span className="text-white">Lamborghini Huracán</span>
-          <span className="mx-2">·</span>
-          <span className="text-white">Ferrari 488 GTB</span>
-          <br />
-          <span className="text-white">Porsche 992</span>
-          <span className="mx-2">·</span>
-          <span className="text-white">Aston Martin DBX</span>
-        </p>
-      </motion.div>
-
-      <motion.div 
-        className="space-y-3 mb-8"
-        variants={itemVariants}
-      >
-        <p className="text-[#00E5FF] text-lg uppercase">Register</p>
-        <p className="text-[#00E5FF] text-lg uppercase">Recieve the clues</p>
-        <p className="text-[#00E5FF] text-lg uppercase">Solve the mission</p>
-        <p className="text-[#FFC107] text-lg uppercase">Find the prize...</p>
-        <p className="text-[#FFC107] text-lg uppercase">and really win.</p>
-      </motion.div>
-
-      {/* Bottom animated line */}
-      <div className="absolute w-full h-[1px] bg-gradient-to-r from-transparent via-[#00E5FF]/20 to-transparent bottom-0 left-0 overflow-hidden">
-        <div className="absolute w-full h-full bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent animate-[moveLight_2s_linear_infinite]"></div>
-      </div>
-    </motion.div>
+    </section>
   );
 };
 
