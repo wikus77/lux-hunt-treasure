@@ -214,15 +214,13 @@ const HowItWorks = () => {
               <h3 className="text-xl font-semibold text-white mb-2 text-center">Auto in Palio Quest'Anno</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-4">
                 <div className="text-center">
-                  <div className="w-16 h-16 mx-auto rounded-full bg-[#FF0000] flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(239,68,68,0.7)]">
-                    <div className="w-12 h-12 flex items-center justify-center relative group">
-                      <img 
-                        src="/lovable-uploads/85332ca5-c65b-45b2-a615-f082fa033670.png" 
-                        alt="Ferrari Logo" 
-                        className="w-10 h-10 object-contain"
-                      />
-                      <div className="absolute inset-0 rounded-full bg-transparent border-2 border-[#FF0000] opacity-50 animate-ping"></div>
-                    </div>
+                  <div className="ferrari-logo-container w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-2">
+                    <img 
+                      src="/lovable-uploads/85332ca5-c65b-45b2-a615-f082fa033670.png" 
+                      alt="Ferrari Logo" 
+                      className="ferrari-logo w-12 h-12 object-contain"
+                    />
+                    <div className="absolute inset-0 rounded-full bg-transparent border-2 border-[#FF0000] opacity-50 animate-ping"></div>
                   </div>
                   <p className="text-white/60 text-sm">SF90 Stradale</p>
                 </div>
