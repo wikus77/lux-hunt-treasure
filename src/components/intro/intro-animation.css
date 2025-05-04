@@ -239,6 +239,67 @@
   animation: pulse-grow 2s infinite alternate;
 }
 
+/* Energy Pattern - NEW */
+.energy-pattern-container {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Energy rings that expand outward */
+.energy-ring {
+  position: absolute;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  border: 2px solid rgba(0, 229, 255, 0);
+  opacity: 0;
+}
+
+.energy-ring-1 {
+  width: 120px;
+  height: 120px;
+  animation: energy-ring-expand 3s ease-out infinite;
+  animation-delay: 0s;
+}
+
+.energy-ring-2 {
+  width: 150px;
+  height: 150px;
+  animation: energy-ring-expand 3s ease-out infinite;
+  animation-delay: 0.5s;
+}
+
+.energy-ring-3 {
+  width: 180px;
+  height: 180px;
+  animation: energy-ring-expand 3s ease-out infinite;
+  animation-delay: 1s;
+}
+
+/* Energy rays that shoot outward */
+.energy-rays {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.energy-ray {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0.8), transparent);
+  transform-origin: 0 50%;
+  animation: energy-ray-pulse 2s ease-out infinite;
+}
+
 /* Logo container */
 .logo-container {
   position: absolute;
@@ -318,6 +379,31 @@
   }
   100% {
     opacity: 1;
+  }
+}
+
+/* Energy pattern animations - NEW */
+@keyframes energy-ring-expand {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    border-color: rgba(0, 229, 255, 0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.5);
+    border-color: rgba(0, 229, 255, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes energy-ray-pulse {
+  0% {
+    transform: rotate(0deg) scaleX(0.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotate(0deg) scaleX(1);
+    opacity: 0;
   }
 }
 

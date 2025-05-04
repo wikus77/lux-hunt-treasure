@@ -97,6 +97,24 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
           <div className="center-pulse"></div>
         )}
         
+        {/* Energy pattern that radiates when eye fully opens */}
+        {animationStage >= 3 && (
+          <div className="energy-pattern-container">
+            <div className="energy-ring energy-ring-1"></div>
+            <div className="energy-ring energy-ring-2"></div>
+            <div className="energy-ring energy-ring-3"></div>
+            <div className="energy-rays">
+              {[...Array(12)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className="energy-ray"
+                  style={{ transform: `rotate(${i * 30}deg)` }}
+                ></div>
+              ))}
+            </div>
+          </div>
+        )}
+        
         {/* Logo transition */}
         {animationStage >= 3 && (
           <div className="logo-container">
