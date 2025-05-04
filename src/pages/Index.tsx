@@ -1,11 +1,13 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import M1ssionText from "@/components/logo/M1ssionText";
 import { ArrowRight } from "lucide-react";
 
+/**
+ * Pagina iniziale completamente ricreata e semplificata
+ * Nessuna animazione complessa, nessuna dipendenza problematica
+ */
 const Index = () => {
   const navigate = useNavigate();
   
@@ -17,22 +19,31 @@ const Index = () => {
     navigate("/login");
   };
 
-  // Stili visibilità forzata
-  React.useEffect(() => {
+  // Imposta immediatamente i colori di sfondo e altri stili essenziali
+  useEffect(() => {
     document.body.style.backgroundColor = "#000";
+    document.body.style.color = "#fff";
     document.body.style.margin = "0";
     document.body.style.padding = "0";
-    document.body.style.overflow = "auto";
-
-    console.log("Index page mounted and visible");
+    document.body.style.display = "block";
+    document.body.style.visibility = "visible";
+    document.body.style.opacity = "1";
+    
+    console.log("Index montata correttamente");
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-black text-white overflow-x-hidden">
-      {/* Header/Navbar */}
+    <div 
+      className="min-h-screen w-full bg-black text-white overflow-x-hidden"
+      style={{display: "block", visibility: "visible", opacity: 1}}
+    >
+      {/* Header semplificato */}
       <header className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center">
         <div className="flex items-center">
-          <M1ssionText />
+          <div className="flex items-center font-orbitron text-xl md:text-2xl font-bold">
+            <span className="text-[#00E5FF]">M1</span>
+            <span className="text-white">SSION</span>
+          </div>
         </div>
         <Button
           onClick={handleLoginClick}
@@ -43,35 +54,24 @@ const Index = () => {
         </Button>
       </header>
 
-      {/* Hero Section */}
+      {/* Hero Section semplificata */}
       <section className="pt-24 px-4 min-h-screen flex flex-col items-center justify-center text-center">
-        <motion.h1 
+        <h1 
           className="text-5xl sm:text-7xl font-orbitron font-bold mb-6 tracking-wider"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
         >
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
             M1SSION
           </span>
-        </motion.h1>
+        </h1>
         
-        <motion.p 
+        <p 
           className="text-xl sm:text-2xl mb-8 max-w-3xl mx-auto text-white/80"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
         >
           La caccia al tesoro più esclusiva d'Italia. 
           Ogni mese, una nuova missione, una nuova auto di lusso da vincere.
-        </motion.p>
+        </p>
         
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="flex flex-col sm:flex-row gap-4"
-        >
+        <div className="flex flex-col sm:flex-row gap-4">
           <Button 
             onClick={handleRegisterClick}
             size="lg"
@@ -79,10 +79,10 @@ const Index = () => {
           >
             Inizia ora <ArrowRight className="ml-2 w-5 h-5" />
           </Button>
-        </motion.div>
+        </div>
       </section>
 
-      {/* Features Section */}
+      {/* Features Section semplificata */}
       <section className="py-20 px-4 bg-black">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-bold mb-12 text-center">
@@ -113,7 +113,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* CTA Section */}
+      {/* CTA Section semplificata */}
       <section className="py-20 px-4 bg-gradient-to-b from-black to-gray-900">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">
@@ -132,11 +132,14 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Footer */}
+      {/* Footer semplificato */}
       <footer className="py-10 px-4 bg-black border-t border-white/10">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <M1ssionText />
+            <div className="flex items-center font-orbitron text-xl font-bold">
+              <span className="text-[#00E5FF]">M1</span>
+              <span className="text-white">SSION</span>
+            </div>
             <p className="mt-4 md:mt-0 text-white/40 text-sm">
               © {new Date().getFullYear()} M1SSION. Tutti i diritti riservati.
             </p>
