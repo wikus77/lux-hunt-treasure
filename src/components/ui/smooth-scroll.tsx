@@ -24,10 +24,9 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
   useEffect(() => {
     if (!scrollContainerRef.current) return;
 
-    // Create a custom options object that works with our implementation
-    // We need to explicitly cast this as any because the LocomotiveScroll types
-    // don't include the 'el' property that the library actually requires
-    const scrollOptions: any = {
+    // Use a type assertion to bypass TypeScript checking for the 'el' property
+    // @ts-ignore - Explicitly ignore the type error for LocomotiveScroll options
+    const scrollInstance = new LocomotiveScroll({
       el: scrollContainerRef.current,
       smooth: options.smooth ?? true,
       multiplier: 1,
@@ -35,18 +34,13 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
       getDirection: true,
       getSpeed: true,
       lerp: options.lerp ?? 0.08,
-    };
-    
-    // Add optional properties if they exist
-    if (options.smartphone) {
-      scrollOptions.smartphone = options.smartphone;
-    }
-    
-    if (options.tablet) {
-      scrollOptions.tablet = options.tablet;
-    }
-
-    const scrollInstance = new LocomotiveScroll(scrollOptions);
+      smartphone: {
+        smooth: options.smartphone?.smooth ?? true,
+      },
+      tablet: {
+        smooth: options.tablet?.smooth ?? true,
+      }
+    });
 
     // Store the instance reference
     setLocomotiveScroll(scrollInstance);
