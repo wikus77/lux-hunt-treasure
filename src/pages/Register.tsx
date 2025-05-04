@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, ChangeEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,48 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { User, Mail, Lock, Check } from "lucide-react";
 
+// Custom styled input component
+const StyledInput = ({ 
+  value, 
+  onChange, 
+  id, 
+  type, 
+  placeholder, 
+  className 
+}: { 
+  value: string; 
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void; 
+  id: string; 
+  type: string; 
+  placeholder: string; 
+  className?: string;
+}) => {
+  // Split the input value to style first two letters differently
+  const firstTwoChars = value.slice(0, 2);
+  const restChars = value.slice(2);
+  
+  return (
+    <div className="relative">
+      <input
+        id={id}
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        className={`bg-black/50 border-white/10 pl-10 w-full h-10 rounded-md border px-3 py-2 text-base md:text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      />
+      {/* Overlay div showing styled text */}
+      <div 
+        className="absolute inset-0 flex items-center pl-10 pointer-events-none px-3 py-2"
+        style={{ letterSpacing: value ? '0.025em' : '0' }}
+      >
+        <span className="text-[#00E5FF]">{firstTwoChars}</span>
+        <span className="text-white">{restChars}</span>
+      </div>
+    </div>
+  );
+};
+
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -16,7 +58,6 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast: useToastHook } = useToast();
 
   // Generate random floating particles
@@ -134,7 +175,7 @@ const Register = () => {
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">
                   <User size={16} />
                 </div>
-                <Input
+                <StyledInput
                   id="name"
                   type="text"
                   placeholder="Il tuo nome"
@@ -152,7 +193,7 @@ const Register = () => {
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">
                   <Mail size={16} />
                 </div>
-                <Input
+                <StyledInput
                   id="email"
                   type="email"
                   placeholder="La tua email"
@@ -170,7 +211,7 @@ const Register = () => {
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">
                   <Lock size={16} />
                 </div>
-                <Input
+                <StyledInput
                   id="password"
                   type="password"
                   placeholder="Crea una password"
@@ -188,7 +229,7 @@ const Register = () => {
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">
                   <Check size={16} />
                 </div>
-                <Input
+                <StyledInput
                   id="confirmPassword"
                   type="password"
                   placeholder="Conferma la password"
