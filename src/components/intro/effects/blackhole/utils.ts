@@ -1,145 +1,233 @@
 
-import { useCallback, useState } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 
-// Tipi di particelle
+// Definizione dei tipi
 export interface Particle {
   id: number;
   x: number;
   y: number;
   size: number;
   color: string;
-  speed: number;
   angle: number;
+  speed: number;
   distance: number;
+  orbit: boolean;
+  opacity: number;
+  distortionFactor: number;
+  trailLength: number;
+  colorVariation: number;
 }
 
-// Funzione helper per generare particelle avanzate per l'effetto buco nero
-export const generateParticles = (count: number = 300): Particle[] => {
+// Genera un array di particelle con proprietà casuali
+export const generateParticles = (count: number): Particle[] => {
   return Array.from({ length: count }, (_, i) => {
-    // Generiamo pattern più realistici per le particelle
-    const distance = Math.random() < 0.2 
-      ? 15 + Math.random() * 15  // Particelle interne
-      : 30 + Math.random() * 25; // Particelle esterne
-    const angle = Math.random() * Math.PI * 2;
-    
-    // Varianza nelle dimensioni delle particelle
-    const size = Math.random() < 0.1 
-      ? 1.5 + Math.random() * 1.5  // Particelle grandi (più rare)
-      : 0.8 + Math.random() * 1.2; // Particelle normali
-    
-    // Colori più realistici per simulare temperatura e composizione
-    const blueValue = Math.floor(128 + Math.random() * 127);
-    const greenValue = Math.floor(180 + Math.random() * 75);
-    
-    // Aggiungiamo varietà di colori: più blu/cyan per particelle fredde, 
-    // più bianche/viola per le particelle calde
-    let color;
-    if (Math.random() < 0.15) {
-      // Particelle viola/bianche (più calde)
-      const purpleValue = Math.floor(100 + Math.random() * 155);
-      color = `rgb(${purpleValue}, ${greenValue * 0.7}, 255)`;
-    } else if (Math.random() < 0.3) {
-      // Particelle bianche
-      const whiteValue = Math.floor(200 + Math.random() * 55);
-      color = `rgb(${whiteValue}, ${whiteValue}, 255)`;
-    } else {
-      // Particelle blu/ciano (più fredde)
-      color = `rgb(${blueValue > 200 ? blueValue : 50}, ${greenValue}, 255)`;
-    }
+    const distance = Math.random() * 80 + 10; // Distanza dal centro
+    const angle = Math.random() * Math.PI * 2; // Angolo iniziale casuale
+    const x = Math.cos(angle) * distance;
+    const y = Math.sin(angle) * distance;
+    const orbit = Math.random() > 0.3; // Alcune particelle orbitano, altre vengono risucchiate
     
     return {
       id: i,
-      x: Math.cos(angle) * distance,
-      y: Math.sin(angle) * distance,
-      size,
-      color,
-      speed: 0.01 + Math.random() * 0.04, // Velocità variabile
+      x,
+      y,
+      size: Math.random() * 2 + 0.5,
+      color: getParticleColor(),
       angle,
-      distance
+      speed: (Math.random() * 0.5 + 0.2) * (orbit ? 1 : 3),
+      distance,
+      orbit,
+      opacity: Math.random() * 0.7 + 0.3,
+      distortionFactor: Math.random() * 0.3 + 0.1,
+      trailLength: Math.floor(Math.random() * 4) + 1,
+      colorVariation: Math.random() * 0.2
     };
   });
 };
 
-// Hook personalizzato per l'animazione delle particelle basata sulla fase
-export const useParticleAnimation = (
-  particles: Particle[], 
-  stage: number, 
-  visible: boolean
-) => {
-  const [currentParticles, setCurrentParticles] = useState<Particle[]>(particles);
-  
-  const updateParticles = useCallback((customUpdateFn?: (particles: Particle[]) => Particle[]) => {
+// Colori per le particelle con effetto realistico
+const getParticleColor = () => {
+  const colors = [
+    'rgb(100, 180, 255)', // Azzurro
+    'rgb(150, 200, 255)', // Azzurro chiaro
+    'rgb(120, 160, 240)', // Blu elettrico
+    'rgb(200, 220, 255)', // Bianco-azzurro
+    'rgb(70, 130, 230)'    // Blu neon
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+};
+
+// Hook personalizzato per gestire l'animazione delle particelle
+export const useParticleAnimation = (initialParticles: Particle[], stage: number, visible: boolean) => {
+  const [currentParticles, setCurrentParticles] = useState<Particle[]>(initialParticles);
+  const lastTimeRef = useRef<number>(0);
+  const frameCountRef = useRef<number>(0);
+
+  // Funzione per aggiornare lo stato delle particelle
+  const updateParticles = useCallback((customUpdate?: (particles: Particle[]) => Particle[]) => {
+    if (customUpdate) {
+      setCurrentParticles(prev => customUpdate(prev));
+      return;
+    }
+
     setCurrentParticles(prevParticles => {
-      // Se viene fornita una funzione di aggiornamento personalizzata, usala
-      if (customUpdateFn) {
-        return customUpdateFn(prevParticles);
-      }
+      // Incrementa il contatore di frame
+      frameCountRef.current += 1;
       
-      // Comportamenti diversi in base alla fase di animazione
       return prevParticles.map(particle => {
-        // Comportamenti di fase
-        if (stage === 2) {
-          // Effetto di orbita con velocità diverse in base alla dimensione della particella
-          const speedFactor = 0.5 * (1 / (particle.size * 0.8));
-          const newAngle = particle.angle + particle.speed * speedFactor;
-          
-          // Fattore di spirale che varia per particelle di dimensioni diverse
-          const spiralFactor = Math.min(0.999, 0.997 + (particle.size * 0.001));
+        // Comportamento basato sullo stage dell'animazione
+        if (stage >= 5) {
+          // Stage finale: le particelle si disperdono verso l'esterno
+          const newDistance = particle.distance + particle.speed * 0.5;
+          const newAngle = particle.angle + 0.002 / (particle.distance * 0.1);
+          const newX = Math.cos(newAngle) * newDistance;
+          const newY = Math.sin(newAngle) * newDistance;
           
           return {
             ...particle,
+            x: newX,
+            y: newY,
             angle: newAngle,
-            distance: particle.distance * spiralFactor,
-            x: Math.cos(newAngle) * particle.distance * spiralFactor,
-            y: Math.sin(newAngle) * particle.distance * spiralFactor
+            distance: newDistance,
+            opacity: Math.max(0, particle.opacity - 0.01),
+            size: Math.max(0.1, particle.size - 0.01)
           };
-        } 
-        else if (stage === 3) {
-          // Effetto di implosione più veloce per particelle grandi
-          const attractFactor = 0.97 - (particle.size * 0.01);
-          
-          // Aggiungiamo accelerazione durante l'implosione
-          const speedIncrease = 1.005;
+        } else if (stage >= 4) {
+          // Stage di stabilizzazione: orbite più regolari
+          const newAngle = particle.angle + (0.005 / (particle.distance * 0.2));
+          const newDistance = particle.orbit 
+            ? particle.distance + Math.sin(frameCountRef.current * 0.01 + particle.id) * 0.1
+            : Math.max(5, particle.distance - 0.1);
+            
+          const newX = Math.cos(newAngle) * newDistance;
+          const newY = Math.sin(newAngle) * newDistance;
           
           return {
             ...particle,
-            angle: particle.angle + particle.speed * 1.2,
-            speed: particle.speed * speedIncrease,
-            distance: particle.distance * attractFactor,
-            x: particle.x * attractFactor,
-            y: particle.y * attractFactor
+            x: newX,
+            y: newY,
+            angle: newAngle,
+            distance: newDistance,
+            opacity: particle.orbit ? particle.opacity : particle.opacity * 0.98
           };
-        } 
-        else if (stage >= 4) {
-          // Effetto di esplosione più drammatico con traiettorie caotiche
-          const explodeFactor = 1.015 + (Math.random() * 0.004);
+        } else if (stage >= 3) {
+          // Stage di implosione/esplosione
+          // Alcune particelle vengono risucchiate, altre espulse
+          const newAngle = particle.angle + (0.01 / (particle.distance * 0.1));
+          let newDistance = particle.orbit 
+            ? particle.distance * 1.015
+            : Math.max(2, particle.distance * 0.97);
+            
+          // Dopo una certa distanza, anche le particelle in orbita vengono risucchiate
+          if (particle.orbit && newDistance > 100) {
+            newDistance *= 0.98;
+          }
           
-          // Introduciamo un leggero movimento casuale
-          const chaosX = Math.random() * 0.4 - 0.2;
-          const chaosY = Math.random() * 0.4 - 0.2;
+          const newX = Math.cos(newAngle) * newDistance;
+          const newY = Math.sin(newAngle) * newDistance;
+          
+          const sizeChange = particle.orbit ? 1.01 : 0.98;
           
           return {
             ...particle,
-            angle: particle.angle + particle.speed * 0.3,
-            distance: particle.distance * explodeFactor,
-            x: particle.x * explodeFactor + chaosX,
-            y: particle.y * explodeFactor + chaosY
+            x: newX,
+            y: newY,
+            angle: newAngle,
+            distance: newDistance,
+            size: particle.size * sizeChange,
+            opacity: particle.orbit ? particle.opacity * 1.01 : particle.opacity * 0.98
+          };
+        } else {
+          // Stage iniziale: formazione del disco di accrezione
+          const distortionStrength = 1 + (particle.distortionFactor * (Math.sin(frameCountRef.current * 0.05 + particle.id) * 0.5 + 0.5));
+          const newAngle = particle.angle + (0.003 / (particle.distance * 0.1)) * distortionStrength;
+          const newDistance = particle.orbit 
+            ? particle.distance + Math.sin(frameCountRef.current * 0.02 + particle.id) * 0.2
+            : Math.max(8, particle.distance - 0.1);
+            
+          const newX = Math.cos(newAngle) * newDistance;
+          const newY = Math.sin(newAngle) * newDistance;
+          
+          const flickerEffect = 0.9 + Math.sin(frameCountRef.current * 0.1 + particle.id * 10) * 0.1;
+          
+          return {
+            ...particle,
+            x: newX,
+            y: newY,
+            angle: newAngle,
+            distance: newDistance,
+            opacity: particle.opacity * flickerEffect
           };
         }
-        
-        // Rotazione standard nelle fasi iniziali, con leggere variazioni
-        const newAngle = particle.angle + particle.speed * 0.2;
-        const pulseFactor = 1 + Math.sin(Date.now() * 0.001 + particle.id * 0.1) * 0.01;
-        
-        return {
-          ...particle,
-          angle: newAngle,
-          x: Math.cos(newAngle) * particle.distance * pulseFactor,
-          y: Math.sin(newAngle) * particle.distance * pulseFactor
-        };
       });
     });
   }, [stage]);
-  
+
+  // Timer per l'animazione
+  useEffect(() => {
+    if (!visible) return;
+
+    const animateParticles = (timestamp: number) => {
+      if (!lastTimeRef.current || timestamp - lastTimeRef.current > 16) {
+        updateParticles();
+        lastTimeRef.current = timestamp;
+      }
+    };
+
+    const animationFrame = requestAnimationFrame(animateParticles);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [updateParticles, visible]);
+
   return { currentParticles, updateParticles };
+};
+
+// Effetto di distorsione gravitazionale per testo e immagini
+export const applyGravitationalLensing = (element: HTMLElement | null, strength: number = 1, centerX: number = 0.5, centerY: number = 0.5) => {
+  if (!element) return;
+  
+  const rect = element.getBoundingClientRect();
+  const width = rect.width;
+  const height = rect.height;
+  
+  // Applica distorsione CSS
+  element.style.transform = `perspective(1000px) rotateX(${Math.sin(centerY * Math.PI) * 5 * strength}deg) rotateY(${Math.sin(centerX * Math.PI) * 5 * strength}deg)`;
+  
+  // Applica sfocatura dinamica
+  const distance = Math.sqrt(Math.pow(centerX - 0.5, 2) + Math.pow(centerY - 0.5, 2));
+  element.style.filter = `blur(${distance * 2 * strength}px)`;
+  
+  // Effetto di allungamento più realistico con matrix3d
+  if (strength > 0.7) {
+    const stretchFactor = 1 + (distance * strength * 0.5);
+    element.style.transform += ` matrix3d(
+      ${stretchFactor}, 0, 0, 0,
+      0, ${stretchFactor}, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1
+    )`;
+  }
+};
+
+// Effetto di dissoluzione tra stadi
+export const useDissolveEffect = (currentStage: number, targetStage: number, duration: number = 1000) => {
+  const [opacity, setOpacity] = useState(currentStage === targetStage ? 1 : 0);
+  
+  useEffect(() => {
+    if (currentStage === targetStage) {
+      const timer = setTimeout(() => {
+        setOpacity(1);
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      setOpacity(0);
+    }
+  }, [currentStage, targetStage]);
+  
+  return {
+    opacity,
+    style: {
+      opacity,
+      transition: `opacity ${duration}ms cubic-bezier(0.4, 0, 0.2, 1)`
+    }
+  };
 };

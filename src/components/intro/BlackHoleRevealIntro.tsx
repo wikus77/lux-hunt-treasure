@@ -21,6 +21,7 @@ interface BlackHoleRevealIntroProps {
 const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete }) => {
   const [stage, setStage] = useState<number>(0);
   const [show3DEffect, setShow3DEffect] = useState<boolean>(false);
+  const [isTransitioningOut, setIsTransitioningOut] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
   // Control animation stages
@@ -47,11 +48,11 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       }
     }, 1000);
     
-    // Auto-complete the entire animation after 8 seconds maximum
+    // Auto-complete the entire animation after 9 seconds maximum
     const maxDurationTimeout = setTimeout(() => {
       console.log("BlackHoleRevealIntro - timeout massimo raggiunto");
-      onComplete();
-    }, 8000);
+      handleAnimationComplete();
+    }, 9000);
     
     return () => {
       clearTimeout(initialTimeout);
@@ -62,7 +63,7 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       }
       console.log("BlackHoleRevealIntro - cleanup effect");
     };
-  }, [onComplete]);
+  }, []);
   
   // Control animation sequence stages
   useEffect(() => {
@@ -107,7 +108,7 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       const timeout = setTimeout(() => {
         console.log("BlackHoleRevealIntro - avvio stage 5");
         setStage(5); // Final stabilization with glow
-      }, 1000);
+      }, 1200);
       
       return () => clearTimeout(timeout);
     }
@@ -117,7 +118,8 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       const completeTimeout = setTimeout(() => {
         console.log("BlackHoleRevealIntro - avvio stage 6");
         setStage(6); // Start fade out
-      }, 1000);
+        setIsTransitioningOut(true); // Inizia transizione in uscita
+      }, 1200);
       
       return () => clearTimeout(completeTimeout);
     }
@@ -126,12 +128,17 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       // Fade out transition to landing page
       const fadeOutTimeout = setTimeout(() => {
         console.log("BlackHoleRevealIntro - animazione completata");
-        onComplete();
-      }, 1000);
+        handleAnimationComplete();
+      }, 2000); // Aumentato per consentire l'effetto di dissolvenza
       
       return () => clearTimeout(fadeOutTimeout);
     }
-  }, [stage, onComplete]);
+  }, [stage]);
+
+  // Gestione completa dell'animazione
+  const handleAnimationComplete = () => {
+    onComplete();
+  };
 
   // Forza il debug per vedere su quale stage siamo
   useEffect(() => {
@@ -146,8 +153,13 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
     <motion.div 
       className="black-hole-container"
       initial={{ opacity: 1 }}
-      animate={{ opacity: stage === 6 ? 0 : 1 }}
-      transition={{ duration: stage === 6 ? 1.5 : 0 }}
+      animate={{ 
+        opacity: isTransitioningOut ? 0 : 1 
+      }}
+      transition={{ 
+        duration: isTransitioningOut ? 2.0 : 0, 
+        ease: "easeInOut"
+      }}
     >
       {/* Background space dust */}
       <SpaceDust />
@@ -162,11 +174,32 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       <EnergyFlash stage={stage} />
       <ParticleConvergence stage={stage} />
       
-      {/* Logo reveal */}
-      <LogoReveal stage={stage} />
+      {/* Logo reveal with enhanced transition */}
+      <motion.div
+        animate={{
+          y: isTransitioningOut ? [0, 20] : 0,
+          scale: isTransitioningOut ? [1, 0.9] : 1,
+          opacity: isTransitioningOut ? [1, 0] : 1
+        }}
+        transition={{
+          duration: 2.0,
+          ease: "easeInOut"
+        }}
+      >
+        <LogoReveal stage={stage} />
+      </motion.div>
       
-      {/* Skip button */}
-      <SkipButton onClick={onComplete} />
+      {/* Skip button with fade out */}
+      <motion.div
+        animate={{
+          opacity: isTransitioningOut ? 0 : 1
+        }}
+        transition={{
+          duration: 0.5
+        }}
+      >
+        <SkipButton onClick={handleAnimationComplete} />
+      </motion.div>
       
       {/* Debug info */}
       <div style={{ 
@@ -180,6 +213,23 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       }}>
         Stage: {stage}
       </div>
+      
+      {/* Background transition gradient */}
+      {isTransitioningOut && (
+        <motion.div
+          className="transition-gradient"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'radial-gradient(circle at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,1) 100%)',
+            zIndex: 50,
+            pointerEvents: 'none'
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 2.0, ease: "easeInOut" }}
+        />
+      )}
     </motion.div>
   );
 };
