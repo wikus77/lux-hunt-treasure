@@ -6,32 +6,32 @@ import { CirclePlay } from "lucide-react";
 const cars = [
   {
     name: "Ferrari 488 GTB",
-    image: "/events/ferrari-488-gtb.jpg",
+    image: "/lovable-uploads/c980c927-8cb1-4825-adf5-781f4d8118b9.png",
     description: "Un motore da sogno, una missione da conquistare",
     trailer: "https://www.youtube.com/watch?v=UAO2urG23S4"
   },
   {
-    name: "Lamborghini Huracan",
-    image: "/events/lamborghini-huracan.jpg",
-    description: "Adrenalina pura, dove solo i migliori osano",
+    name: "Mercedes AMG GT",
+    image: "/lovable-uploads/b96df1db-6d05-4203-8811-d6770bd46b6d.png",
+    description: "Eleganza tedesca e potenza senza compromessi",
     trailer: "https://www.youtube.com/watch?v=vtBrewMd2bU"
   },
   {
-    name: "Porsche 992",
-    image: "/events/porsche-911.jpg",
+    name: "Porsche 911",
+    image: "/lovable-uploads/54cd25b0-fa7b-44c9-b7b6-d69dcc09df92.png",
     description: "Precisione tedesca, premio esclusivo",
     trailer: "https://www.youtube.com/watch?v=OQe58UZAPdU"
   },
   {
-    name: "Aston Martin DBX",
-    image: "/lovable-uploads/ed5de774-31bd-4930-8b16-7af05790ab50.png",
-    description: "Lusso britannico, avventura globale",
+    name: "Lamborghini Huracán",
+    image: "/lovable-uploads/794fb55d-30c8-462e-81e7-e72cc89815d4.png",
+    description: "Potenza e stile, sfida senza limiti",
     trailer: null
   },
   {
-    name: "Lamborghini Urus",
-    image: "/lovable-uploads/159027e7-9756-49fa-a771-b886e6c8f8e9.png",
-    description: "Potenza e stile, sfida senza limiti",
+    name: "McLaren 720S",
+    image: "/lovable-uploads/6df12de9-c68f-493b-ac32-4dd934ed79a2.png",
+    description: "Tecnologia da Formula 1 su strada",
     trailer: null
   }
 ];
