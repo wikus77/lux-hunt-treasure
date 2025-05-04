@@ -40,6 +40,15 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
       mechSound.play().catch(err => console.log("Error playing sound:", err));
     }
   }, [animationStage]);
+  
+  // Play the power-up sound when the logo appears
+  useEffect(() => {
+    if (animationStage === 3) {
+      const powerUpSound = new Audio("/sounds/power-up-sound.mp3");
+      powerUpSound.volume = 0.3;
+      powerUpSound.play().catch(err => console.log("Error playing sound:", err));
+    }
+  }, [animationStage]);
 
   return (
     <motion.div 
