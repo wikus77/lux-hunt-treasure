@@ -5,6 +5,7 @@ import GlitchAnimation from "./animations/GlitchAnimation";
 import ParticleAnimation from "./animations/ParticleAnimation";
 import ScannerAnimation from "./animations/ScannerAnimation";
 import ThreeDAnimation from "./animations/ThreeDAnimation";
+import BlackHoleRevealIntro from "./BlackHoleRevealIntro";
 
 // Import CSS files for Framer Motion (they will be loaded globally)
 import "./styles/base-intro-styles.css";
@@ -17,7 +18,7 @@ interface IntroAnimationOptionsProps {
 
 const IntroAnimationOptions: React.FC<IntroAnimationOptionsProps> = ({ 
   onComplete,
-  selectedOption = 1 // Default to first animation
+  selectedOption = 6 // Default to the new Black Hole animation
 }) => {
   // Select animation based on option
   switch (selectedOption) {
@@ -31,8 +32,10 @@ const IntroAnimationOptions: React.FC<IntroAnimationOptionsProps> = ({
       return <ScannerAnimation onComplete={onComplete} />;
     case 5:
       return <ThreeDAnimation onComplete={onComplete} />;
+    case 6:
+      return <BlackHoleRevealIntro onComplete={onComplete} />;
     default:
-      return <MatrixAnimation onComplete={onComplete} />;
+      return <BlackHoleRevealIntro onComplete={onComplete} />;
   }
 };
 

@@ -11,6 +11,7 @@ import LandingFooter from "@/components/landing/LandingFooter";
 import { useNavigate } from "react-router-dom";
 import { getMissionDeadline } from "@/utils/countdownDate";
 import BlackHoleRevealIntro from "@/components/intro/BlackHoleRevealIntro";
+import IntroAnimationOptions from "@/components/intro/IntroAnimationOptions";
 
 const Index = () => {
   // Control the intro animation visibility
@@ -23,8 +24,8 @@ const Index = () => {
   
   // Check if we should show the intro animation
   useEffect(() => {
-    // Reset the intro animation by clearing localStorage
-    localStorage.removeItem('introShown');
+    // Reset the intro animation by clearing localStorage during development
+    // localStorage.removeItem('introShown'); 
     
     // Check if we've shown the intro before
     const hasSeenIntro = localStorage.getItem('introShown') === 'true';
@@ -57,6 +58,11 @@ const Index = () => {
     setShowAgeVerification(false);
     navigate("/register");
   };
+
+  // Choose which intro animation to display - we're using the Black Hole animation here
+  // If you want to use the other animation options, uncomment this line and
+  // replace <BlackHoleRevealIntro /> with <IntroAnimationOptions selectedOption={selectedIntro} />
+  // const selectedIntro = 1; // 1 = Matrix, 2 = Glitch, 3 = Particle, 4 = Scanner, 5 = 3D
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
