@@ -210,66 +210,74 @@ const HowItWorks = () => {
               </div>
             </div>
             
-            <div className="bg-black/30 border-2 border-purple-500/50 p-6 rounded-lg shadow-[0_0_15px_rgba(168,85,247,0.4)]">
+            <div className="luxury-cars-showcase bg-black/30 border-2 border-purple-500/50 p-6 rounded-lg">
               <h3 className="text-xl font-semibold text-white mb-2 text-center">Auto in Palio Quest'Anno</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-4">
                 <div className="text-center">
-                  <div className="ferrari-logo-container w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-2">
+                  <div className="car-logo-container ferrari-logo-container w-[18.4px] h-[18.4px] mx-auto rounded-full flex items-center justify-center mb-2">
                     <img 
                       src="/lovable-uploads/85332ca5-c65b-45b2-a615-f082fa033670.png" 
                       alt="Ferrari Logo" 
-                      className="ferrari-logo w-12 h-12 object-contain"
+                      className="car-logo w-[13.8px] h-[13.8px] object-contain"
                     />
                     <div className="absolute inset-0 rounded-full bg-transparent border-2 border-[#FF0000] opacity-50 animate-ping"></div>
                   </div>
                   <p className="text-white/60 text-sm">SF90 Stradale</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-full h-16 rounded bg-gradient-to-r from-yellow-600/40 to-yellow-700/40 flex items-center justify-center mb-2 border border-yellow-500/50 shadow-[0_0_10px_rgba(234,179,8,0.3)]">
-                    <div className="w-12 h-12 flex items-center justify-center">
-                      <svg viewBox="0 0 100 60" className="w-full h-full">
-                        <path d="M5,30 L20,10 L80,10 L95,30 L80,50 L20,50 L5,30z" fill="#FFC107" />
-                        <path d="M35,30 L50,15 L65,30 L50,45 L35,30z" fill="#000" />
-                      </svg>
-                    </div>
+                  <div className="car-logo-container lambo-logo-container w-[18.4px] h-[18.4px] mx-auto rounded-full flex items-center justify-center mb-2">
+                    <img 
+                      src="/lovable-uploads/1ae73dae-49f8-4541-8b68-4526a0d1d4cf.png" 
+                      alt="Lamborghini Logo" 
+                      className="car-logo w-[13.8px] h-[13.8px] object-contain"
+                    />
+                    <div className="absolute inset-0 rounded-full bg-transparent border-2 border-[#FFC107] opacity-50 animate-ping"></div>
                   </div>
                   <p className="text-white/60 text-sm">Huracán STO</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-full h-16 rounded bg-gradient-to-r from-gray-600/40 to-gray-700/40 flex items-center justify-center mb-2 border border-gray-500/50 shadow-[0_0_10px_rgba(156,163,175,0.3)]">
-                    <div className="w-12 h-12 flex items-center justify-center">
-                      <svg viewBox="0 0 100 60" className="w-full h-full">
-                        <path d="M50,10 C30,10 15,20 15,30 C15,40 30,50 50,50 C70,50 85,40 85,30 C85,20 70,10 50,10z" fill="#CCCCCC" />
-                        <path d="M50,15 C35,15 20,22 20,30 C20,38 35,45 50,45 C65,45 80,38 80,30 C80,22 65,15 50,15z" fill="#000" />
-                        <path d="M50,20 C40,20 30,24 30,30 C30,36 40,40 50,40 C60,40 70,36 70,30 C70,24 60,20 50,20z" fill="#CCCCCC" />
-                      </svg>
-                    </div>
+                  <div className="car-logo-container porsche-logo-container w-[18.4px] h-[18.4px] mx-auto rounded-full flex items-center justify-center mb-2">
+                    <img 
+                      src="/lovable-uploads/adbaf0b2-3ae6-4134-a0e5-2cd8c932326a.png" 
+                      alt="Porsche Logo" 
+                      className="car-logo w-[13.8px] h-[13.8px] object-contain"
+                    />
+                    <div className="absolute inset-0 rounded-full bg-transparent border-2 border-[#CCCCCC] opacity-50 animate-ping"></div>
                   </div>
                   <p className="text-white/60 text-sm">911 GT3 RS</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-full h-16 rounded bg-gradient-to-r from-blue-600/40 to-blue-700/40 flex items-center justify-center mb-2 border border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.3)]">
-                    <div className="w-12 h-12 flex items-center justify-center">
-                      <svg viewBox="0 0 100 60" className="w-full h-full">
-                        <path d="M20,40 C20,25 35,15 50,15 C65,15 80,25 80,40 L20,40z" fill="#0284c7" />
-                        <path d="M35,40 L40,25 L60,25 L65,40 L35,40z" fill="#000" />
-                        <path d="M25,45 L75,45 L75,50 L25,50 L25,45z" fill="#0284c7" />
-                      </svg>
-                    </div>
+                  <div className="car-logo-container mclaren-logo-container w-[18.4px] h-[18.4px] mx-auto rounded-full flex items-center justify-center mb-2">
+                    <img 
+                      src="/lovable-uploads/b78bdba7-b7f1-446a-918b-44479c0a572f.png" 
+                      alt="McLaren Logo" 
+                      className="car-logo w-[13.8px] h-[13.8px] object-contain"
+                    />
+                    <div className="absolute inset-0 rounded-full bg-transparent border-2 border-[#0284c7] opacity-50 animate-ping"></div>
                   </div>
                   <p className="text-white/60 text-sm">765LT Spider</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-full h-16 rounded bg-gradient-to-r from-green-600/40 to-green-700/40 flex items-center justify-center mb-2 border border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.3)]">
-                    <div className="w-12 h-12 flex items-center justify-center">
-                      <svg viewBox="0 0 100 50" className="w-full h-full">
-                        <path d="M25,35 L25,15 L75,15 L75,35 L25,35z" fill="#10b981" />
-                        <path d="M20,25 L30,15 L70,15 L80,25 L70,35 L30,35 L20,25z" fill="#10b981" />
-                        <path d="M35,25 L40,20 L60,20 L65,25 L60,30 L40,30 L35,25z" fill="#000" />
-                      </svg>
-                    </div>
+                  <div className="car-logo-container aston-logo-container w-[18.4px] h-[18.4px] mx-auto rounded-full flex items-center justify-center mb-2">
+                    <img 
+                      src="/lovable-uploads/28fac653-b8fe-4d2e-9c9f-2d9f321f21fb.png" 
+                      alt="Aston Martin Logo" 
+                      className="car-logo w-[13.8px] h-[13.8px] object-contain"
+                    />
+                    <div className="absolute inset-0 rounded-full bg-transparent border-2 border-[#10b981] opacity-50 animate-ping"></div>
                   </div>
                   <p className="text-white/60 text-sm">Valkyrie</p>
+                </div>
+                <div className="text-center lg:hidden">
+                  <div className="car-logo-container mercedes-logo-container w-[18.4px] h-[18.4px] mx-auto rounded-full flex items-center justify-center mb-2">
+                    <img 
+                      src="/lovable-uploads/a290aca5-7e14-4ff3-bd4e-4d4fa6b22c1e.png" 
+                      alt="Mercedes Logo" 
+                      className="car-logo w-[13.8px] h-[13.8px] object-contain"
+                    />
+                    <div className="absolute inset-0 rounded-full bg-transparent border-2 border-[#808080] opacity-50 animate-ping"></div>
+                  </div>
+                  <p className="text-white/60 text-sm">AMG GT Black</p>
                 </div>
               </div>
             </div>
