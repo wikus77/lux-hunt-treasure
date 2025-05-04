@@ -207,11 +207,44 @@
   filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.7));
 }
 
-/* Particle background */
+/* Particle background for intro and site */
 .particle {
   position: absolute;
   border-radius: 50%;
   @apply bg-cyan-400;
+}
+
+/* Animations for intro sequence */
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-5px, 5px); }
+  40% { transform: translate(-5px, -5px); }
+  60% { transform: translate(5px, 5px); }
+  80% { transform: translate(5px, -5px); }
+  100% { transform: translate(0); }
+}
+
+.glitch-text {
+  animation: glitch 0.5s ease-in-out;
+}
+
+@keyframes flicker {
+  0% { opacity: 0.8; }
+  5% { opacity: 0.3; }
+  10% { opacity: 0.8; }
+  15% { opacity: 0.5; }
+  20% { opacity: 0.8; }
+  25% { opacity: 0.6; }
+  30% { opacity: 0.8; }
+  35% { opacity: 1; }
+  40% { opacity: 0.7; }
+  45% { opacity: 0.9; }
+  50% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+.flicker-element {
+  animation: flicker 1s linear forwards;
 }
 
 /* Mission heading style */
@@ -231,18 +264,13 @@
   letter-spacing: 2px;
 }
 
-/* Animation for car logos */
-@keyframes car-logo-pulse {
-  0%, 100% {
-    transform: scale(1);
-    filter: brightness(1);
-  }
-  50% {
-    transform: scale(1.05);
-    filter: brightness(1.2);
-  }
+/* Enhanced Electric pulse for animation */
+@keyframes electricPulse {
+  0% { transform: scaleY(1); opacity: 1; }
+  50% { transform: scaleY(1.5); opacity: 0.7; }
+  100% { transform: scaleY(1); opacity: 1; }
 }
 
-.car-logo {
-  animation: car-logo-pulse 3s infinite ease-in-out;
+.electric-pulse {
+  animation: electricPulse 0.5s infinite;
 }
