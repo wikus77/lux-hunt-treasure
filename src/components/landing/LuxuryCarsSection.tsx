@@ -1,6 +1,7 @@
 
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 
 const LuxuryCarsSection = () => {
   // Define reliable car logos from public assets
@@ -30,6 +31,39 @@ const LuxuryCarsSection = () => {
       description: 'L\'eredità della Formula 1 in una supercar stradale di lusso britannica.'
     }
   ];
+
+  // State to track which images have loaded successfully
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+
+  const handleImageLoad = (brand: string) => {
+    setLoadedImages(prev => ({
+      ...prev,
+      [brand]: true
+    }));
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, car: typeof carLogos[0]) => {
+    console.error(`Failed to load image: ${car.logo}`);
+    
+    // Create a fallback with colored background and brand name
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 200;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      // Fill with brand color
+      ctx.fillStyle = car.color;
+      ctx.fillRect(0, 0, 200, 200);
+      
+      // Add brand name
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 28px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(car.brand, 100, 100);
+    }
+    e.currentTarget.src = canvas.toDataURL();
+  };
 
   return (
     <motion.section 
@@ -71,27 +105,19 @@ const LuxuryCarsSection = () => {
             whileHover={{ y: -5, transition: { duration: 0.2 } }}
           >
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="mb-4 w-full aspect-square flex items-center justify-center p-4">
+              <div className="mb-4 w-full aspect-square flex items-center justify-center p-4 relative">
                 <img 
                   src={car.logo} 
                   alt={`${car.brand} logo`} 
                   className="w-full h-full object-contain transition-transform group-hover:scale-110 duration-300"
-                  onError={(e) => {
-                    console.error(`Failed to load image: ${car.logo}`);
-                    // Use a more reliable fallback with text
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 200;
-                    canvas.height = 200;
-                    const ctx = canvas.getContext('2d');
-                    if (ctx) {
-                      ctx.fillStyle = car.color;
-                      ctx.font = 'bold 30px Arial';
-                      ctx.textAlign = 'center';
-                      ctx.fillText(car.brand, 100, 100);
-                    }
-                    e.currentTarget.src = canvas.toDataURL();
-                  }}
+                  onLoad={() => handleImageLoad(car.brand)}
+                  onError={(e) => handleImageError(e, car)}
                 />
+                {!loadedImages[car.brand] && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-12 h-12 border-4 border-t-transparent border-cyan-400 rounded-full animate-spin"></div>
+                  </div>
+                )}
               </div>
               
               <h3 className="text-xl font-bold mb-2 text-center" style={{ color: car.color }}>{car.brand}</h3>
