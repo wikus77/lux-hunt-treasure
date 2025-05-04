@@ -24,10 +24,8 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
   useEffect(() => {
     if (!scrollContainerRef.current) return;
 
-    // Use a type assertion to bypass TypeScript checking for the 'el' property
-    // @ts-ignore - Explicitly ignore the type error for LocomotiveScroll options
+    // Create new locomotive scroll instance
     const scrollInstance = new LocomotiveScroll({
-      el: scrollContainerRef.current,
       smooth: options.smooth ?? true,
       multiplier: 1,
       class: "is-inview",
@@ -39,7 +37,9 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
       },
       tablet: {
         smooth: options.tablet?.smooth ?? true,
-      }
+      },
+      // We'll manually set the element in the constructor options
+      container: scrollContainerRef.current,
     });
 
     // Store the instance reference

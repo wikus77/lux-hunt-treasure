@@ -1,12 +1,12 @@
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const textLines = [
   "Nel futuro, la caccia al tesoro non è più un gioco… è una sfida globale.",
   "Ogni mese, una nuova auto di lusso scompare.",
   "Solo i più intuitivi, strategici e veloci sapranno interpretare gli indizi e scoprire dove si nasconde il premio.",
-  "Entra in M1SSION. Vivi l’avventura. Trova il premio. Cambia il tuo destino."
+  "Entra in M1SSION. Vivi l'avventura. Trova il premio. Cambia il tuo destino."
 ];
 
 export default function AnimatedIntroSection({ onEnd }: { onEnd: () => void }) {
