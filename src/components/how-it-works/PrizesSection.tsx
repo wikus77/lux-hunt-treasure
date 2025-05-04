@@ -41,7 +41,7 @@ const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
               <img 
                 src="/lovable-uploads/85332ca5-c65b-45b2-a615-f082fa033670.png" 
                 alt="Ferrari Logo" 
-                className="car-logo object-contain"
+                className="car-logo hover:scale-130"
               />
               <div className="absolute inset-0 rounded-full bg-transparent border border-[#FF0000] opacity-50 animate-ping"></div>
             </div>
@@ -52,7 +52,7 @@ const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
               <img 
                 src="/lovable-uploads/b78bdba7-b7f1-446a-918b-44479c0a572f.png" 
                 alt="McLaren Logo" 
-                className="car-logo object-contain"
+                className="car-logo hover:scale-130"
               />
               <div className="absolute inset-0 rounded-full bg-transparent border border-[#0284c7] opacity-50 animate-ping"></div>
             </div>
@@ -63,7 +63,7 @@ const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
               <img 
                 src="/lovable-uploads/adbaf0b2-3ae6-4134-a0e5-2cd8c932326a.png" 
                 alt="Porsche Logo" 
-                className="car-logo object-contain"
+                className="car-logo hover:scale-130"
               />
               <div className="absolute inset-0 rounded-full bg-transparent border border-[#CCCCCC] opacity-50 animate-ping"></div>
             </div>
@@ -74,7 +74,7 @@ const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
               <img 
                 src="/lovable-uploads/1ae73dae-49f8-4541-8b68-4526a0d1d4cf.png" 
                 alt="Lamborghini Logo" 
-                className="car-logo object-contain"
+                className="car-logo hover:scale-130"
               />
               <div className="absolute inset-0 rounded-full bg-transparent border border-[#FFC107] opacity-50 animate-ping"></div>
             </div>
@@ -85,7 +85,7 @@ const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
               <img 
                 src="/lovable-uploads/28fac653-b8fe-4d2e-9c9f-2d9f321f21fb.png" 
                 alt="Aston Martin Logo" 
-                className="car-logo object-contain"
+                className="car-logo hover:scale-130"
               />
               <div className="absolute inset-0 rounded-full bg-transparent border border-[#10b981] opacity-50 animate-ping"></div>
             </div>
@@ -96,7 +96,7 @@ const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
               <img 
                 src="/lovable-uploads/a290aca5-7e14-4ff3-bd4e-4d4fa6b22c1e.png" 
                 alt="Mercedes Logo" 
-                className="car-logo object-contain"
+                className="car-logo hover:scale-130"
               />
               <div className="absolute inset-0 rounded-full bg-transparent border border-[#808080] opacity-50 animate-ping"></div>
             </div>

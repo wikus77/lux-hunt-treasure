@@ -39,6 +39,12 @@
   }
 }
 
+@layer utilities {
+  .scale-130 {
+    transform: scale(1.3);
+  }
+}
+
 /* Glass Effects */
 .glass-card {
   @apply bg-black/40 backdrop-blur-sm border border-white/10 shadow-lg rounded-lg;
@@ -113,7 +119,7 @@
 
 .car-logo:hover {
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
-  transform: scale(1.3); /* 30% enlargement on hover (changed from 1.1) */
+  transform: scale(1.3); /* 30% enlargement on hover */
 }
 
 /* Enhanced luxury car showcase with simplified neon effect */
