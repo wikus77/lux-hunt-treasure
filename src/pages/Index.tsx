@@ -11,7 +11,6 @@ import LandingFooter from "@/components/landing/LandingFooter";
 import { useNavigate } from "react-router-dom";
 import { getMissionDeadline } from "@/utils/countdownDate";
 import BlackHoleRevealIntro from "@/components/intro/BlackHoleRevealIntro";
-import IntroAnimationOptions from "@/components/intro/IntroAnimationOptions";
 
 const Index = () => {
   // Control the intro animation visibility
@@ -24,18 +23,14 @@ const Index = () => {
   
   // Check if we should show the intro animation
   useEffect(() => {
-    // Reset the intro animation by clearing localStorage during development
-    // localStorage.removeItem('introShown'); 
-    
-    // Check if we've shown the intro before
+    // Verifica se abbiamo mostrato l'intro prima
     const hasSeenIntro = localStorage.getItem('introShown') === 'true';
     
     if (hasSeenIntro) {
       // Skip intro if already seen
       setIntroCompleted(true);
     } else {
-      // Initially hide the main content when showing intro
-      document.body.style.opacity = "1";
+      // Preparazione per l'animazione
       document.body.style.overflow = "hidden"; // Prevent scrolling during intro
     }
   }, []);
@@ -47,7 +42,6 @@ const Index = () => {
     
     // Restore scrolling
     document.body.style.overflow = "auto";
-    document.body.style.visibility = "visible";
   };
 
   const handleRegisterClick = () => {
@@ -59,15 +53,16 @@ const Index = () => {
     navigate("/register");
   };
 
-  // Choose which intro animation to display - we're using the Black Hole animation here
-  // If you want to use the other animation options, uncomment this line and
-  // replace <BlackHoleRevealIntro /> with <IntroAnimationOptions selectedOption={selectedIntro} />
-  // const selectedIntro = 1; // 1 = Matrix, 2 = Glitch, 3 = Particle, 4 = Scanner, 5 = 3D
+  // Forza la visualizzazione dell'animazione per debugging
+  // Rimuovi questa riga una volta che funziona tutto
+  // const introCompleted = false;
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
       {!introCompleted && (
-        <BlackHoleRevealIntro onComplete={handleIntroComplete} />
+        <div className="fixed inset-0 z-[9999]">
+          <BlackHoleRevealIntro onComplete={handleIntroComplete} />
+        </div>
       )}
       
       {introCompleted && (

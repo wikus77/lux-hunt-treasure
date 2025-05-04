@@ -13,6 +13,8 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
   
   // Control animation stages
   useEffect(() => {
+    console.log("BlackHoleRevealIntro - montato");
+    
     // Initialize sound if supported by browser
     try {
       audioRef.current = new Audio("/sounds/buzz.mp3");
@@ -23,6 +25,7 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
     
     // Initial black state
     const initialTimeout = setTimeout(() => {
+      console.log("BlackHoleRevealIntro - avvio stage 1");
       setStage(1); // Start gravitational distortion
       // Play sound effect
       if (audioRef.current) {
@@ -32,6 +35,7 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
     
     // Auto-complete the entire animation after 8 seconds maximum
     const maxDurationTimeout = setTimeout(() => {
+      console.log("BlackHoleRevealIntro - timeout massimo raggiunto");
       onComplete();
     }, 8000);
     
@@ -47,9 +51,12 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
   
   // Control animation sequence stages
   useEffect(() => {
+    console.log("BlackHoleRevealIntro - stage corrente:", stage);
+    
     if (stage === 1) {
       // Gravitational distortion phase
       const timeout = setTimeout(() => {
+        console.log("BlackHoleRevealIntro - avvio stage 2");
         setStage(2); // Black hole formation
       }, 2000);
       
@@ -59,6 +66,7 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
     if (stage === 2) {
       // Black hole formation and implosion
       const timeout = setTimeout(() => {
+        console.log("BlackHoleRevealIntro - avvio stage 3");
         setStage(3); // Implosion and flash
       }, 1500);
       
@@ -68,6 +76,7 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
     if (stage === 3) {
       // Flash and energy burst
       const timeout = setTimeout(() => {
+        console.log("BlackHoleRevealIntro - avvio stage 4");
         setStage(4); // Logo emergence
       }, 1500);
       
@@ -77,6 +86,7 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
     if (stage === 4) {
       // Logo emergence and particles
       const timeout = setTimeout(() => {
+        console.log("BlackHoleRevealIntro - avvio stage 5");
         setStage(5); // Final stabilization with glow
       }, 1500);
       
@@ -86,6 +96,7 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
     if (stage === 5) {
       // Final glow and transition out
       const completeTimeout = setTimeout(() => {
+        console.log("BlackHoleRevealIntro - avvio stage 6");
         setStage(6); // Start fade out
       }, 1000);
       
@@ -95,6 +106,7 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
     if (stage === 6) {
       // Fade out transition to landing page
       const fadeOutTimeout = setTimeout(() => {
+        console.log("BlackHoleRevealIntro - animazione completata");
         onComplete();
       }, 1500);
       
@@ -140,6 +152,8 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       />
     ));
   };
+
+  console.log("BlackHoleRevealIntro - rendering, stage:", stage);
 
   return (
     <motion.div 
