@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import "./styles/intro-base.css";
 import "./styles/intro-animations.css";
 import "./styles/intro-effects.css";
@@ -14,7 +14,7 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
   const [hasError, setHasError] = useState(false);
   const [debugInfo, setDebugInfo] = useState<{stages: string[]}>({stages: []});
   
-  // Aggiungi info di diagnostica
+  // Funzione migliorata di diagnostica
   const logStage = (stage: string) => {
     console.log(`Animation stage: ${stage}`);
     setDebugInfo(prev => ({
@@ -22,52 +22,52 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
     }));
   };
   
-  // Super safety timer to ensure onComplete is called even if animation fails
+  // Super timeout di sicurezza ridotto per garantire che onComplete venga chiamato anche in caso di errore
   useEffect(() => {
     logStage("Component mounted");
     const safetyTimer = setTimeout(() => {
-      logStage("Safety timeout triggered");
+      logStage("Safety timeout triggered - forcing animation complete");
       onComplete();
-    }, 8000);
+    }, 5000); // Ridotto da 8s a 5s
     
     return () => clearTimeout(safetyTimer);
   }, [onComplete]);
   
-  // Control the animation sequence
+  // Sequenza di animazione con gestione errori migliorata
   useEffect(() => {
     try {
       logStage(`Starting animation sequence - Stage ${animationStage}`);
       
       const timers = [
-        // Stage 1: Initial pulsation appears
+        // Stage 1: Pulsazione iniziale
         setTimeout(() => {
           logStage("Setting stage 1");
           setAnimationStage(1);
-        }, 1000),
+        }, 800), // Ridotto da 1000ms a 800ms
         
-        // Stage 2: Eye starts opening
+        // Stage 2: L'occhio inizia ad aprirsi
         setTimeout(() => {
           logStage("Setting stage 2");
           setAnimationStage(2);
-        }, 2000),
+        }, 1600), // Ridotto da 2000ms a 1600ms
         
-        // Stage 3: Eye fully open, show logo
+        // Stage 3: Occhio completamente aperto, mostra logo
         setTimeout(() => {
           logStage("Setting stage 3");
           setAnimationStage(3);
-        }, 3500),
+        }, 2800), // Ridotto da 3500ms a 2800ms
         
-        // Stage 4: Show slogan
+        // Stage 4: Mostra slogan
         setTimeout(() => {
           logStage("Setting stage 4");
           setAnimationStage(4);
-        }, 4500),
+        }, 3600), // Ridotto da 4500ms a 3600ms
         
-        // Complete animation
+        // Completa animazione
         setTimeout(() => {
           logStage("Animation complete - Calling onComplete");
           onComplete();
-        }, 7000)
+        }, 5000) // Ridotto da 7000ms a 5000ms
       ];
       
       return () => timers.forEach(timer => clearTimeout(timer));
@@ -75,11 +75,11 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
       console.error("Error in animation sequence:", error);
       logStage(`Error: ${error instanceof Error ? error.message : String(error)}`);
       setHasError(true);
-      onComplete();
+      onComplete(); // Chiamiamo onComplete per non bloccare l'utente
     }
   }, [onComplete, animationStage]);
 
-  // Play the mechanical sound when eye opens
+  // Riproduci il suono meccanico quando l'occhio si apre, con miglior gestione errori
   useEffect(() => {
     if (animationStage === 2) {
       try {
@@ -87,17 +87,19 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
         const mechSound = new Audio("/sounds/mechanical-sound.mp3");
         mechSound.volume = 0.4;
         mechSound.play().catch(err => {
-          console.log("Error playing sound:", err);
+          console.log("Error playing mechanical sound:", err);
           logStage(`Sound error: ${err.message}`);
+          // Non blocchiamo l'animazione se il suono fallisce
         });
       } catch (error) {
         console.log("Error playing mechanical sound:", error);
         logStage(`Sound load error: ${error instanceof Error ? error.message : String(error)}`);
+        // Non blocchiamo l'animazione se il suono fallisce
       }
     }
   }, [animationStage]);
   
-  // Play the power-up sound when the logo appears
+  // Riproduci il suono power-up quando appare il logo, con miglior gestione errori
   useEffect(() => {
     if (animationStage === 3) {
       try {
@@ -105,27 +107,32 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
         const powerUpSound = new Audio("/sounds/power-up-sound.mp3");
         powerUpSound.volume = 0.3;
         powerUpSound.play().catch(err => {
-          console.log("Error playing sound:", err);
+          console.log("Error playing power-up sound:", err);
           logStage(`Sound error: ${err.message}`);
+          // Non blocchiamo l'animazione se il suono fallisce
         });
       } catch (error) {
         console.log("Error playing power-up sound:", error);
         logStage(`Sound load error: ${error instanceof Error ? error.message : String(error)}`);
+        // Non blocchiamo l'animazione se il suono fallisce
       }
     }
   }, [animationStage]);
 
-  // This helps detect if assets are failing to load
+  // Rileva errori di caricamento delle risorse
   useEffect(() => {
-    window.addEventListener('error', (e) => {
+    const handleError = (e: ErrorEvent) => {
       if (e.target instanceof HTMLImageElement || e.target instanceof HTMLAudioElement) {
         console.error(`Resource error: Failed to load ${e.target.src}`);
         logStage(`Resource load error: ${e.target.src}`);
       }
-    }, true);
+    };
+    
+    window.addEventListener('error', handleError, true);
+    return () => window.removeEventListener('error', handleError, true);
   }, []);
 
-  // If there's an error, render a minimal version to avoid blocking the page
+  // Se c'è un errore, rendiamo una versione minima per evitare il blocco della pagina
   if (hasError) {
     return (
       <motion.div 
@@ -140,6 +147,7 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
     );
   }
 
+  // Rendering principale con miglioramenti per la compatibilità
   return (
     <motion.div 
       className="fixed inset-0 z-50 flex items-center justify-center bg-black overflow-hidden"
@@ -187,7 +195,7 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
           <div className="center-pulse"></div>
         )}
         
-        {/* Energy pattern that radiates when eye fully opens */}
+        {/* Energy pattern che si irradia quando l'occhio è completamente aperto */}
         {animationStage >= 3 && (
           <div className="energy-pattern-container">
             <div className="energy-ring energy-ring-1"></div>
@@ -223,7 +231,7 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
         )}
       </div>
       
-      {/* Diagnostics overlay (visibile solo durante i test) */}
+      {/* Pannello diagnostico (visibile solo durante i test) */}
       {process.env.NODE_ENV !== 'production' && (
         <div className="absolute bottom-4 right-4 bg-black/80 text-white p-2 rounded text-xs max-w-xs overflow-auto" style={{maxHeight: '200px'}}>
           <div>Stage: {animationStage}</div>

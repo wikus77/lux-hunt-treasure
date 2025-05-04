@@ -17,7 +17,9 @@ import Navbar from "@/components/landing/Navbar";
 import IntroAnimation from "@/components/intro/IntroAnimation";
 
 const Index = () => {
+  // Flaggare che il componente è in fase di rendering
   console.log("Index component rendering started");
+  
   const [showIntro, setShowIntro] = useState(false);
   const [introCompleted, setIntroCompleted] = useState(false);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
@@ -25,13 +27,29 @@ const Index = () => {
   const [renderError, setRenderError] = useState<Error | null>(null);
   const navigate = useNavigate();
 
-  // Sistema di diagnostica
+  // Diagnostica migliorata
   useEffect(() => {
-    console.log("System info diagnostics:");
-    console.log("- User Agent:", navigator.userAgent);
-    console.log("- Screen size:", `${window.innerWidth}x${window.innerHeight}`);
-    console.log("- Intro already shown:", localStorage.getItem('introShown') ? "Yes" : "No");
-  }, []);
+    try {
+      console.log("Index component mounted");
+      console.log("System info diagnostics:");
+      console.log("- User Agent:", navigator.userAgent);
+      console.log("- Screen size:", `${window.innerWidth}x${window.innerHeight}`);
+      console.log("- Intro already shown:", localStorage.getItem('introShown') ? "Yes" : "No");
+      console.log("- Current render state:", { showIntro, introCompleted, pageLoaded });
+    } catch (e) {
+      console.error("Error in diagnostics:", e);
+    }
+    
+    // Assicuriamoci che la pagina venga marcata come caricata anche se qualcosa va storto
+    const emergencyTimeout = setTimeout(() => {
+      console.log("Emergency timeout triggered - forcing page load");
+      setPageLoaded(true);
+      setIntroCompleted(true);
+      setShowIntro(false);
+    }, 3000); // Timeout di emergenza ridotto a 3 secondi
+    
+    return () => clearTimeout(emergencyTimeout);
+  }, [showIntro, introCompleted, pageLoaded]);
 
   // Misurazione dei tempi di caricamento
   useEffect(() => {
@@ -51,7 +69,7 @@ const Index = () => {
   useEffect(() => {
     try {
       console.log("Checking intro state...");
-      // For testing purposes, you can uncomment this line
+      // Per test, puoi decommentare questa linea
       // localStorage.removeItem('introShown');
       
       const introShown = localStorage.getItem('introShown');
@@ -68,21 +86,21 @@ const Index = () => {
         localStorage.setItem('introShown', 'true');
       }
 
-      // Safety timeout to ensure content shows even if intro fails
+      // Safety timeout ridotto per garantire che il contenuto si mostri anche se l'intro fallisce
       const safetyTimeout = setTimeout(() => {
         if (!introCompleted) {
           console.log("Safety timeout triggered, forcing content display");
           setIntroCompleted(true);
           setShowIntro(false);
         }
-        // Ensure the page is marked as loaded
+        // Assicuriamo che la pagina sia marcata come caricata
         setPageLoaded(true);
-      }, 5000); // Reduced to 5 seconds for testing
+      }, 3500); // Ridotto a 3.5 secondi per test
 
       return () => clearTimeout(safetyTimeout);
     } catch (error) {
       console.error("Error in intro logic:", error);
-      // In case of any error, skip the intro
+      // In caso di errore, saltiamo l'intro
       setShowIntro(false);
       setIntroCompleted(true);
       setPageLoaded(true);
@@ -94,7 +112,7 @@ const Index = () => {
     console.log("Intro animation completed");
     setIntroCompleted(true);
     setShowIntro(false);
-    // Ensure page is marked as loaded
+    // Assicuriamo che la pagina sia marcata come caricata
     setPageLoaded(true);
   };
 
@@ -107,7 +125,7 @@ const Index = () => {
     navigate("/register");
   };
 
-  // Gestione errori di rendering
+  // Gestione errori di rendering migliorata
   useEffect(() => {
     if (renderError) {
       console.error("Render error detected:", renderError);
@@ -115,7 +133,7 @@ const Index = () => {
     }
   }, [renderError]);
 
-  // If page is still initializing, show a detailed loading state
+  // Se la pagina è ancora in fase di inizializzazione, mostriamo uno stato di caricamento dettagliato
   if (!pageLoaded) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
@@ -123,11 +141,14 @@ const Index = () => {
         <div className="w-64 h-2 bg-gray-700 rounded-full overflow-hidden">
           <div className="h-full bg-cyan-400 animate-pulse" style={{width: '60%'}}></div>
         </div>
+        <div className="mt-4 text-sm text-gray-400">
+          Se questa schermata persiste, ricarica la pagina.
+        </div>
       </div>
     );
   }
 
-  // Backup error UI in caso di problemi di rendering
+  // Backup UI migliorata in caso di errori
   if (renderError) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-4">
