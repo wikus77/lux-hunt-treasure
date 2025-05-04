@@ -8,8 +8,8 @@ const LandingFooter = () => {
         <div className="flex flex-col md:flex-row justify-between items-center w-full mb-8">
           <div className="mb-6 md:mb-0">
             <h2 className="text-2xl font-bold">
-              <span style={{ color: '#00E5FF' }} className="text-[#00E5FF]">M1</span>
-              <span style={{ color: '#FFFFFF' }} className="text-white">SSION</span>
+              <span className="text-[#00E5FF]">M1</span>
+              <span className="text-white">SSION</span>
             </h2>
           </div>
           <div className="flex space-x-6">

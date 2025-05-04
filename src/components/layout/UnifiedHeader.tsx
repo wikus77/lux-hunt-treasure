@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { motion } from "framer-motion";
 import M1ssionText from "@/components/logo/M1ssionText";
+import CountdownTimer from "@/components/ui/countdown-timer";
+import { getMissionDeadline } from "@/utils/countdownDate";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -31,6 +33,9 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Target date from utility
+  const targetDate = getMissionDeadline();
+
   const handleSignOut = () => {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('user');
@@ -43,11 +48,9 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         <div className="flex items-center justify-between h-16 md:h-20">
           <M1ssionText />
 
-          {/* Desktop menu */}
-          <div className="hidden md:flex items-center space-x-8">
-            <div className="text-xs text-yellow-400 font-orbitron">
-              IT IS POSSIBLE
-            </div>
+          {/* Desktop menu with countdown */}
+          <div className="hidden md:flex items-center">
+            <CountdownTimer targetDate={targetDate} />
           </div>
 
           {/* User menu and mobile menu button */}
@@ -111,6 +114,11 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* Mobile countdown - only visible on small screens */}
+        <div className="md:hidden flex justify-center pb-2">
+          <CountdownTimer targetDate={targetDate} />
         </div>
       </div>
 

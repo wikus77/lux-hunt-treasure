@@ -2,6 +2,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import CountdownTimer from "@/components/ui/countdown-timer";
+import { getMissionDeadline } from "@/utils/countdownDate";
 
 const LandingHeader = () => {
   const navigate = useNavigate();
@@ -13,6 +15,9 @@ const LandingHeader = () => {
   const handleLearnMore = () => {
     navigate("/how-it-works");
   };
+
+  // Target date from utility
+  const targetDate = getMissionDeadline();
 
   return (
     <section className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-4 py-16">
@@ -46,6 +51,11 @@ const LandingHeader = () => {
             <span style={{ color: '#FFFFFF' }} className="text-white">SSION</span>
           </span>
         </h1>
+        
+        {/* New Countdown Timer */}
+        <div className="mb-8">
+          <CountdownTimer targetDate={targetDate} />
+        </div>
         
         <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
           Every month, a new luxury car disappears. Only the most intuitive, 
