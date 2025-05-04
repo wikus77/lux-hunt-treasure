@@ -1,7 +1,9 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import "./intro-animation.css";
+import "./styles/intro-base.css";
+import "./styles/intro-animations.css";
+import "./styles/intro-effects.css";
 
 interface IntroAnimationProps {
   onComplete: () => void;

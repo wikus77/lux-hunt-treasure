@@ -1,0 +1,148 @@
+
+/* Rotation animations */
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotate-reverse {
+  0% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Apply rotation to elements */
+.eye-middle-ring {
+  animation: rotate 15s linear infinite;
+}
+
+.eye-outer-ring::before {
+  animation: rotate-reverse 20s linear infinite;
+}
+
+.eye-inner-ring {
+  animation: rotate-reverse 10s linear infinite;
+}
+
+/* Pulse animations */
+@keyframes pulse {
+  0% {
+    box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.5);
+  }
+  100% {
+    box-shadow: inset 0 0 25px rgba(0, 229, 255, 0.8);
+  }
+}
+
+.mechanical-eye.opening .eye-pupil {
+  animation: pulse 2s infinite alternate;
+}
+
+@keyframes pulse-grow {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+.center-pulse {
+  animation: pulse-grow 2s infinite alternate;
+}
+
+/* Fade animations */
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.pupil-reflection {
+  animation: fade-in 1s forwards;
+}
+
+.logo-container {
+  animation: fade-in 1s forwards 0.5s;
+}
+
+.mission-motto {
+  animation: fade-in 1s forwards;
+}
+
+/* Energy pattern animations */
+@keyframes energy-ring-expand {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    border-color: rgba(0, 229, 255, 0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.5);
+    border-color: rgba(0, 229, 255, 0);
+    opacity: 0;
+  }
+}
+
+.energy-ring-1 {
+  animation: energy-ring-expand 3s ease-out infinite;
+  animation-delay: 0s;
+}
+
+.energy-ring-2 {
+  animation: energy-ring-expand 3s ease-out infinite;
+  animation-delay: 0.5s;
+}
+
+.energy-ring-3 {
+  animation: energy-ring-expand 3s ease-out infinite;
+  animation-delay: 1s;
+}
+
+@keyframes energy-ray-pulse {
+  0% {
+    transform: rotate(0deg) scaleX(0.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotate(0deg) scaleX(1);
+    opacity: 0;
+  }
+}
+
+.energy-ray {
+  animation: energy-ray-pulse 2s ease-out infinite;
+}
+
+/* Scan line animation */
+@keyframes scan-line {
+  0% {
+    transform: translateY(-10px);
+  }
+  50% {
+    transform: translateY(10px);
+  }
+  100% {
+    transform: translateY(-10px);
+  }
+}
+
+.eye-container::before {
+  animation: scan-line 3s infinite linear;
+}
+
+.eye-container::after {
+  animation: scan-line 4s infinite linear reverse;
+}
