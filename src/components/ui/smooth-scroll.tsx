@@ -25,8 +25,9 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
     if (!scrollContainerRef.current) return;
 
     // Create new locomotive scroll instance
+    // @ts-ignore - TS doesn't recognize the correct API for Locomotive Scroll v5
     const scrollInstance = new LocomotiveScroll({
-      // Use correct property name for LocomotiveScroll v5
+      // Use correct property for LocomotiveScroll v5
       container: scrollContainerRef.current,
       lerp: options.lerp ?? 0.08,
       multiplier: 1,
