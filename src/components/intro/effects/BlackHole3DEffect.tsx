@@ -1,6 +1,6 @@
 
-import React, { useEffect, useRef, useState } from "react";
-import * as THREE from "three";
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 interface BlackHole3DEffectProps {
   stage: number;
@@ -8,169 +8,208 @@ interface BlackHole3DEffectProps {
 }
 
 const BlackHole3DEffect: React.FC<BlackHole3DEffectProps> = ({ stage, visible }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [particles, setParticles] = useState<{ id: number; x: number; y: number; size: number; color: string; speed: number; angle: number; distance: number }[]>([]);
 
-  // Initialize Three.js scene
+  // Inizializza le particelle
   useEffect(() => {
-    if (!containerRef.current || isInitialized || !visible) return;
+    if (!visible) return;
     
-    // Create scene, camera, and renderer
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0x000000, 0);
-    
-    // Add renderer to container
-    if (containerRef.current) {
-      containerRef.current.appendChild(renderer.domElement);
-    }
-    
-    // Set camera position
-    camera.position.z = 50;
-    
-    // Create particle geometry
-    const particleCount = 2000;
-    const particles = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    const colors = new Float32Array(particleCount * 3);
-    
-    // Create particle system
-    for (let i = 0; i < particleCount; i++) {
-      // Create particles in a spherical distribution
-      const radius = 30 + Math.random() * 20;
-      const phi = Math.acos(-1 + Math.random() * 2);
-      const theta = Math.random() * Math.PI * 2;
+    // Crea particelle per simulare un effetto 3D
+    const particleCount = 200;
+    const newParticles = Array.from({ length: particleCount }, (_, i) => {
+      const distance = 30 + Math.random() * 20;
+      const angle = Math.random() * Math.PI * 2;
+      const size = 1 + Math.random() * 2;
       
-      // Convert spherical to cartesian coordinates
-      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-      positions[i * 3 + 2] = radius * Math.cos(phi);
+      // Colore delle particelle (blu/ciano/bianco)
+      const blueValue = Math.floor(128 + Math.random() * 127);
+      const greenValue = Math.floor(180 + Math.random() * 75);
+      const color = `rgb(${blueValue > 200 ? blueValue : 50}, ${greenValue}, 255)`;
       
-      // Set colors (blue/cyan/white gradient)
-      colors[i * 3] = 0.5 + Math.random() * 0.5; // Blue
-      colors[i * 3 + 1] = 0.7 + Math.random() * 0.3; // Green-blue
-      colors[i * 3 + 2] = 0.9 + Math.random() * 0.1; // Brighten
-    }
-    
-    particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    
-    // Create particle material
-    const particleMaterial = new THREE.PointsMaterial({
-      size: 0.5,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.8,
-      blending: THREE.AdditiveBlending
+      return {
+        id: i,
+        x: Math.cos(angle) * distance,
+        y: Math.sin(angle) * distance,
+        size,
+        color,
+        speed: 0.02 + Math.random() * 0.03,
+        angle,
+        distance
+      };
     });
     
-    // Create particle system
-    const particleSystem = new THREE.Points(particles, particleMaterial);
-    scene.add(particleSystem);
+    setParticles(newParticles);
+  }, [visible]);
+
+  // Animazione delle particelle
+  useEffect(() => {
+    if (!visible || particles.length === 0) return;
     
-    // Create black hole core (black sphere)
-    const blackHoleGeometry = new THREE.SphereGeometry(10, 32, 32);
-    const blackHoleMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const blackHole = new THREE.Mesh(blackHoleGeometry, blackHoleMaterial);
-    scene.add(blackHole);
-    
-    // Animation variables
-    let rotationSpeed = 0.001;
     let animationFrame: number;
-    const particlePositions = particles.attributes.position.array as Float32Array;
-    const initialPositions = particlePositions.slice();
+    let rotation = 0;
     
-    // Animation function
     const animate = () => {
-      animationFrame = requestAnimationFrame(animate);
+      rotation += 0.001;
       
-      // Rotate particle system
-      particleSystem.rotation.y += rotationSpeed;
-      particleSystem.rotation.z += rotationSpeed * 0.5;
-      
-      // Black hole animation based on stage
-      if (stage >= 2) {
-        // Make particles spiral toward black hole in stage 2+
-        for (let i = 0; i < particleCount; i++) {
-          const i3 = i * 3;
-          const x = particlePositions[i3];
-          const y = particlePositions[i3 + 1];
-          const z = particlePositions[i3 + 2];
-          
-          const distance = Math.sqrt(x * x + y * y + z * z);
-          
+      setParticles(prevParticles => 
+        prevParticles.map(particle => {
+          // Diversi comportamenti in base allo stage dell'animazione
           if (stage === 2) {
-            // Orbit effect
+            // Effetto orbita
+            const newAngle = particle.angle + particle.speed * 0.5;
             const spiralFactor = 0.998;
-            particlePositions[i3] = x * spiralFactor + (y * 0.01);
-            particlePositions[i3 + 1] = y * spiralFactor - (x * 0.01);
-            particlePositions[i3 + 2] = z * spiralFactor;
+            return {
+              ...particle,
+              angle: newAngle,
+              distance: particle.distance * spiralFactor,
+              x: Math.cos(newAngle) * particle.distance * spiralFactor,
+              y: Math.sin(newAngle) * particle.distance * spiralFactor
+            };
           } else if (stage === 3) {
-            // Implosion effect
+            // Effetto implosione
             const attractFactor = 0.98;
-            particlePositions[i3] = x * attractFactor;
-            particlePositions[i3 + 1] = y * attractFactor;
-            particlePositions[i3 + 2] = z * attractFactor;
-            rotationSpeed = 0.005;
+            return {
+              ...particle,
+              angle: particle.angle + particle.speed,
+              distance: particle.distance * attractFactor,
+              x: particle.x * attractFactor,
+              y: particle.y * attractFactor
+            };
           } else if (stage >= 4) {
-            // Explosion effect
+            // Effetto esplosione
             const explodeFactor = 1.015;
-            particlePositions[i3] = x * explodeFactor;
-            particlePositions[i3 + 1] = y * explodeFactor;
-            particlePositions[i3 + 2] = z * explodeFactor;
-            rotationSpeed = 0.002;
-            particleMaterial.opacity = Math.max(0, particleMaterial.opacity - 0.005);
+            return {
+              ...particle,
+              angle: particle.angle + particle.speed * 0.3,
+              distance: particle.distance * explodeFactor,
+              x: particle.x * explodeFactor,
+              y: particle.y * explodeFactor
+            };
           }
-        }
-        particles.attributes.position.needsUpdate = true;
-      }
+          
+          // Rotazione standard
+          const newAngle = particle.angle + particle.speed * 0.2;
+          return {
+            ...particle,
+            angle: newAngle,
+            x: Math.cos(newAngle) * particle.distance,
+            y: Math.sin(newAngle) * particle.distance
+          };
+        })
+      );
       
-      // Render the scene
-      renderer.render(scene, camera);
+      animationFrame = requestAnimationFrame(animate);
     };
     
-    // Start animation
     animate();
-    setIsInitialized(true);
     
-    // Handle window resize
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    
-    // Clean up on unmount
     return () => {
-      window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrame);
-      if (containerRef.current && containerRef.current.contains(renderer.domElement)) {
-        containerRef.current.removeChild(renderer.domElement);
-      }
-      scene.remove(particleSystem);
-      scene.remove(blackHole);
-      particles.dispose();
-      blackHoleGeometry.dispose();
-      blackHoleMaterial.dispose();
-      particleMaterial.dispose();
-      renderer.dispose();
     };
-  }, [visible, stage, isInitialized]);
+  }, [particles, stage, visible]);
+
+  if (!visible) return null;
 
   return (
     <div 
-      ref={containerRef} 
       className="black-hole-3d-effect"
       style={{ 
-        display: visible ? 'block' : 'none',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
         opacity: stage >= 5 ? 0 : 1,
-        transition: 'opacity 1.5s ease-out'
+        transition: 'opacity 1.5s ease-out',
+        overflow: 'hidden'
       }}
-    />
+    >
+      {/* Sfondo stellato */}
+      {Array.from({ length: 50 }).map((_, i) => (
+        <div
+          key={`star-${i}`}
+          style={{
+            position: 'absolute',
+            width: `${Math.random() * 2 + 1}px`,
+            height: `${Math.random() * 2 + 1}px`,
+            backgroundColor: 'white',
+            borderRadius: '50%',
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+            opacity: Math.random() * 0.7 + 0.3,
+            boxShadow: '0 0 4px rgba(255, 255, 255, 0.8)'
+          }}
+        />
+      ))}
+      
+      {/* Buco nero centrale */}
+      <motion.div
+        style={{
+          position: 'absolute',
+          width: stage >= 3 ? '40px' : '20px',
+          height: stage >= 3 ? '40px' : '20px',
+          borderRadius: '50%',
+          backgroundColor: '#000',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          boxShadow: '0 0 20px 10px rgba(0, 0, 0, 0.9)',
+          zIndex: 4
+        }}
+        animate={{
+          width: stage >= 2 ? '40px' : '20px',
+          height: stage >= 2 ? '40px' : '20px',
+        }}
+        transition={{ duration: 0.5 }}
+      />
+      
+      {/* Disco di accrescimento */}
+      <motion.div
+        style={{
+          position: 'absolute',
+          width: '120px',
+          height: '120px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(0, 191, 255, 0.7) 0%, rgba(0, 191, 255, 0.3) 40%, rgba(0, 0, 0, 0) 70%)',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          filter: 'blur(5px)',
+          boxShadow: '0 0 30px rgba(0, 191, 255, 0.5), 0 0 60px rgba(0, 191, 255, 0.3), 0 0 90px rgba(0, 191, 255, 0.2)',
+          zIndex: 3,
+          opacity: stage <= 3 ? 1 : 0,
+          transition: 'opacity 0.5s ease-in-out'
+        }}
+      />
+      
+      {/* Particelle */}
+      <svg
+        style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          top: 0,
+          left: 0,
+          zIndex: 1
+        }}
+        viewBox="-100 -100 200 200"
+      >
+        {particles.map(particle => (
+          <motion.circle
+            key={particle.id}
+            cx={particle.x}
+            cy={particle.y}
+            r={particle.size}
+            fill={particle.color}
+            style={{
+              filter: 'blur(1px)',
+              opacity: stage >= 4 ? Math.max(0, 1 - (stage - 4) * 0.3) : 0.8
+            }}
+          />
+        ))}
+      </svg>
+    </div>
   );
 };
 

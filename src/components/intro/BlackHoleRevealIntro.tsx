@@ -140,7 +140,7 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       {/* Background space dust */}
       <SpaceDust />
       
-      {/* 3D Black Hole Effect */}
+      {/* 3D Black Hole Effect - ora usa la versione CSS/SVG */}
       <BlackHole3DEffect stage={stage} visible={show3DEffect} />
       
       {/* Effetti del buco nero e della distorsione gravitazionale */}
