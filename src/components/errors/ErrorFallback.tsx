@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 
 interface ErrorFallbackProps {
@@ -7,24 +7,22 @@ interface ErrorFallbackProps {
 }
 
 const ErrorFallback: React.FC<ErrorFallbackProps> = ({ message }) => {
-  // Garantisce che la pagina di fallback sia sempre visibile
-  useEffect(() => {
-    // Forza lo stile per massima visibilità
-    document.body.style.backgroundColor = "#000";
-    document.body.style.color = "#fff";
-    document.body.style.display = "block";
-    document.body.style.visibility = "visible";
-    document.body.style.opacity = "1";
-  }, []);
-
+  // Rimuoviamo l'useEffect e applichiamo stili semplici e diretti
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-4"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black text-white p-4"
       style={{
-        opacity: 1, 
-        display: 'flex',
-        visibility: 'visible',
-        backgroundColor: '#000'
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9999,
+        display: "flex",
+        visibility: "visible",
+        opacity: 1,
+        backgroundColor: "#000",
+        color: "#fff"
       }}
     >
       <div className="text-2xl font-bold text-red-500 mb-4">Qualcosa è andato storto</div>

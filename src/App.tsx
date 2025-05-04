@@ -42,6 +42,14 @@ const LoadingFallback = () => (
 const queryClient = new QueryClient();
 
 function App() {
+  // Forza la visualizzazione dell'app
+  React.useEffect(() => {
+    document.body.style.display = "block";
+    document.body.style.visibility = "visible";
+    document.body.style.opacity = "1";
+    document.body.style.backgroundColor = "#000000";
+  }, []);
+
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
