@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,15 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { LoginModal } from "@/components/auth/LoginModal";
+import { MagneticButton } from "@/components/ui/magnetic-button";
+import AnimatedLogo from "@/components/logo/AnimatedLogo";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
     // Validazioni base
     if (!email || !password) {
@@ -22,28 +27,33 @@ const Login = () => {
         title: "Errore",
         description: "Completa tutti i campi per continuare."
       });
+      setIsLoading(false);
       return;
     }
 
     // Simuliamo un login riuscito
-    toast({
-      title: "Login completato!",
-      description: "Accesso effettuato con successo."
-    });
-
-    // Redirect alla home page
     setTimeout(() => {
-      navigate("/home");
-    }, 1500);
+      toast({
+        title: "Login completato!",
+        description: "Accesso effettuato con successo."
+      });
+  
+      // Redirect alla home page
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate("/home");
+      }, 500);
+    }, 1000);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2 animate-glow">
-            M1SSION
-          </h1>
+          {/* Sostituito il testo con il logo AnimatedLogo */}
+          <div className="flex justify-center mb-4">
+            <AnimatedLogo />
+          </div>
           <p className="text-muted-foreground">
             Accedi al tuo account
           </p>
@@ -76,18 +86,21 @@ const Login = () => {
             </div>
           </div>
 
-          <Button
+          {/* Sostituito il Button con MagneticButton per risolvere i problemi di interazione */}
+          <MagneticButton
             type="submit"
-            className="w-full mt-6 bg-gradient-to-r from-projectx-blue to-projectx-pink"
+            className="w-full mt-6 bg-gradient-to-r from-projectx-blue to-projectx-pink font-medium"
+            disabled={isLoading}
           >
-            Accedi
-          </Button>
+            {isLoading ? "Accesso in corso..." : "Accedi"}
+          </MagneticButton>
 
           <div className="mt-4 text-center">
             <Button
               variant="link"
               className="text-projectx-neon-blue p-0 hover:underline"
               onClick={() => navigate("/register")}
+              type="button"
             >
               Non hai un account? Registrati
             </Button>
