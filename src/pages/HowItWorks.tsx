@@ -151,7 +151,7 @@ const HowItWorks = () => {
               <div className="flex gap-3 items-start">
                 <Shield className="text-yellow-400 shrink-0 mt-1" size={20} />
                 <p className="text-white/80">
-                  Un solo tentativo "Buzz" al giorno per utente. Usa il tuo Buzz con saggezza dopo aver analizzato attentamente gli indizi.
+                  Un solo tentativo "Buzz" al giorno per profilo utente gratuito. Usa il tuo Buzz con saggezza dopo aver analizzato attentamente gli indizi.
                 </p>
               </div>
               
@@ -210,36 +210,65 @@ const HowItWorks = () => {
               </div>
             </div>
             
-            <div className="bg-black/30 border border-yellow-400/30 p-6 rounded-lg">
+            <div className="bg-black/30 border-2 border-purple-500/50 p-6 rounded-lg shadow-[0_0_15px_rgba(168,85,247,0.4)]">
               <h3 className="text-xl font-semibold text-white mb-2 text-center">Auto in Palio Quest'Anno</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-4">
                 <div className="text-center">
-                  <div className="w-full h-12 rounded bg-gradient-to-r from-red-600/20 to-red-700/20 flex items-center justify-center mb-2">
-                    <span className="text-white">Ferrari</span>
+                  <div className="w-full h-16 rounded bg-gradient-to-r from-red-600/40 to-red-700/40 flex items-center justify-center mb-2 border border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.3)]">
+                    <div className="w-12 h-12 flex items-center justify-center">
+                      <svg viewBox="0 0 100 40" className="w-full h-full">
+                        <path d="M95 20c0 8.284-6.716 15-15 15H20C11.716 35 5 28.284 5 20S11.716 5 20 5h60c8.284 0 15 6.716 15 15z" fill="#FF0000" />
+                        <path d="M17.5 15h65v10h-65z" fill="#FF0000" />
+                        <path d="M30 11.5L26 28h8l4-16.5h-8zM45 11.5L41 28h8l4-16.5h-8zM60 11.5L56 28h8l4-16.5h-8zM75 11.5L71 28h8l4-16.5h-8z" fill="#FFDF00" />
+                      </svg>
+                    </div>
                   </div>
                   <p className="text-white/60 text-sm">SF90 Stradale</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-full h-12 rounded bg-gradient-to-r from-yellow-600/20 to-yellow-700/20 flex items-center justify-center mb-2">
-                    <span className="text-white">Lamborghini</span>
+                  <div className="w-full h-16 rounded bg-gradient-to-r from-yellow-600/40 to-yellow-700/40 flex items-center justify-center mb-2 border border-yellow-500/50 shadow-[0_0_10px_rgba(234,179,8,0.3)]">
+                    <div className="w-12 h-12 flex items-center justify-center">
+                      <svg viewBox="0 0 100 60" className="w-full h-full">
+                        <path d="M5,30 L20,10 L80,10 L95,30 L80,50 L20,50 L5,30z" fill="#FFC107" />
+                        <path d="M35,30 L50,15 L65,30 L50,45 L35,30z" fill="#000" />
+                      </svg>
+                    </div>
                   </div>
                   <p className="text-white/60 text-sm">Huracán STO</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-full h-12 rounded bg-gradient-to-r from-gray-600/20 to-gray-700/20 flex items-center justify-center mb-2">
-                    <span className="text-white">Porsche</span>
+                  <div className="w-full h-16 rounded bg-gradient-to-r from-gray-600/40 to-gray-700/40 flex items-center justify-center mb-2 border border-gray-500/50 shadow-[0_0_10px_rgba(156,163,175,0.3)]">
+                    <div className="w-12 h-12 flex items-center justify-center">
+                      <svg viewBox="0 0 100 60" className="w-full h-full">
+                        <path d="M50,10 C30,10 15,20 15,30 C15,40 30,50 50,50 C70,50 85,40 85,30 C85,20 70,10 50,10z" fill="#CCCCCC" />
+                        <path d="M50,15 C35,15 20,22 20,30 C20,38 35,45 50,45 C65,45 80,38 80,30 C80,22 65,15 50,15z" fill="#000" />
+                        <path d="M50,20 C40,20 30,24 30,30 C30,36 40,40 50,40 C60,40 70,36 70,30 C70,24 60,20 50,20z" fill="#CCCCCC" />
+                      </svg>
+                    </div>
                   </div>
                   <p className="text-white/60 text-sm">911 GT3 RS</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-full h-12 rounded bg-gradient-to-r from-blue-600/20 to-blue-700/20 flex items-center justify-center mb-2">
-                    <span className="text-white">McLaren</span>
+                  <div className="w-full h-16 rounded bg-gradient-to-r from-blue-600/40 to-blue-700/40 flex items-center justify-center mb-2 border border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.3)]">
+                    <div className="w-12 h-12 flex items-center justify-center">
+                      <svg viewBox="0 0 100 60" className="w-full h-full">
+                        <path d="M20,40 C20,25 35,15 50,15 C65,15 80,25 80,40 L20,40z" fill="#0284c7" />
+                        <path d="M35,40 L40,25 L60,25 L65,40 L35,40z" fill="#000" />
+                        <path d="M25,45 L75,45 L75,50 L25,50 L25,45z" fill="#0284c7" />
+                      </svg>
+                    </div>
                   </div>
                   <p className="text-white/60 text-sm">765LT Spider</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-full h-12 rounded bg-gradient-to-r from-green-600/20 to-green-700/20 flex items-center justify-center mb-2">
-                    <span className="text-white">Aston Martin</span>
+                  <div className="w-full h-16 rounded bg-gradient-to-r from-green-600/40 to-green-700/40 flex items-center justify-center mb-2 border border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.3)]">
+                    <div className="w-12 h-12 flex items-center justify-center">
+                      <svg viewBox="0 0 100 50" className="w-full h-full">
+                        <path d="M25,35 L25,15 L75,15 L75,35 L25,35z" fill="#10b981" />
+                        <path d="M20,25 L30,15 L70,15 L80,25 L70,35 L30,35 L20,25z" fill="#10b981" />
+                        <path d="M35,25 L40,20 L60,20 L65,25 L60,30 L40,30 L35,25z" fill="#000" />
+                      </svg>
+                    </div>
                   </div>
                   <p className="text-white/60 text-sm">Valkyrie</p>
                 </div>
@@ -255,14 +284,14 @@ const HowItWorks = () => {
               <div>
                 <h3 className="text-xl font-semibold text-white mb-2">Quanto costa partecipare?</h3>
                 <p className="text-white/70">
-                  La registrazione è gratuita, ma per partecipare attivamente è necessario sottoscrivere un abbonamento. I piani partono da €19,99 al mese per il piano Silver e arrivano fino a €99,99 al mese per il piano Black.
+                  La registrazione è gratuita, ma per partecipare attivamente è necessario sottoscrivere un abbonamento. I piani partono da €3,99 al mese per il piano Silver e arrivano fino a €9,99 al mese per il piano Black.
                 </p>
               </div>
               
               <div>
                 <h3 className="text-xl font-semibold text-white mb-2">Posso vincere se vivo all'estero?</h3>
                 <p className="text-white/70">
-                  Sì, M1SSION è un gioco globale. Non importa dove ti trovi nel mondo, se trovi l'auto, vinci il premio. Le spese di spedizione o di trasferimento dell'auto sono coperte da M1SSION.
+                  Sì, M1SSION è un gioco globale. Non importa dove ti trovi nel mondo, se trovi l'auto, vinci il premio. Le spese di spedizione o di trasferimento dell'auto saranno a tuo carico.
                 </p>
               </div>
               
