@@ -14,7 +14,7 @@ const LuxuryCarsSection = () => {
     { 
       brand: 'Lamborghini', 
       color: '#FFC107', 
-      logo: 'https://cdn.freebiesupply.com/logos/large/2x/lamborghini-logo-png-transparent.png',
+      logo: '/lovable-uploads/899aadd7-7ab5-4acc-839d-891f1ba034b3.png',
       description: 'Il toro, simbolo di forza e audacia del marchio di Sant\'Agata Bolognese.'
     },
     { 
