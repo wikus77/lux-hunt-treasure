@@ -3,6 +3,34 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
 const LuxuryCarsSection = () => {
+  // Define reliable car logos from public assets
+  const carLogos = [
+    { 
+      brand: 'Ferrari', 
+      color: '#FF0000', 
+      logo: 'https://cdn.freebiesupply.com/logos/large/2x/ferrari-logo-png-transparent.png',
+      description: 'L\'emblema del cavallino rampante, simbolo di potenza ed eccellenza italiana.'
+    },
+    { 
+      brand: 'Lamborghini', 
+      color: '#FFC107', 
+      logo: 'https://cdn.freebiesupply.com/logos/large/2x/lamborghini-logo-png-transparent.png',
+      description: 'Il toro, simbolo di forza e audacia del marchio di Sant\'Agata Bolognese.'
+    },
+    { 
+      brand: 'Porsche', 
+      color: '#00E5FF', 
+      logo: 'https://cdn.freebiesupply.com/logos/large/2x/porsche-logo-png-transparent.png',
+      description: 'Lo stemma di Stoccarda, sinonimo di prestazioni e precisione tedesca.'
+    },
+    { 
+      brand: 'McLaren', 
+      color: '#FF5500', 
+      logo: 'https://cdn.freebiesupply.com/logos/large/2x/mclaren-logo-png-transparent.png',
+      description: 'L\'eredità della Formula 1 in una supercar stradale di lusso britannica.'
+    }
+  ];
+
   return (
     <motion.section 
       className="py-20 px-4 bg-black w-full max-w-screen-xl mx-auto"
@@ -32,32 +60,7 @@ const LuxuryCarsSection = () => {
       </motion.p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
-        {[
-          { 
-            brand: 'Ferrari', 
-            color: '#FF0000', 
-            logo: '/lovable-uploads/72f29ba6-d993-48a2-87ee-49f277ac4054.png',
-            description: 'L\'emblema del cavallino rampante, simbolo di potenza ed eccellenza italiana.'
-          },
-          { 
-            brand: 'Lamborghini', 
-            color: '#FFC107', 
-            logo: '/lovable-uploads/5cf7989e-9669-4746-b385-b1a1f71c3911.png',
-            description: 'Il toro, simbolo di forza e audacia del marchio di Sant\'Agata Bolognese.'
-          },
-          { 
-            brand: 'Porsche', 
-            color: '#00E5FF', 
-            logo: '/lovable-uploads/a83b5c6d-75d0-4cb1-9e13-695850f887d5.png',
-            description: 'Lo stemma di Stoccarda, sinonimo di prestazioni e precisione tedesca.'
-          },
-          { 
-            brand: 'McLaren', 
-            color: '#FF5500', 
-            logo: '/lovable-uploads/2b15a4d9-835b-49cd-aa61-ea0ee5cc0bcf.png',
-            description: 'L\'eredità della Formula 1 in una supercar stradale di lusso britannica.'
-          }
-        ].map((car, index) => (
+        {carLogos.map((car, index) => (
           <motion.div 
             key={index}
             className="glass-card hover:bg-white/10 transition-all relative overflow-hidden group p-6"
@@ -75,7 +78,18 @@ const LuxuryCarsSection = () => {
                   className="w-full h-full object-contain transition-transform group-hover:scale-110 duration-300"
                   onError={(e) => {
                     console.error(`Failed to load image: ${car.logo}`);
-                    e.currentTarget.src = "/placeholder.svg"; // Fallback to placeholder
+                    // Use a more reliable fallback with text
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 200;
+                    canvas.height = 200;
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                      ctx.fillStyle = car.color;
+                      ctx.font = 'bold 30px Arial';
+                      ctx.textAlign = 'center';
+                      ctx.fillText(car.brand, 100, 100);
+                    }
+                    e.currentTarget.src = canvas.toDataURL();
                   }}
                 />
               </div>
