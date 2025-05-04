@@ -8,7 +8,7 @@ const LuxuryCarsSection = () => {
     { 
       brand: 'Ferrari', 
       color: '#FF0000', 
-      logo: 'https://cdn.freebiesupply.com/logos/large/2x/ferrari-logo-png-transparent.png',
+      logo: '/lovable-uploads/5349c240-d33e-4a10-8956-b1fe87396dbd.png',
       description: 'L\'emblema del cavallino rampante, simbolo di potenza ed eccellenza italiana.'
     },
     { 
