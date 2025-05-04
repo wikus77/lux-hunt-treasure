@@ -28,6 +28,8 @@ const PaymentGold = lazy(() => import('./pages/PaymentGold'));
 const PaymentBlack = lazy(() => import('./pages/PaymentBlack'));
 const PaymentMethods = lazy(() => import('./pages/PaymentMethods'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard'));
+const HowItWorks = lazy(() => import('./pages/HowItWorks'));
+const Contacts = lazy(() => import('./pages/Contacts'));
 
 const queryClient = new QueryClient();
 
@@ -76,6 +78,8 @@ function App() {
                     <Route path="/" element={<Index />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/how-it-works" element={<HowItWorks />} />
+                    <Route path="/contacts" element={<Contacts />} />
                     
                     <Route path="/" element={<MainLayout />}>
                       <Route path="/home" element={<Home />} />

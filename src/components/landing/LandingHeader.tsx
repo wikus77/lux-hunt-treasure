@@ -1,7 +1,19 @@
 
 import React from "react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const LandingHeader = () => {
+  const navigate = useNavigate();
+
+  const handleJoinHunt = () => {
+    navigate("/register");
+  };
+
+  const handleLearnMore = () => {
+    navigate("/how-it-works");
+  };
+
   return (
     <section className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-4 py-16">
       {/* Static background instead of animated particles */}
@@ -46,10 +58,16 @@ const LandingHeader = () => {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <button className="neon-button px-8 py-3 rounded-full text-black font-bold bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]">
+          <button 
+            className="neon-button px-8 py-3 rounded-full text-black font-bold bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+            onClick={handleJoinHunt}
+          >
             JOIN THE HUNT
           </button>
-          <button className="px-8 py-3 rounded-full text-white font-bold bg-black/30 border border-white/10 hover:bg-black/50 hover:border-white/20 transition-all">
+          <button 
+            className="px-8 py-3 rounded-full text-white font-bold bg-black/30 border border-white/10 hover:bg-black/50 hover:border-white/20 transition-all"
+            onClick={handleLearnMore}
+          >
             LEARN MORE
           </button>
         </div>

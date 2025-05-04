@@ -1,162 +1,270 @@
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Mail, MapPin, Phone, Instagram, Facebook, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
+import LandingFooter from "@/components/landing/LandingFooter";
+import BackgroundParticles from "@/components/ui/background-particles";
+import { Mail, Phone, MapPin, Send } from "lucide-react";
+import StyledInput from "@/components/ui/styled-input";
 
 const Contacts = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
-    // Simulazione invio form
+    
+    // Validation
+    if (!name || !email || !subject || !message) {
+      toast({
+        variant: "destructive",
+        title: "Errore",
+        description: "Completa tutti i campi per inviare il messaggio."
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Simulated form submission
     setTimeout(() => {
       toast({
         title: "Messaggio inviato",
-        description: "Grazie per averci contattato. Ti risponderemo al più presto.",
+        description: "Grazie per averci contattato. Ti risponderemo al più presto."
       });
+      setIsSubmitting(false);
       setName("");
       setEmail("");
+      setSubject("");
       setMessage("");
-      setIsSubmitting(false);
     }, 1500);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-black text-white p-4 pt-20">
-      <div className="container mx-auto max-w-4xl mb-16">
-        <div className="mb-8">
-          <Link to="/">
-            <Button variant="outline" className="mb-8">
-              <ArrowLeft className="mr-2 w-4 h-4" /> Torna alla Home
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-bold mb-6">Contattaci</h1>
-          <p className="text-gray-400 mb-8">
-            Hai domande o suggerimenti? Siamo qui per aiutarti. Contattaci in uno dei seguenti modi:
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          <div>
-            <h2 className="text-xl font-semibold mb-6">Inviaci un messaggio</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
-                  Nome completo
-                </label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  placeholder="Il tuo nome"
-                  className="w-full"
-                />
+    <div className="min-h-screen flex flex-col bg-black">
+      <UnifiedHeader />
+      
+      {/* Spacer for fixed header */}
+      <div className="h-[72px]"></div>
+      
+      {/* Background effects */}
+      <BackgroundParticles count={15} />
+      
+      {/* Main content */}
+      <main className="flex-1 py-20 px-4 relative z-10">
+        <div className="max-w-4xl mx-auto">
+          {/* Hero section */}
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-5xl md:text-6xl font-orbitron font-bold mb-6">
+              <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">Contatta </span>
+              <span className="bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">M1SSION</span>
+            </h1>
+            
+            <p className="text-xl text-white/70 max-w-2xl mx-auto">
+              Hai domande, suggerimenti o hai bisogno di assistenza? Siamo qui per te.
+            </p>
+          </motion.div>
+          
+          {/* Contact info and form */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Contact info */}
+            <motion.div 
+              className="lg:col-span-1"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="glass-card h-full flex flex-col justify-between">
+                <div>
+                  <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyan-400">Info di Contatto</h2>
+                  
+                  <div className="space-y-8">
+                    <div className="flex gap-4 items-start">
+                      <div className="w-10 h-10 rounded-full bg-cyan-400/20 flex items-center justify-center shrink-0">
+                        <Mail className="text-cyan-400" size={20} />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-medium mb-1">Email</h3>
+                        <a href="mailto:info@m1ssion.com" className="text-white/70 hover:text-cyan-400 transition-colors">
+                          info@m1ssion.com
+                        </a>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-4 items-start">
+                      <div className="w-10 h-10 rounded-full bg-cyan-400/20 flex items-center justify-center shrink-0">
+                        <Phone className="text-cyan-400" size={20} />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-medium mb-1">Telefono</h3>
+                        <a href="tel:+39123456789" className="text-white/70 hover:text-cyan-400 transition-colors">
+                          +39 123 456 789
+                        </a>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-4 items-start">
+                      <div className="w-10 h-10 rounded-full bg-cyan-400/20 flex items-center justify-center shrink-0">
+                        <MapPin className="text-cyan-400" size={20} />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-medium mb-1">Indirizzo</h3>
+                        <p className="text-white/70">
+                          Via della Missione, 1<br />
+                          20123 Milano, Italia
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-8 pt-6 border-t border-white/10">
+                  <p className="text-white/50 text-sm">
+                    Orari di assistenza:<br />
+                    Lun-Ven: 9:00 - 18:00
+                  </p>
+                </div>
               </div>
-              
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="La tua email"
-                  className="w-full"
-                />
+            </motion.div>
+            
+            {/* Contact form */}
+            <motion.div 
+              className="lg:col-span-2"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <div className="glass-card">
+                <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyan-400">Inviaci un Messaggio</h2>
+                
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label htmlFor="name" className="block text-white mb-2">Nome</label>
+                      <StyledInput
+                        id="name"
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Il tuo nome"
+                        icon={<Mail size={16} />}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="email" className="block text-white mb-2">Email</label>
+                      <StyledInput
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="La tua email"
+                        icon={<Mail size={16} />}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="subject" className="block text-white mb-2">Oggetto</label>
+                    <StyledInput
+                      id="subject"
+                      type="text"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      placeholder="Oggetto del messaggio"
+                      icon={<Mail size={16} />}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="message" className="block text-white mb-2">Messaggio</label>
+                    <textarea
+                      id="message"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="Il tuo messaggio"
+                      className="w-full bg-black/50 border-white/10 rounded-md border px-3 py-2 min-h-36 text-white"
+                      rows={6}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Button
+                      type="submit"
+                      className="bg-gradient-to-r from-cyan-400 to-blue-600 text-black px-6 py-2 rounded-full font-medium flex items-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        "Invio in corso..."
+                      ) : (
+                        <>
+                          Invia Messaggio <Send size={16} />
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </form>
               </div>
-              
-              <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-1">
-                  Messaggio
-                </label>
-                <Textarea
-                  id="message"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  required
-                  placeholder="Come possiamo aiutarti?"
-                  className="w-full h-32"
-                />
-              </div>
-              
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
-              >
-                {isSubmitting ? "Invio in corso..." : "Invia messaggio"}
-              </Button>
-            </form>
+            </motion.div>
           </div>
           
-          <div>
-            <h2 className="text-xl font-semibold mb-6">Informazioni di contatto</h2>
+          {/* FAQ */}
+          <motion.div 
+            className="mt-20"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl font-orbitron font-bold mb-8 text-center text-white">Domande Frequenti</h2>
             
-            <div className="space-y-6">
-              <div className="flex items-start space-x-3">
-                <MapPin className="w-5 h-5 text-projectx-neon-blue mt-1" />
-                <div>
-                  <h3 className="font-medium">Indirizzo</h3>
-                  <p className="text-gray-400">Via Roma 123, 00100 Roma, Italia</p>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="glass-card">
+                <h3 className="text-xl font-bold mb-3 text-cyan-400">Come posso cambiare il mio abbonamento?</h3>
+                <p className="text-white/70">
+                  Puoi modificare il tuo piano di abbonamento in qualsiasi momento dalla sezione "Abbonamenti" nel tuo profilo. Il nuovo piano entrerà in vigore immediatamente.
+                </p>
               </div>
               
-              <div className="flex items-start space-x-3">
-                <Mail className="w-5 h-5 text-projectx-neon-blue mt-1" />
-                <div>
-                  <h3 className="font-medium">Email</h3>
-                  <p className="text-gray-400">info@m1ssion.com</p>
-                  <p className="text-gray-400">support@m1ssion.com</p>
-                </div>
+              <div className="glass-card">
+                <h3 className="text-xl font-bold mb-3 text-cyan-400">Posso annullare il mio abbonamento?</h3>
+                <p className="text-white/70">
+                  Sì, puoi annullare il tuo abbonamento in qualsiasi momento dalla sezione "Abbonamenti". L'accesso rimarrà attivo fino alla fine del periodo di fatturazione corrente.
+                </p>
               </div>
               
-              <div className="flex items-start space-x-3">
-                <Phone className="w-5 h-5 text-projectx-neon-blue mt-1" />
-                <div>
-                  <h3 className="font-medium">Telefono</h3>
-                  <p className="text-gray-400">+39 06 1234567</p>
-                </div>
+              <div className="glass-card">
+                <h3 className="text-xl font-bold mb-3 text-cyan-400">Come funziona il sistema di vincita?</h3>
+                <p className="text-white/70">
+                  Il vincitore è la prima persona che trova la posizione esatta dell'auto utilizzando la funzione Buzz. Il sistema verifica automaticamente la posizione e, se corretta, il vincitore viene notificato immediatamente.
+                </p>
               </div>
               
-              <div className="pt-4">
-                <h3 className="font-medium mb-3">Seguici sui social media</h3>
-                <div className="flex space-x-4">
-                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
-                    <Instagram className="w-6 h-6" />
-                  </a>
-                  <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
-                    <Facebook className="w-6 h-6" />
-                  </a>
-                  <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
-                    <X className="w-6 h-6" />
-                  </a>
-                </div>
-              </div>
-              
-              <div className="pt-6">
-                <h3 className="font-medium mb-3">Orari di disponibilità</h3>
-                <p className="text-gray-400">Lunedì - Venerdì: 9:00 - 18:00</p>
-                <p className="text-gray-400">Sabato: 10:00 - 14:00</p>
-                <p className="text-gray-400">Domenica: Chiuso</p>
+              <div className="glass-card">
+                <h3 className="text-xl font-bold mb-3 text-cyan-400">Non ricevo gli indizi via email</h3>
+                <p className="text-white/70">
+                  Controlla la cartella spam/promozioni della tua email. Se il problema persiste, contattaci tramite questo modulo e risolveremo il problema il prima possibile.
+                </p>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </main>
+      
+      <LandingFooter />
     </div>
   );
 };
