@@ -12,6 +12,7 @@ import EnergyFlash from "./effects/EnergyFlash";
 import ParticleConvergence from "./effects/ParticleConvergence";
 import LogoReveal from "./effects/LogoReveal";
 import SkipButton from "./effects/SkipButton";
+import BlackHole3DEffect from "./effects/BlackHole3DEffect";
 
 interface BlackHoleRevealIntroProps {
   onComplete: () => void;
@@ -19,6 +20,7 @@ interface BlackHoleRevealIntroProps {
 
 const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete }) => {
   const [stage, setStage] = useState<number>(0);
+  const [show3DEffect, setShow3DEffect] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
   // Control animation stages
@@ -37,6 +39,8 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
     const initialTimeout = setTimeout(() => {
       console.log("BlackHoleRevealIntro - avvio stage 1");
       setStage(1); // Start gravitational distortion
+      setShow3DEffect(true); // Show 3D effect
+      
       // Play sound effect
       if (audioRef.current) {
         audioRef.current.play().catch(err => console.log("Audio play error:", err));
@@ -135,6 +139,9 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
     >
       {/* Background space dust */}
       <SpaceDust />
+      
+      {/* 3D Black Hole Effect */}
+      <BlackHole3DEffect stage={stage} visible={show3DEffect} />
       
       {/* Effetti del buco nero e della distorsione gravitazionale */}
       <GravitationalRings stage={stage} />

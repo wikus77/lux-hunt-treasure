@@ -193,6 +193,23 @@
   animation: pulsateGlow 3s ease-in-out infinite alternate;
 }
 
+/* 3D Black Hole Effect */
+.black-hole-3d-effect {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9;
+}
+
+.black-hole-3d-effect canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
 /* Skip button */
 .skip-button {
   position: absolute;
