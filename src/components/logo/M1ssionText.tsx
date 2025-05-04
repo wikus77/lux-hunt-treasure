@@ -16,8 +16,8 @@ const M1ssionText = () => {
       aria-label="Go to homepage"
       style={{ cursor: 'pointer' }}
     >
-      <span style={{ color: '#00E5FF' }} className="text-[#00E5FF]">M1</span>
-      <span style={{ color: '#FFFFFF' }} className="text-white">SSION</span>
+      <span className="text-[#00E5FF]">M1</span>
+      <span className="text-white">SSION</span>
     </button>
   );
 };

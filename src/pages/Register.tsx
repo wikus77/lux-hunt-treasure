@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { User, Mail, Lock, Check } from "lucide-react";
+import M1ssionText from "../components/logo/M1ssionText";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -110,7 +111,9 @@ const Register = () => {
       >
         {/* Header with logo */}
         <div className="text-center mb-8 relative">
-          <h1 className="mission-heading">M1SSION</h1>
+          <div className="flex justify-center mb-4">
+            <M1ssionText />
+          </div>
           <p className="text-white/70 mb-2">Crea il tuo account</p>
           <div className="line-glow"></div>
           <div className="mission-motto mt-2">IT IS POSSIBLE</div>
