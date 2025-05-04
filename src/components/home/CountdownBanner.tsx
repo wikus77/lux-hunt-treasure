@@ -1,13 +1,11 @@
 
 import { useEffect, useState } from "react";
+import { getMissionDeadline } from "@/utils/countdownDate";
 
 function getTimeLeft() {
-  const nextEventDate = new Date();
-  nextEventDate.setMonth(nextEventDate.getMonth() + 1);
-  nextEventDate.setDate(1);
-  nextEventDate.setHours(0,0,0,0);
+  const targetDate = getMissionDeadline();
   const now = new Date();
-  const diff = nextEventDate.getTime() - now.getTime();
+  const diff = targetDate.getTime() - now.getTime();
 
   if (diff <= 0) return { days: 0, hours: 0, minutes: 0 };
 
