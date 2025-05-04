@@ -1,4 +1,3 @@
-
 import { useState, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -26,27 +25,31 @@ const StyledInput = ({
   className?: string;
 }) => {
   // Split the input value to style first two letters differently
-  const firstTwoChars = value.slice(0, 2);
-  const restChars = value.slice(2);
+  const firstTwoChars = type === 'password' ? '••'.slice(0, Math.min(2, value.length)) : value.slice(0, 2);
+  const restChars = type === 'password' 
+    ? '•'.repeat(Math.max(0, value.length - 2)) 
+    : value.slice(2);
   
   return (
     <div className="relative">
       <input
         id={id}
-        type={type}
+        type={type === 'password' ? 'password' : 'text'}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className={`bg-black/50 border-white/10 pl-10 w-full h-10 rounded-md border px-3 py-2 text-base md:text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+        className={`bg-black/50 border-white/10 pl-10 w-full h-10 rounded-md border px-3 py-2 text-base md:text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className} text-transparent`}
       />
       {/* Overlay div showing styled text */}
-      <div 
-        className="absolute inset-0 flex items-center pl-10 pointer-events-none px-3 py-2"
-        style={{ letterSpacing: value ? '0.025em' : '0' }}
-      >
-        <span className="text-[#00E5FF]">{firstTwoChars}</span>
-        <span className="text-white">{restChars}</span>
-      </div>
+      {value && (
+        <div 
+          className="absolute inset-0 flex items-center pl-10 pointer-events-none px-3 py-2"
+          style={{ letterSpacing: '0.025em' }}
+        >
+          <span className="text-[#00E5FF]">{firstTwoChars}</span>
+          <span className="text-white">{restChars}</span>
+        </div>
+      )}
     </div>
   );
 };
