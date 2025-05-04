@@ -14,10 +14,12 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded');
   // Monitora errori di caricamento risorse (immagini, script, css)
   window.addEventListener('error', (e) => {
-    if (e.target instanceof HTMLImageElement || 
-        e.target instanceof HTMLScriptElement || 
-        e.target instanceof HTMLLinkElement) {
-      console.error(`Resource load failed: ${e.target.src || e.target.href}`);
+    if (e.target instanceof HTMLImageElement) {
+      console.error(`Resource load failed: ${e.target.src}`);
+    } else if (e.target instanceof HTMLScriptElement) {
+      console.error(`Resource load failed: ${e.target.src}`);
+    } else if (e.target instanceof HTMLLinkElement) {
+      console.error(`Resource load failed: ${e.target.href}`);
     }
   }, true);
 
