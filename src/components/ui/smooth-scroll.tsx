@@ -26,8 +26,7 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
 
     // Create new locomotive scroll instance
     const scrollInstance = new LocomotiveScroll({
-      // Use correct property names for LocomotiveScroll v5
-      container: scrollContainerRef.current,
+      el: scrollContainerRef.current,
       lerp: options.lerp ?? 0.08,
       multiplier: 1,
       class: "is-inview",

@@ -86,14 +86,13 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Sostituito il Button con MagneticButton per risolvere i problemi di interazione */}
-          <MagneticButton
+          <Button
             type="submit"
             className="w-full mt-6 bg-gradient-to-r from-projectx-blue to-projectx-pink font-medium"
             disabled={isLoading}
           >
             {isLoading ? "Accesso in corso..." : "Accedi"}
-          </MagneticButton>
+          </Button>
 
           <div className="mt-4 text-center">
             <Button

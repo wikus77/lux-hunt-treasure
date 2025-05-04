@@ -8,12 +8,16 @@ interface MagneticButtonProps
   children: React.ReactNode;
   className?: string;
   strength?: number;
+  onClick?: () => void;
+  type?: "button" | "submit" | "reset";
 }
 
 export const MagneticButton = ({ 
   children, 
   className, 
   strength = 25, 
+  onClick,
+  type = "button",
   ...props 
 }: MagneticButtonProps) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -47,6 +51,8 @@ export const MagneticButton = ({
       className={cn("relative inline-block", className)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+      type={type}
       {...motionProps}
       {...props}
     >

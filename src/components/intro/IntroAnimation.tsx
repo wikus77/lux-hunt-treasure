@@ -25,7 +25,10 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
     >
       <div className="logo-container">
         <div className="scan-line" />
-        <div className="mission-text">M1SSION</div>
+        <div className="mission-text">
+          <span className="text-[#00E5FF]">M1</span>
+          <span className="text-white">SSION</span>
+        </div>
       </div>
     </motion.div>
   );
