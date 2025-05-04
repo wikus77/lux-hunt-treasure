@@ -26,20 +26,14 @@ export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
 
     // Create new locomotive scroll instance
     const scrollInstance = new LocomotiveScroll({
-      smooth: options.smooth ?? true,
+      el: scrollContainerRef.current,
+      lerp: options.lerp ?? 0.08,
       multiplier: 1,
       class: "is-inview",
       getDirection: true,
       getSpeed: true,
-      lerp: options.lerp ?? 0.08,
-      smartphone: {
-        smooth: options.smartphone?.smooth ?? true,
-      },
-      tablet: {
-        smooth: options.tablet?.smooth ?? true,
-      },
-      // We'll manually set the element in the constructor options
-      container: scrollContainerRef.current,
+      smoothMobile: options.smartphone?.smooth ?? true,
+      smoothTablet: options.tablet?.smooth ?? true,
     });
 
     // Store the instance reference
