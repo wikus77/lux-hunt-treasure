@@ -6,6 +6,7 @@ import ParticleAnimation from "./animations/ParticleAnimation";
 import ScannerAnimation from "./animations/ScannerAnimation";
 import ThreeDAnimation from "./animations/ThreeDAnimation";
 import BlackHoleRevealIntro from "./BlackHoleRevealIntro";
+import LaserRevealIntro from "./LaserRevealIntro";
 
 // Import CSS files for Framer Motion (they will be loaded globally)
 import "./styles/base-intro-styles.css";
@@ -18,7 +19,7 @@ interface IntroAnimationOptionsProps {
 
 const IntroAnimationOptions: React.FC<IntroAnimationOptionsProps> = ({ 
   onComplete,
-  selectedOption = 6 // Default to the new Black Hole animation
+  selectedOption = 7 // Default to the new Laser Reveal animation
 }) => {
   // Select animation based on option
   switch (selectedOption) {
@@ -34,8 +35,10 @@ const IntroAnimationOptions: React.FC<IntroAnimationOptionsProps> = ({
       return <ThreeDAnimation onComplete={onComplete} />;
     case 6:
       return <BlackHoleRevealIntro onComplete={onComplete} />;
+    case 7:
+      return <LaserRevealIntro onComplete={onComplete} />;
     default:
-      return <BlackHoleRevealIntro onComplete={onComplete} />;
+      return <LaserRevealIntro onComplete={onComplete} />;
   }
 };
 

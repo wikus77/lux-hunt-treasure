@@ -10,7 +10,7 @@ import CTASection from "@/components/landing/CTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
 import { useNavigate } from "react-router-dom";
 import { getMissionDeadline } from "@/utils/countdownDate";
-import BlackHoleRevealIntro from "@/components/intro/BlackHoleRevealIntro";
+import LaserRevealIntro from "@/components/intro/LaserRevealIntro";
 
 const Index = () => {
   // Control the intro animation visibility
@@ -63,7 +63,7 @@ const Index = () => {
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
       {!introCompleted && (
         <div className="fixed inset-0 z-[9999] bg-black">
-          <BlackHoleRevealIntro onComplete={handleIntroComplete} />
+          <LaserRevealIntro onComplete={handleIntroComplete} />
         </div>
       )}
       
