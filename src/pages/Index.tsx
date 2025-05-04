@@ -10,7 +10,7 @@ import CTASection from "@/components/landing/CTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
 import { useNavigate } from "react-router-dom";
 import { getMissionDeadline } from "@/utils/countdownDate";
-import IntroAnimation from "@/components/intro/IntroAnimation";
+import IntroAnimationOptions from "@/components/intro/IntroAnimationOptions";
 
 const Index = () => {
   // Control the intro animation visibility
@@ -18,6 +18,9 @@ const Index = () => {
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const navigate = useNavigate();
 
+  // Animation option (1-5) - change this value to switch animations
+  const animationOption = 1; // Set this to 1, 2, 3, 4, or 5
+  
   // Get target date from utility function
   const nextEventDate = getMissionDeadline();
   
@@ -61,7 +64,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
       {!introCompleted && (
-        <IntroAnimation onComplete={handleIntroComplete} />
+        <IntroAnimationOptions onComplete={handleIntroComplete} selectedOption={animationOption} />
       )}
       
       {introCompleted && (
