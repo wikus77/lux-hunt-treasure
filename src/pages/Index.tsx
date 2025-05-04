@@ -1,17 +1,20 @@
 
 import { useState, useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
-import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import AgeVerificationModal from "@/components/auth/AgeVerificationModal";
-import IntroAnimation from "@/components/intro/IntroAnimation";
-import PresentationSection from "@/components/landing/PresentationSection";
-import NextEventCountdown from "@/components/landing/NextEventCountdown";
-import HowItWorks from "@/components/landing/HowItWorks";
-import LandingHeader from "@/components/landing/LandingHeader";
-import LuxuryCarsSection from "@/components/landing/LuxuryCarsSection";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+
+// Import componenti della landing page
+import HeroSection from "@/components/landing/HeroSection";
+import FeaturesSection from "@/components/landing/FeaturesSection";
+import PrizeShowcase from "@/components/landing/PrizeShowcase";
+import HowItWorksSection from "@/components/landing/HowItWorksSection"; 
+import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import CTASection from "@/components/landing/CTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
-import { useNavigate } from "react-router-dom";
+import AgeVerificationModal from "@/components/auth/AgeVerificationModal";
+import Navbar from "@/components/landing/Navbar";
+import IntroAnimation from "@/components/intro/IntroAnimation";
 
 const Index = () => {
   const [showIntro, setShowIntro] = useState(true);
@@ -19,13 +22,9 @@ const Index = () => {
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const navigate = useNavigate();
 
-  // Set date for countdown (one month from today)
-  const nextEventDate = new Date();
-  nextEventDate.setMonth(nextEventDate.getMonth() + 1);
-
-  // Check if intro was shown before
+  // Controlla se l'intro è già stato mostrato
   useEffect(() => {
-    // Uncomment this line to test the intro animation again
+    // Rimuovi questo commento per testare l'animazione intro
     // localStorage.removeItem('introShown');
     
     const introShown = localStorage.getItem('introShown');
@@ -33,9 +32,9 @@ const Index = () => {
       setShowIntro(false);
       setIntroCompleted(true);
     } else {
-      // First viewing, show intro
+      // Prima visita, mostra intro
       setShowIntro(true);
-      // Set after first viewing
+      // Imposta dopo la prima visita
       localStorage.setItem('introShown', 'true');
     }
   }, []);
@@ -56,21 +55,18 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
-      <AnimatePresence>
-        {showIntro && (
-          <IntroAnimation onComplete={handleIntroComplete} />
-        )}
-      </AnimatePresence>
+      {showIntro && (
+        <IntroAnimation onComplete={handleIntroComplete} />
+      )}
 
       {introCompleted && (
         <>
-          <UnifiedHeader />
-          <div className="h-[72px] w-full" />
-          <LandingHeader />
-          <PresentationSection visible={introCompleted} />
-          <NextEventCountdown targetDate={nextEventDate} />
-          <HowItWorks onRegisterClick={handleRegisterClick} />
-          <LuxuryCarsSection />
+          <Navbar onRegisterClick={handleRegisterClick} />
+          <HeroSection onRegisterClick={handleRegisterClick} />
+          <PrizeShowcase />
+          <HowItWorksSection />
+          <FeaturesSection />
+          <TestimonialsSection />
           <CTASection onRegisterClick={handleRegisterClick} />
           <LandingFooter />
           <AgeVerificationModal
