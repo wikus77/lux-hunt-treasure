@@ -27,13 +27,13 @@ const BlackHole3DEffect: React.FC<BlackHole3DEffectProps> = ({ stage, visible })
         overflow: 'hidden'
       }}
     >
-      {/* Background stars */}
+      {/* Background stars with nebula effect */}
       <BackgroundStars />
       
       {/* Black hole center with accretion disk */}
       <BlackHoleCenter stage={stage} />
       
-      {/* Particle system */}
+      {/* Enhanced particle system */}
       <ParticleSystem stage={stage} visible={visible} />
     </div>
   );
