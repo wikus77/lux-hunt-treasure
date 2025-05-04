@@ -21,12 +21,12 @@ export default function MissionComplete({ showFinalMessage }: MissionCompletePro
         background: "radial-gradient(circle at center, rgba(29, 5, 84, 0.9) 0%, rgba(0, 0, 0, 0.95) 80%)"
       }}
     >
-      {/* Logo fluttuante 3D */}
+      {/* Logo fluttuante 3D con animazioni ottimizzate */}
       <motion.div
         className="relative"
         animate={{
-          y: [0, -10, 0],
-          rotateY: [0, 10, 0, -10, 0],
+          y: [0, -8, 0],
+          rotateY: [0, 5, 0, -5, 0],
         }}
         transition={{
           duration: 5,
@@ -58,7 +58,7 @@ export default function MissionComplete({ showFinalMessage }: MissionCompletePro
           }}
           animate={{
             opacity: [0.5, 0.8, 0.5],
-            scale: [0.9, 1.1, 0.9]
+            scale: [0.95, 1.05, 0.95]
           }}
           transition={{
             duration: 4,
@@ -68,7 +68,7 @@ export default function MissionComplete({ showFinalMessage }: MissionCompletePro
         />
       </motion.div>
       
-      {/* Testo fluttuante 3D */}
+      {/* Testo fluttuante 3D con performance migliorata */}
       <motion.div 
         className="relative"
         initial={{ opacity: 0, y: 20 }}
@@ -78,8 +78,6 @@ export default function MissionComplete({ showFinalMessage }: MissionCompletePro
         <motion.div 
           className="text-2xl md:text-4xl font-orbitron tracking-widest"
           animate={{
-            y: [0, -5, 0],
-            rotateX: [0, 5, 0],
             textShadow: [
               "0 0 5px rgba(0, 229, 255, 0.5), 0 0 10px rgba(0, 229, 255, 0.3)",
               "0 0 20px rgba(0, 229, 255, 0.8), 0 0 30px rgba(0, 229, 255, 0.5)",
@@ -87,8 +85,6 @@ export default function MissionComplete({ showFinalMessage }: MissionCompletePro
             ]
           }}
           transition={{
-            y: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-            rotateX: { duration: 3, repeat: Infinity, ease: "easeInOut" },
             textShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
           }}
           style={{
@@ -111,8 +107,8 @@ export default function MissionComplete({ showFinalMessage }: MissionCompletePro
         />
       </motion.div>
 
-      {/* Particelle ambientali fluttuanti */}
-      {[...Array(8)].map((_, i) => (
+      {/* Particelle ambientali fluttuanti ottimizzate */}
+      {[...Array(5)].map((_, i) => (
         <motion.div
           key={i}
           className="absolute rounded-full"
@@ -121,8 +117,8 @@ export default function MissionComplete({ showFinalMessage }: MissionCompletePro
             height: `${Math.random() * 4 + 2}px`,
             backgroundColor: i % 2 === 0 ? 'rgba(0, 229, 255, 0.8)' : 'rgba(124, 58, 237, 0.8)',
             boxShadow: i % 2 === 0 
-              ? '0 0 5px rgba(0, 229, 255, 0.8), 0 0 10px rgba(0, 229, 255, 0.5)' 
-              : '0 0 5px rgba(124, 58, 237, 0.8), 0 0 10px rgba(124, 58, 237, 0.5)',
+              ? '0 0 5px rgba(0, 229, 255, 0.8)' 
+              : '0 0 5px rgba(124, 58, 237, 0.8)',
             top: `${Math.random() * 100}%`,
             left: `${Math.random() * 100}%`
           }}

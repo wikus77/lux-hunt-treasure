@@ -38,12 +38,10 @@ export default function TimeBlock({ value, label, pulsing = false, highlight = f
         animate={{
           boxShadow: pulsing
             ? ["0 0 15px rgba(0, 229, 255, 0.4)", "0 0 30px rgba(0, 229, 255, 0.7)", "0 0 15px rgba(0, 229, 255, 0.4)"]
-            : ["0 0 15px rgba(124, 58, 237, 0.3)", "0 0 20px rgba(124, 58, 237, 0.5)", "0 0 15px rgba(124, 58, 237, 0.3)"],
-          translateY: ["0px", "-5px", "0px"]
+            : ["0 0 15px rgba(124, 58, 237, 0.3)", "0 0 20px rgba(124, 58, 237, 0.5)", "0 0 15px rgba(124, 58, 237, 0.3)"]
         }}
         transition={{
-          boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-          translateY: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+          boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
         }}
       >
         {/* Effetto di riflessione lucido 3D */}
@@ -88,7 +86,7 @@ export default function TimeBlock({ value, label, pulsing = false, highlight = f
             </span>
             
             {/* Ombra del testo per effetto 3D */}
-            <span className="absolute inset-0 blur-[1px] text-cyan-600/20 translate-z-[-2px] translate-y-[2px]" aria-hidden="true">
+            <span className="absolute inset-0 blur-[1px] text-cyan-600/20 translate-y-[2px]" aria-hidden="true">
               {formattedValue}
             </span>
           </motion.div>

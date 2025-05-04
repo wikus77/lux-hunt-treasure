@@ -23,17 +23,27 @@ export default function NeonSplitCountdown() {
       
       if (isCountdownComplete(newTime) && !showFinalMessage) {
         setShowFinalMessage(true);
+        // Pulizia del timer quando è completo
+        if (timerRef.current !== null) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
       }
     };
 
     // Impostazione iniziale e intervallo
     updateTimer(); // Aggiorna immediatamente
-    timerRef.current = window.setInterval(updateTimer, 1000);
+    
+    // Solo se il timer non è già impostato
+    if (timerRef.current === null) {
+      timerRef.current = window.setInterval(updateTimer, 1000);
+    }
     
     // Pulizia quando il componente viene smontato
     return () => {
       if (timerRef.current !== null) {
         clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     };
   }, [showFinalMessage]);
@@ -48,6 +58,11 @@ export default function NeonSplitCountdown() {
     }
     prevSecondsRef.current = currentSeconds;
   }, [remainingTime.seconds]);
+
+  // Preveniamo il rendering se siamo in uno stato inconsistente
+  if (!remainingTime && !showFinalMessage) {
+    return null;
+  }
 
   return (
     <motion.div 
@@ -93,8 +108,8 @@ export default function NeonSplitCountdown() {
         </div>
 
         {/* Overlay per il completamento della missione */}
-        <AnimatePresence>
-          <MissionComplete showFinalMessage={showFinalMessage} />
+        <AnimatePresence mode="wait">
+          {showFinalMessage && <MissionComplete showFinalMessage={showFinalMessage} />}
         </AnimatePresence>
       </CountdownContainer>
     </motion.div>

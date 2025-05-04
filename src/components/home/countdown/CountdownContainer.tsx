@@ -15,12 +15,11 @@ export default function CountdownContainer({ children, pulseTrigger }: Countdown
       <motion.div 
         className="absolute inset-0 -z-10"
         animate={{
-          y: [0, -8, 0],
-          rotateX: [0, 2, 0],
-          rotateY: [0, -1, 0]
+          y: [0, -4, 0],
+          rotateX: [0, 1, 0]
         }}
         transition={{
-          duration: 8,
+          duration: 6,
           repeat: Infinity,
           ease: "easeInOut"
         }}
@@ -59,7 +58,7 @@ export default function CountdownContainer({ children, pulseTrigger }: Countdown
           ease: "easeInOut"
         }}
       >
-        {/* Linee luminescenti 3D migliorate */}
+        {/* Linee luminescenti 3D */}
         <motion.div 
           className="absolute top-0 left-0 right-0 h-[2px]"
           style={{
@@ -90,7 +89,7 @@ export default function CountdownContainer({ children, pulseTrigger }: Countdown
           }}
         />
         
-        {/* Raggio di luce in movimento migliorato */}
+        {/* Raggio di luce in movimento */}
         <div className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none overflow-hidden">
           <motion.div 
             className="absolute h-full w-[200px] skew-x-12 bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"
@@ -106,30 +105,18 @@ export default function CountdownContainer({ children, pulseTrigger }: Countdown
           />
         </div>
 
-        {/* Effetto fluttuante 3D per tutto il contenuto del container */}
-        <motion.div
-          className="w-full"
-          animate={{
-            y: [0, -3, 0],
-            rotateX: [0, 1, 0],
-            rotateY: [0, -0.5, 0] 
-          }}
-          transition={{
-            duration: 6,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        >
+        {/* Contenuto */}
+        <div className="w-full relative z-10">
           {children}
-        </motion.div>
+        </div>
       </motion.div>
 
-      {/* Pattern di circuiti 3D migliorati */}
+      {/* Pattern di circuiti */}
       <div className="absolute inset-0 -z-20 opacity-10">
         <motion.div 
           className="w-full h-full" 
           animate={{
-            scale: [1, 1.05, 1],
+            scale: [1, 1.03, 1],
             opacity: [0.1, 0.15, 0.1]
           }}
           transition={{
@@ -144,9 +131,9 @@ export default function CountdownContainer({ children, pulseTrigger }: Countdown
         />
       </div>
 
-      {/* Particelle fluttuanti 3D ambientali */}
+      {/* Particelle fluttuanti ambientali ridotte per migliore performance */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        {[...Array(6)].map((_, i) => (
+        {[...Array(4)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute rounded-full"
@@ -155,8 +142,8 @@ export default function CountdownContainer({ children, pulseTrigger }: Countdown
               height: `${Math.random() * 4 + 2}px`,
               backgroundColor: i % 2 === 0 ? 'rgba(0, 229, 255, 0.8)' : 'rgba(124, 58, 237, 0.8)',
               boxShadow: i % 2 === 0 
-                ? '0 0 5px rgba(0, 229, 255, 0.8), 0 0 10px rgba(0, 229, 255, 0.5)' 
-                : '0 0 5px rgba(124, 58, 237, 0.8), 0 0 10px rgba(124, 58, 237, 0.5)',
+                ? '0 0 5px rgba(0, 229, 255, 0.8)' 
+                : '0 0 5px rgba(124, 58, 237, 0.8)',
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`
             }}

@@ -1,5 +1,5 @@
 
-// Interfaccia per il tempo rimanente
+// Utility per il calcolo del tempo rimanente
 export interface TimeRemaining {
   days: number;
   hours: number;
@@ -7,34 +7,46 @@ export interface TimeRemaining {
   seconds: number;
 }
 
-// Data di destinazione corretta per il countdown (primo giorno del mese prossimo)
-export const getTargetDate = (): Date => {
-  const now = new Date();
-  // Imposta il target al primo giorno del mese prossimo
-  return new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
-};
+// Data target per il countdown (modificabile in base alle esigenze)
+const TARGET_DATE = new Date('2025-05-31T00:00:00'); // Impostazione di default
 
-// Funzione migliorata per calcolare il tempo rimanente
-export const getTimeRemaining = (): TimeRemaining => {
+// Funzione principale per calcolare il tempo rimanente
+export function getTimeRemaining(): TimeRemaining {
   const now = new Date();
-  const target = getTargetDate();
-  const diff = Math.max(0, target.getTime() - now.getTime());
+  const difference = TARGET_DATE.getTime() - now.getTime();
   
-  // Calcola i valori di tempo rimanente
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-  const minutes = Math.floor((diff / (1000 * 60)) % 60);
-  const seconds = Math.floor((diff / 1000) % 60);
+  // Se il countdown è terminato, ritorniamo tutti zeri
+  if (difference <= 0) {
+    return {
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0
+    };
+  }
   
-  return { days, hours, minutes, seconds };
-};
+  // Calcoliamo i valori in modo corretto
+  const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((difference / (1000 * 60)) % 60);
+  const seconds = Math.floor((difference / 1000) % 60);
+  
+  return {
+    days,
+    hours,
+    minutes,
+    seconds
+  };
+}
 
-// Verifica se il countdown è completo
-export const isCountdownComplete = (time: TimeRemaining): boolean => {
+// Verifica se il countdown è completato
+export function isCountdownComplete(time: TimeRemaining): boolean {
   return time.days === 0 && time.hours === 0 && time.minutes === 0 && time.seconds === 0;
-};
+}
 
-// Verifica se è l'ultimo minuto del countdown
-export const isLastMinute = (time: TimeRemaining): boolean => {
-  return time.days === 0 && time.hours === 0 && time.minutes === 0;
-};
+// Funzione per configurare una nuova data target
+export function setTargetDate(newDate: Date) {
+  // In una implementazione reale, questa funzione potrebbe salvare la data nel localStorage
+  // o in un database tramite API
+  console.log("Nuova data impostata:", newDate);
+}
