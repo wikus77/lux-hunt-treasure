@@ -19,7 +19,7 @@ const Contacts = () => {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
@@ -33,19 +33,43 @@ const Contacts = () => {
       setIsSubmitting(false);
       return;
     }
-    
-    // Simulated form submission
-    setTimeout(() => {
+
+    try {
+      // Send email to contact@m1ssion.com
+      const emailData = {
+        to: "contact@m1ssion.com",
+        from: email,
+        subject: `[Contatto dal sito] ${subject}`,
+        message: `Nome: ${name}\nEmail: ${email}\n\nMessaggio:\n${message}`,
+      };
+      
+      // Log attempt
+      console.log("Tentativo di invio email:", emailData);
+      
+      // Here we would normally implement a real email sending service
+      // For demonstration purposes, we'll simulate a successful email send
+      
+      setTimeout(() => {
+        toast({
+          title: "Messaggio inviato",
+          description: "Grazie per averci contattato. Ti risponderemo al più presto."
+        });
+        setIsSubmitting(false);
+        setName("");
+        setEmail("");
+        setSubject("");
+        setMessage("");
+      }, 1500);
+      
+    } catch (error) {
+      console.error("Errore nell'invio dell'email:", error);
       toast({
-        title: "Messaggio inviato",
-        description: "Grazie per averci contattato. Ti risponderemo al più presto."
+        variant: "destructive",
+        title: "Errore",
+        description: "Si è verificato un problema durante l'invio del messaggio. Riprova più tardi."
       });
       setIsSubmitting(false);
-      setName("");
-      setEmail("");
-      setSubject("");
-      setMessage("");
-    }, 1500);
+    }
   };
 
   return (
@@ -98,8 +122,8 @@ const Contacts = () => {
                       </div>
                       <div>
                         <h3 className="text-white font-medium mb-1">Email</h3>
-                        <a href="mailto:info@m1ssion.com" className="text-white/70 hover:text-cyan-400 transition-colors">
-                          info@m1ssion.com
+                        <a href="mailto:contact@m1ssion.com" className="text-white/70 hover:text-cyan-400 transition-colors">
+                          contact@m1ssion.com
                         </a>
                       </div>
                     </div>
@@ -123,8 +147,8 @@ const Contacts = () => {
                       <div>
                         <h3 className="text-white font-medium mb-1">Indirizzo</h3>
                         <p className="text-white/70">
-                          Via della Missione, 1<br />
-                          20123 Milano, Italia
+                          1077 Budapest,<br />
+                          Izabella utca 2. Alagsor 1
                         </p>
                       </div>
                     </div>
