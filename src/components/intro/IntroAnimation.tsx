@@ -11,46 +11,86 @@ interface IntroAnimationProps {
 
 const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
   const [animationStage, setAnimationStage] = useState(0);
+  const [hasError, setHasError] = useState(false);
+  
+  // Safety timer to ensure onComplete is called even if animation fails
+  useEffect(() => {
+    const safetyTimer = setTimeout(() => {
+      console.log("Safety timeout triggered for intro animation");
+      onComplete();
+    }, 8000);
+    
+    return () => clearTimeout(safetyTimer);
+  }, [onComplete]);
   
   // Control the animation sequence
   useEffect(() => {
-    const timers = [
-      // Stage 1: Initial pulsation appears
-      setTimeout(() => setAnimationStage(1), 1000),
+    try {
+      const timers = [
+        // Stage 1: Initial pulsation appears
+        setTimeout(() => setAnimationStage(1), 1000),
+        
+        // Stage 2: Eye starts opening
+        setTimeout(() => setAnimationStage(2), 2000),
+        
+        // Stage 3: Eye fully open, show logo
+        setTimeout(() => setAnimationStage(3), 3500),
+        
+        // Stage 4: Show slogan
+        setTimeout(() => setAnimationStage(4), 4500),
+        
+        // Complete animation
+        setTimeout(() => onComplete(), 7000)
+      ];
       
-      // Stage 2: Eye starts opening
-      setTimeout(() => setAnimationStage(2), 2000),
-      
-      // Stage 3: Eye fully open, show logo
-      setTimeout(() => setAnimationStage(3), 3500),
-      
-      // Stage 4: Show slogan
-      setTimeout(() => setAnimationStage(4), 4500),
-      
-      // Complete animation
-      setTimeout(() => onComplete(), 7000)
-    ];
-    
-    return () => timers.forEach(timer => clearTimeout(timer));
+      return () => timers.forEach(timer => clearTimeout(timer));
+    } catch (error) {
+      console.error("Error in animation sequence:", error);
+      setHasError(true);
+      onComplete();
+    }
   }, [onComplete]);
 
   // Play the mechanical sound when eye opens
   useEffect(() => {
     if (animationStage === 2) {
-      const mechSound = new Audio("/sounds/mechanical-sound.mp3");
-      mechSound.volume = 0.4;
-      mechSound.play().catch(err => console.log("Error playing sound:", err));
+      try {
+        const mechSound = new Audio("/sounds/mechanical-sound.mp3");
+        mechSound.volume = 0.4;
+        mechSound.play().catch(err => console.log("Error playing sound:", err));
+      } catch (error) {
+        console.log("Error playing mechanical sound:", error);
+      }
     }
   }, [animationStage]);
   
   // Play the power-up sound when the logo appears
   useEffect(() => {
     if (animationStage === 3) {
-      const powerUpSound = new Audio("/sounds/power-up-sound.mp3");
-      powerUpSound.volume = 0.3;
-      powerUpSound.play().catch(err => console.log("Error playing sound:", err));
+      try {
+        const powerUpSound = new Audio("/sounds/power-up-sound.mp3");
+        powerUpSound.volume = 0.3;
+        powerUpSound.play().catch(err => console.log("Error playing sound:", err));
+      } catch (error) {
+        console.log("Error playing power-up sound:", error);
+      }
     }
   }, [animationStage]);
+
+  // If there's an error, render a minimal version to avoid blocking the page
+  if (hasError) {
+    return (
+      <motion.div 
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+        initial={{ opacity: 1 }}
+        animate={{ opacity: 0 }}
+        transition={{ duration: 1 }}
+        onAnimationComplete={onComplete}
+      >
+        <div className="text-white text-2xl">M1SSION</div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div 

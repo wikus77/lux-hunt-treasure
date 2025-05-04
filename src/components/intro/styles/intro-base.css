@@ -1,91 +1,94 @@
 
-/* Base container for our eye animation */
-.eye-container {
-  position: relative;
-  width: 100%;
-  max-width: 600px;
-  height: 300px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* The mechanical eye */
+/* Base styles for mechanical eye */
 .mechanical-eye {
   position: relative;
   width: 200px;
   height: 200px;
   border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.9);
   overflow: hidden;
   display: flex;
-  justify-content: center;
   align-items: center;
-  transform: scale(0.8);
-  transition: transform 2.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  justify-content: center;
+  transition: all 0.8s ease-in-out;
 }
 
 .mechanical-eye.opening {
-  transform: scale(1);
+  transform: scale(1.1);
 }
 
-/* Eye components */
+.eye-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Rings around the eye */
 .eye-outer-ring {
   position: absolute;
   width: 200px;
   height: 200px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  border: 2px solid rgba(0, 229, 255, 0.5);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+  transition: all 0.8s ease;
 }
 
 .eye-middle-ring {
   position: absolute;
   width: 150px;
   height: 150px;
-  border: 3px solid rgba(255, 255, 255, 0.5);
   border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  border: 2px solid rgba(0, 229, 255, 0.7);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
 }
 
 .eye-inner-ring {
   position: absolute;
   width: 100px;
   height: 100px;
-  border: 2px solid rgba(255, 255, 255, 0.7);
   border-radius: 50%;
-  overflow: hidden;
+  border: 2px solid rgba(0, 229, 255, 0.9);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
 }
 
-/* Add iris segments */
+/* Pupil */
+.eye-pupil {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(0, 229, 255, 0.9);
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.5s ease;
+}
+
+.mechanical-eye.opening .eye-pupil {
+  transform: scale(1.1);
+  background-color: rgba(0, 80, 100, 0.8);
+}
+
+/* Iris segments */
 .iris-segments {
   position: absolute;
-  width: 90px;
-  height: 90px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   overflow: hidden;
-  opacity: 0;
-  transform: scale(0);
-  transition: all 1s ease-in-out;
-}
-
-.mechanical-eye.opening .iris-segments {
-  opacity: 1;
-  transform: scale(1);
 }
 
 .iris-segment {
   position: absolute;
   width: 100%;
   height: 100%;
-  clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 50% 100%);
-  background-color: rgba(0, 229, 255, 0.1);
+  clip-path: polygon(50% 50%, 50% 0, 70% 0, 70% 50%);
+  background-color: rgba(0, 229, 255, 0.3);
   transform-origin: center;
 }
 
@@ -98,167 +101,81 @@
 .iris-segment:nth-child(7) { transform: rotate(270deg); }
 .iris-segment:nth-child(8) { transform: rotate(315deg); }
 
-/* Circuit lines that appear when the eye opens */
+/* Circuit lines */
 .circuit-lines {
   position: absolute;
-  width: 200px;
-  height: 200px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
-  opacity: 0;
-  transition: all 1.5s ease;
-  pointer-events: none;
-}
-
-.mechanical-eye.opening .circuit-lines {
-  opacity: 0.5;
+  overflow: hidden;
 }
 
 .circuit-line {
   position: absolute;
-  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.7), transparent);
+  width: 100%;
   height: 1px;
+  background: rgba(0, 229, 255, 0.5);
 }
 
 .circuit-line:nth-child(1) {
-  width: 80px;
   top: 40%;
-  left: 10%;
   transform: rotate(30deg);
 }
 
 .circuit-line:nth-child(2) {
-  width: 60px;
   top: 60%;
-  left: 15%;
-  transform: rotate(-20deg);
+  transform: rotate(150deg);
 }
 
 .circuit-line:nth-child(3) {
-  width: 70px;
   top: 50%;
-  right: 10%;
-  transform: rotate(15deg);
+  transform: rotate(90deg);
 }
 
 .circuit-line:nth-child(4) {
-  width: 50px;
-  top: 30%;
-  right: 15%;
-  transform: rotate(-25deg);
+  top: 50%;
+  transform: rotate(0deg);
 }
 
-.eye-pupil {
-  position: absolute;
-  background-color: black;
-  width: 0%;
-  height: 0%;
-  border-radius: 50%;
-  box-shadow: inset 0 0 20px rgba(0, 229, 255, 0.5);
-  transition: all 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-}
-
-.mechanical-eye.opening .eye-pupil {
-  width: 80px;
-  height: 80px;
-}
-
-/* Center pulse */
+/* Center pulse effect */
 .center-pulse {
   position: absolute;
   width: 20px;
   height: 20px;
-  background-color: rgba(0, 229, 255, 0.8);
   border-radius: 50%;
-  box-shadow: 0 0 30px 10px rgba(0, 229, 255, 0.5);
-}
-
-/* Energy Pattern container */
-.energy-pattern-container {
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  pointer-events: none;
-  z-index: 5;
-}
-
-/* Energy rings base styles */
-.energy-ring {
-  position: absolute;
-  border-radius: 50%;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  border: 2px solid rgba(0, 229, 255, 0);
-  opacity: 0;
-}
-
-.energy-ring-1 {
-  width: 120px;
-  height: 120px;
-}
-
-.energy-ring-2 {
-  width: 150px;
-  height: 150px;
-}
-
-.energy-ring-3 {
-  width: 180px;
-  height: 180px;
-}
-
-/* Energy rays base styles */
-.energy-rays {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-}
-
-.energy-ray {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 80px;
-  height: 2px;
-  background: linear-gradient(90deg, rgba(0, 229, 255, 0.8), transparent);
-  transform-origin: 0 50%;
+  background: rgba(0, 229, 255, 0.8);
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.8);
 }
 
 /* Logo container */
 .logo-container {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  bottom: -60px;
+  text-align: center;
   opacity: 0;
 }
 
-/* Mission text */
 .mission-text {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 3rem;
-  font-weight: 300;
-  letter-spacing: 0.3em;
-  color: white;
-  position: relative;
-  overflow: hidden;
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  font-family: 'Inter', sans-serif;
 }
 
-/* Mission motto */
 .mission-motto {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1.2rem;
-  font-weight: 500;
+  position: absolute;
+  bottom: -100px;
+  font-size: 1rem;
   letter-spacing: 0.2em;
-  color: #FFC300;
-  text-shadow: 0 0 10px rgba(255, 195, 0, 0.7);
-  margin-top: 2rem;
+  color: #FFC107;
+  text-align: center;
   opacity: 0;
+}
+
+/* Energy pattern container */
+.energy-pattern-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
 }
