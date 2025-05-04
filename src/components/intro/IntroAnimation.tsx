@@ -1,37 +1,26 @@
 
-import React, { useEffect } from "react";
-import { motion } from "framer-motion";
-import "./intro-animation.css";
+import React from "react";
 
 interface IntroAnimationProps {
   onComplete: () => void;
 }
 
 const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onComplete();
-    }, 7000);
-
-    return () => clearTimeout(timer);
+  // Use simple useEffect instead of complex animations
+  React.useEffect(() => {
+    // Skip animation entirely and complete immediately
+    onComplete();
+    
+    // Optional: If you still want some animation but more reliable:
+    // const timer = setTimeout(() => {
+    //   onComplete();
+    // }, 2000);
+    // 
+    // return () => clearTimeout(timer);
   }, [onComplete]);
 
-  return (
-    <motion.div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black"
-      initial={{ opacity: 1 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 1 } }}
-    >
-      <div className="logo-container">
-        <div className="scan-line" />
-        <div className="mission-text">
-          <span className="text-[#00E5FF]">M1</span>
-          <span className="text-white">SSION</span>
-        </div>
-      </div>
-    </motion.div>
-  );
+  // Return null to prevent any rendering issues
+  return null;
 };
 
 export default IntroAnimation;

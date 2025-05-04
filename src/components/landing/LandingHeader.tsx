@@ -1,14 +1,14 @@
 
 import React from "react";
-import { motion } from "framer-motion";
 
 const LandingHeader = () => {
   return (
     <section className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-4 py-16">
-      {/* Animated background particles */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
+      {/* Static background instead of animated particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden bg-gradient-to-b from-black to-[#111]">
+        {/* Static dots instead of animated particles */}
+        {[...Array(10)].map((_, i) => (
+          <div
             key={i}
             className="absolute rounded-full"
             style={{
@@ -17,17 +17,8 @@ const LandingHeader = () => {
               background: i % 2 === 0 ? "#00E5FF" : "#8A2BE2",
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
+              opacity: 0.4,
               filter: "blur(1px)"
-            }}
-            animate={{
-              y: [0, -30, 0, 30, 0],
-              x: [0, 15, 0, -15, 0],
-              opacity: [0.2, 0.7, 0.4, 0.7, 0.2]
-            }}
-            transition={{
-              duration: Math.random() * 10 + 20,
-              repeat: Infinity,
-              ease: "easeInOut"
             }}
           />
         ))}
@@ -64,14 +55,9 @@ const LandingHeader = () => {
         </div>
       </div>
       
-      {/* Decorative elements - animated glow */}
-      <motion.div
+      {/* Static decorative element instead of animated glow */}
+      <div
         className="absolute bottom-40 w-3/4 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent"
-        animate={{
-          opacity: [0.3, 0.8, 0.3],
-          filter: ["blur(1px)", "blur(3px)", "blur(1px)"]
-        }}
-        transition={{ duration: 5, repeat: Infinity }}
       />
     </section>
   );

@@ -7,15 +7,13 @@ interface PresentationSectionProps {
 }
 
 const PresentationSection = ({ visible }: PresentationSectionProps) => {
+  // Ensure component is always visible regardless of props
   return (
-    <section className="relative py-20 px-4 bg-black">
+    <section className="relative py-20 px-4 bg-black" style={{ opacity: 1, visibility: "visible" }}>
       <div className="max-w-6xl mx-auto">
-        <motion.div 
+        <div 
           className="glass-card p-8 md:p-12 text-center relative overflow-hidden"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          viewport={{ once: true }}
+          // Remove animations that might cause issues
         >
           <h2 className="text-3xl md:text-4xl font-orbitron mb-8">
             WELCOME TO{" "}
@@ -36,16 +34,11 @@ const PresentationSection = ({ visible }: PresentationSectionProps) => {
             Find the prize. Change your destiny.
           </p>
 
-          {/* Animated accent line */}
-          <motion.div 
+          {/* Simple static accent line instead of animated one */}
+          <div 
             className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent"
-            animate={{
-              opacity: [0.3, 0.7, 0.3],
-              filter: ["blur(1px)", "blur(3px)", "blur(1px)"]
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           />
-        </motion.div>
+        </div>
       </div>
     </section>
   );
