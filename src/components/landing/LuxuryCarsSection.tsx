@@ -68,11 +68,15 @@ const LuxuryCarsSection = () => {
             whileHover={{ y: -5, transition: { duration: 0.2 } }}
           >
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="mb-4 w-full aspect-square flex items-center justify-center">
+              <div className="mb-4 w-full aspect-square flex items-center justify-center p-4">
                 <img 
                   src={car.logo} 
                   alt={`${car.brand} logo`} 
                   className="w-full h-full object-contain transition-transform group-hover:scale-110 duration-300"
+                  onError={(e) => {
+                    console.error(`Failed to load image: ${car.logo}`);
+                    e.currentTarget.src = "/placeholder.svg"; // Fallback to placeholder
+                  }}
                 />
               </div>
               
