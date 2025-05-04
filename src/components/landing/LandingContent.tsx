@@ -25,20 +25,22 @@ const LandingContent: React.FC<LandingContentProps> = ({
   onAgeVerified,
   visible
 }) => {
-  // Garantisce che il contenuto sia visibile indipendentemente dall'animazione
+  // Garantisce che il contenuto sia immediatamente visibile
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const element = document.querySelector('.landing-content-wrapper');
-      if (element) {
-        (element as HTMLElement).style.opacity = '1';
-      }
-    }, 800);
-    
-    return () => clearTimeout(timer);
+    // Forza visibilità immediata
+    const element = document.querySelector('.landing-content-wrapper');
+    if (element) {
+      console.log("Forzatura visibilità landing content");
+      (element as HTMLElement).style.opacity = '1';
+      (element as HTMLElement).style.display = 'block';
+    }
   }, []);
 
   return (
-    <div className={`landing-content-wrapper landing-content transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+    <div 
+      className="landing-content-wrapper landing-content opacity-100"
+      style={{opacity: 1, display: 'block'}}
+    >
       <Navbar onRegisterClick={onRegisterClick} />
       <HeroSection onRegisterClick={onRegisterClick} />
       <PrizeShowcase />

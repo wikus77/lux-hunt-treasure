@@ -10,34 +10,31 @@ interface UseIntroAnimationReturn {
 
 export function useIntroAnimation(): UseIntroAnimationReturn {
   const [showIntro, setShowIntro] = useState(false);
-  const [introCompleted, setIntroCompleted] = useState(false);
+  const [introCompleted, setIntroCompleted] = useState(true); // Default a true
   const [renderError, setRenderError] = useState<Error | null>(null);
   
   useEffect(() => {
-    // FALLBACK IMMEDIATO: mostra sempre il contenuto dopo un breve ritardo
-    // Ridotto a 800ms per essere più veloce e garantire che il contenuto sia visibile
-    const forcedTimeout = setTimeout(() => {
-      console.log("FALLBACK FORZATO ATTIVATO: Contenuto mostrato automaticamente");
-      setIntroCompleted(true);
-      setShowIntro(false);
-    }, 800);
+    // FALLBACK IMMEDIATO: mostra sempre il contenuto immediatamente
+    // Settiamo introCompleted a true di default per saltare l'animazione
+    console.log("FALLBACK FORZATO: Contenuto mostrato immediatamente");
     
     try {
       // In caso di problemi di rendering, garantisce che il contenuto sia visibile
       document.body.style.backgroundColor = "#000"; // Sfondo nero come fallback
       
-      const introShown = localStorage.getItem('introShown');
+      // Forza visualizzazione immediata del contenuto
+      localStorage.setItem('introShown', 'true');
+      setShowIntro(false);
+      setIntroCompleted(true);
       
-      if (introShown) {
-        console.log("Intro già mostrato in precedenza, lo saltiamo");
-        setShowIntro(false);
-        setIntroCompleted(true);
-      } else {
-        // Prima visita, mostra intro ma con timeout di sicurezza
-        console.log("Prima visita, mostriamo intro");
-        setShowIntro(true);
-        localStorage.setItem('introShown', 'true');
-      }
+      // Forza visibilità del contenuto dopo un breve ritardo
+      setTimeout(() => {
+        const content = document.querySelector('.landing-content');
+        if (content) {
+          (content as HTMLElement).style.opacity = '1';
+          (content as HTMLElement).style.display = 'block';
+        }
+      }, 100);
     } catch (error) {
       console.error("Errore nel controllo intro:", error);
       // In caso di errore, salta l'intro e mostra il contenuto
@@ -45,8 +42,6 @@ export function useIntroAnimation(): UseIntroAnimationReturn {
       setIntroCompleted(true);
       setRenderError(error instanceof Error ? error : new Error(String(error)));
     }
-    
-    return () => clearTimeout(forcedTimeout);
   }, []);
 
   const handleIntroComplete = () => {
@@ -56,8 +51,8 @@ export function useIntroAnimation(): UseIntroAnimationReturn {
   };
 
   return {
-    showIntro,
-    introCompleted,
+    showIntro: false, // Sempre false per saltare l'intro
+    introCompleted: true, // Sempre true per mostrare il contenuto
     handleIntroComplete,
     renderError
   };

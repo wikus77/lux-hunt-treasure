@@ -1,7 +1,6 @@
 
 import React, { useEffect } from "react";
 import AnimationContainer from "./components/AnimationContainer";
-import EyeAnimation from "./components/EyeAnimation";
 import LogoTransition from "./components/LogoTransition";
 import useAnimationSequence from "./hooks/useAnimationSequence";
 
@@ -10,33 +9,21 @@ interface IntroAnimationProps {
 }
 
 const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
-  // Sicurezza aggiuntiva: forza il completamento anche se il componente non viene smontato correttamente
+  // Sicurezza aggiuntiva: forza il completamento dopo un tempo molto breve
   useEffect(() => {
     const safetyTimer = setTimeout(() => {
+      console.log("FALLBACK ULTRA-SICURO: forzatura completamento");
       onComplete();
-    }, 3000);
+    }, 1000); // Ridotto a 1 secondo
     
     return () => clearTimeout(safetyTimer);
   }, [onComplete]);
 
-  // Gestione sicura degli errori
+  // Implementazione minima - solo logo senza animazione dell'occhio
   try {
-    const { animationStage, hasError } = useAnimationSequence({ 
-      onComplete, 
-      fallbackTime: 2000  // Ridotto per essere più veloce
-    });
-
-    // Se c'è un errore, non renderizzare nulla per evitare di bloccare il resto della pagina
-    if (hasError) {
-      console.log("Errore rilevato, salto l'animazione intro");
-      return null;
-    }
-
-    // Rendering dei componenti dell'animazione
     return (
       <AnimationContainer>
-        <EyeAnimation animationStage={animationStage} />
-        <LogoTransition visible={animationStage >= 3} />
+        <LogoTransition visible={true} />
       </AnimationContainer>
     );
   } catch (error) {

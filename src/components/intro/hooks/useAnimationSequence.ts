@@ -6,57 +6,45 @@ interface UseAnimationSequenceProps {
   fallbackTime?: number;
 }
 
-const useAnimationSequence = ({ onComplete, fallbackTime = 2000 }: UseAnimationSequenceProps) => {
+const useAnimationSequence = ({ onComplete, fallbackTime = 1500 }: UseAnimationSequenceProps) => {
   const [animationStage, setAnimationStage] = useState(0);
   const [hasError, setHasError] = useState(false);
   
-  // SUPER FALLBACK: Chiamare sempre onComplete dopo un breve periodo
-  // Ridotto a 2 secondi per essere più veloce
+  // SUPER FALLBACK: Chiamare sempre onComplete dopo un periodo molto breve
+  // Ulteriormente ridotto a 1.5 secondi per garantire visualizzazione
   useEffect(() => {
-    console.log("Inizializzazione sequence con fallback sicuro");
+    console.log("Inizializzazione sequence con fallback immediato");
     const fallbackTimer = setTimeout(() => {
-      console.log("FALLBACK SICUREZZA: forzatura completamento animazione");
+      console.log("FALLBACK IMMEDIATO: forzatura completamento animazione");
       onComplete();
     }, fallbackTime);
     
     return () => clearTimeout(fallbackTimer);
   }, [onComplete, fallbackTime]);
   
-  // Sequenza di animazione con gestione errori
+  // Sequenza di animazione molto semplificata con gestione errori
   useEffect(() => {
     try {
-      console.log("Avvio sequenza animazione");
-      const timers = [
-        // Fase 1: Pulsazione iniziale
-        setTimeout(() => {
-          console.log("Animazione: fase 1");
-          setAnimationStage(1);
-        }, 300),
-        
-        // Fase 2: L'occhio inizia ad aprirsi
-        setTimeout(() => {
-          console.log("Animazione: fase 2");
-          setAnimationStage(2);
-        }, 600),
-        
-        // Fase 3: Occhio completamente aperto, mostra logo
-        setTimeout(() => {
-          console.log("Animazione: fase 3");
-          setAnimationStage(3);
-        }, 1000),
-        
-        // Completa animazione
-        setTimeout(() => {
-          console.log("Animazione: completata");
-          onComplete();
-        }, 1800)
-      ];
+      console.log("Avvio sequenza animazione semplificata");
       
-      return () => timers.forEach(timer => clearTimeout(timer));
+      // Fase 1: Passa subito alla fase 1
+      setAnimationStage(1);
+      
+      // Dopo un breve periodo passa alla fase finale
+      const timer = setTimeout(() => {
+        console.log("Animazione: completata rapidamente");
+        setAnimationStage(3);
+        // Chiama onComplete per garantire che la landing sia visibile
+        setTimeout(() => onComplete(), 300);
+      }, 700);
+      
+      return () => clearTimeout(timer);
     } catch (error) {
       console.error("Errore nella sequenza di animazione:", error);
       setHasError(true);
-      onComplete(); // Chiama onComplete per non bloccare l'utente
+      // Chiamata immediata di onComplete in caso di errore
+      onComplete();
+      return undefined;
     }
   }, [onComplete]);
 
