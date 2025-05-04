@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAudio } from "@/hooks/useAudio";
+import "../landing/glitch-intro.css";
 
 interface CinematicIntroProps {
   onComplete: () => void;
@@ -150,57 +151,12 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
         )}
       </AnimatePresence>
       
-      {/* Energy surge and logo appearance */}
+      {/* New Glitch Effect */}
       <AnimatePresence>
         {stage >= 3 && (
-          <motion.div 
-            className="absolute"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ 
-              scale: [0, 1.2, 1],
-              opacity: 1
-            }}
-            transition={{ 
-              duration: 1.5, 
-              times: [0, 0.6, 1],
-            }}
-          >
-            {/* Energy pulse/surge */}
-            <motion.div 
-              className="absolute inset-0 rounded-full"
-              initial={{ 
-                scale: 0.2, 
-                opacity: 0, 
-                background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(0,229,255,0.7) 50%, rgba(0,0,0,0) 70%)'
-              }}
-              animate={{ 
-                scale: [0.2, 3, 5], 
-                opacity: [0, 0.8, 0],
-              }}
-              transition={{ 
-                duration: 1.8,
-                times: [0, 0.3, 1],
-              }}
-              style={{
-                width: 300,
-                height: 300,
-                left: -150,
-                top: -150,
-              }}
-            />
-          
-            {/* M1SSION logo */}
-            <motion.h1 
-              className="text-6xl md:text-7xl font-orbitron font-bold tracking-wide relative"
-              animate={{ 
-                textShadow: ["0 0 10px rgba(255,255,255,0.5)", "0 0 30px rgba(255,255,255,0.2)", "0 0 15px rgba(0,229,255,0.5)"]
-              }}
-              transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
-            >
-              <span className="text-[#00E5FF]">M1</span>
-              <span className="text-white">SSION</span>
-            </motion.h1>
-          </motion.div>
+          <div id="intro" className="z-10">
+            <div className="glitch">M1SSION</div>
+          </div>
         )}
       </AnimatePresence>
       
