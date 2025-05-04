@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap');
 
 @tailwind base;
@@ -23,7 +22,6 @@
 }
 
 @layer base {
-  /* Improved typography settings */
   h1, h2, h3, h4, h5, h6 {
     @apply font-orbitron tracking-wide;
   }
