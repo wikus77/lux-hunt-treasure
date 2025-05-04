@@ -12,11 +12,21 @@ interface IntroAnimationProps {
 const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
   const [animationStage, setAnimationStage] = useState(0);
   const [hasError, setHasError] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<{stages: string[]}>({stages: []});
   
-  // Safety timer to ensure onComplete is called even if animation fails
+  // Aggiungi info di diagnostica
+  const logStage = (stage: string) => {
+    console.log(`Animation stage: ${stage}`);
+    setDebugInfo(prev => ({
+      stages: [...prev.stages, `${new Date().toISOString().substr(11, 8)} - ${stage}`]
+    }));
+  };
+  
+  // Super safety timer to ensure onComplete is called even if animation fails
   useEffect(() => {
+    logStage("Component mounted");
     const safetyTimer = setTimeout(() => {
-      console.log("Safety timeout triggered for intro animation");
+      logStage("Safety timeout triggered");
       onComplete();
     }, 8000);
     
@@ -26,40 +36,63 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
   // Control the animation sequence
   useEffect(() => {
     try {
+      logStage(`Starting animation sequence - Stage ${animationStage}`);
+      
       const timers = [
         // Stage 1: Initial pulsation appears
-        setTimeout(() => setAnimationStage(1), 1000),
+        setTimeout(() => {
+          logStage("Setting stage 1");
+          setAnimationStage(1);
+        }, 1000),
         
         // Stage 2: Eye starts opening
-        setTimeout(() => setAnimationStage(2), 2000),
+        setTimeout(() => {
+          logStage("Setting stage 2");
+          setAnimationStage(2);
+        }, 2000),
         
         // Stage 3: Eye fully open, show logo
-        setTimeout(() => setAnimationStage(3), 3500),
+        setTimeout(() => {
+          logStage("Setting stage 3");
+          setAnimationStage(3);
+        }, 3500),
         
         // Stage 4: Show slogan
-        setTimeout(() => setAnimationStage(4), 4500),
+        setTimeout(() => {
+          logStage("Setting stage 4");
+          setAnimationStage(4);
+        }, 4500),
         
         // Complete animation
-        setTimeout(() => onComplete(), 7000)
+        setTimeout(() => {
+          logStage("Animation complete - Calling onComplete");
+          onComplete();
+        }, 7000)
       ];
       
       return () => timers.forEach(timer => clearTimeout(timer));
     } catch (error) {
       console.error("Error in animation sequence:", error);
+      logStage(`Error: ${error instanceof Error ? error.message : String(error)}`);
       setHasError(true);
       onComplete();
     }
-  }, [onComplete]);
+  }, [onComplete, animationStage]);
 
   // Play the mechanical sound when eye opens
   useEffect(() => {
     if (animationStage === 2) {
       try {
+        logStage("Playing mechanical sound");
         const mechSound = new Audio("/sounds/mechanical-sound.mp3");
         mechSound.volume = 0.4;
-        mechSound.play().catch(err => console.log("Error playing sound:", err));
+        mechSound.play().catch(err => {
+          console.log("Error playing sound:", err);
+          logStage(`Sound error: ${err.message}`);
+        });
       } catch (error) {
         console.log("Error playing mechanical sound:", error);
+        logStage(`Sound load error: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
   }, [animationStage]);
@@ -68,14 +101,29 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
   useEffect(() => {
     if (animationStage === 3) {
       try {
+        logStage("Playing power-up sound");
         const powerUpSound = new Audio("/sounds/power-up-sound.mp3");
         powerUpSound.volume = 0.3;
-        powerUpSound.play().catch(err => console.log("Error playing sound:", err));
+        powerUpSound.play().catch(err => {
+          console.log("Error playing sound:", err);
+          logStage(`Sound error: ${err.message}`);
+        });
       } catch (error) {
         console.log("Error playing power-up sound:", error);
+        logStage(`Sound load error: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
   }, [animationStage]);
+
+  // This helps detect if assets are failing to load
+  useEffect(() => {
+    window.addEventListener('error', (e) => {
+      if (e.target instanceof HTMLImageElement || e.target instanceof HTMLAudioElement) {
+        console.error(`Resource error: Failed to load ${e.target.src}`);
+        logStage(`Resource load error: ${e.target.src}`);
+      }
+    }, true);
+  }, []);
 
   // If there's an error, render a minimal version to avoid blocking the page
   if (hasError) {
@@ -107,7 +155,7 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
           <div className="eye-middle-ring"></div>
           <div className="eye-inner-ring"></div>
           
-          {/* Iris segments - new addition */}
+          {/* Iris segments */}
           <div className="iris-segments">
             <div className="iris-segment"></div>
             <div className="iris-segment"></div>
@@ -119,7 +167,7 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
             <div className="iris-segment"></div>
           </div>
           
-          {/* Circuit lines - new addition */}
+          {/* Circuit lines */}
           <div className="circuit-lines">
             <div className="circuit-line"></div>
             <div className="circuit-line"></div>
@@ -174,6 +222,17 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
           </div>
         )}
       </div>
+      
+      {/* Diagnostics overlay (visibile solo durante i test) */}
+      {process.env.NODE_ENV !== 'production' && (
+        <div className="absolute bottom-4 right-4 bg-black/80 text-white p-2 rounded text-xs max-w-xs overflow-auto" style={{maxHeight: '200px'}}>
+          <div>Stage: {animationStage}</div>
+          <div>Log:</div>
+          {debugInfo.stages.map((log, i) => (
+            <div key={i}>{log}</div>
+          ))}
+        </div>
+      )}
     </motion.div>
   );
 };
