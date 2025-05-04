@@ -6,7 +6,7 @@ import './index.css';
 import './styles/global.css';
 import './styles/theme.css';
 import './styles/utilities.css';
-import './styles/animations/index.css';
+import './styles/animations.css';
 import './styles/micro-interactions.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

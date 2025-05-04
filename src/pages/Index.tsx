@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 // Import componenti della landing page
 import HeroSection from "@/components/landing/HeroSection";
@@ -13,20 +14,34 @@ import CTASection from "@/components/landing/CTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
 import AgeVerificationModal from "@/components/auth/AgeVerificationModal";
 import Navbar from "@/components/landing/Navbar";
-import CinematicIntro from "@/components/landing/CinematicIntro";
+import IntroAnimation from "@/components/intro/IntroAnimation";
 
 const Index = () => {
-  const [showCinematicIntro, setShowCinematicIntro] = useState(true);
-  const [showContent, setShowContent] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
+  const [introCompleted, setIntroCompleted] = useState(false);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const navigate = useNavigate();
 
-  // Non utilizziamo più localStorage per controllare se mostrare l'intro
-  // La cinematica sarà mostrata ogni volta
+  // Controlla se l'intro è già stato mostrato
+  useEffect(() => {
+    // Rimuovi questo commento per testare l'animazione intro
+    // localStorage.removeItem('introShown');
+    
+    const introShown = localStorage.getItem('introShown');
+    if (introShown) {
+      setShowIntro(false);
+      setIntroCompleted(true);
+    } else {
+      // Prima visita, mostra intro
+      setShowIntro(true);
+      // Imposta dopo la prima visita
+      localStorage.setItem('introShown', 'true');
+    }
+  }, []);
 
-  const handleCinematicComplete = () => {
-    setShowCinematicIntro(false);
-    setShowContent(true);
+  const handleIntroComplete = () => {
+    setIntroCompleted(true);
+    setShowIntro(false);
   };
 
   const handleRegisterClick = () => {
@@ -40,13 +55,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
-      {/* Cinematic Intro - Mostrato sempre all'ingresso */}
-      {showCinematicIntro && (
-        <CinematicIntro onComplete={handleCinematicComplete} />
+      {showIntro && (
+        <IntroAnimation onComplete={handleIntroComplete} />
       )}
 
-      {/* Landing Content */}
-      {showContent && (
+      {introCompleted && (
         <>
           <Navbar onRegisterClick={handleRegisterClick} />
           <HeroSection onRegisterClick={handleRegisterClick} />
