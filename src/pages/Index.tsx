@@ -17,103 +17,49 @@ import Navbar from "@/components/landing/Navbar";
 import IntroAnimation from "@/components/intro/IntroAnimation";
 
 const Index = () => {
-  // Flaggare che il componente è in fase di rendering
-  console.log("Index component rendering started");
-  
+  // SOLUZIONE DI EMERGENZA: Sempre mostrare il contenuto principale dopo un breve timeout
   const [showIntro, setShowIntro] = useState(false);
   const [introCompleted, setIntroCompleted] = useState(false);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
-  const [pageLoaded, setPageLoaded] = useState(false);
   const [renderError, setRenderError] = useState<Error | null>(null);
   const navigate = useNavigate();
-
-  // Diagnostica migliorata
+  
+  // SUPER FALLBACK: Assicuriamoci che il contenuto si carichi sempre
   useEffect(() => {
-    try {
-      console.log("Index component mounted");
-      console.log("System info diagnostics:");
-      console.log("- User Agent:", navigator.userAgent);
-      console.log("- Screen size:", `${window.innerWidth}x${window.innerHeight}`);
-      console.log("- Intro already shown:", localStorage.getItem('introShown') ? "Yes" : "No");
-      console.log("- Current render state:", { showIntro, introCompleted, pageLoaded });
-    } catch (e) {
-      console.error("Error in diagnostics:", e);
-    }
-    
-    // Assicuriamoci che la pagina venga marcata come caricata anche se qualcosa va storto
-    const emergencyTimeout = setTimeout(() => {
-      console.log("Emergency timeout triggered - forcing page load");
-      setPageLoaded(true);
+    // Inizializzazione sicura: mostra sempre il contenuto dopo un breve ritardo
+    const forcedTimeout = setTimeout(() => {
+      console.log("FALLBACK FORZATO: Attivazione visualizzazione contenuto");
       setIntroCompleted(true);
       setShowIntro(false);
-    }, 3000); // Timeout di emergenza ridotto a 3 secondi
+    }, 1000); // Molto breve, 1 secondo
     
-    return () => clearTimeout(emergencyTimeout);
-  }, [showIntro, introCompleted, pageLoaded]);
-
-  // Misurazione dei tempi di caricamento
-  useEffect(() => {
-    const startTime = performance.now();
-    
-    window.addEventListener('load', () => {
-      const loadTime = performance.now() - startTime;
-      console.log(`Page fully loaded in ${loadTime.toFixed(2)}ms`);
-    });
-
-    return () => {
-      window.removeEventListener('load', () => {});
-    };
-  }, []);
-
-  // Controlla se l'intro è già stato mostrato
-  useEffect(() => {
     try {
-      console.log("Checking intro state...");
-      // Per test, puoi decommentare questa linea
-      // localStorage.removeItem('introShown');
-      
       const introShown = localStorage.getItem('introShown');
       
       if (introShown) {
-        console.log("Intro has already been shown, skipping");
+        console.log("Intro già mostrato in precedenza, lo saltiamo");
         setShowIntro(false);
         setIntroCompleted(true);
       } else {
         // Prima visita, mostra intro
-        console.log("First visit, showing intro");
+        console.log("Prima visita, mostriamo intro");
         setShowIntro(true);
-        // Imposta dopo la prima visita
         localStorage.setItem('introShown', 'true');
       }
-
-      // Safety timeout ridotto per garantire che il contenuto si mostri anche se l'intro fallisce
-      const safetyTimeout = setTimeout(() => {
-        if (!introCompleted) {
-          console.log("Safety timeout triggered, forcing content display");
-          setIntroCompleted(true);
-          setShowIntro(false);
-        }
-        // Assicuriamo che la pagina sia marcata come caricata
-        setPageLoaded(true);
-      }, 3500); // Ridotto a 3.5 secondi per test
-
-      return () => clearTimeout(safetyTimeout);
     } catch (error) {
-      console.error("Error in intro logic:", error);
-      // In caso di errore, saltiamo l'intro
+      console.error("Errore nel controllo intro:", error);
+      // In caso di errore, saltiamo l'intro e mostriamo il contenuto
       setShowIntro(false);
       setIntroCompleted(true);
-      setPageLoaded(true);
-      setRenderError(error instanceof Error ? error : new Error(String(error)));
     }
-  }, [introCompleted]);
+    
+    return () => clearTimeout(forcedTimeout);
+  }, []);
 
   const handleIntroComplete = () => {
-    console.log("Intro animation completed");
+    console.log("Animazione intro completata");
     setIntroCompleted(true);
     setShowIntro(false);
-    // Assicuriamo che la pagina sia marcata come caricata
-    setPageLoaded(true);
   };
 
   const handleRegisterClick = () => {
@@ -125,37 +71,13 @@ const Index = () => {
     navigate("/register");
   };
 
-  // Gestione errori di rendering migliorata
-  useEffect(() => {
-    if (renderError) {
-      console.error("Render error detected:", renderError);
-      toast.error("Si è verificato un problema durante il caricamento della pagina");
-    }
-  }, [renderError]);
-
-  // Se la pagina è ancora in fase di inizializzazione, mostriamo uno stato di caricamento dettagliato
-  if (!pageLoaded) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
-        <div className="text-xl mb-4">Inizializzazione M1SSION...</div>
-        <div className="w-64 h-2 bg-gray-700 rounded-full overflow-hidden">
-          <div className="h-full bg-cyan-400 animate-pulse" style={{width: '60%'}}></div>
-        </div>
-        <div className="mt-4 text-sm text-gray-400">
-          Se questa schermata persiste, ricarica la pagina.
-        </div>
-      </div>
-    );
-  }
-
-  // Backup UI migliorata in caso di errori
+  // Recupero di emergenza in caso di errori di rendering
   if (renderError) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-4">
         <div className="text-2xl font-bold text-red-500 mb-4">Qualcosa è andato storto</div>
-        <div className="mb-4 text-center max-w-md">
-          Si è verificato un errore durante il caricamento della landing page. 
-          Per favore prova a ricaricare la pagina.
+        <div className="mb-6 text-center max-w-md">
+          Si è verificato un errore durante il caricamento della landing page.
         </div>
         <Button 
           onClick={() => window.location.reload()}
@@ -163,39 +85,34 @@ const Index = () => {
         >
           Ricarica la pagina
         </Button>
-        <div className="mt-8 p-4 bg-gray-800 rounded text-xs max-w-lg overflow-auto">
-          <pre>{renderError.toString()}</pre>
-          <pre>{renderError.stack}</pre>
-        </div>
       </div>
     );
   }
 
-  console.log("Rendering main content. Intro completed:", introCompleted, "Show intro:", showIntro);
-
+  // IMPORTANTE: Sempre mostrare il contenuto principale anche se l'intro è attivo
+  // Questo previene la schermata bianca
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
-      {showIntro && (
+      {showIntro && !introCompleted && (
         <IntroAnimation onComplete={handleIntroComplete} />
       )}
 
-      {introCompleted && (
-        <>
-          <Navbar onRegisterClick={handleRegisterClick} />
-          <HeroSection onRegisterClick={handleRegisterClick} />
-          <PrizeShowcase />
-          <HowItWorksSection />
-          <FeaturesSection />
-          <TestimonialsSection />
-          <CTASection onRegisterClick={handleRegisterClick} />
-          <LandingFooter />
-          <AgeVerificationModal
-            open={showAgeVerification}
-            onClose={() => setShowAgeVerification(false)}
-            onVerified={handleAgeVerified}
-          />
-        </>
-      )}
+      {/* CONTENUTO PRINCIPALE: Sempre visibile */}
+      <div className={`transition-opacity duration-500 ${showIntro && !introCompleted ? 'opacity-0' : 'opacity-100'}`}>
+        <Navbar onRegisterClick={handleRegisterClick} />
+        <HeroSection onRegisterClick={handleRegisterClick} />
+        <PrizeShowcase />
+        <HowItWorksSection />
+        <FeaturesSection />
+        <TestimonialsSection />
+        <CTASection onRegisterClick={handleRegisterClick} />
+        <LandingFooter />
+        <AgeVerificationModal
+          open={showAgeVerification}
+          onClose={() => setShowAgeVerification(false)}
+          onVerified={handleAgeVerified}
+        />
+      </div>
     </div>
   );
 };
