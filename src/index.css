@@ -72,11 +72,11 @@
          hover:shadow-[0_0_15px_rgba(0,229,255,0.7)] active:scale-95;
 }
 
-/* Car logo containers */
+/* Car logo containers - UPDATED SIZE BY 30% */
 .car-logo-container {
   @apply relative;
-  width: 24px !important;
-  height: 24px !important;
+  width: 31px !important; /* Increased by 30% from 24px */
+  height: 31px !important; /* Increased by 30% from 24px */
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 255, 255, 0.5);
 }
 
@@ -104,24 +104,22 @@
   box-shadow: 0 0 20px rgba(128, 128, 128, 0.8), 0 0 30px rgba(128, 128, 128, 0.5);
 }
 
-/* Car logo animation */
+/* Car logo animation - UPDATED SIZE BY 30% AND ADDED HOVER EFFECT */
 .car-logo {
   @apply transition-all duration-300;
-  width: 18px !important;
-  height: 18px !important;
+  width: 23px !important; /* Increased by 30% from 18px */
+  height: 23px !important; /* Increased by 30% from 18px */
 }
 
 .car-logo:hover {
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
-  transform: scale(1.1);
+  transform: scale(1.1); /* 10% enlargement on hover */
 }
 
-/* Enhanced luxury car showcase with improved neon effect */
+/* Enhanced luxury car showcase with simplified neon effect */
 .luxury-cars-showcase {
-  border: 1px solid rgba(139, 92, 246, 0.4);
-  box-shadow: 
-    0 0 15px rgba(139, 92, 246, 0.5), 
-    inset 0 0 10px rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
   position: relative;
   overflow: hidden;
 }
