@@ -1,18 +1,16 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { motion } from "framer-motion";
 import BriefProfileModal from "@/components/profile/BriefProfileModal";
-import HomeContent from "@/components/home/HomeContent";
+import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
 import HomeHeader from "@/components/home/HomeHeader";
 
 const Home = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotificationsBanner, setShowNotificationsBanner] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
   const { profileImage } = useProfileImage();
 
   // Use try/catch to handle any potential errors in the notifications hook
@@ -45,15 +43,15 @@ const Home = () => {
     setShowNotificationsBanner(false);
   };
 
-  // Random floating particles for futuristic look
-  const particles = Array.from({ length: 20 }, (_, i) => ({
+  // Background particles for atmosphere
+  const particles = Array.from({ length: 15 }, (_, i) => ({
     id: i,
-    size: Math.random() * 5 + 2,
+    size: Math.random() * 4 + 1,
     top: Math.random() * 100,
     left: Math.random() * 100,
     delay: Math.random() * 5,
     duration: Math.random() * 15 + 15,
-    color: i % 3 === 0 ? '#00E5FF' : i % 3 === 1 ? '#FFC300' : '#FF00FF',
+    color: i % 3 === 0 ? '#00E5FF' : i % 3 === 1 ? '#FFC300' : '#9b87f5',
   }));
 
   if (error) {
@@ -132,9 +130,9 @@ const Home = () => {
           onShowNotifications={handleShowNotifications}
         />
         
-        {/* Main content sections - now using HomeContent component */}
+        {/* New Command Center Home layout */}
         <main className="pt-16 px-4 max-w-screen-xl mx-auto">
-          <HomeContent />
+          <CommandCenterHome />
         </main>
       </motion.div>
 
