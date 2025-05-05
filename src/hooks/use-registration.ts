@@ -1,3 +1,4 @@
+
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -14,11 +15,13 @@ export type FormData = {
 
 // Funzione separata per evitare inferenza profonda con Supabase
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  // Cast the entire query to any to prevent TypeScript from going too deep in type instantiation
-  const { data, error } = await (supabase
+  // Bypass TypeScript's deep type instantiation by using any type
+  const query: any = supabase
     .from('profiles')
     .select('id')
-    .eq('email', email) as unknown as { data: any[] | null; error: any });
+    .eq('email', email);
+  
+  const { data, error } = await query;
   
   if (error) {
     console.error("Errore nel controllo email:", error);
