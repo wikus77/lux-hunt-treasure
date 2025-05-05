@@ -22,6 +22,7 @@ interface UnifiedHeaderProps {
   setProfileImage?: React.Dispatch<React.SetStateAction<string | null>>;
   onClickMail?: () => void;
   enableAvatarUpload?: boolean;
+  leftComponent?: React.ReactNode;
 }
 
 const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
@@ -29,6 +30,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   setProfileImage,
   onClickMail,
   enableAvatarUpload,
+  leftComponent,
 }) => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -46,7 +48,10 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     <header className="fixed top-0 left-0 right-0 z-40 w-full glass-backdrop">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
-          <M1ssionText />
+          <div className="flex items-center">
+            {leftComponent}
+            <M1ssionText />
+          </div>
 
           {/* Desktop menu with countdown */}
           <div className="hidden md:flex items-center">
@@ -155,7 +160,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             </Button>
             <Button 
               variant="ghost" 
-              className="w-full justify-start text-pink-500 hover:bg-white/5"
+              className="w-full justify-start text-white hover:bg-white/5"
               onClick={() => { handleSignOut(); setIsMobileMenuOpen(false); }}
             >
               Esci

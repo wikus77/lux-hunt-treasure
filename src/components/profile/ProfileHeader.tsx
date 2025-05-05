@@ -1,68 +1,39 @@
 
 import { useState } from "react";
-import { Edit, Menu, User, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import InstagramStyleDrawer from "./InstagramStyleDrawer";
-import M1ssionText from "@/components/logo/M1ssionText";
+import { Edit, Save } from "lucide-react";
 
 interface ProfileHeaderProps {
-  profileImage: string | null;
-  name: string;
+  agentCode: string;
+  agentTitle: string;
   isEditing: boolean;
-  setIsEditing: (isEditing: boolean) => void;
-  onSave?: () => void;
+  onEditToggle: () => void;
+  onSave: () => void;
 }
 
-const ProfileHeader = ({
-  profileImage,
-  name,
-  isEditing,
-  setIsEditing,
-  onSave
+const ProfileHeader = ({ 
+  agentCode, 
+  agentTitle, 
+  isEditing, 
+  onEditToggle, 
+  onSave 
 }: ProfileHeaderProps) => {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
   return (
-    <div className="flex justify-between items-center px-4 py-4 border-b border-projectx-deep-blue relative">
-      <M1ssionText />
-      
-      <div className="flex gap-2 items-center">
-        <span className="instagram-story-ring-gradient">
-          <Avatar className="w-10 h-10 border-2 bg-black">
-            <AvatarImage src={profileImage || ""} alt={name} />
-            <AvatarFallback className="bg-transparent">
-              <User className="w-6 h-6 text-projectx-neon-blue" />
-            </AvatarFallback>
-          </Avatar>
-        </span>
-        {isEditing ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onSave}
-          >
-            <Save className="h-5 w-5 text-green-500" />
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsEditing(!isEditing)}
-          >
-            <Edit className="h-5 w-5" />
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="ml-2"
-          onClick={() => setDrawerOpen(true)}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
+    <div className="p-4 border-b border-gray-800 flex justify-between items-center">
+      <div className="flex items-center gap-2">
+        <span className="text-cyan-400 font-mono">DOSSIER AGENTE:</span>
+        <span className="font-mono text-white bg-cyan-900/30 px-2 py-1 rounded">{agentCode}</span>
+        {!isEditing && <span className="bg-cyan-600 text-white text-xs px-2 py-0.5 rounded-full">{agentTitle}</span>}
       </div>
-      <InstagramStyleDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      
+      <Button
+        onClick={() => isEditing ? onSave() : onEditToggle()}
+        size="sm"
+        className="bg-cyan-800 hover:bg-cyan-700"
+      >
+        {isEditing ? <Save className="h-4 w-4 mr-1" /> : <Edit className="h-4 w-4 mr-1" />}
+        {isEditing ? "Salva" : "Modifica"}
+      </Button>
     </div>
   );
 };
