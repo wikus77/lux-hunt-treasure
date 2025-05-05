@@ -14,7 +14,7 @@ import LaserRevealIntro from "@/components/intro/LaserRevealIntro";
 
 const Index = () => {
   // Control the intro animation visibility
-  const [introCompleted, setIntroCompleted] = useState(false);
+  const [introCompleted, setIntroCompleted] = useState(true); // Set to true to skip intro by default
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const navigate = useNavigate();
   
@@ -23,17 +23,18 @@ const Index = () => {
   
   // Check if we should show the intro animation
   useEffect(() => {
-    // Per test e debug, forziamo l'animazione
-    const forceIntroAnimation = true; // Cambia in false per vedere il comportamento normale
+    // For testing, we'll disable the intro animation
+    const forceIntroAnimation = false; // Changed to false to skip the intro
     const hasSeenIntro = localStorage.getItem('introShown') === 'true';
     
-    if (hasSeenIntro && !forceIntroAnimation) {
+    if (hasSeenIntro || !forceIntroAnimation) {
       // Skip intro if already seen
-      console.log("Intro già mostrato, saltiamo...");
+      console.log("Intro already shown, skipping...");
       setIntroCompleted(true);
+      document.body.style.overflow = "auto"; // Enable scrolling
     } else {
-      // Preparazione per l'animazione
-      console.log("Preparazione intro animation...");
+      // Preparation for intro animation
+      console.log("Preparing intro animation...");
       document.body.style.overflow = "hidden"; // Prevent scrolling during intro
     }
   }, []);
@@ -42,7 +43,7 @@ const Index = () => {
     // Mark intro as shown
     localStorage.setItem('introShown', 'true');
     setIntroCompleted(true);
-    console.log("Intro completato, mostriamo la landing page");
+    console.log("Intro completed, showing landing page");
     
     // Restore scrolling
     document.body.style.overflow = "auto";
