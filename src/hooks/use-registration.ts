@@ -40,8 +40,8 @@ export const useRegistration = () => {
     confirmPassword: ''
   });
 
-  // ✅ Inizializzazione errors con cast sicuro
-  const [errors, setErrors] = useState({} as Record<string, string>);
+  // Rimozione del tipo esplicito per `errors` per evitare TS2589
+  const [errors, setErrors] = useState({});
 
   const [isSubmitting, setIsSubmitting] = useState(false as boolean);
   const navigate = useNavigate();
