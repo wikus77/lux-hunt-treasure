@@ -8,12 +8,13 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { SoundProvider } from '@/contexts/SoundContext';
 import { AuthProvider } from '@/contexts/auth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { EmailVerificationPage } from '@/components/auth/EmailVerificationHandler';
 import Index from './pages/Index';
 import MainLayout from './components/layout/MainLayout';
 
 // Lazy-load components
 const Login = lazy(() => import('./pages/Login'));
-const Auth = lazy(() => import('./pages/Auth')); // Authentication flow page
+const Auth = lazy(() => import('./pages/Auth')); 
 const Register = lazy(() => import('./pages/Register'));
 const Home = lazy(() => import('./pages/Home'));
 const Events = lazy(() => import('./pages/Events'));
@@ -85,6 +86,9 @@ function App() {
                   <Route path="/register" element={<Register />} />
                   <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/contacts" element={<Contacts />} />
+                  
+                  {/* Add a dedicated route for email verification */}
+                  <Route path="/verify-email" element={<EmailVerificationPage />} />
                   
                   {/* Rotte protette che richiedono autenticazione */}
                   <Route element={<ProtectedRoute />}>

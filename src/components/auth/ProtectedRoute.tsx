@@ -3,6 +3,7 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/auth';
 import { Spinner } from '@/components/ui/spinner';
+import EmailVerificationAlert from './EmailVerificationAlert';
 
 interface ProtectedRouteProps {
   redirectTo?: string;
@@ -34,6 +35,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
   
   return <Outlet />;
+};
+
+// Also export a component that can be used directly in pages to show a verification alert
+export const EmailVerificationGuard: React.FC<{children: React.ReactNode}> = ({ children }) => {
+  const { isEmailVerified } = useAuthContext();
+  
+  if (!isEmailVerified) {
+    return <EmailVerificationAlert />;
+  }
+  
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;
