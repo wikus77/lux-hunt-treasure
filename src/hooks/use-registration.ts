@@ -13,23 +13,35 @@ type RegistrationFormData = {
   confirmPassword: string;
 };
 
-// ✅ Funzione esterna con tipi disattivati (evita errore TS2589)
+// Define a simple interface for profile data
+interface ProfileData {
+  id: string;
+  email?: string;
+  // Add other profile fields if needed
+}
+
+// ✅ Funzione esterna con tipi espliciti per evitare errore TS2589
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  const untypedClient = supabase as any;
-  const response = await untypedClient
-    .from('profiles')
-    .select('id')
-    .eq('email', email);
+  try {
+    const response = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email);
+    
+    // Usa type assertion per evitare inferenza profonda
+    const data = response.data as ProfileData[] | null;
+    const error = response.error;
 
-  const data = response.data;
-  const error = response.error;
+    if (error) {
+      console.error("Errore nel controllo email:", error);
+      throw error;
+    }
 
-  if (error) {
-    console.error("Errore nel controllo email:", error);
-    throw error;
+    return data && data.length > 0;
+  } catch (err) {
+    console.error("Errore durante il controllo dell'email:", err);
+    throw err;
   }
-
-  return data && data.length > 0;
 }
 
 export const useRegistration = () => {
@@ -80,6 +92,7 @@ export const useRegistration = () => {
         return;
       }
 
+      // Use explicit non-generic call to signUp to simplify type inference
       const result = await supabase.auth.signUp({
         email,
         password,
