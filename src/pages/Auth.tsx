@@ -6,6 +6,7 @@ import ProfileQuiz from "@/components/profile/ProfileQuiz";
 import { supabase } from "@/integrations/supabase/client";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 const Auth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

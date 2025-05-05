@@ -45,7 +45,7 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
     }
 
     try {
-      // Check if email already exists
+      // Check if email already exists - using a string comparison instead of direct object comparison
       const { data: existingUsers, error: checkError } = await supabase
         .from('profiles')
         .select('email')
