@@ -13,23 +13,25 @@ export type FormData = {
   confirmPassword: string;
 };
 
+// Tipo esplicito per gli errori del form
+type FormErrors = {
+  [key: string]: string;
+};
+
 // Funzione separata per evitare inferenza profonda con Supabase
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  const untypedClient = supabase as any;
-  const response = await untypedClient
+  // Use a simpler type assertion to avoid deep type instantiation
+  const { data, error } = await (supabase
     .from('profiles')
     .select('id')
-    .eq('email', email);
-
-  const data = response.data;
-  const error = response.error;
+    .eq('email', email) as any);
 
   if (error) {
     console.error("Errore nel controllo email:", error);
     throw error;
   }
 
-  return data && data.length > 0;
+  return Array.isArray(data) && data.length > 0;
 }
 
 export const useRegistration = () => {
@@ -40,10 +42,10 @@ export const useRegistration = () => {
     confirmPassword: ''
   });
 
-  // Rimozione del tipo esplicito per `errors` per evitare TS2589
-  const [errors, setErrors] = useState({});
+  // Utilizzo del tipo esplicito per errors
+  const [errors, setErrors] = useState<FormErrors>({});
 
-  const [isSubmitting, setIsSubmitting] = useState(false as boolean);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
