@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration } from '@/utils/form-validation';
 
-// Simple type for form data
+// Explicitly define the form data type instead of using inference
 export type RegistrationFormData = {
   name: string;
   email: string;
@@ -13,10 +13,10 @@ export type RegistrationFormData = {
   confirmPassword: string;
 };
 
-// Simple type for profile check results
-type ProfileCheckResult = {
+// Explicitly define the expected response type
+type ProfileQueryResponse = {
   id: string;
-}[];
+}[] | null;
 
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
@@ -56,14 +56,14 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // Check if email already exists
+      // Check if email already exists - use type assertion instead of inference
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email);
       
-      // Simple type assertion without deep inference
-      const profiles = data as any[];
+      // Use explicit type assertion
+      const profiles = data as ProfileQueryResponse;
       
       if (error) {
         console.error("Error checking existing email:", error);

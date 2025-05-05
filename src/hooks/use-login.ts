@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateLogin } from '@/utils/login-validation';
 
-// Simple type for form data
+// Explicit type definition for login form data
 export type LoginFormData = {
   email: string;
   password: string;
