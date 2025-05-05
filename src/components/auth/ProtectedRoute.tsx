@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuthContext } from '@/contexts/AuthContext';
+import { useAuthContext } from '@/contexts/auth';
 import { Spinner } from '@/components/ui/spinner';
 
 interface ProtectedRouteProps {

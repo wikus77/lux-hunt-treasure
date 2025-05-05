@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useAuthContext } from '@/contexts/AuthContext';
+import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 
 interface EmailVerificationAlertProps {

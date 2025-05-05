@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 
 import { ThemeProvider } from '@/components/theme-provider';
 import { SoundProvider } from '@/contexts/SoundContext';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider } from '@/contexts/auth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import Index from './pages/Index';
 import MainLayout from './components/layout/MainLayout';
