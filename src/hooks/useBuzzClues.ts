@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useEffect } from "react";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { useNotifications } from "@/hooks/useNotifications";
 import { vagueBuzzClues } from "@/data/vagueBuzzClues";
 

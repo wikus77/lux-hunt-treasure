@@ -1,7 +1,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 interface BuzzExplosionHandlerProps {
   show: boolean;

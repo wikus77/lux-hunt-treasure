@@ -1,6 +1,6 @@
 
 import { useCallback } from "react";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 export const useMapInteractions = (
   markerLogic: { isAddingMarker: boolean; handleMapClickMarker: (e: google.maps.MapMouseEvent) => void; setIsAddingMarker: (value: boolean) => void },
