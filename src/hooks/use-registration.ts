@@ -40,8 +40,8 @@ export const useRegistration = () => {
     confirmPassword: ''
   });
 
-  // Rimuoviamo la tipizzazione diretta per evitare l'inferenza profonda
-  const [errors, setErrors] = useState({}); // Oggetto vuoto senza tipizzazione
+  // ✅ Tipizzazione semplice per errors: evita inferenza profonda
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const [isSubmitting, setIsSubmitting] = useState(false as boolean);
   const navigate = useNavigate();
