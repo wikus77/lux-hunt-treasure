@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Login from "./Login";
@@ -6,7 +5,7 @@ import ProfileQuiz from "@/components/profile/ProfileQuiz";
 import { supabase } from "@/integrations/supabase/client";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"; // Added missing import
 
 const Auth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
