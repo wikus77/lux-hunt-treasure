@@ -17,7 +17,7 @@ const EditModeToggle = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className="fixed bottom-20 right-4 z-40">
+    <div className="fixed bottom-24 sm:bottom-20 right-4 z-40">
       <Button
         onClick={() => isEditing ? onSave() : setIsEditing(true)}
         size="icon"

@@ -46,9 +46,9 @@ const Home = () => {
   };
 
   // Background particles for atmosphere
-  const particles = Array.from({ length: isMobile ? 10 : 15 }, (_, i) => ({
+  const particles = Array.from({ length: isMobile ? 8 : 15 }, (_, i) => ({
     id: i,
-    size: Math.random() * 4 + 1,
+    size: Math.random() * 3 + 1,
     top: Math.random() * 100,
     left: Math.random() * 100,
     delay: Math.random() * 5,
@@ -133,7 +133,7 @@ const Home = () => {
         />
         
         {/* Increased top padding to accommodate header + countdown */}
-        <main className={`pt-32 ${isMobile ? 'sm:pt-36' : 'sm:pt-36'} px-2 sm:px-4 max-w-screen-xl mx-auto`}>
+        <main className={`pt-[100px] ${isMobile ? 'sm:pt-40' : 'sm:pt-40'} px-2 sm:px-4 max-w-screen-xl mx-auto`}>
           <CommandCenterHome />
         </main>
       </motion.div>

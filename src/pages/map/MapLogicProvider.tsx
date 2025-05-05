@@ -1,13 +1,14 @@
 
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import MapArea from "@/components/maps/MapArea";
+import MapArea from "@/pages/map/MapArea";
 import MapHeader from "./MapHeader";
 import LoadingScreen from "./LoadingScreen";
 import NotesSection from "./NotesSection";
 import { useMapLogic } from "./useMapLogic";
 import CluePopup from "./CluePopup";
 import BuzzMapBanner from "@/components/buzz/BuzzMapBanner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const MapLogicProvider = () => {
   const {
@@ -42,6 +43,8 @@ const MapLogicProvider = () => {
     location,
   } = useMapLogic();
   
+  const isMobile = useIsMobile();
+  
   // Effect to check if we're returning from payment page
   useEffect(() => {
     if (location?.state?.paymentCompleted && location?.state?.mapBuzz) {
@@ -56,7 +59,7 @@ const MapLogicProvider = () => {
   }
 
   return (
-    <div className="relative min-h-screen w-full p-4 flex flex-col gap-4">
+    <div className="relative min-h-screen w-full p-2 sm:p-4 flex flex-col gap-3 sm:gap-4">
       <MapHeader 
         onAddMarker={handleAddMarker}
         onAddArea={handleAddArea}
@@ -90,7 +93,7 @@ const MapLogicProvider = () => {
       )}
 
       {/* Map container with flexible height */}
-      <div className="w-full h-[70vh]">
+      <div className="w-full h-[60vh] sm:h-[70vh]">
         <MapArea 
           onMapReady={handleMapReady}
           markers={markers}
@@ -113,8 +116,8 @@ const MapLogicProvider = () => {
         />
       </div>
 
-      {/* Notes below the map, always in a single column */}
-      <div className="w-full bg-black/50 rounded-xl p-4 border border-projectx-deep-blue/40 shadow-xl">
+      {/* Notes below the map, more compact on mobile */}
+      <div className="w-full bg-black/50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-projectx-deep-blue/40 shadow-xl">
         <NotesSection />
       </div>
     </div>
