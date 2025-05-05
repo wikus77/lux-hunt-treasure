@@ -127,6 +127,30 @@
   100% { transform: translateX(100%); }
 }
 
+/* Line glow effect for the bottom navigation and headers */
+.line-glow {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(to right, transparent, #00D1FF, #7B2EFF, transparent);
+  position: relative;
+  overflow: hidden;
+}
+
+.line-glow::after {
+  content: '';
+  position: absolute;
+  height: 100%;
+  width: 50%;
+  top: 0;
+  background: linear-gradient(to right, transparent, white, transparent);
+  animation: moveGlow 3s infinite ease-in-out;
+}
+
+@keyframes moveGlow {
+  0% { left: -50%; }
+  100% { left: 100%; }
+}
+
 /* Floating particles animation */
 @keyframes float-particle {
   0% { transform: translateY(0) translateX(0); }

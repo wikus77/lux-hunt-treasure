@@ -53,6 +53,13 @@
   .active-gradient-icon {
     animation: glow-pulse 3s infinite ease-in-out;
   }
+
+  /* Aggiungi un effetto di linea indicatrice più visibile per l'elemento attivo */
+  .bottom-nav-item.active::after {
+    content: '';
+    @apply h-0.5 w-8 bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] rounded-full absolute -bottom-1 left-1/2 transform -translate-x-1/2;
+    box-shadow: 0 0 8px rgba(0, 209, 255, 0.7), 0 0 15px rgba(123, 46, 255, 0.3);
+  }
 }
 
 /* GLASS UTILITY */

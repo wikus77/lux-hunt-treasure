@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import M1ssionText from "@/components/logo/M1ssionText";
 import CountdownTimer from "@/components/ui/countdown-timer";
 import { getMissionDeadline } from "@/utils/countdownDate";
+import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 interface MapHeaderProps {
   onAddMarker: () => void;
@@ -34,12 +36,48 @@ const MapHeader = ({
     });
   };
 
+  const [agentCode, setAgentCode] = useState("AG-X480");
+  const [showCodeText, setShowCodeText] = useState(false);
+
+  useEffect(() => {
+    const savedAgentCode = localStorage.getItem('agentCode');
+    if (savedAgentCode) {
+      setAgentCode(savedAgentCode);
+    }
+    
+    // Typewriter effect for agent dossier
+    const timer = setTimeout(() => {
+      setShowCodeText(true);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="sticky top-16 z-10 w-full bg-black/50 backdrop-blur-sm py-3 px-4 border-b border-projectx-deep-blue/30">
       <div className="flex flex-col">
         <div className="flex flex-wrap gap-2 justify-between items-center">
           <div className="flex items-center gap-4">
             <M1ssionText />
+            
+            {/* Agent dossier code with typewriter effect - visible only on larger screens */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="hidden md:flex items-center ml-2"
+            >
+              <span className="text-cyan-400 font-mono text-xs mr-1">DOSSIER AGENTE:</span>
+              <motion.span 
+                className="font-mono text-white bg-cyan-900/30 px-2 py-1 rounded text-xs"
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: "auto", opacity: showCodeText ? 1 : 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+              >
+                {agentCode}
+              </motion.span>
+            </motion.div>
+            
             <div className="flex gap-2 flex-wrap">
               <button
                 onClick={onAddMarker}
@@ -87,6 +125,24 @@ const MapHeader = ({
             </button>
           </div>
         </div>
+        
+        {/* Mobile agent code - only visible on small screens */}
+        <motion.div 
+          className="md:hidden flex justify-center items-center mt-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          <span className="text-cyan-400 font-mono text-[10px] mr-1">DOSSIER:</span>
+          <motion.span 
+            className="font-mono text-white bg-cyan-900/30 px-1.5 py-0.5 rounded text-[10px]"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: "auto", opacity: showCodeText ? 1 : 0 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+          >
+            {agentCode}
+          </motion.span>
+        </motion.div>
         
         {/* Countdown Timer - centered */}
         <div className="flex justify-center mt-2">
