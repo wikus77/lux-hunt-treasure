@@ -5,24 +5,34 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
 
+// Define an interface for the profile data to avoid deep type inference
+interface ProfileData {
+  id: string;
+  [key: string]: any;
+}
 
-// ✅ Funzione esterna senza inferenza profonda
+// Use a simple function with explicit typing
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  const untypedClient = supabase as any; // <-- disattiva tipi per evitare errore
-  const response = await untypedClient
-    .from('profiles')
-    .select('id')
-    .eq('email', email);
+  try {
+    const response = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email);
+      
+    // Use explicit type assertion to prevent deep type inference
+    const data = response.data as ProfileData[] | null;
+    const error = response.error;
 
-  const data = response.data;
-  const error = response.error;
+    if (error) {
+      console.error("Errore nel controllo email:", error);
+      throw error;
+    }
 
-  if (error) {
-    console.error("Errore nel controllo email:", error);
-    throw error;
+    return data && data.length > 0;
+  } catch (error) {
+    console.error("Errore durante il controllo dell'email:", error);
+    return false;
   }
-
-  return data && data.length > 0;
 }
 
 export const useRegistration = () => {
@@ -62,7 +72,7 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // ✅ Usa la funzione esterna senza inferenza complessa
+      // Check if email exists
       const emailEsiste = await checkIfEmailExists(email);
 
       if (emailEsiste) {
@@ -74,7 +84,7 @@ export const useRegistration = () => {
         return;
       }
 
-      // ✅ Registrazione Supabase
+      // Supabase Registration
       const result = await supabase.auth.signUp({
         email,
         password,
