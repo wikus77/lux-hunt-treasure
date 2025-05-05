@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,18 @@ export const useProfileData = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const { toast } = useToast();
+
+  // Personal Info
+  const [personalInfo, setPersonalInfo] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    postalCode: "",
+    country: ""
+  });
 
   // Stats data
   const [stats, setStats] = useState({
@@ -136,6 +149,18 @@ export const useProfileData = () => {
             if (data.agent_title) setAgentTitle(data.agent_title);
             if (data.credits !== undefined) setCredits(data.credits);
             
+            // Set personal information from database
+            setPersonalInfo({
+              firstName: data.first_name || "",
+              lastName: data.last_name || "",
+              email: data.email || "",
+              phone: data.phone || "",
+              address: data.address || "",
+              city: data.city || "",
+              postalCode: data.postal_code || "",
+              country: data.country || ""
+            });
+            
             // Update investigative style if available
             if (data.investigative_style) {
               const styleMap: Record<string, { style: string, color: string }> = {
@@ -221,7 +246,8 @@ export const useProfileData = () => {
       credits,
       badges,
       subscription,
-      personalNotes
+      personalNotes,
+      personalInfo
     },
     actions: {
       setIsEditing,

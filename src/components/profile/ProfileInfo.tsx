@@ -21,6 +21,16 @@ interface ProfileInfoProps {
   };
   credits: number;
   isEditing: boolean;
+  personalInfo?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    address: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
   setProfileImage: (url: string) => void;
   setName: (name: string) => void;
   setBio: (bio: string) => void;
@@ -38,6 +48,7 @@ const ProfileInfo = ({
   stats,
   credits,
   isEditing,
+  personalInfo,
   setProfileImage,
   setName,
   setBio,
@@ -119,6 +130,40 @@ const ProfileInfo = ({
                 <span className="text-sm font-medium">{investigativeStyle.style}</span>
               </div>
             </div>
+            
+            {/* Personal Information Summary */}
+            {personalInfo && (personalInfo.firstName || personalInfo.email || personalInfo.phone) && (
+              <div className="mb-4 p-2 bg-black/30 rounded-md border border-gray-800">
+                <span className="text-xs text-gray-400">Informazioni personali:</span>
+                <div className="mt-1 text-left text-xs">
+                  {personalInfo.firstName && personalInfo.lastName && (
+                    <div className="mb-1">
+                      <span className="text-gray-400">Nome: </span>
+                      <span>{`${personalInfo.firstName} ${personalInfo.lastName}`}</span>
+                    </div>
+                  )}
+                  {personalInfo.email && (
+                    <div className="mb-1">
+                      <span className="text-gray-400">Email: </span>
+                      <span>{personalInfo.email}</span>
+                    </div>
+                  )}
+                  {personalInfo.phone && (
+                    <div className="mb-1">
+                      <span className="text-gray-400">Telefono: </span>
+                      <span>{personalInfo.phone}</span>
+                    </div>
+                  )}
+                  {personalInfo.address && personalInfo.city && (
+                    <div className="mb-1">
+                      <span className="text-gray-400">Indirizzo: </span>
+                      <span>{`${personalInfo.address}, ${personalInfo.city}`}</span>
+                      {personalInfo.postalCode && ` (${personalInfo.postalCode})`}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             
             {/* Quick Stats */}
             <div className="flex flex-wrap justify-center gap-4 mt-4">

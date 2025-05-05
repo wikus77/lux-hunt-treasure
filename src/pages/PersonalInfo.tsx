@@ -128,6 +128,7 @@ const PersonalInfo = () => {
           city: personalInfo.city,
           postal_code: personalInfo.postalCode,
           country: personalInfo.country,
+          full_name: `${personalInfo.firstName} ${personalInfo.lastName}`.trim(),
           updated_at: new Date().toISOString()
         })
         .eq('id', session.user.id);
