@@ -45,12 +45,31 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
     }
 
     try {
+      // Check if email already exists
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', email);
+      
+      if (checkError) {
+        console.error("Error checking existing email:", checkError);
+      }
+      
+      if (existingUsers && existingUsers.length > 0) {
+        toast.error("Errore", {
+          description: "Email già registrata. Prova con un'altra email o accedi.",
+          duration: 3000
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       // Register with Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin + '/login',
+          emailRedirectTo: window.location.origin + '/auth',
           data: {
             full_name: name,
           }
@@ -78,7 +97,7 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
         description: "Ti abbiamo inviato una mail di verifica. Controlla la tua casella e conferma il tuo account per accedere."
       });
       
-      // Redirect to verification pending page or login page
+      // Redirect to verification pending page
       setTimeout(() => {
         navigate("/login?verification=pending");
       }, 2000);

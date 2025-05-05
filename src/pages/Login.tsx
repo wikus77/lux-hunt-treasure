@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
 import StyledInput from "@/components/ui/styled-input";
 import { Mail, Lock, AlertTriangle, CheckCircle } from "lucide-react";
@@ -15,7 +15,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
 
@@ -32,8 +31,11 @@ const Login = () => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Non navighiamo qui, lasciamo che Auth.tsx gestisca la navigazione
-        // in base al completamento del quiz
+        // If session exists and email is verified, redirect to auth component
+        // Auth component will handle redirection based on quiz completion
+        if (session.user.email_confirmed_at) {
+          navigate('/auth');
+        }
       }
     };
     
@@ -44,11 +46,9 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Validazioni base
+    // Basic validations
     if (!email || !password) {
-      toast({
-        variant: "destructive",
-        title: "Errore",
+      toast.error("Errore", {
         description: "Completa tutti i campi per continuare."
       });
       setIsLoading(false);
@@ -66,53 +66,45 @@ const Login = () => {
       
       // Check if email is verified
       if (data.user && !data.user.email_confirmed_at) {
-        toast({
-          variant: "destructive",
-          title: "Email non verificata",
+        toast.error("Email non verificata", {
           description: "Per favore, verifica la tua email prima di accedere. Controlla la tua casella di posta."
         });
         setIsLoading(false);
         return;
       }
       
-      toast({
-        title: "Login completato!",
+      toast.success("Login completato!", {
         description: "Accesso effettuato con successo."
       });
       
-      // Auth component will handle redirection based on quiz completion
+      // Redirect to Auth component which will handle further redirections
+      navigate("/auth");
+      
     } catch (error: any) {
       console.error("Login error:", error);
       
       // Handle specific error cases
       if (error.message.includes("Email not confirmed")) {
-        toast({
-          variant: "destructive",
-          title: "Email non verificata",
+        toast.error("Email non verificata", {
           description: "Per favore, verifica la tua email prima di accedere."
         });
       } else if (error.message.includes("Invalid login credentials")) {
-        toast({
-          variant: "destructive",
-          title: "Credenziali non valide",
+        toast.error("Credenziali non valide", {
           description: "Email o password errati. Riprova."
         });
       } else {
-        toast({
-          variant: "destructive",
-          title: "Errore di accesso",
+        toast.error("Errore di accesso", {
           description: error.message || "Impossibile effettuare il login. Verifica le tue credenziali."
         });
       }
+    } finally {
       setIsLoading(false);
     }
   };
 
   const handleResendVerification = async () => {
     if (!email) {
-      toast({
-        variant: "destructive",
-        title: "Errore",
+      toast.error("Errore", {
         description: "Inserisci la tua email per ricevere nuovamente il link di verifica."
       });
       return;
@@ -126,17 +118,21 @@ const Login = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Email inviata",
+      toast.success("Email inviata", {
         description: "Un nuovo link di verifica è stato inviato alla tua email."
       });
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Errore",
+      toast.error("Errore", {
         description: error.message || "Impossibile inviare l'email di verifica."
       });
     }
+  };
+
+  // Customize verification email message
+  const updateCustomEmailTemplate = async () => {
+    // Note: Supabase doesn't allow direct customization of email templates through the client
+    // This would typically be done through the Supabase dashboard
+    console.log("Email template customization would be done through Supabase dashboard");
   };
 
   return (
