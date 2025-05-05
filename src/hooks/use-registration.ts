@@ -5,10 +5,25 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
 
-// Definizione esplicita del tipo di dati per il risultato della query
-type ProfileData = {
-  id: string;
-};
+
+// ✅ Funzione esterna senza inferenza profonda
+async function checkIfEmailExists(email: string): Promise<boolean> {
+  const untypedClient = supabase as any; // <-- disattiva tipi per evitare errore
+  const response = await untypedClient
+    .from('profiles')
+    .select('id')
+    .eq('email', email);
+
+  const data = response.data;
+  const error = response.error;
+
+  if (error) {
+    console.error("Errore nel controllo email:", error);
+    throw error;
+  }
+
+  return data && data.length > 0;
+}
 
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
@@ -47,27 +62,10 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // Utilizziamo una tipizzazione esplicita per evitare l'errore TS2589
-      const response = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email);
+      // ✅ Usa la funzione esterna senza inferenza complessa
+      const emailEsiste = await checkIfEmailExists(email);
 
-      // Assegnazione esplicita del tipo al risultato della query
-      const profileData = response.data as ProfileData[] | null;
-      const error = response.error;
-
-      if (error) {
-        console.error("Errore Supabase:", error);
-        toast.error("Errore", {
-          description: "Errore durante il controllo dell'email.",
-          duration: 3000
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (profileData && profileData.length > 0) {
+      if (emailEsiste) {
         toast.error("Errore", {
           description: "Email già registrata. Prova un'altra.",
           duration: 3000
@@ -76,7 +74,7 @@ export const useRegistration = () => {
         return;
       }
 
-      // Registrazione utente con Supabase Auth senza tipo generico problematico
+      // ✅ Registrazione Supabase
       const result = await supabase.auth.signUp({
         email,
         password,
