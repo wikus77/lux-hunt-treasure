@@ -1,76 +1,104 @@
 
-import React from "react";
-import { CircleDot, Pencil } from "lucide-react";
+import React from 'react';
+import { X, Edit2, CircleDot } from 'lucide-react';
 
 type Importance = "high" | "medium" | "low";
-type LocalNote = {
+
+type MapNote = {
   id: string;
   note: string;
   importance: Importance;
 };
 
-type MapNoteListProps = {
-  notes: LocalNote[];
-  onImportanceClick: (id: string) => void;
-  onEditNote: (note: LocalNote) => void;
+interface MapNoteListProps {
+  notes: MapNote[];
+  onImportanceClick?: (id: string) => void;
+  onEditNote?: (note: MapNote) => void;
+  onDeleteNote?: (id: string) => void; // Added delete note functionality
+}
+
+const getImportanceStyle = (importance: Importance) => {
+  switch (importance) {
+    case "high":
+      return "border-red-500 bg-red-900/20";
+    case "medium":
+      return "border-amber-500 bg-amber-900/20";
+    case "low":
+      return "border-green-500 bg-green-900/20";
+    default:
+      return "border-slate-500 bg-slate-900/20";
+  }
 };
 
-const importanceColors: Record<Importance, { from: string; to: string }> = {
-  high: { from: "#FF4D6B", to: "#FF193C" },
-  medium: { from: "#FF9466", to: "#FF6B1E" },
-  low: { from: "#4ADE80", to: "#22c55e" }
+const getImportanceColor = (importance: Importance) => {
+  switch (importance) {
+    case "high":
+      return "text-red-500";
+    case "medium":
+      return "text-amber-500";
+    case "low":
+      return "text-green-500";
+    default:
+      return "text-white/70";
+  }
 };
 
-const MapNoteList = ({ notes, onImportanceClick, onEditNote }: MapNoteListProps) => {
-  const sortedNotes = [...notes].sort((a, b) => {
-    const importanceOrder = { high: 0, medium: 1, low: 2 };
-    return importanceOrder[a.importance] - importanceOrder[b.importance];
-  });
+const MapNoteList: React.FC<MapNoteListProps> = ({ 
+  notes, 
+  onImportanceClick,
+  onEditNote, 
+  onDeleteNote 
+}) => {
+  if (notes.length === 0) {
+    return (
+      <div className="py-4 text-center text-white/50 italic text-sm">
+        Nessuna nota aggiunta
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-6">
-      <div className="space-y-3">
-        {sortedNotes.length === 0 ? (
-          <div className="text-center py-4 text-gray-400">
-            Nessuna nota aggiunta. Aggiungi una nota con il "+" a destra.
+    <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
+      {notes.map((note) => (
+        <div 
+          key={note.id} 
+          className={`rounded p-2.5 border flex justify-between items-center gap-2 ${getImportanceStyle(note.importance)}`}
+        >
+          <div className="flex-1 text-sm text-white/90">
+            {note.note}
           </div>
-        ) : (
-          sortedNotes.map((note) => (
-            <div
-              key={`note-${note.id}`}
-              className="p-3 rounded-md bg-projectx-deep-blue/40 backdrop-blur-sm flex gap-2 items-center"
+          <div className="flex items-center gap-1.5">
+            {/* Color indicator button */}
+            <button
+              onClick={() => onImportanceClick?.(note.id)}
+              className="p-1.5 rounded-full hover:bg-white/10 focus:outline-none"
+              aria-label="Cambia priorità"
             >
+              <CircleDot className={`w-4 h-4 ${getImportanceColor(note.importance)}`} />
+            </button>
+            
+            {/* Edit button */}
+            <button
+              onClick={() => onEditNote?.(note)}
+              className="p-1.5 rounded-full hover:bg-white/10 focus:outline-none text-white/70 hover:text-white"
+              aria-label="Modifica nota"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+            
+            {/* Delete button */}
+            {onDeleteNote && (
               <button
-                aria-label="Cambia importanza"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onImportanceClick(note.id);
-                }}
-                className="flex-shrink-0 mr-3 focus:outline-none group transition-all duration-300"
-                type="button"
+                onClick={() => onDeleteNote(note.id)}
+                className="p-1.5 rounded-full hover:bg-red-900/30 focus:outline-none text-white/70 hover:text-red-400"
+                aria-label="Elimina nota"
               >
-                <CircleDot
-                  className="w-3 h-3 transition-all duration-300"
-                  style={{
-                    color: importanceColors[note.importance].to,
-                    fill: importanceColors[note.importance].from,
-                    filter: 'drop-shadow(0 0 3px rgba(255,255,255,0.4))'
-                  }}
-                />
+                <X className="w-4 h-4" />
               </button>
-              <div 
-                className="flex-1 text-sm text-white truncate cursor-pointer"
-                onClick={() => onEditNote(note)}
-              >
-                {note.note || (
-                  <span className="text-gray-400 italic">Nessuna nota</span>
-                )}
-              </div>
-              <Pencil className="w-4 h-4 text-gray-400" />
-            </div>
-          ))
-        )}
-      </div>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

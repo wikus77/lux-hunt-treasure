@@ -64,7 +64,17 @@ const NotesSection: React.FC = () => {
     }
   };
 
-  const clearAllNotes = () => setNotes([]);
+  const deleteNote = (id: string) => {
+    if (confirm("Sei sicuro di voler eliminare questa nota?")) {
+      setNotes(notes.filter(note => note.id !== id));
+    }
+  };
+
+  const clearAllNotes = () => {
+    if (confirm("Sei sicuro di voler eliminare tutte le note?")) {
+      setNotes([]);
+    }
+  };
 
   return (
     <>
@@ -126,6 +136,7 @@ const NotesSection: React.FC = () => {
         notes={notes}
         onImportanceClick={handleImportanceClick}
         onEditNote={handleEditNote}
+        onDeleteNote={deleteNote}
       />
       <NoteColorBanner
         open={showColorBanner}

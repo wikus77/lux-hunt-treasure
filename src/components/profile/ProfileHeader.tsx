@@ -56,7 +56,7 @@ const ProfileHeader = ({
       <Button
         onClick={() => isEditing ? onSave() : onEditToggle()}
         size="sm"
-        className="bg-cyan-800 hover:bg-cyan-700"
+        className="bg-cyan-800 hover:bg-cyan-700 h-10 max-h-10"
       >
         {isEditing ? <Save className="h-4 w-4 mr-1" /> : <Edit className="h-4 w-4 mr-1" />}
         {isEditing ? "Salva" : "Modifica"}
