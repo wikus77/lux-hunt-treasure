@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Plus, X } from "lucide-react";
+import { MapPin, Plus, X, Trash2 } from "lucide-react";
 import MapNoteList from "@/components/maps/MapNoteList";
 import NoteColorBanner from "@/components/maps/NoteColorBanner";
 
@@ -65,9 +65,7 @@ const NotesSection: React.FC = () => {
   };
 
   const deleteNote = (id: string) => {
-    if (confirm("Sei sicuro di voler eliminare questa nota?")) {
-      setNotes(notes.filter(note => note.id !== id));
-    }
+    setNotes(notes.filter(note => note.id !== id));
   };
 
   const clearAllNotes = () => {
@@ -91,6 +89,7 @@ const NotesSection: React.FC = () => {
               onClick={clearAllNotes}
               className="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20"
             >
+              <Trash2 className="h-3.5 w-3.5 mr-1" />
               Cancella tutto
             </Button>
           )}

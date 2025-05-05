@@ -13,7 +13,6 @@ const PresentationSection = ({ visible }: PresentationSectionProps) => {
       <div className="max-w-6xl mx-auto">
         <div 
           className="glass-card p-8 md:p-12 text-center relative overflow-hidden"
-          // Remove animations that might cause issues
         >
           <h2 className="text-3xl md:text-4xl font-orbitron mb-8">
             WELCOME TO{" "}
@@ -22,6 +21,15 @@ const PresentationSection = ({ visible }: PresentationSectionProps) => {
               <span style={{ color: '#FFFFFF' }} className="text-white">SSION</span>
             </span>
           </h2>
+          
+          <div className="flex flex-col items-center mb-8">
+            <div className="bg-[#00E5FF]/20 px-3 py-1 rounded-md mb-2">
+              <span className="text-cyan-400 font-mono text-sm mr-1">DOSSIER:</span>
+              <span className="font-mono text-white bg-cyan-900/30 px-2 py-0.5 rounded text-sm">
+                AG-X480
+              </span>
+            </div>
+          </div>
           
           <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
             In the near future...

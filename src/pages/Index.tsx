@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import AgeVerificationModal from "@/components/auth/AgeVerificationModal";
-import PresentationSection from "@/components/landing/PresentationSection";
+import PresentationSection from "@/components/presentation/PresentationSection";
 import HowItWorks from "@/components/landing/HowItWorks";
 import LandingHeader from "@/components/landing/LandingHeader";
 import LuxuryCarsSection from "@/components/landing/LuxuryCarsSection";

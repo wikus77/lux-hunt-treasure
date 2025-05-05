@@ -32,6 +32,25 @@ const Map = () => {
         location.pathname
       );
     }
+    
+    // Force a script refresh for map components
+    const refreshMapScripts = () => {
+      // Remove any existing Google Maps scripts to force fresh load
+      const existingScripts = document.querySelectorAll('script[src*="maps.googleapis.com"]');
+      existingScripts.forEach(script => script.remove());
+      
+      // Add back the script
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ&libraries=places`;
+      script.async = true;
+      document.head.appendChild(script);
+    };
+    
+    refreshMapScripts();
+    
+    return () => {
+      // Clean up on unmount if needed
+    };
   }, [unlockedClues, location.state, addNotification]);
 
   // Added improved wrapper padding to account for the fixed header and toolbar

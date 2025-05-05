@@ -133,7 +133,7 @@ const Home = () => {
         />
         
         {/* Increased top padding to accommodate header + countdown */}
-        <main className={`pt-[100px] ${isMobile ? 'sm:pt-40' : 'sm:pt-40'} px-2 sm:px-4 max-w-screen-xl mx-auto`}>
+        <main className={`pt-[120px] ${isMobile ? 'sm:pt-44' : 'sm:pt-44'} px-2 sm:px-4 max-w-screen-xl mx-auto pb-20`}>
           <CommandCenterHome />
         </main>
       </motion.div>

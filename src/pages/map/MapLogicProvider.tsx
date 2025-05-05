@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import MapArea from "@/pages/map/MapArea";
 import MapHeader from "./MapHeader";
@@ -45,14 +45,20 @@ const MapLogicProvider = () => {
   
   const isMobile = useIsMobile();
   
-  // Effect to check if we're returning from payment page
+  // Effect to check if we're returning from payment page and handle map initialization
   useEffect(() => {
     if (location?.state?.paymentCompleted && location?.state?.mapBuzz) {
       console.log("BuzzMap payment completed, generating search area...");
-      
-      // The area is automatically generated in useMapLogic, we just handle the UI here
     }
-  }, [location?.state]);
+    
+    // Force re-render after a brief delay to ensure proper initialization
+    const initialRenderTimer = setTimeout(() => {
+      console.log("Ensuring map is properly initialized...");
+      handleMapReady();
+    }, 500);
+    
+    return () => clearTimeout(initialRenderTimer);
+  }, [location?.state, handleMapReady]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -92,29 +98,31 @@ const MapLogicProvider = () => {
         />
       )}
 
-      {/* Map container with flexible height */}
-      <div className="w-full h-[60vh] sm:h-[70vh]">
-        <MapArea 
-          onMapReady={handleMapReady}
-          markers={markers}
-          searchAreas={searchAreas}
-          isAddingMarker={isAddingMarker}
-          isAddingSearchArea={isAddingSearchArea}
-          activeMarker={activeMarker}
-          activeSearchArea={activeSearchArea}
-          onMapClick={handleMapClick}
-          onMapDoubleClick={handleMapDoubleClick}
-          setActiveMarker={setActiveMarker}
-          setActiveSearchArea={setActiveSearchArea}
-          saveMarkerNote={saveMarkerNote}
-          saveSearchArea={saveSearchArea}
-          editMarker={editMarker}
-          editSearchArea={editSearchArea}
-          deleteMarker={deleteMarker}
-          deleteSearchArea={deleteSearchArea}
-          currentLocation={currentLocation}
-        />
-      </div>
+      {/* Map container with Suspense fallback */}
+      <Suspense fallback={<div className="w-full h-[60vh] sm:h-[70vh] bg-black/50 flex items-center justify-center">Loading map...</div>}>
+        <div className="w-full h-[60vh] sm:h-[70vh]">
+          <MapArea 
+            onMapReady={handleMapReady}
+            markers={markers}
+            searchAreas={searchAreas}
+            isAddingMarker={isAddingMarker}
+            isAddingSearchArea={isAddingSearchArea}
+            activeMarker={activeMarker}
+            activeSearchArea={activeSearchArea}
+            onMapClick={handleMapClick}
+            onMapDoubleClick={handleMapDoubleClick}
+            setActiveMarker={setActiveMarker}
+            setActiveSearchArea={setActiveSearchArea}
+            saveMarkerNote={saveMarkerNote}
+            saveSearchArea={saveSearchArea}
+            editMarker={editMarker}
+            editSearchArea={editSearchArea}
+            deleteMarker={deleteMarker}
+            deleteSearchArea={deleteSearchArea}
+            currentLocation={currentLocation}
+          />
+        </div>
+      </Suspense>
 
       {/* Notes below the map, more compact on mobile */}
       <div className="w-full bg-black/50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-projectx-deep-blue/40 shadow-xl">

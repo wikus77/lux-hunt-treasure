@@ -11,14 +11,43 @@ const InteractiveGlobe = () => {
   const isRotatingRef = useRef(true);
 
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/globe.gl';
-    script.async = true;
-    document.body.appendChild(script);
-
-    script.onload = () => {
-      if (!globeRef.current || !window.Globe) return;
+    // Clean up any previous instances
+    if (globeRef.current) {
+      while (globeRef.current.firstChild) {
+        globeRef.current.removeChild(globeRef.current.firstChild);
+      }
+    }
+    
+    // Load the Globe.gl script with error handling
+    try {
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/globe.gl@2.28.6/dist/globe.gl.min.js';
+      script.async = true;
+      script.onload = initGlobe;
+      script.onerror = handleScriptError;
+      document.body.appendChild(script);
       
+      return () => {
+        document.body.removeChild(script);
+        if (globeInstanceRef.current) {
+          // Clean up globe instance
+          globeInstanceRef.current = null;
+        }
+      };
+    } catch (error) {
+      console.error("Error loading globe script:", error);
+      setIsLoading(false);
+    }
+  }, []);
+
+  const initGlobe = () => {
+    if (!globeRef.current || !window.Globe) {
+      console.error("Globe reference or Globe.gl library not available");
+      setIsLoading(false);
+      return;
+    }
+    
+    try {
       const globe = window.Globe()
         .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
         .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
@@ -28,9 +57,8 @@ const InteractiveGlobe = () => {
         (globeRef.current);
 
       globeInstanceRef.current = globe;
-      setIsLoading(false);
-
-      // Add city points (for visibility at high zoom)
+      
+      // Add city points for visibility
       const cities = [
         { lat: 40.7128, lng: -74.0060, name: 'New York' },
         { lat: 48.8566, lng: 2.3522, name: 'Paris' },
@@ -40,18 +68,7 @@ const InteractiveGlobe = () => {
         { lat: 55.7558, lng: 37.6173, name: 'Moscow' },
         { lat: -33.8688, lng: 151.2093, name: 'Sydney' },
         { lat: -22.9068, lng: -43.1729, name: 'Rio de Janeiro' },
-        { lat: 19.4326, lng: -99.1332, name: 'Mexico City' },
-        { lat: 37.7749, lng: -122.4194, name: 'San Francisco' },
         { lat: 45.4642, lng: 9.1900, name: 'Milan' },
-        { lat: 43.7696, lng: 11.2558, name: 'Florence' },
-        { lat: 40.8518, lng: 14.2681, name: 'Naples' },
-        { lat: 45.0703, lng: 7.6869, name: 'Turin' },
-        { lat: 43.7228, lng: 10.4017, name: 'Pisa' },
-        { lat: 44.4056, lng: 8.9463, name: 'Genoa' },
-        { lat: 45.6495, lng: 13.7768, name: 'Trieste' },
-        { lat: 45.4408, lng: 12.3155, name: 'Venice' },
-        { lat: 41.1171, lng: 16.8719, name: 'Bari' },
-        { lat: 37.5079, lng: 15.0830, name: 'Catania' }
       ];
       
       globe.pointsData(cities)
@@ -59,72 +76,100 @@ const InteractiveGlobe = () => {
         .pointAltitude(0.01)
         .pointRadius(0.12)
         .pointsMerge(true)
-        .pointLabel(d => d.name)
-        .onPointClick(point => {
-          globe.pointOfView({
-            lat: point.lat,
-            lng: point.lng,
-            altitude: 0.5
-          }, 1000);
-        });
+        .pointLabel(d => d.name);
 
-      // Auto-rotation
+      // Set up auto-rotation
       let currentLong = 0;
       const rotationSpeed = 0.3;
       
-      (function rotateCam() {
-        if (isRotatingRef.current) {
-          globe.pointOfView({
-            lat: 30,
-            lng: currentLong,
-            altitude: 2.5
-          });
-          currentLong += rotationSpeed;
+      const rotateCam = () => {
+        if (isRotatingRef.current && globeInstanceRef.current) {
+          try {
+            globeInstanceRef.current.pointOfView({
+              lat: 30,
+              lng: currentLong,
+              altitude: 2.5
+            });
+            currentLong += rotationSpeed;
+            requestAnimationFrame(rotateCam);
+          } catch (err) {
+            console.error("Error during globe rotation:", err);
+          }
+        } else if (isRotatingRef.current) {
+          requestAnimationFrame(rotateCam);
         }
-        requestAnimationFrame(rotateCam);
-      })();
+      };
+      
+      // Start rotation
+      rotateCam();
 
-      // Handle resize
+      // Window resize handler
       const handleResize = () => {
-        if (globeRef.current) {
-          globe
-            .width(globeRef.current.clientWidth)
-            .height(globeRef.current.clientHeight);
+        if (globeRef.current && globeInstanceRef.current) {
+          try {
+            globeInstanceRef.current
+              .width(globeRef.current.clientWidth)
+              .height(globeRef.current.clientHeight);
+          } catch (err) {
+            console.error("Error resizing globe:", err);
+          }
         }
       };
 
       window.addEventListener('resize', handleResize);
+      setIsLoading(false);
 
-      // Cleanup
-      return () => {
-        window.removeEventListener('resize', handleResize);
-        if (globeRef.current) {
-          while (globeRef.current.firstChild) {
-            globeRef.current.removeChild(globeRef.current.firstChild);
-          }
-        }
-      };
-    };
+      return () => window.removeEventListener('resize', handleResize);
+    } catch (error) {
+      console.error("Error initializing globe:", error);
+      setIsLoading(false);
+    }
+  };
 
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
+  const handleScriptError = () => {
+    console.error("Failed to load Globe.gl script");
+    setIsLoading(false);
+  };
 
   const handleZoom = (zoomIn: boolean) => {
     if (!globeInstanceRef.current) return;
     
-    const currentAltitude = globeInstanceRef.current.pointOfView().altitude;
-    const newAltitude = zoomIn ? 
-      Math.max(currentAltitude * 0.7, 0.1) : // Allow zooming in much closer for city-level detail
-      Math.min(currentAltitude * 1.3, 5);
-    
-    globeInstanceRef.current.pointOfView({ altitude: newAltitude }, 300);
+    try {
+      const currentAltitude = globeInstanceRef.current.pointOfView().altitude;
+      const newAltitude = zoomIn ? 
+        Math.max(currentAltitude * 0.7, 0.1) : 
+        Math.min(currentAltitude * 1.3, 5);
+      
+      globeInstanceRef.current.pointOfView({ altitude: newAltitude }, 300);
+    } catch (err) {
+      console.error("Error handling zoom:", err);
+    }
   };
 
   const toggleRotation = () => {
     isRotatingRef.current = !isRotatingRef.current;
     setIsRotating(!isRotating);
+    
+    // Restart rotation if needed
+    if (isRotatingRef.current) {
+      const rotateCam = () => {
+        if (!isRotatingRef.current || !globeInstanceRef.current) return;
+        
+        try {
+          const pov = globeInstanceRef.current.pointOfView();
+          globeInstanceRef.current.pointOfView({
+            ...pov,
+            lng: pov.lng + 0.3
+          });
+        } catch (err) {
+          console.error("Error rotating camera:", err);
+        }
+        
+        requestAnimationFrame(rotateCam);
+      };
+      
+      requestAnimationFrame(rotateCam);
+    }
   };
 
   return (
@@ -161,8 +206,11 @@ const InteractiveGlobe = () => {
         </Button>
       </div>
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center text-white bg-black bg-opacity-50 z-10 animate-pulse">
-          Caricamento Globo 3D...
+        <div className="absolute inset-0 flex items-center justify-center text-white bg-black bg-opacity-70 z-10">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mb-3"></div>
+            <p>Caricamento Globo 3D...</p>
+          </div>
         </div>
       )}
     </div>

@@ -1,10 +1,7 @@
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-import { Award } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { getMissionDeadline } from "@/utils/countdownDate";
+import { Lock } from "lucide-react";
 
 interface PrizeVisionProps {
   progress: number;
@@ -12,201 +9,81 @@ interface PrizeVisionProps {
 }
 
 export function PrizeVision({ progress, status }: PrizeVisionProps) {
-  const [currentPrize] = useState({
-    image: "/lovable-uploads/f7ebe6cb-8248-4002-bb84-b0e40781e72e.png" // Keep the Ferrari image but remove name
-  });
-  
-  const [lastUnlockEvent, setLastUnlockEvent] = useLocalStorage<string | null>("last-unlock-event", null);
-  const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
-  
-  // Calculate days remaining until mission deadline
-  const getDaysRemaining = () => {
-    const deadline = getMissionDeadline();
-    const now = new Date();
-    const diffTime = deadline.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
-  };
-  
-  const daysRemaining = getDaysRemaining();
-  const totalDays = 30; // Assuming 30 days total mission duration
-  
-  // Calculate visibility percentage based on algorithm in prompt
-  const calculateVisibilityPercentage = () => {
-    const objectivesPercentage = progress; // Using progress as objective completion
-    const userScore = progress; // Using same value for simplicity
-    
-    if (daysRemaining <= 3) {
-      // Last 3 days - full visibility (100%)
-      return 100;
-    } else {
-      // Calculate partial visibility
-      const partialVisibility = (objectivesPercentage * 0.4) + (userScore * 0.05);
-      
-      // Apply temporal limit for first 27 days (max 35%)
-      return Math.min(partialVisibility, 35);
-    }
-  };
-  
-  // Visibility percentage from 0 to 100
-  const visibilityPercentage = calculateVisibilityPercentage();
-  
-  // Generate filter settings based on visibility percentage
-  const getImageFilters = () => {
-    if (visibilityPercentage >= 100) {
-      return "blur(0px) brightness(1) grayscale(0)";
-    } else if (visibilityPercentage >= 35) {
-      return "blur(2px) brightness(0.7) grayscale(0.3)";
-    } else if (visibilityPercentage >= 20) {
-      return "blur(5px) brightness(0.5) grayscale(0.5)";
-    } else {
-      return "blur(8px) brightness(0.3) grayscale(0.7)";
-    }
-  };
-  
-  // Generate radial revealing mask
-  const getMaskGradient = () => {
-    if (visibilityPercentage >= 100) return "none";
-    
-    const edgeVisibility = Math.min(100, visibilityPercentage * 1.5);
-    const centerVisibility = Math.max(0, visibilityPercentage - 10);
-    
-    return `radial-gradient(
-      circle at center, 
-      rgba(0,0,0,${1 - centerVisibility/100}) ${visibilityPercentage}%, 
-      rgba(0,0,0,${1 - edgeVisibility/100}) ${visibilityPercentage + 15}%, 
-      rgba(0,0,0,0.9) 100%
-    )`;
-  };
-
-  // Get status text
-  const getStatusText = () => {
-    if (daysRemaining <= 3) {
-      return "PREMIO SBLOCCATO!";
-    } else {
-      return "PREMIO BLOCCATO";
+  // Calculate blurring based on status
+  const getBlurValue = () => {
+    switch (status) {
+      case "locked":
+        return "blur-xl";
+      case "partial":
+        return "blur-lg";
+      case "near":
+        return "blur-sm";
+      case "unlocked":
+        return "";
+      default:
+        return "blur-xl";
     }
   };
 
-  // Get help text below status
-  const getHelpText = () => {
-    if (daysRemaining <= 3) {
-      return "Completa la missione per reclamarlo";
-    } else {
-      return "Completa gli obiettivi per sbloccare l'immagine";
+  // Get the appropriate message based on status
+  const getMessage = () => {
+    switch (status) {
+      case "locked":
+        return "Premio bloccato";
+      case "partial":
+        return "Visione parziale";
+      case "near":
+        return "Quasi sbloccato";
+      case "unlocked":
+        return "Premio sbloccato";
+      default:
+        return "Premio bloccato";
     }
   };
-  
-  // Check for unlock level changes to trigger animations
-  useEffect(() => {
-    const currentUnlockLevel = 
-      visibilityPercentage >= 100 ? "unlocked" :
-      visibilityPercentage >= 35 ? "near" :
-      visibilityPercentage >= 20 ? "partial" : "locked";
-    
-    const currentEvent = `${currentUnlockLevel}-${new Date().toDateString()}`;
-    
-    if (lastUnlockEvent !== currentEvent && currentUnlockLevel !== "locked") {
-      setShowUnlockAnimation(true);
-      setTimeout(() => setShowUnlockAnimation(false), 2000);
-      setLastUnlockEvent(currentEvent);
-    }
-  }, [visibilityPercentage, lastUnlockEvent, setLastUnlockEvent]);
 
   return (
-    <motion.div
-      className="glass-card p-4 flex flex-col"
-      initial={{ scale: 0.95 }}
-      animate={{ scale: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="relative aspect-[21/9] md:aspect-[16/5] w-full overflow-hidden rounded-lg">
-        {/* Static base image - always visible but filtered */}
-        <motion.img 
-          src={currentPrize.image} 
-          alt="Premio misterioso"
-          className="w-full h-full object-cover"
-          style={{ filter: getImageFilters() }}
-          animate={{ 
-            filter: getImageFilters()
-          }}
-          transition={{ duration: 1.5 }}
+    <div className="w-full bg-black/50 rounded-xl sm:rounded-2xl border border-projectx-deep-blue/50 overflow-hidden shadow-xl">
+      {/* Progress indicator */}
+      <div className="w-full h-1 bg-gray-900">
+        <div
+          className="h-full bg-gradient-to-r from-cyan-400 to-purple-500"
+          style={{ width: `${progress}%` }}
         />
-        
-        {/* Revealing mask overlay */}
-        <motion.div 
-          className="absolute inset-0"
-          style={{ 
-            background: getMaskGradient(),
-            opacity: visibilityPercentage >= 100 ? 0 : 1
-          }}
-          animate={{ 
-            background: getMaskGradient(),
-            opacity: visibilityPercentage >= 100 ? 0 : 1
-          }}
-          transition={{ duration: 1.5 }}
-        />
-        
-        {/* Edge glow effect for partial reveal */}
-        {visibilityPercentage > 5 && visibilityPercentage < 100 && (
-          <motion.div 
-            className="absolute inset-0 pointer-events-none"
-            animate={{ 
-              boxShadow: ["0 0 10px rgba(0,229,255,0.2) inset", "0 0 15px rgba(0,229,255,0.3) inset", "0 0 10px rgba(0,229,255,0.2) inset"]
-            }}
-            transition={{ duration: 2.5, repeat: Infinity }}
-          />
-        )}
-        
-        {/* Status overlay - center text */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="text-center bg-black/50 px-8 py-4 rounded-lg backdrop-blur-sm">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-              {getStatusText()}
-            </h2>
-            <p className="text-sm md:text-base text-gray-300">
-              {getHelpText()}
-            </p>
-          </div>
-        </div>
-        
-        {/* Countdown overlay for temporal limit */}
-        {daysRemaining > 3 && (
-          <div className="absolute top-3 right-3 bg-black/60 rounded-full px-3 py-1 text-xs text-white">
-            Sblocco completo in: <span className="text-yellow-400 font-mono">{daysRemaining} giorni</span>
-          </div>
-        )}
-        
-        {/* Glowing border for unlocked state */}
-        {visibilityPercentage >= 100 && (
-          <motion.div 
-            className="absolute inset-0 pointer-events-none border-2 border-yellow-400"
-            animate={{ 
-              boxShadow: ["0 0 10px rgba(250,204,21,0.5)", "0 0 20px rgba(250,204,21,0.8)", "0 0 10px rgba(250,204,21,0.5)"]
-            }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          />
-        )}
-        
-        {/* Unlock animation */}
-        {showUnlockAnimation && (
-          <motion.div 
-            className="absolute inset-0 bg-yellow-400"
-            initial={{ opacity: 0.8 }}
-            animate={{ opacity: 0 }}
-            transition={{ duration: 1 }}
-          />
-        )}
       </div>
 
-      {/* Progress bar */}
-      <div className="mt-4">
-        <div className="flex justify-between mb-1 text-sm">
-          <span>Progresso sblocco premio</span>
-          <span className="font-bold">{Math.min(100, Math.round(visibilityPercentage))}%</span>
-        </div>
-        <Progress value={Math.min(100, visibilityPercentage)} className="h-2" />
+      {/* Countdown text - Positioned ABOVE the prize box */}
+      <div className="pt-3 pb-1 px-4 text-center">
+        <span className="text-white/70 text-sm font-medium">
+          Sblocco completo in: <span className="text-cyan-400">45 giorni</span>
+        </span>
       </div>
-    </motion.div>
+
+      <div className="relative overflow-hidden">
+        {/* Prize image - blurred based on status */}
+        <div className={`relative w-full h-36 sm:h-48 ${getBlurValue()} transition-all duration-500`}>
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ 
+              backgroundImage: "url('/lovable-uploads/ef3cb1c4-5fb4-4291-8191-720d84a8e7f3.png')", 
+            }}
+          />
+        </div>
+
+        {/* Overlay with status info */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <motion.div 
+            className="bg-black/40 rounded-full p-4 backdrop-blur-sm"
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 2, repeat: Infinity, repeatType: "loop" }}
+          >
+            <Lock className="h-8 w-8 sm:h-10 sm:w-10 text-white/80" />
+          </motion.div>
+          
+          <span className="mt-3 font-bold text-xl sm:text-2xl text-white text-center backdrop-blur-sm bg-black/20 px-3 py-1 rounded-full">
+            {getMessage()}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }

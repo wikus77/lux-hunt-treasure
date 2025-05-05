@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, Edit2, CircleDot } from 'lucide-react';
+import { X, Edit2, CircleDot, Trash2 } from 'lucide-react';
 
 type Importance = "high" | "medium" | "low";
 
@@ -14,7 +14,7 @@ interface MapNoteListProps {
   notes: MapNote[];
   onImportanceClick?: (id: string) => void;
   onEditNote?: (note: MapNote) => void;
-  onDeleteNote?: (id: string) => void; // Added delete note functionality
+  onDeleteNote?: (id: string) => void; 
 }
 
 const getImportanceStyle = (importance: Importance) => {
@@ -49,6 +49,12 @@ const MapNoteList: React.FC<MapNoteListProps> = ({
   onEditNote, 
   onDeleteNote 
 }) => {
+  const handleDeleteClick = (id: string) => {
+    if (window.confirm("Sei sicuro di voler eliminare questa nota?")) {
+      onDeleteNote?.(id);
+    }
+  };
+
   if (notes.length === 0) {
     return (
       <div className="py-4 text-center text-white/50 italic text-sm">
@@ -87,15 +93,13 @@ const MapNoteList: React.FC<MapNoteListProps> = ({
             </button>
             
             {/* Delete button */}
-            {onDeleteNote && (
-              <button
-                onClick={() => onDeleteNote(note.id)}
-                className="p-1.5 rounded-full hover:bg-red-900/30 focus:outline-none text-white/70 hover:text-red-400"
-                aria-label="Elimina nota"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
+            <button
+              onClick={() => handleDeleteClick(note.id)}
+              className="p-1.5 rounded-full hover:bg-red-900/30 focus:outline-none text-white/70 hover:text-red-400"
+              aria-label="Elimina nota"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
         </div>
       ))}

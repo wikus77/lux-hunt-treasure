@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Save } from "lucide-react";
 import { motion } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProfileHeaderProps {
   agentCode: string;
@@ -20,6 +21,7 @@ const ProfileHeader = ({
   onSave 
 }: ProfileHeaderProps) => {
   const [showCodeText, setShowCodeText] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Typewriter effect for agent dossier
@@ -39,7 +41,7 @@ const ProfileHeader = ({
           transition={{ delay: 0.2, duration: 0.5 }}
           className="flex items-center"
         >
-          <span className="text-cyan-400 font-mono text-xs sm:text-sm">DOSSIER AGENTE:</span>
+          <span className="text-cyan-400 font-mono text-xs sm:text-sm">DOSSIER:</span>
           <motion.span 
             className="font-mono text-white bg-cyan-900/30 px-2 py-1 rounded text-xs sm:text-sm ml-2"
             initial={{ width: 0, opacity: 0 }}
@@ -50,13 +52,13 @@ const ProfileHeader = ({
           </motion.span>
         </motion.div>
         
-        {!isEditing && <span className="bg-cyan-600 text-white text-xs px-2 py-0.5 rounded-full">{agentTitle}</span>}
+        {!isEditing && <span className="bg-cyan-600 text-white text-xs px-2 py-0.5 rounded-full ml-2">{agentTitle}</span>}
       </div>
       
       <Button
         onClick={() => isEditing ? onSave() : onEditToggle()}
         size="sm"
-        className="bg-cyan-800 hover:bg-cyan-700 h-10 max-h-10"
+        className={`bg-cyan-800 hover:bg-cyan-700 h-${isMobile ? '10' : '11'} max-h-${isMobile ? '10' : '11'}`}
       >
         {isEditing ? <Save className="h-4 w-4 mr-1" /> : <Edit className="h-4 w-4 mr-1" />}
         {isEditing ? "Salva" : "Modifica"}
