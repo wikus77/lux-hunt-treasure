@@ -11,18 +11,18 @@ export type ValidationResult = {
   errors: Record<string, string>;
 };
 
-// Utility di validazione per il form di login
+// Validation utility for login form
 export const validateLogin = (formData: LoginFormData): ValidationResult => {
   const errors: Record<string, string> = {};
 
-  // Validazione email
+  // Email validation
   if (!formData.email) {
     errors.email = "L'email è obbligatoria";
   } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
     errors.email = "Formato email non valido";
   }
 
-  // Validazione password
+  // Password validation
   if (!formData.password) {
     errors.password = "La password è obbligatoria";
   }
