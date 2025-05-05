@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,14 +20,8 @@ const Login = () => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Check if quiz has been completed
-        const storedProfile = localStorage.getItem("userProfileType");
-        if (storedProfile) {
-          navigate("/home");
-        } else {
-          // If logged in but no quiz yet, stay on this page
-          // The Auth container will show the quiz
-        }
+        // Non navighiamo qui, lasciamo che Auth.tsx gestisca la navigazione
+        // in base al completamento del quiz
       }
     };
     
