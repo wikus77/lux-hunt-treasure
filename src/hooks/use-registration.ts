@@ -15,20 +15,21 @@ export type FormData = {
 
 // Funzione separata per evitare inferenza profonda con Supabase
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  // Bypass TypeScript's deep type instantiation by using any type
-  const query: any = supabase
-    .from('profiles')
-    .select('id')
-    .eq('email', email);
+  // Use a completely separate approach without builder chains
+  // This avoids deep type inference issues
+  const response = await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/rest/v1/profiles?email=eq.${encodeURIComponent(email)}&select=id`, {
+    headers: {
+      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+    }
+  });
   
-  const { data, error } = await query;
-  
-  if (error) {
-    console.error("Errore nel controllo email:", error);
-    throw error;
+  if (!response.ok) {
+    console.error("Errore nel controllo email:", response.statusText);
+    throw new Error(`Error checking email: ${response.statusText}`);
   }
-
-  return data !== null && data.length > 0;
+  
+  const data = await response.json();
+  return Array.isArray(data) && data.length > 0;
 }
 
 export const useRegistration = () => {
