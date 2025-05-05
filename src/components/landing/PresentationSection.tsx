@@ -24,6 +24,13 @@ const PresentationSection = ({ visible }: PresentationSectionProps) => {
           </h2>
           
           <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
+            Un premio attende chi sa vedere oltre.
+            Gli indizi non sono nascosti: sono camuffati.
+            Serve logica, freddezza e visione.
+            La sfida è iniziata. Questa è M1SSION.
+          </p>
+          
+          <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
             In the near future...
             The world becomes a gameboard.
             The clues are encrypted. The stakes are real.
@@ -33,7 +40,7 @@ const PresentationSection = ({ visible }: PresentationSectionProps) => {
             Thousands will try. Only a few will see the pattern.
             You're not just chasing a prize—you're chasing the proof that you can outthink them all.
           </p>
-          
+
           <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
             This is <span className="text-[#00E5FF] font-bold">M1</span><span className="text-white font-bold">SSION</span>. The countdown has begun. Are you ready?
           </p>
