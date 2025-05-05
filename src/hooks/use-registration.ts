@@ -5,47 +5,28 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, ValidationResult } from '@/utils/form-validation';
 
-// ✅ Tipo definito manualmente (senza inferenza profonda)
-type RegistrationFormData = {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-};
-
-// Define a simple interface for profile data
-interface ProfileData {
-  id: string;
-  email?: string;
-  // Add other profile fields if needed
-}
-
-// ✅ Funzione esterna con tipi espliciti per evitare errore TS2589
+// ✅ Funzione esterna con tipi disattivati (evita errori di tipo)
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  try {
-    const response = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', email);
-    
-    // Usa type assertion per evitare inferenza profonda
-    const data = response.data as ProfileData[] | null;
-    const error = response.error;
+  const untypedClient = supabase as any;
+  const response = await untypedClient
+    .from('profiles')
+    .select('id')
+    .eq('email', email);
 
-    if (error) {
-      console.error("Errore nel controllo email:", error);
-      throw error;
-    }
+  const data = response.data;
+  const error = response.error;
 
-    return data && data.length > 0;
-  } catch (err) {
-    console.error("Errore durante il controllo dell'email:", err);
-    throw err;
+  if (error) {
+    console.error("Errore nel controllo email:", error);
+    throw error;
   }
+
+  return data && data.length > 0;
 }
 
 export const useRegistration = () => {
-  const [formData, setFormData] = useState<RegistrationFormData>({
+  // ✅ Niente tipo esplicito qui → TypeScript capisce da solo
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
@@ -92,7 +73,6 @@ export const useRegistration = () => {
         return;
       }
 
-      // Use explicit non-generic call to signUp to simplify type inference
       const result = await supabase.auth.signUp({
         email,
         password,
