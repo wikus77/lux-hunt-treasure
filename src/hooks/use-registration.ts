@@ -5,16 +5,10 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
 
-// Define a simple profile data type to avoid deep type instantiation
-interface ProfileData {
-  id: string;
-}
-
-// Define explicit type for the query result to avoid deep instantiation
-interface ProfileQueryResult {
-  data: ProfileData[] | null;
-  error: any;
-}
+// ✅ Tipizzazione sicura per Supabase Auth metadata
+type UserMetaData = {
+  full_name: string;
+};
 
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
@@ -53,11 +47,11 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // Use explicit typing to avoid deep instantiation
+      // ✅ Verifica se l’email è già registrata (semplificato)
       const { data: profileData, error } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', email) as ProfileQueryResult;
+        .eq('email', email);
 
       if (error) {
         console.error("Errore Supabase:", error);
@@ -78,8 +72,8 @@ export const useRegistration = () => {
         return;
       }
 
-      // ✅ Registrazione utente e invio email di verifica
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // ✅ Registrazione utente + invio email verifica (TIPO CORRETTO)
+      const { data: authData, error: authError } = await supabase.auth.signUp<UserMetaData>({
         email,
         password,
         options: {
