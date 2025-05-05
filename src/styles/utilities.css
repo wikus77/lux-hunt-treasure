@@ -40,9 +40,18 @@
   .dark .bottom-nav-item.active { @apply text-white; }
   .light .bottom-nav-item.active { @apply text-black; }
   .active-gradient-icon {
-    filter: drop-shadow(0 0 6px #9b87f5aa);
-    transform: scale(1.2);
-    transition: transform 0.2s;
+    filter: drop-shadow(0 0 8px rgba(0, 209, 255, 0.7));
+    transition: transform 0.3s, filter 0.3s;
+  }
+  
+  @keyframes glow-pulse {
+    0% { filter: drop-shadow(0 0 5px rgba(0, 209, 255, 0.5)); }
+    50% { filter: drop-shadow(0 0 12px rgba(123, 46, 255, 0.7)); }
+    100% { filter: drop-shadow(0 0 5px rgba(0, 209, 255, 0.5)); }
+  }
+  
+  .active-gradient-icon {
+    animation: glow-pulse 3s infinite ease-in-out;
   }
 }
 

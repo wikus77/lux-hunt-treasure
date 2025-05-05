@@ -34,11 +34,16 @@ const BottomNavigation = () => {
             >
               <div className="relative">
                 <item.icon
-                  className={`h-6 w-6 ${
+                  className={`h-6 w-6 transition-all duration-300 ${
                     isActive(item.path) 
-                      ? "text-white active-gradient-icon"
+                      ? "text-white scale-110 active-gradient-icon"
                       : "text-gray-400"
                   }`}
+                  style={{
+                    filter: isActive(item.path) 
+                      ? "drop-shadow(0 0 8px rgba(123, 46, 255, 0.5))" 
+                      : "none"
+                  }}
                 />
                 {item.badge && item.badge > 0 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center animate-pulse">
@@ -46,9 +51,16 @@ const BottomNavigation = () => {
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] mt-1 ${isActive(item.path) ? "text-white" : ""}`}>
+              <span className={`text-[10px] mt-1 transition-colors duration-300 ${
+                isActive(item.path) 
+                  ? "text-white font-medium" 
+                  : "text-gray-400"
+              }`}>
                 {item.label}
               </span>
+              {isActive(item.path) && (
+                <div className="h-0.5 w-5 mx-auto mt-1 bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] rounded-full" />
+              )}
             </button>
           ))}
         </nav>
