@@ -54,10 +54,6 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           {/* Agent dossier code with typewriter effect - desktop only */}
           <AgentCodeDisplay agentCode={agentCode} />
 
-          {/* Desktop menu with countdown */}
-          <HeaderCountdown />
-
-          {/* User menu and mobile menu button */}
           <div className="flex items-center">
             <div className="flex items-center space-x-2 md:space-x-3">
               {/* User dropdown */}
@@ -75,7 +71,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         {/* Mobile agent code - only visible on small screens */}
         <AgentCodeDisplay agentCode={agentCode} isMobile={true} />
 
-        {/* Mobile countdown - only visible on small screens */}
+        {/* Countdown Timer - Moved to standalone component with mobile-specific rendering */}
         <HeaderCountdown isMobile={true} />
       </div>
 

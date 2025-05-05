@@ -7,14 +7,21 @@ export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
 
   React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
+    // Initial check
+    const checkIsMobile = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
+    
+    // Check immediately on mount
+    checkIsMobile()
+    
+    // Then add listener to window resize
+    window.addEventListener("resize", checkIsMobile)
+    
+    // Clean up
+    return () => window.removeEventListener("resize", checkIsMobile)
   }, [])
 
-  return !!isMobile
+  // Return true or false (with default fallback to false if undefined during SSR)
+  return isMobile ?? false
 }

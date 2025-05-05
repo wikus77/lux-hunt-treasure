@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { User } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProfileInfoProps {
   profileImage: string | null;
@@ -43,13 +44,15 @@ const ProfileInfo = ({
   setAgentCode,
   setAgentTitle,
 }: ProfileInfoProps) => {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="flex-shrink-0 flex flex-col items-center md:w-1/3">
       <div className="relative">
-        <Avatar className="w-32 h-32 border-2 border-cyan-500 shadow-lg shadow-cyan-500/20">
+        <Avatar className={`${isMobile ? 'w-24 h-24' : 'w-32 h-32'} border-2 border-cyan-500 shadow-lg shadow-cyan-500/20`}>
           <AvatarImage src={profileImage || ""} />
           <AvatarFallback className="bg-cyan-900/30">
-            <User className="w-12 h-12 text-cyan-500" />
+            <User className={`${isMobile ? 'w-8 h-8' : 'w-12 h-12'} text-cyan-500`} />
           </AvatarFallback>
         </Avatar>
         
@@ -68,31 +71,31 @@ const ProfileInfo = ({
                   reader.readAsDataURL(file);
                 }
               }}
-              className="text-xs"
+              className="text-xs w-full max-w-[250px]"
             />
           </div>
         )}
       </div>
       
-      <div className="mt-4 text-center w-full">
+      <div className="mt-4 text-center w-full max-w-[250px] mx-auto">
         {isEditing ? (
           <>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mb-2 bg-black/30"
+              className="mb-2 bg-black/30 h-10"
               placeholder="Nome Agente"
             />
             <Input
               value={agentCode}
               onChange={(e) => setAgentCode(e.target.value)}
-              className="mb-2 bg-black/30 font-mono"
+              className="mb-2 bg-black/30 font-mono h-10"
               placeholder="Codice Agente"
             />
             <Input
               value={agentTitle}
               onChange={(e) => setAgentTitle(e.target.value)}
-              className="mb-2 bg-black/30"
+              className="mb-2 bg-black/30 h-10"
               placeholder="Titolo Agente"
             />
             <Textarea
@@ -100,11 +103,12 @@ const ProfileInfo = ({
               onChange={(e) => setBio(e.target.value)}
               className="bg-black/30"
               placeholder="Bio"
+              rows={isMobile ? 3 : 4}
             />
           </>
         ) : (
           <>
-            <h2 className="text-xl font-bold mb-1">{name}</h2>
+            <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-1`}>{name}</h2>
             <p className="text-sm text-gray-400 mb-3">{bio}</p>
             
             {/* Investigative Style */}

@@ -40,7 +40,7 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
   }, []);
   
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-black/40 border-b border-white/10 transition-all duration-300">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-black/40 border-b border-white/10">
       <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex flex-col">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
@@ -121,11 +121,11 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
             {agentCode}
           </motion.span>
         </motion.div>
-        
-        {/* Countdown Timer */}
-        <div className="flex justify-center mt-1 sm:mt-2">
-          <CountdownTimer targetDate={targetDate} />
-        </div>
+      </div>
+      
+      {/* Countdown Timer - separated to avoid overlapping */}
+      <div className="flex justify-center py-2">
+        <CountdownTimer targetDate={targetDate} />
       </div>
     </header>
   );

@@ -34,7 +34,12 @@ const Map = () => {
     }
   }, [unlockedClues, location.state, addNotification]);
 
-  return <MapLogicProvider />;
+  // Added a wrapper with appropriate padding to account for the fixed header and toolbar
+  return (
+    <div className={`pt-[160px] ${isMobile ? 'sm:pt-[155px]' : 'sm:pt-[155px]'} h-full`}>
+      <MapLogicProvider />
+    </div>
+  );
 };
 
 export default Map;

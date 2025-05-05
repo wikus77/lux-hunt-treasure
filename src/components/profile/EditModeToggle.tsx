@@ -1,6 +1,7 @@
 
 import { Edit, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface EditModeToggleProps {
   isEditing: boolean;
@@ -13,17 +14,19 @@ const EditModeToggle = ({
   setIsEditing,
   onSave
 }: EditModeToggleProps) => {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="fixed bottom-20 right-4 z-40">
       <Button
         onClick={() => isEditing ? onSave() : setIsEditing(true)}
         size="icon"
-        className="w-12 h-12 rounded-full shadow-lg bg-gradient-to-r from-projectx-blue to-projectx-pink"
+        className={`${isMobile ? 'w-10 h-10' : 'w-12 h-12'} rounded-full shadow-lg bg-gradient-to-r from-projectx-blue to-projectx-pink`}
       >
         {isEditing ? (
-          <Save className="h-5 w-5" />
+          <Save className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
         ) : (
-          <Edit className="h-5 w-5" />
+          <Edit className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
         )}
       </Button>
     </div>

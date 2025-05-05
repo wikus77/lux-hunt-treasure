@@ -132,8 +132,8 @@ const Home = () => {
           onShowNotifications={handleShowNotifications}
         />
         
-        {/* New Command Center Home layout */}
-        <main className="pt-24 sm:pt-28 px-2 sm:px-4 max-w-screen-xl mx-auto">
+        {/* Increased top padding to accommodate header + countdown */}
+        <main className={`pt-32 ${isMobile ? 'sm:pt-36' : 'sm:pt-36'} px-2 sm:px-4 max-w-screen-xl mx-auto`}>
           <CommandCenterHome />
         </main>
       </motion.div>
