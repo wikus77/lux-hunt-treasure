@@ -21,7 +21,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  console.log("Auth page - current path:", location.pathname);
+  console.log("Auth page loaded - current path:", location.pathname);
   
   // Handle email verification from URL params
   const wasEmailVerification = useEmailVerificationHandler();
@@ -80,7 +80,6 @@ const Auth = () => {
   };
 
   const handleQuizComplete = async (profileType: string) => {
-    // Mark quiz as completed
     console.log("Quiz completed with profile type:", profileType);
     setHasCompletedQuiz(true);
     
@@ -100,6 +99,7 @@ const Auth = () => {
     if (userId) {
       try {
         console.log("Saving profile data to database for user:", userId);
+        
         // Update the profile with quiz results
         const { error } = await supabase
           .from('profiles')
@@ -117,15 +117,36 @@ const Auth = () => {
           });
         } else {
           console.log("Profile data saved successfully");
+          // Navigate to home page
+          toast.success("Profilo completato!", {
+            description: "Benvenuto nell'applicazione!"
+          });
+          
+          // Navigate to home page after a short delay
+          setTimeout(() => {
+            navigate("/home");
+          }, 1000);
         }
       } catch (error) {
         console.error("Error saving profile data:", error);
       }
+    } else {
+      console.error("No userId available, cannot save profile data");
+      // Navigate anyway to prevent user being stuck
+      navigate("/home");
     }
-    
-    // Navigate to home page
-    navigate("/home");
   };
+
+  // Add more debug information to help diagnose rendering issues
+  useEffect(() => {
+    console.log("Current Auth state:", {
+      isLoading,
+      isLoggedIn,
+      emailVerified,
+      hasCompletedQuiz,
+      userId
+    });
+  }, [isLoading, isLoggedIn, emailVerified, hasCompletedQuiz, userId]);
 
   if (isLoading) {
     return (
@@ -136,7 +157,6 @@ const Auth = () => {
     );
   }
 
-  // Authentication manager component
   return (
     <div className="min-h-screen bg-black">
       <AuthenticationManager 
@@ -158,10 +178,16 @@ const Auth = () => {
       ) : !emailVerified ? (
         <VerificationPendingView />
       ) : !hasCompletedQuiz ? (
-        <ProfileQuiz onComplete={handleQuizComplete} userId={userId} />
+        <div className="min-h-screen bg-black">
+          <h2 className="text-2xl font-bold text-white text-center pt-8 mb-4">
+            Completa il tuo profilo
+          </h2>
+          <ProfileQuiz onComplete={handleQuizComplete} userId={userId} />
+        </div>
       ) : (
         <div className="flex items-center justify-center h-screen">
           <div className="text-white text-xl">Reindirizzamento in corso...</div>
+          <Spinner className="ml-2 text-white" />
         </div>
       )}
     </div>

@@ -1,10 +1,9 @@
 
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProfileCheckManagerProps {
-  userId: string | null;
+  userId: string;
   onProfileComplete: () => void;
   onProfileIncomplete: () => void;
 }
@@ -14,14 +13,18 @@ export const ProfileCheckManager: React.FC<ProfileCheckManagerProps> = ({
   onProfileComplete,
   onProfileIncomplete
 }) => {
-  const navigate = useNavigate();
-  
   useEffect(() => {
-    const checkProfile = async () => {
-      if (!userId) return;
+    const checkProfileStatus = async () => {
+      if (!userId) {
+        console.log("No user ID available for profile check");
+        onProfileIncomplete();
+        return;
+      }
+
+      console.log("Checking profile status for user:", userId);
       
       try {
-        // Check in database if the user has already an investigative style
+        // Query the profiles table to check if the user has completed the quiz
         const { data, error } = await supabase
           .from('profiles')
           .select('investigative_style')
@@ -29,36 +32,29 @@ export const ProfileCheckManager: React.FC<ProfileCheckManagerProps> = ({
           .single();
         
         if (error) {
-          console.error("Errore nel recuperare il profilo:", error);
+          console.error("Error fetching profile data:", error);
+          onProfileIncomplete();
+          return;
         }
         
-        // If the user has an investigative style in the database, mark quiz as completed
-        if (data?.investigative_style) {
-          localStorage.setItem("userProfileType", data.investigative_style);
+        // If investigative_style exists, the user has completed the quiz
+        if (data && data.investigative_style) {
+          console.log("User has completed profile setup with style:", data.investigative_style);
           onProfileComplete();
-          navigate("/home");
         } else {
-          // Check in localStorage as fallback
-          const storedProfile = localStorage.getItem("userProfileType");
-          if (storedProfile) {
-            onProfileComplete();
-            navigate("/home");
-          } else {
-            onProfileIncomplete();
-          }
+          console.log("User has not completed profile setup");
+          onProfileIncomplete();
         }
       } catch (error) {
-        console.error("Errore nel controllo del profilo:", error);
+        console.error("Unexpected error checking profile:", error);
         onProfileIncomplete();
       }
     };
     
-    if (userId) {
-      checkProfile();
-    }
-  }, [userId, onProfileComplete, onProfileIncomplete, navigate]);
-
-  return null; // This is a logic component, it doesn't render anything
+    checkProfileStatus();
+  }, [userId, onProfileComplete, onProfileIncomplete]);
+  
+  return null; // This is a logic component with no UI
 };
 
 export default ProfileCheckManager;

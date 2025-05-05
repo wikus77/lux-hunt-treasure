@@ -37,10 +37,8 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
           
           // Check if the email is verified
           if (!session.user.email_confirmed_at) {
-            console.log("Email not verified, signing out user");
+            console.log("Email not verified, redirecting to verification page");
             // Email not verified
-            await supabase.auth.signOut();
-            navigate('/login?verification=pending');
             onEmailNotVerified();
             return;
           }
@@ -72,19 +70,12 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
           // Check if email is verified
           if (!session.user.email_confirmed_at) {
             console.log("Email not verified after sign in");
-            await supabase.auth.signOut();
-            navigate('/login?verification=pending');
             onEmailNotVerified();
             return;
           }
           
           console.log("Authenticated user with verified email");
           onAuthenticated(session.user.id);
-          
-          // Redirect to home if on login/register pages
-          if (location.pathname === '/login' || location.pathname === '/register') {
-            navigate('/home');
-          }
         } else if (event === "SIGNED_OUT") {
           console.log("User signed out");
           onNotAuthenticated();

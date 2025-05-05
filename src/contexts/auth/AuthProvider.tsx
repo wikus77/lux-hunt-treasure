@@ -15,9 +15,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log("Auth provider state:", {
       isAuthenticated: auth.isAuthenticated(),
       isLoading: auth.isLoading,
-      isEmailVerified: auth.isEmailVerified
+      isEmailVerified: auth.isEmailVerified,
+      userId: auth.getCurrentUser()?.id
     });
-  }, [auth.isAuthenticated, auth.isLoading, auth.isEmailVerified]);
+  }, [auth.isAuthenticated, auth.isLoading, auth.isEmailVerified, auth.getCurrentUser]);
   
   return (
     <AuthContext.Provider value={auth}>
