@@ -15,14 +15,11 @@ export type FormData = {
 
 // Funzione separata per evitare inferenza profonda con Supabase
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  const untypedClient = supabase as any;
-  const response = await untypedClient
+  // Using type assertion to simplify typing and prevent excessive type instantiation
+  const { data, error } = await (supabase
     .from('profiles')
     .select('id')
-    .eq('email', email);
-
-  const data = response.data;
-  const error = response.error;
+    .eq('email', email) as any);
 
   if (error) {
     console.error("Errore nel controllo email:", error);
