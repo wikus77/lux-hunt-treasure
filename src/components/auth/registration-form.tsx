@@ -1,152 +1,22 @@
 
-import { useState, ChangeEvent, FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import StyledInput from "@/components/ui/styled-input";
-import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import { User, Mail, Lock, Check } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import FormField from "./form-field";
+import { useRegistration } from "@/hooks/use-registration";
 
 interface RegistrationFormProps {
   className?: string;
 }
 
-// Define explicit types to prevent deep type inference
-type RegistrationFormData = {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-};
-
-// Simple type for profile check results
-type ProfileCheckResult = {
-  id: string;
-}[];
-
 const RegistrationForm = ({ className }: RegistrationFormProps) => {
-  const [formData, setFormData] = useState<RegistrationFormData>({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: ""
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [id]: value
-    }));
-  };
-
-  const handleRegister = async (e: FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    const { name, email, password, confirmPassword } = formData;
-
-    // Basic validation
-    if (!name || !email || !password || !confirmPassword) {
-      toast.error("Errore", {
-        description: "Completa tutti i campi per continuare.",
-        duration: 3000
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast.error("Errore", {
-        description: "Le password non coincidono.",
-        duration: 3000
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      // Check if email already exists with explicit typing
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email);
-      
-      // Explicitly handle the query result without complex type inference
-      const profilesData = data as ProfileCheckResult;
-      
-      if (error) {
-        console.error("Error checking existing email:", error);
-        toast.error("Errore", {
-          description: "Si è verificato un errore durante la verifica dell'email.",
-          duration: 3000
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Check if any results were returned (meaning email exists)
-      if (profilesData && profilesData.length > 0) {
-        toast.error("Errore", {
-          description: "Email già registrata. Prova con un'altra email o accedi.",
-          duration: 3000
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Register with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin + '/auth',
-          data: {
-            full_name: name,
-          }
-        }
-      });
-
-      if (authError) {
-        if (authError.message.includes("already registered")) {
-          toast.error("Errore", {
-            description: "Email già registrata. Prova con un'altra email o accedi.",
-            duration: 3000
-          });
-        } else {
-          toast.error("Errore", {
-            description: authError.message || "Si è verificato un errore durante la registrazione.",
-            duration: 3000
-          });
-        }
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Registration successful
-      toast.success("Registrazione completata!", {
-        description: "Ti abbiamo inviato una mail di verifica. Controlla la tua casella e conferma il tuo account per accedere."
-      });
-      
-      // Redirect to verification pending page
-      setTimeout(() => {
-        navigate("/login?verification=pending");
-      }, 2000);
-      
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      toast.error("Errore", {
-        description: "Si è verificato un errore. Riprova più tardi.",
-        duration: 3000
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const {
+    formData,
+    errors,
+    isSubmitting,
+    handleChange,
+    handleSubmit
+  } = useRegistration();
 
   return (
     <motion.div 
@@ -155,62 +25,54 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, duration: 0.5 }}
     >
-      <form onSubmit={handleRegister} className="space-y-6 p-6">
+      <form onSubmit={handleSubmit} className="space-y-6 p-6">
         {/* Name field */}
-        <div className="space-y-2">
-          <Label htmlFor="name" className="text-white">Nome completo</Label>
-          <StyledInput
-            id="name"
-            type="text"
-            placeholder="Il tuo nome"
-            value={formData.name}
-            onChange={handleChange}
-            className="bg-black/50 border-white/10"
-            icon={<User size={16} />}
-          />
-        </div>
+        <FormField
+          id="name"
+          type="text"
+          label="Nome completo"
+          placeholder="Il tuo nome"
+          value={formData.name}
+          onChange={handleChange}
+          icon={<User size={16} />}
+          error={errors.name}
+        />
 
         {/* Email field */}
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-white">Email</Label>
-          <StyledInput
-            id="email"
-            type="email"
-            placeholder="La tua email"
-            value={formData.email}
-            onChange={handleChange}
-            className="bg-black/50 border-white/10"
-            icon={<Mail size={16} />}
-          />
-        </div>
+        <FormField
+          id="email"
+          type="email"
+          label="Email"
+          placeholder="La tua email"
+          value={formData.email}
+          onChange={handleChange}
+          icon={<Mail size={16} />}
+          error={errors.email}
+        />
 
         {/* Password field */}
-        <div className="space-y-2">
-          <Label htmlFor="password" className="text-white">Password</Label>
-          <StyledInput
-            id="password"
-            type="password"
-            placeholder="Crea una password"
-            value={formData.password}
-            onChange={handleChange}
-            className="bg-black/50 border-white/10"
-            icon={<Lock size={16} />}
-          />
-        </div>
+        <FormField
+          id="password"
+          type="password"
+          label="Password"
+          placeholder="Crea una password"
+          value={formData.password}
+          onChange={handleChange}
+          icon={<Lock size={16} />}
+          error={errors.password}
+        />
 
         {/* Confirm Password field */}
-        <div className="space-y-2">
-          <Label htmlFor="confirmPassword" className="text-white">Conferma Password</Label>
-          <StyledInput
-            id="confirmPassword"
-            type="password"
-            placeholder="Conferma la password"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            className="bg-black/50 border-white/10"
-            icon={<Check size={16} />}
-          />
-        </div>
+        <FormField
+          id="confirmPassword"
+          type="password"
+          label="Conferma Password"
+          placeholder="Conferma la password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          icon={<Check size={16} />}
+          error={errors.confirmPassword}
+        />
 
         {/* Submit button */}
         <Button
@@ -226,7 +88,7 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
           <Button
             variant="link"
             className="text-cyan-400"
-            onClick={() => navigate("/login")}
+            onClick={() => window.location.href = "/login"}
             type="button"
           >
             Hai già un account? Accedi
