@@ -5,18 +5,13 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration } from '@/utils/form-validation';
 
-// Explicitly define the form data type instead of using inference
+// Tipo per i dati del form di registrazione
 export type RegistrationFormData = {
   name: string;
   email: string;
   password: string;
   confirmPassword: string;
 };
-
-// Define a simple interface for the expected response to avoid deep type inference
-interface ProfileQueryResponse {
-  id: string;
-}
 
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
@@ -56,14 +51,11 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // Check if email already exists - using a simpler type approach
+      // Controllo se l'email esiste già
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email);
-      
-      // Simple array type for profiles to avoid deep inference
-      const profiles = data as ProfileQueryResponse[] | null;
       
       if (error) {
         console.error("Error checking existing email:", error);
@@ -75,8 +67,8 @@ export const useRegistration = () => {
         return;
       }
       
-      // Check if any results were returned (meaning email exists)
-      if (profiles && profiles.length > 0) {
+      // Verifica se ci sono risultati (significa che l'email esiste)
+      if (data && data.length > 0) {
         toast.error("Errore", {
           description: "Email già registrata. Prova con un'altra email o accedi.",
           duration: 3000
@@ -85,7 +77,7 @@ export const useRegistration = () => {
         return;
       }
 
-      // Register with Supabase Auth
+      // Registrazione con Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -113,12 +105,12 @@ export const useRegistration = () => {
         return;
       }
       
-      // Registration successful
+      // Registrazione avvenuta con successo
       toast.success("Registrazione completata!", {
         description: "Ti abbiamo inviato una mail di verifica. Controlla la tua casella e conferma il tuo account per accedere."
       });
       
-      // Redirect to verification pending page
+      // Reindirizzamento alla pagina di attesa verifica
       setTimeout(() => {
         navigate("/login?verification=pending");
       }, 2000);

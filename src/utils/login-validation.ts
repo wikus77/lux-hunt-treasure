@@ -1,22 +1,22 @@
 
-// Explicitly define the input type for login validation
+// Tipo per i dati di input per la validazione del login
 type LoginFormInput = {
   email: string;
   password: string;
 };
 
-// Validation utility for login form
+// Utility di validazione per il form di login
 export const validateLogin = (formData: LoginFormInput) => {
   const errors: Record<string, string> = {};
 
-  // Email validation
+  // Validazione email
   if (!formData.email) {
     errors.email = "L'email è obbligatoria";
   } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
     errors.email = "Formato email non valido";
   }
 
-  // Password validation
+  // Validazione password
   if (!formData.password) {
     errors.password = "La password è obbligatoria";
   }

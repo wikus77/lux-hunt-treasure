@@ -1,5 +1,5 @@
 
-// Explicitly define the input type for validation
+// Tipo per i dati di input per la validazione della registrazione
 type RegistrationFormInput = {
   name: string;
   email: string;
@@ -7,30 +7,30 @@ type RegistrationFormInput = {
   confirmPassword: string;
 };
 
-// Validation utility for registration form
+// Utility di validazione per il form di registrazione
 export const validateRegistration = (formData: RegistrationFormInput) => {
   const errors: Record<string, string> = {};
 
-  // Name validation
+  // Validazione nome
   if (!formData.name) {
     errors.name = "Il nome è obbligatorio";
   }
 
-  // Email validation
+  // Validazione email
   if (!formData.email) {
     errors.email = "L'email è obbligatoria";
   } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
     errors.email = "Formato email non valido";
   }
 
-  // Password validation
+  // Validazione password
   if (!formData.password) {
     errors.password = "La password è obbligatoria";
   } else if (formData.password.length < 6) {
     errors.password = "La password deve contenere almeno 6 caratteri";
   }
 
-  // Confirm password validation
+  // Validazione conferma password
   if (!formData.confirmPassword) {
     errors.confirmPassword = "Conferma la password";
   } else if (formData.password !== formData.confirmPassword) {

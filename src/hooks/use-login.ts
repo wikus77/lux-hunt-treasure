@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateLogin } from '@/utils/login-validation';
 
-// Explicit type definition for login form data
+// Tipo per i dati del form di login
 export type LoginFormData = {
   email: string;
   password: string;
@@ -27,7 +27,7 @@ export const useLogin = () => {
       [id]: value
     }));
     
-    // Clear error when user types
+    // Pulisco gli errori quando l'utente digita
     if (errors[id]) {
       setErrors(prev => ({ ...prev, [id]: '' }));
     }
@@ -36,7 +36,7 @@ export const useLogin = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
-    // Validate form
+    // Validazione form
     const validation = validateLogin(formData);
     if (!validation.isValid) {
       setErrors(validation.errors);
@@ -46,7 +46,7 @@ export const useLogin = () => {
     setIsLoading(true);
 
     try {
-      // Real authentication with Supabase
+      // Autenticazione reale con Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password
@@ -54,7 +54,7 @@ export const useLogin = () => {
       
       if (error) throw error;
       
-      // Check if email is verified
+      // Verifica se l'email è stata verificata
       if (data.user && !data.user.email_confirmed_at) {
         toast.error("Email non verificata", {
           description: "Per favore, verifica la tua email prima di accedere. Controlla la tua casella di posta."
@@ -67,13 +67,13 @@ export const useLogin = () => {
         description: "Accesso effettuato con successo."
       });
       
-      // Redirect to Auth component which will handle further redirections
+      // Reindirizzamento al componente Auth che gestirà ulteriori reindirizzamenti
       navigate("/auth");
       
     } catch (error: any) {
       console.error("Login error:", error);
       
-      // Handle specific error cases
+      // Gestione di casi di errore specifici
       if (error.message.includes("Email not confirmed")) {
         toast.error("Email non verificata", {
           description: "Per favore, verifica la tua email prima di accedere."
