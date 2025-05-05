@@ -8,6 +8,8 @@ import VerificationPendingView from "@/components/auth/VerificationPendingView";
 import { useEmailVerificationHandler } from "@/components/auth/EmailVerificationHandler";
 import { AuthenticationManager } from "@/components/auth/AuthenticationManager";
 import { ProfileCheckManager } from "@/components/auth/ProfileCheckManager";
+import { supabase } from "@/integrations/supabase/client"; // Add import for supabase
+import { toast } from "sonner"; // Add import for toast
 
 const Auth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
