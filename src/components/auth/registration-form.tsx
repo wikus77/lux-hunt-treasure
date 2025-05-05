@@ -1,15 +1,8 @@
 
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { User, Mail, Lock, Check } from "lucide-react";
-import FormField from "./form-field";
-import { useRegistration } from "@/hooks/use-registration";
+import React from 'react';
+import { useRegistration, FormData } from '@/hooks/use-registration';
 
-interface RegistrationFormProps {
-  className?: string;
-}
-
-const RegistrationForm = ({ className }: RegistrationFormProps) => {
+export const RegistrationForm: React.FC = () => {
   const {
     formData,
     errors,
@@ -19,84 +12,69 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
   } = useRegistration();
 
   return (
-    <motion.div 
-      className="glass-card"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2, duration: 0.5 }}
-    >
-      <form onSubmit={handleSubmit} className="space-y-6 p-6">
-        {/* Name field */}
-        <FormField
-          id="name"
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Nome */}
+      <div>
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nome</label>
+        <input
           type="text"
-          label="Nome completo"
-          placeholder="Il tuo nome"
+          id="name"
           value={formData.name}
           onChange={handleChange}
-          icon={<User size={16} />}
-          error={errors.name}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
         />
+        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+      </div>
 
-        {/* Email field */}
-        <FormField
-          id="email"
+      {/* Email */}
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+        <input
           type="email"
-          label="Email"
-          placeholder="La tua email"
+          id="email"
           value={formData.email}
           onChange={handleChange}
-          icon={<Mail size={16} />}
-          error={errors.email}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
         />
+        {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+      </div>
 
-        {/* Password field */}
-        <FormField
-          id="password"
+      {/* Password */}
+      <div>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+        <input
           type="password"
-          label="Password"
-          placeholder="Crea una password"
+          id="password"
           value={formData.password}
           onChange={handleChange}
-          icon={<Lock size={16} />}
-          error={errors.password}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
         />
+        {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+      </div>
 
-        {/* Confirm Password field */}
-        <FormField
-          id="confirmPassword"
+      {/* Conferma Password */}
+      <div>
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Conferma Password</label>
+        <input
           type="password"
-          label="Conferma Password"
-          placeholder="Conferma la password"
+          id="confirmPassword"
           value={formData.confirmPassword}
           onChange={handleChange}
-          icon={<Check size={16} />}
-          error={errors.confirmPassword}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
         />
+        {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
+      </div>
 
-        {/* Submit button */}
-        <Button
+      {/* Bottone invio */}
+      <div>
+        <button
           type="submit"
-          className="w-full neon-button-cyan"
           disabled={isSubmitting}
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
         >
-          {isSubmitting ? "Registrazione in corso..." : "Registrati Ora"}
-        </Button>
-
-        {/* Login link */}
-        <div className="text-center">
-          <Button
-            variant="link"
-            className="text-cyan-400"
-            onClick={() => window.location.href = "/login"}
-            type="button"
-          >
-            Hai già un account? Accedi
-          </Button>
-        </div>
-      </form>
-    </motion.div>
+          {isSubmitting ? 'Registrazione in corso...' : 'Registrati'}
+        </button>
+      </div>
+    </form>
   );
 };
-
-export default RegistrationForm;
