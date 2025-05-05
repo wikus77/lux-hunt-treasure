@@ -1,0 +1,25 @@
+
+// Validation utility for login form
+export const validateLogin = (formData: {
+  email: string;
+  password: string;
+}) => {
+  const errors: Record<string, string> = {};
+
+  // Email validation
+  if (!formData.email) {
+    errors.email = "L'email è obbligatoria";
+  } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    errors.email = "Formato email non valido";
+  }
+
+  // Password validation
+  if (!formData.password) {
+    errors.password = "La password è obbligatoria";
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
+};
