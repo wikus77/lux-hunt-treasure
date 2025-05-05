@@ -7,6 +7,7 @@ import StyledInput from "@/components/ui/styled-input";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { User, Mail, Lock, Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RegistrationFormProps {
   className?: string;
@@ -20,7 +21,7 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  const handleRegister = (e: FormEvent) => {
+  const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -43,21 +44,54 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
       return;
     }
 
-    // Simulate successful registration
-    setTimeout(() => {
-      // Store login info
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("user", JSON.stringify({ name, email }));
+    try {
+      // Register with Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin + '/login',
+          data: {
+            full_name: name,
+          }
+        }
+      });
+
+      if (error) {
+        if (error.message.includes("already registered")) {
+          toast.error("Errore", {
+            description: "Email già registrata. Prova con un'altra email o accedi.",
+            duration: 3000
+          });
+        } else {
+          toast.error("Errore", {
+            description: error.message || "Si è verificato un errore durante la registrazione.",
+            duration: 3000
+          });
+        }
+        setIsSubmitting(false);
+        return;
+      }
       
+      // Registration successful
       toast.success("Registrazione completata!", {
-        description: "Il tuo account è stato creato con successo."
+        description: "Ti abbiamo inviato una mail di verifica. Controlla la tua casella e conferma il tuo account per accedere."
       });
       
-      // Redirect to home page
+      // Redirect to verification pending page or login page
       setTimeout(() => {
-        navigate("/home");
-      }, 1500);
-    }, 1500);
+        navigate("/login?verification=pending");
+      }, 2000);
+      
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast.error("Errore", {
+        description: "Si è verificato un errore. Riprova più tardi.",
+        duration: 3000
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

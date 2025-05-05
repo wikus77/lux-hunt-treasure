@@ -1,12 +1,14 @@
+
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
 import StyledInput from "@/components/ui/styled-input";
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, AlertTriangle, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -14,8 +16,18 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check URL parameters for verification status
+    const verification = searchParams.get('verification');
+    if (verification === 'pending') {
+      setVerificationStatus('pending');
+    } else if (verification === 'success') {
+      setVerificationStatus('success');
+    }
+
     // Check if there's an active session already
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -26,7 +38,7 @@ const Login = () => {
     };
     
     checkSession();
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,12 +57,23 @@ const Login = () => {
 
     try {
       // Real authentication with Supabase
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
       if (error) throw error;
+      
+      // Check if email is verified
+      if (data.user && !data.user.email_confirmed_at) {
+        toast({
+          variant: "destructive",
+          title: "Email non verificata",
+          description: "Per favore, verifica la tua email prima di accedere. Controlla la tua casella di posta."
+        });
+        setIsLoading(false);
+        return;
+      }
       
       toast({
         title: "Login completato!",
@@ -60,12 +83,59 @@ const Login = () => {
       // Auth component will handle redirection based on quiz completion
     } catch (error: any) {
       console.error("Login error:", error);
+      
+      // Handle specific error cases
+      if (error.message.includes("Email not confirmed")) {
+        toast({
+          variant: "destructive",
+          title: "Email non verificata",
+          description: "Per favore, verifica la tua email prima di accedere."
+        });
+      } else if (error.message.includes("Invalid login credentials")) {
+        toast({
+          variant: "destructive",
+          title: "Credenziali non valide",
+          description: "Email o password errati. Riprova."
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Errore di accesso",
+          description: error.message || "Impossibile effettuare il login. Verifica le tue credenziali."
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) {
       toast({
         variant: "destructive",
-        title: "Errore di accesso",
-        description: error.message || "Impossibile effettuare il login. Verifica le tue credenziali."
+        title: "Errore",
+        description: "Inserisci la tua email per ricevere nuovamente il link di verifica."
       });
-      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email inviata",
+        description: "Un nuovo link di verifica è stato inviato alla tua email."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Errore",
+        description: error.message || "Impossibile inviare l'email di verifica."
+      });
     }
   };
 
@@ -81,6 +151,33 @@ const Login = () => {
             Accedi al tuo account
           </p>
         </div>
+
+        {verificationStatus === 'pending' && (
+          <Alert className="mb-6 border-amber-500 bg-amber-500/10">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <AlertTitle className="text-amber-500">Verifica il tuo account</AlertTitle>
+            <AlertDescription>
+              Ti abbiamo inviato un'email di verifica. Per favore, clicca sul link contenuto nell'email per completare la registrazione.
+              <Button 
+                variant="link" 
+                className="p-0 h-auto text-amber-400 mt-2"
+                onClick={handleResendVerification}
+              >
+                Invia nuovamente l'email di verifica
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {verificationStatus === 'success' && (
+          <Alert className="mb-6 border-green-500 bg-green-500/10">
+            <CheckCircle className="h-4 w-4 text-green-500" />
+            <AlertTitle className="text-green-500">Email verificata con successo</AlertTitle>
+            <AlertDescription>
+              La tua email è stata verificata. Ora puoi accedere al tuo account.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <form onSubmit={handleLogin} className="glass-card">
           <div className="space-y-4 p-6">
