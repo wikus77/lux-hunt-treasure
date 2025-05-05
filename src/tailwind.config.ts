@@ -118,10 +118,21 @@ const config: Config = {
         },
         'text-glow': {
           '0%, 100%': {
-            textShadow: '0 0 5px rgba(0, 229, 255, 0.7), 0 0 10px rgba(0, 229, 255, 0.5)'
+            textShadow: '0 0 5px rgba(0, 229, 255, 0.7), 0 0 10px rgba(0, 209, 255, 0.5)'
           },
           '50%': {
-            textShadow: '0 0 15px rgba(0, 229, 255, 0.9), 0 0 25px rgba(0, 229, 255, 0.7)'
+            textShadow: '0 0 15px rgba(0, 229, 255, 0.9), 0 0 25px rgba(0, 209, 255, 0.7)'
+          }
+        },
+        'glow-pulse-nav': {
+          '0%': { 
+            filter: 'drop-shadow(0 0 5px rgba(0, 209, 255, 0.5))' 
+          },
+          '50%': { 
+            filter: 'drop-shadow(0 0 12px rgba(123, 46, 255, 0.7))' 
+          },
+          '100%': { 
+            filter: 'drop-shadow(0 0 5px rgba(0, 209, 255, 0.5))' 
           }
         },
         'reveal-text': {
@@ -174,6 +185,7 @@ const config: Config = {
         'ripple': 'ripple 0.6s ease-in-out',
         'float-animation': 'float 4s infinite ease-in-out',
         'text-glow': 'text-glow 3s infinite ease-in-out',
+        'glow-pulse-nav': 'glow-pulse-nav 3s infinite ease-in-out',
         'reveal-text': 'reveal-text 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards',
         'reveal-block': 'reveal-block 1.1s cubic-bezier(0.19, 1, 0.22, 1) forwards',
         'magnetic-animation': 'magnetic-effect 8s ease-in-out infinite',
