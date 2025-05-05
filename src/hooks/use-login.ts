@@ -3,6 +3,8 @@ import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { validateLogin } from '@/utils/form-validation';
 
 type LoginFormData = {
   email: string;
@@ -23,6 +25,7 @@ export const useLogin = () => {
   const [errors, setErrors] = useState<LoginFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuthContext();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -39,55 +42,31 @@ export const useLogin = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const { email, password } = formData;
-
-    const newErrors: LoginFormErrors = {};
-    if (!email) newErrors.email = 'Inserisci un\'email valida';
-    if (!password) newErrors.password = 'Inserisci una password';
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    // Validazione client-side
+    const validation = validateLogin(formData);
+    if (!validation.isValid) {
+      setErrors(validation.errors as LoginFormErrors);
       return;
     }
 
     setIsSubmitting(true);
+    const { email, password } = formData;
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        toast.error('Errore', {
-          description: error.message || 'Email o password non corretti.',
-          duration: 3000
-        });
-        setIsSubmitting(false);
-        return;
+      const result = await login(email, password);
+      
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Errore durante il login');
       }
 
-      if (!data.user?.email_confirmed_at) {
-        toast.error('Email non verificata', {
-          description: 'Controlla la tua casella email e conferma l\'indirizzo.',
-          duration: 3000
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      toast.success('Login riuscito!', {
-        description: 'Benvenuto nella tua M1SSION.'
-      });
-
+      // La gestione del reindirizzamento è all'interno del contesto di autenticazione
       setTimeout(() => {
-        navigate('/home'); // oppure la tua dashboard iniziale
+        navigate('/home');
       }, 1500);
-
-    } catch (err: any) {
-      console.error('Errore login:', err);
+    } catch (error: any) {
+      console.error('Errore login:', error);
       toast.error('Errore', {
-        description: 'Errore imprevisto durante il login.',
+        description: error.message || 'Errore imprevisto durante il login.',
         duration: 3000
       });
     } finally {

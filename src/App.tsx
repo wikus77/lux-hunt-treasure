@@ -6,12 +6,14 @@ import { Toaster } from "@/components/ui/toaster";
 
 import { ThemeProvider } from '@/components/theme-provider';
 import { SoundProvider } from '@/contexts/SoundContext';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import Index from './pages/Index';
 import MainLayout from './components/layout/MainLayout';
 
 // Lazy-load components
 const Login = lazy(() => import('./pages/Login'));
-const Auth = lazy(() => import('./pages/Auth')); // New Auth page
+const Auth = lazy(() => import('./pages/Auth')); // Authentication flow page
 const Register = lazy(() => import('./pages/Register'));
 const Home = lazy(() => import('./pages/Home'));
 const Events = lazy(() => import('./pages/Events'));
@@ -74,38 +76,43 @@ function App() {
         <Toaster />
         <ThemeProvider>
           <SoundProvider>
-            <Suspense fallback={<FallbackComponent />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/auth" element={<Auth />} /> {/* New Auth route */}
-                <Route path="/register" element={<Register />} />
-                <Route path="/how-it-works" element={<HowItWorks />} />
-                <Route path="/contacts" element={<Contacts />} />
-                
-                <Route path="/" element={<MainLayout />}>
-                  <Route path="/home" element={<Home />} />
-                  <Route path="/events" element={<Events />} />
-                  <Route path="/buzz" element={<Buzz />} />
-                  <Route path="/map" element={<Map />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/notifications" element={<Notifications />} />
-                  <Route path="/leaderboard" element={<Leaderboard />} />
-                  <Route path="*" element={<NotFound />} />
-                </Route>
-                
-                <Route path="/privacy" element={<PrivacyPolicy />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/subscriptions" element={<Subscriptions />} />
-                <Route path="/personal-info" element={<PersonalInfo />} />
-                <Route path="/privacy-security" element={<PrivacySecurity />} />
-                <Route path="/payment-silver" element={<PaymentSilver />} />
-                <Route path="/payment-gold" element={<PaymentGold />} />
-                <Route path="/payment-black" element={<PaymentBlack />} />
-                <Route path="/payment-methods" element={<PaymentMethods />} />
-              </Routes>
-            </Suspense>
+            <AuthProvider>
+              <Suspense fallback={<FallbackComponent />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
+                  <Route path="/contacts" element={<Contacts />} />
+                  
+                  {/* Rotte protette che richiedono autenticazione */}
+                  <Route element={<ProtectedRoute />}>
+                    <Route path="/" element={<MainLayout />}>
+                      <Route path="/home" element={<Home />} />
+                      <Route path="/events" element={<Events />} />
+                      <Route path="/buzz" element={<Buzz />} />
+                      <Route path="/map" element={<Map />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/notifications" element={<Notifications />} />
+                      <Route path="/leaderboard" element={<Leaderboard />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Route>
+                  </Route>
+                  
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/subscriptions" element={<Subscriptions />} />
+                  <Route path="/personal-info" element={<PersonalInfo />} />
+                  <Route path="/privacy-security" element={<PrivacySecurity />} />
+                  <Route path="/payment-silver" element={<PaymentSilver />} />
+                  <Route path="/payment-gold" element={<PaymentGold />} />
+                  <Route path="/payment-black" element={<PaymentBlack />} />
+                  <Route path="/payment-methods" element={<PaymentMethods />} />
+                </Routes>
+              </Suspense>
+            </AuthProvider>
           </SoundProvider>
         </ThemeProvider>
       </QueryClientProvider>
