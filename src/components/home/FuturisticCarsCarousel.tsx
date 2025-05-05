@@ -2,48 +2,105 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { CirclePlay } from "lucide-react";
+import { CarDetailsModal, CarDetails } from "@/components/home/CarDetailsModal";
 
 const cars = [
   {
+    id: "ferrari",
     name: "Ferrari 488 GTB",
     image: "/lovable-uploads/c980c927-8cb1-4825-adf5-781f4d8118b9.png",
     description: "Un motore da sogno, una missione da conquistare",
-    trailer: "https://www.youtube.com/watch?v=UAO2urG23S4"
+    trailer: "https://www.youtube.com/watch?v=UAO2urG23S4",
+    engine: "3.9L V8 Twin-Turbo, 670 CV",
+    acceleration: "0-100 km/h in 3.0s",
+    prize: "In palio per il vincitore assoluto della competizione.",
+    imageUrl: "/lovable-uploads/fef309b6-b056-46ef-bb7f-b2ccacdb5ce3.png"
   },
   {
+    id: "mercedes",
     name: "Mercedes AMG GT",
     image: "/lovable-uploads/b96df1db-6d05-4203-8811-d6770bd46b6d.png",
     description: "Eleganza tedesca e potenza senza compromessi",
-    trailer: "https://www.youtube.com/watch?v=vtBrewMd2bU"
+    trailer: "https://www.youtube.com/watch?v=vtBrewMd2bU",
+    engine: "V8 Biturbo, 730 CV",
+    acceleration: "0-100 km/h in 3,2s",
+    prize: "Premio speciale per il secondo classificato nella competizione nazionale.",
+    imageUrl: "/lovable-uploads/f6925d8d-955c-4883-be54-6e6165691443.png"
   },
   {
+    id: "porsche",
     name: "Porsche 911",
     image: "/lovable-uploads/54cd25b0-fa7b-44c9-b7b6-d69dcc09df92.png",
     description: "Precisione tedesca, premio esclusivo",
-    trailer: "https://www.youtube.com/watch?v=OQe58UZAPdU"
+    trailer: "https://www.youtube.com/watch?v=OQe58UZAPdU",
+    engine: "4.0L Boxer 6 cilindri, 510 CV",
+    acceleration: "0-100 km/h in 3.4s",
+    prize: "Premio esclusivo per i finalisti regionali della competizione.",
+    imageUrl: "/public/events/porsche-911.jpg"
   },
   {
+    id: "lamborghini",
     name: "Lamborghini Huracán",
     image: "/lovable-uploads/794fb55d-30c8-462e-81e7-e72cc89815d4.png",
     description: "Potenza e stile, sfida senza limiti",
-    trailer: null
+    trailer: null,
+    engine: "V10 5.2L, 640 CV",
+    acceleration: "0-100 km/h in 2.9s",
+    prize: "Premio speciale per i vincitori delle sfide di abilità.",
+    imageUrl: "/public/events/lamborghini-huracan.jpg"
   },
   {
+    id: "mclaren",
     name: "McLaren 720S",
     image: "/lovable-uploads/6df12de9-c68f-493b-ac32-4dd934ed79a2.png",
     description: "Tecnologia da Formula 1 su strada",
-    trailer: null
+    trailer: null,
+    engine: "V8 4.0L Twin-Turbo, 720 CV",
+    acceleration: "0-100 km/h in 2,8s",
+    prize: "Premio esclusivo per i vincitori delle sfide tecniche a tempo.",
+    imageUrl: "/public/events/tesla-model-s.jpg"
   },
   {
+    id: "astonmartin",
     name: "Aston Martin",
     image: "/lovable-uploads/c52a635b-2c3c-4c4c-8dcf-c83776fea9d8.png",
     description: "L'eleganza britannica in ogni curva",
-    trailer: null
+    trailer: null,
+    engine: "V12 6.5L + sistema ibrido, 1160 CV",
+    acceleration: "0-100 km/h in 2,5s",
+    prize: "Premio speciale limitato per i vincitori della competizione internazionale.",
+    imageUrl: "/public/events/ferrari-sf90.jpg"
   }
 ];
 
 export default function FuturisticCarsCarousel() {
-  const [modalData, setModalData] = useState<{ name: string, image: string, trailer: string | null } | null>(null);
+  const [selectedCar, setSelectedCar] = useState<CarDetails | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleCarClick = (car: typeof cars[0]) => {
+    if (car.trailer) {
+      window.open(car.trailer, '_blank');
+      return;
+    }
+    
+    const carDetails: CarDetails = {
+      id: car.id,
+      name: car.name,
+      description: car.description,
+      engine: car.engine,
+      acceleration: car.acceleration,
+      prize: car.prize,
+      imageUrl: car.imageUrl,
+      color: car.id === "ferrari" ? "#FF0000" : 
+             car.id === "mercedes" ? "#00D2FF" :
+             car.id === "porsche" ? "#FFDA00" :
+             car.id === "lamborghini" ? "#FFC107" :
+             car.id === "mclaren" ? "#FF5500" : "#FFD700"
+    };
+    
+    setSelectedCar(carDetails);
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="w-full relative">
@@ -55,13 +112,13 @@ export default function FuturisticCarsCarousel() {
             style={{
               boxShadow: "0 0 32px 2px #00e5ff99"
             }}
-            onClick={() => setModalData({ name: car.name, image: car.image, trailer: car.trailer })}
+            onClick={() => handleCarClick(car)}
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.08 * idx }}
             whileHover={{ scale: 1.08 }}
           >
-            {/* Effetto Parallax Glow */}
+            {/* Parallax Glow Effect */}
             <img
               src={car.image}
               alt={car.name}
@@ -71,7 +128,7 @@ export default function FuturisticCarsCarousel() {
                 transform: "perspective(600px) rotateY(4deg)"
               }}
             />
-            {/* Descrizione car animata */}
+            {/* Animated car description */}
             <motion.div
               className="absolute bottom-0 w-full px-3 py-1.5 bg-gradient-to-t from-black/90 to-cyan-900/30"
               initial={{ opacity: 0, y: 24 }}
@@ -81,7 +138,7 @@ export default function FuturisticCarsCarousel() {
               <span className="block text-lg text-cyan-300 font-bold animate-fade-in">{car.name}</span>
               <span className="block text-white/90 text-sm italic animate-fade-in">{car.description}</span>
               <span className="inline-flex items-center gap-1 text-xs text-cyan-100 mt-1">
-                <CirclePlay className="w-3 h-3 inline" /> {car.trailer ? "Guarda il trailer" : "Dettagli"}
+                <CirclePlay className="w-3 h-3 inline" /> {car.trailer ? "Guarda il trailer" : "Scopri di più"}
               </span>
             </motion.div>
             {/* Glow Border */}
@@ -92,24 +149,12 @@ export default function FuturisticCarsCarousel() {
         ))}
       </div>
 
-      {/* Modal dettagli/trailer */}
-      {modalData && (
-        <div className="fixed inset-0 z-[80] bg-black/80 flex items-center justify-center">
-          <div className="bg-black rounded-2xl border-4 border-cyan-400 shadow-2xl p-6 max-w-xs sm:max-w-lg w-full relative">
-            <button
-              className="absolute top-3 right-3 text-cyan-400 hover:text-yellow-400 font-bold text-xl"
-              aria-label="chiudi"
-              onClick={() => setModalData(null)}
-            >×</button>
-            <img src={modalData.image} alt={modalData.name} className="mb-3 rounded-xl w-full h-32 object-cover" style={{filter:"drop-shadow(0 0 24px #00e5ffb6)"}} />
-            <h3 className="text-xl font-orbitron neon-text-cyan mb-1">{modalData.name}</h3>
-            {modalData.trailer ?
-              <a href={modalData.trailer} target="_blank" rel="noopener noreferrer" className="underline text-cyan-200 hover:text-yellow-400 mt-2 block">Guarda il trailer della missione</a>
-              : <span className="italic text-white/80">Trailer non disponibile</span>
-            }
-          </div>
-        </div>
-      )}
+      {/* Car details modal */}
+      <CarDetailsModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        car={selectedCar}
+      />
     </div>
   );
 }

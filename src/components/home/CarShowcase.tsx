@@ -7,48 +7,64 @@ import type { CarouselApi } from "@/components/ui/carousel";
 import { ParallaxImage } from "@/components/ui/parallax-image";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 import { Info } from "lucide-react";
+import { CarDetailsModal, CarDetails } from "@/components/home/CarDetailsModal";
 
 // Car data with the uploaded images
 const LUXURY_CARS = [
   {
-    id: 1,
+    id: "lamborghini",
     name: "Lamborghini Huracán",
     description: "Potenza pura e design audace, una supercar che ridefinisce il concetto di velocità.",
     specs: "5.2L V10 • 640 CV • 0-100 km/h in 2.9s",
     image: "/lovable-uploads/90cbccd3-a237-404e-be56-89d82f6a9838.png",
-    color: "#FFC107"
+    color: "#FFC107",
+    engine: "V10 5.2L, 640 CV",
+    acceleration: "0-100 km/h in 2.9s",
+    prize: "Premio speciale per i vincitori delle sfide di abilità."
   },
   {
-    id: 2,
+    id: "porsche",
     name: "Porsche 911 GT3",
     description: "Precisione ingegneristica tedesca, il simbolo della perfezione su strada e in pista.",
     specs: "4.0L Flat-6 • 510 CV • 0-100 km/h in 3.4s",
     image: "/lovable-uploads/f890fc27-9f45-43c8-beeb-cccc7c1e8a9d.png",
-    color: "#00E5FF"
+    color: "#00E5FF",
+    engine: "4.0L Boxer 6 cilindri, 510 CV",
+    acceleration: "0-100 km/h in 3.4s",
+    prize: "Premio esclusivo per i finalisti regionali della competizione."
   },
   {
-    id: 3,
+    id: "astonmartin",
     name: "Aston Martin Vantage",
     description: "Eleganza britannica e prestazioni mozzafiato in un capolavoro di design automobilistico.",
     specs: "4.0L Twin-Turbo V8 • 503 CV • 0-100 km/h in 3.6s",
     image: "/lovable-uploads/58a727dc-f6b1-4e51-9fdb-a76260dd6607.png",
-    color: "#FFFFFF"
+    color: "#FFFFFF",
+    engine: "4.0L Twin-Turbo V8, 503 CV",
+    acceleration: "0-100 km/h in 3.6s",
+    prize: "Premio esclusivo per i vincitori delle sfide di eleganza."
   },
   {
-    id: 4,
+    id: "ferrari",
     name: "Ferrari 488 GTB",
     description: "Eleganza dinamica e prestazioni da corsa, un simbolo dell'eccellenza automobilistica italiana.",
     specs: "3.9L V8 Twin-Turbo • 670 CV • 0-100 km/h in 3.0s",
     image: "/lovable-uploads/ef3cb1c4-5fb4-4291-8191-720d84a8e7f3.png",
-    color: "#FF0000"
+    color: "#FF0000",
+    engine: "3.9L V8 Twin-Turbo, 670 CV",
+    acceleration: "0-100 km/h in 3.0s",
+    prize: "In palio per il vincitore assoluto della competizione."
   },
   {
-    id: 5,
+    id: "audi",
     name: "Audi RS7",
     description: "Tecnologia all'avanguardia e prestazioni da supercar in una berlina di straordinario lusso.",
     specs: "4.0L V8 Twin-Turbo • 600 CV • 0-100 km/h in 3.6s",
     image: "/lovable-uploads/7e65d385-baf8-446c-b320-4fc6467e3957.png",
-    color: "#AAAAAA"
+    color: "#AAAAAA",
+    engine: "4.0L V8 Twin-Turbo, 600 CV",
+    acceleration: "0-100 km/h in 3.6s",
+    prize: "Premio speciale per i vincitori delle sfide tecniche."
   }
 ];
 
@@ -57,6 +73,8 @@ const CarShowcase = () => {
   const [current, setCurrent] = useState(0);
   const [progressBarWidth, setProgressBarWidth] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [selectedCar, setSelectedCar] = useState<CarDetails | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Auto-play interval
   useEffect(() => {
@@ -98,6 +116,22 @@ const CarShowcase = () => {
     };
   }, [api, current]);
 
+  const handleShowDetails = (car: typeof LUXURY_CARS[0]) => {
+    const carDetails: CarDetails = {
+      id: car.id,
+      name: car.name,
+      description: car.description,
+      engine: car.engine,
+      acceleration: car.acceleration,
+      prize: car.prize,
+      imageUrl: car.image,
+      color: car.color
+    };
+    
+    setSelectedCar(carDetails);
+    setIsModalOpen(true);
+  };
+
   return (
     <section className="min-h-screen relative py-16 md:py-24" data-scroll-section>
       <div className="absolute inset-0 z-0 bg-gradient-to-b from-black via-[#06071b] to-black opacity-80"></div>
@@ -131,7 +165,7 @@ const CarShowcase = () => {
                     </div>
                     
                     {/* Car Info */}
-                    <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12" data-scroll data-scroll-speed="0.1">
+                    <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
                       <motion.div
                         initial={{ opacity: 0, y: 40 }}
                         animate={{ opacity: current === index ? 1 : 0, y: current === index ? 0 : 40 }}
@@ -150,6 +184,7 @@ const CarShowcase = () => {
                         <MagneticButton 
                           className="bg-white/10 backdrop-blur-md border border-white/20 rounded-full py-3 px-6 text-white flex items-center gap-2 hover:bg-white/20 transition-all duration-300 group"
                           strength={20}
+                          onClick={() => handleShowDetails(car)}
                         >
                           <Info className="w-5 h-5" />
                           <span>Scopri di più</span>
@@ -188,6 +223,13 @@ const CarShowcase = () => {
           </div>
         </div>
       </div>
+
+      {/* Car details modal */}
+      <CarDetailsModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        car={selectedCar}
+      />
     </section>
   );
 };
