@@ -1,14 +1,20 @@
 
-// Tipo per i dati di input per la validazione della registrazione
-type RegistrationFormInput = {
+// Explicit type definition for registration form data
+export type RegistrationFormData = {
   name: string;
   email: string;
   password: string;
   confirmPassword: string;
 };
 
+// Validation result type
+export type ValidationResult = {
+  isValid: boolean;
+  errors: Record<string, string>;
+};
+
 // Utility di validazione per il form di registrazione
-export const validateRegistration = (formData: RegistrationFormInput) => {
+export const validateRegistration = (formData: RegistrationFormData): ValidationResult => {
   const errors: Record<string, string> = {};
 
   // Validazione nome

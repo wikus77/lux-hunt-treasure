@@ -3,13 +3,7 @@ import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { validateLogin } from '@/utils/login-validation';
-
-// Tipo per i dati del form di login
-export type LoginFormData = {
-  email: string;
-  password: string;
-};
+import { validateLogin, LoginFormData, ValidationResult } from '@/utils/login-validation';
 
 export const useLogin = () => {
   const [formData, setFormData] = useState<LoginFormData>({
@@ -37,7 +31,7 @@ export const useLogin = () => {
     e.preventDefault();
     
     // Validazione form
-    const validation = validateLogin(formData);
+    const validation: ValidationResult = validateLogin(formData);
     if (!validation.isValid) {
       setErrors(validation.errors);
       return;

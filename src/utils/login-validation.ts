@@ -1,12 +1,18 @@
 
-// Tipo per i dati di input per la validazione del login
-type LoginFormInput = {
+// Explicit type definition for login form data
+export type LoginFormData = {
   email: string;
   password: string;
 };
 
+// Validation result type
+export type ValidationResult = {
+  isValid: boolean;
+  errors: Record<string, string>;
+};
+
 // Utility di validazione per il form di login
-export const validateLogin = (formData: LoginFormInput) => {
+export const validateLogin = (formData: LoginFormData): ValidationResult => {
   const errors: Record<string, string> = {};
 
   // Validazione email

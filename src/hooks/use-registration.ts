@@ -3,15 +3,12 @@ import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { validateRegistration } from '@/utils/form-validation';
+import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
 
-// Tipo per i dati del form di registrazione
-export type RegistrationFormData = {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-};
+// Define explicit type for the profile query response
+type ProfileQueryResponse = {
+  id: string;
+}[];
 
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
@@ -41,7 +38,7 @@ export const useRegistration = () => {
     e.preventDefault();
     
     // Validate form
-    const validation = validateRegistration(formData);
+    const validation: ValidationResult = validateRegistration(formData);
     if (!validation.isValid) {
       setErrors(validation.errors);
       return;
@@ -51,11 +48,14 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // Controllo se l'email esiste già
+      // Controllo se l'email esiste già - using explicit typing
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email);
+      
+      // Explicitly type the response
+      const profileData = data as ProfileQueryResponse;
       
       if (error) {
         console.error("Error checking existing email:", error);
@@ -68,7 +68,7 @@ export const useRegistration = () => {
       }
       
       // Verifica se ci sono risultati (significa che l'email esiste)
-      if (data && data.length > 0) {
+      if (profileData && profileData.length > 0) {
         toast.error("Errore", {
           description: "Email già registrata. Prova con un'altra email o accedi.",
           duration: 3000
