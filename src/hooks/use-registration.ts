@@ -5,27 +5,32 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, ValidationResult } from '@/utils/form-validation';
 
-// ✅ Funzione separata che disattiva i tipi (evita TS2589)
+// Define an interface for profile data
+interface ProfileData {
+  id: string;
+}
+
+// Separate function with explicit typing to avoid deep type instantiation
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  const untypedClient = supabase as any;
-  const response = await untypedClient
-    .from('profiles')
-    .select('id')
-    .eq('email', email);
-
-  const data = response.data;
-  const error = response.error;
-
-  if (error) {
-    console.error("Errore nel controllo email:", error);
-    throw error;
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email);
+    
+    if (error) {
+      console.error("Errore nel controllo email:", error);
+      throw error;
+    }
+    
+    return data !== null && data.length > 0;
+  } catch (err) {
+    console.error("Exception in checkIfEmailExists:", err);
+    return false;
   }
-
-  return data && data.length > 0;
 }
 
 export const useRegistration = () => {
-  // ✅ Nessun tipo esplicito → niente errori
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -33,7 +38,7 @@ export const useRegistration = () => {
     confirmPassword: ''
   });
 
-  const [errors, setErrors] = useState({}); // ✅ niente Record<string, string>
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -73,7 +78,7 @@ export const useRegistration = () => {
         return;
       }
 
-      const result = await supabase.auth.signUp({
+      const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -83,8 +88,6 @@ export const useRegistration = () => {
           }
         }
       });
-
-      const authError = result.error;
 
       if (authError) {
         toast.error("Errore", {
