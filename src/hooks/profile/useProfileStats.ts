@@ -69,17 +69,12 @@ export const useProfileStats = () => {
         if (session?.user) {
           const { data, error } = await supabase
             .from('profiles')
-            .select('stats, investigative_style')
+            .select('investigative_style')
             .eq('id', session.user.id)
             .single();
             
           if (data && !error) {
-            // Update stats if available
-            if (data.stats) {
-              setStats(data.stats);
-            }
-            
-            // Update investigative style if available
+            // Update investigative style if available from database
             if (data.investigative_style) {
               const styleMap: Record<string, { style: string, color: string }> = {
                 'comandante': { style: "Ragionatore Strategico", color: "bg-cyan-500" },
@@ -89,6 +84,9 @@ export const useProfileStats = () => {
               
               setInvestigativeStyle(styleMap[data.investigative_style] || investigativeStyle);
             }
+            
+            // For now we keep the default stats since there's no stats column in the profiles table
+            // In a real app, we might have a separate stats table or store them differently
           }
         }
       } catch (error) {
