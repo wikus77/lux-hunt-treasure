@@ -2,17 +2,8 @@
 import { useState, useEffect } from "react";
 import AnimatedIntroSection from "./AnimatedIntroSection";
 import FuturisticCarsCarousel from "./FuturisticCarsCarousel";
-import FutureMissionsCarousel from "./FutureMissionsCarousel";
-import CountdownBanner from "./CountdownBanner";
-import BigCountdownTimer from "./BigCountdownTimer";
-import { Button } from "@/components/ui/button";
-import { Trophy, Map, Music } from "lucide-react";
+import { CommandCenter } from "@/components/command-center/CommandCenter";
 import { motion, AnimatePresence } from "framer-motion";
-import AnimatedIntroText from "./AnimatedIntroText";
-import InviteMissionText from "./InviteMissionText";
-import CurrentEventSection from "./CurrentEventSection";
-import { MagneticButton } from "@/components/ui/magnetic-button";
-import { ParallaxImage } from "@/components/ui/parallax-image";
 
 export default function HomeContent() {
   console.log("[HomeContent] COMPONENT MOUNTED!");
@@ -27,7 +18,6 @@ export default function HomeContent() {
       return 0;
     }
   });
-  const [musicOn, setMusicOn] = useState(false);
 
   useEffect(() => {
     console.log("[HomeContent] useEffect: step value", step);
@@ -42,18 +32,6 @@ export default function HomeContent() {
     setStep(1);
   };
 
-  // Section reveal animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.3
-      }
-    }
-  };
-
   return (
     <div className="relative">
       <AnimatePresence>
@@ -66,82 +44,33 @@ export default function HomeContent() {
       
       {step === 1 && (
         <motion.main 
-          className="space-y-16" 
+          className="space-y-8"
           initial="hidden"
           animate="visible"
-          variants={containerVariants}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: {
+                staggerChildren: 0.2
+              }
+            }
+          }}
         >
-          {/* Countdown Timer Section */}
-          <div className="flex flex-col items-center justify-center pt-2">
-            <BigCountdownTimer />
-          </div>
+          {/* Command Center - Sala di Comando */}
+          <CommandCenter />
           
-          {/* Intro Text Section */}
-          <div className="flex flex-col items-center justify-center fade-in mb-2 mt-0">
-            <AnimatedIntroText />
-          </div>
-          
-          {/* Invite Mission Text with Parallax */}
-          <div className="relative mb-6">
-            <div className="absolute inset-0 -z-10 opacity-20 overflow-hidden rounded-xl">
-              <ParallaxImage 
-                src="/lovable-uploads/ee63e6a9-208d-43f5-8bad-4c94f9c066cd.png"
-                alt="Background texture"
-                className="w-full h-full overflow-hidden rounded-xl"
-                imageClassName="w-full h-full object-cover opacity-30"
-                speed={0}
-              />
-            </div>
-            <InviteMissionText />
-          </div>
-          
-          {/* Action Buttons - with Magnetic effect */}
-          <div className="flex flex-row items-center justify-center gap-4 px-2 mt-2">
-            <MagneticButton
-              className="neon-border bg-gradient-to-r from-yellow-400 to-pink-500 text-black shadow-lg hover:scale-105 py-2 px-4 rounded-full"
-              onClick={() => window.location.href = "/leaderboard"}
-              strength={20}
+          {/* Luxury Cars Section */}
+          <div className="mt-8 px-4">
+            <motion.h2 
+              className="text-xl font-bold text-center mb-4 text-white"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
             >
-              <Trophy className="w-5 h-5 mr-1 inline" /> Classifica LIVE
-            </MagneticButton>
-            
-            <MagneticButton
-              className="ml-2 bg-black/70 neon-border text-yellow-300 hover:bg-yellow-400/10 w-10 h-10 flex items-center justify-center rounded-full"
-              aria-label={musicOn ? "Disattiva musica" : "Attiva musica"}
-              onClick={() => setMusicOn(v => !v)}
-              strength={30}
-            >
-              <Music className={musicOn ? "text-green-400 animate-neon-pulse w-6 h-6" : "text-yellow-300 w-6 h-6"} />
-            </MagneticButton>
-          </div>
-          
-          {/* Current Event Section with reveal animation */}
-          <div>
-            <CurrentEventSection />
-          </div>
-          
-          {/* Future Missions with staggered fade-in */}
-          <div className="relative">
-            <FutureMissionsCarousel />
-          </div>
-          
-          {/* Map Button Section */}
-          <div className="flex flex-col items-center py-8 mb-8">
-            <MagneticButton
-              className="text-white glass-card px-6 py-3 rounded-xl flex items-center gap-2 hover:scale-105 neon-border"
-              onClick={() => alert("Mappa LIVE: presto disponibile")}
-              strength={25}
-            >
-              <Map className="w-5 h-5" /> Mappa LIVE (prossimamente)
-            </MagneticButton>
-            <motion.span 
-              className="mt-2 text-xs text-yellow-200 opacity-70 italic"
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 0.7, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.7 }}
-            >
-              (Sarà visibile chi trova indizi in tempo reale)
-            </motion.span>
+              <span className="text-cyan-400">Auto di Lusso</span> in Palio
+            </motion.h2>
+            <FuturisticCarsCarousel />
           </div>
         </motion.main>
       )}
