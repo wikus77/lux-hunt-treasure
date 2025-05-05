@@ -5,39 +5,27 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, ValidationResult } from '@/utils/form-validation';
 
-// Define explicit interface for profile data to avoid deep type inference
-interface ProfileData {
-  id: string;
-  // Add other fields if needed but not required for this check
-}
-
-// ✅ External function with explicit return type and types for parameters
+// ✅ Funzione separata che disattiva i tipi (evita TS2589)
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  try {
-    // Use type assertion to avoid deep type inference
-    const response = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', email);
-    
-    // Explicit type assertion for response data
-    const data = response.data as ProfileData[] | null;
-    const error = response.error;
+  const untypedClient = supabase as any;
+  const response = await untypedClient
+    .from('profiles')
+    .select('id')
+    .eq('email', email);
 
-    if (error) {
-      console.error("Errore nel controllo email:", error);
-      throw error;
-    }
+  const data = response.data;
+  const error = response.error;
 
-    return data && data.length > 0;
-  } catch (error) {
-    console.error("Errore durante il controllo dell'email:", error);
-    return false; // Return a default value in case of errors
+  if (error) {
+    console.error("Errore nel controllo email:", error);
+    throw error;
   }
+
+  return data && data.length > 0;
 }
 
 export const useRegistration = () => {
-  // ✅ TypeScript infers the type automatically
+  // ✅ Nessun tipo esplicito → niente errori
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -45,7 +33,7 @@ export const useRegistration = () => {
     confirmPassword: ''
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState({}); // ✅ niente Record<string, string>
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -85,7 +73,6 @@ export const useRegistration = () => {
         return;
       }
 
-      // Use more explicit typing for signUp to avoid deep inference
       const result = await supabase.auth.signUp({
         email,
         password,
