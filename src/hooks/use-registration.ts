@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, ValidationResult } from '@/utils/form-validation';
 
-// ✅ Tipo per i dati del form
+// Tipo per i dati del form
 export type FormData = {
   name: string;
   email: string;
@@ -13,7 +13,7 @@ export type FormData = {
   confirmPassword: string;
 };
 
-// ✅ Funzione separata per evitare inferenza profonda con Supabase
+// Funzione separata per evitare inferenza profonda con Supabase
 async function checkIfEmailExists(email: string): Promise<boolean> {
   const untypedClient = supabase as any;
   const response = await untypedClient
@@ -40,8 +40,9 @@ export const useRegistration = () => {
     confirmPassword: ''
   });
 
-  // ✅ Tipizzazione sicura con Record<string, string>
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // Rimozione della tipizzazione esplicita
+  const [errors, setErrors] = useState({}); // Nessun tipo esplicito qui
+
   const [isSubmitting, setIsSubmitting] = useState(false as boolean);
   const navigate = useNavigate();
 
