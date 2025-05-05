@@ -40,9 +40,8 @@ export const useRegistration = () => {
     confirmPassword: ''
   });
 
-  // ✅ Cast sicuro: evita inferenza profonda = NIENTE TS2589
-  const [errors, setErrors] = useState({} as { [key: string]: string });
-
+  // ✅ Tipizzazione sicura con Record<string, string>
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false as boolean);
   const navigate = useNavigate();
 
