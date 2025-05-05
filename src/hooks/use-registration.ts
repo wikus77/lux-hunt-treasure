@@ -3,13 +3,7 @@ import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { validateRegistration, RegistrationFormData } from '@/utils/form-validation';
-
-// Define explicit interface for profile data
-interface ProfileData {
-  id: string;
-  email?: string;
-}
+import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
 
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
@@ -38,7 +32,7 @@ export const useRegistration = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const validation = validateRegistration(formData);
+    const validation: ValidationResult = validateRegistration(formData);
     if (!validation.isValid) {
       setErrors(validation.errors);
       return;
@@ -48,19 +42,16 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // Use explicitly typed query to avoid deep instantiation
-      const { data, error } = await supabase
+      // ✅ Verifica se l’email è già registrata (SEMPLIFICATO)
+      const { data: profileData, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email);
-      
-      // Safely check if profiles exist
-      const profileData = data as ProfileData[] | null;
 
       if (error) {
-        console.error("Error checking existing email:", error);
+        console.error("Errore Supabase:", error);
         toast.error("Errore", {
-          description: "Si è verificato un errore durante la verifica dell'email.",
+          description: "Errore durante il controllo dell'email.",
           duration: 3000
         });
         setIsSubmitting(false);
@@ -69,7 +60,7 @@ export const useRegistration = () => {
 
       if (profileData && profileData.length > 0) {
         toast.error("Errore", {
-          description: "Email già registrata. Prova con un'altra email o accedi.",
+          description: "Email già registrata. Prova un'altra.",
           duration: 3000
         });
         setIsSubmitting(false);
@@ -113,7 +104,7 @@ export const useRegistration = () => {
       }, 2000);
 
     } catch (error: any) {
-      console.error("Registration error:", error);
+      console.error("Errore di registrazione:", error);
       toast.error("Errore", {
         description: "Si è verificato un errore. Riprova più tardi.",
         duration: 3000
