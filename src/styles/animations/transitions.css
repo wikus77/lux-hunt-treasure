@@ -1,0 +1,79 @@
+
+/* Transition and transform animations */
+@keyframes reveal-block {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(101%);
+  }
+}
+
+.reveal-block {
+  animation: reveal-block 1.1s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+@keyframes magnetic-effect {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  20% {
+    transform: translateX(2px) translateY(-2px);
+  }
+  40% {
+    transform: translateX(-2px) translateY(2px);
+  }
+  60% {
+    transform: translateX(1px) translateY(1px);
+  }
+  80% {
+    transform: translateX(-1px) translateY(-1px);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+}
+
+.magnetic-animation {
+  animation: magnetic-effect 8s ease-in-out infinite;
+}
+
+@keyframes rotate-3d {
+  0% {
+    transform: perspective(1000px) rotateX(0) rotateY(0);
+  }
+  25% {
+    transform: perspective(1000px) rotateX(2deg) rotateY(2deg);
+  }
+  50% {
+    transform: perspective(1000px) rotateX(0) rotateY(4deg);
+  }
+  75% {
+    transform: perspective(1000px) rotateX(-2deg) rotateY(2deg);
+  }
+  100% {
+    transform: perspective(1000px) rotateX(0) rotateY(0);
+  }
+}
+
+.rotate-3d-animation {
+  animation: rotate-3d 12s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.marquee-animation {
+  animation: marquee 20s linear infinite;
+}
+
+/* Stagger animation helper */
+.stagger-animation {
+  transition-delay: var(--stagger-delay, 0ms);
+}

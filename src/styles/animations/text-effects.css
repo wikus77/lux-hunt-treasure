@@ -1,0 +1,84 @@
+
+/* Text glow and wave effects */
+@keyframes text-glow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(0, 229, 255, 0.7), 0 0 10px rgba(0, 229, 255, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(0, 229, 255, 0.9), 0 0 25px rgba(0, 229, 255, 0.7);
+  }
+}
+
+.text-glow {
+  animation: text-glow 3s ease-in-out infinite;
+}
+
+/* Wave text effect */
+.wave-text {
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes wave-text-effect {
+  0% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-8px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(8px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.wave-text span {
+  display: inline-block;
+  animation: wave-text-effect 2.5s ease-in-out infinite;
+  animation-delay: calc(0.1s * var(--char-index, 0));
+}
+
+/* Gradient text reveal */
+@keyframes reveal-text {
+  0% {
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+  }
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+}
+
+.reveal-text {
+  animation: reveal-text 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+}
+
+/* Typing text effect */
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes cursor {
+  50% { border-color: transparent; }
+}
+
+/* Split text animations */
+.split-parent {
+  overflow: hidden;
+  display: block;
+}
+
+.split-child {
+  display: block;
+  transform: translateY(100%);
+  transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.is-visible .split-child {
+  transform: translateY(0);
+}

@@ -1,18 +1,18 @@
 
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import './styles/theme.css'
-import './styles/utilities.css'
-import './styles/animations.css'
-import './styles/micro-interactions.css'
-import App from './App.tsx'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
+import './index.css';
+import './styles/animations/index.css'; // Updated import path
+import './styles/utilities.css';
+import './styles/micro-interactions.css';
+import './styles/theme.css';
 
-// Ensure DOM is fully rendered before mounting
-document.addEventListener('DOMContentLoaded', () => {
-  const rootElement = document.getElementById("root");
-  if (rootElement) {
-    createRoot(rootElement).render(<App />);
-  } else {
-    console.error("Root element not found");
-  }
-});
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
+);

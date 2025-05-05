@@ -1,0 +1,28 @@
+
+/* Main animations index file */
+@import './basic-animations.css';
+@import './text-effects.css';
+@import './transitions.css';
+@import './hover-effects.css';
+
+/* Additional Awwwards-style animations */
+.gradient-white-text {
+  background: linear-gradient(90deg, #ffffff 50%, #f1f1f1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-fill-color: transparent;
+}
+
+/* Parallax utilities */
+.parallax-element {
+  will-change: transform;
+  transform: translateY(var(--parallax-y, 0));
+}
+
+/* Ripple effect */
+@keyframes ripple {
+  0% { transform: scale(0); opacity: 0.5; }
+  100% { transform: scale(4); opacity: 0; }
+}

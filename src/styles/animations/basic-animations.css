@@ -1,0 +1,77 @@
+
+/* Basic animation keyframes */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  @keyframes spin-gradient {
+    0% { transform: rotate(0deg);}
+    100% { transform: rotate(360deg);}
+  }
+}
+
+/* Float animations */
+@keyframes float-particle {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(20px, -10px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float-animation {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Pulse animations */
+@keyframes neon-pulse {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 5px rgba(0, 163, 255, 0.5)) 
+           drop-shadow(0 0 10px rgba(0, 163, 255, 0.3));
+  }
+  50% {
+    filter: brightness(1.2) drop-shadow(0 0 8px rgba(0, 163, 255, 0.7)) 
+           drop-shadow(0 0 15px rgba(0, 163, 255, 0.5));
+  }
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 3s ease-in-out infinite;
+}
+
+/* Fade animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-up-animation {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.fade-up-animation.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
