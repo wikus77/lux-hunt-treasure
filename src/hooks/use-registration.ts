@@ -62,7 +62,7 @@ export const useRegistration = () => {
         .select('id')
         .eq('email', email);
       
-      // Use explicit type assertion
+      // Use explicit type casting to avoid deep type inference
       const profiles = data as ProfileQueryResponse;
       
       if (error) {
