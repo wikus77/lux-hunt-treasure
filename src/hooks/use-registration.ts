@@ -5,6 +5,11 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
 
+// Define a simple profile data type to avoid deep type instantiation
+interface ProfileData {
+  id: string;
+}
+
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
     name: '',
@@ -42,11 +47,11 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // ✅ Verifica se l’email è già registrata (SEMPLIFICATO)
+      // Use explicit typing for the query result to avoid deep instantiation
       const { data: profileData, error } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', email);
+        .eq('email', email) as { data: ProfileData[] | null, error: any };
 
       if (error) {
         console.error("Errore Supabase:", error);
