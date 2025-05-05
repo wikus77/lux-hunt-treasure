@@ -6,12 +6,14 @@ import { Spinner } from '@/components/ui/spinner';
 
 interface ProtectedRouteProps {
   redirectTo?: string;
+  requireEmailVerification?: boolean;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  redirectTo = '/login'
+  redirectTo = '/login',
+  requireEmailVerification = true
 }) => {
-  const { isAuthenticated, isLoading } = useAuthContext();
+  const { isAuthenticated, isLoading, isEmailVerified } = useAuthContext();
   
   if (isLoading) {
     return (
@@ -21,8 +23,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
   
+  // Se l'utente non è autenticato, reindirizza al login
   if (!isAuthenticated()) {
     return <Navigate to={redirectTo} replace />;
+  }
+  
+  // Controllo aggiuntivo per la verifica dell'email se richiesta
+  if (requireEmailVerification && !isEmailVerified) {
+    return <Navigate to="/auth?verification=pending" replace />;
   }
   
   return <Outlet />;
