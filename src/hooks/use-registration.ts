@@ -1,15 +1,13 @@
-
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
 
-// Define explicit types for the query response
-interface ProfileRecord {
+// ✅ Tipo sicuro per la query
+type Profile = {
   id: string;
-  email?: string; // Added optional email field as recommended
-}
+};
 
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
@@ -18,6 +16,7 @@ export const useRegistration = () => {
     password: '',
     confirmPassword: ''
   });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -28,8 +27,7 @@ export const useRegistration = () => {
       ...prev,
       [id]: value
     }));
-    
-    // Clear error when user types
+
     if (errors[id]) {
       setErrors(prev => ({ ...prev, [id]: '' }));
     }
@@ -37,27 +35,23 @@ export const useRegistration = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
-    // Validate form
+
     const validation: ValidationResult = validateRegistration(formData);
     if (!validation.isValid) {
       setErrors(validation.errors);
       return;
     }
-    
+
     setIsSubmitting(true);
     const { name, email, password } = formData;
 
     try {
-      // Check if email already exists with proper typing
-      const { data, error } = await supabase
-        .from('profiles')
+      // ✅ Verifica email esistente usando tipo esplicito
+      const { data: profileData, error } = await supabase
+        .from<Profile>('profiles')
         .select('id')
         .eq('email', email);
-      
-      // Use the explicit type without complex type coercion
-      const profileData = data as ProfileRecord[] | null;
-      
+
       if (error) {
         console.error("Error checking existing email:", error);
         toast.error("Errore", {
@@ -67,8 +61,7 @@ export const useRegistration = () => {
         setIsSubmitting(false);
         return;
       }
-      
-      // Verifica se ci sono risultati (significa che l'email esiste)
+
       if (profileData && profileData.length > 0) {
         toast.error("Errore", {
           description: "Email già registrata. Prova con un'altra email o accedi.",
@@ -78,7 +71,7 @@ export const useRegistration = () => {
         return;
       }
 
-      // Registrazione con Supabase Auth
+      // ✅ Registrazione utente e invio email di verifica
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -105,17 +98,15 @@ export const useRegistration = () => {
         setIsSubmitting(false);
         return;
       }
-      
-      // Registrazione avvenuta con successo
+
       toast.success("Registrazione completata!", {
         description: "Ti abbiamo inviato una mail di verifica. Controlla la tua casella e conferma il tuo account per accedere."
       });
-      
-      // Reindirizzamento alla pagina di attesa verifica
+
       setTimeout(() => {
         navigate("/login?verification=pending");
       }, 2000);
-      
+
     } catch (error: any) {
       console.error("Registration error:", error);
       toast.error("Errore", {
