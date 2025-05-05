@@ -1,18 +1,11 @@
 
 import { useState, useEffect } from "react";
-import HomeLayout from "@/components/home/HomeLayout";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { motion } from "framer-motion";
 import BriefProfileModal from "@/components/profile/BriefProfileModal";
-
-// Import new components
-import HeroSection from "@/components/home/HeroSection";
-import CarShowcase from "@/components/home/CarShowcase";
-import AwardsCeremony from "@/components/home/AwardsCeremony";
-import VideoExplainer from "@/components/home/VideoExplainer";
-import CallToAction from "@/components/home/CallToAction";
+import HomeContent from "@/components/home/HomeContent";
 import HomeHeader from "@/components/home/HomeHeader";
 
 const Home = () => {
@@ -139,13 +132,9 @@ const Home = () => {
           onShowNotifications={handleShowNotifications}
         />
         
-        {/* Main content sections */}
-        <main className="pt-16"> {/* Add padding top to account for the fixed header */}
-          <HeroSection />
-          <CarShowcase />
-          <AwardsCeremony />
-          <VideoExplainer />
-          <CallToAction />
+        {/* Main content sections - now using HomeContent component */}
+        <main className="pt-16 px-4 max-w-screen-xl mx-auto">
+          <HomeContent />
         </main>
       </motion.div>
 
