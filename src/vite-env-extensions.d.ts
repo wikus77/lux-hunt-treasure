@@ -4,4 +4,6 @@
 // Per il globo 3D
 interface Window {
   Globe: () => any;
+  initMap?: () => void;
+  initMapCallback?: () => void;
 }

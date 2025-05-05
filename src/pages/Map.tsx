@@ -41,14 +41,22 @@ const Map = () => {
       
       // Add back the script with a unique query parameter to prevent caching
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ&libraries=places&v=weekly&callback=initMap&t=${new Date().getTime()}`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ&libraries=places&v=weekly&callback=initMapCallback&t=${new Date().getTime()}`;
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
       
-      // Add global callback
+      // Define the global callback function
       window.initMap = function() {
         console.log("Google Maps API loaded successfully");
+      };
+      
+      // Use a separate callback name for the script loading
+      window.initMapCallback = function() {
+        console.log("Maps API script loaded, initializing map");
+        if (typeof window.initMap === 'function') {
+          window.initMap();
+        }
       };
     };
     
@@ -57,6 +65,7 @@ const Map = () => {
     return () => {
       // Clean up on unmount
       delete window.initMap;
+      delete window.initMapCallback;
       document.querySelectorAll('script[src*="maps.googleapis.com"]').forEach(script => script.remove());
     };
   }, [unlockedClues, location.state, addNotification]);
