@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, ValidationResult } from '@/utils/form-validation';
 
-// ✅ Tipo per i dati del form
+// Define the form data type
 export type FormData = {
   name: string;
   email: string;
@@ -13,23 +13,29 @@ export type FormData = {
   confirmPassword: string;
 };
 
-// ✅ Funzione separata con cast sicuro per Supabase
+// Define a simple type for profile data
+type ProfileData = {
+  id: string;
+};
+
+// Simplified function to check if email exists
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  const untypedClient = supabase as any;
-  const response = await untypedClient
-    .from('profiles')
-    .select('id')
-    .eq('email', email);
-
-  const data = response.data;
-  const error = response.error;
-
-  if (error) {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email);
+    
+    if (error) {
+      console.error("Errore nel controllo email:", error);
+      throw error;
+    }
+    
+    return Array.isArray(data) && data.length > 0;
+  } catch (error) {
     console.error("Errore nel controllo email:", error);
     throw error;
   }
-
-  return data && data.length > 0;
 }
 
 export const useRegistration = () => {
@@ -40,9 +46,8 @@ export const useRegistration = () => {
     confirmPassword: ''
   });
 
-  // ✅ Tipizzazione sicura per gli errori
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false as boolean);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
