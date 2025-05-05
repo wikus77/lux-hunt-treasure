@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Award } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { getMissionDeadline } from "@/utils/countdownDate";
 
 interface PrizeVisionProps {
   progress: number;
@@ -10,42 +12,102 @@ interface PrizeVisionProps {
 }
 
 export function PrizeVision({ progress, status }: PrizeVisionProps) {
-  const [currentPrize, setCurrentPrize] = useState({
+  const [currentPrize] = useState({
     name: "Ferrari 488 GTB",
-    image: "/events/ferrari-488-gtb.jpg"
+    image: "/lovable-uploads/f7ebe6cb-8248-4002-bb84-b0e40781e72e.png"
   });
-
-  // Generate filter settings based on unlock status
-  const getImageFilters = () => {
-    switch(status) {
-      case "locked":
-        return "blur(8px) brightness(0.3) grayscale(0.7)";
-      case "partial":
-        return "blur(5px) brightness(0.5) grayscale(0.5)";
-      case "near":
-        return "blur(2px) brightness(0.7) grayscale(0.3)";
-      case "unlocked":
-        return "blur(0px) brightness(1) grayscale(0)";
-      default:
-        return "blur(8px) brightness(0.3) grayscale(0.7)";
+  
+  const [lastUnlockEvent, setLastUnlockEvent] = useLocalStorage<string | null>("last-unlock-event", null);
+  const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
+  
+  // Calculate days remaining until mission deadline
+  const getDaysRemaining = () => {
+    const deadline = getMissionDeadline();
+    const now = new Date();
+    const diffTime = deadline.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+  
+  const daysRemaining = getDaysRemaining();
+  const totalDays = 30; // Assuming 30 days total mission duration
+  
+  // Calculate visibility percentage based on algorithm in prompt
+  const calculateVisibilityPercentage = () => {
+    const objectivesPercentage = progress; // Using progress as objective completion
+    const userScore = progress; // Using same value for simplicity
+    
+    if (daysRemaining <= 3) {
+      // Last 3 days - full visibility (100%)
+      return 100;
+    } else {
+      // Calculate partial visibility
+      const partialVisibility = (objectivesPercentage * 0.4) + (userScore * 0.05);
+      
+      // Apply temporal limit for first 27 days (max 35%)
+      return Math.min(partialVisibility, 35);
     }
+  };
+  
+  // Visibility percentage from 0 to 100
+  const visibilityPercentage = calculateVisibilityPercentage();
+  
+  // Generate filter settings based on visibility percentage
+  const getImageFilters = () => {
+    if (visibilityPercentage >= 100) {
+      return "blur(0px) brightness(1) grayscale(0)";
+    } else if (visibilityPercentage >= 35) {
+      return "blur(2px) brightness(0.7) grayscale(0.3)";
+    } else if (visibilityPercentage >= 20) {
+      return "blur(5px) brightness(0.5) grayscale(0.5)";
+    } else {
+      return "blur(8px) brightness(0.3) grayscale(0.7)";
+    }
+  };
+  
+  // Generate radial revealing mask
+  const getMaskGradient = () => {
+    if (visibilityPercentage >= 100) return "none";
+    
+    const edgeVisibility = Math.min(100, visibilityPercentage * 1.5);
+    const centerVisibility = Math.max(0, visibilityPercentage - 10);
+    
+    return `radial-gradient(
+      circle at center, 
+      rgba(0,0,0,${1 - centerVisibility/100}) ${visibilityPercentage}%, 
+      rgba(0,0,0,${1 - edgeVisibility/100}) ${visibilityPercentage + 15}%, 
+      rgba(0,0,0,0.9) 100%
+    )`;
   };
 
   // Get status text
   const getStatusText = () => {
-    switch(status) {
-      case "locked":
-        return "Premio bloccato";
-      case "partial":
-        return "Segnale in acquisizione...";
-      case "near":
-        return "Premio quasi sbloccato";
-      case "unlocked":
-        return "PREMIO SBLOCCATO!";
-      default:
-        return "Premio bloccato";
+    if (daysRemaining <= 3) {
+      return "PREMIO SBLOCCATO!";
+    } else if (visibilityPercentage >= 35) {
+      return "Premio quasi sbloccato";
+    } else if (visibilityPercentage >= 20) {
+      return "Segnale in acquisizione...";
+    } else {
+      return "Premio bloccato";
     }
   };
+  
+  // Check for unlock level changes to trigger animations
+  useEffect(() => {
+    const currentUnlockLevel = 
+      visibilityPercentage >= 100 ? "unlocked" :
+      visibilityPercentage >= 35 ? "near" :
+      visibilityPercentage >= 20 ? "partial" : "locked";
+    
+    const currentEvent = `${currentUnlockLevel}-${new Date().toDateString()}`;
+    
+    if (lastUnlockEvent !== currentEvent && currentUnlockLevel !== "locked") {
+      setShowUnlockAnimation(true);
+      setTimeout(() => setShowUnlockAnimation(false), 2000);
+      setLastUnlockEvent(currentEvent);
+    }
+  }, [visibilityPercentage, lastUnlockEvent, setLastUnlockEvent]);
 
   return (
     <motion.div
@@ -63,6 +125,7 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
 
       <div className="relative flex-1 flex items-center justify-center">
         <div className="relative overflow-hidden rounded-lg w-full aspect-video">
+          {/* Static base image - always visible but filtered */}
           <motion.img 
             src={currentPrize.image} 
             alt={currentPrize.name}
@@ -74,6 +137,31 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
             transition={{ duration: 1.5 }}
           />
           
+          {/* Revealing mask overlay */}
+          <motion.div 
+            className="absolute inset-0"
+            style={{ 
+              background: getMaskGradient(),
+              opacity: visibilityPercentage >= 100 ? 0 : 1
+            }}
+            animate={{ 
+              background: getMaskGradient(),
+              opacity: visibilityPercentage >= 100 ? 0 : 1
+            }}
+            transition={{ duration: 1.5 }}
+          />
+          
+          {/* Edge glow effect for partial reveal */}
+          {visibilityPercentage > 5 && visibilityPercentage < 100 && (
+            <motion.div 
+              className="absolute inset-0 pointer-events-none"
+              animate={{ 
+                boxShadow: ["0 0 10px rgba(0,229,255,0.2) inset", "0 0 15px rgba(0,229,255,0.3) inset", "0 0 10px rgba(0,229,255,0.2) inset"]
+              }}
+              transition={{ duration: 2.5, repeat: Infinity }}
+            />
+          )}
+          
           {/* Prize name overlay */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
             <h3 className="text-lg font-medium text-white">{currentPrize.name}</h3>
@@ -82,23 +170,30 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
           {/* Status overlay */}
           <motion.div 
             className={`absolute inset-0 flex items-center justify-center backdrop-blur-sm ${
-              status === "unlocked" ? "bg-green-900/30" : "bg-black/40"
+              visibilityPercentage >= 100 ? "bg-green-900/30" : "bg-black/40"
             }`}
             initial={{ opacity: 1 }}
             animate={{ 
-              opacity: status === "unlocked" ? 0 : 0.7
+              opacity: visibilityPercentage >= 100 ? 0 : 0.7
             }}
             transition={{ duration: 1.5 }}
           >
             <span className={`text-xl font-bold ${
-              status === "unlocked" ? "text-green-400" : "text-white"
+              visibilityPercentage >= 100 ? "text-green-400" : "text-white"
             }`}>
               {getStatusText()}
             </span>
           </motion.div>
           
+          {/* Countdown overlay for temporal limit */}
+          {daysRemaining > 3 && (
+            <div className="absolute top-3 right-3 bg-black/60 rounded-full px-3 py-1 text-xs text-white">
+              Sblocco completo in: <span className="text-yellow-400 font-mono">{daysRemaining} giorni</span>
+            </div>
+          )}
+          
           {/* Glowing border for unlocked state */}
-          {status === "unlocked" && (
+          {visibilityPercentage >= 100 && (
             <motion.div 
               className="absolute inset-0 pointer-events-none border-2 border-yellow-400"
               animate={{ 
@@ -107,16 +202,35 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
               transition={{ duration: 1.5, repeat: Infinity }}
             />
           )}
+          
+          {/* Unlock animation */}
+          {showUnlockAnimation && (
+            <motion.div 
+              className="absolute inset-0 bg-yellow-400"
+              initial={{ opacity: 0.8 }}
+              animate={{ opacity: 0 }}
+              transition={{ duration: 1 }}
+            />
+          )}
         </div>
       </div>
 
       {/* Progress bar */}
       <div className="mt-4">
         <div className="flex justify-between mb-1 text-sm">
-          <span>Progresso verso il premio</span>
-          <span className="font-bold">{progress}%</span>
+          <span>Progresso sblocco premio</span>
+          <span className="font-bold">{Math.min(100, Math.round(visibilityPercentage))}%</span>
         </div>
-        <Progress value={progress} className="h-2" />
+        <Progress value={Math.min(100, visibilityPercentage)} className="h-2" />
+        
+        {/* Help text */}
+        <div className="mt-2 text-xs text-gray-400 text-center">
+          {daysRemaining > 3 ? (
+            "Completa obiettivi per aumentare la visibilità del premio"
+          ) : (
+            "Premio completamente sbloccato! Completa la missione per reclamarlo"
+          )}
+        </div>
       </div>
     </motion.div>
   );

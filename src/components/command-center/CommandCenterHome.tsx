@@ -6,22 +6,33 @@ import { BrokerConsole } from "./home-sections/BrokerConsole";
 import { AgentDiary } from "./home-sections/AgentDiary";
 import { ActiveMissionBox } from "./home-sections/ActiveMissionBox";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { toast } from "sonner";
+import { getMissionDeadline } from "@/utils/countdownDate";
 
 export function CommandCenterHome() {
   // Track the user's progress (from 0 to 100)
-  const [progress, setProgress] = useLocalStorage("mission-progress", 0);
+  const [progress, setProgress] = useLocalStorage<number>("mission-progress", 0);
   
   // Track user's credits
-  const [credits, setCredits] = useLocalStorage("user-credits", 1000);
+  const [credits, setCredits] = useLocalStorage<number>("user-credits", 1000);
   
   // Track purchased clues
-  const [purchasedClues, setPurchasedClues] = useLocalStorage("purchased-clues", []);
+  const [purchasedClues, setPurchasedClues] = useLocalStorage<any[]>("purchased-clues", []);
   
   // Track diary entries
-  const [diaryEntries, setDiaryEntries] = useLocalStorage("diary-entries", []);
+  const [diaryEntries, setDiaryEntries] = useLocalStorage<any[]>("diary-entries", []);
 
-  // Track prize unlock status
-  const [prizeUnlockStatus, setPrizeUnlockStatus] = useState("locked");
+  // Track prize unlock status - Now using the correct union type
+  const [prizeUnlockStatus, setPrizeUnlockStatus] = useState<"locked" | "partial" | "near" | "unlocked">("locked");
+
+  // Calculate remaining days for mission
+  const calculateRemainingDays = () => {
+    const deadline = getMissionDeadline();
+    const now = new Date();
+    const diffTime = deadline.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
 
   // Active mission data
   const [activeMission, setActiveMission] = useState({
@@ -31,20 +42,40 @@ export function CommandCenterHome() {
     foundClues: 3,
     timeLimit: "48:00:00", // In HH:MM:SS format
     startTime: new Date().toISOString(),
+    remainingDays: calculateRemainingDays(),
+    totalDays: 30
   });
 
-  // Update prize status based on progress
+  // Update prize status based on progress and days remaining
   useEffect(() => {
-    if (progress < 30) {
-      setPrizeUnlockStatus("locked");
-    } else if (progress < 60) {
-      setPrizeUnlockStatus("partial");
-    } else if (progress < 100) {
-      setPrizeUnlockStatus("near");
-    } else {
+    // Update remaining days
+    setActiveMission(prev => ({
+      ...prev,
+      remainingDays: calculateRemainingDays()
+    }));
+    
+    // Calculate visibility based on the provided algorithm
+    const daysRemaining = activeMission.remainingDays;
+    const objectivesPercentage = (activeMission.foundClues / activeMission.totalClues) * 100;
+    const userScore = progress;
+    
+    if (daysRemaining <= 3) {
+      // Last 3 days - full visibility
       setPrizeUnlockStatus("unlocked");
+    } else {
+      // Calculate partial visibility
+      const partialVisibility = (objectivesPercentage * 0.4) + (userScore * 0.05);
+      
+      // Apply temporal limit for first 27 days
+      if (partialVisibility < 20) {
+        setPrizeUnlockStatus("locked");
+      } else if (partialVisibility < 35) {
+        setPrizeUnlockStatus("partial");
+      } else {
+        setPrizeUnlockStatus("near");
+      }
     }
-  }, [progress]);
+  }, [progress, activeMission.foundClues, activeMission.totalClues]);
 
   // Handle clue purchase
   const handlePurchaseClue = (clue) => {
@@ -64,6 +95,11 @@ export function CommandCenterHome() {
       
       // Increase progress
       setProgress(prev => Math.min(100, prev + clue.progressValue));
+      
+      // Show toast notification
+      toast.success("Indizio acquistato con successo!");
+    } else {
+      toast.error("Crediti insufficienti per acquistare questo indizio.");
     }
   };
 
@@ -79,6 +115,7 @@ export function CommandCenterHome() {
       content: note,
       timestamp: new Date().toISOString()
     });
+    toast.success("Nota aggiunta al diario");
   };
 
   return (

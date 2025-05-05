@@ -1,192 +1,214 @@
 
-import React, { useState, useEffect } from "react";
-import { BadgeDollarSign, ShoppingCart, BarChart3, Info } from "lucide-react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { MagneticButton } from "@/components/ui/magnetic-button";
-import { useToast } from "@/components/ui/use-toast";
+import { Lock, ShieldCheck, Search, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-interface ClueItem {
+interface ClueData {
   id: string;
   code: string;
   title: string;
-  cost: number;
   reliability: number;
+  cost: number;
   progressValue: number;
   description: string;
 }
 
 interface BrokerConsoleProps {
   credits: number;
-  onPurchaseClue: (clue: ClueItem) => void;
+  onPurchaseClue: (clue: ClueData) => void;
 }
 
+// Sample clues data for UI demonstration
+const availableClues: ClueData[] = [
+  {
+    id: "c1",
+    code: "Alpha01",
+    title: "Coordinate iniziali",
+    reliability: 90,
+    cost: 200,
+    progressValue: 5,
+    description: "Indica il punto di partenza della missione con precisione GPS."
+  },
+  {
+    id: "c2",
+    code: "Beta19",
+    title: "Indizio del parco",
+    reliability: 75,
+    cost: 150,
+    progressValue: 3,
+    description: "Suggerisce la presenza di un oggetto nascosto in un'area verde."
+  },
+  {
+    id: "c3",
+    code: "Delta7",
+    title: "Codice digitale",
+    reliability: 85,
+    cost: 300,
+    progressValue: 8,
+    description: "Una sequenza numerica che sblocca un contenuto digitale importante."
+  },
+  {
+    id: "c4",
+    code: "Gamma22",
+    title: "Frammento audio",
+    reliability: 60,
+    cost: 100,
+    progressValue: 2,
+    description: "Registrazione ambientale con suoni e voci che rivelano un indizio."
+  },
+  {
+    id: "c5",
+    code: "Omega99",
+    title: "Foto satellitare",
+    reliability: 95,
+    cost: 450,
+    progressValue: 12,
+    description: "Immagine ad alta risoluzione di un'area urbana con dettagli cruciali."
+  }
+];
+
 export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
-  const { toast } = useToast();
-  const [availableClues, setAvailableClues] = useState<ClueItem[]>([]);
-  const [selectedClue, setSelectedClue] = useState<ClueItem | null>(null);
+  const [selectedClue, setSelectedClue] = useState<ClueData | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Filter clues based on search query
+  const filteredClues = availableClues.filter(clue => 
+    clue.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    clue.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  // Load sample clues
-  useEffect(() => {
-    // Sample clues data
-    const sampleClues: ClueItem[] = [
-      {
-        id: "1",
-        code: "ALPHA01",
-        title: "Coordinate GPS anomale",
-        cost: 200,
-        reliability: 85,
-        progressValue: 5,
-        description: "Una serie di coordinate GPS che indicano un pattern insolito nell'area metropolitana."
-      },
-      {
-        id: "2",
-        code: "BRAVO02",
-        title: "Testimone chiave",
-        cost: 350,
-        reliability: 72,
-        progressValue: 7,
-        description: "Informazioni da una fonte attendibile riguardo movimenti sospetti nella zona industriale."
-      },
-      {
-        id: "3",
-        code: "CHARLIE03",
-        title: "Documento riservato",
-        cost: 500,
-        reliability: 90,
-        progressValue: 12,
-        description: "Una pagina di un documento confidenziale che menziona la posizione del bersaglio."
-      },
-      {
-        id: "4",
-        code: "DELTA04",
-        title: "Registrazione audio",
-        cost: 150,
-        reliability: 60,
-        progressValue: 3,
-        description: "Una conversazione ambigua che potrebbe contenere indizi sulla localizzazione."
-      }
-    ];
-    
-    setAvailableClues(sampleClues);
-  }, []);
+  const handleClueSelect = (clue: ClueData) => {
+    setSelectedClue(clue);
+  };
 
-  const handlePurchase = (clue: ClueItem) => {
-    if (credits < clue.cost) {
-      toast({
-        title: "Crediti insufficienti",
-        description: "Non hai abbastanza crediti per acquistare questo indizio.",
-        variant: "destructive"
-      });
-      return;
+  const handlePurchase = () => {
+    if (selectedClue) {
+      onPurchaseClue(selectedClue);
+      setSelectedClue(null);
     }
+  };
+
+  // Function to render reliability indicator
+  const renderReliabilityIndicator = (reliability: number) => {
+    const getColor = () => {
+      if (reliability >= 80) return "bg-green-500";
+      if (reliability >= 60) return "bg-yellow-500";
+      return "bg-red-500";
+    };
     
-    onPurchaseClue(clue);
-    
-    toast({
-      title: "Indizio acquistato",
-      description: `Hai acquistato l'indizio ${clue.code}`,
-    });
-    
-    // Remove the purchased clue from available clues
-    setAvailableClues(prev => prev.filter(c => c.id !== clue.id));
-    setSelectedClue(null);
+    return (
+      <div className="flex items-center gap-1">
+        <span className={`w-2 h-2 rounded-full ${getColor()}`}></span>
+        <span className="text-xs">{reliability}%</span>
+      </div>
+    );
   };
 
   return (
     <motion.div
       className="glass-card p-4 h-full flex flex-col"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      initial={{ scale: 0.95 }}
+      animate={{ scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center">
-          <BadgeDollarSign className="text-cyan-400 mr-2" size={20} />
-          <h2 className="text-lg font-medium text-cyan-400">Console del Broker</h2>
-        </div>
-        <div className="bg-black/40 px-3 py-1 rounded-full flex items-center">
-          <span className="text-yellow-400 font-mono font-bold">{credits}</span>
-          <span className="ml-1 text-yellow-400/70 text-sm">CR</span>
-        </div>
+      <div className="flex items-center mb-3">
+        <ShieldCheck className="text-blue-400 mr-2" size={20} />
+        <h2 className="text-lg font-medium text-blue-400">Console del Broker</h2>
       </div>
 
       <div className="horizontal-line mb-4"></div>
-
-      <div className="flex-1 overflow-y-auto scrollbar-none">
-        {availableClues.length > 0 ? (
-          <div className="space-y-3">
-            {availableClues.map(clue => (
+      
+      {/* Credits Display */}
+      <div className="flex justify-between items-center mb-4 bg-blue-900/20 p-2 rounded-md">
+        <span className="text-white">Crediti disponibili:</span>
+        <span className="text-xl font-bold text-blue-400">{credits}</span>
+      </div>
+      
+      {/* Search Bar */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
+        <input
+          type="text"
+          placeholder="Cerca indizio per codice o nome..."
+          className="w-full bg-black/30 border border-blue-900/30 rounded pl-9 pr-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-500"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+      
+      {/* Clues List */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
+        {filteredClues.length > 0 ? (
+          <div className="space-y-2">
+            {filteredClues.map((clue) => (
               <motion.div
                 key={clue.id}
-                className={`bg-black/50 border border-gray-800 rounded-lg p-3 cursor-pointer transition-colors ${
-                  selectedClue?.id === clue.id ? "border-cyan-500/50" : "hover:border-gray-700"
+                className={`p-3 rounded-md cursor-pointer transition-all duration-200 ${
+                  selectedClue?.id === clue.id 
+                    ? "bg-blue-900/30 border border-blue-500/50" 
+                    : "bg-black/30 border border-gray-700/50 hover:border-blue-900/50"
                 }`}
-                onClick={() => setSelectedClue(clue.id === selectedClue?.id ? null : clue)}
-                whileHover={{ scale: 1.01 }}
-                transition={{ duration: 0.2 }}
+                onClick={() => handleClueSelect(clue)}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.02 }}
               >
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-start">
                   <div>
-                    <div className="flex items-center">
-                      <span className="text-cyan-300 font-mono text-sm">{clue.code}</span>
-                      <span className="ml-2 bg-cyan-900/30 text-cyan-400 text-xs px-2 py-0.5 rounded-full">
-                        {clue.reliability}% affidabilità
+                    <div className="flex items-center mb-1">
+                      <span className="font-mono text-xs bg-blue-900/40 px-2 py-0.5 rounded text-blue-300 mr-2">
+                        {clue.code}
                       </span>
+                      {renderReliabilityIndicator(clue.reliability)}
                     </div>
-                    <h3 className="font-medium mt-1">{clue.title}</h3>
+                    <h3 className="font-medium text-white">{clue.title}</h3>
                   </div>
-                  <div className="text-yellow-400 font-mono font-bold">
+                  <div className="text-blue-400 font-bold">
                     {clue.cost}
                   </div>
                 </div>
-                
-                {/* Expanded content */}
-                {selectedClue?.id === clue.id && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="mt-3 pt-3 border-t border-gray-800/50"
-                  >
-                    <p className="text-sm text-gray-300 mb-3">{clue.description}</p>
-                    <div className="flex justify-end gap-2">
-                      <MagneticButton 
-                        className="bg-gray-800 hover:bg-gray-700 text-white py-1 px-3 rounded-md text-sm flex items-center"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Show more info about the clue
-                          toast({
-                            title: "Dettagli indizio",
-                            description: `Affidabilità: ${clue.reliability}%, Valore progresso: +${clue.progressValue}%`,
-                          });
-                        }}
-                      >
-                        <Info size={14} className="mr-1" /> Info
-                      </MagneticButton>
-                      <MagneticButton 
-                        className="bg-cyan-700 hover:bg-cyan-600 text-white py-1 px-3 rounded-md text-sm flex items-center"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePurchase(clue);
-                        }}
-                      >
-                        <ShoppingCart size={14} className="mr-1" /> Acquista
-                      </MagneticButton>
-                    </div>
-                  </motion.div>
-                )}
               </motion.div>
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <BarChart3 size={32} className="text-gray-500 mb-2" />
-            <p className="text-gray-400">Nessun indizio disponibile al momento</p>
-            <p className="text-gray-500 text-sm mt-1">Controlla più tardi per nuovi aggiornamenti</p>
+          <div className="text-center py-8 text-gray-500 italic">
+            Nessun indizio trovato con i criteri di ricerca attuali.
           </div>
         )}
       </div>
+      
+      {/* Selected Clue Details */}
+      {selectedClue && (
+        <div className="mt-4 pt-4 border-t border-blue-900/30">
+          <div className="bg-black/30 p-3 rounded-md border border-blue-900/40">
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="font-medium text-blue-400">{selectedClue.title}</h3>
+              <div className="flex items-center">
+                <Star className="text-yellow-500 mr-1" size={14} />
+                <span className="text-gray-400 text-xs">+{selectedClue.progressValue}% progresso</span>
+              </div>
+            </div>
+            <p className="text-sm text-gray-300 mb-3">{selectedClue.description}</p>
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-gray-400">
+                Affidabilità: <span className="text-blue-400">{selectedClue.reliability}%</span>
+              </div>
+              <Button 
+                onClick={handlePurchase}
+                disabled={credits < selectedClue.cost}
+                className={`${
+                  credits >= selectedClue.cost 
+                    ? "bg-blue-700 hover:bg-blue-600 text-white" 
+                    : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                } text-xs px-3 py-1 rounded`}
+              >
+                Acquista per {selectedClue.cost}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

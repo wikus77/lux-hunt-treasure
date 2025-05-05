@@ -1,128 +1,151 @@
 
 import React, { useState } from "react";
-import { FileText, Send, Clock, ShoppingBag, Edit3, MessageSquare, Info } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { Book, Clock, Plus, Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { it } from "date-fns/locale";
-import { Textarea } from "@/components/ui/textarea";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 
-interface DiaryEntry {
-  type: string;
-  content: string;
-  timestamp: string;
-}
-
 interface AgentDiaryProps {
-  entries: DiaryEntry[];
-  purchasedClues: any[];
+  entries: Array<{
+    type: string;
+    content: string;
+    timestamp: string;
+  }>;
   onAddNote: (note: string) => void;
+  purchasedClues: Array<any>;
 }
 
-export function AgentDiary({ entries, purchasedClues, onAddNote }: AgentDiaryProps) {
+export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryProps) {
   const [newNote, setNewNote] = useState("");
+  const [showAddNote, setShowAddNote] = useState(false);
 
-  const handleAddNote = () => {
+  const handleSubmitNote = () => {
     if (newNote.trim()) {
-      onAddNote(newNote.trim());
+      onAddNote(newNote);
       setNewNote("");
+      setShowAddNote(false);
+    }
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    try {
+      return format(new Date(timestamp), "HH:mm • dd/MM");
+    } catch (error) {
+      return "Data sconosciuta";
     }
   };
 
   const getEntryIcon = (type: string) => {
     switch(type) {
       case "purchase":
-        return <ShoppingBag size={16} className="text-cyan-400" />;
+        return <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm">$</div>;
       case "note":
-        return <Edit3 size={16} className="text-purple-400" />;
-      case "message":
-        return <MessageSquare size={16} className="text-amber-400" />;
-      case "info":
-        return <Info size={16} className="text-blue-400" />;
+        return <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center text-white text-sm">N</div>;
       default:
-        return <Clock size={16} className="text-gray-400" />;
+        return <div className="w-6 h-6 rounded-full bg-gray-500 flex items-center justify-center text-white text-sm">?</div>;
     }
   };
 
   return (
     <motion.div
       className="glass-card p-4 h-full flex flex-col"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      initial={{ scale: 0.95 }}
+      animate={{ scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="flex items-center mb-3">
-        <FileText className="text-purple-400 mr-2" size={20} />
-        <h2 className="text-lg font-medium text-purple-400">Diario dell'Agente</h2>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center">
+          <Book className="text-amber-400 mr-2" size={20} />
+          <h2 className="text-lg font-medium text-amber-400">Diario dell'Agente</h2>
+        </div>
+
+        {!showAddNote && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowAddNote(true)} 
+            className="text-white hover:bg-amber-900/30 hover:text-amber-400"
+          >
+            <Plus size={16} className="mr-1" /> Nota
+          </Button>
+        )}
       </div>
 
       <div className="horizontal-line mb-4"></div>
-      
-      {/* Note input area */}
-      <div className="mb-4">
-        <div className="relative">
-          <Textarea
-            placeholder="Aggiungi una nota personale..."
+
+      {showAddNote && (
+        <div className="mb-4 bg-black/30 p-3 rounded-md border border-amber-900/40">
+          <textarea
             value={newNote}
             onChange={(e) => setNewNote(e.target.value)}
-            className="resize-none bg-black/30 border-gray-700 focus:border-purple-500 text-sm"
-            rows={2}
+            placeholder="Inserisci una nota personale..."
+            className="w-full h-20 bg-black/30 border border-amber-900/30 rounded px-3 py-2 mb-2 text-white text-sm focus:outline-none focus:border-amber-500 placeholder:text-gray-500"
           />
-          <MagneticButton
-            className="absolute right-2 bottom-2 text-purple-400 hover:text-purple-300 disabled:text-gray-600"
-            disabled={!newNote.trim()}
-            onClick={handleAddNote}
-          >
-            <Send size={18} />
-          </MagneticButton>
+          <div className="flex space-x-2 justify-end">
+            <Button
+              variant="ghost" 
+              size="sm"
+              onClick={() => setShowAddNote(false)}
+              className="text-gray-400 hover:bg-gray-900/30"
+            >
+              Annulla
+            </Button>
+            <Button
+              onClick={handleSubmitNote}
+              className="bg-amber-700/50 hover:bg-amber-600/50 text-white flex items-center gap-2"
+              size="sm"
+            >
+              <Send size={14} /> Salva nota
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
+        <div className="space-y-3">
+          {entries.length > 0 ? (
+            entries.map((entry, index) => (
+              <motion.div 
+                key={index} 
+                className="bg-black/30 p-3 rounded-md border border-gray-700/50 text-sm"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <div className="flex justify-between items-start mb-1">
+                  <div className="flex items-center">
+                    {getEntryIcon(entry.type)}
+                    <span className="ml-2 text-xs text-gray-400">{entry.type === 'note' ? 'Nota personale' : 'Acquisto indizio'}</span>
+                  </div>
+                  <div className="flex items-center text-xs text-gray-500">
+                    <Clock size={12} className="mr-1" />
+                    {formatTimestamp(entry.timestamp)}
+                  </div>
+                </div>
+                <div className="mt-1 text-white">{entry.content}</div>
+              </motion.div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-500 italic">
+              Nessun elemento nel diario. Aggiungi note o acquista indizi.
+            </div>
+          )}
         </div>
       </div>
-      
-      {/* Timeline */}
-      <div className="flex-1 overflow-y-auto scrollbar-none">
-        <div className="space-y-4">
-          <AnimatePresence>
-            {entries.map((entry, index) => (
-              <motion.div
-                key={index}
-                className="relative pl-6 pb-4"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.3 }}
-              >
-                {/* Timeline line */}
-                <div className="absolute left-2 top-0 bottom-0 w-px bg-gray-800"></div>
-                
-                {/* Timeline icon */}
-                <div className="absolute left-0 top-0 w-4 h-4 rounded-full bg-black border border-gray-700 flex items-center justify-center">
-                  {getEntryIcon(entry.type)}
-                </div>
-                
-                {/* Content */}
-                <div>
-                  <div className="text-xs text-gray-400 mb-1">
-                    {format(new Date(entry.timestamp), "d MMM, HH:mm", { locale: it })}
-                  </div>
-                  <div className="bg-black/30 p-2 rounded border border-gray-800 text-sm">
-                    {entry.content}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-            
-            {entries.length === 0 && (
-              <motion.div 
-                className="text-center py-8 text-gray-500"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <FileText size={24} className="mx-auto mb-2 opacity-50" />
-                <p>Il tuo diario è vuoto</p>
-                <p className="text-xs mt-1">Aggiungi note o acquista indizi</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+
+      <div className="mt-4 pt-3 border-t border-amber-900/30">
+        <div className="flex justify-between items-center">
+          <div className="text-xs text-gray-500">
+            {purchasedClues.length} indizi acquisiti
+          </div>
+          <MagneticButton
+            className="bg-amber-900/30 text-amber-400 text-xs rounded-full px-4 py-1.5 hover:bg-amber-800/40"
+            onClick={() => setShowAddNote(true)}
+            strength={15}
+          >
+            <Plus size={12} className="mr-1" /> Aggiungi nota
+          </MagneticButton>
         </div>
       </div>
     </motion.div>
