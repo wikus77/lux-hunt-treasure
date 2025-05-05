@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useCallback } from "react";
 import { GoogleMap, Marker, InfoWindow, Circle } from "@react-google-maps/api";
 import MapUserMarkers from "./MapUserMarkers";
@@ -45,6 +46,13 @@ type MapMarkersProps = {
   deleteMarker: (id: string) => void;
   deleteSearchArea: (id: string) => void;
   center?: { lat: number; lng: number };
+  mapOptions?: {
+    mapTypeControl?: boolean;
+    fullscreenControl?: boolean;
+    streetViewControl?: boolean;
+    zoomControlOptions?: google.maps.ZoomControlOptions;
+    gestureHandling?: "cooperative" | "greedy" | "auto" | "none";
+  };
 };
 
 const mapContainerStyle = {
@@ -151,6 +159,7 @@ export const MapMarkers = ({
   deleteMarker,
   deleteSearchArea,
   center,
+  mapOptions,
 }: MapMarkersProps) => {
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
   const [currentZoomLevel, setCurrentZoomLevel] = useState(13);
@@ -190,8 +199,9 @@ export const MapMarkers = ({
       // Improve the feel of interaction
       tilt: 0, // Flat view for better readability
       rotateControl: false, // Disable rotation for simpler navigation
+      ...mapOptions, // Merge with any passed mapOptions
     };
-  }, []);
+  }, [mapOptions]);
 
   return (
     <div className="relative w-full h-full flex justify-center">
@@ -245,3 +255,4 @@ export const MapMarkers = ({
     </div>
   );
 };
+
