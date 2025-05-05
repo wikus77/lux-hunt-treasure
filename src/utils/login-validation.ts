@@ -1,9 +1,12 @@
 
-// Validation utility for login form
-export const validateLogin = (formData: {
+// Explicitly define the input type for login validation
+type LoginFormInput = {
   email: string;
   password: string;
-}) => {
+};
+
+// Validation utility for login form
+export const validateLogin = (formData: LoginFormInput) => {
   const errors: Record<string, string> = {};
 
   // Email validation

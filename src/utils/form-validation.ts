@@ -1,11 +1,14 @@
 
-// Validation utility for registration form
-export const validateRegistration = (formData: {
+// Explicitly define the input type for validation
+type RegistrationFormInput = {
   name: string;
   email: string;
   password: string;
   confirmPassword: string;
-}) => {
+};
+
+// Validation utility for registration form
+export const validateRegistration = (formData: RegistrationFormInput) => {
   const errors: Record<string, string> = {};
 
   // Name validation

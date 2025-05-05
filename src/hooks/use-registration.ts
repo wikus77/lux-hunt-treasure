@@ -13,10 +13,10 @@ export type RegistrationFormData = {
   confirmPassword: string;
 };
 
-// Explicitly define the expected response type
-type ProfileQueryResponse = {
+// Define a simple interface for the expected response to avoid deep type inference
+interface ProfileQueryResponse {
   id: string;
-}[] | null;
+}
 
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
@@ -56,14 +56,14 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // Check if email already exists - use type assertion instead of inference
+      // Check if email already exists - using a simpler type approach
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email);
       
-      // Use explicit type casting to avoid deep type inference
-      const profiles = data as ProfileQueryResponse;
+      // Simple array type for profiles to avoid deep inference
+      const profiles = data as ProfileQueryResponse[] | null;
       
       if (error) {
         console.error("Error checking existing email:", error);
