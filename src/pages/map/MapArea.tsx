@@ -2,6 +2,7 @@
 import React from "react";
 import { LoadScript } from "@react-google-maps/api";
 import { MapMarkers, type MapMarker, type SearchArea } from "@/components/maps/MapMarkers";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
 const DEFAULT_CENTER = { lat: 45.4642, lng: 9.19 };
@@ -47,6 +48,8 @@ const MapArea: React.FC<MapAreaProps> = ({
   deleteSearchArea,
   currentLocation
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="bg-black/50 border border-projectx-deep-blue/40 rounded-xl overflow-hidden shadow-xl h-full">
       <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} loadingElement={<div className="h-full flex items-center justify-center">Caricamento mappa...</div>}>
@@ -73,6 +76,13 @@ const MapArea: React.FC<MapAreaProps> = ({
               ? { lat: currentLocation[0], lng: currentLocation[1] }
               : DEFAULT_CENTER
           }
+          mapOptions={{
+            mapTypeControl: !isMobile,
+            fullscreenControl: !isMobile,
+            streetViewControl: !isMobile,
+            zoomControlOptions: isMobile ? { position: google.maps.ControlPosition.RIGHT_CENTER } : undefined,
+            gestureHandling: isMobile ? "greedy" : "auto",
+          }}
         />
       </LoadScript>
     </div>

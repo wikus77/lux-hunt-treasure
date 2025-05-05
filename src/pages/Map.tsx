@@ -4,12 +4,14 @@ import MapLogicProvider from "./map/MapLogicProvider";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useLocation } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Map = () => {
   // Initialize the buzz clues context to make it available for dynamic pricing
   const { unlockedClues } = useBuzzClues();
   const { addNotification } = useNotifications();
   const location = useLocation();
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     // Log the current clue count for debugging

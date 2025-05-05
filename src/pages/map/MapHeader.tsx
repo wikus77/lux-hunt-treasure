@@ -8,6 +8,7 @@ import CountdownTimer from "@/components/ui/countdown-timer";
 import { getMissionDeadline } from "@/utils/countdownDate";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MapHeaderProps {
   onAddMarker: () => void;
@@ -38,6 +39,7 @@ const MapHeader = ({
 
   const [agentCode, setAgentCode] = useState("AG-X480");
   const [showCodeText, setShowCodeText] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const savedAgentCode = localStorage.getItem('agentCode');
@@ -54,10 +56,10 @@ const MapHeader = ({
   }, []);
 
   return (
-    <div className="sticky top-16 z-10 w-full bg-black/50 backdrop-blur-sm py-3 px-4 border-b border-projectx-deep-blue/30">
+    <div className="sticky top-16 z-10 w-full bg-black/50 backdrop-blur-sm py-2 sm:py-3 px-2 sm:px-4 border-b border-projectx-deep-blue/30">
       <div className="flex flex-col">
         <div className="flex flex-wrap gap-2 justify-between items-center">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <M1ssionText />
             
             {/* Agent dossier code with typewriter effect - visible only on larger screens */}
@@ -77,50 +79,50 @@ const MapHeader = ({
                 {agentCode}
               </motion.span>
             </motion.div>
-            
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={onAddMarker}
-                className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-sm ${
-                  isAddingMarker
-                    ? "bg-projectx-blue text-white"
-                    : "bg-black/40 border border-projectx-deep-blue/40 hover:bg-black/60 press-effect"
-                }`}
-              >
-                <PlusCircle className="h-4 w-4" />
-                <span>Punto</span>
-              </button>
+          </div>
+          
+          <div className="flex gap-1 sm:gap-2 flex-wrap">
+            <button
+              onClick={onAddMarker}
+              className={`flex items-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-3 rounded-md text-xs sm:text-sm min-h-[40px] ${
+                isAddingMarker
+                  ? "bg-projectx-blue text-white"
+                  : "bg-black/40 border border-projectx-deep-blue/40 hover:bg-black/60 press-effect"
+              }`}
+            >
+              <PlusCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span>Punto</span>
+            </button>
 
-              <button
-                onClick={onAddArea}
-                className={`flex items-center gap-1.5 py-1.5 px-3 rounded-md text-sm ${
-                  isAddingArea
-                    ? "bg-projectx-blue text-white"
-                    : "bg-black/40 border border-projectx-deep-blue/40 hover:bg-black/60 press-effect"
-                }`}
-              >
-                <Map className="h-4 w-4" />
-                <span>Area</span>
-              </button>
+            <button
+              onClick={onAddArea}
+              className={`flex items-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-3 rounded-md text-xs sm:text-sm min-h-[40px] ${
+                isAddingArea
+                  ? "bg-projectx-blue text-white"
+                  : "bg-black/40 border border-projectx-deep-blue/40 hover:bg-black/60 press-effect"
+              }`}
+            >
+              <Map className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span>Area</span>
+            </button>
 
-              <MapFilters onFilterChange={handleFilterChange} />
-            </div>
+            <MapFilters onFilterChange={handleFilterChange} />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2">
             <button
               onClick={onHelp}
-              className="bg-black/40 border border-projectx-deep-blue/40 py-1.5 px-3 rounded-md flex items-center gap-1.5 hover:bg-black/60 text-sm press-effect"
+              className="bg-black/40 border border-projectx-deep-blue/40 py-1.5 px-2 sm:px-3 rounded-md flex items-center gap-1 sm:gap-1.5 hover:bg-black/60 text-xs sm:text-sm press-effect min-h-[40px]"
             >
-              <HelpCircle className="h-4 w-4" />
+              <HelpCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Aiuto</span>
             </button>
 
             <button
               onClick={onBuzz}
-              className="bg-gradient-to-r from-projectx-blue to-projectx-pink w-10 h-10 rounded-full flex items-center justify-center hover:opacity-90 text-sm press-effect shadow-[0_0_10px_rgba(217,70,239,0.5)]"
+              className="bg-gradient-to-r from-projectx-blue to-projectx-pink w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center hover:opacity-90 text-sm press-effect shadow-[0_0_10px_rgba(217,70,239,0.5)]"
             >
-              <Zap className="h-5 w-5" />
+              <Zap className="h-4 w-4 sm:h-5 sm:w-5" />
               <span className="sr-only">Buzz Map - {buzzMapPrice.toFixed(2)}€</span>
             </button>
           </div>

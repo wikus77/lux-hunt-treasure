@@ -8,6 +8,7 @@ import M1ssionText from "@/components/logo/M1ssionText";
 import CountdownTimer from "@/components/ui/countdown-timer";
 import { getMissionDeadline } from "@/utils/countdownDate";
 import { motion } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface HomeHeaderProps {
   profileImage: string | null;
@@ -19,6 +20,7 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
   const navigate = useNavigate();
   const [agentCode, setAgentCode] = useState("AG-X480");
   const [showCodeText, setShowCodeText] = useState(false);
+  const isMobile = useIsMobile();
   
   // Target date from utility
   const targetDate = getMissionDeadline();
@@ -39,12 +41,12 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
   
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-black/40 border-b border-white/10 transition-all duration-300">
-      <div className="max-w-screen-xl mx-auto px-4 py-4 flex flex-col">
+      <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex flex-col">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <Button
               variant="ghost"
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
+              className="p-2 rounded-full hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px] touch-manipulation"
               onClick={() => navigate("/profile")}
             >
               <Avatar className="w-8 h-8 border border-white/20 bg-black hover:border-white/40 transition-colors">
@@ -55,7 +57,7 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
               </Avatar>
             </Button>
             
-            {/* Agent dossier code with typewriter effect */}
+            {/* Agent dossier code with typewriter effect - desktop only */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -78,11 +80,11 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
             <M1ssionText />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
               aria-label="Notifications"
-              className="p-2 relative rounded-full bg-black/60 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
+              className="p-2 relative rounded-full bg-black/60 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer min-w-[44px] min-h-[44px] touch-manipulation"
               onClick={onShowNotifications}
             >
               <Mail className="w-5 h-5" />
@@ -93,7 +95,7 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
               )}
             </button>
             <button
-              className="p-2 rounded-full bg-black/60 hover:bg-white/10 border border-white/10 transition-colors"
+              className="p-2 rounded-full bg-black/60 hover:bg-white/10 border border-white/10 transition-colors min-w-[44px] min-h-[44px] touch-manipulation"
               onClick={() => navigate("/settings")}
               aria-label="Impostazioni"
             >
@@ -121,7 +123,7 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
         </motion.div>
         
         {/* Countdown Timer */}
-        <div className="flex justify-center mt-2">
+        <div className="flex justify-center mt-1 sm:mt-2">
           <CountdownTimer targetDate={targetDate} />
         </div>
       </div>

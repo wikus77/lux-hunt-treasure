@@ -6,12 +6,14 @@ import { motion } from "framer-motion";
 import BriefProfileModal from "@/components/profile/BriefProfileModal";
 import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
 import HomeHeader from "@/components/home/HomeHeader";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Home = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotificationsBanner, setShowNotificationsBanner] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { profileImage } = useProfileImage();
+  const isMobile = useIsMobile();
 
   // Use try/catch to handle any potential errors in the notifications hook
   let notifications = [];
@@ -44,7 +46,7 @@ const Home = () => {
   };
 
   // Background particles for atmosphere
-  const particles = Array.from({ length: 15 }, (_, i) => ({
+  const particles = Array.from({ length: isMobile ? 10 : 15 }, (_, i) => ({
     id: i,
     size: Math.random() * 4 + 1,
     top: Math.random() * 100,
@@ -56,9 +58,9 @@ const Home = () => {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
-        <div className="p-8 bg-red-800/30 rounded-xl text-center">
-          <h2 className="text-2xl font-bold mb-4">Errore</h2>
+      <div className="flex min-h-screen items-center justify-center bg-black px-4">
+        <div className="p-8 bg-red-800/30 rounded-xl text-center w-full max-w-sm">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">Errore</h2>
           <p>{error}</p>
           <button 
             onClick={() => window.location.reload()}
@@ -131,7 +133,7 @@ const Home = () => {
         />
         
         {/* New Command Center Home layout */}
-        <main className="pt-16 px-4 max-w-screen-xl mx-auto">
+        <main className="pt-24 sm:pt-28 px-2 sm:px-4 max-w-screen-xl mx-auto">
           <CommandCenterHome />
         </main>
       </motion.div>

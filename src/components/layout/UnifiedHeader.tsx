@@ -7,6 +7,7 @@ import AgentCodeDisplay from "./header/AgentCodeDisplay";
 import HeaderCountdown from "./header/HeaderCountdown";
 import MobileMenuButton from "./header/MobileMenuButton";
 import MobileMenu from "./header/MobileMenu";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -24,6 +25,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   leftComponent,
 }) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [agentCode, setAgentCode] = useState("AG-X480");
 
@@ -42,14 +44,14 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 w-full glass-backdrop">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           <div className="flex items-center">
             {leftComponent}
             <M1ssionText />
           </div>
 
-          {/* Agent dossier code with typewriter effect */}
+          {/* Agent dossier code with typewriter effect - desktop only */}
           <AgentCodeDisplay agentCode={agentCode} />
 
           {/* Desktop menu with countdown */}
@@ -57,7 +59,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
           {/* User menu and mobile menu button */}
           <div className="flex items-center">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 md:space-x-3">
               {/* User dropdown */}
               <UserMenu profileImage={profileImage} onSignOut={handleSignOut} />
 

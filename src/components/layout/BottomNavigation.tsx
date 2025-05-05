@@ -3,11 +3,14 @@ import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Award, Home, Map, Bell, Zap } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { motion } from "framer-motion";
 
 const BottomNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
+  const isMobile = useIsMobile();
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -29,22 +32,26 @@ const BottomNavigation = () => {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`bottom-nav-item px-1 ${isActive(item.path) ? "active" : ""}`}
+              className="bottom-nav-item px-1 py-1.5 min-w-[48px] min-h-[48px] flex flex-col items-center justify-center relative"
               aria-label={item.label}
             >
               <div className="relative">
-                <item.icon
-                  className={`h-6 w-6 transition-all duration-300 ${
-                    isActive(item.path) 
-                      ? "text-white scale-110 active-gradient-icon"
-                      : "text-gray-400"
-                  }`}
-                  style={{
+                <motion.div
+                  animate={{ 
                     filter: isActive(item.path) 
                       ? "drop-shadow(0 0 8px rgba(123, 46, 255, 0.5))" 
-                      : "none"
+                      : "none" 
                   }}
-                />
+                  transition={{ duration: 0.3 }}
+                >
+                  <item.icon
+                    className={`h-6 w-6 transition-all duration-300 ${
+                      isActive(item.path) 
+                        ? "text-white scale-110"
+                        : "text-gray-400"
+                    }`}
+                  />
+                </motion.div>
                 {item.badge && item.badge > 0 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center animate-pulse">
                     {item.badge > 9 ? "9+" : item.badge}

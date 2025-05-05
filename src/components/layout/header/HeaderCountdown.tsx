@@ -12,7 +12,7 @@ const HeaderCountdown = ({ isMobile = false }: HeaderCountdownProps) => {
   
   if (isMobile) {
     return (
-      <div className="md:hidden flex justify-center pb-2">
+      <div className="md:hidden flex justify-center py-2 px-2">
         <CountdownTimer targetDate={targetDate} />
       </div>
     );

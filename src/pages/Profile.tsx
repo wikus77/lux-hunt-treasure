@@ -8,10 +8,12 @@ import ProfileInfo from "@/components/profile/ProfileInfo";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import ReferralCodeSection from "@/components/profile/ReferralCodeSection";
 import { useProfileData } from "@/hooks/useProfileData";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Profile = () => {
   const navigate = useNavigate();
   const { profileData, actions } = useProfileData();
+  const isMobile = useIsMobile();
   
   const navigateToPersonalInfo = () => {
     navigate('/personal-info');
@@ -31,7 +33,7 @@ const Profile = () => {
 
   return (
     <ProfileLayout>
-      <div className="glass-card mx-4 mt-4 mb-20">
+      <div className="glass-card mx-2 sm:mx-4 mt-2 sm:mt-4 mb-20">
         {/* Header with Agent Code and Edit Button */}
         <ProfileHeader 
           agentCode={profileData.agentCode}
@@ -42,8 +44,8 @@ const Profile = () => {
         />
         
         {/* Profile Information */}
-        <div className="p-6">
-          <div className="flex flex-col md:flex-row gap-6">
+        <div className="p-3 sm:p-6">
+          <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
             {/* Left Column - Avatar and Basic Info */}
             <ProfileInfo 
               profileImage={profileData.profileImage}
@@ -66,7 +68,7 @@ const Profile = () => {
             />
             
             {/* Right Column - Tabs for different sections */}
-            <div className="flex-1">
+            <div className="flex-1 mt-4 md:mt-0">
               <ProfileTabs 
                 stats={profileData.stats}
                 history={profileData.history}

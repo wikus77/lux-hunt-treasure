@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +11,7 @@ import { LeaderboardSearch } from '@/components/leaderboard/LeaderboardSearch';
 import { LeaderboardProgress } from '@/components/leaderboard/LeaderboardProgress';
 import { LeaderboardTabs } from '@/components/leaderboard/LeaderboardTabs';
 import { useLeaderboardData } from '@/hooks/useLeaderboardData';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const samplePlayers = Array.from({ length: 50 }, (_, i) => ({
   id: i + 1,
@@ -40,6 +42,7 @@ const Leaderboard = () => {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   const { playSound } = useBuzzSound();
+  const isMobile = useIsMobile();
 
   const {
     filter,
@@ -101,13 +104,13 @@ const Leaderboard = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white pt-4 pb-20">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-black text-white pt-2 sm:pt-4 pb-20">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="space-y-6"
+          className="space-y-4 sm:space-y-6"
         >
           <LeaderboardHeader 
             onSimulateRankChange={simulateRankChange}

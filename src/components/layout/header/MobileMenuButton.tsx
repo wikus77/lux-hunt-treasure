@@ -12,8 +12,9 @@ const MobileMenuButton = ({ isOpen, onClick }: MobileMenuButtonProps) => {
     <Button 
       variant="ghost" 
       size="icon" 
-      className="md:hidden text-white"
+      className="md:hidden text-white p-3 h-12 w-12 touch-manipulation" // Increased size for touch target
       onClick={onClick}
+      aria-label={isOpen ? "Close menu" : "Open menu"}
     >
       {isOpen ? (
         <X className="h-6 w-6" />
