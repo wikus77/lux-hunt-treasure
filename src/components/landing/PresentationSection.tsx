@@ -24,13 +24,6 @@ const PresentationSection = ({ visible }: PresentationSectionProps) => {
           </h2>
           
           <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
-            Un premio attende chi sa vedere oltre.
-            Gli indizi non sono nascosti: sono camuffati.
-            Serve logica, freddezza e visione.
-            La sfida è iniziata. Questa è M1SSION.
-          </p>
-          
-          <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
             In the near future...
             The world becomes a gameboard.
             The clues are encrypted. The stakes are real.
