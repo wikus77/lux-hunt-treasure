@@ -5,9 +5,10 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
 
-// Definiamo un tipo esplicito per la risposta della query
+// Define explicit types for the query response
 interface ProfileRecord {
   id: string;
+  email?: string; // Added optional email field as recommended
 }
 
 export const useRegistration = () => {
@@ -48,13 +49,13 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // Controllo se l'email esiste già, evitando inferenza complessa di tipi
+      // Check if email already exists with proper typing
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email);
       
-      // Utilizzo di tipo semplice e senza inferenza complessa
+      // Use the explicit type without complex type coercion
       const profileData = data as ProfileRecord[] | null;
       
       if (error) {
