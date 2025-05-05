@@ -45,7 +45,7 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
     }
 
     try {
-      // Check if email already exists - using a string comparison instead of direct object comparison
+      // Check if email already exists - fixing the type error by simplifying the check
       const { data: existingUsers, error: checkError } = await supabase
         .from('profiles')
         .select('email')
@@ -55,6 +55,7 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
         console.error("Error checking existing email:", checkError);
       }
       
+      // Check if any users with the same email were found
       if (existingUsers && existingUsers.length > 0) {
         toast.error("Errore", {
           description: "Email già registrata. Prova con un'altra email o accedi.",
