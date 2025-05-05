@@ -5,11 +5,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
 
-// Define explicit type for the profile query response
-type ProfileQueryResponse = {
-  id: string;
-}[];
-
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
     name: '',
@@ -48,14 +43,14 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // Controllo se l'email esiste già - using explicit typing
+      // Controllo se l'email esiste già
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email);
       
-      // Explicitly type the response
-      const profileData = data as ProfileQueryResponse;
+      // Uso un tipo più semplice per evitare inferenza profonda
+      const profileData = data as unknown as { id: string }[] | null;
       
       if (error) {
         console.error("Error checking existing email:", error);
