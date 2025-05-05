@@ -1,40 +1,157 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const PersonalInfo = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [personalInfo, setPersonalInfo] = useState({
-    firstName: "Mario",
-    lastName: "Rossi",
-    email: "mario.rossi@example.com",
-    phone: "+39 123 456 7890",
-    address: "Via Roma 123",
-    city: "Milano",
-    postalCode: "20100",
-    country: "Italia"
+  const [loading, setLoading] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [originalInfo, setOriginalInfo] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    postalCode: "",
+    country: ""
   });
+  
+  const [personalInfo, setPersonalInfo] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    postalCode: "",
+    country: ""
+  });
+
+  // Email validation regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  useEffect(() => {
+    // Load user data from Supabase
+    const loadUserData = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          toast.error("Sessione non valida. Effettua il login.");
+          navigate("/login");
+          return;
+        }
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (error) {
+          console.error("Errore nel caricamento dei dati:", error);
+          toast.error("Impossibile caricare i dati personali");
+          return;
+        }
+        
+        if (data) {
+          const userData = {
+            firstName: data.first_name || "",
+            lastName: data.last_name || "",
+            email: data.email || "",
+            phone: data.phone || "",
+            address: data.address || "",
+            city: data.city || "",
+            postalCode: data.postal_code || "",
+            country: data.country || ""
+          };
+          
+          setPersonalInfo(userData);
+          setOriginalInfo(userData);
+        }
+      } catch (error) {
+        console.error("Errore:", error);
+        toast.error("Si è verificato un errore nel caricamento dei dati");
+      }
+    };
+    
+    loadUserData();
+  }, [navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setPersonalInfo(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setPersonalInfo(prev => {
+      const newState = { ...prev, [name]: value };
+      setIsDirty(JSON.stringify(newState) !== JSON.stringify(originalInfo));
+      return newState;
+    });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateEmail = (email: string): boolean => {
+    return emailRegex.test(email);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Informazioni Aggiornate",
-      description: "Le tue informazioni personali sono state aggiornate con successo."
-    });
-    navigate("/settings");
+    
+    // Validate email
+    if (personalInfo.email && !validateEmail(personalInfo.email)) {
+      toast.error("Inserisci un indirizzo email valido");
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Sessione non valida. Effettua il login.");
+        navigate("/login");
+        return;
+      }
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          first_name: personalInfo.firstName,
+          last_name: personalInfo.lastName,
+          email: personalInfo.email,
+          phone: personalInfo.phone,
+          address: personalInfo.address,
+          city: personalInfo.city,
+          postal_code: personalInfo.postalCode,
+          country: personalInfo.country,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', session.user.id);
+        
+      if (error) {
+        console.error("Errore nell'aggiornamento dei dati:", error);
+        toast.error("Impossibile aggiornare i dati personali");
+        return;
+      }
+      
+      toast.success("Informazioni Aggiornate", {
+        description: "Le tue informazioni personali sono state aggiornate con successo."
+      });
+      
+      // Update original info to match current info
+      setOriginalInfo({...personalInfo});
+      setIsDirty(false);
+      
+    } catch (error) {
+      console.error("Errore:", error);
+      toast.error("Si è verificato un errore durante il salvataggio");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -167,9 +284,11 @@ const PersonalInfo = () => {
           
           <Button 
             type="submit"
-            className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
+            disabled={!isDirty || loading}
+            className="w-full bg-white text-black hover:bg-gray-100"
           >
-            <Save className="mr-2 h-4 w-4" /> Salva Modifiche
+            <Save className="mr-2 h-4 w-4" /> 
+            {loading ? "Salvataggio in corso..." : "Salva Modifiche"}
           </Button>
         </form>
       </div>

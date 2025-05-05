@@ -129,40 +129,64 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           agent_code: string | null
           agent_title: string | null
           bio: string | null
+          city: string | null
+          country: string | null
           created_at: string
           credits: number | null
+          email: string | null
+          first_name: string | null
           full_name: string | null
           id: string
           investigative_style: string | null
+          last_name: string | null
+          phone: string | null
+          postal_code: string | null
           subscription_tier: string
           updated_at: string
           username: string | null
         }
         Insert: {
+          address?: string | null
           agent_code?: string | null
           agent_title?: string | null
           bio?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           credits?: number | null
+          email?: string | null
+          first_name?: string | null
           full_name?: string | null
           id: string
           investigative_style?: string | null
+          last_name?: string | null
+          phone?: string | null
+          postal_code?: string | null
           subscription_tier?: string
           updated_at?: string
           username?: string | null
         }
         Update: {
+          address?: string | null
           agent_code?: string | null
           agent_title?: string | null
           bio?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           credits?: number | null
+          email?: string | null
+          first_name?: string | null
           full_name?: string | null
           id?: string
           investigative_style?: string | null
+          last_name?: string | null
+          phone?: string | null
+          postal_code?: string | null
           subscription_tier?: string
           updated_at?: string
           username?: string | null
