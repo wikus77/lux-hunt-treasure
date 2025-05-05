@@ -21,7 +21,7 @@ const BottomNavigation = () => {
     { path: "/map", icon: Map, label: "Mappa" },
     { path: "/buzz", icon: Zap, label: "Buzz" },
     { path: "/leaderboard", icon: Award, label: "Classifica" },
-    { path: "/notifications", icon: BadgeAlert, label: "Avvisi", badge: unreadCount },
+    { path: "/notifications", icon: BadgeAlert, label: "Avvisi", badge: unreadCount > 0 ? unreadCount : null },
   ];
 
   return (
@@ -52,7 +52,7 @@ const BottomNavigation = () => {
                     }`}
                   />
                 </motion.div>
-                {item.badge && item.badge > 0 && (
+                {item.badge && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center animate-pulse">
                     {item.badge > 9 ? "9+" : item.badge}
                   </span>
