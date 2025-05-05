@@ -24,14 +24,18 @@ const PresentationSection = ({ visible }: PresentationSectionProps) => {
           </h2>
           
           <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
-            In the future, treasure hunting isn't just a game... it's a global challenge. Every month, 
-            a luxury car vanishes. Only the most intuitive, strategic, and quick-minded will decipher 
-            the clues and find where the prize is hidden.
+            In the near future...
+            The world becomes a gameboard.
+            The clues are encrypted. The stakes are real.
           </p>
           
           <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
-            Join <span className="text-[#00E5FF] font-bold">M1</span><span className="text-white font-bold">SSION</span>. Live the adventure. 
-            Find the prize. Change your destiny.
+            Thousands will try. Only a few will see the pattern.
+            You're not just chasing a prize—you're chasing the proof that you can outthink them all.
+          </p>
+          
+          <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
+            This is <span className="text-[#00E5FF] font-bold">M1</span><span className="text-white font-bold">SSION</span>. The countdown has begun. Are you ready?
           </p>
 
           {/* Simple static accent line instead of animated one */}

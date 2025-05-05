@@ -2,10 +2,10 @@
 import { motion } from "framer-motion";
 
 const LINES = [
-  "Nel futuro, la caccia al tesoro non è più un gioco… è una sfida globale.",
-  "Ogni mese, una nuova auto di lusso scompare.",
-  "Solo i più intuitivi, strategici e veloci sapranno interpretare gli indizi e scoprire dove si nasconde il premio.",
-  "Entra in M1SSION. Vivi l'avventura. Trova il premio. Cambia il tuo destino.",
+  "Un premio attende chi sa vedere oltre.",
+  "Gli indizi non sono nascosti: sono camuffati.",
+  "Serve logica, freddezza e visione.",
+  "La sfida è iniziata. Questa è M1SSION.",
 ];
 
 // Split text into words for advanced animation
@@ -24,8 +24,8 @@ const SplitWords = ({ text, delay = 0 }: { text: string; delay?: number }) => {
           word.includes("M1SSION") || 
           word.includes("premio") ||
           word === "sfida" ||
-          word === "avventura" ||
-          word === "tesoro";
+          word === "visione" ||
+          word === "logica";
 
         const className = isKeyword 
           ? "font-bold inline-block animate-neon-pulse mx-0.5"
@@ -34,9 +34,9 @@ const SplitWords = ({ text, delay = 0 }: { text: string; delay?: number }) => {
         const textClass = isKeyword 
           ? word.includes("M1SSION") 
             ? "neon-text-magenta" 
-            : word.includes("premio") || word === "tesoro"
+            : word.includes("premio")
               ? "neon-text-cyan"
-              : word === "sfida" || word === "avventura"
+              : word === "sfida" || word === "visione" || word === "logica"
                 ? "text-yellow-400"
                 : ""
           : "";
