@@ -48,10 +48,11 @@ export const useRegistration = () => {
 
     try {
       // Use explicitly typed query to avoid deep instantiation
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email);
+      const { data: profileData, error } = await supabase
+  .from('profiles')
+  .select('id')
+  .eq('email', email);
+
       
       // Safely check if profiles exist
       const profileData = data as ProfileData[] | null;
