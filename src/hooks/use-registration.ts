@@ -5,15 +5,22 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, ValidationResult } from '@/utils/form-validation';
 
-// Define explicit interface for profile data
+// Define the form data interface
+export interface FormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+// Define interface for profile data
 interface ProfileData {
   id: string;
 }
 
-// Simplified function with explicit typing to avoid deep type instantiation
+// Simplified function with explicit typing
 async function checkIfEmailExists(email: string): Promise<boolean> {
   try {
-    // Use explicit type annotation for the response
     const { data, error } = await supabase
       .from('profiles')
       .select('id')
@@ -33,14 +40,14 @@ async function checkIfEmailExists(email: string): Promise<boolean> {
 }
 
 export const useRegistration = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false); 
   const navigate = useNavigate();
 
