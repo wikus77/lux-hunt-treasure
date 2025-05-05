@@ -3,30 +3,29 @@ import React from "react";
 import { motion } from "framer-motion";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 import HomeHeader from "@/components/home/HomeHeader";
+import { useNotificationManager } from "@/hooks/useNotificationManager";
 
 type HomeLayoutProps = {
   children: React.ReactNode;
   profileImage: string | null;
-  showNotificationsBanner: boolean;
-  notifications: any[];
-  unreadCount: number;
-  onCloseNotifications: () => void;
-  onMarkAllAsRead: () => void;
 };
 
 const HomeLayout: React.FC<HomeLayoutProps> = ({
   children,
   profileImage,
-  showNotificationsBanner,
-  notifications,
-  unreadCount,
-  onCloseNotifications,
-  onMarkAllAsRead,
 }) => {
+  const {
+    notifications,
+    unreadCount,
+    notificationsBannerOpen,
+    closeNotificationsBanner,
+    markAllAsRead,
+  } = useNotificationManager();
+
   return (
     <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
       <div className="relative z-20">
-        {showNotificationsBanner && (
+        {notificationsBannerOpen && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -36,10 +35,10 @@ const HomeLayout: React.FC<HomeLayoutProps> = ({
           >
             <NotificationsBanner
               notifications={notifications}
-              open={showNotificationsBanner}
+              open={notificationsBannerOpen}
               unreadCount={unreadCount}
-              onClose={onCloseNotifications}
-              onMarkAllAsRead={onMarkAllAsRead}
+              onClose={closeNotificationsBanner}
+              onMarkAllAsRead={markAllAsRead}
             />
           </motion.div>
         )}

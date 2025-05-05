@@ -1,30 +1,31 @@
 
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import ProfileClues from "@/components/profile/ProfileClues";
 import { clues } from "@/data/cluesData";
-import { FileSearch, Bell } from "lucide-react";
+import { FileSearch } from "lucide-react";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
-import { useNotifications } from "@/hooks/useNotifications";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
+import { useNotificationManager } from "@/hooks/useNotificationManager";
 
 const Events = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { unlockedClues, incrementUnlockedCluesAndAddClue, resetUnlockedClues, MAX_CLUES } = useBuzzClues();
-  const { notifications, unreadCount, markAllAsRead, reloadNotifications, addNotification } = useNotifications();
+  const { 
+    notificationsDrawerOpen, 
+    openNotificationsDrawer, 
+    closeNotificationsDrawer, 
+    createNotification 
+  } = useNotificationManager();
   
   useEffect(() => {
     // Get profile image on mount
     setProfileImage(localStorage.getItem('profileImage'));
-    
-    // Update notifications on mount
-    reloadNotifications();
-  }, [reloadNotifications]);
+  }, []);
 
-  const generateRandomNotification = useCallback(() => {
+  const generateRandomNotification = () => {
     console.log("Generating random notification...");
     
     const notificationTemplates = [
@@ -50,15 +51,13 @@ const Events = () => {
     console.log("Selected notification template:", randomNotification);
     
     try {
-      const success = addNotification(randomNotification);
+      const success = createNotification(randomNotification.title, randomNotification.description);
       console.log("Notification creation result:", success);
       
       if (success) {
         toast.success("Notifica creata con successo!", {
           duration: 2000,
         });
-        // Reload notifications to update the counter
-        reloadNotifications();
       } else {
         toast.error("Errore nella creazione della notifica", {
           duration: 2000,
@@ -70,24 +69,20 @@ const Events = () => {
         duration: 2000,
       });
     }
-  }, [addNotification, reloadNotifications]);
+  };
 
-  const handleShowNotifications = useCallback(() => {
-    setNotificationsOpen(true);
-  }, []);
-
-  const handleResetClues = useCallback(() => {
+  const handleResetClues = () => {
     resetUnlockedClues();
     toast.success("Tutti gli indizi sono stati azzerati", {
       duration: 3000,
     });
-  }, [resetUnlockedClues]);
+  };
 
   return (
     <div className="pb-20 min-h-screen bg-black w-full">
       <UnifiedHeader 
         profileImage={profileImage} 
-        onClickMail={handleShowNotifications}
+        onClickMail={openNotificationsDrawer}
       />
       
       <div className="h-[72px] w-full" />
@@ -113,21 +108,15 @@ const Events = () => {
             onClick={generateRandomNotification} 
             className="w-full flex items-center gap-2 bg-projectx-blue hover:bg-projectx-deep-blue"
           >
-            <Bell className="w-4 h-4" /> Genera Notifica Casuale
+            Genera Notifica Casuale
           </Button>
           
           <Button 
-            onClick={handleShowNotifications} 
+            onClick={openNotificationsDrawer} 
             className="w-full flex items-center gap-2" 
             variant="outline"
           >
-            <Bell className="w-4 h-4" /> 
             Visualizza Notifiche 
-            {unreadCount > 0 && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-projectx-pink rounded-full text-white">
-                {unreadCount}
-              </span>
-            )}
           </Button>
           
           <Button 
@@ -135,7 +124,7 @@ const Events = () => {
             variant="destructive"
             className="w-full flex items-center gap-2"
           >
-            <Bell className="w-4 h-4" /> Azzera Tutti gli Indizi
+            Azzera Tutti gli Indizi
           </Button>
         </div>
 
@@ -155,8 +144,8 @@ const Events = () => {
       </div>
       
       <NotificationsDrawer 
-        open={notificationsOpen} 
-        onOpenChange={setNotificationsOpen} 
+        open={notificationsDrawerOpen} 
+        onOpenChange={closeNotificationsDrawer} 
       />
     </div>
   );

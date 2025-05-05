@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProfileLayout from "@/components/layout/ProfileLayout";
@@ -8,11 +9,13 @@ import ProfileTabs from "@/components/profile/ProfileTabs";
 import ReferralCodeSection from "@/components/profile/ReferralCodeSection";
 import { useProfileData } from "@/hooks/useProfileData";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNotificationManager } from "@/hooks/useNotificationManager";
 
 const Profile = () => {
   const navigate = useNavigate();
   const { profileData, actions } = useProfileData();
   const isMobile = useIsMobile();
+  const { notificationsDrawerOpen, closeNotificationsDrawer } = useNotificationManager();
   
   const navigateToPersonalInfo = () => {
     navigate('/personal-info');
@@ -89,8 +92,8 @@ const Profile = () => {
       </div>
       
       <NotificationsDrawer 
-        open={profileData.showNotifications}
-        onOpenChange={actions.setShowNotifications}
+        open={notificationsDrawerOpen}
+        onOpenChange={closeNotificationsDrawer}
       />
     </ProfileLayout>
   );

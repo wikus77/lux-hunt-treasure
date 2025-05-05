@@ -1,49 +1,26 @@
-
 import { useState, useEffect } from "react";
-import { useNotifications } from "@/hooks/useNotifications";
-import { useProfileImage } from "@/hooks/useProfileImage";
 import { motion } from "framer-motion";
 import BriefProfileModal from "@/components/profile/BriefProfileModal";
 import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
 import HomeHeader from "@/components/home/HomeHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useProfileImage } from "@/hooks/useProfileImage";
+import { useNotificationManager } from "@/hooks/useNotificationManager";
+import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 
 const Home = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showNotificationsBanner, setShowNotificationsBanner] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { profileImage } = useProfileImage();
   const isMobile = useIsMobile();
-
-  // Use try/catch to handle any potential errors in the notifications hook
-  let notifications = [];
-  let unreadCount = 0;
-  let markAllAsRead = () => {};
-  let reloadNotifications = () => {};
-
-  try {
-    const notificationsData = useNotifications();
-    notifications = notificationsData.notifications;
-    unreadCount = notificationsData.unreadCount;
-    markAllAsRead = notificationsData.markAllAsRead;
-    reloadNotifications = notificationsData.reloadNotifications;
-  } catch (e) {
-    console.error("Error loading notifications:", e);
-    // Continue with empty notifications rather than crashing
-  }
-
-  const handleShowNotifications = () => {
-    try {
-      reloadNotifications();
-      setShowNotificationsBanner(true);
-    } catch (e) {
-      console.error("Error showing notifications:", e);
-    }
-  };
-
-  const handleCloseNotifications = () => {
-    setShowNotificationsBanner(false);
-  };
+  const {
+    notifications,
+    unreadCount,
+    markAllAsRead,
+    notificationsBannerOpen,
+    openNotificationsBanner,
+    closeNotificationsBanner
+  } = useNotificationManager();
 
   // Background particles for atmosphere
   const particles = Array.from({ length: isMobile ? 8 : 15 }, (_, i) => ({
@@ -125,11 +102,30 @@ const Home = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
+        {/* Notifications Banner */}
+        {notificationsBannerOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-x-0 top-0 z-[60] px-2 md:px-4 mt-16"
+          >
+            <NotificationsBanner
+              notifications={notifications}
+              open={notificationsBannerOpen}
+              unreadCount={unreadCount}
+              onClose={closeNotificationsBanner}
+              onMarkAllAsRead={markAllAsRead}
+            />
+          </motion.div>
+        )}
+        
         {/* Custom header implementation */}
         <HomeHeader 
           profileImage={profileImage}
           unreadCount={unreadCount}
-          onShowNotifications={handleShowNotifications}
+          onShowNotifications={openNotificationsBanner}
         />
         
         {/* Increased top padding to accommodate header + countdown */}
