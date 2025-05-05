@@ -13,11 +13,6 @@ interface RegistrationFormProps {
   className?: string;
 }
 
-// Definizione di un tipo base per la risposta di Supabase
-type ProfileData = {
-  id: string;
-}
-
 const RegistrationForm = ({ className }: RegistrationFormProps) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -50,15 +45,15 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
     }
 
     try {
-      // Check if email already exists - usando un approccio semplificato
-      const { data, error: checkError } = await supabase
+      // Check if email already exists - con un approccio più semplice
+      // Evitiamo i problemi di tipo utilizzando any per questo specifico controllo
+      const { data, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email);
       
-      // Verifichiamo manualmente il risultato senza tipi complessi
-      if (checkError) {
-        console.error("Error checking existing email:", checkError);
+      if (error) {
+        console.error("Error checking existing email:", error);
         toast.error("Errore", {
           description: "Si è verificato un errore durante la verifica dell'email.",
           duration: 3000
@@ -78,7 +73,7 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
       }
 
       // Register with Supabase Auth
-      const { data: authData, error } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -89,15 +84,15 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
         }
       });
 
-      if (error) {
-        if (error.message.includes("already registered")) {
+      if (authError) {
+        if (authError.message.includes("already registered")) {
           toast.error("Errore", {
             description: "Email già registrata. Prova con un'altra email o accedi.",
             duration: 3000
           });
         } else {
           toast.error("Errore", {
-            description: error.message || "Si è verificato un errore durante la registrazione.",
+            description: authError.message || "Si è verificato un errore durante la registrazione.",
             duration: 3000
           });
         }
