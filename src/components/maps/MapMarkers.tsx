@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useCallback } from "react";
 import { GoogleMap, Marker, InfoWindow, Circle } from "@react-google-maps/api";
 import MapUserMarkers from "./MapUserMarkers";
@@ -52,6 +51,8 @@ type MapMarkersProps = {
     streetViewControl?: boolean;
     zoomControlOptions?: google.maps.ZoomControlOptions;
     gestureHandling?: "cooperative" | "greedy" | "auto" | "none";
+    zoomControl?: boolean;
+    disableDefaultUI?: boolean;
   };
 };
 
@@ -255,4 +256,3 @@ export const MapMarkers = ({
     </div>
   );
 };
-
