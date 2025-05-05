@@ -1,6 +1,11 @@
 
 import React from 'react';
-import { useRegistration, FormData } from '@/hooks/use-registration';
+import { useRegistration } from '@/hooks/use-registration';
+import { Mail, User, Lock } from 'lucide-react';
+import FormField from './form-field';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 
 export const RegistrationForm: React.FC = () => {
   const {
@@ -14,67 +19,71 @@ export const RegistrationForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Nome */}
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nome</label>
-        <input
-          type="text"
-          id="name"
-          value={formData.name}
-          onChange={handleChange}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-        />
-        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-      </div>
+      <FormField
+        id="name"
+        type="text"
+        label="Nome"
+        placeholder="Inserisci il tuo nome"
+        value={formData.name}
+        onChange={handleChange}
+        icon={<User className="h-4 w-4" />}
+        error={errors.name}
+      />
 
       {/* Email */}
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-        <input
-          type="email"
-          id="email"
-          value={formData.email}
-          onChange={handleChange}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-        />
-        {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-      </div>
+      <FormField
+        id="email"
+        type="email"
+        label="Email"
+        placeholder="Inserisci la tua email"
+        value={formData.email}
+        onChange={handleChange}
+        icon={<Mail className="h-4 w-4" />}
+        error={errors.email}
+      />
 
       {/* Password */}
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-        <input
-          type="password"
-          id="password"
-          value={formData.password}
-          onChange={handleChange}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-        />
-        {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
-      </div>
+      <FormField
+        id="password"
+        type="password"
+        label="Password"
+        placeholder="Crea una password sicura"
+        value={formData.password}
+        onChange={handleChange}
+        icon={<Lock className="h-4 w-4" />}
+        error={errors.password}
+      />
 
       {/* Conferma Password */}
-      <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Conferma Password</label>
-        <input
-          type="password"
-          id="confirmPassword"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-        />
-        {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
-      </div>
+      <FormField
+        id="confirmPassword"
+        type="password"
+        label="Conferma Password"
+        placeholder="Ripeti la tua password"
+        value={formData.confirmPassword}
+        onChange={handleChange}
+        icon={<Lock className="h-4 w-4" />}
+        error={errors.confirmPassword}
+      />
 
       {/* Bottone invio */}
-      <div>
-        <button
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
+          className="w-full bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-glow"
         >
-          {isSubmitting ? 'Registrazione in corso...' : 'Registrati'}
-        </button>
-      </div>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Registrazione in corso...
+            </>
+          ) : 'Registrati'}
+        </Button>
+      </motion.div>
     </form>
   );
 };

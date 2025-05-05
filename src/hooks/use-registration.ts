@@ -3,7 +3,7 @@ import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { validateRegistration, ValidationResult } from '@/utils/form-validation';
+import { validateRegistration } from '@/utils/form-validation';
 
 // Tipo per i dati del form
 export type FormData = {
@@ -13,25 +13,6 @@ export type FormData = {
   confirmPassword: string;
 };
 
-// Funzione separata per evitare inferenza profonda con Supabase
-async function checkIfEmailExists(email: string): Promise<boolean> {
-  // Use a completely separate approach without builder chains
-  // This avoids deep type inference issues
-  const response = await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/rest/v1/profiles?email=eq.${encodeURIComponent(email)}&select=id`, {
-    headers: {
-      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
-    }
-  });
-  
-  if (!response.ok) {
-    console.error("Errore nel controllo email:", response.statusText);
-    throw new Error(`Error checking email: ${response.statusText}`);
-  }
-  
-  const data = await response.json();
-  return Array.isArray(data) && data.length > 0;
-}
-
 export const useRegistration = () => {
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -40,10 +21,8 @@ export const useRegistration = () => {
     confirmPassword: ''
   });
 
-  // ✅ Tipizzazione semplice per errors: evita inferenza profonda
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-  const [isSubmitting, setIsSubmitting] = useState(false as boolean);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,7 +40,8 @@ export const useRegistration = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const validation: ValidationResult = validateRegistration(formData);
+    // Validazione client-side
+    const validation = validateRegistration(formData);
     if (!validation.isValid) {
       setErrors(validation.errors);
       return;
@@ -71,9 +51,19 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      const emailEsiste = await checkIfEmailExists(email);
+      // Check if email already exists
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', email)
+        .limit(1);
 
-      if (emailEsiste) {
+      if (checkError) {
+        console.error("Error checking email:", checkError);
+        throw new Error("Si è verificato un errore nel controllo dell'email.");
+      }
+
+      if (existingUsers && existingUsers.length > 0) {
         toast.error("Errore", {
           description: "Email già registrata. Prova un'altra.",
           duration: 3000
@@ -82,6 +72,7 @@ export const useRegistration = () => {
         return;
       }
 
+      // Register user
       const result = await supabase.auth.signUp({
         email,
         password,
@@ -115,7 +106,7 @@ export const useRegistration = () => {
     } catch (error: any) {
       console.error("Errore di registrazione:", error);
       toast.error("Errore", {
-        description: "Si è verificato un errore. Riprova più tardi.",
+        description: error.message || "Si è verificato un errore. Riprova più tardi.",
         duration: 3000
       });
     } finally {

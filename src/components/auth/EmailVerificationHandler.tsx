@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 type VerificationStatus = 'idle' | 'verifying' | 'success' | 'error';
 
 /**
- * Component that handles email verification from redirects
+ * Hook that handles email verification from redirects
  */
 export const useEmailVerificationHandler = () => {
   const [searchParams] = useSearchParams();
@@ -19,7 +21,7 @@ export const useEmailVerificationHandler = () => {
     handleEmailVerification();
   }, []);
 
-  const handleEmailVerification = async (): Promise<boolean> => {
+  const handleEmailVerification = async () => {
     // Check if the URL contains a verification token from email
     const access_token = searchParams.get('access_token');
     const refresh_token = searchParams.get('refresh_token');
@@ -67,6 +69,7 @@ export const EmailVerificationPage: React.FC = () => {
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-black">
         <div className="bg-black/50 border border-blue-500/30 rounded-lg p-6 max-w-md mx-auto text-center">
           <h2 className="text-xl font-bold mb-4 text-white">Verifica in corso</h2>
+          <Loader2 className="animate-spin h-8 w-8 text-cyan-400 mx-auto mb-4" />
           <p className="mb-6 text-white/80">
             Stiamo verificando la tua email, attendere prego...
           </p>
@@ -92,6 +95,3 @@ export const EmailVerificationPage: React.FC = () => {
   // This will only show briefly before redirect happens
   return null;
 };
-
-// Required to make the Button component available
-import { Button } from "@/components/ui/button";
