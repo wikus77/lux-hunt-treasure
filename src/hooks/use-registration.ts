@@ -5,6 +5,11 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
 
+// Define interface for profile query result to avoid deep type inference
+interface ProfileData {
+  id: string;
+}
+
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
     name: '',
@@ -43,7 +48,7 @@ export const useRegistration = () => {
 
     try {
       // ✅ Verifica se email già esiste
-      const { data: profileData, error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email);
@@ -58,6 +63,9 @@ export const useRegistration = () => {
         return;
       }
 
+      // Use type assertion to avoid complex typing issues
+      const profileData = data as ProfileData[] | null;
+
       if (profileData && profileData.length > 0) {
         toast.error("Errore", {
           description: "Email già registrata. Prova un'altra.",
@@ -67,7 +75,7 @@ export const useRegistration = () => {
         return;
       }
 
-      // ✅ Registrazione utente con Supabase Auth (senza <tipo>)
+      // ✅ Registrazione utente con Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
