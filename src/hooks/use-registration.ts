@@ -5,27 +5,34 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, ValidationResult } from '@/utils/form-validation';
 
-// ✅ Funzione separata con cast "as any" per evitare errori TypeScript
+// Define explicit interface for profile data
+interface ProfileData {
+  id: string;
+}
+
+// Simplified function with explicit typing to avoid deep type instantiation
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  const untypedClient = supabase as any;
-  const response = await untypedClient
-    .from('profiles')
-    .select('id')
-    .eq('email', email);
-
-  const data = response.data;
-  const error = response.error;
-
-  if (error) {
-    console.error("Errore nel controllo email:", error);
+  try {
+    // Use explicit type annotation for the response
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email);
+    
+    if (error) {
+      console.error("Error checking email:", error);
+      throw error;
+    }
+    
+    // Return true if any data was found (email exists)
+    return Array.isArray(data) && data.length > 0;
+  } catch (error) {
+    console.error("Error in checkIfEmailExists:", error);
     throw error;
   }
-
-  return data && data.length > 0;
 }
 
 export const useRegistration = () => {
-  // ✅ Nessun tipo esplicito → inferenza sicura
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -33,8 +40,8 @@ export const useRegistration = () => {
     confirmPassword: ''
   });
 
-  const [errors, setErrors] = useState({}); // ✅ niente Record<string, string>
-  const [isSubmitting, setIsSubmitting] = useState(false as boolean); // ✅ evita TS2589
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false); 
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
