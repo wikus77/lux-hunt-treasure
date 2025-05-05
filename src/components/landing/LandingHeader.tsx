@@ -58,9 +58,10 @@ const LandingHeader = () => {
         </div>
         
         <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-          Every month, a new luxury car disappears. Only the most intuitive, 
-          strategic, and fastest will interpret the clues and discover where 
-          the prize is hidden.
+          Un premio attende chi sa vedere oltre.
+          Gli indizi non sono nascosti: sono camuffati.
+          Serve logica, freddezza e visione.
+          La sfida è iniziata. Questa è M1SSION.
         </p>
         
         <p className="text-yellow-300 text-sm md:text-base font-orbitron tracking-widest mb-10">
