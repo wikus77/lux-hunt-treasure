@@ -13,16 +13,19 @@ export type FormData = {
   confirmPassword: string;
 };
 
+// Tipo per gli errori del form
+export type FormErrors = {
+  [key in keyof FormData]?: string;
+};
+
 // Funzione separata per evitare inferenza profonda con Supabase
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  const untypedClient = supabase as any;
-  const response = await untypedClient
+  // Eseguiamo la query con tipizzazione più semplice
+  const { data, error } = await supabase
     .from('profiles')
     .select('id')
-    .eq('email', email);
-
-  const data = response.data;
-  const error = response.error;
+    .eq('email', email)
+    .limit(1) as { data: any[]; error: any };
 
   if (error) {
     console.error("Errore nel controllo email:", error);
@@ -40,10 +43,8 @@ export const useRegistration = () => {
     confirmPassword: ''
   });
 
-  // Rimozione della tipizzazione esplicita
-  const [errors, setErrors] = useState({}); // Nessun tipo esplicito qui
-
-  const [isSubmitting, setIsSubmitting] = useState(false as boolean);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +54,7 @@ export const useRegistration = () => {
       [id]: value
     }));
 
-    if (errors[id]) {
+    if (errors[id as keyof FormData]) {
       setErrors(prev => ({ ...prev, [id]: '' }));
     }
   };
