@@ -5,6 +5,11 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
 
+// Definiamo un tipo esplicito per la risposta della query
+interface ProfileRecord {
+  id: string;
+}
+
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
     name: '',
@@ -43,14 +48,14 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // Controllo se l'email esiste già
+      // Controllo se l'email esiste già, evitando inferenza complessa di tipi
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email);
       
-      // Uso un tipo più semplice per evitare inferenza profonda
-      const profileData = data as unknown as { id: string }[] | null;
+      // Utilizzo di tipo semplice e senza inferenza complessa
+      const profileData = data as ProfileRecord[] | null;
       
       if (error) {
         console.error("Error checking existing email:", error);
