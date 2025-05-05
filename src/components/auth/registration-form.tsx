@@ -13,17 +13,42 @@ interface RegistrationFormProps {
   className?: string;
 }
 
+// Define explicit types to prevent deep type inference
+type RegistrationFormData = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
+
+// Simple type for profile check results
+type ProfileCheckResult = {
+  id: string;
+}[];
+
 const RegistrationForm = ({ className }: RegistrationFormProps) => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [formData, setFormData] = useState<RegistrationFormData>({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: ""
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
 
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    const { name, email, password, confirmPassword } = formData;
 
     // Basic validation
     if (!name || !email || !password || !confirmPassword) {
@@ -45,11 +70,14 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
     }
 
     try {
-      // Check if email already exists - using a simplified approach to avoid type issues
+      // Check if email already exists with explicit typing
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email);
+      
+      // Explicitly handle the query result without complex type inference
+      const profilesData = data as ProfileCheckResult;
       
       if (error) {
         console.error("Error checking existing email:", error);
@@ -62,7 +90,7 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
       }
       
       // Check if any results were returned (meaning email exists)
-      if (data && data.length > 0) {
+      if (profilesData && profilesData.length > 0) {
         toast.error("Errore", {
           description: "Email già registrata. Prova con un'altra email o accedi.",
           duration: 3000
@@ -135,8 +163,8 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
             id="name"
             type="text"
             placeholder="Il tuo nome"
-            value={name}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+            value={formData.name}
+            onChange={handleChange}
             className="bg-black/50 border-white/10"
             icon={<User size={16} />}
           />
@@ -149,8 +177,8 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
             id="email"
             type="email"
             placeholder="La tua email"
-            value={email}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+            value={formData.email}
+            onChange={handleChange}
             className="bg-black/50 border-white/10"
             icon={<Mail size={16} />}
           />
@@ -163,8 +191,8 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
             id="password"
             type="password"
             placeholder="Crea una password"
-            value={password}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+            value={formData.password}
+            onChange={handleChange}
             className="bg-black/50 border-white/10"
             icon={<Lock size={16} />}
           />
@@ -177,8 +205,8 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
             id="confirmPassword"
             type="password"
             placeholder="Conferma la password"
-            value={confirmPassword}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
+            value={formData.confirmPassword}
+            onChange={handleChange}
             className="bg-black/50 border-white/10"
             icon={<Check size={16} />}
           />
