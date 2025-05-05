@@ -3,15 +3,15 @@ import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { validateLogin, LoginFormData } from '@/utils/login-validation';
 
 export const useLogin = () => {
-  const [formData, setFormData] = useState<LoginFormData>({
+  const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
+
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false as boolean);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,76 +20,75 @@ export const useLogin = () => {
       ...prev,
       [id]: value
     }));
-    
-    // Pulisco gli errori quando l'utente digita
-    if (errors[id]) {
+
+    if (errors[id as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [id]: '' }));
     }
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
-    // Validazione form
-    const validation = validateLogin(formData);
-    if (!validation.isValid) {
-      setErrors(validation.errors);
+
+    const { email, password } = formData;
+
+    const newErrors: typeof errors = {};
+    if (!email) newErrors.email = 'Inserisci un’email valida';
+    if (!password) newErrors.password = 'Inserisci una password';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
-    
-    setIsLoading(true);
+
+    setIsSubmitting(true);
 
     try {
-      // Autenticazione reale con Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password
+        email,
+        password
       });
-      
-      if (error) throw error;
-      
-      // Verifica se l'email è stata verificata
-      if (data.user && !data.user.email_confirmed_at) {
-        toast.error("Email non verificata", {
-          description: "Per favore, verifica la tua email prima di accedere. Controlla la tua casella di posta."
+
+      if (error) {
+        toast.error('Errore', {
+          description: error.message || 'Email o password non corretti.',
+          duration: 3000
         });
-        setIsLoading(false);
+        setIsSubmitting(false);
         return;
       }
-      
-      toast.success("Login completato!", {
-        description: "Accesso effettuato con successo."
-      });
-      
-      // Reindirizzamento al componente Auth che gestirà ulteriori reindirizzamenti
-      navigate("/auth");
-      
-    } catch (error: any) {
-      console.error("Login error:", error);
-      
-      // Gestione di casi di errore specifici
-      if (error.message.includes("Email not confirmed")) {
-        toast.error("Email non verificata", {
-          description: "Per favore, verifica la tua email prima di accedere."
+
+      if (!data.user?.email_confirmed_at) {
+        toast.error('Email non verificata', {
+          description: 'Controlla la tua casella email e conferma l’indirizzo.',
+          duration: 3000
         });
-      } else if (error.message.includes("Invalid login credentials")) {
-        toast.error("Credenziali non valide", {
-          description: "Email o password errati. Riprova."
-        });
-      } else {
-        toast.error("Errore di accesso", {
-          description: error.message || "Impossibile effettuare il login. Verifica le tue credenziali."
-        });
+        setIsSubmitting(false);
+        return;
       }
+
+      toast.success('Login riuscito!', {
+        description: 'Benvenuto nella tua M1SSION.'
+      });
+
+      setTimeout(() => {
+        navigate('/home'); // oppure la tua dashboard iniziale
+      }, 1500);
+
+    } catch (err: any) {
+      console.error('Errore login:', err);
+      toast.error('Errore', {
+        description: 'Errore imprevisto durante il login.',
+        duration: 3000
+      });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return {
     formData,
     errors,
-    isLoading,
+    isSubmitting,
     handleChange,
     handleSubmit
   };
