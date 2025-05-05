@@ -162,7 +162,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.5 }}
         >
-          <span className="text-cyan-400 font-mono text-[10px] mr-1">DOSSIER:</span>
+          <span className="text-cyan-400 font-mono text-[10px] mr-1">DOSSIER AGENTE:</span>
           <motion.span 
             className="font-mono text-white bg-cyan-900/30 px-1.5 py-0.5 rounded text-[10px]"
             initial={{ width: 0, opacity: 0 }}
