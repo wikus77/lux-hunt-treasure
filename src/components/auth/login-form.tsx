@@ -2,7 +2,7 @@
 import React from 'react';
 import { useLogin } from '@/hooks/use-login';
 
-export const LoginForm: React.FC = () => {
+const LoginForm: React.FC = () => {
   const {
     formData,
     errors,
@@ -52,3 +52,5 @@ export const LoginForm: React.FC = () => {
     </form>
   );
 };
+
+export default LoginForm;
