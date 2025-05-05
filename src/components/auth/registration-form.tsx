@@ -13,7 +13,8 @@ interface RegistrationFormProps {
   className?: string;
 }
 
-interface ProfileCheck {
+// Definizione di un tipo base per la risposta di Supabase
+type ProfileData = {
   id: string;
 }
 
@@ -49,12 +50,13 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
     }
 
     try {
-      // Check if email already exists - using explicit typing to avoid inference issues
+      // Check if email already exists - usando un approccio semplificato
       const { data, error: checkError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', email) as { data: ProfileCheck[] | null, error: Error | null };
+        .eq('email', email);
       
+      // Verifichiamo manualmente il risultato senza tipi complessi
       if (checkError) {
         console.error("Error checking existing email:", checkError);
         toast.error("Errore", {
