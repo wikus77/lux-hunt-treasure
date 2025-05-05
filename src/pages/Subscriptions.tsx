@@ -1,10 +1,15 @@
 
 import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import { Check } from "lucide-react";
+import { Check, ArrowLeft } from "lucide-react";
 import SubscriptionCard from "@/components/subscription/SubscriptionCard";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 const Subscriptions = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [selected, setSelected] = useState<string>("Base");
   const [profileImage, setProfileImage] = useState<string | null>(null);
   
@@ -65,10 +70,56 @@ const Subscriptions = () => {
         return [];
     }
   };
+  
+  const handleUpdatePlan = (plan: string) => {
+    if (plan === selected) {
+      toast({
+        title: "Piano già attivo",
+        description: `Sei già abbonato al piano ${plan}`
+      });
+      return;
+    }
+    
+    localStorage.setItem('subscription_plan', plan);
+    setSelected(plan);
+    toast({
+      title: "Piano aggiornato",
+      description: `Il tuo abbonamento è stato aggiornato a ${plan}`
+    });
+  };
+  
+  const handleCancelSubscription = () => {
+    if (selected === "Base") {
+      toast({
+        title: "Nessun abbonamento attivo",
+        description: "Hai già il piano base gratuito"
+      });
+      return;
+    }
+    
+    localStorage.setItem('subscription_plan', "Base");
+    setSelected("Base");
+    toast({
+      title: "Abbonamento cancellato",
+      description: "Il tuo abbonamento è stato cancellato con successo"
+    });
+  };
 
   return (
     <div className="min-h-screen bg-black w-full">
-      <UnifiedHeader profileImage={profileImage} />
+      <UnifiedHeader 
+        profileImage={profileImage} 
+        leftComponent={
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => navigate(-1)} 
+            className="mr-2"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        }
+      />
       <div className="h-[72px] w-full" />
       <div className="max-w-screen-xl mx-auto">
         {/* Introduction */}
@@ -90,6 +141,8 @@ const Subscriptions = () => {
               isPopular={false}
               ctaText="Piano Attuale"
               type="Base"
+              onClick={() => handleUpdatePlan("Base")}
+              isActive={selected === "Base"}
             />
             <SubscriptionCard
               title="Silver"
@@ -99,6 +152,8 @@ const Subscriptions = () => {
               isPopular={false}
               ctaText={selected === "Silver" ? "Piano Attuale" : "Passa a Silver"}
               type="Silver"
+              onClick={() => handleUpdatePlan("Silver")}
+              isActive={selected === "Silver"}
             />
             <SubscriptionCard
               title="Gold"
@@ -108,6 +163,8 @@ const Subscriptions = () => {
               isPopular={true}
               ctaText={selected === "Gold" ? "Piano Attuale" : "Passa a Gold"}
               type="Gold"
+              onClick={() => handleUpdatePlan("Gold")}
+              isActive={selected === "Gold"}
             />
             <SubscriptionCard
               title="Black"
@@ -117,8 +174,22 @@ const Subscriptions = () => {
               isPopular={false}
               ctaText={selected === "Black" ? "Piano Attuale" : "Passa a Black"}
               type="Black"
+              onClick={() => handleUpdatePlan("Black")}
+              isActive={selected === "Black"}
             />
           </div>
+          
+          {selected !== "Base" && (
+            <div className="flex justify-center mb-10">
+              <Button 
+                variant="outline"
+                onClick={handleCancelSubscription}
+                className="border-red-500 text-red-500 hover:bg-red-500/10"
+              >
+                Cancella abbonamento
+              </Button>
+            </div>
+          )}
         </section>
 
         {/* Benefits Section */}

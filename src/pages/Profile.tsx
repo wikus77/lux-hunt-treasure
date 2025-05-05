@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Clock, Award, FileText, CreditCard, Link2, Edit, Save, User } from "lucide-react";
@@ -11,8 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [bio, setBio] = useState("Appassionato di auto di lusso e collezionista. Amo la velocità e l'adrenalina!");
   const [name, setName] = useState("Mario Rossi");
@@ -110,6 +111,22 @@ const Profile = () => {
           ? {...badge, pinned: false} 
           : badge
     ));
+  };
+
+  const navigateToPersonalInfo = () => {
+    navigate('/personal-info');
+  };
+
+  const navigateToPrivacySecurity = () => {
+    navigate('/privacy-security');
+  };
+
+  const navigateToPaymentMethods = () => {
+    navigate('/payment-methods');
+  };
+
+  const navigateToSubscriptions = () => {
+    navigate('/subscriptions');
   };
 
   return (
@@ -395,6 +412,7 @@ const Profile = () => {
                     <Button
                       className="w-full mt-3 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                       size="sm"
+                      onClick={navigateToSubscriptions}
                     >
                       Gestisci Abbonamento
                     </Button>
@@ -402,7 +420,10 @@ const Profile = () => {
                   
                   {/* Account Security */}
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-2 bg-black/30 rounded-md">
+                    <div 
+                      className="flex items-center justify-between p-2 bg-black/30 rounded-md cursor-pointer hover:bg-black/40 transition-colors"
+                      onClick={navigateToPersonalInfo}
+                    >
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4 text-cyan-400" />
                         <span className="text-sm">Informazioni personali</span>
@@ -412,7 +433,10 @@ const Profile = () => {
                       </Button>
                     </div>
                     
-                    <div className="flex items-center justify-between p-2 bg-black/30 rounded-md">
+                    <div 
+                      className="flex items-center justify-between p-2 bg-black/30 rounded-md cursor-pointer hover:bg-black/40 transition-colors"
+                      onClick={navigateToPrivacySecurity}
+                    >
                       <div className="flex items-center gap-2">
                         <Shield className="h-4 w-4 text-cyan-400" />
                         <span className="text-sm">Password e sicurezza</span>
@@ -422,7 +446,10 @@ const Profile = () => {
                       </Button>
                     </div>
                     
-                    <div className="flex items-center justify-between p-2 bg-black/30 rounded-md">
+                    <div 
+                      className="flex items-center justify-between p-2 bg-black/30 rounded-md cursor-pointer hover:bg-black/40 transition-colors"
+                      onClick={navigateToPaymentMethods}
+                    >
                       <div className="flex items-center gap-2">
                         <CreditCard className="h-4 w-4 text-cyan-400" />
                         <span className="text-sm">Metodi di pagamento</span>
@@ -445,7 +472,16 @@ const Profile = () => {
                         readOnly 
                         className="bg-black/40 text-sm" 
                       />
-                      <Button className="ml-2 bg-cyan-800 hover:bg-cyan-700">
+                      <Button 
+                        className="ml-2 bg-cyan-800 hover:bg-cyan-700"
+                        onClick={() => {
+                          navigator.clipboard.writeText("AGENT-MR2025");
+                          toast({
+                            title: "Codice copiato",
+                            description: "Il codice referral è stato copiato negli appunti."
+                          });
+                        }}
+                      >
                         Copia
                       </Button>
                     </div>

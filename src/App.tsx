@@ -27,6 +27,8 @@ const PaymentSilver = lazy(() => import('./pages/PaymentSilver'));
 const PaymentGold = lazy(() => import('./pages/PaymentGold'));
 const PaymentBlack = lazy(() => import('./pages/PaymentBlack'));
 const PaymentMethods = lazy(() => import('./pages/PaymentMethods'));
+const PersonalInfo = lazy(() => import('./pages/PersonalInfo'));
+const PrivacySecurity = lazy(() => import('./pages/PrivacySecurity'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks'));
 const Contacts = lazy(() => import('./pages/Contacts'));
@@ -95,6 +97,8 @@ function App() {
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/subscriptions" element={<Subscriptions />} />
+                  <Route path="/personal-info" element={<PersonalInfo />} />
+                  <Route path="/privacy-security" element={<PrivacySecurity />} />
                   <Route path="/payment-silver" element={<PaymentSilver />} />
                   <Route path="/payment-gold" element={<PaymentGold />} />
                   <Route path="/payment-black" element={<PaymentBlack />} />
