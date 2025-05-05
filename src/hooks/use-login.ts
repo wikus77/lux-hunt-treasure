@@ -3,7 +3,7 @@ import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { validateLogin, LoginFormData, ValidationResult } from '@/utils/login-validation';
+import { validateLogin, LoginFormData } from '@/utils/login-validation';
 
 export const useLogin = () => {
   const [formData, setFormData] = useState<LoginFormData>({
@@ -31,7 +31,7 @@ export const useLogin = () => {
     e.preventDefault();
     
     // Validazione form
-    const validation: ValidationResult = validateLogin(formData);
+    const validation = validateLogin(formData);
     if (!validation.isValid) {
       setErrors(validation.errors);
       return;

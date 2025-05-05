@@ -1,13 +1,14 @@
+
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
+import { validateRegistration, RegistrationFormData } from '@/utils/form-validation';
 
-// ✅ Tipo sicuro per la query
-type Profile = {
+// Define explicit type for profile data
+interface ProfileData {
   id: string;
-};
+}
 
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
@@ -36,7 +37,7 @@ export const useRegistration = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const validation: ValidationResult = validateRegistration(formData);
+    const validation = validateRegistration(formData);
     if (!validation.isValid) {
       setErrors(validation.errors);
       return;
@@ -46,11 +47,14 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // ✅ Verifica email esistente usando tipo esplicito
-      const { data: profileData, error } = await supabase
-        .from<Profile>('profiles')
+      // Use explicitly typed query to avoid deep instantiation
+      const { data, error } = await supabase
+        .from('profiles')
         .select('id')
         .eq('email', email);
+      
+      // Safely check if profiles exist
+      const profileData = data as ProfileData[] | null;
 
       if (error) {
         console.error("Error checking existing email:", error);
