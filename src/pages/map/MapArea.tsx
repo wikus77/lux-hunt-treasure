@@ -82,7 +82,6 @@ const MapArea: React.FC<MapAreaProps> = ({
             streetViewControl: !isMobile,
             zoomControlOptions: isMobile ? { position: google.maps.ControlPosition.RIGHT_BOTTOM } : undefined,
             gestureHandling: isMobile ? "greedy" : "auto",
-            disableDefaultUI: isMobile ? true : false,
             zoomControl: true
           }}
         />
