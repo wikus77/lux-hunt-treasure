@@ -3,16 +3,13 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import M1ssionText from "@/components/logo/M1ssionText";
-import AgentCodeDisplay from "@/components/layout/header/AgentCodeDisplay";
 import HeaderCountdown from "@/components/layout/header/HeaderCountdown";
 
 interface HeaderLayoutProps {
   children?: React.ReactNode;
   rightContent?: React.ReactNode;
   leftContent?: React.ReactNode;
-  showAgentCode?: boolean;
   showCountdown?: boolean;
-  agentCode?: string;
   className?: string;
 }
 
@@ -20,9 +17,7 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
   children,
   rightContent,
   leftContent,
-  showAgentCode = true,
   showCountdown = true,
-  agentCode = "AG-X480",
   className = "",
 }) => {
   const isMobile = useIsMobile();
@@ -34,9 +29,6 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
           <div className="flex items-center">
             {leftContent}
             {!leftContent && <M1ssionText />}
-            
-            {/* Agent dossier code - desktop only */}
-            {showAgentCode && !isMobile && <AgentCodeDisplay agentCode={agentCode} />}
           </div>
 
           {/* Right side content */}
@@ -46,9 +38,6 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
             </div>
           )}
         </div>
-
-        {/* Mobile agent code - only visible on small screens */}
-        {showAgentCode && isMobile && <AgentCodeDisplay agentCode={agentCode} isMobile={true} />}
         
         {/* Countdown Timer */}
         {showCountdown && <HeaderCountdown isMobile={isMobile} />}

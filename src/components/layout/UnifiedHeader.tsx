@@ -1,9 +1,8 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import M1ssionText from "@/components/logo/M1ssionText";
 import UserMenu from "./header/UserMenu";
-import AgentCodeDisplay from "./header/AgentCodeDisplay";
 import HeaderCountdown from "./header/HeaderCountdown";
 import MobileMenuButton from "./header/MobileMenuButton";
 import MobileMenu from "./header/MobileMenu";
@@ -27,14 +26,6 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [agentCode, setAgentCode] = useState("AG-X480");
-
-  useEffect(() => {
-    const savedAgentCode = localStorage.getItem('agentCode');
-    if (savedAgentCode) {
-      setAgentCode(savedAgentCode);
-    }
-  }, []);
 
   const handleSignOut = () => {
     localStorage.removeItem('isLoggedIn');
@@ -51,9 +42,6 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             <M1ssionText />
           </div>
 
-          {/* Agent dossier code with typewriter effect - desktop only */}
-          <AgentCodeDisplay agentCode={agentCode} />
-
           <div className="flex items-center">
             <div className="flex items-center space-x-2 md:space-x-3">
               {/* User dropdown */}
@@ -67,9 +55,6 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             </div>
           </div>
         </div>
-
-        {/* Mobile agent code - only visible on small screens */}
-        <AgentCodeDisplay agentCode={agentCode} isMobile={true} />
 
         {/* Countdown Timer - Moved to standalone component with mobile-specific rendering */}
         <HeaderCountdown isMobile={true} />
