@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { motion } from "framer-motion";
-import { SmoothScroll } from "@/components/ui/smooth-scroll";
 import BriefProfileModal from "@/components/profile/BriefProfileModal";
 
 // Import new components
@@ -81,7 +80,7 @@ const Home = () => {
   }
 
   return (
-    <SmoothScroll options={{ lerp: 0.07, smartphone: { smooth: false } }}>
+    <div className="relative">
       {/* Background particles */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         {particles.map(particle => (
@@ -155,7 +154,7 @@ const Home = () => {
         onClose={() => setShowProfileModal(false)}
         profileImage={profileImage}
       />
-    </SmoothScroll>
+    </div>
   );
 };
 

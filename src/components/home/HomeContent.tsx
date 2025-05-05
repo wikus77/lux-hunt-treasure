@@ -13,7 +13,6 @@ import InviteMissionText from "./InviteMissionText";
 import CurrentEventSection from "./CurrentEventSection";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 import { ParallaxImage } from "@/components/ui/parallax-image";
-import { AnimatedSection } from "@/components/ui/animated-section";
 
 export default function HomeContent() {
   console.log("[HomeContent] COMPONENT MOUNTED!");
@@ -71,34 +70,33 @@ export default function HomeContent() {
           initial="hidden"
           animate="visible"
           variants={containerVariants}
-          data-scroll-section
         >
           {/* Countdown Timer Section */}
-          <AnimatedSection className="flex flex-col items-center justify-center pt-2" delay={0.1}>
+          <div className="flex flex-col items-center justify-center pt-2">
             <BigCountdownTimer />
-          </AnimatedSection>
+          </div>
           
           {/* Intro Text Section */}
-          <AnimatedSection className="flex flex-col items-center justify-center fade-in mb-2 mt-0" delay={0.3}>
+          <div className="flex flex-col items-center justify-center fade-in mb-2 mt-0">
             <AnimatedIntroText />
-          </AnimatedSection>
+          </div>
           
           {/* Invite Mission Text with Parallax */}
-          <AnimatedSection className="relative mb-6" delay={0.5}>
-            <div className="absolute inset-0 -z-10 opacity-20 overflow-hidden rounded-xl" data-scroll data-scroll-speed="-0.2">
+          <div className="relative mb-6">
+            <div className="absolute inset-0 -z-10 opacity-20 overflow-hidden rounded-xl">
               <ParallaxImage 
                 src="/lovable-uploads/ee63e6a9-208d-43f5-8bad-4c94f9c066cd.png"
                 alt="Background texture"
                 className="w-full h-full overflow-hidden rounded-xl"
                 imageClassName="w-full h-full object-cover opacity-30"
-                speed={0.3}
+                speed={0}
               />
             </div>
             <InviteMissionText />
-          </AnimatedSection>
+          </div>
           
           {/* Action Buttons - with Magnetic effect */}
-          <AnimatedSection className="flex flex-row items-center justify-center gap-4 px-2 mt-2" delay={0.7}>
+          <div className="flex flex-row items-center justify-center gap-4 px-2 mt-2">
             <MagneticButton
               className="neon-border bg-gradient-to-r from-yellow-400 to-pink-500 text-black shadow-lg hover:scale-105 py-2 px-4 rounded-full"
               onClick={() => window.location.href = "/leaderboard"}
@@ -115,22 +113,20 @@ export default function HomeContent() {
             >
               <Music className={musicOn ? "text-green-400 animate-neon-pulse w-6 h-6" : "text-yellow-300 w-6 h-6"} />
             </MagneticButton>
-          </AnimatedSection>
+          </div>
           
           {/* Current Event Section with reveal animation */}
-          <div data-scroll data-scroll-speed="0.1">
+          <div>
             <CurrentEventSection />
           </div>
           
           {/* Future Missions with staggered fade-in */}
-          <AnimatedSection delay={0.5}>
-            <div className="relative" data-scroll data-scroll-speed="0.15">
-              <FutureMissionsCarousel />
-            </div>
-          </AnimatedSection>
+          <div className="relative">
+            <FutureMissionsCarousel />
+          </div>
           
           {/* Map Button Section */}
-          <AnimatedSection className="flex flex-col items-center py-8 mb-8" delay={0.6}>
+          <div className="flex flex-col items-center py-8 mb-8">
             <MagneticButton
               className="text-white glass-card px-6 py-3 rounded-xl flex items-center gap-2 hover:scale-105 neon-border"
               onClick={() => alert("Mappa LIVE: presto disponibile")}
@@ -146,7 +142,7 @@ export default function HomeContent() {
             >
               (Sarà visibile chi trova indizi in tempo reale)
             </motion.span>
-          </AnimatedSection>
+          </div>
         </motion.main>
       )}
     </div>
