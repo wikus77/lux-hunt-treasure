@@ -4,14 +4,24 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+type LoginFormData = {
+  email: string;
+  password: string;
+};
+
+type LoginFormErrors = {
+  email?: string;
+  password?: string;
+};
+
 export const useLogin = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: ''
   });
 
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [isSubmitting, setIsSubmitting] = useState(false as boolean);
+  const [errors, setErrors] = useState<LoginFormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,7 +31,7 @@ export const useLogin = () => {
       [id]: value
     }));
 
-    if (errors[id as keyof typeof errors]) {
+    if (errors[id as keyof LoginFormErrors]) {
       setErrors(prev => ({ ...prev, [id]: '' }));
     }
   };
@@ -31,8 +41,8 @@ export const useLogin = () => {
 
     const { email, password } = formData;
 
-    const newErrors: typeof errors = {};
-    if (!email) newErrors.email = 'Inserisci un’email valida';
+    const newErrors: LoginFormErrors = {};
+    if (!email) newErrors.email = 'Inserisci un\'email valida';
     if (!password) newErrors.password = 'Inserisci una password';
 
     if (Object.keys(newErrors).length > 0) {
@@ -59,7 +69,7 @@ export const useLogin = () => {
 
       if (!data.user?.email_confirmed_at) {
         toast.error('Email non verificata', {
-          description: 'Controlla la tua casella email e conferma l’indirizzo.',
+          description: 'Controlla la tua casella email e conferma l\'indirizzo.',
           duration: 3000
         });
         setIsSubmitting(false);

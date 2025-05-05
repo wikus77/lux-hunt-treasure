@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, ValidationResult } from '@/utils/form-validation';
 
-// ✅ Tipo per i dati del form
+// Tipo per i dati del form
 export type FormData = {
   name: string;
   email: string;
@@ -13,23 +13,30 @@ export type FormData = {
   confirmPassword: string;
 };
 
-// ✅ Funzione separata con cast "as any" per evitare inferenze profonde da Supabase
+// Tipo per gli errori del form
+type FormErrors = {
+  [key: string]: string;
+};
+
+// Funzione separata per verificare se l'email esiste già
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  const untypedClient = supabase as any;
-  const response = await untypedClient
-    .from('profiles')
-    .select('id')
-    .eq('email', email);
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
 
-  const data = response.data;
-  const error = response.error;
+    if (error) {
+      console.error("Errore nel controllo email:", error);
+      throw error;
+    }
 
-  if (error) {
+    return !!data; // Ritorna true se data esiste, false altrimenti
+  } catch (error) {
     console.error("Errore nel controllo email:", error);
     throw error;
   }
-
-  return data && data.length > 0;
 }
 
 export const useRegistration = () => {
@@ -40,9 +47,8 @@ export const useRegistration = () => {
     confirmPassword: ''
   });
 
-  // ✅ RISOLUZIONE FINALE: niente inferenza → safe cast
-  const [errors, setErrors] = useState({} as Record<string, string>);
-  const [isSubmitting, setIsSubmitting] = useState(false as boolean);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
