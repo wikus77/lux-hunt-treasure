@@ -10,6 +10,12 @@ interface ProfileData {
   id: string;
 }
 
+// Define explicit type for the query result to avoid deep instantiation
+interface ProfileQueryResult {
+  data: ProfileData[] | null;
+  error: any;
+}
+
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
     name: '',
@@ -47,11 +53,11 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // Use explicit typing for the query result to avoid deep instantiation
+      // Use explicit typing to avoid deep instantiation
       const { data: profileData, error } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', email) as { data: ProfileData[] | null, error: any };
+        .eq('email', email) as ProfileQueryResult;
 
       if (error) {
         console.error("Errore Supabase:", error);
