@@ -5,16 +5,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
 
-// Type definition for user metadata
-type UserMetaData = {
-  full_name: string;
-};
-
-// Explicit type for profile query results to avoid deep type instantiation
-type ProfileQueryResult = {
-  id: string;
-}
-
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
     name: '',
@@ -52,11 +42,11 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // Using explicit type casting to avoid deep inference
+      // ✅ Verifica se email già esiste
       const { data: profileData, error } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', email) as { data: ProfileQueryResult[] | null, error: any };
+        .eq('email', email);
 
       if (error) {
         console.error("Errore Supabase:", error);
@@ -77,8 +67,8 @@ export const useRegistration = () => {
         return;
       }
 
-      // User registration with explicit type
-      const { data: authData, error: authError } = await supabase.auth.signUp<UserMetaData>({
+      // ✅ Registrazione utente con Supabase Auth (senza <tipo>)
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -90,23 +80,16 @@ export const useRegistration = () => {
       });
 
       if (authError) {
-        if (authError.message.includes("already registered")) {
-          toast.error("Errore", {
-            description: "Email già registrata. Prova con un'altra email o accedi.",
-            duration: 3000
-          });
-        } else {
-          toast.error("Errore", {
-            description: authError.message || "Si è verificato un errore durante la registrazione.",
-            duration: 3000
-          });
-        }
+        toast.error("Errore", {
+          description: authError.message || "Errore durante la registrazione.",
+          duration: 3000
+        });
         setIsSubmitting(false);
         return;
       }
 
       toast.success("Registrazione completata!", {
-        description: "Ti abbiamo inviato una mail di verifica. Controlla la tua casella e conferma il tuo account per accedere."
+        description: "Controlla la tua casella email e conferma il tuo account."
       });
 
       setTimeout(() => {
