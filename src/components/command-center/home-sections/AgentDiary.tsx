@@ -57,7 +57,11 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center">
           <Book className="text-amber-400 mr-2" size={20} />
-          <h2 className="text-lg font-medium text-amber-400">Diario dell'Agente</h2>
+          <h2 className="text-lg font-medium flex items-center">
+            <span className="text-cyan-400">M1</span>
+            <span className="text-white">SSION</span> 
+            <span className="text-white ml-1">AGENT</span>
+          </h2>
         </div>
 
         {!showAddNote && (

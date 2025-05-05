@@ -22,7 +22,7 @@ export function CommandCenterHome() {
   // Track diary entries
   const [diaryEntries, setDiaryEntries] = useLocalStorage<any[]>("diary-entries", []);
 
-  // Track prize unlock status - Now using the correct union type
+  // Track prize unlock status
   const [prizeUnlockStatus, setPrizeUnlockStatus] = useState<"locked" | "partial" | "near" | "unlocked">("locked");
 
   // Calculate remaining days for mission
@@ -120,20 +120,34 @@ export function CommandCenterHome() {
 
   return (
     <div className="w-full">
-      {/* Active Mission Box - Always visible */}
+      {/* Full-width Prize Vision at the top */}
       <motion.div 
-        className="mb-6"
+        className="mb-6 w-full"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
+        <PrizeVision 
+          progress={progress} 
+          status={prizeUnlockStatus} 
+        />
+      </motion.div>
+
+      {/* Active Mission Box below the Prize Vision */}
+      <motion.div 
+        className="mb-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
         <ActiveMissionBox mission={activeMission} />
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        {/* Left Column - Broker Console */}
+      {/* Two column layout for Console and Agent */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Left Column - M1SSION CONSOLE (Broker Console) */}
         <motion.div 
-          className="md:col-span-4 order-2 md:order-1"
+          className="order-2 md:order-1"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -144,22 +158,9 @@ export function CommandCenterHome() {
           />
         </motion.div>
 
-        {/* Center Column - Prize Vision */}
+        {/* Right Column - M1SSION AGENT (Agent Diary) */}
         <motion.div 
-          className="md:col-span-4 order-1 md:order-2"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <PrizeVision 
-            progress={progress} 
-            status={prizeUnlockStatus} 
-          />
-        </motion.div>
-
-        {/* Right Column - Agent Diary */}
-        <motion.div 
-          className="md:col-span-4 order-3"
+          className="order-3 md:order-2"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}

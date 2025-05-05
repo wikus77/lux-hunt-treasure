@@ -114,7 +114,11 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
     >
       <div className="flex items-center mb-3">
         <ShieldCheck className="text-blue-400 mr-2" size={20} />
-        <h2 className="text-lg font-medium text-blue-400">Console del Broker</h2>
+        <h2 className="text-lg font-medium flex items-center">
+          <span className="text-cyan-400">M1</span>
+          <span className="text-white">SSION</span> 
+          <span className="text-white ml-1">CONSOLE</span>
+        </h2>
       </div>
 
       <div className="horizontal-line mb-4"></div>

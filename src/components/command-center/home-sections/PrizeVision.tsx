@@ -13,8 +13,7 @@ interface PrizeVisionProps {
 
 export function PrizeVision({ progress, status }: PrizeVisionProps) {
   const [currentPrize] = useState({
-    name: "Ferrari 488 GTB",
-    image: "/lovable-uploads/f7ebe6cb-8248-4002-bb84-b0e40781e72e.png"
+    image: "/lovable-uploads/f7ebe6cb-8248-4002-bb84-b0e40781e72e.png" // Keep the Ferrari image but remove name
   });
   
   const [lastUnlockEvent, setLastUnlockEvent] = useLocalStorage<string | null>("last-unlock-event", null);
@@ -84,12 +83,17 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
   const getStatusText = () => {
     if (daysRemaining <= 3) {
       return "PREMIO SBLOCCATO!";
-    } else if (visibilityPercentage >= 35) {
-      return "Premio quasi sbloccato";
-    } else if (visibilityPercentage >= 20) {
-      return "Segnale in acquisizione...";
     } else {
-      return "Premio bloccato";
+      return "PREMIO BLOCCATO";
+    }
+  };
+
+  // Get help text below status
+  const getHelpText = () => {
+    if (daysRemaining <= 3) {
+      return "Completa la missione per reclamarlo";
+    } else {
+      return "Completa gli obiettivi per sbloccare l'immagine";
     }
   };
   
@@ -111,108 +115,88 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
 
   return (
     <motion.div
-      className="glass-card p-4 h-full flex flex-col"
+      className="glass-card p-4 flex flex-col"
       initial={{ scale: 0.95 }}
       animate={{ scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="flex items-center justify-center mb-3">
-        <Award className="text-yellow-400 mr-2" size={20} />
-        <h2 className="text-lg font-medium text-yellow-400">Visione del Premio</h2>
-      </div>
-
-      <div className="horizontal-line mb-4"></div>
-
-      <div className="relative flex-1 flex items-center justify-center">
-        <div className="relative overflow-hidden rounded-lg w-full aspect-video">
-          {/* Static base image - always visible but filtered */}
-          <motion.img 
-            src={currentPrize.image} 
-            alt={currentPrize.name}
-            className="w-full h-full object-cover"
-            style={{ filter: getImageFilters() }}
-            animate={{ 
-              filter: getImageFilters()
-            }}
-            transition={{ duration: 1.5 }}
-          />
-          
-          {/* Revealing mask overlay */}
+      <div className="relative aspect-[21/9] md:aspect-[16/5] w-full overflow-hidden rounded-lg">
+        {/* Static base image - always visible but filtered */}
+        <motion.img 
+          src={currentPrize.image} 
+          alt="Premio misterioso"
+          className="w-full h-full object-cover"
+          style={{ filter: getImageFilters() }}
+          animate={{ 
+            filter: getImageFilters()
+          }}
+          transition={{ duration: 1.5 }}
+        />
+        
+        {/* Revealing mask overlay */}
+        <motion.div 
+          className="absolute inset-0"
+          style={{ 
+            background: getMaskGradient(),
+            opacity: visibilityPercentage >= 100 ? 0 : 1
+          }}
+          animate={{ 
+            background: getMaskGradient(),
+            opacity: visibilityPercentage >= 100 ? 0 : 1
+          }}
+          transition={{ duration: 1.5 }}
+        />
+        
+        {/* Edge glow effect for partial reveal */}
+        {visibilityPercentage > 5 && visibilityPercentage < 100 && (
           <motion.div 
-            className="absolute inset-0"
-            style={{ 
-              background: getMaskGradient(),
-              opacity: visibilityPercentage >= 100 ? 0 : 1
-            }}
+            className="absolute inset-0 pointer-events-none"
             animate={{ 
-              background: getMaskGradient(),
-              opacity: visibilityPercentage >= 100 ? 0 : 1
+              boxShadow: ["0 0 10px rgba(0,229,255,0.2) inset", "0 0 15px rgba(0,229,255,0.3) inset", "0 0 10px rgba(0,229,255,0.2) inset"]
             }}
-            transition={{ duration: 1.5 }}
+            transition={{ duration: 2.5, repeat: Infinity }}
           />
-          
-          {/* Edge glow effect for partial reveal */}
-          {visibilityPercentage > 5 && visibilityPercentage < 100 && (
-            <motion.div 
-              className="absolute inset-0 pointer-events-none"
-              animate={{ 
-                boxShadow: ["0 0 10px rgba(0,229,255,0.2) inset", "0 0 15px rgba(0,229,255,0.3) inset", "0 0 10px rgba(0,229,255,0.2) inset"]
-              }}
-              transition={{ duration: 2.5, repeat: Infinity }}
-            />
-          )}
-          
-          {/* Prize name overlay */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-            <h3 className="text-lg font-medium text-white">{currentPrize.name}</h3>
-          </div>
-          
-          {/* Status overlay */}
-          <motion.div 
-            className={`absolute inset-0 flex items-center justify-center backdrop-blur-sm ${
-              visibilityPercentage >= 100 ? "bg-green-900/30" : "bg-black/40"
-            }`}
-            initial={{ opacity: 1 }}
-            animate={{ 
-              opacity: visibilityPercentage >= 100 ? 0 : 0.7
-            }}
-            transition={{ duration: 1.5 }}
-          >
-            <span className={`text-xl font-bold ${
-              visibilityPercentage >= 100 ? "text-green-400" : "text-white"
-            }`}>
+        )}
+        
+        {/* Status overlay - center text */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="text-center bg-black/50 px-8 py-4 rounded-lg backdrop-blur-sm">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
               {getStatusText()}
-            </span>
-          </motion.div>
-          
-          {/* Countdown overlay for temporal limit */}
-          {daysRemaining > 3 && (
-            <div className="absolute top-3 right-3 bg-black/60 rounded-full px-3 py-1 text-xs text-white">
-              Sblocco completo in: <span className="text-yellow-400 font-mono">{daysRemaining} giorni</span>
-            </div>
-          )}
-          
-          {/* Glowing border for unlocked state */}
-          {visibilityPercentage >= 100 && (
-            <motion.div 
-              className="absolute inset-0 pointer-events-none border-2 border-yellow-400"
-              animate={{ 
-                boxShadow: ["0 0 10px rgba(250,204,21,0.5)", "0 0 20px rgba(250,204,21,0.8)", "0 0 10px rgba(250,204,21,0.5)"]
-              }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            />
-          )}
-          
-          {/* Unlock animation */}
-          {showUnlockAnimation && (
-            <motion.div 
-              className="absolute inset-0 bg-yellow-400"
-              initial={{ opacity: 0.8 }}
-              animate={{ opacity: 0 }}
-              transition={{ duration: 1 }}
-            />
-          )}
+            </h2>
+            <p className="text-sm md:text-base text-gray-300">
+              {getHelpText()}
+            </p>
+          </div>
         </div>
+        
+        {/* Countdown overlay for temporal limit */}
+        {daysRemaining > 3 && (
+          <div className="absolute top-3 right-3 bg-black/60 rounded-full px-3 py-1 text-xs text-white">
+            Sblocco completo in: <span className="text-yellow-400 font-mono">{daysRemaining} giorni</span>
+          </div>
+        )}
+        
+        {/* Glowing border for unlocked state */}
+        {visibilityPercentage >= 100 && (
+          <motion.div 
+            className="absolute inset-0 pointer-events-none border-2 border-yellow-400"
+            animate={{ 
+              boxShadow: ["0 0 10px rgba(250,204,21,0.5)", "0 0 20px rgba(250,204,21,0.8)", "0 0 10px rgba(250,204,21,0.5)"]
+            }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          />
+        )}
+        
+        {/* Unlock animation */}
+        {showUnlockAnimation && (
+          <motion.div 
+            className="absolute inset-0 bg-yellow-400"
+            initial={{ opacity: 0.8 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 1 }}
+          />
+        )}
       </div>
 
       {/* Progress bar */}
@@ -222,15 +206,6 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
           <span className="font-bold">{Math.min(100, Math.round(visibilityPercentage))}%</span>
         </div>
         <Progress value={Math.min(100, visibilityPercentage)} className="h-2" />
-        
-        {/* Help text */}
-        <div className="mt-2 text-xs text-gray-400 text-center">
-          {daysRemaining > 3 ? (
-            "Completa obiettivi per aumentare la visibilità del premio"
-          ) : (
-            "Premio completamente sbloccato! Completa la missione per reclamarlo"
-          )}
-        </div>
       </div>
     </motion.div>
   );
