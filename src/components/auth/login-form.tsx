@@ -2,7 +2,15 @@
 import React from 'react';
 import { useLogin } from '@/hooks/use-login';
 
-const LoginForm: React.FC = () => {
+interface LoginFormProps {
+  verificationStatus?: string | null;
+  onResendVerification?: () => void;
+}
+
+export const LoginForm: React.FC<LoginFormProps> = ({
+  verificationStatus,
+  onResendVerification
+}) => {
   const {
     formData,
     errors,
@@ -39,6 +47,30 @@ const LoginForm: React.FC = () => {
         {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
       </div>
 
+      {/* Verification Status Message */}
+      {verificationStatus === 'pending' && (
+        <div className="bg-amber-50 border border-amber-200 p-3 rounded-md">
+          <p className="text-amber-800 text-sm">
+            Verifica la tua email per completare la registrazione.
+            <button 
+              type="button"
+              onClick={onResendVerification}
+              className="ml-2 text-amber-600 underline hover:text-amber-800"
+            >
+              Invia di nuovo
+            </button>
+          </p>
+        </div>
+      )}
+
+      {verificationStatus === 'success' && (
+        <div className="bg-green-50 border border-green-200 p-3 rounded-md">
+          <p className="text-green-800 text-sm">
+            Email verificata con successo! Ora puoi effettuare il login.
+          </p>
+        </div>
+      )}
+
       {/* Bottone Login */}
       <div>
         <button
@@ -53,4 +85,5 @@ const LoginForm: React.FC = () => {
   );
 };
 
+// Also export as default for backward compatibility
 export default LoginForm;

@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
 import { supabase } from "@/integrations/supabase/client";
-import LoginForm from "@/components/auth/login-form";
+import { LoginForm } from "@/components/auth/login-form";
 
 const Login = () => {
   const [email, setEmail] = useState("");
