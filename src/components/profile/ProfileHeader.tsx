@@ -41,9 +41,9 @@ const ProfileHeader = ({
           transition={{ delay: 0.2, duration: 0.5 }}
           className="flex items-center"
         >
-          <span className="text-cyan-400 font-mono text-xs sm:text-sm">DOSSIER:</span>
+          <span className="text-cyan-400 font-mono text-xs sm:text-sm font-medium">DOSSIER:</span>
           <motion.span 
-            className="font-mono text-white bg-cyan-900/30 px-2 py-1 rounded text-xs sm:text-sm ml-2"
+            className="font-mono text-white bg-cyan-900/40 px-2 py-1 rounded text-xs sm:text-sm ml-2 border border-cyan-900/30"
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: "auto", opacity: showCodeText ? 1 : 0 }}
             transition={{ delay: 0.5, duration: 0.5 }}
@@ -58,7 +58,7 @@ const ProfileHeader = ({
       <Button
         onClick={() => isEditing ? onSave() : onEditToggle()}
         size="sm"
-        className={`bg-cyan-800 hover:bg-cyan-700 h-${isMobile ? '10' : '11'} max-h-${isMobile ? '10' : '11'}`}
+        className={`bg-cyan-800 hover:bg-cyan-700 h-10 px-3 sm:px-4 text-xs sm:text-sm`}
       >
         {isEditing ? <Save className="h-4 w-4 mr-1" /> : <Edit className="h-4 w-4 mr-1" />}
         {isEditing ? "Salva" : "Modifica"}

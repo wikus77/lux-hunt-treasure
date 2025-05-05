@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Award, Home, Map, Bell, Zap } from "lucide-react";
+import { Award, Home, Map, BadgeAlert, Zap } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
@@ -21,7 +21,7 @@ const BottomNavigation = () => {
     { path: "/map", icon: Map, label: "Mappa" },
     { path: "/buzz", icon: Zap, label: "Buzz" },
     { path: "/leaderboard", icon: Award, label: "Classifica" },
-    { path: "/notifications", icon: Bell, label: "Avvisi", badge: unreadCount },
+    { path: "/notifications", icon: BadgeAlert, label: "Avvisi", badge: unreadCount },
   ];
 
   return (

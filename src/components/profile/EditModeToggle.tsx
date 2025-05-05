@@ -21,12 +21,12 @@ const EditModeToggle = ({
       <Button
         onClick={() => isEditing ? onSave() : setIsEditing(true)}
         size="icon"
-        className={`${isMobile ? 'w-11 h-11' : 'w-12 h-12'} rounded-full shadow-lg bg-gradient-to-r from-projectx-blue to-projectx-pink`}
+        className={`${isMobile ? 'w-10 h-10' : 'w-11 h-11'} rounded-full shadow-lg bg-gradient-to-r from-projectx-blue to-projectx-pink`}
       >
         {isEditing ? (
-          <Save className={`${isMobile ? 'h-5 w-5' : 'h-5 w-5'}`} />
+          <Save className={`h-4 w-4`} />
         ) : (
-          <Edit className={`${isMobile ? 'h-5 w-5' : 'h-5 w-5'}`} />
+          <Edit className={`h-4 w-4`} />
         )}
       </Button>
     </div>

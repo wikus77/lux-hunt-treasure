@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Award, Clock, Shield } from "lucide-react";
+import { Award, Clock, Shield, BadgeAlert, Bell } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -84,20 +84,20 @@ const ProfileTabs = ({
           
           <div className="grid grid-cols-2 gap-3">
             <div className="stat-item">
-              <span className="text-xs text-gray-400">Missioni completate</span>
-              <span className="text-lg font-bold">{stats.missionsCompleted}</span>
+              <span className="text-xs text-gray-400">Missioni completate: </span>
+              <span className="text-base font-medium">{stats.missionsCompleted}</span>
             </div>
             <div className="stat-item">
-              <span className="text-xs text-gray-400">Indizi trovati</span>
-              <span className="text-lg font-bold">{stats.cluesFound}</span>
+              <span className="text-xs text-gray-400">Indizi trovati: </span>
+              <span className="text-base font-medium">{stats.cluesFound}</span>
             </div>
             <div className="stat-item">
-              <span className="text-xs text-gray-400">Tempo di gioco</span>
-              <span className="text-lg font-bold">{stats.totalPlayTime}</span>
+              <span className="text-xs text-gray-400">Tempo di gioco: </span>
+              <span className="text-base font-medium">{stats.totalPlayTime}</span>
             </div>
             <div className="stat-item">
-              <span className="text-xs text-gray-400">Punti totali</span>
-              <span className="text-lg font-bold">{stats.pointsEarned}</span>
+              <span className="text-xs text-gray-400">Punti totali: </span>
+              <span className="text-base font-medium">{stats.pointsEarned.toLocaleString('it-IT')}</span>
             </div>
           </div>
           

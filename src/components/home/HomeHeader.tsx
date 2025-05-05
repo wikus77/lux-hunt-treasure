@@ -41,8 +41,8 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
   
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-black/40 border-b border-white/10">
-      <div className="max-w-screen-xl mx-auto px-2 sm:px-4 py-2 sm:py-3 flex flex-col">
-        <div className="flex justify-between items-center">
+      <div className="max-w-screen-xl mx-auto px-2 sm:px-4">
+        <div className="flex items-center justify-between h-14 sm:h-16 py-2">
           <div className="flex items-center">
             <Button
               variant="ghost"
@@ -64,9 +64,9 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
               transition={{ delay: 0.2, duration: 0.5 }}
               className="hidden sm:flex items-center ml-2"
             >
-              <span className="text-cyan-400 font-mono text-xs mr-1.5">DOSSIER:</span>
+              <span className="text-cyan-400 font-mono text-xs mr-1.5 font-medium">DOSSIER:</span>
               <motion.span 
-                className="font-mono text-white bg-cyan-900/30 px-2 py-1 rounded text-xs"
+                className="font-mono text-white bg-cyan-900/40 px-2 py-1 rounded text-xs border border-cyan-900/30"
                 initial={{ width: 0, opacity: 0 }}
                 animate={{ width: "auto", opacity: showCodeText ? 1 : 0 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
@@ -106,14 +106,14 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
         
         {/* Mobile agent code - only visible on small screens */}
         <motion.div 
-          className="sm:hidden flex justify-center items-center mt-1"
+          className="sm:hidden flex justify-center items-center py-1.5 bg-black/20"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.5 }}
         >
-          <span className="text-cyan-400 font-mono text-[10px] mr-1.5">DOSSIER:</span>
+          <span className="text-cyan-400 font-mono text-[11px] mr-1.5 font-medium">DOSSIER:</span>
           <motion.span 
-            className="font-mono text-white bg-cyan-900/30 px-1.5 py-0.5 rounded text-[10px]"
+            className="font-mono text-white bg-cyan-900/40 px-2 py-0.5 rounded text-[11px] border border-cyan-900/30"
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: "auto", opacity: showCodeText ? 1 : 0 }}
             transition={{ delay: 0.6, duration: 0.5 }}
@@ -124,7 +124,7 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
       </div>
       
       {/* Countdown Timer - separated to avoid overlapping */}
-      <div className="flex justify-center py-1.5">
+      <div className="flex justify-center py-1.5 bg-gradient-to-r from-black/40 via-cyan-950/20 to-black/40">
         <CountdownTimer targetDate={targetDate} />
       </div>
     </header>

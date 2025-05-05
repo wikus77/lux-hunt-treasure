@@ -123,16 +123,22 @@ const ProfileInfo = ({
             {/* Quick Stats */}
             <div className="flex flex-wrap justify-center gap-4 mt-4">
               <div className="flex flex-col items-center">
-                <span className="text-cyan-400 text-xl font-bold">{stats.missionsCompleted}</span>
-                <span className="text-xs text-gray-400">Missioni</span>
+                <div className="flex items-baseline">
+                  <span className="text-xs text-gray-400 mr-1.5">Missioni: </span>
+                  <span className="text-cyan-400 text-lg font-medium">{stats.missionsCompleted}</span>
+                </div>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-cyan-400 text-xl font-bold">{stats.cluesFound}</span>
-                <span className="text-xs text-gray-400">Indizi</span>
+                <div className="flex items-baseline">
+                  <span className="text-xs text-gray-400 mr-1.5">Indizi: </span>
+                  <span className="text-cyan-400 text-lg font-medium">{stats.cluesFound}</span>
+                </div>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-cyan-400 text-xl font-bold">{credits}</span>
-                <span className="text-xs text-gray-400">Crediti</span>
+                <div className="flex items-baseline">
+                  <span className="text-xs text-gray-400 mr-1.5">Crediti: </span>
+                  <span className="text-cyan-400 text-lg font-medium">{credits}</span>
+                </div>
               </div>
             </div>
           </>
