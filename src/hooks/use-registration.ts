@@ -5,27 +5,39 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, ValidationResult } from '@/utils/form-validation';
 
-// ✅ Funzione esterna con tipi disattivati (evita errori di tipo)
+// Define explicit interface for profile data to avoid deep type inference
+interface ProfileData {
+  id: string;
+  // Add other fields if needed but not required for this check
+}
+
+// ✅ External function with explicit return type and types for parameters
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  const untypedClient = supabase as any;
-  const response = await untypedClient
-    .from('profiles')
-    .select('id')
-    .eq('email', email);
+  try {
+    // Use type assertion to avoid deep type inference
+    const response = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email);
+    
+    // Explicit type assertion for response data
+    const data = response.data as ProfileData[] | null;
+    const error = response.error;
 
-  const data = response.data;
-  const error = response.error;
+    if (error) {
+      console.error("Errore nel controllo email:", error);
+      throw error;
+    }
 
-  if (error) {
-    console.error("Errore nel controllo email:", error);
-    throw error;
+    return data && data.length > 0;
+  } catch (error) {
+    console.error("Errore durante il controllo dell'email:", error);
+    return false; // Return a default value in case of errors
   }
-
-  return data && data.length > 0;
 }
 
 export const useRegistration = () => {
-  // ✅ Niente tipo esplicito qui → TypeScript capisce da solo
+  // ✅ TypeScript infers the type automatically
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -73,6 +85,7 @@ export const useRegistration = () => {
         return;
       }
 
+      // Use more explicit typing for signUp to avoid deep inference
       const result = await supabase.auth.signUp({
         email,
         password,
