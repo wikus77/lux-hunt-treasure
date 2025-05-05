@@ -13,6 +13,10 @@ interface RegistrationFormProps {
   className?: string;
 }
 
+interface ProfileCheck {
+  id: string;
+}
+
 const RegistrationForm = ({ className }: RegistrationFormProps) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -45,11 +49,11 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
     }
 
     try {
-      // Check if email already exists - using a simplified approach that avoids complex type inference
+      // Check if email already exists - using explicit typing to avoid inference issues
       const { data, error: checkError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', email);
+        .eq('email', email) as { data: ProfileCheck[] | null, error: Error | null };
       
       if (checkError) {
         console.error("Error checking existing email:", checkError);
