@@ -3,36 +3,33 @@ import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
+import { validateRegistration, ValidationResult } from '@/utils/form-validation';
 
-// Define an interface for the profile data to avoid deep type inference
-interface ProfileData {
-  id: string;
-  [key: string]: any;
-}
+// ✅ Tipo definito manualmente (senza inferenza profonda)
+type RegistrationFormData = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
 
-// Use a simple function with explicit typing
+// ✅ Funzione esterna con tipi disattivati (evita errore TS2589)
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  try {
-    const response = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', email);
-      
-    // Use explicit type assertion to prevent deep type inference
-    const data = response.data as ProfileData[] | null;
-    const error = response.error;
+  const untypedClient = supabase as any;
+  const response = await untypedClient
+    .from('profiles')
+    .select('id')
+    .eq('email', email);
 
-    if (error) {
-      console.error("Errore nel controllo email:", error);
-      throw error;
-    }
+  const data = response.data;
+  const error = response.error;
 
-    return data && data.length > 0;
-  } catch (error) {
-    console.error("Errore durante il controllo dell'email:", error);
-    return false;
+  if (error) {
+    console.error("Errore nel controllo email:", error);
+    throw error;
   }
+
+  return data && data.length > 0;
 }
 
 export const useRegistration = () => {
@@ -72,7 +69,6 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // Check if email exists
       const emailEsiste = await checkIfEmailExists(email);
 
       if (emailEsiste) {
@@ -84,7 +80,6 @@ export const useRegistration = () => {
         return;
       }
 
-      // Supabase Registration
       const result = await supabase.auth.signUp({
         email,
         password,
