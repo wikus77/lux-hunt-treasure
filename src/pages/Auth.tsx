@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import Login from "./Login";
 import ProfileQuiz from "@/components/profile/ProfileQuiz";
 import { Spinner } from "@/components/ui/spinner";
@@ -8,8 +8,8 @@ import VerificationPendingView from "@/components/auth/VerificationPendingView";
 import { useEmailVerificationHandler } from "@/components/auth/EmailVerificationHandler";
 import { AuthenticationManager } from "@/components/auth/AuthenticationManager";
 import { ProfileCheckManager } from "@/components/auth/ProfileCheckManager";
-import { supabase } from "@/integrations/supabase/client"; // Add import for supabase
-import { toast } from "sonner"; // Add import for toast
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Auth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -17,18 +17,35 @@ const Auth = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [emailVerified, setEmailVerified] = useState(false);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  console.log("Auth page - current path:", location.pathname);
   
   // Handle email verification from URL params
   const wasEmailVerification = useEmailVerificationHandler();
   
   useEffect(() => {
+    console.log("Auth page mounted, wasEmailVerification:", wasEmailVerification);
+    
     if (wasEmailVerification) {
       setIsLoading(false);
+      // Wait a moment before redirecting to allow the user to see the success message
+      setTimeout(() => {
+        navigate('/login?verification=success');
+      }, 2000);
     }
-  }, [wasEmailVerification]);
+    
+    // Check URL for redirects
+    const redirect = searchParams.get('redirect');
+    if (redirect) {
+      console.log("Found redirect parameter:", redirect);
+    }
+  }, [wasEmailVerification, navigate, searchParams]);
 
   const handleAuthenticationComplete = (userId: string) => {
+    console.log("Authentication complete for user:", userId);
     setIsLoggedIn(true);
     setEmailVerified(true);
     setUserId(userId);
@@ -36,6 +53,7 @@ const Auth = () => {
   };
 
   const handleNotAuthenticated = () => {
+    console.log("User is not authenticated");
     setIsLoggedIn(false);
     setUserId(null);
     setHasCompletedQuiz(false);
@@ -44,6 +62,7 @@ const Auth = () => {
   };
 
   const handleEmailNotVerified = () => {
+    console.log("User's email is not verified");
     setIsLoggedIn(false);
     setUserId(null);
     setEmailVerified(false);
@@ -51,15 +70,18 @@ const Auth = () => {
   };
 
   const handleProfileComplete = () => {
+    console.log("User has completed profile setup");
     setHasCompletedQuiz(true);
   };
 
   const handleProfileIncomplete = () => {
+    console.log("User has not completed profile setup");
     setHasCompletedQuiz(false);
   };
 
   const handleQuizComplete = async (profileType: string) => {
     // Mark quiz as completed
+    console.log("Quiz completed with profile type:", profileType);
     setHasCompletedQuiz(true);
     
     // Update profile in local storage and session
@@ -77,6 +99,7 @@ const Auth = () => {
     // Save investigative style to database
     if (userId) {
       try {
+        console.log("Saving profile data to database for user:", userId);
         // Update the profile with quiz results
         const { error } = await supabase
           .from('profiles')
@@ -92,6 +115,8 @@ const Auth = () => {
           toast.error("Errore", {
             description: "Impossibile salvare il tuo profilo. Riprova più tardi."
           });
+        } else {
+          console.log("Profile data saved successfully");
         }
       } catch (error) {
         console.error("Error saving profile data:", error);
@@ -136,7 +161,7 @@ const Auth = () => {
         <ProfileQuiz onComplete={handleQuizComplete} userId={userId} />
       ) : (
         <div className="flex items-center justify-center h-screen">
-          <p>Reindirizzamento in corso...</p>
+          <div className="text-white text-xl">Reindirizzamento in corso...</div>
         </div>
       )}
     </div>

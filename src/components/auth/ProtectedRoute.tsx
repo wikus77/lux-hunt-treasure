@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/auth';
 import { Spinner } from '@/components/ui/spinner';
 import EmailVerificationAlert from './EmailVerificationAlert';
@@ -14,7 +14,18 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   redirectTo = '/login',
   requireEmailVerification = true
 }) => {
-  const { isAuthenticated, isLoading, isEmailVerified } = useAuthContext();
+  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser } = useAuthContext();
+  const location = useLocation();
+  
+  useEffect(() => {
+    console.log("Protected route check:", {
+      path: location.pathname,
+      isAuthenticated: isAuthenticated(),
+      isLoading,
+      isEmailVerified,
+      user: getCurrentUser()?.id
+    });
+  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser]);
   
   if (isLoading) {
     return (
@@ -24,20 +35,23 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
   
-  // Se l'utente non è autenticato, reindirizza al login
+  // If user is not authenticated, redirect to login
   if (!isAuthenticated()) {
-    return <Navigate to={redirectTo} replace />;
+    console.log("User not authenticated, redirecting to:", redirectTo);
+    return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
   
-  // Controllo aggiuntivo per la verifica dell'email se richiesta
+  // Check for email verification if required
   if (requireEmailVerification && !isEmailVerified) {
-    return <Navigate to="/auth?verification=pending" replace />;
+    console.log("Email not verified, redirecting to verification page");
+    return <Navigate to="/login?verification=pending" replace />;
   }
   
+  // User is authenticated and email is verified, render the protected route
   return <Outlet />;
 };
 
-// Also export a component that can be used directly in pages to show a verification alert
+// Export a component that can be used directly in pages to show a verification alert
 export const EmailVerificationGuard: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const { isEmailVerified } = useAuthContext();
   

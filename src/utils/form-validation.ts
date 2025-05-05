@@ -1,4 +1,3 @@
-
 // Type definitions
 export type RegistrationFormData = {
   name: string;
@@ -7,11 +6,13 @@ export type RegistrationFormData = {
   confirmPassword: string;
 };
 
+// Explicit type definition for login form data
 export type LoginFormData = {
   email: string;
   password: string;
 };
 
+// Validation result type
 export type ValidationResult = {
   isValid: boolean;
   errors: Record<string, string>;
@@ -64,23 +65,18 @@ export const validateRegistration = (formData: RegistrationFormData): Validation
   };
 };
 
-/**
- * Validates login form data
- * @param formData Data from login form
- * @returns Validation result with isValid flag and any errors
- */
+// Validation utility for login form
 export const validateLogin = (formData: LoginFormData): ValidationResult => {
   const errors: Record<string, string> = {};
 
-  // Validazione email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Email validation
   if (!formData.email) {
     errors.email = "L'email è obbligatoria";
-  } else if (!emailRegex.test(formData.email)) {
+  } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
     errors.email = "Formato email non valido";
   }
 
-  // Validazione password
+  // Password validation
   if (!formData.password) {
     errors.password = "La password è obbligatoria";
   }

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,35 +16,33 @@ export const useAuth = () => {
     // Imposta il listener per i cambiamenti di autenticazione PRIMA
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        console.log("Auth state change event:", event);
         setSession(currentSession);
         
         if (event === 'SIGNED_OUT') {
-          toast.info("Disconnesso", {
-            description: "Hai effettuato il logout con successo."
-          });
+          console.log("User signed out");
+          // Clear any locally stored data
+          localStorage.removeItem('userProfileType');
+          localStorage.removeItem('investigativeStyle');
+          localStorage.removeItem('investigativeStyleColor');
+          
           setIsEmailVerified(false);
         } else if (event === 'SIGNED_IN') {
+          console.log("User signed in:", currentSession?.user);
           // Controllo se l'email è stata verificata
-          if (currentSession?.user.email_confirmed_at) {
+          if (currentSession?.user?.email_confirmed_at) {
             setIsEmailVerified(true);
-            toast.success("Accesso effettuato", {
-              description: "Hai effettuato l'accesso con successo."
-            });
           } else {
             setIsEmailVerified(false);
-            toast.warning("Email non verificata", {
-              description: "Controlla la tua casella di posta per verificare la tua email."
-            });
+            navigate('/login?verification=pending');
           }
         } else if (event === 'TOKEN_REFRESHED') {
-          console.log("Token aggiornato automaticamente");
+          console.log("Token refreshed automatically");
         } else if (event === 'USER_UPDATED') {
+          console.log("User updated");
           // Controlla se l'email è stata verificata dopo un aggiornamento dell'utente
-          if (currentSession?.user.email_confirmed_at) {
+          if (currentSession?.user?.email_confirmed_at) {
             setIsEmailVerified(true);
-            toast.success("Email verificata", {
-              description: "La tua email è stata verificata con successo."
-            });
           }
         }
         
@@ -55,25 +53,27 @@ export const useAuth = () => {
     // POI verifica la sessione esistente
     const checkSession = async () => {
       try {
+        console.log("Checking existing session...");
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
           throw error;
         }
         
+        console.log("Session check result:", data.session ? "Found session" : "No session");
         setSession(data.session);
         
         // Controlla se l'email è stata verificata
-        if (data.session?.user.email_confirmed_at) {
+        if (data.session?.user?.email_confirmed_at) {
+          console.log("Email is verified");
           setIsEmailVerified(true);
-        } else {
+        } else if (data.session) {
+          console.log("Email is NOT verified");
           setIsEmailVerified(false);
+          navigate('/login?verification=pending');
         }
       } catch (error: any) {
-        console.error("Errore nel recupero della sessione:", error.message);
-        toast.error("Errore di autenticazione", {
-          description: "Si è verificato un problema con la tua sessione."
-        });
+        console.error("Error retrieving session:", error.message);
       } finally {
         setIsLoading(false);
       }
@@ -85,36 +85,40 @@ export const useAuth = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   // Funzione per effettuare il login
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     
     try {
+      console.log("Attempting login for:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Login error:", error.message);
+        throw error;
+      }
+      
+      console.log("Login successful, user:", data.user?.id);
       
       // Controlla se l'email è stata verificata
-      if (data.user.email_confirmed_at) {
+      if (data.user?.email_confirmed_at) {
         setIsEmailVerified(true);
+        // Redirect to home or dashboard
+        navigate('/home');
       } else {
         setIsEmailVerified(false);
-        toast.warning("Email non verificata", {
-          description: "Controlla la tua casella di posta per verificare la tua email."
-        });
+        // Redirect to verification pending page
+        navigate('/login?verification=pending');
       }
       
       return { success: true, data };
     } catch (error: any) {
-      console.error("Errore durante il login:", error.message);
-      toast.error("Accesso fallito", {
-        description: error.message || "Credenziali non valide. Riprova."
-      });
+      console.error("Login failed:", error.message);
       return { success: false, error };
     } finally {
       setIsLoading(false);
@@ -124,6 +128,7 @@ export const useAuth = () => {
   // Funzione per inviare nuovamente l'email di verifica
   const resendVerificationEmail = async (email: string) => {
     try {
+      console.log("Resending verification email to:", email);
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email
@@ -137,49 +142,56 @@ export const useAuth = () => {
       
       return { success: true };
     } catch (error: any) {
-      console.error("Errore nell'invio dell'email di verifica:", error.message);
-      toast.error("Errore", {
-        description: error.message || "Impossibile inviare l'email di verifica."
-      });
+      console.error("Failed to resend verification email:", error.message);
       return { success: false, error };
     }
   };
 
   // Funzione per effettuare il logout
-  const logout = async () => {
+  const logout = useCallback(async () => {
     setIsLoading(true);
     
     try {
+      console.log("Attempting logout");
       const { error } = await supabase.auth.signOut();
       
       if (error) throw error;
       
+      console.log("Logout successful");
       setIsEmailVerified(false);
+      setSession(null);
+      
+      // Clear local storage data
+      localStorage.removeItem('userProfileType');
+      localStorage.removeItem('investigativeStyle');
+      localStorage.removeItem('investigativeStyleColor');
+      
+      // Navigate to login page
       navigate('/login');
     } catch (error: any) {
-      console.error("Errore durante il logout:", error.message);
+      console.error("Logout failed:", error.message);
       toast.error("Errore durante il logout", {
         description: "Si è verificato un problema. Riprova più tardi."
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [navigate]);
 
   // Funzione per verificare se l'utente è autenticato
-  const isAuthenticated = () => {
-    return !!session;
-  };
+  const isAuthenticated = useCallback(() => {
+    return !!session && isEmailVerified;
+  }, [session, isEmailVerified]);
 
   // Funzione per ottenere l'utente corrente
-  const getCurrentUser = () => {
+  const getCurrentUser = useCallback(() => {
     return session?.user || null;
-  };
+  }, [session]);
 
   // Funzione per ottenere il token di accesso
-  const getAccessToken = () => {
+  const getAccessToken = useCallback(() => {
     return session?.access_token || null;
-  };
+  }, [session]);
 
   return {
     session,

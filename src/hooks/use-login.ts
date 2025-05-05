@@ -3,7 +3,7 @@ import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuthContext } from '@/contexts/auth'; // Fixed import path
+import { useAuthContext } from '@/contexts/auth';
 import { validateLogin } from '@/utils/form-validation';
 
 type LoginFormData = {
@@ -23,6 +23,7 @@ export const useLogin = () => {
   });
 
   const [errors, setErrors] = useState<LoginFormErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuthContext();
@@ -34,15 +35,21 @@ export const useLogin = () => {
       [id]: value
     }));
 
+    // Clear error when user starts typing
     if (errors[id as keyof LoginFormErrors]) {
-      setErrors(prev => ({ ...prev, [id]: '' }));
+      setErrors(prev => ({ ...prev, [id]: undefined }));
+    }
+    
+    // Clear form error when user makes changes
+    if (formError) {
+      setFormError(null);
     }
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Validazione client-side
+    // Client-side validation
     const validation = validateLogin(formData);
     if (!validation.isValid) {
       setErrors(validation.errors as LoginFormErrors);
@@ -50,25 +57,39 @@ export const useLogin = () => {
     }
 
     setIsSubmitting(true);
+    setFormError(null);
     const { email, password } = formData;
 
     try {
       const result = await login(email, password);
       
       if (!result.success) {
-        throw new Error(result.error?.message || 'Errore durante il login');
+        // Handle specific error cases
+        const errorMessage = result.error?.message || 'Errore durante il login';
+        
+        if (errorMessage.includes('Invalid login credentials')) {
+          setFormError('Credenziali non valide. Verifica email e password.');
+        } else if (errorMessage.includes('Email not confirmed')) {
+          setFormError('Email non verificata. Controlla la tua casella di posta.');
+          navigate('/login?verification=pending');
+        } else {
+          setFormError(errorMessage);
+        }
+        throw new Error(errorMessage);
       }
 
-      // La gestione del reindirizzamento è all'interno del contesto di autenticazione
-      setTimeout(() => {
-        navigate('/home');
-      }, 1500);
-    } catch (error: any) {
-      console.error('Errore login:', error);
-      toast.error('Errore', {
-        description: error.message || 'Errore imprevisto durante il login.',
+      // Show success toast and redirect (handled by the auth context)
+      toast.success('Accesso effettuato', {
+        description: 'Benvenuto!',
         duration: 3000
       });
+      
+    } catch (error: any) {
+      console.error('Errore login:', error);
+      // Form error is already set for specific cases above
+      if (!formError) {
+        setFormError(error.message || 'Errore imprevisto durante il login.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -77,6 +98,7 @@ export const useLogin = () => {
   return {
     formData,
     errors,
+    formError,
     isSubmitting,
     handleChange,
     handleSubmit
