@@ -1,6 +1,6 @@
 
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster";
 
@@ -67,46 +67,44 @@ class ErrorBoundaryWrapper extends React.Component<{children: React.ReactNode}, 
 function App() {
   return (
     <ErrorBoundaryWrapper>
-      <BrowserRouter>
-        <QueryClientProvider client={queryClient}>
-          <Toaster />
-          <ThemeProvider>
-            <SoundProvider>
-              <Suspense fallback={<FallbackComponent />}>
-                <div className="bg-black min-h-screen" style={{ opacity: 1, visibility: "visible" }}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/how-it-works" element={<HowItWorks />} />
-                    <Route path="/contacts" element={<Contacts />} />
-                    
-                    <Route path="/" element={<MainLayout />}>
-                      <Route path="/home" element={<Home />} />
-                      <Route path="/events" element={<Events />} />
-                      <Route path="/buzz" element={<Buzz />} />
-                      <Route path="/map" element={<Map />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/notifications" element={<Notifications />} />
-                      <Route path="/leaderboard" element={<Leaderboard />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Route>
-                    
-                    <Route path="/privacy" element={<PrivacyPolicy />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/subscriptions" element={<Subscriptions />} />
-                    <Route path="/payment-silver" element={<PaymentSilver />} />
-                    <Route path="/payment-gold" element={<PaymentGold />} />
-                    <Route path="/payment-black" element={<PaymentBlack />} />
-                    <Route path="/payment-methods" element={<PaymentMethods />} />
-                  </Routes>
-                </div>
-              </Suspense>
-            </SoundProvider>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <Toaster />
+        <ThemeProvider>
+          <SoundProvider>
+            <Suspense fallback={<FallbackComponent />}>
+              <div className="bg-black min-h-screen" style={{ opacity: 1, visibility: "visible" }}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
+                  <Route path="/contacts" element={<Contacts />} />
+                  
+                  <Route path="/" element={<MainLayout />}>
+                    <Route path="/home" element={<Home />} />
+                    <Route path="/events" element={<Events />} />
+                    <Route path="/buzz" element={<Buzz />} />
+                    <Route path="/map" element={<Map />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/leaderboard" element={<Leaderboard />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Route>
+                  
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/subscriptions" element={<Subscriptions />} />
+                  <Route path="/payment-silver" element={<PaymentSilver />} />
+                  <Route path="/payment-gold" element={<PaymentGold />} />
+                  <Route path="/payment-black" element={<PaymentBlack />} />
+                  <Route path="/payment-methods" element={<PaymentMethods />} />
+                </Routes>
+              </div>
+            </Suspense>
+          </SoundProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
     </ErrorBoundaryWrapper>
   );
 }
