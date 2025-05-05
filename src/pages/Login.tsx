@@ -1,14 +1,13 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { LoginModal } from "@/components/auth/LoginModal";
-import { MagneticButton } from "@/components/ui/magnetic-button";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
 import StyledInput from "@/components/ui/styled-input";
 import { Mail, Lock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -17,7 +16,26 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Check if there's an active session already
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // Check if quiz has been completed
+        const storedProfile = localStorage.getItem("userProfileType");
+        if (storedProfile) {
+          navigate("/home");
+        } else {
+          // If logged in but no quiz yet, stay on this page
+          // The Auth container will show the quiz
+        }
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -32,26 +50,37 @@ const Login = () => {
       return;
     }
 
-    // Simuliamo un login riuscito
-    setTimeout(() => {
+    try {
+      // Real authentication with Supabase
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) throw error;
+      
       toast({
         title: "Login completato!",
         description: "Accesso effettuato con successo."
       });
-  
-      // Redirect alla home page
-      setTimeout(() => {
-        setIsLoading(false);
-        navigate("/home");
-      }, 500);
-    }, 1000);
+      
+      // Auth component will handle redirection based on quiz completion
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast({
+        variant: "destructive",
+        title: "Errore di accesso",
+        description: error.message || "Impossibile effettuare il login. Verifica le tue credenziali."
+      });
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          {/* Sostituito il testo con il logo AnimatedLogo */}
+          {/* Logo animato */}
           <div className="flex justify-center mb-4">
             <AnimatedLogo />
           </div>

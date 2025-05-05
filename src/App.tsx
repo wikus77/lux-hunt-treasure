@@ -11,6 +11,7 @@ import MainLayout from './components/layout/MainLayout';
 
 // Lazy-load components
 const Login = lazy(() => import('./pages/Login'));
+const Auth = lazy(() => import('./pages/Auth')); // New Auth page
 const Register = lazy(() => import('./pages/Register'));
 const Home = lazy(() => import('./pages/Home'));
 const Events = lazy(() => import('./pages/Events'));
@@ -77,6 +78,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/auth" element={<Auth />} /> {/* New Auth route */}
                 <Route path="/register" element={<Register />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/contacts" element={<Contacts />} />
