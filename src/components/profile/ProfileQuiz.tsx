@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -181,7 +180,9 @@ const ProfileQuiz = ({ onComplete }: ProfileQuizProps) => {
         try {
           const { error } = await supabase
             .from('profiles')
-            .update({ investigative_style: dominantProfile })
+            .update({ 
+              investigative_style: dominantProfile 
+            })
             .eq('id', session.user.id);
             
           if (error) throw error;

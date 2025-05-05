@@ -129,22 +129,40 @@ export type Database = {
       }
       profiles: {
         Row: {
+          agent_code: string | null
+          agent_title: string | null
+          bio: string | null
           created_at: string
+          credits: number | null
+          full_name: string | null
           id: string
+          investigative_style: string | null
           subscription_tier: string
           updated_at: string
           username: string | null
         }
         Insert: {
+          agent_code?: string | null
+          agent_title?: string | null
+          bio?: string | null
           created_at?: string
+          credits?: number | null
+          full_name?: string | null
           id: string
+          investigative_style?: string | null
           subscription_tier?: string
           updated_at?: string
           username?: string | null
         }
         Update: {
+          agent_code?: string | null
+          agent_title?: string | null
+          bio?: string | null
           created_at?: string
+          credits?: number | null
+          full_name?: string | null
           id?: string
+          investigative_style?: string | null
           subscription_tier?: string
           updated_at?: string
           username?: string | null
