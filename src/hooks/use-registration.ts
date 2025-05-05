@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, ValidationResult } from '@/utils/form-validation';
 
-// Define explicit types to avoid deep type instantiation
+// ✅ Tipo per i dati del form
 export type FormData = {
   name: string;
   email: string;
@@ -13,29 +13,23 @@ export type FormData = {
   confirmPassword: string;
 };
 
-type FormErrors = {
-  [key: string]: string;
-};
-
-// Simple, well-typed function to check email existence
+// ✅ Funzione separata per evitare inferenza profonda con Supabase
 async function checkIfEmailExists(email: string): Promise<boolean> {
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', email)
-      .limit(1);
-      
-    if (error) {
-      console.error("Error checking email:", error);
-      throw error;
-    }
-    
-    return Boolean(data && data.length > 0);
-  } catch (error) {
-    console.error("Exception checking email:", error);
+  const untypedClient = supabase as any;
+  const response = await untypedClient
+    .from('profiles')
+    .select('id')
+    .eq('email', email);
+
+  const data = response.data;
+  const error = response.error;
+
+  if (error) {
+    console.error("Errore nel controllo email:", error);
     throw error;
   }
+
+  return data && data.length > 0;
 }
 
 export const useRegistration = () => {
@@ -46,8 +40,10 @@ export const useRegistration = () => {
     confirmPassword: ''
   });
 
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // ✅ Cast sicuro: evita inferenza profonda = NIENTE TS2589
+  const [errors, setErrors] = useState({} as { [key: string]: string });
+
+  const [isSubmitting, setIsSubmitting] = useState(false as boolean);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,9 +71,9 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      const emailExists = await checkIfEmailExists(email);
+      const emailEsiste = await checkIfEmailExists(email);
 
-      if (emailExists) {
+      if (emailEsiste) {
         toast.error("Errore", {
           description: "Email già registrata. Prova un'altra.",
           duration: 3000
