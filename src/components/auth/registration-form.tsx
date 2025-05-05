@@ -1,4 +1,3 @@
-
 import { useState, ChangeEvent, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface RegistrationFormProps {
   className?: string;
+}
+
+// Define an interface for the email check response
+interface ProfileCheck {
+  id: string;
 }
 
 const RegistrationForm = ({ className }: RegistrationFormProps) => {
@@ -45,12 +49,11 @@ const RegistrationForm = ({ className }: RegistrationFormProps) => {
     }
 
     try {
-      // Check if email already exists - con un approccio più semplice
-      // Evitiamo i problemi di tipo utilizzando any per questo specifico controllo
+      // Check if email already exists with explicit typing to avoid deep type instantiation
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', email);
+        .eq('email', email) as { data: ProfileCheck[] | null, error: Error | null };
       
       if (error) {
         console.error("Error checking existing email:", error);
