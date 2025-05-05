@@ -5,6 +5,11 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration, RegistrationFormData, ValidationResult } from '@/utils/form-validation';
 
+// Definizione esplicita del tipo di dati per il risultato della query
+type ProfileData = {
+  id: string;
+};
+
 export const useRegistration = () => {
   const [formData, setFormData] = useState<RegistrationFormData>({
     name: '',
@@ -42,13 +47,14 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // ✅ Query semplificata per evitare TS2589
+      // Utilizziamo una tipizzazione esplicita per evitare l'errore TS2589
       const response = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email);
 
-      const profileData = response.data;
+      // Assegnazione esplicita del tipo al risultato della query
+      const profileData = response.data as ProfileData[] | null;
       const error = response.error;
 
       if (error) {
@@ -70,7 +76,7 @@ export const useRegistration = () => {
         return;
       }
 
-      // ✅ Registrazione utente con Supabase Auth (senza tipo generico)
+      // Registrazione utente con Supabase Auth senza tipo generico problematico
       const result = await supabase.auth.signUp({
         email,
         password,
