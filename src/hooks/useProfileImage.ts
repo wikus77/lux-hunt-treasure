@@ -1,23 +1,11 @@
 
-import { useState, useEffect } from "react";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export const useProfileImage = () => {
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useLocalStorage<string | null>('profileImage', null);
   
-  useEffect(() => {
-    const savedImage = localStorage.getItem('profileImage');
-    setProfileImage(savedImage);
-    
-    // Setup listener for changes to profileImage in localStorage
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'profileImage') {
-        setProfileImage(e.newValue);
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-  
-  return { profileImage };
+  return { 
+    profileImage,
+    setProfileImage
+  };
 };
