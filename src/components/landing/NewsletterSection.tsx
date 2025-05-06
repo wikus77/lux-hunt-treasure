@@ -114,7 +114,7 @@ const NewsletterSection = ({ countdownCompleted = false }: NewsletterSectionProp
                     onChange={(e) => setName(e.target.value)}
                     className="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:border-[#00E5FF]/50 focus:outline-none focus:ring-1 focus:ring-[#00E5FF]/50"
                     placeholder="Il tuo nome"
-                    disabled={isSubmitting || !countdownCompleted}
+                    disabled={isSubmitting}
                   />
                 </div>
                 
@@ -127,7 +127,7 @@ const NewsletterSection = ({ countdownCompleted = false }: NewsletterSectionProp
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:border-[#00E5FF]/50 focus:outline-none focus:ring-1 focus:ring-[#00E5FF]/50"
                     placeholder="La tua email"
-                    disabled={isSubmitting || !countdownCompleted}
+                    disabled={isSubmitting}
                   />
                 </div>
                 
@@ -136,11 +136,9 @@ const NewsletterSection = ({ countdownCompleted = false }: NewsletterSectionProp
                   className={`w-full p-3 rounded-full flex items-center justify-center ${
                     isSubmitting 
                       ? 'bg-gray-700 cursor-not-allowed' 
-                      : countdownCompleted 
-                        ? 'bg-gradient-to-r from-[#0066FF] to-[#FF00FF] text-white hover:shadow-[0_0_15px_rgba(0,102,255,0.5)]' 
-                        : 'bg-gray-700 cursor-not-allowed opacity-70'
+                      : 'bg-gradient-to-r from-[#0066FF] to-[#FF00FF] text-white hover:shadow-[0_0_15px_rgba(0,102,255,0.5)]'
                   } font-medium transition-all duration-300`}
-                  disabled={isSubmitting || !countdownCompleted}
+                  disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
