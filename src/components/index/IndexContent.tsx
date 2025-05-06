@@ -79,13 +79,13 @@ const IndexContent = ({
         onCountdownComplete={() => {}} // Handled in parent component
       />
       
-      {/* Presentation Section */}
-      <PresentationSection visible={true} />
-      
       {/* Game Explanation Section */}
       <GameExplanationSection />
       
-      {/* M1SSION FOREVER Section */}
+      {/* How It Works Section */}
+      <HowItWorks onRegisterClick={onRegisterClick} countdownCompleted={countdownCompleted} />
+      
+      {/* M1SSION FOREVER Section - MOVED HERE between HowItWorks and PresentationSection */}
       <section className="w-full relative overflow-hidden py-16 bg-black">
         <div className="max-w-6xl mx-auto">
           <div className="text-3xl md:text-5xl font-orbitron text-cyan-400 mb-8 text-center">
@@ -96,10 +96,11 @@ const IndexContent = ({
         </div>
       </section>
       
+      {/* Presentation Section */}
+      <PresentationSection visible={true} />
+      
       {/* Newsletter Section */}
       <NewsletterSection countdownCompleted={countdownCompleted} />
-      
-      <HowItWorks onRegisterClick={onRegisterClick} countdownCompleted={countdownCompleted} />
       
       {/* Subscription Section */}
       <SubscriptionSection countdownCompleted={countdownCompleted} />
