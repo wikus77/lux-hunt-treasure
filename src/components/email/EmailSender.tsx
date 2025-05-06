@@ -1,15 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useEmailService } from '@/hooks/useEmailService';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2, AlertCircle, ChevronDown, ChevronUp, Bug } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import EmailTypeSelector from './EmailTypeSelector';
+import EmailRecipientFields from './EmailRecipientFields';
+import EmailTypeFields from './EmailTypeFields';
+import EmailSubmitButton from './EmailSubmitButton';
+import EmailDebugPanel from './EmailDebugPanel';
 
 const EmailSender: React.FC = () => {
   const { isSending, lastError, lastResponse, sendEmail } = useEmailService();
@@ -43,8 +41,8 @@ const EmailSender: React.FC = () => {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
 
     if (!email) {
       toast.error("Email obbligatoria", { description: "Inserisci un indirizzo email valido" });
@@ -102,180 +100,46 @@ const EmailSender: React.FC = () => {
         <CardDescription>Invia email transazionali agli utenti</CardDescription>
       </CardHeader>
       <CardContent>
-        {lastError && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Errore: {lastError}
-              <Button 
-                variant="link" 
-                size="sm" 
-                className="ml-2 p-0 h-auto" 
-                onClick={() => setShowDebugInfo(!showDebugInfo)}
-              >
-                {showDebugInfo ? 'Nascondi dettagli' : 'Mostra dettagli'}
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {showDebugInfo && (
-          <div className="mb-4 space-y-2">
-            <div className="bg-gray-900 text-white p-3 rounded text-xs overflow-auto max-h-32">
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="font-semibold">Debugging info</h4>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 px-2 text-xs" 
-                  onClick={() => setShowDetailedDebug(!showDetailedDebug)}
-                >
-                  {showDetailedDebug ? 
-                    <><ChevronUp className="h-3 w-3 mr-1" /> Nascondi dettagli</> : 
-                    <><ChevronDown className="h-3 w-3 mr-1" /> Mostra dettagli</>
-                  }
-                </Button>
-              </div>
-              <p>Assicurati che:</p>
-              <ol className="list-decimal pl-5 space-y-1">
-                <li>La chiave API Resend sia configurata correttamente nelle variabili d'ambiente di Supabase</li>
-                <li>Il dominio di invio sia verificato su Resend</li>
-                <li>L'email destinataria non sia bloccata o inesistente</li>
-                <li>Le quote del servizio email non siano esaurite</li>
-              </ol>
-              
-              {showDetailedDebug && lastResponse && (
-                <div className="mt-3 pt-2 border-t border-gray-700">
-                  <p className="font-semibold mb-1">Risposta API:</p>
-                  <pre className="whitespace-pre-wrap break-all">
-                    {JSON.stringify(lastResponse, null, 2)}
-                  </pre>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex justify-end">
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="text-xs flex items-center gap-1"
-                onClick={() => window.open("https://vkjrqirvdvjbemsfzxof.supabase.co/functions/send-email/logs", "_blank")}
-              >
-                <Bug className="h-3 w-3" /> Visualizza logs completi
-              </Button>
-            </div>
-          </div>
-        )}
+        <EmailDebugPanel 
+          lastError={lastError}
+          lastResponse={lastResponse}
+          showDebugInfo={showDebugInfo}
+          showDetailedDebug={showDetailedDebug}
+          setShowDebugInfo={setShowDebugInfo}
+          setShowDetailedDebug={setShowDetailedDebug}
+        />
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email-type">Tipo di Email</Label>
-            <Select 
-              value={emailType} 
-              onValueChange={(value) => setEmailType(value as any)}
-            >
-              <SelectTrigger id="email-type">
-                <SelectValue placeholder="Seleziona tipo di email" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="welcome">Benvenuto</SelectItem>
-                <SelectItem value="verification">Verifica Email</SelectItem>
-                <SelectItem value="password_reset">Reset Password</SelectItem>
-                <SelectItem value="notification">Notifica</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <EmailTypeSelector 
+            emailType={emailType} 
+            onEmailTypeChange={setEmailType} 
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Destinatario</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="email@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+          <EmailRecipientFields 
+            email={email}
+            setEmail={setEmail}
+            name={name}
+            setName={setName}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome Destinatario (opzionale)</Label>
-            <Input
-              id="name"
-              placeholder="Mario Rossi"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-
-          {emailType === 'verification' && (
-            <div className="space-y-2">
-              <Label htmlFor="verification-link">Link di Verifica</Label>
-              <Input
-                id="verification-link"
-                placeholder="https://m1ssion.app/verify?token=xyz"
-                value={verificationLink}
-                onChange={(e) => setVerificationLink(e.target.value)}
-                required
-              />
-            </div>
-          )}
-
-          {emailType === 'password_reset' && (
-            <div className="space-y-2">
-              <Label htmlFor="reset-link">Link Reset Password</Label>
-              <Input
-                id="reset-link"
-                placeholder="https://m1ssion.app/reset-password?token=xyz"
-                value={resetLink}
-                onChange={(e) => setResetLink(e.target.value)}
-                required
-              />
-            </div>
-          )}
-
-          {emailType === 'notification' && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="subject">Oggetto</Label>
-                <Input
-                  id="subject"
-                  placeholder="Aggiornamento sulla tua missione"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="message">Messaggio</Label>
-                <Textarea
-                  id="message"
-                  placeholder="Contenuto del messaggio..."
-                  rows={5}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  required
-                />
-              </div>
-            </>
-          )}
+          <EmailTypeFields 
+            emailType={emailType}
+            verificationLink={verificationLink}
+            setVerificationLink={setVerificationLink}
+            resetLink={resetLink}
+            setResetLink={setResetLink}
+            subject={subject}
+            setSubject={setSubject}
+            message={message}
+            setMessage={setMessage}
+          />
         </form>
       </CardContent>
       <CardFooter>
-        <Button 
-          className="w-full"
-          onClick={handleSubmit}
-          disabled={isSending}
-        >
-          {isSending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Invio in corso...
-            </>
-          ) : (
-            "Invia Email"
-          )}
-        </Button>
+        <EmailSubmitButton 
+          isSending={isSending} 
+          onSubmit={handleSubmit}
+        />
       </CardFooter>
     </Card>
   );
