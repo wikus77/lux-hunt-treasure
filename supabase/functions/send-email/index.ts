@@ -2,7 +2,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// Get the API key from environment variables
+const apiKey = Deno.env.get("RESEND_API_KEY");
+if (!apiKey) {
+  console.error("RESEND_API_KEY environment variable is not set");
+}
+
+const resend = new Resend(apiKey);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,10 +31,50 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { type, email, name = '', subject, data = {} }: EmailRequest = await req.json();
+    let payload;
+    try {
+      payload = await req.json();
+    } catch (e) {
+      console.error("Failed to parse request JSON:", e);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: { message: "Invalid JSON in request body" } 
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+    
+    const { type, email, name = '', subject, data = {} }: EmailRequest = payload;
     
     if (!type || !email) {
-      throw new Error("Missing required fields: type and email");
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: { message: "Missing required fields: type and email" } 
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    if (!apiKey) {
+      console.error("Cannot send email: RESEND_API_KEY is not configured");
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: { message: "Email service is not properly configured. RESEND_API_KEY is missing." } 
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
     console.log(`Sending ${type} email to ${email}`);
@@ -63,24 +109,55 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Send the email
-    const emailResponse = await resend.emails.send(emailData);
+    try {
+      const emailResponse = await resend.emails.send(emailData);
+      
+      console.log("Email API response:", JSON.stringify(emailResponse));
 
-    console.log("Email sent successfully:", emailResponse);
+      if (emailResponse.error) {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: emailResponse.error 
+          }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
 
-    return new Response(JSON.stringify({ success: true, data: emailResponse }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
-    });
+      return new Response(
+        JSON.stringify({ success: true, data: emailResponse }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    } catch (sendError: any) {
+      console.error("Failed to send email:", sendError);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: { 
+            message: sendError.message || "Failed to send email", 
+            details: sendError
+          } 
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
   } catch (error: any) {
     console.error("Error in send-email function:", error);
     
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || "Errore nell'invio dell'email" 
+        error: { message: error.message || "Errore nell'invio dell'email" }
       }),
       {
         status: 500,
@@ -122,7 +199,7 @@ function getVerificationEmail(email: string, name: string, verificationLink: str
     to: email,
     subject: "Verifica il tuo indirizzo email",
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: a00px; margin: 0 auto; padding: 20px; color: #333;">
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
         <div style="background: linear-gradient(90deg, #00e5ff, #0066ff); padding: 15px; border-radius: 5px 5px 0 0;">
           <h1 style="color: white; margin: 0; text-align: center;">Verifica la tua email</h1>
         </div>

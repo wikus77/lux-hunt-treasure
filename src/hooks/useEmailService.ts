@@ -15,6 +15,7 @@ interface SendEmailProps {
 
 export function useEmailService() {
   const [isSending, setIsSending] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   /**
    * Send an email using the email service
@@ -31,6 +32,8 @@ export function useEmailService() {
     }
 
     setIsSending(true);
+    setLastError(null);
+    
     try {
       console.log(`Attempting to send ${type} email to ${email}`);
       
@@ -46,17 +49,29 @@ export function useEmailService() {
 
       if (error) {
         console.error("Error sending email:", error);
-        toast.error(`Errore nell'invio dell'email: ${error.message}`);
-        return { success: false, error: error.message };
+        const errorMessage = error.message || "Si è verificato un errore nell'invio dell'email";
+        toast.error(`Errore nell'invio dell'email: ${errorMessage}`);
+        setLastError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+
+      if (responseData?.error) {
+        console.error("API error sending email:", responseData.error);
+        const errorMessage = responseData.error.message || "Errore dal servizio email";
+        toast.error(`Errore: ${errorMessage}`);
+        setLastError(errorMessage);
+        return { success: false, error: errorMessage };
       }
 
       console.log("Email sent successfully:", responseData);
       return { success: true };
     } catch (error: any) {
       console.error("Exception sending email:", error);
+      const errorMessage = error.message || "Si è verificato un errore nell'invio dell'email";
+      setLastError(errorMessage);
       return { 
         success: false, 
-        error: error.message || "Si è verificato un errore nell'invio dell'email" 
+        error: errorMessage
       };
     } finally {
       setIsSending(false);
@@ -112,6 +127,7 @@ export function useEmailService() {
 
   return {
     isSending,
+    lastError,
     sendEmail,
     sendWelcomeEmail,
     sendVerificationEmail,
