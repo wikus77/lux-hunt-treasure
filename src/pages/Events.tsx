@@ -3,13 +3,14 @@ import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useState, useEffect } from "react";
 import ProfileClues from "@/components/profile/ProfileClues";
 import { clues } from "@/data/cluesData";
-import { FileSearch, Bell } from "lucide-react";
+import { FileSearch, Bell, Broadcast } from "lucide-react";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import PushNotificationRequest from "@/components/notifications/PushNotificationRequest";
 
 const Events = () => {
@@ -22,6 +23,7 @@ const Events = () => {
     createNotification 
   } = useNotificationManager();
   const { isSupported, permission } = usePushNotifications();
+  const { isConnected, broadcastNotification } = useRealTimeNotifications();
   const [showNotificationRequest, setShowNotificationRequest] = useState(false);
   
   useEffect(() => {
@@ -75,6 +77,52 @@ const Events = () => {
     }
   };
 
+  const broadcastRandomNotification = async () => {
+    console.log("Broadcasting random notification...");
+    
+    const notificationTemplates = [
+      { 
+        title: "Notifica Tempo Reale", 
+        description: "Questa è una notifica trasmessa in tempo reale a tutti gli utenti!" 
+      },
+      { 
+        title: "Nuova Attività", 
+        description: "Un nuovo utente si è unito alla caccia ai tesori." 
+      },
+      { 
+        title: "Risultati Aggiornati", 
+        description: "La classifica è stata aggiornata con nuovi punteggi." 
+      },
+      { 
+        title: "Evento Speciale", 
+        description: "Un evento speciale sta per iniziare tra 5 minuti!" 
+      }
+    ];
+
+    const randomNotification = notificationTemplates[Math.floor(Math.random() * notificationTemplates.length)];
+    console.log("Selected broadcast notification template:", randomNotification);
+    
+    try {
+      const success = await broadcastNotification(randomNotification.title, randomNotification.description);
+      
+      if (success) {
+        toast.success("Notifica trasmessa in tempo reale!", {
+          description: "Tutti gli utenti connessi riceveranno questa notifica.",
+          duration: 3000,
+        });
+      } else {
+        toast.error("Errore nella trasmissione della notifica", {
+          duration: 2000,
+        });
+      }
+    } catch (error) {
+      console.error("Errore durante la trasmissione della notifica:", error);
+      toast.error("Si è verificato un errore imprevisto", {
+        duration: 2000,
+      });
+    }
+  };
+
   const handleResetClues = () => {
     resetUnlockedClues();
     toast.success("Tutti gli indizi sono stati azzerati", {
@@ -112,7 +160,17 @@ const Events = () => {
             onClick={generateRandomNotification} 
             className="w-full flex items-center gap-2 bg-projectx-blue hover:bg-projectx-deep-blue"
           >
-            Genera Notifica Casuale
+            <Bell className="h-4 w-4 mr-1" />
+            Genera Notifica Locale
+          </Button>
+          
+          <Button 
+            onClick={broadcastRandomNotification} 
+            className="w-full flex items-center gap-2 bg-gradient-to-r from-projectx-blue to-projectx-pink"
+            disabled={!isConnected}
+          >
+            <Broadcast className="h-4 w-4 mr-1" />
+            Trasmetti Notifica in Tempo Reale {!isConnected && "(Connessione...)"}
           </Button>
           
           <Button 

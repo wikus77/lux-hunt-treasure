@@ -10,12 +10,16 @@ import ReferralCodeSection from "@/components/profile/ReferralCodeSection";
 import { useProfileData } from "@/hooks/useProfileData";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
+import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 
 const Profile = () => {
   const navigate = useNavigate();
   const { profileData, actions } = useProfileData();
   const isMobile = useIsMobile();
   const { notificationsDrawerOpen, closeNotificationsDrawer } = useNotificationManager();
+  
+  // Initialize real-time notifications (this sets up the listener)
+  useRealTimeNotifications();
   
   const navigateToPersonalInfo = () => {
     navigate('/personal-info');

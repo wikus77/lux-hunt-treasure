@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import BriefProfileModal from "@/components/profile/BriefProfileModal";
@@ -6,6 +7,7 @@ import HomeHeader from "@/components/home/HomeHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
+import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 
 const Home = () => {
@@ -21,6 +23,9 @@ const Home = () => {
     openNotificationsBanner,
     closeNotificationsBanner
   } = useNotificationManager();
+  
+  // Initialize real-time notifications (this sets up the listener)
+  const { isConnected } = useRealTimeNotifications();
 
   // Background particles for atmosphere
   const particles = Array.from({ length: isMobile ? 8 : 15 }, (_, i) => ({
@@ -32,6 +37,11 @@ const Home = () => {
     duration: Math.random() * 15 + 15,
     color: i % 3 === 0 ? '#00E5FF' : i % 3 === 1 ? '#FFC300' : '#9b87f5',
   }));
+
+  // Show connection status in console
+  useEffect(() => {
+    console.log("Real-time notification connection status:", isConnected);
+  }, [isConnected]);
 
   if (error) {
     return (
