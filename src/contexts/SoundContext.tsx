@@ -50,3 +50,6 @@ export const useSound = () => {
   }
   return context;
 };
+
+// Add the missing export for useSoundContext
+export const useSoundContext = useSound;

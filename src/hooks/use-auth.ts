@@ -1,7 +1,9 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { AuthContextType } from '@/contexts/auth/types';
 
 /**
  * Hook for authentication functionality using Supabase Auth.
