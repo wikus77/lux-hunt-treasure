@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, Info } from "lucide-react";
 import BackgroundParallax from "@/components/ui/background-parallax";
 import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
-import { LazyImage } from "@/components/ui/lazy-image";
 
 interface IndexContentProps {
   countdownCompleted: boolean;
@@ -74,6 +73,8 @@ const IndexContent = ({
       <NewsletterSection countdownCompleted={countdownCompleted} />
       
       <HowItWorks onRegisterClick={onRegisterClick} countdownCompleted={countdownCompleted} />
+      
+      {/* NOTA: La sezione "Cosa puoi vincere" è stata completamente rimossa da qui */}
       
       {/* Subscription Section */}
       <SubscriptionSection countdownCompleted={countdownCompleted} />

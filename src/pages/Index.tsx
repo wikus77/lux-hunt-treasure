@@ -36,7 +36,7 @@ const Index = () => {
         console.log("Force completing intro after timeout");
         setIntroCompleted(true);
       }
-    }, 2000);
+    }, 500); // Reduced timeout for faster display
     
   }, [introCompleted]);
 
@@ -83,28 +83,21 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black">
-      {!introCompleted ? (
-        <IntroManager 
-          pageLoaded={pageLoaded} 
-          onIntroComplete={() => setIntroCompleted(true)}
+      <ParallaxContainer>
+        <IndexContent 
+          countdownCompleted={countdownCompleted}
+          onRegisterClick={handleRegisterClick}
+          openInviteFriend={openInviteFriend}
         />
-      ) : (
-        <ParallaxContainer>
-          <IndexContent 
-            countdownCompleted={countdownCompleted}
-            onRegisterClick={handleRegisterClick}
-            openInviteFriend={openInviteFriend}
-          />
-          
-          <ModalManager
-            showAgeVerification={showAgeVerification}
-            showInviteFriend={showInviteFriend}
-            onCloseAgeVerification={() => setShowAgeVerification(false)}
-            onCloseInviteFriend={() => setShowInviteFriend(false)}
-            onAgeVerified={handleAgeVerified}
-          />
-        </ParallaxContainer>
-      )}
+        
+        <ModalManager
+          showAgeVerification={showAgeVerification}
+          showInviteFriend={showInviteFriend}
+          onCloseAgeVerification={() => setShowAgeVerification(false)}
+          onCloseInviteFriend={() => setShowInviteFriend(false)}
+          onAgeVerified={handleAgeVerified}
+        />
+      </ParallaxContainer>
     </div>
   );
 };
