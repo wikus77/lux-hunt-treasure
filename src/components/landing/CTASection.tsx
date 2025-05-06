@@ -64,30 +64,19 @@ const CTASection = ({ onRegisterClick, countdownCompleted = false }: CTASectionP
           Unisciti a noi e inizia l'avventura! Registrati per essere il primo a sapere quando inizia M1SSION!
         </motion.p>
         
-        <motion.div
+        <motion.button
+          className={`px-8 py-3 rounded-full font-bold bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black ${countdownCompleted ? 'hover:shadow-[0_0_25px_rgba(0,229,255,0.6)] transition-all duration-300' : 'opacity-70 cursor-not-allowed'}`}
+          onClick={onRegisterClick}
           initial={{ scale: 0.9, opacity: 0 }}
           whileInView={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
           viewport={{ once: true }}
+          disabled={!countdownCompleted}
           data-parallax="scroll"
           data-parallax-speed="0.2"
-          className="relative inline-block"
         >
-          <button
-            className={`px-8 py-3 rounded-full font-bold bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black ${countdownCompleted ? 'hover:shadow-[0_0_25px_rgba(0,229,255,0.6)] transition-all duration-300' : 'opacity-70 cursor-not-allowed'}`}
-            onClick={onRegisterClick}
-            disabled={!countdownCompleted}
-            aria-disabled={!countdownCompleted}
-          >
-            REGISTRATI ORA
-          </button>
-          
-          {!countdownCompleted && (
-            <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black/80 px-3 py-1 rounded text-xs text-cyan-400 whitespace-nowrap backdrop-blur-sm border border-cyan-400/20">
-              Disponibile dopo il conto alla rovescia
-            </div>
-          )}
-        </motion.div>
+          REGISTRATI ORA
+        </motion.button>
       </div>
     </motion.section>
   );

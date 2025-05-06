@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface ParallaxImageProps {
@@ -27,34 +27,7 @@ export function ParallaxImage({
 }: ParallaxImageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isInView, setIsInView] = useState(false);
-  
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    
-    // Set up Intersection Observer for lazy loading
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        setIsInView(entry.isIntersecting);
-      },
-      {
-        rootMargin: "200px 0px",
-        threshold: 0.01,
-      }
-    );
-    
-    observer.observe(container);
-    
-    return () => {
-      if (container) {
-        observer.unobserve(container);
-      }
-    };
-  }, []);
-  
+
   useEffect(() => {
     const container = containerRef.current;
     const img = imgRef.current;
@@ -63,9 +36,9 @@ export function ParallaxImage({
     
     const handleScroll = () => {
       const rect = container.getBoundingClientRect();
-      const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+      const isInView = rect.top < window.innerHeight && rect.bottom > 0;
       
-      if (isVisible) {
+      if (isInView) {
         const scrollPos = window.scrollY;
         const offset = scrollPos - (rect.top + scrollPos - window.innerHeight / 2);
         const parallaxOffset = offset * speed * 0.1;
@@ -74,13 +47,13 @@ export function ParallaxImage({
       }
     };
     
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll);
     handleScroll(); // Initial position
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [speed, isLoaded]);
+  }, [speed]);
 
   return (
     <div
@@ -90,26 +63,16 @@ export function ParallaxImage({
       data-parallax="container"
     >
       <div className="h-full w-full">
-        {(isInView || priority) && (
-          <img
-            ref={imgRef}
-            src={src}
-            alt={alt}
-            className={cn(
-              "w-full h-full object-cover transition-opacity duration-700",
-              isLoaded ? "opacity-100" : "opacity-0",
-              imageClassName
-            )}
-            style={imgStyle}
-            loading={priority ? "eager" : "lazy"}
-            onLoad={() => setIsLoaded(true)}
-            data-parallax="image"
-            data-parallax-speed={speed.toString()}
-          />
-        )}
-        {!isLoaded && (
-          <div className="absolute inset-0 bg-black/20 animate-pulse" />
-        )}
+        <img
+          ref={imgRef}
+          src={src}
+          alt={alt}
+          className={cn("w-full h-full object-cover", imageClassName)}
+          style={imgStyle}
+          loading={priority ? "eager" : "lazy"}
+          data-parallax="image"
+          data-parallax-speed={speed.toString()}
+        />
       </div>
     </div>
   );
