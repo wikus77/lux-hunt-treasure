@@ -8,12 +8,15 @@ import CardPaymentForm from "@/components/payments/CardPaymentForm";
 import ApplePayBox from "@/components/payments/ApplePayBox";
 import GooglePayBox from "@/components/payments/GooglePayBox";
 import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
+import { useStripePayment } from "@/hooks/useStripePayment";
 
 const PaymentSilver = () => {
   const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
   const [showExplosion, setShowExplosion] = useState(false);
   const [fadeOutExplosion, setFadeOutExplosion] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { processSubscription, loading } = useStripePayment();
 
   const handlePaymentCompleted = () => {
     setShowExplosion(true);
@@ -35,26 +38,65 @@ const PaymentSilver = () => {
     }, 1700);
   };
 
-  const handleCardSubmit = () => {
-    handlePaymentCompleted();
+  const handleCardSubmit = async () => {
+    if (isProcessing || loading) return;
+    setIsProcessing(true);
+    
+    toast.info("Collegamento a Stripe in corso...", {
+      description: "Verrai reindirizzato a Stripe per completare il pagamento in modo sicuro.",
+      duration: 3000,
+    });
+    
+    try {
+      await processSubscription("Silver");
+    } catch (error) {
+      console.error("Errore durante il processo di pagamento:", error);
+      toast.error("Errore di pagamento", {
+        description: "Si è verificato un errore durante il processo di pagamento.",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleApplePay = () => {
+  const handleApplePay = async () => {
+    if (isProcessing || loading) return;
+    setIsProcessing(true);
+    
     toast.success("Pagamento Rapido", {
       description: "Pagamento in elaborazione..."
     });
-    setTimeout(() => {
-      handlePaymentCompleted();
-    }, 2000);
+    
+    try {
+      await processSubscription("Silver");
+    } catch (error) {
+      console.error("Errore durante il pagamento rapido:", error);
+      toast.error("Errore di pagamento", {
+        description: "Si è verificato un errore durante il pagamento rapido.",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleGooglePay = () => {
+  const handleGooglePay = async () => {
+    if (isProcessing || loading) return;
+    setIsProcessing(true);
+    
     toast.success("Metodo Alternativo", {
       description: "Pagamento in elaborazione..."
     });
-    setTimeout(() => {
-      handlePaymentCompleted();
-    }, 2000);
+    
+    try {
+      await processSubscription("Silver");
+    } catch (error) {
+      console.error("Errore durante il pagamento alternativo:", error);
+      toast.error("Errore di pagamento", {
+        description: "Si è verificato un errore durante il pagamento alternativo.",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (

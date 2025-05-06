@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import SubscriptionCard from "./SubscriptionCard";
 
 interface SubscriptionPlansProps {
@@ -11,6 +12,7 @@ interface SubscriptionPlansProps {
 
 export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const getSubscriptionFeatures = (type: string) => {
     switch (type) {
@@ -55,12 +57,22 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       return;
     }
     
-    localStorage.setItem('subscription_plan', plan);
-    setSelected(plan);
-    toast({
-      title: "Piano aggiornato",
-      description: `Il tuo abbonamento è stato aggiornato a ${plan}`
-    });
+    // Redirect to appropriate payment page based on selected plan
+    if (plan === "Silver") {
+      navigate("/payment-silver");
+    } else if (plan === "Gold") {
+      navigate("/payment-gold");
+    } else if (plan === "Black") {
+      navigate("/payment-black");
+    } else {
+      // For Base plan (free), just update locally
+      localStorage.setItem('subscription_plan', plan);
+      setSelected(plan);
+      toast({
+        title: "Piano aggiornato",
+        description: `Il tuo abbonamento è stato aggiornato a ${plan}`
+      });
+    }
   };
   
   const handleCancelSubscription = () => {
