@@ -11,11 +11,19 @@ import LandingFooter from "@/components/landing/LandingFooter";
 import { useNavigate } from "react-router-dom";
 import { getMissionDeadline } from "@/utils/countdownDate";
 import LaserRevealIntro from "@/components/intro/LaserRevealIntro";
+import NewsletterSection from "@/components/landing/NewsletterSection";
+import SubscriptionSection from "@/components/landing/SubscriptionSection";
+import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
+import FeaturesSection from "@/components/landing/FeaturesSection";
+import InviteFriendDialog from "@/components/landing/InviteFriendDialog";
+import { Button } from "@/components/ui/button";
+import { UserPlus } from "lucide-react";
 
 const Index = () => {
   // Control the intro animation visibility
   const [introCompleted, setIntroCompleted] = useState(true); // Set to true to skip intro by default
   const [showAgeVerification, setShowAgeVerification] = useState(false);
+  const [showInviteFriend, setShowInviteFriend] = useState(false);
   const navigate = useNavigate();
   
   // Get target date from utility function
@@ -60,6 +68,11 @@ const Index = () => {
 
   console.log("Index rendering, introCompleted:", introCompleted);
 
+  // Function to handle invite friend button click
+  const openInviteFriend = () => {
+    setShowInviteFriend(true);
+  };
+
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
       {!introCompleted && (
@@ -72,16 +85,53 @@ const Index = () => {
         <>
           <UnifiedHeader />
           <div className="h-[72px] w-full" />
+          
+          {/* Invite Friend Button - Fixed position */}
+          <div className="fixed bottom-8 right-8 z-40">
+            <Button 
+              onClick={openInviteFriend}
+              className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-4 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40"
+              size="icon"
+            >
+              <UserPlus className="h-6 w-6" />
+              <span className="sr-only">Invita un amico</span>
+            </Button>
+          </div>
+          
           <LandingHeader />
+          
+          {/* New Launch Progress Bar */}
+          <LaunchProgressBar targetDate={nextEventDate} />
+          
+          {/* Features Section */}
+          <FeaturesSection />
+          
           <PresentationSection visible={true} />
-          <CTASection onRegisterClick={handleRegisterClick} />
+          
+          {/* Newsletter Section */}
+          <NewsletterSection />
+          
           <HowItWorks onRegisterClick={handleRegisterClick} />
+          
+          {/* Subscription Section */}
+          <SubscriptionSection />
+          
           <LuxuryCarsSection />
+          
+          <CTASection onRegisterClick={handleRegisterClick} />
+          
           <LandingFooter />
+          
+          {/* Modals */}
           <AgeVerificationModal
             open={showAgeVerification}
             onClose={() => setShowAgeVerification(false)}
             onVerified={handleAgeVerified}
+          />
+          
+          <InviteFriendDialog
+            open={showInviteFriend}
+            onClose={() => setShowInviteFriend(false)}
           />
         </>
       )}

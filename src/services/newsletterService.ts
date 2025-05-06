@@ -1,0 +1,86 @@
+
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface SubscriberData {
+  name: string;
+  email: string;
+  referrer?: string;
+  campaign?: string;
+}
+
+/**
+ * Save a new newsletter subscriber to the database
+ */
+export const saveSubscriber = async (subscriber: SubscriberData): Promise<void> => {
+  try {
+    const { data, error } = await supabase
+      .from('newsletter_subscribers')
+      .insert([
+        { 
+          name: subscriber.name,
+          email: subscriber.email,
+          referrer: subscriber.referrer || null,
+          campaign: subscriber.campaign || 'landing_page'
+        }
+      ]);
+
+    if (error) {
+      console.error("Error saving subscriber:", error);
+      
+      // Check if it's a duplicate entry error
+      if (error.code === '23505') {
+        toast.info("Sei già iscritto alla newsletter!", {
+          description: "Continueremo a tenerti aggiornato sul lancio di M1SSION."
+        });
+        return;
+      }
+      
+      throw error;
+    }
+
+    // Send confirmation email through edge function
+    try {
+      await supabase.functions.invoke('send-email', {
+        body: {
+          type: 'welcome',
+          email: subscriber.email,
+          name: subscriber.name,
+          subject: 'Benvenuto in M1SSION',
+          data: {
+            launchDate: '19 Giugno 2025'
+          }
+        }
+      });
+    } catch (emailError) {
+      console.error("Failed to send confirmation email:", emailError);
+      // We don't throw here to avoid preventing the subscription from completing
+      // The user is still subscribed even if the email fails
+    }
+
+    console.log("Subscriber saved successfully:", data);
+  } catch (error) {
+    console.error("Failed to save subscriber:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get the current number of newsletter subscribers
+ */
+export const getSubscribersCount = async (): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('newsletter_subscribers')
+      .select('*', { count: 'exact', head: true });
+
+    if (error) {
+      throw error;
+    }
+
+    return count || 0;
+  } catch (error) {
+    console.error("Failed to get subscribers count:", error);
+    return 0;
+  }
+};

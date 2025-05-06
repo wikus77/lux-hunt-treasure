@@ -118,6 +118,36 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_subscribers: {
+        Row: {
+          campaign: string | null
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          referrer: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          campaign?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+          referrer?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          campaign?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          referrer?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       payment_transactions: {
         Row: {
           amount: number
