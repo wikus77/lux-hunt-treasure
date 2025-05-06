@@ -21,7 +21,13 @@ const Settings = () => {
   const { logout } = useAuthContext();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   
-  // Check for URL param "section" to open the specific section
+  // Add state for app settings
+  const [soundEffects, setSoundEffects] = useState(true);
+  const [language, setLanguage] = useState("Italiano");
+  
+  // Add state for notification settings
+  const [pushNotifications, setPushNotifications] = useState(true);
+  const [emailNotifications, setEmailNotifications] = useState(true);
   
   const handleLogout = async () => {
     try {
@@ -63,10 +69,19 @@ const Settings = () => {
         <AccountSection />
         
         {/* App Settings */}
-        <AppSection />
+        <AppSection 
+          soundEffects={soundEffects}
+          language={language}
+          setSoundEffects={setSoundEffects}
+        />
         
         {/* Notification Settings */}
-        <NotificationSection />
+        <NotificationSection 
+          pushNotifications={pushNotifications}
+          emailNotifications={emailNotifications}
+          setPushNotifications={setPushNotifications}
+          setEmailNotifications={setEmailNotifications}
+        />
         
         {/* Support & Help */}
         <SupportSection />

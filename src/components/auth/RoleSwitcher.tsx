@@ -24,12 +24,17 @@ const RoleSwitcher = () => {
       if (!user) return;
       
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
           
+        if (error) {
+          console.error("Error checking admin role:", error);
+          return;
+        }
+        
         setIsAdmin(data?.role === 'admin');
       } catch (error) {
         console.error("Error checking admin role:", error);
