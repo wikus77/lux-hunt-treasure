@@ -137,7 +137,7 @@ const NewsletterSection = ({ countdownCompleted = false }: NewsletterSectionProp
                     isSubmitting 
                       ? 'bg-gray-700 cursor-not-allowed' 
                       : countdownCompleted 
-                        ? 'bg-gradient-to-r from-[#00E5FF] to-[#00A3FF] text-black hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]' 
+                        ? 'bg-gradient-to-r from-[#0066FF] to-[#FF00FF] text-white hover:shadow-[0_0_15px_rgba(0,102,255,0.5)]' 
                         : 'bg-gray-700 cursor-not-allowed opacity-70'
                   } font-medium transition-all duration-300`}
                   disabled={isSubmitting || !countdownCompleted}
