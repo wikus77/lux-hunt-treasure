@@ -14,16 +14,16 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
       price: 'Gratuito',
       highlight: true,
       features: [
-        'Accesso all'app base',
-        '1 indizio a settimana',
-        'Partecipazione alle missioni base',
-        'Supporto via email',
+        "Accesso all'app base",
+        "1 indizio a settimana",
+        "Partecipazione alle missioni base",
+        "Supporto via email",
       ],
       notIncluded: [
-        'Indizi premium',
-        'Tracciamento avanzato',
-        'Accesso anticipato',
-        'Supporto prioritario'
+        "Indizi premium",
+        "Tracciamento avanzato",
+        "Accesso anticipato",
+        "Supporto prioritario"
       ],
       buttonText: 'Inizia Gratis',
       buttonColor: 'bg-gradient-to-r from-[#00E5FF] to-[#008eb3] text-black hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]'
@@ -33,14 +33,14 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
       price: '€9.99',
       period: '/mese',
       features: [
-        'Tutto del piano Base',
-        '3 indizi a settimana',
-        'Tracciamento base',
-        'Supporto chat',
+        "Tutto del piano Base",
+        "3 indizi a settimana",
+        "Tracciamento base",
+        "Supporto chat",
       ],
       notIncluded: [
-        'Accesso anticipato',
-        'Supporto prioritario'
+        "Accesso anticipato",
+        "Supporto prioritario"
       ],
       buttonText: 'Scegli Silver',
       buttonColor: 'bg-gradient-to-r from-[#C0C0C0] to-[#919191] text-black hover:shadow-[0_0_15px_rgba(192,192,192,0.5)]'
@@ -50,11 +50,11 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
       price: '€19.99',
       period: '/mese',
       features: [
-        'Tutto del piano Silver',
-        '5 indizi a settimana',
-        'Tracciamento avanzato',
-        'Accesso anticipato (24h)',
-        'Supporto prioritario',
+        "Tutto del piano Silver",
+        "5 indizi a settimana",
+        "Tracciamento avanzato",
+        "Accesso anticipato (24h)",
+        "Supporto prioritario",
       ],
       buttonText: 'Scegli Gold',
       buttonColor: 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black hover:shadow-[0_0_15px_rgba(255,215,0,0.5)]'
