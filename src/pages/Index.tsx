@@ -20,6 +20,7 @@ import { UserPlus } from "lucide-react";
 import GameExplanationSection from "@/components/landing/GameExplanationSection";
 import ParallaxContainer from "@/components/ui/parallax-container";
 import IntroOverlay from "@/components/intro/IntroOverlay";
+import BackgroundParticles from "@/components/ui/background-particles";
 
 const Index = () => {
   console.log("Index component rendering");
@@ -115,6 +116,7 @@ const Index = () => {
       
       {introCompleted && (
         <ParallaxContainer>
+          <BackgroundParticles count={20} />
           <UnifiedHeader />
           <div className="h-[72px] w-full" />
           
