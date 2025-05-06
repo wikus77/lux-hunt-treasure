@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -13,6 +14,7 @@ export function useAuth(): AuthContextType {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   // Initialize auth state
   useEffect(() => {
@@ -31,6 +33,9 @@ export function useAuth(): AuthContextType {
           console.log("Email verification status:", !!currentSession.user.email_confirmed_at);
         } else {
           setIsEmailVerified(false);
+          // Clear role when logging out
+          setUserRole(null);
+          localStorage.removeItem('userRole');
         }
         
         // Mark loading as complete after auth state changes
@@ -48,6 +53,12 @@ export function useAuth(): AuthContextType {
       if (initialSession?.user) {
         setIsEmailVerified(!!initialSession.user.email_confirmed_at);
         console.log("Initial email verification status:", !!initialSession.user.email_confirmed_at);
+        
+        // Get user role from localStorage
+        const savedRole = localStorage.getItem('userRole');
+        if (savedRole) {
+          setUserRole(savedRole);
+        }
       }
       
       // Mark loading as complete after initial check
@@ -78,6 +89,29 @@ export function useAuth(): AuthContextType {
       }
 
       console.log("Login successful for:", email);
+      
+      // Fetch user role
+      if (data.user) {
+        try {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.user.id)
+            .single();
+            
+          if (profileData?.role) {
+            setUserRole(profileData.role);
+            localStorage.setItem('userRole', profileData.role);
+          } else {
+            // Default to 'user' role if not specified
+            setUserRole('user');
+            localStorage.setItem('userRole', 'user');
+          }
+        } catch (e) {
+          console.error("Error fetching user role:", e);
+        }
+      }
+      
       return { success: true, data };
     } catch (error) {
       console.error("Unexpected login error:", error);
@@ -95,6 +129,9 @@ export function useAuth(): AuthContextType {
     console.log("Logging out user");
     try {
       await supabase.auth.signOut();
+      // Clear role when logging out
+      setUserRole(null);
+      localStorage.removeItem('userRole');
       toast.success("Logout effettuato");
     } catch (error) {
       console.error("Logout error:", error);
@@ -165,6 +202,19 @@ export function useAuth(): AuthContextType {
       return { success: false, error: error.message };
     }
   };
+  
+  /**
+   * Check if user has a specific role
+   */
+  const hasRole = (role: string): boolean => {
+    if (!userRole) return false;
+    
+    // Admin has access to everything
+    if (userRole === 'admin') return true;
+    
+    // Exact role match
+    return userRole === role;
+  };
 
   return {
     session,
@@ -177,5 +227,7 @@ export function useAuth(): AuthContextType {
     getAccessToken,
     resendVerificationEmail,
     resetPassword,
+    userRole,
+    hasRole,
   };
 }

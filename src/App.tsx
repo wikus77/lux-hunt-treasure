@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
@@ -36,10 +35,12 @@ import LanguageSettings from "./pages/LanguageSettings";
 import Stats from "./pages/Stats";
 import Leaderboard from "./pages/Leaderboard";
 import Notifications from "./pages/Notifications";
+import AccessDenied from "./pages/AccessDenied";
 
 // Components
 import { Toaster } from "sonner";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { RoleBasedProtectedRoute } from "./components/auth/RoleBasedProtectedRoute";
 import { Toaster as ShadcnToaster } from "./components/ui/toaster";
 import PublicLayout from "./components/layout/PublicLayout";
 import { EmailVerificationPage } from "./components/auth/EmailVerificationHandler";
@@ -105,153 +106,162 @@ function AppContent() {
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/access-denied" element={<AccessDenied />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Route>
 
+      {/* Base User Routes - Require Authentication */}
       <Route
         path="/home"
         element={
-          <ProtectedRoute>
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
             <Home />
-          </ProtectedRoute>
+          </RoleBasedProtectedRoute>
         }
       />
       <Route
         path="/events"
         element={
-          <ProtectedRoute>
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
             <Events />
-          </ProtectedRoute>
+          </RoleBasedProtectedRoute>
         }
       />
       <Route
         path="/profile"
         element={
-          <ProtectedRoute>
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
             <Profile />
-          </ProtectedRoute>
+          </RoleBasedProtectedRoute>
         }
       />
       <Route
         path="/map"
         element={
-          <ProtectedRoute>
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
             <Map />
-          </ProtectedRoute>
+          </RoleBasedProtectedRoute>
         }
       />
       <Route
         path="/buzz"
         element={
-          <ProtectedRoute>
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
             <Buzz />
-          </ProtectedRoute>
+          </RoleBasedProtectedRoute>
         }
       />
-      <Route
-        path="/subscriptions"
-        element={
-          <ProtectedRoute>
-            <Subscriptions />
-          </ProtectedRoute>
-        }
-      />
+
+      {/* Standard User Settings Routes */}
       <Route
         path="/settings"
         element={
-          <ProtectedRoute>
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
             <Settings />
-          </ProtectedRoute>
+          </RoleBasedProtectedRoute>
         }
       />
       <Route
         path="/personal-info"
         element={
-          <ProtectedRoute>
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
             <PersonalInfo />
-          </ProtectedRoute>
+          </RoleBasedProtectedRoute>
         }
       />
       <Route
         path="/privacy-security"
         element={
-          <ProtectedRoute>
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
             <PrivacySecurity />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/payment-methods"
-        element={
-          <ProtectedRoute>
-            <PaymentMethods />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/payment-silver"
-        element={
-          <ProtectedRoute>
-            <PaymentSilver />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/payment-gold"
-        element={
-          <ProtectedRoute>
-            <PaymentGold />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/payment-black"
-        element={
-          <ProtectedRoute>
-            <PaymentBlack />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/payment-success"
-        element={
-          <ProtectedRoute>
-            <PaymentSuccess />
-          </ProtectedRoute>
+          </RoleBasedProtectedRoute>
         }
       />
       <Route
         path="/language-settings"
         element={
-          <ProtectedRoute>
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
             <LanguageSettings />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/stats"
-        element={
-          <ProtectedRoute>
-            <Stats />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/leaderboard"
-        element={
-          <ProtectedRoute>
-            <Leaderboard />
-          </ProtectedRoute>
+          </RoleBasedProtectedRoute>
         }
       />
       <Route
         path="/notifications"
         element={
-          <ProtectedRoute>
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
             <Notifications />
-          </ProtectedRoute>
+          </RoleBasedProtectedRoute>
         }
       />
+
+      {/* Premium Features - Require paid subscription or admin role */}
+      <Route
+        path="/stats"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['premium_user', 'admin']}>
+            <Stats />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/leaderboard"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['premium_user', 'admin']}>
+            <Leaderboard />
+          </RoleBasedProtectedRoute>
+        }
+      />
+
+      {/* Payment Routes - Available to all authenticated users */}
+      <Route
+        path="/subscriptions"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
+            <Subscriptions />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/payment-methods"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
+            <PaymentMethods />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/payment-silver"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
+            <PaymentSilver />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/payment-gold"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
+            <PaymentGold />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/payment-black"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
+            <PaymentBlack />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/payment-success"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
+            <PaymentSuccess />
+          </RoleBasedProtectedRoute>
+        }
+      />
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -10,6 +10,8 @@ export interface AuthContextType {
   session: Session | null;
   resendVerificationEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+  userRole: string | null;
+  hasRole: (role: string) => boolean;
 }
 
 export interface User {
