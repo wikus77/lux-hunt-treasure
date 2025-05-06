@@ -44,7 +44,7 @@ serve(async (req) => {
 
   try {
     // Parse request
-    const { planType, customPrice, redirectUrl, isBuzz, isMapBuzz, sessionId } = await req.json();
+    const { planType, customPrice, redirectUrl, isBuzz, isMapBuzz, sessionId, paymentMethod } = await req.json();
     
     // Validate required params
     if (!planType) {
@@ -105,6 +105,18 @@ serve(async (req) => {
     // Set price based on plan or custom price
     const amount = customPrice || PLAN_DETAILS[planType].price;
     
+    // Set up payment method options based on request
+    const payment_method_types = ["card"];
+    
+    // Add Apple Pay and Google Pay if requested
+    if (paymentMethod === 'apple_pay') {
+      payment_method_types.push("apple_pay");
+    } else if (paymentMethod === 'google_pay') {
+      // For Google Pay, Stripe uses the "card" payment method with Google Pay wallet
+      // The frontend needs to handle the Google Pay flow
+      console.log("Google Pay payment method requested");
+    }
+
     // Create checkout session based on request type
     let session;
     
@@ -112,7 +124,7 @@ serve(async (req) => {
       // One-time payment
       session = await stripe.checkout.sessions.create({
         customer: customerId,
-        payment_method_types: ["card"],
+        payment_method_types,
         line_items: [{
           price_data: {
             currency: "eur",
@@ -131,6 +143,7 @@ serve(async (req) => {
           userId: user.id,
           type: isMapBuzz ? "buzzMap" : "buzz",
           sessionId: sessionId || '',
+          paymentMethod: paymentMethod || "card"
         },
       });
       
@@ -141,13 +154,14 @@ serve(async (req) => {
         description: isMapBuzz ? "Acquisto Buzz Map" : "Acquisto Indizio Extra",
         provider_transaction_id: session.id,
         status: "pending",
+        payment_method: paymentMethod || "card"
       });
       
     } else {
       // Subscription payment
       session = await stripe.checkout.sessions.create({
         customer: customerId,
-        payment_method_types: ["card"],
+        payment_method_types,
         line_items: [{
           price_data: {
             currency: "eur",
@@ -168,6 +182,7 @@ serve(async (req) => {
         metadata: {
           userId: user.id,
           subscriptionTier: planType,
+          paymentMethod: paymentMethod || "card"
         },
       });
       
@@ -178,6 +193,7 @@ serve(async (req) => {
         description: `Abbonamento ${planType}`,
         provider_transaction_id: session.id,
         status: "pending",
+        payment_method: paymentMethod || "card"
       });
       
       // Create or update subscription record
@@ -187,6 +203,7 @@ serve(async (req) => {
         provider: "stripe",
         provider_subscription_id: session.id,
         status: "pending",
+        payment_method: paymentMethod || "card"
       });
     }
 

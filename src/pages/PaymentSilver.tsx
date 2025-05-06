@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,35 @@ const PaymentSilver = () => {
   const [showExplosion, setShowExplosion] = useState(false);
   const [fadeOutExplosion, setFadeOutExplosion] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { processSubscription, loading } = useStripePayment();
+  const [paymentMethodsAvailable, setPaymentMethodsAvailable] = useState({
+    applePayAvailable: false,
+    googlePayAvailable: false
+  });
+  
+  const { 
+    processSubscription, 
+    loading, 
+    detectPaymentMethodAvailability 
+  } = useStripePayment();
+
+  useEffect(() => {
+    // Check available payment methods
+    const availableMethods = detectPaymentMethodAvailability();
+    setPaymentMethodsAvailable(availableMethods);
+    
+    // If neither Apple Pay nor Google Pay is available, default to card
+    if (!availableMethods.applePayAvailable && !availableMethods.googlePayAvailable) {
+      setPaymentMethod('card');
+    } 
+    // If Apple Pay is available on iOS devices, default to it
+    else if (availableMethods.applePayAvailable && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+      setPaymentMethod('apple');
+    } 
+    // If Google Pay is available on Android devices, default to it
+    else if (availableMethods.googlePayAvailable && /Android/.test(navigator.userAgent)) {
+      setPaymentMethod('google');
+    }
+  }, [detectPaymentMethodAvailability]);
 
   const handlePaymentCompleted = () => {
     setShowExplosion(true);
@@ -48,7 +76,7 @@ const PaymentSilver = () => {
     });
     
     try {
-      await processSubscription("Silver");
+      await processSubscription("Silver", "card");
     } catch (error) {
       console.error("Errore durante il processo di pagamento:", error);
       toast.error("Errore di pagamento", {
@@ -63,16 +91,17 @@ const PaymentSilver = () => {
     if (isProcessing || loading) return;
     setIsProcessing(true);
     
-    toast.success("Pagamento Rapido", {
-      description: "Pagamento in elaborazione..."
+    toast.info("Inizializzazione Apple Pay...", {
+      description: "Preparazione del pagamento con Apple Pay in corso.",
+      duration: 2000,
     });
     
     try {
-      await processSubscription("Silver");
+      await processSubscription("Silver", "apple_pay");
     } catch (error) {
-      console.error("Errore durante il pagamento rapido:", error);
+      console.error("Errore durante il pagamento con Apple Pay:", error);
       toast.error("Errore di pagamento", {
-        description: "Si è verificato un errore durante il pagamento rapido.",
+        description: "Si è verificato un errore durante il pagamento con Apple Pay.",
       });
     } finally {
       setIsProcessing(false);
@@ -83,16 +112,17 @@ const PaymentSilver = () => {
     if (isProcessing || loading) return;
     setIsProcessing(true);
     
-    toast.success("Metodo Alternativo", {
-      description: "Pagamento in elaborazione..."
+    toast.info("Inizializzazione Google Pay...", {
+      description: "Preparazione del pagamento con Google Pay in corso.",
+      duration: 2000,
     });
     
     try {
-      await processSubscription("Silver");
+      await processSubscription("Silver", "google_pay");
     } catch (error) {
-      console.error("Errore durante il pagamento alternativo:", error);
+      console.error("Errore durante il pagamento con Google Pay:", error);
       toast.error("Errore di pagamento", {
-        description: "Si è verificato un errore durante il pagamento alternativo.",
+        description: "Si è verificato un errore durante il pagamento con Google Pay.",
       });
     } finally {
       setIsProcessing(false);
@@ -154,15 +184,17 @@ const PaymentSilver = () => {
             <button 
               className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
               onClick={() => setPaymentMethod('apple')}
+              disabled={!paymentMethodsAvailable.applePayAvailable}
             >
-              <span className="text-sm">Pagamento Rapido</span>
+              <span className="text-sm">Apple Pay</span>
             </button>
             
             <button 
               className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
               onClick={() => setPaymentMethod('google')}
+              disabled={!paymentMethodsAvailable.googlePayAvailable}
             >
-              <span className="text-sm">Altro metodo</span>
+              <span className="text-sm">Google Pay</span>
             </button>
           </div>
 

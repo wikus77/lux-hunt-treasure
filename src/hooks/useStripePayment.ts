@@ -10,6 +10,7 @@ interface StripePaymentOptions {
   isBuzz?: boolean;
   isMapBuzz?: boolean;
   sessionId?: string;
+  paymentMethod?: 'card' | 'apple_pay' | 'google_pay';
 }
 
 export const useStripePayment = () => {
@@ -21,6 +22,12 @@ export const useStripePayment = () => {
     setError(null);
 
     try {
+      // Log the payment method being used
+      const paymentMethodLog = options.paymentMethod 
+        ? `Usando ${options.paymentMethod === 'apple_pay' ? 'Apple Pay' : options.paymentMethod === 'google_pay' ? 'Google Pay' : 'carta di credito'}`
+        : 'Usando metodo di pagamento standard';
+      console.log(paymentMethodLog);
+
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           planType: options.planType,
@@ -29,6 +36,7 @@ export const useStripePayment = () => {
           isBuzz: options.isBuzz,
           isMapBuzz: options.isMapBuzz,
           sessionId: options.sessionId,
+          paymentMethod: options.paymentMethod || 'card',
         },
       });
 
@@ -38,6 +46,16 @@ export const useStripePayment = () => {
 
       if (!data?.url) {
         throw new Error('Errore nella creazione della sessione di pagamento');
+      }
+
+      // If the payment method is Apple Pay or Google Pay, show appropriate message
+      if (options.paymentMethod) {
+        const methodName = options.paymentMethod === 'apple_pay' ? 'Apple Pay' : 
+                          options.paymentMethod === 'google_pay' ? 'Google Pay' : 'carta di credito';
+        toast.info(`Pagamento con ${methodName}`, {
+          description: `Stai per pagare con ${methodName}`,
+          duration: 3000,
+        });
       }
 
       // Redirect to Stripe Checkout
@@ -55,21 +73,39 @@ export const useStripePayment = () => {
     }
   };
 
-  const processSubscription = async (planType: 'Silver' | 'Gold' | 'Black') => {
+  const processSubscription = async (planType: 'Silver' | 'Gold' | 'Black', paymentMethod?: 'card' | 'apple_pay' | 'google_pay') => {
     return createCheckoutSession({
       planType,
+      paymentMethod
     });
   };
 
-  const processBuzzPurchase = async (isMapBuzz = false, customPrice?: number, redirectUrl?: string, sessionId?: string) => {
+  const processBuzzPurchase = async (
+    isMapBuzz = false, 
+    customPrice?: number, 
+    redirectUrl?: string, 
+    sessionId?: string,
+    paymentMethod?: 'card' | 'apple_pay' | 'google_pay'
+  ) => {
     return createCheckoutSession({
       planType: isMapBuzz ? 'BuzzMap' : 'Buzz',
       customPrice,
       redirectUrl,
       isBuzz: !isMapBuzz,
       isMapBuzz,
-      sessionId
+      sessionId,
+      paymentMethod
     });
+  };
+
+  const detectPaymentMethodAvailability = () => {
+    const isApplePayAvailable = window.ApplePaySession && window.ApplePaySession.canMakePayments();
+    const isGooglePayAvailable = !!window.google?.payments;
+    
+    return {
+      applePayAvailable: isApplePayAvailable,
+      googlePayAvailable: isGooglePayAvailable
+    };
   };
 
   return {
@@ -77,5 +113,6 @@ export const useStripePayment = () => {
     error,
     processSubscription,
     processBuzzPurchase,
+    detectPaymentMethodAvailability
   };
 };
