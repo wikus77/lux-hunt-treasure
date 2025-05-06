@@ -133,11 +133,11 @@ const NewsletterSection = ({ countdownCompleted = false }: NewsletterSectionProp
                 
                 <button
                   type="submit"
-                  className={`w-full p-3 rounded-lg flex items-center justify-center ${
+                  className={`w-full p-3 rounded-full flex items-center justify-center ${
                     isSubmitting 
                       ? 'bg-gray-700 cursor-not-allowed' 
                       : countdownCompleted 
-                        ? 'bg-gradient-to-r from-[#00E5FF] to-[#008eb3] text-black hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]' 
+                        ? 'bg-gradient-to-r from-[#9b87f5] to-[#8B5CF6] text-white hover:shadow-[0_0_15px_rgba(139,92,246,0.5)]' 
                         : 'bg-gray-700 cursor-not-allowed opacity-70'
                   } font-medium transition-all duration-300`}
                   disabled={isSubmitting || !countdownCompleted}
