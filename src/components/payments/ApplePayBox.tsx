@@ -13,7 +13,7 @@ const ApplePayBox = ({ onApplePay }: ApplePayBoxProps) => {
   useEffect(() => {
     // Check if Apple Pay is available
     const checkApplePayAvailability = () => {
-      if (window.ApplePaySession && window.ApplePaySession.canMakePayments()) {
+      if (typeof window.ApplePaySession !== 'undefined' && window.ApplePaySession?.canMakePayments()) {
         setIsApplePayAvailable(true);
       } else {
         setIsApplePayAvailable(false);
@@ -64,3 +64,4 @@ const ApplePayBox = ({ onApplePay }: ApplePayBoxProps) => {
 };
 
 export default ApplePayBox;
+

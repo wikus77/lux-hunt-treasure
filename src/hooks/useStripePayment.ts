@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -99,8 +98,8 @@ export const useStripePayment = () => {
   };
 
   const detectPaymentMethodAvailability = () => {
-    const isApplePayAvailable = window.ApplePaySession && window.ApplePaySession.canMakePayments();
-    const isGooglePayAvailable = !!window.google?.payments;
+    const isApplePayAvailable = typeof window.ApplePaySession !== 'undefined' && window.ApplePaySession?.canMakePayments();
+    const isGooglePayAvailable = typeof window.google !== 'undefined' && typeof window.google.payments !== 'undefined';
     
     return {
       applePayAvailable: isApplePayAvailable,

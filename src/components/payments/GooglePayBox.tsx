@@ -13,14 +13,14 @@ const GooglePayBox = ({ onGooglePay }: GooglePayBoxProps) => {
   useEffect(() => {
     // Check if Google Pay is available
     const checkGooglePayAvailability = () => {
-      if (window.google && window.google.payments) {
+      if (typeof window.google !== 'undefined' && typeof window.google.payments !== 'undefined') {
         setIsGooglePayAvailable(true);
       } else {
         // If the Google Pay API is not available yet, we can attempt to load it
         const script = document.createElement('script');
         script.src = 'https://pay.google.com/gp/p/js/pay.js';
         script.onload = () => {
-          if (window.google && window.google.payments) {
+          if (typeof window.google !== 'undefined' && typeof window.google.payments !== 'undefined') {
             setIsGooglePayAvailable(true);
           }
         };
@@ -83,3 +83,4 @@ const GooglePayBox = ({ onGooglePay }: GooglePayBoxProps) => {
 };
 
 export default GooglePayBox;
+
