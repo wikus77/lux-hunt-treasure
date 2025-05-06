@@ -2,6 +2,7 @@
 import React, { ReactNode, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import AuthContext from './AuthContext';
+import { registerDeviceForNotifications } from '@/integrations/firebase/firebase-client';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -18,6 +19,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       isEmailVerified: auth.isEmailVerified,
       userId: auth.getCurrentUser()?.id
     });
+    
+    // Register for notifications when user is authenticated
+    if (auth.isAuthenticated() && auth.isEmailVerified && !auth.isLoading) {
+      // Check if notification permission is granted
+      if (Notification.permission === 'granted') {
+        registerDeviceForNotifications()
+          .then(result => {
+            console.log("Device registration for notifications:", result);
+          })
+          .catch(error => {
+            console.error("Error registering device for notifications:", error);
+          });
+      }
+    }
   }, [auth.isAuthenticated, auth.isLoading, auth.isEmailVerified, auth.getCurrentUser]);
   
   return (

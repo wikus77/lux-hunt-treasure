@@ -3,12 +3,14 @@ import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useState, useEffect } from "react";
 import ProfileClues from "@/components/profile/ProfileClues";
 import { clues } from "@/data/cluesData";
-import { FileSearch } from "lucide-react";
+import { FileSearch, Bell } from "lucide-react";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import PushNotificationRequest from "@/components/notifications/PushNotificationRequest";
 
 const Events = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -19,6 +21,8 @@ const Events = () => {
     closeNotificationsDrawer, 
     createNotification 
   } = useNotificationManager();
+  const { isSupported, permission } = usePushNotifications();
+  const [showNotificationRequest, setShowNotificationRequest] = useState(false);
   
   useEffect(() => {
     // Get profile image on mount
@@ -119,6 +123,16 @@ const Events = () => {
             Visualizza Notifiche 
           </Button>
           
+          {isSupported && permission !== 'granted' && (
+            <Button 
+              onClick={() => setShowNotificationRequest(true)} 
+              className="w-full flex items-center gap-2 bg-gradient-to-r from-projectx-blue to-projectx-pink"
+            >
+              <Bell className="h-4 w-4 mr-1" />
+              Attiva Notifiche Push
+            </Button>
+          )}
+          
           <Button 
             onClick={handleResetClues}
             variant="destructive"
@@ -146,6 +160,11 @@ const Events = () => {
       <NotificationsDrawer 
         open={notificationsDrawerOpen} 
         onOpenChange={closeNotificationsDrawer} 
+      />
+
+      <PushNotificationRequest
+        open={showNotificationRequest}
+        onOpenChange={setShowNotificationRequest}
       />
     </div>
   );
