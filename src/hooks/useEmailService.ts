@@ -16,6 +16,7 @@ interface SendEmailProps {
 export function useEmailService() {
   const [isSending, setIsSending] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [lastResponse, setLastResponse] = useState<any>(null);
 
   /**
    * Send an email using the email service
@@ -26,13 +27,14 @@ export function useEmailService() {
     name = '',
     subject,
     data = {}
-  }: SendEmailProps): Promise<{ success: boolean; error?: string }> => {
+  }: SendEmailProps): Promise<{ success: boolean; error?: string; response?: any }> => {
     if (!email) {
       return { success: false, error: "Email address is required" };
     }
 
     setIsSending(true);
     setLastError(null);
+    setLastResponse(null);
     
     try {
       console.log(`Attempting to send ${type} email to ${email}`);
@@ -47,12 +49,16 @@ export function useEmailService() {
         }
       });
 
+      // Log the complete response for debugging
+      console.log("Complete response from send-email function:", responseData);
+      setLastResponse(responseData);
+
       if (error) {
-        console.error("Error sending email:", error);
+        console.error("Error invoking send-email function:", error);
         const errorMessage = error.message || "Si è verificato un errore nell'invio dell'email";
         toast.error(`Errore nell'invio dell'email: ${errorMessage}`);
         setLastError(errorMessage);
-        return { success: false, error: errorMessage };
+        return { success: false, error: errorMessage, response: responseData };
       }
 
       if (responseData?.error) {
@@ -60,18 +66,22 @@ export function useEmailService() {
         const errorMessage = responseData.error.message || "Errore dal servizio email";
         toast.error(`Errore: ${errorMessage}`);
         setLastError(errorMessage);
-        return { success: false, error: errorMessage };
+        return { success: false, error: errorMessage, response: responseData };
       }
 
       console.log("Email sent successfully:", responseData);
-      return { success: true };
+      toast.success("Email inviata con successo", {
+        description: `L'email è stata inviata a ${email}`
+      });
+      return { success: true, response: responseData };
     } catch (error: any) {
       console.error("Exception sending email:", error);
       const errorMessage = error.message || "Si è verificato un errore nell'invio dell'email";
       setLastError(errorMessage);
       return { 
         success: false, 
-        error: errorMessage
+        error: errorMessage,
+        response: { exception: error.toString() }
       };
     } finally {
       setIsSending(false);
@@ -128,6 +138,7 @@ export function useEmailService() {
   return {
     isSending,
     lastError,
+    lastResponse,
     sendEmail,
     sendWelcomeEmail,
     sendVerificationEmail,

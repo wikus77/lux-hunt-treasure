@@ -8,8 +8,6 @@ if (!apiKey) {
   console.error("RESEND_API_KEY environment variable is not set");
 }
 
-const resend = new Resend(apiKey);
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -68,7 +66,10 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: { message: "Email service is not properly configured. RESEND_API_KEY is missing." } 
+          error: { 
+            message: "Email service is not properly configured. RESEND_API_KEY is missing.",
+            details: "The RESEND_API_KEY environment variable is not set in Supabase."
+          } 
         }),
         {
           status: 500,
@@ -77,7 +78,11 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Initialize Resend with the API key
+    const resend = new Resend(apiKey);
+
     console.log(`Sending ${type} email to ${email}`);
+    console.log("API Key check: ", apiKey ? "Present (length " + apiKey.length + ")" : "Missing");
     
     let emailData;
     
@@ -110,6 +115,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send the email
     try {
+      console.log("Attempting to send email with data:", JSON.stringify(emailData));
+      
       const emailResponse = await resend.emails.send(emailData);
       
       console.log("Email API response:", JSON.stringify(emailResponse));
@@ -118,7 +125,16 @@ const handler = async (req: Request): Promise<Response> => {
         return new Response(
           JSON.stringify({ 
             success: false, 
-            error: emailResponse.error 
+            error: emailResponse.error,
+            debug: {
+              emailType: type,
+              apiKeyPresent: !!apiKey,
+              emailData: {
+                from: emailData.from,
+                to: emailData.to,
+                subject: emailData.subject,
+              }
+            }
           }),
           {
             status: 500,
@@ -143,7 +159,17 @@ const handler = async (req: Request): Promise<Response> => {
           error: { 
             message: sendError.message || "Failed to send email", 
             details: sendError
-          } 
+          },
+          debug: {
+            emailType: type,
+            apiKeyPresent: !!apiKey,
+            apiKeyLength: apiKey ? apiKey.length : 0,
+            emailData: {
+              from: emailData.from,
+              to: emailData.to,
+              subject: emailData.subject,
+            }
+          }
         }),
         {
           status: 500,

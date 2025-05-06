@@ -8,11 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, ChevronDown, ChevronUp, Bug } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const EmailSender: React.FC = () => {
-  const { isSending, lastError, sendEmail } = useEmailService();
+  const { isSending, lastError, lastResponse, sendEmail } = useEmailService();
   const [emailType, setEmailType] = useState<'welcome' | 'verification' | 'password_reset' | 'notification'>('welcome');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -21,6 +21,7 @@ const EmailSender: React.FC = () => {
   const [verificationLink, setVerificationLink] = useState('');
   const [resetLink, setResetLink] = useState('');
   const [showDebugInfo, setShowDebugInfo] = useState(false);
+  const [showDetailedDebug, setShowDetailedDebug] = useState(false);
 
   useEffect(() => {
     // Generate default links for testing
@@ -88,6 +89,9 @@ const EmailSender: React.FC = () => {
       toast.success("Email inviata con successo!", { 
         description: `L'email è stata inviata a ${email}`
       });
+    } else {
+      // Se c'è stato un errore, mostriamo sempre il pannello di debug
+      setShowDebugInfo(true);
     }
   };
 
@@ -116,14 +120,50 @@ const EmailSender: React.FC = () => {
         )}
 
         {showDebugInfo && (
-          <div className="bg-gray-900 text-white p-3 rounded mb-4 text-xs overflow-auto max-h-32">
-            <p>Assicurati che:</p>
-            <ol className="list-decimal pl-5 space-y-1">
-              <li>La chiave API Resend sia configurata correttamente nelle variabili d'ambiente di Supabase</li>
-              <li>Il dominio di invio sia verificato su Resend</li>
-              <li>L'email destinataria non sia bloccata o inesistente</li>
-              <li>Le quote del servizio email non siano esaurite</li>
-            </ol>
+          <div className="mb-4 space-y-2">
+            <div className="bg-gray-900 text-white p-3 rounded text-xs overflow-auto max-h-32">
+              <div className="flex justify-between items-center mb-2">
+                <h4 className="font-semibold">Debugging info</h4>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 px-2 text-xs" 
+                  onClick={() => setShowDetailedDebug(!showDetailedDebug)}
+                >
+                  {showDetailedDebug ? 
+                    <><ChevronUp className="h-3 w-3 mr-1" /> Nascondi dettagli</> : 
+                    <><ChevronDown className="h-3 w-3 mr-1" /> Mostra dettagli</>
+                  }
+                </Button>
+              </div>
+              <p>Assicurati che:</p>
+              <ol className="list-decimal pl-5 space-y-1">
+                <li>La chiave API Resend sia configurata correttamente nelle variabili d'ambiente di Supabase</li>
+                <li>Il dominio di invio sia verificato su Resend</li>
+                <li>L'email destinataria non sia bloccata o inesistente</li>
+                <li>Le quote del servizio email non siano esaurite</li>
+              </ol>
+              
+              {showDetailedDebug && lastResponse && (
+                <div className="mt-3 pt-2 border-t border-gray-700">
+                  <p className="font-semibold mb-1">Risposta API:</p>
+                  <pre className="whitespace-pre-wrap break-all">
+                    {JSON.stringify(lastResponse, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-end">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="text-xs flex items-center gap-1"
+                onClick={() => window.open("https://vkjrqirvdvjbemsfzxof.supabase.co/functions/send-email/logs", "_blank")}
+              >
+                <Bug className="h-3 w-3" /> Visualizza logs completi
+              </Button>
+            </div>
           </div>
         )}
 
