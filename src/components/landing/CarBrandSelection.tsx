@@ -12,7 +12,12 @@ const CarBrandSelection = () => {
 
   // Safety check to ensure component mounts properly
   useEffect(() => {
-    setIsLoaded(true);
+    // Short timeout to ensure DOM is ready
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   // Reset rotation state after animation completes
@@ -36,8 +41,14 @@ const CarBrandSelection = () => {
     ? luxuryCarsData.find(car => car.id === selectedBrand) 
     : null;
 
+  // Show loading state while component initializes
   if (!isLoaded) {
-    return <div className="py-12 text-center">Loading car selection...</div>;
+    return (
+      <div className="w-full py-12 text-center bg-black">
+        <div className="inline-block w-8 h-8 border-2 border-t-cyan-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-400">Caricamento...</p>
+      </div>
+    );
   }
 
   return (

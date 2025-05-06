@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import IntroOverlay from "@/components/intro/IntroOverlay";
 import LaserRevealIntro from "@/components/intro/LaserRevealIntro";
 
@@ -11,8 +11,15 @@ interface IntroManagerProps {
 const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
   const [showIntroOverlay, setShowIntroOverlay] = useState(true);
   const [introCompleted, setIntroCompleted] = useState(false);
+  const safetyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Force intro to complete after timeout, even if animations fail
   useEffect(() => {
+    // Clear any existing timeout to prevent memory leaks
+    if (safetyTimeoutRef.current) {
+      clearTimeout(safetyTimeoutRef.current);
+    }
+    
     console.log("IntroManager effect running, pageLoaded:", pageLoaded);
     
     if (!pageLoaded) {
@@ -24,18 +31,20 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     document.body.style.overflow = "hidden"; // Prevent scrolling during intro
     
     // Add safety timeout to ensure intro completes even if animations fail
-    const safetyTimeout = setTimeout(() => {
-      if (showIntroOverlay && !introCompleted) {
+    safetyTimeoutRef.current = setTimeout(() => {
+      if (!introCompleted) {
         console.log("Safety timeout: forcing intro completion");
         handleIntroComplete();
       }
     }, 8000); // 8-second safety timeout
     
     return () => {
-      clearTimeout(safetyTimeout);
+      if (safetyTimeoutRef.current) {
+        clearTimeout(safetyTimeoutRef.current);
+      }
       document.body.style.overflow = "auto"; // Ensure scrolling is re-enabled
     };
-  }, [pageLoaded]);
+  }, [pageLoaded, introCompleted]);
 
   const handleIntroComplete = () => {
     setIntroCompleted(true);
@@ -55,7 +64,7 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
   
   console.log("IntroManager rendering. State:", { showIntroOverlay, introCompleted, pageLoaded });
   
-  // Skip intro if facing issues
+  // Skip intro if page isn't loaded yet
   if (!pageLoaded) {
     return null;
   }
