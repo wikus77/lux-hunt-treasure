@@ -15,7 +15,7 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
   useEffect(() => {
     if (!pageLoaded) return;
     
-    // Skip intro for now to fix blank screen issues
+    // Skip intro to fix blank screen issues
     const hasSeenIntro = localStorage.getItem('introShown') === 'true';
     
     if (hasSeenIntro) {
@@ -28,7 +28,7 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
       const timeout = setTimeout(() => {
         console.log("Force completing intro after timeout");
         handleIntroComplete();
-      }, 3000);
+      }, 500); // Ridotto per evitare schermate bianche
       
       return () => clearTimeout(timeout);
     }

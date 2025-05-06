@@ -32,6 +32,11 @@ const ParallaxContainer: React.FC<ParallaxContainerProps> = ({ children }) => {
     // Add scroll listener
     window.addEventListener('scroll', handleScroll);
     
+    // Execute once to position elements correctly on initial load
+    setTimeout(() => {
+      handleScroll();
+    }, 100);
+    
     // Cleanup
     return () => {
       window.removeEventListener('scroll', handleScroll);
