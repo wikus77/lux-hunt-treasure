@@ -13,29 +13,29 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
   const [introCompleted, setIntroCompleted] = useState(false);
   
   useEffect(() => {
-    if (!pageLoaded) return;
+    console.log("IntroManager effect running, pageLoaded:", pageLoaded);
     
-    // Force showing the intro every time for testing purposes
-    // Comment out the localStorage check to make sure intro always shows
+    if (!pageLoaded) {
+      console.log("Page not loaded yet, returning");
+      return;
+    }
+    
+    // Force showing the intro every time
     console.log("Preparing intro animation...");
     document.body.style.overflow = "hidden"; // Prevent scrolling during intro
     
-    /* Uncomment this when you want to revert to normal behavior
-    // Check if user has seen the intro before
-    const hasSeenIntro = localStorage.getItem('introShown') === 'true';
+    // For debugging purposes, add a safety timeout
+    const safetyTimeout = setTimeout(() => {
+      if (showIntroOverlay && !introCompleted) {
+        console.log("Safety timeout: forcing intro completion");
+        handleIntroComplete();
+      }
+    }, 10000); // 10 second safety timeout
     
-    if (hasSeenIntro) {
-      // Skip intro if already seen
-      console.log("Intro already shown, skipping...");
-      setShowIntroOverlay(false);
-      setIntroCompleted(true);
-      document.body.style.overflow = "auto"; // Enable scrolling
-    } else {
-      // Preparation for intro animation
-      console.log("Preparing intro animation...");
-      document.body.style.overflow = "hidden"; // Prevent scrolling during intro
-    }
-    */
+    return () => {
+      clearTimeout(safetyTimeout);
+      document.body.style.overflow = "auto"; // Ensure scrolling is re-enabled
+    };
   }, [pageLoaded]);
 
   const handleIntroComplete = () => {
@@ -54,21 +54,16 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
   const handleOverlayComplete = () => {
     console.log("Overlay complete callback fired");
     setShowIntroOverlay(false);
-    // Don't set introCompleted yet, we still need to show the LaserRevealIntro
-    
-    // Mark intro as shown - commented out to ensure laser reveal intro is shown
-    // localStorage.setItem('introShown', 'true');
-    
-    // Restore scrolling
-    document.body.style.overflow = "auto";
   };
   
+  console.log("IntroManager rendering. State:", { showIntroOverlay, introCompleted, pageLoaded });
+  
   // Render appropriate intro component based on state
-  if (showIntroOverlay) {
+  if (showIntroOverlay && pageLoaded) {
     return <IntroOverlay onComplete={handleOverlayComplete} />;
   }
   
-  if (!introCompleted) {
+  if (!introCompleted && pageLoaded) {
     return (
       <div className="fixed inset-0 z-[9999] bg-black">
         <LaserRevealIntro onComplete={handleIntroComplete} />
