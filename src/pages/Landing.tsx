@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Gift, Trophy, Mail, Share2, CheckCircle, Smartphone, MessageSquare } from 'lucide-react';
@@ -10,6 +9,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion } from 'framer-motion';
+import { saveSubscriber } from '@/services/newsletterService';
+import { getMissionDeadline, formatDisplayDate } from '@/utils/countdownDate';
 
 // Schema di validazione per il form della newsletter
 const formSchema = z.object({
@@ -28,25 +29,30 @@ const Landing = () => {
     resolver: zodResolver(formSchema)
   });
 
-  // Data di lancio del gioco (esempio: 30 giorni da oggi)
-  const launchDate = new Date();
-  launchDate.setDate(launchDate.getDate() + 30);
+  // Data di lancio del gioco dalla utility function
+  const launchDate = getMissionDeadline();
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     
     try {
-      // Simulazione di invio dati a un database
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('Newsletter signup:', data);
-      toast.success("Iscrizione completata!", {
-        description: `Grazie ${data.name}! Ti terremo aggiornato sul lancio di M1SSION.`
+      // Invia i dati al database tramite il servizio newsletter
+      const result = await saveSubscriber({
+        name: data.name,
+        email: data.email
       });
       
-      reset();
-      // Qui andrebbe l'invio effettivo a un database o servizio di newsletter
-    } catch (error) {
+      if (result.success) {
+        toast.success("Iscrizione completata!", {
+          description: `Grazie ${data.name}! Ti terremo aggiornato sul lancio di M1SSION.`
+        });
+        reset();
+      } else {
+        toast.error("Si è verificato un errore", {
+          description: result.error || "Non è stato possibile completare l'iscrizione. Riprova più tardi."
+        });
+      }
+    } catch (error: any) {
       console.error('Newsletter signup error:', error);
       toast.error("Si è verificato un errore", {
         description: "Non è stato possibile completare l'iscrizione. Riprova più tardi."

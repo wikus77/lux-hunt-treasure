@@ -7,8 +7,8 @@ export interface NewsletterSubscriber {
   email: string;
   created_at?: string;
   updated_at?: string;
-  campaign?: string;
-  referrer?: string;
+  campaign?: string | null;
+  referrer?: string | null;
 }
 
 /**
@@ -18,7 +18,8 @@ export const saveSubscriber = async (subscriber: Omit<NewsletterSubscriber, 'id'
   try {
     // Add tracking info
     const subscriberData = {
-      ...subscriber,
+      name: subscriber.name,
+      email: subscriber.email,
       campaign: getCampaignFromUrl(),
       referrer: document.referrer || 'direct',
     };
@@ -28,7 +29,7 @@ export const saveSubscriber = async (subscriber: Omit<NewsletterSubscriber, 'id'
       .from('newsletter_subscribers')
       .select('email')
       .eq('email', subscriber.email)
-      .single();
+      .maybeSingle();
     
     if (existingSubscriber) {
       return {
@@ -40,7 +41,7 @@ export const saveSubscriber = async (subscriber: Omit<NewsletterSubscriber, 'id'
     // Insert new subscriber
     const { data, error } = await supabase
       .from('newsletter_subscribers')
-      .insert([subscriberData])
+      .insert(subscriberData)
       .select();
     
     if (error) {
@@ -50,6 +51,9 @@ export const saveSubscriber = async (subscriber: Omit<NewsletterSubscriber, 'id'
         error: error.message
       };
     }
+    
+    // Schedule automated emails
+    await scheduleAutomatedEmails(subscriber.email, subscriber.name);
     
     return {
       success: true,
@@ -74,23 +78,17 @@ const getCampaignFromUrl = (): string | null => {
 
 /**
  * Schedules the automated emails for the subscriber
- * This would be implemented as a server-side function
  */
-export const scheduleAutomatedEmails = async (email: string): Promise<boolean> => {
+export const scheduleAutomatedEmails = async (email: string, name = ''): Promise<boolean> => {
   try {
-    // This is just a placeholder. In a real implementation,
-    // you would call a Supabase Edge Function or other backend API
-    // to schedule the emails at the appropriate times.
-    console.log("Scheduling automated emails for:", email);
-    
-    // Example call to a hypothetical Supabase Edge Function
-    /*
     const { error } = await supabase.functions.invoke('schedule-newsletter-emails', {
-      body: { email }
+      body: { email, name }
     });
     
-    return !error;
-    */
+    if (error) {
+      console.error("Error invoking schedule-newsletter-emails function:", error);
+      return false;
+    }
     
     return true;
   } catch (error) {
