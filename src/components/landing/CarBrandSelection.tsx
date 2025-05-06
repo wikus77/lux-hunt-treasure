@@ -31,14 +31,14 @@ const CarBrandSelection = () => {
     : null;
 
   return (
-    <section className="w-full py-16 md:py-24 bg-black relative overflow-hidden">
+    <div className="w-full relative overflow-hidden">
       {/* Background grid lines effect */}
       <div className="absolute inset-0 z-0">
         <div className="grid-lines"></div>
       </div>
       
-      <div className="container px-4 mx-auto relative z-10">
-        <div className="flex justify-between items-center mb-16">
+      <div className="relative z-10">
+        <div className="flex justify-between items-center mb-12">
           <motion.h2 
             className="text-3xl md:text-5xl font-orbitron text-cyan-400"
             initial={{ opacity: 0, y: -20 }}
@@ -159,7 +159,7 @@ const CarBrandSelection = () => {
           )}
         </motion.div>
       </div>
-    </section>
+    </div>
   );
 };
 
