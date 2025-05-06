@@ -16,7 +16,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LandingRoute />} />
+        <Route path="/" element={<Landing />} />
         <Route element={<PublicLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -45,11 +45,6 @@ function App() {
       <Toaster />
     </Router>
   );
-}
-
-// New landing route that shows the landing page
-function LandingRoute() {
-  return <Landing />;
 }
 
 export default App;
