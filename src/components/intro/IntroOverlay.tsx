@@ -55,3 +55,6 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete, onSkip }) => {
       </div>
     </div>
   );
+};
+
+export default IntroOverlay;
