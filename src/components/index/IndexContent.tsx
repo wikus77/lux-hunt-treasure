@@ -10,6 +10,7 @@ import SubscriptionSection from "@/components/landing/SubscriptionSection";
 import CTASection from "@/components/landing/CTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
+import LuxuryCarBrandGrid from "@/components/landing/LuxuryCarBrandGrid";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Info } from "lucide-react";
 import BackgroundParallax from "@/components/ui/background-parallax";
@@ -72,6 +73,9 @@ const IndexContent = ({
       
       {/* Newsletter Section */}
       <NewsletterSection countdownCompleted={countdownCompleted} />
+      
+      {/* Modifica qui: Sostituzione della sezione vecchia con la nuova griglia 3D */}
+      <LuxuryCarBrandGrid />
       
       <HowItWorks onRegisterClick={onRegisterClick} countdownCompleted={countdownCompleted} />
       
