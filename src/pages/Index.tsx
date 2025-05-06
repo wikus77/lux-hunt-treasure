@@ -24,8 +24,22 @@ const Index = () => {
   // Get target date from utility function
   const nextEventDate = getMissionDeadline();
   
+  // Controlla se l'introduzione deve essere saltata
+  useEffect(() => {
+    if (localStorage.getItem("skipIntro") === "true") {
+      setIntroCompleted(true);
+    }
+  }, []);
+  
   // Add a useEffect to mark when the page is fully loaded
   useEffect(() => {
+    // Impostiamo direttamente pageLoaded a true dopo un breve ritardo
+    // per garantire che i componenti abbiano il tempo di caricare
+    const loadTimer = setTimeout(() => {
+      setPageLoaded(true);
+      console.log("Forced page loaded state to true");
+    }, 800);
+    
     if (document.readyState === 'complete') {
       console.log("Page already loaded");
       setPageLoaded(true);
@@ -36,7 +50,10 @@ const Index = () => {
         setPageLoaded(true);
       };
       window.addEventListener('load', handleLoad);
-      return () => window.removeEventListener('load', handleLoad);
+      return () => {
+        window.removeEventListener('load', handleLoad);
+        clearTimeout(loadTimer);
+      };
     }
   }, []);
 
@@ -71,9 +88,30 @@ const Index = () => {
   const handleCountdownComplete = () => {
     setCountdownCompleted(true);
   };
+  
+  // Callback per quando l'intro è completa
+  const handleIntroComplete = () => {
+    console.log("Intro completed callback, setting introCompleted to true");
+    setIntroCompleted(true);
+    // Memorizziamo che l'intro è stata mostrata
+    localStorage.setItem("skipIntro", "true");
+  };
 
   // Console logging state for debugging
   console.log("Render state:", { introCompleted, pageLoaded });
+
+  // Mostrare immediatamente il contenuto se la pagina è ancora in caricamento dopo 5 secondi
+  useEffect(() => {
+    const forceLoad = setTimeout(() => {
+      if (!pageLoaded || !introCompleted) {
+        console.log("Forcing content to show after timeout");
+        setPageLoaded(true);
+        setIntroCompleted(true);
+      }
+    }, 5000);
+    
+    return () => clearTimeout(forceLoad);
+  }, [pageLoaded, introCompleted]);
 
   // Show loading screen if page is not fully loaded yet
   if (!pageLoaded) {
@@ -86,12 +124,12 @@ const Index = () => {
       {!introCompleted && (
         <IntroManager 
           pageLoaded={pageLoaded} 
-          onIntroComplete={() => setIntroCompleted(true)}
+          onIntroComplete={handleIntroComplete}
         />
       )}
       
-      {/* Main content - only shown after intro completes */}
-      {introCompleted && (
+      {/* Main content - shown after intro completes or fallback when intro fails */}
+      {(introCompleted || !pageLoaded) && (
         <ParallaxContainer>
           <IndexContent 
             countdownCompleted={countdownCompleted}

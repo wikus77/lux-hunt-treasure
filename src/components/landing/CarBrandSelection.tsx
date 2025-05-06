@@ -9,10 +9,16 @@ const CarBrandSelection = () => {
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [isRotating, setIsRotating] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [loadingError, setLoadingError] = useState(false);
 
-  // Safety check to ensure component mounts properly
+  // Assicuriamoci che il componente sia montato correttamente
   useEffect(() => {
-    setIsLoaded(true);
+    try {
+      setIsLoaded(true);
+    } catch (error) {
+      console.error("Error loading CarBrandSelection:", error);
+      setLoadingError(true);
+    }
   }, []);
 
   // Reset rotation state after animation completes
@@ -26,22 +32,47 @@ const CarBrandSelection = () => {
   }, [isRotating]);
 
   const handleBrandClick = (brandId: string) => {
-    setIsRotating(brandId);
-    setTimeout(() => {
-      setSelectedBrand(brandId === selectedBrand ? null : brandId);
-    }, 300);
+    try {
+      setIsRotating(brandId);
+      setTimeout(() => {
+        setSelectedBrand(brandId === selectedBrand ? null : brandId);
+      }, 300);
+    } catch (error) {
+      console.error("Error handling brand click:", error);
+    }
   };
 
   const selectedCar = selectedBrand 
     ? luxuryCarsData.find(car => car.id === selectedBrand) 
     : null;
 
+  // Mostro un fallback in caso di errori
+  if (loadingError) {
+    return (
+      <div className="py-12 text-center text-red-400">
+        Impossibile caricare la selezione auto.
+        <button 
+          onClick={() => window.location.reload()}
+          className="mx-auto mt-4 block px-4 py-2 bg-black/40 border border-cyan-500/50 text-cyan-400 hover:bg-black/60"
+        >
+          Ricarica pagina
+        </button>
+      </div>
+    );
+  }
+
+  // Mostro un indicatore di caricamento se necessario
   if (!isLoaded) {
-    return <div className="py-12 text-center">Loading car selection...</div>;
+    return (
+      <div className="py-12 text-center">
+        <div className="w-10 h-10 border-4 border-t-cyan-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mx-auto"></div>
+        <div className="mt-4 text-cyan-300">Caricamento selezione auto...</div>
+      </div>
+    );
   }
 
   return (
-    <section className="w-full relative overflow-hidden py-16 px-4 bg-black">
+    <div className="w-full relative overflow-hidden">
       <div className="max-w-6xl mx-auto">
         {/* Background grid lines effect */}
         <div className="absolute inset-0 z-0">
@@ -49,23 +80,14 @@ const CarBrandSelection = () => {
         </div>
         
         <div className="relative z-10">
-          <div className="flex justify-between items-center mb-12">
-            <motion.h2 
-              className="text-3xl md:text-5xl font-orbitron text-cyan-400"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              M1SSION
-            </motion.h2>
-            
+          <div className="mb-12 text-center">
             <motion.div
-              className="text-lg md:text-2xl text-cyan-400 font-orbitron"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
+              className="text-lg md:text-xl text-cyan-400 font-orbitron"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              SELECT A BRAND
+              SELEZIONA UN BRAND
             </motion.div>
           </div>
           
@@ -95,6 +117,7 @@ const CarBrandSelection = () => {
                     className={`w-4/5 h-4/5 object-contain transition-all duration-500
                       ${selectedBrand === car.id ? 'filter-none brightness-200' : 'brightness-150 filter-cyan-glow'}
                       ${isRotating === car.id ? 'scale-90' : 'scale-100'}`}
+                    onError={() => console.error(`Error loading image for ${car.brand}`)}
                   />
                 </div>
               </motion.div>
@@ -121,6 +144,7 @@ const CarBrandSelection = () => {
                     src={selectedCar.imageUrl} 
                     alt={selectedCar.name}
                     className="w-full h-[400px] object-cover object-center rounded-t-3xl"
+                    onError={() => console.error(`Error loading image for ${selectedCar.name}`)}
                   />
                   
                   <div className="absolute bottom-0 left-0 right-0 z-20 p-6">
@@ -171,7 +195,7 @@ const CarBrandSelection = () => {
           </motion.div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 

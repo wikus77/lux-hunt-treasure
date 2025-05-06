@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import LandingHeader from "@/components/landing/LandingHeader";
 import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
 import PresentationSection from "@/components/presentation/PresentationSection";
@@ -28,6 +28,21 @@ const IndexContent = ({
   openInviteFriend 
 }: IndexContentProps) => {
   const [showPrizeDetails, setShowPrizeDetails] = useState(false);
+  const [contentLoaded, setContentLoaded] = useState(false);
+
+  // Assicuriamo che il contenuto sia caricato con una breve animazione
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setContentLoaded(true);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Se il contenuto non è ancora caricato, mostriamo un div vuoto e trasparente
+  if (!contentLoaded) {
+    return <div className="min-h-screen bg-black"></div>;
+  }
 
   return (
     <>
@@ -71,7 +86,15 @@ const IndexContent = ({
       <GameExplanationSection />
       
       {/* M1SSION FOREVER Section */}
-      <CarBrandSelection />
+      <section className="w-full relative overflow-hidden py-16 bg-black">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-3xl md:text-5xl font-orbitron text-cyan-400 mb-8 text-center">
+            M1SSION FOREVER
+          </div>
+          
+          <CarBrandSelection />
+        </div>
+      </section>
       
       {/* Newsletter Section */}
       <NewsletterSection countdownCompleted={countdownCompleted} />

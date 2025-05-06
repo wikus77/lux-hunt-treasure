@@ -4,6 +4,41 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
+// Custom error handler for React rendering errors
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
+  constructor(props: {children: React.ReactNode}) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("React error boundary caught an error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '20px', color: 'white', backgroundColor: 'black', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <h1>Oops! Qualcosa è andato storto</h1>
+          <p>L'applicazione ha riscontrato un problema. Prova a ricaricare la pagina.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{ marginTop: '20px', padding: '10px 20px', background: '#00E5FF', color: 'black', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            Ricarica Pagina
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 // Add error boundary
 const rootElement = document.getElementById('root');
 
@@ -14,9 +49,9 @@ if (!rootElement) {
     console.log("Mounting React app");
     
     ReactDOM.createRoot(rootElement).render(
-      <React.StrictMode>
+      <ErrorBoundary>
         <App />
-      </React.StrictMode>
+      </ErrorBoundary>
     );
     
     console.log("React app mounted successfully");

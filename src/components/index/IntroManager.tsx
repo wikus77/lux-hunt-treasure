@@ -11,6 +11,17 @@ interface IntroManagerProps {
 const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
   const [showIntroOverlay, setShowIntroOverlay] = useState(true);
   const [introCompleted, setIntroCompleted] = useState(false);
+  const [introFailed, setIntroFailed] = useState(false);
+  
+  // Determina se l'intro deve essere saltata (in base a localStorage)
+  useEffect(() => {
+    // Verifica se l'utente ha già visto l'intro
+    const hasSeenIntro = localStorage.getItem("hasSeenIntro");
+    if (hasSeenIntro === "true") {
+      console.log("Utente ha già visto l'intro, saltando...");
+      handleIntroComplete();
+    }
+  }, []);
   
   useEffect(() => {
     console.log("IntroManager effect running, pageLoaded:", pageLoaded);
@@ -25,21 +36,26 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     
     // Add safety timeout to ensure intro completes even if animations fail
     const safetyTimeout = setTimeout(() => {
-      if (showIntroOverlay && !introCompleted) {
+      if (!introCompleted) {
         console.log("Safety timeout: forcing intro completion");
+        setIntroFailed(true);
         handleIntroComplete();
       }
-    }, 8000); // 8-second safety timeout
+    }, 6000); // Reduced from 8s to 6s safety timeout
     
     return () => {
       clearTimeout(safetyTimeout);
       document.body.style.overflow = "auto"; // Ensure scrolling is re-enabled
     };
-  }, [pageLoaded]);
+  }, [pageLoaded, introCompleted]);
 
   const handleIntroComplete = () => {
     setIntroCompleted(true);
+    setShowIntroOverlay(false);
     console.log("Intro completed, showing landing page");
+    
+    // Store that the user has seen the intro
+    localStorage.setItem("hasSeenIntro", "true");
     
     // Restore scrolling
     document.body.style.overflow = "auto";
@@ -53,22 +69,39 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     setShowIntroOverlay(false);
   };
   
-  console.log("IntroManager rendering. State:", { showIntroOverlay, introCompleted, pageLoaded });
+  const handleSkipIntro = () => {
+    console.log("User skipped intro");
+    handleIntroComplete();
+  };
   
-  // Skip intro if facing issues
+  console.log("IntroManager rendering. State:", { showIntroOverlay, introCompleted, pageLoaded, introFailed });
+  
+  // Skip intro if facing issues or page not loaded
   if (!pageLoaded) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-black flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="w-12 h-12 border-4 border-t-cyan-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4">Caricamento in corso...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Se l'intro ha avuto problemi, skippiamo direttamente
+  if (introFailed) {
     return null;
   }
   
   // Render appropriate intro component based on state
   if (showIntroOverlay) {
-    return <IntroOverlay onComplete={handleOverlayComplete} />;
+    return <IntroOverlay onComplete={handleOverlayComplete} onSkip={handleSkipIntro} />;
   }
   
   if (!introCompleted) {
     return (
       <div className="fixed inset-0 z-[9999] bg-black">
-        <LaserRevealIntro onComplete={handleIntroComplete} />
+        <LaserRevealIntro onComplete={handleIntroComplete} onSkip={handleSkipIntro} />
       </div>
     );
   }
