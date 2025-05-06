@@ -85,7 +85,7 @@ const IndexContent = ({
       {/* How It Works Section */}
       <HowItWorks onRegisterClick={onRegisterClick} countdownCompleted={countdownCompleted} />
       
-      {/* M1SSION FOREVER Section - MOVED HERE between HowItWorks and PresentationSection */}
+      {/* M1SSION FOREVER Section - between HowItWorks and PresentationSection */}
       <section className="w-full relative overflow-hidden py-16 bg-black">
         <div className="max-w-6xl mx-auto">
           <div className="text-3xl md:text-5xl font-orbitron text-cyan-400 mb-8 text-center">
