@@ -80,7 +80,7 @@ const LuxuryCarsSection = () => {
             data-parallax-speed="0.05"
           >
             <ParallaxImage
-              src="/public/events/ferrari-sf90.jpg"
+              src="/events/ferrari-sf90.jpg"
               alt="Ferrari SF90"
               className="aspect-video md:aspect-[4/3] object-cover"
               speed={0.15}
@@ -104,7 +104,7 @@ const LuxuryCarsSection = () => {
             data-parallax-speed="0.1"
           >
             <ParallaxImage
-              src="/public/events/tesla-model-s.jpg"
+              src="/events/tesla-model-s.jpg"
               alt="Tesla Model S"
               className="aspect-video md:aspect-[4/3] object-cover"
               speed={0.2}
@@ -127,7 +127,7 @@ const LuxuryCarsSection = () => {
             data-parallax-speed="0.15"
           >
             <ParallaxImage
-              src="/public/events/porsche-911.jpg"
+              src="/events/porsche-911.jpg"
               alt="Porsche 911"
               className="aspect-video md:aspect-[4/3] object-cover"
               speed={0.25}
@@ -151,7 +151,7 @@ const LuxuryCarsSection = () => {
         >
           <Button 
             onClick={() => setShowDetails(true)}
-            className="bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+            className="bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black hover:shadow-[0_0_15px_rgba(0,229,255,0.5)] rounded-full"
           >
             <Info className="mr-2 h-4 w-4" />
             Scopri di più

@@ -77,3 +77,37 @@
 .parallax-depth-5 {
   transform: translateZ(-5px) scale(1.625);
 }
+
+/* Additional animation effects for parallax */
+.parallax-fade-in {
+  opacity: 0;
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.parallax-fade-in.is-visible {
+  opacity: 1;
+}
+
+/* Mouse movement parallax effect */
+.parallax-mouse-move {
+  transition: transform 0.1s ease-out;
+  transform-style: preserve-3d;
+}
+
+/* Scroll trigger based animations */
+.parallax-scroll-trigger {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.parallax-scroll-trigger.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Perspective container for 3D effects */
+.perspective-container {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}

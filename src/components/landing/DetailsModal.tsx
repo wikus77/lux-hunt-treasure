@@ -1,198 +1,213 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { ParallaxImage } from '@/components/ui/parallax-image';
-import { motion } from 'framer-motion';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { CheckCircle2, Clock, Gift } from 'lucide-react';
 
-interface DetailsModalProps {
+type DetailsModalProps = {
   open: boolean;
   onClose: () => void;
   type: 'prizes' | 'game' | 'subscription';
   title: string;
-}
+};
 
-const DetailsModal: React.FC<DetailsModalProps> = ({
-  open,
-  onClose,
-  type,
-  title
-}) => {
-  const renderContent = () => {
-    switch (type) {
-      case 'prizes':
-        return (
-          <div className="space-y-6">
-            <p className="text-lg text-white/80">
-              Partecipando alla missione M1SSION potrai vincere auto di lusso e altri premi straordinari. Ecco cosa ti aspetta:
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <ParallaxImage
-                  src="/lovable-uploads/32a96c45-2a5d-4579-bbb8-8bff4a195655.png"
-                  alt="Ferrari"
-                  className="rounded-lg h-48 md:h-64"
-                  speed={0.2}
-                  priority
-                />
-                <h3 className="mt-2 text-lg font-medium text-cyan-400">Ferrari SF90 Stradale</h3>
-                <p className="text-sm text-white/70">Un capolavoro ingegneristico con oltre 1000CV di potenza.</p>
-              </div>
-              
-              <div>
-                <ParallaxImage
-                  src="/public/events/lamborghini-huracan.jpg"
-                  alt="Lamborghini"
-                  className="rounded-lg h-48 md:h-64"
-                  speed={0.2}
-                />
-                <h3 className="mt-2 text-lg font-medium text-cyan-400">Lamborghini Huracán</h3>
-                <p className="text-sm text-white/70">Prestazioni straordinarie e design italiano inconfondibile.</p>
-              </div>
-              
-              <div className="md:col-span-2">
-                <ParallaxImage
-                  src="/public/events/porsche-911.jpg"
-                  alt="Altri premi"
-                  className="rounded-lg h-40 md:h-48"
-                  speed={0.2}
-                />
-                <h3 className="mt-2 text-lg font-medium text-cyan-400">Altri premi esclusivi</h3>
-                <p className="text-sm text-white/70">Orologi di lusso, viaggi esclusivi e molto altro ancora.</p>
-              </div>
-            </div>
-          </div>
-        );
-        
-      case 'game':
-        return (
-          <div className="space-y-6">
-            <p className="text-lg text-white/80">
-              M1SSION è un gioco rivoluzionario che combina cacce al tesoro nel mondo reale, puzzle digitali e competizione sociale.
-            </p>
-            
-            <div className="space-y-4">
-              <div className="bg-white/5 p-4 rounded-lg">
-                <h3 className="text-cyan-400 font-medium mb-2">Come funziona</h3>
-                <p className="text-sm text-white/70">
-                  Ricevi indizi tramite l'app, risolvili e sbloccane di nuovi per avanzare nella tua missione. 
-                  Ogni indizio ti avvicina alla soluzione finale e alla possibilità di vincere premi straordinari.
-                </p>
-              </div>
-              
-              <div className="bg-white/5 p-4 rounded-lg">
-                <h3 className="text-cyan-400 font-medium mb-2">Le regole del gioco</h3>
-                <ul className="text-sm text-white/70 list-disc pl-5 space-y-1">
-                  <li>Risolvi indizi e puzzle di difficoltà crescente</li>
-                  <li>Sblocca nuovi livelli e contenuti speciali</li>
-                  <li>Collabora o competi con altri giocatori</li>
-                  <li>Segui la mappa e scopri i punti d'interesse</li>
-                  <li>Vinci premi reali completando le missioni</li>
-                </ul>
-              </div>
-              
-              <div className="bg-white/5 p-4 rounded-lg">
-                <h3 className="text-cyan-400 font-medium mb-2">Abbonamenti e vantaggi</h3>
-                <p className="text-sm text-white/70">
-                  Scegli tra diversi piani di abbonamento per ottenere più indizi, accessi anticipati e maggiori possibilità di vincita.
-                  Il piano Gold offre il miglior rapporto qualità-prezzo con indizi illimitati e accesso prioritario.
-                </p>
-              </div>
-            </div>
-          </div>
-        );
-        
-      case 'subscription':
-        return (
-          <div className="space-y-6">
-            <p className="text-lg text-white/80">
-              Scegli l'abbonamento più adatto alle tue esigenze. Tutti i piani ti consentono di partecipare a M1SSION, ma con vantaggi diversi.
-            </p>
-            
-            <div className="space-y-4">
-              <div className="bg-gradient-to-r from-[#00E5FF]/10 to-black/70 border border-[#00E5FF]/30 p-4 rounded-lg">
-                <h3 className="text-[#00E5FF] font-medium mb-2">Confronto abbonamenti</h3>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-2">Piano</th>
-                      <th className="text-left py-2">Prezzo</th>
-                      <th className="text-left py-2">Indizi</th>
-                      <th className="hidden md:table-cell text-left py-2">Vantaggi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b border-white/5">
-                      <td className="py-2">Base</td>
-                      <td className="py-2">Gratuito</td>
-                      <td className="py-2">1/settimana</td>
-                      <td className="hidden md:table-cell py-2">Accesso base</td>
-                    </tr>
-                    <tr className="border-b border-white/5">
-                      <td className="py-2">Silver</td>
-                      <td className="py-2">€6,99/mese</td>
-                      <td className="py-2">3/settimana</td>
-                      <td className="hidden md:table-cell py-2">Tracciamento base, supporto chat</td>
-                    </tr>
-                    <tr className="border-b border-white/5 bg-[#00E5FF]/5">
-                      <td className="py-2 font-medium">Gold</td>
-                      <td className="py-2">€9,99/mese</td>
-                      <td className="py-2">5/settimana</td>
-                      <td className="hidden md:table-cell py-2">Accesso anticipato, supporto prioritario</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2">Black</td>
-                      <td className="py-2">€13,99/mese</td>
-                      <td className="py-2">Illimitati</td>
-                      <td className="hidden md:table-cell py-2">Contenuti esclusivi, supporto VIP</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              
-              <div className="bg-white/5 p-4 rounded-lg">
-                <h3 className="text-cyan-400 font-medium mb-2">Perché scegliere Gold?</h3>
-                <p className="text-sm text-white/70">
-                  Il piano Gold è il più consigliato per chi vuole vivere l'esperienza completa di M1SSION. 
-                  Con 5 indizi a settimana e accesso anticipato di 24 ore ai nuovi contenuti, avrai un vantaggio competitivo sostanziale.
-                </p>
-              </div>
-            </div>
-          </div>
-        );
-        
-      default:
-        return null;
-    }
-  };
-  
+const DetailsModal: React.FC<DetailsModalProps> = ({ open, onClose, type, title }) => {
   return (
-    <Dialog open={open} onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-[700px] bg-black/90 border-white/10 text-white backdrop-blur-xl">
+    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl glass-card border-cyan-500/20">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-[#00E5FF] via-white to-[#00E5FF] inline-block text-transparent bg-clip-text">
+          <DialogTitle className="text-2xl font-orbitron gradient-text-cyan text-center">
             {title}
           </DialogTitle>
+          <DialogDescription className="text-center text-gray-300">
+            {type === 'prizes' && 'Dettagli sui premi disponibili in M1SSION'}
+            {type === 'game' && 'Come funziona il gioco M1SSION'}
+            {type === 'subscription' && 'Dettagli sugli abbonamenti M1SSION'}
+          </DialogDescription>
         </DialogHeader>
         
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="mt-4"
-        >
-          {renderContent()}
-        </motion.div>
-        
-        <DialogFooter>
-          <Button onClick={onClose} className="bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black">
-            Chiudi
-          </Button>
-        </DialogFooter>
+        <div className="py-4">
+          {type === 'prizes' && <PrizeDetails />}
+          {type === 'game' && <GameDetails />}
+          {type === 'subscription' && <SubscriptionDetails />}
+        </div>
       </DialogContent>
     </Dialog>
   );
 };
+
+const PrizeDetails = () => (
+  <div className="space-y-6">
+    <div className="space-y-4">
+      <h3 className="text-xl font-semibold text-cyan-400 flex items-center">
+        <Gift className="mr-2 h-5 w-5" />
+        Premio Principale
+      </h3>
+      <p className="text-white">
+        Il vincitore assoluto della competizione M1SSION avrà l'opportunità di portarsi a casa un'auto di lusso.
+        Le auto in palio includono modelli Ferrari, Lamborghini e altre supercar di prestigio.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+        <div className="bg-black/40 rounded-lg p-3 border border-cyan-500/20">
+          <p className="text-white font-bold">Ferrari SF90</p>
+          <p className="text-sm text-gray-400">986 CV, 0-100 km/h in 2.5 secondi</p>
+        </div>
+        <div className="bg-black/40 rounded-lg p-3 border border-cyan-500/20">
+          <p className="text-white font-bold">Lamborghini Huracán</p>
+          <p className="text-sm text-gray-400">640 CV, 0-100 km/h in 2.9 secondi</p>
+        </div>
+      </div>
+    </div>
+    
+    <div className="space-y-4">
+      <h3 className="text-xl font-semibold text-purple-400 flex items-center">
+        <Gift className="mr-2 h-5 w-5" />
+        Premi Secondari
+      </h3>
+      <p className="text-white">
+        I finalisti hanno la possibilità di vincere premi di altissimo valore:
+      </p>
+      <ul className="space-y-2">
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>Orologi di lusso delle migliori marche</span>
+        </li>
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>Dispositivi tech all'avanguardia</span>
+        </li>
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>Viaggi esclusivi in località esotiche</span>
+        </li>
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>Altri premi di alta qualità</span>
+        </li>
+      </ul>
+    </div>
+    
+    <div className="space-y-4">
+      <h3 className="text-xl font-semibold text-amber-400 flex items-center">
+        <Gift className="mr-2 h-5 w-5" />
+        Premi di Partecipazione
+      </h3>
+      <p className="text-white">
+        Tutti i partecipanti hanno accesso a:
+      </p>
+      <ul className="space-y-2">
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-amber-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>Sconti esclusivi su prodotti partner</span>
+        </li>
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-amber-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>Crediti di gioco per sbloccare funzionalità premium</span>
+        </li>
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-amber-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>Possibilità di vincere premi settimanali</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+);
+
+const GameDetails = () => (
+  <div className="space-y-6">
+    <div className="space-y-4">
+      <h3 className="text-xl font-semibold text-cyan-400 flex items-center">
+        <Clock className="mr-2 h-5 w-5" />
+        Come Si Gioca
+      </h3>
+      <p className="text-white">
+        M1SSION è un gioco che combina enigmi digitali e ricerche nel mondo reale. I giocatori devono seguire indizi, 
+        risolvere puzzle e completare missioni per avanzare.
+      </p>
+      <div className="bg-black/40 rounded-lg p-4 border border-cyan-500/20">
+        <p className="text-white">La competizione si svolge in più fasi:</p>
+        <ol className="list-decimal pl-5 mt-2 space-y-2 text-gray-300">
+          <li>Fase di qualificazione - Risolvi gli enigmi iniziali</li>
+          <li>Fase intermedia - Completa missioni speciali</li>
+          <li>Fase finale - Solo i migliori competono per il premio principale</li>
+        </ol>
+      </div>
+    </div>
+    
+    <div className="space-y-4">
+      <h3 className="text-xl font-semibold text-purple-400 flex items-center">
+        <Clock className="mr-2 h-5 w-5" />
+        Regole Principali
+      </h3>
+      <ul className="space-y-2">
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>Ogni missione deve essere completata entro la scadenza indicata</span>
+        </li>
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>I giocatori possono collaborare ma i punti sono individuali</span>
+        </li>
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>È vietato condividere soluzioni pubblicamente</span>
+        </li>
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>I partecipanti devono rispettare il codice di condotta</span>
+        </li>
+      </ul>
+    </div>
+    
+    <div className="space-y-4">
+      <h3 className="text-xl font-semibold text-amber-400 flex items-center">
+        <Clock className="mr-2 h-5 w-5" />
+        Punteggi e Classifica
+      </h3>
+      <p className="text-white">
+        I punti vengono assegnati in base a:
+      </p>
+      <ul className="space-y-2">
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-amber-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>Velocità nel risolvere gli enigmi</span>
+        </li>
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-amber-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>Precisione e completezza delle soluzioni</span>
+        </li>
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-amber-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>Partecipazione a eventi speciali</span>
+        </li>
+        <li className="flex items-start">
+          <CheckCircle2 className="h-5 w-5 text-amber-400 mr-2 flex-shrink-0 mt-0.5" />
+          <span>Bonus per approcci creativi e originali</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+);
+
+const SubscriptionDetails = () => (
+  <div className="space-y-6">
+    <div className="space-y-4">
+      <h3 className="text-xl font-semibold text-cyan-400 flex items-center">
+        <Clock className="mr-2 h-5 w-5" />
+        Dettagli Abbonamenti
+      </h3>
+      <p className="text-white">
+        Gli abbonamenti M1SSION ti garantiscono vantaggi esclusivi e maggiori possibilità di vincita.
+      </p>
+    </div>
+    
+    {/* Subscription details content goes here */}
+  </div>
+);
 
 export default DetailsModal;

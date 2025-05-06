@@ -147,7 +147,7 @@ const Index = () => {
             <div className="flex justify-center pb-8">
               <Button 
                 onClick={() => openDetailsModal('prizes', 'Auto di Lusso in Palio')}
-                className="bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+                className="bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black hover:shadow-[0_0_15px_rgba(0,229,255,0.5)] rounded-full"
                 data-parallax="element"
                 data-parallax-speed="-0.1"
               >
@@ -165,7 +165,7 @@ const Index = () => {
             <div className="flex justify-center pb-8">
               <Button 
                 onClick={() => openDetailsModal('game', 'Come Funziona M1SSION')}
-                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:shadow-[0_0_15px_rgba(123,46,255,0.5)]"
+                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:shadow-[0_0_15px_rgba(123,46,255,0.5)] rounded-full"
                 data-parallax="element"
                 data-parallax-speed="-0.1"
               >
