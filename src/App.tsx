@@ -1,8 +1,9 @@
+
 import { useEffect, useState } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
-import { useSoundContext } from "./contexts/SoundContext";
+import { SoundProvider, useSoundContext } from "./contexts/SoundContext";
 import { toast } from "sonner";
 import { supabase } from "./integrations/supabase/client";
 
@@ -43,7 +44,8 @@ import { Toaster as ShadcnToaster } from "./components/ui/toaster";
 import PublicLayout from "./components/layout/PublicLayout";
 import { EmailVerificationPage } from "./components/auth/EmailVerificationHandler";
 
-function App() {
+// The AppContent component separates the App rendering logic from the provider setup
+function AppContent() {
   const { isEnabled } = useSoundContext();
   const [hydrated, setHydrated] = useState(false);
 
@@ -273,6 +275,14 @@ function App() {
         )}
       </AuthProvider>
     </ThemeProvider>
+  );
+}
+
+function App() {
+  return (
+    <SoundProvider>
+      <AppContent />
+    </SoundProvider>
   );
 }
 

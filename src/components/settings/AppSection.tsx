@@ -17,7 +17,12 @@ const AppSection = ({
   setSoundEffects,
 }: AppSectionProps) => {
   const navigate = useNavigate();
-  const { volume, soundPreference, updateSound, updateVolume } = useSound();
+  const { volume, soundPreference, isEnabled, updateSound, updateVolume, toggleSound } = useSound();
+
+  const handleSoundToggle = (checked: boolean) => {
+    setSoundEffects(checked);
+    toggleSound(checked);
+  };
 
   return (
     <section className="p-4">
@@ -31,7 +36,7 @@ const AppSection = ({
           </div>
           <Switch 
             checked={soundEffects} 
-            onCheckedChange={setSoundEffects}
+            onCheckedChange={handleSoundToggle}
             className="bg-projectx-neon-blue"
           />
         </div>

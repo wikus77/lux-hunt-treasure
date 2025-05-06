@@ -16,7 +16,7 @@ const MAX_CLUES = 1000; // Consistent max clues limit
 
 const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz = false }: BuzzButtonProps) => {
   const [isVaultOpen, setIsVaultOpen] = useState(false);
-  const { soundPreference, volume } = useSound();
+  const { soundPreference, volume, isEnabled } = useSound();
   const { playSound, initializeSound } = useBuzzSound();
 
   useEffect(() => {
@@ -24,7 +24,9 @@ const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz
   }, [soundPreference, volume, initializeSound]);
 
   const handleClick = () => {
-    playSound();
+    if (isEnabled) {
+      playSound();
+    }
     setIsVaultOpen(true);
 
     setTimeout(() => {

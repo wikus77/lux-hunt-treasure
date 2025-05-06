@@ -1,8 +1,10 @@
 
 import { useEffect, useRef } from 'react';
+import { useSound } from '@/contexts/SoundContext';
 
 export const useBuzzSound = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { isEnabled } = useSound();
 
   const initializeSound = (soundPreference: string, volume: number) => {
     const soundPath = getSoundPath(soundPreference);
@@ -22,27 +24,27 @@ export const useBuzzSound = () => {
   };
 
   const playSound = () => {
-    if (audioRef.current) {
-      // Reset the audio to the beginning
-      audioRef.current.currentTime = 0;
-      
-      // Play with error handling
-      const playPromise = audioRef.current.play();
-      
-      if (playPromise !== undefined) {
-        playPromise.catch(e => {
-          console.error("Error playing sound:", e);
-          
-          // Due to browser autoplay policies, we need user interaction
-          // Try to play again with user interaction
-          document.addEventListener('click', function playOnClick() {
-            if (audioRef.current) {
-              audioRef.current.play().catch(err => console.error("Error playing on click:", err));
-            }
-            document.removeEventListener('click', playOnClick);
-          }, { once: true });
-        });
-      }
+    if (!isEnabled || !audioRef.current) return;
+    
+    // Reset the audio to the beginning
+    audioRef.current.currentTime = 0;
+    
+    // Play with error handling
+    const playPromise = audioRef.current.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.catch(e => {
+        console.error("Error playing sound:", e);
+        
+        // Due to browser autoplay policies, we need user interaction
+        // Try to play again with user interaction
+        document.addEventListener('click', function playOnClick() {
+          if (audioRef.current && isEnabled) {
+            audioRef.current.play().catch(err => console.error("Error playing on click:", err));
+          }
+          document.removeEventListener('click', playOnClick);
+        }, { once: true });
+      });
     }
   };
 

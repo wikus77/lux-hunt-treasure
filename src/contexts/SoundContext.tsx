@@ -7,6 +7,7 @@ interface SoundContextType {
   isEnabled: boolean;
   updateSound: (sound: string) => void;
   updateVolume: (volume: number[]) => void;
+  toggleSound: (enabled: boolean) => void;
 }
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
@@ -42,9 +43,21 @@ export const SoundProvider = ({ children }: { children: ReactNode }) => {
     setVolume(newVolume);
     localStorage.setItem('buzzVolume', newVolume[0].toString());
   };
+  
+  const toggleSound = (enabled: boolean) => {
+    setIsEnabled(enabled);
+    localStorage.setItem('soundEnabled', enabled.toString());
+  };
 
   return (
-    <SoundContext.Provider value={{ soundPreference, volume, isEnabled, updateSound, updateVolume }}>
+    <SoundContext.Provider value={{ 
+      soundPreference, 
+      volume, 
+      isEnabled, 
+      updateSound, 
+      updateVolume,
+      toggleSound
+    }}>
       {children}
     </SoundContext.Provider>
   );
