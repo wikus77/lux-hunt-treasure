@@ -7,12 +7,12 @@ importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-comp
 
 // Initialize the Firebase app in the service worker
 firebase.initializeApp({
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyC71GUysMmPq8m3ZkUHvBYTDCRUaAo3mio",
+  authDomain: "project-x-mission.firebaseapp.com",
+  projectId: "project-x-mission",
+  storageBucket: "project-x-mission.appspot.com",
+  messagingSenderId: "307707487376",
+  appId: "1:307707487376:web:29a6c9f3a5ff3caf82cabc"
 });
 
 // Retrieve an instance of Firebase Messaging

@@ -67,7 +67,10 @@ export const usePushNotifications = () => {
       
       if (result.success) {
         setPermission('granted');
-        setToken(result.token || null);
+        // Only set token if it exists in the result
+        if (result.token) {
+          setToken(result.token);
+        }
         toast.success('Notifiche attivate con successo!');
       } else {
         if (result.reason === 'permission-denied') {

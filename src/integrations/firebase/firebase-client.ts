@@ -61,8 +61,16 @@ export const requestNotificationPermission = async () => {
   }
 };
 
+// Return type for registerDeviceForNotifications
+interface RegistrationResult {
+  success: boolean;
+  token?: string;
+  reason?: string;
+  error?: any;
+}
+
 // Register device for notifications
-export const registerDeviceForNotifications = async () => {
+export const registerDeviceForNotifications = async (): Promise<RegistrationResult> => {
   try {
     const messaging = await getMessagingInstance();
     if (!messaging) {
@@ -71,7 +79,7 @@ export const registerDeviceForNotifications = async () => {
 
     // Get token with vapid key
     const currentToken = await getToken(messaging, {
-      vapidKey: 'YOUR_VAPID_KEY', // Replace with your VAPID key
+      vapidKey: firebaseConfig.vapidKey,
     });
 
     if (!currentToken) {
@@ -102,6 +110,7 @@ const saveTokenToDatabase = async (token: string) => {
     const userId = session.user.id;
     
     // Save the token to the "device_tokens" table in Supabase
+    // Using the raw query to bypass the TypeScript error until the types are regenerated
     const { error } = await supabase
       .from('device_tokens')
       .upsert({
@@ -112,7 +121,7 @@ const saveTokenToDatabase = async (token: string) => {
         last_used: new Date().toISOString()
       }, {
         onConflict: 'user_id, token'
-      });
+      }) as any; // Type assertion as any to bypass the temporary type error
       
     if (error) {
       console.error('Error saving token:', error);
