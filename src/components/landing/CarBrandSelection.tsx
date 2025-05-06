@@ -8,6 +8,7 @@ import { ArrowRight } from "lucide-react";
 const CarBrandSelection = () => {
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [isRotating, setIsRotating] = useState<string | null>(null);
+  const [imagesLoaded, setImagesLoaded] = useState<Record<string, boolean>>({});
 
   // Reset rotation state after animation completes
   useEffect(() => {
@@ -18,6 +19,14 @@ const CarBrandSelection = () => {
       return () => clearTimeout(timer);
     }
   }, [isRotating]);
+
+  // Handle image load events
+  const handleImageLoad = (brandId: string) => {
+    setImagesLoaded(prev => ({
+      ...prev,
+      [brandId]: true
+    }));
+  };
 
   const handleBrandClick = (brandId: string) => {
     setIsRotating(brandId);
@@ -84,7 +93,15 @@ const CarBrandSelection = () => {
                   className={`w-4/5 h-4/5 object-contain transition-all duration-500
                     ${selectedBrand === car.id ? 'filter-none brightness-200' : 'brightness-150 filter-cyan-glow'}
                     ${isRotating === car.id ? 'scale-90' : 'scale-100'}`}
+                  onLoad={() => handleImageLoad(car.id)}
                 />
+                
+                {/* Loading state */}
+                {!imagesLoaded[car.id] && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-t-transparent border-cyan-400 rounded-full animate-spin"></div>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}

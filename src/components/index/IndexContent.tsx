@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import LandingHeader from "@/components/landing/LandingHeader";
 import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
 import PresentationSection from "@/components/presentation/PresentationSection";
@@ -27,6 +27,15 @@ const IndexContent = ({
   openInviteFriend 
 }: IndexContentProps) => {
   const [showPrizeDetails, setShowPrizeDetails] = useState(false);
+  
+  // State to control visibility of content sections
+  const [hiddenSections, setHiddenSections] = useState<string[]>([]);
+  
+  // Effect to manage hidden sections - runs once on component mount
+  useEffect(() => {
+    // Add section identifiers you want to hide
+    setHiddenSections(['cosa-puoi-vincere']);
+  }, []);
 
   return (
     <>
