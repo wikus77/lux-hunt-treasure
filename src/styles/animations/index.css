@@ -4,6 +4,7 @@
 @import './text-effects.css';
 @import './transitions.css';
 @import './hover-effects.css';
+@import './parallax.css';
 
 /* Additional Awwwards-style animations */
 .gradient-white-text {
@@ -19,6 +20,7 @@
 .parallax-element {
   will-change: transform;
   transform: translateY(var(--parallax-y, 0));
+  transition: transform 0.1s linear;
 }
 
 /* Ripple effect */

@@ -14,13 +14,16 @@ const CTASection = ({ onRegisterClick, countdownCompleted = false }: CTASectionP
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
       viewport={{ once: true }}
+      data-parallax="scroll"
     >
-      {/* Animated background elements */}
+      {/* Animated background elements with parallax effect */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(20)].map((_, i) => (
           <div
             key={i}
             className="absolute rounded-full opacity-10"
+            data-parallax="background"
+            data-parallax-speed={`-${0.1 + (i % 5) * 0.05}`}
             style={{
               width: `${Math.random() * 300 + 50}px`,
               height: `${Math.random() * 300 + 50}px`,
@@ -42,6 +45,8 @@ const CTASection = ({ onRegisterClick, countdownCompleted = false }: CTASectionP
           whileInView={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
+          data-parallax="scroll"
+          data-parallax-speed="0.1"
         >
           Preparati per la <br />
           <span className="bg-gradient-to-r from-[#00E5FF] to-[#FF00FF] text-transparent bg-clip-text">Missione di una vita</span>
@@ -53,6 +58,8 @@ const CTASection = ({ onRegisterClick, countdownCompleted = false }: CTASectionP
           whileInView={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.1 }}
           viewport={{ once: true }}
+          data-parallax="scroll"
+          data-parallax-speed="0.15"
         >
           Unisciti a noi e inizia l'avventura! Registrati per essere il primo a sapere quando inizia M1SSION!
         </motion.p>
@@ -65,6 +72,8 @@ const CTASection = ({ onRegisterClick, countdownCompleted = false }: CTASectionP
           transition={{ duration: 0.5, delay: 0.2 }}
           viewport={{ once: true }}
           disabled={!countdownCompleted}
+          data-parallax="scroll"
+          data-parallax-speed="0.2"
         >
           REGISTRATI ORA
         </motion.button>

@@ -1,0 +1,55 @@
+
+/* Parallax animation styles */
+.parallax-container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+  perspective: 8px;
+}
+
+.parallax-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transform-style: preserve-3d;
+}
+
+.parallax-bg {
+  transform: translateZ(-10px) scale(2.25);
+}
+
+.parallax-mid {
+  transform: translateZ(-5px) scale(1.625);
+}
+
+.parallax-front {
+  transform: translateZ(0);
+}
+
+/* For smooth transitions */
+[data-parallax] {
+  will-change: transform;
+  transition: transform 0.1s linear;
+}
+
+@keyframes float-animation {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.parallax-float {
+  animation: float-animation 15s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+.parallax-glow {
+  animation: glow-pulse 3s ease-in-out infinite;
+  filter: blur(40px);
+}

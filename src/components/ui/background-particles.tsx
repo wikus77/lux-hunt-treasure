@@ -1,21 +1,29 @@
 
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 interface ParticleProps {
   count?: number;
 }
 
 const BackgroundParticles = ({ count = 15 }: ParticleProps) => {
-  // Generate random floating particles
-  const particles = Array.from({ length: count }, (_, i) => ({
-    id: i,
-    size: Math.random() * 4 + 2,
-    top: Math.random() * 100,
-    left: Math.random() * 100,
-    delay: Math.random() * 5,
-    duration: Math.random() * 15 + 10,
-    color: i % 3 === 0 ? '#00E5FF' : i % 3 === 1 ? '#FFC300' : '#FF00FF',
-  }));
+  const [particles, setParticles] = useState<any[]>([]);
+  
+  useEffect(() => {
+    // Generate random floating particles
+    const generatedParticles = Array.from({ length: count }, (_, i) => ({
+      id: i,
+      size: Math.random() * 4 + 2,
+      top: Math.random() * 100,
+      left: Math.random() * 100,
+      delay: Math.random() * 5,
+      duration: Math.random() * 15 + 10,
+      color: i % 3 === 0 ? '#00E5FF' : i % 3 === 1 ? '#FFC300' : '#FF00FF',
+      parallaxSpeed: Math.random() * 0.2 + 0.1,
+    }));
+    
+    setParticles(generatedParticles);
+  }, [count]);
 
   return (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
@@ -43,6 +51,8 @@ const BackgroundParticles = ({ count = 15 }: ParticleProps) => {
             repeat: Infinity,
             delay: particle.delay,
           }}
+          data-parallax="background"
+          data-parallax-speed={-particle.parallaxSpeed}
         />
       ))}
     </div>

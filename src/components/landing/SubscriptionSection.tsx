@@ -12,7 +12,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
     {
       title: 'Base',
       price: 'Gratuito',
-      highlight: true,
+      highlight: false,
       features: [
         "Accesso all'app base",
         "1 indizio a settimana",
@@ -30,7 +30,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
     },
     {
       title: 'Silver',
-      price: '€9.99',
+      price: '€3.99',
       period: '/mese',
       features: [
         "Tutto del piano Base",
@@ -47,8 +47,9 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
     },
     {
       title: 'Gold',
-      price: '€19.99',
+      price: '€6.99',
       period: '/mese',
+      highlight: true,
       features: [
         "Tutto del piano Silver",
         "5 indizi a settimana",
@@ -58,11 +59,25 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
       ],
       buttonText: 'Scegli Gold',
       buttonColor: 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black hover:shadow-[0_0_15px_rgba(255,215,0,0.5)]'
+    },
+    {
+      title: 'Black',
+      price: '€9.90',
+      period: '/mese',
+      features: [
+        "Tutto del piano Gold",
+        "Indizi illimitati",
+        "Contenuti esclusivi",
+        "Accesso anticipato (48h)",
+        "Supporto VIP",
+      ],
+      buttonText: 'Scegli Black',
+      buttonColor: 'bg-gradient-to-r from-[#1A1A1A] to-[#333333] text-white hover:shadow-[0_0_15px_rgba(0,0,0,0.7)]'
     }
   ];
 
   return (
-    <section className="py-16 px-4 bg-black relative">
+    <section className="py-16 px-4 bg-black relative" data-parallax="scroll" data-image-src="/images/grid-pattern.png">
       <div className="absolute inset-0 bg-[url('/public/images/grid-pattern.png')] opacity-10"></div>
       
       <div className="relative z-10 max-w-6xl mx-auto">
@@ -81,7 +96,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
           </p>
         </motion.div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {subscriptions.map((sub, index) => (
             <motion.div
               key={index}
@@ -92,7 +107,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
               viewport={{ once: true }}
               whileHover={{ y: -5, transition: { duration: 0.2 } }}
             >
-              {/* Badge per il piano gratuito */}
+              {/* Badge per il piano consigliato */}
               {sub.highlight && (
                 <div className="absolute -top-3 -right-3 bg-[#00E5FF] text-black text-xs font-bold py-1 px-3 rounded-full flex items-center">
                   <Sparkles className="w-3 h-3 mr-1" />

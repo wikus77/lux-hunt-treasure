@@ -14,11 +14,11 @@ import LaserRevealIntro from "@/components/intro/LaserRevealIntro";
 import NewsletterSection from "@/components/landing/NewsletterSection";
 import SubscriptionSection from "@/components/landing/SubscriptionSection";
 import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
-import FeaturesSection from "@/components/landing/FeaturesSection";
 import InviteFriendDialog from "@/components/landing/InviteFriendDialog";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import GameExplanationSection from "@/components/landing/GameExplanationSection";
+import ParallaxContainer from "@/components/ui/parallax-container";
 
 const Index = () => {
   console.log("Index component rendering");
@@ -99,7 +99,7 @@ const Index = () => {
       )}
       
       {introCompleted && (
-        <>
+        <ParallaxContainer>
           <UnifiedHeader />
           <div className="h-[72px] w-full" />
           
@@ -132,9 +132,6 @@ const Index = () => {
           {/* Game Explanation Section - How it works with detailed rules */}
           <GameExplanationSection />
           
-          {/* Features Section */}
-          <FeaturesSection countdownCompleted={countdownCompleted} />
-          
           {/* Newsletter Section */}
           <NewsletterSection countdownCompleted={countdownCompleted} />
           
@@ -158,7 +155,7 @@ const Index = () => {
             open={showInviteFriend}
             onClose={() => setShowInviteFriend(false)}
           />
-        </>
+        </ParallaxContainer>
       )}
     </div>
   );
