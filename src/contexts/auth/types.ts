@@ -12,6 +12,7 @@ export interface AuthContextType {
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   userRole: string | null;
   hasRole: (role: string) => boolean;
+  isRoleLoading: boolean;
 }
 
 export interface User {

@@ -4,7 +4,6 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/auth';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
-import EmailVerificationAlert from './EmailVerificationAlert';
 
 interface RoleBasedProtectedRouteProps {
   redirectTo?: string;
@@ -19,7 +18,7 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
   allowedRoles = ['user', 'admin', 'moderator'],
   children
 }) => {
-  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole } = useAuthContext();
+  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole, isRoleLoading } = useAuthContext();
   const location = useLocation();
   
   useEffect(() => {
@@ -29,15 +28,20 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
       isLoading,
       isEmailVerified,
       userRole,
+      isRoleLoading,
       user: getCurrentUser()?.id,
       allowedRoles
     });
-  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, allowedRoles]);
+  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, allowedRoles, isRoleLoading]);
   
-  if (isLoading) {
+  // Waiting for authentication or role loading to complete
+  if (isLoading || (isAuthenticated() && isRoleLoading)) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-black">
         <Spinner className="h-8 w-8 text-white" />
+        <div className="ml-2 text-white font-medium">
+          {isRoleLoading ? 'Caricamento ruolo...' : 'Caricamento...'}
+        </div>
       </div>
     );
   }
@@ -54,7 +58,7 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
     return <Navigate to="/login?verification=pending" replace />;
   }
   
-  // Check if user has the required role
+  // Check if user has the required role - only if role loading is complete
   const hasRequiredRole = allowedRoles.some(role => hasRole(role));
   
   if (!hasRequiredRole) {

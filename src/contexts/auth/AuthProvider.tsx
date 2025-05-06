@@ -13,12 +13,14 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const auth = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [isRoleLoading, setIsRoleLoading] = useState<boolean>(true);
   
   // Fetch user role when authenticated
   useEffect(() => {
     const fetchUserRole = async () => {
       if (auth.isAuthenticated() && auth.isEmailVerified && !auth.isLoading) {
         try {
+          setIsRoleLoading(true);
           const userId = auth.getCurrentUser()?.id;
           
           if (userId) {
@@ -26,32 +28,53 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const cachedRole = localStorage.getItem('userRole');
             if (cachedRole) {
               setUserRole(cachedRole);
+              setIsRoleLoading(false);
+              console.log("Using cached role from localStorage:", cachedRole);
             }
             
             // Then fetch from database to ensure it's up to date
-            const { data, error } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', userId)
-              .single();
-              
-            if (error) {
-              console.error("Error fetching user role:", error);
-            } else if (data?.role) {
-              setUserRole(data.role);
-              localStorage.setItem('userRole', data.role);
-            } else {
-              // If no role is set, default to 'user'
-              setUserRole('user');
-              localStorage.setItem('userRole', 'user');
+            try {
+              const { data, error } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', userId)
+                .single();
+                
+              if (error) {
+                console.error("Error fetching user role:", error);
+                
+                // If we have a cached role, continue using it
+                if (!cachedRole) {
+                  // Fallback to 'user' role if nothing else is available
+                  setUserRole('user');
+                  localStorage.setItem('userRole', 'user');
+                  console.log("Falling back to default 'user' role due to error");
+                }
+              } else if (data?.role) {
+                setUserRole(data.role);
+                localStorage.setItem('userRole', data.role);
+                console.log("Updated role from database:", data.role);
+              } else {
+                // If no role is set, default to 'user'
+                setUserRole('user');
+                localStorage.setItem('userRole', 'user');
+                console.log("No role found in database, defaulting to 'user'");
+              }
+            } catch (fetchError) {
+              console.error("Error in database fetch:", fetchError);
+              // Continue using cached role if available
             }
+            
+            setIsRoleLoading(false);
           }
         } catch (error) {
           console.error("Error in fetchUserRole:", error);
+          setIsRoleLoading(false);
         }
       } else {
         setUserRole(null);
         localStorage.removeItem('userRole');
+        setIsRoleLoading(false);
       }
     };
     
@@ -65,7 +88,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       isLoading: auth.isLoading,
       isEmailVerified: auth.isEmailVerified,
       userId: auth.getCurrentUser()?.id,
-      userRole
+      userRole,
+      isRoleLoading
     });
     
     // Register for notifications when user is authenticated
@@ -81,7 +105,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           });
       }
     }
-  }, [auth.isAuthenticated, auth.isLoading, auth.isEmailVerified, auth.getCurrentUser, userRole]);
+  }, [auth.isAuthenticated, auth.isLoading, auth.isEmailVerified, auth.getCurrentUser, userRole, isRoleLoading]);
   
   // Function to check if user has a specific role
   const hasRole = (role: string): boolean => {
@@ -99,7 +123,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       value={{
         ...auth,
         userRole,
-        hasRole
+        hasRole,
+        isRoleLoading
       }}
     >
       {children}
