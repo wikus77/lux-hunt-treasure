@@ -16,6 +16,29 @@ const ParallaxContainer: React.FC<ParallaxContainerProps> = ({ children }) => {
     const layers = Array.from(document.querySelectorAll('[data-parallax]')) as HTMLElement[];
     parallaxLayers.current = layers;
     
+    // Create background parallax elements
+    const createParallaxEffects = () => {
+      // Add some random floating elements for enhanced visual effect
+      for (let i = 0; i < 8; i++) {
+        const floater = document.createElement('div');
+        floater.className = 'absolute rounded-full opacity-10 z-0 pointer-events-none';
+        floater.style.width = `${Math.random() * 200 + 50}px`;
+        floater.style.height = `${Math.random() * 200 + 50}px`;
+        floater.style.background = i % 3 === 0 ? '#00E5FF' : i % 3 === 1 ? '#8A2BE2' : '#FF0080';
+        floater.style.left = `${Math.random() * 100}%`;
+        floater.style.top = `${Math.random() * 200}%`;
+        floater.style.filter = 'blur(70px)';
+        floater.setAttribute('data-parallax', 'floater');
+        floater.setAttribute('data-parallax-speed', (-0.2 - Math.random() * 0.2).toString());
+        
+        if (containerRef.current) {
+          containerRef.current.appendChild(floater);
+        }
+      }
+    };
+    
+    createParallaxEffects();
+    
     // Update all layers with parallax effect
     const updateParallaxLayers = () => {
       const scrollY = window.scrollY;

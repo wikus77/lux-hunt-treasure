@@ -31,13 +31,32 @@ const Index = () => {
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showInviteFriend, setShowInviteFriend] = useState(false);
   const [countdownCompleted, setCountdownCompleted] = useState(false);
+  const [pageLoaded, setPageLoaded] = useState(false);
   const navigate = useNavigate();
   
   // Get target date from utility function
   const nextEventDate = getMissionDeadline();
   
+  // Add a useEffect to mark when the page is fully loaded
+  useEffect(() => {
+    if (document.readyState === 'complete') {
+      console.log("Page already loaded");
+      setPageLoaded(true);
+    } else {
+      console.log("Setting up load event listener");
+      const handleLoad = () => {
+        console.log("Page fully loaded");
+        setPageLoaded(true);
+      };
+      window.addEventListener('load', handleLoad);
+      return () => window.removeEventListener('load', handleLoad);
+    }
+  }, []);
+  
   // Check if we should show the intro animation
   useEffect(() => {
+    if (!pageLoaded) return;
+    
     // Check if user has seen the intro before
     const hasSeenIntro = localStorage.getItem('introShown') === 'true';
     
@@ -58,7 +77,7 @@ const Index = () => {
     if (now > nextEventDate) {
       setCountdownCompleted(true);
     }
-  }, [nextEventDate]);
+  }, [nextEventDate, pageLoaded]);
 
   const handleIntroComplete = () => {
     // Mark intro as shown
@@ -71,6 +90,7 @@ const Index = () => {
   };
 
   const handleOverlayComplete = () => {
+    console.log("Overlay complete callback fired");
     setShowIntroOverlay(false);
     setIntroCompleted(true);
     // Mark intro as shown
@@ -101,6 +121,24 @@ const Index = () => {
   const handleCountdownComplete = () => {
     setCountdownCompleted(true);
   };
+
+  console.log("Render state:", { 
+    showIntroOverlay, 
+    introCompleted, 
+    pageLoaded 
+  });
+
+  // Show a loading state if page is not fully loaded yet
+  if (!pageLoaded) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center">
+        <div className="loading-spinner text-center">
+          <div className="w-16 h-16 border-4 border-t-cyan-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+          <p className="text-white mt-4">Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
