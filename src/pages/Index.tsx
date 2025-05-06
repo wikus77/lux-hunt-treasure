@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import AgeVerificationModal from "@/components/auth/AgeVerificationModal";
@@ -57,6 +56,12 @@ const Index = () => {
   useEffect(() => {
     if (!pageLoaded) return;
     
+    // Force showing the intro every time for testing purposes
+    // Comment out the localStorage check to make sure intro always shows
+    console.log("Preparing intro animation...");
+    document.body.style.overflow = "hidden"; // Prevent scrolling during intro
+    
+    /* Uncomment this when you want to revert to normal behavior
     // Check if user has seen the intro before
     const hasSeenIntro = localStorage.getItem('introShown') === 'true';
     
@@ -71,6 +76,7 @@ const Index = () => {
       console.log("Preparing intro animation...");
       document.body.style.overflow = "hidden"; // Prevent scrolling during intro
     }
+    */
 
     // Check if countdown has already passed
     const now = new Date();
@@ -92,9 +98,11 @@ const Index = () => {
   const handleOverlayComplete = () => {
     console.log("Overlay complete callback fired");
     setShowIntroOverlay(false);
-    setIntroCompleted(true);
-    // Mark intro as shown
-    localStorage.setItem('introShown', 'true');
+    // Don't set introCompleted yet, we still need to show the LaserRevealIntro
+    
+    // Mark intro as shown - commented out to ensure laser reveal intro is shown
+    // localStorage.setItem('introShown', 'true');
+    
     // Restore scrolling
     document.body.style.overflow = "auto";
   };

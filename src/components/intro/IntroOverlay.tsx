@@ -13,17 +13,17 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
     console.log("IntroOverlay mounted");
     document.body.style.overflow = "hidden"; // Blocca lo scroll durante l'intro
     
-    // Hide overlay after 2 seconds
+    // Extended the visibility time from 3 to 5 seconds
     const timer = setTimeout(() => {
       console.log("Starting fade out");
       setIsVisible(false);
-      // After animation completes, call onComplete
+      // Extended the fade out animation from 1 to 2 seconds
       setTimeout(() => {
         console.log("Animation completed, calling onComplete");
         onComplete();
         document.body.style.overflow = "auto"; // Ripristina lo scroll
-      }, 1000);
-    }, 3000);
+      }, 2000); // Increased from 1000ms to 2000ms for fade out duration
+    }, 5000); // Increased from 3000ms to 5000ms for display duration
 
     return () => {
       clearTimeout(timer);

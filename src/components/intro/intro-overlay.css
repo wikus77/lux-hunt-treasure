@@ -12,7 +12,7 @@
   align-items: center;
   z-index: 9999;
   opacity: 1;
-  transition: opacity 1s ease;
+  transition: opacity 2s ease; /* Increased from 1s to 2s for longer fade effect */
 }
 
 .intro-overlay.fade-out {
@@ -102,7 +102,7 @@
   display: inline-block;
   color: white;
   position: relative;
-  animation: glitch-anim 3s infinite;
+  animation: glitch-anim 3s infinite; /* Increased from 3s to make it more noticeable */
 }
 
 .glitch:before {
