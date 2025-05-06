@@ -1,86 +1,74 @@
 
-import React from "react";
 import { motion } from "framer-motion";
-import { Award, Clock, Gift, Star } from "lucide-react";
+import { Trophy, Map, Calendar, Bell } from "lucide-react";
 
-const featuresList = [
-  {
-    icon: Star,
-    title: "Esperienza Unica",
-    description: "Un'avventura immersiva che combina indagini in tempo reale e caccia al tesoro digitale."
-  },
-  {
-    icon: Award,
-    title: "Premi Esclusivi",
-    description: "Vinci premi reali e esperienze uniche completando le missioni e risolvendo gli enigmi."
-  },
-  {
-    icon: Clock,
-    title: "Tempo Limitato",
-    description: "Ogni missione ha un tempo limitato. La strategia e la velocità sono fondamentali."
-  },
-  {
-    icon: Gift,
-    title: "Bonus Iniziali",
-    description: "Iscriviti prima del lancio e ricevi crediti gratuiti e vantaggi esclusivi."
-  }
-];
+interface FeaturesSectionProps {
+  countdownCompleted?: boolean;
+}
 
-const FeaturesSection = () => {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2
-      }
+const FeaturesSection = ({ countdownCompleted = false }: FeaturesSectionProps) => {
+  const features = [
+    {
+      icon: <Trophy className="w-10 h-10 text-yellow-400" />,
+      title: "Premi di valore reale",
+      description: "Auto di lusso, orologi esclusivi e altri oggetti di valore per i vincitori"
+    },
+    {
+      icon: <Map className="w-10 h-10 text-cyan-400" />,
+      title: "Caccia al tesoro moderna",
+      description: "Una combinazione innovativa di enigmi digitali e ricerca nel mondo reale"
+    },
+    {
+      icon: <Calendar className="w-10 h-10 text-violet-400" />,
+      title: "Eventi settimanali",
+      description: "Nuove missioni e sfide ogni settimana per mantenere alto l'entusiasmo"
+    },
+    {
+      icon: <Bell className="w-10 h-10 text-red-400" />,
+      title: "Notifiche in tempo reale",
+      description: "Ricevi aggiornamenti immediati su nuovi indizi e sviluppi del gioco"
     }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  };
+  ];
 
   return (
-    <section className="w-full py-16 px-4 bg-black/40">
+    <section id="game-explanation" className="py-24 px-4 bg-black">
       <div className="max-w-6xl mx-auto">
-        <motion.div 
+        <motion.div
+          className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-orbitron font-bold text-white mb-4">
-            Scopri <span className="text-cyan-400">M1SSION</span>
+          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent mb-4">
+            Caratteristiche di M1SSION
           </h2>
-          <p className="text-gray-300 max-w-3xl mx-auto">
-            Un'esperienza di gioco rivoluzionaria che unisce caccia al tesoro, enigmi e premi esclusivi
+          <p className="text-white/70 max-w-2xl mx-auto">
+            Scopri cosa rende M1SSION un'esperienza di gioco rivoluzionaria, combinando il mondo digitale con quello reale.
           </p>
         </motion.div>
-        
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-        >
-          {featuresList.map((feature, index) => (
-            <motion.div 
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {features.map((feature, index) => (
+            <motion.div
               key={index}
-              variants={itemVariants}
-              className="feature-card"
+              className="glass-card p-6 flex items-start"
+              initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              viewport={{ once: true }}
+              whileHover={{ y: -5, transition: { duration: 0.2 } }}
             >
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center mb-4">
-                <feature.icon className="h-6 w-6 text-black" />
+              <div className="mr-4 p-3 rounded-full bg-black/30 border border-white/10 flex-shrink-0">
+                {feature.icon}
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
-              <p className="text-gray-400">{feature.description}</p>
+              <div>
+                <h3 className="text-xl font-bold mb-2 text-white">{feature.title}</h3>
+                <p className="text-white/70">{feature.description}</p>
+              </div>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

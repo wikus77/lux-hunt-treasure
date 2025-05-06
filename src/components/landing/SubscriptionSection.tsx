@@ -1,74 +1,147 @@
 
-import React from "react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
-import { SubscriptionBenefits } from "@/components/subscription/SubscriptionBenefits";
-import { useState } from "react";
+import { motion } from 'framer-motion';
+import { Check, X, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-const SubscriptionSection = () => {
-  const [selectedSubscription, setSelectedSubscription] = useState("Base");
+interface SubscriptionSectionProps {
+  countdownCompleted?: boolean;
+}
+
+const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSectionProps) => {
+  const subscriptions = [
+    {
+      title: 'Base',
+      price: 'Gratuito',
+      highlight: true,
+      features: [
+        'Accesso all'app base',
+        '1 indizio a settimana',
+        'Partecipazione alle missioni base',
+        'Supporto via email',
+      ],
+      notIncluded: [
+        'Indizi premium',
+        'Tracciamento avanzato',
+        'Accesso anticipato',
+        'Supporto prioritario'
+      ],
+      buttonText: 'Inizia Gratis',
+      buttonColor: 'bg-gradient-to-r from-[#00E5FF] to-[#008eb3] text-black hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]'
+    },
+    {
+      title: 'Silver',
+      price: '€9.99',
+      period: '/mese',
+      features: [
+        'Tutto del piano Base',
+        '3 indizi a settimana',
+        'Tracciamento base',
+        'Supporto chat',
+      ],
+      notIncluded: [
+        'Accesso anticipato',
+        'Supporto prioritario'
+      ],
+      buttonText: 'Scegli Silver',
+      buttonColor: 'bg-gradient-to-r from-[#C0C0C0] to-[#919191] text-black hover:shadow-[0_0_15px_rgba(192,192,192,0.5)]'
+    },
+    {
+      title: 'Gold',
+      price: '€19.99',
+      period: '/mese',
+      features: [
+        'Tutto del piano Silver',
+        '5 indizi a settimana',
+        'Tracciamento avanzato',
+        'Accesso anticipato (24h)',
+        'Supporto prioritario',
+      ],
+      buttonText: 'Scegli Gold',
+      buttonColor: 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black hover:shadow-[0_0_15px_rgba(255,215,0,0.5)]'
+    }
+  ];
 
   return (
-    <section className="w-full py-16 px-4 relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-black via-black/95 to-black z-0"></div>
+    <section className="py-16 px-4 bg-black relative">
+      <div className="absolute inset-0 bg-[url('/public/images/grid-pattern.png')] opacity-10"></div>
       
-      {/* Decorative elements */}
-      <div className="absolute left-0 top-20 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute right-10 bottom-20 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl"></div>
-      
-      <div className="max-w-6xl mx-auto relative z-10">
-        <motion.div 
+      <div className="relative z-10 max-w-6xl mx-auto">
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-orbitron font-bold text-white mb-4">
-            <span className="text-cyan-400">Piani di </span>Abbonamento
+          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#00E5FF] via-white to-[#00E5FF] inline-block text-transparent bg-clip-text">
+            Abbonamenti M1SSION
           </h2>
-          <p className="text-gray-300 max-w-3xl mx-auto">
-            Scegli il piano più adatto alle tue esigenze. Inizia gratuitamente o potenzia la tua esperienza con i piani premium.
+          <p className="mt-4 text-white/70 max-w-2xl mx-auto">
+            Scegli il piano più adatto a te e inizia la tua avventura. Tutti i piani offrono la possibilità di vincere premi reali.
           </p>
         </motion.div>
-
-        {/* Free Subscription Highlight */}
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          {subscriptions.map((sub, index) => (
+            <motion.div
+              key={index}
+              className={`rounded-xl relative p-6 ${sub.highlight ? 'bg-gradient-to-b from-[#00E5FF]/20 to-black/70 border border-[#00E5FF]/30' : 'bg-white/5 border border-white/10'}`}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.5 }}
+              viewport={{ once: true }}
+              whileHover={{ y: -5, transition: { duration: 0.2 } }}
+            >
+              {/* Badge per il piano gratuito */}
+              {sub.highlight && (
+                <div className="absolute -top-3 -right-3 bg-[#00E5FF] text-black text-xs font-bold py-1 px-3 rounded-full flex items-center">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  Consigliato
+                </div>
+              )}
+              
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-white">{sub.title}</h3>
+                <div className="mt-2">
+                  <span className="text-2xl font-bold text-white">{sub.price}</span>
+                  {sub.period && <span className="text-white/50 text-sm">{sub.period}</span>}
+                </div>
+              </div>
+              
+              <div className="space-y-4 mb-6">
+                {sub.features.map((feature, idx) => (
+                  <div key={idx} className="flex items-center">
+                    <Check className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" />
+                    <span className="text-white/80 text-sm">{feature}</span>
+                  </div>
+                ))}
+                
+                {sub.notIncluded?.map((feature, idx) => (
+                  <div key={idx} className="flex items-center text-white/40">
+                    <X className="h-5 w-5 mr-2 flex-shrink-0" />
+                    <span className="text-sm">{feature}</span>
+                  </div>
+                ))}
+              </div>
+              
+              <Button 
+                className={`w-full ${sub.buttonColor} ${!countdownCompleted ? 'opacity-70 cursor-not-allowed' : ''}`}
+                disabled={!countdownCompleted}
+              >
+                {sub.buttonText}
+              </Button>
+            </motion.div>
+          ))}
+        </div>
+        
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          <SubscriptionBenefits />
-        </motion.div>
-
-        {/* Subscription Plans */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          <SubscriptionPlans 
-            selected={selectedSubscription}
-            setSelected={setSelectedSubscription}
-          />
-        </motion.div>
-
-        <motion.div 
-          className="text-center mt-8"
+          className="text-center text-white/50 text-sm"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          viewport={{ once: true }}
         >
-          <Button 
-            variant="default" 
-            size="lg" 
-            className="bg-gradient-to-r from-cyan-500 via-cyan-400 to-blue-500 text-black font-bold px-8 py-6 rounded-full text-lg hover:shadow-[0_0_25px_rgba(0,229,255,0.7)]"
-          >
-            INIZIA SUBITO
-          </Button>
-          <p className="text-gray-400 mt-4 text-sm">
-            Puoi cambiare o cancellare il tuo abbonamento in qualsiasi momento
-          </p>
+          Tutti gli abbonamenti sono soggetti ai nostri Termini e Condizioni. Puoi cancellare in qualsiasi momento.
         </motion.div>
       </div>
     </section>

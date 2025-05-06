@@ -18,6 +18,7 @@ import FeaturesSection from "@/components/landing/FeaturesSection";
 import InviteFriendDialog from "@/components/landing/InviteFriendDialog";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
+import GameExplanationSection from "@/components/landing/GameExplanationSection";
 
 const Index = () => {
   console.log("Index component rendering");
@@ -26,6 +27,7 @@ const Index = () => {
   const [introCompleted, setIntroCompleted] = useState(true); // Set to true to skip intro by default
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showInviteFriend, setShowInviteFriend] = useState(false);
+  const [countdownCompleted, setCountdownCompleted] = useState(false);
   const navigate = useNavigate();
   
   // Get target date from utility function
@@ -47,7 +49,13 @@ const Index = () => {
       console.log("Preparing intro animation...");
       document.body.style.overflow = "hidden"; // Prevent scrolling during intro
     }
-  }, []);
+
+    // Check if countdown has already passed
+    const now = new Date();
+    if (now > nextEventDate) {
+      setCountdownCompleted(true);
+    }
+  }, [nextEventDate]);
 
   const handleIntroComplete = () => {
     // Mark intro as shown
@@ -60,7 +68,11 @@ const Index = () => {
   };
 
   const handleRegisterClick = () => {
-    setShowAgeVerification(true);
+    if (countdownCompleted) {
+      setShowAgeVerification(true);
+    } else {
+      console.log("Registration is disabled until countdown completes");
+    }
   };
 
   const handleAgeVerified = () => {
@@ -71,6 +83,11 @@ const Index = () => {
   // Function to handle invite friend button click
   const openInviteFriend = () => {
     setShowInviteFriend(true);
+  };
+
+  // Callback for when countdown completes
+  const handleCountdownComplete = () => {
+    setCountdownCompleted(true);
   };
 
   return (
@@ -98,27 +115,35 @@ const Index = () => {
             </Button>
           </div>
           
-          <LandingHeader />
+          <LandingHeader countdownCompleted={countdownCompleted} />
           
           {/* Launch Progress Bar */}
-          <LaunchProgressBar targetDate={nextEventDate} />
+          <LaunchProgressBar 
+            targetDate={nextEventDate} 
+            onCountdownComplete={handleCountdownComplete}
+          />
           
-          {/* Features Section */}
-          <FeaturesSection />
-          
+          {/* Presentation Section */}
           <PresentationSection visible={true} />
           
-          {/* Newsletter Section */}
-          <NewsletterSection />
-          
-          <HowItWorks onRegisterClick={handleRegisterClick} />
-          
-          {/* Subscription Section */}
-          <SubscriptionSection />
-          
+          {/* Luxury Cars Section - Renamed to "Fallo ora, Fallo meglio di tutti" */}
           <LuxuryCarsSection />
           
-          <CTASection onRegisterClick={handleRegisterClick} />
+          {/* Game Explanation Section - How it works with detailed rules */}
+          <GameExplanationSection />
+          
+          {/* Features Section */}
+          <FeaturesSection countdownCompleted={countdownCompleted} />
+          
+          {/* Newsletter Section */}
+          <NewsletterSection countdownCompleted={countdownCompleted} />
+          
+          <HowItWorks onRegisterClick={handleRegisterClick} countdownCompleted={countdownCompleted} />
+          
+          {/* Subscription Section */}
+          <SubscriptionSection countdownCompleted={countdownCompleted} />
+          
+          <CTASection onRegisterClick={handleRegisterClick} countdownCompleted={countdownCompleted} />
           
           <LandingFooter />
           

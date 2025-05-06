@@ -1,12 +1,13 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { motion } from "framer-motion";
 
 interface LaunchProgressBarProps {
   targetDate: Date;
+  onCountdownComplete?: () => void;
 }
 
-const LaunchProgressBar: React.FC<LaunchProgressBarProps> = ({ targetDate }) => {
+const LaunchProgressBar: React.FC<LaunchProgressBarProps> = ({ targetDate, onCountdownComplete }) => {
   // Calculate progress percentage from now to target date
   const progressPercentage = useMemo(() => {
     const now = new Date();
@@ -32,6 +33,13 @@ const LaunchProgressBar: React.FC<LaunchProgressBarProps> = ({ targetDate }) => 
     
     return Math.floor(diff / (1000 * 60 * 60 * 24));
   }, [targetDate]);
+  
+  // Check if countdown is completed
+  useEffect(() => {
+    if (daysRemaining <= 0 && onCountdownComplete) {
+      onCountdownComplete();
+    }
+  }, [daysRemaining, onCountdownComplete]);
   
   // Progress milestone labels
   const milestones = [

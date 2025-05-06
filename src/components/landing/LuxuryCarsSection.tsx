@@ -50,7 +50,7 @@ const LuxuryCarsSection = () => {
       engine: car.engine,
       acceleration: car.acceleration,
       prize: car.prize,
-      imageUrl: car.imageUrl,
+      imageUrl: car.imageUrl || '/lovable-uploads/14f94617-e821-4a59-9b90-32d1dfd615e4.png',
       color: car.color
     };
     
@@ -76,17 +76,17 @@ const LuxuryCarsSection = () => {
         transition={{ duration: 0.5 }}
         viewport={{ once: true }}
       >
-        Auto di Lusso in Palio
+        Fallo ora, Fallo meglio di tutti
       </motion.h2>
 
       <motion.p 
-        className="text-center max-w-2xl mx-auto mb-12 text-white/70"
+        className="text-center max-w-2xl mx-auto mb-8 text-white/70"
         initial={{ y: 20, opacity: 0 }}
         whileInView={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.1 }}
         viewport={{ once: true }}
       >
-        Ogni mese, M1SSION mette in palio un'auto di lusso. Lamborghini, Ferrari, Porsche e altre auto da sogno sono pronte per essere vinte.
+        Questa è <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span>, dove M1 è in celeste e SSION in bianco
       </motion.p>
 
       {isDesktop ? (
@@ -181,7 +181,7 @@ const LuxuryCarsSection = () => {
         </Carousel>
       )}
       
-      {/* Car details modal */}
+      {/* Car details modal - Updated to show the new Ferrari image */}
       <CarDetailsModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

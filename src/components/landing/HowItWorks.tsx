@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 
 interface HowItWorksProps {
   onRegisterClick: () => void;
+  countdownCompleted?: boolean;
 }
 
-const HowItWorks = ({ onRegisterClick }: HowItWorksProps) => {
+const HowItWorks = ({ onRegisterClick, countdownCompleted = false }: HowItWorksProps) => {
   const steps = [
     {
       icon: <UserCheck className="w-8 h-8 text-[#00E5FF]" />,
@@ -38,6 +39,7 @@ const HowItWorks = ({ onRegisterClick }: HowItWorksProps) => {
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
       viewport={{ once: true }}
+      id="how-it-works"
     >
       <motion.h2 
         className="text-3xl md:text-4xl font-bold mb-12 text-center bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] bg-clip-text text-transparent"
@@ -46,7 +48,7 @@ const HowItWorks = ({ onRegisterClick }: HowItWorksProps) => {
         transition={{ duration: 0.5 }}
         viewport={{ once: true }}
       >
-        Come Funziona?
+        Scopri M1SSION
       </motion.h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 relative">
@@ -86,8 +88,9 @@ const HowItWorks = ({ onRegisterClick }: HowItWorksProps) => {
       >
         <Button 
           onClick={onRegisterClick}
-          className="bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black font-bold px-8 py-6 rounded-full hover:shadow-[0_0_15px_rgba(0,229,255,0.5)] transition-all duration-300 hover:scale-105"
+          className={`bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black font-bold px-8 py-6 rounded-full transition-all duration-300 ${countdownCompleted ? 'hover:shadow-[0_0_15px_rgba(0,229,255,0.5)] hover:scale-105' : 'opacity-70 cursor-not-allowed'}`}
           size="lg"
+          disabled={!countdownCompleted}
         >
           Inizia La Tua M1SSION
         </Button>

@@ -5,15 +5,32 @@ import { useNavigate } from "react-router-dom";
 import CountdownTimer from "@/components/ui/countdown-timer";
 import { getMissionDeadline } from "@/utils/countdownDate";
 
-const LandingHeader = () => {
+interface LandingHeaderProps {
+  countdownCompleted?: boolean;
+}
+
+const LandingHeader = ({ countdownCompleted = false }: LandingHeaderProps) => {
   const navigate = useNavigate();
 
   const handleJoinHunt = () => {
-    navigate("/register");
+    if (countdownCompleted) {
+      navigate("/register");
+    } else {
+      console.log("Join Hunt button disabled until countdown completes");
+    }
   };
 
   const handleLearnMore = () => {
-    navigate("/how-it-works");
+    if (countdownCompleted) {
+      navigate("/how-it-works");
+    } else {
+      console.log("Learn More button disabled until countdown completes");
+      // Scroll to game explanation section instead
+      const gameExplanationSection = document.getElementById('game-explanation');
+      if (gameExplanationSection) {
+        gameExplanationSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
   };
 
   // Target date from utility
@@ -70,14 +87,16 @@ const LandingHeader = () => {
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button 
-            className="neon-button px-8 py-3 rounded-full text-black font-bold bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+            className={`neon-button px-8 py-3 rounded-full text-black font-bold bg-gradient-to-r from-cyan-400 to-blue-600 ${countdownCompleted ? 'hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]' : 'opacity-70 cursor-not-allowed'}`}
             onClick={handleJoinHunt}
+            disabled={!countdownCompleted}
           >
             JOIN THE HUNT
           </button>
           <button 
-            className="px-8 py-3 rounded-full text-white font-bold bg-black/30 border border-white/10 hover:bg-black/50 hover:border-white/20 transition-all"
+            className={`px-8 py-3 rounded-full text-white font-bold bg-black/30 border border-white/10 ${countdownCompleted ? 'hover:bg-black/50 hover:border-white/20' : 'opacity-70 cursor-not-allowed'}`}
             onClick={handleLearnMore}
+            disabled={!countdownCompleted}
           >
             LEARN MORE
           </button>
