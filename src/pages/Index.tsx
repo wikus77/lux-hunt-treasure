@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import AgeVerificationModal from "@/components/auth/AgeVerificationModal";
 import PresentationSection from "@/components/presentation/PresentationSection";
@@ -12,13 +12,16 @@ import { useNavigate } from "react-router-dom";
 import { getMissionDeadline } from "@/utils/countdownDate";
 import LaserRevealIntro from "@/components/intro/LaserRevealIntro";
 import NewsletterSection from "@/components/landing/NewsletterSection";
-import SubscriptionSection from "@/components/landing/SubscriptionSection";
 import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
 import InviteFriendDialog from "@/components/landing/InviteFriendDialog";
 import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Info } from "lucide-react";
 import GameExplanationSection from "@/components/landing/GameExplanationSection";
 import ParallaxContainer from "@/components/ui/parallax-container";
+import DetailsModal from "@/components/landing/DetailsModal";
+
+// Lazy load non-essential components
+const SubscriptionSection = lazy(() => import("@/components/landing/SubscriptionSection"));
 
 const Index = () => {
   console.log("Index component rendering");
@@ -28,6 +31,9 @@ const Index = () => {
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showInviteFriend, setShowInviteFriend] = useState(false);
   const [countdownCompleted, setCountdownCompleted] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [detailsType, setDetailsType] = useState<'prizes' | 'game' | 'subscription'>('prizes');
+  const [detailsTitle, setDetailsTitle] = useState('');
   const navigate = useNavigate();
   
   // Get target date from utility function
@@ -84,6 +90,13 @@ const Index = () => {
   const openInviteFriend = () => {
     setShowInviteFriend(true);
   };
+  
+  // Function to open details modal
+  const openDetailsModal = (type: 'prizes' | 'game' | 'subscription', title: string) => {
+    setDetailsType(type);
+    setDetailsTitle(title);
+    setShowDetailsModal(true);
+  };
 
   // Callback for when countdown completes
   const handleCountdownComplete = () => {
@@ -126,19 +139,52 @@ const Index = () => {
           {/* Presentation Section */}
           <PresentationSection visible={true} />
           
-          {/* Luxury Cars Section - Renamed to "Fallo ora, Fallo meglio di tutti" */}
-          <LuxuryCarsSection />
+          {/* Luxury Cars Section - "Fallo ora, Fallo meglio di tutti" */}
+          <div data-parallax="section" data-parallax-speed="0.1">
+            <LuxuryCarsSection />
+            
+            {/* Info Button - Show more details */}
+            <div className="flex justify-center pb-8">
+              <Button 
+                onClick={() => openDetailsModal('prizes', 'Auto di Lusso in Palio')}
+                className="bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+                data-parallax="element"
+                data-parallax-speed="-0.1"
+              >
+                <Info className="mr-2 h-4 w-4" />
+                Scopri di più
+              </Button>
+            </div>
+          </div>
           
           {/* Game Explanation Section - How it works with detailed rules */}
-          <GameExplanationSection />
+          <div data-parallax="section" data-parallax-speed="0.15">
+            <GameExplanationSection />
+            
+            {/* Info Button - Show game details */}
+            <div className="flex justify-center pb-8">
+              <Button 
+                onClick={() => openDetailsModal('game', 'Come Funziona M1SSION')}
+                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:shadow-[0_0_15px_rgba(123,46,255,0.5)]"
+                data-parallax="element"
+                data-parallax-speed="-0.1"
+              >
+                <Info className="mr-2 h-4 w-4" />
+                Regole Complete
+              </Button>
+            </div>
+          </div>
           
           {/* Newsletter Section */}
           <NewsletterSection countdownCompleted={countdownCompleted} />
           
+          {/* How It Works */}
           <HowItWorks onRegisterClick={handleRegisterClick} countdownCompleted={countdownCompleted} />
           
           {/* Subscription Section */}
-          <SubscriptionSection countdownCompleted={countdownCompleted} />
+          <Suspense fallback={<div className="h-[500px] flex items-center justify-center text-white/50">Caricamento abbonamenti...</div>}>
+            <SubscriptionSection countdownCompleted={countdownCompleted} />
+          </Suspense>
           
           <CTASection onRegisterClick={handleRegisterClick} countdownCompleted={countdownCompleted} />
           
@@ -154,6 +200,13 @@ const Index = () => {
           <InviteFriendDialog
             open={showInviteFriend}
             onClose={() => setShowInviteFriend(false)}
+          />
+          
+          <DetailsModal
+            open={showDetailsModal}
+            onClose={() => setShowDetailsModal(false)}
+            type={detailsType}
+            title={detailsTitle}
           />
         </ParallaxContainer>
       )}

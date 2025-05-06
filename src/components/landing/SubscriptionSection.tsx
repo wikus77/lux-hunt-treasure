@@ -2,12 +2,16 @@
 import { motion } from 'framer-motion';
 import { Check, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import DetailsModal from './DetailsModal';
 
 interface SubscriptionSectionProps {
   countdownCompleted?: boolean;
 }
 
 const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSectionProps) => {
+  const [showDetails, setShowDetails] = useState(false);
+  
   const subscriptions = [
     {
       title: 'Base',
@@ -30,7 +34,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
     },
     {
       title: 'Silver',
-      price: '€3.99',
+      price: '€6.99',
       period: '/mese',
       features: [
         "Tutto del piano Base",
@@ -47,7 +51,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
     },
     {
       title: 'Gold',
-      price: '€6.99',
+      price: '€9.99',
       period: '/mese',
       highlight: true,
       features: [
@@ -62,7 +66,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
     },
     {
       title: 'Black',
-      price: '€9.90',
+      price: '€13.99',
       period: '/mese',
       features: [
         "Tutto del piano Gold",
@@ -88,12 +92,22 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#00E5FF] via-white to-[#00E5FF] inline-block text-transparent bg-clip-text">
-            Abbonamenti M1SSION
+          <h2 className="text-3xl md:text-4xl font-bold inline-block">
+            <span className="text-[#00E5FF]">M1</span>
+            <span className="text-white">SSION</span>
+            <span className="text-white ml-2">Abbonamenti</span>
           </h2>
           <p className="mt-4 text-white/70 max-w-2xl mx-auto">
             Scegli il piano più adatto a te e inizia la tua avventura. Tutti i piani offrono la possibilità di vincere premi reali.
           </p>
+          
+          <Button 
+            variant="link" 
+            className="text-cyan-400 hover:text-cyan-300 mt-2"
+            onClick={() => setShowDetails(true)}
+          >
+            Scopri di più sui vantaggi
+          </Button>
         </motion.div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
@@ -106,6 +120,8 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
               transition={{ delay: index * 0.1, duration: 0.5 }}
               viewport={{ once: true }}
               whileHover={{ y: -5, transition: { duration: 0.2 } }}
+              data-parallax="card"
+              data-parallax-speed={`${0.05 + index * 0.02}`}
             >
               {/* Badge per il piano consigliato */}
               {sub.highlight && (
@@ -159,6 +175,13 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
           Tutti gli abbonamenti sono soggetti ai nostri Termini e Condizioni. Puoi cancellare in qualsiasi momento.
         </motion.div>
       </div>
+      
+      <DetailsModal
+        open={showDetails}
+        onClose={() => setShowDetails(false)}
+        type="subscription"
+        title="Dettagli Abbonamenti M1SSION"
+      />
     </section>
   );
 };

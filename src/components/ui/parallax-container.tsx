@@ -7,14 +7,12 @@ interface ParallaxContainerProps {
 
 const ParallaxContainer: React.FC<ParallaxContainerProps> = ({ children }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const parallaxLayers = useRef<HTMLElement[]>([]);
   
   useEffect(() => {
     if (!containerRef.current) return;
     
     // Find all elements with data-parallax attribute
-    const layers = Array.from(document.querySelectorAll('[data-parallax]')) as HTMLElement[];
-    parallaxLayers.current = layers;
+    const parallaxLayers = Array.from(document.querySelectorAll('[data-parallax]')) as HTMLElement[];
     
     // Create background layers for parallax effect
     const createParallaxBg = () => {
@@ -34,7 +32,7 @@ const ParallaxContainer: React.FC<ParallaxContainerProps> = ({ children }) => {
       });
       
       // Add additional floating elements
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 15; i++) {
         const floater = document.createElement('div');
         floater.className = 'absolute rounded-full opacity-10 z-0';
         floater.style.width = `${Math.random() * 300 + 50}px`;
@@ -54,7 +52,8 @@ const ParallaxContainer: React.FC<ParallaxContainerProps> = ({ children }) => {
     // Update all layers with parallax effect
     const updateParallaxLayers = () => {
       const scrollY = window.scrollY;
-      parallaxLayers.current.forEach(layer => {
+      
+      parallaxLayers.forEach(layer => {
         const speed = parseFloat(layer.getAttribute('data-parallax-speed') || '-0.2');
         const type = layer.getAttribute('data-parallax');
         
@@ -71,6 +70,16 @@ const ParallaxContainer: React.FC<ParallaxContainerProps> = ({ children }) => {
           const yPos = fromCenter * speed * 0.1;
           
           layer.style.transform = `translate3d(0, ${yPos}px, 0)`;
+        } else if (type === 'image') {
+          // For images with parallax effect
+          const containerRect = layer.parentElement?.getBoundingClientRect();
+          if (containerRect) {
+            const containerCenterY = containerRect.top + containerRect.height / 2;
+            const viewportCenterY = window.innerHeight / 2;
+            const offset = (containerCenterY - viewportCenterY) * speed * 0.15;
+            
+            layer.style.transform = `translate3d(0, ${offset}px, 0)`;
+          }
         }
       });
     };
@@ -80,16 +89,34 @@ const ParallaxContainer: React.FC<ParallaxContainerProps> = ({ children }) => {
     
     // Add scroll listener
     window.addEventListener('scroll', updateParallaxLayers);
+    window.addEventListener('resize', updateParallaxLayers);
+    
+    // Add requestAnimationFrame to make animations smoother
+    let ticking = false;
+    
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateParallaxLayers();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    
+    window.addEventListener('scroll', onScroll, { passive: true });
     
     return () => {
       window.removeEventListener('scroll', updateParallaxLayers);
+      window.removeEventListener('resize', updateParallaxLayers);
+      window.removeEventListener('scroll', onScroll);
     };
   }, []);
   
   return (
     <div 
       ref={containerRef} 
-      className="relative overflow-x-hidden min-h-screen"
+      className="relative overflow-x-hidden min-h-screen will-change-transform"
     >
       {children}
     </div>

@@ -6,6 +6,7 @@
   min-height: 100vh;
   overflow-x: hidden;
   perspective: 8px;
+  will-change: transform;
 }
 
 .parallax-layer {
@@ -32,7 +33,9 @@
 /* For smooth transitions */
 [data-parallax] {
   will-change: transform;
-  transition: transform 0.1s linear;
+  transition: transform 0.05s linear;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
 }
 
 @keyframes float-animation {
@@ -52,4 +55,25 @@
 .parallax-glow {
   animation: glow-pulse 3s ease-in-out infinite;
   filter: blur(40px);
+}
+
+/* Parallax depth classes */
+.parallax-depth-1 {
+  transform: translateZ(-1px) scale(1.125);
+}
+
+.parallax-depth-2 {
+  transform: translateZ(-2px) scale(1.25);
+}
+
+.parallax-depth-3 {
+  transform: translateZ(-3px) scale(1.375);
+}
+
+.parallax-depth-4 {
+  transform: translateZ(-4px) scale(1.5);
+}
+
+.parallax-depth-5 {
+  transform: translateZ(-5px) scale(1.625);
 }
