@@ -7,6 +7,13 @@ interface CluesDisplayProps {
 }
 
 const CluesDisplay = ({ onClueUnlocked }: CluesDisplayProps) => {
+  // Create a wrapper function that calls onClueUnlocked with the clueId
+  const handleClueUnlocked = () => {
+    // Generate a random clue ID if needed, or use a default one
+    const randomClueId = Math.random().toString(36).substring(2, 15);
+    onClueUnlocked(randomClueId);
+  };
+
   return (
     <div className="glass-card p-4 backdrop-blur-md border border-projectx-blue/10 rounded-xl">
       <ProfileClues 
@@ -18,7 +25,7 @@ const CluesDisplay = ({ onClueUnlocked }: CluesDisplayProps) => {
           isLocked: clue.isLocked,
           subscriptionType: clue.subscriptionType
         }))}
-        onClueUnlocked={onClueUnlocked}
+        onClueUnlocked={handleClueUnlocked}
       />
     </div>
   );
