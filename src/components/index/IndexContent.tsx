@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import LandingHeader from "@/components/landing/LandingHeader";
 import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
 import PresentationSection from "@/components/presentation/PresentationSection";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, Info } from "lucide-react";
 import BackgroundParallax from "@/components/ui/background-parallax";
 import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
+import CarBrandSelection from "@/components/landing/CarBrandSelection";
 
 interface IndexContentProps {
   countdownCompleted: boolean;
@@ -27,15 +28,6 @@ const IndexContent = ({
   openInviteFriend 
 }: IndexContentProps) => {
   const [showPrizeDetails, setShowPrizeDetails] = useState(false);
-  
-  // State to control visibility of content sections
-  const [hiddenSections, setHiddenSections] = useState<string[]>([]);
-  
-  // Effect to manage hidden sections - runs once on component mount
-  useEffect(() => {
-    // Add section identifiers you want to hide
-    setHiddenSections(['cosa-puoi-vincere']);
-  }, []);
 
   return (
     <>
@@ -77,6 +69,9 @@ const IndexContent = ({
       
       {/* Game Explanation Section */}
       <GameExplanationSection />
+      
+      {/* M1SSION FOREVER Section */}
+      <CarBrandSelection />
       
       {/* Newsletter Section */}
       <NewsletterSection countdownCompleted={countdownCompleted} />
