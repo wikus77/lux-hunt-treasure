@@ -12,7 +12,7 @@ const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
     <motion.div className="glass-card mb-12" variants={variants}>
       <h2 className="text-3xl font-orbitron font-bold mb-6 text-cyan-400">M1SSION FOREVER</h2>
       
-      {/* Car Brand Selection */}
+      {/* Only Car Brand Selection */}
       <CarBrandSelection />
     </motion.div>
   );

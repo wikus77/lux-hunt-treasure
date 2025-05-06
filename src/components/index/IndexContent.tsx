@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, Info } from "lucide-react";
 import BackgroundParallax from "@/components/ui/background-parallax";
 import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
-import CarBrandSelection from "@/components/landing/CarBrandSelection";
 
 interface IndexContentProps {
   countdownCompleted: boolean;
@@ -69,9 +68,6 @@ const IndexContent = ({
       
       {/* Game Explanation Section */}
       <GameExplanationSection />
-      
-      {/* M1SSION FOREVER Section */}
-      <CarBrandSelection />
       
       {/* Newsletter Section */}
       <NewsletterSection countdownCompleted={countdownCompleted} />
