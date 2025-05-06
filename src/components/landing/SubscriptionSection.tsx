@@ -30,7 +30,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
     },
     {
       title: 'Silver',
-      price: '€3.99',
+      price: '€6.99',
       period: '/mese',
       features: [
         "Tutto del piano Base",
@@ -47,7 +47,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
     },
     {
       title: 'Gold',
-      price: '€6.99',
+      price: '€9.99',
       period: '/mese',
       highlight: true,
       features: [
@@ -62,7 +62,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
     },
     {
       title: 'Black',
-      price: '€9.90',
+      price: '€13.99',
       period: '/mese',
       features: [
         "Tutto del piano Gold",
@@ -88,8 +88,8 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#00E5FF] via-white to-[#00E5FF] inline-block text-transparent bg-clip-text">
-            Abbonamenti M1SSION
+          <h2 className="text-3xl md:text-4xl font-bold inline-block">
+            <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span> Abbonamenti
           </h2>
           <p className="mt-4 text-white/70 max-w-2xl mx-auto">
             Scegli il piano più adatto a te e inizia la tua avventura. Tutti i piani offrono la possibilità di vincere premi reali.
