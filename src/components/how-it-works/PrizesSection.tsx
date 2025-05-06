@@ -10,7 +10,7 @@ interface SectionProps {
 const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
   return (
     <motion.div className="glass-card mb-12" variants={variants}>
-      <h2 className="text-3xl font-orbitron font-bold mb-6 text-cyan-400">Le Auto</h2>
+      <h2 className="text-3xl font-orbitron font-bold mb-6 text-cyan-400">M1SSION FOREVER</h2>
       
       {/* Only Car Brand Selection */}
       <CarBrandSelection />
