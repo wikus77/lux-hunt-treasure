@@ -11,8 +11,6 @@ import IndexContent from "@/components/index/IndexContent";
 import ModalManager from "@/components/index/ModalManager";
 
 const Index = () => {
-  console.log("Index component rendering");
-  
   // State management
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showInviteFriend, setShowInviteFriend] = useState(false);
@@ -26,19 +24,21 @@ const Index = () => {
   
   // Add a useEffect to mark when the page is fully loaded
   useEffect(() => {
-    if (document.readyState === 'complete') {
-      console.log("Page already loaded");
-      setPageLoaded(true);
-    } else {
-      console.log("Setting up load event listener");
-      const handleLoad = () => {
-        console.log("Page fully loaded");
-        setPageLoaded(true);
-      };
-      window.addEventListener('load', handleLoad);
-      return () => window.removeEventListener('load', handleLoad);
-    }
-  }, []);
+    // Reset any cache issues that might be causing the blank screen
+    localStorage.setItem('introShown', 'true'); // Force skip intro animation
+    
+    // Mark page as loaded
+    setPageLoaded(true);
+    
+    // For emergency fix - if intro is blocking the page, mark it as completed
+    setTimeout(() => {
+      if (!introCompleted) {
+        console.log("Force completing intro after timeout");
+        setIntroCompleted(true);
+      }
+    }, 2000);
+    
+  }, [introCompleted]);
 
   // Check if countdown has already passed
   useEffect(() => {
@@ -72,26 +72,23 @@ const Index = () => {
     setCountdownCompleted(true);
   };
 
-  // Console logging state for debugging
-  console.log("Render state:", { introCompleted, pageLoaded });
-
-  // Show loading screen if page is not fully loaded yet
+  // Emergency fallback - if we're still seeing a blank screen, render content directly
   if (!pageLoaded) {
-    return <LoadingScreen />;
+    return (
+      <div className="min-h-screen flex flex-col w-full bg-black">
+        <LoadingScreen />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
-      {/* Intro animation manager */}
-      {!introCompleted && (
+    <div className="min-h-screen flex flex-col w-full bg-black">
+      {!introCompleted ? (
         <IntroManager 
           pageLoaded={pageLoaded} 
           onIntroComplete={() => setIntroCompleted(true)}
         />
-      )}
-      
-      {/* Main content - only shown after intro completes */}
-      {introCompleted && (
+      ) : (
         <ParallaxContainer>
           <IndexContent 
             countdownCompleted={countdownCompleted}
@@ -99,7 +96,6 @@ const Index = () => {
             openInviteFriend={openInviteFriend}
           />
           
-          {/* Modals */}
           <ModalManager
             showAgeVerification={showAgeVerification}
             showInviteFriend={showInviteFriend}
