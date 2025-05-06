@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 
 const Index = () => {
+  console.log("Index component rendering");
+  
   // Control the intro animation visibility
   const [introCompleted, setIntroCompleted] = useState(true); // Set to true to skip intro by default
   const [showAgeVerification, setShowAgeVerification] = useState(false);
@@ -66,8 +68,6 @@ const Index = () => {
     navigate("/register");
   };
 
-  console.log("Index rendering, introCompleted:", introCompleted);
-
   // Function to handle invite friend button click
   const openInviteFriend = () => {
     setShowInviteFriend(true);
@@ -100,7 +100,7 @@ const Index = () => {
           
           <LandingHeader />
           
-          {/* New Launch Progress Bar */}
+          {/* Launch Progress Bar */}
           <LaunchProgressBar targetDate={nextEventDate} />
           
           {/* Features Section */}

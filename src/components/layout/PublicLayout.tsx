@@ -7,6 +7,8 @@ import { Outlet } from 'react-router-dom';
  * Wraps public pages with common layout elements
  */
 const PublicLayout: React.FC = () => {
+  console.log("PublicLayout rendering");
+  
   return (
     <div className="min-h-screen bg-black">
       <Outlet />

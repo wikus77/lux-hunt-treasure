@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
-import { SoundProvider, useSoundContext } from "./contexts/SoundContext";
+import { SoundProvider } from "./contexts/SoundContext";
 import { toast } from "sonner";
-import { supabase } from "./integrations/supabase/client";
 
 // Pages
 import Login from "./pages/Login";
@@ -47,7 +46,6 @@ import { EmailVerificationPage } from "./components/auth/EmailVerificationHandle
 
 // The AppContent component separates the App rendering logic from the provider setup
 function AppContent() {
-  const { isEnabled } = useSoundContext();
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -290,9 +288,11 @@ function AppContent() {
 
 function App() {
   return (
-    <SoundProvider>
-      <AppContent />
-    </SoundProvider>
+    <BrowserRouter>
+      <SoundProvider>
+        <AppContent />
+      </SoundProvider>
+    </BrowserRouter>
   );
 }
 
