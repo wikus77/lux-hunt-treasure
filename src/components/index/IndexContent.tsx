@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import LandingHeader from "@/components/landing/LandingHeader";
 import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
 import PresentationSection from "@/components/presentation/PresentationSection";
-import LuxuryCarsSection from "@/components/landing/LuxuryCarsSection";
 import GameExplanationSection from "@/components/landing/GameExplanationSection";
 import NewsletterSection from "@/components/landing/NewsletterSection";
 import HowItWorks from "@/components/landing/HowItWorks";
@@ -67,9 +66,6 @@ const IndexContent = ({
       
       {/* Presentation Section */}
       <PresentationSection visible={true} />
-      
-      {/* Luxury Cars Section */}
-      <LuxuryCarsSection />
       
       {/* Game Explanation Section */}
       <GameExplanationSection />
