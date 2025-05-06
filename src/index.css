@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap');
 
 @tailwind base;
@@ -214,6 +215,23 @@
   @apply bg-cyan-400;
 }
 
+/* Grid lines effect for futuristic background */
+.grid-lines {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-size: 50px 50px;
+  background-image:
+    linear-gradient(to right, rgba(0, 229, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 229, 255, 0.07) 1px, transparent 1px);
+  z-index: 0;
+}
+
+/* Filter for neon cyan glow on images */
+.filter-cyan-glow {
+  filter: brightness(1.5) drop-shadow(0 0 3px rgba(0, 229, 255, 0.5));
+}
+
 /* Animations for intro sequence */
 @keyframes glitch {
   0% { transform: translate(0); }
@@ -273,4 +291,10 @@
 
 .electric-pulse {
   animation: electricPulse 0.5s infinite;
+}
+
+/* Line moving animation */
+@keyframes lineMove {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }

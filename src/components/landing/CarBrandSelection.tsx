@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { luxuryCarsData } from "@/data/luxuryCarsData";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 
 const CarBrandSelection = () => {
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
@@ -22,7 +23,7 @@ const CarBrandSelection = () => {
     setIsRotating(brandId);
     setTimeout(() => {
       setSelectedBrand(brandId === selectedBrand ? null : brandId);
-    }, 500);
+    }, 300);
   };
 
   const selectedCar = selectedBrand 
@@ -30,122 +31,118 @@ const CarBrandSelection = () => {
     : null;
 
   return (
-    <section className="w-full py-16 md:py-24 bg-gradient-to-b from-black to-m1ssion-deep-blue">
-      <div className="container px-4 mx-auto">
-        <motion.h2 
-          className="text-center text-3xl md:text-5xl font-orbitron mb-6 gradient-text-multi"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          Vuoi provarci? Fallo. Ma fallo per vincere.
-        </motion.h2>
+    <section className="w-full py-16 md:py-24 bg-black relative overflow-hidden">
+      {/* Background grid lines effect */}
+      <div className="absolute inset-0 z-0">
+        <div className="grid-lines"></div>
+      </div>
+      
+      <div className="container px-4 mx-auto relative z-10">
+        <div className="flex justify-between items-center mb-16">
+          <motion.h2 
+            className="text-3xl md:text-5xl font-orbitron text-cyan-400"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            M1SSION
+          </motion.h2>
+          
+          <motion.div
+            className="text-lg md:text-2xl text-cyan-400 font-orbitron"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            SELECT A BRAND
+          </motion.div>
+        </div>
         
-        <motion.p 
-          className="text-center text-gray-300 mb-12 max-w-2xl mx-auto"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          Seleziona il tuo brand preferito e scopri la tua auto!
-        </motion.p>
-        
-        {/* Brand Selection Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 justify-items-center mb-12">
+        {/* Brand Selection Grid - Large square neon outlined cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
           {luxuryCarsData.map((car) => (
             <motion.div
               key={car.id}
-              className={`relative group cursor-pointer ${car.id}-logo-container car-logo-container glass-card p-3`}
+              className={`relative cursor-pointer`}
               onClick={() => handleBrandClick(car.id)}
-              whileHover={{ scale: 1.1, rotate: 5, y: -10 }}
-              initial={{ opacity: 0, scale: 0.5 }}
+              whileHover={{ scale: 1.05 }}
               animate={{ 
-                opacity: 1, 
-                scale: 1,
                 rotate: isRotating === car.id ? 360 : 0,
-                transition: { 
-                  type: "spring", 
-                  stiffness: 260, 
-                  damping: 20,
-                  duration: isRotating === car.id ? 1 : 0.3
-                }
               }}
               transition={{
-                duration: 0.3,
-                delay: luxuryCarsData.indexOf(car) * 0.1
+                rotate: { duration: 0.8, ease: "easeInOut" },
+                scale: { duration: 0.3 }
               }}
             >
-              <LazyImage
-                src={car.logo}
-                alt={car.brand}
-                className={`car-logo transition-all duration-300 ${selectedBrand === car.id ? 'scale-110' : ''}`}
-              />
-              
-              <motion.div 
-                className="absolute -bottom-2 left-0 right-0 text-xs text-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ 
-                  y: 0, 
-                  opacity: selectedBrand === car.id ? 1 : 0
-                }}
-                transition={{ duration: 0.3 }}
+              <div className={`aspect-square rounded-2xl p-6 flex items-center justify-center
+                ${selectedBrand === car.id ? 'border-2 border-cyan-400 shadow-[0_0_15px_rgba(0,229,255,0.7)]' : 'border border-cyan-400/30'}
+                bg-black transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,229,255,0.4)]`}
               >
-                {car.brand}
-              </motion.div>
+                <LazyImage
+                  src={car.logo}
+                  alt={car.brand}
+                  className={`w-4/5 h-4/5 object-contain transition-all duration-500
+                    ${selectedBrand === car.id ? 'filter-none brightness-200' : 'brightness-150 filter-cyan-glow'}
+                    ${isRotating === car.id ? 'scale-90' : 'scale-100'}`}
+                />
+              </div>
             </motion.div>
           ))}
         </div>
         
-        {/* Selected Car Preview */}
-        <div className="mt-12 relative min-h-[300px]">
+        {/* Selected Car Preview - Dark with neon highlights */}
+        <motion.div 
+          className="mt-8 relative"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: selectedCar ? 1 : 0 }}
+          transition={{ duration: 0.6 }}
+        >
           {selectedCar && (
             <motion.div 
-              className="glass-card p-6 max-w-4xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.8 }}
+              className="relative"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="flex items-center justify-center">
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
-                    className="w-full h-full flex items-center justify-center"
-                  >
-                    <LazyImage 
-                      src={selectedCar.imageUrl} 
-                      alt={selectedCar.name}
-                      className="max-h-[250px] object-contain rounded-lg shadow-lg"
-                    />
-                  </motion.div>
+              <div className="relative rounded-3xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
+                <LazyImage 
+                  src={selectedCar.imageUrl} 
+                  alt={selectedCar.name}
+                  className="w-full h-[400px] object-cover object-center rounded-t-3xl"
+                />
+                
+                <div className="absolute bottom-0 left-0 right-0 z-20 p-6">
+                  <h3 className="text-2xl font-orbitron mb-2 text-cyan-400">{selectedCar.name}</h3>
+                  <p className="text-gray-300 mb-4 max-w-3xl">{selectedCar.description}</p>
+                  
+                  <div className="flex flex-wrap gap-4 text-sm mb-6">
+                    <div className="bg-black/60 backdrop-blur-sm px-4 py-2 rounded-full border border-cyan-400/30">
+                      <span className="text-gray-400 mr-2">Motore:</span>
+                      <span className="text-white">{selectedCar.engine}</span>
+                    </div>
+                    
+                    <div className="bg-black/60 backdrop-blur-sm px-4 py-2 rounded-full border border-cyan-400/30">
+                      <span className="text-gray-400 mr-2">Accelerazione:</span>
+                      <span className="text-white">{selectedCar.acceleration}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-cyan-400 font-orbitron text-lg">
+                    {selectedCar.prize}
+                  </div>
                 </div>
                 
-                <div>
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 0.3 }}
-                  >
-                    <h3 className="text-2xl font-orbitron mb-2 gradient-text-cyan">{selectedCar.name}</h3>
-                    <p className="text-gray-300 mb-4">{selectedCar.description}</p>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center">
-                        <span className="text-gray-400 w-28">Motore:</span>
-                        <span className="text-white">{selectedCar.engine}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="text-gray-400 w-28">Accelerazione:</span>
-                        <span className="text-white">{selectedCar.acceleration}</span>
-                      </div>
-                      <div className="mt-4 pt-4 border-t border-gray-700">
-                        <div className="text-m1ssion-blue font-semibold">{selectedCar.prize}</div>
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
+                {/* Next button at bottom */}
+                <motion.div 
+                  className="absolute bottom-6 right-6 z-30"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center border border-cyan-400 shadow-[0_0_15px_rgba(0,229,255,0.4)] cursor-pointer">
+                    <ArrowRight className="w-5 h-5 text-cyan-400" />
+                  </div>
+                </motion.div>
               </div>
             </motion.div>
           )}
@@ -160,7 +157,7 @@ const CarBrandSelection = () => {
               <p className="text-lg">Seleziona un brand per visualizzare i dettagli dell'auto</p>
             </motion.div>
           )}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
