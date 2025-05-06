@@ -70,8 +70,7 @@ const IndexContent = ({
       {/* Game Explanation Section */}
       <GameExplanationSection />
       
-      {/* NUOVA SEZIONE: Vuoi provarci? Fallo. Ma fallo per vincere. */}
-      {/* Questa sezione sostituisce "Cosa puoi vincere" */}
+      {/* M1SSION FOREVER Section */}
       <CarBrandSelection />
       
       {/* Newsletter Section */}

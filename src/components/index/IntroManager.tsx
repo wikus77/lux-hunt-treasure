@@ -20,17 +20,16 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
       return;
     }
     
-    // Force showing the intro every time
     console.log("Preparing intro animation...");
     document.body.style.overflow = "hidden"; // Prevent scrolling during intro
     
-    // For debugging purposes, add a safety timeout
+    // Add safety timeout to ensure intro completes even if animations fail
     const safetyTimeout = setTimeout(() => {
       if (showIntroOverlay && !introCompleted) {
         console.log("Safety timeout: forcing intro completion");
         handleIntroComplete();
       }
-    }, 10000); // 10 second safety timeout
+    }, 8000); // 8-second safety timeout
     
     return () => {
       clearTimeout(safetyTimeout);
@@ -39,8 +38,6 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
   }, [pageLoaded]);
 
   const handleIntroComplete = () => {
-    // Mark intro as shown
-    localStorage.setItem('introShown', 'true');
     setIntroCompleted(true);
     console.log("Intro completed, showing landing page");
     
@@ -58,12 +55,17 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
   
   console.log("IntroManager rendering. State:", { showIntroOverlay, introCompleted, pageLoaded });
   
+  // Skip intro if facing issues
+  if (!pageLoaded) {
+    return null;
+  }
+  
   // Render appropriate intro component based on state
-  if (showIntroOverlay && pageLoaded) {
+  if (showIntroOverlay) {
     return <IntroOverlay onComplete={handleOverlayComplete} />;
   }
   
-  if (!introCompleted && pageLoaded) {
+  if (!introCompleted) {
     return (
       <div className="fixed inset-0 z-[9999] bg-black">
         <LaserRevealIntro onComplete={handleIntroComplete} />
