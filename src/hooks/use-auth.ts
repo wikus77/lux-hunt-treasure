@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';

@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 interface SoundContextType {
   soundPreference: string;
   volume: number[];
+  isEnabled: boolean;
   updateSound: (sound: string) => void;
   updateVolume: (volume: number[]) => void;
 }
@@ -13,6 +14,7 @@ const SoundContext = createContext<SoundContextType | undefined>(undefined);
 export const SoundProvider = ({ children }: { children: ReactNode }) => {
   const [soundPreference, setSoundPreference] = useState('default');
   const [volume, setVolume] = useState([75]);
+  const [isEnabled, setIsEnabled] = useState(true);
 
   useEffect(() => {
     const savedSound = localStorage.getItem('buzzSound');
@@ -23,6 +25,11 @@ export const SoundProvider = ({ children }: { children: ReactNode }) => {
     const savedVolume = localStorage.getItem('buzzVolume');
     if (savedVolume) {
       setVolume([Number(savedVolume)]);
+    }
+    
+    const savedEnabled = localStorage.getItem('soundEnabled');
+    if (savedEnabled !== null) {
+      setIsEnabled(savedEnabled === 'true');
     }
   }, []);
 
@@ -37,7 +44,7 @@ export const SoundProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <SoundContext.Provider value={{ soundPreference, volume, updateSound, updateVolume }}>
+    <SoundContext.Provider value={{ soundPreference, volume, isEnabled, updateSound, updateVolume }}>
       {children}
     </SoundContext.Provider>
   );

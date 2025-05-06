@@ -6,6 +6,8 @@ export interface AuthContextType {
   isLoading: boolean;
   isEmailVerified: boolean;
   getCurrentUser: () => User | null;
+  getAccessToken: () => string | null;
+  session: Session | null;
   resendVerificationEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
 }
@@ -16,4 +18,12 @@ export interface User {
   app_metadata: Record<string, any>;
   user_metadata: Record<string, any>;
   aud: string;
+}
+
+export interface Session {
+  access_token: string;
+  refresh_token?: string;
+  expires_in?: number;
+  expires_at?: number;
+  user: User;
 }
