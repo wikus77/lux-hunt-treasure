@@ -1,9 +1,8 @@
-
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useState, useEffect } from "react";
 import ProfileClues from "@/components/profile/ProfileClues";
 import { clues } from "@/data/cluesData";
-import { FileSearch, Bell, Broadcast } from "lucide-react";
+import { FileSearch, Bell, Radio } from "lucide-react";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -169,7 +168,7 @@ const Events = () => {
             className="w-full flex items-center gap-2 bg-gradient-to-r from-projectx-blue to-projectx-pink"
             disabled={!isConnected}
           >
-            <Broadcast className="h-4 w-4 mr-1" />
+            <Radio className="h-4 w-4 mr-1" />
             Trasmetti Notifica in Tempo Reale {!isConnected && "(Connessione...)"}
           </Button>
           

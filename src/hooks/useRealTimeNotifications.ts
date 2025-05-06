@@ -48,14 +48,16 @@ export function useRealTimeNotifications() {
     try {
       console.log("Broadcasting notification:", { title, description });
       
-      const { error } = await supabase.channel('notification-updates').send({
+      // Instead of accessing error directly, check the response status
+      const response = await supabase.channel('notification-updates').send({
         type: 'broadcast',
         event: 'new-notification',
         payload: { title, description }
       });
 
-      if (error) {
-        console.error("Error broadcasting notification:", error);
+      // Check if the response is successful (checking for null/undefined instead of error property)
+      if (!response) {
+        console.error("Error broadcasting notification: No response");
         return false;
       }
       
