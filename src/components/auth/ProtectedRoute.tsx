@@ -8,11 +8,13 @@ import EmailVerificationAlert from './EmailVerificationAlert';
 interface ProtectedRouteProps {
   redirectTo?: string;
   requireEmailVerification?: boolean;
+  children?: React.ReactNode; // Add this to accept children
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   redirectTo = '/login',
-  requireEmailVerification = true
+  requireEmailVerification = true,
+  children
 }) => {
   const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser } = useAuthContext();
   const location = useLocation();
@@ -48,7 +50,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
   
   // User is authenticated and email is verified, render the protected route
-  return <Outlet />;
+  return children ? <>{children}</> : <Outlet />;
 };
 
 // Export a component that can be used directly in pages to show a verification alert

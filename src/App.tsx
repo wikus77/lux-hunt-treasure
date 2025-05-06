@@ -68,176 +68,120 @@ function App() {
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             
-            <Route
-              path="/home"
-              element={
-                <ProtectedRoute>
-                  <Home />
-                </ProtectedRoute>
-              }
-            />
+            {/* Protected routes using children pattern */}
+            <Route path="/home" element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/how-it-works"
-              element={
-                <ProtectedRoute>
-                  <HowItWorks />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/how-it-works" element={
+              <ProtectedRoute>
+                <HowItWorks />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/map"
-              element={
-                <ProtectedRoute>
-                  <Map />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/map" element={
+              <ProtectedRoute>
+                <Map />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/stats"
-              element={
-                <ProtectedRoute>
-                  <Stats />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/stats" element={
+              <ProtectedRoute>
+                <Stats />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/privacy-security"
-              element={
-                <ProtectedRoute>
-                  <PrivacySecurity />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/privacy-security" element={
+              <ProtectedRoute>
+                <PrivacySecurity />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/language-settings"
-              element={
-                <ProtectedRoute>
-                  <LanguageSettings />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/language-settings" element={
+              <ProtectedRoute>
+                <LanguageSettings />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/leaderboard"
-              element={
-                <ProtectedRoute>
-                  <Leaderboard />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/leaderboard" element={
+              <ProtectedRoute>
+                <Leaderboard />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/notifications"
-              element={
-                <ProtectedRoute>
-                  <Notifications />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/notifications" element={
+              <ProtectedRoute>
+                <Notifications />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/buzz"
-              element={
-                <ProtectedRoute>
-                  <Buzz />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/buzz" element={
+              <ProtectedRoute>
+                <Buzz />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/contacts"
-              element={
-                <ProtectedRoute>
-                  <Contacts />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/contacts" element={
+              <ProtectedRoute>
+                <Contacts />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/events"
-              element={
-                <ProtectedRoute>
-                  <Events />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/events" element={
+              <ProtectedRoute>
+                <Events />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/subscriptions"
-              element={
-                <ProtectedRoute>
-                  <Subscriptions />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/subscriptions" element={
+              <ProtectedRoute>
+                <Subscriptions />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/payment-silver"
-              element={
-                <ProtectedRoute>
-                  <PaymentSilver />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/payment-silver" element={
+              <ProtectedRoute>
+                <PaymentSilver />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/payment-gold"
-              element={
-                <ProtectedRoute>
-                  <PaymentGold />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/payment-gold" element={
+              <ProtectedRoute>
+                <PaymentGold />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/payment-black"
-              element={
-                <ProtectedRoute>
-                  <PaymentBlack />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/payment-black" element={
+              <ProtectedRoute>
+                <PaymentBlack />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/payment-methods"
-              element={
-                <ProtectedRoute>
-                  <PaymentMethods />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/payment-methods" element={
+              <ProtectedRoute>
+                <PaymentMethods />
+              </ProtectedRoute>
+            } />
             
-            <Route
-              path="/payment-success"
-              element={
-                <ProtectedRoute>
-                  <PaymentSuccess />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/payment-success" element={
+              <ProtectedRoute>
+                <PaymentSuccess />
+              </ProtectedRoute>
+            } />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
