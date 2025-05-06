@@ -71,6 +71,7 @@ const IndexContent = ({
       <GameExplanationSection />
       
       {/* NUOVA SEZIONE: Vuoi provarci? Fallo. Ma fallo per vincere. */}
+      {/* Questa sezione sostituisce "Cosa puoi vincere" */}
       <CarBrandSelection />
       
       {/* Newsletter Section */}
