@@ -25,7 +25,7 @@ const ParallaxContainer: React.FC<ParallaxContainerProps> = ({ children }) => {
           bgLayer.className = 'absolute inset-0 z-0';
           bgLayer.style.background = `radial-gradient(circle at 50% ${50 + (index % 3) * 10}%, rgba(0,229,255,0.${index % 3 + 1}) 0%, transparent ${20 + (index % 4) * 10}%)`;
           bgLayer.setAttribute('data-parallax', 'background');
-          bgLayer.setAttribute('data-parallax-speed', (-0.2 - (index % 3) * 0.1).toString());
+          bgLayer.setAttribute('data-parallax-speed', (-0.3 - (index % 4) * 0.1).toString());
           section.setAttribute('data-parallax-bg', 'true');
           section.style.position = 'relative';
           section.style.overflow = 'hidden';
@@ -34,7 +34,7 @@ const ParallaxContainer: React.FC<ParallaxContainerProps> = ({ children }) => {
       });
       
       // Add additional floating elements
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 15; i++) {
         const floater = document.createElement('div');
         floater.className = 'absolute rounded-full opacity-10 z-0';
         floater.style.width = `${Math.random() * 300 + 50}px`;
@@ -44,7 +44,7 @@ const ParallaxContainer: React.FC<ParallaxContainerProps> = ({ children }) => {
         floater.style.top = `${Math.random() * 200}%`;
         floater.style.filter = 'blur(40px)';
         floater.setAttribute('data-parallax', 'floater');
-        floater.setAttribute('data-parallax-speed', (-0.3 - Math.random() * 0.3).toString());
+        floater.setAttribute('data-parallax-speed', (-0.4 - Math.random() * 0.4).toString());
         containerRef.current.appendChild(floater);
       }
     };
@@ -54,6 +54,10 @@ const ParallaxContainer: React.FC<ParallaxContainerProps> = ({ children }) => {
     // Update all layers with parallax effect
     const updateParallaxLayers = () => {
       const scrollY = window.scrollY;
+      
+      // Store the scroll position as a CSS variable
+      document.documentElement.style.setProperty('--scrollY', scrollY.toString());
+      
       parallaxLayers.current.forEach(layer => {
         const speed = parseFloat(layer.getAttribute('data-parallax-speed') || '-0.2');
         const type = layer.getAttribute('data-parallax');
@@ -68,9 +72,17 @@ const ParallaxContainer: React.FC<ParallaxContainerProps> = ({ children }) => {
           const centerY = rect.top + rect.height / 2;
           const viewportHeight = window.innerHeight;
           const fromCenter = centerY - viewportHeight / 2;
-          const yPos = fromCenter * speed * 0.1;
+          const yPos = fromCenter * speed * 0.2;
           
           layer.style.transform = `translate3d(0, ${yPos}px, 0)`;
+        } else if (type === 'scale-on-scroll') {
+          // Scale effect based on scroll position
+          const rect = layer.getBoundingClientRect();
+          if (rect.top < window.innerHeight && rect.bottom > 0) {
+            const scrollPercentage = 1 - (rect.top / window.innerHeight);
+            const scale = 1 + scrollPercentage * 0.1; // Max 10% scale
+            layer.style.transform = `scale(${scale})`;
+          }
         }
       });
     };
@@ -81,8 +93,12 @@ const ParallaxContainer: React.FC<ParallaxContainerProps> = ({ children }) => {
     // Add scroll listener
     window.addEventListener('scroll', updateParallaxLayers);
     
+    // Add resize listener to recalculate positions
+    window.addEventListener('resize', updateParallaxLayers);
+    
     return () => {
       window.removeEventListener('scroll', updateParallaxLayers);
+      window.removeEventListener('resize', updateParallaxLayers);
     };
   }, []);
   

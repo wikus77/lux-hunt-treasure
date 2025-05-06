@@ -5,7 +5,7 @@
   width: 100%;
   min-height: 100vh;
   overflow-x: hidden;
-  perspective: 8px;
+  perspective: 10px;
 }
 
 .parallax-layer {
@@ -18,11 +18,11 @@
 }
 
 .parallax-bg {
-  transform: translateZ(-10px) scale(2.25);
+  transform: translateZ(-12px) scale(2.25);
 }
 
 .parallax-mid {
-  transform: translateZ(-5px) scale(1.625);
+  transform: translateZ(-6px) scale(1.6);
 }
 
 .parallax-front {
@@ -52,4 +52,42 @@
 .parallax-glow {
   animation: glow-pulse 3s ease-in-out infinite;
   filter: blur(40px);
+}
+
+/* Enhanced parallax effects */
+.parallax-scroll {
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Different speeds for different elements */
+.parallax-speed-1 {
+  transform: translateY(calc(var(--scrollY, 0) * 0.1px));
+}
+
+.parallax-speed-2 {
+  transform: translateY(calc(var(--scrollY, 0) * 0.2px));
+}
+
+.parallax-speed-3 {
+  transform: translateY(calc(var(--scrollY, 0) * 0.3px));
+}
+
+.parallax-speed-negative-1 {
+  transform: translateY(calc(var(--scrollY, 0) * -0.1px));
+}
+
+.parallax-speed-negative-2 {
+  transform: translateY(calc(var(--scrollY, 0) * -0.2px));
+}
+
+/* For 3D-like effects */
+.parallax-depth {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+/* Scale effect for hover with parallax */
+.parallax-scale:hover {
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
 }

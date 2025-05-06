@@ -19,12 +19,14 @@ import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import GameExplanationSection from "@/components/landing/GameExplanationSection";
 import ParallaxContainer from "@/components/ui/parallax-container";
+import IntroOverlay from "@/components/intro/IntroOverlay";
 
 const Index = () => {
   console.log("Index component rendering");
   
   // Control the intro animation visibility
-  const [introCompleted, setIntroCompleted] = useState(true); // Set to true to skip intro by default
+  const [showIntroOverlay, setShowIntroOverlay] = useState(true);
+  const [introCompleted, setIntroCompleted] = useState(false);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showInviteFriend, setShowInviteFriend] = useState(false);
   const [countdownCompleted, setCountdownCompleted] = useState(false);
@@ -35,13 +37,13 @@ const Index = () => {
   
   // Check if we should show the intro animation
   useEffect(() => {
-    // For testing, we'll disable the intro animation
-    const forceIntroAnimation = false; // Changed to false to skip the intro
+    // Check if user has seen the intro before
     const hasSeenIntro = localStorage.getItem('introShown') === 'true';
     
-    if (hasSeenIntro || !forceIntroAnimation) {
+    if (hasSeenIntro) {
       // Skip intro if already seen
       console.log("Intro already shown, skipping...");
+      setShowIntroOverlay(false);
       setIntroCompleted(true);
       document.body.style.overflow = "auto"; // Enable scrolling
     } else {
@@ -63,6 +65,15 @@ const Index = () => {
     setIntroCompleted(true);
     console.log("Intro completed, showing landing page");
     
+    // Restore scrolling
+    document.body.style.overflow = "auto";
+  };
+
+  const handleOverlayComplete = () => {
+    setShowIntroOverlay(false);
+    setIntroCompleted(true);
+    // Mark intro as shown
+    localStorage.setItem('introShown', 'true');
     // Restore scrolling
     document.body.style.overflow = "auto";
   };
@@ -92,7 +103,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
-      {!introCompleted && (
+      {showIntroOverlay && (
+        <IntroOverlay onComplete={handleOverlayComplete} />
+      )}
+      
+      {!introCompleted && !showIntroOverlay && (
         <div className="fixed inset-0 z-[9999] bg-black">
           <LaserRevealIntro onComplete={handleIntroComplete} />
         </div>

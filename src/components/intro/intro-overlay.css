@@ -1,0 +1,92 @@
+
+/* Fullscreen Overlay */
+.intro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 1s ease;
+}
+
+.intro-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.intro-overlay-content {
+  text-align: center;
+  color: white;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.intro-logo {
+  font-size: 4rem;
+  font-weight: bold;
+  letter-spacing: 5px;
+}
+
+.m1 {
+  color: #00e5ff; /* Celeste per M1 */
+}
+
+.ssion {
+  color: white; /* Bianco per SSION */
+}
+
+.intro-slogan {
+  font-size: 1.5rem;
+  margin-top: 20px;
+  font-weight: bold;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+}
+
+.intro-date {
+  font-size: 1.2rem;
+  margin-top: 10px;
+}
+
+/* Glitch Effect */
+@keyframes glitch-anim {
+  0% { transform: translate(2px, 2px); }
+  25% { transform: translate(-2px, -2px); }
+  50% { transform: translate(2px, 2px); }
+  75% { transform: translate(-2px, -2px); }
+  100% { transform: translate(2px, 2px); }
+}
+
+.glitch {
+  display: inline-block;
+  color: white;
+  position: relative;
+  animation: glitch-anim 1s infinite;
+}
+
+.glitch:before {
+  content: attr(data-text);
+  position: absolute;
+  left: 2px;
+  top: 0;
+  color: rgba(255, 0, 255, 0.7);
+  z-index: -1;
+  animation: glitch-anim 2s infinite;
+  opacity: 0.7;
+}
+
+.glitch:after {
+  content: attr(data-text);
+  position: absolute;
+  left: -2px;
+  top: 0;
+  color: rgba(0, 255, 255, 0.7);
+  z-index: -2;
+  animation: glitch-anim 3s infinite;
+  opacity: 0.7;
+}
