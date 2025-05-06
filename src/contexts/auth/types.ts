@@ -1,14 +1,19 @@
 
-import { Session } from '@supabase/supabase-js';
-
 export interface AuthContextType {
-  session: Session | null;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: any }>;
+  logout: () => Promise<void>;
+  isAuthenticated: () => boolean;
   isLoading: boolean;
   isEmailVerified: boolean;
-  isAuthenticated: () => boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; data?: any; error?: any }>;
-  logout: () => Promise<void>;
-  getCurrentUser: () => any;
-  getAccessToken: () => string | null;
-  resendVerificationEmail: (email: string) => Promise<{ success: boolean; error?: any }>;
+  getCurrentUser: () => User | null;
+  resendVerificationEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+}
+
+export interface User {
+  id: string;
+  email?: string;
+  app_metadata: Record<string, any>;
+  user_metadata: Record<string, any>;
+  aud: string;
 }

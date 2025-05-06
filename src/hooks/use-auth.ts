@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -8,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
  * Hook for authentication functionality using Supabase Auth.
  * Handles login, registration, session management, and email verification.
  */
-export const useAuth = () => {
+export function useAuth(): AuthContextType {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -124,27 +123,45 @@ export const useAuth = () => {
   }, [session]);
 
   /**
-   * Resend verification email
+   * Sends a verification email to the specified email address
    */
-  const resendVerificationEmail = async (email: string) => {
+  const resendVerificationEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email
+        email: email,
       });
 
       if (error) {
-        console.error("Email verification resend error:", error.message);
-        return { success: false, error };
+        console.error("Error sending verification email:", error);
+        return { success: false, error: error.message };
       }
 
       return { success: true };
-    } catch (error) {
-      console.error("Unexpected error in resendVerificationEmail:", error);
-      return {
-        success: false,
-        error: { message: "Si è verificato un errore nell'invio dell'email di verifica." } as AuthError
-      };
+    } catch (error: any) {
+      console.error("Exception sending verification email:", error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  /**
+   * Sends a password reset email to the specified email address
+   */
+  const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+
+      if (error) {
+        console.error("Error sending password reset email:", error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      console.error("Exception sending password reset email:", error);
+      return { success: false, error: error.message };
     }
   };
 
@@ -158,5 +175,6 @@ export const useAuth = () => {
     getCurrentUser,
     getAccessToken,
     resendVerificationEmail,
+    resetPassword,
   };
-};
+}
