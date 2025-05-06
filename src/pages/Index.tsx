@@ -6,16 +6,11 @@ import PresentationSection from "@/components/presentation/PresentationSection";
 import HowItWorks from "@/components/landing/HowItWorks";
 import LandingHeader from "@/components/landing/LandingHeader";
 import LuxuryCarsSection from "@/components/landing/LuxuryCarsSection";
+import CTASection from "@/components/landing/CTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
 import { useNavigate } from "react-router-dom";
 import { getMissionDeadline } from "@/utils/countdownDate";
 import LaserRevealIntro from "@/components/intro/LaserRevealIntro";
-import NextEventCountdown from "@/components/landing/NextEventCountdown";
-import { SubscriptionSection } from "@/components/landing/SubscriptionSection";
-import { NewsletterSignup } from "@/components/landing/NewsletterSignup";
-import { InviteFriendSection } from "@/components/landing/InviteFriendSection";
-import { LaunchProgressBar } from "@/components/landing/LaunchProgressBar";
-import { CallToAction } from "@/components/landing/CallToAction";
 
 const Index = () => {
   // Control the intro animation visibility
@@ -63,6 +58,8 @@ const Index = () => {
     navigate("/register");
   };
 
+  console.log("Index rendering, introCompleted:", introCompleted);
+
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
       {!introCompleted && (
@@ -76,29 +73,9 @@ const Index = () => {
           <UnifiedHeader />
           <div className="h-[72px] w-full" />
           <LandingHeader />
-          
-          {/* Countdown and Progress Bar */}
-          <div className="mb-4 mt-8">
-            <NextEventCountdown targetDate={nextEventDate} />
-            <LaunchProgressBar />
-          </div>
-          
           <PresentationSection visible={true} />
-          
-          {/* Subscription Section */}
-          <SubscriptionSection />
-          
-          {/* CTA Section */}
-          <CallToAction />
-          
-          {/* Newsletter Signup */}
-          <NewsletterSignup />
-          
+          <CTASection onRegisterClick={handleRegisterClick} />
           <HowItWorks onRegisterClick={handleRegisterClick} />
-          
-          {/* Invite Friend Section */}
-          <InviteFriendSection />
-          
           <LuxuryCarsSection />
           <LandingFooter />
           <AgeVerificationModal
