@@ -19,6 +19,7 @@ const AppStoreButton = ({ href, icon, store, isActive }: AppStoreButtonProps) =>
         isActive ? 'border-white/30 hover:border-white/50' : 'border-white/20 opacity-70'
       }`}
       style={{ cursor: isActive ? 'pointer' : 'default' }}
+      onClick={!isActive ? (e) => e.preventDefault() : undefined}
     >
       <div className="mr-3 text-white">
         {icon}

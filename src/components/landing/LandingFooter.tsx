@@ -10,9 +10,7 @@ const LandingFooter = () => {
         {/* App Store Buttons Section */}
         <div className="mb-12 py-8 border-b border-white/10">
           <h3 className="text-xl font-bold text-center mb-6">Scarica l'app</h3>
-          <Suspense fallback={<div className="h-16 flex items-center justify-center">Caricamento...</div>}>
-            <AppStoreButtons />
-          </Suspense>
+          <AppStoreButtons />
         </div>
         
         <div className="flex flex-col md:flex-row justify-between items-center w-full mb-8">
