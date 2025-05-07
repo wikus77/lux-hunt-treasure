@@ -25,8 +25,8 @@ const Index = () => {
   const nextEventDate = getMissionDeadline();
   
   // Hide specific sections that match certain text content
-  useEffect(() => {
-  const interval = setInterval(() => {
+ useEffect(() => {
+  const observer = new MutationObserver(() => {
     const allSections = document.querySelectorAll("section");
 
     allSections.forEach((section) => {
@@ -38,16 +38,23 @@ const Index = () => {
         text.includes("auto di lusso")
       ) {
         section.style.display = "none";
-        console.log("✅ Sezione 'Cosa puoi vincere' nascosta.");
+        console.log("✅ Sezione 'Cosa puoi vincere' rimossa con MutationObserver.");
       }
     });
-  }, 500); // ogni mezzo secondo
+  });
 
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+
+  // Ferma l'osservatore dopo 10 secondi per sicurezza
   setTimeout(() => {
-    clearInterval(interval);
-    console.log("🛑 Controllo sezioni terminato.");
-  }, 7000);
+    observer.disconnect();
+    console.log("🛑 MutationObserver disattivato.");
+  }, 10000);
 }, []);
+
 
   
   // Reset intro flag for testing purposes
