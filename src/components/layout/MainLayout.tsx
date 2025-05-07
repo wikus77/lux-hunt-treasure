@@ -19,6 +19,7 @@ import NotificationsDrawer from "../notifications/NotificationsDrawer";
 import M1ssionText from "@/components/logo/M1ssionText";
 import { AIAssistant } from '@/components/ai/AIAssistant';
 import { useIsMobile } from "@/hooks/use-mobile";
+import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 
 const MainLayout = () => {
   const location = useLocation();
@@ -80,6 +81,7 @@ const MainLayout = () => {
 
   return (
     <div className="min-h-screen w-full bg-projectx-dark transition-colors duration-300 text-white relative">
+      <CookiebotInit />
       <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-projectx-card/40 border-b border-white/10 transition-all duration-300">
         <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center">
           <div className="flex items-center">
