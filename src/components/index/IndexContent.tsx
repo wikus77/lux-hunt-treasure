@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from "react";
 import LandingHeader from "@/components/landing/LandingHeader";
-import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
 import PresentationSection from "@/components/presentation/PresentationSection";
 import GameExplanationSection from "@/components/landing/GameExplanationSection";
 import NewsletterSection from "@/components/landing/NewsletterSection";
@@ -72,12 +71,6 @@ const IndexContent = ({
       </div>
       
       <LandingHeader countdownCompleted={countdownCompleted} />
-      
-      {/* Launch Progress Bar */}
-      <LaunchProgressBar 
-        targetDate={new Date(2025, 5, 19, 12, 0, 0)}  
-        onCountdownComplete={() => {}} // Handled in parent component
-      />
       
       {/* Game Explanation Section */}
       <GameExplanationSection />
