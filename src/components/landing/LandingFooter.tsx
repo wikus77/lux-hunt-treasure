@@ -1,10 +1,17 @@
 
 import { Link } from "react-router-dom";
+import AppStoreButtons from "./AppStoreButtons";
 
 const LandingFooter = () => {
   return (
     <footer className="py-12 px-4 bg-black w-full border-t border-white/10">
       <div className="max-w-screen-xl mx-auto">
+        {/* App Store Buttons Section */}
+        <div className="mb-12 py-8 border-b border-white/10">
+          <h3 className="text-xl font-bold text-center mb-6">Scarica l'app</h3>
+          <AppStoreButtons />
+        </div>
+        
         <div className="flex flex-col md:flex-row justify-between items-center w-full mb-8">
           <div className="mb-6 md:mb-0">
             <h2 className="text-2xl font-bold">
