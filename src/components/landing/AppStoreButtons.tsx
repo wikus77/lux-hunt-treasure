@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Apple, Smartphone } from 'lucide-react';
-import { getMissionDeadline } from '@/utils/countdownDate';
 
 interface AppStoreButtonProps {
   href: string;
@@ -35,7 +34,7 @@ const AppStoreButton = ({ href, icon, store, isActive }: AppStoreButtonProps) =>
 const AppStoreButtons = () => {
   // Get current date and launch date
   const today = new Date();
-  const launchDate = getMissionDeadline();
+  const launchDate = new Date("2025-07-19T00:00:00");
   
   // Check if the current date is past or equal to the launch date
   const isActive = today >= launchDate;
