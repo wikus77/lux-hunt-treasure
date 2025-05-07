@@ -86,8 +86,6 @@ const IndexContent = ({
       <HowItWorks onRegisterClick={onRegisterClick} countdownCompleted={countdownCompleted} />
       
       {/* "Vuoi provarci? Fallo. Ma fallo per vincere." Section */}
-      {/* Removed nested conditional that was causing syntax errors */}
-      
       <section className="w-full relative overflow-hidden py-16 bg-black">
         <div className="max-w-6xl mx-auto">
           <div className="text-3xl md:text-5xl font-orbitron text-cyan-400 mb-8 text-center">

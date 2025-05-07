@@ -26,47 +26,27 @@ const Index = () => {
   
   // Hide specific sections that match certain text content
   useEffect(() => {
-  const interval = setInterval(() => {
-    const allSections = document.querySelectorAll("section");
-
-    allSections.forEach((section) => {
-      const text = section.textContent?.toLowerCase() || "";
-      if (
-        text.includes("cosa puoi vincere") ||
-        text.includes("vuoi provarci") ||
-        text.includes("premio principale") ||
-        text.includes("auto di lusso")
-      ) {
-        section.style.display = "none";
-        console.log("✅ Sezione 'Cosa puoi vincere' nascosta.");
-      }
-    });
-  }, 500);
-
-  setTimeout(() => {
-    clearInterval(interval);
-    console.log("🛑 Fine controllo sezioni.");
-  }, 7000);
-}, []);
-
     const interval = setInterval(() => {
       const allSections = document.querySelectorAll("section");
+
       allSections.forEach((section) => {
         const text = section.textContent?.toLowerCase() || "";
         if (
+          text.includes("cosa puoi vincere") ||
           text.includes("vuoi provarci") ||
-          text.includes("cosa puoi vincere")
+          text.includes("premio principale") ||
+          text.includes("auto di lusso")
         ) {
           section.style.display = "none";
-          console.log("✅ Sezione nascosta con successo.");
+          console.log("✅ Sezione 'Cosa puoi vincere' nascosta.");
         }
       });
     }, 500);
 
-    // Ferma il controllo dopo 5 secondi
     setTimeout(() => {
       clearInterval(interval);
-    }, 5000);
+      console.log("🛑 Fine controllo sezioni.");
+    }, 7000);
     
     return () => {
       clearInterval(interval);
