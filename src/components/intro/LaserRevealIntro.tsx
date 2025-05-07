@@ -48,39 +48,57 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
       animate={{ opacity: fadeOut ? 0 : 1 }}
       transition={{ duration: 0.8 }}
     >
-      {/* First laser pass (left to right) */}
+      {/* First laser pass (left to right) - more pronounced starting point */}
       {laserPhase === 1 && (
         <motion.div 
           className="laser-line thin-laser"
-          initial={{ left: "-5%", opacity: 0 }}
-          animate={{ left: "105%", opacity: 1 }}
-          transition={{ duration: 1, ease: "easeInOut" }}
+          initial={{ left: "-10%", width: "5%", opacity: 0 }}
+          animate={{ left: "105%", width: "100%", opacity: [0, 1, 1, 0.8] }}
+          transition={{ 
+            left: { duration: 1, ease: "easeInOut" },
+            width: { duration: 0.3, ease: "easeOut" },
+            opacity: { 
+              times: [0, 0.1, 0.7, 1],
+              duration: 1
+            }
+          }}
         />
       )}
       
-      {/* Second laser pass (right to left) */}
+      {/* Second laser pass (right to left) - more pronounced starting point */}
       {laserPhase === 2 && (
         <motion.div 
           className="laser-line thin-laser"
-          initial={{ left: "105%", opacity: 0 }}
-          animate={{ left: "-5%", opacity: 1 }}
-          transition={{ duration: 1, ease: "easeInOut" }}
+          initial={{ left: "105%", width: "5%", opacity: 0 }}
+          animate={{ left: "-10%", width: "100%", opacity: [0, 1, 1, 0.8] }}
+          transition={{ 
+            left: { duration: 1, ease: "easeInOut" },
+            width: { duration: 0.3, ease: "easeOut" },
+            opacity: { 
+              times: [0, 0.1, 0.7, 1],
+              duration: 1
+            }
+          }}
         />
       )}
       
-      {/* Third laser pass (left to right) */}
+      {/* Third laser pass (left to right) - more pronounced starting point */}
       {laserPhase === 3 && (
         <motion.div 
           className="laser-line thin-laser"
-          initial={{ left: "-5%", opacity: 0 }}
+          initial={{ left: "-10%", width: "5%", opacity: 0 }}
           animate={{ 
             left: "105%", 
+            width: "100%",
             opacity: [0, 1, 1, 0.8, 1, 0.7, 0.4, 0.2],
           }}
           transition={{ 
-            duration: 1.8, 
-            ease: "easeInOut",
-            opacity: { times: [0, 0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 1] }
+            left: { duration: 1.8, ease: "easeInOut" },
+            width: { duration: 0.3, ease: "easeOut" },
+            opacity: { 
+              times: [0, 0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 1],
+              duration: 1.8
+            }
           }}
         />
       )}
