@@ -12,7 +12,29 @@ import ModalManager from "@/components/index/ModalManager";
 
 const Index = () => {
   console.log("Index component rendering");
-  
+  import { useEffect } from "react";
+
+// Inserisci questo all'inizio del file Index.tsx
+useEffect(() => {
+  const interval = setInterval(() => {
+    const allSections = document.querySelectorAll("section");
+    allSections.forEach((section) => {
+      const text = section.textContent?.toLowerCase() || "";
+      if (
+        text.includes("vuoi provarci") ||
+        text.includes("cosa puoi vincere")
+      ) {
+        section.style.display = "none";
+        console.log("✅ Sezione nascosta con successo.");
+      }
+    });
+  }, 500);
+
+  // Ferma il controllo dopo 5 secondi
+  setTimeout(() => {
+    clearInterval(interval);
+  }, 5000);
+}, []);
   // State management
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showInviteFriend, setShowInviteFriend] = useState(false);
