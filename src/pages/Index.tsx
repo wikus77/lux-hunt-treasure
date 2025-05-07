@@ -25,30 +25,7 @@ const Index = () => {
   const nextEventDate = getMissionDeadline();
   
   // Hide specific sections that match certain text content
-  import { useEffect } from "react";
-
-// Inserisci questo all'inizio del file Index.tsx
-useEffect(() => {
-  const interval = setInterval(() => {
-    const allSections = document.querySelectorAll("section");
-    allSections.forEach((section) => {
-      const text = section.textContent?.toLowerCase() || "";
-      if (
-        text.includes("vuoi provarci") ||
-        text.includes("cosa puoi vincere")
-      ) {
-        section.style.display = "none";
-        console.log("✅ Sezione nascosta con successo.");
-      }
-    });
-  }, 500);
-
-  // Ferma il controllo dopo 5 secondi
-  setTimeout(() => {
-    clearInterval(interval);
-  }, 5000);
-}, []);
-(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       const allSections = document.querySelectorAll("section");
       allSections.forEach((section) => {
@@ -63,10 +40,14 @@ useEffect(() => {
       });
     }, 500);
 
-    // Stop the check after 5 seconds
+    // Ferma il controllo dopo 5 secondi
     setTimeout(() => {
       clearInterval(interval);
     }, 5000);
+    
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
   
   // Reset intro flag for testing purposes
