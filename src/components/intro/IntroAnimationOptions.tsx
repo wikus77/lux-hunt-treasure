@@ -19,7 +19,7 @@ interface IntroAnimationOptionsProps {
 
 const IntroAnimationOptions: React.FC<IntroAnimationOptionsProps> = ({ 
   onComplete,
-  selectedOption = 7 // Default to the new Laser Reveal animation
+  selectedOption = 7 // Default to the Laser Reveal animation
 }) => {
   // Select animation based on option
   switch (selectedOption) {
