@@ -16,9 +16,9 @@ const AppStoreButton = ({ href, icon, store, subtext, isActive }: AppStoreButton
       href={isActive ? href : undefined}
       target={isActive ? "_blank" : undefined}
       rel={isActive ? "noopener noreferrer" : undefined}
-      className={`flex items-center px-4 py-3 rounded-lg bg-black border ${
+      className={`flex items-center px-6 py-3 rounded-md bg-black border-2 ${
         isActive 
-          ? 'border-cyan-400 neon-border hover:border-white/50' 
+          ? 'border-[#1EAEDB] hover:border-white/80 shadow-[0_0_10px_rgba(30,174,219,0.7)] transition-all duration-300' 
           : 'border-white/20 opacity-70'
       }`}
       style={{ cursor: isActive ? 'pointer' : 'default' }}
@@ -29,7 +29,7 @@ const AppStoreButton = ({ href, icon, store, subtext, isActive }: AppStoreButton
       </div>
       <div className="flex flex-col">
         <span className="text-xs text-white/70">{subtext}</span>
-        <span className="text-white font-semibold">{store}</span>
+        <span className="text-white font-medium">{store}</span>
       </div>
     </a>
   );
