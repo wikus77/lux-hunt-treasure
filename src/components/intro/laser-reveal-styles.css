@@ -28,6 +28,7 @@
     0 0 8px rgba(30, 174, 219, 0.8),
     0 0 20px rgba(30, 174, 219, 0.6);
   z-index: 10;
+  pointer-events: none;
 }
 
 /* Logo styling */

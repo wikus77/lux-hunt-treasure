@@ -36,9 +36,9 @@ const IntroAnimationOptions: React.FC<IntroAnimationOptionsProps> = ({
     case 6:
       return <BlackHoleRevealIntro onComplete={onComplete} />;
     case 7:
-      return <LaserRevealIntro onComplete={onComplete} />;
+      return <LaserRevealIntro onComplete={onComplete} onSkip={() => onComplete()} />;
     default:
-      return <LaserRevealIntro onComplete={onComplete} />;
+      return <LaserRevealIntro onComplete={onComplete} onSkip={() => onComplete()} />;
   }
 };
 

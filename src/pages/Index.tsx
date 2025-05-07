@@ -24,11 +24,10 @@ const Index = () => {
   // Get target date from utility function
   const nextEventDate = getMissionDeadline();
   
-  // Controlla se l'introduzione deve essere saltata
+  // Reset intro flag for testing purposes
   useEffect(() => {
-    if (localStorage.getItem("skipIntro") === "true") {
-      setIntroCompleted(true);
-    }
+    // Per assicurarci che l'intro venga mostrata, rimuoviamo il flag dal localStorage
+    localStorage.removeItem("skipIntro");
   }, []);
   
   // Add a useEffect to mark when the page is fully loaded
@@ -100,36 +99,16 @@ const Index = () => {
   // Console logging state for debugging
   console.log("Render state:", { introCompleted, pageLoaded });
 
-  // Mostrare immediatamente il contenuto se la pagina è ancora in caricamento dopo 5 secondi
-  useEffect(() => {
-    const forceLoad = setTimeout(() => {
-      if (!pageLoaded || !introCompleted) {
-        console.log("Forcing content to show after timeout");
-        setPageLoaded(true);
-        setIntroCompleted(true);
-      }
-    }, 5000);
-    
-    return () => clearTimeout(forceLoad);
-  }, [pageLoaded, introCompleted]);
-
-  // Show loading screen if page is not fully loaded yet
-  if (!pageLoaded) {
-    return <LoadingScreen />;
-  }
-
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
       {/* Intro animation manager */}
-      {!introCompleted && (
-        <IntroManager 
-          pageLoaded={pageLoaded} 
-          onIntroComplete={handleIntroComplete}
-        />
-      )}
+      <IntroManager 
+        pageLoaded={pageLoaded} 
+        onIntroComplete={handleIntroComplete}
+      />
       
       {/* Main content - shown after intro completes or fallback when intro fails */}
-      {(introCompleted || !pageLoaded) && (
+      {introCompleted && (
         <ParallaxContainer>
           <IndexContent 
             countdownCompleted={countdownCompleted}
@@ -146,6 +125,11 @@ const Index = () => {
             onAgeVerified={handleAgeVerified}
           />
         </ParallaxContainer>
+      )}
+
+      {/* Fallback Loading Screen - mostrato solo quando l'intro non è completa e la pagina non è ancora caricata */}
+      {!introCompleted && !pageLoaded && (
+        <LoadingScreen />
       )}
     </div>
   );

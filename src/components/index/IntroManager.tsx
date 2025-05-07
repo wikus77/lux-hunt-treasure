@@ -9,47 +9,36 @@ interface IntroManagerProps {
 
 const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
   const [introCompleted, setIntroCompleted] = useState(false);
-  const [introFailed, setIntroFailed] = useState(false);
   
-  // Determine if intro should be skipped (based on localStorage)
+  // Check if intro should be skipped
   useEffect(() => {
-    // Check if user has already seen the intro
-    const hasSeenIntro = localStorage.getItem("hasSeenIntro");
-    if (hasSeenIntro === "true") {
-      console.log("User has already seen the intro, skipping...");
-      handleIntroComplete();
-    }
+    // Force the intro to show every time for now (for testing)
+    // Comment the next line and uncomment the commented code below to enable skipping for returning users
+    localStorage.removeItem("hasSeenIntro");
+    
+    // Uncomment this to enable skipping for returning users
+    // const hasSeenIntro = localStorage.getItem("hasSeenIntro");
+    // if (hasSeenIntro === "true") {
+    //   console.log("User has already seen the intro, skipping...");
+    //   handleIntroComplete();
+    // }
   }, []);
   
   useEffect(() => {
-    console.log("IntroManager effect running, pageLoaded:", pageLoaded);
-    
     if (!pageLoaded) {
-      console.log("Page not loaded yet, returning");
       return;
     }
     
-    console.log("Preparing intro animation...");
-    document.body.style.overflow = "hidden"; // Prevent scrolling during intro
-    
-    // Add safety timeout to ensure intro completes even if animations fail
-    const safetyTimeout = setTimeout(() => {
-      if (!introCompleted) {
-        console.log("Safety timeout: forcing intro completion");
-        setIntroFailed(true);
-        handleIntroComplete();
-      }
-    }, 6000); // Safety timeout
+    // Prevent scrolling during intro
+    document.body.style.overflow = "hidden";
     
     return () => {
-      clearTimeout(safetyTimeout);
-      document.body.style.overflow = "auto"; // Ensure scrolling is re-enabled
+      document.body.style.overflow = "auto";
     };
-  }, [pageLoaded, introCompleted]);
+  }, [pageLoaded]);
 
   const handleIntroComplete = () => {
     setIntroCompleted(true);
-    console.log("Intro completed, showing landing page");
     
     // Store that the user has seen the intro
     localStorage.setItem("hasSeenIntro", "true");
@@ -62,13 +51,10 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
   };
   
   const handleSkipIntro = () => {
-    console.log("User skipped intro");
     handleIntroComplete();
   };
   
-  console.log("IntroManager rendering. State:", { introCompleted, pageLoaded, introFailed });
-  
-  // Skip intro if facing issues or page not loaded
+  // If page not loaded yet, show loading screen
   if (!pageLoaded) {
     return (
       <div className="fixed inset-0 z-[9999] bg-black flex items-center justify-center">
@@ -80,11 +66,6 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     );
   }
   
-  // If intro had problems, skip it
-  if (introFailed) {
-    return null;
-  }
-  
   // If intro not completed, show laser reveal animation
   if (!introCompleted) {
     return (
@@ -94,6 +75,7 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     );
   }
   
+  // If intro completed, return null (landing page will be shown)
   return null;
 };
 

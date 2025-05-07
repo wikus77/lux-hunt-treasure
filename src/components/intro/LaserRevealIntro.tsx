@@ -11,11 +11,13 @@ interface LaserRevealIntroProps {
 const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip }) => {
   const [showLogo, setShowLogo] = useState(false);
   const [showDate, setShowDate] = useState(false);
+  const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
     // Timeline of animations
     const laserTimeout = setTimeout(() => setShowLogo(true), 1000); // Show logo after laser scan
     const dateTimeout = setTimeout(() => setShowDate(true), 1500); // Show date text 0.5s after logo
+    const fadeOutTimeout = setTimeout(() => setFadeOut(true), 2500); // Begin fade out after 2.5s
     const completeTimeout = setTimeout(() => {
       // Complete the intro after 3 seconds total
       onComplete();
@@ -24,12 +26,18 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
     return () => {
       clearTimeout(laserTimeout);
       clearTimeout(dateTimeout);
+      clearTimeout(fadeOutTimeout);
       clearTimeout(completeTimeout);
     };
   }, [onComplete]);
 
   return (
-    <div className="laser-reveal-container">
+    <motion.div 
+      className="laser-reveal-container"
+      initial={{ opacity: 1 }}
+      animate={{ opacity: fadeOut ? 0 : 1 }}
+      transition={{ duration: 0.5 }}
+    >
       {/* Laser line animation */}
       <motion.div 
         className="laser-line"
@@ -68,7 +76,7 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
           Skip intro
         </button>
       )}
-    </div>
+    </motion.div>
   );
 };
 
