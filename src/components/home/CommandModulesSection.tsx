@@ -67,10 +67,10 @@ const CommandModulesSection = ({ unlockedModules, handleModuleClick }: CommandMo
         </div>
       </CommandModuleCard>
       
-      {/* Contextual Shortcuts */}
+      {/* Contextual Shortcuts - Fix the icon type issue here */}
       <CommandModuleCard
         title="Accessi Rapidi"
-        icon={() => <span></span>}
+        icon={Zap} /* Changed from () => <span></span> to a proper Lucide icon */
         unlocked={unlockedModules.shortcuts}
         statusText="Disponibile"
         statusColor="cyan"
