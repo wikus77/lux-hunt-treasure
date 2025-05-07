@@ -25,7 +25,20 @@ const Index = () => {
   const nextEventDate = getMissionDeadline();
   
   // Hide specific sections that match certain text content
-  useEffect(() => {
+  useEffect(() => {const allSections = document.querySelectorAll("section");
+
+allSections.forEach((section) => {
+  const text = section.textContent?.toLowerCase() || "";
+  if (
+    text.includes("cosa puoi vincere") ||
+    text.includes("vuoi provarci") ||
+    text.includes("premio principale") ||
+    text.includes("auto di lusso")
+  ) {
+    section.style.display = "none";
+    console.log("✅ Sezione 'Cosa puoi vincere' nascosta.");
+  }
+});
     const interval = setInterval(() => {
       const allSections = document.querySelectorAll("section");
       allSections.forEach((section) => {
