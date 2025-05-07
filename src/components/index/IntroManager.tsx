@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import LaserRevealIntro from "@/components/intro/LaserRevealIntro";
+import IntroAnimationOptions from "@/components/intro/IntroAnimationOptions";
 
 interface IntroManagerProps {
   pageLoaded: boolean;
@@ -66,11 +66,14 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     );
   }
   
-  // If intro not completed, show laser reveal animation
+  // If intro not completed, show selected intro animation
   if (!introCompleted) {
     return (
       <div className="fixed inset-0 z-[9999] bg-black">
-        <LaserRevealIntro onComplete={handleIntroComplete} onSkip={handleSkipIntro} />
+        <IntroAnimationOptions 
+          onComplete={handleIntroComplete} 
+          selectedOption={7} // Using LaserRevealIntro (ID: 7)
+        />
       </div>
     );
   }

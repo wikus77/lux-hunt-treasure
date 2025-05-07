@@ -5,7 +5,7 @@ export const getMissionDeadline = (): Date => {
   return new Date(2025, 6, 19, 0, 0, 0);
 };
 
-// Calcola i giorni rimanenti in modo coerente per tutta l'applicazione
+// Calculate the remaining days consistently throughout the application
 export const getRemainingDays = (): number => {
   const targetDate = getMissionDeadline();
   const now = new Date();

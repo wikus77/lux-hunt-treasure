@@ -9,22 +9,32 @@ interface LaserRevealIntroProps {
 }
 
 const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip }) => {
+  const [laserPhase, setLaserPhase] = useState(1); // 1: left to right, 2: right to left, 3: left to right again
   const [showLogo, setShowLogo] = useState(false);
   const [showDate, setShowDate] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    // Timeline of animations
-    const laserTimeout = setTimeout(() => setShowLogo(true), 1500); // Show logo after laser scan (1.5s)
-    const dateTimeout = setTimeout(() => setShowDate(true), 3500); // Show date text 2s after logo
-    const fadeOutTimeout = setTimeout(() => setFadeOut(true), 6500); // Begin fade out after 6.5s
-    const completeTimeout = setTimeout(() => {
-      // Complete the intro after 7 seconds total
-      onComplete();
-    }, 7000);
+    // Timeline of animations - enhanced with multiple laser passes
+    const firstLaserPassTimeout = setTimeout(() => setLaserPhase(2), 1000); // First pass completes
+    const secondLaserPassTimeout = setTimeout(() => setLaserPhase(3), 2000); // Second pass completes
+    
+    // Start showing logo during third pass
+    const logoTimeout = setTimeout(() => setShowLogo(true), 2400);
+    
+    // Show date text after logo
+    const dateTimeout = setTimeout(() => setShowDate(true), 4000);
+    
+    // Begin fade out of the entire intro
+    const fadeOutTimeout = setTimeout(() => setFadeOut(true), 7000);
+    
+    // Complete the intro after fade out
+    const completeTimeout = setTimeout(() => onComplete(), 7800);
 
     return () => {
-      clearTimeout(laserTimeout);
+      clearTimeout(firstLaserPassTimeout);
+      clearTimeout(secondLaserPassTimeout);
+      clearTimeout(logoTimeout);
       clearTimeout(dateTimeout);
       clearTimeout(fadeOutTimeout);
       clearTimeout(completeTimeout);
@@ -38,45 +48,62 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
       animate={{ opacity: fadeOut ? 0 : 1 }}
       transition={{ duration: 0.8 }}
     >
-      {/* Laser line animation */}
-      <motion.div 
-        className="laser-line"
-        initial={{ left: "-5%", opacity: 0 }}
-        animate={{ 
-          left: "105%", 
-          opacity: [0, 1, 1, 0.8, 1, 0.9, 1],
-          boxShadow: [
-            "0 0 10px 2px rgba(0,229,255,0.7), 0 0 20px 5px rgba(0,229,255,0.5)", 
-            "0 0 15px 3px rgba(0,229,255,0.9), 0 0 30px 8px rgba(0,229,255,0.7)",
-            "0 0 10px 2px rgba(0,229,255,0.7), 0 0 20px 5px rgba(0,229,255,0.5)"
-          ]
-        }}
-        transition={{ 
-          duration: 3, 
-          ease: "easeInOut",
-          times: [0, 0.2, 0.4, 0.6, 0.8, 0.9, 1],
-        }}
-      />
+      {/* First laser pass (left to right) */}
+      {laserPhase === 1 && (
+        <motion.div 
+          className="laser-line thin-laser"
+          initial={{ left: "-5%", opacity: 0 }}
+          animate={{ left: "105%", opacity: 1 }}
+          transition={{ duration: 1, ease: "easeInOut" }}
+        />
+      )}
       
-      {/* M1SSION Logo with glitch effect */}
+      {/* Second laser pass (right to left) */}
+      {laserPhase === 2 && (
+        <motion.div 
+          className="laser-line thin-laser"
+          initial={{ left: "105%", opacity: 0 }}
+          animate={{ left: "-5%", opacity: 1 }}
+          transition={{ duration: 1, ease: "easeInOut" }}
+        />
+      )}
+      
+      {/* Third laser pass (left to right) */}
+      {laserPhase === 3 && (
+        <motion.div 
+          className="laser-line thin-laser"
+          initial={{ left: "-5%", opacity: 0 }}
+          animate={{ 
+            left: "105%", 
+            opacity: [0, 1, 1, 0.8, 1, 0.7, 0.4, 0.2],
+          }}
+          transition={{ 
+            duration: 1.8, 
+            ease: "easeInOut",
+            opacity: { times: [0, 0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 1] }
+          }}
+        />
+      )}
+      
+      {/* M1SSION Logo with enhanced glitch effect - appears during third laser pass */}
       {showLogo && (
         <motion.div 
           className="intro-logo-container"
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.7, type: "spring", stiffness: 100 }}
         >
           <h1 className="intro-logo glitch-text" data-text="M1SSION">
             <span className="cyan-text">M1</span>SSION
           </h1>
           
-          {/* Date text with fade-in */}
+          {/* Date text with smooth fade-in */}
           {showDate && (
             <motion.p 
               className="intro-date"
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.9, ease: "easeOut" }}
             >
               STARTS ON JULY 19
             </motion.p>
@@ -84,7 +111,10 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
         </motion.div>
       )}
       
-      {/* Skip button */}
+      {/* Digital noise overlay for enhanced tech effect */}
+      <div className="digital-noise"></div>
+      
+      {/* Skip button - maintained from original */}
       {onSkip && (
         <button 
           onClick={onSkip} 
