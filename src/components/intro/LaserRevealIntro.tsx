@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import './laser-reveal-styles.css';
 
@@ -9,62 +9,63 @@ interface LaserRevealIntroProps {
 }
 
 const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [showLogo, setShowLogo] = useState(false);
+  const [showDate, setShowDate] = useState(false);
 
   useEffect(() => {
-    console.log("LaserReveal intro mounted");
-    
-    const timer = setTimeout(() => {
-      console.log("LaserReveal intro timeout - completing");
+    // Timeline of animations
+    const laserTimeout = setTimeout(() => setShowLogo(true), 1000); // Show logo after laser scan
+    const dateTimeout = setTimeout(() => setShowDate(true), 1500); // Show date text 0.5s after logo
+    const completeTimeout = setTimeout(() => {
+      // Complete the intro after 3 seconds total
       onComplete();
-    }, 4000); // Total duration 4s (reduced from original)
-    
-    return () => clearTimeout(timer);
+    }, 3000);
+
+    return () => {
+      clearTimeout(laserTimeout);
+      clearTimeout(dateTimeout);
+      clearTimeout(completeTimeout);
+    };
   }, [onComplete]);
 
   return (
-    <div className="laser-reveal-container" ref={containerRef}>
-      {/* Background */}
-      <div className="laser-reveal-bg"></div>
-      
-      {/* Grid lines */}
-      <div className="laser-grid-lines"></div>
-      
-      {/* Horizontal laser beam */}
+    <div className="laser-reveal-container">
+      {/* Laser line animation */}
       <motion.div 
-        className="laser-beam horizontal"
-        initial={{ width: 0 }}
-        animate={{ width: '100%' }}
-        transition={{ duration: 1.5, ease: 'easeInOut' }}
+        className="laser-line"
+        initial={{ left: "-100%", opacity: 1 }}
+        animate={{ left: "100%", opacity: [1, 0.8, 1, 0.9, 1] }}
+        transition={{ duration: 1.2, ease: "easeInOut" }}
       />
       
-      {/* Vertical laser beam */}
-      <motion.div 
-        className="laser-beam vertical"
-        initial={{ height: 0 }}
-        animate={{ height: '100%' }}
-        transition={{ duration: 1.5, delay: 0.5, ease: 'easeInOut' }}
-      />
-      
-      {/* Revealed text */}
-      <motion.div 
-        className="revealed-text"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1, delay: 2, ease: 'easeOut' }}
-      >
-        <span className="m1">M1</span>
-        <span className="ssion">SSION</span>
-      </motion.div>
+      {/* M1SSION Logo with glitch effect */}
+      {showLogo && (
+        <div className="intro-logo-container">
+          <h1 className="intro-logo glitch-text" data-text="M1SSION">
+            <span className="cyan-text">M1</span>SSION
+          </h1>
+          
+          {/* Date text with fade-in */}
+          {showDate && (
+            <motion.p 
+              className="intro-date"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              STARTS ON JUNE 19
+            </motion.p>
+          )}
+        </div>
+      )}
       
       {/* Skip button */}
       {onSkip && (
         <button 
           onClick={onSkip} 
-          className="absolute bottom-8 right-8 px-4 py-2 text-sm text-white/70 border border-white/30 
-                    rounded-md hover:bg-white/10 transition-colors"
+          className="skip-button"
         >
-          Salta intro
+          Skip intro
         </button>
       )}
     </div>
