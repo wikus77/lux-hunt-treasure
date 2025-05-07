@@ -1,6 +1,8 @@
 
 import React, { useMemo, useEffect } from 'react';
 import { motion } from "framer-motion";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
 
 interface LaunchProgressBarProps {
   targetDate: Date;
@@ -32,6 +34,11 @@ const LaunchProgressBar: React.FC<LaunchProgressBarProps> = ({ targetDate, onCou
     if (diff <= 0) return 0;
     
     return Math.floor(diff / (1000 * 60 * 60 * 24));
+  }, [targetDate]);
+
+  // Format target date to display in Italian
+  const formattedDate = useMemo(() => {
+    return format(targetDate, "d MMMM yyyy", { locale: it });
   }, [targetDate]);
   
   // Check if countdown is completed
@@ -68,7 +75,7 @@ const LaunchProgressBar: React.FC<LaunchProgressBarProps> = ({ targetDate, onCou
             </h3>
             <div className="text-right">
               <p className="text-white text-sm">
-                <span className="font-bold text-yellow-400">{daysRemaining}</span> giorni al lancio
+                <span className="font-bold text-yellow-400">{daysRemaining}</span> giorni al lancio {formattedDate}
               </p>
             </div>
           </div>
