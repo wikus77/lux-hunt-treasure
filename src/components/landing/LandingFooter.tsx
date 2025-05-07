@@ -1,5 +1,5 @@
 
-import React, { Suspense } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import AppStoreButtons from "./AppStoreButtons";
 
@@ -9,7 +9,7 @@ const LandingFooter = () => {
       <div className="max-w-screen-xl mx-auto">
         {/* App Store Buttons Section */}
         <div className="mb-12 py-8 border-b border-white/10">
-          <h3 className="text-xl font-bold text-center mb-6">Scarica l'app</h3>
+          <h3 className="text-xl font-bold text-center mb-6 gradient-text-cyan">Scarica l'app</h3>
           <AppStoreButtons />
         </div>
         

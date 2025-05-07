@@ -6,17 +6,20 @@ interface AppStoreButtonProps {
   href: string;
   icon: React.ReactNode;
   store: string;
+  subtext: string;
   isActive: boolean;
 }
 
-const AppStoreButton = ({ href, icon, store, isActive }: AppStoreButtonProps) => {
+const AppStoreButton = ({ href, icon, store, subtext, isActive }: AppStoreButtonProps) => {
   return (
     <a
       href={isActive ? href : undefined}
       target={isActive ? "_blank" : undefined}
       rel={isActive ? "noopener noreferrer" : undefined}
       className={`flex items-center px-4 py-3 rounded-lg bg-black border ${
-        isActive ? 'border-white/30 hover:border-white/50' : 'border-white/20 opacity-70'
+        isActive 
+          ? 'border-cyan-400 neon-border hover:border-white/50' 
+          : 'border-white/20 opacity-70'
       }`}
       style={{ cursor: isActive ? 'pointer' : 'default' }}
       onClick={!isActive ? (e) => e.preventDefault() : undefined}
@@ -25,7 +28,7 @@ const AppStoreButton = ({ href, icon, store, isActive }: AppStoreButtonProps) =>
         {icon}
       </div>
       <div className="flex flex-col">
-        <span className="text-xs text-white/70">Download on the</span>
+        <span className="text-xs text-white/70">{subtext}</span>
         <span className="text-white font-semibold">{store}</span>
       </div>
     </a>
@@ -46,12 +49,14 @@ const AppStoreButtons = () => {
         href="https://apps.apple.com/app/idXXXXXXXXX"
         icon={<Apple size={24} />}
         store="App Store"
+        subtext="Download on the"
         isActive={isActive}
       />
       <AppStoreButton
         href="https://play.google.com/store/apps/details?id=com.m1ssion.app"
         icon={<Smartphone size={24} />}
         store="Google Play"
+        subtext="GET IT ON"
         isActive={isActive}
       />
     </div>
