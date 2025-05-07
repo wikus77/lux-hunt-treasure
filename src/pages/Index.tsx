@@ -25,7 +25,30 @@ const Index = () => {
   const nextEventDate = getMissionDeadline();
   
   // Hide specific sections that match certain text content
-  useEffect(() => {
+  import { useEffect } from "react";
+
+// Inserisci questo all'inizio del file Index.tsx
+useEffect(() => {
+  const interval = setInterval(() => {
+    const allSections = document.querySelectorAll("section");
+    allSections.forEach((section) => {
+      const text = section.textContent?.toLowerCase() || "";
+      if (
+        text.includes("vuoi provarci") ||
+        text.includes("cosa puoi vincere")
+      ) {
+        section.style.display = "none";
+        console.log("✅ Sezione nascosta con successo.");
+      }
+    });
+  }, 500);
+
+  // Ferma il controllo dopo 5 secondi
+  setTimeout(() => {
+    clearInterval(interval);
+  }, 5000);
+}, []);
+(() => {
     const interval = setInterval(() => {
       const allSections = document.querySelectorAll("section");
       allSections.forEach((section) => {
