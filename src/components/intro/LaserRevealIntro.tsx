@@ -48,59 +48,116 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
       animate={{ opacity: fadeOut ? 0 : 1 }}
       transition={{ duration: 0.8 }}
     >
-      {/* First laser pass (left to right) - more pronounced starting point */}
+      {/* First laser pass (left to right) - with star point and cyan to magenta color transition */}
       {laserPhase === 1 && (
-        <motion.div 
-          className="laser-line thin-laser"
-          initial={{ left: "-10%", width: "5%", opacity: 0 }}
-          animate={{ left: "105%", width: "100%", opacity: [0, 1, 1, 0.8] }}
-          transition={{ 
-            left: { duration: 1, ease: "easeInOut" },
-            width: { duration: 0.3, ease: "easeOut" },
-            opacity: { 
-              times: [0, 0.1, 0.7, 1],
-              duration: 1
-            }
-          }}
-        />
+        <>
+          <motion.div 
+            className="laser-star"
+            initial={{ left: "-10%", top: "50%", transform: "translate(0, -50%)" }}
+            animate={{ left: "105%", top: "50%", transform: "translate(0, -50%)" }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="laser-line thin-laser"
+            initial={{ 
+              left: "-10%", 
+              width: "5%", 
+              opacity: 0,
+              background: "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)"
+            }}
+            animate={{ 
+              left: "105%", 
+              width: "100%", 
+              opacity: [0, 1, 1, 0.8],
+              background: [
+                "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(127, 114, 255, 0) 0%, rgba(127, 114, 255, 1) 50%, rgba(127, 114, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(255, 0, 255, 0) 0%, rgba(255, 0, 255, 1) 50%, rgba(255, 0, 255, 0) 100%)"
+              ]
+            }}
+            transition={{ 
+              left: { duration: 1, ease: "easeInOut" },
+              width: { duration: 0.3, ease: "easeOut" },
+              opacity: { times: [0, 0.1, 0.7, 1], duration: 1 },
+              background: { duration: 1, times: [0, 0.5, 1] }
+            }}
+          />
+        </>
       )}
       
-      {/* Second laser pass (right to left) - more pronounced starting point */}
+      {/* Second laser pass (right to left) - with star point and magenta to cyan color transition */}
       {laserPhase === 2 && (
-        <motion.div 
-          className="laser-line thin-laser"
-          initial={{ left: "105%", width: "5%", opacity: 0 }}
-          animate={{ left: "-10%", width: "100%", opacity: [0, 1, 1, 0.8] }}
-          transition={{ 
-            left: { duration: 1, ease: "easeInOut" },
-            width: { duration: 0.3, ease: "easeOut" },
-            opacity: { 
-              times: [0, 0.1, 0.7, 1],
-              duration: 1
-            }
-          }}
-        />
+        <>
+          <motion.div 
+            className="laser-star"
+            initial={{ left: "105%", top: "50%", transform: "translate(0, -50%)" }}
+            animate={{ left: "-10%", top: "50%", transform: "translate(0, -50%)" }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+            style={{ backgroundColor: "#ff00ff", boxShadow: "0 0 8px 4px rgba(255, 0, 255, 0.8)" }}
+          />
+          <motion.div 
+            className="laser-line thin-laser"
+            initial={{ 
+              left: "105%", 
+              width: "5%", 
+              opacity: 0,
+              background: "linear-gradient(to right, rgba(255, 0, 255, 0) 0%, rgba(255, 0, 255, 1) 50%, rgba(255, 0, 255, 0) 100%)"
+            }}
+            animate={{ 
+              left: "-10%", 
+              width: "100%", 
+              opacity: [0, 1, 1, 0.8],
+              background: [
+                "linear-gradient(to right, rgba(255, 0, 255, 0) 0%, rgba(255, 0, 255, 1) 50%, rgba(255, 0, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(127, 114, 255, 0) 0%, rgba(127, 114, 255, 1) 50%, rgba(127, 114, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)"
+              ]
+            }}
+            transition={{ 
+              left: { duration: 1, ease: "easeInOut" },
+              width: { duration: 0.3, ease: "easeOut" },
+              opacity: { times: [0, 0.1, 0.7, 1], duration: 1 },
+              background: { duration: 1, times: [0, 0.5, 1] }
+            }}
+          />
+        </>
       )}
       
-      {/* Third laser pass (left to right) - more pronounced starting point */}
+      {/* Third laser pass (left to right) - with star point and cyan to magenta color transition */}
       {laserPhase === 3 && (
-        <motion.div 
-          className="laser-line thin-laser"
-          initial={{ left: "-10%", width: "5%", opacity: 0 }}
-          animate={{ 
-            left: "105%", 
-            width: "100%",
-            opacity: [0, 1, 1, 0.8, 1, 0.7, 0.4, 0.2],
-          }}
-          transition={{ 
-            left: { duration: 1.8, ease: "easeInOut" },
-            width: { duration: 0.3, ease: "easeOut" },
-            opacity: { 
-              times: [0, 0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 1],
-              duration: 1.8
-            }
-          }}
-        />
+        <>
+          <motion.div 
+            className="laser-star"
+            initial={{ left: "-10%", top: "50%", transform: "translate(0, -50%)" }}
+            animate={{ left: "105%", top: "50%", transform: "translate(0, -50%)" }}
+            transition={{ duration: 1.8, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="laser-line thin-laser"
+            initial={{ 
+              left: "-10%", 
+              width: "5%", 
+              opacity: 0,
+              background: "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)"
+            }}
+            animate={{ 
+              left: "105%", 
+              width: "100%", 
+              opacity: [0, 1, 1, 0.8, 1, 0.7, 0.4, 0.2],
+              background: [
+                "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(127, 114, 255, 0) 0%, rgba(127, 114, 255, 1) 50%, rgba(127, 114, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(255, 0, 255, 0) 0%, rgba(255, 0, 255, 1) 50%, rgba(255, 0, 255, 0) 100%)"
+              ]
+            }}
+            transition={{ 
+              left: { duration: 1.8, ease: "easeInOut" },
+              width: { duration: 0.3, ease: "easeOut" },
+              opacity: { times: [0, 0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 1], duration: 1.8 },
+              background: { duration: 1.8, times: [0, 0.5, 1] }
+            }}
+          />
+        </>
       )}
       
       {/* M1SSION Logo with enhanced glitch effect - appears during third laser pass */}
