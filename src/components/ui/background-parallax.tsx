@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from "react";
 
 const BackgroundParallax: React.FC = () => {
@@ -7,24 +6,12 @@ const BackgroundParallax: React.FC = () => {
   useEffect(() => {
     const handleScroll = () => {
       if (parallaxRef.current) {
-        const scrollPosition = window.scrollY;
-        const elements = document.querySelectorAll('[data-parallax="scroll"]');
-        
-        elements.forEach((element) => {
-          const speed = parseFloat(element.getAttribute('data-parallax-speed') || '0.5');
-          const rect = element.getBoundingClientRect();
-          const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
-          
-          if (isVisible) {
-            const yPos = Math.round((rect.top - window.innerHeight) * speed);
-            (element as HTMLElement).style.backgroundPositionY = `${yPos}px`;
-          }
-        });
-        
-        // Apply parallax to background layers
+        // Keeping only the parallax background layer effects
+        // Removed the scroll progress indicator code
         const layers = document.querySelectorAll('.parallax-layer');
         layers.forEach((layer) => {
           const speed = parseFloat(layer.getAttribute('data-speed') || '0.5');
+          const scrollPosition = window.scrollY;
           const yPos = scrollPosition * speed;
           (layer as HTMLElement).style.transform = `translateY(${yPos}px)`;
         });
