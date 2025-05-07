@@ -8,6 +8,7 @@ import HowItWorksHeader from "@/components/how-it-works/HowItWorksHeader";
 import GameConcept from "@/components/how-it-works/GameConcept";
 import HowToPlay from "@/components/how-it-works/HowToPlay";
 import GameRules from "@/components/how-it-works/GameRules";
+import PrizesSection from "@/components/how-it-works/PrizesSection";
 import FaqSection from "@/components/how-it-works/FaqSection";
 import CallToActionSection from "@/components/how-it-works/CallToActionSection";
 
@@ -63,7 +64,8 @@ const HowItWorks = () => {
           {/* Rules */}
           <GameRules variants={itemVariants} />
           
-          {/* PrizesSection component is completely removed */}
+          {/* Prizes */}
+          <PrizesSection variants={itemVariants} />
           
           {/* FAQ */}
           <FaqSection variants={itemVariants} />
