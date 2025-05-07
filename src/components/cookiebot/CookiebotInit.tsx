@@ -1,86 +1,148 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-// Questo componente si assicura che Cookiebot sia stato inizializzato correttamente
+// Componente migliorato per l'inizializzazione e il debug di Cookiebot
 const CookiebotInit = () => {
+  const [initAttempts, setInitAttempts] = useState(0);
+  const [cookiebotLoaded, setCookiebotLoaded] = useState(false);
+  
   useEffect(() => {
-    // Funzione per verificare e inizializzare Cookiebot
-    const initCookiebot = () => {
-      // Verifica se Cookiebot è già caricato
-      if (window.Cookiebot === undefined) {
-        console.log("Cookiebot non è ancora caricato, reinizializzazione...");
-        
-        // Forza il reload dello script Cookiebot se non è stato caricato
-        const existingScript = document.getElementById('Cookiebot');
-        if (existingScript) {
-          existingScript.remove();
-        }
-        
-        const script = document.createElement('script');
-        script.id = 'Cookiebot';
-        script.src = 'https://consent.cookiebot.com/uc.js';
-        script.setAttribute('data-cbid', 'qfr87kY0ukx-ZP');
-        script.setAttribute('data-blockingmode', 'auto');
-        script.async = false; // Impostiamo a false per assicurarci che venga caricato in modo sincrono
-        document.head.appendChild(script);
-        
-        console.log("Script Cookiebot reinizializzato");
-        
-        // Aggiungiamo un timeout per verificare se Cookiebot è stato caricato dopo un breve periodo
-        setTimeout(() => {
-          if (window.Cookiebot) {
-            console.log("Cookiebot caricato dopo timeout:", window.Cookiebot);
-            tryShowCookiebot();
-          } else {
-            console.log("Cookiebot ancora non disponibile dopo timeout");
-          }
-        }, 1000);
-      } else {
-        console.log("Cookiebot già caricato:", window.Cookiebot);
-        tryShowCookiebot();
+    // Funzione per verificare lo stato di Cookiebot
+    const checkCookiebotStatus = () => {
+      if (window.Cookiebot) {
+        console.log("✅ Cookiebot rilevato:", window.Cookiebot);
+        setCookiebotLoaded(true);
+        return true;
       }
+      console.log("❌ Cookiebot non rilevato");
+      return false;
     };
     
     // Funzione per forzare la visualizzazione del banner
-    const tryShowCookiebot = () => {
-      if (window.Cookiebot) {
+    const forceCookiebotDisplay = () => {
+      if (!window.Cookiebot) return false;
+      
+      try {
+        // Prima proviamo il metodo show se disponibile
         if (typeof window.Cookiebot.show === 'function') {
-          console.log("Forzo la visualizzazione del banner Cookiebot");
+          console.log("🔄 Tentativo di esecuzione Cookiebot.show()");
           window.Cookiebot.show();
-        } else {
-          console.log("La funzione 'show' non è disponibile in Cookiebot");
-          // Proviamo il renew come alternativa
-          if (typeof window.Cookiebot.renew === 'function') {
-            console.log("Eseguo Cookiebot.renew() come alternativa");
-            window.Cookiebot.renew();
-          }
+          return true;
         }
+        
+        // Altrimenti proviamo il metodo renew
+        if (typeof window.Cookiebot.renew === 'function') {
+          console.log("🔄 Tentativo di esecuzione Cookiebot.renew()");
+          window.Cookiebot.renew();
+          return true;
+        }
+        
+        // Se entrambi i metodi falliscono, proviamo a ritirare il consenso
+        if (typeof window.Cookiebot.withdraw === 'function') {
+          console.log("🔄 Tentativo di esecuzione Cookiebot.withdraw()");
+          window.Cookiebot.withdraw();
+          return true;
+        }
+        
+        console.log("⚠️ Nessun metodo di visualizzazione disponibile in Cookiebot");
+        return false;
+      } catch (error) {
+        console.error("❌ Errore durante il tentativo di mostrare Cookiebot:", error);
+        return false;
       }
     };
-
-    // Inizializzazione immediata
-    initCookiebot();
     
-    // Aggiunta di un listener per l'evento DOMContentLoaded per assicurarsi che il DOM sia completamente caricato
-    const handleDOMContentLoaded = () => {
-      console.log("DOM completamente caricato, riprovo l'inizializzazione di Cookiebot");
-      initCookiebot();
+    // Funzione per reinizializzare Cookiebot da zero
+    const reinitializeCookiebot = () => {
+      setInitAttempts(prev => prev + 1);
+      console.log(`🔄 Reinizializzazione di Cookiebot (tentativo ${initAttempts + 1})`);
+      
+      // Rimuovi lo script esistente se presente
+      const existingScript = document.getElementById('Cookiebot');
+      if (existingScript) {
+        existingScript.remove();
+        console.log("🗑️ Rimosso script Cookiebot esistente");
+      }
+      
+      // Crea e inserisci un nuovo script
+      const script = document.createElement('script');
+      script.id = 'Cookiebot';
+      script.src = 'https://consent.cookiebot.com/uc.js';
+      script.setAttribute('data-cbid', 'qfr87kY0ukx-ZP');
+      script.setAttribute('data-blockingmode', 'auto');
+      script.async = false;
+      
+      // Aggiungiamo un listener per sapere quando lo script è caricato
+      script.onload = () => {
+        console.log("✅ Script Cookiebot caricato con successo");
+        // Dopo il caricamento, controlliamo se l'oggetto Cookiebot è disponibile
+        setTimeout(() => {
+          if (checkCookiebotStatus()) {
+            forceCookiebotDisplay();
+          }
+        }, 500);
+      };
+      
+      script.onerror = (error) => {
+        console.error("❌ Errore nel caricamento dello script Cookiebot:", error);
+      };
+      
+      document.head.appendChild(script);
+      console.log("➕ Nuovo script Cookiebot aggiunto al DOM");
     };
     
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', handleDOMContentLoaded);
+    // Definisci una sequenza temporizzata di tentativi
+    const initSequence = () => {
+      // Controllo immediato
+      if (checkCookiebotStatus()) {
+        forceCookiebotDisplay();
+        return;
+      }
+      
+      // Se non è disponibile, pianifica una sequenza di tentativi
+      const attemptTimes = [500, 1500, 3000, 5000, 8000];
+      
+      attemptTimes.forEach((delay, index) => {
+        setTimeout(() => {
+          console.log(`⏱️ Tentativo ${index + 1} di controllare Cookiebot dopo ${delay}ms`);
+          
+          if (checkCookiebotStatus()) {
+            forceCookiebotDisplay();
+          } else if (index === attemptTimes.length - 1) {
+            // Se siamo all'ultimo tentativo pianificato e ancora non funziona
+            console.log("⚠️ Tutti i tentativi pianificati falliti, reinizializzando Cookiebot");
+            reinitializeCookiebot();
+          }
+        }, delay);
+      });
+    };
+    
+    // Avvia la sequenza di inizializzazione
+    initSequence();
+    
+    // Pulisci quando il componente viene smontato
+    return () => {};
+  }, [initAttempts]);
+
+  // Aggiungi un effetto per controllare di nuovo quando la pagina è completamente caricata
+  useEffect(() => {
+    const handleLoad = () => {
+      console.log("📄 Pagina completamente caricata, verifica lo stato di Cookiebot");
+      if (!cookiebotLoaded) {
+        setInitAttempts(prev => prev + 1);
+      }
+    };
+    
+    if (document.readyState === 'complete') {
+      handleLoad();
     } else {
-      // Se il DOM è già caricato, esegui subito
-      handleDOMContentLoaded();
+      window.addEventListener('load', handleLoad);
+      return () => window.removeEventListener('load', handleLoad);
     }
-    
-    // Pulizia del listener quando il componente viene smontato
-    return () => {
-      document.removeEventListener('DOMContentLoaded', handleDOMContentLoaded);
-    };
-  }, []);
+  }, [cookiebotLoaded]);
 
-  return null; // Questo componente non renderizza nulla
+  // Questo componente non renderizza nulla visivamente
+  return null;
 };
 
 export default CookiebotInit;
