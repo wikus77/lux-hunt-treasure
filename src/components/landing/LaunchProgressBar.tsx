@@ -71,7 +71,7 @@ const LaunchProgressBar: React.FC<LaunchProgressBarProps> = ({ targetDate, onCou
             </h3>
             <div className="text-right">
               <p className="text-white text-sm">
-                <span className="font-bold text-yellow-400">{daysRemaining}</span> giorni al lancio {formattedDate}
+                <span className="font-bold text-yellow-400">{daysRemaining}</span> days to launch
               </p>
             </div>
           </div>
