@@ -18,11 +18,11 @@
     <meta name="twitter:site" content="@m1ssion_game" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
-    <!-- ✅ Cookiebot - modificato per priorità di caricamento -->
-    <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="qfr87kY0ukx-ZP" data-blockingmode="auto" type="text/javascript"></script>
+    <!-- ✅ Cookiebot - modificato per priorità di caricamento e aggiunto crossorigin -->
+    <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="qfr87kY0ukx-ZP" data-blockingmode="auto" type="text/javascript" crossorigin="anonymous"></script>
 
-    <!-- ✅ Google Analytics 4 (attivo solo se accettato) -->
-    <script type="text/plain" data-cookieconsent="statistics" async src="https://www.googletagmanager.com/gtag/js?id=G-2K65GKEF2Y"></script>
+    <!-- ✅ Google Analytics 4 (attivo solo se accettato) con attributo crossorigin -->
+    <script type="text/plain" data-cookieconsent="statistics" async src="https://www.googletagmanager.com/gtag/js?id=G-2K65GKEF2Y" crossorigin="anonymous"></script>
     <script type="text/plain" data-cookieconsent="statistics">
       window.dataLayer = window.dataLayer || [];
       function gtag(){ dataLayer.push(arguments); }
@@ -34,7 +34,7 @@
   <body>
     <div id="root"></div>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module" crossorigin="anonymous"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
