@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
-import IntroOverlay from "@/components/intro/IntroOverlay";
-import LaserRevealIntro from "@/components/intro/LaserRevealIntro";
+import GlitchIntro from "@/components/intro/GlitchIntro";
 
 interface IntroManagerProps {
   pageLoaded: boolean;
@@ -9,7 +8,6 @@ interface IntroManagerProps {
 }
 
 const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
-  const [showIntroOverlay, setShowIntroOverlay] = useState(true);
   const [introCompleted, setIntroCompleted] = useState(false);
   const [introFailed, setIntroFailed] = useState(false);
   
@@ -41,7 +39,7 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
         setIntroFailed(true);
         handleIntroComplete();
       }
-    }, 6000); // Reduced from 8s to 6s safety timeout
+    }, 4000); // Safety timeout
     
     return () => {
       clearTimeout(safetyTimeout);
@@ -51,7 +49,6 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
 
   const handleIntroComplete = () => {
     setIntroCompleted(true);
-    setShowIntroOverlay(false);
     console.log("Intro completed, showing landing page");
     
     // Store that the user has seen the intro
@@ -64,17 +61,12 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     onIntroComplete();
   };
 
-  const handleOverlayComplete = () => {
-    console.log("Overlay complete callback fired");
-    setShowIntroOverlay(false);
-  };
-  
   const handleSkipIntro = () => {
     console.log("User skipped intro");
     handleIntroComplete();
   };
   
-  console.log("IntroManager rendering. State:", { showIntroOverlay, introCompleted, pageLoaded, introFailed });
+  console.log("IntroManager rendering. State:", { introCompleted, pageLoaded, introFailed });
   
   // Skip intro if facing issues or page not loaded
   if (!pageLoaded) {
@@ -93,16 +85,10 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     return null;
   }
   
-  // Render appropriate intro component based on state
-  if (showIntroOverlay) {
-    return <IntroOverlay onComplete={handleOverlayComplete} onSkip={handleSkipIntro} />;
-  }
-  
+  // Render the glitch intro if we haven't completed it yet
   if (!introCompleted) {
     return (
-      <div className="fixed inset-0 z-[9999] bg-black">
-        <LaserRevealIntro onComplete={handleIntroComplete} onSkip={handleSkipIntro} />
-      </div>
+      <GlitchIntro onComplete={handleIntroComplete} onSkip={handleSkipIntro} />
     );
   }
   
