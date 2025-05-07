@@ -25,37 +25,39 @@ const Index = () => {
   const nextEventDate = getMissionDeadline();
   
   // Hide specific sections that match certain text content
- useEffect(() => {
-  const observer = new MutationObserver(() => {
-    const allSections = document.querySelectorAll("section");
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const allSections = document.querySelectorAll("section");
 
-    allSections.forEach((section) => {
-      const text = section.textContent?.toLowerCase() || "";
-      if (
-        text.includes("cosa puoi vincere") ||
-        text.includes("vuoi provarci") ||
-        text.includes("premio principale") ||
-        text.includes("auto di lusso")
-      ) {
-        section.style.display = "none";
-        console.log("✅ Sezione 'Cosa puoi vincere' rimossa con MutationObserver.");
-      }
+      allSections.forEach((section) => {
+        const text = section.textContent?.toLowerCase() || "";
+        if (
+          text.includes("cosa puoi vincere") ||
+          text.includes("vuoi provarci") ||
+          text.includes("premio principale") ||
+          text.includes("auto di lusso")
+        ) {
+          section.style.display = "none";
+          console.log("✅ Sezione 'Cosa puoi vincere' rimossa con MutationObserver.");
+        }
+      });
     });
-  });
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
 
-  // Ferma l'osservatore dopo 10 secondi per sicurezza
-  setTimeout(() => {
-    observer.disconnect();
-    console.log("🛑 MutationObserver disattivato.");
-  }, 10000);
-}, []);
+    // Ferma l'osservatore dopo 10 secondi per sicurezza
+    setTimeout(() => {
+      observer.disconnect();
+      console.log("🛑 MutationObserver disattivato.");
+    }, 10000);
 
-
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
   
   // Reset intro flag for testing purposes
   useEffect(() => {
