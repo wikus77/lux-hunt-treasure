@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMissionDeadline } from "@/utils/countdownDate";
 import ParallaxContainer from "@/components/ui/parallax-container";
+import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 
 // Refactored components
 import LoadingScreen from "@/components/index/LoadingScreen";
@@ -26,6 +27,9 @@ const Index = () => {
   
   // Hide specific sections that match certain text content
   useEffect(() => {
+    // Inizializza Cookiebot all'avvio della pagina principale
+    console.log("Inizializzazione di Cookiebot dalla pagina Index");
+    
     const observer = new MutationObserver(() => {
       const allSections = document.querySelectorAll("section");
 
@@ -136,6 +140,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
+      {/* Aggiungiamo CookiebotInit direttamente nella pagina Index */}
+      <CookiebotInit />
+      
       {/* Intro animation manager */}
       <IntroManager 
         pageLoaded={pageLoaded} 
