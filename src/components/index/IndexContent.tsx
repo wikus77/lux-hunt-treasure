@@ -86,14 +86,17 @@ const IndexContent = ({
       
       {/* "Vuoi provarci? Fallo. Ma fallo per vincere." Section - keeping structure but hiding it */}
       {false && (
-        <section className="w-full relative overflow-hidden py-16 bg-black hidden md:block">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-3xl md:text-5xl font-orbitron text-cyan-400 mb-8">
-              Vuoi provarci? Fallo. Ma fallo per vincere.
-            </div>
-            <CarBrandSelection />
-          </div>
-        </section>
+      {false && (
+  <section className="w-full relative overflow-hidden py-16 bg-black hidden md:block">
+    <div className="max-w-6xl mx-auto">
+      <div className="text-3xl md:text-5xl font-orbitron text-cyan-400 mb-8">
+        Vuoi provarci? Fallo. Ma fallo per vincere.
+      </div>
+      <CarBrandSelection />
+    </div>
+  </section>
+)}
+
       )}
 
       {/* Added missing section opening tag */}
