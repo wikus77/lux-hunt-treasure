@@ -1,7 +1,9 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import emailjs from "emailjs-com";
 import { ContactFormData } from "./contactFormSchema";
+import { emailConfig } from "@/config/emailConfig";
 
 export function useContactFormSubmit() {
   const { toast } = useToast();
@@ -13,11 +15,15 @@ export function useContactFormSubmit() {
     setProgress(10); // Start progress
     
     try {
-      // EmailJS configuration
-      // Note: Replace these with actual EmailJS credentials
-      const serviceId = "service_m1ssion";
-      const templateId = "template_contact";
-      const userId = "YOUR_USER_ID";
+      // Get EmailJS configuration from environment variables via config
+      const serviceId = emailConfig.serviceId;
+      const templateId = emailConfig.templateId;
+      const userId = emailConfig.userId;
+      
+      // Check if credentials are available
+      if (!serviceId || !templateId || !userId) {
+        throw new Error("Configurazione EmailJS incompleta. Contattare l'amministratore.");
+      }
       
       const templateParams = {
         from_name: data.name,
@@ -25,11 +31,13 @@ export function useContactFormSubmit() {
         phone: data.phone || "Non fornito",
         subject: data.subject || "Contatto dal sito M1SSION",
         message: data.message,
-        to_email: "contact@m1ssion.com"
+        to_email: emailConfig.toEmail
       };
       
-      // Log attempt
-      console.log("Tentativo di invio email:", templateParams);
+      // Log attempt (only in development)
+      if (import.meta.env.DEV) {
+        console.log("Tentativo di invio email:", templateParams);
+      }
       
       setProgress(30); // Update progress
 
