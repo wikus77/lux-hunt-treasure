@@ -24,6 +24,7 @@ const ContactForm = () => {
   const { handleSubmit, isSubmitting, progress } = useContactFormSubmit();
 
   const onSubmit = async (data: ContactFormData) => {
+    console.log("Form data being submitted:", data); // Debug log
     const result = await handleSubmit(data);
     if (result.success) {
       form.reset();

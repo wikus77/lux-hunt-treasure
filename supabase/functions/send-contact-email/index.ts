@@ -16,7 +16,29 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { name, email, phone, subject, message } = await req.json();
+    // Ensure we're receiving proper JSON data
+    let requestBody;
+    try {
+      requestBody = await req.json();
+      console.log("Received request body:", JSON.stringify(requestBody));
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Errore nel formato dei dati inviati' 
+        }),
+        { 
+          status: 400,
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+    
+    const { name, email, phone, subject, message } = requestBody;
     
     // Validate required fields
     if (!name || !email || !message) {
