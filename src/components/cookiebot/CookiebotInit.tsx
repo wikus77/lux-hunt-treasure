@@ -1,6 +1,25 @@
 
 import React, { useEffect } from 'react';
 
+declare global {
+  interface Window {
+    Cookiebot: {
+      show: () => void;
+      hide: () => void;
+      renew: () => void;
+      withdraw: () => void;
+      consent: {
+        statistics: boolean;
+        marketing: boolean;
+        preferences: boolean;
+        necessary: boolean;
+      };
+    };
+  }
+}
+
+const Cookiebot = window.Cookiebot;
+
 const CookiebotInit: React.FC = () => {
   useEffect(() => {
     // Verifica se Cookiebot è già stato caricato
@@ -12,9 +31,6 @@ const CookiebotInit: React.FC = () => {
         
         // Questo codice può essere eseguito solo se hai accesso al backend di Cookiebot
         // Altrimenti, dovrai impostare il link manualmente dal pannello di controllo di Cookiebot
-        if (window.Cookiebot.dialog) {
-          window.Cookiebot.dialog.privacyPolicyLink = "https://m1ssion.com/privacy";
-        }
       } catch (error) {
         console.error("Errore durante l'impostazione del link alla privacy policy", error);
       }

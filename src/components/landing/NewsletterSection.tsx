@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { saveSubscriber } from "@/services/newsletterService";
 import { toast } from "sonner";
 import { Bell, Send, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface NewsletterSectionProps {
   countdownCompleted?: boolean;
