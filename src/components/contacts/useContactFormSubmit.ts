@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ContactFormData } from "./contactFormSchema";
@@ -36,13 +37,18 @@ export function useContactFormSubmit() {
         body: contactData
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error from Supabase Edge Function:", error);
+        throw new Error(`Edge Function error: ${error.message}`);
+      }
       
       setProgress(80); // Almost complete
 
       // Check the response from our function
-      if (!responseData.success) {
-        throw new Error(responseData.message || 'Errore nell\'invio dell\'email');
+      if (!responseData || !responseData.success) {
+        const errorMsg = responseData?.message || 'Errore nell\'invio dell\'email';
+        console.error("API Error:", errorMsg, responseData);
+        throw new Error(errorMsg);
       }
 
       // Success notification
@@ -55,7 +61,7 @@ export function useContactFormSubmit() {
 
       return { success: true };
     } catch (error) {
-      console.error("Errore nell'invio dell'email:", error);
+      console.error("Errore dettagliato nell'invio dell'email:", error);
       
       // Error notification
       toast({

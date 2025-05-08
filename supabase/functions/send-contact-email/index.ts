@@ -48,7 +48,7 @@ const handler = async (req: Request): Promise<Response> => {
       connection: {
         hostname: Deno.env.get("SMTP_HOST") || "smtp.ionos.it",
         port: parseInt(Deno.env.get("SMTP_PORT") || "587"),
-        tls: false,
+        tls: false, // Important: changed from true to false to use STARTTLS instead
         auth: {
           username: Deno.env.get("SMTP_USER") || "contact@m1ssion.com", 
           password: Deno.env.get("SMTP_PASSWORD") || "",
@@ -104,32 +104,39 @@ ${message}
     // Log the email being sent
     console.log(`Sending email to: ${Deno.env.get("CONTACT_EMAIL") || "contact@m1ssion.com"}`);
 
-    // Send the email
-    await client.send({
-      from: Deno.env.get("SMTP_USER") || "contact@m1ssion.com",
-      to: Deno.env.get("CONTACT_EMAIL") || "contact@m1ssion.com",
-      subject: emailSubject,
-      content: "Messaggio dal form di contatto",
-      html: htmlTemplate,
-    });
-    
-    // Close the connection
-    await client.close();
-    
-    // Return success response
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'Email inviata con successo'
-      }),
-      { 
-        status: 200,
-        headers: { 
-          "Content-Type": "application/json",
-          ...corsHeaders
+    try {
+      // Send the email
+      await client.send({
+        from: Deno.env.get("SMTP_USER") || "contact@m1ssion.com",
+        to: Deno.env.get("CONTACT_EMAIL") || "contact@m1ssion.com",
+        subject: emailSubject,
+        content: "Messaggio dal form di contatto",
+        html: htmlTemplate,
+      });
+      
+      console.log("Email sent successfully!");
+      
+      // Close the connection
+      await client.close();
+      
+      // Return success response
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Email inviata con successo'
+        }),
+        { 
+          status: 200,
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
         }
-      }
-    );
+      );
+    } catch (emailError) {
+      console.error('Errore specifico nell\'invio dell\'email:', emailError);
+      throw emailError; // Re-throw to be caught by the outer try/catch
+    }
     
   } catch (error) {
     console.error('Errore nell\'invio dell\'email:', error);
@@ -138,7 +145,8 @@ ${message}
     return new Response(
       JSON.stringify({
         success: false,
-        message: error instanceof Error ? error.message : 'Errore durante l\'invio dell\'email'
+        message: error instanceof Error ? error.message : 'Errore durante l\'invio dell\'email',
+        errorDetails: error instanceof Error ? error.stack : 'No stack trace available'
       }),
       { 
         status: 500,
