@@ -27,8 +27,8 @@ const ContactInfo = () => {
             </div>
             <div>
               <h3 className="text-white font-medium mb-1">Telefono</h3>
-              <a href="tel:+39123456789" className="text-white/70 hover:text-cyan-400 transition-colors">
-                +39 123 456 789
+              <a href="tel:+36706312023" className="text-white/70 hover:text-cyan-400 transition-colors">
+                +36 706312023
               </a>
             </div>
           </div>

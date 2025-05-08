@@ -24,7 +24,7 @@ const LandingFooter = () => {
             <Link to="/privacy" className="text-sm text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
             <Link to="/cookie-policy" className="text-sm text-white/60 hover:text-white transition-colors">Cookie Policy</Link>
             <Link to="/terms" className="text-sm text-white/60 hover:text-white transition-colors">Termini e Condizioni</Link>
-            <Link to="/contacts" className="text-sm text-white/60 hover:text-white transition-colors">Contatti</Link>
+            <Link to="/contact" className="text-sm text-white/60 hover:text-white transition-colors">Contatti</Link>
           </div>
         </div>
         <div className="border-t border-white/10 pt-6 text-center md:text-left">
