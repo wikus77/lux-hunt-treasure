@@ -154,7 +154,7 @@ const NewsletterSection = ({ countdownCompleted = false }: NewsletterSectionProp
                 </button>
                 
                 <p className="text-xs text-white/40 text-center">
-                  Iscrivendoti accetti la nostra Privacy Policy. Puoi annullare l'iscrizione in qualsiasi momento.
+                  Iscrivendoti accetti la nostra <Link to="/privacy" className="text-cyan-400 hover:underline">Privacy Policy</Link>. Puoi annullare l'iscrizione in qualsiasi momento.
                 </p>
               </form>
             ) : (
