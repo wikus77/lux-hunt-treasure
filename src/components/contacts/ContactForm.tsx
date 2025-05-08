@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
@@ -22,6 +22,15 @@ const ContactForm = () => {
   });
 
   const { handleSubmit, isSubmitting, progress } = useContactFormSubmit();
+  
+  // Log when the component mounts to debug routing issues
+  useEffect(() => {
+    console.log("ContactForm component mounted");
+    
+    return () => {
+      console.log("ContactForm component unmounted");
+    };
+  }, []);
 
   const onSubmit = async (data: ContactFormData) => {
     console.log("Form data being submitted:", data); // Debug log

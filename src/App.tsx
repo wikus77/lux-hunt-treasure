@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
@@ -53,6 +54,8 @@ function AppContent() {
   useEffect(() => {
     // Wait for the end of the hydration before using localStorage
     setHydrated(true);
+    
+    console.log("AppContent mounted and hydrated");
   }, []);
 
   useEffect(() => {
@@ -92,6 +95,9 @@ function AppContent() {
       window.removeEventListener("offline", handleOffline);
     };
   }, []);
+
+  // Log each render to diagnose potential issues
+  console.log("AppContent rendering, hydrated:", hydrated);
 
   const routes = (
     <Routes>
@@ -283,7 +289,9 @@ function AppContent() {
             <ShadcnToaster />
           </>
         ) : (
-          <div>Loading...</div>
+          <div className="flex justify-center items-center min-h-screen bg-black text-white">
+            <p>Caricamento...</p>
+          </div>
         )}
       </AuthProvider>
     </ThemeProvider>
@@ -291,6 +299,8 @@ function AppContent() {
 }
 
 function App() {
+  console.log("App component rendering");
+  
   return (
     <BrowserRouter>
       <SoundProvider>

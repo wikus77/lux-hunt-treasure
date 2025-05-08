@@ -14,6 +14,14 @@ const Contacts = () => {
   const navigate = useNavigate();
   const isBeforeLaunch = new Date() < new Date("2025-07-19T00:00:00");
 
+  // Log component mounting to help debug routing issues
+  useEffect(() => {
+    console.log("Contacts page mounted");
+    return () => {
+      console.log("Contacts page unmounted");
+    };
+  }, []);
+
   // If we're before launch and the user tries to navigate to a restricted page, redirect them
   useEffect(() => {
     if (isBeforeLaunch) {
@@ -31,6 +39,8 @@ const Contacts = () => {
       };
     }
   }, [isBeforeLaunch, navigate]);
+
+  console.log("Contacts page rendering");
 
   return (
     <div className="min-h-screen flex flex-col bg-black">

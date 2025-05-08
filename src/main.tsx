@@ -48,10 +48,15 @@ if (!rootElement) {
   try {
     console.log("Mounting React app");
     
-    ReactDOM.createRoot(rootElement).render(
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
+    // Ensuring the root element is not null before creating root
+    const root = ReactDOM.createRoot(rootElement);
+    
+    root.render(
+      <React.StrictMode>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </React.StrictMode>
     );
     
     console.log("React app mounted successfully");
