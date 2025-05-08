@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ContactFormData } from "./contactFormSchema";
@@ -70,8 +69,8 @@ export function useContactFormSubmit() {
 
       // Success notification
       toast({
-        title: "Messaggio inviato",
-        description: "Grazie per averci contattato. Ti risponderemo al più presto.",
+        title: "Messaggio inviato correttamente",
+        description: "Ti risponderemo al più presto!",
       });
 
       setProgress(100); // Complete
@@ -83,10 +82,8 @@ export function useContactFormSubmit() {
       // Error notification
       toast({
         variant: "destructive",
-        title: "Errore",
-        description: error instanceof Error 
-          ? error.message 
-          : "Si è verificato un problema durante l'invio del messaggio. Riprova più tardi."
+        title: "Si è verificato un errore durante l'invio del messaggio",
+        description: "Riprova tra qualche istante."
       });
       
       setProgress(0); // Reset progress on error
