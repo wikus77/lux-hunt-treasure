@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import LandingHeader from "@/components/landing/LandingHeader";
 import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
 import PresentationSection from "@/components/presentation/PresentationSection";
@@ -11,10 +12,11 @@ import CTASection from "@/components/landing/CTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Info } from "lucide-react";
+import { UserPlus, Info, IdCard } from "lucide-react";
 import BackgroundParallax from "@/components/ui/background-parallax";
 import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
 import CarBrandSelection from "@/components/landing/CarBrandSelection";
+import KYCSection from "@/components/kyc/KYCSection";
 
 interface IndexContentProps {
   countdownCompleted: boolean;
@@ -109,6 +111,30 @@ const IndexContent = ({
       <SubscriptionSection countdownCompleted={countdownCompleted} />
       
       <CTASection onRegisterClick={onRegisterClick} countdownCompleted={countdownCompleted} />
+      
+      {/* KYC Verification Section */}
+      <div className="py-12 bg-black">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 mb-4">
+            <IdCard className="w-6 h-6 text-purple-400" />
+          </div>
+          
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
+            Verifica la tua identità
+          </h2>
+          
+          <p className="text-white/70 mb-6">
+            Per garantire un'esperienza di gioco sicura e conforme alle normative,
+            è necessario completare la verifica dell'identità prima di ricevere premi.
+          </p>
+          
+          <Link to="/kyc">
+            <Button className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600">
+              Vai alla verifica identità
+            </Button>
+          </Link>
+        </div>
+      </div>
       
       {/* App Store & Google Play buttons section */}
       <div className="mt-16 flex flex-col items-center gap-6">

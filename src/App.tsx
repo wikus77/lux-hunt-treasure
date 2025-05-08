@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
@@ -11,6 +12,7 @@ import Register from "./pages/Register";
 import Auth from "./pages/Auth";
 import Home from "./pages/Home";
 import Index from "./pages/Index";
+import KYC from "./pages/KYC";
 import Events from "./pages/Events";
 import Profile from "./pages/Profile";
 import Map from "./pages/Map";
@@ -98,6 +100,7 @@ function AppContent() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/kyc" element={<KYC />} />
         <Route path="/verification" element={<EmailVerificationPage />} />
         <Route path="/contact" element={<Contacts />} />
         <Route path="/email-test" element={<EmailTest />} />
