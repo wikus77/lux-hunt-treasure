@@ -8,6 +8,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface ContactData {
+  name: string;
+  email: string;
+  phone?: string;
+  subject?: string;
+  message: string;
+}
+
 // Setup the handler for the edge function
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -17,10 +25,10 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     // Ensure we're receiving proper JSON data
-    let requestBody;
+    let contactData: ContactData;
     try {
-      requestBody = await req.json();
-      console.log("Received request body:", JSON.stringify(requestBody));
+      contactData = await req.json();
+      console.log("Received contact data:", JSON.stringify(contactData));
     } catch (parseError) {
       console.error("Failed to parse request body:", parseError);
       return new Response(
@@ -38,7 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
     
-    const { name, email, phone, subject, message } = requestBody;
+    const { name, email, phone, subject, message } = contactData;
     
     // Validate required fields
     if (!name || !email || !message) {

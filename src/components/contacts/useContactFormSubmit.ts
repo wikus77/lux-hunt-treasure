@@ -14,14 +14,33 @@ export function useContactFormSubmit() {
     setProgress(10); // Start progress
     
     try {
-      setProgress(30); // Update progress
+      // Primo step: salvataggio nel database
+      setProgress(30);
       
       // Log attempt (only in development)
       if (import.meta.env.DEV) {
-        console.log("Tentativo di invio email:", data);
+        console.log("Tentativo di invio messaggio:", data);
       }
 
-      // Prepare the data to send
+      // Salva il messaggio nella tabella contacts
+      const { error: dbError } = await supabase
+        .from('contacts')
+        .insert({
+          name: data.name,
+          email: data.email,
+          phone: data.phone || null,
+          subject: data.subject || "Contatto dal sito M1SSION",
+          message: data.message
+        });
+      
+      if (dbError) {
+        console.error("Errore nel salvataggio del contatto:", dbError);
+        throw new Error(`Errore nel salvataggio del contatto: ${dbError.message}`);
+      }
+
+      setProgress(50); // Update progress dopo il salvataggio
+
+      // Prepare the data to send via email
       const contactData = {
         name: data.name,
         email: data.email,
@@ -30,9 +49,7 @@ export function useContactFormSubmit() {
         message: data.message
       };
       
-      setProgress(50); // Update progress
-
-      // Send email using Supabase Edge Function
+      // Invio email tramite Supabase Edge Function
       const { data: responseData, error } = await supabase.functions.invoke('send-contact-email', {
         body: contactData
       });
@@ -61,7 +78,7 @@ export function useContactFormSubmit() {
 
       return { success: true };
     } catch (error) {
-      console.error("Errore dettagliato nell'invio dell'email:", error);
+      console.error("Errore dettagliato nell'invio del messaggio:", error);
       
       // Error notification
       toast({
