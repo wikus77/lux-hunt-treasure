@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -62,7 +61,7 @@ const PrivacyPolicy = () => {
           <section>
             <h2 className="text-xl font-semibold mb-3">4. Trasferimento dei Dati</h2>
             <p className="text-gray-300">
-              Le tue informazioni, compresi i Dati Personali, potrebbero essere trasferite - e mantenute su - computer situati al di fuori del tuo stato, provincia, paese o altra giurisdizione governativa dove le leggi sulla protezione dei dati potrebbero essere diverse da quelle della tua giurisdizione. Il tuo consenso a questa Informativa sulla Privacy seguito dalla tua presentazione di tali informazioni rappresenta il tuo consenso a tale trasferimento.
+              Le tue informazioni, compresi i Dati Personali, potrebbero essere trasferite - e mantenute su - computer situati al di fuori del tuo stato, provincia, paese o altra giurisdizione dove le leggi sulla protezione dei dati potrebbero essere diverse da quelle della tua giurisdizione. Il tuo consenso a questa Informativa sulla Privacy seguito dalla tua presentazione di tali informazioni rappresenta il tuo consenso a tale trasferimento.
             </p>
           </section>
           
@@ -119,8 +118,7 @@ const PrivacyPolicy = () => {
             </p>
             <div className="text-gray-300 ml-4 mt-2">
               <p>Email: privacy@m1ssion.com</p>
-              <p>Telefono: +39 06 1234567</p>
-              <p>Indirizzo: Via Roma 123, 00100 Roma, Italia</p>
+              <p>Indirizzo: 1077 Budapest, Izabella utca 2. Alagsor 1</p>
             </div>
           </section>
         </div>
