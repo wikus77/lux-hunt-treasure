@@ -4,11 +4,11 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import BackgroundParticles from "@/components/ui/background-particles";
-import ContactForm from "@/components/contacts/ContactForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check, Mail, Phone, MapPin } from "lucide-react";
 import FaqSection from "@/components/contacts/FaqSection";
+import SimpleContactForm from "@/components/contacts/SimpleContactForm";
 
 const Contacts = () => {
   const navigate = useNavigate();
@@ -150,12 +150,13 @@ const Contacts = () => {
             
             {/* Contact form */}
             <motion.div 
-              className="lg:col-span-2"
+              className="lg:col-span-2 glass-card p-6 rounded-xl border border-white/10 bg-black/30 backdrop-blur-sm"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              <ContactForm />
+              <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyan-400">Inviaci un Messaggio</h2>
+              <SimpleContactForm />
             </motion.div>
           </div>
           
