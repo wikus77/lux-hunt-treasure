@@ -34,8 +34,16 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
+
+    // Log SMTP configuration (for debugging only)
+    console.log("SMTP Configuration:", {
+      host: Deno.env.get("SMTP_HOST") || "smtp.ionos.it",
+      port: Deno.env.get("SMTP_PORT") || "587",
+      user: Deno.env.get("SMTP_USER") || "contact@m1ssion.com",
+      to: Deno.env.get("CONTACT_EMAIL") || "contact@m1ssion.com"
+    });
     
-    // Configure SMTP client with IONOS settings
+    // Configure SMTP client with IONOS settings from environment variables
     const client = new SMTPClient({
       connection: {
         hostname: Deno.env.get("SMTP_HOST") || "smtp.ionos.it",
@@ -92,6 +100,9 @@ ${message}
 </body>
 </html>
 `;
+
+    // Log the email being sent
+    console.log(`Sending email to: ${Deno.env.get("CONTACT_EMAIL") || "contact@m1ssion.com"}`);
 
     // Send the email
     await client.send({
