@@ -3,7 +3,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 
 type PublicLayoutProps = {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 };
 
 /**
