@@ -41,9 +41,6 @@ const IndexContent = ({
     return () => clearTimeout(timer);
   }, []);
   
-  // Verifica se i pulsanti dello store devono essere attivi
-  const isActive = new Date() >= new Date("2025-07-19T00:00:00");
-  
   // Se il contenuto non è ancora caricato, mostriamo un div vuoto e trasparente
   if (!contentLoaded) {
     return <div className="min-h-screen bg-black"></div>;
@@ -136,42 +133,7 @@ const IndexContent = ({
         </div>
       </div>
       
-      {/* App Store & Google Play buttons section */}
-      <div className="mt-16 flex flex-col items-center gap-6">
-        <div className="text-center text-white text-xl font-semibold">Disponibile su</div>
-
-        <div className="flex gap-4">
-          <a
-            href={isActive ? "https://apps.apple.com/app/idXXXXXXXXX" : undefined}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`transition-opacity duration-300 ${
-              isActive ? "opacity-100 cursor-pointer" : "opacity-50 pointer-events-none"
-            }`}
-          >
-            <img
-              src="/appstore-button.png"
-              alt="Download on the App Store"
-              style={{ height: "50px", borderRadius: "10px" }}
-            />
-          </a>
-
-          <a
-            href={isActive ? "https://play.google.com/store/apps/details?id=com.m1ssion.app" : undefined}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`transition-opacity duration-300 ${
-              isActive ? "opacity-100 cursor-pointer" : "opacity-50 pointer-events-none"
-            }`}
-          >
-            <img
-              src="/googleplay-button.png"
-              alt="Get it on Google Play"
-              style={{ height: "50px", borderRadius: "10px" }}
-            />
-          </a>
-        </div>
-      </div>
+      {/* Removing the "Disponibile su" section completely */}
       
       <LandingFooter />
 
