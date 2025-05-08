@@ -4,7 +4,7 @@ import { Mail, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import StyledInput from "@/components/ui/styled-input";
-import { supabase } from "@/integrations/supabase/client";
+import emailjs from "emailjs-com";
 import * as z from "zod";
 import {
   Form,
@@ -47,27 +47,30 @@ const ContactForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Log attempt
-      console.log("Tentativo di invio email:", {
-        to: "contact@m1ssion.com",
-        from: data.email,
-        subject: `[Contatto dal sito] ${data.subject || 'Nessun oggetto'}`,
-        message: `Nome: ${data.name}\nEmail: ${data.email}\n\nMessaggio:\n${data.message}`,
-      });
+      // EmailJS configuration
+      // Note: Replace these with actual EmailJS credentials
+      const serviceId = "service_m1ssion";
+      const templateId = "template_contact";
+      const userId = "YOUR_USER_ID";
       
-      // Call our Supabase Edge Function
-      const { data: responseData, error } = await supabase.functions.invoke("send-contact-email", {
-        body: {
-          name: data.name,
-          email: data.email,
-          subject: data.subject || "Contatto dal sito M1SSION",
-          message: data.message,
-        },
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
+      const templateParams = {
+        from_name: data.name,
+        reply_to: data.email,
+        subject: data.subject || "Contatto dal sito M1SSION",
+        message: data.message,
+        to_email: "contact@m1ssion.com"
+      };
+      
+      // Log attempt
+      console.log("Tentativo di invio email:", templateParams);
+      
+      // Send email using EmailJS
+      await emailjs.send(
+        serviceId,
+        templateId,
+        templateParams,
+        userId
+      );
 
       // Success notification
       toast({
