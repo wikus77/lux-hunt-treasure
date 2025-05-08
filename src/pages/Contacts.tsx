@@ -8,6 +8,7 @@ import ContactForm from "@/components/contacts/ContactForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check, Mail, Phone, MapPin } from "lucide-react";
+import FaqSection from "@/components/contacts/FaqSection";
 
 const Contacts = () => {
   const navigate = useNavigate();
