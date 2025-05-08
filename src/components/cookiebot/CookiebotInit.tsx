@@ -8,15 +8,19 @@ const CookiebotInit: React.FC = () => {
   useEffect(() => {
     // Verifica se Cookiebot è già stato caricato
     if (window.Cookiebot) {
-      // Impostazione del link alla privacy policy
-      // Nota: questa è una soluzione client-side che funzionerà solo se Cookiebot è già stato inizializzato
+      // Impostazione del link alla privacy policy e cookie policy
       try {
-        console.log("Inizializzazione Cookiebot con link alla Privacy Policy");
+        console.log("Inizializzazione Cookiebot con link alle policy");
         
-        // Questo codice può essere eseguito solo se hai accesso al backend di Cookiebot
-        // Altrimenti, dovrai impostare il link manualmente dal pannello di controllo di Cookiebot
+        // Gli URL delle policy - In un'implementazione reale, questi dovrebbero essere configurati
+        // direttamente nel pannello di controllo di Cookiebot
+        const privacyPolicyUrl = "https://m1ssion.com/privacy";
+        const cookiePolicyUrl = "https://m1ssion.com/cookie-policy";
+        
+        // Nota: questi URL dovranno essere configurati manualmente nel pannello di Cookiebot
+        // Questa è solo una nota per ricordare all'utente di farlo
       } catch (error) {
-        console.error("Errore durante l'impostazione del link alla privacy policy", error);
+        console.error("Errore durante l'impostazione dei link alle policy", error);
       }
     } else {
       console.log("Cookiebot non ancora inizializzato");
