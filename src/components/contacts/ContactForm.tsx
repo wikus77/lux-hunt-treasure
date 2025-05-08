@@ -21,7 +21,7 @@ const ContactForm = () => {
     },
   });
 
-  const { handleSubmit, isSubmitting } = useContactFormSubmit();
+  const { handleSubmit, isSubmitting, progress } = useContactFormSubmit();
 
   const onSubmit = async (data: ContactFormData) => {
     const result = await handleSubmit(data);
@@ -39,7 +39,7 @@ const ContactForm = () => {
           <ContactFormFields form={form} />
           
           <div>
-            <ContactSubmitButton isSubmitting={isSubmitting} />
+            <ContactSubmitButton isSubmitting={isSubmitting} progress={progress} />
           </div>
         </form>
       </Form>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import emailjs from "emailjs-com";
@@ -7,9 +6,11 @@ import { ContactFormData } from "./contactFormSchema";
 export function useContactFormSubmit() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const handleSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
+    setProgress(10); // Start progress
     
     try {
       // EmailJS configuration
@@ -21,6 +22,7 @@ export function useContactFormSubmit() {
       const templateParams = {
         from_name: data.name,
         reply_to: data.email,
+        phone: data.phone || "Non fornito",
         subject: data.subject || "Contatto dal sito M1SSION",
         message: data.message,
         to_email: "contact@m1ssion.com"
@@ -29,6 +31,8 @@ export function useContactFormSubmit() {
       // Log attempt
       console.log("Tentativo di invio email:", templateParams);
       
+      setProgress(30); // Update progress
+
       // Send email using EmailJS
       await emailjs.send(
         serviceId,
@@ -37,11 +41,15 @@ export function useContactFormSubmit() {
         userId
       );
 
+      setProgress(80); // Almost complete
+
       // Success notification
       toast({
         title: "Messaggio inviato",
         description: "Grazie per averci contattato. Ti risponderemo al più presto.",
       });
+
+      setProgress(100); // Complete
 
       return { success: true };
     } catch (error) {
@@ -56,14 +64,22 @@ export function useContactFormSubmit() {
           : "Si è verificato un problema durante l'invio del messaggio. Riprova più tardi."
       });
       
+      setProgress(0); // Reset progress on error
       return { success: false, error };
     } finally {
-      setIsSubmitting(false);
+      // We'll keep the progress at 100% for success until the form resets
+      setTimeout(() => {
+        if (progress === 100) {
+          setProgress(0);
+        }
+        setIsSubmitting(false);
+      }, 1000); // Delay to show completed progress
     }
   };
 
   return {
     handleSubmit,
-    isSubmitting
+    isSubmitting,
+    progress
   };
 }
