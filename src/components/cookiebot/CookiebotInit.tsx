@@ -1,24 +1,8 @@
 
 import React, { useEffect } from 'react';
 
-declare global {
-  interface Window {
-    Cookiebot: {
-      show: () => void;
-      hide: () => void;
-      renew: () => void;
-      withdraw: () => void;
-      consent: {
-        statistics: boolean;
-        marketing: boolean;
-        preferences: boolean;
-        necessary: boolean;
-      };
-    };
-  }
-}
-
-const cookiebot = window.Cookiebot;
+// Using optional chaining for safer access to Cookiebot
+const cookiebot = typeof window !== "undefined" && window.Cookiebot;
 
 const CookiebotInit: React.FC = () => {
   useEffect(() => {
