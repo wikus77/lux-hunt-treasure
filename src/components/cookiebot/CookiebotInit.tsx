@@ -18,7 +18,7 @@ declare global {
   }
 }
 
-const Cookiebot = window.Cookiebot;
+const cookiebot = window.Cookiebot;
 
 const CookiebotInit: React.FC = () => {
   useEffect(() => {
