@@ -39,7 +39,7 @@ export function useContactFormSubmit() {
 
       if (error) {
         console.error("Error from Supabase Edge Function:", error);
-        throw new Error(`Edge Function error: ${error.message}`);
+        throw new Error(`Errore di comunicazione: ${error.message}`);
       }
       
       setProgress(80); // Almost complete

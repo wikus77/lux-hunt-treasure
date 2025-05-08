@@ -57,23 +57,35 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Get SMTP configuration from environment variables with defaults
+    const smtpHost = Deno.env.get("SMTP_HOST") || "smtp.ionos.it";
+    const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "587");
+    const smtpUser = Deno.env.get("SMTP_USER") || "contact@m1ssion.com";
+    const smtpPassword = Deno.env.get("SMTP_PASSWORD");
+    const contactEmail = Deno.env.get("CONTACT_EMAIL") || "contact@m1ssion.com";
+
     // Log SMTP configuration (for debugging only)
     console.log("SMTP Configuration:", {
-      host: Deno.env.get("SMTP_HOST") || "smtp.ionos.it",
-      port: Deno.env.get("SMTP_PORT") || "587",
-      user: Deno.env.get("SMTP_USER") || "contact@m1ssion.com",
-      to: Deno.env.get("CONTACT_EMAIL") || "contact@m1ssion.com"
+      host: smtpHost,
+      port: smtpPort,
+      user: smtpUser,
+      to: contactEmail,
     });
     
-    // Configure SMTP client with IONOS settings from environment variables
+    if (!smtpPassword) {
+      console.error("SMTP_PASSWORD environment variable not set");
+      throw new Error("Configurazione SMTP incompleta");
+    }
+
+    // Configure SMTP client
     const client = new SMTPClient({
       connection: {
-        hostname: Deno.env.get("SMTP_HOST") || "smtp.ionos.it",
-        port: parseInt(Deno.env.get("SMTP_PORT") || "587"),
-        tls: false, // Important: changed from true to false to use STARTTLS instead
+        hostname: smtpHost,
+        port: smtpPort,
+        tls: false, // Important: use false for STARTTLS
         auth: {
-          username: Deno.env.get("SMTP_USER") || "contact@m1ssion.com", 
-          password: Deno.env.get("SMTP_PASSWORD") || "",
+          username: smtpUser, 
+          password: smtpPassword,
         },
       },
     });
@@ -124,13 +136,13 @@ ${message}
 `;
 
     // Log the email being sent
-    console.log(`Sending email to: ${Deno.env.get("CONTACT_EMAIL") || "contact@m1ssion.com"}`);
+    console.log(`Sending email to: ${contactEmail}`);
 
     try {
       // Send the email
       await client.send({
-        from: Deno.env.get("SMTP_USER") || "contact@m1ssion.com",
-        to: Deno.env.get("CONTACT_EMAIL") || "contact@m1ssion.com",
+        from: smtpUser,
+        to: contactEmail,
         subject: emailSubject,
         content: "Messaggio dal form di contatto",
         html: htmlTemplate,
