@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
@@ -30,6 +29,7 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import EmailTest from "./pages/EmailTest";
 import Terms from "./pages/Terms";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import CookiePolicy from "./pages/CookiePolicy";
 import HowItWorks from "./pages/HowItWorks";
 import NotFound from "./pages/NotFound";
 import LanguageSettings from "./pages/LanguageSettings";
@@ -106,6 +106,7 @@ function AppContent() {
         <Route path="/email-test" element={<EmailTest />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/cookie-policy" element={<CookiePolicy />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/access-denied" element={<AccessDenied />} />
         <Route path="*" element={<Navigate to="/login" replace />} />

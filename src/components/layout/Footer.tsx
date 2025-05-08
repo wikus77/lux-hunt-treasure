@@ -38,6 +38,16 @@ export const Footer = () => {
                   Buzz
                 </Link>
               </li>
+              <li>
+                <Link to="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/cookie-policy" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Cookie Policy
+                </Link>
+              </li>
             </ul>
           </div>
           
