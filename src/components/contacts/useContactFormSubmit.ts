@@ -15,7 +15,7 @@ export function useContactFormSubmit() {
     setProgress(10); // Start progress
     
     try {
-      // Get EmailJS configuration from environment variables via config
+      // Get EmailJS configuration
       const serviceId = emailConfig.serviceId;
       const templateId = emailConfig.templateId;
       const userId = emailConfig.userId;
