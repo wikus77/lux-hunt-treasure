@@ -15,6 +15,7 @@ const ContactForm = () => {
     defaultValues: {
       name: "",
       email: "",
+      phone: "",
       subject: "",
       message: "",
     },

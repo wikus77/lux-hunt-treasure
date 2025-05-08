@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Mail } from "lucide-react";
+import { Mail, User, Phone } from "lucide-react";
 import StyledInput from "@/components/ui/styled-input";
 import {
   FormControl,
@@ -32,7 +32,7 @@ const ContactFormFields: React.FC<ContactFormFieldsProps> = ({ form }) => {
                   id="name"
                   type="text"
                   placeholder="Il tuo nome"
-                  icon={<Mail size={16} />}
+                  icon={<User size={16} />}
                   {...field}
                 />
               </FormControl>
@@ -62,6 +62,27 @@ const ContactFormFields: React.FC<ContactFormFieldsProps> = ({ form }) => {
           )}
         />
       </div>
+      
+      {/* Phone Field */}
+      <FormField
+        control={form.control}
+        name="phone"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-white mb-2">Telefono</FormLabel>
+            <FormControl>
+              <StyledInput
+                id="phone"
+                type="tel"
+                placeholder="Il tuo numero di telefono"
+                icon={<Phone size={16} />}
+                {...field}
+              />
+            </FormControl>
+            <FormMessage className="text-red-400 text-sm mt-1" />
+          </FormItem>
+        )}
+      />
       
       {/* Subject Field */}
       <FormField
