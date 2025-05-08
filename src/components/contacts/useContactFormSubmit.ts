@@ -1,9 +1,7 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import emailjs from "emailjs-com";
 import { ContactFormData } from "./contactFormSchema";
-import { emailConfig } from "@/config/emailConfig";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useContactFormSubmit() {
   const { toast } = useToast();
@@ -15,41 +13,37 @@ export function useContactFormSubmit() {
     setProgress(10); // Start progress
     
     try {
-      // Get EmailJS configuration
-      const serviceId = emailConfig.serviceId;
-      const templateId = emailConfig.templateId;
-      const userId = emailConfig.userId;
-      
-      // Check if credentials are available
-      if (!serviceId || !templateId || !userId) {
-        throw new Error("Configurazione EmailJS incompleta. Contattare l'amministratore.");
-      }
-      
-      const templateParams = {
-        from_name: data.name,
-        reply_to: data.email,
-        phone: data.phone || "Non fornito",
-        subject: data.subject || "Contatto dal sito M1SSION",
-        message: data.message,
-        to_email: emailConfig.toEmail
-      };
+      setProgress(30); // Update progress
       
       // Log attempt (only in development)
       if (import.meta.env.DEV) {
-        console.log("Tentativo di invio email:", templateParams);
+        console.log("Tentativo di invio email:", data);
       }
+
+      // Prepare the data to send
+      const contactData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone || "Non fornito",
+        subject: data.subject || "Contatto dal sito M1SSION",
+        message: data.message
+      };
       
-      setProgress(30); // Update progress
+      setProgress(50); // Update progress
 
-      // Send email using EmailJS
-      await emailjs.send(
-        serviceId,
-        templateId,
-        templateParams,
-        userId
-      );
+      // Send email using Supabase Edge Function
+      const { data: responseData, error } = await supabase.functions.invoke('send-contact-email', {
+        body: contactData
+      });
 
+      if (error) throw error;
+      
       setProgress(80); // Almost complete
+
+      // Check the response from our function
+      if (!responseData.success) {
+        throw new Error(responseData.message || 'Errore nell\'invio dell\'email');
+      }
 
       // Success notification
       toast({
