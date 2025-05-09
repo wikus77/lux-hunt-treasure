@@ -17,6 +17,7 @@ import BackgroundParallax from "@/components/ui/background-parallax";
 import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
 import CarBrandSelection from "@/components/landing/CarBrandSelection";
 import KYCSection from "@/components/kyc/KYCSection";
+import PreRegistrationForm from "@/components/landing/PreRegistrationForm";
 
 interface IndexContentProps {
   countdownCompleted: boolean;
@@ -81,6 +82,12 @@ const IndexContent = ({
         onCountdownComplete={() => {}} // Handled in parent component
       />
       
+      {/* Presentation Section */}
+      <PresentationSection visible={true} />
+      
+      {/* NUOVA SEZIONE: Form di pre-registrazione */}
+      <PreRegistrationForm />
+      
       {/* Game Explanation Section */}
       <GameExplanationSection />
       
@@ -97,9 +104,6 @@ const IndexContent = ({
           <CarBrandSelection />
         </div>
       </section>
-      
-      {/* Presentation Section */}
-      <PresentationSection visible={true} />
       
       {/* Newsletter Section */}
       <NewsletterSection countdownCompleted={countdownCompleted} />

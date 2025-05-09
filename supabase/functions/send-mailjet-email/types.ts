@@ -1,30 +1,50 @@
+// Existing imports and types
+import { corsHeaders } from "./cors.ts";
 
-/**
- * Interface for contact form data and email sending
- */
+// Contact data interface
 export interface ContactData {
-  type?: 'contact' | 'marketing' | 'notification' | 'welcome';
-  name?: string;
-  email?: string;
+  type: string;
+  name: string;
+  email: string;
   phone?: string;
-  subject?: string;
+  subject: string;
   message?: string;
-  to?: Array<{
-    email: string;
-    name?: string;
-  }>;
-  htmlContent?: string;
+  to: EmailRecipient[];
+  from?: EmailSender;
   trackOpens?: boolean;
   trackClicks?: boolean;
   customCampaign?: string;
-  customId?: string;
-  from?: {
-    Email: string;
-    Name: string;
-  };
-  consent?: {
-    given: boolean;
-    date: string;
-    method: string;
-  };
+  consent?: ConsentData;
+  referral_code?: string; // New: Support for referral codes
 }
+
+export interface EmailRecipient {
+  name?: string;
+  email: string;
+}
+
+export interface EmailSender {
+  Email: string;
+  Name: string;
+}
+
+export interface ConsentData {
+  given: boolean;
+  date: string;
+  method: string;
+}
+
+// Response types
+export interface ErrorResponse {
+  success: false;
+  message: string;
+  details?: any;
+  status?: number;
+}
+
+export interface SuccessResponse {
+  success: true;
+  data: any;
+}
+
+export type ApiResponse = ErrorResponse | SuccessResponse;
