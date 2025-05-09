@@ -56,12 +56,23 @@ export async function handleEmailRequest(req: Request): Promise<Response> {
       
       console.log("Mailjet API response:", status, JSON.stringify(responseData));
       
-      if (status >= 200 && status < 300) {
+      // Fix: Check if the response contains a success message from Mailjet
+      // Mailjet returns a Messages array with Status property
+      if (responseData?.Messages && 
+          responseData.Messages[0]?.Status === "success") {
         console.log("Email sent successfully!");
+        return createSuccessResponse(responseData);
+      } else if (status >= 200 && status < 300) {
+        // Fallback for other successful status codes
+        console.log("Email sent successfully with status code:", status);
         return createSuccessResponse(responseData);
       } else {
         console.error(`Error response from Mailjet API: Status ${status}`, responseData);
-        return createErrorResponse(`Errore nell'invio dell'email: ${responseData.error || 'Risposta non valida dall\'API'}`, responseData, status);
+        return createErrorResponse(
+          `Errore nell'invio dell'email: ${responseData.error || 'Risposta non valida dall\'API'}`, 
+          responseData, 
+          status
+        );
       }
     } catch (emailError: any) {
       console.error('Specific error when sending email:', emailError);

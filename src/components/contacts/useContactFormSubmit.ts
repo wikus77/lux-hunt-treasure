@@ -115,8 +115,8 @@ export function useContactFormSubmit() {
         
         setProgress(80); // Almost complete
 
-        // Check the response
-        if (!responseData || !responseData.success) {
+        // Check the response - Fixed: correctly check the success property
+        if (!responseData || responseData.success === false) {
           const errorMsg = responseData?.message || 'Error sending email';
           console.error("API Error:", errorMsg, responseData);
           
