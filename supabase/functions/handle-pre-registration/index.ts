@@ -156,6 +156,29 @@ serve(async (req) => {
     
     // Try to send confirmation email using Mailjet edge function
     try {
+      // Create the proper HTML content for the email
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+          <div style="background: linear-gradient(90deg, #00E5FF 0%, #0077FF 100%); padding: 20px; text-align: center; color: #000;">
+            <h1 style="margin: 0; color: #FFF;">M1SSION</h1>
+          </div>
+          
+          <div style="padding: 20px; background-color: #ffffff;">
+            <h3>Sei ufficialmente un agente M1SSION.</h3>
+            <p>Hai completato la pre-iscrizione. Tieniti pronto: la tua prima missione sta per arrivare.</p>
+            
+            <p style="margin-top: 20px;">Il tuo codice referral: <strong>${referralCode}</strong></p>
+            
+            <p>Puoi invitare altri agenti usando questo codice e guadagnare crediti extra per la tua missione!</p>
+          </div>
+          
+          <div style="font-size: 12px; text-align: center; padding-top: 20px; color: #999;">
+            <p>&copy; ${new Date().getFullYear()} M1SSION. Tutti i diritti riservati.</p>
+            <p>Questo messaggio è stato inviato automaticamente a seguito della tua pre-registrazione su M1SSION.</p>
+          </div>
+        </div>
+      `;
+      
       const emailResponse = await fetch(
         `${supabaseUrl}/functions/v1/send-mailjet-email`,
         {
@@ -165,18 +188,18 @@ serve(async (req) => {
             'Authorization': `Bearer ${supabaseServiceKey}`
           },
           body: JSON.stringify({
-            type: 'welcome',
+            type: 'contact', // Reuse the contact email type
             to: [{ email: email.trim(), name: name.trim() }],
-            subject: 'Benvenuto in M1SSION!',
+            subject: 'Conferma pre-iscrizione M1SSION',
             from: {
               Email: "contact@m1ssion.com",
               Name: "M1SSION Team"
             },
-            customId: `welcome_${Date.now()}`,
-            customCampaign: 'pre_registration',
+            htmlContent: htmlContent,
+            customId: `pre_reg_${Date.now()}`,
+            customCampaign: 'pre_registration_confirmation',
             trackOpens: true,
-            trackClicks: true,
-            referral_code: referralCode
+            trackClicks: true
           })
         }
       );

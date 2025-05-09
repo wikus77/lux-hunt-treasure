@@ -113,6 +113,9 @@ export const usePreRegistration = () => {
             setName("");
             setEmail("");
             setInviteCode("");
+            
+            // Invia l'email di conferma anche quando si usa il metodo secondario
+            await sendConfirmationEmail(formData.name, formData.email, result.referralCode);
           } else {
             throw new Error("La registrazione non è andata a buon fine");
           }
