@@ -24,7 +24,7 @@ export async function handleEmailRequest(req: Request): Promise<Response> {
     let contactData: ContactData;
     try {
       contactData = await req.json();
-      console.log("Received contact data:", JSON.stringify(contactData, null, 2));
+      console.log("Received email request data:", JSON.stringify(contactData, null, 2));
     } catch (parseError) {
       console.error("Failed to parse request body:", parseError);
       return createErrorResponse("Formato della richiesta non valido", null, 400);
@@ -47,17 +47,17 @@ export async function handleEmailRequest(req: Request): Promise<Response> {
 
     try {
       // Send the email using Mailjet
-      console.log("Sending email via Mailjet...");
+      console.log("Sending email via Mailjet API...");
       const result = await sendMailjetEmail(mailjet, emailData);
       
       // Extract response status and data
       const status = result.status;
       const responseData = result.body;
       
-      console.log("Mailjet API response:", status, JSON.stringify(responseData));
+      console.log("Mailjet API response status:", status);
+      console.log("Mailjet API response body:", JSON.stringify(responseData, null, 2));
       
-      // Fix: Check if the response contains a success message from Mailjet
-      // Mailjet returns a Messages array with Status property
+      // Check if the response contains a success message from Mailjet
       if (responseData?.Messages && 
           responseData.Messages[0]?.Status === "success") {
         console.log("Email sent successfully!");
@@ -69,16 +69,17 @@ export async function handleEmailRequest(req: Request): Promise<Response> {
       } else {
         console.error(`Error response from Mailjet API: Status ${status}`, responseData);
         return createErrorResponse(
-          `Errore nell'invio dell'email: ${responseData.error || 'Risposta non valida dall\'API'}`, 
+          `Errore nell'invio dell'email: ${responseData?.ErrorMessage || responseData?.error || 'Risposta non valida dall\'API'}`, 
           responseData, 
-          status
+          status >= 400 && status < 600 ? status : 500
         );
       }
     } catch (emailError: any) {
       console.error('Specific error when sending email:', emailError);
       return createErrorResponse(
         `Errore durante l'invio dell'email: ${emailError.message || 'Errore sconosciuto'}`,
-        emailError.stack || null
+        emailError.stack || null,
+        500
       );
     }
     
@@ -88,7 +89,8 @@ export async function handleEmailRequest(req: Request): Promise<Response> {
     // Return error response with detailed information
     return createErrorResponse(
       error instanceof Error ? error.message : 'Errore durante l\'invio dell\'email',
-      error instanceof Error ? error.stack : 'No stack trace available'
+      error instanceof Error ? error.stack : 'No stack trace available',
+      500
     );
   }
 }

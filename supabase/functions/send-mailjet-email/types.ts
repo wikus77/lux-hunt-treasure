@@ -4,23 +4,28 @@ import { corsHeaders } from "./cors.ts";
 // Contact data interface
 export interface ContactData {
   type: string;
-  name: string;
-  email: string;
+  name?: string;
+  email?: string;
   phone?: string;
-  subject: string;
+  subject?: string;
   message?: string;
-  to: EmailRecipient[];
+  to?: EmailRecipient[];
   from?: EmailSender;
   trackOpens?: boolean;
   trackClicks?: boolean;
+  htmlContent?: string;
+  textContent?: string;
   customCampaign?: string;
+  customId?: string;
   consent?: ConsentData;
-  referral_code?: string; // New: Support for referral codes
+  referral_code?: string; // Support for referral codes in emails
 }
 
 export interface EmailRecipient {
   name?: string;
-  email: string;
+  email?: string;
+  Name?: string;
+  Email?: string;
 }
 
 export interface EmailSender {
@@ -38,7 +43,7 @@ export interface ConsentData {
 export interface ErrorResponse {
   success: false;
   message: string;
-  details?: any;
+  errorDetails?: any;
   status?: number;
 }
 

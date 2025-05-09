@@ -20,10 +20,26 @@ serve(async (req) => {
   }
   
   try {
-    // Create Supabase client
+    // Create Supabase client with service role key to bypass RLS
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    
+    if (!supabaseServiceKey) {
+      console.error("Missing SUPABASE_SERVICE_ROLE_KEY");
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: "Errore di configurazione del server" 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+    
+    // Use service role to bypass RLS policies
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse request body
     const requestData = await req.json();
@@ -101,7 +117,7 @@ serve(async (req) => {
     // Generate referral code
     const referralCode = `${name.substring(0, 3).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
     
-    // Insert pre-registration
+    // Insert pre-registration using the service role client
     const { data: registration, error: registrationError } = await supabase
       .from('pre_registrations')
       .insert([{
@@ -120,7 +136,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: "Errore durante la registrazione", 
+          message: "Errore durante la registrazione: " + registrationError.message, 
           details: registrationError 
         }),
         { 
@@ -128,6 +144,42 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
         }
       );
+    }
+    
+    // Try to send confirmation email using Mailjet edge function
+    try {
+      const emailResponse = await fetch(
+        `${supabaseUrl}/functions/v1/send-mailjet-email`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseServiceKey}`
+          },
+          body: JSON.stringify({
+            type: 'welcome',
+            to: [{ email, name }],
+            subject: 'Benvenuto in M1SSION!',
+            from: {
+              Email: "contact@m1ssion.com",
+              Name: "M1SSION Team"
+            },
+            customId: `welcome_${Date.now()}`,
+            customCampaign: 'pre_registration',
+            trackOpens: true,
+            trackClicks: true,
+            referral_code: referralCode
+          })
+        }
+      );
+      
+      const emailResult = await emailResponse.json();
+      console.log("Email sending result:", emailResult);
+      
+      // Even if email fails, we still want to return success for the registration
+    } catch (emailError) {
+      console.error("Error sending confirmation email:", emailError);
+      // Continue execution, don't return error response here
     }
     
     // Return success response with the user's referral code
