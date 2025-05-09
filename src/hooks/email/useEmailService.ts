@@ -125,7 +125,7 @@ export function useEmailService(): EmailServiceHook {
   /**
    * Send a notification email with a custom message
    */
-  const sendNotificationEmail = async (email: string, name: string = '', subject: string, message: string) => {
+  const sendNotificationEmail = async (email: string, subject: string, message: string, name: string = '') => {
     return sendEmailService({
       type: 'notification',
       email,
@@ -138,7 +138,7 @@ export function useEmailService(): EmailServiceHook {
   /**
    * Send a marketing email
    */
-  const sendMarketingEmail = async (email: string, name: string = '', subject: string, htmlContent: string) => {
+  const sendMarketingEmail = async (email: string, subject: string, htmlContent: string, name: string = '') => {
     return sendEmailService({
       type: 'marketing',
       email,
@@ -158,3 +158,4 @@ export function useEmailService(): EmailServiceHook {
     sendMarketingEmail
   };
 }
+

@@ -42,6 +42,6 @@ export interface EmailServiceHook {
   lastResponse: any;
   sendEmail: (props: SendEmailProps) => Promise<EmailResult>;
   sendWelcomeEmail: (email: string, name?: string) => Promise<EmailResult>;
-  sendNotificationEmail: (email: string, name?: string, subject: string, message: string) => Promise<EmailResult>;
-  sendMarketingEmail: (email: string, name?: string, subject: string, htmlContent: string) => Promise<EmailResult>;
+  sendNotificationEmail: (email: string, subject: string, message: string, name?: string) => Promise<EmailResult>;
+  sendMarketingEmail: (email: string, subject: string, htmlContent: string, name?: string) => Promise<EmailResult>;
 }
