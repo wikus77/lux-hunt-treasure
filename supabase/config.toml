@@ -4,17 +4,15 @@ project_id = "vkjrqirvdvjbemsfzxof"
 [api]
 enabled = true
 port = 54321
-schemas = ["public", "storage"]
+schemas = ["public", "storage", "graphql_public"]
 
 [db]
 port = 54322
 
-[realtime]
-enabled = true
-
 [studio]
 enabled = true
 port = 54323
+api_url = "http://localhost"
 
 [inbucket]
 enabled = true
@@ -22,16 +20,20 @@ port = 54324
 
 [storage]
 enabled = true
+port = 54325
 
 [auth]
 enabled = true
+port = 54326
 
-[functions]
-[functions.send-contact-email]
-verify_jwt = false
+[realtime]
+enabled = true
+port = 54327
 
+[edge_functions]
+enabled = true
+port = 54328
+
+# Add this to configure Mailjet function to run without authentication
 [functions.send-mailjet-email]
-verify_jwt = false
-
-[functions.send-email]
 verify_jwt = false

@@ -8,40 +8,34 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Email types
-type EmailType = 'transactional' | 'marketing' | 'contact' | 'welcome' | 'notification';
-
-// Email request interface
-interface EmailRequest {
-  type: EmailType;
-  to: {
-    email: string;
-    name?: string;
-  }[];
-  subject: string;
-  htmlContent: string;
+interface ContactData {
+  name: string;
+  email: string;
+  phone?: string;
+  subject?: string;
+  message: string;
+  type?: string;
+  to?: Array<{email: string, name?: string}>;
+  htmlContent?: string;
   textContent?: string;
+  templateId?: number;
+  variables?: Record<string, any>;
+  trackOpens?: boolean;
+  trackClicks?: boolean;
+  customCampaign?: string;
+  customId?: string;
+  consent?: {
+    given: boolean;
+    date: string;
+    method: string;
+  };
   from?: {
     email: string;
     name: string;
   };
-  templateId?: number; // For template-based emails
-  variables?: Record<string, any>; // For template variables
-  headers?: Record<string, string>;
-  trackOpens?: boolean;
-  trackClicks?: boolean;
-  customCampaign?: string;
-  eventPayload?: string; // For event tracking
-  customId?: string;
-  // GDPR consent fields
-  consent?: {
-    given: boolean;
-    date: string;
-    ip?: string;
-    method?: string;
-  };
 }
 
+// Setup the handler for the edge function
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -49,132 +43,194 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const apiKey = Deno.env.get("MAILJET_API_KEY");
-    const secretKey = Deno.env.get("MAILJET_SECRET_KEY");
+    // Get Mailjet API keys from environment variables
+    const mailjetApiKey = Deno.env.get("MAILJET_API_KEY");
+    const mailjetSecretKey = Deno.env.get("MAILJET_SECRET_KEY");
     
-    if (!apiKey || !secretKey) {
-      throw new Error("Mailjet API credentials not configured");
+    if (!mailjetApiKey || !mailjetSecretKey) {
+      throw new Error("Mailjet API keys not configured");
     }
+    
+    // Initialize Mailjet client
+    const mailjet = Client.apiConnect(
+      mailjetApiKey,
+      mailjetSecretKey
+    );
 
-    const mailjet = new Client({
-      apiKey: apiKey,
-      apiSecret: secretKey,
-    });
-
-    const requestData: EmailRequest = await req.json();
-    console.log("Email request received:", JSON.stringify(requestData));
-
-    // Validate required fields
-    if (!requestData.to || requestData.to.length === 0 || !requestData.subject) {
-      throw new Error("Missing required fields: recipients and subject are required");
+    // Parse request data
+    const contactData: ContactData = await req.json();
+    console.log("Received contact data:", JSON.stringify(contactData));
+    
+    const { 
+      name, 
+      email, 
+      phone, 
+      subject, 
+      message,
+      type = 'contact',
+      to,
+      htmlContent,
+      trackOpens = true,
+      trackClicks = false,
+      customCampaign,
+      customId,
+      from
+    } = contactData;
+    
+    // Validate required fields based on message type
+    if (type === 'contact' && (!name || !email || !message)) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Campi obbligatori mancanti per email di contatto' 
+        }),
+        { 
+          status: 400,
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
     }
-
-    // Default from address if not provided
-    const from = requestData.from || {
-      email: "contact@m1ssion.com",
-      name: "M1SSION Team",
+    
+    // Build email content
+    let emailHtmlContent = htmlContent;
+    
+    // If no HTML content is provided and it's a contact form email, generate HTML
+    if (!emailHtmlContent && type === 'contact') {
+      emailHtmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #00e5ff; color: #000; padding: 10px 20px; border-radius: 5px; }
+            .content { padding: 20px 0; }
+            .footer { font-size: 12px; color: #999; border-top: 1px solid #eee; margin-top: 30px; padding-top: 10px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2>Nuovo messaggio da M1SSION</h2>
+            </div>
+            <div class="content">
+              <p><strong>Nome:</strong> ${name}</p>
+              <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Telefono:</strong> ${phone || 'Non fornito'}</p>
+              <p><strong>Oggetto:</strong> ${subject || 'Contatto dal sito M1SSION'}</p>
+              <p><strong>Messaggio:</strong></p>
+              <p style="white-space: pre-line; background: #f9f9f9; padding: 15px; border-radius: 5px;">${message}</p>
+            </div>
+            <div class="footer">
+              <p>Questo messaggio è stato inviato automaticamente dal form di contatto di M1SSION.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+    }
+    
+    // Default recipients if not specified
+    const recipients = to || [{ 
+      Email: "contact@m1ssion.com",
+      Name: "M1SSION Team"
+    }];
+    
+    // Set sender
+    const sender = from || {
+      Email: "contact@m1ssion.com",
+      Name: "M1SSION Contact Form"
     };
-
-    // Handle different email types
-    let emailData: any;
     
-    if (requestData.templateId) {
-      // Template-based email
-      emailData = {
-        Messages: [{
+    // Configure the email data for Mailjet
+    const emailData = {
+      Messages: [
+        {
           From: {
-            Email: from.email,
-            Name: from.name,
+            Email: sender.Email,
+            Name: sender.Name
           },
-          To: requestData.to.map(recipient => ({
+          To: recipients.map(recipient => ({
             Email: recipient.email,
-            Name: recipient.name || recipient.email.split('@')[0],
+            Name: recipient.name || recipient.email.split('@')[0]
           })),
-          TemplateID: requestData.templateId,
-          TemplateLanguage: true,
-          Variables: requestData.variables || {},
-          Subject: requestData.subject,
-          Headers: requestData.headers,
-          TrackOpens: requestData.trackOpens !== false,
-          TrackClicks: requestData.trackClicks !== false,
-          CustomCampaign: requestData.customCampaign,
-          EventPayload: requestData.eventPayload,
-          CustomID: requestData.customId,
-        }],
-      };
-    } else {
-      // Content-based email
-      emailData = {
-        Messages: [{
-          From: {
-            Email: from.email,
-            Name: from.name,
-          },
-          To: requestData.to.map(recipient => ({
-            Email: recipient.email,
-            Name: recipient.name || recipient.email.split('@')[0],
-          })),
-          Subject: requestData.subject,
-          HTMLPart: requestData.htmlContent,
-          TextPart: requestData.textContent || stripHtml(requestData.htmlContent),
-          Headers: requestData.headers,
-          TrackOpens: requestData.trackOpens !== false,
-          TrackClicks: requestData.trackClicks !== false,
-          CustomCampaign: requestData.customCampaign,
-          EventPayload: requestData.eventPayload,
-          CustomID: requestData.customId,
-        }],
-      };
-    }
-
-    console.log("Sending email via Mailjet:", JSON.stringify(emailData));
-
-    // If contact form and consent is tracked, log it
-    if (requestData.type === 'contact' && requestData.consent) {
-      console.log("Contact form submission with consent:", JSON.stringify(requestData.consent));
-      // In a production environment, you might want to store this consent in your database
-    }
-
-    // Send the email
-    const response = await mailjet.post("send", { version: "v3.1" }).request(emailData);
+          Subject: subject || `Nuovo messaggio da ${name}`,
+          TextPart: message,
+          HTMLPart: emailHtmlContent,
+          CustomCampaign: customCampaign || "contact_form",
+          CustomID: customId || `contact_${Date.now()}`,
+          TrackOpens: trackOpens ? "enabled" : "disabled",
+          TrackClicks: trackClicks ? "enabled" : "disabled"
+        }
+      ]
+    };
     
-    console.log("Mailjet response:", JSON.stringify(response.body));
+    // Log the email being sent (without sensitive content)
+    console.log(`Sending email to: ${recipients.map(r => r.email).join(', ')}`);
+    console.log(`From: ${sender.Email} (${sender.Name})`);
+    console.log(`Subject: ${emailData.Messages[0].Subject}`);
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Email sent successfully',
-      data: response.body
-    }), {
-      status: 200,
-      headers: { 
-        "Content-Type": "application/json",
-        ...corsHeaders
+    try {
+      // Send the email using Mailjet
+      const result = await mailjet
+        .post("send", { version: "v3.1" })
+        .request(emailData);
+      
+      // Extract response status and data
+      const status = result.status;
+      const responseData = result.body;
+      
+      console.log("Mailjet API response:", status, JSON.stringify(responseData));
+      
+      if (status >= 200 && status < 300) {
+        console.log("Email sent successfully!");
+        
+        // Return success response
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: 'Email inviata con successo',
+            data: responseData
+          }),
+          { 
+            status: 200,
+            headers: { 
+              "Content-Type": "application/json",
+              ...corsHeaders
+            }
+          }
+        );
+      } else {
+        throw new Error(`Unexpected response status: ${status}`);
       }
-    });
+    } catch (emailError: any) {
+      console.error('Errore specifico nell\'invio dell\'email:', emailError);
+      throw emailError; // Re-throw to be caught by the outer try/catch
+    }
     
-  } catch (error) {
-    console.error("Error sending email via Mailjet:", error);
+  } catch (error: any) {
+    console.error('Errore nell\'invio dell\'email:', error);
     
-    return new Response(JSON.stringify({
-      success: false,
-      message: error instanceof Error ? error.message : 'Unknown error occurred',
-      error: error instanceof Error ? error.stack : String(error)
-    }), {
-      status: 500,
-      headers: { 
-        "Content-Type": "application/json",
-        ...corsHeaders
+    // Return error response
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: error instanceof Error ? error.message : 'Errore durante l\'invio dell\'email',
+        errorDetails: error instanceof Error ? error.stack : 'No stack trace available'
+      }),
+      { 
+        status: 500,
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders
+        }
       }
-    });
+    );
   }
 };
-
-// Helper function to strip HTML tags for text version
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>?/gm, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
 // Start the server
 serve(handler);

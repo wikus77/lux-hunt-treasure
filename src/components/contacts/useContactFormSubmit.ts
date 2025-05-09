@@ -42,20 +42,23 @@ export function useContactFormSubmit() {
       // Prepare the data to send via email
       const contactData = {
         type: 'contact',
+        name: data.name,
+        email: data.email,
+        phone: data.phone || '',
+        subject: data.subject || "Nuovo contatto dal sito M1SSION",
+        message: data.message,
         to: [
           {
             email: "contact@m1ssion.com", 
             name: "M1SSION Team"
           }
         ],
-        subject: data.subject || "Nuovo contatto dal sito M1SSION",
-        htmlContent: generateContactEmailHtml(data),
         from: {
           email: "contact@m1ssion.com",
           name: "M1SSION Contact Form"
         },
         trackOpens: true,
-        trackClicks: true,
+        trackClicks: false,
         customCampaign: "contact_form",
         // GDPR consent tracking
         consent: {
@@ -86,8 +89,8 @@ export function useContactFormSubmit() {
 
       // Success notification
       toast({
-        title: "Message sent successfully",
-        description: "We'll get back to you as soon as possible!",
+        title: "Messaggio inviato con successo",
+        description: "Ti risponderemo il prima possibile!",
       });
 
       setProgress(100); // Complete
@@ -99,8 +102,8 @@ export function useContactFormSubmit() {
       // Error notification
       toast({
         variant: "destructive",
-        title: "An error occurred while sending your message",
-        description: "Please try again in a moment."
+        title: "Si è verificato un errore durante l'invio del messaggio",
+        description: "Riprova tra qualche istante."
       });
       
       setProgress(0); // Reset progress on error
@@ -114,42 +117,6 @@ export function useContactFormSubmit() {
         setIsSubmitting(false);
       }, 1000); // Delay to show completed progress
     }
-  };
-
-  // HTML template for contact form emails
-  const generateContactEmailHtml = (data: ContactFormData): string => {
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #00e5ff; color: #000; padding: 10px 20px; border-radius: 5px; }
-          .content { padding: 20px 0; }
-          .footer { font-size: 12px; color: #999; border-top: 1px solid #eee; margin-top: 30px; padding-top: 10px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h2>New message from M1SSION</h2>
-          </div>
-          <div class="content">
-            <p><strong>Name:</strong> ${data.name}</p>
-            <p><strong>Email:</strong> ${data.email}</p>
-            <p><strong>Phone:</strong> ${data.phone || 'Not provided'}</p>
-            <p><strong>Subject:</strong> ${data.subject || 'Contact from M1SSION website'}</p>
-            <p><strong>Message:</strong></p>
-            <p style="white-space: pre-line; background: #f9f9f9; padding: 15px; border-radius: 5px;">${data.message}</p>
-          </div>
-          <div class="footer">
-            <p>This message was sent automatically from the M1SSION contact form.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
   };
 
   return {

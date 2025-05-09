@@ -22,7 +22,7 @@ const EmailTest: React.FC = () => {
             Sistema di Email Transazionali
           </h1>
           <p className="text-white/70 mb-4">
-            Questa pagina ti permette di testare l'invio di email transazionali usando Resend.
+            Questa pagina ti permette di testare l'invio di email transazionali usando Mailjet.
           </p>
 
           {isAuthenticated ? (
@@ -62,7 +62,7 @@ const EmailTest: React.FC = () => {
                   <div className="bg-gray-900/50 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold text-white mb-2">Implementazione Tecnica</h3>
                     <p className="text-white/80">
-                      Il sistema utilizza Resend come provider per l'invio delle email, con un'integrazione 
+                      Il sistema utilizza Mailjet come provider per l'invio delle email, con un'integrazione 
                       tramite Supabase Edge Functions. Tutte le email sono inviate in modo sicuro dal backend,
                       senza esporre chiavi API nel frontend.
                     </p>
