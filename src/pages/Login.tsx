@@ -29,7 +29,7 @@ const Login = () => {
     }
 
     // Redirect to home if already authenticated
-    if (!authLoading && isAuthenticated()) {
+    if (!authLoading && isAuthenticated) {
       navigate('/home');
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);

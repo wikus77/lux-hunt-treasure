@@ -19,7 +19,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Fetch user role when authenticated
   useEffect(() => {
     const fetchUserRole = async () => {
-      if (auth.isAuthenticated() && auth.isEmailVerified && !auth.isLoading) {
+      // Nota: ora utilizziamo direttamente auth.isAuthenticated come booleano
+      if (auth.isAuthenticated && auth.isEmailVerified && !auth.isLoading) {
         try {
           setIsRoleLoading(true);
           const userId = auth.getCurrentUser()?.id;
@@ -85,7 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Log authentication state changes for debugging
   useEffect(() => {
     console.log("Auth provider state:", {
-      isAuthenticated: auth.isAuthenticated(),
+      isAuthenticated: auth.isAuthenticated,
       isLoading: auth.isLoading,
       isEmailVerified: auth.isEmailVerified,
       userId: auth.getCurrentUser()?.id,
@@ -94,7 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
     
     // Register for notifications when user is authenticated
-    if (auth.isAuthenticated() && auth.isEmailVerified && !auth.isLoading) {
+    if (auth.isAuthenticated && auth.isEmailVerified && !auth.isLoading) {
       // Check if notification permission is granted
       if (Notification.permission === 'granted') {
         registerDeviceForNotifications()
@@ -125,11 +126,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         ...auth,
         userRole,
         hasRole,
-        isRoleLoading,
-        // Expose user from getCurrentUser for easier access
-        user: auth.getCurrentUser(),
-        // Convert isAuthenticated function to boolean property to match updated type
-        isAuthenticated: auth.isAuthenticated()
+        isRoleLoading
       }}
     >
       {children}

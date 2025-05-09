@@ -22,7 +22,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   useEffect(() => {
     console.log("Protected route check:", {
       path: location.pathname,
-      isAuthenticated: isAuthenticated(),
+      isAuthenticated,
       isLoading,
       isEmailVerified,
       user: getCurrentUser()?.id
@@ -38,7 +38,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
   
   // If user is not authenticated, redirect to login
-  if (!isAuthenticated()) {
+  if (!isAuthenticated) {
     console.log("User not authenticated, redirecting to:", redirectTo);
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }

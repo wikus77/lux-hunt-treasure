@@ -25,7 +25,7 @@ const EmailTest: React.FC = () => {
             Questa pagina ti permette di testare l'invio di email transazionali usando Resend.
           </p>
 
-          {isAuthenticated() ? (
+          {isAuthenticated ? (
             <Tabs defaultValue="sender">
               <TabsList className="mb-4">
                 <TabsTrigger value="sender">Invia Email</TabsTrigger>

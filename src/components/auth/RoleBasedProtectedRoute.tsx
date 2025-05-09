@@ -24,7 +24,7 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
   useEffect(() => {
     console.log("Role-based protected route check:", {
       path: location.pathname,
-      isAuthenticated: isAuthenticated(),
+      isAuthenticated,
       isLoading,
       isEmailVerified,
       userRole,
@@ -35,7 +35,7 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
   }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, allowedRoles, isRoleLoading]);
   
   // Waiting for authentication or role loading to complete
-  if (isLoading || (isAuthenticated() && isRoleLoading)) {
+  if (isLoading || (isAuthenticated && isRoleLoading)) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-black">
         <Spinner className="h-8 w-8 text-white" />
@@ -47,7 +47,7 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
   }
   
   // If user is not authenticated, redirect to login
-  if (!isAuthenticated()) {
+  if (!isAuthenticated) {
     console.log("User not authenticated, redirecting to:", redirectTo);
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }

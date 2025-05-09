@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -167,16 +168,19 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     }
   };
 
+  // Modifica qui: restituisci isAuthenticated come boolean, non come funzione
   return {
     session,
     isLoading,
     isEmailVerified,
-    isAuthenticated,
+    isAuthenticated: isAuthenticated(), // Chiamiamo la funzione per ottenere il valore booleano
     login,
     logout,
     getCurrentUser,
     getAccessToken,
     resendVerificationEmail,
     resetPassword,
+    user, // Aggiungiamo l'utente direttamente qui per coerenza con AuthContextType
   };
 }
+
