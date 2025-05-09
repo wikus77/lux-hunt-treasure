@@ -23,3 +23,7 @@ export {
 export { 
   generatePasswordResetEmailHtml 
 } from './passwordResetTemplate';
+
+export {
+  generatePreRegistrationEmailHtml
+} from './preRegistrationTemplate';

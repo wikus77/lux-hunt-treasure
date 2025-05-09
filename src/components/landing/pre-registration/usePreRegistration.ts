@@ -83,6 +83,9 @@ export const usePreRegistration = () => {
     setIsSubmitting(true);
     
     try {
+      // Log input values for debugging
+      console.log("Submitting pre-registration with:", { name: name.trim(), email: email.trim() });
+      
       // Registration data to send to backend
       const registrationData = {
         name: name.trim(),
@@ -96,6 +99,14 @@ export const usePreRegistration = () => {
         .eq('email', email.trim())
         .maybeSingle();
       
+      // Log check result for debugging
+      console.log("Check for existing user:", { existingUser, checkError });
+      
+      if (checkError) {
+        console.error("Error checking existing user:", checkError);
+        throw new Error(`Errore durante la verifica dell'email: ${checkError.message}`);
+      }
+      
       if (existingUser) {
         toast.info("Sei già pre-registrato!", {
           description: "Questa email è già stata utilizzata per la pre-registrazione."
@@ -104,24 +115,32 @@ export const usePreRegistration = () => {
         return;
       }
       
-      // Create pre-registration record without referral code initially
+      // Generate a referral code now
+      const referralCode = `${name.substring(0, 3).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      
+      // Create pre-registration record
       const { data: registration, error: registrationError } = await supabase
         .from('pre_registrations')
         .insert([{
           name: registrationData.name,
           email: registrationData.email,
           referrer: null,
-          referral_code: userReferralCode || null,
+          referral_code: referralCode,
           credits: 100, // Initial credits for first 100 registrations
         }])
         .select();
       
+      // Log insert result for debugging
+      console.log("Insert result:", { registration, registrationError });
+      
       if (registrationError) {
-        throw registrationError;
+        console.error("Detailed registration error:", registrationError);
+        throw new Error(`Errore nella registrazione: ${registrationError.message || 'Errore sconosciuto'}`);
       }
       
       // If registration successful
       setIsSubmitted(true);
+      setUserReferralCode(referralCode);
       toast.success("Benvenuto Agente!", {
         description: "La tua pre-iscrizione è stata convalidata. Sei tra i primi 100 a ricevere 100 crediti. Preparati, ora sei in M1SSION!"
       });
@@ -133,12 +152,12 @@ export const usePreRegistration = () => {
       
       // Send confirmation email via edge function
       try {
-        await supabase.functions.invoke('send-mailjet-email', {
+        const emailResponse = await supabase.functions.invoke('send-mailjet-email', {
           body: {
             type: 'pre_registration',
             name: registrationData.name,
             email: registrationData.email,
-            referral_code: userReferralCode,
+            referral_code: referralCode,
             subject: "Pre-registrazione a M1SSION confermata",
             to: [
               {
@@ -148,15 +167,17 @@ export const usePreRegistration = () => {
             ]
           }
         });
+        
+        console.log("Email sending response:", emailResponse);
       } catch (emailError) {
         console.error("Errore nell'invio dell'email di conferma:", emailError);
         // Don't stop the process if email fails, the registration is still valid
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Errore nella pre-registrazione:", error);
       toast.error("Missione sospesa.", {
-        description: "Qualcosa non è andato come previsto. Verifica i tuoi dati e riprova a registrarti. Entra in M1SSION!"
+        description: error instanceof Error ? error.message : "Qualcosa non è andato come previsto. Verifica i tuoi dati e riprova a registrarti. Entra in M1SSION!"
       });
     } finally {
       setIsSubmitting(false);
@@ -174,12 +195,21 @@ export const usePreRegistration = () => {
     setIsSubmitting(true);
     
     try {
+      console.log("Validating invite code:", inviteCode.trim());
+      
       // Validate the invite code
-      const { data: referrerData } = await supabase
+      const { data: referrerData, error: lookupError } = await supabase
         .from('pre_registrations')
         .select('id, email')
         .eq('referral_code', inviteCode.trim())
         .maybeSingle();
+      
+      console.log("Referrer lookup result:", { referrerData, lookupError });
+        
+      if (lookupError) {
+        console.error("Error looking up referrer:", lookupError);
+        throw new Error(`Errore nella ricerca del codice: ${lookupError.message}`);
+      }
         
       if (!referrerData) {
         toast.error("Codice invito non valido", {
@@ -195,18 +225,29 @@ export const usePreRegistration = () => {
         .update({ referrer: referrerData.email })
         .eq('email', email);
       
+      console.log("Update result:", { updateError });
+      
       if (updateError) {
-        throw updateError;
+        console.error("Error updating referrer:", updateError);
+        throw new Error(`Errore nell'aggiornamento del codice: ${updateError.message}`);
       }
       
       // If there was a referrer, update their credits
-      const { error: referrerUpdateError } = await supabase.rpc('add_referral_credits', {
-        referrer_email: referrerData.email,
-        credits_to_add: 50
-      });
-      
-      if (referrerUpdateError) {
-        console.error("Errore nell'aggiornamento dei crediti del referrer:", referrerUpdateError);
+      try {
+        console.log("Adding credits to referrer:", referrerData.email);
+        const { error: referrerUpdateError } = await supabase.rpc('add_referral_credits', {
+          referrer_email: referrerData.email,
+          credits_to_add: 50
+        });
+        
+        console.log("Credit update result:", { referrerUpdateError });
+        
+        if (referrerUpdateError) {
+          console.error("Errore nell'aggiornamento dei crediti del referrer:", referrerUpdateError);
+          // Continue despite error
+        }
+      } catch (rpcError) {
+        console.error("RPC call error:", rpcError);
         // Continue despite error
       }
       
@@ -217,10 +258,10 @@ export const usePreRegistration = () => {
       // Hide the referral input after successful submission
       setShowReferralInput(false);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Errore nell'applicazione del codice invito:", error);
       toast.error("Errore nell'applicazione del codice", {
-        description: "Si è verificato un problema. Riprova più tardi."
+        description: error instanceof Error ? error.message : "Si è verificato un problema. Riprova più tardi."
       });
     } finally {
       setIsSubmitting(false);

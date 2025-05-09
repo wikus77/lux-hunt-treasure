@@ -10,31 +10,18 @@ schemas = ["public", "storage", "graphql_public"]
 port = 54322
 
 [studio]
-enabled = true
 port = 54323
-api_url = "http://localhost"
 
 [inbucket]
-enabled = true
 port = 54324
 
 [storage]
 enabled = true
-port = 54325
 
 [auth]
 enabled = true
-port = 54326
+site_url = "https://lovable.app"
 
-[realtime]
-enabled = true
-port = 54327
-
-[edge_functions]
-enabled = true
-port = 54328
-
-# Add this to configure Mailjet function to run without authentication
-[functions.send-mailjet-email]
+[functions]
+[functions.handle-pre-registration]
 verify_jwt = false
-
