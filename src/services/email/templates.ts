@@ -1,10 +1,10 @@
-import { generateWelcomeEmailHtml, generateNotificationEmailHtml } from "@/hooks/email/templates";
+import { generateWelcomeEmailHtml as importedWelcomeEmailHtml, generateNotificationEmailHtml as importedNotificationEmailHtml } from "@/hooks/email/templates";
 
 /**
  * Generate HTML content for welcome email
  */
 export const generateWelcomeEmail = (name: string, referralCode?: string): string => {
-  const template = generateWelcomeEmailHtml(name);
+  const template = importedWelcomeEmailHtml(name);
   
   // If we have a referral code, replace the placeholder with the actual code
   if (referralCode) {
@@ -29,7 +29,7 @@ export const generateWelcomeEmail = (name: string, referralCode?: string): strin
  * Generate HTML content for notification email
  */
 export const generateNotificationEmail = (subject: string, message: string): string => {
-  return generateNotificationEmailHtml(subject, message);
+  return importedNotificationEmailHtml(subject, message);
 };
 
 /**
@@ -72,25 +72,6 @@ export const buildNewsletterTemplate = (title: string, content: string): string 
 };
 
 /**
- * Generate welcome email HTML
+ * These local implementations are removed to avoid naming conflicts
+ * and are replaced by the imported versions above
  */
-export const generateWelcomeEmailHtml = (name: string = ''): string => {
-  return `
-    <h1>Benvenuto in M1SSION, ${name || 'nuovo utente'}!</h1>
-    <p>Grazie per esserti iscritto alla nostra piattaforma. Siamo felici di averti con noi!</p>
-    <p>Puoi iniziare ad esplorare la nostra applicazione e scoprire tutte le funzionalità disponibili.</p>
-    <p>Se hai domande o hai bisogno di assistenza, non esitare a contattarci.</p>
-    <p>Cordiali saluti,<br>Il team di M1SSION</p>
-  `;
-};
-
-/**
- * Generate notification email HTML
- */
-export const generateNotificationEmailHtml = (subject: string, message: string): string => {
-  return `
-    <h2>${subject}</h2>
-    <p>${message}</p>
-    <p>Cordiali saluti,<br>Il team di M1SSION</p>
-  `;
-};
