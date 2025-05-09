@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useEmailService } from '@/hooks/useEmailService';
+import { useEmailService } from '@/hooks/email'; // Updated import
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import EmailTypeSelector from './EmailTypeSelector';
