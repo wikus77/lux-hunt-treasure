@@ -20,23 +20,23 @@ interface UseMapMarkersProps {
 }
 
 export const useMapMarkers = ({ map }: UseMapMarkersProps) => {
-  const [markers, setMarkers] = useState<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
 
   // Create markers for cities when map loads or changes
   useEffect(() => {
-    if (!map || !window.google?.maps?.marker?.AdvancedMarkerElement) return;
+    if (!map || !window.google?.maps) return;
 
     // Cleanup old markers
-    markers.forEach((marker) => marker.map = null);
+    markers.forEach((marker) => marker.setMap(null));
     setMarkers([]);
 
-    const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
+    const newMarkers: google.maps.Marker[] = [];
 
     italianCities.forEach((city) => {
       if (!city || typeof city.lat !== "number" || typeof city.lng !== "number") return;
 
-      const marker = new window.google.maps.marker.AdvancedMarkerElement({
+      const marker = new google.maps.Marker({
         map,
         position: { lat: city.lat, lng: city.lng },
         title: city.name,
@@ -53,10 +53,9 @@ export const useMapMarkers = ({ map }: UseMapMarkersProps) => {
 
     // Cleanup
     return () => {
-      newMarkers.forEach((marker) => (marker.map = null));
+      newMarkers.forEach((marker) => marker.setMap(null));
     };
-    // eslint-disable-next-line
-  }, [map, typeof window.google?.maps?.marker?.AdvancedMarkerElement]);
+  }, [map]);
 
   return { markers, setMarkers, selectedCity, setSelectedCity };
 };
