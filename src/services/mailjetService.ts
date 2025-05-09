@@ -17,6 +17,10 @@ interface SendEmailOptions {
   trackClicks?: boolean;
   customCampaign?: string;
   customId?: string;
+  from?: {
+    Email: string;
+    Name: string;
+  };
   consent?: {
     given: boolean;
     date: string;
