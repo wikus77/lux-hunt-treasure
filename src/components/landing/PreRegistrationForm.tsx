@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import FormContainer from "./pre-registration/FormContainer";
 import RegistrationForm from "./pre-registration/RegistrationForm";
 import SuccessView from "./pre-registration/SuccessView";
