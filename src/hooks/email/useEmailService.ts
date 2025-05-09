@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { sendEmail } from '@/services/mailjetService';
+import { sendEmail } from '@/services/email';
 import { toast } from 'sonner';
 
 // Import types and utilities
@@ -68,7 +68,7 @@ export function useEmailService(): EmailServiceHook {
           };
       }
 
-      const result = await sendEmail(type, {
+      const result = await sendEmail(type as EmailType, {
         to: [{ email, name }],
         subject: emailSubject,
         htmlContent: htmlContent,
@@ -158,4 +158,3 @@ export function useEmailService(): EmailServiceHook {
     sendMarketingEmail
   };
 }
-
