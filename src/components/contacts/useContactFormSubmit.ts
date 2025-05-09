@@ -7,10 +7,12 @@ export function useContactFormSubmit() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [result, setResult] = useState<{ success: boolean; error?: Error | unknown } | undefined>(undefined);
 
   const handleSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
     setProgress(10); // Start progress
+    setResult(undefined); // Reset previous results
     
     try {
       // First step: Save to database
@@ -94,6 +96,7 @@ export function useContactFormSubmit() {
       });
 
       setProgress(100); // Complete
+      setResult({ success: true });
 
       return { success: true };
     } catch (error) {
@@ -107,6 +110,7 @@ export function useContactFormSubmit() {
       });
       
       setProgress(0); // Reset progress on error
+      setResult({ success: false, error });
       return { success: false, error };
     } finally {
       // Keep the progress at 100% for success until the form resets
@@ -122,6 +126,7 @@ export function useContactFormSubmit() {
   return {
     handleSubmit,
     isSubmitting,
-    progress
+    progress,
+    result
   };
 }
