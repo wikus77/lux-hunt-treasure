@@ -7,11 +7,12 @@ interface SubscriberData {
   email: string;
   referrer?: string;
   campaign?: string;
-  user_id?: string; // New field to store authenticated user ID
+  user_id?: string; // Field to store authenticated user ID
 }
 
 /**
  * Save a new newsletter subscriber to the database
+ * @deprecated Use useNewsletterSubscription hook instead
  */
 export const saveSubscriber = async (subscriber: SubscriberData): Promise<void> => {
   try {
@@ -73,6 +74,7 @@ export const saveSubscriber = async (subscriber: SubscriberData): Promise<void> 
 
 /**
  * Get the current number of newsletter subscribers
+ * @deprecated Use useNewsletterSubscription hook instead
  */
 export const getSubscribersCount = async (): Promise<number> => {
   try {
