@@ -114,16 +114,24 @@ serve(async (req) => {
       );
     }
     
-    // Generate referral code
-    const referralCode = `${name.substring(0, 3).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    // Generate referral code with improved entropy
+    const randomBytes = new Uint8Array(8);
+    crypto.getRandomValues(randomBytes);
+    const randomStr = Array.from(randomBytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+      .substring(0, 6)
+      .toUpperCase();
+    
+    const referralCode = `${name.substring(0, 3).toUpperCase()}${randomStr}`;
     
     // Insert pre-registration using the service role client
     const { data: registration, error: registrationError } = await supabase
       .from('pre_registrations')
       .insert([{
-        name,
-        email,
-        referrer,
+        name: name.trim(),
+        email: email.trim(),
+        referrer: referrer?.trim(),
         referral_code: referralCode,
         credits: 100
       }])
@@ -158,7 +166,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             type: 'welcome',
-            to: [{ email, name }],
+            to: [{ email: email.trim(), name: name.trim() }],
             subject: 'Benvenuto in M1SSION!',
             from: {
               Email: "contact@m1ssion.com",
