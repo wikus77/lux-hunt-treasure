@@ -214,6 +214,39 @@ export type Database = {
         }
         Relationships: []
       }
+      pre_registrations: {
+        Row: {
+          confirmed: boolean
+          created_at: string
+          credits: number
+          email: string
+          id: string
+          name: string
+          referral_code: string | null
+          referrer: string | null
+        }
+        Insert: {
+          confirmed?: boolean
+          created_at?: string
+          credits?: number
+          email: string
+          id?: string
+          name: string
+          referral_code?: string | null
+          referrer?: string | null
+        }
+        Update: {
+          confirmed?: boolean
+          created_at?: string
+          credits?: number
+          email?: string
+          id?: string
+          name?: string
+          referral_code?: string | null
+          referrer?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -359,6 +392,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_referral_credits: {
+        Args: { referrer_email: string; credits_to_add: number }
+        Returns: undefined
+      }
       update_user_subscription_tier: {
         Args: { user_id_param: string; new_tier: string }
         Returns: undefined
