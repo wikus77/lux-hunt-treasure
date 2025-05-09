@@ -81,7 +81,7 @@ serve(async (req) => {
       .from('pre_registrations')
       .select('id')
       .eq('email', email)
-      .maybeSingle();
+      .maybeSingle(); // Using maybeSingle instead of single to avoid errors
     
     console.log("Check for existing user:", { existingUser, checkError });
     

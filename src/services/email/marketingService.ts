@@ -14,7 +14,7 @@ export const subscribeToMarketingList = async (email: string, name: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
 
-    // First save to your DB
+    // First save to your DB with proper RLS policies now in place
     const { error: dbError } = await supabase
       .from('newsletter_subscribers')
       .insert({
