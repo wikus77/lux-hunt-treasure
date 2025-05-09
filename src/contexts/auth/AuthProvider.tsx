@@ -5,6 +5,7 @@ import AuthContext from './AuthContext';
 import { registerDeviceForNotifications } from '@/integrations/firebase/firebase-client';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { User } from './types';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -124,7 +125,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         ...auth,
         userRole,
         hasRole,
-        isRoleLoading
+        isRoleLoading,
+        // Expose user from getCurrentUser for easier access
+        user: auth.getCurrentUser(),
+        // Convert isAuthenticated function to boolean property to match updated type
+        isAuthenticated: auth.isAuthenticated()
       }}
     >
       {children}

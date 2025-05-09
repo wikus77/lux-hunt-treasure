@@ -2,7 +2,7 @@
 export interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: any }>;
   logout: () => Promise<void>;
-  isAuthenticated: () => boolean;
+  isAuthenticated: boolean;
   isLoading: boolean;
   isEmailVerified: boolean;
   getCurrentUser: () => User | null;
@@ -13,6 +13,7 @@ export interface AuthContextType {
   userRole: string | null;
   hasRole: (role: string) => boolean;
   isRoleLoading: boolean;
+  user: User | null;
 }
 
 export interface User {

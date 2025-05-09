@@ -10,7 +10,7 @@ interface ConsentTypes {
   communications: boolean;
 }
 
-// Define the user consents interface to fix TypeScript errors
+// Add this interface to properly match the database table structure
 interface UserConsent {
   user_id: string;
   marketing_consent: boolean;
@@ -19,6 +19,9 @@ interface UserConsent {
   communications_consent: boolean;
   updated_at?: string;
 }
+
+// Define a custom type to extend Database tables for TypeScript
+type CustomTables = 'user_consents' | 'consent_history';
 
 export function useConsentManagement() {
   const { isAuthenticated, user } = useAuthContext();
@@ -36,8 +39,9 @@ export function useConsentManagement() {
       if (isAuthenticated && user?.id) {
         setIsLoading(true);
         try {
-          // Using typed generic parameter to help TypeScript understand the structure
-          const { data, error } = await supabase
+          // Using any to avoid TypeScript errors with custom tables
+          // This is a workaround until Supabase types are properly extended
+          const { data, error } = await (supabase as any)
             .from('user_consents')
             .select('*')
             .eq('user_id', user.id)
@@ -48,7 +52,7 @@ export function useConsentManagement() {
           }
 
           if (data) {
-            const userConsent = data as unknown as UserConsent;
+            const userConsent = data as UserConsent;
             setConsents({
               marketing: userConsent.marketing_consent || false,
               analytics: userConsent.analytics_consent || false,
@@ -97,8 +101,8 @@ export function useConsentManagement() {
         };
         updateData[consentField] = value;
         
-        // Using updateData to avoid TypeScript errors with direct property access
-        const { error } = await supabase
+        // Using any to avoid TypeScript errors with custom tables
+        const { error } = await (supabase as any)
           .from('user_consents')
           .upsert(updateData, {
             onConflict: 'user_id'
@@ -118,7 +122,7 @@ export function useConsentManagement() {
           consent_timestamp: new Date().toISOString()
         };
         
-        await supabase
+        await (supabase as any)
           .from('consent_history')
           .insert(historyData);
 
