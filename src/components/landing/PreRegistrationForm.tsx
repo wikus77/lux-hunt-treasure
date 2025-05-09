@@ -26,6 +26,10 @@ const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
   const [userReferralCode, setUserReferralCode] = useState("");
   const [showInviteOptions, setShowInviteOptions] = useState(false);
   const [showReferralInput, setShowReferralInput] = useState(false);
+  const [formErrors, setFormErrors] = useState({
+    name: "",
+    email: ""
+  });
 
   // Generate a unique referral code for the user after successful registration
   useEffect(() => {
@@ -45,17 +49,43 @@ const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
     return re.test(email);
   };
 
+  const validateForm = (): boolean => {
+    const errors = {
+      name: "",
+      email: ""
+    };
+    let isValid = true;
+
+    // Validate name
+    if (!name.trim()) {
+      errors.name = "Inserisci il tuo nome";
+      isValid = false;
+    }
+    
+    // Validate email
+    if (!email.trim()) {
+      errors.email = "Inserisci il tuo indirizzo email";
+      isValid = false;
+    } else if (!validateEmail(email)) {
+      errors.email = "Inserisci un indirizzo email valido";
+      isValid = false;
+    }
+
+    setFormErrors(errors);
+    return isValid;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
-    if (!name.trim()) {
-      toast.error("Inserisci il tuo nome");
-      return;
-    }
+    // Clear previous errors
+    setFormErrors({
+      name: "",
+      email: ""
+    });
     
-    if (!email.trim() || !validateEmail(email)) {
-      toast.error("Inserisci un indirizzo email valido");
+    // Validate form
+    if (!validateForm()) {
       return;
     }
     
@@ -292,10 +322,13 @@ const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:border-[#00E5FF]/50 focus:outline-none focus:ring-1 focus:ring-[#00E5FF]/50"
+                    className={`w-full p-3 rounded-lg ${formErrors.name ? 'border-red-500 bg-red-500/10' : 'border-white/10 bg-white/5'} text-white placeholder-white/40 focus:border-[#00E5FF]/50 focus:outline-none focus:ring-1 focus:ring-[#00E5FF]/50`}
                     placeholder="Il tuo nome"
                     disabled={isSubmitting}
                   />
+                  {formErrors.name && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
+                  )}
                 </div>
                 
                 <div>
@@ -305,10 +338,13 @@ const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
                     id="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:border-[#00E5FF]/50 focus:outline-none focus:ring-1 focus:ring-[#00E5FF]/50"
+                    className={`w-full p-3 rounded-lg ${formErrors.email ? 'border-red-500 bg-red-500/10' : 'border-white/10 bg-white/5'} text-white placeholder-white/40 focus:border-[#00E5FF]/50 focus:outline-none focus:ring-1 focus:ring-[#00E5FF]/50`}
                     placeholder="La tua email"
                     disabled={isSubmitting}
                   />
+                  {formErrors.email && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
+                  )}
                 </div>
                 
                 <button
