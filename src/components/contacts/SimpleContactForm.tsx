@@ -3,14 +3,25 @@ import React, { useState } from "react";
 import { useContactFormSubmit } from "./useContactFormSubmit";
 import { ContactFormData } from "./contactFormSchema";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Link } from "react-router-dom";
 
 const SimpleContactForm = () => {
   const { handleSubmit, isSubmitting, progress } = useContactFormSubmit();
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(false);
   
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    
+    if (!consentGiven) {
+      // Show error or alert about required consent
+      setError(true);
+      return;
+    }
+    
     setSuccess(false);
     setError(false);
     
@@ -31,6 +42,7 @@ const SimpleContactForm = () => {
       if (result.success) {
         setSuccess(true);
         event.currentTarget.reset();
+        setConsentGiven(false); // Reset consent
       } else {
         setError(true);
       }
@@ -80,6 +92,23 @@ const SimpleContactForm = () => {
         disabled={isSubmitting}
       />
       
+      {/* GDPR Consent checkbox */}
+      <div className="flex items-center space-x-2">
+        <Checkbox 
+          id="gdpr-consent" 
+          checked={consentGiven}
+          onCheckedChange={(checked) => setConsentGiven(checked as boolean)}
+          disabled={isSubmitting}
+        />
+        <Label 
+          htmlFor="gdpr-consent" 
+          className="text-sm text-gray-600"
+        >
+          Acconsento al trattamento dei miei dati personali per rispondere alla mia richiesta come specificato nella{' '}
+          <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>.
+        </Label>
+      </div>
+      
       {progress > 0 && progress < 100 && (
         <div className="w-full">
           <Progress value={progress} className="h-2" />
@@ -90,7 +119,7 @@ const SimpleContactForm = () => {
       <button
         type="submit"
         className="bg-black text-white px-6 py-3 rounded-xl w-full hover:bg-gray-800 transition disabled:opacity-50"
-        disabled={isSubmitting}
+        disabled={isSubmitting || !consentGiven}
       >
         {isSubmitting ? 'Invio in corso...' : 'Invia messaggio'}
       </button>
@@ -101,7 +130,13 @@ const SimpleContactForm = () => {
         </p>
       )}
 
-      {error && (
+      {error && !consentGiven && (
+        <p className="text-red-600 text-center mt-4">
+          È necessario acconsentire al trattamento dei dati personali per inviare il messaggio.
+        </p>
+      )}
+
+      {error && consentGiven && (
         <p className="text-red-600 text-center mt-4">
           Si è verificato un errore durante l'invio. Riprova tra poco.
         </p>

@@ -9,10 +9,12 @@ schemas = ["public", "storage"]
 [db]
 port = 54322
 
+[realtime]
+enabled = true
+
 [studio]
 enabled = true
 port = 54323
-api_url = "http://localhost"
 
 [inbucket]
 enabled = true
@@ -23,18 +25,13 @@ enabled = true
 
 [auth]
 enabled = true
-site_url = "http://localhost:3000"
 
-[auth.email]
-enable_signup = true
-double_confirm_changes = true
-enable_confirmations = false
+[functions]
+[functions.send-contact-email]
+verify_jwt = false
 
-[auth.sms]
-enable_signup = true
-enable_confirmations = false
+[functions.send-mailjet-email]
+verify_jwt = false
 
-[auth.external.github]
-enabled = false
-client_id = ""
-secret = ""
+[functions.send-email]
+verify_jwt = false
