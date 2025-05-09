@@ -1,27 +1,8 @@
 
 project_id = "vkjrqirvdvjbemsfzxof"
 
-[api]
-enabled = true
-port = 54321
-schemas = ["public", "storage", "graphql_public"]
+[functions.send-mailjet-email]
+verify_jwt = true
 
-[db]
-port = 54322
-
-[studio]
-port = 54323
-
-[inbucket]
-port = 54324
-
-[storage]
-enabled = true
-
-[auth]
-enabled = true
-site_url = "https://lovable.app"
-
-[functions]
 [functions.handle-pre-registration]
 verify_jwt = false

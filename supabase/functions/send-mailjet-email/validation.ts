@@ -1,56 +1,50 @@
 
 import { ContactData } from "./types.ts";
 
-/**
- * Validate the contact data
- */
+// Function to validate email contact data
 export function validateContactData(data: ContactData): { isValid: boolean; errorMessage?: string } {
+  if (!data) {
+    return { isValid: false, errorMessage: 'Nessun dato fornito' };
+  }
+  
   console.log("Validating email data for type:", data.type);
   
-  // Check if type is provided
-  if (!data.type) {
-    return { isValid: false, errorMessage: "Tipo di email non specificato" };
+  // Validate based on email type
+  switch (data.type) {
+    case 'contact':
+      // For contact form emails
+      if (!data.email) {
+        return { isValid: false, errorMessage: "L'email del mittente è obbligatoria" };
+      }
+      break;
+      
+    case 'welcome':
+    case 'notification':
+    case 'marketing':
+      // For transactional emails
+      if (!data.to || data.to.length === 0) {
+        return { isValid: false, errorMessage: "Almeno un destinatario è obbligatorio" };
+      }
+      
+      // Check that all recipients have valid email addresses
+      const invalidRecipients = data.to.filter(
+        recipient => !recipient.email && !recipient.Email
+      );
+      
+      if (invalidRecipients.length > 0) {
+        return { 
+          isValid: false, 
+          errorMessage: "Alcuni destinatari non hanno un indirizzo email valido" 
+        };
+      }
+      break;
+      
+    default:
+      return { 
+        isValid: false, 
+        errorMessage: `Tipo di email non supportato: ${data.type}` 
+      };
   }
   
-  // Validate required fields based on email type
-  if (data.type === 'contact') {
-    if (!data.email) {
-      return { isValid: false, errorMessage: "Email mittente obbligatoria mancante" };
-    }
-    // Name is optional, message is optional for structured contact forms
-  } else if (data.type === 'welcome' || data.type === 'notification' || data.type === 'transactional') {
-    // For welcome, notification or transactional emails
-    if (!data.to || (Array.isArray(data.to) && data.to.length === 0)) {
-      return { isValid: false, errorMessage: "Destinatario email mancante" };
-    }
-    
-    // Check each recipient email
-    if (Array.isArray(data.to)) {
-      for (const recipient of data.to) {
-        if (!recipient.email && !recipient.Email) {
-          return { isValid: false, errorMessage: "Indirizzo email destinatario mancante" };
-        }
-      }
-    }
-  } else if (data.type === 'marketing') {
-    // For marketing emails
-    if (!data.to || (Array.isArray(data.to) && data.to.length === 0)) {
-      return { isValid: false, errorMessage: "Destinatario email mancante" };
-    }
-    
-    if (!data.subject) {
-      return { isValid: false, errorMessage: "Oggetto obbligatorio per email di marketing" };
-    }
-  }
-
-  // All validations passed
   return { isValid: true };
-}
-
-/**
- * Validate email format
- */
-export function validateEmailFormat(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
 }

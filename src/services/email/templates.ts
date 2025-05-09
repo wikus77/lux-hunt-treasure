@@ -1,3 +1,36 @@
+import { generateWelcomeEmailHtml, generateNotificationEmailHtml } from "@/hooks/email/templates";
+
+/**
+ * Generate HTML content for welcome email
+ */
+export const generateWelcomeEmail = (name: string, referralCode?: string): string => {
+  const template = generateWelcomeEmailHtml(name);
+  
+  // If we have a referral code, replace the placeholder with the actual code
+  if (referralCode) {
+    return template.replace('{{#if referral_code}}', '')
+                  .replace('{{referral_code}}', referralCode)
+                  .replace('{{/if}}', '');
+  }
+  
+  // Otherwise remove the referral code section entirely
+  const parts = template.split('{{#if referral_code}}');
+  if (parts.length > 1) {
+    const endParts = parts[1].split('{{/if}}');
+    if (endParts.length > 1) {
+      return parts[0] + endParts[1];
+    }
+  }
+  
+  return template;
+};
+
+/**
+ * Generate HTML content for notification email
+ */
+export const generateNotificationEmail = (subject: string, message: string): string => {
+  return generateNotificationEmailHtml(subject, message);
+};
 
 /**
  * Helper to build HTML newsletters

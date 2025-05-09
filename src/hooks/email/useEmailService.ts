@@ -1,147 +1,78 @@
-import { useState } from 'react';
-import { sendEmail } from '@/services/email';
-import { toast } from 'sonner';
 
-// Import types and utilities
-import { EmailType, SendEmailProps, EmailResult, EmailServiceHook } from './emailTypes';
-import { 
-  generateWelcomeEmailHtml,
-  generateNotificationEmailHtml, 
-  generateDefaultMarketingEmailHtml,
-  generateVerificationEmailHtml,
-  generatePasswordResetEmailHtml
-} from './templates';
+import { useState } from 'react';
+import { supabase } from "@/integrations/supabase/client";
+import { EmailServiceHook, SendEmailProps, EmailResult } from './emailTypes';
 import { logEmailAttempt, handleEmailSuccess, handleEmailError } from './emailUtils';
 
 /**
- * Hook for sending emails through the Mailjet service
+ * Hook for sending emails using Supabase Edge Functions
  */
-export function useEmailService(): EmailServiceHook {
+export const useEmailService = (): EmailServiceHook => {
   const [isSending, setIsSending] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
   const [lastResponse, setLastResponse] = useState<any>(null);
 
   /**
-   * Send an email using the Mailjet service
+   * Send an email using the appropriate edge function
    */
-  const sendEmailService = async ({
-    type,
-    email,
-    name = '',
-    subject,
-    data = {}
-  }: SendEmailProps): Promise<EmailResult> => {
-    if (!email) {
-      return { success: false, error: "Email address is required" };
-    }
-
+  const sendEmail = async (props: SendEmailProps): Promise<EmailResult> => {
+    const { type, email, name, subject, data } = props;
+    
+    logEmailAttempt(type, email);
     setIsSending(true);
     setLastError(null);
-    setLastResponse(null);
     
     try {
-      logEmailAttempt(type, email);
-      
-      let htmlContent = '';
-      let emailSubject = subject || '';
-      
-      // Generate content based on email type
-      switch (type) {
-        case 'welcome':
-          emailSubject = emailSubject || "Benvenuto in M1SSION";
-          htmlContent = generateWelcomeEmailHtml(name, data?.launchDate || "19 Giugno 2025");
-          break;
-          
-        case 'notification':
-          emailSubject = emailSubject || "Aggiornamento importante";
-          htmlContent = generateNotificationEmailHtml(name, data?.message || "");
-          break;
-          
-        case 'marketing':
-          emailSubject = emailSubject || "Novità da M1SSION";
-          htmlContent = data.htmlContent || generateDefaultMarketingEmailHtml(name);
-          break;
-          
-        case 'verification':
-          emailSubject = emailSubject || "Verifica il tuo indirizzo email";
-          htmlContent = generateVerificationEmailHtml(name, data?.verificationLink || "");
-          break;
-          
-        case 'password_reset':
-          emailSubject = emailSubject || "Reset della Password";
-          htmlContent = generatePasswordResetEmailHtml(name, data?.resetLink || "");
-          break;
-          
-        default:
-          return { 
-            success: false, 
-            error: `Unsupported email type: ${type}`
-          };
-      }
-
-      // Convert email type to match the services/email/types.ts EmailType (fixes type error)
-      const serviceEmailType = type === 'verification' || type === 'password_reset' ? 
-        'transactional' : type;
-
-      const result = await sendEmail(serviceEmailType as any, {
-        to: [{ email, name }],
-        subject: emailSubject,
-        htmlContent: htmlContent,
-        trackOpens: true,
-        trackClicks: true,
-        customCampaign: `${type}_email`,
-        consent: {
-          given: true,
-          date: new Date().toISOString(), 
-          method: 'web_app'
+      // Call the Mailjet email function
+      const { data: response, error } = await supabase.functions.invoke('send-mailjet-email', {
+        body: {
+          type,
+          email,
+          name,
+          subject,
+          to: [{ email, name }],
+          ...data
         }
       });
-
-      setLastResponse(result);
-
-      if (!result.success) {
-        const errorMessage = result.error?.toString() || "Si è verificato un errore nell'invio dell'email";
-        toast.error(`Errore nell'invio dell'email: ${errorMessage}`);
-        setLastError(errorMessage);
-        return { 
-          success: false, 
-          error: errorMessage,
-          response: result 
-        };
-      }
-
-      handleEmailSuccess(email);
       
-      return { success: true, response: result };
-    } catch (error: any) {
+      if (error) {
+        const errorMessage = handleEmailError(error);
+        setLastError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+      
+      setLastResponse(response);
+      handleEmailSuccess(email);
+      return { success: true, response };
+    } catch (error) {
       const errorMessage = handleEmailError(error);
       setLastError(errorMessage);
-      return { 
-        success: false, 
-        error: errorMessage,
-        response: { exception: error.toString() }
-      };
+      return { success: false, error: errorMessage };
     } finally {
       setIsSending(false);
     }
   };
 
   /**
-   * Send a welcome email to a new user
+   * Send a welcome email
    */
-  const sendWelcomeEmail = async (email: string, name: string = '') => {
-    return sendEmailService({
+  const sendWelcomeEmail = async (email: string, name?: string): Promise<EmailResult> => {
+    return sendEmail({
       type: 'welcome',
       email,
-      name
+      name: name || email.split('@')[0],
+      subject: 'Benvenuto in M1SSION!',
+      data: {
+        launchDate: '19 Giugno 2025'
+      }
     });
   };
-
+  
   /**
-   * Send a notification email with a custom message
+   * Send a notification email
    */
-  const sendNotificationEmail = async (email: string, subject: string, message: string, name: string = '') => {
-    return sendEmailService({
+  const sendNotificationEmail = async (email: string, subject: string, message: string, name?: string): Promise<EmailResult> => {
+    return sendEmail({
       type: 'notification',
       email,
       name,
@@ -149,12 +80,12 @@ export function useEmailService(): EmailServiceHook {
       data: { message }
     });
   };
-
+  
   /**
    * Send a marketing email
    */
-  const sendMarketingEmail = async (email: string, subject: string, htmlContent: string, name: string = '') => {
-    return sendEmailService({
+  const sendMarketingEmail = async (email: string, subject: string, htmlContent: string, name?: string): Promise<EmailResult> => {
+    return sendEmail({
       type: 'marketing',
       email,
       name,
@@ -162,14 +93,14 @@ export function useEmailService(): EmailServiceHook {
       data: { htmlContent }
     });
   };
-
+  
   return {
     isSending,
     lastError,
     lastResponse,
-    sendEmail: sendEmailService,
+    sendEmail,
     sendWelcomeEmail,
     sendNotificationEmail,
     sendMarketingEmail
   };
-}
+};
