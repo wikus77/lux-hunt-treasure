@@ -37,3 +37,4 @@ port = 54328
 # Add this to configure Mailjet function to run without authentication
 [functions.send-mailjet-email]
 verify_jwt = false
+
