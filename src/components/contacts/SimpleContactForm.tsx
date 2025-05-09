@@ -1,4 +1,3 @@
-
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -24,7 +23,7 @@ const SimpleContactForm: React.FC = () => {
   const { handleSubmit, isSubmitting, progress, result } = useContactFormSubmit();
 
   const onSubmit = async (data: ContactFormData) => {
-    await handleSubmit(data);
+    const result = await handleSubmit(data);
     if (!isSubmitting && result?.success) {
       form.reset();
     }
@@ -35,7 +34,7 @@ const SimpleContactForm: React.FC = () => {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <ContactFormFields form={form} disabled={isSubmitting} />
         
-        {/* Email Sending Status Component */}
+        {/* Email Sending Status Component with enhanced error handling */}
         <EmailSendingStatus 
           isSubmitting={isSubmitting} 
           progress={progress} 

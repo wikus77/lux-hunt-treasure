@@ -1,15 +1,16 @@
 
 import React from "react";
 import { Progress } from "@/components/ui/progress";
-import { Check, X, Send } from "lucide-react";
+import { Check, X, Send, AlertCircle, Database, Wifi, Mail } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { ContactSubmissionError } from "./useContactFormSubmit";
 
 export interface EmailSendingStatusProps {
   isSubmitting: boolean;
   progress: number;
   result?: {
     success: boolean;
-    error?: Error | unknown;
+    error?: ContactSubmissionError;
   };
 }
 
@@ -24,6 +25,31 @@ export function EmailSendingStatus({ isSubmitting, progress, result }: EmailSend
     if (isSuccess) return "bg-gradient-to-r from-green-400 to-green-600";
     if (isError) return "bg-gradient-to-r from-red-400 to-red-600";
     return "bg-gradient-to-r from-cyan-400 to-blue-600"; // Default for in-progress
+  };
+
+  // Get appropriate error icon based on error type
+  const getErrorIcon = () => {
+    if (!result?.error) return <X size={16} />;
+    
+    switch (result.error.type) {
+      case 'database':
+        return <Database size={16} />;
+      case 'network':
+        return <Wifi size={16} />;
+      case 'email':
+        return <Mail size={16} />;
+      case 'validation':
+        return <AlertCircle size={16} />;
+      default:
+        return <X size={16} />;
+    }
+  };
+
+  // Get error message based on type
+  const getErrorMessage = () => {
+    if (!result?.error) return "Errore durante l'invio";
+    
+    return result.error.message;
   };
 
   // Render nothing if idle with no previous results
@@ -72,13 +98,11 @@ export function EmailSendingStatus({ isSubmitting, progress, result }: EmailSend
           {isError && (
             <div>
               <div className="flex items-center gap-2 text-red-400 mb-1">
-                <X size={16} />
-                <span>Invio fallito</span>
+                {getErrorIcon()}
+                <span>{getErrorMessage()}</span>
               </div>
-              {result?.error instanceof Error ? (
-                <p className="text-white/60 text-xs ml-6 mt-1">{result.error.message}</p>
-              ) : (
-                <p className="text-white/60 text-xs ml-6 mt-1">Si è verificato un errore durante l'invio</p>
+              {result?.error?.details && (
+                <p className="text-white/60 text-xs ml-6 mt-1">{result.error.details}</p>
               )}
             </div>
           )}
