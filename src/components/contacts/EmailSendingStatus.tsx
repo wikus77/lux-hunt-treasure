@@ -54,6 +54,7 @@ export function EmailSendingStatus({ isSubmitting, progress, result }: EmailSend
       return "Errore di connessione con il servizio email";
     }
     
+    // Return the original error message
     return result.error.message;
   };
   
@@ -67,6 +68,10 @@ export function EmailSendingStatus({ isSubmitting, progress, result }: EmailSend
     
     if (result.error.type === 'email') {
       return "Il server di posta non ha potuto inviare l'email. Riprova più tardi.";
+    }
+    
+    if (result.error.message.includes("No API key found")) {
+      return "Problema con le chiavi API Mailjet. Contatta l'amministratore del sito.";
     }
     
     return result.error.details;

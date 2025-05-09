@@ -61,19 +61,30 @@ export function prepareEmailData(data: ContactData): any {
   };
 }
 
-// Function to send email using Mailjet client
+// Function to send email using Mailjet client - fixed to properly handle the API response
 export async function sendMailjetEmail(mailjetClient: any, emailData: any): Promise<{status: number, body: any}> {
-  const result = await mailjetClient
-    .post("send", { version: "v3.1" })
-    .request(emailData);
-  
-  return {
-    status: result.status,
-    body: result.body
-  };
+  try {
+    const result = await mailjetClient
+      .post("send", { version: "v3.1" })
+      .request(emailData);
+    
+    return {
+      status: result.status,
+      body: result.body
+    };
+  } catch (error) {
+    console.error("Error sending email via Mailjet:", error);
+    if (error.statusCode) {
+      return {
+        status: error.statusCode,
+        body: { error: error.message, errorInfo: error.ErrorInfo || null }
+      };
+    }
+    throw error; // Re-throw if it's not a standard Mailjet API error
+  }
 }
 
-// Create and configure Mailjet client
+// Create and configure Mailjet client - completely rewritten to ensure proper auth
 export function createMailjetClient(): any {
   // Get Mailjet API keys from environment variables
   const mailjetApiKey = Deno.env.get("MAILJET_API_KEY");
@@ -84,11 +95,18 @@ export function createMailjetClient(): any {
     return null;
   }
   
-  // Initialize Mailjet client with the correct approach
-  return mailjet.apiConnect(
-    mailjetApiKey,
-    mailjetSecretKey
-  );
+  // Initialize Mailjet client with the correct approach for node-mailjet 6.0
+  try {
+    const client = mailjet.apiConnect(
+      mailjetApiKey,
+      mailjetSecretKey
+    );
+    console.log("Mailjet client created successfully");
+    return client;
+  } catch (error) {
+    console.error("Failed to create Mailjet client:", error);
+    return null;
+  }
 }
 
 // Function to create error response
