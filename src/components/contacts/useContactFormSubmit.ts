@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ContactFormData } from "./contactFormSchema";
@@ -70,13 +71,13 @@ export function useContactFormSubmit() {
         message: data.message,
         to: [
           {
-            email: "contact@m1ssion.com", 
-            name: "M1SSION Team"
+            Email: "contact@m1ssion.com", 
+            Name: "M1SSION Team"
           }
         ],
         from: {
-          email: "contact@m1ssion.com",
-          name: "M1SSION Contact Form"
+          Email: "contact@m1ssion.com",
+          Name: "M1SSION Contact Form"
         },
         trackOpens: true,
         trackClicks: false,
@@ -91,9 +92,13 @@ export function useContactFormSubmit() {
       
       // Send email using Mailjet Edge Function
       try {
+        console.log("Invoking send-mailjet-email function with data:", JSON.stringify(contactData, null, 2));
+        
         const { data: responseData, error } = await supabase.functions.invoke('send-mailjet-email', {
           body: contactData
         });
+
+        console.log("Edge function response:", responseData, error);
 
         if (error) {
           console.error("Error from Mailjet Edge Function:", error);

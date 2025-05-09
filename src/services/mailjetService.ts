@@ -32,13 +32,15 @@ export type EmailType = 'transactional' | 'marketing' | 'welcome' | 'notificatio
  */
 export const sendEmail = async (type: EmailType, options: SendEmailOptions) => {
   try {
+    console.log(`Sending ${type} email via Mailjet Edge Function`);
+    
     const { data, error } = await supabase.functions.invoke('send-mailjet-email', {
       body: {
         type,
         ...options,
         from: {
-          email: "contact@m1ssion.com",
-          name: "M1SSION",
+          Email: "contact@m1ssion.com",
+          Name: "M1SSION",
         }
       }
     });
@@ -48,6 +50,7 @@ export const sendEmail = async (type: EmailType, options: SendEmailOptions) => {
       return { success: false, error };
     }
 
+    console.log('Email sent successfully:', data);
     return { success: true, data };
   } catch (err) {
     console.error('Exception when sending email:', err);
