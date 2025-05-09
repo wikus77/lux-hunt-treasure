@@ -103,7 +103,7 @@ export function useContactFormSubmit() {
       toast({
         variant: "destructive",
         title: "Si è verificato un errore durante l'invio del messaggio",
-        description: "Riprova tra qualche istante."
+        description: error instanceof Error ? error.message : "Riprova tra qualche istante."
       });
       
       setProgress(0); // Reset progress on error
