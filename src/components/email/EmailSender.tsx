@@ -76,7 +76,7 @@ const EmailSender: React.FC = () => {
     }
 
     const result = await sendEmail({
-      type: emailType,
+      type: emailType as any, // Type casting to fix TypeScript error
       email,
       name,
       subject,

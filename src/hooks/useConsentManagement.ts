@@ -10,8 +10,18 @@ interface ConsentTypes {
   communications: boolean;
 }
 
+// Define the user consents interface to fix TypeScript errors
+interface UserConsent {
+  user_id: string;
+  marketing_consent: boolean;
+  analytics_consent: boolean;
+  profiling_consent: boolean;
+  communications_consent: boolean;
+  updated_at?: string;
+}
+
 export function useConsentManagement() {
-  const { isAuthenticated, userId } = useAuthContext();
+  const { isAuthenticated, user } = useAuthContext();
   const [consents, setConsents] = useState<ConsentTypes>({
     marketing: false,
     analytics: false,
@@ -23,13 +33,14 @@ export function useConsentManagement() {
   // Load user's consent preferences if authenticated
   useEffect(() => {
     const loadConsents = async () => {
-      if (isAuthenticated() && userId) {
+      if (isAuthenticated && user?.id) {
         setIsLoading(true);
         try {
+          // Using typed generic parameter to help TypeScript understand the structure
           const { data, error } = await supabase
             .from('user_consents')
             .select('*')
-            .eq('user_id', userId)
+            .eq('user_id', user.id)
             .single();
 
           if (error && error.code !== 'PGRST116') {
@@ -37,11 +48,12 @@ export function useConsentManagement() {
           }
 
           if (data) {
+            const userConsent = data as unknown as UserConsent;
             setConsents({
-              marketing: data.marketing_consent || false,
-              analytics: data.analytics_consent || false,
-              profiling: data.profiling_consent || false,
-              communications: data.communications_consent || false
+              marketing: userConsent.marketing_consent || false,
+              analytics: userConsent.analytics_consent || false,
+              profiling: userConsent.profiling_consent || false,
+              communications: userConsent.communications_consent || false
             });
           }
         } catch (err) {
@@ -64,7 +76,7 @@ export function useConsentManagement() {
     };
 
     loadConsents();
-  }, [isAuthenticated, userId]);
+  }, [isAuthenticated, user?.id]);
 
   // Update user's consent preferences
   const updateConsent = async (consentType: keyof ConsentTypes, value: boolean) => {
@@ -74,16 +86,21 @@ export function useConsentManagement() {
     }));
 
     // For authenticated users, save to database
-    if (isAuthenticated() && userId) {
+    if (isAuthenticated && user?.id) {
       try {
         const consentField = `${consentType}_consent`;
+        
+        // We need to build the update object dynamically
+        const updateData: Record<string, any> = {
+          user_id: user.id,
+          updated_at: new Date().toISOString()
+        };
+        updateData[consentField] = value;
+        
+        // Using updateData to avoid TypeScript errors with direct property access
         const { error } = await supabase
           .from('user_consents')
-          .upsert({
-            user_id: userId,
-            [consentField]: value,
-            updated_at: new Date().toISOString()
-          }, {
+          .upsert(updateData, {
             onConflict: 'user_id'
           });
 
@@ -92,16 +109,18 @@ export function useConsentManagement() {
           throw error;
         }
 
-        // Record consent history for compliance
+        // Record consent history for compliance - using our full type definition
+        const historyData = {
+          user_id: user.id,
+          consent_type: consentType,
+          consent_given: value,
+          ip_address: 'client_ip', // In a real app, you'd capture the client IP
+          consent_timestamp: new Date().toISOString()
+        };
+        
         await supabase
           .from('consent_history')
-          .insert({
-            user_id: userId,
-            consent_type: consentType,
-            consent_given: value,
-            ip_address: 'client_ip', // In a real app, you'd capture the client IP
-            consent_timestamp: new Date().toISOString()
-          });
+          .insert(historyData);
 
       } catch (err) {
         console.error("Failed to save consent:", err);

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { sendEmail, EmailType } from '@/services/mailjetService';
@@ -430,7 +429,7 @@ export function useEmailService() {
     isSending,
     lastError,
     lastResponse,
-    sendEmailService,
+    sendEmail: sendEmailService,
     sendWelcomeEmail,
     sendNotificationEmail,
     sendMarketingEmail
