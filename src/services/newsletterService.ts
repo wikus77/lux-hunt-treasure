@@ -7,6 +7,7 @@ interface SubscriberData {
   email: string;
   referrer?: string;
   campaign?: string;
+  user_id?: string; // New field to store authenticated user ID
 }
 
 /**
@@ -14,6 +15,10 @@ interface SubscriberData {
  */
 export const saveSubscriber = async (subscriber: SubscriberData): Promise<void> => {
   try {
+    // Check if user is authenticated and add their ID
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    
     const { data, error } = await supabase
       .from('newsletter_subscribers')
       .insert([
@@ -21,7 +26,8 @@ export const saveSubscriber = async (subscriber: SubscriberData): Promise<void> 
           name: subscriber.name,
           email: subscriber.email,
           referrer: subscriber.referrer || null,
-          campaign: subscriber.campaign || 'landing_page'
+          campaign: subscriber.campaign || 'landing_page',
+          user_id: userId || null // Add user ID if authenticated
         }
       ]);
 

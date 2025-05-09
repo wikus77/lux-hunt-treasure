@@ -10,13 +10,18 @@ import { sendEmail } from "./mailjetClient";
  */
 export const subscribeToMarketingList = async (email: string, name: string) => {
   try {
+    // Get the current user ID if authenticated
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+
     // First save to your DB
     const { error: dbError } = await supabase
       .from('newsletter_subscribers')
       .insert({
         email,
         name,
-        campaign: 'website_signup'
+        campaign: 'website_signup',
+        user_id: userId || null
       });
     
     if (dbError) throw dbError;

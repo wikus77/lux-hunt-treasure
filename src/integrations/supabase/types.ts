@@ -157,6 +157,7 @@ export type Database = {
           name: string
           referrer: string | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           campaign?: string | null
@@ -166,6 +167,7 @@ export type Database = {
           name: string
           referrer?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           campaign?: string | null
@@ -175,6 +177,7 @@ export type Database = {
           name?: string
           referrer?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
