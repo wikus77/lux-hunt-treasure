@@ -14,7 +14,6 @@ interface PreRegistrationFormProps {
 interface PreRegistrationData {
   name: string;
   email: string;
-  inviteCode?: string;
   referrer?: string;
 }
 
@@ -26,6 +25,7 @@ const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [userReferralCode, setUserReferralCode] = useState("");
   const [showInviteOptions, setShowInviteOptions] = useState(false);
+  const [showReferralInput, setShowReferralInput] = useState(false);
 
   // Generate a unique referral code for the user after successful registration
   useEffect(() => {
@@ -65,8 +65,7 @@ const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
       // Registration data to send to backend
       const registrationData: PreRegistrationData = {
         name: name.trim(),
-        email: email.trim(),
-        inviteCode: inviteCode.trim() || null,
+        email: email.trim()
       };
       
       // Check if this email is already registered
@@ -84,31 +83,13 @@ const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
         return;
       }
       
-      // If there's an invite code, validate it and update the referrer
-      if (inviteCode) {
-        const { data: referrerData } = await supabase
-          .from('pre_registrations')
-          .select('id, email')
-          .eq('referral_code', inviteCode.trim())
-          .maybeSingle();
-          
-        if (referrerData) {
-          registrationData.referrer = referrerData.email;
-        } else {
-          toast.warning("Codice invito non valido", {
-            description: "Il codice inserito non corrisponde a nessun utente."
-          });
-          // Continue with registration, but without the referrer
-        }
-      }
-      
-      // Create pre-registration record
+      // Create pre-registration record without referral code initially
       const { data: registration, error: registrationError } = await supabase
         .from('pre_registrations')
         .insert([{
           name: registrationData.name,
           email: registrationData.email,
-          referrer: registrationData.referrer || null,
+          referrer: null,
           referral_code: userReferralCode || null,
           credits: 100, // Initial credits for first 100 registrations
         }])
@@ -123,18 +104,6 @@ const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
       toast.success("Benvenuto Agente!", {
         description: "La tua pre-iscrizione è stata convalidata. Sei tra i primi 100 a ricevere 100 crediti. Preparati, ora sei in M1SSION!"
       });
-      
-      // If there was a referrer, update their credits
-      if (registrationData.referrer) {
-        const { error: referrerUpdateError } = await supabase.rpc('add_referral_credits', {
-          referrer_email: registrationData.referrer,
-          credits_to_add: 50
-        });
-        
-        if (referrerUpdateError) {
-          console.error("Errore nell'aggiornamento dei crediti del referrer:", referrerUpdateError);
-        }
-      }
       
       // Clear form
       setName("");
@@ -173,6 +142,70 @@ const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
     }
   };
   
+  const handleInviteCodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!inviteCode.trim()) {
+      toast.error("Inserisci un codice invito valido");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Validate the invite code
+      const { data: referrerData } = await supabase
+        .from('pre_registrations')
+        .select('id, email')
+        .eq('referral_code', inviteCode.trim())
+        .maybeSingle();
+        
+      if (!referrerData) {
+        toast.error("Codice invito non valido", {
+          description: "Il codice inserito non corrisponde a nessun utente."
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Update user's record with the referrer
+      const { error: updateError } = await supabase
+        .from('pre_registrations')
+        .update({ referrer: referrerData.email })
+        .eq('email', email);
+      
+      if (updateError) {
+        throw updateError;
+      }
+      
+      // If there was a referrer, update their credits
+      const { error: referrerUpdateError } = await supabase.rpc('add_referral_credits', {
+        referrer_email: referrerData.email,
+        credits_to_add: 50
+      });
+      
+      if (referrerUpdateError) {
+        console.error("Errore nell'aggiornamento dei crediti del referrer:", referrerUpdateError);
+        // Continue despite error
+      }
+      
+      toast.success("Codice invito applicato con successo!", {
+        description: "Hai assegnato 50 crediti bonus al tuo amico!"
+      });
+      
+      // Hide the referral input after successful submission
+      setShowReferralInput(false);
+      
+    } catch (error) {
+      console.error("Errore nell'applicazione del codice invito:", error);
+      toast.error("Errore nell'applicazione del codice", {
+        description: "Si è verificato un problema. Riprova più tardi."
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
   const copyReferralCode = () => {
     if (userReferralCode) {
       navigator.clipboard.writeText(userReferralCode);
@@ -184,6 +217,10 @@ const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
   
   const handleInviteFriend = () => {
     setShowInviteOptions(true);
+  };
+  
+  const handleShowReferralInput = () => {
+    setShowReferralInput(true);
   };
   
   const shareViaEmail = () => {
@@ -274,21 +311,6 @@ const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
                   />
                 </div>
                 
-                <div>
-                  <label htmlFor="inviteCode" className="block text-sm font-medium text-white/70 mb-1">
-                    Codice Invito <span className="text-white/50">(opzionale)</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="inviteCode"
-                    value={inviteCode}
-                    onChange={(e) => setInviteCode(e.target.value)}
-                    className="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:border-[#00E5FF]/50 focus:outline-none focus:ring-1 focus:ring-[#00E5FF]/50"
-                    placeholder="Inserisci il codice invito"
-                    disabled={isSubmitting}
-                  />
-                </div>
-                
                 <button
                   type="submit"
                   className={`w-full p-3 rounded-full flex items-center justify-center ${
@@ -347,13 +369,23 @@ const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
                 </div>
                 
                 {!showInviteOptions ? (
-                  <Button 
-                    onClick={handleInviteFriend} 
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium px-4 py-2 rounded-full flex items-center gap-2 mx-auto"
-                  >
-                    <UserPlus size={18} />
-                    Invita un amico
-                  </Button>
+                  <div className="flex flex-col space-y-3">
+                    <Button 
+                      onClick={handleInviteFriend} 
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium px-4 py-2 rounded-full flex items-center gap-2 mx-auto"
+                    >
+                      <UserPlus size={18} />
+                      Invita un amico
+                    </Button>
+                    
+                    <Button
+                      onClick={handleShowReferralInput}
+                      variant="outline"
+                      className="border-white/20 text-white/80 hover:text-white hover:bg-white/10"
+                    >
+                      Hai un codice invito?
+                    </Button>
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     <h4 className="text-white text-sm mb-2">Condividi il tuo codice:</h4>
@@ -364,7 +396,61 @@ const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
                       <Mail size={18} />
                       Invita via Email
                     </Button>
+                    
+                    <Button
+                      onClick={() => setShowInviteOptions(false)}
+                      variant="outline"
+                      className="w-full border-white/20 text-white/80 hover:text-white hover:bg-white/10"
+                    >
+                      Torna indietro
+                    </Button>
                   </div>
+                )}
+                
+                {/* Referral code input - shown only after clicking "Hai un codice invito?" */}
+                {showReferralInput && (
+                  <motion.form 
+                    onSubmit={handleInviteCodeSubmit}
+                    className="mt-6 space-y-4 border-t border-white/10 pt-6"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <h4 className="text-white text-sm mb-2">Inserisci il codice invito:</h4>
+                    <div>
+                      <input
+                        type="text"
+                        value={inviteCode}
+                        onChange={(e) => setInviteCode(e.target.value)}
+                        className="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:border-[#00E5FF]/50 focus:outline-none focus:ring-1 focus:ring-[#00E5FF]/50"
+                        placeholder="Codice invito"
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        type="submit"
+                        className="flex-1 bg-gradient-to-r from-[#0066FF] to-[#00E5FF] text-white"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          "Applica codice"
+                        )}
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="border-white/20 text-white/80 hover:text-white hover:bg-white/10"
+                        onClick={() => setShowReferralInput(false)}
+                      >
+                        Annulla
+                      </Button>
+                    </div>
+                  </motion.form>
                 )}
               </motion.div>
             )}
