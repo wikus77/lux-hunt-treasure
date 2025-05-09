@@ -38,7 +38,7 @@ export const sendEmail = async (type: EmailType, options: SendEmailOptions) => {
       body: {
         type,
         ...options,
-        from: {
+        from: options.from || {
           Email: "contact@m1ssion.com",
           Name: "M1SSION",
         }

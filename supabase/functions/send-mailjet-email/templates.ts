@@ -1,7 +1,9 @@
 
 import { ContactData } from "./types.ts";
 
-// Function to generate HTML content for contact emails
+/**
+ * Generate HTML content for contact emails
+ */
 export function generateContactEmailHtml(data: ContactData): string {
   const { name, email, phone, subject, message } = data;
   
@@ -23,12 +25,12 @@ export function generateContactEmailHtml(data: ContactData): string {
           <h2>Nuovo messaggio da M1SSION</h2>
         </div>
         <div class="content">
-          <p><strong>Nome:</strong> ${name}</p>
+          <p><strong>Nome:</strong> ${name || 'Non fornito'}</p>
           <p><strong>Email:</strong> ${email}</p>
           <p><strong>Telefono:</strong> ${phone || 'Non fornito'}</p>
           <p><strong>Oggetto:</strong> ${subject || 'Contatto dal sito M1SSION'}</p>
           <p><strong>Messaggio:</strong></p>
-          <p style="white-space: pre-line; background: #f9f9f9; padding: 15px; border-radius: 5px;">${message}</p>
+          <p style="white-space: pre-line; background: #f9f9f9; padding: 15px; border-radius: 5px;">${message || 'Nessun messaggio fornito'}</p>
         </div>
         <div class="footer">
           <p>Questo messaggio è stato inviato automaticamente dal form di contatto di M1SSION.</p>

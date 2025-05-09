@@ -36,7 +36,7 @@ export function prepareEmailData(data: ContactData): any {
   const emailHtmlContent = htmlContent || 
     (data.type === 'contact' ? generateContactEmailHtml(data) : '');
   
-  // Configure the email data for Mailjet
+  // Configure the email data for Mailjet v3.1 API
   return {
     Messages: [
       {
@@ -45,11 +45,11 @@ export function prepareEmailData(data: ContactData): any {
           Name: sender.Name
         },
         To: recipients.map(recipient => ({
-          Email: recipient.email,
-          Name: recipient.name || recipient.email.split('@')[0]
+          Email: recipient.email || recipient.Email,
+          Name: recipient.name || recipient.Name || ''
         })),
-        Subject: subject || `Nuovo messaggio da ${name}`,
-        TextPart: message,
+        Subject: subject || `Nuovo messaggio da ${name || 'un visitatore'}`,
+        TextPart: message || "",
         HTMLPart: emailHtmlContent,
         CustomCampaign: customCampaign || "contact_form",
         CustomID: customId || `contact_${Date.now()}`,

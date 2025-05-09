@@ -21,7 +21,7 @@ export async function handleEmailRequest(req: Request): Promise<Response> {
 
     // Parse request data
     const contactData: ContactData = await req.json();
-    console.log("Received contact data:", JSON.stringify(contactData));
+    console.log("Received contact data:", JSON.stringify(contactData, null, 2));
     
     // Validate contact data
     const validation = validateContactData(contactData);

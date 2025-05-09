@@ -1,27 +1,30 @@
 
+/**
+ * Interface for contact form data and email sending
+ */
 export interface ContactData {
-  name: string;
-  email: string;
+  type?: 'contact' | 'marketing' | 'notification' | 'welcome';
+  name?: string;
+  email?: string;
   phone?: string;
   subject?: string;
-  message: string;
-  type?: string;
-  to?: Array<{email: string, name?: string}>;
+  message?: string;
+  to?: Array<{
+    email: string;
+    name?: string;
+  }>;
   htmlContent?: string;
-  textContent?: string;
-  templateId?: number;
-  variables?: Record<string, any>;
   trackOpens?: boolean;
   trackClicks?: boolean;
   customCampaign?: string;
   customId?: string;
+  from?: {
+    Email: string;
+    Name: string;
+  };
   consent?: {
     given: boolean;
     date: string;
     method: string;
-  };
-  from?: {
-    email: string;
-    name: string;
   };
 }

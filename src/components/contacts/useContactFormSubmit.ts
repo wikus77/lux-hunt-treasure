@@ -71,8 +71,8 @@ export function useContactFormSubmit() {
         message: data.message,
         to: [
           {
-            Email: "contact@m1ssion.com", 
-            Name: "M1SSION Team"
+            email: "contact@m1ssion.com", 
+            name: "M1SSION Team"
           }
         ],
         from: {

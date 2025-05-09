@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Progress } from "@/components/ui/progress";
-import { Check, X, Send, AlertCircle, Database, Wifi, Mail } from "lucide-react";
+import { Check, X, Database, Wifi, Mail, AlertCircle } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { ContactSubmissionError } from "./useContactFormSubmit";
 
