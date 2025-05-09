@@ -49,7 +49,27 @@ export function EmailSendingStatus({ isSubmitting, progress, result }: EmailSend
   const getErrorMessage = () => {
     if (!result?.error) return "Errore durante l'invio";
     
+    // Add more detailed messages for common error scenarios
+    if (result.error.message.includes("Mailjet") || result.error.message.includes("API")) {
+      return "Errore di connessione con il servizio email";
+    }
+    
     return result.error.message;
+  };
+  
+  // Get detailed error instructions
+  const getErrorInstructions = () => {
+    if (!result?.error) return null;
+    
+    if (result.error.type === 'network' || result.error.message.includes("Edge Function")) {
+      return "Verifica la tua connessione e riprova.";
+    }
+    
+    if (result.error.type === 'email') {
+      return "Il server di posta non ha potuto inviare l'email. Riprova più tardi.";
+    }
+    
+    return result.error.details;
   };
 
   // Render nothing if idle with no previous results
@@ -101,8 +121,8 @@ export function EmailSendingStatus({ isSubmitting, progress, result }: EmailSend
                 {getErrorIcon()}
                 <span>{getErrorMessage()}</span>
               </div>
-              {result?.error?.details && (
-                <p className="text-white/60 text-xs ml-6 mt-1">{result.error.details}</p>
+              {getErrorInstructions() && (
+                <p className="text-white/60 text-xs ml-6 mt-1">{getErrorInstructions()}</p>
               )}
             </div>
           )}

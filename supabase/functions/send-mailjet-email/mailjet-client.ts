@@ -1,5 +1,6 @@
 
-import { Client } from "npm:node-mailjet@6.0.0";
+// Import the Mailjet package correctly
+import mailjet from "npm:node-mailjet@6.0.0";
 import { ContactData } from "./types.ts";
 import { generateContactEmailHtml } from "./templates.ts";
 import { corsHeaders } from "./cors.ts";
@@ -73,7 +74,7 @@ export async function sendMailjetEmail(mailjetClient: any, emailData: any): Prom
 }
 
 // Create and configure Mailjet client
-export function createMailjetClient(): Client | null {
+export function createMailjetClient(): any {
   // Get Mailjet API keys from environment variables
   const mailjetApiKey = Deno.env.get("MAILJET_API_KEY");
   const mailjetSecretKey = Deno.env.get("MAILJET_SECRET_KEY");
@@ -83,8 +84,8 @@ export function createMailjetClient(): Client | null {
     return null;
   }
   
-  // Initialize Mailjet client
-  return Client.apiConnect(
+  // Initialize Mailjet client with the correct approach
+  return mailjet.apiConnect(
     mailjetApiKey,
     mailjetSecretKey
   );

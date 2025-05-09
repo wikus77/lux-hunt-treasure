@@ -16,12 +16,19 @@ export async function handleEmailRequest(req: Request): Promise<Response> {
     // Initialize Mailjet client
     const mailjet = createMailjetClient();
     if (!mailjet) {
+      console.error("Failed to create Mailjet client - API keys may be missing");
       throw new Error("Mailjet API keys not configured");
     }
 
     // Parse request data
-    const contactData: ContactData = await req.json();
-    console.log("Received contact data:", JSON.stringify(contactData, null, 2));
+    let contactData: ContactData;
+    try {
+      contactData = await req.json();
+      console.log("Received contact data:", JSON.stringify(contactData, null, 2));
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return createErrorResponse("Invalid request format", null, 400);
+    }
     
     // Validate contact data
     const validation = validateContactData(contactData);
@@ -40,6 +47,7 @@ export async function handleEmailRequest(req: Request): Promise<Response> {
 
     try {
       // Send the email using Mailjet
+      console.log("Sending email via Mailjet...");
       const result = await sendMailjetEmail(mailjet, emailData);
       
       // Extract response status and data
@@ -52,19 +60,20 @@ export async function handleEmailRequest(req: Request): Promise<Response> {
         console.log("Email sent successfully!");
         return createSuccessResponse(responseData);
       } else {
+        console.error("Unexpected response status:", status);
         throw new Error(`Unexpected response status: ${status}`);
       }
     } catch (emailError: any) {
-      console.error('Errore specifico nell\'invio dell\'email:', emailError);
+      console.error('Specific error when sending email:', emailError);
       throw emailError; // Re-throw to be caught by the outer try/catch
     }
     
   } catch (error: any) {
-    console.error('Errore nell\'invio dell\'email:', error);
+    console.error('Error sending email:', error);
     
-    // Return error response
+    // Return error response with detailed information
     return createErrorResponse(
-      error instanceof Error ? error.message : 'Errore durante l\'invio dell\'email',
+      error instanceof Error ? error.message : 'Error while sending email',
       error instanceof Error ? error.stack : 'No stack trace available'
     );
   }
