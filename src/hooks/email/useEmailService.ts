@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { sendEmail } from '@/services/email';
 import { toast } from 'sonner';
@@ -8,8 +7,10 @@ import { EmailType, SendEmailProps, EmailResult, EmailServiceHook } from './emai
 import { 
   generateWelcomeEmailHtml,
   generateNotificationEmailHtml, 
-  generateDefaultMarketingEmailHtml 
-} from './emailTemplates';
+  generateDefaultMarketingEmailHtml,
+  generateVerificationEmailHtml,
+  generatePasswordResetEmailHtml
+} from './templates';
 import { logEmailAttempt, handleEmailSuccess, handleEmailError } from './emailUtils';
 
 /**
@@ -61,6 +62,16 @@ export function useEmailService(): EmailServiceHook {
           htmlContent = data.htmlContent || generateDefaultMarketingEmailHtml(name);
           break;
           
+        case 'verification':
+          emailSubject = emailSubject || "Verifica il tuo indirizzo email";
+          htmlContent = generateVerificationEmailHtml(name, data?.verificationLink || "");
+          break;
+          
+        case 'password_reset':
+          emailSubject = emailSubject || "Reset della Password";
+          htmlContent = generatePasswordResetEmailHtml(name, data?.resetLink || "");
+          break;
+          
         default:
           return { 
             success: false, 
@@ -68,7 +79,11 @@ export function useEmailService(): EmailServiceHook {
           };
       }
 
-      const result = await sendEmail(type as EmailType, {
+      // Convert email type to match the services/email/types.ts EmailType (fixes type error)
+      const serviceEmailType = type === 'verification' || type === 'password_reset' ? 
+        'transactional' : type;
+
+      const result = await sendEmail(serviceEmailType as any, {
         to: [{ email, name }],
         subject: emailSubject,
         htmlContent: htmlContent,

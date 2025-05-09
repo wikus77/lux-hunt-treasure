@@ -1,5 +1,5 @@
 
 export * from './emailTypes';
 export * from './useEmailService';
-export * from './emailTemplates';
+export * from './templates';
 export * from './emailUtils';
