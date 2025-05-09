@@ -45,6 +45,21 @@ serve(async (req) => {
       );
     }
     
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: "Formato email non valido" 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+    
     // Check if email already exists
     const { data: existingUser, error: checkError } = await supabase
       .from('pre_registrations')

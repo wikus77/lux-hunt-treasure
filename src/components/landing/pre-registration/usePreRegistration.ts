@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { FormErrors, PreRegistrationFormData, PreRegistrationState } from "./types";
+import { FormErrors, PreRegistrationFormData } from "./types";
 import { validateForm } from "./validators";
 import { copyToClipboard, generateReferralCode, generateShareEmailContent } from "./referralUtils";
 import { 
@@ -10,7 +10,8 @@ import {
   sendConfirmationEmail, 
   validateInviteCode,
   updateUserReferrer,
-  addReferralCredits
+  addReferralCredits,
+  registerUserViaEdgeFunction
 } from "./preRegistrationService";
 
 export const usePreRegistration = () => {
@@ -36,10 +37,10 @@ export const usePreRegistration = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Clear previous errors
+    // Pulisci gli errori precedenti
     setFormErrors({ name: "", email: "" });
     
-    // Validate form
+    // Valida il modulo
     const formData: PreRegistrationFormData = {
       name: name.trim(),
       email: email.trim()
@@ -54,44 +55,78 @@ export const usePreRegistration = () => {
     setIsSubmitting(true);
     
     try {
-      // Log input values for debugging
-      console.log("Submitting pre-registration with:", formData);
+      // Log dei valori di input per il debug
+      console.log("Invio pre-registrazione con:", formData);
       
-      // Check if this email is already registered
-      const existingUser = await checkExistingUser(formData.email);
-      
-      if (existingUser) {
-        toast.info("Sei già pre-registrato!", {
-          description: "Questa email è già stata utilizzata per la pre-registrazione."
+      // Prova prima con il metodo standard, poi con l'edge function come fallback
+      try {
+        // Controlla se questa email è già registrata
+        const existingUser = await checkExistingUser(formData.email);
+        
+        if (existingUser) {
+          toast.info("Sei già pre-registrato!", {
+            description: "Questa email è già stata utilizzata per la pre-registrazione."
+          });
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // Registra l'utente
+        const { referralCode } = await registerUser(formData);
+        
+        // Aggiorna lo stato dell'interfaccia
+        setIsSubmitted(true);
+        setUserReferralCode(referralCode);
+        
+        // Mostra il messaggio di successo
+        toast.success("Benvenuto Agente!", {
+          description: "La tua pre-iscrizione è stata convalidata. Sei tra i primi 100 a ricevere 100 crediti. Preparati, ora sei in M1SSION!"
         });
-        setIsSubmitting(false);
-        return;
+        
+        // Pulisci il modulo
+        setName("");
+        setEmail("");
+        setInviteCode("");
+        
+        // Invia l'email di conferma
+        await sendConfirmationEmail(formData.name, formData.email, referralCode);
+        
+      } catch (primaryError) {
+        console.error("Errore nel metodo primario di registrazione:", primaryError);
+        console.log("Tentativo con edge function come fallback...");
+        
+        try {
+          // Metodo secondario: prova con l'edge function
+          const result = await registerUserViaEdgeFunction(formData);
+          
+          if (result.success) {
+            // Aggiorna lo stato dell'interfaccia
+            setIsSubmitted(true);
+            setUserReferralCode(result.referralCode);
+            
+            // Mostra il messaggio di successo
+            toast.success("Benvenuto Agente!", {
+              description: "La tua pre-iscrizione è stata convalidata. Sei tra i primi 100 a ricevere 100 crediti. Preparati, ora sei in M1SSION!"
+            });
+            
+            // Pulisci il modulo
+            setName("");
+            setEmail("");
+            setInviteCode("");
+          } else {
+            throw new Error("La registrazione non è andata a buon fine");
+          }
+        } catch (secondaryError) {
+          console.error("Anche il metodo secondario è fallito:", secondaryError);
+          throw new Error(secondaryError instanceof Error ? secondaryError.message : "Errore nella registrazione");
+        }
       }
-      
-      // Register the user
-      const { referralCode } = await registerUser(formData);
-      
-      // Update UI state
-      setIsSubmitted(true);
-      setUserReferralCode(referralCode);
-      
-      // Show success message
-      toast.success("Benvenuto Agente!", {
-        description: "La tua pre-iscrizione è stata convalidata. Sei tra i primi 100 a ricevere 100 crediti. Preparati, ora sei in M1SSION!"
-      });
-      
-      // Clear form
-      setName("");
-      setEmail("");
-      setInviteCode("");
-      
-      // Send confirmation email
-      await sendConfirmationEmail(formData.name, formData.email, referralCode);
-      
     } catch (error: any) {
       console.error("Errore nella pre-registrazione:", error);
       toast.error("Missione sospesa.", {
-        description: error instanceof Error ? error.message : "Qualcosa non è andato come previsto. Verifica i tuoi dati e riprova a registrarti. Entra in M1SSION!"
+        description: error instanceof Error 
+          ? error.message 
+          : "Qualcosa non è andato come previsto. Verifica i tuoi dati e riprova a registrarti. Entra in M1SSION!"
       });
     } finally {
       setIsSubmitting(false);
@@ -110,7 +145,7 @@ export const usePreRegistration = () => {
     setIsSubmitting(true);
     
     try {
-      // Validate the invite code and get referrer data
+      // Valida il codice invito e ottieni i dati del referrer
       const referrerData = await validateInviteCode(inviteCode.trim());
       
       if (!referrerData) {
@@ -118,17 +153,17 @@ export const usePreRegistration = () => {
         return;
       }
       
-      // Update user's record with the referrer
+      // Aggiorna il record dell'utente con il referrer
       await updateUserReferrer(email, referrerData.email);
       
-      // Add credits to referrer
+      // Aggiungi crediti al referrer
       await addReferralCredits(referrerData.email);
       
       toast.success("Codice invito applicato con successo!", {
         description: "Hai assegnato 50 crediti bonus al tuo amico!"
       });
       
-      // Hide the referral input after successful submission
+      // Nascondi l'input del referral dopo l'invio riuscito
       setShowReferralInput(false);
       
     } catch (error: any) {
