@@ -1,88 +1,84 @@
 
-import { useState, useEffect } from "react";
-import { useAuthContext } from "@/contexts/auth";
-import { Link, useLocation } from "react-router-dom";
-import UserMenu from "./header/UserMenu";
-import MobileMenuButton from "./header/MobileMenuButton";
-import { MobileMenu } from "./header/MobileMenu";
-import HeaderCountdown from "./header/HeaderCountdown";
-import AgentCodeDisplay from "./header/AgentCodeDisplay";
+import React from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import UserMenu from './header/UserMenu';
+import MobileMenuButton from './header/MobileMenuButton';
+import MobileMenu from './header/MobileMenu';
+import HeaderCountdown from './header/HeaderCountdown';
+import AgentCodeDisplay from './header/AgentCodeDisplay';
+import { useNotificationManager } from '@/hooks/useNotificationManager';
 
-const UnifiedHeader = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated, hasRole } = useAuthContext();
+interface UnifiedHeaderProps {
+  onClickMail?: () => void;
+}
+
+const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({ onClickMail }) => {
+  const navigate = useNavigate();
   const location = useLocation();
-  const isAdmin = hasRole("admin");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const { openNotificationsBanner, unreadCount } = useNotificationManager();
   
-  // Close mobile menu on route change
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [location.pathname]);
-  
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur bg-opacity-80 bg-black border-b border-gray-800">
-      <div className="container flex h-16 items-center px-4 sm:px-6">
-        <div className="flex items-center space-x-4 lg:space-x-6">
-          <Link to="/" className="flex items-center space-x-2">
-            <span className="text-xl font-bold tracking-wider">
-              <span className="text-cyan-500">M1</span>SSION
-            </span>
+    <header className="fixed top-0 left-0 w-full h-[72px] z-50 bg-black border-b border-white/10 backdrop-blur-md">
+      <div className="container mx-auto h-full flex items-center justify-between px-4">
+        <div className="flex items-center">
+          <MobileMenuButton 
+            onClick={toggleMobileMenu} 
+            isOpen={isMobileMenuOpen} 
+          />
+          
+          <Link to="/" className="text-white font-bold text-xl ml-2">
+            M1SSION
           </Link>
           
-          <HeaderCountdown />
-        </div>
-        
-        <div className="hidden flex-1 md:flex justify-center">
-          <AgentCodeDisplay />
-        </div>
-
-        <div className="flex flex-1 items-center justify-end space-x-3 md:space-x-4">
-          {isAuthenticated && (
-            <nav className="hidden md:flex items-center space-x-4">
-              <Link 
-                to="/home" 
-                className="text-sm font-medium transition-colors hover:text-primary"
-              >
-                Home
-              </Link>
-              <Link 
-                to="/map" 
-                className="text-sm font-medium transition-colors hover:text-primary"
-              >
-                Mappa
-              </Link>
-              <Link 
-                to="/events" 
-                className="text-sm font-medium transition-colors hover:text-primary"
-              >
-                Eventi
-              </Link>
-              <Link 
-                to="/profile" 
-                className="text-sm font-medium transition-colors hover:text-primary"
-              >
-                Profilo
-              </Link>
-              
-              {isAdmin && (
-                <Link 
-                  to="/admin" 
-                  className="text-sm font-medium text-cyan-500 transition-colors hover:text-cyan-400"
-                >
-                  Admin
-                </Link>
-              )}
-            </nav>
-          )}
-
-          <UserMenu />
-          <MobileMenuButton 
-            isOpen={isMobileMenuOpen} 
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+          <AgentCodeDisplay 
+            agentCode="ABC123" /* Added the required agentCode prop */
+            className="hidden md:flex ml-4" 
           />
         </div>
+        
+        <div className="hidden md:flex items-center space-x-6">
+          <HeaderCountdown />
+          
+          <nav className="hidden lg:flex items-center space-x-4">
+            <Link to="/events" className={`text-sm ${location.pathname === '/events' ? 'text-cyan-400' : 'text-white/70 hover:text-white'}`}>
+              Eventi
+            </Link>
+            <Link to="/map" className={`text-sm ${location.pathname === '/map' ? 'text-cyan-400' : 'text-white/70 hover:text-white'}`}>
+              Mappa
+            </Link>
+            <Link to="/leaderboard" className={`text-sm ${location.pathname === '/leaderboard' ? 'text-cyan-400' : 'text-white/70 hover:text-white'}`}>
+              Classifica
+            </Link>
+          </nav>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            onClick={openNotificationsBanner}
+          >
+            <Bell className="h-5 w-5 text-white" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </Button>
+          
+          <UserMenu onClickMail={onClickMail} />
+        </div>
       </div>
-      {isMobileMenuOpen && <MobileMenu isAdmin={isAdmin} />}
+      
+      <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
     </header>
   );
 };
