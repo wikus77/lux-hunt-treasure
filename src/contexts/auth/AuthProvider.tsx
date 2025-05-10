@@ -5,7 +5,7 @@ import AuthContext from './AuthContext';
 import { registerDeviceForNotifications } from '@/integrations/firebase/firebase-client';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User } from './types';
+import { User } from '@supabase/supabase-js';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -19,7 +19,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Fetch user role when authenticated
   useEffect(() => {
     const fetchUserRole = async () => {
-      // Nota: ora utilizziamo direttamente auth.isAuthenticated come booleano
       if (auth.isAuthenticated && auth.isEmailVerified && !auth.isLoading) {
         try {
           setIsRoleLoading(true);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -12,6 +11,7 @@ import { AuthContextType } from '@/contexts/auth/types';
 export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRoleLoading'> {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
 
@@ -35,6 +35,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         }
         
         // Mark loading as complete after auth state changes
+        setLoading(false);
         setIsLoading(false);
       }
     );
@@ -52,6 +53,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       }
       
       // Mark loading as complete after initial check
+      setLoading(false);
       setIsLoading(false);
     });
     
@@ -107,9 +109,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   /**
    * Check if user is authenticated
    */
-  const isAuthenticated = useCallback(() => {
-    return !!user && !!session;
-  }, [user, session]);
+  const isAuthenticated = !!user && !!session;
 
   /**
    * Get current authenticated user
@@ -168,19 +168,22 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     }
   };
 
-  // Modifica qui: restituisci isAuthenticated come boolean, non come funzione
+  // Keep both names for compatibility
+  const signOut = logout;
+
   return {
+    user,
     session,
+    loading,
     isLoading,
     isEmailVerified,
-    isAuthenticated: isAuthenticated(), // Chiamiamo la funzione per ottenere il valore booleano
+    isAuthenticated,
     login,
     logout,
+    signOut,
     getCurrentUser,
     getAccessToken,
     resendVerificationEmail,
-    resetPassword,
-    user, // Aggiungiamo l'utente direttamente qui per coerenza con AuthContextType
+    resetPassword
   };
 }
-

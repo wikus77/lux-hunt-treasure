@@ -5,16 +5,18 @@ import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserMenu from './header/UserMenu';
 import MobileMenuButton from './header/MobileMenuButton';
-import MobileMenu from './header/MobileMenu';
+import { MobileMenu } from './header/MobileMenu';
 import HeaderCountdown from './header/HeaderCountdown';
 import AgentCodeDisplay from './header/AgentCodeDisplay';
 import { useNotificationManager } from '@/hooks/useNotificationManager';
 
 interface UnifiedHeaderProps {
   onClickMail?: () => void;
+  profileImage?: string | null;
+  leftComponent?: React.ReactNode;
 }
 
-const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({ onClickMail }) => {
+const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({ onClickMail, profileImage, leftComponent }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -33,13 +35,14 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({ onClickMail }) => {
             isOpen={isMobileMenuOpen} 
           />
           
-          <Link to="/" className="text-white font-bold text-xl ml-2">
-            M1SSION
-          </Link>
+          {leftComponent || (
+            <Link to="/" className="text-white font-bold text-xl ml-2">
+              M1SSION
+            </Link>
+          )}
           
           <AgentCodeDisplay 
-            agentCode="ABC123" /* Added the required agentCode prop */
-            className="hidden md:flex ml-4" 
+            agentCode="ABC123"
           />
         </div>
         
@@ -78,7 +81,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({ onClickMail }) => {
         </div>
       </div>
       
-      <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+      {isMobileMenuOpen && <MobileMenu />}
     </header>
   );
 };
