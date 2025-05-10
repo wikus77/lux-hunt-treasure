@@ -1,23 +1,22 @@
 
 /// <reference types="vite/client" />
 
-// Dichiarazione per Cookiebot
+// Dichiarazione per Cookie Script
 interface Window {
-  Cookiebot?: {
+  CookieScriptConsent?: {
     show: () => void;
     hide: () => void;
     renew: () => void;
     withdraw: () => void;
-    consent: {
+    categories: {
+      necessary: boolean;
+      preferences: boolean;
       statistics: boolean;
       marketing: boolean;
-      preferences: boolean;
-      necessary: boolean;
     };
   };
   dataLayer?: any[];
   gtag?: (...args: any[]) => void;
-  klaro?: any; // Aggiungiamo la dichiarazione per klaro
 }
 
 // Environment variables for EmailJS

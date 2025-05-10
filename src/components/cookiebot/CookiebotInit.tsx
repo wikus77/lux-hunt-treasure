@@ -2,53 +2,58 @@
 import React, { useEffect } from "react";
 
 /**
- * Componente che gestisce l'inizializzazione di Klaro CMP
- * Questo componente assicura che Klaro venga inizializzato correttamente
- * dopo il caricamento completo della pagina e l'animazione introduttiva
+ * Componente che gestisce l'inizializzazione di Cookie Script CMP
+ * Questo componente assicura che Cookie Script venga inizializzato correttamente
+ * dopo il caricamento completo della pagina
  */
 const CookiebotInit: React.FC = () => {
   useEffect(() => {
-    // Funzione per inizializzare Klaro dopo l'animazione introduttiva
-    const initializeKlaro = () => {
-      console.log("Inizializzazione di Klaro dopo animazione");
+    // Verifichiamo se gli script di Cookie Script sono già presenti
+    const checkScripts = () => {
+      const mainScriptExists = document.querySelector('script[src*="cdn.cookie-script.com/s/2db074620da1ba3a3cc6c19025d1d99d.js"]');
+      const reportScriptExists = document.querySelector('script[src*="report.cookie-script.com/r/2db074620da1ba3a3cc6c19025d1d99d.js"]');
       
-      // Se lo script è già presente, non lo aggiungiamo nuovamente
-      if (document.querySelector('script[src*="5510d78d444e464c8146e1b7577972e9/klaro.js"]')) {
-        console.log("Script Klaro già caricato");
-        return;
-      }
+      return {
+        mainScriptExists,
+        reportScriptExists
+      };
+    };
 
-      // Creazione e aggiunta dello script Klaro
-      try {
-        const klaroScript = document.createElement('script');
-        klaroScript.src = "https://api.kiprotect.com/v1/privacy-managers/5510d78d444e464c8146e1b7577972e9/klaro.js";
-        klaroScript.defer = true;
-        document.head.appendChild(klaroScript);
-        console.log("Script Klaro caricato dinamicamente");
-      } catch (error) {
-        console.error("Errore durante il caricamento di Klaro:", error);
+    // Funzione per inizializzare Cookie Script se gli script non sono già presenti
+    const initializeCookieScript = () => {
+      const { mainScriptExists, reportScriptExists } = checkScripts();
+      
+      if (!mainScriptExists) {
+        console.log("Aggiunta dello script principale Cookie Script");
+        const mainScript = document.createElement('script');
+        mainScript.type = "text/javascript";
+        mainScript.charset = "UTF-8";
+        mainScript.src = "//cdn.cookie-script.com/s/2db074620da1ba3a3cc6c19025d1d99d.js";
+        document.head.appendChild(mainScript);
+      }
+      
+      if (!reportScriptExists) {
+        console.log("Aggiunta dello script report Cookie Script");
+        const reportScript = document.createElement('script');
+        reportScript.type = "text/javascript";
+        reportScript.charset = "UTF-8";
+        reportScript.setAttribute("data-cookiescriptreport", "report");
+        reportScript.src = "//report.cookie-script.com/r/2db074620da1ba3a3cc6c19025d1d99d.js";
+        document.head.appendChild(reportScript);
       }
     };
 
-    // Verifichiamo se la pagina è completamente caricata
-    if (document.readyState === 'complete') {
-      // Se la pagina è già caricata, inizializziamo Klaro dopo un ritardo
-      // per assicurarci che l'animazione introduttiva sia terminata
-      setTimeout(() => {
-        initializeKlaro();
-      }, 4000);
+    // Esecuzione immediata: se il DOM è già pronto, inizializza subito
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      initializeCookieScript();
     } else {
-      // Altrimenti, aspettiamo che la pagina sia completamente caricata
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          initializeKlaro();
-        }, 4000);
-      });
+      // Altrimenti, attendi il caricamento del DOM
+      document.addEventListener('DOMContentLoaded', initializeCookieScript);
     }
 
-    // Cleanup function
+    // Cleanup della sottoscrizione all'evento
     return () => {
-      window.removeEventListener('load', initializeKlaro);
+      document.removeEventListener('DOMContentLoaded', initializeCookieScript);
     };
   }, []);
 
