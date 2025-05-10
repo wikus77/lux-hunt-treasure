@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import { CalendarDays, Envelope, MapPin } from "lucide-react";
+import { CalendarDays, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EventCard from "@/components/events/EventCard";
+import { Event } from "@/data/eventData";
 
 const EventsPage = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -14,6 +16,16 @@ const EventsPage = () => {
       location: "Milano, Italia",
       description: "Un'avventura emozionante nel cuore di Milano, alla ricerca di indizi nascosti e tesori inestimabili.",
       imageUrl: "/public/lovable-uploads/a253aeab-083c-4416-b20f-da7a0433ea3b.png",
+      carModel: "",
+      carBrand: "",
+      gender: "man" as const,
+      images: [
+        {
+          url: "/public/lovable-uploads/a253aeab-083c-4416-b20f-da7a0433ea3b.png",
+          description: "Caccia al tesoro a Milano"
+        }
+      ],
+      detailedDescription: "Un'avventura emozionante nel cuore di Milano, alla ricerca di indizi nascosti e tesori inestimabili."
     },
     {
       id: 2,
@@ -22,6 +34,16 @@ const EventsPage = () => {
       location: "Roma, Italia",
       description: "Incontra altri agenti, scambia informazioni e partecipa a missioni segrete nella città eterna.",
       imageUrl: "/public/lovable-uploads/a253aeab-083c-4416-b20f-da7a0433ea3b.png",
+      carModel: "",
+      carBrand: "",
+      gender: "man" as const,
+      images: [
+        {
+          url: "/public/lovable-uploads/a253aeab-083c-4416-b20f-da7a0433ea3b.png",
+          description: "Raduno degli Agenti Segreti a Roma"
+        }
+      ],
+      detailedDescription: "Incontra altri agenti, scambia informazioni e partecipa a missioni segrete nella città eterna."
     },
     {
       id: 3,
@@ -30,6 +52,16 @@ const EventsPage = () => {
       location: "Firenze, Italia",
       description: "Metti alla prova le tue abilità di risoluzione degli enigmi in una delle città più belle del mondo.",
       imageUrl: "/public/lovable-uploads/a253aeab-083c-4416-b20f-da7a0433ea3b.png",
+      carModel: "",
+      carBrand: "",
+      gender: "man" as const,
+      images: [
+        {
+          url: "/public/lovable-uploads/a253aeab-083c-4416-b20f-da7a0433ea3b.png",
+          description: "Sfida di Enigmi a Firenze"
+        }
+      ],
+      detailedDescription: "Metti alla prova le tue abilità di risoluzione degli enigmi in una delle città più belle del mondo."
     },
   ]);
 
@@ -54,7 +86,18 @@ const EventsPage = () => {
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <EventCard 
+              key={event.id}
+              title={event.title}
+              carModel={event.carModel}
+              carBrand={event.carBrand}
+              date={event.date}
+              imageUrl={event.imageUrl}
+              description={event.description}
+              gender={event.gender}
+              images={event.images}
+              detailedDescription={event.detailedDescription}
+            />
           ))}
         </div>
       </div>

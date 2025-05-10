@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Lock, CreditCard, ChevronRight, LogOut, Bell, Globe } from "lucide-react";
@@ -38,10 +39,6 @@ const Settings = () => {
       toast.error("Errore durante il logout");
     }
   };
-
-  useEffect(() => {
-    setProfileImage(localStorage.getItem('profileImage'));
-  }, []);
 
   const handleEmailClick = () => {
     navigate('/notifications');
