@@ -188,7 +188,7 @@ serve(async (req) => {
             'Authorization': `Bearer ${supabaseServiceKey}`
           },
           body: JSON.stringify({
-            type: 'contact', // Reuse the contact email type
+            type: 'pre_registration', 
             to: [{ email: email.trim(), name: name.trim() }],
             subject: 'Conferma pre-iscrizione M1SSION',
             from: {

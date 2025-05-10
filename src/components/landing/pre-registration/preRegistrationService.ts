@@ -96,10 +96,10 @@ export const sendConfirmationEmail = async (name: string, email: string, referra
   try {
     console.log(`Sending confirmation email to ${name} <${email}> with referral code ${referralCode}`);
     
-    // Use the same Mailjet edge function already used in the contact form
+    // Use the existing send-mailjet-email edge function
     const { data, error } = await supabase.functions.invoke('send-mailjet-email', {
       body: {
-        type: 'contact', // Reusing the contact type as it's the same flow
+        type: 'pre_registration',
         to: [{
           email: email.trim(),
           name: name.trim()
@@ -130,10 +130,10 @@ export const sendConfirmationEmail = async (name: string, email: string, referra
             </div>
           </div>
         `,
-        trackOpens: true,
-        trackClicks: true,
         customCampaign: 'pre_registration_confirmation',
         customId: `pre_reg_${Date.now()}`,
+        trackOpens: true,
+        trackClicks: true,
         consent: {
           given: true,
           date: new Date().toISOString(),

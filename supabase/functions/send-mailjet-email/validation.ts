@@ -1,49 +1,62 @@
 
-import { ContactData } from "./types.ts";
+import { ContactData, EmailType } from "./types.ts";
 
-// Function to validate email contact data
+// Validate contact data based on email type
 export function validateContactData(data: ContactData): { isValid: boolean; errorMessage?: string } {
-  if (!data) {
-    return { isValid: false, errorMessage: 'Nessun dato fornito' };
+  // Validate required common fields
+  if (!data.type) {
+    return { isValid: false, errorMessage: 'Il tipo di email è obbligatorio' };
   }
-  
-  console.log("Validating email data for type:", data.type);
-  
-  // Validate based on email type
-  switch (data.type) {
-    case 'contact':
-      // For contact form emails
-      if (!data.email) {
-        return { isValid: false, errorMessage: "L'email del mittente è obbligatoria" };
+
+  const emailType: EmailType = data.type;
+
+  if (emailType === 'contact') {
+    // Contact form validation
+    if (!data.name) {
+      return { isValid: false, errorMessage: 'Il nome è obbligatorio' };
+    }
+    
+    if (!data.email) {
+      return { isValid: false, errorMessage: "L'email è obbligatoria" };
+    }
+    
+    if (!data.message) {
+      return { isValid: false, errorMessage: 'Il messaggio è obbligatorio' };
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+      return { isValid: false, errorMessage: "Il formato dell'email non è valido" };
+    }
+  } else if (['welcome', 'notification', 'marketing', 'pre_registration'].includes(emailType)) {
+    // Direct email sending - validate recipients
+    if (!data.to || data.to.length === 0) {
+      return { isValid: false, errorMessage: 'I destinatari sono obbligatori' };
+    }
+    
+    // Validate that all recipients have valid email addresses
+    for (const recipient of data.to) {
+      const recipientEmail = 'email' in recipient ? recipient.email : recipient.Email;
+      if (!recipientEmail) {
+        return { isValid: false, errorMessage: "L'email del destinatario è obbligatoria" };
       }
-      break;
       
-    case 'welcome':
-    case 'notification':
-    case 'marketing':
-      // For transactional emails
-      if (!data.to || data.to.length === 0) {
-        return { isValid: false, errorMessage: "Almeno un destinatario è obbligatorio" };
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(recipientEmail)) {
+        return { isValid: false, errorMessage: `Il formato dell'email '${recipientEmail}' non è valido` };
       }
-      
-      // Check that all recipients have valid email addresses
-      const invalidRecipients = data.to.filter(
-        recipient => !recipient.email && !recipient.Email
-      );
-      
-      if (invalidRecipients.length > 0) {
-        return { 
-          isValid: false, 
-          errorMessage: "Alcuni destinatari non hanno un indirizzo email valido" 
-        };
-      }
-      break;
-      
-    default:
-      return { 
-        isValid: false, 
-        errorMessage: `Tipo di email non supportato: ${data.type}` 
-      };
+    }
+    
+    if (!data.subject) {
+      return { isValid: false, errorMessage: "L'oggetto dell'email è obbligatorio" };
+    }
+    
+    if (!data.from || !data.from.Email) {
+      return { isValid: false, errorMessage: "L'email del mittente è obbligatoria" };
+    }
+  } else {
+    return { isValid: false, errorMessage: `Tipo di email '${emailType}' non supportato` };
   }
   
   return { isValid: true };

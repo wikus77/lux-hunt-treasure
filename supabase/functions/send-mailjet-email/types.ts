@@ -1,55 +1,31 @@
-// Existing imports and types
-import { corsHeaders } from "./cors.ts";
 
-// Contact data interface
+// Define the possible types of emails that can be sent
+export type EmailType = 'contact' | 'welcome' | 'notification' | 'marketing' | 'pre_registration';
+
+// Define the structure for contact form data
 export interface ContactData {
-  type: string;
+  type: EmailType;
   name?: string;
   email?: string;
-  phone?: string;
-  subject?: string;
   message?: string;
-  to?: EmailRecipient[];
-  from?: EmailSender;
+  subject?: string;
+  phone?: string;
+  
+  // For direct email sending
+  to?: Array<{email: string, name?: string} | {Email: string, Name?: string}>;
+  htmlContent?: string;
+  from?: {
+    Email: string;
+    Name: string;
+  };
   trackOpens?: boolean;
   trackClicks?: boolean;
-  htmlContent?: string;
-  textContent?: string;
   customCampaign?: string;
   customId?: string;
-  consent?: ConsentData;
-  referral_code?: string; // Support for referral codes in emails
+  consent?: {
+    given: boolean;
+    date: string;
+    method: string;
+  };
+  referral_code?: string;
 }
-
-export interface EmailRecipient {
-  name?: string;
-  email?: string;
-  Name?: string;
-  Email?: string;
-}
-
-export interface EmailSender {
-  Email: string;
-  Name: string;
-}
-
-export interface ConsentData {
-  given: boolean;
-  date: string;
-  method: string;
-}
-
-// Response types
-export interface ErrorResponse {
-  success: false;
-  message: string;
-  errorDetails?: any;
-  status?: number;
-}
-
-export interface SuccessResponse {
-  success: true;
-  data: any;
-}
-
-export type ApiResponse = ErrorResponse | SuccessResponse;
