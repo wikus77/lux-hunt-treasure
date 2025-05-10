@@ -73,9 +73,17 @@ export const AdminAppMessages = () => {
         return;
       }
 
+      // Fix: Change from array to single object for insert
       const { data, error } = await supabase
         .from('app_messages')
-        .insert([messageData])
+        .insert({
+          title: messageData.title,
+          content: messageData.content,
+          message_type: messageData.message_type || 'info',
+          target_users: messageData.target_users || ['all'],
+          is_active: messageData.is_active !== undefined ? messageData.is_active : true,
+          expiry_date: messageData.expiry_date
+        })
         .select();
 
       if (error) {
@@ -96,6 +104,12 @@ export const AdminAppMessages = () => {
     if (!currentMessage) return;
 
     try {
+      // Ensure required fields
+      if (!messageData.title || !messageData.content) {
+        toast.error("Titolo e contenuto sono obbligatori");
+        return;
+      }
+
       const { error } = await supabase
         .from('app_messages')
         .update({
@@ -303,87 +317,4 @@ export const AdminAppMessages = () => {
       />
     </div>
   );
-
-  function handleUpdateMessage(messageData: Partial<AppMessage>) {
-    if (!currentMessage) return;
-
-    try {
-      const { error } = supabase
-        .from('app_messages')
-        .update({
-          ...messageData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', currentMessage.id)
-        .then(({ error }) => {
-          if (error) {
-            throw error;
-          }
-          toast.success("Messaggio aggiornato con successo");
-          fetchMessages();
-        });
-    } catch (error: any) {
-      toast.error("Errore nell'aggiornamento del messaggio", {
-        description: error.message
-      });
-      console.error("Error updating message:", error);
-    }
-  }
-
-  function handleDeleteMessage() {
-    if (!currentMessage) return;
-
-    try {
-      supabase
-        .from('app_messages')
-        .delete()
-        .eq('id', currentMessage.id)
-        .then(({ error }) => {
-          if (error) {
-            throw error;
-          }
-          toast.success("Messaggio eliminato con successo");
-          fetchMessages();
-        });
-    } catch (error: any) {
-      toast.error("Errore nell'eliminazione del messaggio", {
-        description: error.message
-      });
-      console.error("Error deleting message:", error);
-    }
-  }
-
-  function toggleMessageStatus(message: AppMessage) {
-    try {
-      supabase
-        .from('app_messages')
-        .update({
-          is_active: !message.is_active,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', message.id)
-        .then(({ error }) => {
-          if (error) {
-            throw error;
-          }
-          toast.success(`Messaggio ${message.is_active ? 'disattivato' : 'attivato'} con successo`);
-          fetchMessages();
-        });
-    } catch (error: any) {
-      toast.error("Errore nell'aggiornamento dello stato del messaggio", {
-        description: error.message
-      });
-      console.error("Error toggling message status:", error);
-    }
-  }
-
-  function openEditDialog(message: AppMessage) {
-    setCurrentMessage(message);
-    setIsEditDialogOpen(true);
-  }
-
-  function openDeleteDialog(message: AppMessage) {
-    setCurrentMessage(message);
-    setIsDeleteDialogOpen(true);
-  }
 };

@@ -70,9 +70,15 @@ export const AdminMissions = () => {
         return;
       }
 
+      // Fix: Change from array to single object for insert
       const { data, error } = await supabase
         .from('missions')
-        .insert([missionData])
+        .insert({
+          title: missionData.title,
+          description: missionData.description || null,
+          publication_date: missionData.publication_date || null,
+          status: missionData.status || 'draft'
+        })
         .select();
 
       if (error) {
@@ -93,6 +99,12 @@ export const AdminMissions = () => {
     if (!currentMission) return;
 
     try {
+      // Ensure required fields
+      if (!missionData.title) {
+        toast.error("Il titolo è obbligatorio");
+        return;
+      }
+
       const { error } = await supabase
         .from('missions')
         .update({
@@ -244,53 +256,4 @@ export const AdminMissions = () => {
       />
     </div>
   );
-
-  function handleUpdateMission(missionData: Partial<Mission>) {
-    if (!currentMission) return;
-
-    try {
-      supabase
-        .from('missions')
-        .update({
-          ...missionData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', currentMission.id)
-        .then(({ error }) => {
-          if (error) {
-            throw error;
-          }
-          toast.success("Missione aggiornata con successo");
-          fetchMissions();
-        });
-    } catch (error: any) {
-      toast.error("Errore nell'aggiornamento della missione", {
-        description: error.message
-      });
-      console.error("Error updating mission:", error);
-    }
-  }
-
-  function handleDeleteMission() {
-    if (!currentMission) return;
-
-    try {
-      supabase
-        .from('missions')
-        .delete()
-        .eq('id', currentMission.id)
-        .then(({ error }) => {
-          if (error) {
-            throw error;
-          }
-          toast.success("Missione eliminata con successo");
-          fetchMissions();
-        });
-    } catch (error: any) {
-      toast.error("Errore nell'eliminazione della missione", {
-        description: error.message
-      });
-      console.error("Error deleting mission:", error);
-    }
-  }
 };
