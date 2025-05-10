@@ -11,7 +11,7 @@ const CookiebotInit: React.FC = () => {
     // Funzione per inizializzare manualmente Klaro se necessario
     const initializeKlaro = () => {
       try {
-        if (window && typeof window.klaro !== 'undefined') {
+        if (typeof window !== 'undefined' && typeof window.klaro !== 'undefined') {
           console.log("Klaro già inizializzato");
         } else {
           console.log("Tentativo di inizializzazione manuale di Klaro");

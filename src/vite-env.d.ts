@@ -17,6 +17,7 @@ interface Window {
   };
   dataLayer?: any[];
   gtag?: (...args: any[]) => void;
+  klaro?: any; // Aggiungiamo la dichiarazione per klaro
 }
 
 // Environment variables for EmailJS
