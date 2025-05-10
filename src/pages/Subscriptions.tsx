@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +13,20 @@ const Subscriptions = () => {
   const [selected, setSelected] = useState<string>("Base");
   const [profileImage, setProfileImage] = useState<string | null>(null);
   
+  // Componente React da utilizzare come leftComponent
+  const LeftComponent = () => (
+    <div className="flex items-center">
+      <Button 
+        variant="ghost" 
+        size="icon"
+        onClick={() => navigate(-1)} 
+        className="mr-2"
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </Button>
+    </div>
+  );
+
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
     
@@ -39,19 +52,10 @@ const Subscriptions = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black w-full">
+    <div className="min-h-screen bg-black">
       <UnifiedHeader 
         profileImage={profileImage} 
-        leftComponent={
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigate(-1)} 
-            className="mr-2"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        }
+        leftComponent={<LeftComponent />} 
       />
       <div className="h-[72px] w-full" />
       <div className="max-w-screen-xl mx-auto">

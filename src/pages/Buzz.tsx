@@ -167,12 +167,6 @@ const Buzz = () => {
   return (
     <div className="min-h-screen bg-black pb-20 w-full">
       <UnifiedHeader profileImage={profileImage} />
-      <div className="h-[72px] w-full" />
-      <ClueBanner 
-        open={showClueBanner} 
-        message={lastVagueClue || ""} 
-        onClose={() => setShowClueBanner(false)} 
-      />
       
       <section className="flex flex-col items-center justify-center py-6 sm:py-10 h-[70vh] w-full px-3 sm:px-4">
         <div className="text-center mb-6 sm:mb-8 w-full">

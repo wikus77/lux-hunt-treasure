@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Lock, CreditCard, ChevronRight, LogOut, Bell, Globe } from "lucide-react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
@@ -40,11 +39,19 @@ const Settings = () => {
     }
   };
 
+  useEffect(() => {
+    setProfileImage(localStorage.getItem('profileImage'));
+  }, []);
+
+  const handleEmailClick = () => {
+    navigate('/notifications');
+  };
+
   return (
-    <div className="min-h-screen bg-black overflow-hidden">
+    <div className="min-h-screen bg-black">
       <UnifiedHeader 
         profileImage={profileImage} 
-        onClickMail={() => navigate('/notifications')}
+        onClickMail={handleEmailClick}
       />
       
       <div className="h-[72px] w-full" />

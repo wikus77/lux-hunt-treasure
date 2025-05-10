@@ -1,79 +1,63 @@
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import { useBuzzClues } from "@/hooks/useBuzzClues";
-import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
-import { useNotificationManager } from "@/hooks/useNotificationManager";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
-import PushNotificationRequest from "@/components/notifications/PushNotificationRequest";
-import EventsHeader from "@/components/events/EventsHeader";
-import NotificationButtons from "@/components/events/NotificationButtons";
-import CluesDisplay from "@/components/events/CluesDisplay";
-import { toast } from "sonner";
+import { CalendarDays, Envelope, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import EventCard from "@/components/events/EventCard";
 
 const EventsPage = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const { unlockedClues, incrementUnlockedCluesAndAddClue, resetUnlockedClues, MAX_CLUES } = useBuzzClues();
-  const { 
-    notificationsDrawerOpen, 
-    openNotificationsDrawer, 
-    closeNotificationsDrawer, 
-    createNotification 
-  } = useNotificationManager();
-  const { isSupported, permission } = usePushNotifications();
-  const { isConnected, broadcastNotification } = useRealTimeNotifications();
-  const [showNotificationRequest, setShowNotificationRequest] = useState(false);
-  
+  const [events, setEvents] = useState([
+    {
+      id: 1,
+      title: "Caccia al tesoro a Milano",
+      date: "15 Luglio 2024",
+      location: "Milano, Italia",
+      description: "Un'avventura emozionante nel cuore di Milano, alla ricerca di indizi nascosti e tesori inestimabili.",
+      imageUrl: "/public/lovable-uploads/a253aeab-083c-4416-b20f-da7a0433ea3b.png",
+    },
+    {
+      id: 2,
+      title: "Raduno degli Agenti Segreti a Roma",
+      date: "22 Agosto 2024",
+      location: "Roma, Italia",
+      description: "Incontra altri agenti, scambia informazioni e partecipa a missioni segrete nella città eterna.",
+      imageUrl: "/public/lovable-uploads/a253aeab-083c-4416-b20f-da7a0433ea3b.png",
+    },
+    {
+      id: 3,
+      title: "Sfida di Enigmi a Firenze",
+      date: "10 Settembre 2024",
+      location: "Firenze, Italia",
+      description: "Metti alla prova le tue abilità di risoluzione degli enigmi in una delle città più belle del mondo.",
+      imageUrl: "/public/lovable-uploads/a253aeab-083c-4416-b20f-da7a0433ea3b.png",
+    },
+  ]);
+
   useEffect(() => {
-    // Get profile image on mount
     setProfileImage(localStorage.getItem('profileImage'));
   }, []);
 
-  const handleResetClues = () => {
-    resetUnlockedClues();
-    toast.success("Tutti gli indizi sono stati azzerati", {
-      duration: 3000,
-    });
+  const handleEmailClick = () => {
+    window.location.href = "mailto:info@m1ssion.com";
   };
 
   return (
-    <div className="pb-20 min-h-screen bg-black w-full">
+    <div className="min-h-screen bg-black">
       <UnifiedHeader 
         profileImage={profileImage} 
-        onClickMail={openNotificationsDrawer}
+        onClickMail={handleEmailClick} 
       />
-      
-      <div className="h-[72px] w-full" />
-      
-      <div className="max-w-4xl mx-auto px-4">
-        <EventsHeader unlockedClues={unlockedClues} maxClues={MAX_CLUES} />
-        
-        <NotificationButtons 
-          openNotificationsDrawer={openNotificationsDrawer}
-          isConnected={isConnected}
-          isSupported={isSupported}
-          permission={permission}
-          createNotification={createNotification}
-          broadcastNotification={broadcastNotification}
-          onShowNotificationRequest={() => setShowNotificationRequest(true)}
-          onResetClues={handleResetClues}
-        />
-
-        <CluesDisplay 
-          onClueUnlocked={incrementUnlockedCluesAndAddClue} 
-        />
+      <div className="container mx-auto py-8 text-white">
+        <h1 className="text-3xl font-bold mb-4">Prossimi Eventi</h1>
+        <p className="text-gray-400 mb-8">
+          Resta aggiornato su tutti gli eventi M1SSION in programma.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {events.map((event) => (
+            <EventCard key={event.id} event={event} />
+          ))}
+        </div>
       </div>
-      
-      <NotificationsDrawer 
-        open={notificationsDrawerOpen} 
-        onOpenChange={closeNotificationsDrawer} 
-      />
-
-      <PushNotificationRequest
-        open={showNotificationRequest}
-        onOpenChange={setShowNotificationRequest}
-      />
     </div>
   );
 };
