@@ -38,24 +38,53 @@
     <meta name="twitter:site" content="@m1ssion_game" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
-    <!-- ✅ Cookiebot -->
-    <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="qfr87kY0ukx-ZP" data-blockingmode="auto" type="text/javascript" crossorigin="anonymous"></script>
-
-    <!-- ✅ Google Analytics 4 (attivo solo dopo consenso) -->
-    <script type="text/plain" data-cookieconsent="statistics" async src="https://www.googletagmanager.com/gtag/js?id=G-9824MZJZ63" crossorigin="anonymous"></script>
-    <script type="text/plain" data-cookieconsent="statistics">
+    <!-- ✅ Google Analytics 4 (attivo solo dopo consenso Klaro) -->
+    <script type="text/plain" data-type="text/javascript" data-name="google-analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-9824MZJZ63" crossorigin="anonymous"></script>
+    <script type="text/plain" data-name="google-analytics">
       window.dataLayer = window.dataLayer || [];
       function gtag(){ dataLayer.push(arguments); }
       gtag('js', new Date());
       gtag('config', 'G-9824MZJZ63');
     </script>
     
-    <!-- Usercentrics CMP Script -->
-    <script
-      id="usercentrics-cmp"
-      src="https://web.cmp.usercentrics.eu/ui/loader.js"
-      data-settings-id="qfr87kY0ukx-ZP"
-      async>
+    <!-- Klaro CMP Script -->
+    <script defer data-config="klaro-config" src="https://cdn.kiprotect.com/klaro/v0.7.16/klaro.js"></script>
+    <script type="application/json" id="klaro-config">
+    {
+      "version": 1,
+      "elementID": "klaro",
+      "storageMethod": "cookie",
+      "storageName": "klaro",
+      "htmlTexts": true,
+      "cookieName": "klaro",
+      "privacyPolicy": "/privacy-policy",
+      "default": false,
+      "mustConsent": true,
+      "acceptAll": true,
+      "translations": {
+        "it": {
+          "consentModal": {
+            "title": "Cookie e Privacy",
+            "description": "Utilizziamo i cookie per migliorare la tua esperienza sul nostro sito. Alcuni di questi sono necessari per il funzionamento del sito, mentre altri ci aiutano a migliorare l'esperienza utente."
+          },
+          "purposes": {
+            "analytics": "Analisi"
+          }
+        }
+      },
+      "services": [
+        {
+          "name": "google-analytics",
+          "title": "Google Analytics",
+          "purposes": ["analytics"],
+          "default": false,
+          "cookies": [ "_ga", "_gat", "_gid" ],
+          "required": false,
+          "optOut": false,
+          "onlyOnce": true
+        }
+      ]
+    }
     </script>
   </head>
 
