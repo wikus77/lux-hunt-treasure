@@ -12,24 +12,31 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useAuthContext } from "@/contexts/auth";
 
 interface UserMenuProps {
-  profileImage?: string | null;
-  onSignOut: () => void;
-  disabled?: boolean;
+  onClickMail?: () => void;
+  enableAvatarUpload?: boolean;
 }
 
-const UserMenu = ({ profileImage, onSignOut, disabled = false }: UserMenuProps) => {
+const UserMenu = ({ onClickMail, enableAvatarUpload }: UserMenuProps) => {
   const navigate = useNavigate();
-  const [isButtonDisabled, setIsButtonDisabled] = useState(disabled);
+  const { signOut } = useAuthContext();
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   useEffect(() => {
     // Check if current date is before July 19, 2025
     const launchDate = new Date('2025-07-19T00:00:00');
     const currentDate = new Date();
     
-    setIsButtonDisabled(currentDate < launchDate || disabled);
-  }, [disabled]);
+    setIsButtonDisabled(currentDate < launchDate);
+  }, []);
+
+  const handleSignOut = () => {
+    if (signOut) {
+      signOut();
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -42,13 +49,9 @@ const UserMenu = ({ profileImage, onSignOut, disabled = false }: UserMenuProps) 
           id="profile-button"
         >
           <Avatar className="h-8 w-8 border border-cyan-400/30 hover:border-cyan-400/70 transition-colors">
-            {profileImage ? (
-              <AvatarImage src={profileImage} alt="Profile" />
-            ) : (
-              <AvatarFallback className="bg-black">
-                <User className="h-4 w-4 text-cyan-400" />
-              </AvatarFallback>
-            )}
+            <AvatarFallback className="bg-black">
+              <User className="h-4 w-4 text-cyan-400" />
+            </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -73,7 +76,7 @@ const UserMenu = ({ profileImage, onSignOut, disabled = false }: UserMenuProps) 
           <DropdownMenuSeparator className="bg-white/10" />
           <DropdownMenuItem 
             className="text-white/80 hover:text-white hover:bg-white/10"
-            onClick={onSignOut}
+            onClick={handleSignOut}
           >
             <LogOut className="mr-2 h-4 w-4 text-pink-500" />
             Esci

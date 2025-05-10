@@ -2,11 +2,11 @@
 import { useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/auth";
 import { Link, useLocation } from "react-router-dom";
-import { UserMenu } from "./header/UserMenu";
-import { MobileMenuButton } from "./header/MobileMenuButton";
+import UserMenu from "./header/UserMenu";
+import MobileMenuButton from "./header/MobileMenuButton";
 import { MobileMenu } from "./header/MobileMenu";
-import { HeaderCountdown } from "./header/HeaderCountdown";
-import { AgentCodeDisplay } from "./header/AgentCodeDisplay";
+import HeaderCountdown from "./header/HeaderCountdown";
+import AgentCodeDisplay from "./header/AgentCodeDisplay";
 
 const UnifiedHeader = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

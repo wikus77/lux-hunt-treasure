@@ -15,11 +15,7 @@ const ProfileLayout = ({ children }: ProfileLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <UnifiedHeader 
-        profileImage={profileImage}
-        enableAvatarUpload={true}
-        onClickMail={() => navigate('/notifications')}
-      />
+      <UnifiedHeader />
       <div className="h-[72px] w-full" />
       <main className="pb-20 max-w-screen-xl mx-auto">
         {children}

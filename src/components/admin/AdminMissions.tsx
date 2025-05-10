@@ -64,6 +64,12 @@ export const AdminMissions = () => {
 
   const handleCreateMission = async (missionData: Partial<Mission>) => {
     try {
+      // Ensure required fields are present
+      if (!missionData.title) {
+        toast.error("Il titolo è obbligatorio");
+        return;
+      }
+
       const { data, error } = await supabase
         .from('missions')
         .insert([missionData])
@@ -238,4 +244,53 @@ export const AdminMissions = () => {
       />
     </div>
   );
+
+  function handleUpdateMission(missionData: Partial<Mission>) {
+    if (!currentMission) return;
+
+    try {
+      supabase
+        .from('missions')
+        .update({
+          ...missionData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentMission.id)
+        .then(({ error }) => {
+          if (error) {
+            throw error;
+          }
+          toast.success("Missione aggiornata con successo");
+          fetchMissions();
+        });
+    } catch (error: any) {
+      toast.error("Errore nell'aggiornamento della missione", {
+        description: error.message
+      });
+      console.error("Error updating mission:", error);
+    }
+  }
+
+  function handleDeleteMission() {
+    if (!currentMission) return;
+
+    try {
+      supabase
+        .from('missions')
+        .delete()
+        .eq('id', currentMission.id)
+        .then(({ error }) => {
+          if (error) {
+            throw error;
+          }
+          toast.success("Missione eliminata con successo");
+          fetchMissions();
+        });
+    } catch (error: any) {
+      toast.error("Errore nell'eliminazione della missione", {
+        description: error.message
+      });
+      console.error("Error deleting mission:", error);
+    }
+  }
 };
