@@ -47,32 +47,43 @@ import { RoleBasedProtectedRoute } from "./components/auth/RoleBasedProtectedRou
 import { Toaster as ShadcnToaster } from "./components/ui/toaster";
 import PublicLayout from "./components/layout/PublicLayout";
 import { EmailVerificationPage } from "./components/auth/EmailVerificationHandler";
+import { ErrorBoundary } from "./components/error/ErrorBoundary"; // Importiamo il nuovo componente
 
 // The AppContent component separates the App rendering logic from the provider setup
 function AppContent() {
   const [hydrated, setHydrated] = useState(false);
 
+  // CORREZIONE: Miglioramento della gestione dell'idratazione
   useEffect(() => {
-    // Wait for the end of the hydration before using localStorage
-    setHydrated(true);
+    // Ritardiamo leggermente il setting dell'hydrated state
+    const hydrateTimer = setTimeout(() => {
+      setHydrated(true);
+      console.log("AppContent hydrated");
+    }, 10);
     
-    console.log("AppContent mounted and hydrated");
+    return () => clearTimeout(hydrateTimer);
   }, []);
 
   useEffect(() => {
     // Check if the user has already been redirected to a specific payment page
-    const hasRedirected = localStorage.getItem("paymentRedirected");
+    if (!hydrated) return; // CORREZIONE: Facciamo questo check solo dopo l'idratazione
+    
+    try {
+      const hasRedirected = localStorage.getItem("paymentRedirected");
 
-    if (hasRedirected) {
-      // Remove the item from localStorage
-      localStorage.removeItem("paymentRedirected");
+      if (hasRedirected) {
+        // Remove the item from localStorage
+        localStorage.removeItem("paymentRedirected");
 
-      // Show a success toast
-      toast.success("Pagamento effettuato con successo!", {
-        description: "Grazie per il tuo supporto!",
-      });
+        // Show a success toast
+        toast.success("Pagamento effettuato con successo!", {
+          description: "Grazie per il tuo supporto!",
+        });
+      }
+    } catch (error) {
+      console.error("Error accessing localStorage:", error);
     }
-  }, []);
+  }, [hydrated]);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -301,7 +312,10 @@ function AppContent() {
           </>
         ) : (
           <div className="flex justify-center items-center min-h-screen bg-black text-white">
-            <p>Caricamento...</p>
+            <div className="loading-spinner text-center">
+              <div className="w-12 h-12 border-4 border-t-cyan-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+              <p className="mt-4">Caricamento...</p>
+            </div>
           </div>
         )}
       </AuthProvider>
@@ -309,13 +323,16 @@ function AppContent() {
   );
 }
 
+// CREAZIONE: Nuovo componente ErrorBoundary per gestire gli errori a livello root
 function App() {
   console.log("App component rendering");
   
   return (
     <BrowserRouter>
       <SoundProvider>
-        <AppContent />
+        <ErrorBoundary>
+          <AppContent />
+        </ErrorBoundary>
       </SoundProvider>
     </BrowserRouter>
   );

@@ -20,79 +20,119 @@ const Index = () => {
   const [countdownCompleted, setCountdownCompleted] = useState(false);
   const [pageLoaded, setPageLoaded] = useState(false);
   const [introCompleted, setIntroCompleted] = useState(false);
+  const [renderContent, setRenderContent] = useState(false); // New state to control rendering
   const navigate = useNavigate();
   
   // Get target date from utility function
   const nextEventDate = getMissionDeadline();
   
-  // Hide specific sections that match certain text content
+  // CORREZIONE: Utilizzo di un Effetto più sicuro per MutationObserver
   useEffect(() => {
-    // Inizializza Cookiebot all'avvio della pagina principale
-    console.log("Inizializzazione di Cookiebot dalla pagina Index");
-    
-    const observer = new MutationObserver(() => {
-      const allSections = document.querySelectorAll("section");
+    // Spostato in un setTimeout per evitare problemi di idratazione
+    const observerTimer = setTimeout(() => {
+      console.log("Setting up mutation observer");
+      const observer = new MutationObserver(() => {
+        const allSections = document.querySelectorAll("section");
 
-      allSections.forEach((section) => {
-        const text = section.textContent?.toLowerCase() || "";
-        if (
-          text.includes("cosa puoi vincere") ||
-          text.includes("vuoi provarci") ||
-          text.includes("premio principale") ||
-          text.includes("auto di lusso")
-        ) {
-          section.style.display = "none";
-          console.log("✅ Sezione 'Cosa puoi vincere' rimossa con MutationObserver.");
-        }
+        allSections.forEach((section) => {
+          const text = section.textContent?.toLowerCase() || "";
+          if (
+            text.includes("cosa puoi vincere") ||
+            text.includes("vuoi provarci") ||
+            text.includes("premio principale") ||
+            text.includes("auto di lusso")
+          ) {
+            section.style.display = "none";
+            console.log("✅ Sezione 'Cosa puoi vincere' rimossa con MutationObserver.");
+          }
+        });
       });
-    });
 
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
 
-    // Ferma l'osservatore dopo 10 secondi per sicurezza
-    setTimeout(() => {
-      observer.disconnect();
-      console.log("🛑 MutationObserver disattivato.");
-    }, 10000);
+      // Ferma l'osservatore dopo 10 secondi per sicurezza
+      setTimeout(() => {
+        observer.disconnect();
+        console.log("🛑 MutationObserver disattivato.");
+      }, 10000);
 
-    return () => {
-      observer.disconnect();
-    };
+      return () => {
+        observer.disconnect();
+      };
+    }, 500); // Ritardo di 500ms per garantire che il DOM sia pronto
+
+    return () => clearTimeout(observerTimer);
   }, []);
   
-  // Reset intro flag for testing purposes
+  // CORREZIONE: Gestione sicura del localStorage
   useEffect(() => {
-    // Per assicurarci che l'intro venga mostrata, rimuoviamo il flag dal localStorage
-    localStorage.removeItem("skipIntro");
+    try {
+      // Per assicurarci che l'intro venga mostrata, rimuoviamo il flag dal localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("skipIntro");
+        console.log("Removed skipIntro from localStorage");
+      }
+    } catch (error) {
+      console.error("localStorage error:", error);
+    }
   }, []);
   
-  // Add a useEffect to mark when the page is fully loaded
+  // CORREZIONE: Gestione più robusta del caricamento della pagina
   useEffect(() => {
-    // Impostiamo direttamente pageLoaded a true dopo un breve ritardo
-    // per garantire che i componenti abbiano il tempo di caricare
+    let isMounted = true;
+    
+    // Impostiamo pageLoaded a true dopo un breve ritardo di sicurezza
     const loadTimer = setTimeout(() => {
-      setPageLoaded(true);
-      console.log("Forced page loaded state to true");
+      if (isMounted) {
+        setPageLoaded(true);
+        console.log("Forced page loaded state to true");
+        
+        // CORREZIONE: Introduciamo un ritardo per rendere il contenuto visibile
+        // per garantire che tutto sia caricato e l'idratazione sia completata
+        setTimeout(() => {
+          if (isMounted) {
+            setRenderContent(true);
+            console.log("Content rendering enabled");
+          }
+        }, 100);
+      }
     }, 800);
     
     if (document.readyState === 'complete') {
       console.log("Page already loaded");
-      setPageLoaded(true);
+      if (isMounted) {
+        setPageLoaded(true);
+        setRenderContent(true);
+      }
     } else {
       console.log("Setting up load event listener");
       const handleLoad = () => {
         console.log("Page fully loaded");
-        setPageLoaded(true);
+        if (isMounted) {
+          setPageLoaded(true);
+          // Leggero ritardo prima di renderizzare il contenuto
+          setTimeout(() => {
+            if (isMounted) {
+              setRenderContent(true);
+            }
+          }, 100);
+        }
       };
       window.addEventListener('load', handleLoad);
       return () => {
         window.removeEventListener('load', handleLoad);
         clearTimeout(loadTimer);
+        isMounted = false;
       };
     }
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(loadTimer);
+    };
   }, []);
 
   // Check if countdown has already passed
@@ -132,25 +172,38 @@ const Index = () => {
     console.log("Intro completed callback, setting introCompleted to true");
     setIntroCompleted(true);
     // Memorizziamo che l'intro è stata mostrata
-    localStorage.setItem("skipIntro", "true");
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("skipIntro", "true");
+      }
+    } catch (error) {
+      console.error("Error setting localStorage:", error);
+    }
   };
 
   // Console logging state for debugging
-  console.log("Render state:", { introCompleted, pageLoaded });
+  console.log("Render state:", { introCompleted, pageLoaded, renderContent });
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
-      {/* Aggiungiamo CookiebotInit direttamente nella pagina Index */}
+      {/* CORREZIONE: CookiebotInit spostato all'inizio del componente */}
       <CookiebotInit />
       
-      {/* Intro animation manager */}
-      <IntroManager 
-        pageLoaded={pageLoaded} 
-        onIntroComplete={handleIntroComplete}
-      />
+      {/* CORREZIONE: LoadingScreen migliorato - sempre visibile durante il caricamento */}
+      {(!renderContent || !pageLoaded) && (
+        <LoadingScreen />
+      )}
       
-      {/* Main content - shown after intro completes or fallback when intro fails */}
-      {introCompleted && (
+      {/* Intro animation manager - renderizzato solo quando la pagina è caricata */}
+      {pageLoaded && (
+        <IntroManager 
+          pageLoaded={pageLoaded} 
+          onIntroComplete={handleIntroComplete}
+        />
+      )}
+      
+      {/* Main content - CORREZIONE: renderizzato solo quando tutto è pronto */}
+      {renderContent && introCompleted && (
         <ParallaxContainer>
           <IndexContent 
             countdownCompleted={countdownCompleted}
@@ -167,11 +220,6 @@ const Index = () => {
             onAgeVerified={handleAgeVerified}
           />
         </ParallaxContainer>
-      )}
-
-      {/* Fallback Loading Screen - mostrato solo quando l'intro non è completa e la pagina non è ancora caricata */}
-      {!introCompleted && !pageLoaded && (
-        <LoadingScreen />
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
+import { ErrorBoundary } from '../error/ErrorBoundary';
 
 type PublicLayoutProps = {
   children?: React.ReactNode;
@@ -22,9 +23,11 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({ children }: PublicLayoutPro
   console.log("PublicLayout rendering");
   
   return (
-    <div className="min-h-screen bg-black">
-      {children || <Outlet />}
-    </div>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-black">
+        {children || <Outlet />}
+      </div>
+    </ErrorBoundary>
   );
 };
 

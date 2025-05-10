@@ -42,13 +42,13 @@ const HowItWorks = ({ onRegisterClick, countdownCompleted = false }: HowItWorksP
       id="how-it-works"
     >
       <motion.h2 
-        className="text-3xl md:text-4xl font-bold mb-12 text-center bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] bg-clip-text text-transparent"
+        className="text-3xl md:text-4xl font-bold mb-12 text-center"
         initial={{ y: 20, opacity: 0 }}
         whileInView={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
         viewport={{ once: true }}
       >
-        Scopri M1SSION
+        Scopri <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span>
       </motion.h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 relative">

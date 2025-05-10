@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 
 const LoadingScreen = () => {
   const [dots, setDots] = useState("...");
+  const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
   
   // Crea un'animazione per i puntini di caricamento
   useEffect(() => {
@@ -10,10 +11,16 @@ const LoadingScreen = () => {
       setDots(prev => prev.length >= 3 ? "." : prev + ".");
     }, 500);
     
-    return () => clearInterval(interval);
+    // Mostra info aggiuntive se il caricamento è lento
+    const timeout = setTimeout(() => {
+      setShowAdditionalInfo(true);
+    }, 3000);
+    
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
   }, []);
-  
-  console.log("LoadingScreen rendered");
   
   return (
     <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[9999]">
@@ -25,6 +32,12 @@ const LoadingScreen = () => {
       <div className="mt-12 text-cyan-400/70 text-sm">
         M1SSION sta caricando...
       </div>
+
+      {showAdditionalInfo && (
+        <div className="mt-4 text-gray-400 text-xs max-w-xs text-center">
+          <p>Se questa pagina rimane visibile per molto tempo, prova ad aggiornare la pagina.</p>
+        </div>
+      )}
     </div>
   );
 };
