@@ -5,6 +5,18 @@ const LoadingScreen = () => {
   const [dots, setDots] = useState("...");
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
   const [showFallbackInfo, setShowFallbackInfo] = useState(false);
+  const [loadingDuration, setLoadingDuration] = useState(0);
+  
+  // MIGLIORAMENTO: Tracking tempo di caricamento
+  useEffect(() => {
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setLoadingDuration(elapsed);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
   
   // MIGLIORAMENTO: Crea un'animazione per i puntini di caricamento
   useEffect(() => {
@@ -31,6 +43,7 @@ const LoadingScreen = () => {
   
   // MIGLIORAMENTO: Aggiunto una funzione per forzare il ricaricamento
   const handleForceReload = () => {
+    console.log("Forzatura ricaricamento pagina");
     window.location.reload();
   };
   
@@ -39,6 +52,12 @@ const LoadingScreen = () => {
       <div className="loading-spinner text-center">
         <div className="w-16 h-16 border-4 border-t-cyan-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
         <p className="text-white mt-4 text-xl">Caricamento{dots}</p>
+        
+        {loadingDuration > 5 && (
+          <p className="text-yellow-400 mt-1 text-xs">
+            Tempo di caricamento: {loadingDuration}s
+          </p>
+        )}
       </div>
       
       <div className="mt-12 text-cyan-400/70 text-sm">

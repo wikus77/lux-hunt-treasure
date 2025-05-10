@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 import LoadingManager from "./index/LoadingManager";
 import CountdownManager from "./index/CountdownManager";
@@ -15,6 +15,7 @@ const Index = () => {
   const [introCompleted, setIntroCompleted] = useState(false);
   const [countdownCompleted, setCountdownCompleted] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [retryCount, setRetryCount] = useState(0); // Tracking per tentativi di recovery
   
   // Get event handlers
   const {
@@ -26,6 +27,19 @@ const Index = () => {
     closeAgeVerification,
     closeInviteFriend
   } = useEventHandlers(countdownCompleted);
+  
+  // AGGIUNTA: Tentativo di recovery automatico in caso di problemi
+  useEffect(() => {
+    if (error && retryCount < 2) {
+      const recoveryTimeout = setTimeout(() => {
+        console.log(`⚠️ Tentativo di recovery automatico #${retryCount + 1}`);
+        setError(null);
+        setRetryCount(prev => prev + 1);
+      }, 2000);
+      
+      return () => clearTimeout(recoveryTimeout);
+    }
+  }, [error, retryCount]);
   
   // CORREZIONE: Gestione sicura del localStorage
   useEffect(() => {
@@ -74,14 +88,28 @@ const Index = () => {
     }
   }, []);
   
+  // MIGLIORAMENTO: Controllo periodico della salute del componente
+  useEffect(() => {
+    // Se il contenuto non viene mai renderizzato dopo un certo tempo, consideriamo un errore
+    const healthCheckTimeout = setTimeout(() => {
+      if (!renderContent && pageLoaded) {
+        console.warn("❌ Health check fallito: contenuto non renderizzato dopo 8 secondi");
+        setError(new Error("Timeout di rendering del contenuto"));
+      }
+    }, 8000);
+    
+    return () => clearTimeout(healthCheckTimeout);
+  }, [renderContent, pageLoaded]);
+  
   // Handlers for child components
-  const handleLoaded = (isLoaded: boolean, canRender: boolean) => {
+  const handleLoaded = useCallback((isLoaded: boolean, canRender: boolean) => {
+    console.log("handleLoaded chiamato con:", { isLoaded, canRender });
     setPageLoaded(isLoaded);
     setRenderContent(canRender);
-  };
+  }, []);
 
   // Callback per quando l'intro è completa
-  const handleIntroComplete = () => {
+  const handleIntroComplete = useCallback(() => {
     console.log("Intro completed callback, setting introCompleted to true");
     setIntroCompleted(true);
     // Memorizziamo che l'intro è stata mostrata
@@ -92,20 +120,21 @@ const Index = () => {
     } catch (error) {
       console.error("Error setting localStorage:", error);
     }
-  };
+  }, []);
 
   // Callback for when countdown completes
-  const handleCountdownComplete = (isCompleted: boolean) => {
+  const handleCountdownComplete = useCallback((isCompleted: boolean) => {
     setCountdownCompleted(isCompleted);
-  };
+  }, []);
 
   // Function to handle page retry on error
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
+    console.log("Retry richiesto dall'utente");
     window.location.reload();
-  };
+  }, []);
 
   // Console logging state for debugging
-  console.log("Render state:", { introCompleted, pageLoaded, renderContent });
+  console.log("Index render state:", { introCompleted, pageLoaded, renderContent });
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">

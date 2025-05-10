@@ -12,6 +12,25 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
   const [introCompleted, setIntroCompleted] = useState(false);
   const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [timeoutId, setTimeoutId] = useState<number | null>(null);
+  
+  // MIGLIORAMENTO: Previene blocchi se l'intro non completa in tempo ragionevole
+  useEffect(() => {
+    if (!introCompleted && pageLoaded) {
+      // Timeout di sicurezza: se dopo 10 secondi l'intro non è ancora completato,
+      // lo consideriamo completato forzatamente per evitare blocchi
+      const id = window.setTimeout(() => {
+        console.warn("⚠️ Intro timeout sicurezza attivato - Forzatura completamento");
+        handleIntroComplete();
+      }, 10000);
+      
+      setTimeoutId(id);
+      
+      return () => {
+        if (timeoutId) window.clearTimeout(timeoutId);
+      };
+    }
+  }, [introCompleted, pageLoaded]);
   
   // MIGLIORAMENTO: Verifica localStorage in modo sicuro con gestione errori
   useEffect(() => {
@@ -19,7 +38,12 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
       // Solo lato client dopo montaggio del componente
       if (typeof window !== 'undefined') {
         // Force the intro to show every time for now (for testing)
-        localStorage.removeItem("hasSeenIntro");
+        try {
+          localStorage.removeItem("hasSeenIntro");
+        } catch (e) {
+          console.warn("Non è stato possibile accedere a localStorage, ignoriamo:", e);
+        }
+        
         setHasCheckedStorage(true);
         
         // Uncommenta questa parte per abilitare il salt dell'intro per gli utenti di ritorno
@@ -58,15 +82,26 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
 
   const handleIntroComplete = () => {
     try {
+      // Cancelliamo il timeout di sicurezza se esiste
+      if (timeoutId) window.clearTimeout(timeoutId);
+      
       setIntroCompleted(true);
       
       // Store that the user has seen the intro
       if (typeof window !== 'undefined') {
-        localStorage.setItem("hasSeenIntro", "true");
+        try {
+          localStorage.setItem("hasSeenIntro", "true");
+        } catch (e) {
+          console.warn("Non è stato possibile salvare su localStorage, ignoriamo:", e);
+        }
       }
       
       // Restore scrolling
-      document.body.style.overflow = "auto";
+      try {
+        document.body.style.overflow = "auto";
+      } catch (e) {
+        console.warn("Errore nel ripristino dell'overflow, ignoriamo:", e);
+      }
       
       // Notify parent component
       onIntroComplete();

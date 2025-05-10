@@ -16,8 +16,22 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({ children }: PublicLayoutPro
   // Add logging to debug component mounting issues
   useEffect(() => {
     console.log("PublicLayout mounted");
+    
+    // MIGLIORAMENTO: Diagnostica automatica per problemi routing
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log("Tab tornata attiva, controllo stato layout", { 
+          route: window.location.pathname,
+          docReady: document.readyState
+        });
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
     return () => {
       console.log("PublicLayout unmounted");
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
   

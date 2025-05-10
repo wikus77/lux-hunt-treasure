@@ -43,17 +43,27 @@ const MainContent: React.FC<MainContentProps> = ({
   onCloseInviteFriend,
   onAgeVerified,
 }) => {
-  // If there's an error, show error fallback
+  // MIGLIORAMENTO: Log di debug per la diagnostica di errori di render
+  React.useEffect(() => {
+    console.log("MainContent - stato render:", { 
+      pageLoaded, 
+      introCompleted, 
+      renderContent,
+      error: error ? error.message : null
+    });
+  }, [pageLoaded, introCompleted, renderContent, error]);
+
+  // Se c'è un errore, mostra error fallback
   if (error) {
     return <ErrorFallback error={error} onRetry={onRetry} />;
   }
 
-  // If page isn't loaded or content shouldn't be rendered yet, show loading screen
+  // Se la pagina non è caricata o il contenuto non deve essere ancora renderizzato, mostra loading screen
   if (!renderContent || !pageLoaded) {
     return <LoadingScreen />;
   }
 
-  // Show intro animation if needed
+  // Mostra animazione intro se necessario
   return (
     <>
       {pageLoaded && (
@@ -63,7 +73,7 @@ const MainContent: React.FC<MainContentProps> = ({
         />
       )}
       
-      {/* Main content rendered only when everything is ready */}
+      {/* Main content renderizzato solo quando tutto è pronto */}
       {renderContent && introCompleted && (
         <ParallaxContainer>
           <IndexContent 
