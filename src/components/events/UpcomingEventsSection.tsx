@@ -1,3 +1,4 @@
+
 import { Event } from "@/data/eventData";
 import EventCard from "./EventCard";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
@@ -60,6 +61,7 @@ const UpcomingEventsSection = ({ events }: UpcomingEventsSectionProps) => {
                 detailedDescription={event.detailedDescription}
                 isCurrent={event.isCurrent || false}
                 mysteryPrizes={event.mysteryPrizes}
+                gender={event.gender} // Added the required gender prop
               />
             </div>
           </section>

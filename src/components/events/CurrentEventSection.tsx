@@ -67,6 +67,7 @@ const CurrentEventSection = ({ currentEvent }: CurrentEventSectionProps) => {
           images={currentEvent.images}
           detailedDescription={currentEvent.detailedDescription}
           mysteryPrizes={upcomingMysteryPrizes}
+          gender={currentEvent.gender} // Added the required gender prop
         />
       </div>
     </section>
