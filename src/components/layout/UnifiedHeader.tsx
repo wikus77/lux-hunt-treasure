@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { useAuthContext } from "@/contexts/auth";
 import { Link, useLocation } from "react-router-dom";
 import UserMenu from "./header/UserMenu";
@@ -8,7 +8,13 @@ import { MobileMenu } from "./header/MobileMenu";
 import HeaderCountdown from "./header/HeaderCountdown";
 import AgentCodeDisplay from "./header/AgentCodeDisplay";
 
-const UnifiedHeader = () => {
+interface UnifiedHeaderProps {
+  profileImage?: string | null;
+  onClickMail?: () => void;
+  leftComponent?: ReactNode;
+}
+
+const UnifiedHeader = ({ profileImage, onClickMail, leftComponent }: UnifiedHeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isAuthenticated, hasRole } = useAuthContext();
   const location = useLocation();
@@ -23,6 +29,7 @@ const UnifiedHeader = () => {
     <header className="sticky top-0 z-50 w-full backdrop-blur bg-opacity-80 bg-black border-b border-gray-800">
       <div className="container flex h-16 items-center px-4 sm:px-6">
         <div className="flex items-center space-x-4 lg:space-x-6">
+          {leftComponent}
           <Link to="/" className="flex items-center space-x-2">
             <span className="text-xl font-bold tracking-wider">
               <span className="text-cyan-500">M1</span>SSION
@@ -33,7 +40,7 @@ const UnifiedHeader = () => {
         </div>
         
         <div className="hidden flex-1 md:flex justify-center">
-          <AgentCodeDisplay />
+          <AgentCodeDisplay agentCode="M1-AGENT" />
         </div>
 
         <div className="flex flex-1 items-center justify-end space-x-3 md:space-x-4">
@@ -75,7 +82,7 @@ const UnifiedHeader = () => {
             </nav>
           )}
 
-          <UserMenu />
+          <UserMenu onClickMail={onClickMail} />
           <MobileMenuButton 
             isOpen={isMobileMenuOpen} 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
