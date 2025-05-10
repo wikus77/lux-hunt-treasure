@@ -1,4 +1,3 @@
-
 import { motion } from 'framer-motion';
 import { Check, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -66,7 +65,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
       period: '/mese',
       features: [
         "Tutto del piano Gold",
-        "Indizi illimitati",
+        "7 indizi a settimana",
         "Contenuti esclusivi",
         "Accesso anticipato (48h)",
         "Supporto VIP",

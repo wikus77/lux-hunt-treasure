@@ -17,8 +17,8 @@ const PresentationSection = ({ visible }: PresentationSectionProps) => {
           <h2 className="text-3xl md:text-4xl font-orbitron mb-8">
             WELCOME TO{" "}
             <span>
-              <span style={{ color: '#00E5FF' }} className="text-[#00E5FF]">M1</span>
-              <span style={{ color: '#FFFFFF' }} className="text-white">SSION</span>
+              <span className="text-[#00E5FF]">M1</span>
+              <span className="text-white">SSION</span>
             </span>
           </h2>
           
@@ -43,7 +43,7 @@ const PresentationSection = ({ visible }: PresentationSectionProps) => {
           </p>
 
           <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
-            This is <span className="text-[#00E5FF] font-bold">M1</span><span className="text-white font-bold">SSION</span>. The countdown has begun. Are you ready?
+            This is <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span>. The countdown has begun. Are you ready?
           </p>
 
           {/* Simple static accent line instead of animated one */}
