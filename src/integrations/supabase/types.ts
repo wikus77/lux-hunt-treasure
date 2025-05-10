@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      app_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          expiry_date: string | null
+          id: string
+          is_active: boolean | null
+          is_read: boolean | null
+          message_type: string
+          target_users: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_read?: boolean | null
+          message_type?: string
+          target_users?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_read?: boolean | null
+          message_type?: string
+          target_users?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       buzz_purchases: {
         Row: {
           created_at: string
@@ -145,6 +184,36 @@ export type Database = {
           last_used?: string
           token?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      missions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          publication_date: string | null
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          publication_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          publication_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -386,6 +455,35 @@ export type Database = {
             columns: ["clue_id"]
             isOneToOne: false
             referencedRelation: "clues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_message_reads: {
+        Row: {
+          id: string
+          message_id: string
+          read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_message_reads_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "app_messages"
             referencedColumns: ["id"]
           },
         ]

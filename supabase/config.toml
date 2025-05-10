@@ -1,8 +1,33 @@
 
 project_id = "vkjrqirvdvjbemsfzxof"
 
-[functions.send-mailjet-email]
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[auth]
+enabled = true
+port = 54325
+
+[storage]
+enabled = true
+port = 54326
+
+[edge-functions]
+[edge-functions.send-mailjet-email]
 verify_jwt = true
 
-[functions.handle-pre-registration]
-verify_jwt = false
+[edge-functions.send-push-notification]
+verify_jwt = true

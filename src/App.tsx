@@ -38,6 +38,7 @@ import Stats from "./pages/Stats";
 import Leaderboard from "./pages/Leaderboard";
 import Notifications from "./pages/Notifications";
 import AccessDenied from "./pages/AccessDenied";
+import AdminDashboard from "./pages/AdminDashboard"; // New Admin Dashboard page
 
 // Components
 import { Toaster } from "sonner";
@@ -156,6 +157,16 @@ function AppContent() {
         element={
           <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
             <Buzz />
+          </RoleBasedProtectedRoute>
+        }
+      />
+
+      {/* Admin Dashboard - Only for admin users */}
+      <Route
+        path="/admin"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['admin']}>
+            <AdminDashboard />
           </RoleBasedProtectedRoute>
         }
       />
