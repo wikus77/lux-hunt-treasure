@@ -1,7 +1,8 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { ErrorBoundary } from '../error/ErrorBoundary';
+import LoadingScreen from '../index/LoadingScreen';
 
 type PublicLayoutProps = {
   children?: React.ReactNode;
@@ -24,9 +25,11 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({ children }: PublicLayoutPro
   
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-black">
-        {children || <Outlet />}
-      </div>
+      <Suspense fallback={<LoadingScreen />}>
+        <div className="min-h-screen bg-black">
+          {children || <Outlet />}
+        </div>
+      </Suspense>
     </ErrorBoundary>
   );
 };

@@ -20,20 +20,18 @@ const Index = () => {
   const [countdownCompleted, setCountdownCompleted] = useState(false);
   const [pageLoaded, setPageLoaded] = useState(false);
   const [introCompleted, setIntroCompleted] = useState(false);
-  const [renderContent, setRenderContent] = useState(false); // New state to control rendering
+  const [renderContent, setRenderContent] = useState(false); // State to control rendering
+  const [error, setError] = useState<Error | null>(null); // Error state for fallback
   const navigate = useNavigate();
   
   // Get target date from utility function
   const nextEventDate = getMissionDeadline();
   
-  // CORREZIONE: Utilizzo di un Effetto più sicuro per MutationObserver
+  // MIGLIORAMENTO: Protezione contro errori di rendering
   useEffect(() => {
-    // Spostato in un setTimeout per evitare problemi di idratazione
-    const observerTimer = setTimeout(() => {
-      console.log("Setting up mutation observer");
+    try {
       const observer = new MutationObserver(() => {
         const allSections = document.querySelectorAll("section");
-
         allSections.forEach((section) => {
           const text = section.textContent?.toLowerCase() || "";
           if (
@@ -53,18 +51,14 @@ const Index = () => {
         subtree: true,
       });
 
-      // Ferma l'osservatore dopo 10 secondi per sicurezza
-      setTimeout(() => {
-        observer.disconnect();
-        console.log("🛑 MutationObserver disattivato.");
-      }, 10000);
-
       return () => {
         observer.disconnect();
+        console.log("🛑 MutationObserver disattivato.");
       };
-    }, 500); // Ritardo di 500ms per garantire che il DOM sia pronto
-
-    return () => clearTimeout(observerTimer);
+    } catch (err) {
+      console.error("Errore nel setup MutationObserver:", err);
+      // Non propaghiamo questo errore, è solo per logging
+    }
   }, []);
   
   // CORREZIONE: Gestione sicura del localStorage
@@ -80,18 +74,17 @@ const Index = () => {
     }
   }, []);
   
-  // CORREZIONE: Gestione più robusta del caricamento della pagina
+  // MIGLIORAMENTO: Gestione più robusta del caricamento della pagina
   useEffect(() => {
     let isMounted = true;
     
-    // Impostiamo pageLoaded a true dopo un breve ritardo di sicurezza
     const loadTimer = setTimeout(() => {
       if (isMounted) {
         setPageLoaded(true);
-        console.log("Forced page loaded state to true");
+        console.log("Page loaded state set to true");
         
-        // CORREZIONE: Introduciamo un ritardo per rendere il contenuto visibile
-        // per garantire che tutto sia caricato e l'idratazione sia completata
+        // Piccolo ritardo prima di renderizzare il contenuto effettivo
+        // per garantire che l'hydration sia completata
         setTimeout(() => {
           if (isMounted) {
             setRenderContent(true);
@@ -101,37 +94,33 @@ const Index = () => {
       }
     }, 800);
     
-    if (document.readyState === 'complete') {
-      console.log("Page already loaded");
-      if (isMounted) {
-        setPageLoaded(true);
-        setRenderContent(true);
-      }
-    } else {
-      console.log("Setting up load event listener");
-      const handleLoad = () => {
-        console.log("Page fully loaded");
-        if (isMounted) {
-          setPageLoaded(true);
-          // Leggero ritardo prima di renderizzare il contenuto
-          setTimeout(() => {
-            if (isMounted) {
-              setRenderContent(true);
-            }
-          }, 100);
-        }
-      };
-      window.addEventListener('load', handleLoad);
-      return () => {
-        window.removeEventListener('load', handleLoad);
+    // Gestione più robusta del caricamento
+    const handleDocumentReady = () => {
+      if (document.readyState === 'complete' && isMounted) {
         clearTimeout(loadTimer);
-        isMounted = false;
-      };
-    }
+        console.log("Document ready state is complete");
+        setPageLoaded(true);
+        // Piccolo ritardo come sopra
+        setTimeout(() => {
+          if (isMounted) {
+            setRenderContent(true);
+          }
+        }, 100);
+      }
+    };
+    
+    // Controllo immediato
+    handleDocumentReady();
+    
+    // Anche ascolto per eventi futuri
+    document.addEventListener('readystatechange', handleDocumentReady);
+    window.addEventListener('load', handleDocumentReady);
     
     return () => {
       isMounted = false;
       clearTimeout(loadTimer);
+      document.removeEventListener('readystatechange', handleDocumentReady);
+      window.removeEventListener('load', handleDocumentReady);
     };
   }, []);
 
@@ -181,20 +170,36 @@ const Index = () => {
     }
   };
 
+  // Se c'è un errore, mostriamo un fallback
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4 text-white">
+        <h2 className="text-xl font-bold mb-4">Si è verificato un errore</h2>
+        <p className="mb-4">Ci scusiamo per l'inconveniente.</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-cyan-600 text-white rounded-md"
+        >
+          Ricarica la pagina
+        </button>
+      </div>
+    );
+  }
+
   // Console logging state for debugging
   console.log("Render state:", { introCompleted, pageLoaded, renderContent });
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
-      {/* CORREZIONE: CookiebotInit spostato all'inizio del componente */}
+      {/* CookiebotInit sempre disponibile */}
       <CookiebotInit />
       
-      {/* CORREZIONE: LoadingScreen migliorato - sempre visibile durante il caricamento */}
+      {/* MIGLIORAMENTO: LoadingScreen migliorato - sempre visibile durante il caricamento */}
       {(!renderContent || !pageLoaded) && (
         <LoadingScreen />
       )}
       
-      {/* Intro animation manager - renderizzato solo quando la pagina è caricata */}
+      {/* MIGLIORAMENTO: Intro animation manager dentro un try/catch per evitare errori fatali */}
       {pageLoaded && (
         <IntroManager 
           pageLoaded={pageLoaded} 
@@ -202,7 +207,7 @@ const Index = () => {
         />
       )}
       
-      {/* Main content - CORREZIONE: renderizzato solo quando tutto è pronto */}
+      {/* MIGLIORAMENTO: Main content renderizzato solo quando tutto è pronto */}
       {renderContent && introCompleted && (
         <ParallaxContainer>
           <IndexContent 

@@ -4,23 +4,35 @@ import React, { useEffect, useState } from "react";
 const LoadingScreen = () => {
   const [dots, setDots] = useState("...");
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
+  const [showFallbackInfo, setShowFallbackInfo] = useState(false);
   
-  // Crea un'animazione per i puntini di caricamento
+  // MIGLIORAMENTO: Crea un'animazione per i puntini di caricamento
   useEffect(() => {
     const interval = setInterval(() => {
       setDots(prev => prev.length >= 3 ? "." : prev + ".");
     }, 500);
     
     // Mostra info aggiuntive se il caricamento è lento
-    const timeout = setTimeout(() => {
+    const timeoutInfo = setTimeout(() => {
       setShowAdditionalInfo(true);
     }, 3000);
     
+    // Mostra info fallback se il caricamento è molto lento
+    const timeoutFallback = setTimeout(() => {
+      setShowFallbackInfo(true);
+    }, 8000);
+    
     return () => {
       clearInterval(interval);
-      clearTimeout(timeout);
+      clearTimeout(timeoutInfo);
+      clearTimeout(timeoutFallback);
     };
   }, []);
+  
+  // MIGLIORAMENTO: Aggiunto una funzione per forzare il ricaricamento
+  const handleForceReload = () => {
+    window.location.reload();
+  };
   
   return (
     <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[9999]">
@@ -36,6 +48,17 @@ const LoadingScreen = () => {
       {showAdditionalInfo && (
         <div className="mt-4 text-gray-400 text-xs max-w-xs text-center">
           <p>Se questa pagina rimane visibile per molto tempo, prova ad aggiornare la pagina.</p>
+        </div>
+      )}
+      
+      {showFallbackInfo && (
+        <div className="mt-6">
+          <button 
+            onClick={handleForceReload}
+            className="px-4 py-2 bg-cyan-600/50 text-white rounded hover:bg-cyan-600/70 transition-all"
+          >
+            Ricarica Pagina
+          </button>
         </div>
       )}
     </div>
