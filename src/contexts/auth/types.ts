@@ -1,36 +1,33 @@
 
 export interface AuthContextType {
-  user: any | null;
-  signIn?: (email: string, password: string) => Promise<void>;
-  signUp?: (email: string, password: string, data?: any) => Promise<void>;
-  resetPassword?: (email: string) => Promise<{ success: boolean; error?: string }>;
-  updateUserProfile?: (data: any) => Promise<void>;
-  loading?: boolean;
-  logout?: () => void;
-  signOut?: () => void;
-  
-  // Add missing properties
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: any }>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
   isEmailVerified: boolean;
-  getCurrentUser: () => any;
-  getAccessToken?: () => string | null;
+  getCurrentUser: () => User | null;
+  getAccessToken: () => string | null;
+  session: Session | null;
   resendVerificationEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
-  session?: any;
-  
-  // Role-related properties
-  userRole?: string | null;
-  hasRole?: (role: string) => boolean;
-  isRoleLoading?: boolean;
-  
-  // Login method
-  login?: (email: string, password: string) => Promise<any>;
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+  userRole: string | null;
+  hasRole: (role: string) => boolean;
+  isRoleLoading: boolean;
+  user: User | null;
 }
 
-// Add User type needed by AuthProvider
 export interface User {
   id: string;
   email?: string;
-  email_confirmed_at?: string;
-  user_metadata?: any;
+  app_metadata: Record<string, any>;
+  user_metadata: Record<string, any>;
+  aud: string;
+}
+
+export interface Session {
+  access_token: string;
+  refresh_token?: string;
+  expires_in?: number;
+  expires_at?: number;
+  user: User;
 }

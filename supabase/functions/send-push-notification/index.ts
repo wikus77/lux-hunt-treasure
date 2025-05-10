@@ -1,162 +1,131 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-// Define CORS headers
+// Define CORS headers directly in this file instead of importing
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface PushNotificationPayload {
-  userId?: string; // Optional - if null, send to all users
-  title: string;
-  body: string;
-  data?: Record<string, any>;
-}
+const ONESIGNAL_APP_ID = Deno.env.get("ONESIGNAL_APP_ID");
+const ONESIGNAL_API_KEY = Deno.env.get("ONESIGNAL_REST_API_KEY");
 
-// Handle CORS preflight requests
-const handleCors = (req: Request) => {
+const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: corsHeaders,
-      status: 204,
-    });
+    return new Response(null, { headers: corsHeaders });
   }
-  return null;
-};
-
-serve(async (req: Request) => {
-  // Handle CORS preflight
-  const corsResponse = handleCors(req);
-  if (corsResponse) return corsResponse;
 
   try {
-    const apiKey = Deno.env.get("FCM_SERVER_KEY");
-    if (!apiKey) {
-      throw new Error("FCM_SERVER_KEY not found");
-    }
-
-    // Create Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
-    const payload: PushNotificationPayload = await req.json();
-    const { userId, title, body, data } = payload;
-
-    // Validate the required fields
-    if (!title || !body) {
+    // Check if OneSignal credentials are set
+    if (!ONESIGNAL_APP_ID || !ONESIGNAL_API_KEY) {
+      console.error("OneSignal credentials not found in environment variables");
       return new Response(
-        JSON.stringify({ error: "Missing required fields: title, body" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        JSON.stringify({ 
+          success: false, 
+          message: "OneSignal API keys not configured" 
+        }),
+        { 
+          status: 500,
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
         }
       );
     }
 
-    // Get the FCM tokens for the user(s)
-    let tokens: string[] = [];
-
-    if (userId) {
-      // Send to specific user
-      const { data: tokenData, error: tokenError } = await supabaseClient
-        .from("device_tokens")
-        .select("token")
-        .eq("user_id", userId);
-
-      if (tokenError) {
-        throw new Error(`Error fetching tokens: ${tokenError.message}`);
-      }
-
-      tokens = tokenData.map((t) => t.token);
-    } else {
-      // Send to all users
-      const { data: tokenData, error: tokenError } = await supabaseClient
-        .from("device_tokens")
-        .select("token");
-
-      if (tokenError) {
-        throw new Error(`Error fetching tokens: ${tokenError.message}`);
-      }
-
-      tokens = tokenData.map((t) => t.token);
-    }
-
-    if (tokens.length === 0) {
-      return new Response(
-        JSON.stringify({ message: "No device tokens found to notify" }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    }
-
-    console.log(`Sending notification to ${tokens.length} tokens`);
-
-    // Send the FCM notification
-    const fcmEndpoint = "https://fcm.googleapis.com/fcm/send";
+    // Parse request body
+    const { title, message, segments = ["All"], url } = await req.json();
     
-    const fcmPayload = {
-      registration_ids: tokens,
-      notification: {
-        title,
-        body,
-      },
-      data: data || {},
+    if (!title || !message) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: "Title and message are required" 
+        }),
+        { 
+          status: 400,
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    console.log(`Sending push notification: "${title}" to segments: ${segments.join(", ")}`);
+
+    // Prepare OneSignal request
+    const notificationData = {
+      app_id: ONESIGNAL_APP_ID,
+      headings: { en: title },
+      contents: { en: message },
+      included_segments: segments,
+      url: url || "https://m1ssion.com"
     };
 
-    const fcmResponse = await fetch(fcmEndpoint, {
+    // Send notification via OneSignal API
+    const response = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `key=${apiKey}`,
+        "Authorization": `Basic ${ONESIGNAL_API_KEY}`
       },
-      body: JSON.stringify(fcmPayload),
+      body: JSON.stringify(notificationData)
     });
 
-    const fcmResult = await fcmResponse.json();
-
-    // Store the notification in the database for in-app access
-    const { data: notificationData, error: notificationError } = await supabaseClient
-      .from("notifications")
-      .insert([
-        {
-          user_id: userId, // Null for all users
-          title,
-          body,
-          data: data || {}
+    const responseData = await response.json();
+    
+    if (response.ok) {
+      console.log("OneSignal API response:", responseData);
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: "Notification sent successfully",
+          data: responseData
+        }),
+        { 
+          status: 200,
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
         }
-      ]);
-
-    if (notificationError) {
-      console.error("Error storing notification:", notificationError);
+      );
+    } else {
+      console.error("OneSignal API error:", responseData);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: "Failed to send notification",
+          error: responseData
+        }),
+        { 
+          status: response.status,
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
     }
-
+  } catch (error) {
+    console.error("Error in send-push-notification function:", error);
     return new Response(
       JSON.stringify({ 
-        message: "Notification sent", 
-        result: fcmResult,
-        recipients: tokens.length
+        success: false, 
+        message: error instanceof Error ? error.message : "Internal server error" 
       }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
-    );
-  } catch (error) {
-    console.error("Error sending push notification:", error);
-    
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
+      { 
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders
+        }
       }
     );
   }
-});
+};
+
+serve(handler);

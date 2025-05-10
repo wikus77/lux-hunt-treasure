@@ -1,186 +1,204 @@
 
-import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import "./laser-reveal-styles.css";
-import "./styles/base-intro-styles.css";
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import './laser-reveal-styles.css';
 
 interface LaserRevealIntroProps {
   onComplete: () => void;
-  onSkip: () => void;
+  onSkip?: () => void;
 }
 
 const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip }) => {
-  const [stage, setStage] = useState(0);
-  const [particles, setParticles] = useState<{ id: number; x: number; y: number; xDirection: number }[]>([]);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const logoImageUrl = "/lovable-uploads/781937e4-2515-4cad-8393-c51c1c81d6c9.png";
+  const [laserPhase, setLaserPhase] = useState(1); // 1: left to right, 2: right to left, 3: left to right again
+  const [showLogo, setShowLogo] = useState(false);
+  const [showDate, setShowDate] = useState(false);
+  const [fadeOut, setFadeOut] = useState(false);
 
-  // Controllo delle fasi di animazione
   useEffect(() => {
-    const stageTimers = [
-      setTimeout(() => setStage(1), 100),    // Inizia laser orizzontale
-      setTimeout(() => setStage(2), 2000),   // Mostra logo
-      setTimeout(() => setStage(3), 3000),   // Rivela testo
-      setTimeout(() => setStage(4), 5500),   // Avvia transizione finale
-      setTimeout(() => onComplete(), 6500)   // Completamento animazione
-    ];
+    // Timeline of animations - enhanced with multiple laser passes
+    const firstLaserPassTimeout = setTimeout(() => setLaserPhase(2), 1000); // First pass completes
+    const secondLaserPassTimeout = setTimeout(() => setLaserPhase(3), 2000); // Second pass completes
+    
+    // Start showing logo during third pass
+    const logoTimeout = setTimeout(() => setShowLogo(true), 2400);
+    
+    // Show date text after logo
+    const dateTimeout = setTimeout(() => setShowDate(true), 4000);
+    
+    // Begin fade out of the entire intro
+    const fadeOutTimeout = setTimeout(() => setFadeOut(true), 7000);
+    
+    // Complete the intro after fade out
+    const completeTimeout = setTimeout(() => onComplete(), 7800);
 
-    return () => stageTimers.forEach(timer => clearTimeout(timer));
+    return () => {
+      clearTimeout(firstLaserPassTimeout);
+      clearTimeout(secondLaserPassTimeout);
+      clearTimeout(logoTimeout);
+      clearTimeout(dateTimeout);
+      clearTimeout(fadeOutTimeout);
+      clearTimeout(completeTimeout);
+    };
   }, [onComplete]);
 
-  // Creazione effetto particelle quando il laser "brucia" il contenuto
-  useEffect(() => {
-    if (stage >= 2) {
-      const interval = setInterval(() => {
-        if (containerRef.current) {
-          const newParticle = {
-            id: Date.now(),
-            x: Math.random() * 80 + 10,
-            y: Math.random() * 60 + 20,
-            xDirection: (Math.random() - 0.5) * 40
-          };
-          
-          setParticles(prev => [...prev, newParticle]);
-          
-          // Rimuovi particelle vecchie per mantenere le prestazioni
-          setTimeout(() => {
-            setParticles(prev => prev.filter(p => p.id !== newParticle.id));
-          }, 1000);
-        }
-      }, 100);
-
-      return () => clearInterval(interval);
-    }
-  }, [stage]);
-
   return (
-    <div className="laser-reveal-container" ref={containerRef}>
-      {/* Sfondo con effetto stellare */}
-      <div className="star-background">
-        {Array.from({ length: 50 }).map((_, i) => (
-          <div 
-            key={`star-${i}`}
-            className="star"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              width: `${Math.random() * 2 + 1}px`,
-              height: `${Math.random() * 2 + 1}px`
+    <motion.div 
+      className="laser-reveal-container"
+      initial={{ opacity: 1 }}
+      animate={{ opacity: fadeOut ? 0 : 1 }}
+      transition={{ duration: 0.8 }}
+    >
+      {/* First laser pass (left to right) - with star point and cyan to magenta color transition */}
+      {laserPhase === 1 && (
+        <>
+          <motion.div 
+            className="laser-star"
+            initial={{ left: "-10%", top: "50%", transform: "translate(0, -50%)" }}
+            animate={{ left: "105%", top: "50%", transform: "translate(0, -50%)" }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="laser-line thin-laser"
+            initial={{ 
+              left: "-10%", 
+              width: "5%", 
+              opacity: 0,
+              background: "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)"
+            }}
+            animate={{ 
+              left: "105%", 
+              width: "100%", 
+              opacity: [0, 1, 1, 0.8],
+              background: [
+                "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(127, 114, 255, 0) 0%, rgba(127, 114, 255, 1) 50%, rgba(127, 114, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(255, 0, 255, 0) 0%, rgba(255, 0, 255, 1) 50%, rgba(255, 0, 255, 0) 100%)"
+              ]
+            }}
+            transition={{ 
+              left: { duration: 1, ease: "easeInOut" },
+              width: { duration: 0.3, ease: "easeOut" },
+              opacity: { times: [0, 0.1, 0.7, 1], duration: 1 },
+              background: { duration: 1, times: [0, 0.5, 1] }
             }}
           />
-        ))}
-      </div>
-      
-      {/* Linea laser che si muove */}
-      <motion.div 
-        className="laser-line"
-        initial={{ top: "-10px", opacity: 0 }}
-        animate={{ 
-          top: stage >= 1 ? ["0%", "100%"] : "-10px",
-          opacity: stage >= 1 ? [0, 1, 1, 0] : 0
-        }}
-        transition={{ 
-          duration: 2,
-          times: [0, 0.1, 0.9, 1],
-          ease: "easeInOut" 
-        }}
-      />
-      
-      {/* Contenuto nascosto che verrà rivelato */}
-      <div className={`laser-hidden-content ${stage >= 2 ? "laser-glow" : ""}`}>
-        {stage >= 2 && (
-          <div className="laser-revealed-content">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.2 }}
-              className="laser-logo"
-            >
-              <motion.img 
-                src={logoImageUrl} 
-                alt="M1SSION Logo" 
-                className="w-full"
-                initial={{ filter: "brightness(0) invert(1)" }}
-                animate={{ filter: "brightness(1) invert(0)" }}
-                transition={{ duration: 1.5, delay: 0.5 }}
-              />
-            </motion.div>
-            
-            {stage >= 3 && (
-              <>
-                <motion.div 
-                  className="laser-text"
-                  initial={{ width: 0 }}
-                  animate={{ width: "100%" }}
-                  transition={{ duration: 1, delay: 0.3 }}
-                >
-                  <motion.h1 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 1 }}
-                  >
-                    BENVENUTO A M1SSION
-                  </motion.h1>
-                </motion.div>
-                
-                <motion.div 
-                  className="laser-text"
-                  initial={{ width: 0 }}
-                  animate={{ width: "100%" }}
-                  transition={{ duration: 0.7, delay: 0.8 }}
-                >
-                  <motion.h2 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 1.3 }}
-                  >
-                    LA CACCIA AL TESORO STA PER INIZIARE
-                  </motion.h2>
-                </motion.div>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-      
-      {/* Particelle per effetto "bruciatura" */}
-      <div className="laser-particles">
-        {particles.map(particle => (
-          <div
-            key={particle.id}
-            className="particle"
-            style={{
-              left: `${particle.x}%`,
-              top: `${particle.y}%`,
-              '--x-direction': `${particle.xDirection}px`
-            } as React.CSSProperties}
-          />
-        ))}
-      </div>
-      
-      {/* Effetto di transizione finale */}
-      {stage >= 4 && (
-        <motion.div 
-          className="laser-final-flash"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 0.8, 0] }}
-          transition={{ duration: 1.2, times: [0, 0.5, 1] }}
-        />
+        </>
       )}
       
-      {/* Pulsante skip */}
-      <motion.button
-        className="skip-button"
-        onClick={onSkip}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.7 }}
-        whileHover={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-      >
-        SALTA
-      </motion.button>
-    </div>
+      {/* Second laser pass (right to left) - with star point and magenta to cyan color transition */}
+      {laserPhase === 2 && (
+        <>
+          <motion.div 
+            className="laser-star"
+            initial={{ left: "105%", top: "50%", transform: "translate(0, -50%)" }}
+            animate={{ left: "-10%", top: "50%", transform: "translate(0, -50%)" }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+            style={{ backgroundColor: "#ff00ff", boxShadow: "0 0 8px 4px rgba(255, 0, 255, 0.8)" }}
+          />
+          <motion.div 
+            className="laser-line thin-laser"
+            initial={{ 
+              left: "105%", 
+              width: "5%", 
+              opacity: 0,
+              background: "linear-gradient(to right, rgba(255, 0, 255, 0) 0%, rgba(255, 0, 255, 1) 50%, rgba(255, 0, 255, 0) 100%)"
+            }}
+            animate={{ 
+              left: "-10%", 
+              width: "100%", 
+              opacity: [0, 1, 1, 0.8],
+              background: [
+                "linear-gradient(to right, rgba(255, 0, 255, 0) 0%, rgba(255, 0, 255, 1) 50%, rgba(255, 0, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(127, 114, 255, 0) 0%, rgba(127, 114, 255, 1) 50%, rgba(127, 114, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)"
+              ]
+            }}
+            transition={{ 
+              left: { duration: 1, ease: "easeInOut" },
+              width: { duration: 0.3, ease: "easeOut" },
+              opacity: { times: [0, 0.1, 0.7, 1], duration: 1 },
+              background: { duration: 1, times: [0, 0.5, 1] }
+            }}
+          />
+        </>
+      )}
+      
+      {/* Third laser pass (left to right) - with star point and cyan to magenta color transition */}
+      {laserPhase === 3 && (
+        <>
+          <motion.div 
+            className="laser-star"
+            initial={{ left: "-10%", top: "50%", transform: "translate(0, -50%)" }}
+            animate={{ left: "105%", top: "50%", transform: "translate(0, -50%)" }}
+            transition={{ duration: 1.8, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="laser-line thin-laser"
+            initial={{ 
+              left: "-10%", 
+              width: "5%", 
+              opacity: 0,
+              background: "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)"
+            }}
+            animate={{ 
+              left: "105%", 
+              width: "100%", 
+              opacity: [0, 1, 1, 0.8, 1, 0.7, 0.4, 0.2],
+              background: [
+                "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(127, 114, 255, 0) 0%, rgba(127, 114, 255, 1) 50%, rgba(127, 114, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(255, 0, 255, 0) 0%, rgba(255, 0, 255, 1) 50%, rgba(255, 0, 255, 0) 100%)"
+              ]
+            }}
+            transition={{ 
+              left: { duration: 1.8, ease: "easeInOut" },
+              width: { duration: 0.3, ease: "easeOut" },
+              opacity: { times: [0, 0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 1], duration: 1.8 },
+              background: { duration: 1.8, times: [0, 0.5, 1] }
+            }}
+          />
+        </>
+      )}
+      
+      {/* M1SSION Logo with enhanced glitch effect - appears during third laser pass */}
+      {showLogo && (
+        <motion.div 
+          className="intro-logo-container"
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7, type: "spring", stiffness: 100 }}
+        >
+          <h1 className="intro-logo glitch-text" data-text="M1SSION">
+            <span className="cyan-text">M1</span>SSION
+          </h1>
+          
+          {/* Date text with smooth fade-in */}
+          {showDate && (
+            <motion.p 
+              className="intro-date"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, ease: "easeOut" }}
+            >
+              STARTS ON JULY 19
+            </motion.p>
+          )}
+        </motion.div>
+      )}
+      
+      {/* Digital noise overlay for enhanced tech effect */}
+      <div className="digital-noise"></div>
+      
+      {/* Skip button - maintained from original */}
+      {onSkip && (
+        <button 
+          onClick={onSkip} 
+          className="skip-button"
+        >
+          Skip intro
+        </button>
+      )}
+    </motion.div>
   );
 };
 

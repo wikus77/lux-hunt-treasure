@@ -21,7 +21,7 @@ interface UserMenuProps {
 
 const UserMenu = ({ onClickMail, enableAvatarUpload }: UserMenuProps) => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthContext(); // Changed signOut to logout to match context
+  const { signOut } = useAuthContext();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   useEffect(() => {
@@ -33,8 +33,8 @@ const UserMenu = ({ onClickMail, enableAvatarUpload }: UserMenuProps) => {
   }, []);
 
   const handleSignOut = () => {
-    if (logout) { // Use logout instead of signOut
-      logout();
+    if (signOut) {
+      signOut();
     }
   };
 

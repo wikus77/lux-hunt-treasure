@@ -5,10 +5,9 @@ import { motion } from "framer-motion";
 interface AgentCodeDisplayProps {
   agentCode: string;
   isMobile?: boolean;
-  className?: string;
 }
 
-const AgentCodeDisplay = ({ agentCode, isMobile = false, className = '' }: AgentCodeDisplayProps) => {
+const AgentCodeDisplay = ({ agentCode, isMobile = false }: AgentCodeDisplayProps) => {
   const [showCodeText, setShowCodeText] = useState(false);
 
   useEffect(() => {
@@ -23,7 +22,7 @@ const AgentCodeDisplay = ({ agentCode, isMobile = false, className = '' }: Agent
   if (isMobile) {
     return (
       <motion.div 
-        className={`flex justify-center items-center py-1.5 bg-black/20 ${className}`} // Aggiunto sfondo leggermente visibile
+        className="flex justify-center items-center py-1.5 bg-black/20" // Aggiunto sfondo leggermente visibile
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
@@ -46,7 +45,7 @@ const AgentCodeDisplay = ({ agentCode, isMobile = false, className = '' }: Agent
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.2, duration: 0.5 }}
-      className={`hidden md:flex items-center ml-2 ${className}`}
+      className="hidden md:flex items-center ml-2"
     >
       <span className="text-cyan-400 font-mono text-xs mr-1.5 font-medium">DOSSIER:</span>
       <motion.span 
