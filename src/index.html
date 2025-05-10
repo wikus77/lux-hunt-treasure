@@ -47,45 +47,8 @@
       gtag('config', 'G-9824MZJZ63');
     </script>
     
-    <!-- Klaro CMP Script -->
-    <script defer data-config="klaro-config" src="https://cdn.kiprotect.com/klaro/v0.7.16/klaro.js"></script>
-    <script type="application/json" id="klaro-config">
-    {
-      "version": 1,
-      "elementID": "klaro",
-      "storageMethod": "cookie",
-      "storageName": "klaro",
-      "htmlTexts": true,
-      "cookieName": "klaro",
-      "privacyPolicy": "/privacy-policy",
-      "default": false,
-      "mustConsent": true,
-      "acceptAll": true,
-      "translations": {
-        "it": {
-          "consentModal": {
-            "title": "Cookie e Privacy",
-            "description": "Utilizziamo i cookie per migliorare la tua esperienza sul nostro sito. Alcuni di questi sono necessari per il funzionamento del sito, mentre altri ci aiutano a migliorare l'esperienza utente."
-          },
-          "purposes": {
-            "analytics": "Analisi"
-          }
-        }
-      },
-      "services": [
-        {
-          "name": "google-analytics",
-          "title": "Google Analytics",
-          "purposes": ["analytics"],
-          "default": false,
-          "cookies": [ "_ga", "_gat", "_gid" ],
-          "required": false,
-          "optOut": false,
-          "onlyOnce": true
-        }
-      ]
-    }
-    </script>
+    <!-- Klaro CMP Script - Script personalizzato -->
+    <script defer src="https://api.kiprotect.com/v1/privacy-managers/5510d78d444e464c8146e1b7577972e9/klaro.js"></script>
   </head>
 
   <body>
