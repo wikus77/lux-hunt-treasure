@@ -88,7 +88,7 @@ export const usePreRegistration = () => {
         setEmail("");
         setInviteCode("");
         
-        // Invia l'email di conferma
+        // Invia l'email di conferma CON il referral code
         const emailSent = await sendConfirmationEmail(formData.name, formData.email, referralCode);
         console.log("Email confirmation status:", emailSent ? "sent" : "failed");
         
@@ -124,7 +124,7 @@ export const usePreRegistration = () => {
             setEmail("");
             setInviteCode("");
             
-            // Invia l'email di conferma anche quando si usa il metodo secondario
+            // Invia l'email di conferma CON il referral code
             const emailSent = await sendConfirmationEmail(formData.name, formData.email, result.referralCode);
             console.log("Email confirmation status (edge function):", emailSent ? "sent" : "failed");
             

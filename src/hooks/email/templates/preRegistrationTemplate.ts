@@ -8,6 +8,7 @@ export type PreRegistrationEmailData = {
 
 export const generatePreRegistrationEmailHtml = (data: PreRegistrationEmailData): string => {
   const { name, referral_code } = data;
+  const displayReferralCode = referral_code || "CODICE NON DISPONIBILE";
   
   return `
   <!DOCTYPE html>
@@ -46,7 +47,7 @@ export const generatePreRegistrationEmailHtml = (data: PreRegistrationEmailData)
         
         <h3>Il tuo codice referral esclusivo:</h3>
         
-        <div class="referral-code">${referral_code}</div>
+        <div class="referral-code">${displayReferralCode}</div>
         
         <p>Condividi questo codice con i tuoi amici. Per ogni amico che si iscrive usando il tuo codice, guadagnerai <strong>50 crediti extra</strong>!</p>
         

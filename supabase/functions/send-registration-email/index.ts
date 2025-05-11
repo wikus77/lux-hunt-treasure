@@ -39,7 +39,7 @@ serve(async (req) => {
 
     const { email, name, formType, referral_code } = requestData;
 
-    console.log(`Processing ${formType} email for ${name} (${email})`)
+    console.log(`Processing ${formType} email for ${name} (${email}), referral code: ${referral_code || "not provided"}`)
 
     // Validate required fields
     if (!email || !formType) {
@@ -130,6 +130,9 @@ serve(async (req) => {
       subject = "Pre-registrazione confermata"
       
       // Enhanced HTML for pre-registration with referral code
+      // Make sure we display the actual referral code or a clear message if it's not available
+      const displayReferralCode = referral_code || "CODICE NON DISPONIBILE";
+      
       htmlPart = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
           <div style="background: linear-gradient(90deg, #00E5FF 0%, #0077FF 100%); padding: 20px; text-align: center; color: #000;">
@@ -140,7 +143,7 @@ serve(async (req) => {
             <h3>Sei ufficialmente un agente M1SSION.</h3>
             <p>Hai completato la pre-iscrizione. Tieniti pronto: la tua prima missione sta per arrivare.</p>
             
-            <p style="margin-top: 20px;">Il tuo codice referral: <strong>${referral_code || "CODICE NON DISPONIBILE"}</strong></p>
+            <p style="margin-top: 20px;">Il tuo codice referral: <strong>${displayReferralCode}</strong></p>
             
             <p>Puoi invitare altri agenti usando questo codice e guadagnare crediti extra per la tua missione!</p>
           </div>

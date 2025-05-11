@@ -100,6 +100,7 @@ export const registerUserViaEdgeFunction = async (userData: PreRegistrationFormD
 export const sendConfirmationEmail = async (name: string, email: string, referralCode: string): Promise<boolean> => {
   try {
     console.log("Sending confirmation email to:", email);
+    console.log("Including referral code:", referralCode);
     
     // First method: Use the registration email service
     try {
@@ -110,7 +111,8 @@ export const sendConfirmationEmail = async (name: string, email: string, referra
       const success = await sendRegistrationEmail({
         email,
         name,
-        formType: "preregistrazione"
+        formType: "preregistrazione",
+        referral_code: referralCode  // Pass the referral code here
       });
       
       if (success) {
@@ -131,7 +133,7 @@ export const sendConfirmationEmail = async (name: string, email: string, referra
             email: email,
             name: name,
             formType: "preregistrazione",
-            referral_code: referralCode
+            referral_code: referralCode  // Pass the referral code here too
           }
         });
         
