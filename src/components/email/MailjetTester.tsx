@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Spinner } from "@/components/ui/spinner";
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 
 interface TestEmailState {
   email: string;
@@ -57,14 +57,14 @@ const MailjetTester = () => {
       console.log("Email sending response:", data);
       setResponse(data);
       
-      if (data.success) {
+      if (data?.success) {
         toast.success("Email inviata con successo", {
           description: `L'email è stata inviata a ${formData.email}`
         });
       } else {
-        setError(data.error || "Errore sconosciuto nell'invio dell'email");
+        setError(data?.error || "Errore sconosciuto nell'invio dell'email");
         toast.error("Errore nell'invio dell'email", {
-          description: data.error || "Si è verificato un errore durante l'invio dell'email"
+          description: data?.error || "Si è verificato un errore durante l'invio dell'email"
         });
       }
     } catch (err: any) {
@@ -112,7 +112,7 @@ const MailjetTester = () => {
           <Select 
             value={formData.formType} 
             onValueChange={(value) => handleChange('formType', value as any)}>
-            <SelectTrigger className="mt-1">
+            <SelectTrigger className="mt-1" id="formType">
               <SelectValue placeholder="Seleziona tipo" />
             </SelectTrigger>
             <SelectContent>
@@ -126,7 +126,7 @@ const MailjetTester = () => {
         </div>
         
         <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? <Spinner className="mr-2 h-4 w-4" /> : "Invia Email di Test"}
+          {isLoading ? <><Spinner className="mr-2 h-4 w-4" /> Invio in corso...</> : "Invia Email di Test"}
         </Button>
       </form>
       
