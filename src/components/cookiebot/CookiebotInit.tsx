@@ -51,6 +51,14 @@ const CookiebotInit: React.FC = () => {
       document.addEventListener('DOMContentLoaded', initializeCookieScript);
     }
 
+    // Add helper function to check for consent globally
+    window.checkCookieConsent = (category: 'necessary' | 'preferences' | 'statistics' | 'marketing') => {
+      if (window.CookieScriptConsent && window.CookieScriptConsent.categories) {
+        return window.CookieScriptConsent.categories[category] === true;
+      }
+      return false;
+    };
+
     // Cleanup della sottoscrizione all'evento
     return () => {
       document.removeEventListener('DOMContentLoaded', initializeCookieScript);

@@ -56,6 +56,7 @@ const AppRoutes = () => {
         <Route path="/cookie-policy" element={<CookiePolicy />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/access-denied" element={<AccessDenied />} />
+        
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Route>
 
@@ -111,11 +112,11 @@ const AppRoutes = () => {
         }
       />
 
-      {/* Email Campaign - For admin users */}
+      {/* Email Campaign route - Only for admin/developer users */}
       <Route
         path="/email-campaign"
         element={
-          <RoleBasedProtectedRoute allowedRoles={['admin']}>
+          <RoleBasedProtectedRoute allowedRoles={['admin', 'developer']}>
             <EmailCampaign />
           </RoleBasedProtectedRoute>
         }
