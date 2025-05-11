@@ -19,9 +19,5 @@ interface Window {
       };
     };
   };
-  // Add grecaptcha here as well to ensure it's available in all contexts
-  grecaptcha?: {
-    ready: (callback: () => void) => void;
-    execute: (siteKey: string, options: { action: string }) => Promise<string>;
-  };
 }
+

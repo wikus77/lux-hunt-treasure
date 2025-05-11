@@ -36,7 +36,4 @@ verify_jwt = true
 verify_jwt = true
 
 [edge-functions.send-mailjet-campaign]
-verify_jwt = false
-
-[edge-functions.verify-recaptcha]
-verify_jwt = false
+verify_jwt = true

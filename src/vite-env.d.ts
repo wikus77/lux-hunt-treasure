@@ -17,15 +17,6 @@ interface Window {
   };
   dataLayer?: any[];
   gtag?: (...args: any[]) => void;
-  
-  // Add checkCookieConsent global function
-  checkCookieConsent?: (category: 'necessary' | 'preferences' | 'statistics' | 'marketing') => boolean;
-  
-  // Add grecaptcha global object
-  grecaptcha?: {
-    ready: (callback: () => void) => void;
-    execute: (siteKey: string, options: { action: string }) => Promise<string>;
-  };
 }
 
 // Environment variables for EmailJS
