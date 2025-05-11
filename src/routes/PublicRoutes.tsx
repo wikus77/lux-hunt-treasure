@@ -16,7 +16,6 @@ import PrivacyPolicy from "../pages/PrivacyPolicy";
 import CookiePolicy from "../pages/CookiePolicy";
 import HowItWorks from "../pages/HowItWorks";
 import AccessDenied from "../pages/AccessDenied";
-import EmailCampaign from "../pages/EmailCampaign";
 import { EmailVerificationPage } from "../components/auth/EmailVerificationHandler";
 
 export const PublicRoutes = () => {
@@ -35,16 +34,8 @@ export const PublicRoutes = () => {
       <Route path="/cookie-policy" element={<CookiePolicy />} />
       <Route path="/how-it-works" element={<HowItWorks />} />
       <Route path="/access-denied" element={<AccessDenied />} />
-
-      {/* IMPORTANT: Make email-campaign available to admins without layout protection */}
-      <Route
-        path="/email-campaign"
-        element={
-          <RoleBasedProtectedRoute allowedRoles={['admin', 'developer']}>
-            <EmailCampaign />
-          </RoleBasedProtectedRoute>
-        }
-      />
+      
+      {/* The email-campaign route has been moved to AppRoutes.tsx */}
       
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Route>

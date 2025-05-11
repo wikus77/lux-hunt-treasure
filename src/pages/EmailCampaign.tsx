@@ -1,27 +1,12 @@
 
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React from "react";
 import { useAuthContext } from "@/contexts/auth";
 import CampaignSender from "@/components/email/CampaignSender";
 import { Spinner } from "@/components/ui/spinner";
 
 const EmailCampaign = () => {
-  const { hasRole, isAuthenticated, isRoleLoading } = useAuthContext();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // If user is authenticated and roles are loaded, check if they have admin or developer role
-    if (!isRoleLoading && isAuthenticated) {
-      const isAdmin = hasRole("admin");
-      const isDeveloper = hasRole("developer");
-      
-      if (!isAdmin && !isDeveloper) {
-        console.log("User doesn't have admin or developer role, redirecting to access-denied");
-        navigate("/access-denied");
-      }
-    }
-  }, [hasRole, isRoleLoading, isAuthenticated, navigate]);
-
+  const { hasRole, isRoleLoading } = useAuthContext();
+  
   // Show loading while checking permissions
   if (isRoleLoading) {
     return (
@@ -32,6 +17,7 @@ const EmailCampaign = () => {
     );
   }
 
+  // Permissions are checked via the route, so this component can focus on rendering
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6 text-center text-white">
