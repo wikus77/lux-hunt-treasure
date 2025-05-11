@@ -58,7 +58,7 @@ export const initializeTurnstile = (): Promise<void> => {
     script.async = true;
     script.defer = true;
     
-    // Define the callback function
+    // Define the callback function - make sure it's defined before the script is loaded
     window.onloadTurnstileCallback = () => {
       console.log('Turnstile script loaded via callback');
       resolve();
