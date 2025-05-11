@@ -7,9 +7,10 @@ import { Progress } from "@/components/ui/progress";
 interface ContactSubmitButtonProps {
   isSubmitting: boolean;
   progress: number;
+  disabled?: boolean; // Added the disabled prop with optional type
 }
 
-const ContactSubmitButton: React.FC<ContactSubmitButtonProps> = ({ isSubmitting, progress }) => {
+const ContactSubmitButton: React.FC<ContactSubmitButtonProps> = ({ isSubmitting, progress, disabled = false }) => {
   return (
     <div className="space-y-2">
       {isSubmitting && (
@@ -22,7 +23,7 @@ const ContactSubmitButton: React.FC<ContactSubmitButtonProps> = ({ isSubmitting,
       <Button
         type="submit"
         className="bg-gradient-to-r from-cyan-400 to-blue-600 text-black px-6 py-2 rounded-full font-medium flex items-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
-        disabled={isSubmitting}
+        disabled={isSubmitting || disabled}
       >
         {isSubmitting ? (
           <>Invio in corso...</>
