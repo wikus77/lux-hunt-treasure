@@ -28,6 +28,7 @@ import PaymentGold from "./pages/PaymentGold";
 import PaymentBlack from "./pages/PaymentBlack";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import EmailTest from "./pages/EmailTest";
+import EmailCampaign from "./pages/EmailCampaign"; // New import for the Campaign page
 import Terms from "./pages/Terms";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CookiePolicy from "./pages/CookiePolicy";
@@ -178,6 +179,16 @@ function AppContent() {
         element={
           <RoleBasedProtectedRoute allowedRoles={['admin']}>
             <AdminDashboard />
+          </RoleBasedProtectedRoute>
+        }
+      />
+
+      {/* Email Campaign - For admin users */}
+      <Route
+        path="/email-campaign"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['admin']}>
+            <EmailCampaign />
           </RoleBasedProtectedRoute>
         }
       />
