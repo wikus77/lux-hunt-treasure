@@ -34,3 +34,6 @@ verify_jwt = true
 
 [edge-functions.send-registration-email]
 verify_jwt = true
+
+[edge-functions.send-mailjet-campaign]
+verify_jwt = true
