@@ -132,8 +132,6 @@ serve(async (req) => {
     // Step 2: Send the campaign
     console.log(`Sending campaign "${campaignName}" (ID: ${campaign.ID})...`);
     
-    // Send campaign (draft version)
-    // Note: You would need to replace this with the appropriate Mailjet API for sending campaigns
     try {
       const sendResponse = await mailjetClient
         .post(`campaign/${campaign.ID}/send`)

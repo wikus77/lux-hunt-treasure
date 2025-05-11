@@ -1,3 +1,4 @@
+
 import { Navigate, Route, Routes } from "react-router-dom";
 import { RoleBasedProtectedRoute } from "../components/auth/RoleBasedProtectedRoute";
 import PublicLayout from "../components/layout/PublicLayout";
@@ -55,9 +56,6 @@ const AppRoutes = () => {
         <Route path="/cookie-policy" element={<CookiePolicy />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/access-denied" element={<AccessDenied />} />
-
-        {/* Email Campaign route with CAPTCHA bypass for admins/developers */}
-        <Route path="/email-campaign" element={<EmailCampaign />} />
         
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Route>
@@ -110,6 +108,16 @@ const AppRoutes = () => {
         element={
           <RoleBasedProtectedRoute allowedRoles={['admin']}>
             <AdminDashboard />
+          </RoleBasedProtectedRoute>
+        }
+      />
+
+      {/* Email Campaign route - Only for admin/developer users */}
+      <Route
+        path="/email-campaign"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['admin', 'developer']}>
+            <EmailCampaign />
           </RoleBasedProtectedRoute>
         }
       />
