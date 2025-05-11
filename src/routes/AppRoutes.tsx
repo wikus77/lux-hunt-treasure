@@ -1,3 +1,4 @@
+
 import { Navigate, Route, Routes } from "react-router-dom";
 import { RoleBasedProtectedRoute } from "../components/auth/RoleBasedProtectedRoute";
 import PublicLayout from "../components/layout/PublicLayout";
@@ -25,6 +26,7 @@ import PaymentBlack from "../pages/PaymentBlack";
 import PaymentSuccess from "../pages/PaymentSuccess";
 import EmailTest from "../pages/EmailTest";
 import EmailCampaign from "../pages/EmailCampaign";
+import DevCampaignTest from "../pages/DevCampaignTest"; // Import the new CAPTCHA-free page
 import Terms from "../pages/Terms";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
 import CookiePolicy from "../pages/CookiePolicy";
@@ -58,6 +60,9 @@ const AppRoutes = () => {
 
         {/* Email Campaign route with CAPTCHA bypass for admins/developers */}
         <Route path="/email-campaign" element={<EmailCampaign />} />
+        
+        {/* New Dev Campaign Test route - completely CAPTCHA-free */}
+        <Route path="/dev-campaign-test" element={<DevCampaignTest />} />
         
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Route>
