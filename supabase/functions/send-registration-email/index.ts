@@ -19,7 +19,25 @@ serve(async (req) => {
   
   try {
     // Parse the request body
-    const { email, name, formType } = await req.json()
+    let requestData;
+    try {
+      requestData = await req.json();
+      console.log("Received registration email data:", JSON.stringify(requestData));
+    } catch (parseError) {
+      console.error("Error parsing request body:", parseError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid request format" }), 
+        { 
+          status: 400, 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          } 
+        }
+      );
+    }
+
+    const { email, name, formType } = requestData;
 
     console.log(`Processing ${formType} email for ${name} (${email})`)
 
@@ -46,7 +64,11 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "API keys Mailjet non configurate"
+          error: "API keys Mailjet non configurate",
+          debug: {
+            MJ_APIKEY_PUBLIC_EXISTS: !!MJ_APIKEY_PUBLIC,
+            MJ_APIKEY_PRIVATE_EXISTS: !!MJ_APIKEY_PRIVATE,
+          }
         }), 
         { 
           status: 500, 
@@ -59,10 +81,30 @@ serve(async (req) => {
     }
 
     // Initialize Mailjet client with API keys from environment variables
-    const mailjetClient = mailjet.apiConnect(
-      MJ_APIKEY_PUBLIC,
-      MJ_APIKEY_PRIVATE
-    )
+    let mailjetClient;
+    try {
+      mailjetClient = mailjet.apiConnect(
+        MJ_APIKEY_PUBLIC,
+        MJ_APIKEY_PRIVATE
+      );
+      console.log("Mailjet client initialized successfully");
+    } catch (mjInitError) {
+      console.error("Error initializing Mailjet client:", mjInitError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Errore nell'inizializzazione del client Mailjet",
+          details: mjInitError.message || JSON.stringify(mjInitError)
+        }), 
+        { 
+          status: 500, 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          } 
+        }
+      );
+    }
 
     // Configure email based on form type
     let senderEmail = "noreply@m1ssion.com"
@@ -89,24 +131,28 @@ serve(async (req) => {
       htmlPart = `<h3>Grazie per la tua pre-registrazione!</h3><p>Sei tra i primi a far parte di M1SSION. Ti aggiorneremo sul lancio.</p>`
     }
 
-    console.log(`Sending email from ${senderEmail} to ${email} with subject "${subject}"`)
+    console.log(`Preparing to send email from ${senderEmail} to ${email} with subject "${subject}"`)
+
+    // Prepare email data
+    const emailData = {
+      Messages: [
+        {
+          From: { Email: senderEmail, Name: senderName },
+          To: [{ Email: email, Name: name || "Utente" }],
+          Subject: subject,
+          HTMLPart: htmlPart,
+          TrackOpens: "enabled",
+          TrackClicks: "enabled"
+        }
+      ]
+    };
 
     // Send email through Mailjet API
     try {
-      const response = await mailjetClient.post("send", { version: "v3.1" }).request({
-        Messages: [
-          {
-            From: { Email: senderEmail, Name: senderName },
-            To: [{ Email: email, Name: name || "Utente" }],
-            Subject: subject,
-            HTMLPart: htmlPart,
-            TrackOpens: "enabled",
-            TrackClicks: "enabled"
-          }
-        ]
-      })
-
-      console.log("Mailjet API response:", response.body)
+      console.log("Sending email via Mailjet API...");
+      const response = await mailjetClient.post("send", { version: "v3.1" }).request(emailData);
+      console.log("Mailjet API response status:", response.status);
+      console.log("Mailjet API response body:", JSON.stringify(response.body, null, 2));
 
       return new Response(
         JSON.stringify({ 
@@ -123,13 +169,25 @@ serve(async (req) => {
         }
       )
     } catch (mailjetError: any) {
-      console.error("Mailjet API error:", mailjetError)
+      console.error("Mailjet API error:", mailjetError);
+      
+      // Extract detailed error info
+      let errorDetails = mailjetError;
+      try {
+        if (mailjetError.response && mailjetError.response.data) {
+          errorDetails = mailjetError.response.data;
+        } else if (mailjetError.message) {
+          errorDetails = mailjetError.message;
+        }
+      } catch (e) {
+        console.error("Error parsing Mailjet error:", e);
+      }
       
       return new Response(
         JSON.stringify({ 
           success: false, 
           error: "Errore API Mailjet: " + (mailjetError.message || mailjetError.ErrorMessage || JSON.stringify(mailjetError)),
-          details: mailjetError
+          details: errorDetails
         }), 
         { 
           status: 500, 
@@ -141,7 +199,7 @@ serve(async (req) => {
       )
     }
   } catch (error: any) {
-    console.error("Error sending email:", error)
+    console.error("General error sending email:", error);
     
     return new Response(
       JSON.stringify({ 

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { shouldBypassCaptcha } from '@/utils/turnstile';
 
@@ -7,15 +7,34 @@ interface UseTurnstileOptions {
   action?: string;
   onSuccess?: (result: any) => void;
   onError?: (error: any) => void;
+  autoVerify?: boolean;
 }
 
 export const useTurnstile = (options: UseTurnstileOptions = {}) => {
-  const { action = 'submit', onSuccess, onError } = options;
+  const { action = 'submit', onSuccess, onError, autoVerify = false } = options;
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
-  const verifyToken = async (token: string) => {
+  // For pages that bypass CAPTCHA, automatically set verified to true
+  useEffect(() => {
+    if (shouldBypassCaptcha(window.location.pathname)) {
+      console.log('Auto-bypassing Turnstile on developer path');
+      setIsVerified(true);
+      setToken('BYPASS_FOR_DEVELOPMENT');
+      onSuccess?.({ success: true, bypass: true });
+    }
+  }, [onSuccess]);
+
+  // Auto-verify if requested and token is available
+  useEffect(() => {
+    if (autoVerify && token && !isVerified && !isVerifying) {
+      verifyToken(token).catch(console.error);
+    }
+  }, [token, autoVerify, isVerified, isVerifying]);
+
+  const verifyToken = async (turnstileToken: string) => {
     // Skip verification if on bypass paths
     if (shouldBypassCaptcha(window.location.pathname)) {
       console.log('Bypassing verification on developer path');
@@ -25,14 +44,15 @@ export const useTurnstile = (options: UseTurnstileOptions = {}) => {
     }
 
     // Skip verification if token is a bypass token
-    if (token.startsWith('BYPASS_')) {
+    if (turnstileToken.startsWith('BYPASS_')) {
       console.log('Bypass token detected, skipping verification');
       setIsVerified(true);
       onSuccess?.({ success: true, bypass: true });
       return true;
     }
 
-    if (!token) {
+    // Without a token, allow functionality to continue as a failsafe
+    if (!turnstileToken) {
       console.log('No token provided, but allowing functionality to continue');
       setIsVerified(true); // Allow functionality to continue
       onSuccess?.({ success: true, noToken: true });
@@ -44,7 +64,7 @@ export const useTurnstile = (options: UseTurnstileOptions = {}) => {
 
     try {
       const { data, error: functionError } = await supabase.functions.invoke('verify-turnstile', {
-        body: { token, action }
+        body: { token: turnstileToken, action }
       });
 
       if (functionError) {
@@ -82,17 +102,17 @@ export const useTurnstile = (options: UseTurnstileOptions = {}) => {
     }
   };
 
-  // For pages that bypass CAPTCHA, we can immediately set verified to true
-  useState(() => {
-    if (shouldBypassCaptcha(window.location.pathname)) {
-      setIsVerified(true);
-    }
-  });
+  const setTurnstileToken = (newToken: string) => {
+    setToken(newToken);
+    return newToken;
+  };
 
   return {
     isVerifying,
     isVerified,
     error,
-    verifyToken
+    token,
+    verifyToken,
+    setTurnstileToken
   };
 };

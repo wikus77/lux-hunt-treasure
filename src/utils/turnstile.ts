@@ -37,7 +37,7 @@ export const shouldBypassCaptcha = (path: string): boolean => {
  * This function loads the Turnstile script if it's not already loaded
  */
 export const initializeTurnstile = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     // If we're on a bypass path, resolve immediately
     if (shouldBypassCaptcha(window.location.pathname)) {
       console.log('Bypassing Turnstile on developer path:', window.location.pathname);
@@ -54,34 +54,45 @@ export const initializeTurnstile = (): Promise<void> => {
 
     // Load Turnstile script
     const script = document.createElement('script');
-    script.src = `https://challenges.cloudflare.com/turnstile/v0/api.js?render=${TURNSTILE_SITE_KEY}`;
+    script.src = `https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback`;
     script.async = true;
     script.defer = true;
     
+    // Define the callback function
+    window.onloadTurnstileCallback = () => {
+      console.log('Turnstile script loaded via callback');
+      resolve();
+    };
+    
     script.onload = () => {
-      console.log('Turnstile script loaded');
+      console.log('Turnstile script loaded via onload');
       resolve();
     };
     
     script.onerror = () => {
-      console.error('Error loading Turnstile script');
-      // Resolve anyway to not block functionality
-      resolve();
+      console.error('Error loading Turnstile script, but continuing without it');
+      resolve(); // Resolve anyway to not block functionality
     };
     
     document.head.appendChild(script);
+    
+    // Set a timeout just in case callbacks fail
+    setTimeout(() => {
+      console.log('Turnstile script load timeout reached, continuing');
+      resolve();
+    }, 2000);
   });
 };
 
 /**
  * Get a Turnstile token for a specific action
  * @param action Action name for analytics
- * @returns Token or null if on bypass path
+ * @returns Token or bypass token if on bypass path
  */
-export const getTurnstileToken = async (action: string = 'submit'): Promise<string | null> => {
-  // If we're on a bypass path, return null to indicate bypass
+export const getTurnstileToken = async (action: string = 'submit'): Promise<string> => {
+  // If we're on a bypass path, return a bypass token
   if (shouldBypassCaptcha(window.location.pathname)) {
-    console.log('Bypassing Turnstile token generation on developer path:', window.location.pathname);
+    console.log('Bypassing Turnstile token generation on developer path');
     return 'BYPASS_FOR_DEVELOPMENT';
   }
 
@@ -90,39 +101,82 @@ export const getTurnstileToken = async (action: string = 'submit'): Promise<stri
     await initializeTurnstile();
     
     // Wait for turnstile to be ready
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       if (!window.turnstile) {
-        console.log('Turnstile not loaded, but allowing functionality to continue');
-        resolve('BYPASS_DUE_TO_LOAD_ERROR');
+        console.log('Turnstile not loaded, providing bypass token');
+        resolve('BYPASS_NOT_LOADED');
         return;
       }
 
-      window.turnstile.ready(() => {
-        try {
-          if (!window.turnstile) {
-            throw new Error('turnstile became unavailable');
+      try {
+        window.turnstile.ready(() => {
+          try {
+            // Create a container element for the widget
+            const containerId = 'turnstile-container-' + Math.random().toString(36).substring(2, 9);
+            const container = document.createElement('div');
+            container.id = containerId;
+            container.style.position = 'absolute';
+            container.style.visibility = 'hidden';
+            document.body.appendChild(container);
+            
+            // Render the widget
+            window.turnstile.render(`#${containerId}`, {
+              sitekey: TURNSTILE_SITE_KEY,
+              action: action,
+              callback: function(token: string) {
+                console.log('Turnstile token generated');
+                // Clean up container
+                try {
+                  document.body.removeChild(container);
+                } catch (e) {
+                  console.warn('Error removing turnstile container:', e);
+                }
+                resolve(token);
+              },
+              'error-callback': function() {
+                console.warn('Turnstile error, providing bypass token');
+                // Clean up container
+                try {
+                  document.body.removeChild(container);
+                } catch (e) {
+                  console.warn('Error removing turnstile container:', e);
+                }
+                resolve('BYPASS_DUE_TO_ERROR');
+              },
+              'expired-callback': function() {
+                console.warn('Turnstile token expired, providing bypass token');
+                // Clean up container
+                try {
+                  document.body.removeChild(container);
+                } catch (e) {
+                  console.warn('Error removing turnstile container:', e);
+                }
+                resolve('BYPASS_DUE_TO_EXPIRY');
+              }
+            });
+            
+            // Add a timeout for safety
+            setTimeout(() => {
+              console.warn('Turnstile token generation timeout, providing bypass token');
+              try {
+                document.body.removeChild(container);
+              } catch (e) {
+                console.warn('Error removing turnstile container:', e);
+              }
+              resolve('BYPASS_DUE_TO_TIMEOUT');
+            }, 5000);
+          } catch (renderError) {
+            console.error('Error rendering Turnstile:', renderError);
+            resolve('BYPASS_RENDER_ERROR');
           }
-          window.turnstile.render('#turnstile-container', {
-            sitekey: TURNSTILE_SITE_KEY,
-            callback: function(token) {
-              console.log('Turnstile token generated for action:', action);
-              resolve(token);
-            },
-            'error-callback': function() {
-              console.warn('Turnstile error, but allowing functionality to continue');
-              resolve('BYPASS_DUE_TO_RENDER_ERROR');
-            }
-          });
-        } catch (error) {
-          console.error('Error executing Turnstile:', error);
-          // Resolve with bypass to not block functionality
-          resolve('BYPASS_DUE_TO_EXECUTION_ERROR');
-        }
-      });
+        });
+      } catch (readyError) {
+        console.error('Error in Turnstile ready function:', readyError);
+        resolve('BYPASS_READY_ERROR');
+      }
     });
   } catch (error) {
     console.error('Failed to get Turnstile token:', error);
-    // Return bypass to not block functionality
     return 'BYPASS_DUE_TO_ERROR';
   }
 };

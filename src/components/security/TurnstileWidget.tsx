@@ -12,10 +12,12 @@ const TurnstileWidget = ({ onVerify, action = 'submit', className = '' }: Turnst
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string>('');
   const errorTimerRef = useRef<number | null>(null);
+  const verificationAttemptedRef = useRef<boolean>(false);
 
   useEffect(() => {
     // Skip turnstile on bypass paths
     if (shouldBypassCaptcha(window.location.pathname)) {
+      console.log('Bypassing Turnstile on developer path:', window.location.pathname);
       onVerify('BYPASS_FOR_DEVELOPMENT');
       return;
     }
@@ -23,7 +25,10 @@ const TurnstileWidget = ({ onVerify, action = 'submit', className = '' }: Turnst
     // Set a fallback in case script loading fails
     errorTimerRef.current = window.setTimeout(() => {
       console.warn('Turnstile widget did not load in time, providing bypass token');
-      onVerify('BYPASS_DUE_TO_TIMEOUT');
+      if (!verificationAttemptedRef.current) {
+        verificationAttemptedRef.current = true;
+        onVerify('BYPASS_DUE_TO_TIMEOUT');
+      }
     }, 5000);
 
     // Load Turnstile script if not already loaded
@@ -37,7 +42,10 @@ const TurnstileWidget = ({ onVerify, action = 'submit', className = '' }: Turnst
       script.onload = renderWidget;
       script.onerror = () => {
         console.warn('Turnstile script failed to load, providing bypass token');
-        onVerify('BYPASS_SCRIPT_LOAD_ERROR');
+        if (!verificationAttemptedRef.current) {
+          verificationAttemptedRef.current = true;
+          onVerify('BYPASS_SCRIPT_LOAD_ERROR');
+        }
       };
     } else {
       renderWidget();
@@ -67,11 +75,12 @@ const TurnstileWidget = ({ onVerify, action = 'submit', className = '' }: Turnst
             containerRef.current!.id = containerId;
             
             try {
-              widgetIdRef.current = window.turnstile?.render(containerId, {
+              widgetIdRef.current = window.turnstile?.render(`#${containerId}`, {
                 sitekey: '0x4AAAAAABcmLn-b1NViurvi',
-                theme: 'light',
+                theme: 'dark',
                 callback: (token: string) => {
                   console.log(`Turnstile verification completed for action: ${action}`);
+                  verificationAttemptedRef.current = true;
                   onVerify(token);
                 },
                 'expired-callback': () => {
@@ -81,26 +90,41 @@ const TurnstileWidget = ({ onVerify, action = 'submit', className = '' }: Turnst
                   } catch (resetError) {
                     console.warn('Error resetting expired Turnstile widget:', resetError);
                     // Provide bypass token on error
-                    onVerify('BYPASS_RESET_ERROR');
+                    if (!verificationAttemptedRef.current) {
+                      verificationAttemptedRef.current = true;
+                      onVerify('BYPASS_RESET_ERROR');
+                    }
                   }
                 },
                 'error-callback': () => {
                   console.warn('Turnstile encountered an error, providing bypass token');
-                  onVerify('BYPASS_WIDGET_ERROR');
+                  if (!verificationAttemptedRef.current) {
+                    verificationAttemptedRef.current = true;
+                    onVerify('BYPASS_WIDGET_ERROR');
+                  }
                 }
               });
             } catch (renderError) {
               console.warn('Error rendering Turnstile widget:', renderError);
-              onVerify('BYPASS_RENDER_ERROR');
+              if (!verificationAttemptedRef.current) {
+                verificationAttemptedRef.current = true;
+                onVerify('BYPASS_RENDER_ERROR');
+              }
             }
           });
         } catch (turnstileError) {
           console.warn('Error in Turnstile ready function:', turnstileError);
-          onVerify('BYPASS_READY_ERROR');
+          if (!verificationAttemptedRef.current) {
+            verificationAttemptedRef.current = true;
+            onVerify('BYPASS_READY_ERROR');
+          }
         }
       } else if (!window.turnstile) {
         console.warn('Turnstile not available after script load, providing bypass token');
-        onVerify('BYPASS_NOT_AVAILABLE');
+        if (!verificationAttemptedRef.current) {
+          verificationAttemptedRef.current = true;
+          onVerify('BYPASS_NOT_AVAILABLE');
+        }
       }
     }
 
@@ -125,7 +149,7 @@ const TurnstileWidget = ({ onVerify, action = 'submit', className = '' }: Turnst
     return <div className="text-sm text-gray-500 italic">CAPTCHA bypassed for development</div>;
   }
 
-  return <div ref={containerRef} className={className} />;
+  return <div ref={containerRef} className={`turnstile-container ${className}`} />;
 };
 
 export default TurnstileWidget;

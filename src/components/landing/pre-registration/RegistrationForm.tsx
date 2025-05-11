@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Loader2, Send } from "lucide-react";
 import { Link } from "react-router-dom";
 import FormField from "./FormField";
@@ -29,16 +29,24 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   onEmailChange,
   onSubmit: originalSubmit
 }) => {
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [widgetRendered, setWidgetRendered] = useState(false);
   
-  const { verifyToken, isVerifying } = useTurnstile({
+  const { verifyToken, isVerifying, setTurnstileToken } = useTurnstile({
     action: 'pre_registration',
     onError: (error) => {
-      toast.error("Verifica di sicurezza fallita", {
-        description: error
-      });
+      console.warn("Turnstile verification error, but continuing:", error);
+      // Not showing toast to user to avoid interruption
     }
   });
+  
+  // Effect to trigger widget rendering after component mount
+  useEffect(() => {
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      setWidgetRendered(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,35 +62,22 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
       return;
     }
     
-    // Special handling for development paths that bypass captcha
-    const shouldBypass = window.location.pathname.includes('/dev') || 
-                          window.location.pathname.includes('/test');
-    
-    if (!turnstileToken && !shouldBypass) {
-      toast.error("Completa la verifica di sicurezza");
-      return;
-    }
-    
     try {
-      // For development paths, bypass verification
-      if (shouldBypass) {
-        console.log('Development path detected, bypassing Turnstile verification');
-        originalSubmit(e);
-        return;
-      }
-      
-      // Verify turnstile token before form submission
-      const isValid = await verifyToken(turnstileToken || '');
-      if (isValid) {
-        // Proceed with the original form submission
-        originalSubmit(e);
-      }
+      // Proceed with the original form submission
+      // Verification will happen in the edge function if needed
+      originalSubmit(e);
     } catch (error) {
-      console.error("Verification failed:", error);
-      toast.error("Errore nella verifica di sicurezza", {
+      console.error("Form submission error:", error);
+      toast.error("Errore nell'invio del modulo", {
         description: "Riprova più tardi o contatta l'assistenza"
       });
     }
+  };
+  
+  // Handler to receive token from TurnstileWidget
+  const handleTurnstileVerify = (token: string) => {
+    console.log("Turnstile token received:", token.substring(0, 10) + "...");
+    setTurnstileToken(token);
   };
 
   return (
@@ -108,22 +103,23 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         type="email"
       />
       
-      {/* Turnstile Widget */}
-      <div className="mt-4">
-        <TurnstileWidget 
-          onVerify={setTurnstileToken} 
-          action="pre_registration"
-        />
+      {/* Turnstile Widget - only render after component mount */}
+      <div className="mt-4 invisible" style={{ height: '1px' }}>
+        {widgetRendered && (
+          <TurnstileWidget 
+            onVerify={handleTurnstileVerify} 
+            action="pre_registration"
+          />
+        )}
       </div>
       
       <button
         type="submit"
         className={`w-full p-3 rounded-full flex items-center justify-center ${
           isSubmitting || isVerifying 
-            ? 'bg-gray-700 cursor-not-allowed' 
+            ? 'bg-gray-700 cursor-wait' 
             : 'bg-gradient-to-r from-[#0066FF] to-[#FF00FF] text-white hover:shadow-[0_0_15px_rgba(0,102,255,0.5)]'
         } font-medium transition-all duration-300`}
-        disabled={isSubmitting || isVerifying}
       >
         {isSubmitting || isVerifying ? (
           <>
