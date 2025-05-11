@@ -37,7 +37,7 @@ export const initializeRecaptcha = (): Promise<void> => {
     }
 
     // Check if reCAPTCHA script is already loaded
-    if (window.grecaptcha && window.grecaptcha.ready) {
+    if (window.grecaptcha) {
       console.log('reCAPTCHA already loaded');
       resolve();
       return;
@@ -81,8 +81,17 @@ export const getReCaptchaToken = async (action: string = 'submit'): Promise<stri
     
     // Wait for grecaptcha to be ready
     return new Promise((resolve, reject) => {
+      if (!window.grecaptcha) {
+        console.error('grecaptcha is not loaded');
+        reject(new Error('reCAPTCHA not loaded'));
+        return;
+      }
+
       window.grecaptcha.ready(async () => {
         try {
+          if (!window.grecaptcha) {
+            throw new Error('grecaptcha became unavailable');
+          }
           const token = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action });
           console.log('reCAPTCHA token generated for action:', action);
           resolve(token);
@@ -108,37 +117,11 @@ export const verifyReCaptchaToken = async (token: string | null): Promise<{succe
     return { success: true, score: 1.0 };
   }
 
-  try {
-    const SECRET_KEY = Deno.env.get('RECAPTCHA_SECRET_KEY');
-    
-    if (!SECRET_KEY) {
-      throw new Error('RECAPTCHA_SECRET_KEY is not configured');
-    }
-    
-    const verifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
-    const formData = new URLSearchParams();
-    formData.append('secret', SECRET_KEY);
-    formData.append('response', token);
-    
-    const response = await fetch(verifyUrl, {
-      method: 'POST',
-      body: formData
-    });
-    
-    const data = await response.json();
-    
-    // Check if verification was successful and score is high enough
-    if (data.success && data.score >= 0.5) {
-      return { success: true, score: data.score };
-    } else {
-      return { 
-        success: false, 
-        score: data.score || 0,
-        error: data['error-codes'] ? data['error-codes'].join(', ') : 'Verification failed'
-      };
-    }
-  } catch (error: any) {
-    console.error('Error verifying reCAPTCHA token:', error);
-    return { success: false, error: error.message || 'Unknown error' };
-  }
+  // This function is only meant to be used in the Edge Function environment
+  // Client-side code should not call this method directly
+  console.error('verifyReCaptchaToken should only be called in an Edge Function');
+  return { 
+    success: false, 
+    error: 'This verification method can only be used server-side'
+  };
 };
