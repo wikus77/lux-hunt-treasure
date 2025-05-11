@@ -19,9 +19,10 @@ interface Window {
       };
     };
   };
-  // Add grecaptcha here as well to ensure it's available in all contexts
-  grecaptcha?: {
+  // Add turnstile here to ensure it's available in all contexts
+  turnstile?: {
     ready: (callback: () => void) => void;
-    execute: (siteKey: string, options: { action: string }) => Promise<string>;
+    render: (container: string, options: any) => string;
+    reset: (widgetId: string) => void;
   };
 }
