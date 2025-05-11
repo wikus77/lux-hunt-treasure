@@ -41,11 +41,11 @@ const TurnstileWidget = ({ onVerify, action = 'submit', className = '' }: Turnst
           }
 
           // Render a new widget - pass the container element ID instead of the DOM reference
-          const containerId = 'turnstile-container';
+          const containerId = 'turnstile-container-' + Math.random().toString(36).substring(2, 9);
           containerRef.current.id = containerId;
           
           widgetIdRef.current = window.turnstile?.render(containerId, {
-            sitekey: 'YOUR_TURNSTILE_SITE_KEY',
+            sitekey: '0x4AAAAAABcmLn-b1NViurvi',
             theme: 'light',
             callback: (token: string) => {
               console.log(`Turnstile verification completed for action: ${action}`);

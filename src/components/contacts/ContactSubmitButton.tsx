@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 interface ContactSubmitButtonProps {
   isSubmitting: boolean;
   progress: number;
-  disabled?: boolean; // Added the disabled prop with optional type
+  disabled?: boolean; // We've added this prop as optional
 }
 
 const ContactSubmitButton: React.FC<ContactSubmitButtonProps> = ({ isSubmitting, progress, disabled = false }) => {

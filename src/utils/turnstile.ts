@@ -3,8 +3,8 @@
  * Cloudflare Turnstile utility functions
  */
 
-// Define the SITE_KEY to use (replace with your actual key when ready)
-const TURNSTILE_SITE_KEY = "YOUR_TURNSTILE_SITE_KEY"; // This will be replaced with the real key
+// Define the SITE_KEY to use
+const TURNSTILE_SITE_KEY = "0x4AAAAAABcmLn-b1NViurvi";
 
 /**
  * Paths that should bypass Turnstile verification
