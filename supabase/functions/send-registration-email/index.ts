@@ -3,6 +3,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { Mailjet } from "https://esm.sh/node-mailjet"
 
+// Add CORS headers to ensure browser requests work properly
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -15,10 +16,12 @@ serve(async (req) => {
   }
   
   try {
+    // Parse the request body
     const { email, name, formType } = await req.json()
 
     console.log(`Processing ${formType} email for ${name} (${email})`)
 
+    // Validate required fields
     if (!email || !formType) {
       return new Response(
         JSON.stringify({ success: false, error: "Email o tipo di form mancante" }), 
@@ -32,18 +35,19 @@ serve(async (req) => {
       )
     }
 
+    // Initialize Mailjet client with API keys from environment variables
     const mailjet = Mailjet.apiConnect(
       Deno.env.get("MJ_APIKEY_PUBLIC")!,
       Deno.env.get("MJ_APIKEY_PRIVATE")!
     )
 
-    // Configurazione base per tipo di form
+    // Configure email based on form type
     let senderEmail = "noreply@m1ssion.com"
     let senderName = "M1SSION"
     let subject = "Benvenuto in M1SSION"
     let htmlPart = `<h2>Hai appena compiuto il primo passo.</h2><p>Benvenuto su M1SSION, la caccia ha inizio.</p>`
 
-    // Personalizzazione in base al tipo di form
+    // Customize email content based on form type
     if (formType === "agente") {
       senderEmail = "contact@m1ssion.com"
       subject = "Conferma ricezione richiesta agente"
@@ -64,7 +68,7 @@ serve(async (req) => {
 
     console.log(`Sending email from ${senderEmail} to ${email} with subject "${subject}"`)
 
-    // Invio email
+    // Send email through Mailjet API
     const response = await mailjet.post("send", { version: "v3.1" }).request({
       Messages: [
         {
@@ -78,10 +82,14 @@ serve(async (req) => {
       ]
     })
 
-    console.log("Mailjet API response:", response)
+    console.log("Mailjet API response:", response.body)
 
     return new Response(
-      JSON.stringify({ success: true, message: "Email inviata con successo" }), 
+      JSON.stringify({ 
+        success: true, 
+        message: "Email inviata con successo",
+        response: response.body
+      }), 
       { 
         status: 200, 
         headers: { 
@@ -117,7 +125,11 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: false, error: "Errore nell'invio email: " + error.message }), 
+      JSON.stringify({ 
+        success: false, 
+        error: "Errore nell'invio email: " + error.message,
+        details: error.stack || "No stack trace available"
+      }), 
       { 
         status: 500, 
         headers: { 
