@@ -1,6 +1,6 @@
 
 export interface AuthContextType {
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: any }>;
+  login: (email: string, password: string, captchaToken?: string) => Promise<{ success: boolean; error?: any }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;

@@ -78,6 +78,7 @@ export const useLogin = () => {
       }
       
       // Now the token has been verified, we can proceed with login using the verified token
+      // Ensure we're passing the correct number of arguments to login
       const result = await login(email, password, turnstileToken);
       
       if (!result.success) {
