@@ -1,11 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRegistration } from '@/hooks/use-registration';
 import { Mail, User, Lock } from 'lucide-react';
 import FormField from './form-field';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
+import TurnstileWidget from '@/components/security/TurnstileWidget';
+import { useTurnstile } from '@/hooks/useTurnstile';
+import { toast } from 'sonner';
 
 export const RegistrationForm: React.FC = () => {
   const {
@@ -13,8 +16,39 @@ export const RegistrationForm: React.FC = () => {
     errors,
     isSubmitting,
     handleChange,
-    handleSubmit
+    handleSubmit: originalHandleSubmit
   } = useRegistration();
+
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const { verifyToken, isVerifying } = useTurnstile({
+    action: 'registration',
+    onError: (error) => {
+      toast.error('Security verification failed', {
+        description: error
+      });
+    }
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!turnstileToken) {
+      toast.error('Please complete the security verification');
+      return;
+    }
+
+    try {
+      // Verify turnstile token before form submission
+      const isValid = await verifyToken(turnstileToken);
+      if (isValid) {
+        // Proceed with the original form submission
+        originalHandleSubmit(e);
+      }
+    } catch (error) {
+      console.error('Turnstile verification failed:', error);
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -66,6 +100,15 @@ export const RegistrationForm: React.FC = () => {
         error={errors.confirmPassword}
       />
 
+      {/* Turnstile Widget */}
+      <div className="mt-4">
+        <TurnstileWidget
+          onVerify={setTurnstileToken}
+          action="registration"
+          className="mt-2"
+        />
+      </div>
+
       {/* Bottone invio */}
       <motion.div
         whileHover={{ scale: 1.02 }}
@@ -73,13 +116,13 @@ export const RegistrationForm: React.FC = () => {
       >
         <Button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isVerifying || !turnstileToken}
           className="w-full bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-glow"
         >
-          {isSubmitting ? (
+          {isSubmitting || isVerifying ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Registrazione in corso...
+              {isVerifying ? 'Verifica in corso...' : 'Registrazione in corso...'}
             </>
           ) : 'Registrati'}
         </Button>

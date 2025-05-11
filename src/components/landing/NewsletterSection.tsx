@@ -1,10 +1,11 @@
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { saveSubscriber } from "@/services/newsletterService";
 import { toast } from "sonner";
 import { Bell, Send, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import TurnstileWidget from "@/components/security/TurnstileWidget";
+import { useTurnstile } from "@/hooks/useTurnstile";
 
 interface NewsletterSectionProps {
   countdownCompleted?: boolean;
@@ -15,6 +16,16 @@ const NewsletterSection = ({ countdownCompleted = false }: NewsletterSectionProp
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const { verifyToken, isVerifying } = useTurnstile({
+    action: 'newsletter_subscription',
+    onError: (error) => {
+      toast.error("Security verification failed", {
+        description: error
+      });
+    }
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,9 +41,22 @@ const NewsletterSection = ({ countdownCompleted = false }: NewsletterSectionProp
       return;
     }
     
+    if (!turnstileToken) {
+      toast.error("Completa la verifica di sicurezza");
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
+      // First verify the turnstile token
+      const isValid = await verifyToken(turnstileToken);
+      
+      if (!isValid) {
+        throw new Error('Security verification failed');
+      }
+      
+      // If verification passes, proceed with subscription
       await saveSubscriber({
         name,
         email,
@@ -47,6 +71,7 @@ const NewsletterSection = ({ countdownCompleted = false }: NewsletterSectionProp
       // Reset form
       setName("");
       setEmail("");
+      setTurnstileToken(null);
     } catch (error) {
       console.error("Newsletter subscription error:", error);
       toast.error("Si è verificato un errore durante l'iscrizione", {
@@ -132,19 +157,27 @@ const NewsletterSection = ({ countdownCompleted = false }: NewsletterSectionProp
                   />
                 </div>
                 
+                {/* Turnstile Widget */}
+                <div className="mt-4">
+                  <TurnstileWidget 
+                    onVerify={setTurnstileToken} 
+                    action="newsletter_subscription"
+                  />
+                </div>
+                
                 <button
                   type="submit"
                   className={`w-full p-3 rounded-full flex items-center justify-center ${
-                    isSubmitting 
+                    isSubmitting || isVerifying || !turnstileToken
                       ? 'bg-gray-700 cursor-not-allowed' 
                       : 'bg-gradient-to-r from-[#0066FF] to-[#FF00FF] text-white hover:shadow-[0_0_15px_rgba(0,102,255,0.5)]'
                   } font-medium transition-all duration-300`}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isVerifying || !turnstileToken}
                 >
-                  {isSubmitting ? (
+                  {isSubmitting || isVerifying ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Iscrizione in corso...
+                      {isVerifying ? "Verifica in corso..." : "Iscrizione in corso..."}
                     </>
                   ) : (
                     <>
