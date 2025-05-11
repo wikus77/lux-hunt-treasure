@@ -89,7 +89,17 @@ export const usePreRegistration = () => {
         setInviteCode("");
         
         // Invia l'email di conferma
-        await sendConfirmationEmail(formData.name, formData.email, referralCode);
+        const emailSent = await sendConfirmationEmail(formData.name, formData.email, referralCode);
+        console.log("Email confirmation status:", emailSent ? "sent" : "failed");
+        
+        if (!emailSent) {
+          console.warn("Email sending failed, trying again...");
+          // Retry once if failed
+          setTimeout(async () => {
+            const retryResult = await sendConfirmationEmail(formData.name, formData.email, referralCode);
+            console.log("Email confirmation retry status:", retryResult ? "sent" : "failed again");
+          }, 2000);
+        }
         
       } catch (primaryError) {
         console.error("Errore nel metodo primario di registrazione:", primaryError);
@@ -115,7 +125,17 @@ export const usePreRegistration = () => {
             setInviteCode("");
             
             // Invia l'email di conferma anche quando si usa il metodo secondario
-            await sendConfirmationEmail(formData.name, formData.email, result.referralCode);
+            const emailSent = await sendConfirmationEmail(formData.name, formData.email, result.referralCode);
+            console.log("Email confirmation status (edge function):", emailSent ? "sent" : "failed");
+            
+            if (!emailSent) {
+              console.warn("Email sending failed via edge function, trying once more...");
+              // Retry once if failed
+              setTimeout(async () => {
+                const retryResult = await sendConfirmationEmail(formData.name, formData.email, result.referralCode);
+                console.log("Email confirmation retry status:", retryResult ? "sent" : "failed again");
+              }, 2000);
+            }
           } else {
             throw new Error("La registrazione non è andata a buon fine");
           }

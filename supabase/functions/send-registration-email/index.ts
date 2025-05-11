@@ -37,7 +37,7 @@ serve(async (req) => {
       );
     }
 
-    const { email, name, formType } = requestData;
+    const { email, name, formType, referral_code } = requestData;
 
     console.log(`Processing ${formType} email for ${name} (${email})`)
 
@@ -128,7 +128,29 @@ serve(async (req) => {
     } else if (formType === "preregistrazione") {
       senderEmail = "contact@m1ssion.com" 
       subject = "Pre-registrazione confermata"
-      htmlPart = `<h3>Grazie per la tua pre-registrazione!</h3><p>Sei tra i primi a far parte di M1SSION. Ti aggiorneremo sul lancio.</p>`
+      
+      // Enhanced HTML for pre-registration with referral code
+      htmlPart = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+          <div style="background: linear-gradient(90deg, #00E5FF 0%, #0077FF 100%); padding: 20px; text-align: center; color: #000;">
+            <h1 style="margin: 0; color: #FFF;">M1SSION</h1>
+          </div>
+          
+          <div style="padding: 20px; background-color: #ffffff;">
+            <h3>Sei ufficialmente un agente M1SSION.</h3>
+            <p>Hai completato la pre-iscrizione. Tieniti pronto: la tua prima missione sta per arrivare.</p>
+            
+            <p style="margin-top: 20px;">Il tuo codice referral: <strong>${referral_code || "CODICE NON DISPONIBILE"}</strong></p>
+            
+            <p>Puoi invitare altri agenti usando questo codice e guadagnare crediti extra per la tua missione!</p>
+          </div>
+          
+          <div style="font-size: 12px; text-align: center; padding-top: 20px; color: #999;">
+            <p>&copy; ${new Date().getFullYear()} M1SSION. Tutti i diritti riservati.</p>
+            <p>Questo messaggio è stato inviato automaticamente a seguito della tua pre-registrazione su M1SSION.</p>
+          </div>
+        </div>
+      `
     }
 
     console.log(`Preparing to send email from ${senderEmail} to ${email} with subject "${subject}"`)

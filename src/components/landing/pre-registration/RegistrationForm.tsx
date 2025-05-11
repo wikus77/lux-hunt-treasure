@@ -30,12 +30,19 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   onSubmit: originalSubmit
 }) => {
   const [widgetRendered, setWidgetRendered] = useState(false);
+  const [turnstileVerified, setTurnstileVerified] = useState(false);
   
   const { verifyToken, isVerifying, setTurnstileToken } = useTurnstile({
     action: 'pre_registration',
+    onSuccess: () => {
+      console.log("Turnstile verification successful");
+      setTurnstileVerified(true);
+    },
     onError: (error) => {
       console.warn("Turnstile verification error, but continuing:", error);
       // Not showing toast to user to avoid interruption
+      // Still allowing submission with a warning in logs
+      setTurnstileVerified(true);
     }
   });
   
@@ -63,9 +70,17 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
     }
     
     try {
-      // Proceed with the original form submission
-      // Verification will happen in the edge function if needed
+      console.log("Pre-registration form submission initiated", {
+        name, 
+        email, 
+        turnstileVerified,
+        isVerifying
+      });
+      
+      // Always proceed with form submission even if Turnstile has issues
+      // The edge function will handle additional verification if needed
       originalSubmit(e);
+      
     } catch (error) {
       console.error("Form submission error:", error);
       toast.error("Errore nell'invio del modulo", {
@@ -103,8 +118,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         type="email"
       />
       
-      {/* Turnstile Widget - only render after component mount */}
-      <div className="mt-4 invisible" style={{ height: '1px' }}>
+      {/* Turnstile Widget - only render after component mount but not visible to user */}
+      <div className="mt-4 opacity-0 h-0 overflow-hidden">
         {widgetRendered && (
           <TurnstileWidget 
             onVerify={handleTurnstileVerify} 
