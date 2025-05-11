@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { toast } from "sonner";
 
 interface TestEmailState {
   email: string;
@@ -38,7 +39,7 @@ const MailjetTester = () => {
     try {
       console.log("Sending test email with data:", formData);
       
-      // Call the edge function
+      // Call the edge function with JWT authentication
       const { data, error: funcError } = await supabase.functions.invoke('send-registration-email', {
         body: formData
       });
@@ -46,14 +47,32 @@ const MailjetTester = () => {
       if (funcError) {
         console.error("Edge function error:", funcError);
         setError(funcError.message || "Failed to send email");
+        toast.error("Errore nell'invio dell'email", {
+          description: funcError.message || "Si è verificato un errore durante l'invio dell'email"
+        });
+        setIsLoading(false);
         return;
       }
       
       console.log("Email sending response:", data);
       setResponse(data);
+      
+      if (data.success) {
+        toast.success("Email inviata con successo", {
+          description: `L'email è stata inviata a ${formData.email}`
+        });
+      } else {
+        setError(data.error || "Errore sconosciuto nell'invio dell'email");
+        toast.error("Errore nell'invio dell'email", {
+          description: data.error || "Si è verificato un errore durante l'invio dell'email"
+        });
+      }
     } catch (err: any) {
       console.error("Exception when sending test email:", err);
       setError(err.message || "An unexpected error occurred");
+      toast.error("Errore imprevisto", {
+        description: err.message || "Si è verificato un errore imprevisto"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -97,8 +116,8 @@ const MailjetTester = () => {
               <SelectValue placeholder="Seleziona tipo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="newsletter">Newsletter</SelectItem>
               <SelectItem value="registrazione">Registrazione</SelectItem>
+              <SelectItem value="newsletter">Newsletter</SelectItem>
               <SelectItem value="agente">Agente</SelectItem>
               <SelectItem value="contatto">Contatto</SelectItem>
               <SelectItem value="preregistrazione">Pre-registrazione</SelectItem>
@@ -120,11 +139,15 @@ const MailjetTester = () => {
       )}
       
       {response && (
-        <Alert className="mt-4 bg-green-700 text-white">
-          <CheckCircle2 className="h-4 w-4" />
-          <AlertTitle>Email Inviata</AlertTitle>
+        <Alert className={`mt-4 ${response.success ? "bg-green-700" : "bg-amber-700"} text-white`}>
+          {response.success ? (
+            <CheckCircle2 className="h-4 w-4" />
+          ) : (
+            <AlertCircle className="h-4 w-4" />
+          )}
+          <AlertTitle>{response.success ? "Email Inviata" : "Stato Invio"}</AlertTitle>
           <AlertDescription className="mt-2">
-            <p>L'email è stata inviata con successo!</p>
+            <p>{response.success ? "L'email è stata inviata con successo!" : response.message || "Stato invio non chiaro"}</p>
             <details className="mt-2">
               <summary className="cursor-pointer">Dettagli risposta</summary>
               <pre className="text-xs mt-2 bg-black bg-opacity-20 p-2 rounded overflow-auto max-h-40">

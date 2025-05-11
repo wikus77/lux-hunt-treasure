@@ -1,7 +1,9 @@
 
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
-import { Mailjet } from "https://esm.sh/node-mailjet"
+
+// Import Mailjet correctly - fixed import syntax
+import mailjet from "npm:node-mailjet@6.0.0";
 
 // Add CORS headers to ensure browser requests work properly
 const corsHeaders = {
@@ -35,10 +37,31 @@ serve(async (req) => {
       )
     }
 
+    // Get Mailjet API keys from environment variables
+    const MJ_APIKEY_PUBLIC = Deno.env.get("MJ_APIKEY_PUBLIC");
+    const MJ_APIKEY_PRIVATE = Deno.env.get("MJ_APIKEY_PRIVATE");
+    
+    if (!MJ_APIKEY_PUBLIC || !MJ_APIKEY_PRIVATE) {
+      console.error("Mailjet API keys not found in environment variables");
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "API keys Mailjet non configurate"
+        }), 
+        { 
+          status: 500, 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          } 
+        }
+      )
+    }
+
     // Initialize Mailjet client with API keys from environment variables
-    const mailjet = Mailjet.apiConnect(
-      Deno.env.get("MJ_APIKEY_PUBLIC")!,
-      Deno.env.get("MJ_APIKEY_PRIVATE")!
+    const mailjetClient = mailjet.apiConnect(
+      MJ_APIKEY_PUBLIC,
+      MJ_APIKEY_PRIVATE
     )
 
     // Configure email based on form type
@@ -69,61 +92,57 @@ serve(async (req) => {
     console.log(`Sending email from ${senderEmail} to ${email} with subject "${subject}"`)
 
     // Send email through Mailjet API
-    const response = await mailjet.post("send", { version: "v3.1" }).request({
-      Messages: [
-        {
-          From: { Email: senderEmail, Name: senderName },
-          To: [{ Email: email, Name: name || "Utente" }],
-          Subject: subject,
-          HTMLPart: htmlPart,
-          TrackOpens: "enabled",
-          TrackClicks: "enabled"
-        }
-      ]
-    })
-
-    console.log("Mailjet API response:", response.body)
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Email inviata con successo",
-        response: response.body
-      }), 
-      { 
-        status: 200, 
-        headers: { 
-          "Content-Type": "application/json",
-          ...corsHeaders
-        } 
-      }
-    )
-  } catch (error: any) {
-    console.error("Error sending email:", error)
-    
-    // Email di errore (fallback)
     try {
-      console.log("Attempting to send error notification email")
-      const mailjet = Mailjet.apiConnect(
-        Deno.env.get("MJ_APIKEY_PUBLIC")!,
-        Deno.env.get("MJ_APIKEY_PRIVATE")!
-      )
-
-      await mailjet.post("send", { version: "v3.1" }).request({
+      const response = await mailjetClient.post("send", { version: "v3.1" }).request({
         Messages: [
           {
-            From: { Email: "contact@m1ssion.com", Name: "M1SSION Support" },
-            To: [{ Email: "support@m1ssion.com", Name: "Admin" }],
-            Subject: "Errore nell'invio email a utente",
-            HTMLPart: `<p>Errore: ${error.message}</p><p>Stack: ${error.stack || "Non disponibile"}</p>`
+            From: { Email: senderEmail, Name: senderName },
+            To: [{ Email: email, Name: name || "Utente" }],
+            Subject: subject,
+            HTMLPart: htmlPart,
+            TrackOpens: "enabled",
+            TrackClicks: "enabled"
           }
         ]
       })
-      console.log("Error notification email sent")
-    } catch (fallbackError) {
-      console.error("Failed to send error notification:", fallbackError)
-    }
 
+      console.log("Mailjet API response:", response.body)
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: "Email inviata con successo",
+          response: response.body
+        }), 
+        { 
+          status: 200, 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          } 
+        }
+      )
+    } catch (mailjetError: any) {
+      console.error("Mailjet API error:", mailjetError)
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Errore API Mailjet: " + (mailjetError.message || mailjetError.ErrorMessage || JSON.stringify(mailjetError)),
+          details: mailjetError
+        }), 
+        { 
+          status: 500, 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          } 
+        }
+      )
+    }
+  } catch (error: any) {
+    console.error("Error sending email:", error)
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
