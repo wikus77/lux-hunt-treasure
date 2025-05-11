@@ -40,8 +40,11 @@ const TurnstileWidget = ({ onVerify, action = 'submit', className = '' }: Turnst
             window.turnstile?.reset(widgetIdRef.current);
           }
 
-          // Render a new widget
-          widgetIdRef.current = window.turnstile?.render(containerRef.current!, {
+          // Render a new widget - pass the container element ID instead of the DOM reference
+          const containerId = 'turnstile-container';
+          containerRef.current.id = containerId;
+          
+          widgetIdRef.current = window.turnstile?.render(containerId, {
             sitekey: 'YOUR_TURNSTILE_SITE_KEY',
             theme: 'light',
             callback: (token: string) => {
@@ -72,7 +75,7 @@ const TurnstileWidget = ({ onVerify, action = 'submit', className = '' }: Turnst
     return <div className="text-sm text-gray-500 italic">CAPTCHA bypassed for development</div>;
   }
 
-  return <div ref={containerRef} id="turnstile-container" className={className} />;
+  return <div ref={containerRef} className={className} />;
 };
 
 export default TurnstileWidget;
