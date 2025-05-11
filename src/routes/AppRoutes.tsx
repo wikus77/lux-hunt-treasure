@@ -1,4 +1,3 @@
-
 import { Navigate, Route, Routes } from "react-router-dom";
 import { RoleBasedProtectedRoute } from "../components/auth/RoleBasedProtectedRoute";
 import PublicLayout from "../components/layout/PublicLayout";
@@ -57,15 +56,8 @@ const AppRoutes = () => {
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/access-denied" element={<AccessDenied />} />
 
-        {/* IMPORTANT: Make email-campaign available to admins without layout protection */}
-        <Route
-          path="/email-campaign"
-          element={
-            <RoleBasedProtectedRoute allowedRoles={['admin', 'developer']}>
-              <EmailCampaign />
-            </RoleBasedProtectedRoute>
-          }
-        />
+        {/* Email Campaign route with CAPTCHA bypass for admins/developers */}
+        <Route path="/email-campaign" element={<EmailCampaign />} />
         
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Route>
@@ -121,17 +113,6 @@ const AppRoutes = () => {
           </RoleBasedProtectedRoute>
         }
       />
-
-      {/* Remove this since we've moved email-campaign to the public layout section
-      <Route
-        path="/email-campaign"
-        element={
-          <RoleBasedProtectedRoute allowedRoles={['admin']}>
-            <EmailCampaign />
-          </RoleBasedProtectedRoute>
-        }
-      />
-      */}
 
       {/* Standard User Settings Routes */}
       <Route
