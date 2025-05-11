@@ -20,24 +20,26 @@ import { EmailVerificationPage } from "../components/auth/EmailVerificationHandl
 
 export const PublicRoutes = () => {
   return (
-    <Route element={<PublicLayout />}>
-      <Route path="/" element={<Index />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/kyc" element={<KYC />} />
-      <Route path="/verification" element={<EmailVerificationPage />} />
-      <Route path="/contact" element={<Contacts />} />
-      <Route path="/email-test" element={<EmailTest />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/privacy" element={<PrivacyPolicy />} />
-      <Route path="/cookie-policy" element={<CookiePolicy />} />
-      <Route path="/how-it-works" element={<HowItWorks />} />
-      <Route path="/access-denied" element={<AccessDenied />} />
-      
-      {/* The email-campaign route has been moved to AppRoutes.tsx */}
-      
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Route>
+    <>
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<Index />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/kyc" element={<KYC />} />
+        <Route path="/verification" element={<EmailVerificationPage />} />
+        <Route path="/contact" element={<Contacts />} />
+        <Route path="/email-test" element={<EmailTest />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/cookie-policy" element={<CookiePolicy />} />
+        <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/access-denied" element={<AccessDenied />} />
+        
+        {/* The email-campaign route has been moved to AppRoutes.tsx */}
+        
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Route>
+    </>
   );
 };

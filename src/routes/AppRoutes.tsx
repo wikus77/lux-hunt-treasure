@@ -33,13 +33,14 @@ const AppRoutes = () => {
         }
       />
 
-      <PublicRoutes />
-      <UserRoutes />
-      <AdminRoutes />
-      <SettingsRoutes />
-      <PremiumRoutes />
-      <PaymentRoutes />
-      <NotFoundRoute />
+      {/* Include all route groups using fragments */}
+      {PublicRoutes()}
+      {UserRoutes()}
+      {AdminRoutes()}
+      {SettingsRoutes()}
+      {PremiumRoutes()}
+      {PaymentRoutes()}
+      {NotFoundRoute()}
     </Routes>
   );
 };
