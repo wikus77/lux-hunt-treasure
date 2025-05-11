@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PreRegistrationFormData } from "./types";
 import { generateReferralCode } from "./referralUtils";
+import { logActivity } from "@/services/activityLogService";
+import { createReferral } from "@/services/referralService";
 
 /**
  * Check if a user with the provided email already exists
@@ -48,6 +50,16 @@ export const registerUser = async (userData: PreRegistrationFormData) => {
     }
     
     console.log("User registered successfully:", data);
+    
+    // Log the pre-registration activity
+    await logActivity({
+      userEmail: userData.email,
+      action: 'pre_registration',
+      metadata: {
+        name: userData.name,
+        referral_code: referralCode
+      }
+    });
     
     return { 
       success: true,
@@ -204,6 +216,7 @@ export const validateInviteCode = async (inviteCode: string) => {
  */
 export const updateUserReferrer = async (userEmail: string, referrerEmail: string) => {
   try {
+    // Update the user record
     const { error } = await supabase
       .from('pre_registrations')
       .update({ referrer: referrerEmail })
@@ -212,6 +225,30 @@ export const updateUserReferrer = async (userEmail: string, referrerEmail: strin
     if (error) {
       console.error("Error updating user with referrer:", error);
       throw new Error("Errore nell'aggiornamento del referrer");
+    }
+    
+    // Create a referral record
+    const user = await supabase
+      .from('pre_registrations')
+      .select('referral_code')
+      .eq('email', referrerEmail)
+      .maybeSingle();
+      
+    if (user?.data?.referral_code) {
+      await createReferral({
+        invitedEmail: userEmail,
+        referrerCode: user.data.referral_code
+      });
+      
+      // Log the referral activity
+      await logActivity({
+        userEmail: userEmail,
+        action: 'referral_applied',
+        metadata: {
+          referrer: referrerEmail,
+          referral_code: user.data.referral_code
+        }
+      });
     }
     
     return true;
@@ -236,6 +273,16 @@ export const addReferralCredits = async (referrerEmail: string, creditsToAdd = 5
       console.error("Error adding referral credits:", error);
       throw new Error("Errore nell'aggiunta dei crediti");
     }
+    
+    // Log the credits added
+    await logActivity({
+      userEmail: referrerEmail,
+      action: 'credits_added',
+      metadata: {
+        amount: creditsToAdd,
+        reason: 'referral'
+      }
+    });
     
     return true;
   } catch (error) {
