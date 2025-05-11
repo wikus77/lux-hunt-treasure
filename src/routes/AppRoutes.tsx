@@ -1,4 +1,5 @@
-import { Navigate, Routes } from "react-router-dom";
+
+import { Navigate, Route, Routes } from "react-router-dom";
 import { publicRoutes } from "./publicRoutes";
 import { userRoutes } from "./userRoutes";
 import { adminRoutes } from "./adminRoutes";
