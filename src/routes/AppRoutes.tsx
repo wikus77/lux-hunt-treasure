@@ -56,6 +56,17 @@ const AppRoutes = () => {
         <Route path="/cookie-policy" element={<CookiePolicy />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/access-denied" element={<AccessDenied />} />
+
+        {/* IMPORTANT: Make email-campaign available to admins without layout protection */}
+        <Route
+          path="/email-campaign"
+          element={
+            <RoleBasedProtectedRoute allowedRoles={['admin', 'developer']}>
+              <EmailCampaign />
+            </RoleBasedProtectedRoute>
+          }
+        />
+        
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Route>
 
@@ -111,7 +122,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* Email Campaign - For admin users */}
+      {/* Remove this since we've moved email-campaign to the public layout section
       <Route
         path="/email-campaign"
         element={
@@ -120,6 +131,7 @@ const AppRoutes = () => {
           </RoleBasedProtectedRoute>
         }
       />
+      */}
 
       {/* Standard User Settings Routes */}
       <Route
