@@ -29,6 +29,18 @@ const CookiebotInit: React.FC = () => {
         mainScript.type = "text/javascript";
         mainScript.charset = "UTF-8";
         mainScript.src = "//cdn.cookie-script.com/s/2db074620da1ba3a3cc6c19025d1d99d.js";
+        
+        // Prevenire il ricaricamento della pagina quando viene gestito l'evento di consenso
+        window.addEventListener('CookieScriptAccepted', function(e) {
+          e.preventDefault();
+          console.log('Cookie consent handled without page reload');
+          return false;
+        }, { once: true });
+        
+        // Aggiungiamo attributi per prevenire il ricaricamento
+        mainScript.setAttribute('data-no-reload', 'true');
+        mainScript.setAttribute('data-cs-no-reload', 'true');
+        
         document.head.appendChild(mainScript);
       }
       

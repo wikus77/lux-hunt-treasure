@@ -43,20 +43,45 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!turnstileToken) {
+    // Check for required fields
+    if (!name.trim()) {
+      toast.error("Nome richiesto", { description: "Inserisci il tuo nome" });
+      return;
+    }
+    
+    if (!email.trim()) {
+      toast.error("Email richiesta", { description: "Inserisci la tua email" });
+      return;
+    }
+    
+    // Special handling for development paths that bypass captcha
+    const shouldBypass = window.location.pathname.includes('/dev') || 
+                          window.location.pathname.includes('/test');
+    
+    if (!turnstileToken && !shouldBypass) {
       toast.error("Completa la verifica di sicurezza");
       return;
     }
     
     try {
+      // For development paths, bypass verification
+      if (shouldBypass) {
+        console.log('Development path detected, bypassing Turnstile verification');
+        originalSubmit(e);
+        return;
+      }
+      
       // Verify turnstile token before form submission
-      const isValid = await verifyToken(turnstileToken);
+      const isValid = await verifyToken(turnstileToken || '');
       if (isValid) {
         // Proceed with the original form submission
         originalSubmit(e);
       }
     } catch (error) {
       console.error("Verification failed:", error);
+      toast.error("Errore nella verifica di sicurezza", {
+        description: "Riprova più tardi o contatta l'assistenza"
+      });
     }
   };
 
@@ -94,11 +119,11 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
       <button
         type="submit"
         className={`w-full p-3 rounded-full flex items-center justify-center ${
-          isSubmitting || isVerifying || !turnstileToken
+          isSubmitting || isVerifying 
             ? 'bg-gray-700 cursor-not-allowed' 
             : 'bg-gradient-to-r from-[#0066FF] to-[#FF00FF] text-white hover:shadow-[0_0_15px_rgba(0,102,255,0.5)]'
         } font-medium transition-all duration-300`}
-        disabled={isSubmitting || isVerifying || !turnstileToken}
+        disabled={isSubmitting || isVerifying}
       >
         {isSubmitting || isVerifying ? (
           <>
