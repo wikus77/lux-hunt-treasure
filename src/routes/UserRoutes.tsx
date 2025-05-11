@@ -1,0 +1,58 @@
+
+import { Route } from "react-router-dom";
+import { RoleBasedProtectedRoute } from "../components/auth/RoleBasedProtectedRoute";
+
+// Pages
+import Home from "../pages/Home";
+import Events from "../pages/Events";
+import Profile from "../pages/Profile";
+import Map from "../pages/Map";
+import Buzz from "../pages/Buzz";
+
+export const UserRoutes = () => {
+  return (
+    <>
+      {/* Base User Routes - Require Authentication */}
+      <Route
+        path="/home"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
+            <Home />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/events"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
+            <Events />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
+            <Profile />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/map"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
+            <Map />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/buzz"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['user', 'moderator', 'admin']}>
+            <Buzz />
+          </RoleBasedProtectedRoute>
+        }
+      />
+    </>
+  );
+};
