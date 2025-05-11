@@ -10,7 +10,6 @@ import Index from "../pages/Index";
 import KYC from "../pages/KYC";
 import Contacts from "../pages/Contacts";
 import EmailTest from "../pages/EmailTest";
-import EmailCampaign from "../pages/EmailCampaign";
 import DevCampaignTest from "../pages/DevCampaignTest";
 import Terms from "../pages/Terms";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
@@ -38,8 +37,7 @@ export const publicRoutes = (
     <Route path="/how-it-works" element={<HowItWorks />} />
     <Route path="/access-denied" element={<AccessDenied />} />
 
-    {/* Email Campaign routes */}
-    <Route path="/email-campaign" element={<EmailCampaign />} />
+    {/* Dev Campaign Test route remains in public routes */}
     <Route path="/dev-campaign-test" element={<DevCampaignTest />} />
   </Route>
 );
