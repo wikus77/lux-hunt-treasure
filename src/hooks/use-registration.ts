@@ -37,7 +37,7 @@ export const useRegistration = () => {
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent, turnstileToken?: string) => {
     e.preventDefault();
 
     // Validazione client-side
@@ -46,11 +46,27 @@ export const useRegistration = () => {
       setErrors(validation.errors);
       return;
     }
+    
+    if (!turnstileToken) {
+      toast.error("Sicurezza", {
+        description: "Completare la verifica di sicurezza"
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     const { name, email, password } = formData;
 
     try {
+      // First verify the turnstile token
+      const verifyResponse = await supabase.functions.invoke('verify-turnstile', {
+        body: { token: turnstileToken, action: 'registration' }
+      });
+      
+      if (!verifyResponse.data?.success) {
+        throw new Error('Security verification failed');
+      }
+
       // Check if email already exists
       const { data: existingUsers, error: checkError } = await supabase
         .from('profiles')
@@ -80,7 +96,8 @@ export const useRegistration = () => {
           emailRedirectTo: window.location.origin + '/auth',
           data: {
             full_name: name,
-          }
+          },
+          captchaToken: turnstileToken // Pass the turnstile token here
         }
       });
 

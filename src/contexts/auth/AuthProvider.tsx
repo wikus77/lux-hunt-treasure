@@ -1,132 +1,201 @@
-
-import React, { ReactNode, useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import AuthContext from './AuthContext';
-import { registerDeviceForNotifications } from '@/integrations/firebase/firebase-client';
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { User } from './types';
 
-interface AuthProviderProps {
-  children: ReactNode;
+interface AuthContextType {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  isEmailVerified: boolean;
+  user: User | null;
+  userId: string | undefined;
+  userRole: string | null;
+  isRoleLoading: boolean;
+  login: (email: string, password: string, captchaToken?: string) => Promise<{ success: boolean; data?: any; error?: Error }>;
+  logout: () => Promise<void>;
+  signup: (email: string, password: string) => Promise<{ success: boolean; error?: Error }>;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const auth = useAuth();
+const AuthContext = createContext<AuthContextType>({
+  isAuthenticated: false,
+  isLoading: true,
+  isEmailVerified: false,
+  user: null,
+  userId: undefined,
+  userRole: null,
+  isRoleLoading: true,
+  login: async () => ({ success: false }),
+  logout: async () => {},
+  signup: async () => ({ success: false })
+});
+
+export const useAuthContext = () => useContext(AuthContext);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [isRoleLoading, setIsRoleLoading] = useState<boolean>(true);
-  
-  // Fetch user role when authenticated
+  const [isRoleLoading, setIsRoleLoading] = useState(true);
+
   useEffect(() => {
-    const fetchUserRole = async () => {
-      // Nota: ora utilizziamo direttamente auth.isAuthenticated come booleano
-      if (auth.isAuthenticated && auth.isEmailVerified && !auth.isLoading) {
-        try {
-          setIsRoleLoading(true);
-          const userId = auth.getCurrentUser()?.id;
-          
-          if (userId) {
-            // First check if role is stored in localStorage (for quicker access)
-            const cachedRole = localStorage.getItem('userRole');
-            if (cachedRole) {
-              setUserRole(cachedRole);
-              setIsRoleLoading(false);
-              console.log("Using cached role from localStorage:", cachedRole);
-            }
-            
-            // Then fetch from database to ensure it's up to date
-            try {
-              const { data, error } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', userId)
-                .single();
-                
-              if (error) {
-                console.error("Error fetching user role:", error);
-                
-                // If we have a cached role, continue using it
-                if (!cachedRole) {
-                  // Fallback to 'user' role if nothing else is available
-                  setUserRole('user');
-                  localStorage.setItem('userRole', 'user');
-                  console.log("Falling back to default 'user' role due to error");
-                }
-              } else if (data?.role) {
-                setUserRole(data.role);
-                localStorage.setItem('userRole', data.role);
-                console.log("Updated role from database:", data.role);
-              } else {
-                // If no role is set, default to 'user'
-                setUserRole('user');
-                localStorage.setItem('userRole', 'user');
-                console.log("No role found in database, defaulting to 'user'");
-              }
-            } catch (fetchError) {
-              console.error("Error in database fetch:", fetchError);
-              // Continue using cached role if available
-            }
-            
-            setIsRoleLoading(false);
-          }
-        } catch (error) {
-          console.error("Error in fetchUserRole:", error);
-          setIsRoleLoading(false);
-        }
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error('Error getting session:', error);
+        setIsLoading(false);
+        return;
+      }
+
+      setSession(session);
+
+      if (session) {
+        setUser(session.user);
+        setIsAuthenticated(true);
+        fetchUserRole(session.user.id);
       } else {
-        setUserRole(null);
-        localStorage.removeItem('userRole');
-        setIsRoleLoading(false);
+        setIsAuthenticated(false);
       }
+      setIsLoading(false);
     };
-    
-    fetchUserRole();
-  }, [auth.isAuthenticated, auth.isLoading, auth.isEmailVerified, auth.getCurrentUser]);
-  
-  // Log authentication state changes for debugging
-  useEffect(() => {
-    console.log("Auth provider state:", {
-      isAuthenticated: auth.isAuthenticated,
-      isLoading: auth.isLoading,
-      isEmailVerified: auth.isEmailVerified,
-      userId: auth.getCurrentUser()?.id,
-      userRole,
-      isRoleLoading
-    });
-    
-    // Register for notifications when user is authenticated
-    if (auth.isAuthenticated && auth.isEmailVerified && !auth.isLoading) {
-      // Check if notification permission is granted
-      if (Notification.permission === 'granted') {
-        registerDeviceForNotifications()
-          .then(result => {
-            console.log("Device registration for notifications:", result);
-          })
-          .catch(error => {
-            console.error("Error registering device for notifications:", error);
-          });
+
+    checkSession();
+
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state change event:', event);
+
+        setSession(session);
+
+        if (session) {
+          setUser(session.user);
+          setIsAuthenticated(true);
+          fetchUserRole(session.user.id);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+          setUserRole(null);
+        }
+        setIsLoading(false);
       }
+    );
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  // Login function
+  const login = async (email: string, password: string, captchaToken?: string) => {
+    try {
+      console.log(`Login attempt for email: ${email}`);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+        options: captchaToken ? { 
+          captchaToken // Pass the turnstile token as captchaToken
+        } : undefined
+      });
+
+      if (error) {
+        console.error('Login error:', error.message);
+        return { success: false, error };
+      }
+
+      // Update auth state
+      setSession(data.session);
+      setUser(data.user);
+      setIsAuthenticated(true);
+      setIsLoading(false);
+
+      // After login, also fetch user role
+      fetchUserRole(data.user.id);
+
+      return { success: true, data };
+    } catch (err) {
+      console.error('Errore login:', err);
+      return { success: false, error: err as Error };
     }
-  }, [auth.isAuthenticated, auth.isLoading, auth.isEmailVerified, auth.getCurrentUser, userRole, isRoleLoading]);
-  
-  // Function to check if user has a specific role
-  const hasRole = (role: string): boolean => {
-    if (!userRole) return false;
-    
-    // Super admin has access to everything
-    if (userRole === 'admin') return true;
-    
-    // Exact role match
-    return userRole === role;
   };
-  
+
+  // Logout function
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      // Update auth state
+      setSession(null);
+      setUser(null);
+      setIsAuthenticated(false);
+      setUserRole(null);
+    } catch (err) {
+      console.error('Errore durante il logout:', err);
+    }
+  };
+
+  // Signup function
+  const signup = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin + '/auth'
+        }
+      });
+
+      if (error) {
+        console.error('Signup error:', error.message);
+        return { success: false, error };
+      }
+
+      return { success: true, data };
+    } catch (err) {
+      console.error('Errore durante la registrazione:', err);
+      return { success: false, error: err as Error };
+    }
+  };
+
+  const fetchUserRole = async (userId: string) => {
+    setIsRoleLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user role:', error);
+      }
+
+      setUserRole(data?.role || null);
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+      setUserRole(null);
+    } finally {
+      setIsRoleLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider 
+    <AuthContext.Provider
       value={{
-        ...auth,
+        isAuthenticated,
+        isLoading,
+        isEmailVerified,
+        user,
+        userId: user?.id,
         userRole,
-        hasRole,
-        isRoleLoading
+        isRoleLoading,
+        login,
+        logout,
+        signup
       }}
     >
       {children}

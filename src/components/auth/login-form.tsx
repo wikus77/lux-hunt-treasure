@@ -5,6 +5,7 @@ import { Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import TurnstileWidget from '@/components/security/TurnstileWidget';
 
 interface LoginFormProps {
   verificationStatus?: string | null;
@@ -24,6 +25,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     formError
   } = useLogin();
   const [emailForResend, setEmailForResend] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleResendClick = () => {
     if (onResendVerification && emailForResend) {
@@ -31,8 +33,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     }
   };
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    handleSubmit(e, turnstileToken || undefined);
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleFormSubmit} className="space-y-6">
       {/* Email */}
       <div className="space-y-2">
         <label htmlFor="email" className="block text-sm font-medium text-white">Email</label>
@@ -76,6 +82,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
       </div>
 
+      {/* Turnstile Security Widget */}
+      <div className="mt-4">
+        <TurnstileWidget
+          onVerify={setTurnstileToken}
+          action="login" 
+        />
+        {!turnstileToken && !isSubmitting && (
+          <p className="mt-1 text-xs text-amber-400">Completare la verifica di sicurezza</p>
+        )}
+      </div>
+
       {/* Form Error Message */}
       {formError && (
         <Alert variant="destructive" className="bg-red-900/50 border-red-800">
@@ -115,7 +132,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       {/* Bottone Login */}
       <Button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || !turnstileToken}
         className="w-full bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-glow"
       >
         {isSubmitting ? (

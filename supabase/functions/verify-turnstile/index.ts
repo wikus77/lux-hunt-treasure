@@ -34,7 +34,8 @@ serve(async (req) => {
           success: true, 
           score: 1.0,
           action,
-          bypass: true
+          bypass: true,
+          captcha_token: token // Add this for compatibility with Supabase Auth
         }),
         { 
           status: 200,
@@ -66,7 +67,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          action: action || 'default'
+          action: action || 'default',
+          captcha_token: token // Add this for compatibility with Supabase Auth
         }),
         { 
           status: 200,
@@ -80,7 +82,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: data['error-codes'] ? data['error-codes'].join(', ') : 'Verification failed'
+          error: data['error-codes'] ? data['error-codes'].join(', ') : 'Verification failed',
+          details: data
         }),
         { 
           status: 400,

@@ -46,7 +46,7 @@ export const useLogin = () => {
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent, turnstileToken?: string) => {
     e.preventDefault();
 
     // Client-side validation
@@ -56,12 +56,29 @@ export const useLogin = () => {
       return;
     }
 
+    if (!turnstileToken) {
+      setFormError('Security verification required. Please complete the captcha.');
+      return;
+    }
+
     setIsSubmitting(true);
     setFormError(null);
     const { email, password } = formData;
 
     try {
-      const result = await login(email, password);
+      console.log(`Login attempt for email: ${email}`);
+      
+      // First verify the turnstile token
+      const verifyResponse = await supabase.functions.invoke('verify-turnstile', {
+        body: { token: turnstileToken, action: 'login' }
+      });
+      
+      if (!verifyResponse.data?.success) {
+        throw new Error('Security verification failed');
+      }
+      
+      // Now the token has been verified, we can proceed with login using the verified token
+      const result = await login(email, password, turnstileToken);
       
       if (!result.success) {
         // Handle specific error cases

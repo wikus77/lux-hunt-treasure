@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import TurnstileWidget from '@/components/security/TurnstileWidget';
-import { useTurnstile } from '@/hooks/useTurnstile';
 import { toast } from 'sonner';
 
 export const RegistrationForm: React.FC = () => {
@@ -21,33 +20,8 @@ export const RegistrationForm: React.FC = () => {
 
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
-  const { verifyToken, isVerifying } = useTurnstile({
-    action: 'registration',
-    onError: (error) => {
-      toast.error('Security verification failed', {
-        description: error
-      });
-    }
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!turnstileToken) {
-      toast.error('Please complete the security verification');
-      return;
-    }
-
-    try {
-      // Verify turnstile token before form submission
-      const isValid = await verifyToken(turnstileToken);
-      if (isValid) {
-        // Proceed with the original form submission
-        originalHandleSubmit(e);
-      }
-    } catch (error) {
-      console.error('Turnstile verification failed:', error);
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    originalHandleSubmit(e, turnstileToken || undefined);
   };
 
   return (
@@ -116,13 +90,13 @@ export const RegistrationForm: React.FC = () => {
       >
         <Button
           type="submit"
-          disabled={isSubmitting || isVerifying || !turnstileToken}
+          disabled={isSubmitting || !turnstileToken}
           className="w-full bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-glow"
         >
-          {isSubmitting || isVerifying ? (
+          {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {isVerifying ? 'Verifica in corso...' : 'Registrazione in corso...'}
+              {'Registrazione in corso...'}
             </>
           ) : 'Registrati'}
         </Button>
