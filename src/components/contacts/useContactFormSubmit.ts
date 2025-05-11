@@ -1,8 +1,8 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ContactFormData } from "./contactFormSchema";
 import { supabase } from "@/integrations/supabase/client";
+import { sendRegistrationEmail } from "@/services/email/registrationEmailService";
 
 export type ContactSubmissionError = {
   type: 'database' | 'network' | 'email' | 'validation' | 'unknown';
@@ -60,39 +60,49 @@ export function useContactFormSubmit() {
       }
 
       setProgress(50); // Update progress after saving
-
-      // Prepare the data to send via email
-      const contactData = {
-        type: 'contact',
-        name: data.name,
-        email: data.email,
-        phone: data.phone || '',
-        subject: data.subject || "Nuovo contatto dal sito M1SSION",
-        message: data.message,
-        to: [
-          {
-            email: "contact@m1ssion.com", 
-            name: "M1SSION Team"
-          }
-        ],
-        from: {
-          Email: "contact@m1ssion.com",
-          Name: "M1SSION Contact Form"
-        },
-        trackOpens: true,
-        trackClicks: false,
-        customCampaign: "contact_form",
-        // GDPR consent tracking
-        consent: {
-          given: true,
-          date: new Date().toISOString(),
-          method: "contact_form"
-        }
-      };
       
-      // Send email using Mailjet Edge Function
+      // Send email via Mailjet edge function
       try {
-        console.log("Invoking send-mailjet-email function with data:", JSON.stringify(contactData, null, 2));
+        console.log("Sending contact confirmation email...");
+        
+        // Send confirmation to user
+        const emailSent = await sendRegistrationEmail({
+          email: data.email,
+          name: data.name,
+          formType: "contatto"
+        });
+        
+        if (!emailSent) {
+          throw new Error("Failed to send confirmation email");
+        }
+        
+        // Also send notification to M1SSION team using existing edge function
+        const contactData = {
+          type: 'contact',
+          name: data.name,
+          email: data.email,
+          phone: data.phone || '',
+          subject: data.subject || "Nuovo contatto dal sito M1SSION",
+          message: data.message,
+          to: [
+            {
+              email: "contact@m1ssion.com", 
+              name: "M1SSION Team"
+            }
+          ],
+          from: {
+            Email: "contact@m1ssion.com",
+            Name: "M1SSION Contact Form"
+          },
+          trackOpens: true,
+          trackClicks: false,
+          customCampaign: "contact_form",
+          consent: {
+            given: true,
+            date: new Date().toISOString(),
+            method: "contact_form"
+          }
+        };
         
         const { data: responseData, error } = await supabase.functions.invoke('send-mailjet-email', {
           body: contactData
@@ -113,8 +123,6 @@ export function useContactFormSubmit() {
           throw networkError;
         }
         
-        setProgress(80); // Almost complete
-
         // Check the response - Fixed: correctly check the success property
         if (!responseData || responseData.success === false) {
           const errorMsg = responseData?.message || 'Error sending email';

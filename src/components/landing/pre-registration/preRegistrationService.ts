@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PreRegistrationFormData } from "./types";
@@ -92,68 +91,22 @@ export const registerUserViaEdgeFunction = async (userData: PreRegistrationFormD
 /**
  * Send confirmation email to the user after pre-registration
  */
-export const sendConfirmationEmail = async (name: string, email: string, referralCode: string) => {
+export const sendConfirmationEmail = async (name: string, email: string, referralCode: string): Promise<boolean> => {
   try {
-    console.log(`Sending confirmation email to ${name} <${email}> with referral code ${referralCode}`);
+    // Import the registration email service 
+    const { sendRegistrationEmail } = await import('@/services/email/registrationEmailService');
     
-    // Use the existing send-mailjet-email edge function
-    const { data, error } = await supabase.functions.invoke('send-mailjet-email', {
-      body: {
-        type: 'pre_registration',
-        to: [{
-          email: email.trim(),
-          name: name.trim()
-        }],
-        subject: 'Conferma pre-iscrizione M1SSION',
-        from: {
-          Email: "contact@m1ssion.com",
-          Name: "M1SSION Team"
-        },
-        htmlContent: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
-            <div style="background: linear-gradient(90deg, #00E5FF 0%, #0077FF 100%); padding: 20px; text-align: center; color: #000;">
-              <h1 style="margin: 0; color: #FFF;">M1SSION</h1>
-            </div>
-            
-            <div style="padding: 20px; background-color: #ffffff;">
-              <h3>Sei ufficialmente un agente M1SSION.</h3>
-              <p>Hai completato la pre-iscrizione. Tieniti pronto: la tua prima missione sta per arrivare.</p>
-              
-              <p style="margin-top: 20px;">Il tuo codice referral: <strong>${referralCode}</strong></p>
-              
-              <p>Puoi invitare altri agenti usando questo codice e guadagnare crediti extra per la tua missione!</p>
-            </div>
-            
-            <div style="font-size: 12px; text-align: center; padding-top: 20px; color: #999;">
-              <p>&copy; ${new Date().getFullYear()} M1SSION. Tutti i diritti riservati.</p>
-              <p>Questo messaggio è stato inviato automaticamente a seguito della tua pre-registrazione su M1SSION.</p>
-            </div>
-          </div>
-        `,
-        customCampaign: 'pre_registration_confirmation',
-        customId: `pre_reg_${Date.now()}`,
-        trackOpens: true,
-        trackClicks: true,
-        consent: {
-          given: true,
-          date: new Date().toISOString(),
-          method: 'signup'
-        }
-      }
+    // Send email using the Mailjet edge function
+    const success = await sendRegistrationEmail({
+      email,
+      name,
+      formType: "preregistrazione"
     });
     
-    if (error) {
-      console.error("Error sending confirmation email:", error);
-      throw error;
-    }
-    
-    console.log("Confirmation email sent successfully:", data);
-    return { success: true, data };
+    return success;
   } catch (error) {
     console.error("Failed to send confirmation email:", error);
-    // Don't throw the error here, as this is a non-critical operation
-    // We don't want to fail the registration if email sending fails
-    return { success: false, error };
+    return false;
   }
 };
 

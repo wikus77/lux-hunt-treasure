@@ -30,3 +30,24 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+// Mailjet response types
+interface MailjetResponse {
+  Messages: MailjetMessage[];
+  success: boolean;
+  error?: string;
+}
+
+interface MailjetMessage {
+  Status: string;
+  To: MailjetRecipient[];
+  Cc?: MailjetRecipient[];
+  Bcc?: MailjetRecipient[];
+}
+
+interface MailjetRecipient {
+  Email: string;
+  MessageUUID?: string;
+  MessageID?: number;
+  MessageHref?: string;
+}

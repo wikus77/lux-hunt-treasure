@@ -1,94 +1,60 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { sendRegistrationEmail } from "./email/registrationEmailService";
 
-interface SubscriberData {
+export interface NewsletterSubscriptionData {
   name: string;
   email: string;
-  referrer?: string;
   campaign?: string;
-  user_id?: string; // Field to store authenticated user ID
+  referrer?: string;
 }
 
-/**
- * Save a new newsletter subscriber to the database
- * @deprecated Use useNewsletterSubscription hook instead
- */
-export const saveSubscriber = async (subscriber: SubscriberData): Promise<void> => {
+export const saveSubscriber = async (data: NewsletterSubscriptionData): Promise<void> => {
   try {
-    // Check if user is authenticated and add their ID
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
+    // First, check if user already exists
+    const { data: existingSubscribers } = await supabase
+      .from('newsletter_subscribers')
+      .select('id')
+      .eq('email', data.email)
+      .limit(1);
     
-    const { data, error } = await supabase
-      .from('newsletter_subscribers')
-      .insert([
-        { 
-          name: subscriber.name,
-          email: subscriber.email,
-          referrer: subscriber.referrer || null,
-          campaign: subscriber.campaign || 'landing_page',
-          user_id: userId || null // Add user ID if authenticated
-        }
-      ]);
-
-    if (error) {
-      console.error("Error saving subscriber:", error);
+    if (existingSubscribers && existingSubscribers.length > 0) {
+      console.log("Email already registered to newsletter:", data.email);
       
-      // Check if it's a duplicate entry error
-      if (error.code === '23505') {
-        toast.info("Sei già iscritto alla newsletter!", {
-          description: "Continueremo a tenerti aggiornato sul lancio di M1SSION."
-        });
-        return;
-      }
-      
-      throw error;
-    }
-
-    // Send confirmation email through edge function
-    try {
-      await supabase.functions.invoke('send-email', {
-        body: {
-          type: 'welcome',
-          email: subscriber.email,
-          name: subscriber.name,
-          subject: 'Benvenuto in M1SSION',
-          data: {
-            launchDate: '19 Giugno 2025'
-          }
-        }
+      // Still send the confirmation email
+      await sendRegistrationEmail({
+        email: data.email,
+        name: data.name,
+        formType: "newsletter"
       });
-    } catch (emailError) {
-      console.error("Failed to send confirmation email:", emailError);
-      // We don't throw here to avoid preventing the subscription from completing
-      // The user is still subscribed even if the email fails
+      
+      return;
     }
-
-    console.log("Subscriber saved successfully:", data);
-  } catch (error) {
-    console.error("Failed to save subscriber:", error);
-    throw error;
-  }
-};
-
-/**
- * Get the current number of newsletter subscribers
- * @deprecated Use useNewsletterSubscription hook instead
- */
-export const getSubscribersCount = async (): Promise<number> => {
-  try {
-    const { count, error } = await supabase
-      .from('newsletter_subscribers')
-      .select('*', { count: 'exact', head: true });
-
+    
+    // Insert new subscriber
+    const { error } = await supabase.from('newsletter_subscribers').insert([
+      {
+        name: data.name,
+        email: data.email,
+        campaign: data.campaign || 'website',
+        referrer: data.referrer
+      }
+    ]);
+    
     if (error) {
       throw error;
     }
-
-    return count || 0;
+    
+    // Send confirmation email
+    await sendRegistrationEmail({
+      email: data.email,
+      name: data.name,
+      formType: "newsletter"
+    });
+    
+    console.log("New subscriber added to newsletter:", data.email);
   } catch (error) {
-    console.error("Failed to get subscribers count:", error);
-    return 0;
+    console.error("Error saving newsletter subscriber:", error);
+    throw error;
   }
 };
