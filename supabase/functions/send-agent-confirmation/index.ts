@@ -83,20 +83,26 @@ const handler = async (req: Request): Promise<Response> => {
     const senderName = "M1SSION";
     const subject = "Sei ufficialmente un agente M1SSION";
 
-    // Create HTML content using the template and replacing the referral code
-    const displayReferralCode = referral_code || "CODICE NON DISPONIBILE";
-    const htmlPart = generateAgentEmailHtml(name, displayReferralCode);
+    console.log(`Preparing to send email from ${senderEmail} to ${email} using Mailjet template ID: 12965521`);
+    
+    // Set the variables for the template
+    const variables = {
+      name: name,
+      referral_code: referral_code || "CODICE NON DISPONIBILE"
+    };
 
-    console.log(`Preparing to send email from ${senderEmail} to ${email} with subject "${subject}"`);
+    console.log("Template variables:", variables);
 
-    // Prepare email data
+    // Prepare email data using the Mailjet template
     const emailData = {
       Messages: [
         {
           From: { Email: senderEmail, Name: senderName },
           To: [{ Email: email, Name: name || "Nuovo Agente" }],
           Subject: subject,
-          HTMLPart: htmlPart,
+          TemplateID: 12965521, // Using the specific template ID
+          TemplateLanguage: true, // Enable template language processing
+          Variables: variables, // Pass the variables to the template
           TrackOpens: "enabled",
           TrackClicks: "enabled"
         }
@@ -105,7 +111,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email through Mailjet API
     try {
-      console.log("Sending email via Mailjet API...");
+      console.log("Sending email via Mailjet API with template...");
       const response = await mailjetClient.post("send", { version: "v3.1" }).request(emailData);
       console.log("Mailjet API response status:", response.status);
       console.log("Mailjet API response body:", JSON.stringify(response.body, null, 2));
@@ -173,122 +179,6 @@ const handler = async (req: Request): Promise<Response> => {
     );
   }
 };
-
-// Function to generate HTML email content
-function generateAgentEmailHtml(name: string, referralCode: string): string {
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sei un Agente M1SSION</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      margin: 0;
-      padding: 0;
-      background-color: #0a0a0a;
-      color: #ffffff;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #0a0a0a;
-    }
-    .header {
-      text-align: center;
-      padding: 20px 0;
-      border-bottom: 1px solid #333;
-    }
-    .logo {
-      font-size: 28px;
-      font-weight: bold;
-    }
-    .blue-text {
-      color: #00E5FF;
-    }
-    .content {
-      padding: 30px 0;
-    }
-    .button {
-      display: inline-block;
-      background: linear-gradient(90deg, #00E5FF 0%, #0077FF 100%);
-      color: #000000;
-      text-decoration: none;
-      padding: 12px 30px;
-      border-radius: 50px;
-      font-weight: bold;
-      margin: 20px 0;
-      text-align: center;
-    }
-    .footer {
-      text-align: center;
-      padding-top: 30px;
-      font-size: 12px;
-      color: #888;
-      border-top: 1px solid #333;
-    }
-    .referral-code {
-      background-color: #111;
-      border: 1px solid #333;
-      border-radius: 4px;
-      padding: 10px 20px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #00E5FF;
-      text-align: center;
-      margin: 20px 0;
-      letter-spacing: 2px;
-    }
-    .highlight {
-      color: #00E5FF;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="logo"><span class="blue-text">M1</span>SSION</div>
-    </div>
-    
-    <div class="content">
-      <h1>Congratulazioni, ${name}!</h1>
-      
-      <p>Sei ufficialmente diventato un <span class="highlight">Agente M1SSION</span>.</p>
-      
-      <p>Da questo momento fai parte di un network esclusivo di agenti che avranno accesso privilegiato al nostro ecosistema di missioni, enigmi e premi esclusivi.</p>
-      
-      <h3>Il tuo codice di accesso personale:</h3>
-      
-      <div class="referral-code">${referralCode}</div>
-      
-      <p>Questo codice è il tuo identificativo unico nel sistema M1SSION. Usalo per:</p>
-      <ul>
-        <li>Invitare altri agenti (guadagnando crediti bonus)</li>
-        <li>Sbloccare missioni speciali</li>
-        <li>Ottenere vantaggi esclusivi riservati agli agenti</li>
-      </ul>
-      
-      <p>Riceverai presto ulteriori istruzioni. Tieniti pronto, la prima missione sta per iniziare.</p>
-      
-      <div style="text-align: center;">
-        <a href="https://m1ssion.com" class="button">ACCEDI AL CENTRO COMANDI</a>
-      </div>
-    </div>
-    
-    <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} M1SSION. Tutti i diritti riservati.</p>
-      <p>Questo messaggio è confidenziale e destinato esclusivamente agli agenti M1SSION.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `;
-}
 
 // Start the server
 console.log("Starting send-agent-confirmation edge function");
