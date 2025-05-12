@@ -58,14 +58,14 @@ serve(async (req) => {
     console.log("Initializing Mailjet client");
     const mailjetClient = mailjet.apiConnect(MJ_APIKEY_PUBLIC, MJ_APIKEY_PRIVATE);
 
-    // IMPORTANT: Set sender email explicitly to noreply@m1ssion.com
-    // This will override any template default sender
+    // Explicitly set sender email to override any template default
     const senderEmail = "noreply@m1ssion.com";
     const senderName = "M1SSION";
 
     console.log(`Preparing email to ${email} with referral_code: ${referral_code || "non disponibile"}`);
+    console.log(`Using Mailjet TemplateID: 6974914`);
 
-    // Create email data with EXPLICIT sender email that should override any template default
+    // Create email data with ONLY template configuration - no Subject or HTMLPart
     const emailData = {
       Messages: [
         {
@@ -77,7 +77,8 @@ serve(async (req) => {
             Email: email, 
             Name: name || "Agente" 
           }],
-          TemplateID: 6974023,
+          // Updated template ID to 6974914
+          TemplateID: 6974914,
           TemplateLanguage: true,
           Variables: {
             referral_code: referral_code || "CODICE NON DISPONIBILE"

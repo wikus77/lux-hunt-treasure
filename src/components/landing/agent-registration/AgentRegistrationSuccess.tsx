@@ -29,6 +29,9 @@ const AgentRegistrationSuccess: React.FC<AgentRegistrationSuccessProps> = ({
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
   
+  // Log rendering for debugging duplicate notifications
+  console.log("Rendering AgentRegistrationSuccess with code:", referralCode);
+  
   return (
     <div className={`space-y-6 ${className || ''}`}>
       <div className="text-center">

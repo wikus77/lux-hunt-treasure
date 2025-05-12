@@ -1,6 +1,5 @@
 
 import React, { useState } from "react";
-import { toast } from "sonner";
 import { registerAgent } from "@/services/agentRegistrationService";
 import FormField from "../pre-registration/FormField";
 
@@ -61,6 +60,7 @@ const AgentRegistrationForm: React.FC<AgentRegistrationFormProps> = ({
     }
     
     setIsSubmitting(true);
+    console.log("Starting agent registration submission");
     
     try {
       console.log("Submitting agent registration form:", { name, email });
@@ -85,12 +85,20 @@ const AgentRegistrationForm: React.FC<AgentRegistrationFormProps> = ({
           onSuccess(result.referralCode);
         }
       } else {
+        // Only show error notifications directly in the form
+        console.error("Registration failed:", result.error);
+        
+        // We use the toast import here but ONLY for errors
+        const { toast } = await import("sonner");
         toast.error("Errore nella registrazione", {
           description: result.error || "Si è verificato un errore. Riprova più tardi."
         });
       }
     } catch (error: any) {
       console.error("Exception in agent registration form submission:", error);
+      
+      // We use the toast import here but ONLY for errors
+      const { toast } = await import("sonner");
       toast.error("Errore imprevisto", {
         description: "Si è verificato un errore nella registrazione. Riprova più tardi."
       });
