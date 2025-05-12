@@ -25,7 +25,7 @@ interface Window {
     render: (container: string, options: any) => string;
     reset: (widgetId: string) => void;
   };
-  // Aggiungiamo le definizioni per Cookie Script
+  // Type definitions for Cookie Script
   checkCookieConsent?: (category: 'necessary' | 'preferences' | 'statistics' | 'marketing') => boolean;
   CookieScriptConsent?: {
     categories: {

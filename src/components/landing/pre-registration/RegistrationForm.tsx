@@ -82,17 +82,6 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
     }
   };
 
-  // Determina se il pulsante deve essere disabilitato
-  const isButtonDisabled = isSubmitting || isVerifying || (!useBypass && !turnstileToken);
-
-  console.log("Button state:", { 
-    isSubmitting, 
-    isVerifying, 
-    useBypass, 
-    turnstileToken, 
-    isButtonDisabled 
-  });
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <FormField
@@ -130,11 +119,10 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
       <button
         type="submit"
         className={`w-full p-3 rounded-full flex items-center justify-center ${
-          isButtonDisabled
-            ? 'bg-gray-700 opacity-90 cursor-not-allowed' 
+          (isSubmitting || isVerifying)
+            ? 'bg-gray-700 opacity-90' 
             : 'bg-gradient-to-r from-[#0066FF] to-[#FF00FF] text-white hover:shadow-[0_0_15px_rgba(0,102,255,0.5)]'
         } font-medium transition-all duration-300`}
-        disabled={false} // Non disabilitiamo mai il pulsante per garantire che sia cliccabile
       >
         {isSubmitting || isVerifying ? (
           <>
