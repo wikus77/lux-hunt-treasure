@@ -1,191 +1,85 @@
 
+// deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { corsHeaders } from "./cors.ts";
+import mailjet from "npm:node-mailjet@6.0.0";
 
-// Define email request interface
-interface AgentEmailRequest {
-  name: string;
-  email: string;
-  referral_code: string;
-}
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
+};
 
-// Main handler
-const handler = async (req: Request): Promise<Response> => {
-  console.log(`Processing ${req.method} request to send-agent-confirmation`);
-  
-  // Handle CORS preflight requests
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const requestData: AgentEmailRequest = await req.json();
-    console.log("Received agent confirmation email request:", requestData);
-    
-    // Validate required fields
-    if (!requestData.email || !requestData.name) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Email e nome sono campi obbligatori" 
-        }),
-        { 
-          status: 400, 
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          } 
-        }
-      );
+    const { email, name, formType, referral_code } = await req.json();
+
+    if (!email || !formType) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Email o tipo di form mancante"
+      }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders }
+      });
     }
 
-    const { name, email, referral_code } = requestData;
-
-    // Get Mailjet API keys from environment variables
     const MJ_APIKEY_PUBLIC = Deno.env.get("MJ_APIKEY_PUBLIC");
     const MJ_APIKEY_PRIVATE = Deno.env.get("MJ_APIKEY_PRIVATE");
-    
+
     if (!MJ_APIKEY_PUBLIC || !MJ_APIKEY_PRIVATE) {
-      console.error("Mailjet API keys not found in environment variables");
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "API keys Mailjet non configurate",
-          debug: {
-            MJ_APIKEY_PUBLIC_EXISTS: !!MJ_APIKEY_PUBLIC,
-            MJ_APIKEY_PRIVATE_EXISTS: !!MJ_APIKEY_PRIVATE,
-          }
-        }), 
-        { 
-          status: 500, 
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          } 
-        }
-      );
+      return new Response(JSON.stringify({
+        success: false,
+        error: "API keys Mailjet non configurate"
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders }
+      });
     }
 
-    // Import Mailjet correctly
-    const mailjet = await import("npm:node-mailjet@6.0.0").then(mod => mod.default);
+    const mailjetClient = mailjet.apiConnect(MJ_APIKEY_PUBLIC, MJ_APIKEY_PRIVATE);
 
-    // Initialize Mailjet client with API keys from environment variables
-    const mailjetClient = mailjet.apiConnect(
-      MJ_APIKEY_PUBLIC,
-      MJ_APIKEY_PRIVATE
-    );
+    const senderEmail = "noreply@m1ssion.com";
+    const senderName = "M1SSION";
 
-    console.log("Mailjet client initialized successfully");
+    console.log(`Invio email a ${email} con referral_code: ${referral_code || "non disponibile"}`);
 
-    // Set the variables for the template - explicitly define all variables expected by the template
-    const variables = {
-      name: name,
-      referral_code: referral_code || "CODICE NON DISPONIBILE"
-    };
-
-    console.log("Template variables:", variables);
-    console.log("Using Mailjet template ID: 6974023");
-
-    // Prepare email data using the Mailjet template
     const emailData = {
       Messages: [
         {
-          From: { 
-            Email: "noreply@m1ssion.com", 
-            Name: "M1SSION" 
-          },
-          To: [{ 
-            Email: email, 
-            Name: name || "Nuovo Agente" 
-          }],
-          Subject: "Sei ufficialmente un agente M1SSION",
+          From: { Email: senderEmail, Name: senderName },
+          To: [{ Email: email, Name: name || "Agente" }],
           TemplateID: 6974023,
           TemplateLanguage: true,
-          Variables: variables,
-          TrackOpens: "enabled",
-          TrackClicks: "enabled"
+          Variables: {
+            referral_code: referral_code || "NON DISPONIBILE"
+          }
         }
       ]
     };
 
-    // Send email through Mailjet API
-    try {
-      console.log("Sending email via Mailjet API with template...");
-      console.log("Email data being sent:", JSON.stringify(emailData, null, 2));
-      
-      const response = await mailjetClient.post("send", { version: "v3.1" }).request(emailData);
-      console.log("Mailjet API response status:", response.status);
-      console.log("Mailjet API response body:", JSON.stringify(response.body, null, 2));
+    const response = await mailjetClient.post("send", { version: "v3.1" }).request(emailData);
 
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: "Email inviata con successo",
-          response: response.body,
-          template_used: 6974023,
-          variables_sent: variables
-        }), 
-        { 
-          status: 200, 
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          } 
-        }
-      );
-    } catch (mailjetError: any) {
-      console.error("Mailjet API error:", mailjetError);
-      
-      // Extract detailed error info
-      let errorDetails = mailjetError;
-      try {
-        if (mailjetError.response && mailjetError.response.data) {
-          errorDetails = mailjetError.response.data;
-        } else if (mailjetError.message) {
-          errorDetails = mailjetError.message;
-        }
-      } catch (e) {
-        console.error("Error parsing Mailjet error:", e);
-      }
-      
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Errore API Mailjet: " + (mailjetError.message || mailjetError.ErrorMessage || JSON.stringify(mailjetError)),
-          details: errorDetails,
-          template_attempted: 6974023,
-          variables_attempted: variables
-        }), 
-        { 
-          status: 500, 
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          } 
-        }
-      );
-    }
-  } catch (error: any) {
-    console.error("General error sending email:", error);
-    
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: "Errore nell'invio email: " + error.message,
-        details: error.stack || "No stack trace available"
-      }), 
-      { 
-        status: 500, 
-        headers: { 
-          "Content-Type": "application/json",
-          ...corsHeaders
-        } 
-      }
-    );
+    return new Response(JSON.stringify({
+      success: true,
+      message: "Email inviata correttamente",
+      response: response.body
+    }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders }
+    });
+
+  } catch (error) {
+    console.error("Errore generale:", error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: "Errore nell'invio email",
+      details: error.message || error
+    }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders }
+    });
   }
-};
-
-// Start the server
-console.log("Starting send-agent-confirmation edge function");
-serve(handler);
+});
