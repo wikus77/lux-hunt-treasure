@@ -78,13 +78,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Mailjet client initialized successfully");
 
-    // Sender info
-    const senderEmail = "noreply@m1ssion.com";
-    const senderName = "M1SSION";
-    const subject = "Sei ufficialmente un agente M1SSION";
-
-    console.log(`Preparing to send email from ${senderEmail} to ${email} using Mailjet template ID: 12965521`);
-    
     // Set the variables for the template
     const variables = {
       name: name,
@@ -97,12 +90,18 @@ const handler = async (req: Request): Promise<Response> => {
     const emailData = {
       Messages: [
         {
-          From: { Email: senderEmail, Name: senderName },
-          To: [{ Email: email, Name: name || "Nuovo Agente" }],
-          Subject: subject,
-          TemplateID: 12965521, // Using the specific template ID
-          TemplateLanguage: true, // Enable template language processing
-          Variables: variables, // Pass the variables to the template
+          From: { 
+            Email: "noreply@m1ssion.com", 
+            Name: "M1SSION" 
+          },
+          To: [{ 
+            Email: email, 
+            Name: name || "Nuovo Agente" 
+          }],
+          Subject: "Sei ufficialmente un agente M1SSION",
+          TemplateID: 12965521,
+          TemplateLanguage: true,
+          Variables: variables,
           TrackOpens: "enabled",
           TrackClicks: "enabled"
         }
