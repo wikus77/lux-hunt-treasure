@@ -72,7 +72,7 @@ serve(async (req) => {
           TemplateID: 6974023,
           TemplateLanguage: true,
           Variables: {
-            referral_code: referral_code || "NON DISPONIBILE"
+            referral_code: referral_code || "CODICE NON DISPONIBILE"
           }
         }
       ]
