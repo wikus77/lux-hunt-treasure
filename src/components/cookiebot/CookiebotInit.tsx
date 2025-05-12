@@ -90,6 +90,19 @@ const CookiebotInit: React.FC = () => {
               preferences: true,  // Consentiamo le preferenze per default nel fallback
               statistics: false,  // Aggiunto per conformità con il tipo richiesto
               marketing: false    // Aggiunto per conformità con il tipo richiesto
+            },
+            // Implementiamo i metodi richiesti come funzioni vuote
+            show: () => {
+              console.log("Fallback CookieScript: show called");
+            },
+            hide: () => {
+              console.log("Fallback CookieScript: hide called");
+            },
+            renew: () => {
+              console.log("Fallback CookieScript: renew called");
+            },
+            withdraw: () => {
+              console.log("Fallback CookieScript: withdraw called");
             }
           };
           
