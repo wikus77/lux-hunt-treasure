@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { toast } from "sonner";
 import AgentRegistrationForm from "./agent-registration/AgentRegistrationForm";
 import AgentRegistrationSuccess from "./agent-registration/AgentRegistrationSuccess";
 
@@ -12,6 +13,12 @@ const AgentRegistrationContainer: React.FC<AgentRegistrationContainerProps> = ({
   const [referralCode, setReferralCode] = useState("");
   
   const handleRegistrationSuccess = (code: string) => {
+    // Centralized success notification - this is the ONLY place where success toast should appear
+    toast.success("Registrazione completata!", {
+      description: "Sei ufficialmente un agente M1SSION. Controlla la tua email."
+    });
+    
+    // Update state to show success view
     setReferralCode(code);
     setIsSubmitted(true);
   };
