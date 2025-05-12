@@ -1,6 +1,5 @@
 
 import React, { useState } from "react";
-import { toast } from "sonner";
 import AgentRegistrationForm from "./agent-registration/AgentRegistrationForm";
 import AgentRegistrationSuccess from "./agent-registration/AgentRegistrationSuccess";
 
@@ -12,20 +11,9 @@ const AgentRegistrationContainer: React.FC<AgentRegistrationContainerProps> = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   
-  // IMPORTANT: This is the ONLY place where success notification should appear
-  // All other components should call this callback without showing their own notifications
   const handleRegistrationSuccess = (code: string) => {
-    // SINGLE notification point - this is the ONLY place where success toast should appear
-    toast.success("Registrazione completata!", {
-      description: "Sei ufficialmente un agente M1SSION. Controlla la tua email."
-    });
-    
-    // Update state to show success view
     setReferralCode(code);
     setIsSubmitted(true);
-    
-    // Log success for debugging
-    console.log("Registration success handled in AgentRegistrationContainer");
   };
   
   return (
