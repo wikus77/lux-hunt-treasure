@@ -43,6 +43,7 @@ const CookiebotInit: React.FC = () => {
         mainScript.setAttribute('data-no-reload', 'true');
         mainScript.setAttribute('data-cs-no-reload', 'true');
         mainScript.setAttribute('data-no-duplicate', 'true'); // Previene duplicati
+        mainScript.setAttribute('data-cookiescript', 'true'); // Identifica lo script correttamente
         
         // Funzione di callback dopo il caricamento
         mainScript.onload = () => {
