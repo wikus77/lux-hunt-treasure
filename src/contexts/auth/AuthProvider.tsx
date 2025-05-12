@@ -5,14 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import AuthContext from './AuthContext';
 import { useAuth } from '@/hooks/use-auth';
 import { AuthContextType } from './types';
-import { toast } from 'sonner';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // We get the base authentication functionality from our useAuth hook
   const auth = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
-  const [authInitialized, setAuthInitialized] = useState(false);
 
   // Fetch user role when auth state changes
   useEffect(() => {
@@ -46,22 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     fetchUserRole();
-    
-    // Mark auth as initialized after first load
-    if (!authInitialized && !auth.isLoading) {
-      setAuthInitialized(true);
-    }
-    
-  }, [auth.isAuthenticated, auth.user, auth.isLoading]);
-
-  // Show loading state on first initialization
-  useEffect(() => {
-    if (auth.isLoading && !authInitialized) {
-      console.log('Auth is initializing...');
-    } else if (authInitialized) {
-      console.log('Auth initialization complete');
-    }
-  }, [auth.isLoading, authInitialized]);
+  }, [auth.isAuthenticated, auth.user]);
 
   // Check if user has a specific role
   const hasRole = (role: string): boolean => {
@@ -82,5 +65,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
-
-export default AuthProvider;

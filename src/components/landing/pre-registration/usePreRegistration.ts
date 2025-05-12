@@ -88,18 +88,8 @@ export const usePreRegistration = () => {
         setEmail("");
         setInviteCode("");
         
-        // Invia l'email di conferma CON il referral code
-        const emailSent = await sendConfirmationEmail(formData.name, formData.email, referralCode);
-        console.log("Email confirmation status:", emailSent ? "sent" : "failed");
-        
-        if (!emailSent) {
-          console.warn("Email sending failed, trying again...");
-          // Retry once if failed
-          setTimeout(async () => {
-            const retryResult = await sendConfirmationEmail(formData.name, formData.email, referralCode);
-            console.log("Email confirmation retry status:", retryResult ? "sent" : "failed again");
-          }, 2000);
-        }
+        // Invia l'email di conferma
+        await sendConfirmationEmail(formData.name, formData.email, referralCode);
         
       } catch (primaryError) {
         console.error("Errore nel metodo primario di registrazione:", primaryError);
@@ -124,18 +114,8 @@ export const usePreRegistration = () => {
             setEmail("");
             setInviteCode("");
             
-            // Invia l'email di conferma CON il referral code
-            const emailSent = await sendConfirmationEmail(formData.name, formData.email, result.referralCode);
-            console.log("Email confirmation status (edge function):", emailSent ? "sent" : "failed");
-            
-            if (!emailSent) {
-              console.warn("Email sending failed via edge function, trying once more...");
-              // Retry once if failed
-              setTimeout(async () => {
-                const retryResult = await sendConfirmationEmail(formData.name, formData.email, result.referralCode);
-                console.log("Email confirmation retry status:", retryResult ? "sent" : "failed again");
-              }, 2000);
-            }
+            // Invia l'email di conferma anche quando si usa il metodo secondario
+            await sendConfirmationEmail(formData.name, formData.email, result.referralCode);
           } else {
             throw new Error("La registrazione non è andata a buon fine");
           }

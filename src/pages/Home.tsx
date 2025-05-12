@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import BriefProfileModal from "@/components/profile/BriefProfileModal";
 import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
 import HomeHeader from "@/components/home/HomeHeader";
@@ -9,14 +9,10 @@ import { useProfileImage } from "@/hooks/useProfileImage";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
-import HomeLayout from "@/components/home/HomeLayout";
-import { Helmet } from "react-helmet";
-import { toast } from "sonner";
 
 const Home = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
   const { profileImage } = useProfileImage();
   const isMobile = useIsMobile();
   const {
@@ -42,30 +38,10 @@ const Home = () => {
     color: i % 3 === 0 ? '#00E5FF' : i % 3 === 1 ? '#FFC300' : '#9b87f5',
   }));
 
-  // Improve loading experience
-  useEffect(() => {
-    // Simple timer to ensure smooth UI transition
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
   // Show connection status in console
   useEffect(() => {
     console.log("Real-time notification connection status:", isConnected);
   }, [isConnected]);
-
-  // Handle errors
-  useEffect(() => {
-    if (error) {
-      toast.error("Si è verificato un errore", {
-        description: error,
-        position: "bottom-center"
-      });
-    }
-  }, [error]);
 
   if (error) {
     return (
@@ -84,59 +60,96 @@ const Home = () => {
   }
 
   return (
-    <HomeLayout profileImage={profileImage}>
-      <Helmet>
-        <title>M1SSION - Home</title>
-      </Helmet>
-      
-      <AnimatePresence>
-        {isLoaded && (
+    <div className="relative">
+      {/* Background particles */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        {particles.map(particle => (
           <motion.div
-            className="relative z-10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
+            key={particle.id}
+            className="absolute rounded-full"
+            style={{
+              width: `${particle.size}px`,
+              height: `${particle.size}px`,
+              backgroundColor: particle.color,
+              boxShadow: `0 0 8px ${particle.color}`,
+              top: `${particle.top}%`,
+              left: `${particle.left}%`,
+            }}
+            animate={{
+              y: [0, -30, 0, 30, 0],
+              x: [0, 20, 40, 20, 0],
+              opacity: [0.3, 0.7, 0.5, 0.8, 0.3],
+            }}
+            transition={{
+              duration: particle.duration,
+              ease: "easeInOut",
+              times: [0, 0.2, 0.5, 0.8, 1],
+              repeat: Infinity,
+              delay: particle.delay,
+            }}
+          />
+        ))}
+
+        {/* Animated gradient overlay */}
+        <div 
+          className="absolute inset-0 bg-gradient-to-b from-[#06071b]/80 via-transparent to-[#06071b]/80 z-[-1]" 
+          style={{ 
+            backgroundImage: "radial-gradient(ellipse at top, rgba(0,229,255,0.15) 0%, rgba(0,0,0,0) 60%), radial-gradient(ellipse at bottom, rgba(155,135,245,0.15) 0%, rgba(0,0,0,0) 60%)" 
+          }}
+        />
+
+        {/* Light beams */}
+        <div className="absolute top-0 left-1/4 w-[200px] h-[500px] bg-[#00a3ff] opacity-[0.02] blur-[80px] transform rotate-[-45deg]" />
+        <div className="absolute bottom-0 right-1/4 w-[200px] h-[500px] bg-[#9b87f5] opacity-[0.02] blur-[80px] transform rotate-[45deg]" />
+
+        {/* Grid lines */}
+        <div className="absolute inset-0 bg-[url('/grid-pattern.png')] bg-repeat opacity-[0.05]" />
+      </div>
+
+      <motion.div
+        className="relative z-10"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* Notifications Banner */}
+        {notificationsBannerOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-x-0 top-0 z-[60] px-2 md:px-4 mt-16"
           >
-            {/* Notifications Banner */}
-            {notificationsBannerOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="fixed inset-x-0 top-0 z-[60] px-2 md:px-4 mt-16"
-              >
-                <NotificationsBanner
-                  notifications={notifications}
-                  open={notificationsBannerOpen}
-                  unreadCount={unreadCount}
-                  onClose={closeNotificationsBanner}
-                  onMarkAllAsRead={markAllAsRead}
-                />
-              </motion.div>
-            )}
-            
-            {/* Custom header implementation */}
-            <HomeHeader 
-              profileImage={profileImage}
+            <NotificationsBanner
+              notifications={notifications}
+              open={notificationsBannerOpen}
               unreadCount={unreadCount}
-              onShowNotifications={openNotificationsBanner}
+              onClose={closeNotificationsBanner}
+              onMarkAllAsRead={markAllAsRead}
             />
-            
-            {/* Increased top padding to accommodate header + countdown */}
-            <main className={`pt-[120px] ${isMobile ? 'sm:pt-44' : 'sm:pt-44'} px-2 sm:px-4 max-w-screen-xl mx-auto pb-20`}>
-              <CommandCenterHome />
-            </main>
           </motion.div>
         )}
-      </AnimatePresence>
+        
+        {/* Custom header implementation */}
+        <HomeHeader 
+          profileImage={profileImage}
+          unreadCount={unreadCount}
+          onShowNotifications={openNotificationsBanner}
+        />
+        
+        {/* Increased top padding to accommodate header + countdown */}
+        <main className={`pt-[120px] ${isMobile ? 'sm:pt-44' : 'sm:pt-44'} px-2 sm:px-4 max-w-screen-xl mx-auto pb-20`}>
+          <CommandCenterHome />
+        </main>
+      </motion.div>
 
       <BriefProfileModal
         open={showProfileModal}
         onClose={() => setShowProfileModal(false)}
         profileImage={profileImage}
       />
-    </HomeLayout>
+    </div>
   );
 };
 

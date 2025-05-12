@@ -19,27 +19,9 @@ serve(async (req) => {
   
   try {
     // Parse the request body
-    let requestData;
-    try {
-      requestData = await req.json();
-      console.log("Received registration email data:", JSON.stringify(requestData));
-    } catch (parseError) {
-      console.error("Error parsing request body:", parseError);
-      return new Response(
-        JSON.stringify({ success: false, error: "Invalid request format" }), 
-        { 
-          status: 400, 
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          } 
-        }
-      );
-    }
+    const { email, name, formType } = await req.json()
 
-    const { email, name, formType, referral_code } = requestData;
-
-    console.log(`Processing ${formType} email for ${name} (${email}), referral code: ${referral_code || "not provided"}`)
+    console.log(`Processing ${formType} email for ${name} (${email})`)
 
     // Validate required fields
     if (!email || !formType) {
@@ -64,11 +46,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "API keys Mailjet non configurate",
-          debug: {
-            MJ_APIKEY_PUBLIC_EXISTS: !!MJ_APIKEY_PUBLIC,
-            MJ_APIKEY_PRIVATE_EXISTS: !!MJ_APIKEY_PRIVATE,
-          }
+          error: "API keys Mailjet non configurate"
         }), 
         { 
           status: 500, 
@@ -81,30 +59,10 @@ serve(async (req) => {
     }
 
     // Initialize Mailjet client with API keys from environment variables
-    let mailjetClient;
-    try {
-      mailjetClient = mailjet.apiConnect(
-        MJ_APIKEY_PUBLIC,
-        MJ_APIKEY_PRIVATE
-      );
-      console.log("Mailjet client initialized successfully");
-    } catch (mjInitError) {
-      console.error("Error initializing Mailjet client:", mjInitError);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Errore nell'inizializzazione del client Mailjet",
-          details: mjInitError.message || JSON.stringify(mjInitError)
-        }), 
-        { 
-          status: 500, 
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          } 
-        }
-      );
-    }
+    const mailjetClient = mailjet.apiConnect(
+      MJ_APIKEY_PUBLIC,
+      MJ_APIKEY_PRIVATE
+    )
 
     // Configure email based on form type
     let senderEmail = "noreply@m1ssion.com"
@@ -128,56 +86,27 @@ serve(async (req) => {
     } else if (formType === "preregistrazione") {
       senderEmail = "contact@m1ssion.com" 
       subject = "Pre-registrazione confermata"
-      
-      // Enhanced HTML for pre-registration with referral code
-      // Make sure we display the actual referral code or a clear message if it's not available
-      const displayReferralCode = referral_code || "CODICE NON DISPONIBILE";
-      
-      htmlPart = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
-          <div style="background: linear-gradient(90deg, #00E5FF 0%, #0077FF 100%); padding: 20px; text-align: center; color: #000;">
-            <h1 style="margin: 0; color: #FFF;">M1SSION</h1>
-          </div>
-          
-          <div style="padding: 20px; background-color: #ffffff;">
-            <h3>Sei ufficialmente un agente M1SSION.</h3>
-            <p>Hai completato la pre-iscrizione. Tieniti pronto: la tua prima missione sta per arrivare.</p>
-            
-            <p style="margin-top: 20px;">Il tuo codice referral: <strong>${displayReferralCode}</strong></p>
-            
-            <p>Puoi invitare altri agenti usando questo codice e guadagnare crediti extra per la tua missione!</p>
-          </div>
-          
-          <div style="font-size: 12px; text-align: center; padding-top: 20px; color: #999;">
-            <p>&copy; ${new Date().getFullYear()} M1SSION. Tutti i diritti riservati.</p>
-            <p>Questo messaggio è stato inviato automaticamente a seguito della tua pre-registrazione su M1SSION.</p>
-          </div>
-        </div>
-      `
+      htmlPart = `<h3>Grazie per la tua pre-registrazione!</h3><p>Sei tra i primi a far parte di M1SSION. Ti aggiorneremo sul lancio.</p>`
     }
 
-    console.log(`Preparing to send email from ${senderEmail} to ${email} with subject "${subject}"`)
-
-    // Prepare email data
-    const emailData = {
-      Messages: [
-        {
-          From: { Email: senderEmail, Name: senderName },
-          To: [{ Email: email, Name: name || "Utente" }],
-          Subject: subject,
-          HTMLPart: htmlPart,
-          TrackOpens: "enabled",
-          TrackClicks: "enabled"
-        }
-      ]
-    };
+    console.log(`Sending email from ${senderEmail} to ${email} with subject "${subject}"`)
 
     // Send email through Mailjet API
     try {
-      console.log("Sending email via Mailjet API...");
-      const response = await mailjetClient.post("send", { version: "v3.1" }).request(emailData);
-      console.log("Mailjet API response status:", response.status);
-      console.log("Mailjet API response body:", JSON.stringify(response.body, null, 2));
+      const response = await mailjetClient.post("send", { version: "v3.1" }).request({
+        Messages: [
+          {
+            From: { Email: senderEmail, Name: senderName },
+            To: [{ Email: email, Name: name || "Utente" }],
+            Subject: subject,
+            HTMLPart: htmlPart,
+            TrackOpens: "enabled",
+            TrackClicks: "enabled"
+          }
+        ]
+      })
+
+      console.log("Mailjet API response:", response.body)
 
       return new Response(
         JSON.stringify({ 
@@ -194,25 +123,13 @@ serve(async (req) => {
         }
       )
     } catch (mailjetError: any) {
-      console.error("Mailjet API error:", mailjetError);
-      
-      // Extract detailed error info
-      let errorDetails = mailjetError;
-      try {
-        if (mailjetError.response && mailjetError.response.data) {
-          errorDetails = mailjetError.response.data;
-        } else if (mailjetError.message) {
-          errorDetails = mailjetError.message;
-        }
-      } catch (e) {
-        console.error("Error parsing Mailjet error:", e);
-      }
+      console.error("Mailjet API error:", mailjetError)
       
       return new Response(
         JSON.stringify({ 
           success: false, 
           error: "Errore API Mailjet: " + (mailjetError.message || mailjetError.ErrorMessage || JSON.stringify(mailjetError)),
-          details: errorDetails
+          details: mailjetError
         }), 
         { 
           status: 500, 
@@ -224,7 +141,7 @@ serve(async (req) => {
       )
     }
   } catch (error: any) {
-    console.error("General error sending email:", error);
+    console.error("Error sending email:", error)
     
     return new Response(
       JSON.stringify({ 

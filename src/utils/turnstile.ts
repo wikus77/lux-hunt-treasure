@@ -11,9 +11,7 @@ const TURNSTILE_SITE_KEY = "0x4AAAAAABcmLn-b1NViurvi";
  */
 const CAPTCHA_BYPASS_PATHS = [
   '/email-campaign',
-  '/dev-campaign-test',
-  '/dev',
-  '/test'
+  '/dev-campaign-test'
 ];
 
 /**
@@ -21,15 +19,8 @@ const CAPTCHA_BYPASS_PATHS = [
  */
 export const shouldBypassCaptcha = (path: string): boolean => {
   // Check if the current path is in the bypass list
-  const shouldBypass = CAPTCHA_BYPASS_PATHS.some(bypassPath => 
+  return CAPTCHA_BYPASS_PATHS.some(bypassPath => 
     path === bypassPath || path.startsWith(`${bypassPath}/`));
-  
-  // For development, enable easier testing
-  if (shouldBypass) {
-    console.log('Bypassing Turnstile on developer path:', path);
-  }
-  
-  return shouldBypass;
 };
 
 /**
@@ -37,7 +28,7 @@ export const shouldBypassCaptcha = (path: string): boolean => {
  * This function loads the Turnstile script if it's not already loaded
  */
 export const initializeTurnstile = (): Promise<void> => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     // If we're on a bypass path, resolve immediately
     if (shouldBypassCaptcha(window.location.pathname)) {
       console.log('Bypassing Turnstile on developer path:', window.location.pathname);
@@ -54,46 +45,34 @@ export const initializeTurnstile = (): Promise<void> => {
 
     // Load Turnstile script
     const script = document.createElement('script');
-    script.src = `https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback`;
+    script.src = `https://challenges.cloudflare.com/turnstile/v0/api.js?render=${TURNSTILE_SITE_KEY}`;
     script.async = true;
     script.defer = true;
     
-    // Define the callback function - make sure it's defined before the script is loaded
-    window.onloadTurnstileCallback = () => {
-      console.log('Turnstile script loaded via callback');
-      resolve();
-    };
-    
     script.onload = () => {
-      console.log('Turnstile script loaded via onload');
+      console.log('Turnstile script loaded');
       resolve();
     };
     
     script.onerror = () => {
-      console.error('Error loading Turnstile script, but continuing without it');
-      resolve(); // Resolve anyway to not block functionality
+      console.error('Error loading Turnstile script');
+      reject(new Error('Failed to load Turnstile'));
     };
     
     document.head.appendChild(script);
-    
-    // Set a timeout just in case callbacks fail
-    setTimeout(() => {
-      console.log('Turnstile script load timeout reached, continuing');
-      resolve();
-    }, 2000);
   });
 };
 
 /**
  * Get a Turnstile token for a specific action
  * @param action Action name for analytics
- * @returns Token or bypass token if on bypass path
+ * @returns Token or null if on bypass path
  */
-export const getTurnstileToken = async (action: string = 'submit'): Promise<string> => {
-  // If we're on a bypass path, return a bypass token
+export const getTurnstileToken = async (action: string = 'submit'): Promise<string | null> => {
+  // If we're on a bypass path, return null to indicate bypass
   if (shouldBypassCaptcha(window.location.pathname)) {
-    console.log('Bypassing Turnstile token generation on developer path');
-    return 'BYPASS_FOR_DEVELOPMENT';
+    console.log('Bypassing Turnstile token generation on developer path:', window.location.pathname);
+    return null;
   }
 
   try {
@@ -101,83 +80,34 @@ export const getTurnstileToken = async (action: string = 'submit'): Promise<stri
     await initializeTurnstile();
     
     // Wait for turnstile to be ready
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       if (!window.turnstile) {
-        console.log('Turnstile not loaded, providing bypass token');
-        resolve('BYPASS_NOT_LOADED');
+        console.error('turnstile is not loaded');
+        reject(new Error('Turnstile not loaded'));
         return;
       }
 
-      try {
-        window.turnstile.ready(() => {
-          try {
-            // Create a container element for the widget
-            const containerId = 'turnstile-container-' + Math.random().toString(36).substring(2, 9);
-            const container = document.createElement('div');
-            container.id = containerId;
-            container.style.position = 'absolute';
-            container.style.visibility = 'hidden';
-            document.body.appendChild(container);
-            
-            // Render the widget
-            window.turnstile.render(`#${containerId}`, {
-              sitekey: TURNSTILE_SITE_KEY,
-              action: action,
-              callback: function(token: string) {
-                console.log('Turnstile token generated');
-                // Clean up container
-                try {
-                  document.body.removeChild(container);
-                } catch (e) {
-                  console.warn('Error removing turnstile container:', e);
-                }
-                resolve(token);
-              },
-              'error-callback': function() {
-                console.warn('Turnstile error, providing bypass token');
-                // Clean up container
-                try {
-                  document.body.removeChild(container);
-                } catch (e) {
-                  console.warn('Error removing turnstile container:', e);
-                }
-                resolve('BYPASS_DUE_TO_ERROR');
-              },
-              'expired-callback': function() {
-                console.warn('Turnstile token expired, providing bypass token');
-                // Clean up container
-                try {
-                  document.body.removeChild(container);
-                } catch (e) {
-                  console.warn('Error removing turnstile container:', e);
-                }
-                resolve('BYPASS_DUE_TO_EXPIRY');
-              }
-            });
-            
-            // Add a timeout for safety
-            setTimeout(() => {
-              console.warn('Turnstile token generation timeout, providing bypass token');
-              try {
-                document.body.removeChild(container);
-              } catch (e) {
-                console.warn('Error removing turnstile container:', e);
-              }
-              resolve('BYPASS_DUE_TO_TIMEOUT');
-            }, 5000);
-          } catch (renderError) {
-            console.error('Error rendering Turnstile:', renderError);
-            resolve('BYPASS_RENDER_ERROR');
+      window.turnstile.ready(() => {
+        try {
+          if (!window.turnstile) {
+            throw new Error('turnstile became unavailable');
           }
-        });
-      } catch (readyError) {
-        console.error('Error in Turnstile ready function:', readyError);
-        resolve('BYPASS_READY_ERROR');
-      }
+          window.turnstile.render('#turnstile-container', {
+            sitekey: TURNSTILE_SITE_KEY,
+            callback: function(token) {
+              console.log('Turnstile token generated for action:', action);
+              resolve(token);
+            },
+          });
+        } catch (error) {
+          console.error('Error executing Turnstile:', error);
+          reject(error);
+        }
+      });
     });
   } catch (error) {
     console.error('Failed to get Turnstile token:', error);
-    return 'BYPASS_DUE_TO_ERROR';
+    throw error;
   }
 };
 
@@ -190,17 +120,12 @@ export const verifyTurnstileToken = async (token: string | null): Promise<{succe
   if (token === null) {
     return { success: true };
   }
-  
-  // If token is a bypass value, return success
-  if (token?.startsWith('BYPASS_')) {
-    return { success: true };
-  }
 
   // This function is only meant to be used in the Edge Function environment
   // Client-side code should not call this method directly
-  console.warn('verifyTurnstileToken should only be called in an Edge Function');
+  console.error('verifyTurnstileToken should only be called in an Edge Function');
   return { 
-    success: true, 
-    error: 'This verification method can only be used server-side, but allowing functionality to continue'
+    success: false, 
+    error: 'This verification method can only be used server-side'
   };
 };

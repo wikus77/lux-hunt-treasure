@@ -25,6 +25,4 @@ interface Window {
     render: (container: string, options: any) => string;
     reset: (widgetId: string) => void;
   };
-  // Add Turnstile callback that's used in the script loading
-  onloadTurnstileCallback?: () => void;
 }

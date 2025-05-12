@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { validateLogin } from '@/utils/form-validation';
-import { shouldBypassCaptcha } from '@/utils/turnstile';
 
 type LoginFormData = {
   email: string;
@@ -57,10 +56,7 @@ export const useLogin = () => {
       return;
     }
 
-    // Check if on bypass path and allow login without Turnstile
-    const isDevPath = shouldBypassCaptcha(window.location.pathname);
-
-    if (!turnstileToken && !isDevPath) {
+    if (!turnstileToken) {
       setFormError('Security verification required. Please complete the captcha.');
       return;
     }
@@ -72,30 +68,18 @@ export const useLogin = () => {
     try {
       console.log(`Login attempt for email: ${email}`);
       
-      // Special handling for development paths
-      if (isDevPath) {
-        console.log('Development path detected, bypassing Turnstile verification for login');
-        turnstileToken = 'BYPASS_FOR_DEVELOPMENT';
+      // First verify the turnstile token
+      const verifyResponse = await supabase.functions.invoke('verify-turnstile', {
+        body: { token: turnstileToken, action: 'login' }
+      });
+      
+      if (!verifyResponse.data?.success) {
+        throw new Error('Security verification failed');
       }
       
-      // First verify the turnstile token - skip for dev paths
-      if (!isDevPath && turnstileToken && !turnstileToken.startsWith('BYPASS_')) {
-        const verifyResponse = await supabase.functions.invoke('verify-turnstile', {
-          body: { token: turnstileToken, action: 'login' }
-        });
-        
-        if (!verifyResponse.data?.success) {
-          console.warn('Security verification warning, but allowing login to proceed:', verifyResponse.error);
-          // Continue anyway to prevent blocking login functionality
-        }
-      }
-      
-      // Now proceed with login using the verified or bypass token
-      // Handle the case when token is undefined by providing empty string
-      const finalToken = turnstileToken || 'BYPASS_EMPTY_TOKEN';
-      console.log(`Proceeding with login using token type: ${finalToken.startsWith('BYPASS_') ? 'bypass' : 'verified'}`);
-      
-      const result = await login(email, password, finalToken);
+      // Now the token has been verified, we can proceed with login using the verified token
+      // Ensure we're passing the correct number of arguments to login
+      const result = await login(email, password, turnstileToken);
       
       if (!result.success) {
         // Handle specific error cases
