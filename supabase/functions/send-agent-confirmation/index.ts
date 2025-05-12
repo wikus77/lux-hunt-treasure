@@ -2,15 +2,12 @@
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import mailjet from "npm:node-mailjet@6.0.0";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
-};
+import { corsHeaders } from "./cors.ts";
 
 serve(async (req) => {
   // Log all requests for debugging
   console.log(`Received ${req.method} request to send-agent-confirmation`);
+  console.log(`Request headers: ${JSON.stringify(Object.fromEntries(req.headers))}`);
   
   if (req.method === 'OPTIONS') {
     console.log("Handling CORS preflight request");
@@ -22,15 +19,15 @@ serve(async (req) => {
     const requestBody = await req.json();
     console.log("Request body received:", JSON.stringify(requestBody));
     
-    const { email, name, formType, referral_code } = requestBody;
+    const { email, name, referral_code } = requestBody;
 
-    console.log(`Processing request for: ${email}, type: ${formType}, with referral code: ${referral_code || "not provided"}`);
+    console.log(`Processing request for: ${email}, name: ${name}, with referral code: ${referral_code || "not provided"}`);
 
-    if (!email || !formType) {
-      console.error("Missing required fields:", { email, formType });
+    if (!email) {
+      console.error("Missing required field: email");
       return new Response(JSON.stringify({
         success: false,
-        error: "Email o tipo di form mancante"
+        error: "Email mancante"
       }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders }
@@ -96,7 +93,7 @@ serve(async (req) => {
       headers: { "Content-Type": "application/json", ...corsHeaders }
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in send-agent-confirmation function:", error);
     console.error("Stack trace:", error.stack);
     

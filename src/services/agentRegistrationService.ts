@@ -118,21 +118,21 @@ export const sendAgentConfirmationEmail = async (
   try {
     console.log(`Sending agent confirmation email to ${email} with code ${referralCode}`);
     
+    // UPDATED: Call directly to the send-agent-confirmation edge function
     const { data, error } = await supabase.functions.invoke('send-agent-confirmation', {
       body: {
-        name,
         email,
-        formType: "agent-registration", // Specifichiamo il tipo di form
-        referral_code: referralCode  // Importante: usa il nome corretto come nella funzione edge
+        name,
+        referral_code: referralCode
       }
     });
     
     if (error) {
-      console.error("Error sending agent confirmation email:", error);
+      console.error("Error invoking send-agent-confirmation function:", error);
       return false;
     }
     
-    console.log("Agent confirmation email sent successfully:", data);
+    console.log("Agent confirmation email response:", data);
     
     // Log the email activity
     await logActivity({
