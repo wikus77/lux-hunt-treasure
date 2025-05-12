@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Loader2, Send } from "lucide-react";
 import { Link } from "react-router-dom";
 import FormField from "./FormField";
@@ -30,27 +30,49 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   onSubmit: originalSubmit
 }) => {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [useBypass, setUseBypass] = useState(false);
   
   const { verifyToken, isVerifying } = useTurnstile({
     action: 'pre_registration',
     onError: (error) => {
+      console.error("Turnstile verification failed:", error);
       toast.error("Verifica di sicurezza fallita", {
         description: error
       });
     }
   });
   
+  // Effetto per applicare bypass automaticamente in ambiente di sviluppo
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost') {
+      console.log("Development environment detected, bypassing Turnstile");
+      setUseBypass(true);
+      setTurnstileToken("DEVELOPMENT_BYPASS_TOKEN");
+    }
+  }, []);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Form submission attempted");
+    
+    // In modalità sviluppo o con bypass, procedi sempre
+    if (useBypass) {
+      console.log("Using development bypass for Turnstile");
+      originalSubmit(e);
+      return;
+    }
     
     if (!turnstileToken) {
+      console.log("No turnstile token available");
       toast.error("Completa la verifica di sicurezza");
       return;
     }
     
     try {
       // Verify turnstile token before form submission
+      console.log("Verifying turnstile token...");
       const isValid = await verifyToken(turnstileToken);
+      console.log("Turnstile verification result:", isValid);
       if (isValid) {
         // Proceed with the original form submission
         originalSubmit(e);
@@ -59,6 +81,17 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
       console.error("Verification failed:", error);
     }
   };
+
+  // Determina se il pulsante deve essere disabilitato
+  const isButtonDisabled = isSubmitting || isVerifying || (!useBypass && !turnstileToken);
+
+  console.log("Button state:", { 
+    isSubmitting, 
+    isVerifying, 
+    useBypass, 
+    turnstileToken, 
+    isButtonDisabled 
+  });
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -83,22 +116,25 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         type="email"
       />
       
-      {/* Turnstile Widget */}
-      <div className="mt-4">
-        <TurnstileWidget 
-          onVerify={setTurnstileToken} 
-          action="pre_registration"
-        />
-      </div>
+      {/* Turnstile Widget, solo se non in modalità bypass */}
+      {!useBypass && (
+        <div className="mt-4">
+          <TurnstileWidget 
+            onVerify={setTurnstileToken} 
+            action="pre_registration"
+          />
+          <div className="text-xs text-white/40 mt-1">Completa la verifica di sicurezza</div>
+        </div>
+      )}
       
       <button
         type="submit"
         className={`w-full p-3 rounded-full flex items-center justify-center ${
-          isSubmitting || isVerifying || !turnstileToken
-            ? 'bg-gray-700 cursor-not-allowed' 
+          isButtonDisabled
+            ? 'bg-gray-700 opacity-90 cursor-not-allowed' 
             : 'bg-gradient-to-r from-[#0066FF] to-[#FF00FF] text-white hover:shadow-[0_0_15px_rgba(0,102,255,0.5)]'
         } font-medium transition-all duration-300`}
-        disabled={isSubmitting || isVerifying || !turnstileToken}
+        disabled={false} // Non disabilitiamo mai il pulsante per garantire che sia cliccabile
       >
         {isSubmitting || isVerifying ? (
           <>

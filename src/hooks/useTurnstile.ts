@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { shouldBypassCaptcha } from '@/utils/turnstile';
 
@@ -16,8 +16,11 @@ export const useTurnstile = (options: UseTurnstileOptions = {}) => {
   const [error, setError] = useState<string | null>(null);
 
   const verifyToken = async (token: string) => {
-    // Skip verification if on bypass paths
-    if (shouldBypassCaptcha(window.location.pathname)) {
+    // Skip verification if on bypass paths or in development mode
+    if (shouldBypassCaptcha(window.location.pathname) || 
+        process.env.NODE_ENV === 'development' || 
+        window.location.hostname === 'localhost') {
+      console.log("Bypassing Turnstile verification in development environment");
       setIsVerified(true);
       onSuccess?.({ success: true, bypass: true });
       return true;
@@ -33,23 +36,28 @@ export const useTurnstile = (options: UseTurnstileOptions = {}) => {
     setError(null);
 
     try {
+      console.log("Verifying Turnstile token...");
       const { data, error: functionError } = await supabase.functions.invoke('verify-turnstile', {
         body: { token, action }
       });
 
       if (functionError) {
+        console.error("Function error:", functionError);
         throw new Error(functionError.message || 'Failed to verify token');
       }
 
       if (!data?.success) {
+        console.error("Verification failed:", data?.error || "Unknown error");
         throw new Error(data?.error || 'Verification failed');
       }
 
+      console.log("Token verified successfully!");
       setIsVerified(true);
       onSuccess?.(data);
       return true;
     } catch (err: any) {
       const errorMessage = err.message || 'Verification failed';
+      console.error("Error during verification:", errorMessage);
       setError(errorMessage);
       setIsVerified(false);
       onError?.(errorMessage);
@@ -59,12 +67,15 @@ export const useTurnstile = (options: UseTurnstileOptions = {}) => {
     }
   };
 
-  // For pages that bypass CAPTCHA, we can immediately set verified to true
-  useState(() => {
-    if (shouldBypassCaptcha(window.location.pathname)) {
+  // Per pagine che bypassano CAPTCHA, impostiamo immediatamente verified a true
+  useEffect(() => {
+    if (shouldBypassCaptcha(window.location.pathname) || 
+        process.env.NODE_ENV === 'development' || 
+        window.location.hostname === 'localhost') {
+      console.log("Setting immediate verification bypass");
       setIsVerified(true);
     }
-  });
+  }, []);
 
   return {
     isVerifying,

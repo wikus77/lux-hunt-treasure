@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          id: string
+          metadata: Json | null
+          timestamp: string | null
+          user_email: string | null
+        }
+        Insert: {
+          action: string
+          id?: string
+          metadata?: Json | null
+          timestamp?: string | null
+          user_email?: string | null
+        }
+        Update: {
+          action?: string
+          id?: string
+          metadata?: Json | null
+          timestamp?: string | null
+          user_email?: string | null
+        }
+        Relationships: []
+      }
       app_messages: {
         Row: {
           content: string
@@ -385,6 +409,30 @@ export type Database = {
           subscription_tier?: string
           updated_at?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string | null
+          id: string
+          invited_email: string
+          referrer_code: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          invited_email: string
+          referrer_code: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          invited_email?: string
+          referrer_code?: string
+          status?: string | null
         }
         Relationships: []
       }
