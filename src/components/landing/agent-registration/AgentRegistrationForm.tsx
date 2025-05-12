@@ -73,8 +73,8 @@ const AgentRegistrationForm: React.FC<AgentRegistrationFormProps> = ({
       console.log("Agent registration result:", result);
       
       if (result.success) {
-        // IMPORTANT: Only show ONE toast notification here - REMOVED to prevent duplicates
-        // The parent component will handle the success notification
+        // IMPORTANT: No toast notification here - parent component handles notification
+        console.log("Registration successful, referral code:", result.referralCode);
         
         // Reset form
         setName("");
