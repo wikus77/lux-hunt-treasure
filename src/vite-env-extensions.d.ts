@@ -15,9 +15,14 @@ interface Window {
 
 // Google Payments
 declare namespace google {
-  interface payments {
-    api: {
-      PaymentsClient: any;
+  namespace payments {
+    namespace api {
+      class PaymentsClient {
+        constructor(options?: any);
+        isReadyToPay(request: any): Promise<any>;
+        createButton(options: any): HTMLElement;
+        loadPaymentData(request: any): Promise<any>;
+      }
     }
   }
 }
