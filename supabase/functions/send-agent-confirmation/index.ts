@@ -94,38 +94,19 @@ serve(async (req) => {
     console.log("Email payload prepared:", JSON.stringify(emailData, null, 2));
     console.log("Sending email via Mailjet API");
 
-    try {
-      const response = await mailjetClient.post("send", { version: "v3.1" }).request(emailData);
-      
-      // Log the complete API response for debugging
-      console.log("Mailjet API response:", JSON.stringify(response.body, null, 2));
-      
-      return new Response(JSON.stringify({
-        success: true,
-        message: "Email inviata correttamente",
-        response: response.body
-      }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    } catch (mailjetError: any) {
-      // Enhanced error logging for Mailjet errors
-      console.error("Mailjet API error:", mailjetError);
-      
-      // Add detailed error information from Mailjet's response if available
-      if (mailjetError.response && mailjetError.response.body) {
-        console.error("Mailjet error details:", JSON.stringify(mailjetError.response.body, null, 2));
-      }
-      
-      return new Response(JSON.stringify({
-        success: false,
-        error: "Errore nell'invio email via Mailjet",
-        details: mailjetError.response?.body || mailjetError.message || mailjetError
-      }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
+    const response = await mailjetClient.post("send", { version: "v3.1" }).request(emailData);
+
+    // Log the complete API response for debugging
+    console.log("Mailjet API response:", JSON.stringify(response.body, null, 2));
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: "Email inviata correttamente",
+      response: response.body
+    }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders }
+    });
 
   } catch (error: any) {
     console.error("Error in send-agent-confirmation function:", error);

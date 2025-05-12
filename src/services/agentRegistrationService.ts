@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { generateReferralCode } from "@/components/landing/pre-registration/referralUtils";
 import { logActivity } from "./activityLogService";
 
@@ -154,8 +155,10 @@ export const sendAgentConfirmationEmail = async (
   }
 };
 
-// Remove testSendAgentConfirmation to prevent duplicate emails - can be re-added later if needed
-
+/**
+ * Test utility function to manually test the agent confirmation email
+ * This should be called only on demand, not automatically
+ */
 export const testSendAgentConfirmation = async (
   email: string,
   name: string = "Test Agent"
