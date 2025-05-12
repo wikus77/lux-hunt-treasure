@@ -122,7 +122,8 @@ export const sendAgentConfirmationEmail = async (
       body: {
         name,
         email,
-        referral_code: referralCode
+        formType: "agent-registration", // Specifichiamo il tipo di form
+        referral_code: referralCode  // Importante: usa il nome corretto come nella funzione edge
       }
     });
     
