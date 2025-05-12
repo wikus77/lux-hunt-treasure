@@ -18,6 +18,7 @@ export const testAgentEmail = async (email: string, name: string = "Test Agent")
     
     if (result) {
       console.log("✅ Test email sent successfully!");
+      console.log("Check email From field to verify sender is noreply@m1ssion.com");
       toast.success("Test email sent", {
         description: `Confirmation email sent to ${email}`
       });
