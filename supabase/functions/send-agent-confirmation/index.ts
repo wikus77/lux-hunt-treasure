@@ -78,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Mailjet client initialized successfully");
 
-    // Set the variables for the template
+    // Set the variables for the template - explicitly define all variables expected by the template
     const variables = {
       name: name,
       referral_code: referral_code || "CODICE NON DISPONIBILE"
@@ -112,6 +112,8 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email through Mailjet API
     try {
       console.log("Sending email via Mailjet API with template...");
+      console.log("Email data being sent:", JSON.stringify(emailData, null, 2));
+      
       const response = await mailjetClient.post("send", { version: "v3.1" }).request(emailData);
       console.log("Mailjet API response status:", response.status);
       console.log("Mailjet API response body:", JSON.stringify(response.body, null, 2));
@@ -120,7 +122,9 @@ const handler = async (req: Request): Promise<Response> => {
         JSON.stringify({ 
           success: true, 
           message: "Email inviata con successo",
-          response: response.body
+          response: response.body,
+          template_used: 6973742,
+          variables_sent: variables
         }), 
         { 
           status: 200, 
@@ -149,7 +153,9 @@ const handler = async (req: Request): Promise<Response> => {
         JSON.stringify({ 
           success: false, 
           error: "Errore API Mailjet: " + (mailjetError.message || mailjetError.ErrorMessage || JSON.stringify(mailjetError)),
-          details: errorDetails
+          details: errorDetails,
+          template_attempted: 6973742,
+          variables_attempted: variables
         }), 
         { 
           status: 500, 
