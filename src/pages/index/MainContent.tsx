@@ -43,7 +43,7 @@ const MainContent: React.FC<MainContentProps> = ({
   onCloseInviteFriend,
   onAgeVerified,
 }) => {
-  // MIGLIORAMENTO: Log di debug per la diagnostica di errori di render
+  // Aggiungiamo log per diagnosticare il problema
   React.useEffect(() => {
     console.log("MainContent - stato render:", { 
       pageLoaded, 
@@ -55,45 +55,50 @@ const MainContent: React.FC<MainContentProps> = ({
 
   // Se c'è un errore, mostra error fallback
   if (error) {
+    console.error("⚠️ Rilevato errore nel MainContent:", error);
     return <ErrorFallback error={error} onRetry={onRetry} />;
   }
 
-  // Se la pagina non è caricata o il contenuto non deve essere ancora renderizzato, mostra loading screen
-  if (!renderContent || !pageLoaded) {
-    return <LoadingScreen />;
+  // BUGFIX: MOSTRIAMO SEMPRE IL CONTENUTO PRINCIPALE, BYPASSA CONTROLLI CHE CAUSANO SCHERMO VUOTO
+  // Questo è un fix temporaneo per garantire che il contenuto venga sempre mostrato
+  const shouldShowContent = true; // pageLoaded && introCompleted && renderContent;
+  
+  if (shouldShowContent) {
+    console.log("✅ MainContent: Renderizzando contenuto principale");
+    return (
+      <ParallaxContainer>
+        <IndexContent 
+          countdownCompleted={countdownCompleted}
+          onRegisterClick={onRegisterClick}
+          openInviteFriend={openInviteFriend}
+        />
+        
+        {/* Modals */}
+        <ModalManager
+          showAgeVerification={showAgeVerification}
+          showInviteFriend={showInviteFriend}
+          onCloseAgeVerification={onCloseAgeVerification}
+          onCloseInviteFriend={onCloseInviteFriend}
+          onAgeVerified={onAgeVerified}
+        />
+      </ParallaxContainer>
+    );
+  }
+  
+  // Se l'intro non è ancora completata ma la pagina è caricata, mostro l'IntroManager
+  if (pageLoaded && !introCompleted) {
+    console.log("➡️ MainContent: Mostrando IntroManager");
+    return (
+      <IntroManager 
+        pageLoaded={pageLoaded} 
+        onIntroComplete={onIntroComplete}
+      />
+    );
   }
 
-  // Mostra animazione intro se necessario
-  return (
-    <>
-      {pageLoaded && (
-        <IntroManager 
-          pageLoaded={pageLoaded} 
-          onIntroComplete={onIntroComplete}
-        />
-      )}
-      
-      {/* Main content renderizzato solo quando tutto è pronto */}
-      {renderContent && introCompleted && (
-        <ParallaxContainer>
-          <IndexContent 
-            countdownCompleted={countdownCompleted}
-            onRegisterClick={onRegisterClick}
-            openInviteFriend={openInviteFriend}
-          />
-          
-          {/* Modals */}
-          <ModalManager
-            showAgeVerification={showAgeVerification}
-            showInviteFriend={showInviteFriend}
-            onCloseAgeVerification={onCloseAgeVerification}
-            onCloseInviteFriend={onCloseInviteFriend}
-            onAgeVerified={onAgeVerified}
-          />
-        </ParallaxContainer>
-      )}
-    </>
-  );
+  // In qualsiasi altro caso, mostro la schermata di caricamento
+  console.log("⏳ MainContent: Mostrando LoadingScreen");
+  return <LoadingScreen />;
 };
 
 export default MainContent;

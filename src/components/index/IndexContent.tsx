@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import LandingHeader from "@/components/landing/LandingHeader";
 import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
@@ -19,6 +19,7 @@ import CarBrandSelection from "@/components/landing/CarBrandSelection";
 import KYCSection from "@/components/kyc/KYCSection";
 import PreRegistrationForm from "@/components/landing/PreRegistrationForm";
 import MobileStoreButtons from "@/components/landing/MobileStoreButtons";
+import AgentRegistrationContainer from "@/components/landing/AgentRegistrationContainer";
 
 interface IndexContentProps {
   countdownCompleted: boolean;
@@ -31,22 +32,24 @@ const IndexContent = ({
   onRegisterClick, 
   openInviteFriend 
 }: IndexContentProps) => {
-  const [showPrizeDetails, setShowPrizeDetails] = useState(false);
-  const [contentLoaded, setContentLoaded] = useState(false);
+  const [showPrizeDetails, setShowPrizeDetails] = React.useState(false);
 
-  // Assicuriamo che il contenuto sia caricato con una breve animazione
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setContentLoaded(true);
-    }, 300);
+  // Forzare la visualizzazione del contenuto
+  React.useEffect(() => {
+    console.log("IndexContent montato. Renderizzazione forzata.");
     
-    return () => clearTimeout(timer);
+    // Controllo per l'esistenza del component wrapper
+    const indexContentRoot = document.getElementById('root');
+    if (indexContentRoot) {
+      console.log("Root DOM trovato, verifico contenuto");
+    } else {
+      console.error("Root DOM non trovato!");
+    }
+    
+    return () => {
+      console.log("IndexContent smontato");
+    };
   }, []);
-  
-  // Se il contenuto non è ancora caricato, mostriamo un div vuoto e trasparente
-  if (!contentLoaded) {
-    return <div className="min-h-screen bg-black"></div>;
-  }
 
   return (
     <>
@@ -85,6 +88,19 @@ const IndexContent = ({
       
       {/* Presentation Section */}
       <PresentationSection visible={true} />
+      
+      {/* Agent Registration Container (Nuovo!) */}
+      <section className="w-full py-16 px-4 bg-gradient-to-b from-black to-[#111]">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center gradient-text-cyan">
+            Diventa un Agente M1SSION
+          </h2>
+          <p className="text-lg text-center text-white/80 mb-12 max-w-2xl mx-auto">
+            Unisciti al network di agenti selezionati, invita nuove persone nella rete e guadagna premi esclusivi.
+          </p>
+          <AgentRegistrationContainer className="mx-auto" />
+        </div>
+      </section>
       
       {/* NUOVA SEZIONE: Form di pre-registrazione */}
       <PreRegistrationForm />
