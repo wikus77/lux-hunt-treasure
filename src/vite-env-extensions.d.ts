@@ -1,31 +1,30 @@
 
 /// <reference types="vite/client" />
 
-// Definizione dei tipi per le librerie esterne utilizzate nel progetto
-
-// Globe per InteractiveGlobe
+// Per il globo 3D
 interface Window {
-  Globe?: any;
-  ApplePaySession?: any;
-  turnstile?: any;
-  initMap?: Function;
-  initMapCallback?: Function;
-  onloadTurnstileCallback?: Function;
+  Globe: () => any;
+  initMap?: () => void;
+  initMapCallback?: () => void;
+  // Add type definitions for Apple Pay
+  ApplePaySession?: {
+    canMakePayments: () => boolean;
+    new (version: number, request: any): any;
+  };
+  // Add type definitions for Google Pay
+  google?: {
+    payments?: {
+      api?: {
+        PaymentsClient?: any;
+      };
+    };
+  };
+  // Add turnstile here to ensure it's available in all contexts
+  turnstile?: {
+    ready: (callback: () => void) => void;
+    render: (container: string, options: any) => string;
+    reset: (widgetId: string) => void;
+  };
+  // Add Turnstile callback that's used in the script loading
+  onloadTurnstileCallback?: () => void;
 }
-
-// Google Payments
-declare namespace google {
-  namespace payments {
-    namespace api {
-      class PaymentsClient {
-        constructor(options?: any);
-        isReadyToPay(request: any): Promise<any>;
-        createButton(options: any): HTMLElement;
-        loadPaymentData(request: any): Promise<any>;
-      }
-    }
-  }
-}
-
-// Aggiunta per TypeScript per i tipi relativi a stripe
-declare module '@stripe/stripe-js';

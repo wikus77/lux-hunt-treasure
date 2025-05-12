@@ -73,6 +73,7 @@ const AgentRegistrationForm: React.FC<AgentRegistrationFormProps> = ({
       console.log("Agent registration result:", result);
       
       if (result.success) {
+        // IMPORTANT: Only show ONE toast notification here
         toast.success("Registrazione completata!", {
           description: "Sei ufficialmente un agente M1SSION. Controlla la tua email."
         });
@@ -86,7 +87,7 @@ const AgentRegistrationForm: React.FC<AgentRegistrationFormProps> = ({
           onSuccess(result.referralCode);
         }
         
-        // Show warning if email might be delayed
+        // Only show warning if email might be delayed
         if (result.error) {
           toast.warning(result.error, {
             description: "Controlla la tua casella email tra qualche minuto."

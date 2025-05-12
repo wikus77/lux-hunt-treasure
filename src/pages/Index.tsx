@@ -10,12 +10,12 @@ const Index = () => {
   console.log("Index component rendering");
   
   // State management
-  const [pageLoaded, setPageLoaded] = useState(true); // IMPORTANT: Forziamo pageLoaded a true
-  const [renderContent, setRenderContent] = useState(true); // IMPORTANT: Forziamo renderContent a true
-  const [introCompleted, setIntroCompleted] = useState(true); // IMPORTANT: Forziamo introCompleted a true
+  const [pageLoaded, setPageLoaded] = useState(false);
+  const [renderContent, setRenderContent] = useState(false);
+  const [introCompleted, setIntroCompleted] = useState(false);
   const [countdownCompleted, setCountdownCompleted] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const [retryCount, setRetryCount] = useState(0); // Tracking per tentativi di recovery
   
   // Get event handlers
   const {
@@ -28,7 +28,7 @@ const Index = () => {
     closeInviteFriend
   } = useEventHandlers(countdownCompleted);
   
-  // MIGLIORAMENTO: Tentativo di recovery automatico in caso di problemi
+  // AGGIUNTA: Tentativo di recovery automatico in caso di problemi
   useEffect(() => {
     if (error && retryCount < 2) {
       const recoveryTimeout = setTimeout(() => {
@@ -54,19 +54,58 @@ const Index = () => {
     }
   }, []);
 
-  // Forzare l'inizializzazione completa dei componenti principali
+  // MIGLIORAMENTO: Protezione contro errori di rendering
   useEffect(() => {
-    console.log("Index component montato, forzando caricamento della landing page");
-    setPageLoaded(true);
-    setRenderContent(true);
-    setIntroCompleted(true);
+    try {
+      const observer = new MutationObserver(() => {
+        const allSections = document.querySelectorAll("section");
+        allSections.forEach((section) => {
+          const text = section.textContent?.toLowerCase() || "";
+          if (
+            text.includes("cosa puoi vincere") ||
+            text.includes("vuoi provarci") ||
+            text.includes("premio principale") ||
+            text.includes("auto di lusso")
+          ) {
+            section.style.display = "none";
+            console.log("✅ Sezione 'Cosa puoi vincere' rimossa con MutationObserver.");
+          }
+        });
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+
+      return () => {
+        observer.disconnect();
+        console.log("🛑 MutationObserver disattivato.");
+      };
+    } catch (err) {
+      console.error("Errore nel setup MutationObserver:", err);
+      // Non propaghiamo questo errore, è solo per logging
+    }
   }, []);
+  
+  // MIGLIORAMENTO: Controllo periodico della salute del componente
+  useEffect(() => {
+    // Se il contenuto non viene mai renderizzato dopo un certo tempo, consideriamo un errore
+    const healthCheckTimeout = setTimeout(() => {
+      if (!renderContent && pageLoaded) {
+        console.warn("❌ Health check fallito: contenuto non renderizzato dopo 8 secondi");
+        setError(new Error("Timeout di rendering del contenuto"));
+      }
+    }, 8000);
+    
+    return () => clearTimeout(healthCheckTimeout);
+  }, [renderContent, pageLoaded]);
   
   // Handlers for child components
   const handleLoaded = useCallback((isLoaded: boolean, canRender: boolean) => {
     console.log("handleLoaded chiamato con:", { isLoaded, canRender });
-    setPageLoaded(true); // Forziamo a true
-    setRenderContent(true); // Forziamo a true
+    setPageLoaded(isLoaded);
+    setRenderContent(canRender);
   }, []);
 
   // Callback per quando l'intro è completa
@@ -94,6 +133,9 @@ const Index = () => {
     window.location.reload();
   }, []);
 
+  // Console logging state for debugging
+  console.log("Index render state:", { introCompleted, pageLoaded, renderContent });
+
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
       {/* CookiebotInit sempre disponibile */}
@@ -107,9 +149,9 @@ const Index = () => {
       
       {/* Main Content */}
       <MainContent 
-        pageLoaded={true} // Forziamo a true
-        introCompleted={true} // Forziamo a true
-        renderContent={true} // Forziamo a true
+        pageLoaded={pageLoaded}
+        introCompleted={introCompleted}
+        renderContent={renderContent}
         error={error}
         countdownCompleted={countdownCompleted}
         showAgeVerification={showAgeVerification}

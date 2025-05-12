@@ -83,3 +83,4 @@ const GooglePayBox = ({ onGooglePay }: GooglePayBoxProps) => {
 };
 
 export default GooglePayBox;
+
