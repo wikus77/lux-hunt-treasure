@@ -85,6 +85,7 @@ const handler = async (req: Request): Promise<Response> => {
     };
 
     console.log("Template variables:", variables);
+    console.log("Using Mailjet template ID: 6973742");
 
     // Prepare email data using the Mailjet template
     const emailData = {
@@ -99,7 +100,7 @@ const handler = async (req: Request): Promise<Response> => {
             Name: name || "Nuovo Agente" 
           }],
           Subject: "Sei ufficialmente un agente M1SSION",
-          TemplateID: 12965521,
+          TemplateID: 6973742,
           TemplateLanguage: true,
           Variables: variables,
           TrackOpens: "enabled",
