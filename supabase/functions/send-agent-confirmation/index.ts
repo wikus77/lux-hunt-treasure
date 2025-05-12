@@ -63,6 +63,7 @@ serve(async (req) => {
 
     console.log(`Preparing email to ${email} with referral_code: ${referral_code || "non disponibile"}`);
 
+    // IMPORTANT: Create email data using ONLY TemplateID, no Subject or HTMLPart
     const emailData = {
       Messages: [
         {
@@ -77,6 +78,7 @@ serve(async (req) => {
       ]
     };
 
+    // Log the exact payload being sent to Mailjet for debugging
     console.log("Email payload prepared:", JSON.stringify(emailData, null, 2));
     console.log("Sending email via Mailjet API");
 
