@@ -63,10 +63,14 @@ const AgentRegistrationForm: React.FC<AgentRegistrationFormProps> = ({
     setIsSubmitting(true);
     
     try {
+      console.log("Submitting agent registration form:", { name, email });
+      
       const result = await registerAgent({
         name,
         email
       });
+      
+      console.log("Agent registration result:", result);
       
       if (result.success) {
         toast.success("Registrazione completata!", {
