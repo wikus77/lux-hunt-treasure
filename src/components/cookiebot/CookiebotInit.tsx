@@ -87,7 +87,9 @@ const CookiebotInit: React.FC = () => {
           window.CookieScriptConsent = {
             categories: {
               necessary: true,
-              preferences: true  // Consentiamo le preferenze per default nel fallback
+              preferences: true,  // Consentiamo le preferenze per default nel fallback
+              statistics: false,  // Aggiunto per conformità con il tipo richiesto
+              marketing: false    // Aggiunto per conformità con il tipo richiesto
             }
           };
           
