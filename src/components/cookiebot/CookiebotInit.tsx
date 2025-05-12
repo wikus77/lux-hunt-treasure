@@ -32,16 +32,17 @@ const CookiebotInit: React.FC = () => {
         mainScript.src = "//cdn.cookie-script.com/s/2db074620da1ba3a3cc6c19025d1d99d.js";
         mainScript.async = true; // Imposta script come asincrono
         
-        // Prevenire il ricaricamento della pagina quando viene gestito l'evento di consenso
+        // IMPORTANTE: Prevenire il ricaricamento della pagina quando viene gestito l'evento di consenso
         window.addEventListener('CookieScriptConsent', function(e) {
           console.log('Cookie consent handled without page reload');
           e.preventDefault();
           return false;
         }, { once: false, capture: true });
         
-        // Aggiungere attributi data per prevenire il ricaricamento
+        // FISSATO: Aggiungere attributi data per prevenire il ricaricamento
         mainScript.setAttribute('data-no-reload', 'true');
         mainScript.setAttribute('data-cs-no-reload', 'true');
+        mainScript.setAttribute('data-no-duplicate', 'true'); // Previene duplicati
         
         // Funzione di callback dopo il caricamento
         mainScript.onload = () => {
@@ -62,6 +63,8 @@ const CookiebotInit: React.FC = () => {
         };
         
         document.head.appendChild(mainScript);
+      } else {
+        console.log("Script Cookie Script già presente, non verrà reinizializzato");
       }
       
       if (!reportScriptExists) {
@@ -115,7 +118,15 @@ const CookiebotInit: React.FC = () => {
       return fallbackTimer;
     };
 
+    // FISSATO: Controllo se lo script è già caricato
     // Esecuzione immediata: se il DOM è già pronto, inizializza subito
+    // SOLO SE non c'è già lo script caricato
+    const { mainScriptExists } = checkScripts();
+    if (mainScriptExists) {
+      console.log("Cookie Script già caricato in precedenza, skip inizializzazione");
+      return;
+    }
+
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
       initializeCookieScript();
     } else {
@@ -154,7 +165,7 @@ const CookiebotInit: React.FC = () => {
       document.removeEventListener('CookieScriptConsent', handleCookieConsentEvent, { capture: true });
       clearTimeout(fallbackTimer);
     };
-  }, []);
+  }, []); // Eseguito solo una volta al montaggio del componente
 
   return null; // Questo componente non renderizza nulla
 };

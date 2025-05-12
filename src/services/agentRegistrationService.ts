@@ -118,6 +118,7 @@ export const sendAgentConfirmationEmail = async (
 ): Promise<boolean> => {
   try {
     console.log(`Sending agent confirmation email to ${email} with code ${referralCode}`);
+    console.log(`Using sender: noreply@m1ssion.com and template ID: 6974914`);
     
     // EXCLUSIVE: Direct call to the send-agent-confirmation edge function
     const { data, error } = await supabase.functions.invoke('send-agent-confirmation', {
@@ -141,7 +142,9 @@ export const sendAgentConfirmationEmail = async (
       action: 'agent_email_sent',
       metadata: {
         name,
-        referral_code: referralCode
+        referral_code: referralCode,
+        template_id: 6974914,
+        sender: "noreply@m1ssion.com"
       }
     });
     
@@ -163,6 +166,7 @@ export const testSendAgentConfirmation = async (
   try {
     const testReferralCode = "TEST" + Math.floor(Math.random() * 10000);
     console.log(`[TEST] Sending test agent email to ${email} with code ${testReferralCode}`);
+    console.log(`[TEST] Using template ID 6974914 and sender noreply@m1ssion.com`);
     
     const result = await sendAgentConfirmationEmail(name, email, testReferralCode);
     console.log(`[TEST] Email send result: ${result ? "success" : "failed"}`);

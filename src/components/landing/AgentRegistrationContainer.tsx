@@ -12,6 +12,8 @@ const AgentRegistrationContainer: React.FC<AgentRegistrationContainerProps> = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   
+  // IMPORTANT: This is the ONLY place where success notification should appear
+  // All other components should call this callback without showing their own notifications
   const handleRegistrationSuccess = (code: string) => {
     // SINGLE notification point - this is the ONLY place where success toast should appear
     toast.success("Registrazione completata!", {
