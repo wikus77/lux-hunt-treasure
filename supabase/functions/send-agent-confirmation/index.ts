@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { corsHeaders } from "./cors.ts";
 
 interface AgentData {
@@ -14,6 +13,8 @@ const mailjetSecretKey = Deno.env.get("MJ_APIKEY_PRIVATE");
 
 if (!mailjetApiKey || !mailjetSecretKey) {
   console.error("Missing Mailjet API keys!");
+  console.error("MJ_APIKEY_PUBLIC present:", !!mailjetApiKey);
+  console.error("MJ_APIKEY_PRIVATE present:", !!mailjetSecretKey);
 }
 
 serve(async (req) => {
@@ -49,6 +50,21 @@ serve(async (req) => {
         }),
         {
           status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Validate Mailjet API keys
+    if (!mailjetApiKey || !mailjetSecretKey) {
+      console.error("Cannot send email: Mailjet API keys are not configured");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Mailjet API keys not configured",
+        }),
+        {
+          status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
