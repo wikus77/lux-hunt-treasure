@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormErrors, PreRegistrationFormData } from "./types";
@@ -110,7 +109,7 @@ export const usePreRegistration = () => {
       // Only if registration was successful, send the email
       if (registrationSuccess && referralCode) {
         try {
-          console.log("Attempting to send email with referral code:", referralCode);
+          console.log("Attempting to send agent confirmation email with referral code:", referralCode);
           
           // Send confirmation email using agent confirmation service
           emailSent = await sendAgentConfirmationEmail({
@@ -119,14 +118,14 @@ export const usePreRegistration = () => {
             referral_code: referralCode
           });
           
-          console.log("Email sending result:", emailSent ? "Success" : "Failed");
+          console.log("Agent confirmation email sending result:", emailSent ? "Success" : "Failed");
           
           // If email sending fails, we log but don't throw an error
           if (!emailSent) {
             console.warn("Email not sent, but registration was successful");
           }
         } catch (emailError) {
-          console.error("Error sending email:", emailError);
+          console.error("Error sending agent confirmation email:", emailError);
           // Don't throw an error that would block the flow, just log it
           emailSent = false;
         }

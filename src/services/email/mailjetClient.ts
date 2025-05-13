@@ -13,12 +13,19 @@ export const sendEmail = async (type: EmailType, options: SendEmailOptions): Pro
     console.log("Email options:", JSON.stringify({
       type,
       to: options.to,
+      from: options.from || {
+        Email: "noreply@m1ssion.com",
+        Name: "M1SSION",
+      },
       subject: options.subject,
       templateId: options.templateId,
-      variables: options.variables,
-      trackOpens: options.trackOpens,
-      trackClicks: options.trackClicks,
-      customCampaign: options.customCampaign
+      variables: options.variables ? {
+        ...options.variables,
+        referral_code: options.variables.referral_code
+      } : undefined,
+      trackOpens: options.trackOpens !== false,
+      trackClicks: options.trackClicks !== false,
+      customCampaign: options.customCampaign || type
     }, null, 2));
     
     // Make sure referral_code is explicitly logged when present
@@ -33,12 +40,23 @@ export const sendEmail = async (type: EmailType, options: SendEmailOptions): Pro
         from: options.from || {
           Email: "noreply@m1ssion.com",
           Name: "M1SSION",
-        }
+        },
+        // Ensure tracking is enabled by default
+        trackOpens: options.trackOpens !== false,
+        trackClicks: options.trackClicks !== false,
+        // Ensure we have a customCampaign for tracking
+        customCampaign: options.customCampaign || type
       }
     });
 
     if (error) {
       console.error('Error sending email:', error);
+      
+      // Add more detailed error logging
+      if (typeof error === 'object') {
+        console.error('Error details:', JSON.stringify(error, null, 2));
+      }
+      
       return { success: false, error };
     }
 
@@ -46,6 +64,15 @@ export const sendEmail = async (type: EmailType, options: SendEmailOptions): Pro
     return { success: true, data };
   } catch (err) {
     console.error('Exception when sending email:', err);
+    
+    // Add more detailed error logging for exceptions
+    if (err instanceof Error) {
+      console.error('Error message:', err.message);
+      console.error('Error stack:', err.stack);
+    } else if (typeof err === 'object') {
+      console.error('Error details:', JSON.stringify(err, null, 2));
+    }
+    
     return { success: false, error: err };
   }
 };

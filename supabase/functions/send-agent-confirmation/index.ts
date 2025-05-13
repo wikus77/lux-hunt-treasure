@@ -18,13 +18,17 @@ if (!mailjetApiKey || !mailjetSecretKey) {
 }
 
 serve(async (req) => {
+  console.log("Agent confirmation request received");
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
   // Make sure we're only accepting POST requests
   if (req.method !== "POST") {
+    console.error("Invalid method:", req.method);
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -32,11 +36,31 @@ serve(async (req) => {
   }
 
   try {
-    // Parse the JSON body
-    const requestData = await req.json();
+    let requestData;
+    try {
+      // Parse the JSON body
+      requestData = await req.json();
+      
+      // Log the raw request data for debugging
+      console.log("Raw request data received:", JSON.stringify(requestData, null, 2));
+    } catch (parseError) {
+      console.error("Failed to parse request JSON:", parseError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Invalid JSON in request body",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+    
     const { email, name, referral_code } = requestData as AgentData;
 
     console.log("Agent confirmation request received for:", email);
+    console.log("Name:", name);
     console.log("Referral code:", referral_code);
 
     // Validate that all required fields are present
@@ -47,6 +71,21 @@ serve(async (req) => {
           success: false,
           error: "Missing required fields",
           received: { email, name, referral_code },
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Validate email format
+    if (!email.includes("@")) {
+      console.error("Invalid email format:", email);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Invalid email format",
         }),
         {
           status: 400,
@@ -112,13 +151,32 @@ serve(async (req) => {
       body: JSON.stringify(mailjetData),
     });
 
-    const mailjetResult = await mailjetResponse.json();
-
-    console.log("Mailjet response status:", mailjetResponse.status);
-    console.log("Mailjet response:", JSON.stringify(mailjetResult, null, 2));
+    console.log("Mailjet API response status:", mailjetResponse.status);
+    
+    let mailjetResult;
+    try {
+      mailjetResult = await mailjetResponse.json();
+      console.log("Mailjet API response:", JSON.stringify(mailjetResult, null, 2));
+    } catch (jsonError) {
+      console.error("Failed to parse Mailjet response as JSON:", jsonError);
+      const textResponse = await mailjetResponse.text();
+      console.log("Mailjet text response:", textResponse);
+      
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Invalid JSON response from Mailjet API",
+          details: textResponse
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
     if (mailjetResponse.status >= 200 && mailjetResponse.status < 300) {
-      console.log("Email sent successfully");
+      console.log("Email sent successfully to:", email);
       return new Response(
         JSON.stringify({
           success: true,
@@ -146,10 +204,19 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error("Error processing request:", error);
+    let errorMessage = "Unknown error";
+    let errorDetails = {};
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = { stack: error.stack };
+    }
+    
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || "Unknown error",
+        error: errorMessage,
+        details: errorDetails
       }),
       {
         status: 500,
