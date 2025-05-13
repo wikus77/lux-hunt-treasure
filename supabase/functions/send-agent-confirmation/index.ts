@@ -18,10 +18,22 @@ serve(async (req) => {
   try {
     const { email, name, referral_code } = await req.json();
 
-    if (!email || !referral_code) {
+    if (!email) {
+      console.error("❌ Email mancante nella richiesta");
       return new Response(JSON.stringify({
         success: false,
-        error: "Email o referral_code mancante"
+        error: "Email mancante"
+      }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders }
+      });
+    }
+
+    if (!referral_code) {
+      console.error("❌ referral_code mancante nella richiesta per:", email);
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Codice referral mancante"
       }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders }
@@ -32,6 +44,7 @@ serve(async (req) => {
     const MJ_APIKEY_PRIVATE = Deno.env.get("MJ_APIKEY_PRIVATE");
 
     if (!MJ_APIKEY_PUBLIC || !MJ_APIKEY_PRIVATE) {
+      console.error("❌ Chiavi API Mailjet non configurate");
       return new Response(JSON.stringify({
         success: false,
         error: "Chiavi API Mailjet non configurate"
@@ -43,6 +56,7 @@ serve(async (req) => {
 
     const mailjetClient = mailjet.apiConnect(MJ_APIKEY_PUBLIC, MJ_APIKEY_PRIVATE);
 
+    // Migliorato payload con CustomID e metadati per tracciamento
     const emailData = {
       Messages: [
         {
@@ -59,7 +73,9 @@ serve(async (req) => {
           TemplateID: 6974914,
           TemplateLanguage: true,
           Variables: {
-            referral_code: referral_code
+            referral_code: referral_code,
+            name: name || "Agente",
+            registration_date: new Date().toISOString().split('T')[0]
           },
           CustomID: `agent_conf_${Date.now()}`,
           TrackOpens: "enabled",
@@ -69,13 +85,38 @@ serve(async (req) => {
     };
 
     console.log("📤 Inviando email con Mailjet - Payload:", JSON.stringify(emailData, null, 2));
+    console.log("📧 Email destinatario:", email);
+    console.log("🔑 Referral code:", referral_code);
+    
     const response = await mailjetClient.post("send", { version: "v3.1" }).request(emailData);
-    console.log("✅ Mailjet ha risposto:", JSON.stringify(response.body, null, 2));
-
+    
+    // Log completo della risposta per debugging
+    console.log("✅ Mailjet risposta completa:", JSON.stringify(response, null, 2));
+    
+    // Verifica esplicita dello stato della risposta
+    const messageStatus = response.body?.Messages?.[0]?.Status;
+    if (!messageStatus || messageStatus !== 'success') {
+      console.error("❌ Mailjet ha risposto senza successo:", JSON.stringify(response.body, null, 2));
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Email non inviata correttamente",
+        details: response.body
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders }
+      });
+    }
+    
+    // Dettagli aggiuntivi sulla risposta
+    console.log("📊 Dettagli consegna:", response.body?.Messages?.[0]);
+    
     return new Response(JSON.stringify({
       success: true,
       message: "Email inviata con successo",
-      response: response.body
+      response: response.body,
+      email: email,
+      referral_code: referral_code,
+      timestamp: new Date().toISOString()
     }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders }
@@ -83,10 +124,20 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("❌ Errore durante l'invio email:", error);
+    // Logging dettagliato dell'errore
+    if (error.response) {
+      console.error("Dettagli errore API:", error.response);
+    }
+    if (error.request) {
+      console.error("Dettagli richiesta:", error.request);
+    }
+    
     return new Response(JSON.stringify({
       success: false,
       error: "Errore invio email",
-      details: error.message || error
+      details: error.message || String(error),
+      stack: error.stack || "No stack trace available",
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders }

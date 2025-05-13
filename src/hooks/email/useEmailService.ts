@@ -1,78 +1,84 @@
 
-import { useState } from 'react';
-import { supabase } from "@/integrations/supabase/client";
-import { EmailServiceHook, SendEmailProps, EmailResult } from './emailTypes';
-import { logEmailAttempt, handleEmailSuccess, handleEmailError } from './emailUtils';
+import { useState } from "react";
+import { toast } from "sonner";
+import { 
+  EmailServiceHook, 
+  EmailType,
+  SendEmailProps, 
+  EmailResult 
+} from "./emailTypes";
+import { sendEmail } from "@/services/email/mailjetClient";
+import { handleEmailSuccess, handleEmailError, logEmailAttempt } from "./emailUtils";
 
 /**
- * Hook for sending emails using Supabase Edge Functions
+ * Hook per gestire l'invio di email tramite Mailjet
  */
 export const useEmailService = (): EmailServiceHook => {
-  const [isSending, setIsSending] = useState(false);
+  const [isSending, setIsSending] = useState<boolean>(false);
   const [lastError, setLastError] = useState<string | null>(null);
   const [lastResponse, setLastResponse] = useState<any>(null);
 
   /**
-   * Send an email using the appropriate edge function
+   * Invia una email generica
    */
-  const sendEmail = async (props: SendEmailProps): Promise<EmailResult> => {
-    const { type, email, name, subject, data } = props;
-    
-    logEmailAttempt(type, email);
+  const sendEmailWithType = async (props: SendEmailProps): Promise<EmailResult> => {
     setIsSending(true);
     setLastError(null);
     
     try {
-      // Call the Mailjet email function
-      const { data: response, error } = await supabase.functions.invoke('send-mailjet-email', {
-        body: {
-          type,
-          email,
-          name,
-          subject,
-          to: [{ email, name }],
-          ...data
-        }
-      });
+      logEmailAttempt(props.type, props.email);
       
-      if (error) {
-        const errorMessage = handleEmailError(error);
-        setLastError(errorMessage);
-        return { success: false, error: errorMessage };
+      // Aggiungi metadati per tracciamento e debug
+      const enhancedProps = {
+        ...props,
+        trackOpens: true,
+        trackClicks: true,
+        customId: `${props.type}_${Date.now()}`,
+        timestamp: new Date().toISOString()
+      };
+      
+      const result = await sendEmail(props.type, enhancedProps);
+      
+      if (result.success) {
+        handleEmailSuccess(props.email);
+        setLastResponse(result.data);
+      } else {
+        const errorMsg = handleEmailError(result.error);
+        setLastError(errorMsg);
       }
       
-      setLastResponse(response);
-      handleEmailSuccess(email);
-      return { success: true, response };
+      return result;
     } catch (error) {
-      const errorMessage = handleEmailError(error);
-      setLastError(errorMessage);
-      return { success: false, error: errorMessage };
+      const errorMsg = handleEmailError(error);
+      setLastError(errorMsg);
+      return { success: false, error: errorMsg };
     } finally {
       setIsSending(false);
     }
   };
 
   /**
-   * Send a welcome email
+   * Invia un'email di benvenuto
    */
   const sendWelcomeEmail = async (email: string, name?: string): Promise<EmailResult> => {
-    return sendEmail({
+    return sendEmailWithType({
       type: 'welcome',
       email,
-      name: name || email.split('@')[0],
-      subject: 'Benvenuto in M1SSION!',
-      data: {
-        launchDate: '19 Giugno 2025'
-      }
+      name,
+      subject: 'Benvenuto in M1SSION'
     });
   };
-  
+
   /**
-   * Send a notification email
+   * Invia un'email di notifica
    */
-  const sendNotificationEmail = async (email: string, subject: string, message: string, name?: string): Promise<EmailResult> => {
-    return sendEmail({
+  const sendNotificationEmail = async (
+    email: string, 
+    subject: string, 
+    message: string,
+    name?: string
+  ): Promise<EmailResult> => {
+    return sendEmailWithType({
       type: 'notification',
       email,
       name,
@@ -80,12 +86,17 @@ export const useEmailService = (): EmailServiceHook => {
       data: { message }
     });
   };
-  
+
   /**
-   * Send a marketing email
+   * Invia un'email di marketing
    */
-  const sendMarketingEmail = async (email: string, subject: string, htmlContent: string, name?: string): Promise<EmailResult> => {
-    return sendEmail({
+  const sendMarketingEmail = async (
+    email: string, 
+    subject: string, 
+    htmlContent: string,
+    name?: string
+  ): Promise<EmailResult> => {
+    return sendEmailWithType({
       type: 'marketing',
       email,
       name,
@@ -93,14 +104,16 @@ export const useEmailService = (): EmailServiceHook => {
       data: { htmlContent }
     });
   };
-  
+
   return {
     isSending,
     lastError,
     lastResponse,
-    sendEmail,
+    sendEmail: sendEmailWithType,
     sendWelcomeEmail,
     sendNotificationEmail,
     sendMarketingEmail
   };
 };
+
+export * from "./emailTypes";

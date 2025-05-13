@@ -14,9 +14,18 @@ interface AgentConfirmationProps {
 export const sendAgentConfirmationEmail = async (props: AgentConfirmationProps): Promise<boolean> => {
   const { email, name, referral_code } = props;
   
+  if (!email || !referral_code) {
+    console.error("Parametri mancanti nell'invio email:", { email, referral_code });
+    toast.error("Impossibile inviare l'email di conferma", {
+      description: "Dati incompleti per l'invio dell'email."
+    });
+    return false;
+  }
+  
   try {
     console.log("Invio email di conferma all'agente:", { email, name, referral_code });
     
+    // Tentativo principale con edge function
     const { data, error } = await supabase.functions.invoke('send-agent-confirmation', {
       body: {
         email: email.trim(),
@@ -27,10 +36,42 @@ export const sendAgentConfirmationEmail = async (props: AgentConfirmationProps):
     
     if (error) {
       console.error("Errore nell'invio dell'email di conferma:", error);
-      toast.error("Impossibile inviare l'email di conferma", {
-        description: "Si è verificato un errore durante l'invio. Riprova più tardi."
-      });
-      return false;
+      
+      // Fallback con altra funzione se disponibile
+      try {
+        console.log("Tentativo di fallback per invio email...");
+        const { data: fallbackData, error: fallbackError } = await supabase.functions.invoke('send-mailjet-email', {
+          body: {
+            type: 'welcome',
+            to: [{ email, name: name || "" }],
+            subject: "Benvenuto in M1SSION",
+            variables: {
+              referral_code,
+              name: name || "Agente"
+            },
+            templateId: 6974914
+          }
+        });
+        
+        if (fallbackError) {
+          console.error("Anche il fallback è fallito:", fallbackError);
+          throw fallbackError;
+        }
+        
+        if (!fallbackData.success) {
+          console.error("Fallback email non riuscito:", fallbackData);
+          throw new Error(fallbackData.message || "Invio email di fallback non riuscito");
+        }
+        
+        console.log("Email inviata con successo via fallback");
+        return true;
+      } catch (fallbackError) {
+        console.error("Tutti i tentativi di invio email falliti:", fallbackError);
+        toast.error("Impossibile inviare l'email di conferma", {
+          description: "Si è verificato un errore durante l'invio. Riprova più tardi."
+        });
+        return false;
+      }
     }
     
     if (!data.success) {
