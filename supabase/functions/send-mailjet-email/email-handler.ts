@@ -39,6 +39,17 @@ export async function handleEmailRequest(req: Request): Promise<Response> {
     // Prepare email data
     const emailData = prepareEmailData(contactData);
     
+    // Additional logging for referral_code if present
+    if (contactData.type === 'welcome' || contactData.type === 'agent_confirmation') {
+      console.log("Email type:", contactData.type);
+      console.log("Referral code included:", contactData.variables?.referral_code || "NOT FOUND");
+      
+      // Ensure referral_code is explicitly passed to template variables
+      if (emailData.Messages && emailData.Messages[0] && emailData.Messages[0].Variables) {
+        console.log("Variables before sending:", JSON.stringify(emailData.Messages[0].Variables, null, 2));
+      }
+    }
+
     // Log the email being sent (without sensitive content)
     const recipients = emailData.Messages[0].To.map((r: any) => r.Email).join(', ');
     console.log(`Sending email to: ${recipients}`);

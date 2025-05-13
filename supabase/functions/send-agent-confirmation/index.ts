@@ -56,7 +56,7 @@ serve(async (req) => {
 
     const mailjetClient = mailjet.apiConnect(MJ_APIKEY_PUBLIC, MJ_APIKEY_PRIVATE);
 
-    // Migliorato payload con CustomID e metadati per tracciamento
+    // Migliorato payload con CustomID e metadati per tracciamento e debug
     const emailData = {
       Messages: [
         {
@@ -87,6 +87,7 @@ serve(async (req) => {
     console.log("📤 Inviando email con Mailjet - Payload:", JSON.stringify(emailData, null, 2));
     console.log("📧 Email destinatario:", email);
     console.log("🔑 Referral code:", referral_code);
+    console.log("📝 Variabili template:", JSON.stringify(emailData.Messages[0].Variables, null, 2));
     
     try {
       const response = await mailjetClient.post("send", { version: "v3.1" }).request(emailData);

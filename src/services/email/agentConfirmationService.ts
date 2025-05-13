@@ -27,7 +27,7 @@ export const sendAgentConfirmationEmail = async (props: AgentConfirmationProps):
       body: {
         email: email.trim(),
         name: name?.trim() || "",
-        referral_code: referral_code
+        referral_code: referral_code // Ensure referral_code is passed explicitly
       }
     });
     
@@ -39,11 +39,11 @@ export const sendAgentConfirmationEmail = async (props: AgentConfirmationProps):
         console.log("Tentativo di fallback per invio email...");
         const { data: fallbackData, error: fallbackError } = await supabase.functions.invoke('send-mailjet-email', {
           body: {
-            type: 'welcome',
+            type: 'agent_confirmation', // Use specific type for agent confirmation
             to: [{ email, name: name || "" }],
             subject: "Benvenuto in M1SSION",
             variables: {
-              referral_code,
+              referral_code: referral_code, // Explicitly pass referral_code
               name: name || "Agente"
             },
             templateId: 6974914
