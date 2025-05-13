@@ -26,6 +26,7 @@ export interface SendEmailOptions {
     date: string;
     method: string;
   };
+  timestamp?: string;
 }
 
 // Types of emails

@@ -1,6 +1,6 @@
 
 // Define the possible types of emails that can be sent
-export type EmailType = 'contact' | 'welcome' | 'notification' | 'marketing' | 'pre_registration' | 'verification' | 'password_reset';
+export type EmailType = 'contact' | 'welcome' | 'notification' | 'marketing' | 'pre_registration' | 'verification' | 'password_reset' | 'transactional';
 
 // Define the structure for contact form data
 export interface ContactData {
@@ -14,6 +14,8 @@ export interface ContactData {
   // For direct email sending
   to?: Array<{email: string, name?: string} | {Email: string, Name?: string}>;
   htmlContent?: string;
+  templateId?: number;
+  variables?: Record<string, any>;
   from?: {
     Email: string;
     Name: string;
@@ -28,4 +30,5 @@ export interface ContactData {
     method: string;
   };
   referral_code?: string;
+  timestamp?: string;
 }

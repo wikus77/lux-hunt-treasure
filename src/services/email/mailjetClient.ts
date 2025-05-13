@@ -19,7 +19,8 @@ export const sendEmail = async (type: EmailType, options: SendEmailOptions): Pro
         Name: "M1SSION",
       },
       trackOpens: options.trackOpens,
-      trackClicks: options.trackClicks
+      trackClicks: options.trackClicks,
+      templateId: options.templateId
     }, null, 2));
     
     const { data, error } = await supabase.functions.invoke('send-mailjet-email', {
