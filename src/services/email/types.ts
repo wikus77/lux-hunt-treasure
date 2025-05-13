@@ -1,41 +1,30 @@
-
-export type EmailType = 
-  | 'welcome' 
-  | 'verification' 
-  | 'password_reset' 
-  | 'notification'
-  | 'marketing'
-  | 'agent_confirmation'  // Added specific type for agent confirmations
-  | 'contact';
-
-/**
- * Interface for email sending options
- */
-export interface SendEmailOptions {
-  to: Array<{
-    email: string;
-    name?: string;
-  }>;
-  from?: {
-    Email: string;
-    Name: string;
-  };
-  subject: string;
-  htmlContent?: string;
-  textContent?: string;
-  templateId?: number;
-  variables?: Record<string, any>;
-  trackOpens?: boolean;
-  trackClicks?: boolean;
-  customId?: string;
-  attachments?: any[];
+// Tipo per i destinatari delle email
+export interface EmailRecipient {
+  email: string;
+  name?: string;
 }
 
-/**
- * Interface for email sending result
- */
-export interface EmailResult {
-  success: boolean;
-  error?: any;
-  data?: any;
+// Opzioni generiche per l'invio email, compatibili con Mailjet e sistema Lovable
+export interface SendEmailOptions {
+  recipients: EmailRecipient[];
+
+  // Campi opzionali e generici
+  subject?: string;
+  htmlContent?: string;
+  textContent?: string;
+  templateId?: number; // per email transazionali con template ID
+  variables?: Record<string, any>; // dati dinamici per template (es. referral_code)
+  fromEmail?: string;
+  fromName?: string;
+
+  // Compatibilità con campagne e tracking
+  customCampaign?: string; // identificatore personalizzato per campagne
+  trackOpens?: boolean;
+  trackClicks?: boolean;
+
+  // Supporto timestamp se necessario per logging
+  timestamp?: string;
+
+  // Catch-all per eventuali override futuri
+  [key: string]: any;
 }
