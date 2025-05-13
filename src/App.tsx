@@ -28,9 +28,9 @@ function App() {
   return (
     // Top-level error boundary catches any rendering errors
     <ErrorBoundary>
+      {/* Ensure CookiebotInit is included at the top level, outside BrowserRouter */}
+      <CookiebotInit />
       <BrowserRouter>
-        {/* Initialize Cookie Script helper only once at root level */}
-        <CookiebotInit />
         <AuthProvider>
           {/* Suspense provides fallback during code-splitting or data loading */}
           <Suspense fallback={<LoadingFallback />}>

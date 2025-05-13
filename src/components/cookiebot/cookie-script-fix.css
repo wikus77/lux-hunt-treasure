@@ -1,0 +1,32 @@
+
+/* Fix for Cookie Script banner buttons */
+.cookiescript_buttons {
+  position: relative !important;
+  z-index: 999999 !important;
+  pointer-events: auto !important;
+}
+
+.cookiescript_buttons button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  position: relative !important;
+  z-index: 9999999 !important;
+}
+
+.cookiescript_accept,
+.cookiescript_reject {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Ensure the close button is also clickable */
+.cookiescript_close {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: 9999999 !important;
+}
+
+/* Ensure the cookie banner itself doesn't block other elements */
+.cookiescript_badge {
+  pointer-events: auto !important;
+}
