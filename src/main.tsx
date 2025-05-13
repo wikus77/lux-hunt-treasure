@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-// MIGLIORAMENTO: Gestione errori globale
+// Funzione migliorata per il rendering dell'app con migliore gestione degli errori
 const renderApp = () => {
   console.log("Attempting to render app");
   
@@ -23,7 +23,7 @@ const renderApp = () => {
     console.log("Creating React root");
     const root = ReactDOM.createRoot(rootElement);
     
-    // MIGLIORAMENTO: Wrapping dell'app in un errore boundary globale
+    // Wrapping dell'app in un errore boundary globale
     root.render(
       <React.StrictMode>
         <App />
@@ -34,36 +34,52 @@ const renderApp = () => {
   } catch (error) {
     console.error("Error rendering app:", error);
     
-    // Fallback error display
+    // Migliore visualizzazione errori con dettagli aggiuntivi
     if (rootElement) {
       const errorDiv = document.createElement('div');
       errorDiv.style.padding = '20px';
       errorDiv.style.color = 'white';
       errorDiv.style.backgroundColor = 'black';
-      errorDiv.innerHTML = '<h1>Error Loading Application</h1><p>Please refresh the page or contact support.</p>';
+      errorDiv.innerHTML = `
+        <h1>Error Loading Application</h1>
+        <p>Please refresh the page or contact support.</p>
+        <p style="color: red; font-size: 14px;">${error?.message || 'Unknown error'}</p>
+      `;
       rootElement.appendChild(errorDiv);
     }
   }
 };
 
-// MIGLIORAMENTO: Assicuriamo che il DOM sia completamente caricato
+// Assicuriamo che il DOM sia completamente caricato prima di tentare il rendering
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded");
-    renderApp();
+    setTimeout(renderApp, 10); // Piccolo timeout per assicurare che tutte le risorse siano disponibili
   });
 } else {
   console.log("DOM already loaded");
-  renderApp();
+  setTimeout(renderApp, 10); // Stesso timeout per consistenza
 }
 
-// MIGLIORAMENTO: Gestione errori non catturati
+// Gestione errori non catturati
 window.addEventListener('error', (event) => {
   console.error('Global error caught:', event.error);
-  // Non blocchiamo l'errore, lo logghiamo solo
+  // Logging migliorato con più informazioni di contesto
+  console.error('Error details:', {
+    message: event.error?.message,
+    stack: event.error?.stack,
+    location: window.location.href,
+    timestamp: new Date().toISOString()
+  });
 });
 
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled Promise Rejection:', event.reason);
-  // Non blocchiamo la rejection, la logghiamo solo
+  // Logging migliorato
+  console.error('Rejection details:', {
+    message: event.reason?.message,
+    stack: event.reason?.stack,
+    location: window.location.href,
+    timestamp: new Date().toISOString()
+  });
 });

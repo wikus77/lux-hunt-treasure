@@ -6,19 +6,29 @@ const LoadingScreen = () => {
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
   const [showFallbackInfo, setShowFallbackInfo] = useState(false);
   const [loadingDuration, setLoadingDuration] = useState(0);
+  const [loadingStage, setLoadingStage] = useState("Inizializzazione");
   
-  // MIGLIORAMENTO: Tracking tempo di caricamento
+  // Tracking tempo di caricamento
   useEffect(() => {
     const startTime = Date.now();
     const interval = setInterval(() => {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       setLoadingDuration(elapsed);
+      
+      // Aggiornamento stadio caricamento in base al tempo trascorso
+      if (elapsed > 2 && elapsed <= 5) {
+        setLoadingStage("Caricamento componenti");
+      } else if (elapsed > 5 && elapsed <= 8) {
+        setLoadingStage("Inizializzazione interfaccia");
+      } else if (elapsed > 8) {
+        setLoadingStage("Finalizzazione");
+      }
     }, 1000);
     
     return () => clearInterval(interval);
   }, []);
   
-  // MIGLIORAMENTO: Crea un'animazione per i puntini di caricamento
+  // Animazione per i puntini di caricamento
   useEffect(() => {
     const interval = setInterval(() => {
       setDots(prev => prev.length >= 3 ? "." : prev + ".");
@@ -32,7 +42,7 @@ const LoadingScreen = () => {
     // Mostra info fallback se il caricamento è molto lento
     const timeoutFallback = setTimeout(() => {
       setShowFallbackInfo(true);
-    }, 8000);
+    }, 7000);
     
     return () => {
       clearInterval(interval);
@@ -41,10 +51,11 @@ const LoadingScreen = () => {
     };
   }, []);
   
-  // MIGLIORAMENTO: Aggiunto una funzione per forzare il ricaricamento
+  // Funzione per forzare il ricaricamento
   const handleForceReload = () => {
     console.log("Forzatura ricaricamento pagina");
-    window.location.reload();
+    // Aggiunta un parametro di query per evitare cache
+    window.location.href = window.location.pathname + '?reload=' + Date.now();
   };
   
   return (
@@ -52,6 +63,7 @@ const LoadingScreen = () => {
       <div className="loading-spinner text-center">
         <div className="w-16 h-16 border-4 border-t-cyan-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
         <p className="text-white mt-4 text-xl">Caricamento{dots}</p>
+        <p className="text-cyan-400/70 mt-1 text-sm">{loadingStage}</p>
         
         {loadingDuration > 5 && (
           <p className="text-yellow-400 mt-1 text-xs">
@@ -78,6 +90,15 @@ const LoadingScreen = () => {
           >
             Ricarica Pagina
           </button>
+        </div>
+      )}
+
+      {/* Visualizzazione evento di caricamento attuale */}
+      {loadingDuration > 10 && (
+        <div className="mt-4 p-3 bg-red-900/20 border border-red-900/30 rounded max-w-xs text-center">
+          <p className="text-red-400 text-xs">
+            Caricamento prolungato. È possibile che ci sia un problema con la connessione o con l'applicazione.
+          </p>
         </div>
       )}
     </div>
