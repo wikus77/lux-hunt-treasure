@@ -1,26 +1,21 @@
 
-import { BrowserRouter } from "react-router-dom";
-import { SoundProvider } from "./contexts/SoundContext";
-import { AuthProvider } from "./contexts/auth/AuthProvider";
-import { ErrorBoundary } from "./components/error/ErrorBoundary";
-import AppContent from "./components/app/AppContent";
+import './App.css';
+import AppContent from './components/app/AppContent';
+import CookiebotInit from './components/cookiebot/CookiebotInit';
 
 /**
- * Main App component - sets up providers and error boundaries
+ * Root component of the application.
+ * This is the entry point for the entire React tree.
  */
 function App() {
   console.log("App component rendering");
   
   return (
-    <BrowserRouter>
-      <SoundProvider>
-        <AuthProvider>
-          <ErrorBoundary>
-            <AppContent />
-          </ErrorBoundary>
-        </AuthProvider>
-      </SoundProvider>
-    </BrowserRouter>
+    <>
+      {/* Initialize Cookie Script helper only once at root level */}
+      <CookiebotInit />
+      <AppContent />
+    </>
   );
 }
 

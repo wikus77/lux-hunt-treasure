@@ -28,6 +28,10 @@ interface Window {
   // Type definitions for Cookie Script
   checkCookieConsent?: (category: 'necessary' | 'preferences' | 'statistics' | 'marketing') => boolean;
   CookieScriptConsent?: {
+    show?: () => void;
+    hide?: () => void;
+    renew?: () => void;
+    withdraw?: () => void;
     categories: {
       necessary: boolean;
       preferences: boolean;
