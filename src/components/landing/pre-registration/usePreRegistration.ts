@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormErrors, PreRegistrationFormData } from "./types";
@@ -36,10 +37,10 @@ export const usePreRegistration = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Pulisci gli errori precedenti
+    // Clear previous errors
     setFormErrors({ name: "", email: "" });
     
-    // Valida il modulo
+    // Validate the form
     const formData: PreRegistrationFormData = {
       name: name.trim(),
       email: email.trim()
@@ -54,16 +55,16 @@ export const usePreRegistration = () => {
     setIsSubmitting(true);
     
     try {
-      // Log dei valori di input per il debug
-      console.log("Invio pre-registrazione con:", formData);
+      // Log input values for debugging
+      console.log("Submitting pre-registration with:", formData);
       
       let registrationSuccess = false;
       let emailSent = false;
       let referralCode = "";
       
-      // Prova prima con il metodo standard, poi con l'edge function come fallback
+      // Try with standard method first, then edge function as fallback
       try {
-        // Controlla se questa email è già registrata
+        // Check if this email is already registered
         const existingUser = await checkExistingUser(formData.email);
         
         if (existingUser) {
@@ -74,7 +75,7 @@ export const usePreRegistration = () => {
           return;
         }
         
-        // Registra l'utente
+        // Register the user
         const result = await registerUser(formData);
         registrationSuccess = result.success;
         referralCode = result.referralCode;
@@ -83,49 +84,49 @@ export const usePreRegistration = () => {
           throw new Error("Errore nella registrazione dell'utente");
         }
         
-        console.log("Registrazione completata con successo. Codice referral:", referralCode);
+        console.log("Registration completed successfully. Referral code:", referralCode);
         
       } catch (primaryError) {
-        console.error("Errore nel metodo primario di registrazione:", primaryError);
-        console.log("Tentativo con edge function come fallback...");
+        console.error("Error in primary registration method:", primaryError);
+        console.log("Attempting edge function fallback...");
         
         try {
-          // Metodo secondario: prova con l'edge function
+          // Secondary method: try with edge function
           const result = await registerUserViaEdgeFunction(formData);
           
           if (result.success) {
             registrationSuccess = true;
             referralCode = result.referralCode;
-            console.log("Registrazione via edge function completata. Codice referral:", referralCode);
+            console.log("Edge function registration completed. Referral code:", referralCode);
           } else {
-            throw new Error("La registrazione non è andata a buon fine");
+            throw new Error("Registration failed");
           }
         } catch (secondaryError) {
-          console.error("Anche il metodo secondario è fallito:", secondaryError);
-          throw new Error(secondaryError instanceof Error ? secondaryError.message : "Errore nella registrazione");
+          console.error("Secondary method also failed:", secondaryError);
+          throw new Error(secondaryError instanceof Error ? secondaryError.message : "Registration error");
         }
       }
       
-      // Solo se la registrazione è avvenuta con successo, inviamo l'email
+      // Only if registration was successful, send the email
       if (registrationSuccess && referralCode) {
         try {
-          console.log("Tentativo di invio email con codice referral:", referralCode);
+          console.log("Attempting to send email with referral code:", referralCode);
           
-          // Invia l'email di conferma usando il servizio di conferma agente
+          // Send confirmation email using agent confirmation service
           emailSent = await sendAgentConfirmationEmail({
             email: formData.email,
             name: formData.name,
             referral_code: referralCode
           });
           
-          console.log("Risultato invio email:", emailSent ? "Successo" : "Fallito");
+          console.log("Email sending result:", emailSent ? "Success" : "Failed");
           
           // If email sending fails, we log but don't throw an error
           if (!emailSent) {
-            console.warn("Email non inviata, ma la registrazione è avvenuta con successo");
+            console.warn("Email not sent, but registration was successful");
           }
         } catch (emailError) {
-          console.error("Errore nell'invio dell'email:", emailError);
+          console.error("Error sending email:", emailError);
           // Don't throw an error that would block the flow, just log it
           emailSent = false;
         }
@@ -154,7 +155,7 @@ export const usePreRegistration = () => {
         throw new Error("Errore nella generazione del codice referral");
       }
     } catch (error: any) {
-      console.error("Errore nella pre-registrazione:", error);
+      console.error("Error in pre-registration:", error);
       toast.error("Missione sospesa.", {
         description: error instanceof Error 
           ? error.message 
@@ -177,7 +178,7 @@ export const usePreRegistration = () => {
     setIsSubmitting(true);
     
     try {
-      // Valida il codice invito e ottieni i dati del referrer
+      // Validate invite code and get referrer data
       const referrerData = await validateInviteCode(inviteCode.trim());
       
       if (!referrerData) {
@@ -185,21 +186,21 @@ export const usePreRegistration = () => {
         return;
       }
       
-      // Aggiorna il record dell'utente con il referrer
+      // Update user record with referrer
       await updateUserReferrer(email, referrerData.email);
       
-      // Aggiungi crediti al referrer
+      // Add credits to referrer
       await addReferralCredits(referrerData.email);
       
       toast.success("Codice invito applicato con successo!", {
         description: "Hai assegnato 50 crediti bonus al tuo amico!"
       });
       
-      // Nascondi l'input del referral dopo l'invio riuscito
+      // Hide referral input after successful submission
       setShowReferralInput(false);
       
     } catch (error: any) {
-      console.error("Errore nell'applicazione del codice invito:", error);
+      console.error("Error applying invite code:", error);
       toast.error("Errore nell'applicazione del codice", {
         description: error instanceof Error ? error.message : "Si è verificato un problema. Riprova più tardi."
       });

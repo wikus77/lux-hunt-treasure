@@ -40,8 +40,20 @@ export const sendAgentConfirmationEmail = async (data: AgentConfirmationData): P
       })
     });
     
+    // Check if the response is valid
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error("Edge function response error:", response.status, errorData);
+      throw new Error(`Edge function error: ${response.status} - ${errorData}`);
+    }
+    
     const result = await response.json();
     console.log("Agent confirmation email result:", JSON.stringify(result, null, 2));
+    
+    if (!result.success) {
+      console.error("Email sending failed in edge function:", result);
+      return false;
+    }
     
     return result.success;
   } catch (error) {
