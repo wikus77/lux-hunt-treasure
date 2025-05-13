@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PreRegistrationFormData } from "./types";
@@ -27,6 +28,10 @@ export const checkExistingUser = async (email: string) => {
 export const registerUser = async (userData: PreRegistrationFormData) => {
   const referralCode = generateReferralCode(userData.name);
   
+  // Get current authenticated user ID, if available
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
+  
   try {
     const { data, error } = await supabase
       .from('pre_registrations')
@@ -35,7 +40,8 @@ export const registerUser = async (userData: PreRegistrationFormData) => {
           name: userData.name.trim(),
           email: userData.email.toLowerCase().trim(),
           referral_code: referralCode,
-          credits: 100
+          credits: 100,
+          created_by: userId // Add the user ID to set ownership
         }
       ])
       .select()
@@ -60,11 +66,16 @@ export const registerUser = async (userData: PreRegistrationFormData) => {
  * Register a new user via edge function (fallback method)
  */
 export const registerUserViaEdgeFunction = async (userData: PreRegistrationFormData) => {
+  // Get current authenticated user ID, if available
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
+  
   try {
     const { data, error } = await supabase.functions.invoke('handle-pre-registration', {
       body: {
         name: userData.name.trim(),
-        email: userData.email.toLowerCase().trim()
+        email: userData.email.toLowerCase().trim(),
+        created_by: userId // Pass the user ID to edge function
       }
     });
     
