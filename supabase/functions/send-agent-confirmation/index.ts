@@ -84,7 +84,7 @@ serve(async (req) => {
               Name: name,
             },
           ],
-          TemplateID: 6974914,
+          TemplateID: 6977931,
           TemplateLanguage: true,
           Subject: "Benvenuto, Agente di M1SSION!",
           Variables: {

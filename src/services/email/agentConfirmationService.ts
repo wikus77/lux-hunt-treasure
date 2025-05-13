@@ -30,7 +30,7 @@ export const sendAgentConfirmationEmail = async (data: AgentConfirmationData): P
     const result = await sendEmail('agent_confirmation', {
       to: [{ email: data.email, name: data.name }],
       subject: 'Benvenuto, Agente di M1SSION!',
-      templateId: 6974914, // Mailjet template ID for agent confirmation
+      templateId: 6977931, // Aggiornato all'ultimo template ID Mailjet
       variables: {
         name: data.name,
         referral_code: data.referral_code
