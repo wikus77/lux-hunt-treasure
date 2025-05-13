@@ -1,6 +1,6 @@
 
 // Define the possible types of emails that can be sent
-export type EmailType = 'contact' | 'welcome' | 'notification' | 'marketing' | 'pre_registration';
+export type EmailType = 'contact' | 'welcome' | 'notification' | 'marketing' | 'pre_registration' | 'verification' | 'password_reset';
 
 // Define the structure for contact form data
 export interface ContactData {

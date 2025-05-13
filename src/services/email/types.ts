@@ -29,7 +29,7 @@ export interface SendEmailOptions {
 }
 
 // Types of emails
-export type EmailType = 'transactional' | 'marketing' | 'welcome' | 'notification' | 'contact';
+export type EmailType = 'transactional' | 'marketing' | 'welcome' | 'notification' | 'contact' | 'verification' | 'password_reset';
 
 export interface EmailResult {
   success: boolean;

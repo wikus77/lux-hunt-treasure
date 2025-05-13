@@ -37,7 +37,11 @@ export const useEmailService = (): EmailServiceHook => {
         timestamp: new Date().toISOString()
       };
       
-      const result = await sendEmail(props.type, enhancedProps);
+      // Map between email types in hooks/email and services/email
+      // This ensures compatibility between the two type systems
+      const serviceEmailType = props.type as any;
+      
+      const result = await sendEmail(serviceEmailType, enhancedProps);
       
       if (result.success) {
         handleEmailSuccess(props.email);
