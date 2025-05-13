@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormErrors, PreRegistrationFormData } from "./types";
@@ -6,7 +7,6 @@ import { copyToClipboard, generateReferralCode, generateShareEmailContent } from
 import { 
   checkExistingUser,
   registerUser, 
-  sendConfirmationEmail, 
   validateInviteCode,
   updateUserReferrer,
   addReferralCredits,
@@ -58,6 +58,10 @@ export const usePreRegistration = () => {
       // Log dei valori di input per il debug
       console.log("Invio pre-registrazione con:", formData);
       
+      let registrationSuccess = false;
+      let emailSent = false;
+      let referralCode = "";
+      
       // Prova prima con il metodo standard, poi con l'edge function come fallback
       try {
         // Controlla se questa email è già registrata
@@ -72,28 +76,13 @@ export const usePreRegistration = () => {
         }
         
         // Registra l'utente
-        const { referralCode } = await registerUser(formData);
+        const result = await registerUser(formData);
+        registrationSuccess = result.success;
+        referralCode = result.referralCode;
         
-        // Aggiorna lo stato dell'interfaccia
-        setIsSubmitted(true);
-        setUserReferralCode(referralCode);
-        
-        // Mostra il messaggio di successo (solo una volta)
-        toast.success("Benvenuto Agente!", {
-          description: "La tua pre-iscrizione è stata convalidata. Sei tra i primi 100 a ricevere 100 crediti. Preparati, ora sei in M1SSION!"
-        });
-        
-        // Pulisci il modulo
-        setName("");
-        setEmail("");
-        setInviteCode("");
-        
-        // Invia l'email di conferma usando il nuovo servizio di conferma agente
-        await sendAgentConfirmationEmail({
-          email: formData.email,
-          name: formData.name,
-          referral_code: referralCode
-        });
+        if (!registrationSuccess) {
+          throw new Error("Errore nella registrazione dell'utente");
+        }
         
       } catch (primaryError) {
         console.error("Errore nel metodo primario di registrazione:", primaryError);
@@ -104,26 +93,8 @@ export const usePreRegistration = () => {
           const result = await registerUserViaEdgeFunction(formData);
           
           if (result.success) {
-            // Aggiorna lo stato dell'interfaccia
-            setIsSubmitted(true);
-            setUserReferralCode(result.referralCode);
-            
-            // Mostra il messaggio di successo (solo una volta)
-            toast.success("Benvenuto Agente!", {
-              description: "La tua pre-iscrizione è stata convalidata. Sei tra i primi 100 a ricevere 100 crediti. Preparati, ora sei in M1SSION!"
-            });
-            
-            // Pulisci il modulo
-            setName("");
-            setEmail("");
-            setInviteCode("");
-            
-            // Invia l'email di conferma usando il nuovo servizio di conferma agente
-            await sendAgentConfirmationEmail({
-              email: formData.email,
-              name: formData.name,
-              referral_code: result.referralCode
-            });
+            registrationSuccess = true;
+            referralCode = result.referralCode;
           } else {
             throw new Error("La registrazione non è andata a buon fine");
           }
@@ -131,6 +102,48 @@ export const usePreRegistration = () => {
           console.error("Anche il metodo secondario è fallito:", secondaryError);
           throw new Error(secondaryError instanceof Error ? secondaryError.message : "Errore nella registrazione");
         }
+      }
+      
+      // Solo se la registrazione è avvenuta con successo, inviamo l'email
+      if (registrationSuccess) {
+        try {
+          // Invia l'email di conferma usando il servizio di conferma agente
+          emailSent = await sendAgentConfirmationEmail({
+            email: formData.email,
+            name: formData.name,
+            referral_code: referralCode
+          });
+          
+          // Se l'invio email fallisce, non lanciamo un errore ma lo logghiamo
+          if (!emailSent) {
+            console.warn("Email non inviata, ma la registrazione è avvenuta con successo");
+          }
+        } catch (emailError) {
+          console.error("Errore nell'invio dell'email:", emailError);
+          // Non lanciamo un errore che blocchi il flusso, ma lo logghiamo
+          emailSent = false;
+        }
+        
+        // Aggiorna lo stato dell'interfaccia SOLO se la registrazione è riuscita
+        setIsSubmitted(true);
+        setUserReferralCode(referralCode);
+        
+        // Mostra un messaggio di successo appropriato in base all'esito dell'invio email
+        if (emailSent) {
+          toast.success("Benvenuto Agente!", {
+            description: "La tua pre-iscrizione è stata convalidata. Sei tra i primi 100 a ricevere 100 crediti. Preparati, ora sei in M1SSION!"
+          });
+        } else {
+          // Messaggio di successo ma con nota sull'email
+          toast.success("Pre-iscrizione completata!", {
+            description: "Ti sei registrato con successo, ma potrebbe esserci stato un problema nell'invio dell'email di conferma. Il tuo codice referral è: " + referralCode
+          });
+        }
+        
+        // Pulisci il modulo
+        setName("");
+        setEmail("");
+        setInviteCode("");
       }
     } catch (error: any) {
       console.error("Errore nella pre-registrazione:", error);

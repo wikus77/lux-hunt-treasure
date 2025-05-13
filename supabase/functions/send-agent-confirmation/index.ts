@@ -88,55 +88,79 @@ serve(async (req) => {
     console.log("📧 Email destinatario:", email);
     console.log("🔑 Referral code:", referral_code);
     
-    const response = await mailjetClient.post("send", { version: "v3.1" }).request(emailData);
-    
-    // Log completo della risposta per debugging
-    console.log("✅ Mailjet risposta completa:", JSON.stringify(response, null, 2));
-    
-    // Verifica esplicita dello stato della risposta
-    const messageStatus = response.body?.Messages?.[0]?.Status;
-    if (!messageStatus || messageStatus !== 'success') {
-      console.error("❌ Mailjet ha risposto senza successo:", JSON.stringify(response.body, null, 2));
+    try {
+      const response = await mailjetClient.post("send", { version: "v3.1" }).request(emailData);
+      
+      // Log completo della risposta per debugging, evitando errori di circolarità JSON
+      console.log("✅ Mailjet risposta status:", response.status);
+      console.log("✅ Mailjet body:", JSON.stringify(response.body || {}, null, 2));
+      
+      // Verifica esplicita dello stato della risposta
+      const messageStatus = response.body?.Messages?.[0]?.Status;
+      if (!messageStatus || messageStatus !== 'success') {
+        console.error("❌ Mailjet ha risposto senza successo:", JSON.stringify(response.body || {}, null, 2));
+        return new Response(JSON.stringify({
+          success: false,
+          error: "Email non inviata correttamente",
+          details: response.body || {}
+        }), {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders }
+        });
+      }
+      
+      // Dettagli aggiuntivi sulla risposta
+      console.log("📊 Dettagli consegna:", JSON.stringify(response.body?.Messages?.[0] || {}, null, 2));
+      
+      return new Response(JSON.stringify({
+        success: true,
+        message: "Email inviata con successo",
+        response: {
+          status: response.status,
+          messageStatus: messageStatus,
+        },
+        email: email,
+        referral_code: referral_code,
+        timestamp: new Date().toISOString()
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders }
+      });
+    } catch (mjError) {
+      console.error("❌ Errore Mailjet:", mjError);
+      
+      // Evitare errori di circolarità JSON nel log
+      let errorDetails;
+      try {
+        errorDetails = JSON.stringify(mjError, (key, value) => {
+          if (key === 'req' || key === 'res' || key === 'request' || key === 'response') {
+            return '[Circular]';
+          }
+          return value;
+        }, 2);
+      } catch (jsonError) {
+        errorDetails = "Errore non serializzabile: " + (mjError.message || String(mjError));
+      }
+      
+      console.error("Dettagli errore:", errorDetails);
+      
       return new Response(JSON.stringify({
         success: false,
-        error: "Email non inviata correttamente",
-        details: response.body
+        error: "Errore invio con Mailjet",
+        details: mjError.message || String(mjError),
+        timestamp: new Date().toISOString()
       }), {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders }
       });
     }
-    
-    // Dettagli aggiuntivi sulla risposta
-    console.log("📊 Dettagli consegna:", response.body?.Messages?.[0]);
-    
-    return new Response(JSON.stringify({
-      success: true,
-      message: "Email inviata con successo",
-      response: response.body,
-      email: email,
-      referral_code: referral_code,
-      timestamp: new Date().toISOString()
-    }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders }
-    });
-
   } catch (error) {
-    console.error("❌ Errore durante l'invio email:", error);
-    // Logging dettagliato dell'errore
-    if (error.response) {
-      console.error("Dettagli errore API:", error.response);
-    }
-    if (error.request) {
-      console.error("Dettagli richiesta:", error.request);
-    }
+    console.error("❌ Errore generale:", error);
     
     return new Response(JSON.stringify({
       success: false,
       error: "Errore invio email",
       details: error.message || String(error),
-      stack: error.stack || "No stack trace available",
       timestamp: new Date().toISOString()
     }), {
       status: 500,

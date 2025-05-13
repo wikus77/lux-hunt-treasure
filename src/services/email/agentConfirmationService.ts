@@ -16,9 +16,6 @@ export const sendAgentConfirmationEmail = async (props: AgentConfirmationProps):
   
   if (!email || !referral_code) {
     console.error("Parametri mancanti nell'invio email:", { email, referral_code });
-    toast.error("Impossibile inviare l'email di conferma", {
-      description: "Dati incompleti per l'invio dell'email."
-    });
     return false;
   }
   
@@ -67,18 +64,13 @@ export const sendAgentConfirmationEmail = async (props: AgentConfirmationProps):
         return true;
       } catch (fallbackError) {
         console.error("Tutti i tentativi di invio email falliti:", fallbackError);
-        toast.error("Impossibile inviare l'email di conferma", {
-          description: "Si è verificato un errore durante l'invio. Riprova più tardi."
-        });
+        // Non mostriamo toast qui, sarà gestito dal chiamante
         return false;
       }
     }
     
     if (!data.success) {
       console.error("L'invio dell'email non è andato a buon fine:", data);
-      toast.error("Impossibile inviare l'email di conferma", {
-        description: data.message || "Si è verificato un errore imprevisto"
-      });
       return false;
     }
     
@@ -86,9 +78,6 @@ export const sendAgentConfirmationEmail = async (props: AgentConfirmationProps):
     return true;
   } catch (error) {
     console.error("Eccezione durante l'invio dell'email di conferma:", error);
-    toast.error("Errore di sistema", {
-      description: "Si è verificato un errore imprevisto. I nostri tecnici sono stati avvisati."
-    });
     return false;
   }
 };
@@ -110,6 +99,10 @@ export const _testSendAgentConfirmation = async (): Promise<void> => {
   if (success) {
     toast.success("Email di test inviata con successo", {
       description: `Controlla ${testEmail}`
+    });
+  } else {
+    toast.error("Errore nell'invio dell'email di test", {
+      description: "Non è stato possibile inviare l'email di test."
     });
   }
 };
