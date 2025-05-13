@@ -11,6 +11,7 @@ type PublicLayoutProps = {
 /**
  * Layout component for public routes
  * Wraps public pages with common layout elements
+ * Now includes error boundary and logging
  */
 const PublicLayout: React.FC<PublicLayoutProps> = ({ children }: PublicLayoutProps) => {
   // Add logging to debug component mounting issues

@@ -3,6 +3,7 @@ import React from 'react';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
 interface ErrorBoundaryState {
@@ -21,6 +22,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     // Aggiorna lo stato in modo che il prossimo render mostri l'UI di fallback
+    console.error("ErrorBoundary caught:", error.message);
     return { 
       hasError: true,
       errorMessage: error.message || 'Si è verificato un errore inaspettato'
@@ -28,7 +30,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Puoi anche salvare l'errore in un servizio di reporting
+    // Logging dell'errore per debugging
     console.error("React error boundary caught an error:", error, errorInfo);
   }
 
@@ -39,7 +41,12 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   render() {
     if (this.state.hasError) {
-      // UI di fallback personalizzata
+      // Se è stato fornito un fallback personalizzato, usalo
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+      
+      // UI di fallback di default
       return (
         <div style={{ 
           padding: '20px', 
