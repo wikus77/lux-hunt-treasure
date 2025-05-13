@@ -1,202 +1,144 @@
 
-// deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import mailjet from "npm:node-mailjet@6.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { corsHeaders } from "./cors.ts";
 
-interface AgentConfirmationData {
+interface AgentData {
   email: string;
   name: string;
   referral_code: string;
 }
 
+const mailjetApiKey = Deno.env.get("MJ_APIKEY_PUBLIC");
+const mailjetSecretKey = Deno.env.get("MJ_APIKEY_PRIVATE");
+
+if (!mailjetApiKey || !mailjetSecretKey) {
+  console.error("Missing Mailjet API keys!");
+}
+
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Make sure we're only accepting POST requests
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  }
+
   try {
+    // Parse the JSON body
     const requestData = await req.json();
-    const { email, name, referral_code } = requestData;
+    const { email, name, referral_code } = requestData as AgentData;
 
-    console.log(`📨 Richiesta ricevuta per invio email: ${JSON.stringify(requestData, null, 2)}`);
+    console.log("Agent confirmation request received for:", email);
+    console.log("Referral code:", referral_code);
 
-    if (!email) {
-      console.error("❌ Email mancante nella richiesta");
-      return new Response(JSON.stringify({
-        success: false,
-        error: "Email mancante"
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
-
-    if (!referral_code) {
-      console.error("❌ referral_code mancante nella richiesta per:", email);
-      return new Response(JSON.stringify({
-        success: false,
-        error: "Codice referral mancante"
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
-
-    const MJ_APIKEY_PUBLIC = Deno.env.get("MJ_APIKEY_PUBLIC");
-    const MJ_APIKEY_PRIVATE = Deno.env.get("MJ_APIKEY_PRIVATE");
-
-    // Verifica dettagliata delle API key
-    if (!MJ_APIKEY_PUBLIC) console.error("❌ MJ_APIKEY_PUBLIC mancante");
-    if (!MJ_APIKEY_PRIVATE) console.error("❌ MJ_APIKEY_PRIVATE mancante");
-
-    if (!MJ_APIKEY_PUBLIC || !MJ_APIKEY_PRIVATE) {
-      console.error("❌ Chiavi API Mailjet non configurate");
-      return new Response(JSON.stringify({
-        success: false,
-        error: "Chiavi API Mailjet non configurate"
-      }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
-
-    try {
-      // Prima verifichiamo se Mailjet è correttamente configurato
-      const mailjetClient = mailjet.apiConnect(MJ_APIKEY_PUBLIC, MJ_APIKEY_PRIVATE);
-      console.log("✅ Client Mailjet inizializzato correttamente");
-      
-      // Migliorato payload con CustomID e metadati per tracciamento e debug
-      const emailData = {
-        Messages: [
-          {
-            From: {
-              Email: "noreply@m1ssion.com",
-              Name: "M1SSION"
-            },
-            To: [
-              {
-                Email: email,
-                Name: name || "Agente"
-              }
-            ],
-            TemplateID: 6974914,
-            TemplateLanguage: true,
-            Variables: {
-              referral_code: referral_code,
-              name: name || "Agente",
-              registration_date: new Date().toISOString().split('T')[0]
-            },
-            CustomID: `agent_conf_${Date.now()}`,
-            TrackOpens: "enabled",
-            TrackClicks: "enabled",
-            // Aggiunta per debug
-            Headers: {
-              "X-Debug": "true",
-              "X-Priority": "1"
-            }
-          }
-        ]
-      };
-
-      console.log("📤 Inviando email con Mailjet - Payload:", JSON.stringify(emailData, null, 2));
-      console.log("📧 Email destinatario:", email);
-      console.log("🔑 Referral code:", referral_code);
-      console.log("📝 Variabili template:", JSON.stringify(emailData.Messages[0].Variables, null, 2));
-      
-      try {
-        // Send the email using Mailjet API
-        console.log("🚀 Chiamata API Mailjet in corso...");
-        const response = await mailjetClient.post("send", { version: "v3.1" }).request(emailData);
-        
-        // Log completo della risposta per debugging, evitando errori di circolarità JSON
-        console.log("✅ Mailjet risposta status:", response.status);
-        console.log("✅ Mailjet body:", JSON.stringify(response.body || {}, null, 2));
-        
-        // Verifica esplicita dello stato della risposta
-        const messageStatus = response.body?.Messages?.[0]?.Status;
-        if (!messageStatus || messageStatus !== 'success') {
-          console.error("❌ Mailjet ha risposto senza successo:", JSON.stringify(response.body || {}, null, 2));
-          return new Response(JSON.stringify({
-            success: false,
-            error: "Email non inviata correttamente",
-            details: response.body || {}
-          }), {
-            status: 500,
-            headers: { "Content-Type": "application/json", ...corsHeaders }
-          });
-        }
-        
-        // Dettagli aggiuntivi sulla risposta
-        console.log("📊 Dettagli consegna:", JSON.stringify(response.body?.Messages?.[0] || {}, null, 2));
-        
-        return new Response(JSON.stringify({
-          success: true,
-          message: "Email inviata con successo",
-          response: {
-            status: response.status,
-            messageStatus: messageStatus,
-            messageId: response.body?.Messages?.[0]?.To?.[0]?.MessageID || null,
-            messageUUID: response.body?.Messages?.[0]?.To?.[0]?.MessageUUID || null
-          },
-          email: email,
-          referral_code: referral_code,
-          timestamp: new Date().toISOString()
-        }), {
-          status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders }
-        });
-      } catch (mjError) {
-        console.error("❌ Errore Mailjet:", mjError);
-        
-        // Evitare errori di circolarità JSON nel log
-        let errorDetails;
-        try {
-          errorDetails = JSON.stringify(mjError, (key, value) => {
-            if (key === 'req' || key === 'res' || key === 'request' || key === 'response') {
-              return '[Circular]';
-            }
-            return value;
-          }, 2);
-        } catch (jsonError) {
-          errorDetails = "Errore non serializzabile: " + (mjError.message || String(mjError));
-        }
-        
-        console.error("Dettagli errore:", errorDetails);
-        
-        return new Response(JSON.stringify({
+    // Validate that all required fields are present
+    if (!email || !name || !referral_code) {
+      console.error("Missing required fields:", { email, name, referral_code });
+      return new Response(
+        JSON.stringify({
           success: false,
-          error: "Errore invio con Mailjet",
-          details: mjError.message || String(mjError),
-          timestamp: new Date().toISOString()
-        }), {
+          error: "Missing required fields",
+          received: { email, name, referral_code },
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Construct the Mailjet API request
+    const mailjetData = {
+      Messages: [
+        {
+          From: {
+            Email: "noreply@m1ssion.com",
+            Name: "M1SSION",
+          },
+          To: [
+            {
+              Email: email,
+              Name: name,
+            },
+          ],
+          TemplateID: 6974914,
+          TemplateLanguage: true,
+          Subject: "Benvenuto, Agente di M1SSION!",
+          Variables: {
+            name: name,
+            referral_code: referral_code,
+          },
+          CustomCampaign: "agent_confirmation",
+          TrackOpens: "enabled",
+          TrackClicks: "enabled",
+        },
+      ],
+    };
+
+    console.log("Sending Mailjet request with data:", JSON.stringify(mailjetData, null, 2));
+
+    // Call the Mailjet API to send the email
+    const mailjetResponse = await fetch("https://api.mailjet.com/v3.1/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${btoa(
+          `${mailjetApiKey}:${mailjetSecretKey}`
+        )}`,
+      },
+      body: JSON.stringify(mailjetData),
+    });
+
+    const mailjetResult = await mailjetResponse.json();
+
+    console.log("Mailjet response status:", mailjetResponse.status);
+    console.log("Mailjet response:", JSON.stringify(mailjetResult, null, 2));
+
+    if (mailjetResponse.status >= 200 && mailjetResponse.status < 300) {
+      console.log("Email sent successfully");
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Email sent successfully",
+          data: mailjetResult,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    } else {
+      console.error("Mailjet API error:", mailjetResult);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Failed to send email",
+          details: mailjetResult,
+        }),
+        {
           status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders }
-        });
-      }
-    } catch (clientError) {
-      console.error("❌ Errore inizializzazione Mailjet:", clientError);
-      return new Response(JSON.stringify({
-        success: false,
-        error: "Impossibile inizializzare client Mailjet",
-        details: String(clientError),
-        timestamp: new Date().toISOString()
-      }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
   } catch (error) {
-    console.error("❌ Errore generale:", error);
-    
-    return new Response(JSON.stringify({
-      success: false,
-      error: "Errore invio email",
-      details: error.message || String(error),
-      timestamp: new Date().toISOString()
-    }), {
-      status: 500,
-      headers: { "Content-Type": "application/json", ...corsHeaders }
-    });
+    console.error("Error processing request:", error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message || "Unknown error",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
   }
 });

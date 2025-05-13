@@ -6,11 +6,17 @@ import { generateWelcomeEmail, generateNotificationEmail } from "./templates";
 /**
  * Send a welcome email to a new user
  */
-export const sendWelcomeEmail = async (recipient: EmailRecipient) => {
+export const sendWelcomeEmail = async (recipient: EmailRecipient, referralCode?: string) => {
+  console.log("Sending welcome email with referral code:", referralCode);
+  
   return sendEmail('welcome', {
     to: [recipient],
     subject: 'Benvenuto in M1SSION!',
-    htmlContent: generateWelcomeEmail(recipient.name),
+    templateId: 6974914, // Use the Mailjet template ID
+    variables: {
+      name: recipient.name,
+      referral_code: referralCode || "MISSIONE"
+    },
     trackOpens: true,
     trackClicks: true,
     customCampaign: 'welcome_email',

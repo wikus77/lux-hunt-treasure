@@ -14,12 +14,15 @@ export const sendEmail = async (type: EmailType, options: SendEmailOptions): Pro
       type,
       to: options.to,
       subject: options.subject,
+      templateId: options.templateId,
       variables: options.variables,
-      templateId: options.templateId
+      trackOpens: options.trackOpens,
+      trackClicks: options.trackClicks,
+      customCampaign: options.customCampaign
     }, null, 2));
     
-    // Make sure referral_code is explicitly included for agent_confirmation emails
-    if (type === 'agent_confirmation' && options.variables) {
+    // Make sure referral_code is explicitly logged when present
+    if (options.variables?.referral_code) {
       console.log("Referral code in mailjetClient:", options.variables.referral_code);
     }
     

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { 
@@ -61,7 +62,7 @@ export const useEmailService = (): EmailServiceHook => {
       
       // Map between email types in hooks/email and services/email
       // This ensures compatibility between the two type systems
-      const serviceEmailType = props.type as any;
+      const serviceEmailType = mapEmailType(props.type);
       
       const result = await sendEmail(serviceEmailType, emailServiceOptions);
       
@@ -170,6 +171,24 @@ const getTemplateIdForType = (type: EmailType): number | undefined => {
       return 6974918; // Example template ID for notification emails
     default:
       return undefined; // Use dynamic content when no template is specified
+  }
+};
+
+// Map the email types between hooks and services
+const mapEmailType = (hookType: EmailType): any => {
+  switch (hookType) {
+    case 'welcome':
+      return 'welcome';
+    case 'notification':
+      return 'notification';
+    case 'verification':
+      return 'verification';
+    case 'password_reset':
+      return 'password_reset';
+    case 'marketing':
+      return 'marketing';
+    default:
+      return hookType;
   }
 };
 
