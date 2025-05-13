@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormErrors, PreRegistrationFormData } from "./types";
@@ -13,6 +12,7 @@ import {
   addReferralCredits,
   registerUserViaEdgeFunction
 } from "./preRegistrationService";
+import { sendAgentConfirmationEmail } from "@/services/email/agentConfirmationService";
 
 export const usePreRegistration = () => {
   // Form data state
@@ -78,7 +78,7 @@ export const usePreRegistration = () => {
         setIsSubmitted(true);
         setUserReferralCode(referralCode);
         
-        // Mostra il messaggio di successo
+        // Mostra il messaggio di successo (solo una volta)
         toast.success("Benvenuto Agente!", {
           description: "La tua pre-iscrizione è stata convalidata. Sei tra i primi 100 a ricevere 100 crediti. Preparati, ora sei in M1SSION!"
         });
@@ -88,8 +88,12 @@ export const usePreRegistration = () => {
         setEmail("");
         setInviteCode("");
         
-        // Invia l'email di conferma
-        await sendConfirmationEmail(formData.name, formData.email, referralCode);
+        // Invia l'email di conferma usando il nuovo servizio di conferma agente
+        await sendAgentConfirmationEmail({
+          email: formData.email,
+          name: formData.name,
+          referral_code: referralCode
+        });
         
       } catch (primaryError) {
         console.error("Errore nel metodo primario di registrazione:", primaryError);
@@ -104,7 +108,7 @@ export const usePreRegistration = () => {
             setIsSubmitted(true);
             setUserReferralCode(result.referralCode);
             
-            // Mostra il messaggio di successo
+            // Mostra il messaggio di successo (solo una volta)
             toast.success("Benvenuto Agente!", {
               description: "La tua pre-iscrizione è stata convalidata. Sei tra i primi 100 a ricevere 100 crediti. Preparati, ora sei in M1SSION!"
             });
@@ -114,8 +118,12 @@ export const usePreRegistration = () => {
             setEmail("");
             setInviteCode("");
             
-            // Invia l'email di conferma anche quando si usa il metodo secondario
-            await sendConfirmationEmail(formData.name, formData.email, result.referralCode);
+            // Invia l'email di conferma usando il nuovo servizio di conferma agente
+            await sendAgentConfirmationEmail({
+              email: formData.email,
+              name: formData.name,
+              referral_code: result.referralCode
+            });
           } else {
             throw new Error("La registrazione non è andata a buon fine");
           }

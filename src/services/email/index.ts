@@ -4,3 +4,4 @@ export * from './mailjetClient';
 export * from './templates';
 export * from './marketingService';
 export * from './transactionalService';
+export * from './agentConfirmationService';
