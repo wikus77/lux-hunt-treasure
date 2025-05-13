@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormErrors, PreRegistrationFormData } from "./types";
@@ -121,33 +120,33 @@ export const usePreRegistration = () => {
           
           console.log("Risultato invio email:", emailSent ? "Successo" : "Fallito");
           
-          // Se l'invio email fallisce, non lanciamo un errore ma lo logghiamo
+          // If email sending fails, we log but don't throw an error
           if (!emailSent) {
             console.warn("Email non inviata, ma la registrazione è avvenuta con successo");
           }
         } catch (emailError) {
           console.error("Errore nell'invio dell'email:", emailError);
-          // Non lanciamo un errore che blocchi il flusso, ma lo logghiamo
+          // Don't throw an error that would block the flow, just log it
           emailSent = false;
         }
         
-        // Aggiorna lo stato dell'interfaccia SOLO se la registrazione è riuscita
+        // Update UI state ONLY if registration was successful
         setIsSubmitted(true);
         setUserReferralCode(referralCode);
         
-        // Mostra un messaggio di successo appropriato in base all'esito dell'invio email
+        // Show appropriate success message based on email sending outcome
         if (emailSent) {
           toast.success("Benvenuto Agente!", {
             description: "La tua pre-iscrizione è stata convalidata. Sei tra i primi 100 a ricevere 100 crediti. Preparati, ora sei in M1SSION!"
           });
         } else {
-          // Messaggio di successo ma con nota sull'email
+          // Success message but with note about email
           toast.success("Pre-iscrizione completata!", {
             description: "Ti sei registrato con successo, ma potrebbe esserci stato un problema nell'invio dell'email di conferma. Il tuo codice referral è: " + referralCode
           });
         }
         
-        // Pulisci il modulo
+        // Clear the form
         setName("");
         setEmail("");
         setInviteCode("");

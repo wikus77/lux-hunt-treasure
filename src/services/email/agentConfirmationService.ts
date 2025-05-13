@@ -27,19 +27,20 @@ export const sendAgentConfirmationEmail = async (data: AgentConfirmationData): P
       referral_code: data.referral_code
     }, null, 2));
     
-    const result = await sendEmail('agent_confirmation', {
-      to: [{ email: data.email, name: data.name }],
-      subject: 'Benvenuto, Agente di M1SSION!',
-      templateId: 6977931, // Aggiornato all'ultimo template ID Mailjet
-      variables: {
+    // Call the Supabase edge function directly
+    const response = await fetch("https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/send-agent-confirmation", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json" 
+      },
+      body: JSON.stringify({
+        email: data.email,
         name: data.name,
         referral_code: data.referral_code
-      },
-      trackOpens: true,
-      trackClicks: true,
-      customCampaign: 'agent_confirmation',
+      })
     });
     
+    const result = await response.json();
     console.log("Agent confirmation email result:", JSON.stringify(result, null, 2));
     
     return result.success;
