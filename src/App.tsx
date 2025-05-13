@@ -1,5 +1,6 @@
 
 import './App.css';
+import { BrowserRouter } from "react-router-dom";
 import AppContent from './components/app/AppContent';
 import CookiebotInit from './components/cookiebot/CookiebotInit';
 
@@ -11,11 +12,11 @@ function App() {
   console.log("App component rendering");
   
   return (
-    <>
+    <BrowserRouter>
       {/* Initialize Cookie Script helper only once at root level */}
       <CookiebotInit />
       <AppContent />
-    </>
+    </BrowserRouter>
   );
 }
 
