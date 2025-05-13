@@ -46,10 +46,18 @@ export const useEmailService = (): EmailServiceHook => {
           ...props.data,
           name: props.name,
           email: props.email,
-          type: props.type
+          type: props.type,
+          // Pass the referral_code explicitly if it exists in props.data
+          referral_code: props.data?.referral_code || ""
         },
         ...metadata
       };
+      
+      console.log(`Sending ${props.type} email with data:`, JSON.stringify({
+        to: emailServiceOptions.to,
+        subject: emailServiceOptions.subject,
+        variables: emailServiceOptions.variables
+      }, null, 2));
       
       // Map between email types in hooks/email and services/email
       // This ensures compatibility between the two type systems

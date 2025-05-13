@@ -31,6 +31,9 @@ export const sendAgentConfirmationEmail = async (props: AgentConfirmationProps):
       }
     });
     
+    // Log dettagliato della risposta per debug
+    console.log("Risposta da send-agent-confirmation:", JSON.stringify(data, null, 2));
+    
     if (error) {
       console.error("Errore nell'invio dell'email di conferma:", error);
       
@@ -49,6 +52,9 @@ export const sendAgentConfirmationEmail = async (props: AgentConfirmationProps):
             templateId: 6974914
           }
         });
+        
+        // Log dettagliato della risposta di fallback
+        console.log("Risposta fallback da send-mailjet-email:", JSON.stringify(fallbackData, null, 2));
         
         if (fallbackError) {
           console.error("Anche il fallback è fallito:", fallbackError);

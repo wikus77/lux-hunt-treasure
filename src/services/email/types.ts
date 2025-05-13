@@ -1,39 +1,41 @@
 
-import { supabase } from "@/integrations/supabase/client";
+export type EmailType = 
+  | 'welcome' 
+  | 'verification' 
+  | 'password_reset' 
+  | 'notification'
+  | 'marketing'
+  | 'agent_confirmation'  // Added specific type for agent confirmations
+  | 'contact';
 
-export type EmailRecipient = {
-  email: string;
-  name?: string;
-};
-
+/**
+ * Interface for email sending options
+ */
 export interface SendEmailOptions {
-  to: EmailRecipient[];
+  to: Array<{
+    email: string;
+    name?: string;
+  }>;
+  from?: {
+    Email: string;
+    Name: string;
+  };
   subject: string;
-  htmlContent: string;
+  htmlContent?: string;
   textContent?: string;
   templateId?: number;
   variables?: Record<string, any>;
   trackOpens?: boolean;
   trackClicks?: boolean;
-  customCampaign?: string;
   customId?: string;
-  from?: {
-    Email: string;
-    Name: string;
-  };
-  consent?: {
-    given: boolean;
-    date: string;
-    method: string;
-  };
-  timestamp?: string;
+  attachments?: any[];
 }
 
-// Types of emails
-export type EmailType = 'transactional' | 'marketing' | 'welcome' | 'notification' | 'contact' | 'verification' | 'password_reset';
-
+/**
+ * Interface for email sending result
+ */
 export interface EmailResult {
   success: boolean;
-  data?: any;
   error?: any;
+  data?: any;
 }

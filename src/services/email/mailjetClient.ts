@@ -14,21 +14,21 @@ export const sendEmail = async (type: EmailType, options: SendEmailOptions): Pro
       type,
       to: options.to,
       subject: options.subject,
-      from: options.from || {
-        Email: "contact@m1ssion.com",
-        Name: "M1SSION",
-      },
-      trackOpens: options.trackOpens,
-      trackClicks: options.trackClicks,
+      variables: options.variables,
       templateId: options.templateId
     }, null, 2));
+    
+    // Make sure referral_code is explicitly included for agent_confirmation emails
+    if (type === 'agent_confirmation' && options.variables) {
+      console.log("Referral code in mailjetClient:", options.variables.referral_code);
+    }
     
     const { data, error } = await supabase.functions.invoke('send-mailjet-email', {
       body: {
         type,
         ...options,
         from: options.from || {
-          Email: "contact@m1ssion.com",
+          Email: "noreply@m1ssion.com",
           Name: "M1SSION",
         }
       }

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormErrors, PreRegistrationFormData } from "./types";
@@ -84,6 +83,8 @@ export const usePreRegistration = () => {
           throw new Error("Errore nella registrazione dell'utente");
         }
         
+        console.log("Registrazione completata con successo. Codice referral:", referralCode);
+        
       } catch (primaryError) {
         console.error("Errore nel metodo primario di registrazione:", primaryError);
         console.log("Tentativo con edge function come fallback...");
@@ -95,6 +96,7 @@ export const usePreRegistration = () => {
           if (result.success) {
             registrationSuccess = true;
             referralCode = result.referralCode;
+            console.log("Registrazione via edge function completata. Codice referral:", referralCode);
           } else {
             throw new Error("La registrazione non è andata a buon fine");
           }
@@ -105,14 +107,18 @@ export const usePreRegistration = () => {
       }
       
       // Solo se la registrazione è avvenuta con successo, inviamo l'email
-      if (registrationSuccess) {
+      if (registrationSuccess && referralCode) {
         try {
+          console.log("Tentativo di invio email con codice referral:", referralCode);
+          
           // Invia l'email di conferma usando il servizio di conferma agente
           emailSent = await sendAgentConfirmationEmail({
             email: formData.email,
             name: formData.name,
             referral_code: referralCode
           });
+          
+          console.log("Risultato invio email:", emailSent ? "Successo" : "Fallito");
           
           // Se l'invio email fallisce, non lanciamo un errore ma lo logghiamo
           if (!emailSent) {
@@ -144,6 +150,8 @@ export const usePreRegistration = () => {
         setName("");
         setEmail("");
         setInviteCode("");
+      } else {
+        throw new Error("Errore nella generazione del codice referral");
       }
     } catch (error: any) {
       console.error("Errore nella pre-registrazione:", error);
