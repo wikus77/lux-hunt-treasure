@@ -1,5 +1,5 @@
 
-import { sendEmail } from "./mailjetClient";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Interface for agent confirmation data
@@ -38,44 +38,30 @@ export const sendAgentConfirmationEmail = async (data: AgentConfirmationData): P
       referral_code: data.referral_code
     }, null, 2));
     
-    // Call the Supabase edge function directly
-    const response = await fetch("https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/send-agent-confirmation", {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json" 
-      },
-      body: JSON.stringify({
+    // Use Supabase client to call the Edge Function instead of direct fetch
+    // This automatically includes the required authorization headers
+    const { data: responseData, error } = await supabase.functions.invoke("send-agent-confirmation", {
+      body: {
         email: data.email,
         name: data.name,
         referral_code: data.referral_code
-      })
+      }
     });
     
-    console.log("Edge function response status:", response.status);
-    
-    // Check if the response is valid
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error("Edge function response error:", response.status, errorData);
-      throw new Error(`Edge function error: ${response.status} - ${errorData}`);
-    }
-    
-    let result;
-    try {
-      result = await response.json();
-      console.log("Agent confirmation email result:", JSON.stringify(result, null, 2));
-    } catch (parseError) {
-      console.error("Failed to parse response JSON:", parseError);
-      console.log("Response text:", await response.text());
-      throw new Error("Invalid JSON response from edge function");
-    }
-    
-    if (!result.success) {
-      console.error("Email sending failed in edge function:", result);
+    // Log the response from the edge function
+    if (error) {
+      console.error("Edge function error:", error);
       return false;
     }
     
-    return result.success;
+    console.log("Agent confirmation email result:", JSON.stringify(responseData, null, 2));
+    
+    if (!responseData || !responseData.success) {
+      console.error("Email sending failed in edge function:", responseData);
+      return false;
+    }
+    
+    return true;
   } catch (error) {
     console.error("Failed to send agent confirmation email:", error);
     return false;
