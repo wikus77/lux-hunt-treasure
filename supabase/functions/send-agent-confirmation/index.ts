@@ -1,7 +1,6 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./cors.ts";
-import { SmtpClient } from "https://deno.land/x/denomailer@0.15.1/mod.ts";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 interface AgentData {
   email: string;
@@ -108,7 +107,7 @@ async function sendEmailViaIonosSMTP(data: AgentData) {
             <p>Grazie per esserti pre-iscritto a M1SSION. Sei ufficialmente parte di questa avventura esclusiva.</p>
             
             <p>Ecco il tuo codice di invito personale. Condividilo con i tuoi amici per guadagnare crediti bonus:</p>
-            <div class="referral-code">${data.referral_code}</div>
+            <div class="referral_code">${data.referral_code}</div>
             
             <p>Ricorda: <strong>IT IS POSSIBLE</strong></p>
           </div>
