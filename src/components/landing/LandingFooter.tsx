@@ -20,7 +20,7 @@ const LandingFooter = () => {
               <span className="text-white">SSION</span>
             </h2>
           </div>
-          <div className="flex space-x-6">
+          <div className="flex flex-wrap gap-4 justify-center md:justify-end">
             <Link to="/privacy" className="text-sm text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
             <Link to="/cookie-policy" className="text-sm text-white/60 hover:text-white transition-colors">Cookie Policy</Link>
             <Link to="/terms" className="text-sm text-white/60 hover:text-white transition-colors">Termini e Condizioni</Link>

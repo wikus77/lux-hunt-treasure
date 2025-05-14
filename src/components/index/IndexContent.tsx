@@ -43,6 +43,25 @@ const IndexContent = ({
     return () => clearTimeout(timer);
   }, []);
   
+  // Fix per il problema di ricarica della pagina:
+  // Pulisci la cache di localStorage per forzare il ricaricamento dei contenuti
+  useEffect(() => {
+    // Rimuovi i flag che potrebbero impedire il caricamento completo
+    if (typeof window !== 'undefined') {
+      try {
+        // Rimuove solo i flag relativi all'intro e non altri dati importanti
+        localStorage.removeItem("skipIntro");
+        localStorage.removeItem("introStep");
+        localStorage.removeItem("introShown");
+        
+        // Non rimuovere informazioni di autenticazione o altre preferenze utente
+        console.log("Cache di navigazione pulita per garantire il corretto caricamento");
+      } catch (error) {
+        console.error("Errore nell'accesso a localStorage:", error);
+      }
+    }
+  }, []);
+  
   // Se il contenuto non è ancora caricato, mostriamo un div vuoto e trasparente
   if (!contentLoaded) {
     return <div className="min-h-screen bg-black"></div>;
@@ -90,10 +109,19 @@ const IndexContent = ({
       <PreRegistrationForm />
       
       {/* Game Explanation Section */}
-      <GameExplanationSection />
+      <div id="game-explanation">
+        <GameExplanationSection />
+      </div>
       
       {/* How It Works Section */}
-      <HowItWorks onRegisterClick={onRegisterClick} countdownCompleted={countdownCompleted} />
+      <HowItWorks onRegisterClick={() => {
+        const preRegistrationSection = document.getElementById('pre-registration-form');
+        if (preRegistrationSection) {
+          preRegistrationSection.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          onRegisterClick();
+        }
+      }} countdownCompleted={countdownCompleted} />
       
       {/* "Vuoi provarci? Fallo. Ma fallo per vincere." Section */}
       <section className="w-full relative overflow-hidden py-16 bg-black">

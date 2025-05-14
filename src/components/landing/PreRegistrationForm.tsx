@@ -40,7 +40,7 @@ const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
   const handleReferralInputCancel = () => setShowReferralInput(false);
 
   return (
-    <FormContainer className={className}>
+    <FormContainer className={className} id="pre-registration-form">
       {!isSubmitted ? (
         <RegistrationForm 
           name={name}

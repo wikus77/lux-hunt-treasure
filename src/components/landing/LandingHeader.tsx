@@ -13,10 +13,10 @@ const LandingHeader = ({ countdownCompleted = false }: LandingHeaderProps) => {
   const navigate = useNavigate();
 
   const handleJoinHunt = () => {
-    if (countdownCompleted) {
-      navigate("/register");
-    } else {
-      console.log("Join Hunt button disabled until countdown completes");
+    // Reindirizza sempre alla registrazione, indipendentemente dal countdown
+    const preRegistrationSection = document.getElementById('pre-registration-form');
+    if (preRegistrationSection) {
+      preRegistrationSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -87,9 +87,8 @@ const LandingHeader = ({ countdownCompleted = false }: LandingHeaderProps) => {
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button 
-            className={`neon-button px-8 py-3 rounded-full text-black font-bold bg-gradient-to-r from-cyan-400 to-blue-600 ${countdownCompleted ? 'hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]' : 'opacity-70 cursor-not-allowed'}`}
+            className="neon-button px-8 py-3 rounded-full text-black font-bold bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
             onClick={handleJoinHunt}
-            disabled={!countdownCompleted}
           >
             JOIN THE HUNT
           </button>

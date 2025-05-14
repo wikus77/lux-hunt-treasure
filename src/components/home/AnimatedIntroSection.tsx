@@ -109,4 +109,4 @@ export default function AnimatedIntroSection({ onEnd }: { onEnd: () => void }) {
       </motion.button>
     </motion.section>
   );
-}
+};

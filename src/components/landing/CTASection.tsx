@@ -7,6 +7,17 @@ interface CTASectionProps {
 }
 
 const CTASection = ({ onRegisterClick, countdownCompleted = false }: CTASectionProps) => {
+  const handleRegisterClick = () => {
+    // Sempre scorrere fino al form di registrazione, indipendentemente dallo stato del countdown
+    const preRegistrationSection = document.getElementById('pre-registration-form');
+    if (preRegistrationSection) {
+      preRegistrationSection.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // Fallback al handler originale
+      onRegisterClick();
+    }
+  };
+
   return (
     <motion.section 
       className="relative py-16 px-4 overflow-hidden bg-gradient-to-b from-blue-900/20 to-black"
@@ -65,17 +76,16 @@ const CTASection = ({ onRegisterClick, countdownCompleted = false }: CTASectionP
         </motion.p>
         
         <motion.button
-          className={`px-8 py-3 rounded-full font-bold bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black ${countdownCompleted ? 'hover:shadow-[0_0_25px_rgba(0,229,255,0.6)] transition-all duration-300' : 'opacity-70 cursor-not-allowed'}`}
-          onClick={onRegisterClick}
+          className="px-8 py-3 rounded-full font-bold bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black hover:shadow-[0_0_25px_rgba(0,229,255,0.6)] transition-all duration-300"
+          onClick={handleRegisterClick}
           initial={{ scale: 0.9, opacity: 0 }}
           whileInView={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
           viewport={{ once: true }}
-          disabled={!countdownCompleted}
           data-parallax="scroll"
           data-parallax-speed="0.3"
-          whileHover={{ scale: countdownCompleted ? 1.05 : 1 }}
-          whileTap={{ scale: countdownCompleted ? 0.95 : 1 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           REGISTRATI ORA
         </motion.button>

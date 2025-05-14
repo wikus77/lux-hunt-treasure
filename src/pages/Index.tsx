@@ -41,16 +41,26 @@ const Index = () => {
     }
   }, [error, retryCount]);
   
-  // CORREZIONE: Gestione sicura del localStorage
+  // Verifica se l'intro è già stata mostrata in precedenza
   useEffect(() => {
     try {
-      // Per assicurarci che l'intro venga mostrata, rimuoviamo il flag dal localStorage
+      // Controlla solo se introCompleted deve essere true basandosi su stato precedente
       if (typeof window !== 'undefined') {
-        localStorage.removeItem("skipIntro");
-        console.log("Removed skipIntro from localStorage");
+        const skipIntro = localStorage.getItem("skipIntro");
+        if (skipIntro === "true") {
+          console.log("Intro already shown, skipping...");
+          setIntroCompleted(true);
+        } else {
+          // Solo se non c'è flag, impostiamo a false (inizia l'intro)
+          console.log("No skipIntro flag found, will show intro");
+          setIntroCompleted(false);
+          // Non rimuoviamo qui il flag, per evitare cicli infiniti
+        }
       }
     } catch (error) {
       console.error("localStorage error:", error);
+      // In caso di errore, assumiamo che l'intro debba essere mostrata
+      setIntroCompleted(false);
     }
   }, []);
 
