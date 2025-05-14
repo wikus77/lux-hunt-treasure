@@ -541,7 +541,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      pre_registrations_with_index: {
+        Row: {
+          confirmed: boolean | null
+          created_at: string | null
+          created_by: string | null
+          credits: number | null
+          email: string | null
+          id: string | null
+          name: string | null
+          numero_progressivo: number | null
+          referral_code: string | null
+          referrer: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_referral_credits: {
