@@ -5,10 +5,13 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.43.1'
 
+// The reserved code specifically for wikus77@hotmail.it
+const RESERVED_ADMIN_CODE = 'AG-X019';
+const RESERVED_ADMIN_EMAIL = 'wikus77@hotmail.it';
+
 // Generate a unique agent code with exclusion for admin code
 const generateAgentCode = async (supabase: any): Promise<string> => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const RESERVED_ADMIN_CODE = 'AG-X019';
   
   let code: string;
   let exists = true;
@@ -44,6 +47,68 @@ const generateAgentCode = async (supabase: any): Promise<string> => {
   return code;
 };
 
+// Ensures the admin user has the reserved code
+const ensureAdminCode = async (supabase: any): Promise<void> => {
+  try {
+    // Find the admin user by email
+    const { data: adminUser, error: userError } = await supabase
+      .from('profiles')
+      .select('id, agent_code')
+      .eq('email', RESERVED_ADMIN_EMAIL)
+      .maybeSingle();
+
+    if (userError) {
+      console.error('Error finding admin user:', userError);
+      return;
+    }
+
+    // If admin user exists but doesn't have the reserved code, update it
+    if (adminUser && adminUser.agent_code !== RESERVED_ADMIN_CODE) {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ agent_code: RESERVED_ADMIN_CODE })
+        .eq('id', adminUser.id);
+
+      if (updateError) {
+        console.error('Error setting admin code:', updateError);
+      } else {
+        console.log(`Reserved code ${RESERVED_ADMIN_CODE} set for admin user`);
+      }
+    }
+    
+    // Check if any other user incorrectly has the admin code and reset it
+    const { data: wrongUsers, error: wrongUsersError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('agent_code', RESERVED_ADMIN_CODE)
+      .neq('email', RESERVED_ADMIN_EMAIL);
+
+    if (wrongUsersError) {
+      console.error('Error checking for unauthorized admin code usage:', wrongUsersError);
+      return;
+    }
+
+    // Fix any unauthorized usage of the admin code
+    if (wrongUsers && wrongUsers.length > 0) {
+      for (const user of wrongUsers) {
+        const newCode = await generateAgentCode(supabase);
+        const { error: fixError } = await supabase
+          .from('profiles')
+          .update({ agent_code: newCode })
+          .eq('id', user.id);
+
+        if (fixError) {
+          console.error(`Error fixing unauthorized admin code for user ${user.id}:`, fixError);
+        } else {
+          console.log(`Fixed unauthorized admin code usage for user ${user.id}, assigned ${newCode}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error in admin code management:', error);
+  }
+};
+
 Deno.serve(async (req) => {
   try {
     // Get the request body
@@ -56,10 +121,13 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
+    // Ensure the admin has the correct code and no one else has it
+    await ensureAdminCode(supabase);
+    
     // Get the user's profile
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select('agent_code')
+      .select('agent_code, email')
       .eq('id', userId)
       .single();
 
@@ -73,8 +141,13 @@ Deno.serve(async (req) => {
     if (profile && profile.agent_code) {
       agentCode = profile.agent_code;
     } else {
-      // Generate a new unique agent code
-      agentCode = await generateAgentCode(supabase);
+      // If this is the admin user, assign the reserved code
+      if (profile && profile.email === RESERVED_ADMIN_EMAIL) {
+        agentCode = RESERVED_ADMIN_CODE;
+      } else {
+        // Generate a new unique agent code for non-admin users
+        agentCode = await generateAgentCode(supabase);
+      }
       
       // Update the user's profile with the new agent code
       const { error: updateError } = await supabase

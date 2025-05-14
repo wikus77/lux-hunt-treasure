@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -20,7 +21,44 @@ export const useAgentCode = () => {
           return;
         }
 
-        // First, check if the user already has an agent code in their profile
+        // Special case for admin user
+        const RESERVED_ADMIN_EMAIL = 'wikus77@hotmail.it';
+        const RESERVED_ADMIN_CODE = 'AG-X019';
+
+        // First, check if the user is the admin
+        if (user.email?.toLowerCase() === RESERVED_ADMIN_EMAIL.toLowerCase()) {
+          // Check if they already have the reserved code
+          const { data: adminProfile, error: adminProfileError } = await supabase
+            .from('profiles')
+            .select('agent_code')
+            .eq('id', user.id)
+            .single();
+            
+          if (adminProfileError) {
+            console.error("Error fetching admin profile:", adminProfileError);
+            setError(new Error("Failed to fetch agent code"));
+          } else if (!adminProfile || adminProfile.agent_code !== RESERVED_ADMIN_CODE) {
+            // If admin doesn't have the reserved code, set it
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ agent_code: RESERVED_ADMIN_CODE })
+              .eq('id', user.id);
+              
+            if (updateError) {
+              console.error("Error assigning admin code:", updateError);
+              setError(new Error("Failed to assign admin code"));
+            } else {
+              setAgentCode(RESERVED_ADMIN_CODE);
+            }
+          } else {
+            // Admin already has the correct code
+            setAgentCode(RESERVED_ADMIN_CODE);
+          }
+          setIsLoading(false);
+          return;
+        }
+        
+        // For non-admin users, check if they already have a code in profile
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('agent_code')
