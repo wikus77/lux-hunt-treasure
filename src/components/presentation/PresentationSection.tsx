@@ -1,12 +1,76 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PresentationSectionProps {
   visible: boolean;
 }
 
 const PresentationSection = ({ visible }: PresentationSectionProps) => {
+  const [agentCode, setAgentCode] = useState<string>("AG-X480"); // Default code
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch the current user's agent code
+  useEffect(() => {
+    const fetchAgentCode = async () => {
+      try {
+        // Get the current authenticated user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Fetch the user's profile to get their agent code
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('agent_code')
+            .eq('id', user.id)
+            .single();
+
+          if (error) {
+            console.error("Error fetching profile:", error);
+          } else if (profile && profile.agent_code) {
+            // If the user has an agent code, use it
+            setAgentCode(profile.agent_code);
+          } else {
+            // If the user doesn't have an agent code, generate one and save it
+            const newAgentCode = generateAgentCode();
+            setAgentCode(newAgentCode);
+            
+            // Save the new agent code to the user's profile
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ agent_code: newAgentCode })
+              .eq('id', user.id);
+
+            if (updateError) {
+              console.error("Error updating agent code:", updateError);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error in agent code fetch:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAgentCode();
+  }, []);
+
+  // Generate a unique agent code
+  const generateAgentCode = () => {
+    // Generate a random alphanumeric code with 5 characters
+    const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluding confusing characters like I, O, 0, 1
+    let result = 'AG-';
+    
+    // Add 5 random characters
+    for (let i = 0; i < 5; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    
+    return result;
+  };
+
   // Ensure component is always visible regardless of props
   return (
     <section className="relative py-20 px-4 bg-black" style={{ opacity: 1, visibility: "visible" }}>
@@ -26,7 +90,7 @@ const PresentationSection = ({ visible }: PresentationSectionProps) => {
             <div className="bg-[#00E5FF]/20 px-3 py-1 rounded-md mb-2">
               <span className="text-cyan-400 font-mono text-sm mr-1">DOSSIER:</span>
               <span className="font-mono text-white bg-cyan-900/30 px-2 py-0.5 rounded text-sm">
-                AG-X480
+                {isLoading ? "..." : agentCode}
               </span>
             </div>
           </div>
