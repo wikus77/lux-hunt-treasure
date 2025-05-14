@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +12,6 @@ const LandingHeader = ({ countdownCompleted = false }: LandingHeaderProps) => {
   const navigate = useNavigate();
 
   const handleJoinHunt = () => {
-    // Reindirizza sempre alla registrazione, indipendentemente dal countdown
     const preRegistrationSection = document.getElementById('pre-registration-form');
     if (preRegistrationSection) {
       preRegistrationSection.scrollIntoView({ behavior: 'smooth' });
@@ -21,15 +19,9 @@ const LandingHeader = ({ countdownCompleted = false }: LandingHeaderProps) => {
   };
 
   const handleLearnMore = () => {
-    if (countdownCompleted) {
-      navigate("/how-it-works");
-    } else {
-      console.log("Learn More button disabled until countdown completes");
-      // Scroll to game explanation section instead
-      const gameExplanationSection = document.getElementById('game-explanation');
-      if (gameExplanationSection) {
-        gameExplanationSection.scrollIntoView({ behavior: 'smooth' });
-      }
+    const gameExplanationSection = document.getElementById('game-explanation');
+    if (gameExplanationSection) {
+      gameExplanationSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -93,9 +85,8 @@ const LandingHeader = ({ countdownCompleted = false }: LandingHeaderProps) => {
             JOIN THE HUNT
           </button>
           <button 
-            className={`px-8 py-3 rounded-full text-white font-bold bg-black/30 border border-white/10 ${countdownCompleted ? 'hover:bg-black/50 hover:border-white/20' : 'opacity-70 cursor-not-allowed'}`}
+            className="px-8 py-3 rounded-full text-white font-bold bg-black/30 border border-white/10 hover:bg-black/50 hover:border-white/20"
             onClick={handleLearnMore}
-            disabled={!countdownCompleted}
           >
             LEARN MORE
           </button>
