@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -91,7 +90,6 @@ export const useAgentCode = () => {
             console.error("Error from edge function:", fnError);
             
             // Fallback: Generate a code on the client and save it
-            // This will use the improved agent code generation logic
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             const RESERVED_ADMIN_CODE = 'AG-X019';
             
