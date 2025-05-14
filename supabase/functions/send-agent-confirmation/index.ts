@@ -37,6 +37,12 @@ serve(async (req) => {
     // Check for API keys
     const MJ_APIKEY_PUBLIC = Deno.env.get("MJ_APIKEY_PUBLIC");
     const MJ_APIKEY_PRIVATE = Deno.env.get("MJ_APIKEY_PRIVATE");
+    
+    // Log IONOS configuration status
+    const USE_IONOS_ONLY = Deno.env.get("USE_IONOS_ONLY");
+    console.log("IONOS Configuration:", {
+      useIonosOnly: USE_IONOS_ONLY === "true" ? "Yes" : "No"
+    });
 
     console.log("Mailjet API keys present:", {
       publicKey: !!MJ_APIKEY_PUBLIC,
@@ -81,7 +87,8 @@ serve(async (req) => {
           TemplateID: 6974914,
           TemplateLanguage: true,
           Variables: {
-            referral_code: referral_code || "CODICE NON DISPONIBILE"
+            referral_code: referral_code || "CODICE NON DISPONIBILE",
+            timestamp: new Date().toISOString() // Adding timestamp for tracking
           },
           // Force sender to override any template setting
           SenderEmail: senderEmail,
@@ -93,16 +100,23 @@ serve(async (req) => {
     // Log the exact payload being sent to Mailjet for debugging
     console.log("Email payload prepared:", JSON.stringify(emailData, null, 2));
     console.log("Sending email via Mailjet API");
+    console.log(`IONOS configuration: ${USE_IONOS_ONLY === "true" ? "Using IONOS SMTP" : "Using Mailjet API"}`);
 
     try {
+      // Enhanced logging before sending
+      console.log(`${new Date().toISOString()} - Attempting to send email to ${email} via ${USE_IONOS_ONLY === "true" ? "IONOS SMTP" : "Mailjet API"}`);
+      
       const response = await mailjetClient.post("send", { version: "v3.1" }).request(emailData);
       
       // Log the complete API response for debugging
-      console.log("Mailjet API response:", JSON.stringify(response.body, null, 2));
+      console.log(`${new Date().toISOString()} - Mailjet API response:`, JSON.stringify(response.body, null, 2));
+      console.log(`${new Date().toISOString()} - Email sent successfully to: ${email}`);
       
       return new Response(JSON.stringify({
         success: true,
         message: "Email inviata correttamente",
+        timestamp: new Date().toISOString(),
+        recipient: email,
         response: response.body
       }), {
         status: 200,
@@ -110,16 +124,18 @@ serve(async (req) => {
       });
     } catch (mailjetError: any) {
       // Enhanced error logging for Mailjet errors
-      console.error("Mailjet API error:", mailjetError);
+      console.error(`${new Date().toISOString()} - Mailjet API error for recipient ${email}:`, mailjetError);
       
       // Add detailed error information from Mailjet's response if available
       if (mailjetError.response && mailjetError.response.body) {
-        console.error("Mailjet error details:", JSON.stringify(mailjetError.response.body, null, 2));
+        console.error(`${new Date().toISOString()} - Mailjet error details for ${email}:`, JSON.stringify(mailjetError.response.body, null, 2));
       }
       
       return new Response(JSON.stringify({
         success: false,
         error: "Errore nell'invio email via Mailjet",
+        timestamp: new Date().toISOString(),
+        recipient: email,
         details: mailjetError.response?.body || mailjetError.message || mailjetError
       }), {
         status: 500,
@@ -128,12 +144,13 @@ serve(async (req) => {
     }
 
   } catch (error: any) {
-    console.error("Error in send-agent-confirmation function:", error);
-    console.error("Stack trace:", error.stack);
+    console.error(`${new Date().toISOString()} - Error in send-agent-confirmation function:`, error);
+    console.error(`${new Date().toISOString()} - Stack trace:`, error.stack);
     
     return new Response(JSON.stringify({
       success: false,
       error: "Errore nell'invio email",
+      timestamp: new Date().toISOString(),
       details: error.message || error,
       stack: error.stack
     }), {
