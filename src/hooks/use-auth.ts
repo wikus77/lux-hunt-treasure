@@ -183,3 +183,4 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     user, // Aggiungiamo l'utente direttamente qui per coerenza con AuthContextType
   };
 }
+

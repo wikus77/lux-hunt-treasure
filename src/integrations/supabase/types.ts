@@ -314,7 +314,6 @@ export type Database = {
         Row: {
           confirmed: boolean
           created_at: string
-          created_by: string | null
           credits: number
           email: string
           id: string
@@ -325,7 +324,6 @@ export type Database = {
         Insert: {
           confirmed?: boolean
           created_at?: string
-          created_by?: string | null
           credits?: number
           email: string
           id?: string
@@ -336,7 +334,6 @@ export type Database = {
         Update: {
           confirmed?: boolean
           created_at?: string
-          created_by?: string | null
           credits?: number
           email?: string
           id?: string

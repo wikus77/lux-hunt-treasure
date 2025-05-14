@@ -1,16 +1,30 @@
 
-/// <reference types="vite/client" />
+// Add type definition for CookieScriptConsent
 
-// Per il globo 3D
 interface Window {
-  Globe: () => any;
-  initMap?: () => void;
-  initMapCallback?: () => void;
+  CookieScriptConsent?: {
+    categories: {
+      necessary: boolean;
+      preferences: boolean;
+      statistics: boolean;
+      marketing: boolean;
+    };
+    show: () => void;
+    hide: () => void;
+    renew: () => void;
+    withdraw: () => void;
+  };
+  checkCookieConsent?: (category: 'necessary' | 'preferences' | 'statistics' | 'marketing') => boolean;
+  
+  // Add Globe.gl type definition
+  Globe?: () => any;
+  
   // Add type definitions for Apple Pay
   ApplePaySession?: {
     canMakePayments: () => boolean;
     new (version: number, request: any): any;
   };
+  
   // Add type definitions for Google Pay
   google?: {
     payments?: {
@@ -19,24 +33,18 @@ interface Window {
       };
     };
   };
-  // Add turnstile here to ensure it's available in all contexts
+  
+  // Add Map-related callback functions
+  initMap?: () => void;
+  initMapCallback?: () => void;
+  
+  // Add Cloudflare Turnstile type definitions
   turnstile?: {
     ready: (callback: () => void) => void;
     render: (container: string, options: any) => string;
     reset: (widgetId: string) => void;
   };
-  // Type definitions for Cookie Script
-  checkCookieConsent?: (category: 'necessary' | 'preferences' | 'statistics' | 'marketing') => boolean;
-  CookieScriptConsent?: {
-    show?: () => void;
-    hide?: () => void;
-    renew?: () => void;
-    withdraw?: () => void;
-    categories: {
-      necessary: boolean;
-      preferences: boolean;
-      statistics: boolean;
-      marketing: boolean;
-    };
-  };
+  
+  // Add Turnstile callback that's used in the script loading
+  onloadTurnstileCallback?: () => void;
 }

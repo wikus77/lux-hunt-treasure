@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { shouldBypassCaptcha } from '@/utils/turnstile';
 
 interface TurnstileWidgetProps {
@@ -11,30 +11,23 @@ interface TurnstileWidgetProps {
 const TurnstileWidget = ({ onVerify, action = 'submit', className = '' }: TurnstileWidgetProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string>('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const errorTimerRef = useRef<number | null>(null);
+  const verificationAttemptedRef = useRef<boolean>(false);
 
   useEffect(() => {
     // Skip turnstile on bypass paths
-    const shouldBypass = shouldBypassCaptcha(window.location.pathname);
-    if (shouldBypass) {
-      console.log("Bypassing Turnstile for", window.location.pathname);
+    if (shouldBypassCaptcha(window.location.pathname)) {
+      console.log('Bypassing Turnstile on developer path:', window.location.pathname);
       onVerify('BYPASS_FOR_DEVELOPMENT');
-      setIsLoading(false);
       return;
     }
 
-    let isMounted = true;
-    let loadTimeout: ReturnType<typeof setTimeout>;
-    
-    // Set a timeout to detect script loading issues
-    loadTimeout = setTimeout(() => {
-      if (isMounted && isLoading && !window.turnstile) {
-        console.warn('Turnstile failed to load in reasonable time, setting bypass');
-        setLoadError('Caricamento sicurezza fallito');
-        // Auto-verify to prevent blocking UI
-        onVerify('TIMEOUT_BYPASS_TOKEN');
-        setIsLoading(false);
+    // Set a fallback in case script loading fails
+    errorTimerRef.current = window.setTimeout(() => {
+      console.warn('Turnstile widget did not load in time, providing bypass token');
+      if (!verificationAttemptedRef.current) {
+        verificationAttemptedRef.current = true;
+        onVerify('BYPASS_DUE_TO_TIMEOUT');
       }
     }, 5000);
 
@@ -46,128 +39,117 @@ const TurnstileWidget = ({ onVerify, action = 'submit', className = '' }: Turnst
       script.defer = true;
       document.head.appendChild(script);
 
-      script.onload = () => {
-        if (isMounted) {
-          console.log('Turnstile script loaded successfully');
-          setIsLoading(false);
-          renderWidget();
-        }
-      };
-      
+      script.onload = renderWidget;
       script.onerror = () => {
-        if (isMounted) {
-          console.error('Failed to load Turnstile script');
-          setLoadError('Errore caricamento sicurezza');
-          setIsLoading(false);
-          // Auto-verify to prevent blocking UI
-          onVerify('ERROR_BYPASS_TOKEN');
+        console.warn('Turnstile script failed to load, providing bypass token');
+        if (!verificationAttemptedRef.current) {
+          verificationAttemptedRef.current = true;
+          onVerify('BYPASS_SCRIPT_LOAD_ERROR');
         }
       };
     } else {
-      console.log('Turnstile already available');
-      setIsLoading(false);
       renderWidget();
     }
 
     function renderWidget() {
-      if (!containerRef.current || !window.turnstile) return;
-      
-      try {
-        window.turnstile.ready(() => {
-          if (!isMounted) return;
-          if (!containerRef.current) return;
-          
-          // Reset if a widget already exists
-          if (widgetIdRef.current) {
-            try {
-              window.turnstile?.reset(widgetIdRef.current);
-            } catch (e) {
-              console.warn('Error resetting Turnstile widget:', e);
-            }
-          }
+      // Clear the fallback timer since the script loaded
+      if (errorTimerRef.current) {
+        clearTimeout(errorTimerRef.current);
+        errorTimerRef.current = null;
+      }
 
-          // Generate a unique containerId
-          const containerId = 'turnstile-container-' + Math.random().toString(36).substring(2, 9);
-          containerRef.current.id = containerId;
-          
-          try {
-            widgetIdRef.current = window.turnstile?.render(containerId, {
-              sitekey: '0x4AAAAAABcmLn-b1NViurvi',
-              theme: 'light',
-              callback: (token: string) => {
-                console.log(`Turnstile verification completed for action: ${action}`);
-                onVerify(token);
-              },
-              'expired-callback': () => {
-                console.log('Turnstile token expired, refreshing...');
-                try {
-                  window.turnstile?.reset(widgetIdRef.current);
-                } catch (e) {
-                  console.warn('Error in expired-callback:', e);
-                }
-              },
-              'error-callback': () => {
-                console.error('Turnstile encountered an error');
-                // Auto-verify to prevent blocking UI
-                onVerify('ERROR_CALLBACK_BYPASS_TOKEN');
+      if (containerRef.current && window.turnstile) {
+        try {
+          window.turnstile.ready(() => {
+            // Reset if a widget already exists
+            if (widgetIdRef.current) {
+              try {
+                window.turnstile?.reset(widgetIdRef.current);
+              } catch (resetError) {
+                console.warn('Error resetting Turnstile widget:', resetError);
               }
-            });
-          } catch (err) {
-            console.error('Error rendering Turnstile:', err);
-            setLoadError('Errore rendering sicurezza');
-            // Auto-verify to prevent blocking UI
-            onVerify('RENDER_ERROR_BYPASS_TOKEN');
+            }
+
+            // Render a new widget - pass the container element ID instead of the DOM reference
+            const containerId = 'turnstile-container-' + Math.random().toString(36).substring(2, 9);
+            containerRef.current!.id = containerId;
+            
+            try {
+              widgetIdRef.current = window.turnstile?.render(`#${containerId}`, {
+                sitekey: '0x4AAAAAABcmLn-b1NViurvi',
+                theme: 'dark',
+                callback: (token: string) => {
+                  console.log(`Turnstile verification completed for action: ${action}`);
+                  verificationAttemptedRef.current = true;
+                  onVerify(token);
+                },
+                'expired-callback': () => {
+                  console.log('Turnstile token expired, refreshing...');
+                  try {
+                    window.turnstile?.reset(widgetIdRef.current);
+                  } catch (resetError) {
+                    console.warn('Error resetting expired Turnstile widget:', resetError);
+                    // Provide bypass token on error
+                    if (!verificationAttemptedRef.current) {
+                      verificationAttemptedRef.current = true;
+                      onVerify('BYPASS_RESET_ERROR');
+                    }
+                  }
+                },
+                'error-callback': () => {
+                  console.warn('Turnstile encountered an error, providing bypass token');
+                  if (!verificationAttemptedRef.current) {
+                    verificationAttemptedRef.current = true;
+                    onVerify('BYPASS_WIDGET_ERROR');
+                  }
+                }
+              });
+            } catch (renderError) {
+              console.warn('Error rendering Turnstile widget:', renderError);
+              if (!verificationAttemptedRef.current) {
+                verificationAttemptedRef.current = true;
+                onVerify('BYPASS_RENDER_ERROR');
+              }
+            }
+          });
+        } catch (turnstileError) {
+          console.warn('Error in Turnstile ready function:', turnstileError);
+          if (!verificationAttemptedRef.current) {
+            verificationAttemptedRef.current = true;
+            onVerify('BYPASS_READY_ERROR');
           }
-        });
-      } catch (err) {
-        console.error('Exception in Turnstile rendering:', err);
-        setLoadError('Eccezione caricamento sicurezza');
-        // Auto-verify to prevent blocking UI
-        onVerify('EXCEPTION_BYPASS_TOKEN');
+        }
+      } else if (!window.turnstile) {
+        console.warn('Turnstile not available after script load, providing bypass token');
+        if (!verificationAttemptedRef.current) {
+          verificationAttemptedRef.current = true;
+          onVerify('BYPASS_NOT_AVAILABLE');
+        }
       }
     }
 
     return () => {
-      isMounted = false;
-      clearTimeout(loadTimeout);
-      
       // Clean up by resetting the widget when component unmounts
       if (widgetIdRef.current && window.turnstile) {
         try {
           window.turnstile.reset(widgetIdRef.current);
-        } catch (e) {
-          console.warn('Error cleaning up Turnstile widget:', e);
+        } catch (error) {
+          console.warn('Error cleaning up Turnstile widget:', error);
         }
+      }
+      
+      // Clear any pending timers
+      if (errorTimerRef.current) {
+        clearTimeout(errorTimerRef.current);
       }
     };
   }, [onVerify, action]);
 
   if (shouldBypassCaptcha(window.location.pathname)) {
-    return (
-      <div className="text-sm text-gray-500 italic px-4 py-2 bg-gray-100/10 rounded-md">
-        Verifica di sicurezza automatica (modalità sviluppo)
-      </div>
-    );
+    return <div className="text-sm text-gray-500 italic">CAPTCHA bypassed for development</div>;
   }
 
-  if (loadError) {
-    return (
-      <div className="text-sm text-yellow-400 px-4 py-2 bg-yellow-400/10 rounded-md">
-        {loadError} - Continua comunque
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-4 animate-pulse">
-        <div className="w-6 h-6 border-2 border-t-cyan-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mr-2"></div>
-        <span className="text-sm text-gray-400">Caricamento verifica sicurezza...</span>
-      </div>
-    );
-  }
-
-  return <div ref={containerRef} className={className} />;
+  return <div ref={containerRef} className={`turnstile-container ${className}`} />;
 };
 
 export default TurnstileWidget;

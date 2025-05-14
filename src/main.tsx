@@ -3,8 +3,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import { Toaster } from 'sonner';
 
-// Funzione migliorata per il rendering dell'app con migliore gestione degli errori
+// Gestione errori globale migliorata
 const renderApp = () => {
   console.log("Attempting to render app");
   
@@ -23,10 +24,11 @@ const renderApp = () => {
     console.log("Creating React root");
     const root = ReactDOM.createRoot(rootElement);
     
-    // Wrapping dell'app in un errore boundary globale
+    // Wrapping dell'app in un errore boundary globale e Toaster per notifiche
     root.render(
       <React.StrictMode>
         <App />
+        <Toaster position="top-right" richColors closeButton />
       </React.StrictMode>
     );
     
@@ -34,52 +36,34 @@ const renderApp = () => {
   } catch (error) {
     console.error("Error rendering app:", error);
     
-    // Migliore visualizzazione errori con dettagli aggiuntivi
+    // Fallback error display migliorato
     if (rootElement) {
       const errorDiv = document.createElement('div');
       errorDiv.style.padding = '20px';
       errorDiv.style.color = 'white';
       errorDiv.style.backgroundColor = 'black';
-      errorDiv.innerHTML = `
-        <h1>Error Loading Application</h1>
-        <p>Please refresh the page or contact support.</p>
-        <p style="color: red; font-size: 14px;">${error?.message || 'Unknown error'}</p>
-      `;
+      errorDiv.innerHTML = '<h1>Error Loading Application</h1><p>Si è verificato un errore durante il caricamento dell\'applicazione. Riprova tra qualche istante o contatta il supporto.</p><button onclick="window.location.reload()" style="background: #333; color: white; padding: 8px 16px; margin-top: 16px; border: none; border-radius: 4px;">Ricarica pagina</button>';
       rootElement.appendChild(errorDiv);
     }
   }
 };
 
-// Assicuriamo che il DOM sia completamente caricato prima di tentare il rendering
+// Assicuriamo che il DOM sia completamente caricato e che l'app sia idratata correttamente
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded");
-    setTimeout(renderApp, 10); // Piccolo timeout per assicurare che tutte le risorse siano disponibili
+    renderApp();
   });
 } else {
   console.log("DOM already loaded");
-  setTimeout(renderApp, 10); // Stesso timeout per consistenza
+  renderApp();
 }
 
 // Gestione errori non catturati
 window.addEventListener('error', (event) => {
   console.error('Global error caught:', event.error);
-  // Logging migliorato con più informazioni di contesto
-  console.error('Error details:', {
-    message: event.error?.message,
-    stack: event.error?.stack,
-    location: window.location.href,
-    timestamp: new Date().toISOString()
-  });
 });
 
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled Promise Rejection:', event.reason);
-  // Logging migliorato
-  console.error('Rejection details:', {
-    message: event.reason?.message,
-    stack: event.reason?.stack,
-    location: window.location.href,
-    timestamp: new Date().toISOString()
-  });
 });

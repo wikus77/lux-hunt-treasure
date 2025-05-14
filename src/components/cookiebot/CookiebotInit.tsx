@@ -1,112 +1,174 @@
 
 import React, { useEffect } from "react";
-import "./cookie-script-fix.css"; // Import the CSS fix
 
 /**
- * Component that manages Cookie Script CMP helper functions
- * This component does NOT load the script (it's in index.html)
- * but only adds helper functionality to check consent
+ * Componente che gestisce l'inizializzazione di Cookie Script CMP
+ * Questo componente assicura che Cookie Script venga inizializzato correttamente
+ * dopo il caricamento completo della pagina
  */
 const CookiebotInit: React.FC = () => {
   useEffect(() => {
-    // Add helper function to check for consent globally
-    if (typeof window !== 'undefined') {
-      // Only add the helper function if it doesn't already exist
-      if (!window.checkCookieConsent) {
-        window.checkCookieConsent = (category: 'necessary' | 'preferences' | 'statistics' | 'marketing') => {
-          if (window.CookieScriptConsent && window.CookieScriptConsent.categories) {
-            return window.CookieScriptConsent.categories[category] === true;
-          }
-          return false;
-        };
-        console.log("Cookie consent helper function initialized");
-      }
-
-      // Fix for Cookie Script buttons not being clickable
-      const fixCookieScriptButtons = () => {
-        const cookieScriptBannerButtons = document.querySelectorAll('.cookiescript_buttons button');
-        if (cookieScriptBannerButtons.length > 0) {
-          console.log("Found Cookie Script buttons, ensuring they are clickable");
-          cookieScriptBannerButtons.forEach(button => {
-            // Ensure buttons have proper z-index and pointer-events
-            if (button instanceof HTMLElement) {
-              button.style.pointerEvents = 'auto';
-              button.style.position = 'relative';
-              button.style.zIndex = '999999';
-            }
-          });
-        }
+    // Verifichiamo se gli script di Cookie Script sono già presenti
+    const checkScripts = () => {
+      const mainScriptExists = document.querySelector('script[src*="cdn.cookie-script.com/s/2db074620da1ba3a3cc6c19025d1d99d.js"]');
+      const reportScriptExists = document.querySelector('script[src*="report.cookie-script.com/r/2db074620da1ba3a3cc6c19025d1d99d.js"]');
+      
+      return {
+        mainScriptExists,
+        reportScriptExists
       };
+    };
 
-      // Check for Cookie Script buttons periodically after page load
-      const buttonCheckInterval = setInterval(() => {
-        const banner = document.querySelector('.cookiescript_badge');
-        if (banner) {
-          fixCookieScriptButtons();
-          clearInterval(buttonCheckInterval);
-        }
-      }, 500);
-
-      // Clear interval after 10 seconds to prevent infinite checking
-      setTimeout(() => clearInterval(buttonCheckInterval), 10000);
-
-      // Listen for Cookie Script events
-      const cookieConsentListener = () => {
-        console.log("Cookie consent updated:", window.CookieScriptConsent);
-        // Check if cookie is actually set
-        const cookieExists = document.cookie.split(';').some(c => c.trim().startsWith('CookieScriptConsent='));
-        console.log("CookieScriptConsent cookie exists:", cookieExists);
-      };
-
-      // Listen for Cookie Script events
-      document.addEventListener('cookieScriptAccept', cookieConsentListener);
-      document.addEventListener('cookieScriptDecline', cookieConsentListener);
-
-      return () => {
-        document.removeEventListener('cookieScriptAccept', cookieConsentListener);
-        document.removeEventListener('cookieScriptDecline', cookieConsentListener);
-        clearInterval(buttonCheckInterval);
-      };
-    }
-  }, []);
-
-  // Debug function to check if the Cookie Script initialization is working
-  useEffect(() => {
-    // Delayed check for Cookie Script initialization
-    const checkTimer = setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        console.log("Cookie Script initialized check:", {
-          scriptLoaded: typeof window.CookieScriptConsent !== 'undefined',
-          bannerVisible: document.querySelector('.cookiescript_badge') !== null,
-          cookieExists: document.cookie.split(';').some(c => c.trim().startsWith('CookieScriptConsent=')),
-        });
+    // Funzione per inizializzare Cookie Script se gli script non sono già presenti
+    const initializeCookieScript = () => {
+      const { mainScriptExists, reportScriptExists } = checkScripts();
+      
+      // Solo se gli script non esistono già, li aggiungiamo
+      if (!mainScriptExists) {
+        console.log("Aggiunta dello script principale Cookie Script (async)");
+        const mainScript = document.createElement('script');
+        mainScript.type = "text/javascript";
+        mainScript.charset = "UTF-8";
+        mainScript.src = "//cdn.cookie-script.com/s/2db074620da1ba3a3cc6c19025d1d99d.js";
+        mainScript.async = true; // Imposta script come asincrono
         
-        // If script is loaded but banner elements might have issues, try to fix them
-        if (typeof window.CookieScriptConsent !== 'undefined') {
-          const banner = document.querySelector('.cookiescript_badge');
-          if (banner) {
-            // Ensure banner is clickable
-            if (banner instanceof HTMLElement) {
-              banner.style.pointerEvents = 'auto';
+        // IMPORTANTE: Prevenire il ricaricamento della pagina quando viene gestito l'evento di consenso
+        window.addEventListener('CookieScriptConsent', function(e) {
+          console.log('Cookie consent handled without page reload');
+          e.preventDefault();
+          return false;
+        }, { once: false, capture: true });
+        
+        // FISSATO: Aggiungere attributi data per prevenire il ricaricamento
+        mainScript.setAttribute('data-no-reload', 'true');
+        mainScript.setAttribute('data-cs-no-reload', 'true');
+        mainScript.setAttribute('data-no-duplicate', 'true'); // Previene duplicati
+        mainScript.setAttribute('data-cookiescript', 'true'); // Identifica lo script correttamente
+        
+        // Funzione di callback dopo il caricamento
+        mainScript.onload = () => {
+          console.log("Cookie Script caricato con successo");
+          // Configurazione dopo il caricamento
+          if (window.CookieScriptConsent) {
+            console.log("CookieScriptConsent trovato, impostazione preferenze");
+            // Impostare cache preferences se disponibili
+            try {
+              const savedPreferences = localStorage.getItem('cookie_preferences');
+              if (savedPreferences) {
+                console.log("Ripristino preferenze cookie salvate");
+              }
+            } catch (e) {
+              console.error("Errore nel ripristino preferenze cookie:", e);
             }
-            
-            // Check buttons specifically
-            const acceptBtn = document.querySelector('.cookiescript_accept');
-            const declineBtn = document.querySelector('.cookiescript_reject');
-            
-            console.log("Cookie Script buttons found:", {
-              acceptButton: acceptBtn !== null,
-              declineButton: declineBtn !== null
-            });
           }
-        }
+        };
+        
+        document.head.appendChild(mainScript);
+      } else {
+        console.log("Script Cookie Script già presente, non verrà reinizializzato");
       }
-    }, 2000);
+      
+      if (!reportScriptExists) {
+        console.log("Aggiunta dello script report Cookie Script (async)");
+        const reportScript = document.createElement('script');
+        reportScript.type = "text/javascript";
+        reportScript.charset = "UTF-8";
+        reportScript.setAttribute("data-cookiescriptreport", "report");
+        reportScript.src = "//report.cookie-script.com/r/2db074620da1ba3a3cc6c19025d1d99d.js";
+        reportScript.async = true; // Imposta script come asincrono
+        document.head.appendChild(reportScript);
+      }
+    };
 
-    return () => clearTimeout(checkTimer);
-  }, []);
+    // Configurare un fallback per i servizi essenziali
+    const setupEssentialFallback = () => {
+      // Se dopo 3 secondi Cookie Script non è ancora inizializzato,
+      // creiamo un fallback per consentire le funzionalità essenziali
+      const fallbackTimer = setTimeout(() => {
+        if (!window.CookieScriptConsent) {
+          console.warn("Cookie Script non inizializzato dopo il timeout, configurazione fallback");
+          // Impostare un oggetto fittizio per evitare errori
+          window.CookieScriptConsent = {
+            categories: {
+              necessary: true,
+              preferences: true,  // Consentiamo le preferenze per default nel fallback
+              statistics: false,  // Aggiunto per conformità con il tipo richiesto
+              marketing: false    // Aggiunto per conformità con il tipo richiesto
+            },
+            // Implementiamo i metodi richiesti come funzioni vuote
+            show: () => {
+              console.log("Fallback CookieScript: show called");
+            },
+            hide: () => {
+              console.log("Fallback CookieScript: hide called");
+            },
+            renew: () => {
+              console.log("Fallback CookieScript: renew called");
+            },
+            withdraw: () => {
+              console.log("Fallback CookieScript: withdraw called");
+            }
+          };
+          
+          // Simulare l'evento di consenso
+          const event = new Event('CookieScriptConsentFallback');
+          document.dispatchEvent(event);
+        }
+      }, 3000);
+      
+      return fallbackTimer;
+    };
 
-  return null; // This component doesn't render anything
+    // FISSATO: Controllo se lo script è già caricato
+    // Esecuzione immediata: se il DOM è già pronto, inizializza subito
+    // SOLO SE non c'è già lo script caricato
+    const { mainScriptExists } = checkScripts();
+    if (mainScriptExists) {
+      console.log("Cookie Script già caricato in precedenza, skip inizializzazione");
+      return;
+    }
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      initializeCookieScript();
+    } else {
+      // Altrimenti, attendi il caricamento del DOM
+      document.addEventListener('DOMContentLoaded', initializeCookieScript);
+    }
+
+    // Setup fallback per funzionalità essenziali
+    const fallbackTimer = setupEssentialFallback();
+
+    // CORREZIONE: Gestire l'evento di consenso a livello globale
+    const handleCookieConsentEvent = (e: Event) => {
+      console.log('Cookie consent event detected');
+      e.preventDefault();
+      // Non ricaricare la pagina, consentire all'applicazione di continuare
+      return false;
+    };
+
+    // Aggiungere handler per diversi eventi di consenso cookie
+    window.addEventListener('CookieScriptConsent', handleCookieConsentEvent, { capture: true });
+    document.addEventListener('CookieScriptConsent', handleCookieConsentEvent, { capture: true });
+    
+    // Add helper function to check for consent globally
+    window.checkCookieConsent = (category: 'necessary' | 'preferences' | 'statistics' | 'marketing') => {
+      if (window.CookieScriptConsent && window.CookieScriptConsent.categories) {
+        return window.CookieScriptConsent.categories[category] === true;
+      }
+      // Fallback: allow necessary, block others
+      return category === 'necessary';
+    };
+
+    // Cleanup della sottoscrizione all'evento e timer
+    return () => {
+      document.removeEventListener('DOMContentLoaded', initializeCookieScript);
+      window.removeEventListener('CookieScriptConsent', handleCookieConsentEvent, { capture: true });
+      document.removeEventListener('CookieScriptConsent', handleCookieConsentEvent, { capture: true });
+      clearTimeout(fallbackTimer);
+    };
+  }, []); // Eseguito solo una volta al montaggio del componente
+
+  return null; // Questo componente non renderizza nulla
 };
 
 export default CookiebotInit;

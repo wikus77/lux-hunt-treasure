@@ -11,7 +11,6 @@ interface PreRegistrationData {
   name: string;
   email: string;
   referrer?: string | null;
-  created_by?: string | null; // Add created_by field to track ownership
 }
 
 serve(async (req) => {
@@ -46,7 +45,7 @@ serve(async (req) => {
     const requestData = await req.json();
     console.log("Received pre-registration request:", requestData);
     
-    const { name, email, referrer, created_by } = requestData as PreRegistrationData;
+    const { name, email, referrer } = requestData as PreRegistrationData;
     
     // Validation
     if (!name || !email) {
@@ -134,8 +133,7 @@ serve(async (req) => {
         email: email.trim(),
         referrer: referrer?.trim(),
         referral_code: referralCode,
-        credits: 100,
-        created_by: created_by // Store the user ID who created this record
+        credits: 100
       }])
       .select();
     

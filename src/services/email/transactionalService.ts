@@ -6,21 +6,11 @@ import { generateWelcomeEmail, generateNotificationEmail } from "./templates";
 /**
  * Send a welcome email to a new user
  */
-export const sendWelcomeEmail = async (recipient: EmailRecipient, referralCode?: string) => {
-  console.log("Sending welcome email with referral code:", referralCode);
-  
+export const sendWelcomeEmail = async (recipient: EmailRecipient) => {
   return sendEmail('welcome', {
     to: [recipient],
     subject: 'Benvenuto in M1SSION!',
-    from: {
-      Email: "contact@m1ssion.com", // Changed from noreply@m1ssion.com to contact@m1ssion.com
-      Name: "M1SSION"
-    },
-    templateId: 6974914, // Use the Mailjet template ID
-    variables: {
-      name: recipient.name,
-      referral_code: referralCode || "MISSIONE"
-    },
+    htmlContent: generateWelcomeEmail(recipient.name),
     trackOpens: true,
     trackClicks: true,
     customCampaign: 'welcome_email',
@@ -42,10 +32,6 @@ export const sendNotificationEmail = async (
 ) => {
   return sendEmail('notification', {
     to: [recipient],
-    from: {
-      Email: "contact@m1ssion.com", // Changed from noreply@m1ssion.com to contact@m1ssion.com
-      Name: "M1SSION"
-    },
     subject,
     htmlContent: generateNotificationEmail(subject, message),
     trackOpens: true,
