@@ -40,9 +40,6 @@ const AgentRegistrationSuccess: React.FC<AgentRegistrationSuccessProps> = ({ ref
     }
   };
   
-  // Important: Removing any duplicate notification/alert that was here
-  // The toast notification is already shown in the parent component
-  
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
