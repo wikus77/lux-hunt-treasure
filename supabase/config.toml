@@ -49,3 +49,6 @@ verify_jwt = false
 
 [edge-functions.send-agent-confirmation]
 verify_jwt = false
+
+[edge-functions.test-fallback-email]
+verify_jwt = false
