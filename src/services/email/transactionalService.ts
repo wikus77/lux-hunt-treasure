@@ -12,6 +12,10 @@ export const sendWelcomeEmail = async (recipient: EmailRecipient, referralCode?:
   return sendEmail('welcome', {
     to: [recipient],
     subject: 'Benvenuto in M1SSION!',
+    from: {
+      Email: "contact@m1ssion.com", // Changed from noreply@m1ssion.com to contact@m1ssion.com
+      Name: "M1SSION"
+    },
     templateId: 6974914, // Use the Mailjet template ID
     variables: {
       name: recipient.name,
@@ -38,6 +42,10 @@ export const sendNotificationEmail = async (
 ) => {
   return sendEmail('notification', {
     to: [recipient],
+    from: {
+      Email: "contact@m1ssion.com", // Changed from noreply@m1ssion.com to contact@m1ssion.com
+      Name: "M1SSION"
+    },
     subject,
     htmlContent: generateNotificationEmail(subject, message),
     trackOpens: true,

@@ -57,7 +57,7 @@ export const generatePreRegistrationEmailHtml = (data: PreRegistrationEmailData)
       
       <div class="footer">
         <p>&copy; 2025 M1SSION. Tutti i diritti riservati.</p>
-        <p>Questo messaggio è stato inviato a seguito della tua registrazione su M1SSION.</p>
+        <p>Questo messaggio è stato inviato da contact@m1ssion.com a seguito della tua registrazione su M1SSION.</p>
       </div>
     </div>
   </body>

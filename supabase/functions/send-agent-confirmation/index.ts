@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "./cors.ts";
 import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
@@ -21,7 +22,7 @@ async function sendEmailViaMailjet(data: AgentData) {
     Messages: [
       {
         From: {
-          Email: "noreply@m1ssion.com",
+          Email: "contact@m1ssion.com", // Changed from noreply@m1ssion.com to contact@m1ssion.com
           Name: "M1SSION",
         },
         To: [
@@ -45,6 +46,7 @@ async function sendEmailViaMailjet(data: AgentData) {
   };
 
   console.log("Sending Mailjet request with data:", JSON.stringify(mailjetData, null, 2));
+  console.log("Using sender email: contact@m1ssion.com"); // Added logging for sender verification
 
   const mailjetResponse = await fetch("https://api.mailjet.com/v3.1/send", {
     method: "POST",
@@ -121,14 +123,17 @@ async function sendEmailViaIonosSMTP(data: AgentData) {
   `;
 
   const result = await client.send({
-    from: "noreply@m1ssion.com",
+    from: "contact@m1ssion.com", // Changed from noreply@m1ssion.com to contact@m1ssion.com
     to: data.email,
     subject: "Benvenuto, Agente di M1SSION!",
     html: htmlContent,
     headers: {
       "X-Fallback": "IONOS",
+      "X-Sender": "contact@m1ssion.com" // Added for tracking
     },
   });
+
+  console.log("Using IONOS SMTP sender: contact@m1ssion.com"); // Added logging for sender verification
 
   await client.close();
   console.log("IONOS SMTP email sent successfully", { recipient: data.email });

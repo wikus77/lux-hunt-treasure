@@ -14,7 +14,7 @@ export const sendEmail = async (type: EmailType, options: SendEmailOptions): Pro
       type,
       to: options.to,
       from: options.from || {
-        Email: "noreply@m1ssion.com",
+        Email: "contact@m1ssion.com", // Changed from noreply@m1ssion.com to contact@m1ssion.com
         Name: "M1SSION",
       },
       subject: options.subject,
@@ -38,7 +38,7 @@ export const sendEmail = async (type: EmailType, options: SendEmailOptions): Pro
         type,
         ...options,
         from: options.from || {
-          Email: "noreply@m1ssion.com",
+          Email: "contact@m1ssion.com", // Changed from noreply@m1ssion.com to contact@m1ssion.com
           Name: "M1SSION",
         },
         // Ensure tracking is enabled by default
