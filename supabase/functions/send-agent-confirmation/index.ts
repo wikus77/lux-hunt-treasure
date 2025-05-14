@@ -13,6 +13,7 @@ const mailjetApiKey = Deno.env.get("MJ_APIKEY_PUBLIC");
 const mailjetSecretKey = Deno.env.get("MJ_APIKEY_PRIVATE");
 const ionosSmtpUser = Deno.env.get("IONOS_SMTP_USER");
 const ionosSmtpPass = Deno.env.get("IONOS_SMTP_PASS");
+const useIonosOnly = Deno.env.get("USE_IONOS_ONLY") === "true";
 
 // Function to send email via Mailjet API
 async function sendEmailViaMailjet(data: AgentData) {
@@ -22,7 +23,7 @@ async function sendEmailViaMailjet(data: AgentData) {
     Messages: [
       {
         From: {
-          Email: "contact@m1ssion.com", // Changed from noreply@m1ssion.com to contact@m1ssion.com
+          Email: "contact@m1ssion.com",
           Name: "M1SSION",
         },
         To: [
@@ -46,7 +47,7 @@ async function sendEmailViaMailjet(data: AgentData) {
   };
 
   console.log("Sending Mailjet request with data:", JSON.stringify(mailjetData, null, 2));
-  console.log("Using sender email: contact@m1ssion.com"); // Added logging for sender verification
+  console.log("Using sender email: contact@m1ssion.com");
 
   const mailjetResponse = await fetch("https://api.mailjet.com/v3.1/send", {
     method: "POST",
@@ -70,8 +71,15 @@ async function sendEmailViaMailjet(data: AgentData) {
 
 // Function to send email via IONOS SMTP (fallback)
 async function sendEmailViaIonosSMTP(data: AgentData) {
-  console.log("Attempting to send email via IONOS SMTP fallback");
+  console.log(`IONOS SMTP email sending to: ${data.email}`);
+  console.log(`Subject: Benvenuto, Agente di M1SSION!`);
   
+  if (!ionosSmtpUser || !ionosSmtpPass) {
+    const error = "Missing IONOS SMTP credentials";
+    console.error(error);
+    throw new Error(error);
+  }
+
   const client = new SmtpClient();
   await client.connectTLS({
     hostname: "smtp.ionos.it",
@@ -109,7 +117,7 @@ async function sendEmailViaIonosSMTP(data: AgentData) {
             <p>Grazie per esserti pre-iscritto a M1SSION. Sei ufficialmente parte di questa avventura esclusiva.</p>
             
             <p>Ecco il tuo codice di invito personale. Condividilo con i tuoi amici per guadagnare crediti bonus:</p>
-            <div class="referral_code">${data.referral_code}</div>
+            <div class="referral-code">${data.referral_code}</div>
             
             <p>Ricorda: <strong>IT IS POSSIBLE</strong></p>
           </div>
@@ -122,23 +130,30 @@ async function sendEmailViaIonosSMTP(data: AgentData) {
     </html>
   `;
 
-  const result = await client.send({
-    from: "contact@m1ssion.com", // Changed from noreply@m1ssion.com to contact@m1ssion.com
-    to: data.email,
-    subject: "Benvenuto, Agente di M1SSION!",
-    html: htmlContent,
-    headers: {
-      "X-Fallback": "IONOS",
-      "X-Sender": "contact@m1ssion.com" // Added for tracking
-    },
-  });
+  try {
+    const result = await client.send({
+      from: "contact@m1ssion.com",
+      to: data.email,
+      subject: "Benvenuto, Agente di M1SSION!",
+      html: htmlContent,
+      headers: {
+        "X-Sender": "contact@m1ssion.com",
+        "X-Transport": "IONOS-SMTP-Direct"
+      },
+    });
 
-  console.log("Using IONOS SMTP sender: contact@m1ssion.com"); // Added logging for sender verification
+    console.log("Using IONOS SMTP sender: contact@m1ssion.com");
+    console.log(`IONOS SMTP email status: success`);
 
-  await client.close();
-  console.log("IONOS SMTP email sent successfully", { recipient: data.email });
-  
-  return result;
+    await client.close();
+    console.log("IONOS SMTP email sent successfully", { recipient: data.email });
+    
+    return result;
+  } catch (error) {
+    console.error(`IONOS SMTP email status: error - ${error.message}`);
+    await client.close();
+    throw error;
+  }
 }
 
 serve(async (req) => {
@@ -218,66 +233,33 @@ serve(async (req) => {
       );
     }
 
-    // Implement the primary-fallback logic
-    try {
-      // 1. Primary: Try sending via Mailjet
-      const mailjetResponse = await sendEmailViaMailjet({ email, name, referral_code });
+    // Check if we should use IONOS SMTP only
+    if (useIonosOnly) {
+      console.log("USE_IONOS_ONLY is true, skipping Mailjet");
       
-      if (mailjetResponse.status >= 200 && mailjetResponse.status < 300 && 
-          mailjetResponse.data?.Messages?.[0]?.Status === "success") {
-        
-        console.log("Email sent successfully via Mailjet to:", email);
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: "Email sent successfully via Mailjet",
-            provider: "mailjet",
-            data: mailjetResponse.data,
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-      } else {
-        throw new Error(`Mailjet failed with status ${mailjetResponse.status}`);
-      }
-      
-    } catch (mailjetError) {
-      console.error("Mailjet error:", mailjetError);
-      
-      // 2. Fallback: Try sending via IONOS SMTP
       try {
-        if (!ionosSmtpUser || !ionosSmtpPass) {
-          throw new Error("IONOS SMTP credentials not configured");
-        }
+        await sendEmailViaIonosSMTP({ email, name, referral_code });
         
-        const ionosResult = await sendEmailViaIonosSMTP({ email, name, referral_code });
-        
-        console.log("Fallback email sent via IONOS SMTP to:", email);
+        console.log("Email sent successfully via IONOS SMTP to:", email);
         return new Response(
           JSON.stringify({
             success: true,
-            message: "Fallback email sent via IONOS SMTP",
+            message: "Email sent via IONOS SMTP (Mailjet bypassed)",
             provider: "ionos",
-            fallback: true,
+            direct: true,
           }),
           {
             status: 200,
             headers: { "Content-Type": "application/json", ...corsHeaders },
           }
         );
-        
       } catch (ionosError) {
-        console.error("IONOS SMTP fallback also failed:", ionosError);
+        console.error("IONOS SMTP error:", ionosError);
         return new Response(
           JSON.stringify({
             success: false,
-            error: "Email failed on both Mailjet and IONOS SMTP",
-            details: {
-              mailjetError: mailjetError.message,
-              ionosError: ionosError.message
-            }
+            error: "Email sending failed via IONOS SMTP",
+            details: ionosError.message
           }),
           {
             status: 500,
@@ -285,8 +267,77 @@ serve(async (req) => {
           }
         );
       }
+    } 
+    // Normal flow with Mailjet primary and IONOS fallback
+    else {
+      try {
+        // 1. Primary: Try sending via Mailjet
+        const mailjetResponse = await sendEmailViaMailjet({ email, name, referral_code });
+        
+        if (mailjetResponse.status >= 200 && mailjetResponse.status < 300 && 
+            mailjetResponse.data?.Messages?.[0]?.Status === "success") {
+          
+          console.log("Email sent successfully via Mailjet to:", email);
+          return new Response(
+            JSON.stringify({
+              success: true,
+              message: "Email sent successfully via Mailjet",
+              provider: "mailjet",
+              data: mailjetResponse.data,
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+            }
+          );
+        } else {
+          throw new Error(`Mailjet failed with status ${mailjetResponse.status}`);
+        }
+        
+      } catch (mailjetError) {
+        console.error("Mailjet error:", mailjetError);
+        
+        // 2. Fallback: Try sending via IONOS SMTP
+        try {
+          if (!ionosSmtpUser || !ionosSmtpPass) {
+            throw new Error("IONOS SMTP credentials not configured");
+          }
+          
+          await sendEmailViaIonosSMTP({ email, name, referral_code });
+          
+          console.log("Fallback email sent via IONOS SMTP to:", email);
+          return new Response(
+            JSON.stringify({
+              success: true,
+              message: "Fallback email sent via IONOS SMTP",
+              provider: "ionos",
+              fallback: true,
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+            }
+          );
+          
+        } catch (ionosError) {
+          console.error("IONOS SMTP fallback also failed:", ionosError);
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: "Email failed on both Mailjet and IONOS SMTP",
+              details: {
+                mailjetError: mailjetError.message,
+                ionosError: ionosError.message
+              }
+            }),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+            }
+          );
+        }
+      }
     }
-    
   } catch (error) {
     console.error("Error processing request:", error);
     let errorMessage = "Unknown error";
