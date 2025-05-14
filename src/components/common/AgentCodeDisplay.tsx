@@ -15,15 +15,36 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   // Helper function to generate a new agent code
-  const generateAgentCode = () => {
-    const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let result = 'AG-';
+  const generateAgentCode = async () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const RESERVED_ADMIN_CODE = 'AG-X019';
     
-    for (let i = 0; i < 5; i++) {
-      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    let code;
+    let exists = true;
+    
+    while (exists) {
+      const random = Array.from({ length: 5 }, () =>
+        characters[Math.floor(Math.random() * characters.length)]
+      ).join('');
+      
+      code = `AG-${random}`;
+      
+      // Skip if this is the reserved admin code
+      if (code === RESERVED_ADMIN_CODE) {
+        continue;
+      }
+      
+      // Check if the code already exists
+      const { data } = await supabase
+        .from('profiles')
+        .select('agent_code')
+        .eq('agent_code', code)
+        .maybeSingle();
+        
+      exists = !!data;
     }
     
-    return result;
+    return code;
   };
   
   useEffect(() => {
@@ -43,7 +64,7 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
           } else if (profile && profile.agent_code) {
             setAgentCode(profile.agent_code);
           } else {
-            const newAgentCode = generateAgentCode();
+            const newAgentCode = await generateAgentCode();
             setAgentCode(newAgentCode);
             
             const { error: updateError } = await supabase

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -54,11 +53,34 @@ export const useAgentCode = () => {
             console.error("Error from edge function:", fnError);
             
             // Fallback: Generate a code on the client and save it
-            const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            let newCode = 'AG-';
+            // This will use the improved agent code generation logic
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            const RESERVED_ADMIN_CODE = 'AG-X019';
             
-            for (let i = 0; i < 5; i++) {
-              newCode += characters.charAt(Math.floor(Math.random() * characters.length));
+            let newCode;
+            let isUnique = false;
+            
+            // Keep generating until we have a unique code that's not the admin code
+            while (!isUnique) {
+              const random = Array.from({ length: 5 }, () =>
+                characters[Math.floor(Math.random() * characters.length)]
+              ).join('');
+              
+              newCode = `AG-${random}`;
+              
+              // Skip if this is the admin code
+              if (newCode === RESERVED_ADMIN_CODE) {
+                continue;
+              }
+              
+              // Verify the code doesn't already exist
+              const { data: existingCode } = await supabase
+                .from('profiles')
+                .select('agent_code')
+                .eq('agent_code', newCode)
+                .maybeSingle();
+                
+              isUnique = !existingCode;
             }
 
             // Save the generated code to the user's profile

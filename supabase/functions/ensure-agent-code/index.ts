@@ -5,35 +5,40 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.43.1'
 
-// Generate a unique agent code
-const generateAgentCode = (): string => {
-  const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let result = 'AG-';
+// Generate a unique agent code with exclusion for admin code
+const generateAgentCode = async (supabase: any): Promise<string> => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const RESERVED_ADMIN_CODE = 'AG-X019';
   
-  for (let i = 0; i < 5; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  
-  return result;
-};
+  let code: string;
+  let exists = true;
 
-// Ensure the agent code is unique
-const ensureUniqueCode = async (supabase: any, code: string): Promise<string> => {
-  // Check if the code already exists
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('agent_code', code)
-    .limit(1);
+  while (exists) {
+    // Generate a random code
+    const random = Array.from({ length: 5 }, () =>
+      characters[Math.floor(Math.random() * characters.length)]
+    ).join('');
 
-  if (error) {
-    console.error('Error checking code uniqueness:', error);
-    throw error;
-  }
+    code = `AG-${random}`;
+    
+    // Skip if this is the reserved admin code
+    if (code === RESERVED_ADMIN_CODE) {
+      continue;
+    }
 
-  // If the code exists, generate a new one recursively
-  if (data && data.length > 0) {
-    return ensureUniqueCode(supabase, generateAgentCode());
+    // Check if the code already exists
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('agent_code', code)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error checking code uniqueness:', error);
+      throw error;
+    }
+
+    exists = !!data;
   }
 
   return code;
@@ -69,7 +74,7 @@ Deno.serve(async (req) => {
       agentCode = profile.agent_code;
     } else {
       // Generate a new unique agent code
-      agentCode = await ensureUniqueCode(supabase, generateAgentCode());
+      agentCode = await generateAgentCode(supabase);
       
       // Update the user's profile with the new agent code
       const { error: updateError } = await supabase
