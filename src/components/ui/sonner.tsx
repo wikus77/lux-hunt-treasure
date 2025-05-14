@@ -7,13 +7,13 @@ type ToasterProps = React.ComponentProps<typeof Sonner>
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
 
-  // Modified the position to be top-right only
-  // This ensures toast notifications only appear in one location
+  // Garantisco che la posizione sia sempre top-right
+  // Questo assicura che le notifiche appaiano solo in questa posizione
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
-      position="top-right" // Explicitly set position to top-right
+      position="top-right" // Posizione fissa a top-right
       toastOptions={{
         classNames: {
           toast:

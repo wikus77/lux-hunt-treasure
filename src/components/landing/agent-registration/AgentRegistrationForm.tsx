@@ -73,7 +73,7 @@ const AgentRegistrationForm: React.FC<AgentRegistrationFormProps> = ({
       console.log("Agent registration result:", result);
       
       if (result.success) {
-        // IMPORTANT: No toast notification here - parent component handles notification
+        // IMPORTANTE: Nessuna notifica toast qui - il componente padre gestisce la notifica
         console.log("Registration successful, referral code:", result.referralCode);
         
         // Reset form
@@ -85,10 +85,10 @@ const AgentRegistrationForm: React.FC<AgentRegistrationFormProps> = ({
           onSuccess(result.referralCode);
         }
       } else {
-        // Only show error notifications directly in the form
+        // Mostro solo le notifiche di errore direttamente nel form
         console.error("Registration failed:", result.error);
         
-        // We use the toast import here but ONLY for errors
+        // Uso l'importazione di toast qui ma SOLO per errori
         const { toast } = await import("sonner");
         toast.error("Errore nella registrazione", {
           description: result.error || "Si è verificato un errore. Riprova più tardi."
@@ -97,7 +97,7 @@ const AgentRegistrationForm: React.FC<AgentRegistrationFormProps> = ({
     } catch (error: any) {
       console.error("Exception in agent registration form submission:", error);
       
-      // We use the toast import here but ONLY for errors
+      // Uso l'importazione di toast qui ma SOLO per errori
       const { toast } = await import("sonner");
       toast.error("Errore imprevisto", {
         description: "Si è verificato un errore nella registrazione. Riprova più tardi."

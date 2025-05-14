@@ -12,21 +12,21 @@ const AgentRegistrationContainer: React.FC<AgentRegistrationContainerProps> = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   
-  // IMPORTANT: This is the ONLY place where success notification should appear
+  // Questo è l'UNICO punto in cui dovrebbe apparire la notifica di successo
   const handleRegistrationSuccess = (code: string) => {
-    // Log implementation for debugging the toast flow
+    // Log per il debugging del flusso dei toast
     console.log("Registration success handled in AgentRegistrationContainer - showing toast notification");
     
-    // SINGLE notification point - this is the ONLY place where success toast should appear
+    // UNICO punto di notifica - questo è l'UNICO posto dove il toast di successo dovrebbe apparire
     toast.success("Registrazione completata!", {
       description: "Sei ufficialmente un agente M1SSION. Controlla la tua email."
     });
     
-    // Update state to show success view
+    // Aggiorna lo stato per mostrare la vista di successo
     setReferralCode(code);
     setIsSubmitted(true);
     
-    // Log success for debugging
+    // Log di successo per il debugging
     console.log("Registration success handled in AgentRegistrationContainer");
   };
   

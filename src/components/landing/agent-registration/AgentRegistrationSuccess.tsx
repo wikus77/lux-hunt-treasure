@@ -40,8 +40,8 @@ const AgentRegistrationSuccess: React.FC<AgentRegistrationSuccessProps> = ({ ref
     }
   };
   
-  // The duplicate toast notification was previously here and has been removed
-  // The registration success toast is already displayed by the parent component (AgentRegistrationContainer)
+  // Il toast di successo è già mostrato dal componente parent (AgentRegistrationContainer)
+  // Ho rimosso qualsiasi duplicazione di toast qui
   
   return (
     <motion.div
