@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import LandingHeader from "@/components/landing/LandingHeader";
@@ -66,33 +67,6 @@ const IndexContent = ({
     return <div className="min-h-screen bg-black"></div>;
   }
 
-  // Function to scroll to registration form
-  const scrollToRegistration = () => {
-    const preRegistrationSection = document.getElementById('pre-registration-form');
-    if (preRegistrationSection) {
-      preRegistrationSection.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  // Effect to fix page reload issues
-  useEffect(() => {
-    // Remove cached scroll position
-    if (typeof window !== 'undefined') {
-      window.history.scrollRestoration = 'manual';
-      localStorage.removeItem('scrollPosition');
-    }
-    
-    // Reset scroll position on mount
-    window.scrollTo(0, 0);
-  }, []);
-
-  // MIGLIORAMENTO: Log di debug per la diagnostica di errori di render
-  React.useEffect(() => {
-    console.log("MainContent - stato render:", { 
-      contentLoaded
-    });
-  }, [contentLoaded]);
-
   return (
     <>
       <BackgroundParallax />
@@ -128,86 +102,86 @@ const IndexContent = ({
         onCountdownComplete={() => {}} // Handled in parent component
       />
       
-      {/* Main content sections */}
-      <div className="flex flex-col min-h-screen">
-        <PresentationSection visible={true} />
-        
-        {/* Pre-registration form */}
-        <div id="pre-registration-form">
-          <PreRegistrationForm />
-        </div>
-        
-        {/* Game Explanation Section */}
-        <div id="game-explanation">
-          <GameExplanationSection />
-        </div>
-        
-        {/* How It Works Section */}
-        <HowItWorks onRegisterClick={scrollToRegistration} countdownCompleted={countdownCompleted} />
-        
-        {/* "Vuoi provarci? Fallo. Ma fallo per vincere." Section */}
-        <section className="w-full relative overflow-hidden py-16 bg-black">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-3xl md:text-5xl font-orbitron text-cyan-400 mb-8 text-center">
-              Vuoi provarci? Fallo. Ma fallo per vincere.
-            </div>
-            
-            <CarBrandSelection />
+      {/* Presentation Section */}
+      <PresentationSection visible={true} />
+      
+      {/* NUOVA SEZIONE: Form di pre-registrazione */}
+      <PreRegistrationForm />
+      
+      {/* Game Explanation Section */}
+      <div id="game-explanation">
+        <GameExplanationSection />
+      </div>
+      
+      {/* How It Works Section */}
+      <HowItWorks onRegisterClick={() => {
+        const preRegistrationSection = document.getElementById('pre-registration-form');
+        if (preRegistrationSection) {
+          preRegistrationSection.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          onRegisterClick();
+        }
+      }} countdownCompleted={countdownCompleted} />
+      
+      {/* "Vuoi provarci? Fallo. Ma fallo per vincere." Section */}
+      <section className="w-full relative overflow-hidden py-16 bg-black">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-3xl md:text-5xl font-orbitron text-cyan-400 mb-8 text-center">
+            Vuoi provarci? Fallo. Ma fallo per vincere.
           </div>
-        </section>
-        
-        {/* Newsletter Section */}
-        <NewsletterSection countdownCompleted={countdownCompleted} />
-        
-        {/* Subscription Section */}
-        <SubscriptionSection countdownCompleted={countdownCompleted} />
-        
-        <CTASection onRegisterClick={scrollToRegistration} countdownCompleted={countdownCompleted} />
-        
-        {/* KYC Verification Section */}
-        <div className="py-12 bg-black">
-          <div className="max-w-3xl mx-auto px-4 text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 mb-4">
-              <IdCard className="w-6 h-6 text-purple-400" />
-            </div>
-            
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
-              Verifica la tua identità
-            </h2>
-            
-            <p className="text-white/70 mb-6">
-              Per garantire un'esperienza di gioco sicura e conforme alle normative,
-              è necessario completare la verifica dell'identità prima di ricevere premi.
-            </p>
-            
-            <Link to="/kyc">
-              <Button className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600">
-                Vai alla verifica identità
-              </Button>
-            </Link>
-          </div>
+          
+          <CarBrandSelection />
         </div>
-        
-        {/* Disponibile su sezione */}
-        <div className="py-12 bg-gradient-to-b from-black to-[#06071b]">
-          <div className="max-w-3xl mx-auto px-4 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
-              Disponibile su
-            </h2>
-            
-            <MobileStoreButtons className="justify-center mx-auto max-w-md" />
-            
-            <p className="text-white/50 mt-6 text-sm">
-              Scarica l'app per avere accesso a tutte le funzionalità e ricevere notifiche in tempo reale.
-            </p>
+      </section>
+      
+      {/* Newsletter Section */}
+      <NewsletterSection countdownCompleted={countdownCompleted} />
+      
+      {/* Subscription Section */}
+      <SubscriptionSection countdownCompleted={countdownCompleted} />
+      
+      <CTASection onRegisterClick={onRegisterClick} countdownCompleted={countdownCompleted} />
+      
+      {/* KYC Verification Section */}
+      <div className="py-12 bg-black">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 mb-4">
+            <IdCard className="w-6 h-6 text-purple-400" />
           </div>
-        </div>
-        
-        {/* Footer - now properly positioned */}
-        <div className="mt-auto">
-          <LandingFooter />
+          
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
+            Verifica la tua identità
+          </h2>
+          
+          <p className="text-white/70 mb-6">
+            Per garantire un'esperienza di gioco sicura e conforme alle normative,
+            è necessario completare la verifica dell'identità prima di ricevere premi.
+          </p>
+          
+          <Link to="/kyc">
+            <Button className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600">
+              Vai alla verifica identità
+            </Button>
+          </Link>
         </div>
       </div>
+      
+      {/* Disponibile su sezione */}
+      <div className="py-12 bg-gradient-to-b from-black to-[#06071b]">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
+            Disponibile su
+          </h2>
+          
+          <MobileStoreButtons className="justify-center mx-auto max-w-md" />
+          
+          <p className="text-white/50 mt-6 text-sm">
+            Scarica l'app per avere accesso a tutte le funzionalità e ricevere notifiche in tempo reale.
+          </p>
+        </div>
+      </div>
+      
+      <LandingFooter />
 
       {/* Prize Details Modal */}
       <PrizeDetailsModal 

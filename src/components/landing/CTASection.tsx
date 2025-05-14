@@ -1,3 +1,4 @@
+
 import { motion } from "framer-motion";
 
 interface CTASectionProps {
@@ -7,19 +8,24 @@ interface CTASectionProps {
 
 const CTASection = ({ onRegisterClick, countdownCompleted = false }: CTASectionProps) => {
   const handleRegisterClick = () => {
+    // Sempre scorrere fino al form di registrazione, indipendentemente dallo stato del countdown
     const preRegistrationSection = document.getElementById('pre-registration-form');
     if (preRegistrationSection) {
       preRegistrationSection.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // Fallback al handler originale
+      onRegisterClick();
     }
   };
 
   return (
     <motion.section 
-      className="py-20 px-4 relative overflow-hidden bg-gradient-to-b from-blue-900/20 to-black"
+      className="relative py-16 px-4 overflow-hidden bg-gradient-to-b from-blue-900/20 to-black"
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
       viewport={{ once: true }}
+      data-parallax="scroll"
     >
       {/* Animated background elements with parallax effect */}
       <div className="absolute inset-0 overflow-hidden">
@@ -69,19 +75,20 @@ const CTASection = ({ onRegisterClick, countdownCompleted = false }: CTASectionP
           Unisciti a noi e inizia l'avventura! Registrati per essere il primo a sapere quando inizia M1SSION!
         </motion.p>
         
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, ease: "easeOut", delay: 0.4 }}
+        <motion.button
+          className="px-8 py-3 rounded-full font-bold bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black hover:shadow-[0_0_25px_rgba(0,229,255,0.6)] transition-all duration-300"
+          onClick={handleRegisterClick}
+          initial={{ scale: 0.9, opacity: 0 }}
+          whileInView={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
           viewport={{ once: true }}
+          data-parallax="scroll"
+          data-parallax-speed="0.3"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <button 
-            onClick={handleRegisterClick}
-            className="bg-gradient-to-r from-cyan-400 to-blue-600 text-black px-8 py-4 rounded-full font-bold text-xl flex items-center gap-2 hover:shadow-[0_0_20px_rgba(0,229,255,0.5)]"
-          >
-            REGISTRATI ORA
-          </button>
-        </motion.div>
+          REGISTRATI ORA
+        </motion.button>
       </div>
     </motion.section>
   );

@@ -15,12 +15,10 @@ const LandingFooter = () => {
         
         <div className="flex flex-col md:flex-row justify-between items-center w-full mb-8">
           <div className="mb-6 md:mb-0">
-            <Link to="/" className="block">
-              <h2 className="text-2xl font-bold">
-                <span className="text-[#00E5FF]">M1</span>
-                <span className="text-white">SSION</span>
-              </h2>
-            </Link>
+            <h2 className="text-2xl font-bold">
+              <span className="text-[#00E5FF]">M1</span>
+              <span className="text-white">SSION</span>
+            </h2>
           </div>
           <div className="flex flex-wrap gap-4 justify-center md:justify-end">
             <Link to="/privacy" className="text-sm text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
