@@ -14,6 +14,9 @@ const AgentRegistrationContainer: React.FC<AgentRegistrationContainerProps> = ({
   
   // IMPORTANT: This is the ONLY place where success notification should appear
   const handleRegistrationSuccess = (code: string) => {
+    // Log implementation for debugging the toast flow
+    console.log("Registration success handled in AgentRegistrationContainer - showing toast notification");
+    
     // SINGLE notification point - this is the ONLY place where success toast should appear
     toast.success("Registrazione completata!", {
       description: "Sei ufficialmente un agente M1SSION. Controlla la tua email."

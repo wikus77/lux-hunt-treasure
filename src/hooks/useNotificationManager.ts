@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useProfileNotifications } from "@/hooks/profile/useProfileNotifications";
 import { useNotifications } from "@/hooks/useNotifications";
+import { toast } from "sonner"; // Use sonner toast consistently
 
 export function useNotificationManager() {
   const { showNotifications, setShowNotifications } = useProfileNotifications();
@@ -45,6 +46,11 @@ export function useNotificationManager() {
 
   // Create notification with proper type checking
   const createNotification = useCallback((title: string, description: string) => {
+    // Use sonner toast instead of any potential custom toast implementation
+    toast(title, {
+      description
+    });
+    
     return addNotification({ title, description });
   }, [addNotification]);
 

@@ -40,7 +40,7 @@ const AgentRegistrationSuccess: React.FC<AgentRegistrationSuccessProps> = ({ ref
     }
   };
   
-  // NOTE: Removing any duplicate toast notification that was here
+  // The duplicate toast notification was previously here and has been removed
   // The registration success toast is already displayed by the parent component (AgentRegistrationContainer)
   
   return (

@@ -1,16 +1,19 @@
 
 import { useTheme } from "next-themes"
-import { Toaster as Sonner, toast } from "sonner"
+import { Toaster as Sonner } from "sonner"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
 
+  // Modified the position to be top-right only
+  // This ensures toast notifications only appear in one location
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      position="top-right" // Explicitly set position to top-right
       toastOptions={{
         classNames: {
           toast:
@@ -27,4 +30,6 @@ const Toaster = ({ ...props }: ToasterProps) => {
   )
 }
 
+// Export the connected toast function from sonner
+import { toast } from "sonner"
 export { Toaster, toast }
