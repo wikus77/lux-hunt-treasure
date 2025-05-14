@@ -31,6 +31,12 @@ export const registerUser = async (userData: PreRegistrationFormData) => {
   const referralCode = generateReferralCode(userData.name);
   
   try {
+    // Get the current authenticated user if available
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+    
+    console.log("Current authenticated user ID:", userId || "Not authenticated");
+    
     const { data, error } = await supabase
       .from('pre_registrations')
       .insert([
@@ -38,7 +44,8 @@ export const registerUser = async (userData: PreRegistrationFormData) => {
           name: userData.name.trim(),
           email: userData.email.toLowerCase().trim(),
           referral_code: referralCode,
-          credits: 100
+          credits: 100,
+          user_id: userId || null // Include the user_id if user is authenticated
         }
       ])
       .select()
@@ -57,7 +64,8 @@ export const registerUser = async (userData: PreRegistrationFormData) => {
       action: 'pre_registration',
       metadata: {
         name: userData.name,
-        referral_code: referralCode
+        referral_code: referralCode,
+        user_id: userId || null
       }
     });
     
@@ -77,10 +85,18 @@ export const registerUser = async (userData: PreRegistrationFormData) => {
 export const registerUserViaEdgeFunction = async (userData: PreRegistrationFormData) => {
   try {
     console.log("Attempting registration via edge function");
+    
+    // Get the current authenticated user if available
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+    
+    console.log("Current authenticated user ID for edge function:", userId || "Not authenticated");
+    
     const { data, error } = await supabase.functions.invoke('handle-pre-registration', {
       body: {
         name: userData.name.trim(),
-        email: userData.email.toLowerCase().trim()
+        email: userData.email.toLowerCase().trim(),
+        user_id: userId || null // Include the user_id if user is authenticated
       }
     });
     

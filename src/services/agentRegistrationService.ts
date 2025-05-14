@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { generateReferralCode } from "@/components/landing/pre-registration/referralUtils";
 import { logActivity } from "./activityLogService";
@@ -19,6 +18,12 @@ export const registerAgent = async (data: AgentRegistrationData): Promise<{succe
     const referralCode = generateReferralCode(name);
     
     console.log(`Registering new agent: ${name} (${email}) with referral code: ${referralCode}`);
+    
+    // Get the current authenticated user if available
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+    
+    console.log("Current authenticated user ID:", userId || "Not authenticated");
     
     // Check if this email is already registered
     const { data: existingAgent, error: checkError } = await supabase
@@ -42,7 +47,8 @@ export const registerAgent = async (data: AgentRegistrationData): Promise<{succe
         action: 'agent_registration_repeat',
         metadata: {
           name,
-          existing_referral_code: existingAgent.referral_code
+          existing_referral_code: existingAgent.referral_code,
+          user_id: userId || null
         }
       });
       
@@ -65,7 +71,8 @@ export const registerAgent = async (data: AgentRegistrationData): Promise<{succe
           email: email.toLowerCase().trim(),
           referral_code: referralCode,
           credits: 100,
-          confirmed: true
+          confirmed: true,
+          user_id: userId || null // Include the user_id if user is authenticated
         }
       ])
       .select()
@@ -84,7 +91,8 @@ export const registerAgent = async (data: AgentRegistrationData): Promise<{succe
       action: 'agent_registration',
       metadata: {
         name,
-        referral_code: referralCode
+        referral_code: referralCode,
+        user_id: userId || null
       }
     });
     

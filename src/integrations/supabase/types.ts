@@ -321,6 +321,7 @@ export type Database = {
           name: string
           referral_code: string | null
           referrer: string | null
+          user_id: string | null
         }
         Insert: {
           confirmed?: boolean
@@ -332,6 +333,7 @@ export type Database = {
           name: string
           referral_code?: string | null
           referrer?: string | null
+          user_id?: string | null
         }
         Update: {
           confirmed?: boolean
@@ -343,6 +345,7 @@ export type Database = {
           name?: string
           referral_code?: string | null
           referrer?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
