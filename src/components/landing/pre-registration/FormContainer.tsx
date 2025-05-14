@@ -5,13 +5,15 @@ import { UserPlus } from "lucide-react";
 
 interface FormContainerProps {
   className?: string;
+  id?: string; // Added id prop
   children: React.ReactNode;
 }
 
-const FormContainer: React.FC<FormContainerProps> = ({ className, children }) => {
+const FormContainer: React.FC<FormContainerProps> = ({ className, id, children }) => {
   return (
     <section className="py-16 px-4 bg-gradient-to-b from-blue-900/20 to-black">
       <motion.div 
+        id={id} // Using the id prop
         className={`max-w-4xl mx-auto glass-card p-8 sm:p-10 relative overflow-hidden ${className || ""}`}
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
