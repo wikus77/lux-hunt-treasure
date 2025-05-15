@@ -10,23 +10,7 @@ const MobileStoreButtons: React.FC<MobileStoreButtonsProps> = ({ className = '' 
   return (
     <div className={`flex flex-col sm:flex-row items-center gap-4 ${className}`}>
       <motion.a 
-        href="https://play.google.com/store/apps/details?id=com.tuonome.app" 
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-full sm:w-auto"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <img 
-          src="/googleplay-button.png" 
-          alt="Get it on Google Play" 
-          className="w-full max-w-[180px] h-auto block" 
-          style={{ minHeight: '40px' }}
-        />
-      </motion.a>
-      
-      <motion.a 
-        href="https://apps.apple.com/app/id0000000000"
+        href="https://apps.apple.com/app/id0000000000" 
         target="_blank"
         rel="noopener noreferrer"
         className="w-full sm:w-auto"
@@ -36,6 +20,22 @@ const MobileStoreButtons: React.FC<MobileStoreButtonsProps> = ({ className = '' 
         <img 
           src="/appstore-button.png" 
           alt="Download on the App Store" 
+          className="w-full max-w-[180px] h-auto block" 
+          style={{ minHeight: '40px' }}
+        />
+      </motion.a>
+      
+      <motion.a 
+        href="https://play.google.com/store/apps/details?id=com.tuonome.app"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-full sm:w-auto"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <img 
+          src="/googleplay-button.png" 
+          alt="Get it on Google Play" 
           className="w-full max-w-[180px] h-auto block" 
           style={{ minHeight: '40px' }}
         />
