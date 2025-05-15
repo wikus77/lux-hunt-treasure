@@ -45,7 +45,7 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6 p-1">
           {prizes.map((prize, index) => (
             <div 
               key={index} 

@@ -18,8 +18,11 @@ const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
         Vuoi provarci? Fallo. Ma fallo per vincere.
       </h2>
       
-      {/* Car Brand Selection */}
-      <CarBrandSelection />
+      <div className="rounded-xl overflow-hidden bg-black/30 backdrop-blur-sm border border-white/10 p-2"
+           style={{ boxShadow: "0 8px 32px rgba(0, 0, 0, 0.15), 0 0 8px rgba(0, 209, 255, 0.05)" }}>
+        {/* Car Brand Selection */}
+        <CarBrandSelection />
+      </div>
     </motion.div>
   );
 };

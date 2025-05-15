@@ -2,10 +2,42 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
+import AgentInfoPopup from "@/components/agent/AgentInfoPopup";
+import useSoundEffects from "@/hooks/useSoundEffects";
 
 const AgentBadge = () => {
   const [agentCode, setAgentCode] = useState<string | null>(null);
   const [show, setShow] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const isMobile = useIsMobile();
+  const { playSound } = useSoundEffects();
+
+  const handleMouseDown = () => {
+    if (isMobile) {
+      // Start timer for long press on mobile
+      const timer = setTimeout(() => {
+        setShowPopup(true);
+        playSound("agentClick", 0.3);
+      }, 500);
+      setLongPressTimer(timer);
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+  };
+
+  const handleClick = () => {
+    if (!isMobile) {
+      setShowPopup(true);
+      playSound("agentClick", 0.3);
+    }
+  };
 
   useEffect(() => {
     const fetchAgentCode = async () => {
@@ -48,18 +80,33 @@ const AgentBadge = () => {
   }, []);
 
   return (
-    <div
-      className={`
-        flex items-center gap-2 px-3 py-1
-        text-sm font-mono text-white
-        border border-white/20 shadow-md
-        bg-[#0e0e0e]/80 rounded-full transition-opacity duration-500
-        ${show ? "opacity-100 glow" : "opacity-0"}
-      `}
-    >
-      <span className="text-cyan-400">M1-AGENT-{agentCode ?? "?????"}</span>
-      <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-    </div>
+    <>
+      <div
+        className={`
+          flex items-center gap-2 px-3 py-1
+          text-sm font-mono text-white 
+          border border-white/20 shadow-md
+          bg-[#0e0e0e]/80 rounded-full transition-opacity duration-500
+          ${show ? "opacity-100 glow" : "opacity-0"}
+          cursor-pointer hover:border-cyan-400/30 hover:bg-[#0e0e0e]/90
+        `}
+        onClick={handleClick}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onTouchStart={handleMouseDown}
+        onTouchEnd={handleMouseUp}
+        onTouchCancel={handleMouseUp}
+      >
+        <span className="text-cyan-400">M1-AGENT-{agentCode ?? "?????"}</span>
+        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+      </div>
+
+      <AgentInfoPopup 
+        isOpen={showPopup} 
+        onClose={() => setShowPopup(false)} 
+        agentCode={agentCode} 
+      />
+    </>
   );
 };
 

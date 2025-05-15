@@ -7,8 +7,9 @@ export const MysteryPrizesSection = () => {
   return (
     <section className="w-full px-0 py-4">
       <h2 className="text-xl font-bold mb-4 px-4">Premi Misteriosi dei Prossimi Eventi</h2>
-      <div className="relative w-full">
-        <Carousel>
+      <div className="relative w-full p-2 rounded-xl bg-black/30 backdrop-blur-sm border border-white/10"
+           style={{ boxShadow: "0 8px 32px rgba(0, 0, 0, 0.15), 0 0 8px rgba(0, 209, 255, 0.05)" }}>
+        <Carousel className="w-full">
           <CarouselContent>
             {mysteryPrizes.map((prize, index) => (
               <CarouselItem key={index} className="w-full max-w-full">
