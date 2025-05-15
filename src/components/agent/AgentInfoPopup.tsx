@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Search, FileEdit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface AgentInfoPopupProps {
@@ -125,7 +125,7 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
             role="dialog"
             aria-label="Dynamic Island agente"
           >
-            <div className="bg-black/80 backdrop-blur-md border border-cyan-500/30 rounded-[inherit] overflow-hidden p-6 text-white h-full w-full">
+            <div className="bg-zinc-900/95 backdrop-blur-md border border-cyan-500/30 rounded-[inherit] overflow-hidden p-6 text-white h-full w-full">
               <motion.div
                 variants={contentVariants}
                 className="flex justify-between items-center mb-4"
@@ -146,22 +146,41 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
                 className="space-y-4"
                 variants={contentVariants}
               >
-                <div className="bg-black/40 border border-cyan-800/30 rounded-lg p-3">
-                  <p className="text-sm text-gray-400">Codice agente:</p>
-                  <p className="font-mono text-cyan-400 text-lg">{agentCode ?? "?????"}</p>
-                </div>
-                
-                <div className="bg-black/40 border border-cyan-800/30 rounded-lg p-3">
-                  <p className="text-sm text-gray-400">Status:</p>
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                    <p className="text-green-400">Attivo</p>
+                <div className="flex gap-4 items-center">
+                  {/* Placeholder for agent profile image */}
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500 to-blue-700 flex items-center justify-center text-xl font-bold border-2 border-white/20">
+                    {agentCode ? agentCode.substring(0, 1) : "?"}
+                  </div>
+                  
+                  <div className="flex-1">
+                    <div className="bg-black/40 border border-cyan-800/30 rounded-lg p-3 mb-2">
+                      <p className="text-sm text-gray-400">Codice agente:</p>
+                      <p className="font-mono text-cyan-400 text-lg">{agentCode ?? "?????"}</p>
+                    </div>
+                    
+                    <div className="bg-black/40 border border-cyan-800/30 rounded-lg p-3">
+                      <p className="text-sm text-gray-400">Missione in corso:</p>
+                      <p className="text-white">Operazione Venezia</p>
+                    </div>
                   </div>
                 </div>
                 
-                <p className="text-sm text-gray-400">
-                  Il tuo codice identificativo personale nella rete M1SSION. Questo codice è univoco e ti identifica nel sistema.
-                </p>
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <Button 
+                    className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90"
+                  >
+                    <Search size={16} />
+                    <span>Accedi ai tuoi indizi</span>
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    className="flex items-center gap-2 border-cyan-500/50 hover:bg-black/50"
+                  >
+                    <FileEdit size={16} />
+                    <span>Modifica profilo</span>
+                  </Button>
+                </div>
               </motion.div>
               
               <motion.div variants={contentVariants}>

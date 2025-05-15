@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AgentInfoPopup from "@/components/agent/AgentInfoPopup";
 import useSoundEffects from "@/hooks/useSoundEffects";
@@ -97,7 +97,7 @@ const AgentBadge = () => {
     <>
       <motion.div
         className={`
-          fixed top-4 left-1/2 -translate-x-1/2 z-50
+          fixed top-4 z-50
           flex items-center gap-2 px-3 py-1
           text-sm font-mono text-white 
           border border-white/20 shadow-md
@@ -131,6 +131,11 @@ const AgentBadge = () => {
         transition={{ 
           duration: 0.3, 
           ease: [0.4, 0, 0.2, 1]
+        }}
+        style={{
+          position: "fixed",
+          left: "50%",
+          transform: "translateX(-50%)"
         }}
       >
         <span className="text-cyan-400">M1-AGENT-{agentCode ?? "?????"}</span>
