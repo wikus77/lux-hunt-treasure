@@ -21,7 +21,7 @@ const AppStoreButtons = () => {
         <img 
           src="/appstore-button.png" 
           alt="Download on the App Store"
-          className={`h-14 ${isActive ? 'hover:opacity-90 transition-opacity' : ''}`}
+          className="h-14 w-auto"
         />
       </a>
       <a 
@@ -34,7 +34,7 @@ const AppStoreButtons = () => {
         <img 
           src="/googleplay-button.png" 
           alt="Get it on Google Play" 
-          className={`h-14 ${isActive ? 'hover:opacity-90 transition-opacity' : ''}`}
+          className="h-14 w-auto"
         />
       </a>
     </div>
