@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PreRegistrationFormData } from "./types";
@@ -275,6 +276,7 @@ export const updateUserReferrer = async (userEmail: string, referrerEmail: strin
 
 /**
  * Add referral credits to the referrer
+ * @param params Object with user_email and credits_to_add
  */
 export const addReferralCredits = async (
   params: { user_email: string; credits_to_add: number }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -76,8 +76,8 @@ const fetchPreRegistrations = async () => {
       referral_code, 
       credits, 
       confirmed, 
-      user_id, 
-      profiles (agent_code)
+      user_id,
+      user_id
     `)
     .order('created_at', { ascending: true });
   
@@ -85,12 +85,33 @@ const fetchPreRegistrations = async () => {
     throw error;
   }
   
-  // Elabora i dati per includere il numero progressivo e formattare il campo agent_code
-  return data.map((item, index) => ({
-    ...item,
-    numero_progressivo: index + 1,
-    agent_code: item.profiles?.agent_code || null
-  }));
+  // Fetch agent codes separately for each user that has a user_id
+  const preRegistrationsWithAgentCodes = await Promise.all(
+    data.map(async (item, index) => {
+      let agentCode = null;
+      
+      // Only query profiles for items with user_id
+      if (item.user_id) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('agent_code')
+          .eq('id', item.user_id)
+          .maybeSingle();
+          
+        if (!profileError && profileData) {
+          agentCode = profileData.agent_code;
+        }
+      }
+      
+      return {
+        ...item,
+        numero_progressivo: index + 1,
+        agent_code: agentCode
+      };
+    })
+  );
+  
+  return preRegistrationsWithAgentCodes;
 };
 
 const AdminDashboard: React.FC = () => {
@@ -337,7 +358,7 @@ const AdminDashboard: React.FC = () => {
       {isLoading ? (
         <p>Caricamento...</p>
       ) : error ? (
-        <p>Errore: {error.message}</p>
+        <p>Errore: {(error as Error).message}</p>
       ) : (
         <Table>
           <TableCaption>Elenco delle pre-registrazioni.</TableCaption>

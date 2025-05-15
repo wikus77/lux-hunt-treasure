@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormErrors, PreRegistrationFormData } from "./types";
@@ -179,8 +178,11 @@ export const usePreRegistration = () => {
       // Aggiorna il record dell'utente con il referrer
       await updateUserReferrer(email, referrerData.email);
       
-      // Aggiungi crediti al referrer
-      await addReferralCredits(referrerData.email);
+      // Aggiungi crediti al referrer (passando un oggetto invece di una stringa)
+      await addReferralCredits({
+        user_email: referrerData.email,
+        credits_to_add: 50
+      });
       
       toast.success("Codice invito applicato con successo!", {
         description: "Hai assegnato 50 crediti bonus al tuo amico!"
