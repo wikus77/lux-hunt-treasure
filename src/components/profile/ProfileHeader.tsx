@@ -38,7 +38,7 @@ const ProfileHeader = ({
     // Typewriter effect for agent dossier
     const timer = setTimeout(() => {
       setShowCodeText(true);
-    }, 300);
+    }, 1000);
     
     return () => clearTimeout(timer);
   }, []);

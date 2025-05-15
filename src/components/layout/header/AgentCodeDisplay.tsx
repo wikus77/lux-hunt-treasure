@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/auth';
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +10,7 @@ interface AgentCodeDisplayProps {
 const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({ agentCode: propAgentCode }) => {
   const [agentCode, setAgentCode] = useState<string | null>(propAgentCode || null);
   const [isCodeVisible, setIsCodeVisible] = useState(false);
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated, user } = useAuthContext();
   
   // Special admin constant
   const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';
@@ -25,27 +24,23 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({ agentCode: propAgen
 
     const fetchAgentCode = async () => {
       // Only fetch agent code if user is authenticated
-      if (isAuthenticated) {
+      if (isAuthenticated && user) {
         try {
-          const { data: { user } } = await supabase.auth.getUser();
+          // Check if it's the special admin user
+          if (user.email?.toLowerCase() === SPECIAL_ADMIN_EMAIL.toLowerCase()) {
+            setAgentCode(SPECIAL_ADMIN_CODE);
+            return;
+          }
           
-          if (user) {
-            // Check if it's the special admin user
-            if (user.email?.toLowerCase() === SPECIAL_ADMIN_EMAIL.toLowerCase()) {
-              setAgentCode(SPECIAL_ADMIN_CODE);
-              return;
-            }
+          // Otherwise retrieve the agent code from profile
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('agent_code')
+            .eq('id', user.id)
+            .single();
             
-            // Altrimenti recupera il codice agente dal profilo
-            const { data, error } = await supabase
-              .from('profiles')
-              .select('agent_code')
-              .eq('id', user.id)
-              .single();
-              
-            if (data?.agent_code) {
-              setAgentCode(data.agent_code);
-            }
+          if (data?.agent_code) {
+            setAgentCode(data.agent_code);
           }
         } catch (error) {
           console.error("Error fetching agent code:", error);
@@ -61,7 +56,7 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({ agentCode: propAgen
     }, 1000);
     
     return () => clearTimeout(timer);
-  }, [isAuthenticated, propAgentCode]);
+  }, [isAuthenticated, propAgentCode, user]);
 
   return (
     <div className="flex items-center justify-center">

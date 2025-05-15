@@ -17,7 +17,7 @@ interface UnifiedHeaderProps {
 
 const UnifiedHeader = ({ profileImage, onClickMail, leftComponent }: UnifiedHeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated, hasRole } = useAuthContext();
+  const { isAuthenticated, hasRole, user } = useAuthContext();
   const location = useLocation();
   const isAdmin = hasRole("admin");
   const { agentCode } = useAgentCode();
@@ -26,6 +26,15 @@ const UnifiedHeader = ({ profileImage, onClickMail, leftComponent }: UnifiedHead
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
+  // Special admin constant
+  const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';
+  const SPECIAL_ADMIN_CODE = 'X0197';
+  
+  // Determine the correct agent code to display
+  const displayAgentCode = user?.email?.toLowerCase() === SPECIAL_ADMIN_EMAIL.toLowerCase() 
+    ? SPECIAL_ADMIN_CODE 
+    : agentCode;
   
   return (
     <header className="sticky top-0 z-50 w-full backdrop-blur bg-opacity-80 bg-black border-b border-gray-800">
@@ -42,8 +51,7 @@ const UnifiedHeader = ({ profileImage, onClickMail, leftComponent }: UnifiedHead
         </div>
         
         <div className="hidden flex-1 md:flex justify-center">
-          {/* Passaggio del codice agente reale dell'utente */}
-          <AgentCodeDisplay agentCode={agentCode} />
+          <AgentCodeDisplay agentCode={displayAgentCode} />
         </div>
 
         <div className="flex flex-1 items-center justify-end space-x-3 md:space-x-4">

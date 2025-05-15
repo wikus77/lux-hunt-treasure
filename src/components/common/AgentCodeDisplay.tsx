@@ -18,12 +18,12 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
 
   // Special admin constants
   const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';
-  const SPECIAL_ADMIN_CODE = 'AG-X019';
+  const SPECIAL_ADMIN_CODE = 'X0197';
   
   // Helper function to generate a new agent code
   const generateAgentCode = async () => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const RESERVED_ADMIN_CODE = 'AG-X019';
+    const RESERVED_ADMIN_CODE = 'X0197';
     
     let code;
     let exists = true;

@@ -1,3 +1,4 @@
+
 import { PlusCircle, Filter, Map, HelpCircle, Zap } from "lucide-react";
 import { MapFilters } from "@/components/maps/MapFilters";
 import { toast } from "sonner";
@@ -78,7 +79,7 @@ const MapHeader = ({
     // Typewriter effect for agent dossier
     const timer = setTimeout(() => {
       setShowCodeText(true);
-    }, 300);
+    }, 1000);
     
     return () => clearTimeout(timer);
   }, []);

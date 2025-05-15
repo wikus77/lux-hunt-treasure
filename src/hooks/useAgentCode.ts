@@ -21,38 +21,12 @@ export const useAgentCode = () => {
         }
 
         // Special case for admin user
-        const RESERVED_ADMIN_EMAIL = 'wikus77@hotmail.it';
-        const RESERVED_ADMIN_CODE = 'AG-X019';
+        const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';
+        const SPECIAL_ADMIN_CODE = 'X0197';
 
         // First, check if the user is the admin
-        if (user.email?.toLowerCase() === RESERVED_ADMIN_EMAIL.toLowerCase()) {
-          // Check if they already have the reserved code
-          const { data: adminProfile, error: adminProfileError } = await supabase
-            .from('profiles')
-            .select('agent_code')
-            .eq('id', user.id)
-            .single();
-            
-          if (adminProfileError) {
-            console.error("Error fetching admin profile:", adminProfileError);
-            setError(new Error("Failed to fetch agent code"));
-          } else if (!adminProfile || adminProfile.agent_code !== RESERVED_ADMIN_CODE) {
-            // If admin doesn't have the reserved code, set it
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({ agent_code: RESERVED_ADMIN_CODE })
-              .eq('id', user.id);
-              
-            if (updateError) {
-              console.error("Error assigning admin code:", updateError);
-              setError(new Error("Failed to assign admin code"));
-            } else {
-              setAgentCode(RESERVED_ADMIN_CODE);
-            }
-          } else {
-            // Admin already has the correct code
-            setAgentCode(RESERVED_ADMIN_CODE);
-          }
+        if (user.email?.toLowerCase() === SPECIAL_ADMIN_EMAIL.toLowerCase()) {
+          setAgentCode(SPECIAL_ADMIN_CODE);
           setIsLoading(false);
           return;
         }
@@ -91,7 +65,7 @@ export const useAgentCode = () => {
             
             // Fallback: Generate a code on the client and save it
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            const RESERVED_ADMIN_CODE = 'AG-X019';
+            const RESERVED_ADMIN_CODE = 'X0197';
             
             let newCode;
             let isUnique = false;
