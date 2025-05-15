@@ -7,7 +7,8 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import Auth from './pages/Auth';
 import Profile from './pages/Profile';
-import { Toaster } from "sonner";  // Importiamo Toaster da sonner
+import TestAgent from './pages/TestAgent';
+import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
@@ -25,8 +26,8 @@ function App() {
               <Route path="/home" element={<Home />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/test-agent" element={<TestAgent />} />
             </Routes>
-            {/* Unico Toaster nell'app, in posizione top-right */}
             <Toaster position="top-right" />
           </ErrorBoundary>
         </AuthProvider>

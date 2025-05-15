@@ -1,4 +1,4 @@
-// src/components/AgentBadge.tsx
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -49,5 +49,3 @@ const AgentBadge = () => {
 };
 
 export default AgentBadge;
-
-
