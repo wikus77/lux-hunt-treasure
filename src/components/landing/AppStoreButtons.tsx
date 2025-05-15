@@ -12,27 +12,27 @@ const AppStoreButtons = () => {
   return (
     <div className="flex flex-col sm:flex-row gap-4 justify-center">
       <a 
-        href={isActive ? "https://apps.apple.com/app/idXXXXXXXXX" : undefined}
+        href={isActive ? "https://apps.apple.com/app/id0000000000" : undefined}
         target={isActive ? "_blank" : undefined}
         rel={isActive ? "noopener noreferrer" : undefined}
         className={`${!isActive && 'pointer-events-none opacity-80'}`}
         aria-label="Download on App Store"
       >
         <img 
-          src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" 
+          src="/appstore-button.png" 
           alt="Download on the App Store"
           className={`h-14 ${isActive ? 'hover:opacity-90 transition-opacity' : ''}`}
         />
       </a>
       <a 
-        href={isActive ? "https://play.google.com/store/apps/details?id=com.m1ssion.app" : undefined}
+        href={isActive ? "https://play.google.com/store/apps/details?id=com.tuonome.app" : undefined}
         target={isActive ? "_blank" : undefined}
         rel={isActive ? "noopener noreferrer" : undefined}
         className={`${!isActive && 'pointer-events-none opacity-80'}`}
         aria-label="Get it on Google Play"
       >
         <img 
-          src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" 
+          src="/googleplay-button.png" 
           alt="Get it on Google Play" 
           className={`h-14 ${isActive ? 'hover:opacity-90 transition-opacity' : ''}`}
         />
