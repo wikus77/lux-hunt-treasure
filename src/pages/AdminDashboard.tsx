@@ -36,9 +36,9 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       // Utilizziamo la view che è stata spostata nello schema private
-      const { data, error } = await supabase
-        .from('private.pre_registrations_with_index')
-        .select('*')
+     const { data, error } = await supabase
+  .from<any>("private.pre_registrations_with_index")
+  .select("*");
         .order('created_at', { ascending: true });
       
       if (error) {
