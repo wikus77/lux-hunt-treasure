@@ -10,6 +10,7 @@ import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 import HomeLayout from "@/components/home/HomeLayout";
+import DynamicIsland from "@/components/DynamicIsland";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
 
@@ -88,6 +89,8 @@ const Home = () => {
       <Helmet>
         <title>M1SSION - Home</title>
       </Helmet>
+      
+      <DynamicIsland />
       
       <AnimatePresence>
         {isLoaded && (
