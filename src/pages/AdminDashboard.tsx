@@ -1,5 +1,4 @@
-
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuthContext } from "@/contexts/auth";
 import { useNavigate, Outlet } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,9 +7,15 @@ import { AdminMissions } from "@/components/admin/AdminMissions";
 import { AdminPushNotifications } from "@/components/admin/AdminPushNotifications";
 import { AdminEmailSender } from "@/components/admin/AdminEmailSender";
 import { AdminAppMessages } from "@/components/admin/AdminAppMessages";
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
 
 const AdminDashboard = () => {
   const { hasRole, userRole, isAuthenticated, isRoleLoading } = useAuthContext();
@@ -19,7 +24,6 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Redirect non-admin users away from this page
     if (!isRoleLoading && isAuthenticated && !hasRole("admin")) {
       console.log("Non-admin user attempting to access admin page, redirecting to access-denied");
       navigate("/access-denied");
@@ -35,12 +39,11 @@ const AdminDashboard = () => {
   const fetchPreRegistrations = async () => {
     setLoading(true);
     try {
-      // Utilizziamo la view che è stata spostata nello schema private
-     const { data, error } = await supabase
-  .from<any>("private.pre_registrations_with_index")
-  .select("*");
-        .order('created_at', { ascending: true });
-      
+      const { data, error } = await supabase
+        .from<any>("private.pre_registrations_with_index")
+        .select("*")
+        .order("created_at", { ascending: true });
+
       if (error) {
         console.error("Error fetching pre-registrations:", error);
       } else {
@@ -53,7 +56,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Show loading state while checking permissions
   if (isRoleLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-black">
@@ -63,7 +65,6 @@ const AdminDashboard = () => {
     );
   }
 
-  // Allow rendering only for admin users
   if (!hasRole("admin")) {
     return null;
   }
@@ -71,7 +72,7 @@ const AdminDashboard = () => {
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
-      
+
       <Tabs defaultValue="missions" className="w-full">
         <TabsList className="grid w-full grid-cols-5 mb-8">
           <TabsTrigger value="missions">Missioni</TabsTrigger>
@@ -80,19 +81,19 @@ const AdminDashboard = () => {
           <TabsTrigger value="messages">Messaggi In-App</TabsTrigger>
           <TabsTrigger value="registrations">Pre-Registrazioni</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="missions">
           <AdminMissions />
         </TabsContent>
-        
+
         <TabsContent value="push">
           <AdminPushNotifications />
         </TabsContent>
-        
+
         <TabsContent value="email">
           <AdminEmailSender />
         </TabsContent>
-        
+
         <TabsContent value="messages">
           <AdminAppMessages />
         </TabsContent>
@@ -100,7 +101,7 @@ const AdminDashboard = () => {
         <TabsContent value="registrations">
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-bold mb-4">Pre-Registrazioni</h2>
-            
+
             {loading ? (
               <div className="flex justify-center py-8">
                 <Spinner className="h-8 w-8" />
@@ -118,26 +119,36 @@ const AdminDashboard = () => {
                       <TableHead>Data Creazione</TableHead>
                       <TableHead>Confermato</TableHead>
                       <TableHead>Crediti</TableHead>
+                      <TableHead>Dossier</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {preRegistrations.map((registration) => (
                       <TableRow key={registration.id}>
-                        <TableCell className="font-medium">{registration.numero_progressivo}</TableCell>
+                        <TableCell>{registration.numero_progressivo}</TableCell>
                         <TableCell>{registration.name}</TableCell>
                         <TableCell>{registration.email}</TableCell>
-                        <TableCell>{registration.referrer || '-'}</TableCell>
-                        <TableCell>{registration.referral_code || '-'}</TableCell>
+                        <TableCell>{registration.referrer || "-"}</TableCell>
+                        <TableCell>{registration.referral_code || "-"}</TableCell>
                         <TableCell>
-                          {new Date(registration.created_at).toLocaleString('it-IT')}
+                          {new Date(registration.created_at).toLocaleString("it-IT")}
                         </TableCell>
-                        <TableCell>{registration.confirmed ? '✅' : '❌'}</TableCell>
+                        <TableCell>{registration.confirmed ? "✅" : "❌"}</TableCell>
                         <TableCell>{registration.credits}</TableCell>
+                        <TableCell>
+                          {registration.agent_code ? (
+                            <span className="font-mono text-xs bg-gray-200 px-2 py-1 rounded">
+                              {registration.agent_code}
+                            </span>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                     {preRegistrations.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-4">
+                        <TableCell colSpan={9} className="text-center py-4">
                           Nessuna pre-registrazione trovata
                         </TableCell>
                       </TableRow>
@@ -149,8 +160,7 @@ const AdminDashboard = () => {
           </div>
         </TabsContent>
       </Tabs>
-      
-      {/* Allow for nested routes if needed */}
+
       <Outlet />
     </div>
   );
