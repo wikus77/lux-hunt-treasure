@@ -110,27 +110,24 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
           
           {/* Dynamic Island Container */}
           <motion.div
-            className="fixed left-1/2 z-[60] origin-center"
-            style={{
-              top: "16px",
-              transformOrigin: "center center",
-              transform: "translateX(-50%)",
-              overflow: "hidden",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3), 0 0 16px rgba(0, 209, 255, 0.15)"
-            }}
-            variants={dynamicIslandVariants}
+            className="fixed z-[60] origin-center"
             initial="hidden"
             animate="visible"
             exit="exit"
+            variants={dynamicIslandVariants}
+            style={{
+              top: "16px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              transformOrigin: "center center",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3), 0 0 16px rgba(0, 209, 255, 0.15)"
+            }}
             role="dialog"
-            aria-label="Informazioni agente"
+            aria-label="Dynamic Island agente"
           >
             <div className="bg-black/80 backdrop-blur-md border border-cyan-500/30 rounded-[inherit] overflow-hidden p-6 text-white h-full w-full">
               <motion.div
                 variants={contentVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
                 className="flex justify-between items-center mb-4"
               >
                 <h3 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
@@ -148,9 +145,6 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
               <motion.div 
                 className="space-y-4"
                 variants={contentVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
               >
                 <div className="bg-black/40 border border-cyan-800/30 rounded-lg p-3">
                   <p className="text-sm text-gray-400">Codice agente:</p>
@@ -170,12 +164,7 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
                 </p>
               </motion.div>
               
-              <motion.div
-                variants={contentVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-              >
+              <motion.div variants={contentVariants}>
                 <Button 
                   onClick={onClose} 
                   className="w-full mt-6 bg-gradient-to-r from-cyan-500 to-blue-500 hover:opacity-90 text-black"

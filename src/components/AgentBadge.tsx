@@ -114,6 +114,24 @@ const AgentBadge = () => {
         onTouchCancel={handleMouseUp}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
+        initial={{ 
+          opacity: 0,
+          top: "16px",
+          left: "50%",
+          x: "-50%",
+          transformOrigin: "center center"
+        }}
+        animate={{ 
+          opacity: show ? 1 : 0,
+          top: "16px",
+          left: "50%",
+          x: "-50%",
+          transformOrigin: "center center"
+        }}
+        transition={{ 
+          duration: 0.3, 
+          ease: [0.4, 0, 0.2, 1]
+        }}
       >
         <span className="text-cyan-400">M1-AGENT-{agentCode ?? "?????"}</span>
         <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
