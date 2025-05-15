@@ -41,18 +41,17 @@ const AgentBadge = () => {
     <div
       className={`
         flex items-center gap-2 px-3 py-1
-        bg-[#0e0e0e]/80 text-white font-mono text-sm
-        border border-white/20 shadow-md
-        rounded-full
+        text-sm font-mono text-white
+        bg-[#0e0e0e]/80 border border-white/20
+        rounded-full shadow-md
         ${show ? "animate-glow" : "opacity-0"}
       `}
     >
-      <span className="text-cyan-400">
-        M1-AGENT-{agentCode ?? "?????"}
-      </span>
+      <span className="text-cyan-400">M1-AGENT-{agentCode ?? "?????"}</span>
       <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
     </div>
   );
 };
 
 export default AgentBadge;
+
