@@ -548,11 +548,15 @@ export type Database = {
     }
     Functions: {
       add_referral_credits: {
-        Args: { referrer_email: string; credits_to_add: number }
+        Args: { user_email: string; credits_to_add: number }
+        Returns: undefined
+      }
+      handle_new_user: {
+        Args: { new_user_id: string; user_email: string }
         Returns: undefined
       }
       update_user_subscription_tier: {
-        Args: { user_id_param: string; new_tier: string }
+        Args: { target_user_id: string; new_tier: string }
         Returns: undefined
       }
     }

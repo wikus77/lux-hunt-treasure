@@ -7,6 +7,7 @@ import MobileMenuButton from "./header/MobileMenuButton";
 import { MobileMenu } from "./header/MobileMenu";
 import HeaderCountdown from "./header/HeaderCountdown";
 import AgentCodeDisplay from "./header/AgentCodeDisplay";
+import useAgentCode from "@/hooks/useAgentCode";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -19,6 +20,7 @@ const UnifiedHeader = ({ profileImage, onClickMail, leftComponent }: UnifiedHead
   const { isAuthenticated, hasRole } = useAuthContext();
   const location = useLocation();
   const isAdmin = hasRole("admin");
+  const { agentCode } = useAgentCode();
   
   // Close mobile menu on route change
   useEffect(() => {
@@ -40,7 +42,8 @@ const UnifiedHeader = ({ profileImage, onClickMail, leftComponent }: UnifiedHead
         </div>
         
         <div className="hidden flex-1 md:flex justify-center">
-          <AgentCodeDisplay agentCode="M1-AGENT" />
+          {/* Passaggio del codice agente reale dell'utente */}
+          <AgentCodeDisplay agentCode={agentCode} />
         </div>
 
         <div className="flex flex-1 items-center justify-end space-x-3 md:space-x-4">

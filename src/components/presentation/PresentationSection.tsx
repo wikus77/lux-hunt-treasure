@@ -1,15 +1,12 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import useAgentCode from "@/hooks/useAgentCode";
 
 interface PresentationSectionProps {
   visible: boolean;
 }
 
 const PresentationSection = ({ visible }: PresentationSectionProps) => {
-  const { agentCode, isLoading } = useAgentCode();
-
   // Ensure component is always visible regardless of props
   return (
     <section className="relative py-20 px-4 bg-black" style={{ opacity: 1, visibility: "visible" }}>
@@ -25,14 +22,7 @@ const PresentationSection = ({ visible }: PresentationSectionProps) => {
             </span>
           </h2>
           
-          <div className="flex flex-col items-center mb-8">
-            <div className="bg-[#00E5FF]/20 px-3 py-1 rounded-md mb-2">
-              <span className="text-cyan-400 font-mono text-sm mr-1">DOSSIER:</span>
-              <span className="font-mono text-white bg-cyan-900/30 px-2 py-0.5 rounded text-sm">
-                {isLoading ? "..." : agentCode}
-              </span>
-            </div>
-          </div>
+          {/* Rimosso il blocco del codice agente come richiesto */}
           
           <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
             In the near future...
