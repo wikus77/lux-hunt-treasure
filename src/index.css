@@ -5,37 +5,45 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 0%;
-    --foreground: 222.2 84% 4.9%;
-    --primary: 196 100% 50%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 270 95% 65%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --border: 220 13% 69%;
-  }
-
   body {
-    @apply bg-black text-white font-inter;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-black text-white;
   }
 }
 
-@layer base {
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-orbitron tracking-wide;
+@layer components {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(7.7px);
+    -webkit-backdrop-filter: blur(7.7px);
+    border: 1px solid rgba(255, 255, 255, 0.17);
   }
 
-  h1 {
-    @apply text-3xl md:text-5xl font-light;
+  .neon-button {
+    transition: all 0.2s ease-in-out;
   }
 
-  h2 {
-    @apply text-2xl md:text-4xl font-light;
+  .press-effect {
+    transition: all 0.1s ease-in-out;
   }
 
-  h3 {
-    @apply text-xl md:text-2xl;
+  .press-effect:active {
+    transform: scale(0.95);
+  }
+
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  .line-glow {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #00E5FF, transparent);
+    opacity: 0.4;
   }
 }
 
@@ -57,257 +65,4 @@
       text-shadow: 0 0 8px rgba(0, 229, 255, 0.9), 0 0 12px rgba(0, 229, 255, 0.5);
     }
   }
-}
-
-/* Glass Effects */
-.glass-card {
-  @apply bg-black/40 backdrop-blur-sm border border-white/10 shadow-lg rounded-lg;
-  box-shadow: 0 8px 32px rgb(0 0 0 / 20%), inset 0 0 2px 0 rgb(255 255 255 / 5%);
-}
-
-/* Neon Effects */
-.neon-text {
-  @apply text-cyan-400 font-bold;
-  text-shadow: 0 0 10px rgba(0, 229, 255, 0.7), 0 0 20px rgba(0, 229, 255, 0.5);
-}
-
-.neon-text-cyan {
-  @apply text-cyan-400 font-bold;
-  text-shadow: 0 0 10px rgba(0, 229, 255, 0.7), 0 0 20px rgba(0, 229, 255, 0.5);
-}
-
-.neon-text-magenta {
-  @apply text-magenta-400 font-bold;
-  text-shadow: 0 0 10px rgba(255, 0, 255, 0.7), 0 0 20px rgba(255, 0, 255, 0.5);
-}
-
-.neon-border {
-  @apply border border-cyan-400;
-  box-shadow: 0 0 10px rgba(0, 229, 255, 0.6), inset 0 0 5px rgba(0, 229, 255, 0.3);
-}
-
-.neon-button {
-  @apply bg-gradient-to-r from-cyan-400 to-blue-600 
-         text-black font-bold py-2 px-4 rounded-full transition-all duration-300 
-         hover:shadow-[0_0_15px_rgba(0,229,255,0.7)] active:scale-95;
-}
-
-/* Car logo containers - DOUBLED SIZE */
-.car-logo-container {
-  @apply relative;
-  width: 62px !important; /* Doubled from 31px */
-  height: 62px !important; /* Doubled from 31px */
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 255, 255, 0.5);
-}
-
-.ferrari-logo-container {
-  box-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 0 0 30px rgba(255, 0, 0, 0.5);
-}
-
-.lambo-logo-container {
-  box-shadow: 0 0 20px rgba(255, 193, 7, 0.8), 0 0 30px rgba(255, 193, 7, 0.5);
-}
-
-.porsche-logo-container {
-  box-shadow: 0 0 20px rgba(204, 204, 204, 0.8), 0 0 30px rgba(204, 204, 204, 0.5);
-}
-
-.mclaren-logo-container {
-  box-shadow: 0 0 20px rgba(2, 132, 199, 0.8), 0 0 30px rgba(2, 132, 199, 0.5);
-}
-
-.aston-logo-container {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), 0 0 30px rgba(16, 185, 129, 0.5);
-}
-
-.mercedes-logo-container {
-  box-shadow: 0 0 20px rgba(128, 128, 128, 0.8), 0 0 30px rgba(128, 128, 128, 0.5);
-}
-
-/* Car logo animation - DOUBLED SIZE AND HOVER EFFECT WITH 30% ENLARGEMENT */
-.car-logo {
-  @apply transition-all duration-300;
-  width: 46px !important; /* Doubled from 23px */
-  height: 46px !important; /* Doubled from 23px */
-}
-
-.car-logo:hover {
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
-  transform: scale(1.3); /* 30% enlargement on hover */
-}
-
-/* Enhanced luxury car showcase with simplified neon effect */
-.luxury-cars-showcase {
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-.luxury-cars-showcase::before {
-  display: none;
-}
-
-/* Gradient text */
-.gradient-text-cyan {
-  @apply bg-gradient-to-r from-cyan-300 to-blue-500 bg-clip-text text-transparent;
-  text-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
-}
-
-/* Custom Scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  @apply bg-black;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-cyan-400/30 rounded-full;
-}
-
-/* Interactive elements */
-.press-effect {
-  @apply transform transition-transform active:scale-95;
-}
-
-.ripple-effect {
-  position: relative;
-  overflow: hidden;
-}
-
-/* Hover effect for cards and buttons */
-.interaction-feedback {
-  @apply transition-all duration-200;
-}
-
-.interaction-feedback:hover {
-  @apply shadow-[0_0_15px_rgba(0,163,255,0.3)];
-}
-
-/* Gradient text */
-.gradient-text {
-  @apply bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent;
-}
-
-.gradient-text-multi {
-  @apply bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent;
-}
-
-/* Glass backdrop for headers */
-.glass-backdrop {
-  @apply bg-black/60 backdrop-blur-md border-b border-white/10;
-}
-
-/* Animated lines */
-.line-glow {
-  height: 1px;
-  @apply w-full bg-gradient-to-r from-transparent via-cyan-400 to-transparent relative overflow-hidden;
-}
-
-.line-glow::after {
-  content: '';
-  @apply absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent;
-  animation: lineMove 2s infinite linear;
-}
-
-/* Logo animation on hover */
-.logo-hover {
-  @apply transition-all duration-300;
-}
-
-.logo-hover:hover {
-  filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.7));
-}
-
-/* Particle background for intro and site */
-.particle {
-  position: absolute;
-  border-radius: 50%;
-  @apply bg-cyan-400;
-}
-
-/* Grid lines effect for futuristic background */
-.grid-lines {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-size: 50px 50px;
-  background-image:
-    linear-gradient(to right, rgba(0, 229, 255, 0.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 229, 255, 0.07) 1px, transparent 1px);
-  z-index: 0;
-}
-
-/* Filter for neon cyan glow on images */
-.filter-cyan-glow {
-  filter: brightness(1.5) drop-shadow(0 0 3px rgba(0, 229, 255, 0.5));
-}
-
-/* Animations for intro sequence */
-@keyframes glitch {
-  0% { transform: translate(0); }
-  20% { transform: translate(-5px, 5px); }
-  40% { transform: translate(-5px, -5px); }
-  60% { transform: translate(5px, 5px); }
-  80% { transform: translate(5px, -5px); }
-  100% { transform: translate(0); }
-}
-
-.glitch-text {
-  animation: glitch 0.5s ease-in-out;
-}
-
-@keyframes flicker {
-  0% { opacity: 0.8; }
-  5% { opacity: 0.3; }
-  10% { opacity: 0.8; }
-  15% { opacity: 0.5; }
-  20% { opacity: 0.8; }
-  25% { opacity: 0.6; }
-  30% { opacity: 0.8; }
-  35% { opacity: 1; }
-  40% { opacity: 0.7; }
-  45% { opacity: 0.9; }
-  50% { opacity: 1; }
-  100% { opacity: 1; }
-}
-
-.flicker-element {
-  animation: flicker 1s linear forwards;
-}
-
-/* Mission heading style */
-.mission-heading {
-  @apply text-xl md:text-3xl font-bold font-orbitron mb-2;
-  background: linear-gradient(to right, #00e5ff, #8A2BE2);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
-  letter-spacing: 1px;
-}
-
-.mission-motto {
-  @apply text-lg md:text-2xl font-orbitron font-bold text-yellow-300 mt-4;
-  text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
-  letter-spacing: 2px;
-}
-
-/* Enhanced Electric pulse for animation */
-@keyframes electricPulse {
-  0% { transform: scaleY(1); opacity: 1; }
-  50% { transform: scaleY(1.5); opacity: 0.7; }
-  100% { transform: scaleY(1); opacity: 1; }
-}
-
-.electric-pulse {
-  animation: electricPulse 0.5s infinite;
-}
-
-/* Line moving animation */
-@keyframes lineMove {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
 }
