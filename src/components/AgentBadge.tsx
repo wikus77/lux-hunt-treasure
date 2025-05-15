@@ -9,26 +9,32 @@ const AgentBadge = () => {
   useEffect(() => {
     const fetch = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      if (user.email === "wikus77@hotmail.it") {
+      
+      // First check for special admin case
+      if (user?.email === "wikus77@hotmail.it") {
         setAgentCode("X0197");
         return;
       }
+      
+      // Only fetch from database if we have a user and they're not the special admin
+      if (user) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("agent_code")
+          .eq("id", user.id)
+          .single();
 
-      const { data } = await supabase
-        .from("profiles")
-        .select("agent_code")
-        .eq("id", user.id)
-        .single();
-
-      if (data?.agent_code) {
-        setAgentCode(data.agent_code.replace("AG-", ""));
+        if (data?.agent_code) {
+          setAgentCode(data.agent_code.replace("AG-", ""));
+        }
       }
     };
 
     fetch();
+    
+    // Set the delay for the glow animation
     const timer = setTimeout(() => setShow(true), 2000);
+    
     return () => clearTimeout(timer);
   }, []);
 

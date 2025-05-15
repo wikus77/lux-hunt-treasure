@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import CountdownTimer from "@/components/ui/countdown-timer";
 import { getMissionDeadline } from "@/utils/countdownDate";
-import AgentBadge from "@/components/AgentBadge";
 
 interface LandingHeaderProps {
   countdownCompleted?: boolean;
@@ -61,10 +60,7 @@ const LandingHeader = ({ countdownCompleted = false }: LandingHeaderProps) => {
 
       {/* Content */}
       <div className="z-10 max-w-5xl">
-        {/* Agent Badge - Added here */}
-        <div className="flex justify-center mb-6">
-          <AgentBadge />
-        </div>
+        {/* Removed the duplicate AgentBadge from here */}
         
         {/* Main Title with the styled M1SSION text */}
         <h1 className="text-4xl md:text-6xl xl:text-7xl font-orbitron font-light mb-6">
