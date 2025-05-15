@@ -55,15 +55,17 @@
 
   /* Animation for the agent code glow effect */
   .animate-glow {
-    animation: code-glow 3s ease-in-out infinite alternate;
+    animation: glow 0.6s ease-in-out forwards;
   }
 
-  @keyframes code-glow {
-    0% {
-      text-shadow: 0 0 2px rgba(0, 229, 255, 0.7);
+  @keyframes glow {
+    from {
+      opacity: 0;
+      text-shadow: none;
     }
-    100% {
-      text-shadow: 0 0 8px rgba(0, 229, 255, 0.9), 0 0 12px rgba(0, 229, 255, 0.5);
+    to {
+      opacity: 1;
+      text-shadow: 0 0 6px rgba(0, 255, 255, 0.6);
     }
   }
 }
