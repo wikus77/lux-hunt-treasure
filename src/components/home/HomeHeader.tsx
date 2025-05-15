@@ -1,10 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import RealtimeStatusIndicator from "@/components/notifications/RealtimeStatusIndicator";
 import AgentBadge from "@/components/AgentBadge";
+import { Button } from "@/components/ui/button";
 
 interface HomeHeaderProps {
   profileImage: string | null;
