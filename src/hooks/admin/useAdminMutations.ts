@@ -27,9 +27,8 @@ export const useConfirmEmailMutation = () => {
       });
     },
     onError: (error: Error) => {
-      toast("Errore", {
+      toast.error("Errore", {
         description: error.message,
-        variant: "destructive"
       });
     }
   });
@@ -59,9 +58,8 @@ export const useAddCreditsMutation = () => {
       });
     },
     onError: (error: Error) => {
-      toast("Errore", {
+      toast.error("Errore", {
         description: error.message,
-        variant: "destructive"
       });
     }
   });
@@ -90,9 +88,8 @@ export const useCreateUserMutation = () => {
       });
     },
     onError: (error: Error) => {
-      toast("Errore", {
+      toast.error("Errore", {
         description: error.message,
-        variant: "destructive"
       });
     }
   });
