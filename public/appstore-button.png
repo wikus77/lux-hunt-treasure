@@ -1,5 +1,4 @@
 
-// Questo file verrà caricato dall'immagine che hai fornito (GET IT ON Google Play)
 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
   <a
     href="https://apps.apple.com/app/id0000000000"
@@ -25,3 +24,4 @@
     />
   </a>
 </div>
+</lov-code>
