@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
 
 interface AgentCodeDisplayProps {
   className?: string;
@@ -13,7 +14,12 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
 }) => {
   const [agentCode, setAgentCode] = useState<string>("AG-X480"); // Default code
   const [isLoading, setIsLoading] = useState(true);
+  const [isCodeVisible, setIsCodeVisible] = useState(false);
 
+  // Special admin constants
+  const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';
+  const SPECIAL_ADMIN_CODE = 'AG-X019';
+  
   // Helper function to generate a new agent code
   const generateAgentCode = async () => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -53,6 +59,13 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
+          // Check if this is the special admin
+          if (user.email?.toLowerCase() === SPECIAL_ADMIN_EMAIL.toLowerCase()) {
+            setAgentCode(SPECIAL_ADMIN_CODE);
+            setIsLoading(false);
+            return;
+          }
+          
           const { data: profile, error } = await supabase
             .from('profiles')
             .select('agent_code')
@@ -85,6 +98,13 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
     };
 
     fetchAgentCode();
+    
+    // Add animation delay
+    const timer = setTimeout(() => {
+      setIsCodeVisible(true);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -92,9 +112,14 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
       {showLabel && (
         <span className="text-cyan-400 font-mono text-sm mr-1">DOSSIER:</span>
       )}
-      <span className="font-mono text-white bg-cyan-900/30 px-2 py-0.5 rounded text-sm">
+      <motion.span 
+        className="font-mono text-white bg-cyan-900/30 px-2 py-0.5 rounded text-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isCodeVisible ? 1 : 0 }}
+        transition={{ duration: 0.5 }}
+      >
         {isLoading ? "..." : agentCode}
-      </span>
+      </motion.span>
     </div>
   );
 };

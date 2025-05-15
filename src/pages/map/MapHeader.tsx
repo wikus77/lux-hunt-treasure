@@ -1,4 +1,3 @@
-
 import { PlusCircle, Filter, Map, HelpCircle, Zap } from "lucide-react";
 import { MapFilters } from "@/components/maps/MapFilters";
 import { toast } from "sonner";
@@ -9,6 +8,7 @@ import { getMissionDeadline } from "@/utils/countdownDate";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MapHeaderProps {
   onAddMarker: () => void;
@@ -40,12 +40,40 @@ const MapHeader = ({
   const [agentCode, setAgentCode] = useState("AG-X480");
   const [showCodeText, setShowCodeText] = useState(false);
   const isMobile = useIsMobile();
+  
+  // Special admin constants
+  const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';
+  const SPECIAL_ADMIN_CODE = 'X0197';
 
   useEffect(() => {
-    const savedAgentCode = localStorage.getItem('agentCode');
-    if (savedAgentCode) {
-      setAgentCode(savedAgentCode);
-    }
+    const fetchAgentCode = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Check if user is the special admin
+          if (user.email?.toLowerCase() === SPECIAL_ADMIN_EMAIL.toLowerCase()) {
+            setAgentCode(SPECIAL_ADMIN_CODE);
+            return;
+          }
+          
+          // Otherwise check if they have an agent code in their profile
+          const { data } = await supabase
+            .from('profiles')
+            .select('agent_code')
+            .eq('id', user.id)
+            .single();
+            
+          if (data?.agent_code) {
+            setAgentCode(data.agent_code);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching agent code:", error);
+      }
+    };
+    
+    fetchAgentCode();
     
     // Typewriter effect for agent dossier
     const timer = setTimeout(() => {

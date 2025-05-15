@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/auth';
 import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
 
 interface AgentCodeDisplayProps {
   agentCode?: string;
@@ -9,9 +10,10 @@ interface AgentCodeDisplayProps {
 
 const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({ agentCode: propAgentCode }) => {
   const [agentCode, setAgentCode] = useState<string | null>(propAgentCode || null);
+  const [isCodeVisible, setIsCodeVisible] = useState(false);
   const { isAuthenticated } = useAuthContext();
   
-  // Costante per l'utente admin speciale
+  // Special admin constant
   const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';
   const SPECIAL_ADMIN_CODE = 'X0197';
 
@@ -22,13 +24,13 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({ agentCode: propAgen
     }
 
     const fetchAgentCode = async () => {
-      // Solo se l'utente è autenticato, recupera il codice agente
+      // Only fetch agent code if user is authenticated
       if (isAuthenticated) {
         try {
           const { data: { user } } = await supabase.auth.getUser();
           
           if (user) {
-            // Verifica se è l'utente speciale admin
+            // Check if it's the special admin user
             if (user.email?.toLowerCase() === SPECIAL_ADMIN_EMAIL.toLowerCase()) {
               setAgentCode(SPECIAL_ADMIN_CODE);
               return;
@@ -46,12 +48,19 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({ agentCode: propAgen
             }
           }
         } catch (error) {
-          console.error("Errore nel recupero del codice agente:", error);
+          console.error("Error fetching agent code:", error);
         }
       }
     };
 
     fetchAgentCode();
+    
+    // Add animation delay
+    const timer = setTimeout(() => {
+      setIsCodeVisible(true);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
   }, [isAuthenticated, propAgentCode]);
 
   return (
@@ -59,9 +68,24 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({ agentCode: propAgen
       <div className="px-3 py-1 bg-black/40 border border-cyan-400/30 rounded-md flex items-center">
         <div className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse mr-2"></div>
         <span className="text-sm text-cyan-400 font-mono">
-          {isAuthenticated 
-            ? `M1-AGENT${agentCode ? `-${agentCode}` : '-????'}`
-            : "M1-AGENT"}
+          {isAuthenticated ? (
+            <>
+              M1-AGENT
+              {agentCode && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: isCodeVisible ? 1 : 0 }}
+                  transition={{ duration: 0.5 }}
+                  className={isCodeVisible ? "text-cyan-400 animate-glow" : ""}
+                >
+                  -{agentCode}
+                </motion.span>
+              )}
+              {!agentCode && "-????"}
+            </>
+          ) : (
+            "M1-AGENT"
+          )}
         </span>
       </div>
     </div>
