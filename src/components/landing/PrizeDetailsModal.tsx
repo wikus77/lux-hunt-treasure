@@ -28,14 +28,14 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
     },
     {
       name: "Porsche 911 Turbo",
-      description: "Un'icona dell'ingegneria automobilistica tedesca, perfetto equilibrio tra lusso e prestazioni.",
-      image: "/events/porsche-911.jpg"
+      description: "La Porsche 911 Turbo è il simbolo della perfezione tedesca: eleganza, potenza e precisione in un'unica auto. Un gioiello nero su quattro ruote per chi completa la M1SSION con intelligenza e velocità.",
+      image: "/lovable-uploads/7bda6b4a-6ac6-489d-8b2f-b9a4f9c312a2.png"
     }
   ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl bg-black/80 backdrop-blur-md border border-cyan-500/30">
+      <DialogContent className="sm:max-w-3xl bg-black/80 backdrop-blur-md border border-cyan-500/30 rounded-xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-orbitron text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
             📦 Premi Esclusivi M1SSION
@@ -47,12 +47,16 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
           {prizes.map((prize, index) => (
-            <div key={index} className="bg-white/5 border border-white/10 p-4 rounded-lg">
-              <div className="h-48 overflow-hidden rounded-md mb-4">
+            <div 
+              key={index} 
+              className="bg-white/5 border border-white/10 p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white/8 hover:scale-[1.02]"
+              style={{ boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2), 0 0 8px rgba(0, 209, 255, 0.1)" }}
+            >
+              <div className="h-48 overflow-hidden rounded-lg mb-4">
                 <LazyImage 
                   src={prize.image} 
                   alt={prize.name} 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
                 />
               </div>
               <h3 className="font-orbitron text-lg font-bold text-cyan-400 mb-2">{prize.name}</h3>
@@ -63,7 +67,7 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button className="w-full bg-gradient-to-r from-cyan-500 to-blue-500">
+            <Button className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full">
               Chiudi
             </Button>
           </DialogClose>

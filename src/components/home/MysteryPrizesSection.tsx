@@ -12,14 +12,15 @@ export const MysteryPrizesSection = () => {
           <CarouselContent>
             {mysteryPrizes.map((prize, index) => (
               <CarouselItem key={index} className="w-full max-w-full">
-                <Card className="p-1 w-full">
+                <Card className="p-1 w-full rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02]" 
+                     style={{ boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2), 0 0 8px rgba(0, 209, 255, 0.1)" }}>
                   <div 
-                    className="h-48 flex items-center justify-center bg-black rounded-md w-full overflow-hidden"
+                    className="h-48 flex items-center justify-center bg-black rounded-lg w-full overflow-hidden"
                   >
                     <img
                       src={prize.imageUrl}
                       alt={prize.description}
-                      className="object-contain h-full w-full"
+                      className="object-contain h-full w-full transform hover:scale-105 transition-transform duration-500"
                     />
                   </div>
                   <p className="p-4 text-sm text-muted-foreground text-center">
