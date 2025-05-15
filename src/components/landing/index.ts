@@ -9,3 +9,5 @@ export { default as FeaturesSection } from './FeaturesSection';
 export { default as HowItWorks } from './HowItWorks';
 export { default as CTASection } from './CTASection';
 export { default as PresentationSection } from './PresentationSection';
+export { default as MobileStoreButtons } from './MobileStoreButtons';
+export { default as AppStoreButtons } from './AppStoreButtons';

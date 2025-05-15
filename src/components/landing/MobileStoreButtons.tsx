@@ -18,7 +18,7 @@ const MobileStoreButtons: React.FC<MobileStoreButtonsProps> = ({ className = '' 
         whileTap={{ scale: 0.95 }}
       >
         <img 
-          src="/appstore-button.png" 
+          src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" 
           alt="Download on the App Store" 
           className="w-full max-w-[180px] h-auto block" 
           style={{ minHeight: '40px' }}
@@ -34,7 +34,7 @@ const MobileStoreButtons: React.FC<MobileStoreButtonsProps> = ({ className = '' 
         whileTap={{ scale: 0.95 }}
       >
         <img 
-          src="/googleplay-button.png" 
+          src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" 
           alt="Get it on Google Play" 
           className="w-full max-w-[180px] h-auto block" 
           style={{ minHeight: '40px' }}
