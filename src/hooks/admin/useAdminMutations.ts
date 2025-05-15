@@ -22,14 +22,12 @@ export const useConfirmEmailMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pre_registrations'] });
-      toast({
-        title: "Successo",
+      toast("Successo", {
         description: "Email confermata con successo.",
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Errore",
+      toast("Errore", {
         description: error.message,
         variant: "destructive"
       });
@@ -56,14 +54,12 @@ export const useAddCreditsMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pre_registrations'] });
-      toast({
-        title: "Successo",
+      toast("Successo", {
         description: "Crediti aggiunti con successo.",
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Errore",
+      toast("Errore", {
         description: error.message,
         variant: "destructive"
       });
@@ -89,14 +85,12 @@ export const useCreateUserMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pre_registrations'] });
-      toast({
-        title: "Successo",
+      toast("Successo", {
         description: "Utente creato con successo.",
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Errore",
+      toast("Errore", {
         description: error.message,
         variant: "destructive"
       });

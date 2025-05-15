@@ -67,9 +67,11 @@ const AdminDashboard: React.FC = () => {
         isOpen={isAddingCredits}
         onOpenChange={setIsAddingCredits}
         email={selectedEmail}
-        onSubmit={(values) => {
-          addCreditsMutation.mutate(values);
-          setIsAddingCredits(false);
+        onSubmit={({ email, credits }) => {
+          if (email && credits !== undefined) {
+            addCreditsMutation.mutate({ email, credits });
+            setIsAddingCredits(false);
+          }
         }}
         isPending={addCreditsMutation.isPending}
       />
