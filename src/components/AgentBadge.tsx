@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -11,6 +11,8 @@ const AgentBadge = () => {
   const [show, setShow] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [badgePosition, setBadgePosition] = useState<{top: number; left: number; width: number} | null>(null);
+  const badgeRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const { playSound } = useSoundEffects();
 
@@ -18,6 +20,7 @@ const AgentBadge = () => {
     if (isMobile) {
       // Start timer for long press on mobile
       const timer = setTimeout(() => {
+        capturePosition();
         setShowPopup(true);
         playSound("agentClick", 0.3);
       }, 500);
@@ -34,8 +37,21 @@ const AgentBadge = () => {
 
   const handleClick = () => {
     if (!isMobile) {
+      capturePosition();
       setShowPopup(true);
       playSound("agentClick", 0.3);
+    }
+  };
+
+  // Function to capture the current position of the badge element
+  const capturePosition = () => {
+    if (badgeRef.current) {
+      const rect = badgeRef.current.getBoundingClientRect();
+      setBadgePosition({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width
+      });
     }
   };
 
@@ -81,14 +97,16 @@ const AgentBadge = () => {
 
   return (
     <>
-      <div
+      <motion.div
+        ref={badgeRef}
         className={`
           flex items-center gap-2 px-3 py-1
           text-sm font-mono text-white 
           border border-white/20 shadow-md
-          bg-[#0e0e0e]/80 rounded-full transition-opacity duration-500
+          bg-[#0e0e0e]/80 rounded-full transition-all duration-300
           ${show ? "opacity-100 glow" : "opacity-0"}
           cursor-pointer hover:border-cyan-400/30 hover:bg-[#0e0e0e]/90
+          active:scale-95
         `}
         onClick={handleClick}
         onMouseDown={handleMouseDown}
@@ -96,15 +114,18 @@ const AgentBadge = () => {
         onTouchStart={handleMouseDown}
         onTouchEnd={handleMouseUp}
         onTouchCancel={handleMouseUp}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
       >
         <span className="text-cyan-400">M1-AGENT-{agentCode ?? "?????"}</span>
         <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-      </div>
+      </motion.div>
 
       <AgentInfoPopup 
         isOpen={showPopup} 
         onClose={() => setShowPopup(false)} 
-        agentCode={agentCode} 
+        agentCode={agentCode}
+        triggerPosition={badgePosition}
       />
     </>
   );
