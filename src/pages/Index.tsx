@@ -179,3 +179,6 @@ const Index = () => {
 };
 
 export default Index;
+<div className="text-white text-xl animate-glow mt-10">
+  Test Animazione Glow dopo 2s
+</div>
