@@ -12,14 +12,14 @@ interface PrizeDetailsModalProps {
 const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
   const prizes = [
     {
+      name: "Lamborghini Huracán",
+      description: "Vivi il brivido della velocità con una Lamborghini Huracán. Design aggressivo, motore ruggente e linee affilate: è più di un'auto, è una dichiarazione di potere. Solo un agente M1SSION potrà portarsela a casa.",
+      image: "/lovable-uploads/211b98b7-646d-4c40-80d6-416ac71a54fc.png"
+    },
+    {
       name: "Ferrari SF90 Stradale",
       description: "Un'auto di lusso con prestazioni straordinarie, design all'avanguardia e tecnologia di punta.",
       image: "/events/ferrari-sf90.jpg"
-    },
-    {
-      name: "Lamborghini Huracán",
-      description: "Potenza, eleganza e prestazioni da supercar racchiuse in un design audace e inconfondibile.",
-      image: "/events/lamborghini-huracan.jpg"
     },
     {
       name: "Tesla Model S Plaid",
@@ -38,10 +38,10 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
       <DialogContent className="sm:max-w-3xl bg-black/80 backdrop-blur-md border border-cyan-500/30">
         <DialogHeader>
           <DialogTitle className="text-2xl font-orbitron text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-            Premi Esclusivi M1SSION
+            📦 Premi Esclusivi M1SSION
           </DialogTitle>
           <DialogDescription className="text-center text-white/70">
-            Ecco i premi che potrai vincere partecipando alle nostre missioni speciali.
+            Ecco i premi che potrai vincere partecipando alle nostre missioni speciali. Solo i più veloci, astuti e determinati potranno conquistarli.
           </DialogDescription>
         </DialogHeader>
 
