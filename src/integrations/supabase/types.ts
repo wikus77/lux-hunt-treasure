@@ -551,6 +551,12 @@ export type Database = {
         Args: { user_email: string; credits_to_add: number }
         Returns: undefined
       }
+      get_my_agent_code: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          agent_code: string
+        }[]
+      }
       handle_new_user: {
         Args: { new_user_id: string; user_email: string }
         Returns: undefined

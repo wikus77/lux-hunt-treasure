@@ -7,7 +7,7 @@ const AgentBadge = () => {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchAgentCode = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       // First check for special admin case
@@ -16,21 +16,29 @@ const AgentBadge = () => {
         return;
       }
       
-      // Only fetch from database if we have a user and they're not the special admin
+      // Only proceed if we have a user and they're not the special admin
       if (user) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("agent_code")
-          .eq("id", user.id)
-          .single();
+        try {
+          // Use our new secure RPC function to get the agent code
+          const { data, error } = await supabase
+            .rpc('get_my_agent_code')
+            .single();
 
-        if (data?.agent_code) {
-          setAgentCode(data.agent_code.replace("AG-", ""));
+          if (error) {
+            console.error("Error fetching agent code:", error);
+            return;
+          }
+
+          if (data?.agent_code) {
+            setAgentCode(data.agent_code.replace("AG-", ""));
+          }
+        } catch (err) {
+          console.error("Failed to fetch agent code:", err);
         }
       }
     };
 
-    fetch();
+    fetchAgentCode();
     
     // Set the delay for the glow animation
     const timer = setTimeout(() => setShow(true), 2000);
