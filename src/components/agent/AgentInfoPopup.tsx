@@ -8,10 +8,9 @@ interface AgentInfoPopupProps {
   isOpen: boolean;
   onClose: () => void;
   agentCode: string | null;
-  triggerPosition?: { top: number; left: number; width: number };
 }
 
-const AgentInfoPopup = ({ isOpen, onClose, agentCode, triggerPosition }: AgentInfoPopupProps) => {
+const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => {
   // Close on escape key
   useEffect(() => {
     const handleEscapeKey = (e: KeyboardEvent) => {
@@ -24,40 +23,44 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode, triggerPosition }: AgentIn
     return () => window.removeEventListener("keydown", handleEscapeKey);
   }, [isOpen, onClose]);
 
-  // Define animation variants
+  // Define animation variants for Apple-like Dynamic Island
   const backdropVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 },
     exit: { opacity: 0 }
   };
 
-  const contentVariants = {
-    hidden: { 
-      opacity: 0,
-      scale: 0.9,
-      width: "auto",
-      height: "36px",
-      borderRadius: "9999px"
-    },
-    visible: { 
-      opacity: 1,
-      scale: 1,
-      width: "92%", 
-      maxWidth: "32rem",
-      height: "auto",
-      borderRadius: "24px",
-      transition: { 
-        type: "spring",
-        duration: 0.4,
-        ease: [0.4, 0, 0.2, 1] // Apple-like easing
-      }
-    },
-    exit: { 
-      opacity: 0,
-      scale: 0.9,
+  const dynamicIslandVariants = {
+    hidden: {
       width: "auto",
       height: "36px",
       borderRadius: "9999px",
+      opacity: 1,
+      scale: 0.95,
+      y: 0
+    },
+    visible: {
+      width: "92%",
+      maxWidth: "32rem",
+      height: "auto",
+      borderRadius: "24px",
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        duration: 0.4,
+        bounce: 0,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    },
+    exit: {
+      width: "auto",
+      height: "36px",
+      borderRadius: "9999px",
+      opacity: 1,
+      scale: 0.95,
+      y: 0,
       transition: {
         duration: 0.3,
         ease: [0.4, 0, 0.2, 1]
@@ -65,17 +68,28 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode, triggerPosition }: AgentIn
     }
   };
 
-  const contentItemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { 
-      opacity: 1, 
+  const contentVariants = {
+    hidden: {
+      opacity: 0,
+      y: 10
+    },
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { 
-        delay: 0.1,
-        duration: 0.3
+      transition: {
+        delay: 0.15,
+        duration: 0.3,
+        ease: [0.4, 0, 0.2, 1]
       }
     },
-    exit: { opacity: 0, y: 10 }
+    exit: {
+      opacity: 0,
+      y: 10,
+      transition: {
+        duration: 0.2,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    }
   };
 
   return (
@@ -94,16 +108,17 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode, triggerPosition }: AgentIn
             role="presentation"
           />
           
-          {/* Dynamic Island inspired popup */}
+          {/* Dynamic Island Container */}
           <motion.div
-            className="fixed left-1/2 -translate-x-1/2 z-50"
+            className="fixed left-1/2 z-[60] origin-center"
             style={{
               top: "16px",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3), 0 0 16px rgba(0, 209, 255, 0.15)",
               transformOrigin: "center center",
-              overflow: "hidden"
+              transform: "translateX(-50%)",
+              overflow: "hidden",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3), 0 0 16px rgba(0, 209, 255, 0.15)"
             }}
-            variants={contentVariants}
+            variants={dynamicIslandVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -112,7 +127,10 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode, triggerPosition }: AgentIn
           >
             <div className="bg-black/80 backdrop-blur-md border border-cyan-500/30 rounded-[inherit] overflow-hidden p-6 text-white h-full w-full">
               <motion.div
-                variants={contentItemVariants}
+                variants={contentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
                 className="flex justify-between items-center mb-4"
               >
                 <h3 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
@@ -129,7 +147,10 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode, triggerPosition }: AgentIn
               
               <motion.div 
                 className="space-y-4"
-                variants={contentItemVariants}
+                variants={contentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
               >
                 <div className="bg-black/40 border border-cyan-800/30 rounded-lg p-3">
                   <p className="text-sm text-gray-400">Codice agente:</p>
@@ -150,7 +171,10 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode, triggerPosition }: AgentIn
               </motion.div>
               
               <motion.div
-                variants={contentItemVariants}
+                variants={contentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
               >
                 <Button 
                   onClick={onClose} 

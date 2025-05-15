@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -16,8 +16,8 @@ const AgentBadge = () => {
   const { playSound } = useSoundEffects();
 
   const handleMouseDown = () => {
+    // Start timer for long press on mobile (350ms)
     if (isMobile) {
-      // Start timer for long press on mobile (350ms)
       setPressStartTime(Date.now());
       const timer = setTimeout(() => {
         setShowPopup(true);
@@ -47,6 +47,10 @@ const AgentBadge = () => {
       setShowPopup(true);
       playSound("agentClick", 0.3);
     }
+  };
+
+  const handleClose = () => {
+    setShowPopup(false);
   };
 
   useEffect(() => {
@@ -97,8 +101,8 @@ const AgentBadge = () => {
           flex items-center gap-2 px-3 py-1
           text-sm font-mono text-white 
           border border-white/20 shadow-md
-          bg-[#0e0e0e]/80 rounded-full transition-all duration-300
-          ${show ? "opacity-100 glow" : "opacity-0"}
+          bg-[#0e0e0e]/80 rounded-full transition-colors 
+          ${show ? "opacity-100 animate-glow" : "opacity-0"}
           cursor-pointer hover:border-cyan-400/30 hover:bg-[#0e0e0e]/90
           active:scale-95
         `}
@@ -117,7 +121,7 @@ const AgentBadge = () => {
 
       <AgentInfoPopup 
         isOpen={showPopup} 
-        onClose={() => setShowPopup(false)} 
+        onClose={handleClose} 
         agentCode={agentCode}
       />
     </>
