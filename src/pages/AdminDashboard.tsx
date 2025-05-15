@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,9 +21,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   Form,
   FormControl,
@@ -35,7 +34,6 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Plus, Check, Copy, UserPlus, Mail, CheckCircle2, XCircle } from 'lucide-react';
-import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -122,11 +120,11 @@ const AdminDashboard: React.FC = () => {
   const [emailToConfirm, setEmailToConfirm] = useState<string | null>(null);
   const [creditsToAddEmail, setCreditsToAddEmail] = useState<string | null>(null);
   const [creditsToAdd, setCreditsToAdd] = useState<number | null>(null);
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   // Mutation per aggiornare lo stato di conferma
-  const confirmEmailMutation = useMutation(
-    async (email: string) => {
+  const confirmEmailMutation = useMutation({
+    mutationFn: async (email: string) => {
       const { data, error } = await supabase
         .from('pre_registrations')
         .update({ confirmed: true })
@@ -138,27 +136,25 @@ const AdminDashboard: React.FC = () => {
 
       return data;
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('pre_registrations');
-        toast({
-          title: "Successo",
-          description: "Email confermata con successo.",
-        })
-      },
-      onError: (error: any) => {
-        handleError(error);
-      },
-      onSettled: () => {
-        setIsConfirmationDialogOpen(false);
-        setEmailToConfirm(null);
-      },
-    }
-  );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pre_registrations'] });
+      toast({
+        title: "Successo",
+        description: "Email confermata con successo.",
+      });
+    },
+    onError: (error: any) => {
+      handleError(error);
+    },
+    onSettled: () => {
+      setIsConfirmationDialogOpen(false);
+      setEmailToConfirm(null);
+    },
+  });
 
   // Mutation per aggiungere crediti
-  const addCreditsMutation = useMutation(
-    async ({ email, credits }: { email: string; credits: number }) => {
+  const addCreditsMutation = useMutation({
+    mutationFn: async ({ email, credits }: { email: string; credits: number }) => {
       const { data, error } = await supabase
         .from('pre_registrations')
         .update({ credits: credits })
@@ -170,28 +166,26 @@ const AdminDashboard: React.FC = () => {
 
       return data;
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('pre_registrations');
-        toast({
-          title: "Successo",
-          description: "Crediti aggiunti con successo.",
-        })
-      },
-      onError: (error: any) => {
-        handleError(error);
-      },
-      onSettled: () => {
-        setIsAddingCredits(false);
-        setCreditsToAddEmail(null);
-        setCreditsToAdd(null);
-      },
-    }
-  );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pre_registrations'] });
+      toast({
+        title: "Successo",
+        description: "Crediti aggiunti con successo.",
+      });
+    },
+    onError: (error: any) => {
+      handleError(error);
+    },
+    onSettled: () => {
+      setIsAddingCredits(false);
+      setCreditsToAddEmail(null);
+      setCreditsToAdd(null);
+    },
+  });
 
   // Mutation per creare un nuovo utente
-  const createUserMutation = useMutation(
-    async (email: string) => {
+  const createUserMutation = useMutation({
+    mutationFn: async (email: string) => {
       const { data, error } = await supabase.functions.invoke('create-user-from-preregistration', {
         body: { email: email }
       });
@@ -202,19 +196,17 @@ const AdminDashboard: React.FC = () => {
 
       return data;
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('pre_registrations');
-        toast({
-          title: "Successo",
-          description: "Utente creato con successo.",
-        })
-      },
-      onError: (error: any) => {
-        handleError(error);
-      },
-    }
-  );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pre_registrations'] });
+      toast({
+        title: "Successo",
+        description: "Utente creato con successo.",
+      });
+    },
+    onError: (error: any) => {
+      handleError(error);
+    },
+  });
 
   // Nella sezione di query:
   const { data: preRegistrations, isLoading, error, refetch } = useQuery({
@@ -228,7 +220,7 @@ const AdminDashboard: React.FC = () => {
       email: "",
       credits: 0,
     },
-  })
+  });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     addCreditsMutation.mutate({ email: values.email, credits: values.credits });
@@ -268,8 +260,6 @@ const AdminDashboard: React.FC = () => {
     });
   };
 
-  // Utilizza handleError dove necessario invece di toast.error
-
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-3xl font-bold mb-4">Dashboard Amministrativa</h1>
@@ -295,8 +285,8 @@ const AdminDashboard: React.FC = () => {
             <Button type="button" variant="secondary" onClick={() => setIsConfirmationDialogOpen(false)}>
               Annulla
             </Button>
-            <Button type="submit" onClick={handleConfirmEmail} disabled={confirmEmailMutation.isLoading}>
-              {confirmEmailMutation.isLoading ? "Confermando..." : "Conferma"}
+            <Button type="submit" onClick={handleConfirmEmail} disabled={confirmEmailMutation.isPending}>
+              {confirmEmailMutation.isPending ? "Confermando..." : "Conferma"}
             </Button>
           </div>
         </DialogContent>
@@ -346,8 +336,8 @@ const AdminDashboard: React.FC = () => {
                 <Button type="button" variant="secondary" onClick={() => setIsAddingCredits(false)}>
                   Annulla
                 </Button>
-                <Button type="submit" disabled={addCreditsMutation.isLoading}>
-                  {addCreditsMutation.isLoading ? "Aggiungendo..." : "Aggiungi"}
+                <Button type="submit" disabled={addCreditsMutation.isPending}>
+                  {addCreditsMutation.isPending ? "Aggiungendo..." : "Aggiungi"}
                 </Button>
               </div>
             </form>
