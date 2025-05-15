@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PreRegistrationFormData } from "./types";
@@ -277,32 +276,23 @@ export const updateUserReferrer = async (userEmail: string, referrerEmail: strin
 /**
  * Add referral credits to the referrer
  */
-export const addReferralCredits = async (referrerEmail: string, creditsToAdd = 50) => {
+export const addReferralCredits = async (
+  params: { user_email: string; credits_to_add: number }
+) => {
   try {
-    // Use the built-in database function to add credits
     const { error } = await supabase.rpc('add_referral_credits', {
-      referrer_email: referrerEmail.toLowerCase().trim(),
-      credits_to_add: creditsToAdd
+      user_email: params.user_email,
+      credits_to_add: params.credits_to_add
     });
-    
+
     if (error) {
-      console.error("Error adding referral credits:", error);
-      throw new Error("Errore nell'aggiunta dei crediti");
+      console.error('Error adding referral credits:', error);
+      throw error;
     }
-    
-    // Log the credits added
-    await logActivity({
-      userEmail: referrerEmail,
-      action: 'credits_added',
-      metadata: {
-        amount: creditsToAdd,
-        reason: 'referral'
-      }
-    });
-    
-    return true;
-  } catch (error) {
-    console.error("Exception adding referral credits:", error);
-    throw error;
+
+    return { success: true };
+  } catch (err) {
+    console.error('Exception adding referral credits:', err);
+    throw err;
   }
 };
