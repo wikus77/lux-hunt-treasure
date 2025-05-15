@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import M1ssionText from "@/components/logo/M1ssionText";
 import HeaderCountdown from "@/components/layout/header/HeaderCountdown";
+import AgentBadge from "@/components/AgentBadge";
 
 interface HeaderLayoutProps {
   children?: React.ReactNode;
@@ -29,6 +30,11 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
           <div className="flex items-center">
             {leftContent}
             {!leftContent && <M1ssionText />}
+          </div>
+          
+          {/* Center section with agent badge */}
+          <div className="hidden md:flex items-center justify-center">
+            <AgentBadge />
           </div>
 
           {/* Right side content */}

@@ -1,10 +1,10 @@
 
-import { useState, useEffect } from "react";
-import { Bell, ChevronDown, Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Bell, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import RealtimeStatusIndicator from "@/components/notifications/RealtimeStatusIndicator";
+import AgentBadge from "@/components/AgentBadge";
 
 interface HomeHeaderProps {
   profileImage: string | null;
@@ -30,8 +30,9 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
           </span>
         </div>
         
-        {/* Center section with real-time indicator */}
-        <div className="hidden sm:flex items-center gap-2">
+        {/* Center section with agent badge and real-time indicator */}
+        <div className="hidden sm:flex items-center gap-3">
+          <AgentBadge />
           <RealtimeStatusIndicator isConnected={isConnected} />
         </div>
         
@@ -82,6 +83,9 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
       {isMenuOpen && (
         <div className="absolute top-full left-0 w-full bg-black/90 border-b border-projectx-deep-blue/30 py-3 px-4 sm:hidden">
           <div className="space-y-2">
+            <div className="flex items-center justify-center mb-3">
+              <AgentBadge />
+            </div>
             <div className="flex items-center gap-2 py-1">
               <RealtimeStatusIndicator isConnected={isConnected} />
               <span className="text-sm text-gray-400">
