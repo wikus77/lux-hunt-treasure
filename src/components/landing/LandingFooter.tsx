@@ -1,6 +1,6 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
+import StoreButtons from "./StoreButtons";
 
 const LandingFooter = () => {
   return (
@@ -9,31 +9,7 @@ const LandingFooter = () => {
         {/* App Store Buttons Section */}
         <div className="mb-12 py-8 border-b border-white/10">
           <h3 className="text-xl font-bold text-center mb-6 gradient-text-cyan">Scarica l'app</h3>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
-            <a
-              href="https://apps.apple.com/app/id0000000000"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src="/appstore-button.png"
-                alt="Download on the App Store"
-                className="h-14 w-auto block"
-              />
-            </a>
-
-            <a
-              href="https://play.google.com/store/apps/details?id=com.tuonome.app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src="/googleplay-button.png"
-                alt="Get it on Google Play"
-                className="h-14 w-auto block"
-              />
-            </a>
-          </div>
+          <StoreButtons />
         </div>
         
         <div className="flex flex-col md:flex-row justify-between items-center w-full mb-8">

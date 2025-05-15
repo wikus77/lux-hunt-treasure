@@ -11,3 +11,4 @@ export { default as CTASection } from './CTASection';
 export { default as PresentationSection } from './PresentationSection';
 export { default as MobileStoreButtons } from './MobileStoreButtons';
 export { default as AppStoreButtons } from './AppStoreButtons';
+export { default as StoreButtons } from './StoreButtons';
