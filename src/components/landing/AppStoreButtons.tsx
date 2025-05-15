@@ -21,7 +21,7 @@ const AppStoreButtons = () => {
         <img 
           src="/appstore-button.png" 
           alt="Download on the App Store"
-          className="h-14 w-auto"
+          className="h-14 w-auto block"
           style={{ minHeight: '40px', display: 'block' }}
         />
       </a>
@@ -35,7 +35,7 @@ const AppStoreButtons = () => {
         <img 
           src="/googleplay-button.png" 
           alt="Get it on Google Play" 
-          className="h-14 w-auto"
+          className="h-14 w-auto block"
           style={{ minHeight: '40px', display: 'block' }}
         />
       </a>

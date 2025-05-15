@@ -20,7 +20,7 @@ const MobileStoreButtons: React.FC<MobileStoreButtonsProps> = ({ className = '' 
         <img 
           src="/googleplay-button.png" 
           alt="Get it on Google Play" 
-          className="w-full max-w-[180px] h-auto" 
+          className="w-full max-w-[180px] h-auto block" 
           style={{ minHeight: '40px' }}
         />
       </motion.a>
@@ -36,7 +36,7 @@ const MobileStoreButtons: React.FC<MobileStoreButtonsProps> = ({ className = '' 
         <img 
           src="/appstore-button.png" 
           alt="Download on the App Store" 
-          className="w-full max-w-[180px] h-auto" 
+          className="w-full max-w-[180px] h-auto block" 
           style={{ minHeight: '40px' }}
         />
       </motion.a>
