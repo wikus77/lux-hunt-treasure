@@ -50,10 +50,10 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({ agentCode: propAgen
 
     fetchAgentCode();
     
-    // Add animation delay
+    // Add animation delay - increased to 2 seconds as requested
     const timer = setTimeout(() => {
       setIsCodeVisible(true);
-    }, 1000);
+    }, 2000);
     
     return () => clearTimeout(timer);
   }, [isAuthenticated, propAgentCode, user]);
@@ -63,14 +63,14 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({ agentCode: propAgen
       <div className="px-3 py-1 bg-black/40 border border-cyan-400/30 rounded-md flex items-center">
         <div className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse mr-2"></div>
         <span className="text-sm text-cyan-400 font-mono">
-          {isAuthenticated ? (
+          M1-AGENT
+          {isAuthenticated && (
             <>
-              M1-AGENT
               {agentCode && (
                 <motion.span
                   initial={{ opacity: 0 }}
                   animate={{ opacity: isCodeVisible ? 1 : 0 }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: 1.0 }}
                   className={isCodeVisible ? "text-cyan-400 animate-glow" : ""}
                 >
                   -{agentCode}
@@ -78,8 +78,6 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({ agentCode: propAgen
               )}
               {!agentCode && "-????"}
             </>
-          ) : (
-            "M1-AGENT"
           )}
         </span>
       </div>

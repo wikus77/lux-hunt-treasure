@@ -99,10 +99,10 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
 
     fetchAgentCode();
     
-    // Add animation delay
+    // Add animation delay - increased to 2 seconds
     const timer = setTimeout(() => {
       setIsCodeVisible(true);
-    }, 1000);
+    }, 2000);
     
     return () => clearTimeout(timer);
   }, []);
@@ -116,7 +116,7 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
         className="font-mono text-white bg-cyan-900/30 px-2 py-0.5 rounded text-sm"
         initial={{ opacity: 0 }}
         animate={{ opacity: isCodeVisible ? 1 : 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 1.0 }}
       >
         {isLoading ? "..." : agentCode}
       </motion.span>

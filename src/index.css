@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap');
 
 @tailwind base;
@@ -43,6 +42,20 @@
 @layer utilities {
   .scale-130 {
     transform: scale(1.3);
+  }
+
+  /* Animation for the agent code glow effect */
+  .animate-glow {
+    animation: code-glow 3s ease-in-out infinite alternate;
+  }
+
+  @keyframes code-glow {
+    0% {
+      text-shadow: 0 0 2px rgba(0, 229, 255, 0.7);
+    }
+    100% {
+      text-shadow: 0 0 8px rgba(0, 229, 255, 0.9), 0 0 12px rgba(0, 229, 255, 0.5);
+    }
   }
 }
 

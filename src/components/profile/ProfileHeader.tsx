@@ -35,10 +35,10 @@ const ProfileHeader = ({
     : agentCode;
 
   useEffect(() => {
-    // Typewriter effect for agent dossier
+    // Typewriter effect for agent dossier - increased to 2 seconds
     const timer = setTimeout(() => {
       setShowCodeText(true);
-    }, 1000);
+    }, 2000);
     
     return () => clearTimeout(timer);
   }, []);
