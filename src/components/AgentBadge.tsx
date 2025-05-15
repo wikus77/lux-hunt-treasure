@@ -11,19 +11,18 @@ const AgentBadge = () => {
   const [show, setShow] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
-  const [badgePosition, setBadgePosition] = useState<{top: number; left: number; width: number} | null>(null);
-  const badgeRef = useRef<HTMLDivElement>(null);
+  const [pressStartTime, setPressStartTime] = useState<number | null>(null);
   const isMobile = useIsMobile();
   const { playSound } = useSoundEffects();
 
   const handleMouseDown = () => {
     if (isMobile) {
-      // Start timer for long press on mobile
+      // Start timer for long press on mobile (350ms)
+      setPressStartTime(Date.now());
       const timer = setTimeout(() => {
-        capturePosition();
         setShowPopup(true);
         playSound("agentClick", 0.3);
-      }, 500);
+      }, 350);
       setLongPressTimer(timer);
     }
   };
@@ -32,26 +31,21 @@ const AgentBadge = () => {
     if (longPressTimer) {
       clearTimeout(longPressTimer);
       setLongPressTimer(null);
+      
+      // If it was a short tap (less than 350ms), treat as a click
+      if (pressStartTime && Date.now() - pressStartTime < 350) {
+        if (!isMobile) {
+          setShowPopup(true);
+          playSound("agentClick", 0.3);
+        }
+      }
     }
   };
 
   const handleClick = () => {
     if (!isMobile) {
-      capturePosition();
       setShowPopup(true);
       playSound("agentClick", 0.3);
-    }
-  };
-
-  // Function to capture the current position of the badge element
-  const capturePosition = () => {
-    if (badgeRef.current) {
-      const rect = badgeRef.current.getBoundingClientRect();
-      setBadgePosition({
-        top: rect.top,
-        left: rect.left,
-        width: rect.width
-      });
     }
   };
 
@@ -98,8 +92,8 @@ const AgentBadge = () => {
   return (
     <>
       <motion.div
-        ref={badgeRef}
         className={`
+          fixed top-4 left-1/2 -translate-x-1/2 z-50
           flex items-center gap-2 px-3 py-1
           text-sm font-mono text-white 
           border border-white/20 shadow-md
@@ -125,7 +119,6 @@ const AgentBadge = () => {
         isOpen={showPopup} 
         onClose={() => setShowPopup(false)} 
         agentCode={agentCode}
-        triggerPosition={badgePosition}
       />
     </>
   );
