@@ -1,8 +1,7 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export const AgentBadge = () => {
+const AgentBadge = () => {
   const [agentCode, setAgentCode] = useState<string | null>(null);
   const [show, setShow] = useState(false);
 
@@ -10,7 +9,6 @@ export const AgentBadge = () => {
     const fetchCode = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        
         if (!user) return;
 
         if (user.email === "wikus77@hotmail.it") {
@@ -24,35 +22,35 @@ export const AgentBadge = () => {
           .eq("id", user.id)
           .single();
 
+        if (error) throw error;
         if (data?.agent_code) {
-          setAgentCode(data.agent_code.replace("AG-", ""));
+          const code = data.agent_code.replace("AG-", "");
+          setAgentCode(code);
         }
       } catch (err) {
-        console.error("Error fetching agent code:", err);
+        console.error("Errore recuperando il codice agente:", err);
       }
     };
 
     fetchCode();
-
-    const timeout = setTimeout(() => {
-      setShow(true);
-    }, 2000);
-
-    return () => clearTimeout(timeout);
+    const timer = setTimeout(() => setShow(true), 2000);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
     <div
       className={`
         flex items-center gap-2 px-3 py-1
-        text-sm font-mono text-white
-        bg-[#0e0e0e]/80 border border-white/20
-        rounded-full shadow
+        bg-[#0e0e0e]/80 text-white font-mono text-sm
+        border border-white/20 shadow-md
+        rounded-full
         ${show ? "animate-glow" : "opacity-0"}
       `}
     >
-      <span className="text-cyan-400">M1-AGENT-{agentCode || "?????"}</span>
-      <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+      <span className="text-cyan-400">
+        M1-AGENT-{agentCode ?? "?????"}
+      </span>
+      <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
     </div>
   );
 };
