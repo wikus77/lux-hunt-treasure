@@ -40,9 +40,9 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from<any>("private.pre_registrations_with_index")
-        .select("*")
-        .order("created_at", { ascending: true });
+  .from<any, any>("private.pre_registrations_with_index")
+  .select("*")
+  .order("created_at", { ascending: true });
 
       if (error) {
         console.error("Error fetching pre-registrations:", error);
