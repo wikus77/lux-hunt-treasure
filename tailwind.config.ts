@@ -1,4 +1,3 @@
-
 import type { Config } from 'tailwindcss';
 import animate from 'tailwindcss-animate';
 
@@ -161,7 +160,17 @@ const config: Config = {
           '50%': { transform: 'translateY(0)' },
           '75%': { transform: 'translateY(8px)' },
           '100%': { transform: 'translateY(0)' }
-        }
+        },
+        'glow': {
+          from: {
+            opacity: '0',
+            textShadow: 'none',
+          },
+          to: {
+            opacity: '1',
+            textShadow: '0 0 6px rgba(0, 255, 255, 0.6)',
+          },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -179,7 +188,8 @@ const config: Config = {
         'magnetic-animation': 'magnetic-effect 8s ease-in-out infinite',
         'rotate-3d-animation': 'rotate-3d 12s ease-in-out infinite',
         'marquee-animation': 'marquee 20s linear infinite',
-        'wave-text': 'wave-text-effect 2.5s ease-in-out infinite'
+        'wave-text': 'wave-text-effect 2.5s ease-in-out infinite',
+        'glow': 'glow 0.6s ease-in-out 2s forwards',
       },
       fontFamily: {
         'inter': ['Inter', 'sans-serif'],
