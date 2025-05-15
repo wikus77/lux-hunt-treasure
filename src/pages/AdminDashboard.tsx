@@ -35,9 +35,9 @@ const AdminDashboard = () => {
   const fetchPreRegistrations = async () => {
     setLoading(true);
     try {
-      // Utilizziamo la nuova vista per ottenere i dati con numerazione progressiva
+      // Utilizziamo la view che è stata spostata nello schema private
       const { data, error } = await supabase
-        .from('pre_registrations_with_index')
+        .from('private.pre_registrations_with_index')
         .select('*')
         .order('created_at', { ascending: true });
       
