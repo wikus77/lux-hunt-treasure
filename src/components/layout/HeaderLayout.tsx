@@ -32,8 +32,8 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
             {!leftContent && <M1ssionText />}
           </div>
           
-          {/* Center section with agent badge */}
-          <div className="hidden md:flex items-center justify-center">
+          {/* Center section with agent badge - visible on all screen sizes */}
+          <div className="flex items-center justify-center">
             <AgentBadge />
           </div>
 

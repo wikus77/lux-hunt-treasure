@@ -9,7 +9,7 @@ import { getMissionDeadline } from "@/utils/countdownDate";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
+import AgentBadge from "@/components/AgentBadge";
 
 interface MapHeaderProps {
   onAddMarker: () => void;
@@ -38,51 +38,7 @@ const MapHeader = ({
     });
   };
 
-  const [agentCode, setAgentCode] = useState("AG-X480");
-  const [showCodeText, setShowCodeText] = useState(false);
   const isMobile = useIsMobile();
-  
-  // Special admin constants
-  const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';
-  const SPECIAL_ADMIN_CODE = 'X0197';
-
-  useEffect(() => {
-    const fetchAgentCode = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          // Check if user is the special admin
-          if (user.email?.toLowerCase() === SPECIAL_ADMIN_EMAIL.toLowerCase()) {
-            setAgentCode(SPECIAL_ADMIN_CODE);
-            return;
-          }
-          
-          // Otherwise check if they have an agent code in their profile
-          const { data } = await supabase
-            .from('profiles')
-            .select('agent_code')
-            .eq('id', user.id)
-            .single();
-            
-          if (data?.agent_code) {
-            setAgentCode(data.agent_code);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching agent code:", error);
-      }
-    };
-    
-    fetchAgentCode();
-    
-    // Typewriter effect for agent dossier - increased to 2 seconds
-    const timer = setTimeout(() => {
-      setShowCodeText(true);
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <>
@@ -92,26 +48,13 @@ const MapHeader = ({
           <div className="flex items-center justify-between h-14 sm:h-16">
             <div className="flex items-center">
               <M1ssionText />
-              
-              {/* Agent dossier code with typewriter effect - desktop only */}
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-                className="hidden sm:flex items-center ml-2"
-              >
-                <span className="text-cyan-400 font-mono text-xs mr-1">DOSSIER:</span>
-                <motion.span 
-                  className="font-mono text-white bg-cyan-900/30 px-2 py-1 rounded-md text-xs"
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: "auto", opacity: showCodeText ? 1 : 0 }}
-                  transition={{ delay: 0.5, duration: 0.5 }}
-                >
-                  {agentCode}
-                </motion.span>
-              </motion.div>
             </div>
 
+            {/* Center section with agent badge - visible on all screen sizes */}
+            <div className="flex items-center justify-center">
+              <AgentBadge />
+            </div>
+            
             {/* Right side actions */}
             <div className="flex items-center gap-2">
               <button
@@ -131,24 +74,6 @@ const MapHeader = ({
               </button>
             </div>
           </div>
-
-          {/* Mobile agent code - compact version for small screens */}
-          <motion.div 
-            className="sm:hidden flex justify-center items-center py-1"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-          >
-            <span className="text-cyan-400 font-mono text-[10px] mr-1">DOSSIER:</span>
-            <motion.span 
-              className="font-mono text-white bg-cyan-900/30 px-1.5 py-0.5 rounded-md text-[10px]"
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: "auto", opacity: showCodeText ? 1 : 0 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-            >
-              {agentCode}
-            </motion.span>
-          </motion.div>
           
           {/* Countdown Timer - centered and more compact */}
           <div className="flex justify-center pb-1.5 pt-0.5">

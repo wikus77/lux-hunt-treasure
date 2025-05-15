@@ -18,7 +18,6 @@ import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
 import CarBrandSelection from "@/components/landing/CarBrandSelection";
 import KYCSection from "@/components/kyc/KYCSection";
 import PreRegistrationForm from "@/components/landing/PreRegistrationForm";
-import MobileStoreButtons from "@/components/landing/MobileStoreButtons";
 
 interface IndexContentProps {
   countdownCompleted: boolean;
@@ -166,21 +165,7 @@ const IndexContent = ({
         </div>
       </div>
       
-      {/* Disponibile su sezione */}
-      <div className="py-12 bg-gradient-to-b from-black to-[#06071b]">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
-            Disponibile su
-          </h2>
-          
-          <MobileStoreButtons className="justify-center mx-auto max-w-md" />
-          
-          <p className="text-white/50 mt-6 text-sm">
-            Scarica l'app per avere accesso a tutte le funzionalità e ricevere notifiche in tempo reale.
-          </p>
-        </div>
-      </div>
-      
+      {/* Manteniamo la sezione corretta nel footer e rimuoviamo la sezione duplicata qui */}
       <LandingFooter />
 
       {/* Prize Details Modal */}

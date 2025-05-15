@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import AppStoreButtons from "./AppStoreButtons";
+import MobileStoreButtons from "./MobileStoreButtons";
 
 const LandingFooter = () => {
   return (
@@ -10,7 +10,7 @@ const LandingFooter = () => {
         {/* App Store Buttons Section */}
         <div className="mb-12 py-8 border-b border-white/10">
           <h3 className="text-xl font-bold text-center mb-6 gradient-text-cyan">Scarica l'app</h3>
-          <AppStoreButtons />
+          <MobileStoreButtons className="justify-center mx-auto max-w-md" />
         </div>
         
         <div className="flex flex-col md:flex-row justify-between items-center w-full mb-8">
