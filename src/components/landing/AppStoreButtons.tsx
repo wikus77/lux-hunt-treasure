@@ -15,7 +15,7 @@ const AppStoreButtons = () => {
         href={isActive ? "https://apps.apple.com/app/id0000000000" : undefined}
         target={isActive ? "_blank" : undefined}
         rel={isActive ? "noopener noreferrer" : undefined}
-        className={`${!isActive && 'pointer-events-none opacity-80'}`}
+        className={`${!isActive && 'pointer-events-none opacity-80'} transition-transform hover:scale-105`}
         aria-label="Download on App Store"
       >
         <img 
@@ -28,7 +28,7 @@ const AppStoreButtons = () => {
         href={isActive ? "https://play.google.com/store/apps/details?id=com.tuonome.app" : undefined}
         target={isActive ? "_blank" : undefined}
         rel={isActive ? "noopener noreferrer" : undefined}
-        className={`${!isActive && 'pointer-events-none opacity-80'}`}
+        className={`${!isActive && 'pointer-events-none opacity-80'} transition-transform hover:scale-105`}
         aria-label="Get it on Google Play"
       >
         <img 
