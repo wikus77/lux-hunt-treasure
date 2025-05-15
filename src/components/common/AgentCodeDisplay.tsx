@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
@@ -66,40 +65,27 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
             return;
           }
           
-          const { data: profile, error } = await supabase
+          // Otherwise check if they have an agent code in their profile
+          const { data } = await supabase
             .from('profiles')
             .select('agent_code')
             .eq('id', user.id)
             .single();
-
-          if (error) {
-            console.error("Error fetching profile:", error);
-          } else if (profile && profile.agent_code) {
-            setAgentCode(profile.agent_code);
-          } else {
-            const newAgentCode = await generateAgentCode();
-            setAgentCode(newAgentCode);
             
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({ agent_code: newAgentCode })
-              .eq('id', user.id);
-
-            if (updateError) {
-              console.error("Error updating agent code:", updateError);
-            }
+          if (data?.agent_code) {
+            setAgentCode(data.agent_code);
           }
         }
       } catch (error) {
-        console.error("Error in agent code fetch:", error);
+        console.error("Error fetching agent code:", error);
       } finally {
         setIsLoading(false);
       }
     };
-
+    
     fetchAgentCode();
     
-    // Add animation delay - increased to 2 seconds
+    // Typewriter effect for agent dossier - increased to 2 seconds
     const timer = setTimeout(() => {
       setIsCodeVisible(true);
     }, 2000);

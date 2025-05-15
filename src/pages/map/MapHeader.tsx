@@ -102,7 +102,7 @@ const MapHeader = ({
               >
                 <span className="text-cyan-400 font-mono text-xs mr-1">DOSSIER:</span>
                 <motion.span 
-                  className="font-mono text-white bg-cyan-900/30 px-2 py-1 rounded text-xs"
+                  className="font-mono text-white bg-cyan-900/30 px-2 py-1 rounded-md text-xs"
                   initial={{ width: 0, opacity: 0 }}
                   animate={{ width: "auto", opacity: showCodeText ? 1 : 0 }}
                   transition={{ delay: 0.5, duration: 0.5 }}
@@ -141,7 +141,7 @@ const MapHeader = ({
           >
             <span className="text-cyan-400 font-mono text-[10px] mr-1">DOSSIER:</span>
             <motion.span 
-              className="font-mono text-white bg-cyan-900/30 px-1.5 py-0.5 rounded text-[10px]"
+              className="font-mono text-white bg-cyan-900/30 px-1.5 py-0.5 rounded-md text-[10px]"
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: "auto", opacity: showCodeText ? 1 : 0 }}
               transition={{ delay: 0.6, duration: 0.5 }}
