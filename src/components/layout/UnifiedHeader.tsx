@@ -40,7 +40,7 @@ const UnifiedHeader = ({ profileImage, onClickMail, leftComponent }: UnifiedHead
           <HeaderCountdown />
         </div>
         
-        <div className="hidden flex-1 md:flex justify-center">
+        <div className="flex-1 flex justify-center">
           <AgentBadge />
         </div>
 

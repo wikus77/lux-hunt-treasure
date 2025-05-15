@@ -32,7 +32,7 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
         </div>
         
         {/* Center section with agent badge and real-time indicator */}
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="flex sm:flex items-center gap-3">
           <AgentBadge />
           <RealtimeStatusIndicator isConnected={isConnected} />
         </div>
