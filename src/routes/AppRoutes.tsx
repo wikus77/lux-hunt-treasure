@@ -7,9 +7,9 @@ import Admin from "../pages/Admin"; // Direct import for debugging
 import { PublicRoutes } from "./groups/PublicRoutes";
 import { UserRoutes } from "./groups/UserRoutes";
 import { AdminRoutes } from "./groups/AdminRoutes";
-import { SettingsRoutes } from "./groups/SettingsRoutes";
-import { PremiumRoutes } from "./groups/PremiumRoutes";
-import { PaymentRoutes } from "./groups/PaymentRoutes";
+import SettingsRoutes from "./groups/SettingsRoutes";
+import PremiumRoutes from "./groups/PremiumRoutes";
+import PaymentRoutes from "./groups/PaymentRoutes";
 
 /**
  * Application routes organized by categories:
