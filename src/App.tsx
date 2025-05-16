@@ -12,6 +12,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
+import GlobalLayout from "./components/layout/GlobalLayout";
 
 function App() {
   return (
@@ -19,16 +20,18 @@ function App() {
       <SoundProvider>
         <AuthProvider>
           <ErrorBoundary>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/home" element={<Home />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/test-agent" element={<TestAgent />} />
-            </Routes>
-            <Toaster position="top-right" />
+            <GlobalLayout>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/test-agent" element={<TestAgent />} />
+              </Routes>
+              <Toaster position="top-right" />
+            </GlobalLayout>
           </ErrorBoundary>
         </AuthProvider>
       </SoundProvider>

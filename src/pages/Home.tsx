@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import BriefProfileModal from "@/components/profile/BriefProfileModal";
@@ -11,7 +12,7 @@ import NotificationsBanner from "@/components/notifications/NotificationsBanner"
 import HomeLayout from "@/components/home/HomeLayout";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
-import DynamicIsland from "@/components/DynamicIsland";
+// Removed DynamicIsland import as it's now provided globally
 
 const Home = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -82,12 +83,7 @@ const Home = () => {
         <title>M1SSION - Home</title>
       </Helmet>
 
-      {/* ✅ Dynamic Island centrata */}
-      <div className="fixed top-4 inset-x-0 z-50 flex justify-center pointer-events-none">
-        <div className="pointer-events-auto">
-          <DynamicIsland />
-        </div>
-      </div>
+      {/* Removed DynamicIsland component here as it's now provided globally */}
 
       <AnimatePresence>
         {isLoaded && (
