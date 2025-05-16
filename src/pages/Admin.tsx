@@ -1,10 +1,16 @@
-
-import AdminPrizeForm from '@/pages/AdminPrizeForm'; // Update the import path
+'use client';
+import { useEffect } from 'react';
 
 export default function Admin() {
+  useEffect(() => {
+    document.title = 'Admin Test - M1SSION';
+  }, []);
+
   return (
-    <div className="min-h-screen bg-black text-white">
-      <AdminPrizeForm />
+    <div style={{ color: 'white', padding: '4rem', textAlign: 'center' }}>
+      ✅ TEST DI ADMIN ATTIVO<br />
+      Se vedi questo messaggio, la pagina funziona.<br />
+      Il problema è **solo** dentro `AdminPrizeForm`.
     </div>
   );
 }
