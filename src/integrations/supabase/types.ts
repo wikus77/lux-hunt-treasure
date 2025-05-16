@@ -349,6 +349,42 @@ export type Database = {
         }
         Relationships: []
       }
+      prizes: {
+        Row: {
+          acceleration: string | null
+          created_at: string
+          description: string | null
+          engine: string | null
+          id: string
+          image_url: string | null
+          name: string | null
+          power: string | null
+          traction: string | null
+        }
+        Insert: {
+          acceleration?: string | null
+          created_at?: string
+          description?: string | null
+          engine?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string | null
+          power?: string | null
+          traction?: string | null
+        }
+        Update: {
+          acceleration?: string | null
+          created_at?: string
+          description?: string | null
+          engine?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string | null
+          power?: string | null
+          traction?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null

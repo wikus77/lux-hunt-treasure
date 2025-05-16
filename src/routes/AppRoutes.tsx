@@ -37,6 +37,7 @@ import Leaderboard from "../pages/Leaderboard";
 import Notifications from "../pages/Notifications";
 import AccessDenied from "../pages/AccessDenied";
 import AdminDashboard from "../pages/AdminDashboard";
+import Admin from "../pages/Admin";
 import { EmailVerificationPage } from "../components/auth/EmailVerificationHandler";
 
 const AppRoutes = () => {
@@ -105,6 +106,16 @@ const AppRoutes = () => {
       {/* Admin Dashboard - Only for admin users */}
       <Route
         path="/admin"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['admin']}>
+            <Admin />
+          </RoleBasedProtectedRoute>
+        }
+      />
+
+      {/* Old admin dashboard route with new component */}
+      <Route
+        path="/admin-dashboard"
         element={
           <RoleBasedProtectedRoute allowedRoles={['admin']}>
             <AdminDashboard />
