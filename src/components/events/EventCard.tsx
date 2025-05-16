@@ -31,7 +31,7 @@ interface EventCardProps {
   images: EventImage[];
   detailedDescription: string;
   mysteryPrizes?: MysteryPrize[];
-  gender: "man" | "woman"; // Added gender prop to match what's being passed in EventsPage.tsx
+  gender: "man" | "woman";
 }
 
 export const EventCard = ({ 
@@ -45,7 +45,7 @@ export const EventCard = ({
   images,
   detailedDescription,
   mysteryPrizes,
-  gender, // Added gender to destructuring
+  gender,
 }: EventCardProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
