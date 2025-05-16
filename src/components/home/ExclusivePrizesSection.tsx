@@ -45,7 +45,7 @@ const ExclusivePrizesSection = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="perspective-1000 cursor-pointer"
+                className="card-container perspective-1000 cursor-pointer"
                 onClick={() => toggleCardFlip(index)}
                 onKeyDown={(e) => e.key === "Enter" && toggleCardFlip(index)}
                 tabIndex={0}
@@ -53,14 +53,10 @@ const ExclusivePrizesSection = () => {
                 aria-pressed={flippedCards.includes(index)}
               >
                 <div 
-                  className={`relative h-full transition-transform duration-700 transform-style-3d ${flippedCards.includes(index) ? 'rotate-y-180' : ''}`}
-                  style={{ transformStyle: 'preserve-3d' }}
+                  className={`card relative h-full transition-transform duration-700 transform-style-3d ${flippedCards.includes(index) ? 'is-flipped' : ''}`}
                 >
                   {/* Front of card */}
-                  <div 
-                    className="bg-black/40 rounded-lg overflow-hidden border border-gray-800 hover:border-cyan-500/30 transition-colors group absolute w-full h-full backface-hidden"
-                    style={{ backfaceVisibility: 'hidden' }}
-                  >
+                  <div className="card-front bg-black/40 rounded-lg overflow-hidden border border-gray-800 hover:border-cyan-500/30 transition-colors group">
                     <div className="aspect-video overflow-hidden relative">
                       <img 
                         src={prize.imageUrl} 
@@ -87,10 +83,7 @@ const ExclusivePrizesSection = () => {
                   </div>
                   
                   {/* Back of card */}
-                  <div 
-                    className="bg-black/70 rounded-lg overflow-hidden border border-gray-800 hover:border-cyan-500/30 transition-colors absolute w-full h-full backface-hidden rotate-y-180 p-4"
-                    style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-                  >
+                  <div className="card-back bg-black/70 rounded-lg overflow-hidden border border-gray-800 hover:border-cyan-500/30 transition-colors p-4">
                     <div className="h-full flex flex-col">
                       <h3 className="text-lg font-bold text-cyan-400 mb-3 text-center">
                         {prize.description.split(',')[0]}
