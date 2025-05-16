@@ -2,11 +2,20 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { mysteryPrizes } from "@/data/mysteryPrizesData";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronLeft, Gauge, Zap, Fuel, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const ExclusivePrizesSection = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [flippedCards, setFlippedCards] = useState<number[]>([]);
+  
+  const toggleCardFlip = (index: number) => {
+    setFlippedCards(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index) 
+        : [...prev, index]
+    );
+  };
   
   return (
     <div className="mt-8 mb-12">
@@ -36,33 +45,89 @@ const ExclusivePrizesSection = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="bg-black/40 rounded-lg overflow-hidden border border-gray-800 hover:border-cyan-500/30 transition-colors group"
+                className="perspective-1000 cursor-pointer"
+                onClick={() => toggleCardFlip(index)}
+                onKeyDown={(e) => e.key === "Enter" && toggleCardFlip(index)}
+                tabIndex={0}
+                role="button"
+                aria-pressed={flippedCards.includes(index)}
               >
-                <div className="aspect-video overflow-hidden relative">
-                  <img 
-                    src={prize.imageUrl} 
-                    alt={`Premio ${index + 1}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-60" />
-                </div>
-                
-                <div className="p-4">
-                  <h3 className="text-lg font-bold text-white mb-2">
-                    {prize.description.split(',')[0]}
-                  </h3>
-                  
-                  <p className="text-gray-400 text-sm mb-4">
-                    {prize.description.split(',')[1] || "Auto esclusiva per gli agenti M1SSION"}
-                  </p>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-between bg-gradient-to-r from-gray-900/50 to-black border-cyan-500/30 hover:bg-black/60 group-hover:border-cyan-400/60"
+                <div 
+                  className={`relative h-full transition-transform duration-700 transform-style-3d ${flippedCards.includes(index) ? 'rotate-y-180' : ''}`}
+                  style={{ transformStyle: 'preserve-3d' }}
+                >
+                  {/* Front of card */}
+                  <div 
+                    className="bg-black/40 rounded-lg overflow-hidden border border-gray-800 hover:border-cyan-500/30 transition-colors group absolute w-full h-full backface-hidden"
+                    style={{ backfaceVisibility: 'hidden' }}
                   >
-                    <span>Scopri la missione</span>
-                    <ChevronRight size={16} className="text-cyan-400" />
-                  </Button>
+                    <div className="aspect-video overflow-hidden relative">
+                      <img 
+                        src={prize.imageUrl} 
+                        alt={`Premio ${index + 1}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-60" />
+                    </div>
+                    
+                    <div className="p-4">
+                      <h3 className="text-lg font-bold text-white mb-2">
+                        {prize.description.split(',')[0]}
+                      </h3>
+                      
+                      <p className="text-gray-400 text-sm mb-4">
+                        {prize.description.split(',')[1] || "Auto esclusiva per gli agenti M1SSION"}
+                      </p>
+                      
+                      <div className="flex items-center justify-center mt-2 text-xs text-cyan-400">
+                        <span>Tocca per dettagli</span>
+                        <RotateCw size={14} className="ml-1" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Back of card */}
+                  <div 
+                    className="bg-black/70 rounded-lg overflow-hidden border border-gray-800 hover:border-cyan-500/30 transition-colors absolute w-full h-full backface-hidden rotate-y-180 p-4"
+                    style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                  >
+                    <div className="h-full flex flex-col">
+                      <h3 className="text-lg font-bold text-cyan-400 mb-3 text-center">
+                        {prize.description.split(',')[0]}
+                      </h3>
+                      
+                      <div className="space-y-3 flex-grow">
+                        <div className="flex items-center text-gray-200">
+                          <Gauge className="text-cyan-500 mr-2" size={18} />
+                          <span className="font-medium">Potenza:</span>
+                          <span className="ml-auto">{index === 0 ? "670 CV" : index === 1 ? "780 CV" : "760 CV"}</span>
+                        </div>
+                        
+                        <div className="flex items-center text-gray-200">
+                          <Zap className="text-cyan-500 mr-2" size={18} />
+                          <span className="font-medium">0-100 km/h:</span>
+                          <span className="ml-auto">{index === 0 ? "3.0s" : index === 1 ? "2.9s" : "2.8s"}</span>
+                        </div>
+                        
+                        <div className="flex items-center text-gray-200">
+                          <RotateCw className="text-cyan-500 mr-2" size={18} />
+                          <span className="font-medium">Cambio:</span>
+                          <span className="ml-auto">{index === 0 ? "Automatico 7" : index === 1 ? "Doppia frizione" : "Sequenziale"}</span>
+                        </div>
+                        
+                        <div className="flex items-center text-gray-200">
+                          <Fuel className="text-cyan-500 mr-2" size={18} />
+                          <span className="font-medium">Motore:</span>
+                          <span className="ml-auto">{index === 0 ? "V8 Turbo" : index === 1 ? "V12" : "V10"}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-center mt-4 text-xs text-cyan-400">
+                        <span>Tocca per tornare</span>
+                        <RotateCw size={14} className="ml-1" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             ))}

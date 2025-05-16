@@ -5,6 +5,7 @@
 @import './transitions.css';
 @import './hover-effects.css';
 @import './parallax.css';
+@import './flip-card.css';
 
 /* Additional Awwwards-style animations */
 .gradient-white-text {

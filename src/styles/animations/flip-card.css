@@ -1,0 +1,23 @@
+
+/* Flip Card Animation Styles */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg) scale(1.05);
+}
+
+@media (hover: hover) {
+  .transform-style-3d:hover {
+    transform: scale(1.02);
+  }
+}
