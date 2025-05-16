@@ -54,7 +54,7 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6 p-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6 p-1 rounded-2xl shadow-xl p-6">
             {prizes.map((prize, index) => {
               const longPressProps = useLongPress(() => setPreviewImage(prize.image));
               
