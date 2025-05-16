@@ -6,13 +6,15 @@ import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const ExclusivePrizesSection = () => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  
   return (
     <div className="mt-8 mb-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="max-w-md mx-auto"
+        className="max-w-4xl mx-auto"
       >
         <div className="bg-gray-900/60 backdrop-blur-sm p-6 rounded-lg shadow-xl border border-gray-800">
           <h2 className="text-2xl font-bold text-white mb-3 text-center flex items-center justify-center gap-2">
@@ -27,12 +29,12 @@ const ExclusivePrizesSection = () => {
           <div className="h-0.5 w-full mb-6 bg-gradient-to-r from-purple-600 via-cyan-500 to-blue-500" />
           
           {/* Prize cards */}
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {mysteryPrizes.map((prize, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
                 className="bg-black/40 rounded-lg overflow-hidden border border-gray-800 hover:border-cyan-500/30 transition-colors group"
               >

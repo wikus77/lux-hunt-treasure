@@ -40,7 +40,7 @@ export default function HomeContent() {
           {/* Display actual CommandCenter once all modules are unlocked */}
           <CommandCenterWrapper allModulesUnlocked={areAllModulesUnlocked()} />
           
-          {/* Exclusive Prizes Section - Now inline rather than modal */}
+          {/* New Exclusive Prizes Section */}
           <ExclusivePrizesSection />
           
           {/* Luxury Cars Section */}
