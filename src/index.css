@@ -68,7 +68,7 @@
     stroke-linecap: round;
     stroke-dasharray: 900;
     stroke-dashoffset: 0;
-    animation: laser-loop 6s linear infinite;
+    animation: laser-loop 4s linear infinite;
   }
 
   @keyframes laser-loop {

@@ -84,9 +84,9 @@ export default function DynamicIsland() {
                 </stop>
               </linearGradient>
               <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#00ffff" flood-opacity="0.7"/>
-                <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#00ffff" flood-opacity="0.4"/>
-                <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#00ffff" flood-opacity="0.2"/>
+                <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#00ffff" flood-opacity="0.8"/>
+                <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#00ffff" flood-opacity="0.4"/>
+                <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#00ffff" flood-opacity="0.2"/>
               </filter>
             </defs>
             <path
