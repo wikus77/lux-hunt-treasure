@@ -11,7 +11,7 @@ import NotificationsBanner from "@/components/notifications/NotificationsBanner"
 import HomeLayout from "@/components/home/HomeLayout";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
-import { DynamicIsland } from "@/components/DynamicIsland";
+import DynamicIsland from "@/components/DynamicIsland";
 
 const Home = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
