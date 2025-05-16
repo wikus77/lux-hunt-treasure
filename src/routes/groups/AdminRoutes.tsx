@@ -1,6 +1,6 @@
 
-import { Routes, Route } from 'react-router-dom';
-import Admin from '@/pages/Admin'; // Ensure correct import path
+import { Route, Routes } from 'react-router-dom';
+import Admin from '../../pages/Admin'; // Corretto il path di importazione
 import RoleBasedProtectedRoute from '@/components/auth/RoleBasedProtectedRoute';
 import { useState, useEffect } from 'react';
 
@@ -12,8 +12,16 @@ export default function AdminRoutes() {
     const expirationDate = new Date('2025-05-21T00:00:00');
     const currentDate = new Date();
     
+    console.log('AdminRoutes: Checking bypass protection', {
+      currentDate: currentDate.toISOString(),
+      expirationDate: expirationDate.toISOString(),
+      shouldBypass: currentDate < expirationDate
+    });
+    
     setBypassProtection(currentDate < expirationDate);
   }, []);
+
+  console.log('AdminRoutes rendering, bypassProtection:', bypassProtection);
 
   return (
     <Routes>

@@ -1,6 +1,7 @@
 
 import { Routes, Route } from "react-router-dom";
 import NotFound from "../pages/NotFound";
+import Admin from "../pages/Admin"; // Importazione diretta per debug
 
 // Route Groups
 import PublicRoutes from "./groups/PublicRoutes";
@@ -32,6 +33,9 @@ const AppRoutes = () => {
       
       {/* Admin Routes */}
       <AdminRoutes />
+      
+      {/* Direct Admin Route for Debugging */}
+      <Route path="/direct-admin" element={<Admin />} />
       
       {/* Settings Routes */}
       <SettingsRoutes />
