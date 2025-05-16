@@ -12,13 +12,15 @@ interface GlobalLayoutProps {
  */
 const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   return (
-    <>
-      {/* Global DynamicIsland component */}
+    <div className="relative min-h-screen">
+      {/* Global DynamicIsland component positioned at the top center */}
       <DynamicIsland />
       
       {/* Page content */}
-      {children}
-    </>
+      <div className="relative z-10">
+        {children}
+      </div>
+    </div>
   );
 };
 
