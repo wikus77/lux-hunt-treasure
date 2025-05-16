@@ -72,9 +72,12 @@ export default function DynamicIsland() {
           transition={{ type: "spring", stiffness: 240, damping: 22 }}
           style={{ height: 44, minWidth: 120 }}
         >
-          {/* Laser SVG Animation Border */}
-          <svg className="laser-border" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <rect x="1" y="1" width="98" height="98" rx="50" ry="50" className="pulse-path" fill="none"/>
+          {/* Custom path SVG laser border animation */}
+          <svg className="laser-border" viewBox="0 0 260 56" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M28,1 H232 A27,27 0 0 1 259,28 A27,27 0 0 1 232,55 H28 A27,27 0 0 1 1,28 A27,27 0 0 1 28,1 Z"
+              className="pulse-path"
+            />
           </svg>
           
           <span className="text-sm font-medium leading-none tracking-tight">
