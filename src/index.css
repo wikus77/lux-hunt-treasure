@@ -51,28 +51,12 @@
   .dynamic-island {
     position: relative;
     overflow: visible;
-  }
-
-  .laser-border {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 10;
-  }
-
-  .pulse-path {
-    stroke-width: 2.5;
-    fill: none;
-    stroke-linecap: round;
-    stroke-dasharray: 900;
-    stroke-dashoffset: 0;
-    animation: laser-loop 5s linear infinite;
-  }
-
-  @keyframes laser-loop {
-    to { stroke-dashoffset: -900; }
+    background: linear-gradient(to bottom, #1a1a1a, #0d0d0d);
+    border-radius: 28px;
+    box-shadow:
+      inset 0 1px 3px rgba(255, 255, 255, 0.05),
+      0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: none;
   }
 }
 

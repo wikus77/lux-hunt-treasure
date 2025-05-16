@@ -6,8 +6,6 @@ import UserMenu from "./header/UserMenu";
 import MobileMenuButton from "./header/MobileMenuButton";
 import { MobileMenu } from "./header/MobileMenu";
 import HeaderCountdown from "./header/HeaderCountdown";
-import AgentBadge from "@/components/AgentBadge";
-import useAgentCode from "@/hooks/useAgentCode";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -41,7 +39,7 @@ const UnifiedHeader = ({ profileImage, onClickMail, leftComponent }: UnifiedHead
         </div>
         
         <div className="flex-1 flex justify-center">
-          <AgentBadge />
+          {/* AgentBadge removed */}
         </div>
 
         <div className="flex flex-1 items-center justify-end space-x-3 md:space-x-4">

@@ -60,7 +60,7 @@ export default function DynamicIsland() {
       <div className="relative">
         <motion.div
           layoutId="dynamic-island"
-          className={`dynamic-island z-50 flex items-center justify-center cursor-pointer text-sm font-medium shadow-md bg-black text-white px-6`}
+          className={`dynamic-island z-50 flex items-center justify-center cursor-pointer text-sm font-medium shadow-md bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] text-white px-6`}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => setIsOpen((prev) => !prev)}
@@ -72,34 +72,9 @@ export default function DynamicIsland() {
           transition={{ type: "spring", stiffness: 240, damping: 22 }}
           style={{ height: 44, minWidth: 120 }}
         >
-          {/* Custom SVG laser border with gradient animation and glow effect */}
-          <svg className="laser-border" viewBox="0 0 260 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="laserGradient" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#00ffff">
-                  <animate attributeName="stop-color" values="#00ffff;#ff00ff;#8000ff;#00ffff" dur="4s" repeatCount="indefinite"/>
-                </stop>
-                <stop offset="100%" stopColor="#00ffff">
-                  <animate attributeName="stop-color" values="#00ffff;#ff00ff;#8000ff;#00ffff" dur="4s" repeatCount="indefinite"/>
-                </stop>
-              </linearGradient>
-              <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
-                <feDropShadow dx="0" dy="0" stdDeviation="2.5" flood-color="#00ffff" flood-opacity="0.6"/>
-                <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#00ffff" flood-opacity="0.35"/>
-                <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#00ffff" flood-opacity="0.2"/>
-              </filter>
-            </defs>
-            <path
-              d="M28,0 H232 A28,28 0 0 1 260,28 A28,28 0 0 1 232,56 H28 A28,28 0 0 1 0,28 A28,28 0 0 1 28,0 Z"
-              className="pulse-path"
-              stroke="url(#laserGradient)"
-              filter="url(#glow)"
-            />
-          </svg>
-          
           <span className="text-sm font-medium leading-none tracking-tight">
             <span className="text-[#00f0ff]">M</span>
-            <span className="text-white">1-AGENT-{agentId}</span>
+            <span className="text-white">1-{agentId}</span>
           </span>
         </motion.div>
       </div>
@@ -125,7 +100,7 @@ export default function DynamicIsland() {
                 <div>
                   <p className="text-sm font-semibold">
                     <span className="text-[#00f0ff]">M</span>
-                    <span className="text-white">1-AGENT-{agentId}</span>
+                    <span className="text-white">1-{agentId}</span>
                   </p>
                   <p className="text-xs text-gray-400">Hai ricevuto un nuovo indizio!</p>
                 </div>
