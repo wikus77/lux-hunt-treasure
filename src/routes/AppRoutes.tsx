@@ -1,15 +1,15 @@
 
 import { Routes, Route } from "react-router-dom";
 import NotFound from "../pages/NotFound";
-import Admin from "../pages/Admin"; // Importazione diretta per debug
+import Admin from "../pages/Admin"; // Direct import for debugging
 
-// Route Groups
-import PublicRoutes from "./groups/PublicRoutes";
-import UserRoutes from "./groups/UserRoutes";
-import AdminRoutes from "./groups/AdminRoutes";
-import SettingsRoutes from "./groups/SettingsRoutes";
-import PremiumRoutes from "./groups/PremiumRoutes";
-import PaymentRoutes from "./groups/PaymentRoutes";
+// Individual route files
+import { PublicRoutes } from "./groups/PublicRoutes";
+import { UserRoutes } from "./groups/UserRoutes";
+import { AdminRoutes } from "./groups/AdminRoutes";
+import { SettingsRoutes } from "./groups/SettingsRoutes";
+import { PremiumRoutes } from "./groups/PremiumRoutes";
+import { PaymentRoutes } from "./groups/PaymentRoutes";
 
 /**
  * Application routes organized by categories:
@@ -21,7 +21,7 @@ import PaymentRoutes from "./groups/PaymentRoutes";
  * - Payment routes (subscription and payment processing)
  */
 const AppRoutes = () => {
-  console.log('AppRoutes rendering - Admin route should be available via AdminRoutes');
+  console.log('AppRoutes rendering - Admin route should be available');
   
   return (
     <Routes>

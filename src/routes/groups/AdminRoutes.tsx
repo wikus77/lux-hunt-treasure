@@ -1,10 +1,11 @@
 
+import React from 'react';
 import { Route } from 'react-router-dom';
-import Admin from '../../pages/Admin'; // Corretto il path di importazione
+import Admin from '../../pages/Admin';
 import RoleBasedProtectedRoute from '@/components/auth/RoleBasedProtectedRoute';
 import { useState, useEffect } from 'react';
 
-export default function AdminRoutes() {
+export const AdminRoutes = () => {
   const [bypassProtection, setBypassProtection] = useState(false);
   
   useEffect(() => {
@@ -41,4 +42,4 @@ export default function AdminRoutes() {
       />
     </>
   );
-}
+};

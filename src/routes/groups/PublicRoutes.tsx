@@ -1,5 +1,6 @@
 
 import { Route } from 'react-router-dom';
+import React from 'react';
 import Index from '../../pages/Index';
 import Login from '../../pages/Login';
 import Register from '../../pages/Register';
@@ -11,7 +12,9 @@ import Terms from '../../pages/Terms';
 import CookiePolicy from '../../pages/CookiePolicy';
 
 // Public routes that don't require authentication
-const PublicRoutes = () => {
+export const PublicRoutes = () => {
+  console.log('PublicRoutes component rendering');
+  
   return (
     <>
       <Route path="/" element={<Index />} />
@@ -25,5 +28,3 @@ const PublicRoutes = () => {
     </>
   );
 };
-
-export default PublicRoutes;

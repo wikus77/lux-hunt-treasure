@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Route } from 'react-router-dom';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import Home from '../../pages/Home';
@@ -11,7 +12,7 @@ import Buzz from '../../pages/Buzz';
 import TestAgent from '../../pages/TestAgent';
 
 // Routes that require basic authentication
-const UserRoutes = () => {
+export const UserRoutes = () => {
   return (
     <>
       <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
@@ -25,5 +26,3 @@ const UserRoutes = () => {
     </>
   );
 };
-
-export default UserRoutes;
