@@ -72,21 +72,28 @@ export default function DynamicIsland() {
           transition={{ type: "spring", stiffness: 240, damping: 22 }}
           style={{ height: 44, minWidth: 120 }}
         >
-          {/* Custom SVG laser border with gradient animation */}
+          {/* Custom SVG laser border with gradient animation and glow effect */}
           <svg className="laser-border" viewBox="0 0 260 56" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="laserGradient" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stopColor="#00ffff">
-                  <animate attributeName="stop-color" values="#00ffff;#ff00ff;#8000ff;#00ffff" dur="4s" repeatCount="indefinite"/>
+                  <animate attributeName="stop-color" values="#00ffff;#ff00ff;#8000ff;#00ffff" dur="3s" repeatCount="indefinite"/>
                 </stop>
                 <stop offset="100%" stopColor="#00ffff">
-                  <animate attributeName="stop-color" values="#00ffff;#ff00ff;#8000ff;#00ffff" dur="4s" repeatCount="indefinite"/>
+                  <animate attributeName="stop-color" values="#00ffff;#ff00ff;#8000ff;#00ffff" dur="3s" repeatCount="indefinite"/>
                 </stop>
               </linearGradient>
+              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#00ffff" flood-opacity="0.7"/>
+                <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#00ffff" flood-opacity="0.4"/>
+                <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#00ffff" flood-opacity="0.2"/>
+              </filter>
             </defs>
             <path
               d="M28,0 H232 A28,28 0 0 1 260,28 A28,28 0 0 1 232,56 H28 A28,28 0 0 1 0,28 A28,28 0 0 1 28,0 Z"
               className="pulse-path"
+              stroke="url(#laserGradient)"
+              filter="url(#glow)"
             />
           </svg>
           
