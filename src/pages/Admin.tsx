@@ -1,7 +1,10 @@
+
+import AdminPrizeForm from '@/pages/AdminPrizeForm'; // Update the import path
+
 export default function Admin() {
   return (
-    <div style={{ color: 'white', padding: '4rem', textAlign: 'center' }}>
-      ✅ LA PAGINA /admin FUNZIONA
+    <div className="min-h-screen bg-black text-white">
+      <AdminPrizeForm />
     </div>
   );
 }
