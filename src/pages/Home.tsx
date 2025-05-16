@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import BriefProfileModal from "@/components/profile/BriefProfileModal";
@@ -10,9 +9,9 @@ import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 import HomeLayout from "@/components/home/HomeLayout";
-import DynamicIsland from "@/components/DynamicIsland";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
+import { DynamicIsland } from "@/components/DynamicIsland";
 
 const Home = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -28,11 +27,9 @@ const Home = () => {
     openNotificationsBanner,
     closeNotificationsBanner
   } = useNotificationManager();
-  
-  // Initialize real-time notifications (this sets up the listener)
+
   const { isConnected } = useRealTimeNotifications();
 
-  // Background particles for atmosphere
   const particles = Array.from({ length: isMobile ? 8 : 15 }, (_, i) => ({
     id: i,
     size: Math.random() * 3 + 1,
@@ -43,22 +40,17 @@ const Home = () => {
     color: i % 3 === 0 ? '#00E5FF' : i % 3 === 1 ? '#FFC300' : '#9b87f5',
   }));
 
-  // Improve loading experience
   useEffect(() => {
-    // Simple timer to ensure smooth UI transition
     const timer = setTimeout(() => {
       setIsLoaded(true);
     }, 300);
-    
     return () => clearTimeout(timer);
   }, []);
 
-  // Show connection status in console
   useEffect(() => {
     console.log("Real-time notification connection status:", isConnected);
   }, [isConnected]);
 
-  // Handle errors
   useEffect(() => {
     if (error) {
       toast.error("Si è verificato un errore", {
@@ -89,9 +81,14 @@ const Home = () => {
       <Helmet>
         <title>M1SSION - Home</title>
       </Helmet>
-      
-      <DynamicIsland />
-      
+
+      {/* ✅ Dynamic Island centrata */}
+      <div className="fixed top-4 inset-x-0 z-50 flex justify-center pointer-events-none">
+        <div className="pointer-events-auto">
+          <DynamicIsland />
+        </div>
+      </div>
+
       <AnimatePresence>
         {isLoaded && (
           <motion.div
@@ -100,7 +97,6 @@ const Home = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            {/* Notifications Banner */}
             {notificationsBannerOpen && (
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -118,15 +114,13 @@ const Home = () => {
                 />
               </motion.div>
             )}
-            
-            {/* Custom header implementation */}
+
             <HomeHeader 
               profileImage={profileImage}
               unreadCount={unreadCount}
               onShowNotifications={openNotificationsBanner}
             />
-            
-            {/* Increased top padding to accommodate header + countdown */}
+
             <main className={`pt-[120px] ${isMobile ? 'sm:pt-44' : 'sm:pt-44'} px-2 sm:px-4 max-w-screen-xl mx-auto pb-20`}>
               <CommandCenterHome />
             </main>
