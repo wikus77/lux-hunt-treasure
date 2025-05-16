@@ -25,26 +25,16 @@ const AppRoutes = () => {
   
   return (
     <Routes>
-      {/* Public Routes */}
+      {/* Include all route groups */}
       <PublicRoutes />
-      
-      {/* User Routes - Require Authentication */}
       <UserRoutes />
-      
-      {/* Admin Routes */}
       <AdminRoutes />
+      <SettingsRoutes />
+      <PremiumRoutes />
+      <PaymentRoutes />
       
       {/* Direct Admin Route for Debugging */}
       <Route path="/direct-admin" element={<Admin />} />
-      
-      {/* Settings Routes */}
-      <SettingsRoutes />
-      
-      {/* Premium Features Routes */}
-      <PremiumRoutes />
-      
-      {/* Payment Routes */}
-      <PaymentRoutes />
       
       {/* Fallback 404 Route */}
       <Route path="*" element={<NotFound />} />
