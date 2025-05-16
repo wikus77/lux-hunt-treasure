@@ -1,12 +1,11 @@
 
 import { Routes, Route } from "react-router-dom";
 import NotFound from "../pages/NotFound";
-import Admin from "../pages/Admin"; // Direct import for debugging
 
-// Individual route files
-import { PublicRoutes } from "./groups/PublicRoutes";
-import { UserRoutes } from "./groups/UserRoutes";
-import { AdminRoutes } from "./groups/AdminRoutes";
+// Route Groups
+import PublicRoutes from "./groups/PublicRoutes";
+import UserRoutes from "./groups/UserRoutes";
+import AdminRoutes from "./groups/AdminRoutes";
 import SettingsRoutes from "./groups/SettingsRoutes";
 import PremiumRoutes from "./groups/PremiumRoutes";
 import PaymentRoutes from "./groups/PaymentRoutes";
@@ -21,20 +20,27 @@ import PaymentRoutes from "./groups/PaymentRoutes";
  * - Payment routes (subscription and payment processing)
  */
 const AppRoutes = () => {
-  console.log('AppRoutes rendering - Admin route should be available');
+  console.log('AppRoutes rendering - Admin route should be available via AdminRoutes');
   
   return (
     <Routes>
-      {/* Include all route groups */}
+      {/* Public Routes */}
       <PublicRoutes />
-      <UserRoutes />
-      <AdminRoutes />
-      <SettingsRoutes />
-      <PremiumRoutes />
-      <PaymentRoutes />
       
-      {/* Direct Admin Route for Debugging */}
-      <Route path="/direct-admin" element={<Admin />} />
+      {/* User Routes - Require Authentication */}
+      <UserRoutes />
+      
+      {/* Admin Routes */}
+      <AdminRoutes />
+      
+      {/* Settings Routes */}
+      <SettingsRoutes />
+      
+      {/* Premium Features Routes */}
+      <PremiumRoutes />
+      
+      {/* Payment Routes */}
+      <PaymentRoutes />
       
       {/* Fallback 404 Route */}
       <Route path="*" element={<NotFound />} />

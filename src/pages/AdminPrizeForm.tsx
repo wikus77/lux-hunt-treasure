@@ -7,8 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
 export default function AdminPrizeForm() {
-  console.log('AdminPrizeForm rendering'); // Added debug log
-  
   const [loading, setLoading] = useState(false);
   const [connectionTest, setConnectionTest] = useState<{success: boolean, message: string} | null>(null);
   const [formData, setFormData] = useState({

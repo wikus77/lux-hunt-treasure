@@ -1,12 +1,18 @@
 
 import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Index from './pages/Index';
+import Register from './pages/Register';
+import Login from './pages/Login';
+import Home from './pages/Home';
+import Auth from './pages/Auth';
+import Profile from './pages/Profile';
+import TestAgent from './pages/TestAgent';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import GlobalLayout from "./components/layout/GlobalLayout";
-import AppContent from "./components/app/AppContent";
 
 function App() {
   return (
@@ -15,7 +21,15 @@ function App() {
         <AuthProvider>
           <ErrorBoundary>
             <GlobalLayout>
-              <AppContent />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/test-agent" element={<TestAgent />} />
+              </Routes>
               <Toaster position="top-right" />
             </GlobalLayout>
           </ErrorBoundary>
