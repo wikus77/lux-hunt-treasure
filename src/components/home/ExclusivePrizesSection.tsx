@@ -16,6 +16,12 @@ const ExclusivePrizesSection = () => {
         : [...prev, index]
     );
   };
+
+  // Prevent default event for double-click
+  const handleCardEvents = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
   
   return (
     <div className="mt-8 mb-12">
@@ -47,6 +53,9 @@ const ExclusivePrizesSection = () => {
                 transition={{ duration: 0.4, delay: index * 0.1 }}
                 className="card-container perspective-1000 cursor-pointer"
                 onClick={() => toggleCardFlip(index)}
+                onDoubleClick={handleCardEvents}
+                onMouseDown={handleCardEvents}
+                onTouchStart={handleCardEvents}
                 onKeyDown={(e) => e.key === "Enter" && toggleCardFlip(index)}
                 tabIndex={0}
                 role="button"
@@ -62,6 +71,7 @@ const ExclusivePrizesSection = () => {
                         src={prize.imageUrl} 
                         alt={`Premio ${index + 1}`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        draggable="false"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-60" />
                     </div>

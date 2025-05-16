@@ -6,12 +6,9 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-black text-white overflow-x-hidden;
-  }
-  
-  html {
-    @apply overflow-x-hidden;
+  html, body {
+    @apply bg-black text-white;
+    overflow-x: hidden !important;
   }
 }
 
