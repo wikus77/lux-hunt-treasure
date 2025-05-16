@@ -72,10 +72,20 @@ export default function DynamicIsland() {
           transition={{ type: "spring", stiffness: 240, damping: 22 }}
           style={{ height: 44, minWidth: 120 }}
         >
-          {/* Custom path SVG laser border animation */}
+          {/* Custom SVG laser border with gradient animation */}
           <svg className="laser-border" viewBox="0 0 260 56" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="laserGradient" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#00ffff">
+                  <animate attributeName="stop-color" values="#00ffff;#ff00ff;#8000ff;#00ffff" dur="4s" repeatCount="indefinite"/>
+                </stop>
+                <stop offset="100%" stopColor="#00ffff">
+                  <animate attributeName="stop-color" values="#00ffff;#ff00ff;#8000ff;#00ffff" dur="4s" repeatCount="indefinite"/>
+                </stop>
+              </linearGradient>
+            </defs>
             <path
-              d="M28,1 H232 A27,27 0 0 1 259,28 A27,27 0 0 1 232,55 H28 A27,27 0 0 1 1,28 A27,27 0 0 1 28,1 Z"
+              d="M28,0 H232 A28,28 0 0 1 260,28 A28,28 0 0 1 232,56 H28 A28,28 0 0 1 0,28 A28,28 0 0 1 28,0 Z"
               className="pulse-path"
             />
           </svg>

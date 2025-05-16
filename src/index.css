@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap');
 
 @tailwind base;
@@ -63,13 +62,13 @@
   }
 
   .pulse-path {
-    stroke: #00ffff;
     stroke-width: 2.5;
     fill: none;
     stroke-linecap: round;
     stroke-dasharray: 800;
     stroke-dashoffset: 800;
-    animation: laser-loop 3s linear infinite;
+    animation: laser-loop 4s linear infinite;
+    stroke: url(#laserGradient);
   }
 
   @keyframes laser-loop {
