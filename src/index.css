@@ -46,6 +46,50 @@
     background: linear-gradient(to right, transparent, #00E5FF, transparent);
     opacity: 0.4;
   }
+  
+  /* Laser border animation for Dynamic Island */
+  .laser-border {
+    width: 300px;
+    height: 90px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 10;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+  }
+
+  .pulse-path {
+    stroke-width: 4;
+    fill: none;
+    stroke-linecap: round;
+    stroke-dasharray: 800;
+    stroke-dashoffset: 800;
+    animation: laser-move 4s linear infinite alternate;
+  }
+
+  @keyframes laser-move {
+    0% {
+      stroke-dashoffset: 800;
+      stroke: #00ffff;
+    }
+    25% {
+      stroke: #ff00ff;
+    }
+    50% {
+      stroke-dashoffset: 0;
+      stroke: #8000ff;
+    }
+    75% {
+      stroke: #00ffff;
+    }
+    100% {
+      stroke-dashoffset: 800;
+      stroke: #00ffff;
+    }
+  }
 }
 
 @layer utilities {
