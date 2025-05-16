@@ -16,7 +16,7 @@ const ExclusivePrizesSection = () => {
         transition={{ duration: 0.6 }}
         className="max-w-md mx-auto"
       >
-        <div className="bg-gray-900/60 backdrop-blur-sm p-6 rounded-lg shadow-xl border border-gray-800">
+        <div className="bg-gray-900/60 backdrop-blur-sm p-6 rounded-xl shadow-xl border border-gray-800 overflow-hidden">
           <h2 className="text-2xl font-bold text-white mb-3 text-center flex items-center justify-center gap-2">
             <span className="text-cyan-400">📦</span> Premi Esclusivi M1SSION
           </h2>
