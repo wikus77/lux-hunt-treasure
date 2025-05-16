@@ -2,21 +2,102 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useLongPress } from "@/hooks/useLongPress";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function DynamicIsland() {
   const [isOpen, setIsOpen] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [agentId, setAgentId] = useState("");
+  const isMobile = useIsMobile();
+
+  // Handle haptic feedback
+  const triggerHapticFeedback = () => {
+    if (navigator.vibrate && isMobile) {
+      navigator.vibrate(30); // 30ms vibration for subtle feedback
+    }
+  };
+
+  // Long press handler for mobile
+  const handleLongPress = () => {
+    triggerHapticFeedback();
+    setIsOpen(true);
+  };
+
+  // Configure long press
+  const longPress = useLongPress(handleLongPress, {
+    threshold: 400 // 400ms threshold for long press
+  });
+
+  // Handle click for desktop
+  const handleClick = () => {
+    if (!isMobile) {
+      setIsOpen(!isOpen);
+    }
+  };
 
   useEffect(() => {
-    const storedId = localStorage.getItem("m1-agent-id");
-    if (storedId) {
-      setAgentId(storedId);
-    } else {
-      const randomId = `XX${Math.floor(100 + Math.random() * 900)}`;
-      localStorage.setItem("m1-agent-id", randomId);
-      setAgentId(randomId);
-    }
+    const fetchAgentCode = async () => {
+      // Try to get the agent code from Supabase if the user is logged in
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Special admin case
+          if (user.email === "wikus77@hotmail.it") {
+            setAgentId("X0197");
+            localStorage.setItem("m1-agent-id", "X0197");
+            return;
+          }
+          
+          // Get agent code from database
+          const { data, error } = await supabase
+            .rpc('get_my_agent_code')
+            .single();
+
+          if (!error && data?.agent_code) {
+            const code = data.agent_code.replace("AG-", "");
+            setAgentId(code);
+            localStorage.setItem("m1-agent-id", code);
+          } else {
+            // Fallback to stored code
+            const storedId = localStorage.getItem("m1-agent-id");
+            if (storedId) {
+              setAgentId(storedId);
+            } else {
+              // Generate a new code only if nothing is available
+              const randomId = `XX${Math.floor(100 + Math.random() * 900)}`;
+              localStorage.setItem("m1-agent-id", randomId);
+              setAgentId(randomId);
+            }
+          }
+        } else {
+          // Not logged in, use stored or generate code
+          const storedId = localStorage.getItem("m1-agent-id");
+          if (storedId) {
+            setAgentId(storedId);
+          } else {
+            const randomId = `XX${Math.floor(100 + Math.random() * 900)}`;
+            localStorage.setItem("m1-agent-id", randomId);
+            setAgentId(randomId);
+          }
+        }
+      } catch (error) {
+        // Fallback in case of any error
+        console.error("Error fetching agent code:", error);
+        const storedId = localStorage.getItem("m1-agent-id");
+        if (storedId) {
+          setAgentId(storedId);
+        } else {
+          const randomId = `XX${Math.floor(100 + Math.random() * 900)}`;
+          localStorage.setItem("m1-agent-id", randomId);
+          setAgentId(randomId);
+        }
+      }
+    };
+
+    fetchAgentCode();
   }, []);
 
   useEffect(() => {
@@ -36,6 +117,28 @@ export default function DynamicIsland() {
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Add backdrop blur when popup is open (mobile only)
+  useEffect(() => {
+    const mainContent = document.querySelector('main');
+    if (mainContent && isMobile) {
+      if (isOpen) {
+        mainContent.style.filter = 'blur(3px)';
+        mainContent.style.opacity = '0.6';
+        mainContent.style.transition = 'filter 0.3s, opacity 0.3s';
+      } else {
+        mainContent.style.filter = '';
+        mainContent.style.opacity = '';
+      }
+    }
+    
+    return () => {
+      if (mainContent) {
+        mainContent.style.filter = '';
+        mainContent.style.opacity = '';
+      }
+    };
+  }, [isOpen, isMobile]);
 
   const formatTime = (totalSeconds) => {
     const d = Math.floor(totalSeconds / 86400);
@@ -60,21 +163,26 @@ export default function DynamicIsland() {
       <div className="relative">
         <motion.div
           layoutId="dynamic-island"
-          className={`dynamic-island z-50 flex items-center justify-center cursor-pointer text-sm font-medium shadow-md bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] text-white px-6`}
-          whileHover={{ scale: 1.05 }}
+          className={`dynamic-island z-50 flex items-center justify-center cursor-pointer text-sm font-medium shadow-md text-white px-6`}
+          whileHover={{ scale: isMobile ? 1 : 1.1 }} // Only apply hover animation on desktop
           whileTap={{ scale: 0.97 }}
-          onClick={() => setIsOpen((prev) => !prev)}
+          onClick={handleClick}
+          {...longPress}
           initial={false}
           animate={{
             borderRadius: "999px",
             scaleX: isOpen ? 1.1 : 1,
           }}
           transition={{ type: "spring", stiffness: 240, damping: 22 }}
-          style={{ height: 44, minWidth: 120 }}
+          style={{ 
+            height: 48, // 10% larger than original 44px
+            minWidth: 132, // 10% larger than original 120px
+            transform: "scale(1.1)" // Ensure 10% size increase
+          }}
         >
           <span className="text-sm font-medium leading-none tracking-tight">
             <span className="text-[#00f0ff]">M</span>
-            <span className="text-white">1-{agentId}</span>
+            <span className="text-white">1-AGENT-{agentId}</span>
           </span>
         </motion.div>
       </div>
@@ -100,7 +208,7 @@ export default function DynamicIsland() {
                 <div>
                   <p className="text-sm font-semibold">
                     <span className="text-[#00f0ff]">M</span>
-                    <span className="text-white">1-{agentId}</span>
+                    <span className="text-white">1-AGENT-{agentId}</span>
                   </p>
                   <p className="text-xs text-gray-400">Hai ricevuto un nuovo indizio!</p>
                 </div>

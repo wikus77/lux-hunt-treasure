@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useAuthContext } from '@/contexts/auth';
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";

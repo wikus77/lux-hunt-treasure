@@ -31,9 +31,9 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
             {!leftContent && <M1ssionText />}
           </div>
           
-          {/* Center section - M1-AGENT badge removed */}
+          {/* Center section - removed M1-AGENT badge */}
           <div className="flex items-center justify-center">
-            {/* AgentBadge removed */}
+            {/* Empty center area */}
           </div>
 
           {/* Right side content */}

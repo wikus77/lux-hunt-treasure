@@ -39,7 +39,7 @@ const UnifiedHeader = ({ profileImage, onClickMail, leftComponent }: UnifiedHead
         </div>
         
         <div className="flex-1 flex justify-center">
-          {/* AgentBadge removed */}
+          {/* Removed agent badge from center */}
         </div>
 
         <div className="flex flex-1 items-center justify-end space-x-3 md:space-x-4">

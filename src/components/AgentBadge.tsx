@@ -5,43 +5,38 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AgentInfoPopup from "@/components/agent/AgentInfoPopup";
 import useSoundEffects from "@/hooks/useSoundEffects";
+import { useLongPress } from "@/hooks/useLongPress";
 
 const AgentBadge = () => {
   const [agentCode, setAgentCode] = useState<string | null>(null);
   const [show, setShow] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
-  const [pressStartTime, setPressStartTime] = useState<number | null>(null);
   const isMobile = useIsMobile();
   const { playSound } = useSoundEffects();
 
-  const handleMouseDown = () => {
-    // Start timer for long press on mobile (350ms)
-    if (isMobile) {
-      setPressStartTime(Date.now());
-      const timer = setTimeout(() => {
-        setShowPopup(true);
-        playSound("agentClick", 0.3);
-      }, 350);
-      setLongPressTimer(timer);
+  // Handle haptic feedback when long pressed (mobile) or clicked (desktop)
+  const triggerHapticFeedback = () => {
+    if (navigator.vibrate && isMobile) {
+      navigator.vibrate(30); // 30ms vibration for subtle feedback
     }
   };
 
-  const handleMouseUp = () => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
-      
-      // If it was a short tap (less than 350ms), treat as a click
-      if (pressStartTime && Date.now() - pressStartTime < 350) {
-        if (!isMobile) {
-          setShowPopup(true);
-          playSound("agentClick", 0.3);
-        }
-      }
-    }
+  // Enhanced long press handler with haptic feedback
+  const longPressHandler = () => {
+    setShowPopup(true);
+    triggerHapticFeedback();
+    playSound("agentClick", 0.3);
   };
 
+  // Configure long press for mobile devices
+  const longPress = useLongPress(longPressHandler, {
+    threshold: 400,
+    onStart: () => {
+      // Optional: Show a visual indicator that long press is active
+    }
+  });
+
+  // Regular click handler for desktop
   const handleClick = () => {
     if (!isMobile) {
       setShowPopup(true);
@@ -93,6 +88,28 @@ const AgentBadge = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Add backdrop blur when popup is open (mobile only)
+  useEffect(() => {
+    const mainContent = document.querySelector('main');
+    if (mainContent && isMobile) {
+      if (showPopup) {
+        mainContent.style.filter = 'blur(3px)';
+        mainContent.style.opacity = '0.6';
+        mainContent.style.transition = 'filter 0.3s, opacity 0.3s';
+      } else {
+        mainContent.style.filter = '';
+        mainContent.style.opacity = '';
+      }
+    }
+    
+    return () => {
+      if (mainContent) {
+        mainContent.style.filter = '';
+        mainContent.style.opacity = '';
+      }
+    };
+  }, [showPopup, isMobile]);
+
   return (
     <>
       <motion.div
@@ -101,32 +118,30 @@ const AgentBadge = () => {
           flex items-center gap-2 px-3 py-1
           text-sm font-mono text-white 
           border border-white/20 shadow-md
-          bg-[#0e0e0e]/80 rounded-full transition-colors 
+          dynamic-island rounded-full transition-colors 
           ${show ? "opacity-100 animate-glow" : "opacity-0"}
           cursor-pointer hover:border-cyan-400/30 hover:bg-[#0e0e0e]/90
           active:scale-95
         `}
         onClick={handleClick}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onTouchStart={handleMouseDown}
-        onTouchEnd={handleMouseUp}
-        onTouchCancel={handleMouseUp}
-        whileHover={{ scale: 1.02 }}
+        {...longPress}
+        whileHover={{ scale: isMobile ? 1 : 1.1 }} // Only apply hover scale on desktop
         whileTap={{ scale: 0.98 }}
         initial={{ 
           opacity: 0,
           top: "16px",
           left: "50%",
           x: "-50%",
-          transformOrigin: "center center"
+          transformOrigin: "center center",
+          scale: 1.1 // 10% larger
         }}
         animate={{ 
           opacity: show ? 1 : 0,
           top: "16px",
           left: "50%",
           x: "-50%",
-          transformOrigin: "center center"
+          transformOrigin: "center center",
+          scale: 1.1 // 10% larger
         }}
         transition={{ 
           duration: 0.3, 
@@ -135,7 +150,7 @@ const AgentBadge = () => {
         style={{
           position: "fixed",
           left: "50%",
-          transform: "translateX(-50%)"
+          transform: "translateX(-50%) scale(1.1)" // 10% larger
         }}
       >
         <span className="text-cyan-400">M1-AGENT-{agentCode ?? "?????"}</span>

@@ -32,7 +32,7 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
         
         {/* Center section with real-time indicator */}
         <div className="flex sm:flex items-center gap-3">
-          {/* AgentBadge removed */}
+          {/* Removed M1-AGENT badge */}
           <RealtimeStatusIndicator isConnected={isConnected} />
         </div>
         
@@ -84,7 +84,7 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
         <div className="absolute top-full left-0 w-full bg-black/90 border-b border-projectx-deep-blue/30 py-3 px-4 sm:hidden">
           <div className="space-y-2">
             <div className="flex items-center justify-center mb-3">
-              {/* AgentBadge removed */}
+              {/* Removed M1-AGENT badge */}
             </div>
             <div className="flex items-center gap-2 py-1">
               <RealtimeStatusIndicator isConnected={isConnected} />
