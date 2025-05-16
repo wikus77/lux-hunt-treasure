@@ -1,8 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LazyImage } from "@/components/ui/lazy-image";
+import ImagePreview from "@/components/ui/image-preview";
+import { useLongPress } from "@/hooks/useLongPress";
 
 interface PrizeDetailsModalProps {
   isOpen: boolean;
@@ -10,6 +12,8 @@ interface PrizeDetailsModalProps {
 }
 
 const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  
   const prizes = [
     {
       name: "Lamborghini Huracán",
@@ -19,7 +23,7 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
     {
       name: "Ferrari SF90 Stradale",
       description: "Un'auto di lusso con prestazioni straordinarie, design all'avanguardia e tecnologia di punta.",
-      image: "/events/ferrari-sf90.jpg"
+      image: "/lovable-uploads/b9b5db19-1879-4050-866e-6cb044f50764.png" // Updated Ferrari image
     },
     {
       name: "Tesla Model S Plaid",
@@ -33,47 +37,72 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
     }
   ];
 
+  const closePreview = () => {
+    setPreviewImage(null);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl bg-black/80 backdrop-blur-md border border-cyan-500/30 rounded-xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-orbitron text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-            📦 Premi Esclusivi M1SSION
-          </DialogTitle>
-          <DialogDescription className="text-center text-white/70">
-            Ecco i premi che potrai vincere partecipando alle nostre missioni speciali. Solo i più veloci, astuti e determinati potranno conquistarli.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-3xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto bg-black/80 backdrop-blur-md border border-cyan-500/30 rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-orbitron text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+              📦 Premi Esclusivi M1SSION
+            </DialogTitle>
+            <DialogDescription className="text-center text-white/70">
+              Ecco i premi che potrai vincere partecipando alle nostre missioni speciali. Solo i più veloci, astuti e determinati potranno conquistarli.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6 p-1">
-          {prizes.map((prize, index) => (
-            <div 
-              key={index} 
-              className="bg-white/5 border border-white/10 p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white/8 hover:scale-[1.02]"
-              style={{ boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2), 0 0 8px rgba(0, 209, 255, 0.1)" }}
-            >
-              <div className="h-48 overflow-hidden rounded-lg mb-4">
-                <LazyImage 
-                  src={prize.image} 
-                  alt={prize.name} 
-                  className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <h3 className="font-orbitron text-lg font-bold text-cyan-400 mb-2">{prize.name}</h3>
-              <p className="text-sm text-white/70">{prize.description}</p>
-            </div>
-          ))}
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6 p-1">
+            {prizes.map((prize, index) => {
+              const longPressProps = useLongPress(() => setPreviewImage(prize.image));
+              
+              return (
+                <div 
+                  key={index} 
+                  className="bg-white/5 border border-white/10 p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white/8 hover:scale-[1.02]"
+                  style={{ boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2), 0 0 8px rgba(0, 209, 255, 0.1)" }}
+                >
+                  <div 
+                    className="h-48 overflow-hidden rounded-lg mb-4 cursor-pointer"
+                    {...longPressProps}
+                    onDoubleClick={() => setPreviewImage(prize.image)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setPreviewImage(prize.image);
+                    }}
+                  >
+                    <LazyImage 
+                      src={prize.image} 
+                      alt={prize.name} 
+                      className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <h3 className="font-orbitron text-lg font-bold text-cyan-400 mb-2">{prize.name}</h3>
+                  <p className="text-sm text-white/70">{prize.description}</p>
+                </div>
+              );
+            })}
+          </div>
 
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full">
-              Chiudi
-            </Button>
-          </DialogClose>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full">
+                Chiudi
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ImagePreview 
+        isOpen={!!previewImage}
+        onClose={closePreview}
+        imageUrl={previewImage || ""}
+        alt="Prize preview"
+      />
+    </>
   );
 };
 

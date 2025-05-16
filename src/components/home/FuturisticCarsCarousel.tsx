@@ -1,20 +1,21 @@
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { CirclePlay } from "lucide-react";
 import { CarDetailsModal, CarDetails } from "@/components/home/CarDetailsModal";
+import ImagePreview from "@/components/ui/image-preview";
+import { useLongPress } from "@/hooks/useLongPress";
 
 const cars = [
   {
     id: "ferrari",
-    name: "Ferrari 488 GTB",
-    image: "/lovable-uploads/c980c927-8cb1-4825-adf5-781f4d8118b9.png",
+    name: "Ferrari SF90 Stradale",
+    image: "/lovable-uploads/b9b5db19-1879-4050-866e-6cb044f50764.png", // Updated Ferrari image
     description: "Un motore da sogno, una missione da conquistare",
     trailer: "https://www.youtube.com/watch?v=UAO2urG23S4",
     engine: "3.9L V8 Twin-Turbo, 670 CV",
     acceleration: "0-100 km/h in 3.0s",
     prize: "In palio per il vincitore assoluto della competizione.",
-    imageUrl: "/lovable-uploads/fef309b6-b056-46ef-bb7f-b2ccacdb5ce3.png"
+    imageUrl: "/lovable-uploads/b9b5db19-1879-4050-866e-6cb044f50764.png" // Updated Ferrari image
   },
   {
     id: "mercedes",
@@ -76,6 +77,7 @@ const cars = [
 export default function FuturisticCarsCarousel() {
   const [selectedCar, setSelectedCar] = useState<CarDetails | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const handleCarClick = (car: typeof cars[0]) => {
     if (car.trailer) {
@@ -105,48 +107,67 @@ export default function FuturisticCarsCarousel() {
   return (
     <div className="w-full relative">
       <div className="flex gap-5 overflow-x-auto py-2 px-1 scrollbar-none">
-        {cars.map((car, idx) => (
-          <motion.div
-            key={car.name}
-            className="min-w-[260px] max-w-[340px] group relative rounded-2xl overflow-hidden shadow-xl border-4 border-cyan-400/80 bg-gradient-to-br from-black/90 to-cyan-900/50 cursor-pointer hover:scale-105 transition-all neon-border"
-            style={{
-              boxShadow: "0 0 32px 2px #00e5ff99"
-            }}
-            onClick={() => handleCarClick(car)}
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.08 * idx }}
-            whileHover={{ scale: 1.08 }}
-          >
-            {/* Parallax Glow Effect */}
-            <img
-              src={car.image}
-              alt={car.name}
-              className="w-full h-40 object-cover rounded-xl group-hover:scale-110 transition-transform duration-300"
-              style={{
-                filter: "drop-shadow(0 0 32px #00e5ffcf)",
-                transform: "perspective(600px) rotateY(4deg)"
-              }}
-            />
-            {/* Animated car description */}
+        {cars.map((car, idx) => {
+          const longPressProps = useLongPress(() => setPreviewImage(car.image));
+          
+          return (
             <motion.div
-              className="absolute bottom-0 w-full px-3 py-1.5 bg-gradient-to-t from-black/90 to-cyan-900/30"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.16 + 0.07 * idx }}
+              key={car.name}
+              className="min-w-[260px] max-w-[340px] group relative rounded-xl overflow-hidden shadow-xl border-4 border-cyan-400/80 bg-gradient-to-br from-black/90 to-cyan-900/50 cursor-pointer hover:scale-105 transition-all neon-border"
+              style={{
+                boxShadow: "0 0 32px 2px #00e5ff99"
+              }}
+              onClick={() => handleCarClick(car)}
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.08 * idx }}
+              whileHover={{ scale: 1.08 }}
             >
-              <span className="block text-lg text-cyan-300 font-bold animate-fade-in">{car.name}</span>
-              <span className="block text-white/90 text-sm italic animate-fade-in">{car.description}</span>
-              <span className="inline-flex items-center gap-1 text-xs text-cyan-100 mt-1">
-                <CirclePlay className="w-3 h-3 inline" /> {car.trailer ? "Guarda il trailer" : "Scopri di più"}
-              </span>
+              {/* Parallax Glow Effect */}
+              <div
+                {...longPressProps}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  setPreviewImage(car.image);
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setPreviewImage(car.image);
+                }}
+              >
+                <img
+                  src={car.image}
+                  alt={car.name}
+                  className="w-full h-40 object-cover rounded-xl group-hover:scale-110 transition-transform duration-300"
+                  style={{
+                    filter: "drop-shadow(0 0 32px #00e5ffcf)",
+                    transform: "perspective(600px) rotateY(4deg)"
+                  }}
+                />
+              </div>
+              
+              {/* Animated car description */}
+              <motion.div
+                className="absolute bottom-0 w-full px-3 py-1.5 bg-gradient-to-t from-black/90 to-cyan-900/30"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.16 + 0.07 * idx }}
+              >
+                <span className="block text-lg text-cyan-300 font-bold animate-fade-in">{car.name}</span>
+                <span className="block text-white/90 text-sm italic animate-fade-in">{car.description}</span>
+                <span className="inline-flex items-center gap-1 text-xs text-cyan-100 mt-1">
+                  <CirclePlay className="w-3 h-3 inline" /> {car.trailer ? "Guarda il trailer" : "Scopri di più"}
+                </span>
+              </motion.div>
+              
+              {/* Glow Border */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute inset-0 rounded-xl border-4 border-cyan-400 neon-border animate-neon-pulse" />
+              </div>
             </motion.div>
-            {/* Glow Border */}
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute inset-0 rounded-2xl border-4 border-cyan-400 neon-border animate-neon-pulse" />
-            </div>
-          </motion.div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Car details modal */}
@@ -154,6 +175,14 @@ export default function FuturisticCarsCarousel() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         car={selectedCar}
+      />
+      
+      {/* Image preview modal */}
+      <ImagePreview 
+        isOpen={!!previewImage}
+        onClose={() => setPreviewImage(null)}
+        imageUrl={previewImage || ""}
+        alt="Car preview"
       />
     </div>
   );
