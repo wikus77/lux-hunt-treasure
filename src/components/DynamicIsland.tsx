@@ -73,20 +73,20 @@ export default function DynamicIsland() {
           style={{ height: 44, minWidth: 120 }}
         >
           {/* Custom SVG laser border with gradient animation and glow effect */}
-          <svg className="laser-border" viewBox="0 0 260 56" xmlns="http://www.w3.org/2000/svg">
+          <svg className="laser-border" viewBox="0 0 260 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
             <defs>
               <linearGradient id="laserGradient" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stopColor="#00ffff">
-                  <animate attributeName="stop-color" values="#00ffff;#ff00ff;#8000ff;#00ffff" dur="3s" repeatCount="indefinite"/>
+                  <animate attributeName="stop-color" values="#00ffff;#ff00ff;#8000ff;#00ffff" dur="4s" repeatCount="indefinite"/>
                 </stop>
                 <stop offset="100%" stopColor="#00ffff">
-                  <animate attributeName="stop-color" values="#00ffff;#ff00ff;#8000ff;#00ffff" dur="3s" repeatCount="indefinite"/>
+                  <animate attributeName="stop-color" values="#00ffff;#ff00ff;#8000ff;#00ffff" dur="4s" repeatCount="indefinite"/>
                 </stop>
               </linearGradient>
-              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#00ffff" flood-opacity="0.8"/>
-                <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#00ffff" flood-opacity="0.4"/>
-                <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#00ffff" flood-opacity="0.2"/>
+              <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+                <feDropShadow dx="0" dy="0" stdDeviation="2.5" flood-color="#00ffff" flood-opacity="0.6"/>
+                <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#00ffff" flood-opacity="0.35"/>
+                <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#00ffff" flood-opacity="0.2"/>
               </filter>
             </defs>
             <path
