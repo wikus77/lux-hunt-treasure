@@ -58,6 +58,13 @@
       0 4px 12px rgba(0, 0, 0, 0.4);
     transition: none;
   }
+  
+  /* New neon effect for the agent code */
+  .dynamic-code {
+    color: #00ffff;
+    text-shadow: 0 0 4px #00ffff, 0 0 6px #00ccff;
+    font-weight: 600;
+  }
 }
 
 @layer utilities {

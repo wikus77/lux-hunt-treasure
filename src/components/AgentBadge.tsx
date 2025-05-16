@@ -115,8 +115,8 @@ const AgentBadge = () => {
       <motion.div
         className={`
           fixed top-4 z-50
-          flex items-center gap-2 px-3 py-1
-          text-sm font-mono text-white 
+          flex items-center gap-2 px-3 py-0.5
+          text-sm font-mono
           border border-white/20 shadow-md
           dynamic-island rounded-full transition-colors 
           ${show ? "opacity-100 animate-glow" : "opacity-0"}
@@ -150,10 +150,11 @@ const AgentBadge = () => {
         style={{
           position: "fixed",
           left: "50%",
-          transform: "translateX(-50%) scale(1.1)" // 10% larger
+          transform: "translateX(-50%) scale(1.1)", // 10% larger
+          height: "42px" // Reduced height by 7% (from original 45-46px)
         }}
       >
-        <span className="text-cyan-400">M1-AGENT-{agentCode ?? "?????"}</span>
+        <span className="dynamic-code">M1-AGENT-{agentCode ?? "?????"}</span>
         <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
       </motion.div>
 

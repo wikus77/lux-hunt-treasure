@@ -163,7 +163,7 @@ export default function DynamicIsland() {
       <div className="relative">
         <motion.div
           layoutId="dynamic-island"
-          className={`dynamic-island z-50 flex items-center justify-center cursor-pointer text-sm font-medium shadow-md text-white px-6`}
+          className={`dynamic-island z-50 flex items-center justify-center cursor-pointer text-sm font-medium shadow-md px-6`}
           whileHover={{ scale: isMobile ? 1 : 1.1 }} // Only apply hover animation on desktop
           whileTap={{ scale: 0.97 }}
           onClick={handleClick}
@@ -175,14 +175,13 @@ export default function DynamicIsland() {
           }}
           transition={{ type: "spring", stiffness: 240, damping: 22 }}
           style={{ 
-            height: 48, // 10% larger than original 44px
+            height: 44, // 7% reduction from original 48px height
             minWidth: 132, // 10% larger than original 120px
             transform: "scale(1.1)" // Ensure 10% size increase
           }}
         >
           <span className="text-sm font-medium leading-none tracking-tight">
-            <span className="text-[#00f0ff]">M</span>
-            <span className="text-white">1-AGENT-{agentId}</span>
+            <span className="dynamic-code">M1-AGENT-{agentId}</span>
           </span>
         </motion.div>
       </div>
@@ -207,8 +206,7 @@ export default function DynamicIsland() {
                 />
                 <div>
                   <p className="text-sm font-semibold">
-                    <span className="text-[#00f0ff]">M</span>
-                    <span className="text-white">1-AGENT-{agentId}</span>
+                    <span className="dynamic-code">M1-AGENT-{agentId}</span>
                   </p>
                   <p className="text-xs text-gray-400">Hai ricevuto un nuovo indizio!</p>
                 </div>

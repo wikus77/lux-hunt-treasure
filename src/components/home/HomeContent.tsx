@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CommandCenter } from "@/components/command-center/CommandCenter";
@@ -8,6 +9,7 @@ import DarkZoneTitle from "./DarkZoneTitle";
 import CommandModulesSection from "./CommandModulesSection";
 import CommandCenterWrapper from "./CommandCenterWrapper";
 import LuxuryCarsSection from "./LuxuryCarsSection";
+import ExclusivePrizesSection from "./ExclusivePrizesSection";
 
 export default function HomeContent() {
   console.log("[HomeContent] COMPONENT MOUNTED!");
@@ -38,7 +40,10 @@ export default function HomeContent() {
           {/* Display actual CommandCenter once all modules are unlocked */}
           <CommandCenterWrapper allModulesUnlocked={areAllModulesUnlocked()} />
           
-          {/* Luxury Cars Section - Keep it at the bottom */}
+          {/* New Exclusive Prizes Section */}
+          <ExclusivePrizesSection />
+          
+          {/* Luxury Cars Section */}
           <LuxuryCarsSection />
         </motion.div>
       )}
