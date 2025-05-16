@@ -59,11 +59,10 @@
     transition: none;
   }
   
-  /* New neon effect for the agent code */
+  /* Updated style for the agent code - minimal text shadow */
   .dynamic-code {
-    color: #00ffff;
-    text-shadow: 0 0 4px #00ffff, 0 0 6px #00ccff;
     font-weight: 600;
+    text-shadow: 0 0 2px rgba(0, 255, 255, 0.3);
   }
 }
 
@@ -84,7 +83,7 @@
     }
     to {
       opacity: 1;
-      text-shadow: 0 0 6px rgba(0, 255, 255, 0.6);
+      text-shadow: 0 0 2px rgba(0, 255, 255, 0.3);
     }
   }
   
