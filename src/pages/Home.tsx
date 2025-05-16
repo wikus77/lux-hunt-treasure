@@ -83,6 +83,8 @@ const Home = () => {
         <title>M1SSION - Home</title>
       </Helmet>
 
+      {/* Removed DynamicIsland component from here as it's now provided globally */}
+
       <AnimatePresence>
         {isLoaded && (
           <motion.div
