@@ -14,7 +14,6 @@ import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Info, IdCard } from "lucide-react";
 import BackgroundParallax from "@/components/ui/background-parallax";
-import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
 import CarBrandSelection from "@/components/landing/CarBrandSelection";
 import KYCSection from "@/components/kyc/KYCSection";
 import PreRegistrationForm from "@/components/landing/PreRegistrationForm";
@@ -30,7 +29,6 @@ const IndexContent = ({
   onRegisterClick, 
   openInviteFriend 
 }: IndexContentProps) => {
-  const [showPrizeDetails, setShowPrizeDetails] = useState(false);
   const [contentLoaded, setContentLoaded] = useState(false);
 
   // Assicuriamo che il contenuto sia caricato con una breve animazione
@@ -72,17 +70,8 @@ const IndexContent = ({
       <UnifiedHeader />
       <div className="h-[72px] w-full" />
       
-      {/* Floating Action Buttons - Fixed position */}
+      {/* Floating Action Button - Only for Invite Friend */}
       <div className="fixed bottom-8 right-8 z-40 flex flex-col gap-4">
-        <Button 
-          onClick={() => setShowPrizeDetails(true)}
-          className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 p-4 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40"
-          size="icon"
-        >
-          <Info className="h-6 w-6" />
-          <span className="sr-only">Dettagli premi</span>
-        </Button>
-        
         <Button 
           onClick={openInviteFriend}
           className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-4 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40"
@@ -167,12 +156,6 @@ const IndexContent = ({
       
       {/* Manteniamo la sezione corretta nel footer e rimuoviamo la sezione duplicata qui */}
       <LandingFooter />
-
-      {/* Prize Details Modal */}
-      <PrizeDetailsModal 
-        isOpen={showPrizeDetails} 
-        onClose={() => setShowPrizeDetails(false)} 
-      />
     </>
   );
 };
