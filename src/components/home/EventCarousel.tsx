@@ -1,7 +1,10 @@
+
 import { useState, useRef } from "react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { motion } from "framer-motion";
 import { ChevronRight, Calendar, Clock } from "lucide-react";
+import ImagePreview from "@/components/ui/image-preview";
+import { useLongPress } from "@/hooks/useLongPress";
 
 const cars = [
   {
@@ -48,6 +51,7 @@ export default function EventCarousel() {
   const [countdown, setCountdown] = useState(formatCountdown(endTimestamp - Date.now()));
   const interval = useRef<NodeJS.Timeout | null>(null);
   const [modalData, setModalData] = useState<{ name: string, image: string, trailer: string | null } | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   useState(() => {
     interval.current = setInterval(() => {
@@ -55,6 +59,10 @@ export default function EventCarousel() {
     }, 20000);
     return () => interval.current && clearInterval(interval.current);
   });
+
+  const closePreview = () => {
+    setPreviewImage(null);
+  };
 
   return (
     <section className="w-full py-4 mt-2 relative">
@@ -70,48 +78,69 @@ export default function EventCarousel() {
       </motion.div>
       <Carousel>
         <CarouselContent>
-          {cars.map((car, idx) => (
-            <CarouselItem key={idx} className="flex flex-col items-center">
-              <motion.div
-                className="group relative rounded-2xl overflow-hidden shadow-xl border-4 border-cyan-400/70 bg-gradient-to-br from-black/90 to-cyan-900/40 cursor-pointer transition-transform duration-300 hover:scale-[1.03]"
-                initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.08 * idx }}
-                onClick={() => setModalData({ name: car.name, image: car.image, trailer: car.trailer })}
-                whileHover={{ scale: 1.04, boxShadow: "0 0 28px #00e5fff7" }}
-              >
-                <img 
-                  src={car.image}
-                  alt={car.name}
-                  className="w-full h-56 sm:h-64 object-cover rounded-2xl shadow-cyan-400/80 group-hover:scale-105 transition-transform duration-300"
-                  style={{
-                    filter: "drop-shadow(0 0 40px #00e5ff90)",
-                    transform: "perspective(800px) rotateY(-4deg)"
-                  }}
-                />
+          {cars.map((car, idx) => {
+            const longPressProps = useLongPress(() => {
+              setPreviewImage(car.image);
+            });
+
+            return (
+              <CarouselItem key={idx} className="flex flex-col items-center">
                 <motion.div
-                  className="absolute bottom-0 w-full px-4 py-3 bg-gradient-to-t from-black/95 to-cyan-900/30"
-                  initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.13 * idx + 0.15 }}
+                  className="group relative rounded-2xl overflow-hidden shadow-xl border-4 border-cyan-400/70 bg-gradient-to-br from-black/90 to-cyan-900/40 cursor-pointer transition-transform duration-300 hover:scale-[1.03]"
+                  initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.08 * idx }}
+                  onClick={() => setModalData({ name: car.name, image: car.image, trailer: car.trailer })}
+                  whileHover={{ scale: 1.04, boxShadow: "0 0 28px #00e5fff7" }}
                 >
-                  <span className="block text-lg text-cyan-300 font-bold animate-fade-in">{car.name}</span>
-                  <span className="block text-sm text-white italic animate-fade-in">{car.description}</span>
-                  <span className="block text-cyan-100/70 mt-1 text-xs">Clicca per dettagli</span>
+                  <div
+                    {...longPressProps}
+                    onDoubleClick={() => setPreviewImage(car.image)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setPreviewImage(car.image);
+                    }}
+                  >
+                    <img 
+                      src={car.image}
+                      alt={car.name}
+                      className="w-full h-56 sm:h-64 object-cover rounded-2xl shadow-cyan-400/80 group-hover:scale-105 transition-transform duration-300"
+                      style={{
+                        filter: "drop-shadow(0 0 40px #00e5ff90)",
+                        transform: "perspective(800px) rotateY(-4deg)"
+                      }}
+                    />
+                  </div>
+                  <motion.div
+                    className="absolute bottom-0 w-full px-4 py-3 bg-gradient-to-t from-black/95 to-cyan-900/30"
+                    initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.13 * idx + 0.15 }}
+                  >
+                    <span className="block text-lg text-cyan-300 font-bold animate-fade-in">{car.name}</span>
+                    <span className="block text-sm text-white italic animate-fade-in">{car.description}</span>
+                    <span className="block text-cyan-100/70 mt-1 text-xs">Clicca per dettagli</span>
+                  </motion.div>
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute inset-0 rounded-2xl border-4 border-cyan-400 neon-border animate-neon-pulse" />
+                  </div>
                 </motion.div>
-                <div className="absolute inset-0 pointer-events-none">
-                  <div className="absolute inset-0 rounded-2xl border-4 border-cyan-400 neon-border animate-neon-pulse" />
-                </div>
-              </motion.div>
-            </CarouselItem>
-          ))}
+              </CarouselItem>
+            );
+          })}
         </CarouselContent>
       </Carousel>
+
       {modalData && (
-        <div className="fixed inset-0 z-[70] bg-black/80 flex items-center justify-center">
+        <div className="fixed inset-0 z-[70] bg-black/80 flex items-center justify-center px-4">
           <div className="bg-black rounded-2xl border-4 border-cyan-400/80 shadow-2xl p-6 max-w-lg w-full relative">
             <button
               className="absolute top-3 right-3 text-cyan-400 hover:text-yellow-400 font-bold text-xl"
               aria-label="chiudi"
               onClick={() => setModalData(null)}
             >×</button>
-            <img src={modalData.image} alt={modalData.name} className="mb-3 rounded-xl w-full h-44 object-cover" style={{filter:"drop-shadow(0 0 24px #00e5ff8c)"}} />
+            <img 
+              src={modalData.image} 
+              alt={modalData.name} 
+              className="mb-3 rounded-xl w-full h-44 object-cover" 
+              style={{filter:"drop-shadow(0 0 24px #00e5ff8c)"}} 
+            />
             <h3 className="text-xl font-orbitron neon-text-cyan mb-1">{modalData.name}</h3>
             {modalData.trailer 
               ? <a href={modalData.trailer} target="_blank" rel="noopener noreferrer" className="underline text-cyan-200 hover:text-yellow-400 mt-2 block">Guarda il trailer della missione</a>
@@ -120,6 +149,13 @@ export default function EventCarousel() {
           </div>
         </div>
       )}
+
+      <ImagePreview 
+        isOpen={!!previewImage}
+        onClose={closePreview}
+        imageUrl={previewImage || ""}
+        alt="Car preview"
+      />
     </section>
   );
 }

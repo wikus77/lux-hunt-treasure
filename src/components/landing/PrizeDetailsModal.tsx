@@ -23,7 +23,7 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
     {
       name: "Ferrari SF90 Stradale",
       description: "Un'auto di lusso con prestazioni straordinarie, design all'avanguardia e tecnologia di punta.",
-      image: "/lovable-uploads/b9b5db19-1879-4050-866e-6cb044f50764.png" // Updated Ferrari image
+      image: "/lovable-uploads/2f1f79ad-4221-4a49-a188-81e28222514d.png" // Updated Ferrari image
     },
     {
       name: "Tesla Model S Plaid",
@@ -44,7 +44,7 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-3xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto bg-black/80 backdrop-blur-md border border-cyan-500/30 rounded-xl">
+        <DialogContent className="sm:max-w-3xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto bg-black/80 backdrop-blur-md border border-cyan-500/30 rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-orbitron text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
               📦 Premi Esclusivi M1SSION
@@ -65,7 +65,7 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
                   style={{ boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2), 0 0 8px rgba(0, 209, 255, 0.1)" }}
                 >
                   <div 
-                    className="h-48 overflow-hidden rounded-lg mb-4 cursor-pointer"
+                    className="h-48 overflow-hidden rounded-xl mb-4 cursor-pointer"
                     {...longPressProps}
                     onDoubleClick={() => setPreviewImage(prize.image)}
                     onContextMenu={(e) => {

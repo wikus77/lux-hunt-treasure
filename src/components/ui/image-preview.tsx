@@ -19,7 +19,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[60vw] max-w-[90vw] p-1 bg-black/90 border border-cyan-500/30">
+      <DialogContent className="sm:max-w-[60vw] max-w-[90vw] p-1 bg-black/90 border border-cyan-500/30 rounded-xl">
         <div className="relative">
           <button
             className="absolute top-2 right-2 z-10 rounded-full bg-black/50 p-1 text-white/80 hover:bg-black/70 hover:text-white transition-colors"

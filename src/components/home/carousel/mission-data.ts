@@ -32,8 +32,8 @@ export const futurePrizes: MissionPrize[] = [
     date: "01/08/2025"
   },
   {
-    name: "Ferrari Purosangue",
-    image: "/lovable-uploads/b83c1e65-cd66-46ad-937b-60d7fd0c6a63.png",
+    name: "Ferrari SF90 Stradale",
+    image: "/lovable-uploads/2f1f79ad-4221-4a49-a188-81e28222514d.png",
     description: "Supercar da sogno, supera ogni limite",
     date: "01/09/2025"
   },

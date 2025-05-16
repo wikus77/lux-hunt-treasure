@@ -7,6 +7,8 @@ import EventCardHeader from "./EventCardHeader";
 import EventPrizeCarousel from "./EventPrizeCarousel";
 import EventDateInfo from "./EventDateInfo";
 import { upcomingMysteryPrizes } from "@/data/mysteryPrizesData";
+import ImagePreview from "@/components/ui/image-preview";
+import { useLongPress } from "@/hooks/useLongPress";
 
 interface EventImage {
   url: string;
@@ -46,16 +48,31 @@ export const EventCard = ({
   gender, // Added gender to destructuring
 }: EventCardProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   
   // Use upcomingMysteryPrizes from the data file if no mysteryPrizes are provided
   const prizes = mysteryPrizes || upcomingMysteryPrizes;
 
+  const longPressProps = useLongPress(() => {
+    setPreviewImage(imageUrl);
+  });
+
+  const closePreview = () => {
+    setPreviewImage(null);
+  };
+
   return (
     <>
-      <Card className={`overflow-hidden ${isCurrent ? "neon-border" : "border-m1ssion-deep-blue"}`}>
+      <Card className={`overflow-hidden ${isCurrent ? "neon-border" : "border-m1ssion-deep-blue"} rounded-xl`}>
         <div 
-          className="h-48 bg-cover bg-center" 
+          className="h-48 bg-cover bg-center rounded-t-xl" 
           style={{ backgroundImage: `url(${imageUrl})` }}
+          {...longPressProps}
+          onDoubleClick={() => setPreviewImage(imageUrl)}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setPreviewImage(imageUrl);
+          }}
         />
         
         <EventCardHeader 
@@ -79,7 +96,7 @@ export const EventCard = ({
           <EventDateInfo date={date} />
           
           <Button 
-            className="w-full bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
+            className="w-full bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink rounded-lg"
             onClick={() => setIsDialogOpen(true)}
           >
             Visualizza dettagli
@@ -96,6 +113,13 @@ export const EventCard = ({
         date={date}
         description={detailedDescription}
         images={images}
+      />
+
+      <ImagePreview 
+        isOpen={!!previewImage}
+        onClose={closePreview}
+        imageUrl={previewImage || ""}
+        alt={`${title} preview`}
       />
     </>
   );
