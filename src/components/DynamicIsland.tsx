@@ -58,15 +58,9 @@ export default function DynamicIsland() {
   return (
     <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 flex flex-col items-center w-full">
       <div className="relative">
-        {/* Laser SVG Animation Border */}
-        <svg className="laser-border" viewBox="0 0 300 90" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2" y="2" width="296" height="86" rx="43" fill="none" stroke="#444" strokeWidth="2"/>
-          <rect className="pulse-path" x="2" y="2" width="296" height="86" rx="43" />
-        </svg>
-        
         <motion.div
           layoutId="dynamic-island"
-          className={`z-50 flex items-center justify-center cursor-pointer text-sm font-medium shadow-md bg-black text-white px-6`}
+          className={`dynamic-island z-50 flex items-center justify-center cursor-pointer text-sm font-medium shadow-md bg-black text-white px-6`}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => setIsOpen((prev) => !prev)}
@@ -78,6 +72,11 @@ export default function DynamicIsland() {
           transition={{ type: "spring", stiffness: 240, damping: 22 }}
           style={{ height: 44, minWidth: 120 }}
         >
+          {/* Laser SVG Animation Border */}
+          <svg className="laser-border" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <rect x="1" y="1" width="98" height="98" rx="50" ry="50" className="pulse-path" fill="none"/>
+          </svg>
+          
           <span className="text-sm font-medium leading-none tracking-tight">
             <span className="text-[#00f0ff]">M</span>
             <span className="text-white">1-AGENT-{agentId}</span>

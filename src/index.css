@@ -47,48 +47,36 @@
     opacity: 0.4;
   }
   
-  /* Laser border animation for Dynamic Island */
+  /* Dynamic Island styles */
+  .dynamic-island {
+    position: relative;
+    overflow: visible;
+  }
+
   .laser-border {
-    width: 300px;
-    height: 90px;
     position: absolute;
-    top: 0;
-    left: 0;
-    pointer-events: none;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     z-index: 10;
-    transform: translate(-50%, -50%);
-    top: 50%;
-    left: 50%;
+    pointer-events: none;
   }
 
   .pulse-path {
-    stroke-width: 4;
-    fill: none;
+    stroke-width: 2;
     stroke-linecap: round;
-    stroke-dasharray: 800;
-    stroke-dashoffset: 800;
-    animation: laser-move 4s linear infinite alternate;
+    fill: none;
+    stroke-dasharray: 300;
+    stroke-dashoffset: 300;
+    animation: laser-move 3s linear infinite alternate;
   }
 
   @keyframes laser-move {
-    0% {
-      stroke-dashoffset: 800;
-      stroke: #00ffff;
-    }
-    25% {
-      stroke: #ff00ff;
-    }
-    50% {
-      stroke-dashoffset: 0;
-      stroke: #8000ff;
-    }
-    75% {
-      stroke: #00ffff;
-    }
-    100% {
-      stroke-dashoffset: 800;
-      stroke: #00ffff;
-    }
+    0%   { stroke-dashoffset: 300; stroke: #00ffff; }
+    25%  { stroke: #ff00ff; }
+    50%  { stroke-dashoffset: 0;   stroke: #8000ff; }
+    75%  { stroke: #00ffff; }
+    100% { stroke-dashoffset: 300; stroke: #00ffff; }
   }
 }
 
