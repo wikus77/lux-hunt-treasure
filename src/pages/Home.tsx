@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import BriefProfileModal from "@/components/profile/BriefProfileModal";
@@ -10,7 +11,6 @@ import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 import HomeLayout from "@/components/home/HomeLayout";
 import { Helmet } from "react-helmet";
-import { toast } from "sonner";
 // Removed DynamicIsland import as it's now provided globally
 
 const Home = () => {
