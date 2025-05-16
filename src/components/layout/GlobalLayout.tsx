@@ -13,12 +13,8 @@ interface GlobalLayoutProps {
 const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   return (
     <>
-      {/* Global DynamicIsland component with pointer-events-none wrapper and pointer-events-auto inner div */}
-      <div className="fixed top-4 inset-x-0 z-50 flex justify-center pointer-events-none">
-        <div className="pointer-events-auto">
-          <DynamicIsland />
-        </div>
-      </div>
+      {/* Global DynamicIsland component */}
+      <DynamicIsland />
       
       {/* Page content */}
       {children}
