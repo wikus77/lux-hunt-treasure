@@ -20,6 +20,8 @@ import PaymentRoutes from "./groups/PaymentRoutes";
  * - Payment routes (subscription and payment processing)
  */
 const AppRoutes = () => {
+  console.log('AppRoutes rendering - Admin route should be available via AdminRoutes');
+  
   return (
     <Routes>
       {/* Public Routes */}
