@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -140,6 +139,12 @@ const Terms = () => {
               Per qualsiasi domanda riguardo questi Termini, contattaci all'indirizzo legale@m1ssion.com o tramite la sezione Contatti del nostro sito.
             </p>
           </section>
+        </div>
+        
+        <div className="mt-10">
+          <p className="text-gray-300 font-bold">
+            È vietata ogni riproduzione, copia, distribuzione o rielaborazione, anche parziale, dell'applicazione, del concept di gioco, del regolamento, delle missioni, dell'interfaccia utente o della narrativa di M1SSION. Ogni infrazione sarà perseguita legalmente ai sensi della normativa sulla proprietà intellettuale (art. 2575 c.c. e Direttiva UE 2001/29/CE).
+          </p>
         </div>
         
         <div className="mt-10 mb-10 text-center">
