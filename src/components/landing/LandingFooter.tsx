@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import StoreButtons from "./StoreButtons";
@@ -20,10 +21,10 @@ const LandingFooter = () => {
             </h2>
           </div>
           <div className="flex flex-wrap gap-4 justify-center md:justify-end">
-            <Link to="/privacy" className="text-sm text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
+            <Link to="/privacy-policy" className="text-sm text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
             <Link to="/cookie-policy" className="text-sm text-white/60 hover:text-white transition-colors">Cookie Policy</Link>
-            <Link to="/terms" className="text-sm text-white/60 hover:text-white transition-colors">Termini e Condizioni</Link>
-            <Link to="/contact" className="text-sm text-white/60 hover:text-white transition-colors">Contatti</Link>
+            <Link to="/termini-e-condizioni" className="text-sm text-white/60 hover:text-white transition-colors">Termini e Condizioni</Link>
+            <Link to="/contatti" className="text-sm text-white/60 hover:text-white transition-colors">Contatti</Link>
           </div>
         </div>
         <div className="border-t border-white/10 pt-6 text-center md:text-left">
