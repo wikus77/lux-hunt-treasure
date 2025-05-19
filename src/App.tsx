@@ -8,6 +8,10 @@ import Home from './pages/Home';
 import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 import TestAgent from './pages/TestAgent';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import CookiePolicy from './pages/CookiePolicy';
+import Terms from './pages/Terms';
+import Contacts from './pages/Contacts';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
@@ -29,6 +33,10 @@ function App() {
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/test-agent" element={<TestAgent />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/cookie-policy" element={<CookiePolicy />} />
+                <Route path="/termini-e-condizioni" element={<Terms />} />
+                <Route path="/contatti" element={<Contacts />} />
               </Routes>
               <Toaster position="top-right" />
             </GlobalLayout>
