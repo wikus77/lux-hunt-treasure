@@ -65,15 +65,48 @@ const Contacts = () => {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-5xl md:text-6xl font-orbitron font-bold mb-6">
-              <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">Contatta </span>
-              <span className="bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">M1SSION</span>
+              <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">Contattaci</span>
             </h1>
             
             <p className="text-xl text-white/70 max-w-2xl mx-auto">
-              Hai domande, suggerimenti o hai bisogno di assistenza? Siamo qui per te.
+              Hai bisogno di aiuto o vuoi contattare il team M1SSION? Usa i seguenti canali:
             </p>
           </motion.div>
 
+          {/* Contact info sections */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="space-y-6 mb-12"
+          >
+            <div className="flex items-center gap-3 text-white">
+              <Mail className="text-cyan-400" />
+              <span><strong>Email</strong>: support@m1ssion.com</span>
+            </div>
+            
+            <div className="flex items-center gap-3 text-white">
+              <span className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400 mr-1" viewBox="0 0 24 24" stroke="currentColor" fill="none">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                </svg>
+              </span>
+              <span><strong>Social</strong>: @m1ssion.official su Instagram e TikTok</span>
+            </div>
+            
+            <div className="flex items-center gap-3 text-white">
+              <Check className="text-cyan-400" />
+              <span><strong>Modulo di contatto</strong>: disponibile nell'app alla voce "Supporto"</span>
+            </div>
+            
+            <div className="flex items-center gap-3 text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span><strong>FAQ</strong>: consulta la sezione "Aiuto" nell'app</span>
+            </div>
+          </motion.div>
+          
           {/* Status Alert */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -83,9 +116,9 @@ const Contacts = () => {
           >
             <Alert className="border border-cyan-500/30 bg-black/70 backdrop-blur-sm">
               <Check className="h-4 w-4 text-cyan-400" />
-              <AlertTitle className="text-cyan-300">Form di contatto attivo</AlertTitle>
+              <AlertTitle className="text-cyan-300">Orari di assistenza</AlertTitle>
               <AlertDescription className="text-white/80">
-                Il nostro form di contatto è ora completamente funzionante. I messaggi vengono inviati direttamente al nostro team di supporto.
+                Siamo disponibili dal lunedì al venerdì, dalle 9:00 alle 18:00.
               </AlertDescription>
             </Alert>
           </motion.div>
@@ -108,8 +141,8 @@ const Contacts = () => {
                   </div>
                   <div>
                     <h3 className="text-white font-medium mb-1">Email</h3>
-                    <a href="mailto:contact@m1ssion.com" className="text-white/70 hover:text-cyan-400 transition-colors">
-                      contact@m1ssion.com
+                    <a href="mailto:support@m1ssion.com" className="text-white/70 hover:text-cyan-400 transition-colors">
+                      support@m1ssion.com
                     </a>
                   </div>
                 </div>
