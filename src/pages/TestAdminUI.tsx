@@ -1,10 +1,26 @@
 
 import React, { useEffect } from 'react';
 import AdminPrizeManager from '@/components/admin/prizeManager/AdminPrizeManager';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function TestAdminUI() {
   useEffect(() => {
     console.log("🟢 Rendering attivo");
+    
+    // Check auth status on mount
+    supabase.auth.getSession().then(({ data }) => {
+      console.log("🔑 Session check:", data.session ? "Session found" : "No session");
+    });
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("🔄 Auth event:", event);
+      console.log("🔑 User ID:", session?.user?.id || "None");
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
   
   return (

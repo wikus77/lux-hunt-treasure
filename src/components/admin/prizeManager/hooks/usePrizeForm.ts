@@ -1,8 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { geocodeAddress, createPrize, generatePrizeClues, insertPrizeClues } from "../services/prizeService";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface PrizeFormValues {
   city: string;
@@ -21,6 +22,36 @@ export const usePrizeForm = () => {
   const [geocodeError, setGeocodeError] = useState<string | null>(null);
   const [showManualCoordinates, setShowManualCoordinates] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Check authentication status on mount
+    const checkAuth = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      const authenticated = !!data?.user?.id;
+      setIsAuthenticated(authenticated);
+      setUserId(data?.user?.id || null);
+      
+      console.log("🔐 Authentication check:", authenticated ? "Authenticated" : "Not authenticated");
+      console.log("🔑 User ID:", data?.user?.id || "None");
+    };
+    
+    checkAuth();
+    
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const authenticated = !!session?.user?.id;
+      setIsAuthenticated(authenticated);
+      setUserId(session?.user?.id || null);
+      console.log("🔄 Auth state changed:", event);
+      console.log("🔑 User ID now:", session?.user?.id || "None");
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
   
   const form = useForm<PrizeFormValues>({
     defaultValues: {
@@ -53,6 +84,14 @@ export const usePrizeForm = () => {
   };
 
   const onSubmit = async (values: PrizeFormValues) => {
+    // Check if user is authenticated before proceeding
+    if (!isAuthenticated) {
+      toast.error("Utente non autenticato", { 
+        description: "Devi effettuare il login prima di poter inserire premi." 
+      });
+      return;
+    }
+    
     try {
       setIsLoading(true);
       setGeocodeError(null);
@@ -180,6 +219,7 @@ export const usePrizeForm = () => {
     showManualCoordinates,
     toggleManualCoordinates,
     handleRetry,
-    isRetrying
+    isRetrying,
+    isAuthenticated
   };
 };

@@ -3,12 +3,21 @@ import { useEffect } from "react";
 import { usePrizeForm } from "./hooks/usePrizeForm";
 import PrizeForm from "./PrizeForm";
 import { MapPinIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminPrizeManager = () => {
   console.log("🟢 AdminPrizeManager rendering");
   
   useEffect(() => {
     console.log("🟢 AdminPrizeManager mounted");
+    
+    // Check if user is authenticated
+    supabase.auth.getUser().then(({ data, error }) => {
+      console.log("🧑‍💼 User ID attivo:", data?.user?.id);
+      if (!data?.user) {
+        alert("⚠️ Nessun utente loggato. Autenticati per inserire premi.");
+      }
+    });
   }, []);
   
   const { 
@@ -19,7 +28,8 @@ const AdminPrizeManager = () => {
     showManualCoordinates, 
     toggleManualCoordinates,
     handleRetry,
-    isRetrying 
+    isRetrying,
+    isAuthenticated
   } = usePrizeForm();
 
   return (
@@ -30,6 +40,13 @@ const AdminPrizeManager = () => {
       </div>
       <p className="text-gray-400 mb-6">Inserisci i dettagli del premio e genera indizi automatici</p>
       
+      {!isAuthenticated && (
+        <div className="bg-red-500/30 border border-red-500/50 p-4 rounded-md mb-4">
+          <p className="text-red-200 font-medium">⚠️ Utente non autenticato</p>
+          <p className="text-red-200/80 text-sm">Effettua il login per inserire premi nel database.</p>
+        </div>
+      )}
+      
       <PrizeForm
         form={form}
         isLoading={isLoading}
@@ -39,6 +56,7 @@ const AdminPrizeManager = () => {
         toggleManualCoordinates={toggleManualCoordinates}
         handleRetry={handleRetry}
         isRetrying={isRetrying}
+        isAuthenticated={isAuthenticated}
       />
     </div>
   );
