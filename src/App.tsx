@@ -12,6 +12,8 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookiePolicy from './pages/CookiePolicy';
 import Terms from './pages/Terms';
 import Contacts from './pages/Contacts';
+import Clues from './pages/Clues';
+import Map from './pages/Map';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
@@ -37,6 +39,9 @@ function App() {
                 <Route path="/cookie-policy" element={<CookiePolicy />} />
                 <Route path="/termini-e-condizioni" element={<Terms />} />
                 <Route path="/contatti" element={<Contacts />} />
+                <Route path="/clues" element={<Clues />} />
+                <Route path="/clues/:id" element={<Clues />} />
+                <Route path="/map" element={<Map />} />
               </Routes>
               <Toaster position="top-right" />
             </GlobalLayout>

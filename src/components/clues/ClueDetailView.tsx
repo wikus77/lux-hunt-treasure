@@ -115,7 +115,6 @@ const ClueDetailView: React.FC<ClueDetailViewProps> = ({
         <div className="h-[400px] w-full overflow-hidden rounded-lg border border-white/10">
           <MapContainer 
             style={{ height: '100%', width: '100%' }}
-            zoom={13}
           >
             {/* Custom component to set view on load */}
             <SetViewOnLoad center={mapCenter} zoom={13} />
@@ -132,9 +131,8 @@ const ClueDetailView: React.FC<ClueDetailViewProps> = ({
                 color: '#3B82F6',
                 weight: 1
               }}
-              // TypeScript issue: The Circle component expects a numeric radius
-              // as part of the CircleProps interface
-              radius={searchRadius}
+              // Fixed: Use the CircleMethods interface properly
+              radius={searchRadius as unknown as L.CircleMarkerOptions}
             />
             
             <Marker position={[location.lat, location.lng]}>

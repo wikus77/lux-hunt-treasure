@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useNotifications } from '@/hooks/useNotifications';
 import { toast } from 'sonner';
+import { adaptToClue } from '@/utils/adaptToClue';
+import { Clue } from '@/types/Clue';
 
 // Define the structure of clue data from the database
 interface DbClue {
@@ -27,8 +29,6 @@ interface DbClue {
   created_at: string;
   type: string;
 }
-
-export interface Clue extends DbClue {}
 
 export interface ClueData {
   id: string;
@@ -88,9 +88,11 @@ export const useClueManagement = (language: string = 'it') => {
       }
       
       // Type-safe filtering of valid clue IDs
-      const clueIds: string[] = userClueData
-        .filter((uc): uc is UserClue => uc && typeof uc === 'object' && 'clue_id' in uc)
-        .map(uc => uc.clue_id);
+      const validUserClues = userClueData.filter(
+        (uc): uc is UserClue => uc && typeof uc === 'object' && 'clue_id' in uc
+      );
+      
+      const clueIds: string[] = validUserClues.map(uc => uc.clue_id);
       
       if (clueIds.length === 0) {
         setClues([]);
@@ -173,9 +175,12 @@ export const useClueManagement = (language: string = 'it') => {
       }
       
       // Type-safe handling for received clue IDs
-      const receivedClueIds: string[] = (userClueData || [])
-        .filter((uc): uc is UserClue => uc && typeof uc === 'object' && 'clue_id' in uc)
-        .map(uc => uc.clue_id);
+      const validUserClues = Array.isArray(userClueData) 
+        ? userClueData.filter((uc): uc is UserClue => 
+            uc && typeof uc === 'object' && 'clue_id' in uc)
+        : [];
+      
+      const receivedClueIds: string[] = validUserClues.map(uc => uc.clue_id);
       
       // Get a buzz clue that the user hasn't received yet
       let buzzClueData: DbClue | null = null;
