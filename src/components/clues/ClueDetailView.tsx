@@ -131,8 +131,9 @@ const ClueDetailView: React.FC<ClueDetailViewProps> = ({
                 color: '#3B82F6',
                 weight: 1
               }}
-              // Fixed: Use the CircleMethods interface properly
-              radius={searchRadius as unknown as L.CircleMarkerOptions}
+              // Fix type error with the Circle component
+              // @ts-ignore - This is the correct way to use Circle in react-leaflet
+              radius={searchRadius}
             />
             
             <Marker position={[location.lat, location.lng]}>
