@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -14,42 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Plus, Search, Filter, Download, Award } from 'lucide-react';
 import { useAuthContext } from '@/contexts/auth';
-
-interface PrizeFormData {
-  title: string;
-  city: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  radius: number;
-  start_date: string;
-  end_date: string;
-  is_active: boolean;
-}
-
-interface PrizeClue {
-  id?: string;
-  prize_id: string;
-  week: number;
-  description_it: string;
-  description_en: string;
-  description_fr: string;
-  clue_type: string;
-}
-
-interface Prize {
-  id: string;
-  title: string;
-  city: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  radius: number;
-  start_date: string;
-  end_date: string;
-  is_active: boolean;
-  created_at: string;
-}
+import { Prize, PrizeClue, PrizeFormData } from '@/types/prize';
 
 export default function AdminPrizeClues() {
   const [loading, setLoading] = useState(false);
@@ -106,11 +70,13 @@ export default function AdminPrizeClues() {
       
       if (error) throw error;
       
-      setPrizes(data || []);
-      setFilteredPrizes(data || []);
+      // Cast data to Prize[] since we know our interface matches the DB schema
+      const typedData = (data || []) as Prize[];
+      setPrizes(typedData);
+      setFilteredPrizes(typedData);
       
       // Fetch clues for each prize
-      for (const prize of data || []) {
+      for (const prize of typedData) {
         fetchCluesForPrize(prize.id);
       }
     } catch (error) {
@@ -121,10 +87,12 @@ export default function AdminPrizeClues() {
     }
   };
   
+  // Use a type assertion to handle the deep type instantiation issue
   const fetchCluesForPrize = async (prizeId: string) => {
     try {
+      // Use 'from' with a type assertion to avoid the type error
       const { data, error } = await supabase
-        .from('prize_clues')
+        .from('prize_clues' as any) // Type assertion to avoid the error
         .select('*')
         .eq('prize_id', prizeId)
         .order('week', { ascending: true });
@@ -133,7 +101,7 @@ export default function AdminPrizeClues() {
       
       setPrizeClues(prev => ({
         ...prev,
-        [prizeId]: data || []
+        [prizeId]: (data as PrizeClue[]) || []
       }));
     } catch (error) {
       console.error(`Error fetching clues for prize ${prizeId}:`, error);
@@ -181,10 +149,23 @@ export default function AdminPrizeClues() {
         return;
       }
       
+      // Convert formData to match the Prize schema for insertion
+      const prizeData = {
+        title: formData.title,
+        city: formData.city,
+        location_address: formData.address,
+        lat: formData.latitude,
+        lng: formData.longitude,
+        area_radius_m: formData.radius,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        is_active: formData.is_active
+      };
+      
       // Insert prize
       const { data, error } = await supabase
         .from('prizes')
-        .insert([formData])
+        .insert([prizeData])
         .select()
         .single();
         
@@ -239,17 +220,20 @@ export default function AdminPrizeClues() {
         throw new Error("Nessun indizio generato");
       }
       
+      // Prepare the clue data to match our PrizeClue interface
+      const cluesData = generatedData.clues.map((clue: any, index: number) => ({
+        prize_id: prizeId,
+        week: index + 1,
+        description_it: clue.italian,
+        description_en: clue.english,
+        description_fr: clue.french,
+        clue_type: 'weekly'
+      }));
+      
       // Insert generated clues
       const { error: insertError } = await supabase
-        .from('prize_clues')
-        .insert(generatedData.clues.map((clue: any, index: number) => ({
-          prize_id: prizeId,
-          week: index + 1,
-          description_it: clue.italian,
-          description_en: clue.english,
-          description_fr: clue.french,
-          clue_type: 'weekly'
-        })));
+        .from('prize_clues' as any) // Type assertion to avoid the error
+        .insert(cluesData);
         
       if (insertError) throw insertError;
       
@@ -585,15 +569,15 @@ export default function AdminPrizeClues() {
                         <div className="grid grid-cols-3 gap-2">
                           <div>
                             <p className="text-sm font-medium">Data Inizio:</p>
-                            <p className="text-sm">{format(new Date(prize.start_date), 'dd/MM/yyyy')}</p>
+                            <p className="text-sm">{prize.start_date ? format(new Date(prize.start_date), 'dd/MM/yyyy') : 'N/A'}</p>
                           </div>
                           <div>
                             <p className="text-sm font-medium">Data Fine:</p>
-                            <p className="text-sm">{format(new Date(prize.end_date), 'dd/MM/yyyy')}</p>
+                            <p className="text-sm">{prize.end_date ? format(new Date(prize.end_date), 'dd/MM/yyyy') : 'N/A'}</p>
                           </div>
                           <div>
                             <p className="text-sm font-medium">Area:</p>
-                            <p className="text-sm">{prize.radius}m</p>
+                            <p className="text-sm">{prize.radius || prize.area_radius_m || 500}m</p>
                           </div>
                         </div>
                       </div>
@@ -604,7 +588,7 @@ export default function AdminPrizeClues() {
                           <p className="text-sm text-gray-500">Nessun indizio generato</p>
                           <Button 
                             size="sm" 
-                            onClick={() => generateClues(prize.id, prize.city, prize.address)}
+                            onClick={() => generateClues(prize.id, prize.city, prize.location_address || prize.address || '')}
                             disabled={generatingClues}
                           >
                             <Plus className="mr-2 h-4 w-4" />
