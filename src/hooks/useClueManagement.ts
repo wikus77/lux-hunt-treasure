@@ -83,8 +83,18 @@ export const useClueManagement = (language: string = 'it') => {
         return;
       }
       
+      // Add safety check to ensure we have valid data before mapping
+      const clueIds: string[] = userClueData
+        ?.filter((uc: any): uc is { clue_id: string } => uc && 'clue_id' in uc)
+        ?.map((uc: { clue_id: string }) => uc.clue_id) || [];
+      
+      if (clueIds.length === 0) {
+        setClues([]);
+        setLoading(false);
+        return;
+      }
+      
       // Get the actual clue details
-      const clueIds = userClueData.map((uc: { clue_id: string }) => uc.clue_id);
       const { data: clueData, error: clueError } = await supabase
         .from('clues')
         .select('*')
@@ -96,20 +106,21 @@ export const useClueManagement = (language: string = 'it') => {
       
       // Transform the clues based on user's language
       // Use explicit type for the database result
-      const formattedClues: ClueData[] = (clueData as unknown as DbClue[]).map((dbClue: DbClue) => ({
-        id: dbClue.id,
-        title: dbClue[`title_${language}` as keyof DbClue] as string || dbClue.title_it || '',
-        description: dbClue[`description_${language}` as keyof DbClue] as string || dbClue.description_it || '',
-        region_hint: dbClue[`region_hint_${language}` as keyof DbClue] as string | undefined || dbClue.region_hint_it || undefined,
-        city_hint: dbClue[`city_hint_${language}` as keyof DbClue] as string | undefined || dbClue.city_hint_it || undefined,
-        location: {
-          lat: dbClue.lat,
-          lng: dbClue.lng,
-          label: dbClue.location_label
-        },
-        week: dbClue.week,
-        is_final_week: dbClue.is_final_week
-      }));
+      const formattedClues: ClueData[] = (clueData as unknown as DbClue[])
+        .map((dbClue: DbClue): ClueData => ({
+          id: dbClue.id,
+          title: dbClue[`title_${language}` as keyof DbClue] as string || dbClue.title_it || '',
+          description: dbClue[`description_${language}` as keyof DbClue] as string || dbClue.description_it || '',
+          region_hint: dbClue[`region_hint_${language}` as keyof DbClue] as string | undefined || dbClue.region_hint_it || undefined,
+          city_hint: dbClue[`city_hint_${language}` as keyof DbClue] as string | undefined || dbClue.city_hint_it || undefined,
+          location: {
+            lat: dbClue.lat,
+            lng: dbClue.lng,
+            label: dbClue.location_label
+          },
+          week: dbClue.week,
+          is_final_week: dbClue.is_final_week
+        }));
       
       setClues(formattedClues);
       
@@ -158,7 +169,9 @@ export const useClueManagement = (language: string = 'it') => {
       }
       
       // Define explicit type for receivedClueIds to avoid infinite type issues
-      const receivedClueIds: string[] = (userClueData || []).map((uc: { clue_id: string }) => uc.clue_id);
+      const receivedClueIds: string[] = (userClueData || [])
+        .filter((uc: any): uc is { clue_id: string } => uc && 'clue_id' in uc)
+        .map((uc: { clue_id: string }) => uc.clue_id);
       
       // Get a buzz clue that the user hasn't received yet
       let buzzClueData: DbClue | null = null;
