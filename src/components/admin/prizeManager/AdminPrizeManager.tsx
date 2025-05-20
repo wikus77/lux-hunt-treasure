@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,12 @@ interface PrizeFormValues {
 }
 
 const AdminPrizeManager = () => {
+  console.log("🟢 AdminPrizeManager rendering");
   const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    console.log("🟢 AdminPrizeManager mounted");
+  }, []);
   
   const form = useForm<PrizeFormValues>({
     defaultValues: {
@@ -150,6 +155,7 @@ const AdminPrizeManager = () => {
   return (
     <div className="p-6 bg-black/80 border border-white/10 rounded-lg">
       <h2 className="text-xl font-bold mb-6 text-white">Gestione Premi M1SSION</h2>
+      <h3 className="text-lg text-green-500 mb-4">✅ AdminPrizeManager montato con successo</h3>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

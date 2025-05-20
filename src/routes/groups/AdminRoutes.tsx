@@ -14,6 +14,10 @@ export default function AdminRoutes() {
     const currentDate = new Date();
     
     setBypassProtection(currentDate < expirationDate);
+    
+    // Debug log for routes
+    console.log("🟢 AdminRoutes rendering, bypassProtection:", currentDate < expirationDate);
+    console.log("🟢 Current routes being configured in AdminRoutes");
   }, []);
 
   return (
