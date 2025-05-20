@@ -29,7 +29,10 @@ export const fetchUserCluesFromApi = async (): Promise<DbClue[]> => {
 
   if (clueError) throw new Error(`Error fetching clue details: ${clueError.message}`);
 
-  const clues: DbClue[] = (clueData ?? []).map((raw): DbClue => adaptToDbClue(raw));
+  // FIX APPLICATO QUI (RIGA 57)
+  const rawClues = (clueData ?? []) as any[];
+  const clues: DbClue[] = rawClues.map((raw): DbClue => adaptToDbClue(raw));
+
   return clues;
 };
 
