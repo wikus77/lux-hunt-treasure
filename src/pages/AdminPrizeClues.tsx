@@ -117,17 +117,17 @@ export default function AdminPrizeClues() {
   
   const fetchCluesForPrize = async (prizeId: string) => {
     try {
-      // Using 'from' with a type assertion to avoid the type error
-      const { data, error } = await supabase
-        .from('prize_clues')
+      // Use type casting to avoid TypeScript errors with table name
+      const response = await supabase
+        .from('prize_clues' as any)
         .select('*')
         .eq('prize_id', prizeId)
         .order('week', { ascending: true });
         
-      if (error) throw error;
+      if (response.error) throw response.error;
       
-      // Use type assertion to handle the type mismatch
-      const clues = data as unknown as PrizeClue[];
+      // Cast the data to our PrizeClue interface to satisfy TypeScript
+      const clues = response.data as unknown as PrizeClue[];
       
       setPrizeClues(prev => ({
         ...prev,
@@ -259,12 +259,12 @@ export default function AdminPrizeClues() {
         clue_type: 'weekly'
       }));
       
-      // Insert generated clues
-      const { error: insertError } = await supabase
-        .from('prize_clues')
+      // Insert generated clues using type casting to avoid TypeScript errors
+      const response = await supabase
+        .from('prize_clues' as any)
         .insert(cluesData);
         
-      if (insertError) throw insertError;
+      if (response.error) throw response.error;
       
       toast.success('Indizi generati con successo!');
       fetchCluesForPrize(prizeId);
