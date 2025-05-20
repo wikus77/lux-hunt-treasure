@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -102,7 +101,7 @@ const AdminPrizeManager = () => {
         throw new Error(clueData.error || "Impossibile generare gli indizi");
       }
       
-      // 4. Insert clues into the database
+      // 4. Insert clues into the database using our edge function
       const clues = clueData.clues.map((clue: any) => ({
         prize_id: prizeId,
         week: clue.week,
@@ -115,12 +114,19 @@ const AdminPrizeManager = () => {
         description_fr: clue.description_fr
       }));
       
-      const { error: cluesError } = await supabase
-        .from("prize_clues")
-        .insert(clues);
+      const insertResponse = await fetch(
+        "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/insert-prize-clues", 
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ clues_data: clues })
+        }
+      );
       
-      if (cluesError) {
-        throw new Error(cluesError?.message || "Errore durante il salvataggio degli indizi");
+      const insertResult = await insertResponse.json();
+      
+      if (!insertResponse.ok || insertResult.error) {
+        throw new Error(insertResult.error || "Errore durante il salvataggio degli indizi");
       }
       
       toast.success("Premio e indizi creati con successo!");
