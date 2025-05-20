@@ -2,11 +2,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import { PrizeFormValues } from "../hooks/usePrizeForm";
 
-interface GeocodeResult {
+export interface GeocodeResult {
   lat: string;
   lon: string;
   display_name?: string;
   error?: string;
+  statusCode?: number;
+  errorType?: 'rate_limit' | 'not_found' | 'service_error' | 'network_error';
 }
 
 interface ClueGenerationParams {
@@ -37,15 +39,47 @@ export async function geocodeAddress(city: string, address: string): Promise<Geo
       }
     );
     
+    // Log detailed response status
+    console.log(`Geocode response status: ${geocodeResponse.status} ${geocodeResponse.statusText}`);
+    
     if (!geocodeResponse.ok) {
       console.error(`Geocode error: ${geocodeResponse.status} ${geocodeResponse.statusText}`);
-      return { error: `Errore geocoding: ${geocodeResponse.statusText}`, lat: "", lon: "" };
+      
+      const errorInfo = await geocodeResponse.json().catch(e => ({ 
+        error: `Response parsing failed: ${e.message}` 
+      }));
+      
+      return { 
+        error: errorInfo.error || `Errore geocoding: ${geocodeResponse.statusText}`, 
+        statusCode: geocodeResponse.status,
+        errorType: errorInfo.errorType || (geocodeResponse.status === 429 ? 'rate_limit' : 'service_error'),
+        lat: "", 
+        lon: "" 
+      };
     }
     
-    return await geocodeResponse.json();
+    const result = await geocodeResponse.json();
+    console.log("Geocode response:", result);
+    
+    if (result.error) {
+      return {
+        error: result.error,
+        statusCode: result.statusCode || 400,
+        errorType: result.errorType || 'not_found',
+        lat: "",
+        lon: ""
+      };
+    }
+    
+    return result;
   } catch (error) {
     console.error("Geocode error:", error);
-    return { error: `Errore durante la geocodifica: ${error.message}`, lat: "", lon: "" };
+    return { 
+      error: `Errore durante la geocodifica: ${error.message}`, 
+      errorType: 'network_error',
+      lat: "", 
+      lon: "" 
+    };
   }
 }
 

@@ -11,7 +11,16 @@ const AdminPrizeManager = () => {
     console.log("🟢 AdminPrizeManager mounted");
   }, []);
   
-  const { form, isLoading, onSubmit } = usePrizeForm();
+  const { 
+    form, 
+    isLoading, 
+    onSubmit, 
+    geocodeError, 
+    showManualCoordinates, 
+    toggleManualCoordinates,
+    handleRetry,
+    isRetrying 
+  } = usePrizeForm();
 
   return (
     <div className="p-6 bg-black/80 border border-white/10 rounded-lg">
@@ -25,6 +34,11 @@ const AdminPrizeManager = () => {
         form={form}
         isLoading={isLoading}
         onSubmit={onSubmit}
+        geocodeError={geocodeError}
+        showManualCoordinates={showManualCoordinates}
+        toggleManualCoordinates={toggleManualCoordinates}
+        handleRetry={handleRetry}
+        isRetrying={isRetrying}
       />
     </div>
   );

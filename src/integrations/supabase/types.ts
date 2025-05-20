@@ -366,6 +366,7 @@ export type Database = {
           name: string | null
           power: string | null
           start_date: string | null
+          title: string | null
           traction: string | null
         }
         Insert: {
@@ -384,6 +385,7 @@ export type Database = {
           name?: string | null
           power?: string | null
           start_date?: string | null
+          title?: string | null
           traction?: string | null
         }
         Update: {
@@ -402,6 +404,7 @@ export type Database = {
           name?: string | null
           power?: string | null
           start_date?: string | null
+          title?: string | null
           traction?: string | null
         }
         Relationships: []
