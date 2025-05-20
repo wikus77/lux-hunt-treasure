@@ -7,6 +7,7 @@ import {
   getMessagingInstance
 } from '@/integrations/firebase/firebase-client';
 import { useNotificationManager } from '@/hooks/useNotificationManager';
+import { supabase } from '@/integrations/supabase/client';
 
 export const usePushNotifications = () => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
@@ -34,24 +35,71 @@ export const usePushNotifications = () => {
     checkSupport();
   }, []);
 
-  // Setup message listener
+  // Setup message listener for clue notifications
   useEffect(() => {
     if (isSupported && permission === 'granted') {
       setupMessageListener((payload) => {
-        // Create an in-app notification
+        // Check if this is a clue notification
         if (payload.notification) {
           const { title, body } = payload.notification;
-          createNotification(title || 'Nuova notifica', body || '');
+          createNotification(title || 'Nuovo indizio', body || '');
           
           // Show toast
-          toast(title || 'Nuova notifica', {
+          toast(title || 'Nuovo indizio', {
             description: body || '',
             duration: 5000,
+            action: {
+              label: "View Clue",
+              onClick: () => {
+                // Navigate to clues page
+                window.location.href = payload.notification?.clickAction || '/clues';
+              },
+            },
           });
         }
       });
     }
   }, [isSupported, permission, createNotification]);
+
+  // Save device token to Supabase
+  const saveDeviceToken = useCallback(async (newToken: string) => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session.session) {
+        console.log('Cannot save device token: User not logged in');
+        return;
+      }
+      
+      // Check if token already exists
+      const { data: existingToken } = await supabase
+        .from('device_tokens')
+        .select('id')
+        .eq('token', newToken)
+        .eq('user_id', session.session.user.id)
+        .single();
+      
+      if (existingToken) {
+        // Update last_used timestamp
+        await supabase
+          .from('device_tokens')
+          .update({ last_used: new Date().toISOString() })
+          .eq('id', existingToken.id);
+      } else {
+        // Insert new token
+        await supabase
+          .from('device_tokens')
+          .insert({
+            user_id: session.session.user.id,
+            token: newToken,
+            device_type: /Android/i.test(navigator.userAgent) ? 'android' : 
+                         /iPad|iPhone|iPod/.test(navigator.userAgent) ? 'ios' : 'web'
+          });
+      }
+    } catch (error) {
+      console.error('Error saving device token:', error);
+    }
+  }, []);
 
   // Request permission
   const requestPermission = useCallback(async () => {
@@ -70,6 +118,8 @@ export const usePushNotifications = () => {
         // Only set token if it exists in the result
         if (result.token) {
           setToken(result.token);
+          // Save token to Supabase
+          await saveDeviceToken(result.token);
         }
         toast.success('Notifiche attivate con successo!');
       } else {
@@ -91,7 +141,7 @@ export const usePushNotifications = () => {
       setLoading(false);
       return { success: false, error };
     }
-  }, [isSupported, createNotification]);
+  }, [isSupported, saveDeviceToken]);
 
   return {
     isSupported,

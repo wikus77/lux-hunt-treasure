@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 import NotFound from "../pages/NotFound";
 
@@ -9,6 +8,9 @@ import AdminRoutes from "./groups/AdminRoutes";
 import SettingsRoutes from "./groups/SettingsRoutes";
 import PremiumRoutes from "./groups/PremiumRoutes";
 import PaymentRoutes from "./groups/PaymentRoutes";
+
+// Add the Clues component to the imports
+import Clues from '@/pages/Clues';
 
 /**
  * Application routes organized by categories:
@@ -41,6 +43,10 @@ const AppRoutes = () => {
       
       {/* Payment Routes */}
       <PaymentRoutes />
+      
+      {/* Clues Route */}
+      <Route path="/clues" element={<Clues />} />
+      <Route path="/clues/:id" element={<Clues />} />
       
       {/* Fallback 404 Route */}
       <Route path="*" element={<NotFound />} />

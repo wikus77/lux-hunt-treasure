@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import BuzzExplosionHandler from "@/components/buzz/BuzzExplosionHandler";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Bell, LightbulbIcon, Trash } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useClueManagement } from "@/hooks/useClueManagement";
 
 const Buzz = () => {
   const [showDialog, setShowDialog] = useState(false);
@@ -25,6 +27,7 @@ const Buzz = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const { addNotification, reloadNotifications } = useNotifications();
   const isMobile = useIsMobile();
+  const { receiveBuzzClue } = useClueManagement();
 
   const {
     unlockedClues,
@@ -54,14 +57,14 @@ const Buzz = () => {
         savePaymentMethod();
         // Show explosion animation
         setShowExplosion(true);
-        // Don't automatically increment clues - wait for the animation to complete
-        // This prevents immediately jumping to 1000/1000
+        // Process the clue after payment
+        receiveBuzzClue();
       } catch (error) {
         // Ignore
       }
     }
     // eslint-disable-next-line
-  }, [location.state, savePaymentMethod, navigate, initializeSound]);
+  }, [location.state, savePaymentMethod, navigate, initializeSound, receiveBuzzClue]);
 
   const handleBuzzClick = () => {
     if (!hasPaymentMethod) {
@@ -95,15 +98,12 @@ const Buzz = () => {
   function handleExplosionCompleted() {
     setShowExplosion(false);
     
-    // Increment ONE clue when the explosion animation completes
-    incrementUnlockedCluesAndAddClue();
-    
     // Show the banner with the clue
     setShowClueBanner(true);
     
-    // Navigate to notifications after a delay
+    // Navigate to clues page after a delay
     setTimeout(() => {
-      navigate("/notifications", { replace: true });
+      navigate("/clues", { replace: true });
     }, 1800);
   }
 
@@ -118,44 +118,13 @@ const Buzz = () => {
     setTimeout(() => {
       setShowDialog(false);
       
-      // Generate a random clue from the vague clues
-      const newClue = getNextVagueClue();
-      setLastVagueClue(newClue);
+      // Process buzz clue
+      receiveBuzzClue();
       
-      // Increase unlocked clue count and show explosion/animation
-      incrementUnlockedCluesAndAddClue();
-      
-      // Add notification for the new clue
-      const success = addNotification({
-        title: "Nuovo Indizio Extra!",
-        description: newClue
-      });
-      
-      if (success) {
-        // Reload notifications to update the counter
-        reloadNotifications();
-        
-        // Show success message
-        toast.success("Hai ricevuto un nuovo indizio!", {
-          duration: 3000,
-        });
-        
-        // Show explosion animation
-        setShowExplosion(true);
-      } else {
-        toast.error("Errore nel salvataggio dell'indizio", {
-          duration: 3000,
-        });
-      }
+      // Show explosion animation
+      setShowExplosion(true);
     }, 1500);
-  }, [
-    playSound, 
-    getNextVagueClue, 
-    setLastVagueClue, 
-    incrementUnlockedCluesAndAddClue, 
-    addNotification, 
-    reloadNotifications
-  ]);
+  }, [playSound, receiveBuzzClue]);
 
   const handleResetClues = () => {
     resetUnlockedClues();
