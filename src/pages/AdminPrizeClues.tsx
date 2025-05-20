@@ -70,14 +70,42 @@ export default function AdminPrizeClues() {
       
       if (error) throw error;
       
-      // Cast data to Prize[] since we know our interface matches the DB schema
-      const typedData = (data || []) as Prize[];
-      setPrizes(typedData);
-      setFilteredPrizes(typedData);
+      // Convert the raw data to the Prize type
+      const typedData = data?.map(item => ({
+        id: item.id,
+        title: item.name || '',
+        city: item.location_address?.split(',').pop()?.trim() || '',
+        address: item.location_address || '',
+        latitude: item.lat || 0,
+        longitude: item.lng || 0,
+        radius: item.area_radius_m || 500,
+        start_date: item.start_date || '',
+        end_date: item.end_date || '',
+        is_active: item.is_active || false,
+        created_at: item.created_at || '',
+        
+        // Optional properties from original schema
+        acceleration: item.acceleration,
+        area_radius_m: item.area_radius_m,
+        description: item.description,
+        engine: item.engine,
+        image_url: item.image_url,
+        lat: item.lat,
+        lng: item.lng,
+        location_address: item.location_address,
+        name: item.name,
+        power: item.power,
+        traction: item.traction
+      })) as Prize[];
+      
+      setPrizes(typedData || []);
+      setFilteredPrizes(typedData || []);
       
       // Fetch clues for each prize
-      for (const prize of typedData) {
-        fetchCluesForPrize(prize.id);
+      if (typedData) {
+        for (const prize of typedData) {
+          fetchCluesForPrize(prize.id);
+        }
       }
     } catch (error) {
       console.error('Error fetching prizes:', error);
@@ -87,21 +115,23 @@ export default function AdminPrizeClues() {
     }
   };
   
-  // Use a type assertion to handle the deep type instantiation issue
   const fetchCluesForPrize = async (prizeId: string) => {
     try {
-      // Use 'from' with a type assertion to avoid the type error
+      // Using 'from' with a type assertion to avoid the type error
       const { data, error } = await supabase
-        .from('prize_clues' as any) // Type assertion to avoid the error
+        .from('prize_clues')
         .select('*')
         .eq('prize_id', prizeId)
         .order('week', { ascending: true });
         
       if (error) throw error;
       
+      // Use type assertion to handle the type mismatch
+      const clues = data as unknown as PrizeClue[];
+      
       setPrizeClues(prev => ({
         ...prev,
-        [prizeId]: (data as PrizeClue[]) || []
+        [prizeId]: clues || []
       }));
     } catch (error) {
       console.error(`Error fetching clues for prize ${prizeId}:`, error);
@@ -151,8 +181,7 @@ export default function AdminPrizeClues() {
       
       // Convert formData to match the Prize schema for insertion
       const prizeData = {
-        title: formData.title,
-        city: formData.city,
+        name: formData.title,
         location_address: formData.address,
         lat: formData.latitude,
         lng: formData.longitude,
@@ -232,7 +261,7 @@ export default function AdminPrizeClues() {
       
       // Insert generated clues
       const { error: insertError } = await supabase
-        .from('prize_clues' as any) // Type assertion to avoid the error
+        .from('prize_clues')
         .insert(cluesData);
         
       if (insertError) throw insertError;
