@@ -1,6 +1,6 @@
 
-import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Circle, Marker, Popup } from 'react-leaflet';
+import React, { useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { motion } from "framer-motion";
 import { Calendar, MapPin, AlertCircle } from "lucide-react";
@@ -15,6 +15,15 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
+
+// Helper component to set the view of the map
+function SetViewOnLoad({ center, zoom }: { center: [number, number], zoom: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, map, zoom]);
+  return null;
+}
 
 interface ClueLocation {
   lat: number;
@@ -106,25 +115,27 @@ const ClueDetailView: React.FC<ClueDetailViewProps> = ({
         <div className="h-[400px] w-full overflow-hidden rounded-lg border border-white/10">
           <MapContainer 
             style={{ height: '100%', width: '100%' }}
-            // Remove the 'center' prop as it's not recognized by TypeScript
-            // We'll set the map view after initialization
+            zoom={13}
           >
+            {/* Custom component to set view on load */}
+            <SetViewOnLoad center={mapCenter} zoom={13} />
+            
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            
             <Circle 
-              // For Circle, we need to use a different approach for setting center and radius
-              // due to TypeScript type constraints
               center={mapCenter}
-              // @ts-ignore - Override TypeScript error since this prop is actually supported in react-leaflet
-              radius={searchRadius}
               pathOptions={{ 
                 fillColor: '#3B82F6', 
                 fillOpacity: 0.2, 
                 color: '#3B82F6',
                 weight: 1
               }}
+              // Use TypeScript assertion for radius prop
+              radius={searchRadius as any}
             />
+            
             <Marker position={[location.lat, location.lng]}>
               <Popup>
                 <div className="font-medium">{location.label}</div>

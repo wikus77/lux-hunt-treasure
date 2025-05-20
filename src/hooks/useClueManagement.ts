@@ -4,28 +4,31 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNotifications } from '@/hooks/useNotifications';
 import { toast } from 'sonner';
 
-export interface Clue {
+// Define the structure of clue data from the database
+interface DbClue {
   id: string;
   location_label: string;
   week: number;
   title_it: string;
-  title_en: string;
-  title_fr: string;
+  title_en: string | null;
+  title_fr: string | null;
   description_it: string;
-  description_en: string;
-  description_fr: string;
-  region_hint_it?: string;
-  region_hint_en?: string;
-  region_hint_fr?: string;
-  city_hint_it?: string;
-  city_hint_en?: string;
-  city_hint_fr?: string;
+  description_en: string | null;
+  description_fr: string | null;
+  region_hint_it?: string | null;
+  region_hint_en?: string | null;
+  region_hint_fr?: string | null;
+  city_hint_it?: string | null;
+  city_hint_en?: string | null;
+  city_hint_fr?: string | null;
   is_final_week: boolean;
   lat: number;
   lng: number;
   created_at: string;
   type: string;
 }
+
+export interface Clue extends DbClue {}
 
 export interface ClueData {
   id: string;
@@ -81,7 +84,7 @@ export const useClueManagement = (language: string = 'it') => {
       }
       
       // Get the actual clue details
-      const clueIds = userClueData.map((uc: any) => uc.clue_id);
+      const clueIds = userClueData.map((uc: { clue_id: string }) => uc.clue_id);
       const { data: clueData, error: clueError } = await supabase
         .from('clues')
         .select('*')
@@ -92,19 +95,20 @@ export const useClueManagement = (language: string = 'it') => {
       }
       
       // Transform the clues based on user's language
-      const formattedClues: ClueData[] = clueData.map((clue: Clue) => ({
-        id: clue.id,
-        title: clue[`title_${language}`] || clue.title_it || '',
-        description: clue[`description_${language}`] || clue.description_it || '',
-        region_hint: clue[`region_hint_${language}`] || clue.region_hint_it || undefined,
-        city_hint: clue[`city_hint_${language}`] || clue.city_hint_it || undefined,
+      // Use explicit type for the database result
+      const formattedClues: ClueData[] = (clueData as unknown as DbClue[]).map((dbClue: DbClue) => ({
+        id: dbClue.id,
+        title: dbClue[`title_${language}` as keyof DbClue] as string || dbClue.title_it || '',
+        description: dbClue[`description_${language}` as keyof DbClue] as string || dbClue.description_it || '',
+        region_hint: dbClue[`region_hint_${language}` as keyof DbClue] as string | undefined || dbClue.region_hint_it || undefined,
+        city_hint: dbClue[`city_hint_${language}` as keyof DbClue] as string | undefined || dbClue.city_hint_it || undefined,
         location: {
-          lat: clue.lat,
-          lng: clue.lng,
-          label: clue.location_label
+          lat: dbClue.lat,
+          lng: dbClue.lng,
+          label: dbClue.location_label
         },
-        week: clue.week,
-        is_final_week: clue.is_final_week
+        week: dbClue.week,
+        is_final_week: dbClue.is_final_week
       }));
       
       setClues(formattedClues);
@@ -153,11 +157,11 @@ export const useClueManagement = (language: string = 'it') => {
         throw new Error(`Error fetching user clues: ${userClueError.message}`);
       }
       
-      // Use a safe type annotation that doesn't cause infinite type issues
-      const receivedClueIds: string[] = (userClueData || []).map((uc: any) => uc.clue_id);
+      // Define explicit type for receivedClueIds to avoid infinite type issues
+      const receivedClueIds: string[] = (userClueData || []).map((uc: { clue_id: string }) => uc.clue_id);
       
       // Get a buzz clue that the user hasn't received yet
-      let buzzClueData;
+      let buzzClueData: DbClue | null = null;
       
       const { data: buzzClue, error: buzzClueError } = await supabase
         .from('clues')
@@ -182,9 +186,9 @@ export const useClueManagement = (language: string = 'it') => {
           throw new Error('No available clues found');
         }
         
-        buzzClueData = fallbackClue;
+        buzzClueData = fallbackClue as unknown as DbClue;
       } else {
-        buzzClueData = buzzClue;
+        buzzClueData = buzzClue as unknown as DbClue;
       }
       
       // Mark clue as sent to user
@@ -197,8 +201,8 @@ export const useClueManagement = (language: string = 'it') => {
         });
       
       // Add notification
-      const clueTitle = buzzClueData[`title_${language}`] || buzzClueData.title_it || '';
-      const clueDescription = buzzClueData[`description_${language}`] || buzzClueData.description_it || '';
+      const clueTitle = buzzClueData[`title_${language}` as keyof DbClue] as string || buzzClueData.title_it || '';
+      const clueDescription = buzzClueData[`description_${language}` as keyof DbClue] as string || buzzClueData.description_it || '';
       
       addNotification({
         title: `🎯 ${clueTitle}`,
