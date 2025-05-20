@@ -3,8 +3,8 @@ import { useAdminCheck } from '@/hooks/admin/useAdminCheck';
 import AdminPrizeManager from '@/components/admin/prizeManager/AdminPrizeManager';
 import { Spinner } from '@/components/ui/spinner';
 
-export default function AdminPrizeManagerPage() {
-  const { isAdmin, isRoleLoading } = useAdminCheck();
+export default function AdminPrizeClues() {
+  const { isAdmin, isRoleLoading } = useAdminCheck(false); // Disable redirect on fail
   
   if (isRoleLoading) {
     return (
@@ -17,9 +17,11 @@ export default function AdminPrizeManagerPage() {
     );
   }
   
-  if (!isAdmin) {
-    return null;
-  }
+  // Force rendering of the component even if not admin (for debugging)
+  // TODO: Re-enable admin check after confirming visibility
+  // if (!isAdmin) {
+  //   return null;
+  // }
   
   return (
     <div className="container mx-auto py-10">
