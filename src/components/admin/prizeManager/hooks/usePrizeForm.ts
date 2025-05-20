@@ -30,7 +30,8 @@ export const usePrizeForm = () => {
       setIsLoading(true);
       console.log("Submitting form with values:", values);
       
-      // 1. Geocode the address
+      // 1. Geocode the address to get coordinates
+      toast.info("Geolocalizzazione indirizzo...");
       const geocodeData = await geocodeAddress(values.city, values.address);
       console.log("Geocode response:", geocodeData);
       
@@ -39,6 +40,7 @@ export const usePrizeForm = () => {
       }
       
       // 2. Insert prize into the database
+      toast.info("Salvataggio premio...");
       const { data: prizeData, error: prizeError } = await createPrize(
         values, 
         parseFloat(geocodeData.lat),
@@ -59,6 +61,7 @@ export const usePrizeForm = () => {
       console.log("Created prize with ID:", prizeId);
       
       // 3. Generate clues
+      toast.info("Generazione indizi...");
       const clueData = await generatePrizeClues({
         prizeId,
         city: values.city,
@@ -67,18 +70,28 @@ export const usePrizeForm = () => {
         lng: parseFloat(geocodeData.lon)
       });
       
+      console.log("Generated clues:", clueData);
+      
       if (clueData.error || !clueData.clues) {
         throw new Error(clueData.error || "Impossibile generare gli indizi");
       }
       
       // 4. Insert clues into the database
+      toast.info("Salvataggio indizi...");
       const insertResult = await insertPrizeClues(clueData.clues, prizeId);
+      
+      console.log("Clues insertion result:", insertResult);
       
       if (insertResult.error) {
         throw new Error(insertResult.error || "Errore durante il salvataggio degli indizi");
       }
       
-      toast.success("Premio e indizi creati con successo!");
+      // Success!
+      toast.success("Premio e indizi creati con successo!", {
+        description: `Salvato premio in ${values.city} con ${clueData.clues.length} indizi.`
+      });
+      
+      // Reset form after success
       form.reset();
       
     } catch (error) {

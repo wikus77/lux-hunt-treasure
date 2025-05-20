@@ -5,6 +5,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Spinner } from "@/components/ui/spinner";
 import { PrizeFormValues } from "./hooks/usePrizeForm";
 import { UseFormReturn } from "react-hook-form";
+import { MapPinIcon, CalendarIcon, SaveIcon } from "lucide-react";
 
 interface PrizeFormProps {
   form: UseFormReturn<PrizeFormValues>;
@@ -22,7 +23,10 @@ const PrizeForm = ({ form, isLoading, onSubmit }: PrizeFormProps) => {
             name="city"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Città</FormLabel>
+                <FormLabel className="text-white flex items-center gap-2">
+                  <MapPinIcon className="h-4 w-4" />
+                  Città
+                </FormLabel>
                 <FormControl>
                   <Input 
                     placeholder="Es: Milano" 
@@ -40,7 +44,10 @@ const PrizeForm = ({ form, isLoading, onSubmit }: PrizeFormProps) => {
             name="address"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Indirizzo completo</FormLabel>
+                <FormLabel className="text-white flex items-center gap-2">
+                  <MapPinIcon className="h-4 w-4" />
+                  Indirizzo completo
+                </FormLabel>
                 <FormControl>
                   <Input 
                     placeholder="Es: Via Montenapoleone 10" 
@@ -60,7 +67,10 @@ const PrizeForm = ({ form, isLoading, onSubmit }: PrizeFormProps) => {
             name="area_radius_m"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Raggio (metri)</FormLabel>
+                <FormLabel className="text-white flex items-center gap-2">
+                  <MapPinIcon className="h-4 w-4" />
+                  Raggio (metri)
+                </FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
@@ -79,7 +89,10 @@ const PrizeForm = ({ form, isLoading, onSubmit }: PrizeFormProps) => {
             name="start_date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Data inizio</FormLabel>
+                <FormLabel className="text-white flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  Data inizio
+                </FormLabel>
                 <FormControl>
                   <Input 
                     type="date" 
@@ -97,7 +110,10 @@ const PrizeForm = ({ form, isLoading, onSubmit }: PrizeFormProps) => {
             name="end_date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Data fine (opzionale)</FormLabel>
+                <FormLabel className="text-white flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  Data fine (opzionale)
+                </FormLabel>
                 <FormControl>
                   <Input 
                     type="date" 
@@ -112,7 +128,7 @@ const PrizeForm = ({ form, isLoading, onSubmit }: PrizeFormProps) => {
         
         <Button 
           type="submit" 
-          className="bg-gradient-to-r from-cyan-400 to-blue-600 text-black" 
+          className="bg-gradient-to-r from-cyan-400 to-blue-600 text-black hover:brightness-110 transition-all"
           disabled={isLoading}
         >
           {isLoading ? (
@@ -121,7 +137,10 @@ const PrizeForm = ({ form, isLoading, onSubmit }: PrizeFormProps) => {
               Elaborazione...
             </>
           ) : (
-            "Salva Premio e Genera Indizi"
+            <>
+              <SaveIcon className="mr-2 h-4 w-4" />
+              Salva Premio e Genera Indizi
+            </>
           )}
         </Button>
       </form>
