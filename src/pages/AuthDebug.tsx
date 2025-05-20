@@ -1,13 +1,16 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import TurnstileWidget from "@/components/security/TurnstileWidget";
 
 const AuthDebug = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(true);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,9 +41,13 @@ const AuthDebug = () => {
     try {
       setIsLoading(true);
       
+      // Pass the turnstileToken as part of the gotrue_meta_security object
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        options: {
+          captchaToken: turnstileToken || "BYPASS_FOR_DEVELOPMENT"
+        }
       });
       
       if (error) {
@@ -118,6 +125,13 @@ const AuthDebug = () => {
               required
               className="w-full px-4 py-2 rounded-md border border-gray-700 bg-black/50 text-white"
               placeholder="Inserisci password"
+            />
+          </div>
+          
+          <div className="mt-2">
+            <TurnstileWidget 
+              onVerify={setTurnstileToken} 
+              action="login_debug"
             />
           </div>
           
