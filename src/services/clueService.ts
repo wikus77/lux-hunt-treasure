@@ -166,3 +166,4 @@ export const getCurrentUserWeek = async () => {
   
   return Math.floor((userClueCount?.length || 0) / 7) + 1;
 };
+
