@@ -27,7 +27,8 @@ export interface Clue {
   type: string;
 }
 
-interface ClueData {
+export interface ClueData {
+  id: string;  // Add id to ClueData to fix the errors in Clues.tsx
   title: string;
   description: string;
   region_hint?: string;
@@ -91,7 +92,8 @@ export const useClueManagement = (language: string = 'it') => {
       }
       
       // Transform the clues based on user's language
-      const formattedClues = clueData.map((clue: Clue): ClueData => ({
+      const formattedClues = clueData.map((clue: any): ClueData => ({
+        id: clue.id,  // Include ID in the transformed data
         title: clue[`title_${language}`] || clue.title_it,
         description: clue[`description_${language}`] || clue.description_it,
         region_hint: clue[`region_hint_${language}`] || clue.region_hint_it || undefined,
@@ -154,7 +156,7 @@ export const useClueManagement = (language: string = 'it') => {
       const receivedClueIds = userClueData?.map(uc => uc.clue_id) || [];
       
       // Get a buzz clue that the user hasn't received yet
-      const { data: buzzClue, error: buzzClueError } = await supabase
+      let { data: buzzClue, error: buzzClueError } = await supabase
         .from('clues')
         .select('*')
         .eq('type', 'buzz')

@@ -62,7 +62,7 @@ const Clues = () => {
 
   return (
     <div className={`min-h-screen bg-black ${isMobile ? 'pt-[65px]' : 'pt-[80px]'}`}>
-      <UnifiedHeader title="Clues" />
+      <UnifiedHeader>Clues</UnifiedHeader>
       
       <div className="container mx-auto px-4 py-6">
         <h1 className="text-3xl font-bold mb-6">Your Clues</h1>
