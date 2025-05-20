@@ -100,22 +100,19 @@ const ClueDetailView: React.FC<ClueDetailViewProps> = ({
         {/* Map Component */}
         <div className="h-[400px] w-full overflow-hidden rounded-lg border border-white/10">
           <MapContainer 
-            center={[location.lat, location.lng]} 
-            zoom={13} 
             style={{ height: '100%', width: '100%' }}
+            zoom={13}
           >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <Circle 
-              center={[location.lat, location.lng]}
               pathOptions={{ 
                 fillColor: '#3B82F6', 
                 fillOpacity: 0.2, 
                 color: '#3B82F6',
                 weight: 1
               }}
-              radius={500} 
             />
             <Marker position={[location.lat, location.lng]}>
               <Popup>

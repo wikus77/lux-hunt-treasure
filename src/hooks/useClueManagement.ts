@@ -94,8 +94,8 @@ export const useClueManagement = (language: string = 'it') => {
       // Transform the clues based on user's language
       const formattedClues: ClueData[] = clueData.map((clue: any) => ({
         id: clue.id,
-        title: clue[`title_${language}`] || clue.title_it,
-        description: clue[`description_${language}`] || clue.description_it,
+        title: clue[`title_${language}`] || clue.title_it || clue.title || '',
+        description: clue[`description_${language}`] || clue.description_it || clue.description || '',
         region_hint: clue[`region_hint_${language}`] || clue.region_hint_it || undefined,
         city_hint: clue[`city_hint_${language}`] || clue.city_hint_it || undefined,
         location: {
@@ -156,7 +156,9 @@ export const useClueManagement = (language: string = 'it') => {
       const receivedClueIds = userClueData?.map((uc: any) => uc.clue_id) || [];
       
       // Get a buzz clue that the user hasn't received yet
-      let { data: buzzClue, error: buzzClueError } = await supabase
+      let buzzClueData;
+      
+      const { data: buzzClue, error: buzzClueError } = await supabase
         .from('clues')
         .select('*')
         .eq('type', 'buzz')
@@ -179,7 +181,9 @@ export const useClueManagement = (language: string = 'it') => {
           throw new Error('No available clues found');
         }
         
-        buzzClue = fallbackClue;
+        buzzClueData = fallbackClue;
+      } else {
+        buzzClueData = buzzClue;
       }
       
       // Mark clue as sent to user
@@ -187,13 +191,13 @@ export const useClueManagement = (language: string = 'it') => {
         .from('user_clues')
         .insert({
           user_id: userSession.session.user.id,
-          clue_id: buzzClue.id,
+          clue_id: buzzClueData.id,
           delivery_type: 'buzz'
         });
       
       // Add notification
-      const clueTitle = buzzClue[`title_${language}`] || buzzClue.title_it;
-      const clueDescription = buzzClue[`description_${language}`] || buzzClue.description_it;
+      const clueTitle = buzzClueData.title || buzzClueData[`title_${language}`] || '';
+      const clueDescription = buzzClueData.description || buzzClueData[`description_${language}`] || '';
       
       addNotification({
         title: `🎯 ${clueTitle}`,
