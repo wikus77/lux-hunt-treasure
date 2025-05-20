@@ -48,7 +48,7 @@ export const fetchUserCluesFromApi = async () => {
     throw new Error(`Error fetching clue details: ${clueError.message}`);
   }
   
-  return clueData as unknown as DbClue[];
+  return clueData as DbClue[];
 };
 
 /**
@@ -78,13 +78,18 @@ export const addClueToUser = async (clueId: string, deliveryType: string = 'buzz
  * Fetches a Buzz clue that the user hasn't received yet
  */
 export const fetchAvailableBuzzClue = async (weekNumber: number, receivedClueIds: string[]) => {
+  // Prepare safe placeholder for empty array condition
+  const safeIds = receivedClueIds.length > 0 
+    ? receivedClueIds 
+    : ['00000000-0000-0000-0000-000000000000']; // Use UUID placeholder
+
   // Get a buzz clue that the user hasn't received yet
   const { data: buzzClue, error: buzzClueError } = await supabase
     .from('clues')
     .select('*')
     .eq('type', 'buzz')
     .eq('week', weekNumber)
-    .not('id', 'in', receivedClueIds.length > 0 ? receivedClueIds : ['00000000-0000-0000-0000-000000000000'])
+    .not('id', 'in', safeIds)
     .limit(1)
     .single();
   
@@ -94,7 +99,7 @@ export const fetchAvailableBuzzClue = async (weekNumber: number, receivedClueIds
       .from('clues')
       .select('*')
       .eq('week', weekNumber)
-      .not('id', 'in', receivedClueIds.length > 0 ? receivedClueIds : ['00000000-0000-0000-0000-000000000000'])
+      .not('id', 'in', safeIds)
       .limit(1)
       .single();
       
@@ -102,10 +107,10 @@ export const fetchAvailableBuzzClue = async (weekNumber: number, receivedClueIds
       throw new Error('No available clues found');
     }
     
-    return fallbackClue as unknown as DbClue;
+    return fallbackClue as DbClue;
   }
   
-  return buzzClue as unknown as DbClue;
+  return buzzClue as DbClue;
 };
 
 /**

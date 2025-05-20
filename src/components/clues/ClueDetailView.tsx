@@ -1,29 +1,10 @@
 
-import React, { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import React from 'react';
 import { motion } from "framer-motion";
-import { Calendar, MapPin, AlertCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import L from 'leaflet';
-
-// Fix for Leaflet marker icon issue in production builds
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-});
-
-// Helper component to set the view of the map
-function SetViewOnLoad({ center, zoom }: { center: [number, number], zoom: number }) {
-  const map = useMap();
-  useEffect(() => {
-    map.setView(center, zoom);
-  }, [center, map, zoom]);
-  return null;
-}
+import ClueHeader from './ClueHeader';
+import ClueDescription from './ClueDescription';
+import LocationHints from './LocationHints';
+import ClueMap from './ClueMap';
 
 interface ClueLocation {
   lat: number;
@@ -50,18 +31,6 @@ const ClueDetailView: React.FC<ClueDetailViewProps> = ({
   week,
   isFinalWeek = false
 }) => {
-  useEffect(() => {
-    // This is needed to properly render the map when it's mounted
-    setTimeout(() => {
-      window.dispatchEvent(new Event('resize'));
-    }, 300);
-  }, []);
-  
-  // Default center to the location provided
-  const mapCenter: [number, number] = [location.lat, location.lng];
-  // Default search radius in meters
-  const searchRadius = 500;
-
   return (
     <div className="space-y-6">
       <motion.div 
@@ -71,85 +40,23 @@ const ClueDetailView: React.FC<ClueDetailViewProps> = ({
         className="space-y-4"
       >
         {/* Clue Header with Week Information */}
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">{title}</h2>
-          <Badge variant={isFinalWeek ? "destructive" : "secondary"} className="text-sm">
-            <Calendar className="w-3 h-3 mr-1" />
-            Week {week}
-            {isFinalWeek && " (Final)"}
-          </Badge>
-        </div>
+        <ClueHeader 
+          title={title}
+          week={week}
+          isFinalWeek={isFinalWeek}
+        />
         
         {/* Clue Description */}
-        <Card>
-          <CardContent className="p-4 text-md">
-            <p>{description}</p>
-          </CardContent>
-        </Card>
+        <ClueDescription description={description} />
         
         {/* Location Hints */}
-        {(regionHint || cityHint) && (
-          <Card className="bg-black/50">
-            <CardHeader className="py-2 px-4">
-              <CardTitle className="text-lg flex items-center">
-                <AlertCircle className="w-4 h-4 mr-2 text-amber-400" />
-                Location Hints
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="py-2 px-4 space-y-2">
-              {regionHint && (
-                <div>
-                  <span className="font-medium text-amber-400">Region:</span> {regionHint}
-                </div>
-              )}
-              {cityHint && (
-                <div>
-                  <span className="font-medium text-amber-400">City:</span> {cityHint}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        <LocationHints 
+          regionHint={regionHint}
+          cityHint={cityHint}
+        />
         
-        {/* Map Component */}
-        <div className="h-[400px] w-full overflow-hidden rounded-lg border border-white/10">
-          <MapContainer 
-            style={{ height: '100%', width: '100%' }}
-          >
-            {/* Custom component to set view on load */}
-            <SetViewOnLoad center={mapCenter} zoom={13} />
-            
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            
-            <Circle 
-              center={mapCenter}
-              pathOptions={{ 
-                fillColor: '#3B82F6', 
-                fillOpacity: 0.2, 
-                color: '#3B82F6',
-                weight: 1
-              }}
-              // Fix type error with the Circle component
-              // @ts-ignore - This is the correct way to use Circle in react-leaflet
-              radius={searchRadius}
-            />
-            
-            <Marker position={[location.lat, location.lng]}>
-              <Popup>
-                <div className="font-medium">{location.label}</div>
-                <div className="text-sm text-muted-foreground">Search area for clue</div>
-              </Popup>
-            </Marker>
-          </MapContainer>
-        </div>
-        
-        {/* Location Label */}
-        <div className="flex items-center text-md text-muted-foreground">
-          <MapPin className="w-4 h-4 mr-2" />
-          <span>{location.label}</span>
-        </div>
+        {/* Map Component and Location Label */}
+        <ClueMap location={location} />
       </motion.div>
     </div>
   );
