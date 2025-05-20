@@ -108,11 +108,11 @@ export const fetchAvailableBuzzClue = async (weekNumber: number, receivedClueIds
       throw new Error('No available clues found');
     }
     
-    // Use type assertion to convert the response to DbClue
+    // Use type assertion for the fallbackClue
     return fallbackClue as unknown as DbClue;
   }
   
-  // Use type assertion to convert the response to DbClue
+  // Use type assertion for the buzzClue
   return buzzClue as unknown as DbClue;
 };
 
