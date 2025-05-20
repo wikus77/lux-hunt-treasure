@@ -45,6 +45,10 @@ export interface ClueData {
   is_final_week: boolean;
 }
 
+interface UserClue {
+  clue_id: string;
+}
+
 export const useClueManagement = (language: string = 'it') => {
   const [clues, setClues] = useState<ClueData[]>([]);
   const [activeClue, setActiveClue] = useState<ClueData | null>(null);
@@ -69,9 +73,9 @@ export const useClueManagement = (language: string = 'it') => {
       // Get all clue IDs that have been sent to this user
       const { data: userClueData, error: userClueError } = await supabase
         .from('user_clues')
-        .select('clue_id, sent_at')
+        .select('clue_id')
         .eq('user_id', userSession.session.user.id)
-        .order('sent_at', { ascending: false });
+        .order('created_at', { ascending: false });
       
       if (userClueError) {
         throw new Error(`Error fetching user clues: ${userClueError.message}`);
@@ -83,10 +87,10 @@ export const useClueManagement = (language: string = 'it') => {
         return;
       }
       
-      // Add safety check to ensure we have valid data before mapping
+      // Type-safe filtering of valid clue IDs
       const clueIds: string[] = userClueData
-        ?.filter((uc: any): uc is { clue_id: string } => uc && 'clue_id' in uc)
-        ?.map((uc: { clue_id: string }) => uc.clue_id) || [];
+        .filter((uc): uc is UserClue => uc && typeof uc === 'object' && 'clue_id' in uc)
+        .map(uc => uc.clue_id);
       
       if (clueIds.length === 0) {
         setClues([]);
@@ -168,10 +172,10 @@ export const useClueManagement = (language: string = 'it') => {
         throw new Error(`Error fetching user clues: ${userClueError.message}`);
       }
       
-      // Define explicit type for receivedClueIds to avoid infinite type issues
+      // Type-safe handling for received clue IDs
       const receivedClueIds: string[] = (userClueData || [])
-        .filter((uc: any): uc is { clue_id: string } => uc && 'clue_id' in uc)
-        .map((uc: { clue_id: string }) => uc.clue_id);
+        .filter((uc): uc is UserClue => uc && typeof uc === 'object' && 'clue_id' in uc)
+        .map(uc => uc.clue_id);
       
       // Get a buzz clue that the user hasn't received yet
       let buzzClueData: DbClue | null = null;
