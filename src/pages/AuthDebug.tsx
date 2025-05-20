@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,28 +7,20 @@ const AuthDebug = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if the current user is authorized based on email
-    // This is a client-side check for development purposes only
     const checkAuthorization = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         const { data: userData } = await supabase.auth.getUser();
+        console.log("Current user email:", userData.user?.email);
         if (userData.user?.email === "wikus77@hotmail.it") {
-          setIsAuthorized(true);
-          return;
+          console.log("Admin user detected");
         }
-      }
-      
-      // Only allow access if email matches or not logged in yet
-      if (window.location.hostname === "localhost" || email === "wikus77@hotmail.it") {
-        setIsAuthorized(true);
       } else {
-        toast.error("Accesso negato", { description: "Non sei autorizzato a visualizzare questa pagina" });
-        navigate("/");
+        console.log("No active session");
       }
     };
     
@@ -39,7 +30,6 @@ const AuthDebug = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Verify authorized email - additional client-side check
     if (email !== "wikus77@hotmail.it") {
       toast.error("Accesso negato", { description: "Non sei autorizzato a utilizzare questa pagina" });
       return;
@@ -57,7 +47,6 @@ const AuthDebug = () => {
         throw error;
       }
 
-      // Check if the user is an admin
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("role")
@@ -75,7 +64,6 @@ const AuthDebug = () => {
       
       toast.success("Login effettuato con successo", { description: "Reindirizzamento alla pagina di gestione..." });
       
-      // Redirect to the admin UI page
       setTimeout(() => {
         navigate("/test-admin-ui");
       }, 1500);
@@ -87,17 +75,6 @@ const AuthDebug = () => {
       setIsLoading(false);
     }
   };
-
-  if (!isAuthorized) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="p-6 rounded-lg bg-red-900/30 border border-red-800/50">
-          <h1 className="text-xl font-bold mb-4">Accesso negato</h1>
-          <p>Non sei autorizzato a visualizzare questa pagina.</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-black">
