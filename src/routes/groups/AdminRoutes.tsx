@@ -1,12 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Admin from '@/pages/Admin';
-import AdminPrizeClues from '@/pages/AdminPrizeClues';
+import Admin from '@/pages/Admin'; // Ensure correct import path
 import RoleBasedProtectedRoute from '@/components/auth/RoleBasedProtectedRoute';
+import { useState, useEffect } from 'react';
 
-// This component is now used as a sub-router within AppRoutes
-const AdminRoutes = () => {
+export default function AdminRoutes() {
   const [bypassProtection, setBypassProtection] = useState(false);
   
   useEffect(() => {
@@ -20,7 +18,7 @@ const AdminRoutes = () => {
   return (
     <Routes>
       <Route 
-        path="/" 
+        path="/admin" 
         element={
           bypassProtection ? (
             // Temporary direct access until May 21, 2025
@@ -33,16 +31,6 @@ const AdminRoutes = () => {
           )
         } 
       />
-      <Route
-        path="/prize-clues"
-        element={
-          <RoleBasedProtectedRoute allowedRoles={['admin']}>
-            <AdminPrizeClues />
-          </RoleBasedProtectedRoute>
-        }
-      />
     </Routes>
   );
-};
-
-export default AdminRoutes;
+}

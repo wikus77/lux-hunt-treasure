@@ -352,56 +352,35 @@ export type Database = {
       prizes: {
         Row: {
           acceleration: string | null
-          area_radius_m: number | null
           created_at: string
           description: string | null
-          end_date: string | null
           engine: string | null
           id: string
           image_url: string | null
-          is_active: boolean | null
-          lat: number | null
-          lng: number | null
-          location_address: string | null
           name: string | null
           power: string | null
-          start_date: string | null
           traction: string | null
         }
         Insert: {
           acceleration?: string | null
-          area_radius_m?: number | null
           created_at?: string
           description?: string | null
-          end_date?: string | null
           engine?: string | null
           id?: string
           image_url?: string | null
-          is_active?: boolean | null
-          lat?: number | null
-          lng?: number | null
-          location_address?: string | null
           name?: string | null
           power?: string | null
-          start_date?: string | null
           traction?: string | null
         }
         Update: {
           acceleration?: string | null
-          area_radius_m?: number | null
           created_at?: string
           description?: string | null
-          end_date?: string | null
           engine?: string | null
           id?: string
           image_url?: string | null
-          is_active?: boolean | null
-          lat?: number | null
-          lng?: number | null
-          location_address?: string | null
           name?: string | null
           power?: string | null
-          start_date?: string | null
           traction?: string | null
         }
         Relationships: []

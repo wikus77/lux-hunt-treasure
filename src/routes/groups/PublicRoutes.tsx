@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Route } from 'react-router-dom';
+import { Route, Navigate } from 'react-router-dom';
 import PublicLayout from "../../components/layout/PublicLayout";
 
 // Pages
@@ -19,26 +20,26 @@ import { EmailVerificationPage } from "../../components/auth/EmailVerificationHa
 
 const PublicRoutes = () => {
   return (
-    <>
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<Index />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/kyc" element={<KYC />} />
-        <Route path="/verification" element={<EmailVerificationPage />} />
-        <Route path="/contact" element={<Contacts />} />
-        <Route path="/contatti" element={<Contacts />} /> {/* Italian alias */}
-        <Route path="/email-test" element={<EmailTest />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/termini-e-condizioni" element={<Terms />} /> {/* Italian alias */}
-        <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* Alternative path */}
-        <Route path="/cookie-policy" element={<CookiePolicy />} />
-        <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/access-denied" element={<AccessDenied />} />
-      </Route>
-    </>
+    <Route element={<PublicLayout />}>
+      <Route path="/" element={<Index />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/kyc" element={<KYC />} />
+      <Route path="/verification" element={<EmailVerificationPage />} />
+      <Route path="/contact" element={<Contacts />} />
+      <Route path="/contatti" element={<Contacts />} /> {/* Italian alias */}
+      <Route path="/email-test" element={<EmailTest />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/termini-e-condizioni" element={<Terms />} /> {/* Italian alias */}
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* Alternative path */}
+      <Route path="/cookie-policy" element={<CookiePolicy />} />
+      <Route path="/how-it-works" element={<HowItWorks />} />
+      <Route path="/access-denied" element={<AccessDenied />} />
+      
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Route>
   );
 };
 
