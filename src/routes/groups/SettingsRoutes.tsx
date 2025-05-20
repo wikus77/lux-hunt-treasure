@@ -5,8 +5,8 @@ import { RoleBasedProtectedRoute } from "../../components/auth/RoleBasedProtecte
 
 // Pages
 import Settings from "../../pages/Settings";
-import PersonalInfo from "../../pages/PersonalInfo";
 import PrivacySecurity from "../../pages/PrivacySecurity";
+import PersonalInfo from "../../pages/PersonalInfo";
 import LanguageSettings from "../../pages/LanguageSettings";
 import Notifications from "../../pages/Notifications";
 
@@ -24,15 +24,7 @@ const SettingsRoutes = () => {
         }
       />
       <Route
-        path="/personal-info"
-        element={
-          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <PersonalInfo />
-          </RoleBasedProtectedRoute>
-        }
-      />
-      <Route
-        path="/privacy-security"
+        path="/settings/privacy"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <PrivacySecurity />
@@ -40,7 +32,15 @@ const SettingsRoutes = () => {
         }
       />
       <Route
-        path="/language-settings"
+        path="/settings/personal"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+            <PersonalInfo />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/language"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <LanguageSettings />
@@ -48,7 +48,7 @@ const SettingsRoutes = () => {
         }
       />
       <Route
-        path="/notifications"
+        path="/settings/notifications"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <Notifications />

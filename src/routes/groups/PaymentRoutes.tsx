@@ -4,26 +4,18 @@ import { Route } from 'react-router-dom';
 import { RoleBasedProtectedRoute } from "../../components/auth/RoleBasedProtectedRoute";
 
 // Pages
-import Subscriptions from "../../pages/Subscriptions";
 import PaymentMethods from "../../pages/PaymentMethods";
 import PaymentSilver from "../../pages/PaymentSilver";
 import PaymentGold from "../../pages/PaymentGold";
 import PaymentBlack from "../../pages/PaymentBlack";
 import PaymentSuccess from "../../pages/PaymentSuccess";
+import Subscriptions from "../../pages/Subscriptions";
 
 const PaymentRoutes = () => {
   const baseUserRoles = ['user', 'moderator', 'admin'];
   
   return (
     <>
-      <Route
-        path="/subscriptions"
-        element={
-          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <Subscriptions />
-          </RoleBasedProtectedRoute>
-        }
-      />
       <Route
         path="/payment-methods"
         element={
@@ -33,7 +25,7 @@ const PaymentRoutes = () => {
         }
       />
       <Route
-        path="/payment-silver"
+        path="/payment/silver"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <PaymentSilver />
@@ -41,7 +33,7 @@ const PaymentRoutes = () => {
         }
       />
       <Route
-        path="/payment-gold"
+        path="/payment/gold"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <PaymentGold />
@@ -49,7 +41,7 @@ const PaymentRoutes = () => {
         }
       />
       <Route
-        path="/payment-black"
+        path="/payment/black"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <PaymentBlack />
@@ -57,10 +49,18 @@ const PaymentRoutes = () => {
         }
       />
       <Route
-        path="/payment-success"
+        path="/payment/success"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <PaymentSuccess />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/subscriptions"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+            <Subscriptions />
           </RoleBasedProtectedRoute>
         }
       />
