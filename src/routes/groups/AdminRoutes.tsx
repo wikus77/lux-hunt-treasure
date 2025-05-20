@@ -3,6 +3,7 @@ import { Route } from 'react-router-dom';
 import Admin from '@/pages/Admin'; // Ensure correct import path
 import RoleBasedProtectedRoute from '@/components/auth/RoleBasedProtectedRoute';
 import { useState, useEffect } from 'react';
+import AdminPrizeManager from '@/pages/AdminPrizeManager';
 
 export default function AdminRoutes() {
   const [bypassProtection, setBypassProtection] = useState(false);
@@ -29,6 +30,16 @@ export default function AdminRoutes() {
               <Admin />
             </RoleBasedProtectedRoute>
           )
+        } 
+      />
+      
+      {/* Add new route for Prize Manager */}
+      <Route 
+        path="/admin/prizes" 
+        element={
+          <RoleBasedProtectedRoute allowedRoles={['admin']}>
+            <AdminPrizeManager />
+          </RoleBasedProtectedRoute>
         } 
       />
     </>
