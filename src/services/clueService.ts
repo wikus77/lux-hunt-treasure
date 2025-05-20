@@ -32,7 +32,7 @@ export const fetchUserCluesFromApi = async () => {
     (uc): uc is UserClue => uc && typeof uc === 'object' && 'clue_id' in uc
   );
   
-  const clueIds: string[] = validUserClues.map(uc => uc.clue_id);
+  const clueIds: string[] = validUserClues.map((uc: UserClue) => uc.clue_id);
   
   if (clueIds.length === 0) {
     return [];
@@ -49,7 +49,7 @@ export const fetchUserCluesFromApi = async () => {
   }
   
   // Use type assertion to convert the response to DbClue[]
-  return (clueData || []) as unknown as DbClue[];
+  return (clueData || []) as DbClue[];
 };
 
 /**
@@ -80,7 +80,7 @@ export const addClueToUser = async (clueId: string, deliveryType: string = 'buzz
  */
 export const fetchAvailableBuzzClue = async (weekNumber: number, receivedClueIds: string[]) => {
   // Prepare safe placeholder for empty array condition
-  const safeIds = receivedClueIds.length > 0 
+  const safeIds: string[] = receivedClueIds.length > 0 
     ? receivedClueIds 
     : ['00000000-0000-0000-0000-000000000000']; // Use UUID placeholder
 
@@ -108,11 +108,11 @@ export const fetchAvailableBuzzClue = async (weekNumber: number, receivedClueIds
       throw new Error('No available clues found');
     }
     
-    // Fixed: Use a direct type assertion instead of the nested as operators
+    // Use direct type assertion
     return fallbackClue as unknown as DbClue;
   }
   
-  // Fixed: Use a direct type assertion instead of the nested as operators
+  // Use direct type assertion
   return buzzClue as unknown as DbClue;
 };
 
@@ -137,12 +137,12 @@ export const fetchUserClueIds = async () => {
   }
   
   // Type-safe handling for received clue IDs
-  const validUserClues = Array.isArray(userClueData) 
+  const validUserClues: UserClue[] = Array.isArray(userClueData) 
     ? userClueData.filter((uc): uc is UserClue => 
         uc && typeof uc === 'object' && 'clue_id' in uc)
     : [];
   
-  return validUserClues.map(uc => uc.clue_id);
+  return validUserClues.map((uc: UserClue) => uc.clue_id);
 };
 
 /**
