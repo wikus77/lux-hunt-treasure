@@ -17,7 +17,8 @@ import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import GlobalLayout from "./components/layout/GlobalLayout";
-import TestAdminUI from './pages/TestAdminUI'; // Add import for the new page
+import TestAdminUI from './pages/TestAdminUI';
+import AuthDebug from './pages/AuthDebug'; // Import the new debug authentication page
 
 function App() {
   return (
@@ -38,8 +39,8 @@ function App() {
                 <Route path="/cookie-policy" element={<CookiePolicy />} />
                 <Route path="/termini-e-condizioni" element={<Terms />} />
                 <Route path="/contatti" element={<Contacts />} />
-                {/* Add the new test route with direct access */}
                 <Route path="/test-admin-ui" element={<TestAdminUI />} />
+                <Route path="/auth-debug" element={<AuthDebug />} /> {/* Add the new debug authentication route */}
               </Routes>
               <Toaster position="top-right" />
             </GlobalLayout>
