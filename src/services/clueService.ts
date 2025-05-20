@@ -111,11 +111,11 @@ export const fetchAvailableBuzzClue = async (weekNumber: number, receivedClueIds
       throw new Error('No available clues found');
     }
     
-    // Convert the raw response to a properly typed DbClue
+    // Direct type assertion to break deep inference chain
     return adaptToDbClue(fallbackClue);
   }
   
-  // Convert the raw response to a properly typed DbClue
+  // Direct type assertion to break deep inference chain
   return adaptToDbClue(buzzClue);
 };
 
