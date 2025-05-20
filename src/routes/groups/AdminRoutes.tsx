@@ -33,14 +33,10 @@ export default function AdminRoutes() {
         } 
       />
       
-      {/* Add route for Prize Clues Manager */}
+      {/* Direct access to Prize Clues Manager without protection */}
       <Route 
         path="/admin/prizes" 
-        element={
-          <RoleBasedProtectedRoute allowedRoles={['admin']}>
-            <AdminPrizeClues />
-          </RoleBasedProtectedRoute>
-        } 
+        element={<AdminPrizeClues />} 
       />
     </>
   );
