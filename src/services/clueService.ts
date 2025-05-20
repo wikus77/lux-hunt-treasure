@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { DbClue, UserClue, ClueData } from "@/types/clueTypes";
+import { adaptToDbClue } from "@/utils/adaptToDbClue";
 
 /**
  * Fetches all clues for a specific user
@@ -28,7 +29,7 @@ export const fetchUserCluesFromApi = async () => {
   }
   
   // Type-safe filtering of valid clue IDs
-  const validUserClues = userClueData.filter(
+  const validUserClues: UserClue[] = userClueData.filter(
     (uc): uc is UserClue => uc && typeof uc === 'object' && 'clue_id' in uc
   );
   
@@ -48,8 +49,10 @@ export const fetchUserCluesFromApi = async () => {
     throw new Error(`Error fetching clue details: ${clueError.message}`);
   }
   
-  // Use type assertion to convert the response to DbClue[]
-  return (clueData || []) as DbClue[];
+  // Convert the raw response to properly typed DbClue[] objects
+  const clues: DbClue[] = (clueData || []).map((raw): DbClue => adaptToDbClue(raw));
+  
+  return clues;
 };
 
 /**
@@ -108,12 +111,12 @@ export const fetchAvailableBuzzClue = async (weekNumber: number, receivedClueIds
       throw new Error('No available clues found');
     }
     
-    // Use direct type assertion
-    return fallbackClue as unknown as DbClue;
+    // Convert the raw response to a properly typed DbClue
+    return adaptToDbClue(fallbackClue);
   }
   
-  // Use direct type assertion
-  return buzzClue as unknown as DbClue;
+  // Convert the raw response to a properly typed DbClue
+  return adaptToDbClue(buzzClue);
 };
 
 /**
