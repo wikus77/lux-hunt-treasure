@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { DbClue, UserClue } from "@/types/clueTypes";
 import { adaptToDbClue } from "@/utils/adaptToDbClue";
@@ -29,7 +30,7 @@ export const fetchUserCluesFromApi = async (): Promise<DbClue[]> => {
 
   if (clueError) throw new Error(`Error fetching clue details: ${clueError.message}`);
 
-  // FIX APPLICATO QUI (RIGA 57)
+  // Breaking the type inference chain with explicit typing
   const rawClues = (clueData ?? []) as any[];
   const clues: DbClue[] = rawClues.map((raw): DbClue => adaptToDbClue(raw));
 
@@ -79,10 +80,12 @@ export const fetchAvailableBuzzClue = async (
       throw new Error('No available clues found');
     }
 
-    return adaptToDbClue(fallbackClue);
+    // Breaking the type inference chain with explicit typing
+    return adaptToDbClue(fallbackClue as any);
   }
 
-  return adaptToDbClue(buzzClue);
+  // Breaking the type inference chain with explicit typing
+  return adaptToDbClue(buzzClue as any);
 };
 
 export const fetchUserClueIds = async (): Promise<string[]> => {
