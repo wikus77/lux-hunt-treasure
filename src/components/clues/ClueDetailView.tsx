@@ -47,6 +47,11 @@ const ClueDetailView: React.FC<ClueDetailViewProps> = ({
       window.dispatchEvent(new Event('resize'));
     }, 300);
   }, []);
+  
+  // Default center to the location provided
+  const mapCenter: [number, number] = [location.lat, location.lng];
+  // Default search radius in meters
+  const searchRadius = 500;
 
   return (
     <div className="space-y-6">
@@ -101,18 +106,20 @@ const ClueDetailView: React.FC<ClueDetailViewProps> = ({
         <div className="h-[400px] w-full overflow-hidden rounded-lg border border-white/10">
           <MapContainer 
             style={{ height: '100%', width: '100%' }}
-            zoom={13}
+            center={mapCenter}
           >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <Circle 
+              center={mapCenter}
               pathOptions={{ 
                 fillColor: '#3B82F6', 
                 fillOpacity: 0.2, 
                 color: '#3B82F6',
                 weight: 1
               }}
+              radius={searchRadius}
             />
             <Marker position={[location.lat, location.lng]}>
               <Popup>

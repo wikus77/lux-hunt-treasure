@@ -153,7 +153,7 @@ export const useClueManagement = (language: string = 'it') => {
         throw new Error(`Error fetching user clues: ${userClueError.message}`);
       }
       
-      const receivedClueIds = userClueData?.map((uc: any) => uc.clue_id) || [];
+      const receivedClueIds: string[] = userClueData?.map((uc: any) => uc.clue_id) || [];
       
       // Get a buzz clue that the user hasn't received yet
       let buzzClueData;
