@@ -108,11 +108,11 @@ export const fetchAvailableBuzzClue = async (weekNumber: number, receivedClueIds
       throw new Error('No available clues found');
     }
     
-    // Use type assertion for the fallbackClue
+    // Fixed: Use a direct type assertion instead of the nested as operators
     return fallbackClue as unknown as DbClue;
   }
   
-  // Use type assertion for the buzzClue
+  // Fixed: Use a direct type assertion instead of the nested as operators
   return buzzClue as unknown as DbClue;
 };
 
@@ -166,4 +166,3 @@ export const getCurrentUserWeek = async () => {
   
   return Math.floor((userClueCount?.length || 0) / 7) + 1;
 };
-
