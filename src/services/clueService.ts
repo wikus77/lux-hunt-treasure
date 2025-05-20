@@ -48,7 +48,8 @@ export const fetchUserCluesFromApi = async () => {
     throw new Error(`Error fetching clue details: ${clueError.message}`);
   }
   
-  return clueData as DbClue[];
+  // Use type assertion to convert the response to DbClue[]
+  return (clueData || []) as unknown as DbClue[];
 };
 
 /**
@@ -107,10 +108,12 @@ export const fetchAvailableBuzzClue = async (weekNumber: number, receivedClueIds
       throw new Error('No available clues found');
     }
     
-    return fallbackClue as DbClue;
+    // Use type assertion to convert the response to DbClue
+    return fallbackClue as unknown as DbClue;
   }
   
-  return buzzClue as DbClue;
+  // Use type assertion to convert the response to DbClue
+  return buzzClue as unknown as DbClue;
 };
 
 /**
