@@ -92,10 +92,10 @@ export const useClueManagement = (language: string = 'it') => {
       }
       
       // Transform the clues based on user's language
-      const formattedClues: ClueData[] = clueData.map((clue: any) => ({
+      const formattedClues: ClueData[] = clueData.map((clue: Clue) => ({
         id: clue.id,
-        title: clue[`title_${language}`] || clue.title_it || clue.title || '',
-        description: clue[`description_${language}`] || clue.description_it || clue.description || '',
+        title: clue[`title_${language}`] || clue.title_it || '',
+        description: clue[`description_${language}`] || clue.description_it || '',
         region_hint: clue[`region_hint_${language}`] || clue.region_hint_it || undefined,
         city_hint: clue[`city_hint_${language}`] || clue.city_hint_it || undefined,
         location: {
@@ -153,7 +153,8 @@ export const useClueManagement = (language: string = 'it') => {
         throw new Error(`Error fetching user clues: ${userClueError.message}`);
       }
       
-      const receivedClueIds: string[] = userClueData?.map((uc: any) => uc.clue_id) || [];
+      // Use a safe type annotation that doesn't cause infinite type issues
+      const receivedClueIds: string[] = (userClueData || []).map((uc: any) => uc.clue_id);
       
       // Get a buzz clue that the user hasn't received yet
       let buzzClueData;
@@ -196,8 +197,8 @@ export const useClueManagement = (language: string = 'it') => {
         });
       
       // Add notification
-      const clueTitle = buzzClueData.title || buzzClueData[`title_${language}`] || '';
-      const clueDescription = buzzClueData.description || buzzClueData[`description_${language}`] || '';
+      const clueTitle = buzzClueData[`title_${language}`] || buzzClueData.title_it || '';
+      const clueDescription = buzzClueData[`description_${language}`] || buzzClueData.description_it || '';
       
       addNotification({
         title: `🎯 ${clueTitle}`,
