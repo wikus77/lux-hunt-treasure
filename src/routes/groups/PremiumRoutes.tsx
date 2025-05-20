@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Route } from 'react-router-dom';
 import { RoleBasedProtectedRoute } from "../../components/auth/RoleBasedProtectedRoute";
@@ -10,6 +9,7 @@ import Leaderboard from "../../pages/Leaderboard";
 const PremiumRoutes = () => {
   return (
     <>
+      {/* Premium route definitions here */}
       <Route
         path="/stats"
         element={

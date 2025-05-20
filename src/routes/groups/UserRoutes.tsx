@@ -1,58 +1,74 @@
-
 import React from 'react';
 import { Route } from 'react-router-dom';
-import { RoleBasedProtectedRoute } from "../../components/auth/RoleBasedProtectedRoute";
+import { ProtectedRoute } from "../../components/auth/ProtectedRoute";
 
 // Pages
 import Home from "../../pages/Home";
-import Events from "../../pages/Events";
 import Profile from "../../pages/Profile";
-import Map from "../../pages/Map";
+import Events from "../../pages/Events";
 import Buzz from "../../pages/Buzz";
+import Map from "../../pages/Map";
+import TestAgent from "../../pages/TestAgent";
+import AdminPrizeForm from "../../pages/AdminPrizeForm";
 
 const UserRoutes = () => {
-  const baseUserRoles = ['user', 'moderator', 'admin'];
-  
   return (
     <>
+      {/* User route definitions here */}
       <Route
         path="/home"
         element={
-          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+          <ProtectedRoute>
             <Home />
-          </RoleBasedProtectedRoute>
-        }
-      />
-      <Route
-        path="/events"
-        element={
-          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <Events />
-          </RoleBasedProtectedRoute>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/profile"
         element={
-          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+          <ProtectedRoute>
             <Profile />
-          </RoleBasedProtectedRoute>
+          </ProtectedRoute>
         }
       />
       <Route
-        path="/map"
+        path="/events"
         element={
-          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <Map />
-          </RoleBasedProtectedRoute>
+          <ProtectedRoute>
+            <Events />
+          </ProtectedRoute>
         }
       />
       <Route
         path="/buzz"
         element={
-          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+          <ProtectedRoute>
             <Buzz />
-          </RoleBasedProtectedRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/map"
+        element={
+          <ProtectedRoute>
+            <Map />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/test-agent"
+        element={
+          <ProtectedRoute>
+            <TestAgent />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin-prize-form"
+        element={
+          <ProtectedRoute>
+            <AdminPrizeForm />
+          </ProtectedRoute>
         }
       />
     </>

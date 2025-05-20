@@ -24,6 +24,11 @@ const AppRoutes = () => {
   
   return (
     <Routes>
+      {/* Include all route groups directly */}
+      <Route>
+        <Route path="*" element={<NotFound />} />
+      </Route>
+      
       {/* Public Routes */}
       <PublicRoutes />
       
@@ -41,9 +46,6 @@ const AppRoutes = () => {
       
       {/* Payment Routes */}
       <PaymentRoutes />
-      
-      {/* Fallback 404 Route */}
-      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

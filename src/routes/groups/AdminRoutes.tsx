@@ -1,5 +1,5 @@
 
-import { Routes, Route } from 'react-router-dom';
+import { Route } from 'react-router-dom';
 import Admin from '@/pages/Admin'; // Ensure correct import path
 import RoleBasedProtectedRoute from '@/components/auth/RoleBasedProtectedRoute';
 import { useState, useEffect } from 'react';
@@ -16,7 +16,7 @@ export default function AdminRoutes() {
   }, []);
 
   return (
-    <Routes>
+    <>
       <Route 
         path="/admin" 
         element={
@@ -31,6 +31,6 @@ export default function AdminRoutes() {
           )
         } 
       />
-    </Routes>
+    </>
   );
 }
