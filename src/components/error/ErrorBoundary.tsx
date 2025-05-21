@@ -3,6 +3,7 @@ import React from 'react';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
 interface ErrorBoundaryState {
@@ -39,7 +40,12 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   render() {
     if (this.state.hasError) {
-      // UI di fallback personalizzata
+      // Se è stato fornito un fallback personalizzato, usalo
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+      
+      // Altrimenti usa l'UI di fallback predefinita
       return (
         <div style={{ 
           padding: '20px', 
