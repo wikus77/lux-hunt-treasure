@@ -1,22 +1,25 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
 import useBuzzSound from "@/hooks/useBuzzSound";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useBuzzUiState } from "@/hooks/buzz/useBuzzUiState";
+import { useBuzzNavigation } from "@/hooks/buzz/useBuzzNavigation";
+import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useBuzzFeature() {
-  const [showDialog, setShowDialog] = useState(false);
-  const [showExplosion, setShowExplosion] = useState(false);
-  const [showClueBanner, setShowClueBanner] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const { showDialog, setShowDialog, showExplosion, setShowExplosion, 
+          showClueBanner, setShowClueBanner, handleExplosionCompleted } = useBuzzUiState();
+  
+  const { navigate, location, navigateToPaymentMethods, navigateToNotifications } = useBuzzNavigation();
+  
   const { hasPaymentMethod, savePaymentMethod } = useHasPaymentMethod();
   const { initializeSound, playSound } = useBuzzSound();
   const { addNotification, reloadNotifications } = useNotifications();
+  const { callBuzzApi } = useBuzzApi();
 
   const {
     unlockedClues,
@@ -51,14 +54,7 @@ export function useBuzzFeature() {
 
   const handleBuzzClick = async () => {
     if (!hasPaymentMethod) {
-      navigate("/payment-methods", {
-        state: {
-          fromBuzz: true,
-          fromRegularBuzz: true,
-          clue: { description: getNextVagueClue() },
-          generateMapArea: false
-        }
-      });
+      navigateToPaymentMethods(getNextVagueClue());
       return;
     }
     
@@ -74,49 +70,41 @@ export function useBuzzFeature() {
       
       setShowDialog(true);
       
-      const { data, error } = await supabase.functions.invoke("handle-buzz-press", {
-        body: { userId, generateMap: false },
-      });
+      const response = await callBuzzApi({ userId, generateMap: false });
       
-      if (error) {
-        console.error("Error calling buzz function:", error);
-        toast.error("Errore durante l'elaborazione dell'indizio");
+      if (!response.success) {
+        toast.error(response.error || "Errore durante l'elaborazione dell'indizio");
         setShowDialog(false);
         return;
       }
       
-      if (data.success) {
-        // Simulate payment completed
-        setTimeout(() => {
-          setShowDialog(false);
+      // Simulate payment completed
+      setTimeout(() => {
+        setShowDialog(false);
+        
+        // Add notification for the new clue
+        const success = addNotification({
+          title: "Nuovo Indizio Buzz!",
+          description: response.clue_text || ""
+        });
+        
+        if (success) {
+          // Reload notifications to update the counter
+          reloadNotifications();
           
-          // Add notification for the new clue
-          const success = addNotification({
-            title: "Nuovo Indizio Buzz!",
-            description: data.clue_text
+          // Show success message
+          toast.success("Hai ricevuto un nuovo indizio!", {
+            duration: 3000,
           });
           
-          if (success) {
-            // Reload notifications to update the counter
-            reloadNotifications();
-            
-            // Show success message
-            toast.success("Hai ricevuto un nuovo indizio!", {
-              duration: 3000,
-            });
-            
-            // Show explosion animation
-            setShowExplosion(true);
-          } else {
-            toast.error("Errore nel salvataggio dell'indizio", {
-              duration: 3000,
-            });
-          }
-        }, 1500);
-      } else {
-        toast.error(data.error || "Errore durante l'elaborazione dell'indizio");
-        setShowDialog(false);
-      }
+          // Show explosion animation
+          setShowExplosion(true);
+        } else {
+          toast.error("Errore nel salvataggio dell'indizio", {
+            duration: 3000,
+          });
+        }
+      }, 1500);
     } catch (error) {
       console.error("Error in buzz process:", error);
       toast.error("Si è verificato un errore");
@@ -142,50 +130,43 @@ export function useBuzzFeature() {
     
     // Call the Edge Function
     try {
-      const { data, error } = await supabase.functions.invoke("handle-buzz-press", {
-        body: { userId, generateMap: false },
-      });
+      const response = await callBuzzApi({ userId, generateMap: false });
       
-      if (error) {
-        toast.error("Errore durante l'elaborazione dell'indizio");
+      if (!response.success) {
+        toast.error(response.error || "Errore durante l'elaborazione dell'indizio");
         setShowDialog(false);
         return;
       }
       
-      if (data.success) {
-        // Generate a random clue from the vague clues
-        const newClue = data.clue_text;
-        setLastVagueClue(newClue);
+      // Generate a random clue from the vague clues
+      const newClue = response.clue_text || "";
+      setLastVagueClue(newClue);
+      
+      // Increase unlocked clue count and show explosion/animation
+      incrementUnlockedCluesAndAddClue();
+      
+      // Add notification for the new clue
+      const success = addNotification({
+        title: "Nuovo Indizio Extra!",
+        description: newClue
+      });
+      
+      if (success) {
+        // Reload notifications to update the counter
+        reloadNotifications();
         
-        // Increase unlocked clue count and show explosion/animation
-        incrementUnlockedCluesAndAddClue();
-        
-        // Add notification for the new clue
-        const success = addNotification({
-          title: "Nuovo Indizio Extra!",
-          description: newClue
+        // Show success message
+        toast.success("Hai ricevuto un nuovo indizio!", {
+          duration: 3000,
         });
         
-        if (success) {
-          // Reload notifications to update the counter
-          reloadNotifications();
-          
-          // Show success message
-          toast.success("Hai ricevuto un nuovo indizio!", {
-            duration: 3000,
-          });
-          
-          // Hide dialog and show explosion
-          setShowDialog(false);
-          setShowExplosion(true);
-        } else {
-          toast.error("Errore nel salvataggio dell'indizio", {
-            duration: 3000,
-          });
-          setShowDialog(false);
-        }
+        // Hide dialog and show explosion
+        setShowDialog(false);
+        setShowExplosion(true);
       } else {
-        toast.error(data.error || "Errore durante l'elaborazione dell'indizio");
+        toast.error("Errore nel salvataggio dell'indizio", {
+          duration: 3000,
+        });
         setShowDialog(false);
       }
     } catch (error) {
@@ -198,30 +179,23 @@ export function useBuzzFeature() {
   const handlePayment = () => {
     setShowDialog(false);
     setTimeout(() => {
-      navigate("/payment-methods", {
-        state: {
-          fromBuzz: true,
-          fromRegularBuzz: true,
-          clue: { description: getNextVagueClue() },
-          generateMapArea: false
-        }
-      });
+      navigateToPaymentMethods(getNextVagueClue());
     }, 1200);
   };
 
-  const handleExplosionCompleted = () => {
-    setShowExplosion(false);
-    
-    // Increment ONE clue when the explosion animation completes
-    incrementUnlockedCluesAndAddClue();
-    
-    // Show the banner with the clue
-    setShowClueBanner(true);
-    
-    // Navigate to notifications after a delay
-    setTimeout(() => {
-      navigate("/notifications", { replace: true });
-    }, 1800);
+  const handleExplosionCompletedCallback = () => {
+    handleExplosionCompleted(() => {
+      // Increment ONE clue when the explosion animation completes
+      incrementUnlockedCluesAndAddClue();
+      
+      // Show the banner with the clue
+      setShowClueBanner(true);
+      
+      // Navigate to notifications after a delay
+      setTimeout(() => {
+        navigateToNotifications();
+      }, 1800);
+    });
   };
 
   const handleResetClues = () => {
@@ -241,7 +215,7 @@ export function useBuzzFeature() {
     handleBuzzClick,
     handleClueButtonClick,
     handlePayment,
-    handleExplosionCompleted,
+    handleExplosionCompleted: handleExplosionCompletedCallback,
     handleResetClues
   };
 }
