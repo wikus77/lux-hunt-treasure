@@ -117,3 +117,6 @@ verify_jwt = false
 
 [functions.create-admin-profile]
 verify_jwt = false
+
+[functions.geocode-address]
+verify_jwt = false

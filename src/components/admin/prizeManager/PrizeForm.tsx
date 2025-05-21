@@ -1,3 +1,4 @@
+
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -5,12 +6,16 @@ import { PrizeFormValues } from "./hooks/usePrizeForm";
 import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { AlertCircle, Info, ChevronDown } from "lucide-react";
 
 interface PrizeFormProps {
   form: UseFormReturn<PrizeFormValues>;
   isLoading: boolean;
   onSubmit: (values: PrizeFormValues) => void;
   geocodeError: string | null;
+  geocodeResponse?: any | null;
   showManualCoordinates: boolean;
   toggleManualCoordinates: () => void;
   handleRetry: () => void;
@@ -23,6 +28,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
   isLoading,
   onSubmit,
   geocodeError,
+  geocodeResponse,
   showManualCoordinates,
   toggleManualCoordinates,
   handleRetry,
@@ -45,62 +51,110 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
         {form.formState.errors.address && (
           <p className="text-red-500 text-sm">{form.formState.errors.address.message}</p>
         )}
-        {geocodeError && <p className="text-red-500 text-sm">{geocodeError}</p>}
-        {geocodeError && (
-          <Button variant="secondary" size="sm" onClick={handleRetry} disabled={isRetrying}>
-            {isRetrying ? (
-              <>
-                <Spinner className="mr-2 h-4 w-4" />
-                Riprovo...
-              </>
-            ) : (
-              'Riprova geocoding'
-            )}
-          </Button>
-        )}
       </div>
       
-      <div>
-        <label className="inline-flex items-center">
-          <Input type="checkbox" className="mr-2" checked={showManualCoordinates} onChange={toggleManualCoordinates} />
-          Inserisci coordinate manualmente
-        </label>
-      </div>
+      {/* Error and debugging section */}
+      {geocodeError && (
+        <Alert variant="destructive" className="bg-red-900/20 border-red-800">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle className="text-red-300">Errore di geocoding</AlertTitle>
+          <AlertDescription className="text-red-200">
+            {geocodeError}
+            <div className="mt-2">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={handleRetry} 
+                disabled={isRetrying}
+                className="mr-2"
+              >
+                {isRetrying ? (
+                  <>
+                    <Spinner className="mr-2 h-4 w-4" />
+                    Riprovo...
+                  </>
+                ) : (
+                  'Riprova geocoding'
+                )}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={toggleManualCoordinates}
+                className={showManualCoordinates ? "bg-blue-900/30" : ""}
+              >
+                {showManualCoordinates ? 'Nascondi coordinate manuali' : 'Inserisci coordinate manualmente'}
+              </Button>
+            </div>
+          </AlertDescription>
+          
+          {geocodeResponse && (
+            <Collapsible className="mt-4 w-full">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex items-center w-full justify-start p-0 text-xs">
+                  <Info className="h-3 w-3 mr-1" />
+                  <span>Mostra dettagli risposta</span>
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="mt-2 p-2 bg-black/50 rounded text-xs overflow-auto max-h-32">
+                  <pre className="whitespace-pre-wrap">{JSON.stringify(geocodeResponse, null, 2)}</pre>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+        </Alert>
+      )}
       
+      {/* Manual coordinates input */}
       {showManualCoordinates && (
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="manual_lat">Latitudine</Label>
-            <Input 
-              type="number" 
-              id="manual_lat" 
-              placeholder="Es: 45.4642"
-              {...form.register("manual_lat", {
-                valueAsNumber: true,
-                min: -90,
-                max: 90,
-              })} 
-            />
-            {form.formState.errors.manual_lat && (
-              <p className="text-red-500 text-sm">Latitudine non valida</p>
-            )}
+        <div className="glass-card p-4 rounded-md bg-blue-900/20 border border-blue-800/30">
+          <h4 className="text-sm font-medium mb-3 flex items-center">
+            <Info className="h-4 w-4 mr-1 text-blue-400" />
+            Inserimento coordinate manuali
+          </h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="manual_lat">Latitudine</Label>
+              <Input 
+                type="text" 
+                id="manual_lat" 
+                placeholder="Es: 45.4642"
+                {...form.register("manual_lat")} 
+              />
+              {form.formState.errors.manual_lat && (
+                <p className="text-red-500 text-sm">Latitudine non valida</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="manual_lng">Longitudine</Label>
+              <Input 
+                type="text" 
+                id="manual_lng" 
+                placeholder="Es: 9.1900"
+                {...form.register("manual_lng")} 
+              />
+              {form.formState.errors.manual_lng && (
+                <p className="text-red-500 text-sm">Longitudine non valida</p>
+              )}
+            </div>
           </div>
-          <div>
-            <Label htmlFor="manual_lng">Longitudine</Label>
-            <Input 
-              type="number" 
-              id="manual_lng" 
-              placeholder="Es: 9.1900"
-              {...form.register("manual_lng", {
-                valueAsNumber: true,
-                min: -180,
-                max: 180,
-              })} 
-            />
-            {form.formState.errors.manual_lng && (
-              <p className="text-red-500 text-sm">Longitudine non valida</p>
-            )}
-          </div>
+        </div>
+      )}
+      
+      {/* Show toggle button even without error */}
+      {!geocodeError && (
+        <div>
+          <Button 
+            type="button"
+            variant="outline" 
+            size="sm" 
+            onClick={toggleManualCoordinates}
+            className={showManualCoordinates ? "bg-blue-900/30" : ""}
+          >
+            {showManualCoordinates ? 'Nascondi coordinate manuali' : 'Inserisci coordinate manualmente'}
+          </Button>
         </div>
       )}
       

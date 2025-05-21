@@ -24,6 +24,7 @@ export const usePrizeForm = () => {
   const [isRetrying, setIsRetrying] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [geocodeResponse, setGeocodeResponse] = useState<any | null>(null);
   
   useEffect(() => {
     // Check authentication status on mount
@@ -70,8 +71,8 @@ export const usePrizeForm = () => {
     setIsRetrying(true);
     const values = form.getValues();
     
-    // Wait 5 seconds before retrying
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Wait 3 seconds before retrying to respect rate limits
+    await new Promise(resolve => setTimeout(resolve, 3000));
     
     onSubmit(values).finally(() => {
       setIsRetrying(false);
@@ -95,6 +96,7 @@ export const usePrizeForm = () => {
     try {
       setIsLoading(true);
       setGeocodeError(null);
+      setGeocodeResponse(null);
       console.log("Submitting form with values:", values);
       
       let lat: number;
@@ -115,6 +117,7 @@ export const usePrizeForm = () => {
         toast.info("Geolocalizzazione indirizzo...");
         const geocodeData = await geocodeAddress(values.city, values.address);
         console.log("Geocode response:", geocodeData);
+        setGeocodeResponse(geocodeData);
         
         if (geocodeData.error || !geocodeData.lat || !geocodeData.lon) {
           // Set error state for UI
@@ -135,7 +138,7 @@ export const usePrizeForm = () => {
             });
           }
           
-          // Enable manual coordinate input
+          // Enable manual coordinate input automatically
           setShowManualCoordinates(true);
           form.setValue("use_manual_coordinates", true);
           
@@ -216,6 +219,7 @@ export const usePrizeForm = () => {
     isLoading,
     onSubmit,
     geocodeError,
+    geocodeResponse,
     showManualCoordinates,
     toggleManualCoordinates,
     handleRetry,

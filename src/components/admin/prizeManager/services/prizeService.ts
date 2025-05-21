@@ -30,11 +30,14 @@ interface ClueGenerationResult {
 export async function geocodeAddress(city: string, address: string): Promise<GeocodeResult> {
   try {
     console.log(`Geocoding address: ${address}, ${city}`);
+    // Use the full URL with project ID for direct access without auth headers
     const geocodeResponse = await fetch(
       "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/geocode-address", 
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json" 
+        },
         body: JSON.stringify({ address, city })
       }
     );
