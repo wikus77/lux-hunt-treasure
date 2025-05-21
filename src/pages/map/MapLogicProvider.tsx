@@ -84,16 +84,16 @@ const MapLogicProvider = () => {
           url={mapSettings.tileUrl}
         />
         
-        {/* Circle showing approximate prize location */}
+        {/* Circle showing approximate prize location - Fix by using the Circle component correctly */}
         <Circle
           center={prizeLocation}
           pathOptions={{
             color: '#00D1FF',
             fillColor: '#00D1FF',
             fillOpacity: 0.2,
-            weight: 2
+            weight: 2,
+            radius: bufferRadius // Move radius inside pathOptions to fix TypeScript error
           }}
-          radius={bufferRadius}
         />
         
         {/* User location marker */}
