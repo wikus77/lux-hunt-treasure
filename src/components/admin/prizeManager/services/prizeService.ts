@@ -92,6 +92,7 @@ export async function geocodeAddress(city: string, address: string): Promise<Geo
  */
 async function getAuthToken(): Promise<string> {
   const { data } = await supabase.auth.getSession();
+  // Access token is in data.session?.access_token
   return data.session?.access_token || '';
 }
 
@@ -99,21 +100,21 @@ async function getAuthToken(): Promise<string> {
  * Logs the current user and session information for debugging
  */
 export async function logAuthDebugInfo() {
-  const { data: session } = await supabase.auth.getSession();
+  const { data: sessionData } = await supabase.auth.getSession();
   const { data: userData } = await supabase.auth.getUser();
   
   console.group("🔐 Auth Debug Info");
-  console.log("Session:", session);
-  console.log("User ID:", session?.user?.id);
+  console.log("Session:", sessionData);
+  console.log("User ID:", userData?.user?.id);
   console.log("User Data:", userData);
-  console.log("Access Token:", session?.access_token ? "Present" : "Missing");
+  console.log("Access Token:", sessionData.session?.access_token ? "Present" : "Missing");
   
   // Check admin status in profiles
-  if (session?.user?.id) {
+  if (userData?.user?.id) {
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("id, email, role")
-      .eq("id", session.user.id)
+      .eq("id", userData.user.id)
       .single();
     
     console.log("Profile Data:", profile);
@@ -123,10 +124,10 @@ export async function logAuthDebugInfo() {
   console.groupEnd();
   
   return {
-    isAuthenticated: !!session?.user,
-    userId: session?.user?.id,
-    userEmail: session?.user?.email,
-    isAdmin: session?.user?.email === 'wikus77@hotmail.it'
+    isAuthenticated: !!userData?.user,
+    userId: userData?.user?.id,
+    userEmail: userData?.user?.email,
+    isAdmin: userData?.user?.email === 'wikus77@hotmail.it' || userData?.user?.email === 'admin@example.com'
   };
 }
 
