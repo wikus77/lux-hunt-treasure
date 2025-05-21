@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const AuthDebug = () => {
-  const [email, setEmail] = useState("wikus77@hotmail.it");
+  const [email] = useState("wikus77@hotmail.it");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -12,25 +12,22 @@ const AuthDebug = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (email !== "wikus77@hotmail.it") {
-      toast.error("Accesso negato", {
-        description: "Non sei autorizzato a utilizzare questa pagina",
-      });
-      return;
-    }
-
     try {
       setIsLoading(true);
 
       const res = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
       });
 
       const data = await res.json();
 
       if (!res.ok) {
+        console.error("Errore Supabase:", data);
         throw new Error(data.error || "Login fallito");
       }
 
