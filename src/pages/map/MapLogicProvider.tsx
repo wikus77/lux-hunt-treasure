@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Circle, Marker, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -159,19 +158,20 @@ const MapLogicProvider = () => {
       >
         <TileLayer
           url={mapSettings.tileUrl}
-          attribution={mapSettings.attribution}
+          // Remove attribution prop since it's not supported
         />
         
         {/* Circle showing approximate prize location - only show when ready and has valid data */}
         {mapReady && prizeLocation && bufferRadius && (
           <Circle
             center={prizeLocation}
-            radius={bufferRadius}
+            // Move radius into pathOptions
             pathOptions={{
               color: '#00D1FF',
               fillColor: '#00D1FF',
               fillOpacity: 0.2,
-              weight: 2
+              weight: 2,
+              radius: bufferRadius
             }}
           />
         )}
