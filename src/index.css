@@ -45,7 +45,7 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/5 backdrop-blur-md border border-white/10;
+    @apply bg-white/10 backdrop-blur-md border border-white/10;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 
                 inset 0 2px 3px rgba(255, 255, 255, 0.06);
