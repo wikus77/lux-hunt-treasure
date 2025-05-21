@@ -9,7 +9,7 @@ export function usePrizeLocation(userLocation: [number, number] | null) {
   
   // In a real application, this would come from your backend
   useEffect(() => {
-    // Simulated prize location near user or default to Rome
+    // Simulated prize location near user or default
     setTimeout(() => {
       try {
         // Use user location if available, otherwise use default

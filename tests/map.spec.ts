@@ -9,20 +9,16 @@ test('map page should load correctly', async ({ page }) => {
   await page.waitForTimeout(2000); // Give extra time for map to load
   
   // Check for map container
-  const mapContainer = await page.locator('.w-full.h-[60vh]').first();
+  const mapContainer = await page.locator('.rounded-lg.overflow-hidden').first();
   
   // Verify map container is visible
   expect(await mapContainer.isVisible()).toBeTruthy();
   
-  // Test map controls if available
-  const mapControls = await page.locator('button').filter({ hasText: 'Aggiungi' }).first();
-  if (await mapControls.isVisible()) {
-    await mapControls.click();
-    
-    // Close any dialogs that might have opened
-    const closeButton = await page.locator('button').filter({ hasText: 'Chiudi' }).first();
-    if (await closeButton.isVisible()) {
-      await closeButton.click();
-    }
-  }
+  // Verify the page title
+  const pageTitle = await page.locator('h1.gradient-text-cyan').textContent();
+  expect(pageTitle).toContain('MAPPA');
+  
+  // Verify the footer message
+  const footerMessage = await page.locator('.glass-card.mx-4.p-4.text-center').textContent();
+  expect(footerMessage).toContain('area stimata');
 });

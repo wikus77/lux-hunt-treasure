@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button"; // Added missing import
 
 type HelpDialogProps = {
   open: boolean;
@@ -16,21 +15,20 @@ const HelpDialog: React.FC<HelpDialogProps> = ({ open, setOpen }) => (
       </DialogHeader>
       <div className="space-y-4 text-sm">
         <div>
-          <h3 className="font-medium">Aggiungere un punto</h3>
-          <p className="text-muted-foreground">Fai doppio click sulla mappa o usa il pulsante "Aggiungi punto" e poi clicca sulla mappa.</p>
+          <h3 className="font-medium">Visualizzazione del premio</h3>
+          <p className="text-muted-foreground">L'area indicata con il cerchio azzurro rappresenta la zona approssimativa dove potrebbe trovarsi il premio.</p>
         </div>
         <div>
-          <h3 className="font-medium">Aggiungere un'area</h3>
-          <p className="text-muted-foreground">Clicca sul pulsante "Aggiungi area" e poi clicca sulla mappa dove vuoi creare l'area.</p>
+          <h3 className="font-medium">La tua posizione</h3>
+          <p className="text-muted-foreground">Il marker sulla mappa indica la tua posizione attuale. Se non vedi il marker, potresti dover attivare la geolocalizzazione.</p>
         </div>
         <div>
-          <h3 className="font-medium">Modificare o eliminare</h3>
-          <p className="text-muted-foreground">Clicca su un punto o un'area per aprire le opzioni di modifica o eliminazione.</p>
+          <h3 className="font-medium">Geolocalizzazione</h3>
+          <p className="text-muted-foreground">Se non hai attivato la geolocalizzazione, vedrai un messaggio in fondo alla mappa. Tocca il messaggio per attivare la posizione.</p>
         </div>
         <div>
-          <h3 className="font-medium">Funzione Buzz</h3>
-          <p className="text-muted-foreground">Il pulsante Buzz analizza tutti gli indizi raccolti e aggiunge un'area di ricerca ottimizzata sulla mappa. Ogni click successivo riduce il raggio di 5km (minimo 50km).</p>
-          <p className="text-muted-foreground mt-1">L'area Buzz può essere modificata o eliminata con una pressione prolungata su di essa.</p>
+          <h3 className="font-medium">Controlli della mappa</h3>
+          <p className="text-muted-foreground">Usa i controlli standard di Google Maps per spostarti, zoommare e cambiare visualizzazione.</p>
         </div>
       </div>
     </DialogContent>

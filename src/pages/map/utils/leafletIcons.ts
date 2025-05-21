@@ -1,20 +1,33 @@
 
-import L from 'leaflet';
-
-// Fix for marker icon in Leaflet with React
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: '/assets/marker-icon-2x.png',
-  iconUrl: '/assets/marker-icon.png',
-  shadowUrl: '/assets/marker-shadow.png',
-});
-
-// Custom prize icon
-export const prizeIcon = new L.Icon({
-  iconUrl: '/assets/prize-marker.png',
-  iconSize: [40, 40],
-  iconAnchor: [20, 40],
-});
-
 // Default fallback location (Milano)
 export const DEFAULT_LOCATION: [number, number] = [45.4642, 9.19];
+
+// Google Maps marker icons
+export const createUserMarkerIcon = () => ({
+  url: '/assets/marker-icon.png',
+  scaledSize: new window.google.maps.Size(30, 30),
+  origin: new window.google.maps.Point(0, 0),
+  anchor: new window.google.maps.Point(15, 15),
+});
+
+export const createPrizeMarkerIcon = () => ({
+  url: '/assets/prize-marker.png',
+  scaledSize: new window.google.maps.Size(40, 40),
+  origin: new window.google.maps.Point(0, 0),
+  anchor: new window.google.maps.Point(20, 40),
+});
+
+// Circle Options for prize location
+export const getPrizeCircleOptions = (radius: number) => ({
+  strokeColor: '#00D1FF',
+  strokeOpacity: 0.8,
+  strokeWeight: 2,
+  fillColor: '#00D1FF',
+  fillOpacity: 0.2,
+  clickable: false,
+  draggable: false,
+  editable: false,
+  visible: true,
+  radius: radius,
+  zIndex: 1,
+});

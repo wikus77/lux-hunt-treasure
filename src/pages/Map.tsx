@@ -35,42 +35,6 @@ const Map = () => {
         location.pathname
       );
     }
-    
-    // Force a script refresh for map components
-    const refreshMapScripts = () => {
-      // Remove any existing Google Maps scripts to force fresh load
-      const existingScripts = document.querySelectorAll('script[src*="maps.googleapis.com"]');
-      existingScripts.forEach(script => script.remove());
-      
-      // Add back the script with a unique query parameter to prevent caching
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ&libraries=places&v=weekly&callback=initMapCallback&t=${new Date().getTime()}`;
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-      
-      // Define the global callback function
-      window.initMap = function() {
-        console.log("Google Maps API loaded successfully");
-      };
-      
-      // Use a separate callback name for the script loading
-      window.initMapCallback = function() {
-        console.log("Maps API script loaded, initializing map");
-        if (typeof window.initMap === 'function') {
-          window.initMap();
-        }
-      };
-    };
-    
-    refreshMapScripts();
-    
-    return () => {
-      // Clean up on unmount
-      delete window.initMap;
-      delete window.initMapCallback;
-      document.querySelectorAll('script[src*="maps.googleapis.com"]').forEach(script => script.remove());
-    };
   }, [unlockedClues, location.state, addNotification]);
 
   return (
@@ -100,12 +64,6 @@ const Map = () => {
           transition={{ delay: 0.3, duration: 0.5 }}
         >
           <MapLogicProvider />
-          <div id="map-loading-indicator" className="hidden absolute inset-0 bg-black/70 z-50 flex items-center justify-center">
-            <div className="text-cyan-400 text-center">
-              <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p>Caricamento mappa...</p>
-            </div>
-          </div>
         </motion.div>
         
         <motion.div
