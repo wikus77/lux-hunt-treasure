@@ -48,28 +48,20 @@ serve(async (req) => {
     // Simple connectivity test using a lightweight query
     console.log("Testing database connection...");
     try {
-      // First attempt: Try with a simple query to an existing table (profiles)
-      const { data: pingData, error: pingError } = await supabase
+      // Use a simple query to profiles table to test connection
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('count(*)', { count: 'exact', head: true });
+        .select("id")
+        .limit(1);
 
-      if (pingError) {
-        // Second attempt with a more basic query
-        console.error("First connection test failed:", pingError.message);
-        
-        const { data: nowData, error: nowError } = await supabase.rpc('now');
-        
-        if (nowError) {
-          console.error("Database connection test failed:", nowError);
-          throw new Error("Database connection test failed: " + nowError.message);
-        } else {
-          console.log("Database connection successful with now() function");
-        }
+      if (profileError) {
+        console.error("Database connection test failed:", profileError);
+        throw new Error("Database connection failed: " + profileError.message);
       } else {
-        console.log("Database connection test successful with profiles table");
+        console.log("Test connessione riuscito");
       }
     } catch (connError) {
-      console.error("Test diagnostico fallito: problema con SUPABASE_SERVICE_ROLE_KEY o rete", connError);
+      console.error("Connessione fallita: controlla la rete o SUPABASE_SERVICE_ROLE_KEY", connError);
       throw new Error("Connection test failed: " + connError.message);
     }
     
@@ -254,7 +246,7 @@ serve(async (req) => {
       JSON.stringify({ 
         error: error.message || "Internal server error",
         stack: error.stack,
-        details: "Test diagnostico fallito: problema con SUPABASE_SERVICE_ROLE_KEY o rete",
+        details: "Connessione fallita: controlla la rete o SUPABASE_SERVICE_ROLE_KEY",
         manual_sql: `
           CREATE TABLE IF NOT EXISTS public.prize_clues (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
