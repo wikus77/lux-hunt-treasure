@@ -57,8 +57,9 @@ const config: Config = {
           400: '#ff00ff',
         },
         'm1ssion': {
-          'blue': '#00a3ff',
-          'pink': '#ff00ff',
+          'blue': '#00D1FF',
+          'purple': '#7B2EFF',
+          'pink': '#F059FF',
           'deep-blue': '#131524'
         }
       },
@@ -194,7 +195,10 @@ const config: Config = {
       fontFamily: {
         'inter': ['Inter', 'sans-serif'],
         'orbitron': ['Orbitron', 'sans-serif'],
-      }
+      },
+      backgroundImage: {
+        'gradient-landing': 'radial-gradient(circle at 50% 10%, rgba(19, 21, 36, 0.5) 0%, rgba(0, 0, 0, 0.8) 80%)',
+      },
     },
   },
   plugins: [animate],

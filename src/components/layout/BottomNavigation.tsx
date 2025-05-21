@@ -24,25 +24,22 @@ const BottomNavigation = () => {
     { path: "/notifications", icon: BadgeAlert, label: "Avvisi", badge: unreadCount > 0 ? unreadCount : null },
   ];
 
-  // Adjust touch target sizing for better mobile UX
-  const buttonClasses = "bottom-nav-item px-1 py-2 min-w-[56px] min-h-[50px] flex flex-col items-center justify-center relative";
-
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
-      <div className="glass-backdrop py-2 px-4 sm:py-3 bg-black/70 backdrop-blur-md border-t border-white/10">
+      <div className="bg-black/80 backdrop-blur-xl py-2 px-4 sm:py-3 border-t border-white/10">
         <nav className="flex justify-around items-center max-w-screen-xl mx-auto">
           {navigationItems.map((item) => (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={buttonClasses}
+              className="bottom-nav-item px-1 py-2 min-w-[56px] min-h-[50px] flex flex-col items-center justify-center relative"
               aria-label={item.label}
             >
               <div className="relative">
                 <motion.div
                   animate={{ 
                     filter: isActive(item.path) 
-                      ? "drop-shadow(0 0 8px rgba(123, 46, 255, 0.5))" 
+                      ? "drop-shadow(0 0 8px rgba(0, 209, 255, 0.7))" 
                       : "none" 
                   }}
                   transition={{ duration: 0.3 }}
@@ -69,7 +66,7 @@ const BottomNavigation = () => {
                 {item.label}
               </span>
               {isActive(item.path) && (
-                <div className="h-0.5 w-5 mx-auto mt-1 bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] rounded-full" />
+                <div className="h-0.5 w-8 mx-auto mt-1 bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] rounded-full" />
               )}
             </button>
           ))}

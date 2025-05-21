@@ -15,9 +15,9 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({
   showBottomNav = false // Default to hidden for the public pages
 }) => {
   return (
-    <div className="min-h-screen bg-black text-white relative">
+    <div className="min-h-screen bg-black text-white relative bg-gradient-to-b from-[#131524]/70 to-black">
       <div className="w-full h-full min-h-screen flex flex-col">
-        <main className="flex-1 w-full pt-[72px] pb-16 max-w-screen-xl mx-auto px-2 sm:px-4">
+        <main className="flex-1 w-full pt-[72px] pb-16 max-w-screen-xl mx-auto px-3 sm:px-6">
           {children}
         </main>
         
@@ -27,6 +27,9 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({
         <div className={showBottomNav ? "" : "hidden"}>
           <BottomNavigation />
         </div>
+        
+        {/* Subtle gradient overlay at bottom for visual depth */}
+        <div className="fixed bottom-0 left-0 w-full h-[150px] pointer-events-none bg-gradient-to-t from-black to-transparent opacity-70 z-10" />
       </div>
     </div>
   );

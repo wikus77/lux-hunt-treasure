@@ -10,19 +10,19 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-r from-cyan-400 to-blue-600 text-black hover:shadow-[0_0_15px_rgba(0,229,255,0.5)] hover:scale-[1.03]",
+        default: "bg-gradient-to-r from-[#7B2EFF] to-[#00D1FF] text-white hover:shadow-[0_0_15px_rgba(0,209,255,0.5)] hover:scale-[1.03]",
         destructive: "bg-gradient-to-r from-red-500 to-red-700 text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:scale-[1.03]",
-        outline: "border border-cyan-400/30 hover:border-cyan-400/70 bg-black/30 hover:bg-black/50 text-white",
+        outline: "border border-[#00D1FF]/30 hover:border-[#00D1FF]/70 bg-black/30 hover:bg-black/50 text-white",
         secondary: "bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-[0_0_15px_rgba(217,70,239,0.5)] hover:scale-[1.03]",
-        ghost: "hover:bg-white/10 hover:text-cyan-400 text-white",
-        link: "text-cyan-400 underline-offset-4 hover:underline hover:brightness-125",
+        ghost: "hover:bg-white/10 hover:text-[#00D1FF] text-white",
+        link: "text-[#00D1FF] underline-offset-4 hover:underline hover:brightness-125",
         accent: "bg-gradient-to-r from-yellow-400 to-orange-500 text-black hover:shadow-[0_0_15px_rgba(250,204,21,0.5)] hover:scale-[1.03]",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: "h-10 px-6 py-2 rounded-full",
+        sm: "h-9 rounded-full px-4",
+        lg: "h-11 rounded-full px-8",
+        icon: "h-10 w-10 rounded-full",
       },
     },
     defaultVariants: {

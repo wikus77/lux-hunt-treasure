@@ -29,22 +29,22 @@ const InteractiveButton = React.forwardRef<HTMLButtonElement, InteractiveButtonP
     }, []);
 
     const baseStyles = {
-      default: 'bg-projectx-blue text-white hover:bg-projectx-blue/90',
-      outline: 'border border-projectx-blue text-projectx-blue hover:bg-projectx-blue/10',
-      ghost: 'text-projectx-blue hover:bg-projectx-blue/10'
+      default: 'bg-gradient-to-r from-[#7B2EFF] to-[#00D1FF] text-white hover:shadow-[0_0_15px_rgba(0,209,255,0.5)] hover:scale-[1.03]',
+      outline: 'border border-[#00D1FF]/30 hover:border-[#00D1FF]/70 bg-black/30 hover:bg-black/50 text-white',
+      ghost: 'hover:bg-white/10 hover:text-[#00D1FF] text-white'
     };
 
     const sizeStyles = {
-      sm: 'px-3 py-1.5 text-sm',
-      md: 'px-4 py-2',
-      lg: 'px-6 py-3 text-lg'
+      sm: 'px-4 py-1.5 text-sm rounded-full',
+      md: 'px-6 py-2 rounded-full',
+      lg: 'px-8 py-3 text-lg rounded-full'
     };
 
     return (
       <button
         ref={ref}
         className={cn(
-          'relative rounded-md font-medium transition-all duration-200',
+          'relative font-medium transition-all duration-300',
           'press-effect ripple-effect interaction-feedback',
           baseStyles[variant],
           sizeStyles[size],
@@ -54,7 +54,12 @@ const InteractiveButton = React.forwardRef<HTMLButtonElement, InteractiveButtonP
         {...props}
       >
         {children}
-        {isRippling && <span className="ripple" style={rippleStyle} />}
+        {isRippling && (
+          <span 
+            className="absolute rounded-full bg-white/30 animate-ripple pointer-events-none"
+            style={rippleStyle} 
+          />
+        )}
       </button>
     )
   }
