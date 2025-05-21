@@ -1,20 +1,28 @@
 
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
+
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  gradient?: boolean;
+}
 
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+  CardProps
+>(({ className, gradient = false, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "glass-card overflow-hidden transition-all duration-300 hover:shadow-lg card-hover-effect",
+      "glass-card overflow-hidden transition-all duration-300 hover:shadow-lg card-hover-effect relative",
       className
     )}
     {...props}
-  />
+  >
+    {gradient && (
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent opacity-80" />
+    )}
+    {props.children}
+  </div>
 ))
 Card.displayName = "Card"
 
