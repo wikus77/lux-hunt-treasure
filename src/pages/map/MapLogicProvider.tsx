@@ -25,7 +25,16 @@ const prizeIcon = new L.Icon({
 function SetViewOnChange({ center, zoom }: { center: [number, number]; zoom: number }) {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, zoom);
+    if (map && center && Array.isArray(center) && center.length === 2) {
+      // Ensure all values are valid before setting view
+      if (!isNaN(center[0]) && !isNaN(center[1]) && !isNaN(zoom)) {
+        try {
+          map.setView(center, zoom);
+        } catch (err) {
+          console.error("Error setting map view:", err);
+        }
+      }
+    }
   }, [center, zoom, map]);
   return null;
 }
@@ -36,11 +45,16 @@ const MapLogicProvider = () => {
   const [bufferRadius, setBufferRadius] = useState(1000); // 1km
   const [mapSettings, setMapSettings] = useState(getDefaultMapSettings());
   const { permission, userLocation: geoLocation, askPermission } = useUserLocationPermission();
+  const [mapReady, setMapReady] = useState(false);
   
   // Get user's location
   useEffect(() => {
     if (permission === 'granted' && geoLocation) {
-      setUserLocation(geoLocation);
+      // Validate coordinates before setting them
+      if (Array.isArray(geoLocation) && geoLocation.length === 2 && 
+          !isNaN(geoLocation[0]) && !isNaN(geoLocation[1])) {
+        setUserLocation(geoLocation);
+      }
     } else if (permission === 'prompt') {
       askPermission();
     } else if (permission === 'denied') {
@@ -55,18 +69,26 @@ const MapLogicProvider = () => {
     // Simulated prize location near user or default to Rome
     setTimeout(() => {
       if (userLocation) {
-        // Random offset within a certain range from user's location
-        const latOffset = (Math.random() - 0.5) * 0.05;
-        const lngOffset = (Math.random() - 0.5) * 0.05;
-        setPrizeLocation([
-          userLocation[0] + latOffset,
-          userLocation[1] + lngOffset
-        ]);
-        
-        // Set buffer radius based on clues unlocked (simulated)
-        const unlockedClues = parseInt(localStorage.getItem('unlockedClues') || '0');
-        const newRadius = Math.max(100, 2000 - unlockedClues * 200); // Shrinks as more clues are unlocked
-        setBufferRadius(newRadius);
+        try {
+          // Random offset within a certain range from user's location
+          const latOffset = (Math.random() - 0.5) * 0.05;
+          const lngOffset = (Math.random() - 0.5) * 0.05;
+          
+          // Validate before setting
+          const newLat = userLocation[0] + latOffset;
+          const newLng = userLocation[1] + lngOffset;
+          
+          if (!isNaN(newLat) && !isNaN(newLng)) {
+            setPrizeLocation([newLat, newLng]);
+          
+            // Set buffer radius based on clues unlocked (simulated)
+            const unlockedClues = parseInt(localStorage.getItem('unlockedClues') || '0');
+            const newRadius = Math.max(100, 2000 - unlockedClues * 200); // Shrinks as more clues are unlocked
+            setBufferRadius(newRadius);
+          }
+        } catch (err) {
+          console.error("Error setting prize location:", err);
+        }
       }
     }, 1000);
   }, [userLocation]);
@@ -75,34 +97,47 @@ const MapLogicProvider = () => {
   const mapCenter = userLocation || prizeLocation;
   const mapZoom = userLocation ? 15 : 13; // Closer zoom when user location is available
   
+  // Handle map ready state
+  const handleMapReady = () => {
+    setMapReady(true);
+    console.log("Map component is mounted and ready");
+  };
+
   return (
     <div style={{ height: '60vh', width: '100%', zIndex: 1 }} className="rounded-lg overflow-hidden">
       <MapContainer 
         style={{ height: '100%', width: '100%' }}
+        center={mapCenter}
+        zoom={mapZoom}
+        whenReady={handleMapReady}
       >
         <TileLayer
           url={mapSettings.tileUrl}
         />
         
         {/* Circle showing approximate prize location - Correzione del componente Circle */}
-        <Circle
-          center={prizeLocation}
-          pathOptions={{
-            color: '#00D1FF',
-            fillColor: '#00D1FF',
-            fillOpacity: 0.2,
-            weight: 2,
-            radius: bufferRadius // Il radius deve essere all'interno di pathOptions per react-leaflet
-          }}
-        />
+        {mapReady && prizeLocation && (
+          <Circle
+            center={prizeLocation}
+            pathOptions={{
+              color: '#00D1FF',
+              fillColor: '#00D1FF',
+              fillOpacity: 0.2,
+              weight: 2,
+              radius: bufferRadius
+            }}
+          />
+        )}
         
         {/* User location marker */}
-        {userLocation && (
+        {mapReady && userLocation && (
           <Marker position={userLocation} />
         )}
         
         {/* Update the view when center changes */}
-        <SetViewOnChange center={mapCenter} zoom={mapZoom} />
+        {mapReady && mapCenter && (
+          <SetViewOnChange center={mapCenter} zoom={mapZoom} />
+        )}
       </MapContainer>
       
       {permission === 'denied' && (
