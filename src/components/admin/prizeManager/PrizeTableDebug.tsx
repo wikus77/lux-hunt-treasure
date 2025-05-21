@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, AlertCircle, Database, RefreshCw, ArrowRight } from "lucide-react";
+import { CheckCircle, AlertCircle, Database, RefreshCw, ArrowRight, Code } from "lucide-react";
 
 const PrizeTableDebug = () => {
   const [tableStatus, setTableStatus] = useState<{
@@ -17,6 +17,7 @@ const PrizeTableDebug = () => {
   });
   
   const [creationResult, setCreationResult] = useState<any>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const checkPrizeCluesTable = async () => {
     setTableStatus({ checking: true });
@@ -44,15 +45,19 @@ const PrizeTableDebug = () => {
               method: "GET",
               headers: {
                 "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
-              }
+                "Content-Type": "application/json"
+              },
+              cache: "no-store"
             }
           );
           
-          if (!response.ok) {
-            throw new Error(`API check failed: ${response.status} - ${response.statusText || 'Unknown error'}`);
+          let result;
+          try {
+            result = await response.json();
+          } catch (jsonError) {
+            throw new Error(`Failed to parse response: ${await response.text()}`);
           }
           
-          const result = await response.json();
           console.log("Edge function response:", result);
           setCreationResult(result);
           
@@ -94,15 +99,23 @@ const PrizeTableDebug = () => {
             headers: {
               "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
               "Content-Type": "application/json"
-            }
+            },
+            cache: "no-store"
           }
         );
         
         if (!response.ok) {
-          throw new Error(`API check failed: ${response.status} - ${response.statusText || 'Unknown error'}`);
+          const errorText = await response.text();
+          throw new Error(`API check failed: ${response.status} - ${errorText || 'Unknown error'}`);
         }
         
-        const result = await response.json();
+        let result;
+        try {
+          result = await response.json();
+        } catch (e) {
+          throw new Error(`Failed to parse response as JSON: ${await response.text()}`);
+        }
+        
         console.log("Edge function response:", result);
         setCreationResult(result);
         
@@ -127,10 +140,10 @@ const PrizeTableDebug = () => {
     }
   };
   
-  // Check table status on mount
+  // Check table status on mount or when retryCount changes
   useEffect(() => {
     checkPrizeCluesTable();
-  }, []);
+  }, [retryCount]);
 
   const handleCreateTable = async () => {
     setTableStatus({ checking: true });
@@ -144,11 +157,18 @@ const PrizeTableDebug = () => {
           headers: {
             "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
             "Content-Type": "application/json"
-          }
+          },
+          cache: "no-store"
         }
       );
       
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (e) {
+        throw new Error(`Failed to parse response: ${await response.text()}`);
+      }
+      
       console.log("Edge function create response:", result);
       setCreationResult(result);
       
@@ -193,6 +213,22 @@ const PrizeTableDebug = () => {
     }
   };
 
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1); // This will trigger useEffect to re-run checkPrizeCluesTable
+  };
+
+  const handleManualCreate = async () => {
+    // This is just a placeholder - in a real app, you'd show SQL to run or redirect to SQL editor
+    setTableStatus({ checking: true });
+    
+    // Direct the user to the Supabase SQL editor
+    window.open('https://supabase.com/dashboard/project/vkjrqirvdvjbemsfzxof/sql/new', '_blank');
+    
+    setTimeout(() => {
+      setTableStatus(prev => ({...prev, checking: false}));
+    }, 1000);
+  };
+
   return (
     <div className="mt-6 p-4 border border-gray-700 rounded-lg bg-black/40">
       <h3 className="text-lg font-medium flex items-center mb-3">
@@ -217,7 +253,7 @@ const PrizeTableDebug = () => {
               </div>
             )}
             
-            <div className="mt-3 flex space-x-3">
+            <div className="mt-3 flex flex-wrap gap-3">
               <Button 
                 onClick={handleCreateTable}
                 variant="destructive"
@@ -228,12 +264,22 @@ const PrizeTableDebug = () => {
               </Button>
               
               <Button 
-                onClick={checkPrizeCluesTable}
+                onClick={handleRetry}
                 variant="outline" 
                 size="sm"
               >
                 <RefreshCw className="mr-2 h-3 w-3" />
                 Riprova verifica
+              </Button>
+
+              <Button 
+                onClick={handleManualCreate}
+                variant="secondary"
+                size="sm"
+                className="bg-amber-900/50 border-amber-700/50 hover:bg-amber-700/30"
+              >
+                <Code className="mr-2 h-3 w-3" />
+                SQL Editor
               </Button>
             </div>
             
@@ -283,9 +329,9 @@ CREATE POLICY "Admin users can manage prize clues"
         </Alert>
       ) : null}
       
-      <div className="flex space-x-3 mt-3">
+      <div className="flex flex-wrap gap-3 mt-3">
         <Button 
-          onClick={checkPrizeCluesTable}
+          onClick={handleRetry}
           disabled={tableStatus.checking}
           variant="outline" 
           size="sm"
@@ -304,15 +350,26 @@ CREATE POLICY "Admin users can manage prize clues"
         </Button>
         
         {!tableStatus.exists && !tableStatus.checking && (
-          <Button 
-            onClick={handleCreateTable}
-            variant="default"
-            size="sm"
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Database className="mr-2 h-3 w-3" />
-            Crea tabella prize_clues
-          </Button>
+          <>
+            <Button 
+              onClick={handleCreateTable}
+              variant="default"
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Database className="mr-2 h-3 w-3" />
+              Crea tabella prize_clues
+            </Button>
+            
+            <Button 
+              onClick={handleManualCreate}
+              variant="secondary" 
+              size="sm"
+            >
+              <Code className="mr-2 h-3 w-3" />
+              Apri SQL Editor
+            </Button>
+          </>
         )}
       </div>
       

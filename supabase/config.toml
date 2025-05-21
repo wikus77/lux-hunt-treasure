@@ -27,6 +27,7 @@ enabled = true
 
 [edge_functions]
 [edge_functions.create-prize-clues-table]
+verify_jwt = false
 
 [edge_functions.geocode-address]
 verify_jwt = true
@@ -36,4 +37,3 @@ verify_jwt = true
 
 [edge_functions.insert-prize-clues]
 verify_jwt = true
-
