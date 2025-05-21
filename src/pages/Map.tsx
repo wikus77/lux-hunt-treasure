@@ -1,11 +1,13 @@
 
 import React, { useEffect } from "react";
+import { motion } from "framer-motion";
 import MapLogicProvider from "./map/MapLogicProvider";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
 
 const Map = () => {
   // Initialize the buzz clues context to make it available for dynamic pricing
@@ -71,20 +73,53 @@ const Map = () => {
     };
   }, [unlockedClues, location.state, addNotification]);
 
-  // Added improved wrapper with loading indicator
   return (
-    <div className="min-h-screen bg-black">
-      <div className={`pt-[180px] ${isMobile ? 'sm:pt-[170px]' : 'sm:pt-[170px]'} h-full relative pb-20`}>
-        <MapLogicProvider />
-        <div id="map-loading-indicator" className="hidden absolute inset-0 bg-black/70 z-50 flex items-center justify-center">
-          <div className="text-cyan-400 text-center">
-            <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p>Caricamento mappa...</p>
+    <motion.div 
+      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <UnifiedHeader />
+      <div className="h-[72px] w-full" />
+      
+      <motion.div
+        className="container mx-auto"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        <h1 className="text-4xl font-bold gradient-text-cyan text-center mt-6 mb-8">MAPPA</h1>
+      </motion.div>
+      
+      <div className={`pt-4 ${isMobile ? 'sm:pt-6' : 'sm:pt-6'} h-full relative pb-20`}>
+        <motion.div
+          className="glass-card mx-4 mb-4 overflow-hidden"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          <MapLogicProvider />
+          <div id="map-loading-indicator" className="hidden absolute inset-0 bg-black/70 z-50 flex items-center justify-center">
+            <div className="text-cyan-400 text-center">
+              <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p>Caricamento mappa...</p>
+            </div>
           </div>
-        </div>
+        </motion.div>
+        
+        <motion.div
+          className="glass-card mx-4 p-4 text-center text-white/80"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+        >
+          Ecco l'area stimata dove si trova il premio!
+        </motion.div>
       </div>
+      
       <BottomNavigation />
-    </div>
+    </motion.div>
   );
 };
 

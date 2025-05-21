@@ -1,9 +1,9 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { Loader } from "lucide-react";
 import { toast } from "sonner";
 import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
-import { Loader } from "lucide-react";
 
 interface BuzzButtonProps {
   isLoading: boolean;
@@ -57,17 +57,52 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   };
 
   return (
-    <Button
-      className="w-32 h-32 rounded-full bg-red-500 hover:bg-red-600 shadow-lg transition-all duration-300 hover:shadow-red-500/30 hover:scale-105"
+    <motion.button
+      className="w-60 h-60 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl hover:shadow-[0_0_30px_rgba(123,46,255,0.6)] focus:outline-none"
       onClick={handleBuzzPress}
       disabled={isLoading}
+      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.05 }}
+      initial={{ boxShadow: "0 0 0px rgba(123, 46, 255, 0)" }}
+      animate={{ 
+        boxShadow: ["0 0 10px rgba(123, 46, 255, 0.3)", "0 0 30px rgba(0, 209, 255, 0.6)", "0 0 10px rgba(123, 46, 255, 0.3)"]
+      }}
+      transition={{ 
+        boxShadow: { repeat: Infinity, duration: 3 },
+        scale: { type: "spring", stiffness: 300, damping: 20 }
+      }}
     >
-      {isLoading ? (
-        <Loader className="w-8 h-8 animate-spin" />
-      ) : (
-        <span className="text-xl font-bold">BUZZ</span>
-      )}
-    </Button>
+      {/* Radial gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#7B2EFF] via-[#00D1FF] to-[#FF59F8] opacity-90 rounded-full" />
+      
+      {/* Animated pulse effect */}
+      <motion.div
+        className="absolute inset-0 rounded-full"
+        initial={{ opacity: 0.4, scale: 1 }}
+        animate={{ opacity: [0.4, 0.6, 0.4], scale: [1, 1.05, 1] }}
+        transition={{ repeat: Infinity, duration: 3 }}
+      />
+      
+      {/* Glow effect */}
+      <motion.div
+        className="absolute -inset-1 rounded-full blur-xl"
+        style={{ background: "linear-gradient(to right, #7B2EFF, #00D1FF, #FF59F8)", opacity: 0.5 }}
+        initial={{ opacity: 0.2 }}
+        animate={{ opacity: [0.2, 0.4, 0.2] }}
+        transition={{ repeat: Infinity, duration: 2 }}
+      />
+      
+      {/* Button content */}
+      <div className="absolute inset-0 flex items-center justify-center rounded-full z-10">
+        {isLoading ? (
+          <Loader className="w-12 h-12 animate-spin text-white" />
+        ) : (
+          <span className="text-3xl font-bold text-white tracking-wider glow-text">
+            BUZZ!
+          </span>
+        )}
+      </div>
+    </motion.button>
   );
 };
 

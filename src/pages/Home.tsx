@@ -63,15 +63,18 @@ const Home = () => {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black px-4">
-        <div className="p-8 bg-red-800/30 rounded-xl text-center w-full max-w-sm">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4">Errore</h2>
-          <p>{error}</p>
-          <button 
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#131524]/70 to-black px-4">
+        <div className="p-8 bg-red-800/30 rounded-xl text-center w-full max-w-sm glass-card">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-red-300">Errore</h2>
+          <p className="text-white/80">{error}</p>
+          <motion.button 
             onClick={() => window.location.reload()}
-            className="mt-6 px-6 py-2 bg-red-900 rounded-md">
+            className="mt-6 px-6 py-2 bg-gradient-to-r from-red-600 to-red-700 rounded-full text-white btn-hover-effect"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+          >
             Riprova
-          </button>
+          </motion.button>
         </div>
       </div>
     );

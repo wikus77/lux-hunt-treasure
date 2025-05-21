@@ -1,78 +1,92 @@
 
-import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Award, Home, Map, BadgeAlert, Zap } from "lucide-react";
-import { useNotifications } from "@/hooks/useNotifications";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Link, useLocation } from "react-router-dom";
+import { Home, Map, Zap, Trophy, Bell } from "lucide-react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useNotificationManager } from "@/hooks/useNotificationManager";
 
 const BottomNavigation = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { unreadCount } = useNotifications();
-  const isMobile = useIsMobile();
+  const [activeRoute, setActiveRoute] = useState("/");
+  const { unreadCount } = useNotificationManager();
+
+  useEffect(() => {
+    setActiveRoute(location.pathname);
+  }, [location]);
 
   const isActive = (path: string) => {
-    return location.pathname === path;
+    if (path === "/" && activeRoute === "/") return true;
+    if (path !== "/" && activeRoute.startsWith(path)) return true;
+    return false;
   };
 
   const navigationItems = [
-    { path: "/home", icon: Home, label: "Home" },
-    { path: "/map", icon: Map, label: "Mappa" },
-    { path: "/buzz", icon: Zap, label: "Buzz" },
-    { path: "/leaderboard", icon: Award, label: "Classifica" },
-    { path: "/notifications", icon: BadgeAlert, label: "Avvisi", badge: unreadCount > 0 ? unreadCount : null },
+    {
+      path: "/",
+      icon: Home,
+      label: "Home",
+    },
+    {
+      path: "/map",
+      icon: Map,
+      label: "Mappa",
+    },
+    {
+      path: "/buzz",
+      icon: Zap,
+      label: "Buzz",
+    },
+    {
+      path: "/leaderboard",
+      icon: Trophy,
+      label: "Classifica",
+    },
+    {
+      path: "/notifications",
+      icon: Bell,
+      label: "Notifiche",
+      badge: unreadCount,
+    },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
-      <div className="bg-black/80 backdrop-blur-xl py-2 px-4 sm:py-3 border-t border-white/10">
-        <nav className="flex justify-around items-center max-w-screen-xl mx-auto">
-          {navigationItems.map((item) => (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className="bottom-nav-item px-1 py-2 min-w-[56px] min-h-[50px] flex flex-col items-center justify-center relative"
-              aria-label={item.label}
+    <motion.nav
+      initial={{ y: 50, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="fixed bottom-0 left-0 right-0 z-50 glass-backdrop border-t border-white/10 backdrop-blur-xl bg-gradient-to-r from-black/80 via-[#131524]/80 to-black/80 safe-padding-bottom"
+    >
+      <div className="flex justify-around items-center h-16">
+        {navigationItems.map((item) => (
+          <Link
+            to={item.path}
+            key={item.path}
+            className={`bottom-nav-item relative px-2 py-1 ${
+              isActive(item.path) ? "active" : ""
+            }`}
+          >
+            <motion.div
+              whileTap={{ scale: 0.9 }}
+              className="flex flex-col items-center justify-center w-full"
             >
-              <div className="relative">
-                <motion.div
-                  animate={{ 
-                    filter: isActive(item.path) 
-                      ? "drop-shadow(0 0 8px rgba(0, 209, 255, 0.7))" 
-                      : "none" 
-                  }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <item.icon
-                    className={`h-6 w-6 transition-all duration-300 ${
-                      isActive(item.path) 
-                        ? "text-white scale-110"
-                        : "text-gray-400"
-                    }`}
-                  />
-                </motion.div>
-                {item.badge && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center animate-pulse">
-                    {item.badge > 9 ? "9+" : item.badge}
-                  </span>
-                )}
-              </div>
-              <span className={`text-[10px] mt-1 transition-colors duration-300 ${
-                isActive(item.path) 
-                  ? "text-white font-medium" 
-                  : "text-gray-400"
-              }`}>
+              {isActive(item.path) ? (
+                <item.icon className="w-6 h-6 active-gradient-icon mb-1" />
+              ) : (
+                <item.icon className="w-5 h-5 opacity-70 mb-1" />
+              )}
+              <span className="text-xs font-medium">
                 {item.label}
               </span>
-              {isActive(item.path) && (
-                <div className="h-0.5 w-8 mx-auto mt-1 bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] rounded-full" />
+              {item.badge && item.badge > 0 && (
+                <span className="absolute -top-1 right-0 w-4 h-4 bg-gradient-to-r from-[#7B2EFF] to-[#00D1FF] rounded-full flex items-center justify-center text-[10px]">
+                  {item.badge}
+                </span>
               )}
-            </button>
-          ))}
-        </nav>
+            </motion.div>
+          </Link>
+        ))}
       </div>
-    </div>
+    </motion.nav>
   );
 };
 

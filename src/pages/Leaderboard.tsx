@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +13,7 @@ import { LeaderboardTabs } from '@/components/leaderboard/LeaderboardTabs';
 import { useLeaderboardData } from '@/hooks/useLeaderboardData';
 import { useIsMobile } from '@/hooks/use-mobile';
 import BottomNavigation from '@/components/layout/BottomNavigation';
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
 
 const samplePlayers = Array.from({ length: 50 }, (_, i) => ({
   id: i + 1,
@@ -104,34 +106,53 @@ const Leaderboard = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white pt-2 sm:pt-4 pb-20">
-      <div className="max-w-4xl mx-auto px-3 sm:px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
+    <motion.div 
+      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black pb-24"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <UnifiedHeader />
+      <div className="h-[72px] w-full" />
+      
+      <div className="container mx-auto">
+        <motion.h1
+          className="text-4xl font-bold gradient-text-cyan text-center mt-6 mb-8"
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="space-y-4 sm:space-y-6"
+          transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <LeaderboardHeader 
-            onSimulateRankChange={simulateRankChange}
-            onFilterChange={setFilter}
-          />
-          <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
-          <LeaderboardTopUsers players={samplePlayers.slice(0, 3)} />
-          
-          <LeaderboardTabs 
-            filteredPlayers={filteredPlayers}
-            isLoading={isLoading}
-            hasMorePlayers={hasMorePlayers}
-            sampleTeams={sampleTeams}
-            onLoadMore={handleLoadMore}
-            onInvite={handleInvite}
-            onCreateTeam={handleCreateTeamAndInvite}
-            onTabChange={setActiveTab}
-          />
-          
-          <LeaderboardProgress currentPosition={42} totalPlayers={100} />
-        </motion.div>
+          CLASSIFICA
+        </motion.h1>
+        
+        <div className="max-w-4xl mx-auto px-3 sm:px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="space-y-4 sm:space-y-6 glass-card"
+          >
+            <LeaderboardHeader 
+              onSimulateRankChange={simulateRankChange}
+              onFilterChange={setFilter}
+            />
+            <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
+            <LeaderboardTopUsers players={samplePlayers.slice(0, 3)} />
+            
+            <LeaderboardTabs 
+              filteredPlayers={filteredPlayers}
+              isLoading={isLoading}
+              hasMorePlayers={hasMorePlayers}
+              sampleTeams={sampleTeams}
+              onLoadMore={handleLoadMore}
+              onInvite={handleInvite}
+              onCreateTeam={handleCreateTeamAndInvite}
+              onTabChange={setActiveTab}
+            />
+            
+            <LeaderboardProgress currentPosition={42} totalPlayers={100} />
+          </motion.div>
+        </div>
       </div>
       
       <CreateTeamDialog
@@ -141,7 +162,7 @@ const Leaderboard = () => {
       />
       
       <BottomNavigation />
-    </div>
+    </motion.div>
   );
 };
 

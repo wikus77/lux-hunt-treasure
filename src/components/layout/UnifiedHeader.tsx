@@ -1,95 +1,92 @@
 
-import { useState, useEffect, ReactNode } from "react";
-import { useAuthContext } from "@/contexts/auth";
-import { Link, useLocation } from "react-router-dom";
-import UserMenu from "./header/UserMenu";
-import MobileMenuButton from "./header/MobileMenuButton";
-import { MobileMenu } from "./header/MobileMenu";
-import HeaderCountdown from "./header/HeaderCountdown";
+import { Link } from "react-router-dom";
+import { Bell, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNotificationManager } from "@/hooks/useNotificationManager";
+import ProfileAvatar from "@/components/profile/ProfileAvatar";
+import AgentBadge from "@/components/AgentBadge";
+import { motion } from "framer-motion";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
+  leftComponent?: React.ReactNode;
   onClickMail?: () => void;
-  leftComponent?: ReactNode;
 }
 
-const UnifiedHeader = ({ profileImage, onClickMail, leftComponent }: UnifiedHeaderProps) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated, hasRole } = useAuthContext();
-  const location = useLocation();
-  const isAdmin = hasRole("admin");
-  
-  // Close mobile menu on route change
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [location.pathname]);
-  
+const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
+  profileImage,
+  leftComponent,
+  onClickMail,
+}) => {
+  const { unreadCount, openNotificationsDrawer } = useNotificationManager();
+
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur bg-opacity-80 bg-black border-b border-gray-800">
-      <div className="container flex h-16 items-center px-4 sm:px-6">
-        <div className="flex items-center space-x-4 lg:space-x-6">
-          {leftComponent}
-          <Link to="/" className="flex items-center space-x-2">
-            <span className="text-xl font-bold tracking-wider">
-              <span className="text-cyan-500">M1</span>SSION
-            </span>
-          </Link>
-          
-          <HeaderCountdown />
-        </div>
-        
-        <div className="flex-1 flex justify-center">
-          {/* Removed agent badge from center */}
-        </div>
+    <motion.header
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="fixed top-0 left-0 right-0 z-50 glass-backdrop h-[72px] backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70"
+    >
+      <div className="container mx-auto h-full max-w-screen-xl">
+        <div className="flex items-center justify-between h-full px-3 sm:px-4">
+          {/* Left Section */}
+          <div className="flex items-center">
+            {leftComponent ? (
+              leftComponent
+            ) : (
+              <Link
+                to="/"
+                className="text-xl sm:text-2xl font-orbitron font-bold gradient-cyan-text glow-text"
+              >
+                M1SSION
+              </Link>
+            )}
+          </div>
 
-        <div className="flex flex-1 items-center justify-end space-x-3 md:space-x-4">
-          {isAuthenticated && (
-            <nav className="hidden md:flex items-center space-x-4">
-              <Link 
-                to="/home" 
-                className="text-sm font-medium transition-colors hover:text-primary"
-              >
-                Home
-              </Link>
-              <Link 
-                to="/map" 
-                className="text-sm font-medium transition-colors hover:text-primary"
-              >
-                Mappa
-              </Link>
-              <Link 
-                to="/events" 
-                className="text-sm font-medium transition-colors hover:text-primary"
-              >
-                Eventi
-              </Link>
-              <Link 
-                to="/profile" 
-                className="text-sm font-medium transition-colors hover:text-primary"
-              >
-                Profilo
-              </Link>
-              
-              {isAdmin && (
-                <Link 
-                  to="/admin" 
-                  className="text-sm font-medium text-cyan-500 transition-colors hover:text-cyan-400"
-                >
-                  Admin
-                </Link>
+          {/* Center - Agent Badge */}
+          <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:block">
+            <AgentBadge />
+          </div>
+
+          {/* Right Section */}
+          <div className="flex items-center space-x-1 sm:space-x-3">
+            {/* Notifications */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClickMail || openNotificationsDrawer}
+              className="relative rounded-full hover:bg-white/10"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-projectx-pink rounded-full w-4 h-4 text-xs flex items-center justify-center">
+                  {unreadCount}
+                </span>
               )}
-            </nav>
-          )}
+            </Button>
 
-          <UserMenu onClickMail={onClickMail} />
-          <MobileMenuButton 
-            isOpen={isMobileMenuOpen} 
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-          />
+            {/* Settings */}
+            <Link to="/settings">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full hover:bg-white/10"
+              >
+                <Settings className="w-5 h-5" />
+              </Button>
+            </Link>
+
+            {/* Profile Avatar */}
+            <Link to="/profile">
+              <ProfileAvatar
+                profileImage={profileImage}
+                className="w-10 h-10 border-2 border-projectx-blue/30 hover:border-projectx-blue transition-colors"
+              />
+            </Link>
+          </div>
         </div>
       </div>
-      {isMobileMenuOpen && <MobileMenu isAdmin={isAdmin} />}
-    </header>
+    </motion.header>
   );
 };
 
