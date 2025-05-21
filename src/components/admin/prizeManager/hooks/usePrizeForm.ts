@@ -113,8 +113,8 @@ export const usePrizeForm = () => {
     setIsRetrying(true);
     const values = form.getValues();
     
-    // Wait 3 seconds before retrying to respect rate limits
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // Wait 2 seconds before retrying to respect rate limits
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     onSubmit(values).finally(() => {
       setIsRetrying(false);
@@ -167,6 +167,11 @@ export const usePrizeForm = () => {
         }
         
         console.log("Using manual coordinates:", { lat, lon });
+        
+        // Show confirmation toast
+        toast.info("Utilizzo coordinate manuali", {
+          description: `Lat: ${lat}, Lon: ${lon}`
+        });
       } else {
         // 1. Geocode the address to get coordinates
         toast.info("Geolocalizzazione indirizzo...");
@@ -187,6 +192,10 @@ export const usePrizeForm = () => {
             toast.error("Indirizzo non trovato", { 
               description: "Prova a inserire un indirizzo più specifico o le coordinate manualmente." 
             });
+          } else if (geocodeData.errorType === 'format_error') {
+            toast.error("Formato indirizzo non valido", { 
+              description: "Verifica il formato dell'indirizzo (es. 'Via Monte Napoleone 10')" 
+            });
           } else {
             toast.error("Errore di geocoding", { 
               description: geocodeData.error || "Errore imprevisto durante la geolocalizzazione." 
@@ -202,6 +211,13 @@ export const usePrizeForm = () => {
         
         lat = parseFloat(geocodeData.lat);
         lon = parseFloat(geocodeData.lon);
+        
+        // Show success toast with found location
+        if (geocodeData.display_name) {
+          toast.success("Indirizzo localizzato", {
+            description: geocodeData.display_name
+          });
+        }
       }
       
       // 2. Insert prize into the database

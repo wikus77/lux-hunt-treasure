@@ -8,7 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AlertCircle, Info, ChevronDown, Lock, ShieldAlert } from "lucide-react";
+import { 
+  AlertCircle, 
+  Info, 
+  ChevronDown, 
+  Lock, 
+  ShieldAlert, 
+  MapPin, 
+  AlertTriangle,
+  RefreshCw
+} from "lucide-react";
 
 interface PrizeFormProps {
   form: UseFormReturn<PrizeFormValues>;
@@ -39,6 +48,10 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
   isAdmin = false,
   authDebugInfo = null
 }) => {
+  // Extract suggestions from geocode response if present
+  const suggestions = geocodeResponse?.suggestions || [];
+  const debugInfo = geocodeResponse?.debug;
+  
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       {/* Authentication status */}
@@ -85,6 +98,11 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
         {form.formState.errors.address && (
           <p className="text-red-500 text-sm">{form.formState.errors.address.message}</p>
         )}
+        {/* Formato consigliato */}
+        <p className="text-xs text-gray-400 mt-1">
+          <Info className="h-3 w-3 inline mr-1" />
+          Formato consigliato: "Via Nome Via 123" (es. "Via Monte Napoleone 10")
+        </p>
       </div>
       
       {/* Error and debugging section */}
@@ -94,46 +112,70 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
           <AlertTitle className="text-red-300">Errore di geocoding</AlertTitle>
           <AlertDescription className="text-red-200">
             {geocodeError}
-            <div className="mt-2">
+            
+            {/* Suggestions for fixing the address */}
+            {suggestions && suggestions.length > 0 && (
+              <div className="mt-3 space-y-1">
+                <p className="font-medium">Suggerimenti:</p>
+                <ul className="list-disc ml-4 space-y-1 text-sm">
+                  {suggestions.map((suggestion, idx) => (
+                    <li key={idx}>{suggestion}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            <div className="mt-4 flex flex-wrap gap-2">
               <Button 
                 variant="secondary" 
                 size="sm" 
                 onClick={handleRetry} 
                 disabled={isRetrying}
-                className="mr-2"
               >
                 {isRetrying ? (
                   <>
-                    <Spinner className="mr-2 h-4 w-4" />
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                     Riprovo...
                   </>
                 ) : (
-                  'Riprova geocoding'
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Riprova geocoding
+                  </>
                 )}
               </Button>
+              
               <Button 
-                variant="outline" 
+                variant={showManualCoordinates ? "default" : "outline"}
                 size="sm" 
                 onClick={toggleManualCoordinates}
-                className={showManualCoordinates ? "bg-blue-900/30" : ""}
+                className={showManualCoordinates ? "bg-blue-700 hover:bg-blue-800" : ""}
               >
+                <MapPin className="mr-2 h-4 w-4" />
                 {showManualCoordinates ? 'Nascondi coordinate manuali' : 'Inserisci coordinate manualmente'}
               </Button>
             </div>
           </AlertDescription>
           
-          {geocodeResponse && (
+          {debugInfo && (
             <Collapsible className="mt-4 w-full">
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" size="sm" className="flex items-center w-full justify-start p-0 text-xs">
                   <Info className="h-3 w-3 mr-1" />
-                  <span>Mostra dettagli risposta</span>
+                  <span>Mostra dettagli debug</span>
                   <ChevronDown className="h-3 w-3 ml-1" />
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="mt-2 p-2 bg-black/50 rounded text-xs overflow-auto max-h-32">
-                  <pre className="whitespace-pre-wrap">{JSON.stringify(geocodeResponse, null, 2)}</pre>
+                <div className="mt-2 p-2 bg-black/50 rounded text-xs font-mono overflow-auto max-h-64">
+                  <div className="text-green-400 mb-1">Input originale:</div>
+                  <pre className="whitespace-pre-wrap text-gray-300 mb-2">{JSON.stringify(debugInfo.originalInput, null, 2)}</pre>
+                  
+                  <div className="text-green-400 mb-1">Formati tentati:</div>
+                  <pre className="whitespace-pre-wrap text-gray-300 mb-2">{JSON.stringify(debugInfo.formatsAttempted, null, 2)}</pre>
+                  
+                  <div className="text-green-400 mb-1">Risposte:</div>
+                  <pre className="whitespace-pre-wrap text-gray-300">{JSON.stringify(debugInfo.responses, null, 2)}</pre>
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -141,13 +183,19 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
         </Alert>
       )}
       
-      {/* Manual coordinates input */}
+      {/* Manual coordinates input - now more visible and with instructions */}
       {showManualCoordinates && (
         <div className="glass-card p-4 rounded-md bg-blue-900/20 border border-blue-800/30">
-          <h4 className="text-sm font-medium mb-3 flex items-center">
-            <Info className="h-4 w-4 mr-1 text-blue-400" />
+          <h4 className="text-sm font-medium mb-2 flex items-center text-blue-300">
+            <MapPin className="h-4 w-4 mr-1" />
             Inserimento coordinate manuali
           </h4>
+          
+          <p className="text-xs text-gray-300 mb-3">
+            Puoi inserire direttamente le coordinate geografiche (latitudine e longitudine). 
+            Puoi ottenerle da Google Maps cliccando con il tasto destro su un luogo.
+          </p>
+          
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="manual_lat">Latitudine</Label>
@@ -174,24 +222,45 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
               )}
             </div>
           </div>
+          
+          {/* Use coordinates checkbox */}
+          <div className="mt-3">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="use_manual_coordinates"
+                className="rounded border-gray-500"
+                {...form.register("use_manual_coordinates")}
+              />
+              <Label htmlFor="use_manual_coordinates" className="text-sm">
+                Usa queste coordinate anziché il geocoding
+              </Label>
+            </div>
+            <p className="text-xs text-amber-300 mt-1">
+              <AlertTriangle className="h-3 w-3 inline mr-1" />
+              Assicurati di inserire coordinate valide per l'Italia
+            </p>
+          </div>
         </div>
       )}
       
       {/* Show toggle button even without error */}
-      {!geocodeError && (
+      {!geocodeError && !showManualCoordinates && (
         <div>
           <Button 
             type="button"
             variant="outline" 
             size="sm" 
             onClick={toggleManualCoordinates}
-            className={showManualCoordinates ? "bg-blue-900/30" : ""}
+            className="mt-1"
           >
-            {showManualCoordinates ? 'Nascondi coordinate manuali' : 'Inserisci coordinate manualmente'}
+            <MapPin className="mr-2 h-4 w-4" />
+            Inserisci coordinate manualmente
           </Button>
         </div>
       )}
       
+      {/* Area radius */}
       <div>
         <Label htmlFor="area_radius_m">Raggio dell'area (metri)</Label>
         <Input 
@@ -209,6 +278,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
         )}
       </div>
       
+      {/* Dates */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="start_date">Data Inizio</Label>
@@ -223,6 +293,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
         </div>
       </div>
       
+      {/* Submit button */}
       <div className="flex justify-end mt-6">
         <Button 
           type="submit" 
@@ -245,6 +316,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
         </Button>
       </div>
       
+      {/* Auth messages */}
       {!isAuthenticated && (
         <div className="text-amber-400 text-sm mt-2">
           Devi autenticarti prima di poter salvare premi.

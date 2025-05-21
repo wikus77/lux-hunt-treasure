@@ -1,13 +1,16 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { PrizeFormValues } from "../hooks/usePrizeForm";
 
 export interface GeocodeResult {
-  lat: string;
-  lon: string;
+  lat?: string;
+  lon?: string;
   display_name?: string;
   error?: string;
   statusCode?: number;
-  errorType?: 'rate_limit' | 'not_found' | 'service_error' | 'network_error';
+  errorType?: 'rate_limit' | 'not_found' | 'service_error' | 'network_error' | 'format_error';
+  debug?: any;
+  suggestions?: string[];
 }
 
 interface ClueGenerationParams {
@@ -29,6 +32,7 @@ interface ClueGenerationResult {
 export async function geocodeAddress(city: string, address: string): Promise<GeocodeResult> {
   try {
     console.log(`Geocoding address: ${address}, ${city}`);
+    
     // Use the full URL with project ID for direct access without auth headers
     const geocodeResponse = await fetch(
       "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/geocode-address", 
@@ -48,16 +52,24 @@ export async function geocodeAddress(city: string, address: string): Promise<Geo
     if (!geocodeResponse.ok) {
       console.error(`Geocode error: ${geocodeResponse.status} ${geocodeResponse.statusText}`);
       
-      const errorInfo = await geocodeResponse.json().catch(e => ({ 
-        error: `Response parsing failed: ${e.message}` 
-      }));
+      let errorInfo;
+      try {
+        errorInfo = await geocodeResponse.json();
+      } catch (e) {
+        errorInfo = { 
+          error: `Response parsing failed: ${e.message}` 
+        };
+      }
       
+      // Return full error details including suggestions
       return { 
         error: errorInfo.error || `Errore geocoding: ${geocodeResponse.statusText}`, 
         statusCode: geocodeResponse.status,
         errorType: errorInfo.errorType || (geocodeResponse.status === 429 ? 'rate_limit' : 'service_error'),
         lat: "", 
-        lon: "" 
+        lon: "",
+        suggestions: errorInfo.suggestions || [],
+        debug: errorInfo.debug
       };
     }
     
@@ -70,7 +82,9 @@ export async function geocodeAddress(city: string, address: string): Promise<Geo
         statusCode: result.statusCode || 400,
         errorType: result.errorType || 'not_found',
         lat: "",
-        lon: ""
+        lon: "",
+        suggestions: result.suggestions || [],
+        debug: result.debug
       };
     }
     
