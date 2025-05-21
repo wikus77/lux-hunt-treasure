@@ -56,9 +56,9 @@ serve(async (req) => {
       );
     }
 
-    // Per debug: verifica se la richiesta è per l'admin
-    const isAdminRequest = email === "wikus77@hotmail.it";
-    if (!isAdminRequest) {
+    // Per sicurezza: verifica se la richiesta è per l'admin
+    const adminEmail = "wikus77@hotmail.it";
+    if (email !== adminEmail) {
       console.error("Accesso negato per email non admin:", email);
       return new Response(
         JSON.stringify({ error: "Accesso non autorizzato" }),
@@ -69,16 +69,16 @@ serve(async (req) => {
       );
     }
 
-    console.log("Tentativo di login admin per:", email);
+    console.log("Tentativo di login admin per:", adminEmail);
 
     // Client con ruolo admin per le operazioni privilegiate
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { 
-        persistSession: false // Non persistere la sessione nella funzione Edge
+        persistSession: false
       },
     });
     
-    // Login amministratore con credenziali (bypassando captcha)
+    // Login amministratore con credenziali
     const { data, error } = await supabaseAdmin.auth.signInWithPassword({
       email,
       password,
@@ -95,12 +95,54 @@ serve(async (req) => {
       );
     }
 
-    // Verifica se esiste un profilo per l'utente e crealo se necessario
+    // Pulizia profili duplicati - prima di creare un nuovo profilo
+    try {
+      const { data: existingProfiles } = await supabaseAdmin
+        .from("profiles")
+        .select("id, email, role")
+        .eq("email", adminEmail);
+      
+      if (existingProfiles && existingProfiles.length > 0) {
+        console.log(`Trovati ${existingProfiles.length} profili per ${adminEmail}`);
+        
+        // Tieni traccia del profilo corretto (quello che corrisponde all'ID utente)
+        const correctProfileIndex = existingProfiles.findIndex(p => p.id === data.user.id);
+        
+        // Elimina tutti i profili tranne quello corretto (se esiste)
+        for (let i = 0; i < existingProfiles.length; i++) {
+          const profile = existingProfiles[i];
+          
+          // Se questo è il profilo corretto, assicurati che abbia il ruolo admin
+          if (i === correctProfileIndex) {
+            if (profile.role !== "admin") {
+              console.log(`Aggiornamento ruolo per il profilo corretto (ID: ${profile.id})`);
+              await supabaseAdmin
+                .from("profiles")
+                .update({ role: "admin" })
+                .eq("id", profile.id);
+            }
+          } 
+          // Altrimenti elimina il profilo duplicato
+          else {
+            console.log(`Eliminazione profilo duplicato: ${profile.id}`);
+            await supabaseAdmin
+              .from("profiles")
+              .delete()
+              .eq("id", profile.id);
+          }
+        }
+      }
+    } catch (cleanupErr) {
+      console.error("Errore pulizia profili:", cleanupErr);
+      // Continua comunque, questo è solo un passaggio di pulizia
+    }
+
+    // Verifica ed eventualmente crea/aggiorna il profilo admin
     const { data: profileData, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("*")
+      .select("id, role")
       .eq("id", data.user.id)
-      .single();
+      .maybeSingle();
 
     if (profileError && profileError.code !== "PGRST116") {
       console.error("Errore verifica profilo:", profileError);
@@ -109,50 +151,17 @@ serve(async (req) => {
     if (!profileData) {
       console.log("Profilo non trovato, creazione profilo admin...");
       
-      // Tenta di cancellare eventuali profili duplicati prima di crearne uno nuovo
-      try {
-        console.log("Controllo ed eliminazione eventuali profili duplicati per:", email);
-        const { data: duplicateProfiles, error: searchError } = await supabaseAdmin
-          .from("profiles")
-          .select("id")
-          .eq("email", email);
-
-        if (searchError) {
-          console.error("Errore ricerca profili duplicati:", searchError);
-        } else if (duplicateProfiles && duplicateProfiles.length > 0) {
-          console.log(`Trovati ${duplicateProfiles.length} profili duplicati, eliminazione...`);
-          
-          // Elimina i profili duplicati
-          for (const profile of duplicateProfiles) {
-            console.log("Eliminazione profilo duplicato:", profile.id);
-            const { error: deleteError } = await supabaseAdmin
-              .from("profiles")
-              .delete()
-              .eq("id", profile.id);
-            
-            if (deleteError) {
-              console.error("Errore eliminazione profilo duplicato:", deleteError);
-            }
-          }
-        }
-      } catch (cleanupErr) {
-        console.error("Errore durante la pulizia dei profili:", cleanupErr);
-      }
-      
-      // Crea il nuovo profilo con l'ID corretto dell'utente
       try {
         const { data: insertData, error: insertError } = await supabaseAdmin
           .from("profiles")
-          .upsert({
+          .insert({
             id: data.user.id,
-            email: email,
+            email: adminEmail,
             role: "admin",
             full_name: "Amministratore",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
             subscription_tier: "admin"
-          }, { onConflict: "id" })
-          .select("*")
+          })
+          .select()
           .single();
         
         if (insertError) {
@@ -163,17 +172,14 @@ serve(async (req) => {
       } catch (insertErr) {
         console.error("Eccezione durante l'inserimento del profilo:", insertErr);
       }
+    } else if (profileData.role !== "admin") {
+      console.log("Aggiornamento ruolo a admin per il profilo esistente");
+      await supabaseAdmin
+        .from("profiles")
+        .update({ role: "admin" })
+        .eq("id", data.user.id);
     } else {
-      console.log("Profilo esistente trovato:", profileData.id);
-      
-      // Assicurarsi che il ruolo sia admin
-      if (profileData.role !== "admin") {
-        console.log("Aggiornamento ruolo a admin...");
-        await supabaseAdmin
-          .from("profiles")
-          .update({ role: "admin" })
-          .eq("id", data.user.id);
-      }
+      console.log("Profilo admin già esistente e corretto");
     }
 
     console.log("Login completato con successo, generazione token");

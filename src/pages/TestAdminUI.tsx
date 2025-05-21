@@ -5,9 +5,10 @@ import AdminPrizeManager from '@/components/admin/prizeManager/AdminPrizeManager
 import { useAuthContext } from '@/contexts/auth';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { ShieldAlert } from 'lucide-react';
 
 export default function TestAdminUI() {
-  const { isAuthenticated, isLoading, userRole, hasRole, isRoleLoading, logout, user, getCurrentUser } = useAuthContext();
+  const { isAuthenticated, isLoading, userRole, hasRole, isRoleLoading, logout, getCurrentUser } = useAuthContext();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,7 +23,15 @@ export default function TestAdminUI() {
       isRoleLoading,
       isAdmin: hasRole('admin')
     });
-  }, [isAuthenticated, isLoading, userRole, isRoleLoading, getCurrentUser, hasRole]);
+    
+    // Special check for admin email
+    const isAdminEmail = getCurrentUser()?.email === 'wikus77@hotmail.it';
+    if (isAuthenticated && !isLoading && !isRoleLoading && !hasRole('admin') && !isAdminEmail) {
+      console.log("Non-admin user attempting to access admin UI:", getCurrentUser()?.email);
+      toast.error("Accesso negato: solo gli amministratori possono accedere a questa pagina");
+      navigate('/');
+    }
+  }, [isAuthenticated, isLoading, userRole, isRoleLoading, hasRole, navigate, getCurrentUser]);
   
   const handleLogout = async () => {
     await logout();
@@ -62,7 +71,9 @@ export default function TestAdminUI() {
       
       {!isAuthenticated ? (
         <div className="p-6 bg-red-900/30 border border-red-500/30 rounded-lg">
-          <h2 className="text-xl text-red-300 mb-4">Accesso non autorizzato</h2>
+          <h2 className="text-xl text-red-300 mb-4 flex items-center">
+            <ShieldAlert className="mr-2" /> Accesso non autorizzato
+          </h2>
           <p className="text-white mb-4">Devi effettuare il login come amministratore per accedere a questa pagina.</p>
           <Button 
             onClick={() => navigate('/auth-debug')}
@@ -74,7 +85,9 @@ export default function TestAdminUI() {
         </div>
       ) : !hasRole('admin') ? (
         <div className="p-6 bg-amber-900/30 border border-amber-500/30 rounded-lg">
-          <h2 className="text-xl text-amber-300 mb-4">Ruolo richiesto: Admin</h2>
+          <h2 className="text-xl text-amber-300 mb-4 flex items-center">
+            <ShieldAlert className="mr-2" /> Ruolo richiesto: Admin
+          </h2>
           <p className="text-white mb-4">
             Sei autenticato come {getCurrentUser()?.email}, ma è richiesto il ruolo di amministratore.
           </p>

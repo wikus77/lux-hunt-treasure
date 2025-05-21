@@ -45,21 +45,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // Se non trova tramite ID, prova con l'email
-        const { data: dataByEmail, error: errorByEmail } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('email', auth.user.email)
-          .maybeSingle();
+        if (auth.user.email) {
+          const { data: dataByEmail, error: errorByEmail } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('email', auth.user.email)
+            .maybeSingle();
 
-        if (dataByEmail) {
-          console.log("Ruolo utente trovato tramite email:", dataByEmail.role);
-          setUserRole(dataByEmail.role);
-          setIsRoleLoading(false);
-          return;
-        }
-        
-        if (errorByEmail) {
-          console.error('Error fetching user role by email:', errorByEmail);
+          if (dataByEmail) {
+            console.log("Ruolo utente trovato tramite email:", dataByEmail.role);
+            setUserRole(dataByEmail.role);
+            setIsRoleLoading(false);
+            return;
+          }
+          
+          if (errorByEmail) {
+            console.error('Error fetching user role by email:', errorByEmail);
+          }
         }
 
         // Se non trova né per ID né per email e l'utente è wikus77@hotmail.it, crea il profilo admin
@@ -67,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log("Creazione automatica profilo admin per:", auth.user.email);
           
           const { data: newProfile, error: insertError } = await supabase
-            .from('profiles')
+            .from("profiles")
             .insert({
               id: auth.user.id,
               email: auth.user.email,

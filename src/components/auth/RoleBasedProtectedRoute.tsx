@@ -23,6 +23,10 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
   const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole, isRoleLoading } = useAuthContext();
   const location = useLocation();
   
+  // Admin detection
+  const isAdminEmail = getCurrentUser()?.email === 'wikus77@hotmail.it';
+  const isAdminRoute = location.pathname === '/test-admin-ui' || location.pathname === '/auth-debug';
+  
   useEffect(() => {
     console.log("Role-based protected route check:", {
       path: location.pathname,
@@ -34,9 +38,17 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
       user: getCurrentUser()?.id,
       email: getCurrentUser()?.email,
       allowedRoles,
-      bypassCheck
+      bypassCheck,
+      isAdminEmail
     });
-  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, allowedRoles, isRoleLoading, bypassCheck]);
+  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, allowedRoles, isRoleLoading, bypassCheck, isAdminEmail]);
+  
+  // Special case for admin routes - only allow wikus77@hotmail.it
+  if (isAdminRoute && !isAdminEmail) {
+    console.log("Access denied to admin route for non-admin email:", getCurrentUser()?.email);
+    toast.error("Accesso riservato all'amministratore");
+    return <Navigate to="/login" replace />;
+  }
   
   // Waiting for authentication or role loading to complete
   if (isLoading || (isAuthenticated && isRoleLoading)) {
@@ -49,9 +61,6 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
       </div>
     );
   }
-  
-  // Debug special case for email wikus77@hotmail.it
-  const isAdminEmail = getCurrentUser()?.email === 'wikus77@hotmail.it';
   
   // If user is not authenticated, redirect to login
   if (!isAuthenticated) {

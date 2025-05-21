@@ -1,11 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTurnstile } from "@/hooks/useTurnstile";
+import StyledInput from "@/components/ui/styled-input"; 
+import { Key, Mail, ShieldCheck } from "lucide-react";
 
 const AuthDebug = () => {
-  const [email] = useState("wikus77@hotmail.it");
+  const [email] = useState("wikus77@hotmail.it"); // Email predefinita e bloccata
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -14,7 +17,7 @@ const AuthDebug = () => {
   const navigate = useNavigate();
   
   // Utilizzo del hook useTurnstile per gestire la verifica captcha
-  const { setTurnstileToken, token, isVerified } = useTurnstile({
+  const { setTurnstileToken, token } = useTurnstile({
     action: 'login',
     autoVerify: true
   });
@@ -114,7 +117,6 @@ const AuthDebug = () => {
             if (insertError) {
               console.error("⚠️ Errore nella creazione del profilo:", insertError.message);
               setStatusMessage("Autenticazione riuscita, tentativo di creare il profilo fallito");
-              // Procedi con il Metodo 2
             } else {
               console.log("✅ Profilo creato con successo:", newProfile);
               setDebugInfo(prev => ({
@@ -150,7 +152,6 @@ const AuthDebug = () => {
         } catch (profileErr: any) {
           console.error("❌ Errore verifica profilo:", profileErr.message);
           setError(`Errore nella verifica del profilo: ${profileErr.message}`);
-          // Continua comunque con il metodo edge function
         }
       }
       
@@ -253,8 +254,9 @@ const AuthDebug = () => {
     <div className="flex items-center justify-center min-h-screen bg-black">
       <div className="w-full max-w-md p-8 bg-black/50 backdrop-blur-md rounded-lg border border-white/10">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-white">Debug Login</h1>
-          <p className="text-gray-400 mt-1">Solo per amministratori</p>
+          <ShieldCheck className="w-12 h-12 mx-auto text-cyan-400 mb-2" />
+          <h1 className="text-2xl font-bold text-white">Admin Access</h1>
+          <p className="text-gray-400 mt-1">Accesso riservato</p>
           
           {statusMessage && (
             <div className="mt-2 p-2 bg-gray-800/50 rounded text-sm">
@@ -268,12 +270,14 @@ const AuthDebug = () => {
             <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
               Email
             </label>
-            <input
+            <StyledInput
               id="email"
               type="email"
               value={email}
-              disabled
-              className="w-full px-4 py-2 rounded-md border border-gray-700 bg-black/50 text-white"
+              onChange={() => {}} // Non modificabile
+              icon={<Mail size={16} />}
+              placeholder="Email amministratore"
+              className="bg-black/50 border-gray-700/50 cursor-not-allowed"
             />
           </div>
 
@@ -281,14 +285,14 @@ const AuthDebug = () => {
             <label htmlFor="password" className="block text-sm font-medium text-white mb-1">
               Password
             </label>
-            <input
+            <StyledInput
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-2 rounded-md border border-gray-700 bg-black/50 text-white"
+              icon={<Key size={16} />}
               placeholder="Inserisci password"
+              className="border-gray-700/50"
             />
           </div>
 
@@ -299,10 +303,15 @@ const AuthDebug = () => {
 
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-medium py-2 px-4 rounded-md transition-colors mt-4"
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-medium py-2 px-4 rounded-md transition-colors mt-4 flex items-center justify-center"
             disabled={isLoading}
           >
-            {isLoading ? "Autenticazione in corso..." : "Accedi"}
+            {isLoading ? (
+              <>
+                <div className="animate-spin h-4 w-4 border-2 border-white/50 border-t-white rounded-full mr-2"></div>
+                <span>Autenticazione in corso...</span>
+              </>
+            ) : "Accedi"}
           </button>
           
           {/* Mostra bottone logout se c'è una sessione attiva */}
@@ -328,7 +337,7 @@ const AuthDebug = () => {
         {debugInfo && (
           <div className="mt-4 p-3 bg-gray-800/50 border border-gray-700/50 rounded-md overflow-auto">
             <h3 className="text-cyan-400 font-medium mb-2">Debug Info</h3>
-            <pre className="text-xs text-white whitespace-pre-wrap">
+            <pre className="text-xs text-white whitespace-pre-wrap break-words">
               {JSON.stringify(debugInfo, null, 2)}
             </pre>
           </div>
