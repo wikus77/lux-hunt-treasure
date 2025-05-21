@@ -14,6 +14,7 @@ import BuzzExplosionHandler from "@/components/buzz/BuzzExplosionHandler";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Bell, LightbulbIcon, Trash } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
 
 const Buzz = () => {
   const [showDialog, setShowDialog] = useState(false);
@@ -64,7 +65,7 @@ const Buzz = () => {
     // eslint-disable-next-line
   }, [location.state, savePaymentMethod, navigate, initializeSound]);
 
-  const handleBuzzClick = () => {
+  const handleBuzzClick = async () => {
     if (!hasPaymentMethod) {
       navigate("/payment-methods", {
         state: {
@@ -76,7 +77,67 @@ const Buzz = () => {
       });
       return;
     }
-    setShowDialog(true);
+    
+    // If user is authenticated, call the Edge Function directly
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      
+      if (!userId) {
+        toast.error("Devi effettuare l'accesso per utilizzare questa funzione");
+        return;
+      }
+      
+      setShowDialog(true);
+      
+      const { data, error } = await supabase.functions.invoke("handle-buzz-press", {
+        body: { userId, generateMap: false },
+      });
+      
+      if (error) {
+        console.error("Error calling buzz function:", error);
+        toast.error("Errore durante l'elaborazione dell'indizio");
+        setShowDialog(false);
+        return;
+      }
+      
+      if (data.success) {
+        // Simulate payment completed
+        setTimeout(() => {
+          setShowDialog(false);
+          
+          // Add notification for the new clue
+          const success = addNotification({
+            title: "Nuovo Indizio Buzz!",
+            description: data.clue_text
+          });
+          
+          if (success) {
+            // Reload notifications to update the counter
+            reloadNotifications();
+            
+            // Show success message
+            toast.success("Hai ricevuto un nuovo indizio!", {
+              duration: 3000,
+            });
+            
+            // Show explosion animation
+            setShowExplosion(true);
+          } else {
+            toast.error("Errore nel salvataggio dell'indizio", {
+              duration: 3000,
+            });
+          }
+        }, 1500);
+      } else {
+        toast.error(data.error || "Errore durante l'elaborazione dell'indizio");
+        setShowDialog(false);
+      }
+    } catch (error) {
+      console.error("Error in buzz process:", error);
+      toast.error("Si è verificato un errore");
+      setShowDialog(false);
+    }
   };
 
   const handlePayment = () => {
@@ -108,50 +169,77 @@ const Buzz = () => {
     }, 1800);
   }
 
-  const handleClueButtonClick = useCallback(() => {
+  const handleClueButtonClick = useCallback(async () => {
     // Play sound
     playSound();
+    
+    // Try to get authenticated user
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData?.session?.user?.id;
+    
+    if (!userId) {
+      toast.error("Devi effettuare l'accesso per utilizzare questa funzione");
+      return;
+    }
     
     // Show payment dialog
     setShowDialog(true);
     
-    // Simulate payment completed
-    setTimeout(() => {
-      setShowDialog(false);
-      
-      // Generate a random clue from the vague clues
-      const newClue = getNextVagueClue();
-      setLastVagueClue(newClue);
-      
-      // Increase unlocked clue count and show explosion/animation
-      incrementUnlockedCluesAndAddClue();
-      
-      // Add notification for the new clue
-      const success = addNotification({
-        title: "Nuovo Indizio Extra!",
-        description: newClue
+    // Call the Edge Function
+    try {
+      const { data, error } = await supabase.functions.invoke("handle-buzz-press", {
+        body: { userId, generateMap: false },
       });
       
-      if (success) {
-        // Reload notifications to update the counter
-        reloadNotifications();
-        
-        // Show success message
-        toast.success("Hai ricevuto un nuovo indizio!", {
-          duration: 3000,
-        });
-        
-        // Show explosion animation
-        setShowExplosion(true);
-      } else {
-        toast.error("Errore nel salvataggio dell'indizio", {
-          duration: 3000,
-        });
+      if (error) {
+        toast.error("Errore durante l'elaborazione dell'indizio");
+        setShowDialog(false);
+        return;
       }
-    }, 1500);
+      
+      if (data.success) {
+        // Generate a random clue from the vague clues
+        const newClue = data.clue_text;
+        setLastVagueClue(newClue);
+        
+        // Increase unlocked clue count and show explosion/animation
+        incrementUnlockedCluesAndAddClue();
+        
+        // Add notification for the new clue
+        const success = addNotification({
+          title: "Nuovo Indizio Extra!",
+          description: newClue
+        });
+        
+        if (success) {
+          // Reload notifications to update the counter
+          reloadNotifications();
+          
+          // Show success message
+          toast.success("Hai ricevuto un nuovo indizio!", {
+            duration: 3000,
+          });
+          
+          // Hide dialog and show explosion
+          setShowDialog(false);
+          setShowExplosion(true);
+        } else {
+          toast.error("Errore nel salvataggio dell'indizio", {
+            duration: 3000,
+          });
+          setShowDialog(false);
+        }
+      } else {
+        toast.error(data.error || "Errore durante l'elaborazione dell'indizio");
+        setShowDialog(false);
+      }
+    } catch (error) {
+      console.error("Error in handle clue button click:", error);
+      toast.error("Si è verificato un errore");
+      setShowDialog(false);
+    }
   }, [
     playSound, 
-    getNextVagueClue, 
     setLastVagueClue, 
     incrementUnlockedCluesAndAddClue, 
     addNotification, 

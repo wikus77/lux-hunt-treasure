@@ -623,37 +623,90 @@ export type Database = {
           },
         ]
       }
+      user_buzz_map: {
+        Row: {
+          generated_at: string | null
+          id: string
+          lat: number
+          lng: number
+          radius_km: number
+          user_id: string
+          week: number
+        }
+        Insert: {
+          generated_at?: string | null
+          id?: string
+          lat: number
+          lng: number
+          radius_km: number
+          user_id: string
+          week: number
+        }
+        Update: {
+          generated_at?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          radius_km?: number
+          user_id?: string
+          week?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_buzz_map_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_clues: {
         Row: {
           buzz_cost: number | null
           clue_id: string
-          id: string
-          is_unlocked: boolean
-          unlocked_at: string | null
+          clue_type: string
+          created_at: string
+          description_en: string | null
+          description_fr: string | null
+          description_it: string
+          title_en: string | null
+          title_fr: string | null
+          title_it: string
           user_id: string
         }
         Insert: {
           buzz_cost?: number | null
-          clue_id: string
-          id?: string
-          is_unlocked?: boolean
-          unlocked_at?: string | null
+          clue_id?: string
+          clue_type?: string
+          created_at?: string
+          description_en?: string | null
+          description_fr?: string | null
+          description_it: string
+          title_en?: string | null
+          title_fr?: string | null
+          title_it: string
           user_id: string
         }
         Update: {
           buzz_cost?: number | null
           clue_id?: string
-          id?: string
-          is_unlocked?: boolean
-          unlocked_at?: string | null
+          clue_type?: string
+          created_at?: string
+          description_en?: string | null
+          description_fr?: string | null
+          description_it?: string
+          title_en?: string | null
+          title_fr?: string | null
+          title_it?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "user_clues_clue_id_fkey"
-            columns: ["clue_id"]
+            foreignKeyName: "user_clues_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "clues"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -690,13 +743,6 @@ export type Database = {
           week?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "user_map_areas_clue_id_fkey"
-            columns: ["clue_id"]
-            isOneToOne: false
-            referencedRelation: "user_clues"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "user_map_areas_user_id_fkey"
             columns: ["user_id"]

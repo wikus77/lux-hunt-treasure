@@ -104,9 +104,11 @@ serve(async (req) => {
       .from('user_clues')
       .insert({
         user_id: userId,
-        clue_id: crypto.randomUUID(), // Temporary - would normally reference a real clue
-        is_unlocked: true,
-        unlocked_at: new Date().toISOString(),
+        title_it: `Indizio Buzz #${buzzCount}`,
+        description_it: clueText,
+        title_en: `Buzz Clue #${buzzCount}`,
+        description_en: translateToEnglish(clueText),
+        clue_type: 'buzz',
         buzz_cost: buzzCost
       })
       .select()
@@ -115,7 +117,7 @@ serve(async (req) => {
     if (clueError) {
       console.error("Error saving clue:", clueError);
       return new Response(
-        JSON.stringify({ success: false, error: "Failed to save clue" }),
+        JSON.stringify({ success: false, error: "Failed to save clue: " + clueError.message }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -184,7 +186,7 @@ serve(async (req) => {
                 lng: mapArea.lng,
                 radius_km: mapArea.radius_km,
                 week: currentWeek,
-                clue_id: clueData.id
+                clue_id: clueData.clue_id
               });
               
             if (!mapError) {
@@ -260,4 +262,17 @@ function generateClueBasedOnWeek(weekNumber: number): string {
       return geographicClues[Math.floor(Math.random() * geographicClues.length)];
     }
   }
+}
+
+// Helper function to translate clues to English (simplified translation for this example)
+function translateToEnglish(italianClue: string): string {
+  const translations: Record<string, string> = {
+    "Cerca dove splende il sole sul metallo lucente": "Look where the sun shines on gleaming metal",
+    "L'essenza del premio si nasconde tra storia e modernità": "The essence of the prize hides between history and modernity",
+    "Il tuo obiettivo si muove in spazi aperti e veloci": "Your target moves in open and fast spaces",
+    "Una creazione nata dalla passione e dall'innovazione": "A creation born from passion and innovation",
+    "Dove il design incontra la potenza troverai ciò che cerchi": "Where design meets power, you'll find what you seek"
+  };
+  
+  return translations[italianClue] || italianClue;
 }
