@@ -664,7 +664,7 @@ export type Database = {
       user_clues: {
         Row: {
           buzz_cost: number | null
-          clue_id: string
+          clue_id: string | null
           clue_type: string
           created_at: string
           description_en: string | null
@@ -677,7 +677,7 @@ export type Database = {
         }
         Insert: {
           buzz_cost?: number | null
-          clue_id?: string
+          clue_id?: string | null
           clue_type?: string
           created_at?: string
           description_en?: string | null
@@ -690,7 +690,7 @@ export type Database = {
         }
         Update: {
           buzz_cost?: number | null
-          clue_id?: string
+          clue_id?: string | null
           clue_type?: string
           created_at?: string
           description_en?: string | null

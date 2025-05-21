@@ -99,7 +99,7 @@ serve(async (req) => {
     // Generate appropriate clue based on current week
     const clueText = generateClueBasedOnWeek(currentWeek);
     
-    // Insert clue into user_clues table
+    // Insert clue into user_clues table with updated schema
     const { data: clueData, error: clueError } = await supabase
       .from('user_clues')
       .insert({
@@ -111,7 +111,7 @@ serve(async (req) => {
         clue_type: 'buzz',
         buzz_cost: buzzCost
       })
-      .select()
+      .select('clue_id')
       .single();
 
     if (clueError) {
