@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
 import useBuzzSound from "@/hooks/useBuzzSound";
-import { useBuzzClues } from "@/hooks/useBuzzClues";
+import { useBuzzClues } from "@/hooks/buzz/useBuzzClues";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useBuzzUiState } from "@/hooks/buzz/useBuzzUiState";
 import { useBuzzNavigation } from "@/hooks/buzz/useBuzzNavigation";

@@ -1,8 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import ClueCard from "@/components/clues/ClueCard";
 import { clues } from "@/data/cluesData";
-import { useBuzzClues } from "@/hooks/useBuzzClues";
+import { useBuzzClues } from "@/hooks/buzz/useBuzzClues";
 
 export const CluesSection = () => {
   const { unlockedClues, incrementUnlockedCluesAndAddClue, MAX_CLUES } = useBuzzClues();
