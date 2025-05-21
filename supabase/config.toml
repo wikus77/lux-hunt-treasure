@@ -33,3 +33,4 @@ enabled = true
 [edge_functions.generate-prize-clues]
 
 [edge_functions.insert-prize-clues]
+

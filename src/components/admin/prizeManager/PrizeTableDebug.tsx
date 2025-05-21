@@ -18,9 +18,9 @@ const PrizeTableDebug = () => {
     setTableStatus({ checking: true });
     
     try {
-      // First, try to check via direct query
+      // First, try to check via direct query with type assertion to bypass TypeScript error
       const { data, error } = await supabase
-        .from('prize_clues')
+        .from('prize_clues' as any)
         .select('count(*)', { count: 'exact', head: true });
         
       if (error) {

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PrizeFormValues } from "../hooks/usePrizeForm";
 
@@ -261,3 +260,51 @@ export async function insertPrizeClues(clues: any[], prizeId: string) {
     return { error: `Errore durante il salvataggio degli indizi: ${error.message}` };
   }
 }
+
+/**
+ * Saves clues data for a prize
+ * @param cluesData Array of clue objects to save
+ * @returns Promise resolving to success status
+ */
+export const savePrizeClues = async (cluesData: any[]) => {
+  try {
+    console.log("🔄 Saving prize clues:", cluesData);
+    
+    // Get the current session
+    const { data: sessionData } = await supabase.auth.getSession();
+    const session = sessionData?.session;
+    
+    if (!session) {
+      console.error("❌ No active session found");
+      throw new Error("Authentication required to save clues");
+    }
+    
+    // Call the Edge Function to insert clues
+    const response = await fetch(
+      "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/insert-prize-clues",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          clues_data: cluesData,
+        }),
+      }
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Edge function error:", errorData);
+      throw new Error(`Failed to save clues: ${errorData.error || response.statusText}`);
+    }
+    
+    const result = await response.json();
+    console.log("✅ Clues saved successfully:", result);
+    return result;
+  } catch (error) {
+    console.error("❌ Error saving clues:", error);
+    throw error;
+  }
+};

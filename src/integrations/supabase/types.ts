@@ -349,6 +349,56 @@ export type Database = {
         }
         Relationships: []
       }
+      prize_clues: {
+        Row: {
+          clue_type: string
+          created_at: string
+          description_en: string | null
+          description_fr: string | null
+          description_it: string
+          id: string
+          prize_id: string
+          title_en: string | null
+          title_fr: string | null
+          title_it: string
+          week: number
+        }
+        Insert: {
+          clue_type?: string
+          created_at?: string
+          description_en?: string | null
+          description_fr?: string | null
+          description_it: string
+          id?: string
+          prize_id: string
+          title_en?: string | null
+          title_fr?: string | null
+          title_it: string
+          week: number
+        }
+        Update: {
+          clue_type?: string
+          created_at?: string
+          description_en?: string | null
+          description_fr?: string | null
+          description_it?: string
+          id?: string
+          prize_id?: string
+          title_en?: string | null
+          title_fr?: string | null
+          title_it?: string
+          week?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prize_clues_prize_id_fkey"
+            columns: ["prize_id"]
+            isOneToOne: false
+            referencedRelation: "prizes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prizes: {
         Row: {
           acceleration: string | null

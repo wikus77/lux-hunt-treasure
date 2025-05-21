@@ -40,18 +40,6 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Create the prize_clues table if it doesn't exist
-    const { error: tableCheckError } = await supabase
-      .from('prize_clues')
-      .select('count(*)', { count: 'exact', head: true });
-    
-    if (tableCheckError && tableCheckError.message.includes('relation "prize_clues" does not exist')) {
-      console.log("Prize clues table doesn't exist, creating it...");
-      // Table creation would normally be done via migrations, but this is a fallback
-      // This won't actually execute since we can't run arbitrary SQL in edge functions
-      console.error("Table prize_clues doesn't exist. Please create it through SQL migrations.");
-    }
-    
     // Insert clues
     const { data, error } = await supabase
       .from('prize_clues')
