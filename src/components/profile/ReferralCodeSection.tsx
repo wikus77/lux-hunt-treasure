@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import GradientBox from "@/components/ui/gradient-box";
 
 const ReferralCodeSection = () => {
   const { toast } = useToast();
@@ -18,7 +17,7 @@ const ReferralCodeSection = () => {
   };
 
   return (
-    <GradientBox className="mt-4 p-3 rounded-md bg-black/30 border border-gray-800">
+    <div className="mt-4 p-3 rounded-md bg-black/30 border border-gray-800">
       <div className="flex items-center gap-2">
         <Link2 className="h-4 w-4 text-cyan-400" />
         <h4 className="text-sm font-bold">Codice referral</h4>
@@ -39,7 +38,7 @@ const ReferralCodeSection = () => {
       <span className="text-xs text-gray-400 block mt-2">
         Recluta un altro agente e ricevi 500 crediti
       </span>
-    </GradientBox>
+    </div>
   );
 };
 
