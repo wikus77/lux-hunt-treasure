@@ -6,9 +6,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// CORS headers
+// CORS headers - aggiornati per supportare il dominio specifico
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "*", // Possiamo restringere a https://m1ssion.com in produzione
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -33,6 +33,12 @@ interface BuzzResponse {
   error?: string;
 }
 
+// Validazione UUID v4
+function isValidUuid(uuid: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -49,24 +55,35 @@ serve(async (req) => {
     const requestData = await req.json();
     const { userId, generateMap, prizeId } = requestData as BuzzRequest;
     
+    // Validazione migliorata per userId
     if (!userId) {
+      console.error("Richiesta invalida: userId mancante");
       return new Response(
-        JSON.stringify({ success: false, error: "UserID is required" }),
+        JSON.stringify({ success: false, error: "UserID è un campo obbligatorio" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Verify that userId is a valid UUID
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(userId)) {
+    // Verifica che userId sia un UUID valido
+    if (!isValidUuid(userId)) {
+      console.error(`Richiesta invalida: userId non è un UUID v4 valido: ${userId}`);
       return new Response(
-        JSON.stringify({ success: false, error: "Invalid UserID format" }),
+        JSON.stringify({ success: false, error: "UserID non è in formato UUID v4 valido" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
     // Get current week since mission start
-    const { data: weekData } = await supabase.rpc('get_current_mission_week');
+    const { data: weekData, error: weekError } = await supabase.rpc('get_current_mission_week');
+    
+    if (weekError) {
+      console.error("Errore nel recupero della settimana corrente:", weekError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Impossibile determinare la settimana della missione" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    
     const currentWeek = weekData || 1;
     console.log(`Current mission week: ${currentWeek}`);
 
@@ -76,9 +93,9 @@ serve(async (req) => {
     });
 
     if (buzzCountError) {
-      console.error("Error incrementing buzz counter:", buzzCountError);
+      console.error("Errore nell'incremento del contatore buzz:", buzzCountError);
       return new Response(
-        JSON.stringify({ success: false, error: "Failed to update buzz counter" }),
+        JSON.stringify({ success: false, error: "Impossibile aggiornare il contatore buzz" }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -88,10 +105,10 @@ serve(async (req) => {
       daily_count: buzzCount
     });
 
-    if (costError || !costData) {
-      console.error("Error calculating buzz cost:", costError);
+    if (costError || costData === null) {
+      console.error("Errore nel calcolo del costo buzz:", costError);
       return new Response(
-        JSON.stringify({ success: false, error: "Failed to calculate buzz cost" }),
+        JSON.stringify({ success: false, error: "Impossibile calcolare il costo del buzz" }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -101,7 +118,7 @@ serve(async (req) => {
     // Check if user is blocked from making more buzz requests today
     if (buzzCost <= 0) {
       return new Response(
-        JSON.stringify({ success: false, error: "Daily limit exceeded (50 buzzes)" }),
+        JSON.stringify({ success: false, error: "Limite giornaliero superato (50 buzzes)" }),
         { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -125,9 +142,24 @@ serve(async (req) => {
       .single();
 
     if (clueError) {
-      console.error("Error saving clue:", clueError);
+      console.error("Errore nel salvataggio dell'indizio:", clueError.message, clueError.details, clueError.hint);
+      let errorMessage = "Impossibile salvare l'indizio: ";
+      
+      // Errori specifici in base al tipo
+      if (clueError.code === "23505") {
+        errorMessage += "Indizio duplicato";
+      } else if (clueError.code === "23503") {
+        errorMessage += "Riferimento utente non valido";
+      } else if (clueError.code === "42P01") {
+        errorMessage += "Tabella user_clues non trovata";
+      } else if (clueError.code === "42703") {
+        errorMessage += "Colonna mancante nella tabella";
+      } else {
+        errorMessage += clueError.message;
+      }
+      
       return new Response(
-        JSON.stringify({ success: false, error: "Failed to save clue: " + clueError.message }),
+        JSON.stringify({ success: false, error: errorMessage }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -150,7 +182,7 @@ serve(async (req) => {
       });
 
       if (genError) {
-        console.error("Error incrementing map generation counter:", genError);
+        console.error("Errore nell'incremento del contatore di generazione mappe:", genError);
       } else {
         // Get max allowed generations for this week
         const { data: maxGenData } = await supabase.rpc('get_max_map_generations', {
@@ -199,13 +231,19 @@ serve(async (req) => {
                 clue_id: clueData.clue_id
               });
               
-            if (!mapError) {
+            if (mapError) {
+              console.error("Errore nel salvare l'area della mappa:", mapError);
+            } else {
               response.map_area = mapArea;
             }
+          } else {
+            console.error("Impossibile trovare le coordinate del premio:", prizeId);
           }
           
           response.remainingMapGenerations = maxGenerations - generationData;
           response.canGenerateMap = generationData < maxGenerations;
+        } else {
+          console.log(`Utente ${userId} ha raggiunto il limite di generazioni mappa per la settimana ${currentWeek}`);
         }
       }
     }
@@ -216,9 +254,9 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("Error in BUZZ handler:", error);
+    console.error("Errore generale nella gestione BUZZ:", error);
     return new Response(
-      JSON.stringify({ success: false, error: error.message || "Server error" }),
+      JSON.stringify({ success: false, error: error.message || "Errore del server" }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
