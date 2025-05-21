@@ -1,6 +1,6 @@
 
-// Default fallback location (Milano)
-export const DEFAULT_LOCATION: [number, number] = [45.4642, 9.19];
+// Default fallback location (Roma)
+export const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
 
 // Google Maps marker icons
 export const createUserMarkerIcon = () => ({
