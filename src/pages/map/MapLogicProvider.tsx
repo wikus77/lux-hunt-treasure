@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useLoadScript, Marker, Circle } from '@react-google-maps/api';
 import { toast } from 'sonner';
-import { DEFAULT_LOCATION, createUserMarkerIcon, createPrizeMarkerIcon, getPrizeCircleOptions } from './utils/leafletIcons';
+import { DEFAULT_LOCATION } from './utils/leafletIcons';
 import MapStatusMessages from './components/MapStatusMessages';
 import { useUserLocationPermission } from '@/hooks/useUserLocationPermission';
 import { usePrizeLocation } from './hooks/usePrizeLocation';
@@ -108,7 +108,7 @@ const MapLogicProvider = () => {
     libraries: ["places"],
   });
 
-  // Get user location information - request it immediately
+  // Get user location information
   const { permission, userLocation, askPermission, loading, error } = useUserLocationPermission();
   const [locationReceived, setLocationReceived] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
@@ -116,19 +116,11 @@ const MapLogicProvider = () => {
   // Get prize location based on user's location
   const { prizeLocation, bufferRadius } = usePrizeLocation(userLocation);
 
-  // Map state - explicitly maintain the center state
+  // Map state
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [mapZoom, setMapZoom] = useState(15);
-  const [mapCenter, setMapCenter] = useState<google.maps.LatLngLiteral | null>(null);
 
-  // Request location permission immediately when component mounts
-  useEffect(() => {
-    if (permission === 'prompt') {
-      askPermission();
-    }
-  }, []);
-
-  // Handle user location updates with improved center management
+  // Handle user location updates
   useEffect(() => {
     console.log("Geolocation status:", { permission, loading, error });
     console.log("Geolocation data:", userLocation);
@@ -139,9 +131,6 @@ const MapLogicProvider = () => {
           !isNaN(userLocation[0]) && !isNaN(userLocation[1])) {
         console.log("Setting user location to:", userLocation);
         setLocationReceived(true);
-        
-        // Update the map center state
-        setMapCenter({ lat: userLocation[0], lng: userLocation[1] });
         
         // If map is already loaded, center it
         if (map) {
@@ -158,12 +147,7 @@ const MapLogicProvider = () => {
       console.log("Requesting geolocation permission...");
       askPermission();
     } else if (permission === 'denied') {
-      console.log("Geolocation permission denied, using fallback to Roma");
-      
-      // Set fallback location (Roma instead of Milano)
-      const fallbackLocation = { lat: 41.9028, lng: 12.4964 }; // Roma
-      setMapCenter(fallbackLocation);
-      
+      console.log("Geolocation permission denied, using fallback");
       toast.error("Posizione non disponibile", {
         description: "Non è stato possibile localizzarti. Alcune funzionalità potrebbero essere limitate."
       });
@@ -182,6 +166,14 @@ const MapLogicProvider = () => {
     }
   }, [userLocation, permission, askPermission]);
   
+  // Get map center depending on availability
+  const getMapCenter = useCallback(() => {
+    if (userLocation && Array.isArray(userLocation) && userLocation.length === 2) {
+      return { lat: userLocation[0], lng: userLocation[1] };
+    }
+    return { lat: DEFAULT_LOCATION[0], lng: DEFAULT_LOCATION[1] };
+  }, [userLocation]);
+  
   // Retry getting location
   const retryGetLocation = () => {
     console.log("Retrying location detection...");
@@ -191,22 +183,6 @@ const MapLogicProvider = () => {
   // Handle loading state and errors
   if (loadError) return <div className="text-red-500 text-center p-4">Errore nel caricamento della mappa</div>;
   if (!isLoaded) return <LoadingScreen />;
-
-  // Determine appropriate center for the map
-  const getMapCenter = () => {
-    // If we have a specific map center state, use it
-    if (mapCenter) {
-      return mapCenter;
-    }
-    
-    // If we have user location, use it
-    if (userLocation && Array.isArray(userLocation) && userLocation.length === 2) {
-      return { lat: userLocation[0], lng: userLocation[1] };
-    }
-    
-    // Fall back to Roma (not Milano)
-    return { lat: 41.9028, lng: 12.4964 };
-  };
 
   return (
     <div style={{ height: '60vh', width: '100%', zIndex: 1 }} className="rounded-lg overflow-hidden relative">

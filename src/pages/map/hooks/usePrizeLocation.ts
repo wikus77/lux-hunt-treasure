@@ -1,12 +1,10 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-
-// Default fallback to Roma, not Milano
-const DEFAULT_FALLBACK: [number, number] = [41.9028, 12.4964];
+import { DEFAULT_LOCATION } from '../utils/leafletIcons';
 
 export function usePrizeLocation(userLocation: [number, number] | null) {
-  const [prizeLocation, setPrizeLocation] = useState<[number, number]>(DEFAULT_FALLBACK);
+  const [prizeLocation, setPrizeLocation] = useState<[number, number]>([41.9027, 12.4963]); // Roma by default
   const [bufferRadius, setBufferRadius] = useState(1000); // 1km
   
   // In a real application, this would come from your backend
@@ -15,7 +13,7 @@ export function usePrizeLocation(userLocation: [number, number] | null) {
     setTimeout(() => {
       try {
         // Use user location if available, otherwise use default
-        const baseLocation = userLocation || DEFAULT_FALLBACK;
+        const baseLocation = userLocation || DEFAULT_LOCATION;
         
         // Random offset within a certain range from user's location
         const latOffset = (Math.random() - 0.5) * 0.05;

@@ -15,7 +15,7 @@ export type UseUserLocationPermissionResult = {
 export function useUserLocationPermission(): UseUserLocationPermissionResult {
   const [permission, setPermission] = useState<"granted" | "denied" | "prompt">("prompt");
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-  const [loading, setLoading] = useState(true); // Initialize as loading
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastAttempt, setLastAttempt] = useState<number | null>(null);
 
@@ -31,7 +31,6 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
       setError("La geolocalizzazione non è supportata dal tuo browser");
       setPermission("denied");
       localStorage.setItem(GEO_PERMISSION_KEY, "denied");
-      setLoading(false);
       return;
     }
 
@@ -82,7 +81,7 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
           setLoading(false);
         },
         {
-          enableHighAccuracy: true, // Change to true for more accurate positioning
+          enableHighAccuracy: false, // Set to false for faster response
           timeout: 8000, // 8 seconds timeout
           maximumAge: 30000 // 30 seconds cache
         }
@@ -95,7 +94,7 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
     }
   }, [lastAttempt]);
 
-  // Check stored permission and get location on initial load - IMMEDIATELY
+  // Check stored permission and get location on initial load
   useEffect(() => {
     const storedPermission = localStorage.getItem(GEO_PERMISSION_KEY);
     
@@ -105,7 +104,6 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
       getCurrentPosition();
     } else if (storedPermission === "denied") {
       setPermission("denied");
-      setLoading(false);
     } else {
       setPermission("prompt");
       // Try to get position automatically on first load
