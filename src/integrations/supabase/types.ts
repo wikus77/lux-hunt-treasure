@@ -591,8 +591,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_buzz_counter: {
+        Row: {
+          buzz_count: number
+          date: string
+          id: string
+          user_id: string
+          week_map_generations: number[] | null
+        }
+        Insert: {
+          buzz_count?: number
+          date?: string
+          id?: string
+          user_id: string
+          week_map_generations?: number[] | null
+        }
+        Update: {
+          buzz_count?: number
+          date?: string
+          id?: string
+          user_id?: string
+          week_map_generations?: number[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_buzz_counter_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_clues: {
         Row: {
+          buzz_cost: number | null
           clue_id: string
           id: string
           is_unlocked: boolean
@@ -600,6 +633,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          buzz_cost?: number | null
           clue_id: string
           id?: string
           is_unlocked?: boolean
@@ -607,6 +641,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          buzz_cost?: number | null
           clue_id?: string
           id?: string
           is_unlocked?: boolean
@@ -619,6 +654,54 @@ export type Database = {
             columns: ["clue_id"]
             isOneToOne: false
             referencedRelation: "clues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_map_areas: {
+        Row: {
+          clue_id: string | null
+          created_at: string
+          id: string
+          lat: number
+          lng: number
+          radius_km: number
+          user_id: string
+          week: number
+        }
+        Insert: {
+          clue_id?: string | null
+          created_at?: string
+          id?: string
+          lat: number
+          lng: number
+          radius_km: number
+          user_id: string
+          week: number
+        }
+        Update: {
+          clue_id?: string | null
+          created_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          radius_km?: number
+          user_id?: string
+          week?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_map_areas_clue_id_fkey"
+            columns: ["clue_id"]
+            isOneToOne: false
+            referencedRelation: "user_clues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_map_areas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -661,9 +744,25 @@ export type Database = {
         Args: { user_email: string; credits_to_add: number }
         Returns: undefined
       }
+      calculate_buzz_price: {
+        Args: { daily_count: number }
+        Returns: number
+      }
       execute_sql: {
         Args: { sql: string }
         Returns: undefined
+      }
+      get_current_mission_week: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      get_map_radius_km: {
+        Args: { p_week: number; p_generation_count: number }
+        Returns: number
+      }
+      get_max_map_generations: {
+        Args: { p_week: number }
+        Returns: number
       }
       get_my_agent_code: {
         Args: Record<PropertyKey, never>
@@ -674,6 +773,14 @@ export type Database = {
       handle_new_user: {
         Args: { new_user_id: string; user_email: string }
         Returns: undefined
+      }
+      increment_buzz_counter: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      increment_map_generation_counter: {
+        Args: { p_user_id: string; p_week: number }
+        Returns: number
       }
       update_user_subscription_tier: {
         Args: { target_user_id: string; new_tier: string }
