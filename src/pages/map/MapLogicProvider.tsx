@@ -20,7 +20,7 @@ const prizeIcon = new L.Icon({
 });
 
 // Custom component to update the map view
-function SetViewOnChange({ center, zoom }) {
+function SetViewOnChange({ center, zoom }: { center: [number, number]; zoom: number }) {
   const map = useMap();
   useEffect(() => {
     map.setView(center, zoom);
@@ -29,8 +29,8 @@ function SetViewOnChange({ center, zoom }) {
 }
 
 const MapLogicProvider = () => {
-  const [prizeLocation, setPrizeLocation] = useState([41.9027, 12.4963]); // Roma by default
-  const [userLocation, setUserLocation] = useState(null);
+  const [prizeLocation, setPrizeLocation] = useState<[number, number]>([41.9027, 12.4963]); // Roma by default
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [bufferRadius, setBufferRadius] = useState(1000); // 1km
   const [mapSettings, setMapSettings] = useState(getDefaultMapSettings());
   
@@ -71,26 +71,31 @@ const MapLogicProvider = () => {
   }, [userLocation]);
   
   // Define map center based on availability
-  const mapCenter = userLocation || prizeLocation;
+  const mapCenter: [number, number] = userLocation || prizeLocation;
   
   return (
     <div style={{ height: '60vh', width: '100%', zIndex: 1 }} className="rounded-lg overflow-hidden">
-      <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
+      <MapContainer 
+        center={mapCenter} 
+        zoom={13} 
+        style={{ height: '100%', width: '100%' }}
+        scrollWheelZoom={true}
+      >
         <TileLayer
-          url={mapSettings.tileUrl}
           attribution={mapSettings.attribution}
+          url={mapSettings.tileUrl}
         />
         
         {/* Circle showing approximate prize location */}
         <Circle
           center={prizeLocation}
-          radius={bufferRadius}
           pathOptions={{
             color: '#00D1FF',
             fillColor: '#00D1FF',
             fillOpacity: 0.2,
             weight: 2
           }}
+          radius={bufferRadius}
         />
         
         {/* User location marker */}

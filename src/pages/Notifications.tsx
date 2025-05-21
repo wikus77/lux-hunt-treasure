@@ -19,6 +19,11 @@ const Notifications = () => {
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [activeCategory, setActiveCategory] = useState<NotificationCategory>("all");
 
+  // Reload notifications when component mounts
+  useEffect(() => {
+    reloadNotifications();
+  }, [reloadNotifications]);
+
   const categoryFilters: Record<string, RegExp> = {
     location: /luogo|posizione|dove|zona|area|quartiere|città|regione|coordinate/i,
     car: /auto|veicolo|macchina|automobile|modello|marca|carrozzeria/i,
