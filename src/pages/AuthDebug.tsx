@@ -331,7 +331,7 @@ const AuthDebug = () => {
               icon={<Mail size={16} />}
               placeholder="Email amministratore"
               className="bg-black/50 border-gray-700/50 cursor-not-allowed"
-              readOnly
+              readOnly={true}
             />
           </div>
 

@@ -21,6 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log("⚠️ Tentativo di creazione profilo admin per:", userEmail);
     
     try {
+      // First try the direct approach
       const { data: newProfile, error } = await supabase
         .from("profiles")
         .insert({
@@ -34,7 +35,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
       if (error) {
         console.error("❌ Errore nella creazione del profilo admin:", error);
-        return false;
+        
+        // If the direct approach fails, try using the RPC function
+        try {
+          // Call the edge function as a fallback
+          const result = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/create-admin-profile", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
+            },
+            body: JSON.stringify({
+              userId,
+              email: userEmail
+            })
+          });
+          
+          if (!result.ok) {
+            throw new Error("Failed to create admin profile via edge function");
+          }
+          
+          const data = await result.json();
+          console.log("✅ Profilo admin creato tramite funzione:", data);
+          setUserRole('admin');
+          return true;
+        } catch (edgeError) {
+          console.error("❌ Errore nella creazione del profilo tramite funzione:", edgeError);
+          return false;
+        }
       }
       
       console.log("✅ Profilo admin creato con successo:", newProfile?.role);
@@ -124,10 +152,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Default fallback dopo tutti i tentativi
         console.log("⚠️ Nessun profilo trovato dopo multipli tentativi");
-        setUserRole(null);
+        
+        // If user is the admin email but no profile exists, force create one as a last resort
+        if (auth.user.email === 'wikus77@hotmail.it') {
+          setUserRole('admin');
+        } else {
+          setUserRole(null);
+        }
       } catch (error) {
         console.error('❌ Exception fetching user role:', error);
-        setUserRole(null);
+        
+        // If user is the admin email, force the role as admin even if there's an error
+        if (auth.user.email === 'wikus77@hotmail.it') {
+          setUserRole('admin');
+        } else {
+          setUserRole(null);
+        }
       } finally {
         if (retryCount >= maxRetries) {
           setIsRoleLoading(false);
@@ -155,6 +195,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check if user has a specific role
   const hasRole = (role: string): boolean => {
+    // Special case for wikus77@hotmail.it - always treated as admin
+    if (auth.user?.email === 'wikus77@hotmail.it') {
+      return role === 'admin';
+    }
     return userRole === role;
   };
 
