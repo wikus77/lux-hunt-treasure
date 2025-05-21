@@ -76,10 +76,10 @@ const MapLogicProvider = () => {
   return (
     <div style={{ height: '60vh', width: '100%', zIndex: 1 }} className="rounded-lg overflow-hidden">
       <MapContainer 
-        center={mapCenter} 
-        zoom={13} 
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={true}
+        // Instead of providing center and zoom as props, we use the SetViewOnChange component
+        // This is because MapContainer props are immutable after initial render
       >
         <TileLayer
           url={mapSettings.tileUrl}
