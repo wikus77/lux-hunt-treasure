@@ -156,33 +156,32 @@ const MapLogicProvider = () => {
       <MapContainer 
         style={{ height: '100%', width: '100%' }}
         whenReady={handleMapReady}
-        // We're using SetViewOnChange instead of center/zoom props
-        // as they're not supported in the current version
       >
         <TileLayer
           url={mapSettings.tileUrl}
+          attribution={mapSettings.attribution}
         />
         
-        {/* Circle showing approximate prize location */}
+        {/* Circle showing approximate prize location - only show when ready and has valid data */}
         {mapReady && prizeLocation && bufferRadius && (
           <Circle
             center={prizeLocation}
+            radius={bufferRadius}
             pathOptions={{
               color: '#00D1FF',
               fillColor: '#00D1FF',
               fillOpacity: 0.2,
-              weight: 2,
-              radius: bufferRadius // radius should be in pathOptions
+              weight: 2
             }}
           />
         )}
         
-        {/* User location marker */}
+        {/* User location marker - only show when ready and has valid data */}
         {mapReady && userLocation && (
           <Marker position={userLocation} />
         )}
         
-        {/* Update the view when center changes */}
+        {/* Update the view when center changes and map is ready */}
         {mapReady && mapCenter && (
           <SetViewOnChange center={mapCenter} zoom={mapZoom} />
         )}

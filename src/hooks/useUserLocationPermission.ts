@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-// Key su localStorage per il permesso concesso/diniego
+// Key for storing permission in localStorage
 const GEO_PERMISSION_KEY = "geo_permission_granted";
 
 export type UseUserLocationPermissionResult = {
@@ -83,13 +83,14 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
         {
           enableHighAccuracy: false, // Set to false for faster response
           timeout: 8000, // 8 seconds timeout
-          maximumAge: 60000 // 1 minute cache
+          maximumAge: 30000 // 30 seconds cache
         }
       );
     } catch (e) {
       console.error("Unexpected error in geolocation request:", e);
       setError("Errore imprevisto nella geolocalizzazione");
       setLoading(false);
+      setPermission("denied");
     }
   }, [lastAttempt]);
 
@@ -99,6 +100,7 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
     
     if (storedPermission === "granted") {
       setPermission("granted");
+      // Still try to get the position to refresh it
       getCurrentPosition();
     } else if (storedPermission === "denied") {
       setPermission("denied");
