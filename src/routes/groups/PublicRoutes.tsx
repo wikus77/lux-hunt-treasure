@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Route } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import PublicLayout from "../../components/layout/PublicLayout";
 
 // Pages
@@ -20,26 +20,24 @@ import { EmailVerificationPage } from "../../components/auth/EmailVerificationHa
 
 const PublicRoutes = () => {
   return (
-    <>
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<Index />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/kyc" element={<KYC />} />
-        <Route path="/verification" element={<EmailVerificationPage />} />
-        <Route path="/contact" element={<Contacts />} />
-        <Route path="/contatti" element={<Contacts />} /> {/* Italian alias */}
-        <Route path="/email-test" element={<EmailTest />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/termini-e-condizioni" element={<Terms />} /> {/* Italian alias */}
-        <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* Alternative path */}
-        <Route path="/cookie-policy" element={<CookiePolicy />} />
-        <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/access-denied" element={<AccessDenied />} />
-      </Route>
-    </>
+    <Routes>
+      <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
+      <Route path="/register" element={<PublicLayout><Register /></PublicLayout>} />
+      <Route path="/login" element={<PublicLayout><Login /></PublicLayout>} />
+      <Route path="/auth" element={<PublicLayout><Auth /></PublicLayout>} />
+      <Route path="/kyc" element={<PublicLayout><KYC /></PublicLayout>} />
+      <Route path="/verification" element={<PublicLayout><EmailVerificationPage /></PublicLayout>} />
+      <Route path="/contact" element={<PublicLayout><Contacts /></PublicLayout>} />
+      <Route path="/contatti" element={<PublicLayout><Contacts /></PublicLayout>} /> {/* Italian alias */}
+      <Route path="/email-test" element={<PublicLayout><EmailTest /></PublicLayout>} />
+      <Route path="/terms" element={<PublicLayout><Terms /></PublicLayout>} />
+      <Route path="/termini-e-condizioni" element={<PublicLayout><Terms /></PublicLayout>} /> {/* Italian alias */}
+      <Route path="/privacy" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
+      <Route path="/privacy-policy" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} /> {/* Alternative path */}
+      <Route path="/cookie-policy" element={<PublicLayout><CookiePolicy /></PublicLayout>} />
+      <Route path="/how-it-works" element={<PublicLayout><HowItWorks /></PublicLayout>} />
+      <Route path="/access-denied" element={<PublicLayout><AccessDenied /></PublicLayout>} />
+    </Routes>
   );
 };
 
