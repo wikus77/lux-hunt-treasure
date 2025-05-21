@@ -4,6 +4,8 @@ import { MapContainer, TileLayer, Circle, Marker, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { getDefaultMapSettings } from '@/utils/mapUtils';
+import { toast } from 'sonner';
+import { useUserLocationPermission } from '@/hooks/useUserLocationPermission';
 
 // Fix for marker icon in Leaflet with React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -33,21 +35,20 @@ const MapLogicProvider = () => {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [bufferRadius, setBufferRadius] = useState(1000); // 1km
   const [mapSettings, setMapSettings] = useState(getDefaultMapSettings());
+  const { permission, userLocation: geoLocation, askPermission } = useUserLocationPermission();
   
   // Get user's location
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation([latitude, longitude]);
-        },
-        (error) => {
-          console.error('Error getting user location:', error);
-        }
-      );
+    if (permission === 'granted' && geoLocation) {
+      setUserLocation(geoLocation);
+    } else if (permission === 'prompt') {
+      askPermission();
+    } else if (permission === 'denied') {
+      toast.error("Posizione non disponibile", {
+        description: "Non è stato possibile localizzarti. Alcune funzionalità potrebbero essere limitate."
+      });
     }
-  }, []);
+  }, [permission, geoLocation, askPermission]);
   
   // In a real application, this would come from your backend
   useEffect(() => {
@@ -72,6 +73,7 @@ const MapLogicProvider = () => {
   
   // Define map center based on availability
   const mapCenter = userLocation || prizeLocation;
+  const mapZoom = userLocation ? 15 : 13; // Closer zoom when user location is available
   
   return (
     <div style={{ height: '60vh', width: '100%', zIndex: 1 }} className="rounded-lg overflow-hidden">
@@ -100,8 +102,14 @@ const MapLogicProvider = () => {
         )}
         
         {/* Update the view when center changes */}
-        <SetViewOnChange center={mapCenter} zoom={13} />
+        <SetViewOnChange center={mapCenter} zoom={mapZoom} />
       </MapContainer>
+      
+      {permission === 'denied' && (
+        <div className="absolute bottom-4 left-0 right-0 mx-auto w-max px-6 py-2 bg-black/70 text-white rounded-full text-sm">
+          Posizione non disponibile. Tocca per attivare.
+        </div>
+      )}
     </div>
   );
 };
