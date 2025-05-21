@@ -84,7 +84,7 @@ const MapLogicProvider = () => {
           url={mapSettings.tileUrl}
         />
         
-        {/* Circle showing approximate prize location - Fix by using the Circle component correctly */}
+        {/* Circle showing approximate prize location - Correzione del componente Circle */}
         <Circle
           center={prizeLocation}
           pathOptions={{
@@ -92,7 +92,7 @@ const MapLogicProvider = () => {
             fillColor: '#00D1FF',
             fillOpacity: 0.2,
             weight: 2,
-            radius: bufferRadius // Move radius inside pathOptions to fix TypeScript error
+            radius: bufferRadius // Il radius deve essere all'interno di pathOptions per react-leaflet
           }}
         />
         
