@@ -7,6 +7,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 // Supporto per richieste OPTIONS (preflight)
@@ -71,7 +72,11 @@ serve(async (req) => {
     console.log("Tentativo di login admin per:", email);
 
     // Client con ruolo admin per le operazioni privilegiate
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { 
+        persistSession: false // Non persistere la sessione nella funzione Edge
+      },
+    });
     
     // Login amministratore con credenziali (bypassando captcha)
     const { data, error } = await supabaseAdmin.auth.signInWithPassword({
@@ -97,22 +102,66 @@ serve(async (req) => {
       .eq("id", data.user.id)
       .single();
 
-    if (profileError || !profileData) {
+    if (profileError && profileError.code !== "PGRST116") {
+      console.error("Errore verifica profilo:", profileError);
+    }
+
+    if (!profileData) {
       console.log("Profilo non trovato, creazione profilo admin...");
       
-      const { error: insertError } = await supabaseAdmin
-        .from("profiles")
-        .insert({
-          id: data.user.id,
-          email: data.user.email,
-          role: "admin",
-          created_at: new Date().toISOString(),
-        });
+      // Tenta di cancellare eventuali profili duplicati prima di crearne uno nuovo
+      try {
+        console.log("Controllo ed eliminazione eventuali profili duplicati per:", email);
+        const { data: duplicateProfiles, error: searchError } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .eq("email", email);
+
+        if (searchError) {
+          console.error("Errore ricerca profili duplicati:", searchError);
+        } else if (duplicateProfiles && duplicateProfiles.length > 0) {
+          console.log(`Trovati ${duplicateProfiles.length} profili duplicati, eliminazione...`);
+          
+          // Elimina i profili duplicati
+          for (const profile of duplicateProfiles) {
+            console.log("Eliminazione profilo duplicato:", profile.id);
+            const { error: deleteError } = await supabaseAdmin
+              .from("profiles")
+              .delete()
+              .eq("id", profile.id);
+            
+            if (deleteError) {
+              console.error("Errore eliminazione profilo duplicato:", deleteError);
+            }
+          }
+        }
+      } catch (cleanupErr) {
+        console.error("Errore durante la pulizia dei profili:", cleanupErr);
+      }
       
-      if (insertError) {
-        console.error("Errore creazione profilo:", insertError);
-      } else {
-        console.log("Profilo admin creato con successo");
+      // Crea il nuovo profilo con l'ID corretto dell'utente
+      try {
+        const { data: insertData, error: insertError } = await supabaseAdmin
+          .from("profiles")
+          .upsert({
+            id: data.user.id,
+            email: email,
+            role: "admin",
+            full_name: "Amministratore",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            subscription_tier: "admin"
+          }, { onConflict: "id" })
+          .select("*")
+          .single();
+        
+        if (insertError) {
+          console.error("Errore creazione profilo:", insertError);
+        } else {
+          console.log("Profilo admin creato con successo:", insertData);
+        }
+      } catch (insertErr) {
+        console.error("Eccezione durante l'inserimento del profilo:", insertErr);
       }
     } else {
       console.log("Profilo esistente trovato:", profileData.id);

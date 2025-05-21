@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +38,20 @@ const AuthDebug = () => {
         email: data.session.user.email,
         sessionExpiry: new Date(data.session.expires_at! * 1000).toLocaleString(),
       });
+
+      // Check admin role
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.session.user.id)
+        .maybeSingle();
+        
+      if (profileData) {
+        setDebugInfo(prev => ({
+          ...prev,
+          role: profileData.role
+        }));
+      }
     } else {
       setStatusMessage("Nessuna sessione attiva");
     }
@@ -70,13 +83,13 @@ const AuthDebug = () => {
       if (!authError && authData?.session) {
         console.log("✅ Login riuscito con Supabase Auth");
         
-        // Verifica del ruolo
+        // Verifica e creazione profilo
         try {
           const { data: profileData, error: profileError } = await supabase
             .from("profiles")
             .select("role, id")
             .eq("id", authData.session.user.id)
-            .single();
+            .maybeSingle();
             
           setDebugInfo({
             method: "Supabase Auth Diretto",
@@ -84,20 +97,48 @@ const AuthDebug = () => {
             profile: profileData || "Nessun profilo trovato",
             profileError: profileError?.message || null,
           });
-            
-          if (profileError) {
-            console.warn("⚠️ Errore nel recupero del profilo:", profileError.message);
-            setStatusMessage("Autenticazione riuscita ma errore nel recupero del profilo");
-            
-            if (profileError.code === "PGRST116") {
-              setError("Profilo utente non trovato. Utilizzo della funzione edge per la creazione del profilo.");
-              // Procedi con il Metodo 2 per creare anche il profilo
+          
+          if (!profileData) {
+            console.log("Profilo non trovato, creazione automatica...");
+            const { data: newProfile, error: insertError } = await supabase
+              .from("profiles")
+              .insert({
+                id: authData.session.user.id,
+                email: email,
+                role: "admin",
+                full_name: "Admin Debug"
+              })
+              .select("*")
+              .single();
+              
+            if (insertError) {
+              console.error("⚠️ Errore nella creazione del profilo:", insertError.message);
+              setStatusMessage("Autenticazione riuscita, tentativo di creare il profilo fallito");
+              // Procedi con il Metodo 2
             } else {
-              throw new Error(`Errore profilo: ${profileError.message}`);
+              console.log("✅ Profilo creato con successo:", newProfile);
+              setDebugInfo(prev => ({
+                ...prev,
+                newProfile
+              }));
+              // Tutto ok!
+              playSuccessSound();
+              toast.success("Login riuscito e profilo admin creato");
+              navigate("/test-admin-ui");
+              return;
             }
-          } else if (!profileData || profileData.role !== "admin") {
-            await supabase.auth.signOut();
-            throw new Error("Accesso riservato agli amministratori");
+          } else if (profileData.role !== "admin") {
+            console.log("⚙️ Aggiornamento ruolo a admin...");
+            await supabase
+              .from("profiles")
+              .update({ role: "admin" })
+              .eq("id", authData.session.user.id);
+              
+            // Tutto ok!
+            playSuccessSound();
+            toast.success("Login riuscito e ruolo aggiornato a admin");
+            navigate("/test-admin-ui");
+            return;
           } else {
             // Tutto ok!
             playSuccessSound();
@@ -109,7 +150,7 @@ const AuthDebug = () => {
         } catch (profileErr: any) {
           console.error("❌ Errore verifica profilo:", profileErr.message);
           setError(`Errore nella verifica del profilo: ${profileErr.message}`);
-          await supabase.auth.signOut();
+          // Continua comunque con il metodo edge function
         }
       }
       
@@ -166,8 +207,8 @@ const AuthDebug = () => {
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("role")
-        .eq("email", email)
-        .single();
+        .eq("id", data.user.id)
+        .maybeSingle();
 
       console.log("🧑 Profilo:", profileData);
       

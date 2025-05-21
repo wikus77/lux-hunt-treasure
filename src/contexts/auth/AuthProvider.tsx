@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
         
-        if (errorById && errorById.code !== 'PGRST116') {
+        if (errorById) {
           console.error('Error fetching user role by ID:', errorById);
         }
 
@@ -51,13 +51,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('email', auth.user.email)
           .maybeSingle();
 
+        if (dataByEmail) {
+          console.log("Ruolo utente trovato tramite email:", dataByEmail.role);
+          setUserRole(dataByEmail.role);
+          setIsRoleLoading(false);
+          return;
+        }
+        
         if (errorByEmail) {
           console.error('Error fetching user role by email:', errorByEmail);
-          setUserRole(null);
-        } else {
-          console.log("Ruolo utente trovato tramite email:", dataByEmail?.role);
-          setUserRole(dataByEmail?.role || null);
         }
+
+        // Se non trova né per ID né per email e l'utente è wikus77@hotmail.it, crea il profilo admin
+        if (auth.user.email === 'wikus77@hotmail.it') {
+          console.log("Creazione automatica profilo admin per:", auth.user.email);
+          
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: auth.user.id,
+              email: auth.user.email,
+              role: 'admin',
+              full_name: 'Admin User'
+            })
+            .select('role')
+            .maybeSingle();
+            
+          if (insertError) {
+            console.error("Errore creazione profilo admin:", insertError);
+          } else {
+            console.log("Profilo admin creato con successo:", newProfile?.role);
+            setUserRole(newProfile?.role || 'admin');
+            setIsRoleLoading(false);
+            return;
+          }
+        }
+        
+        // Default fallback
+        setUserRole(null);
       } catch (error) {
         console.error('Exception fetching user role:', error);
         setUserRole(null);
