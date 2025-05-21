@@ -5,6 +5,7 @@ import BuzzButton from "./BuzzButton";
 import { useBuzzClues } from "@/hooks/buzz/useBuzzClues";
 import { useAuth } from "@/hooks/useAuth";
 import ErrorFallback from "../error/ErrorFallback";
+import GradientBox from "@/components/ui/gradient-box";
 
 const BuzzMainContent = () => {
   const { user } = useAuth();
@@ -58,11 +59,12 @@ const BuzzMainContent = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5, duration: 0.5 }}
-        className="mt-12 text-center max-w-md glass-card p-6"
       >
-        <p className="text-white/80">
-          Effettua il pagamento e premiati puoi ottenere degli indizi esclusivi
-        </p>
+        <GradientBox className="mt-12 text-center max-w-md p-6">
+          <p className="text-white/80">
+            Effettua il pagamento e premiati puoi ottenere degli indizi esclusivi
+          </p>
+        </GradientBox>
       </motion.div>
     </motion.div>
   );
