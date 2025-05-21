@@ -1,15 +1,18 @@
 
 import React, { ReactNode } from "react";
 import Footer from "./Footer";
+import BottomNavigation from "./BottomNavigation";
 
 interface PublicLayoutProps {
   children: ReactNode;
   showFooter?: boolean;
+  showBottomNav?: boolean;
 }
 
 const PublicLayout: React.FC<PublicLayoutProps> = ({
   children,
-  showFooter = true
+  showFooter = true,
+  showBottomNav = false // Default to hidden for the public pages
 }) => {
   return (
     <div className="min-h-screen bg-black text-white relative">
@@ -19,6 +22,11 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({
         </main>
         
         {showFooter && <Footer />}
+        
+        {/* Bottom Navigation - conditionally rendered but included in DOM */}
+        <div className={showBottomNav ? "" : "hidden"}>
+          <BottomNavigation />
+        </div>
       </div>
     </div>
   );

@@ -10,6 +10,13 @@
     @apply bg-black text-white;
     overflow-x: hidden !important;
   }
+  
+  /* Mobile optimization - better touch targets */
+  @media (max-width: 640px) {
+    button, a {
+      @apply touch-manipulation;
+    }
+  }
 }
 
 @layer components {
@@ -65,6 +72,32 @@
     font-weight: 600;
     text-shadow: 0 0 2px rgba(0, 255, 255, 0.3);
   }
+  
+  /* Mobile optimized spacing classes */
+  .mobile-px {
+    @apply px-3 sm:px-4;
+  }
+  
+  .mobile-py {
+    @apply py-3 sm:py-4;
+  }
+  
+  .mobile-space-y {
+    @apply space-y-3 sm:space-y-4;
+  }
+  
+  /* Improved bottom navigation styling */
+  .bottom-nav-item {
+    @apply flex flex-col items-center justify-center transition-colors;
+  }
+  
+  .bottom-nav-item.active {
+    @apply text-white;
+  }
+  
+  .bottom-nav-item:not(.active) {
+    @apply text-gray-400;
+  }
 }
 
 @layer utilities {
@@ -91,6 +124,21 @@
   /* Specific glow class for the AgentBadge component */
   .glow {
     animation: glow 0.6s ease-in-out forwards;
+  }
+  
+  /* Mobile-first paddings */
+  .safe-padding-x {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  
+  .safe-padding-bottom {
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  }
+  
+  /* Improved tap targets for mobile */
+  .tap-target {
+    @apply min-h-[44px] min-w-[44px];
   }
 }
 
@@ -120,5 +168,17 @@
   
   .max-w-7xl {
     max-width: 80rem;
+  }
+}
+
+/* Enhanced mobile spacing for content */
+@media (max-width: 640px) {
+  .mobile-content-spacing {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  h1, h2, h3 {
+    word-break: break-word;
   }
 }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +11,7 @@ import { LeaderboardProgress } from '@/components/leaderboard/LeaderboardProgres
 import { LeaderboardTabs } from '@/components/leaderboard/LeaderboardTabs';
 import { useLeaderboardData } from '@/hooks/useLeaderboardData';
 import { useIsMobile } from '@/hooks/use-mobile';
+import BottomNavigation from '@/components/layout/BottomNavigation';
 
 const samplePlayers = Array.from({ length: 50 }, (_, i) => ({
   id: i + 1,
@@ -139,6 +139,8 @@ const Leaderboard = () => {
         onClose={() => setShowCreateTeamDialog(false)}
         player={selectedPlayer}
       />
+      
+      <BottomNavigation />
     </div>
   );
 };
