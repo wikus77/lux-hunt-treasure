@@ -1,67 +1,56 @@
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import BuzzButton from "@/components/buzz/BuzzButton";
-import { LightbulbIcon, Trash } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useBuzzFeature } from "@/hooks/useBuzzFeature";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import BuzzButton from "./BuzzButton";
+import { useBuzzClues } from "@/hooks/buzz/useBuzzClues";
+import { useAuth } from "@/hooks/useAuth";
+import ErrorFallback from "../error/ErrorFallback";
 
-export default function BuzzMainContent() {
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const isMobile = useIsMobile();
-  
-  const {
-    unlockedClues,
-    handleBuzzClick,
-    handleClueButtonClick,
-    handleResetClues
-  } = useBuzzFeature();
-  
-  useEffect(() => {
-    setProfileImage(localStorage.getItem('profileImage'));
-  }, []);
+const BuzzMainContent = () => {
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { incrementUnlockedCluesAndAddClue } = useBuzzClues();
+
+  if (error) {
+    return <ErrorFallback message={error} onRetry={() => setError(null)} />;
+  }
 
   return (
-    <section className="flex flex-col items-center justify-center py-6 sm:py-10 h-[70vh] w-full px-3 sm:px-4">
-      <div className="text-center mb-6 sm:mb-8 w-full">
-        <h2 className="text-xl sm:text-2xl font-bold mb-2">Hai bisogno di un indizio extra?</h2>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          Premi il pulsante Buzz per ottenere un indizio supplementare a 1,99€
+    <div className="px-4 py-6 flex flex-col items-center">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-8 text-center"
+      >
+        <h1 className="text-2xl font-bold mb-2">BUZZ</h1>
+        <p className="text-muted-foreground">
+          Premi il pulsante per ricevere indizi sulla posizione del premio
         </p>
-      </div>
-      
-      {/* Pulsante principale BUZZ */}
-      <BuzzButton
-        onBuzzClick={handleBuzzClick}
-        unlockedClues={unlockedClues}
-        isMapBuzz={false}
+      </motion.div>
+
+      <BuzzButton 
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        setError={setError}
+        userId={user?.id || ""}
+        onSuccess={incrementUnlockedCluesAndAddClue}
       />
-      
-      {/* Nuovo pulsante Indizio Istantaneo */}
-      <div className="mt-8 sm:mt-12 w-full max-w-md px-3 sm:px-0">
-        <Button 
-          onClick={handleClueButtonClick}
-          className="w-full py-4 sm:py-6 text-base sm:text-lg flex items-center justify-center gap-2 sm:gap-3 bg-gradient-to-r from-projectx-blue to-projectx-pink hover:opacity-90"
-        >
-          <LightbulbIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-          Ottieni Indizio Istantaneo (1,99€)
-        </Button>
-        <p className="text-xs sm:text-sm text-center mt-2 text-muted-foreground">
-          Ricevi subito una notifica con un nuovo indizio esclusivo
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="mt-8 text-center max-w-md"
+      >
+        <p className="text-sm text-muted-foreground">
+          Ogni buzz genera un indizio casuale che potrebbe aiutarti a trovare il premio.
+          Più indizi raccogli, maggiori saranno le tue possibilità!
         </p>
-      </div>
-      
-      {/* Pulsante Reset */}
-      <div className="mt-4 sm:mt-6 w-full max-w-md px-3 sm:px-0">
-        <Button 
-          onClick={handleResetClues}
-          variant="destructive"
-          className="w-full py-2 flex items-center justify-center gap-2"
-        >
-          <Trash className="w-4 h-4" />
-          Azzera Tutti gli Indizi
-        </Button>
-      </div>
-    </section>
+      </motion.div>
+    </div>
   );
-}
+};
+
+export default BuzzMainContent;

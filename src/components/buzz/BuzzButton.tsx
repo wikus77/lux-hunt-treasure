@@ -1,62 +1,73 @@
 
-import { useState, useEffect } from 'react';
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Zap } from "lucide-react";
-import { useBuzzSound } from '@/hooks/useBuzzSound';
-import { useSound } from '@/contexts/SoundContext';
-import { MAX_BUZZ_CLUES } from '@/utils/buzzConstants';
+import { toast } from "sonner";
+import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
+import { Loader } from "lucide-react";
 
 interface BuzzButtonProps {
-  onBuzzClick: () => void;
-  unlockedClues: number;
-  updateUnlockedClues?: (val: number) => void;
-  isMapBuzz?: boolean;
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  userId: string;
+  onSuccess: () => void;
 }
 
-const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz = false }: BuzzButtonProps) => {
-  const [isVaultOpen, setIsVaultOpen] = useState(false);
-  const { soundPreference, volume, isEnabled } = useSound();
-  const { playSound, initializeSound } = useBuzzSound();
+const BuzzButton: React.FC<BuzzButtonProps> = ({
+  isLoading,
+  setIsLoading,
+  setError,
+  userId,
+  onSuccess
+}) => {
+  const { callBuzzApi } = useBuzzApi();
 
-  useEffect(() => {
-    initializeSound(soundPreference, volume[0] / 100);
-  }, [soundPreference, volume, initializeSound]);
-
-  const handleClick = () => {
-    if (isEnabled) {
-      playSound();
+  const handleBuzzPress = async () => {
+    if (isLoading || !userId) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await callBuzzApi({ 
+        userId, 
+        generateMap: false 
+      });
+      
+      if (response.success) {
+        toast.success("Nuovo indizio sbloccato!", {
+          description: response.clue_text,
+        });
+        onSuccess();
+      } else {
+        setError(response.error || "Errore sconosciuto");
+        toast.error("Errore", {
+          description: response.error || "Si è verificato un errore durante l'elaborazione dell'indizio",
+        });
+      }
+    } catch (error) {
+      console.error("Errore durante la chiamata a Buzz API:", error);
+      setError("Si è verificato un errore di comunicazione con il server");
+      toast.error("Errore di connessione", {
+        description: "Impossibile contattare il server. Riprova più tardi.",
+      });
+    } finally {
+      setIsLoading(false);
     }
-    setIsVaultOpen(true);
-
-    setTimeout(() => {
-      setIsVaultOpen(false);
-      // We'll handle clue incrementing elsewhere
-      onBuzzClick();
-    }, 1500);
   };
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      <div className={`transition-all duration-500 ${isVaultOpen ? "scale-125" : "scale-100"}`}>
-        <Button
-          onClick={handleClick}
-          className={`w-48 h-48 rounded-full bg-gradient-to-r from-projectx-blue to-projectx-pink flex items-center justify-center text-4xl font-bold shadow-[0_0_40px_rgba(217,70,239,0.5)] transition-all duration-300 hover:shadow-[0_0_60px_rgba(217,70,239,0.7)] ${
-            isVaultOpen ? "animate-pulse" : ""
-          }`}
-        >
-          <Zap className="w-24 h-24" />
-        </Button>
-      </div>
-
-      <div className="text-center">
-        <p className="text-sm text-muted-foreground">
-          Limite: {MAX_BUZZ_CLUES} indizi supplementari per evento
-        </p>
-        <p className="text-sm mt-1 font-medium">
-          {unlockedClues}/{MAX_BUZZ_CLUES} indizi sbloccati
-        </p>
-      </div>
-    </div>
+    <Button
+      className="w-32 h-32 rounded-full bg-red-500 hover:bg-red-600 shadow-lg transition-all duration-300 hover:shadow-red-500/30 hover:scale-105"
+      onClick={handleBuzzPress}
+      disabled={isLoading}
+    >
+      {isLoading ? (
+        <Loader className="w-8 h-8 animate-spin" />
+      ) : (
+        <span className="text-xl font-bold">BUZZ</span>
+      )}
+    </Button>
   );
 };
 

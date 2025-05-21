@@ -1,84 +1,62 @@
 
-import { useState, useCallback, useEffect } from "react";
-import { useNotifications } from "@/hooks/useNotifications";
-import { MAX_BUZZ_CLUES } from "@/utils/buzzConstants";
-import { 
-  loadUnlockedCluesCount, 
-  loadUsedVagueClues,
-  saveUnlockedCluesCount,
-  saveUsedVagueClues 
-} from "@/utils/buzzClueStorage";
-import { getNextVagueClue, processClueIncrement } from "@/utils/buzzClueOperations";
-import { showCluesResetNotification } from "@/utils/buzzNotificationUtils";
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import { loadUnlockedCluesCount, saveUnlockedCluesCount } from "@/utils/buzzClueStorage";
+import { processClueIncrement } from "@/utils/buzzClueOperations";
 
-export const useBuzzClues = () => {
-  // Initialize with saved unlocked clues count or 0
-  const [unlockedClues, setUnlockedClues] = useState<number>(() => loadUnlockedCluesCount());
-  const [usedVagueClues, setUsedVagueClues] = useState<string[]>(() => loadUsedVagueClues());
-  const [lastVagueClue, setLastVagueClue] = useState<string | null>(null);
+export const MAX_BUZZ_CLUES = 10;
 
-  // Use a function to get notifications to avoid the "Invalid hook call" error
-  const getNotifications = () => {
-    try {
-      return useNotifications();
-    } catch (e) {
-      // Return a default object if called outside a component
-      return {
-        addNotification: null
-      };
-    }
-  };
-
-  const { addNotification } = getNotifications();
-
-  // Save unlocked clues count to localStorage when it changes
+export function useBuzzClues() {
+  const [unlockedClues, setUnlockedClues] = useState<number>(0);
+  const [usedVagueClues, setUsedVagueClues] = useState<string[]>([]);
+  
   useEffect(() => {
-    saveUnlockedCluesCount(unlockedClues);
-  }, [unlockedClues]);
-
-  // Save used vague clues to localStorage when they change
-  useEffect(() => {
-    saveUsedVagueClues(usedVagueClues);
-  }, [usedVagueClues]);
-
-  const incrementUnlockedCluesAndAddClue = useCallback(() => {
-    let updatedCount = 0;
+    // Carica il conteggio degli indizi sbloccati dal localStorage
+    const savedCount = loadUnlockedCluesCount();
+    setUnlockedClues(savedCount);
     
-    setUnlockedClues(prevCount => {
-      const result = processClueIncrement(prevCount, usedVagueClues, addNotification);
-      updatedCount = result.updatedCount;
-      
-      if (result.nextClue) {
-        setUsedVagueClues(prev => [...prev, result.nextClue!]);
-        setLastVagueClue(result.nextClue);
-      }
-      
-      return updatedCount;
-    });
-
-    return updatedCount;
-  }, [usedVagueClues, addNotification]);
-
-  const resetUnlockedClues = useCallback(() => {
-    setUnlockedClues(0);
-    setUsedVagueClues([]);
-    setLastVagueClue(null);
-
-    localStorage.removeItem('unlockedCluesCount');
-    localStorage.removeItem('usedVagueBuzzClues');
-    
-    showCluesResetNotification();
+    // Aggiungi una registrazione per debug
+    console.log(`Indizi sbloccati caricati: ${savedCount}`);
   }, []);
-
+  
+  // Funzione per incrementare gli indizi sbloccati e aggiungerne uno nuovo
+  const incrementUnlockedCluesAndAddClue = useCallback(() => {
+    const addNotification = (notification: any) => {
+      // Utilizza toast come fallback per le notifiche
+      toast.success(notification.title, {
+        description: notification.description
+      });
+      return true;
+    };
+    
+    const { updatedCount, nextClue } = processClueIncrement(
+      unlockedClues,
+      usedVagueClues,
+      addNotification
+    );
+    
+    // Aggiorna lo stato locale
+    setUnlockedClues(updatedCount);
+    
+    // Salva nel localStorage
+    saveUnlockedCluesCount(updatedCount);
+    
+    // Aggiorna gli indizi vaghi utilizzati se ne è stato generato uno nuovo
+    if (nextClue) {
+      const newUsedClues = [...usedVagueClues, nextClue];
+      setUsedVagueClues(newUsedClues);
+    }
+    
+    console.log(`Indizi sbloccati aggiornati: ${updatedCount}`);
+    
+    return { updatedCount, nextClue };
+  }, [unlockedClues, usedVagueClues]);
+  
   return {
     unlockedClues,
     setUnlockedClues,
     usedVagueClues,
-    lastVagueClue,
-    setLastVagueClue,
     incrementUnlockedCluesAndAddClue,
-    resetUnlockedClues,
-    getNextVagueClue: () => getNextVagueClue(usedVagueClues),
     MAX_CLUES: MAX_BUZZ_CLUES
   };
-};
+}
