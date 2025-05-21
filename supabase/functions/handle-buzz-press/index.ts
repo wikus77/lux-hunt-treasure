@@ -46,11 +46,21 @@ serve(async (req) => {
     });
 
     // Parse request body
-    const { userId, generateMap, prizeId } = await req.json() as BuzzRequest;
+    const requestData = await req.json();
+    const { userId, generateMap, prizeId } = requestData as BuzzRequest;
     
     if (!userId) {
       return new Response(
         JSON.stringify({ success: false, error: "UserID is required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Verify that userId is a valid UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid UserID format" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
