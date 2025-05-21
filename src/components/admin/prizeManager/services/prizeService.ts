@@ -92,7 +92,6 @@ export async function geocodeAddress(city: string, address: string): Promise<Geo
  */
 async function getAuthToken(): Promise<string> {
   const { data } = await supabase.auth.getSession();
-  // Access token is in data.session?.access_token
   return data.session?.access_token || '';
 }
 
