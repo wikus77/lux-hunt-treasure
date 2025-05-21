@@ -22,7 +22,32 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // First attempt to check if the table exists with direct query
+    // First check if table already exists using pg_catalog
+    const { data: tableExists, error: tableCheckError } = await supabase
+      .from('pg_tables')
+      .select('tablename')
+      .eq('schemaname', 'public')
+      .eq('tablename', 'prize_clues')
+      .maybeSingle();
+    
+    if (tableCheckError) {
+      console.log("Error checking if table exists via pg_catalog:", tableCheckError);
+      // Continue with creation attempt as the error might be due to permissions
+    } else if (tableExists) {
+      console.log("Table 'prize_clues' already exists according to pg_catalog");
+      return new Response(
+        JSON.stringify({ exists: true, message: "Table 'prize_clues' already exists" }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+    
+    // Attempt to check if table exists with SELECT
     try {
       const { data, error } = await supabase
         .from('prize_clues')
@@ -40,120 +65,69 @@ serve(async (req) => {
             }
           }
         );
+      } else {
+        console.log("Table check error (expected if table doesn't exist):", error.message);
       }
     } catch (checkError) {
       console.log("Check table error (expected if table doesn't exist):", checkError.message);
     }
     
-    // Table doesn't exist or check failed, create it with SQL
-    console.log("Attempting to create prize_clues table via SQL");
+    // Table doesn't exist, create it directly with SQL
+    console.log("Creating prize_clues table using direct SQL");
     
-    // Create the table using SQL directly
-    const { data, error } = await supabase.rpc(
-      'exec',
-      {
-        query: `
-          DO $$
-          BEGIN
-            -- Check if table exists first
-            IF NOT EXISTS (
-              SELECT FROM pg_tables 
-              WHERE schemaname = 'public' 
-                AND tablename = 'prize_clues'
-            ) THEN
-              -- Create table if it doesn't exist
-              CREATE TABLE public.prize_clues (
-                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                prize_id UUID REFERENCES public.prizes(id) NOT NULL,
-                week INTEGER NOT NULL,
-                clue_type TEXT NOT NULL DEFAULT 'regular',
-                title_it TEXT NOT NULL,
-                title_en TEXT,
-                title_fr TEXT,
-                description_it TEXT NOT NULL,
-                description_en TEXT,
-                description_fr TEXT,
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
-              );
-              
-              -- Enable RLS
-              ALTER TABLE public.prize_clues ENABLE ROW LEVEL SECURITY;
-              
-              -- Add policy for admins
-              CREATE POLICY "Admin users can manage prize clues"
-                ON public.prize_clues
-                USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
-                
-              RAISE NOTICE 'Table prize_clues created successfully';
-            ELSE
-              RAISE NOTICE 'Table prize_clues already exists';
-            END IF;
-          END $$;
-        `
+    try {
+      // Create table using direct SQL
+      const createTableSQL = `
+        CREATE TABLE IF NOT EXISTS public.prize_clues (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          prize_id UUID REFERENCES public.prizes(id) NOT NULL,
+          week INTEGER NOT NULL,
+          clue_type TEXT NOT NULL DEFAULT 'regular',
+          title_it TEXT NOT NULL,
+          title_en TEXT,
+          title_fr TEXT,
+          description_it TEXT NOT NULL,
+          description_en TEXT,
+          description_fr TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+        );
+      `;
+      
+      const { error: createError } = await supabase.rpc('exec', { query: createTableSQL });
+      
+      if (createError) {
+        console.error("Error creating table:", createError);
+        throw new Error(`Failed to create table: ${createError.message}`);
       }
-    );
-    
-    // Check for errors from SQL execution
-    if (error) {
-      console.error("Error creating table via SQL:", error);
       
-      // Try alternative method with raw SQL if exec function fails
-      const { error: sqlError } = await supabase.from('prize_clues').select('id').limit(1);
+      // Enable RLS
+      const enableRlsSQL = `ALTER TABLE public.prize_clues ENABLE ROW LEVEL SECURITY;`;
+      await supabase.rpc('exec', { query: enableRlsSQL });
       
-      if (sqlError && sqlError.message.includes("relation") && sqlError.message.includes("does not exist")) {
-        console.log("Confirmed table does not exist, creating manually");
+      // Add policy for admins
+      const createPolicySQL = `
+        CREATE POLICY "Admin users can manage prize clues"
+          ON public.prize_clues
+          USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
+      `;
+      await supabase.rpc('exec', { query: createPolicySQL });
+      
+      console.log("Table 'prize_clues' created successfully with RLS and policies");
+      
+      // Verify the table was created successfully
+      try {
+        const { data: verifyData, error: verifyError } = await supabase
+          .from('prize_clues')
+          .select('count(*)', { count: 'exact', head: true });
         
-        // If table doesn't exist, try separate operations
-        try {
-          await supabase.rpc('exec', { 
-            query: `CREATE TABLE IF NOT EXISTS public.prize_clues (
-              id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-              prize_id UUID REFERENCES public.prizes(id) NOT NULL,
-              week INTEGER NOT NULL,
-              clue_type TEXT NOT NULL DEFAULT 'regular',
-              title_it TEXT NOT NULL,
-              title_en TEXT,
-              title_fr TEXT,
-              description_it TEXT NOT NULL,
-              description_en TEXT,
-              description_fr TEXT,
-              created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
-            );`
-          });
-          
-          await supabase.rpc('exec', { 
-            query: `ALTER TABLE public.prize_clues ENABLE ROW LEVEL SECURITY;`
-          });
-          
-          await supabase.rpc('exec', { 
-            query: `CREATE POLICY "Admin users can manage prize clues" 
-              ON public.prize_clues 
-              USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');`
-          });
-          
-          console.log("Table created successfully with separate operations");
-          
+        if (verifyError) {
+          console.error("Table verification failed:", verifyError);
           return new Response(
             JSON.stringify({ 
               exists: false, 
-              created: true, 
-              message: "Table 'prize_clues' created successfully via separate operations" 
-            }),
-            {
-              status: 200,
-              headers: {
-                "Content-Type": "application/json",
-                ...corsHeaders
-              }
-            }
-          );
-        } catch (separateError) {
-          console.error("Error in separate operations:", separateError);
-          return new Response(
-            JSON.stringify({ 
-              error: separateError.message,
-              message: "Failed to create table with separate operations",
-              details: separateError
+              created: false, 
+              error: "Table creation claimed success but verification failed", 
+              details: verifyError.message
             }),
             {
               status: 500,
@@ -164,14 +138,33 @@ serve(async (req) => {
             }
           );
         }
+        
+        console.log("Table 'prize_clues' created and verified successfully");
+      } catch (verifyError) {
+        console.error("Verification error:", verifyError);
       }
       
       return new Response(
         JSON.stringify({ 
           exists: false, 
-          created: false, 
-          error: error.message,
-          message: "Failed to create table 'prize_clues'"
+          created: true, 
+          message: "Table 'prize_clues' created successfully" 
+        }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    } catch (sqlError) {
+      console.error("SQL execution error:", sqlError);
+      
+      return new Response(
+        JSON.stringify({ 
+          error: sqlError.message || "SQL execution error",
+          details: sqlError
         }),
         {
           status: 500,
@@ -182,51 +175,6 @@ serve(async (req) => {
         }
       );
     }
-    
-    // Verify the table was created successfully
-    try {
-      const { data: verifyData, error: verifyError } = await supabase
-        .from('prize_clues')
-        .select('count(*)', { count: 'exact', head: true });
-      
-      if (verifyError) {
-        console.error("Table verification failed:", verifyError);
-        return new Response(
-          JSON.stringify({ 
-            exists: false, 
-            created: false, 
-            error: "Table creation claimed success but verification failed", 
-            details: verifyError.message
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json",
-              ...corsHeaders
-            }
-          }
-        );
-      }
-      
-      console.log("Table 'prize_clues' created and verified successfully");
-    } catch (verifyError) {
-      console.error("Verification error:", verifyError);
-    }
-    
-    return new Response(
-      JSON.stringify({ 
-        exists: false, 
-        created: true, 
-        message: "Table 'prize_clues' created successfully" 
-      }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders
-        }
-      }
-    );
     
   } catch (error) {
     console.error("Error in create-prize-clues-table function:", error);

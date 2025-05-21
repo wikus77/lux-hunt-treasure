@@ -28,16 +28,51 @@ const PrizeTableDebug = () => {
         .select('count(*)', { count: 'exact', head: true });
         
       if (error) {
-        if (error.message.includes('relation "prize_clues" does not exist') || 
-            error.message.includes("relation") && error.message.includes("does not exist")) {
-          console.log("Table doesn't exist:", error.message);
+        console.log("Table doesn't exist:", error.message);
+        setTableStatus({ 
+          checking: false, 
+          exists: false,
+          error: "La tabella 'prize_clues' non esiste nel database."
+        });
+        
+        // Automatically try the edge function if direct query fails
+        try {
+          console.log("Attempting to check/create table via edge function");
+          const response = await fetch(
+            "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/create-prize-clues-table",
+            {
+              method: "GET",
+              headers: {
+                "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
+              }
+            }
+          );
+          
+          if (!response.ok) {
+            throw new Error(`API check failed: ${response.status} - ${response.statusText || 'Unknown error'}`);
+          }
+          
+          const result = await response.json();
+          console.log("Edge function response:", result);
+          setCreationResult(result);
+          
+          if (response.ok) {
+            setTableStatus({
+              checking: false,
+              exists: result.exists || result.created,
+              creationAttempted: true,
+              error: (!result.exists && !result.created) ? result.message : undefined
+            });
+          } else {
+            throw new Error(`API check failed: ${response.status} - ${result.error || result.message || 'Unknown error'}`);
+          }
+        } catch (apiError) {
+          console.error("Error checking via API:", apiError);
           setTableStatus({ 
             checking: false, 
-            exists: false,
-            error: "La tabella 'prize_clues' non esiste nel database."
+            error: `Errore durante la verifica della tabella: ${error.message}`,
+            detailedError: apiError.message
           });
-        } else {
-          throw error;
         }
       } else {
         console.log("Table exists, count result:", data);
@@ -58,30 +93,35 @@ const PrizeTableDebug = () => {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
+              "Content-Type": "application/json"
             }
           }
         );
+        
+        if (!response.ok) {
+          throw new Error(`API check failed: ${response.status} - ${response.statusText || 'Unknown error'}`);
+        }
         
         const result = await response.json();
         console.log("Edge function response:", result);
         setCreationResult(result);
         
-        if (response.ok) {
-          setTableStatus({
-            checking: false,
-            exists: result.exists || result.created,
-            creationAttempted: true,
-            error: (!result.exists && !result.created) ? result.message : undefined
-          });
-        } else {
-          throw new Error(`API check failed: ${response.status} - ${result.error || result.message || 'Unknown error'}`);
+        if (result.error) {
+          throw new Error(result.error);
         }
+        
+        setTableStatus({
+          checking: false,
+          exists: result.exists || result.created,
+          creationAttempted: true,
+          error: (!result.exists && !result.created) ? result.message : undefined
+        });
       } catch (apiError) {
         console.error("Error checking via API:", apiError);
         setTableStatus({ 
           checking: false, 
-          error: `Errore durante la verifica della tabella: ${error.message}`,
-          detailedError: apiError.message
+          error: `Errore durante la verifica della tabella: ${apiError.message}`,
+          detailedError: JSON.stringify(apiError)
         });
       }
     }
@@ -103,6 +143,7 @@ const PrizeTableDebug = () => {
           method: "POST", // Using POST to indicate we want to create the table
           headers: {
             "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
+            "Content-Type": "application/json"
           }
         }
       );
@@ -111,16 +152,37 @@ const PrizeTableDebug = () => {
       console.log("Edge function create response:", result);
       setCreationResult(result);
       
-      if (response.ok) {
-        setTableStatus({
-          checking: false,
-          exists: result.exists || result.created,
-          creationAttempted: true,
-          error: (!result.exists && !result.created) ? result.message : undefined
-        });
-      } else {
-        throw new Error(`API creation failed: ${response.status} - ${result.error || 'Unknown error'}`);
+      if (!response.ok || result.error) {
+        throw new Error(result.error || `API creation failed: ${response.status} - ${result.message || 'Unknown error'}`);
       }
+      
+      setTableStatus({
+        checking: false,
+        exists: result.exists || result.created,
+        creationAttempted: true,
+        error: (!result.exists && !result.created) ? result.message : undefined
+      });
+      
+      // If table was created, verify it
+      if (result.created) {
+        try {
+          // Delay for a moment to ensure table has been fully created
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const { data, error } = await supabase
+            .from('prize_clues' as any)
+            .select('count(*)', { count: 'exact', head: true });
+            
+          if (error) {
+            throw new Error(`Verifica fallita: ${error.message}`);
+          }
+          
+          console.log("Table verified successfully:", data);
+        } catch (verifyError) {
+          console.error("Table verification error:", verifyError);
+        }
+      }
+      
     } catch (apiError) {
       console.error("Error creating table via API:", apiError);
       setTableStatus({ 
