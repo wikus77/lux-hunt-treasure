@@ -661,6 +661,10 @@ export type Database = {
         Args: { user_email: string; credits_to_add: number }
         Returns: undefined
       }
+      execute_sql: {
+        Args: { sql: string }
+        Returns: undefined
+      }
       get_my_agent_code: {
         Args: Record<PropertyKey, never>
         Returns: {

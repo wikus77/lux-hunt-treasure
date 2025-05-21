@@ -47,11 +47,11 @@ serve(async (req) => {
       console.log("Check table error (expected if table doesn't exist):", checkError.message);
     }
     
-    // Table doesn't exist, create it using direct SQL with the supabase client
-    console.log("Creating prize_clues table using direct SQL via supabase client");
+    // Table doesn't exist, create it using the public.query function we've created
+    console.log("Creating prize_clues table using public.query function");
     
     try {
-      // Create the table
+      // Create the table SQL
       const createTableSQL = `
         CREATE TABLE IF NOT EXISTS public.prize_clues (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -68,7 +68,7 @@ serve(async (req) => {
         );
       `;
       
-      // Run SQL to create table
+      // Run SQL to create table using our custom query function
       const { error: createTableError } = await supabase.rpc(
         'query',
         { query_text: createTableSQL }
@@ -77,20 +77,22 @@ serve(async (req) => {
       if (createTableError) {
         console.error("Error creating table:", createTableError);
         
-        // Try alternative approach using REST API if RPC fails
-        const res = await fetch(`${supabaseUrl}/rest/v1/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseServiceKey}`,
-            'apikey': supabaseServiceKey,
-            'Prefer': 'resolution=merge-duplicates'
-          },
-          body: JSON.stringify({ query: createTableSQL })
-        });
-        
-        if (!res.ok) {
-          throw new Error(`Direct SQL API call failed: ${res.status} ${res.statusText}`);
+        // Try direct SQL as a fallback approach
+        try {
+          // Call custom function to execute SQL directly
+          console.log("Attempting to create table using direct SQL via execute_sql function");
+          
+          const { error: directSqlError } = await supabase.rpc(
+            'execute_sql',
+            { sql: createTableSQL }
+          );
+          
+          if (directSqlError) {
+            throw new Error(`Direct SQL execution failed: ${directSqlError.message}`);
+          }
+        } catch (directError) {
+          console.error("Direct SQL execution error:", directError);
+          throw directError;
         }
       }
       
@@ -100,9 +102,9 @@ serve(async (req) => {
         console.log("Enable RLS error (continuing):", e.message);
       });
       
-      // Add policy for admins
+      // Add policy for admins if it doesn't exist
       const createPolicySQL = `
-        CREATE POLICY "Admin users can manage prize clues"
+        CREATE POLICY IF NOT EXISTS "Admin users can manage prize clues"
           ON public.prize_clues
           USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
       `;
@@ -169,7 +171,6 @@ serve(async (req) => {
           }
         );
       }
-      
     } catch (sqlError) {
       console.error("SQL execution error:", sqlError);
       
@@ -196,7 +197,7 @@ CREATE TABLE IF NOT EXISTS public.prize_clues (
 ALTER TABLE public.prize_clues ENABLE ROW LEVEL SECURITY;
 
 -- Add policy for admins
-CREATE POLICY "Admin users can manage prize clues"
+CREATE POLICY IF NOT EXISTS "Admin users can manage prize clues"
   ON public.prize_clues
   USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
 `
@@ -210,7 +211,6 @@ CREATE POLICY "Admin users can manage prize clues"
         }
       );
     }
-    
   } catch (error) {
     console.error("Error in create-prize-clues-table function:", error);
     return new Response(
@@ -237,7 +237,7 @@ CREATE TABLE IF NOT EXISTS public.prize_clues (
 ALTER TABLE public.prize_clues ENABLE ROW LEVEL SECURITY;
 
 -- Add policy for admins
-CREATE POLICY "Admin users can manage prize clues"
+CREATE POLICY IF NOT EXISTS "Admin users can manage prize clues"
   ON public.prize_clues
   USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
 `
