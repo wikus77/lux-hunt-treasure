@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,12 +49,22 @@ const PrizeTableDebug = () => {
       // Se la query diretta fallisce, usa l'edge function
       console.log("Tentativo di verifica/creazione tabella tramite edge function");
       
+      // Ottieni il token di accesso dell'utente corrente
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      
+      console.log("Session:", JSON.stringify(sessionData, null, 2));
+      console.log("User ID:", sessionData?.session?.user.id);
+      console.log("User Data:", JSON.stringify({ user: sessionData?.session?.user }, null, 2));
+      console.log("Access Token:", accessToken ? "Present" : "Missing");
+      
       const response = await fetch(
         "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/create-prize-clues-table",
         {
           method: "GET",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : {})
           },
           cache: "no-store"
         }
@@ -108,10 +119,10 @@ const PrizeTableDebug = () => {
         });
         
         // Se l'errore include SQL, lo mostriamo per l'esecuzione manuale
-        if (result.sql) {
+        if (result.sql || result.manual_sql) {
           setCreationResult({
             ...result,
-            sql: result.sql
+            sql: result.sql || result.manual_sql
           });
         }
       }
@@ -121,7 +132,7 @@ const PrizeTableDebug = () => {
       setTableStatus({
         checking: false,
         exists: false,
-        error: `Errore durante la verifica: ${error.message}`,
+        error: `Test diagnostico fallito: problema con SUPABASE_SERVICE_ROLE_KEY o rete. Dettaglio: ${error.message}`,
         detailedError: error.stack || JSON.stringify(error)
       });
     }
@@ -137,12 +148,17 @@ const PrizeTableDebug = () => {
     
     try {
       console.log("Attempting to create table via edge function");
+      
+      // Ottieni il token di accesso dell'utente corrente
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      
       const response = await fetch(
         "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/create-prize-clues-table",
         {
           method: "POST", // Using POST to indicate we want to create the table
           headers: {
-            "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
+            ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : {}),
             "Content-Type": "application/json"
           },
           cache: "no-store"
@@ -177,7 +193,7 @@ const PrizeTableDebug = () => {
           await new Promise(resolve => setTimeout(resolve, 1000));
           
           const { data, error } = await supabase
-            .from('prize_clues' as any)
+            .from('prize_clues')
             .select('count(*)', { count: 'exact', head: true });
             
           if (error) {
@@ -195,7 +211,7 @@ const PrizeTableDebug = () => {
       setTableStatus({ 
         checking: false,
         creationAttempted: true, 
-        error: `Errore durante la creazione della tabella: ${apiError.message}`,
+        error: `Test diagnostico fallito: problema con SUPABASE_SERVICE_ROLE_KEY o rete. Dettaglio: ${apiError.message}`,
       });
     }
   };

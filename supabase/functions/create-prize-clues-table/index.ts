@@ -6,6 +6,17 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+// Add detailed logging for environment variables
+console.log("Edge function environment check:");
+console.log(`SUPABASE_URL defined: ${Boolean(supabaseUrl)}`);
+console.log(`SUPABASE_SERVICE_ROLE_KEY defined: ${Boolean(supabaseServiceKey)}`);
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error("⚠️ Missing required environment variables:");
+  if (!supabaseUrl) console.error("- SUPABASE_URL is not defined");
+  if (!supabaseServiceKey) console.error("- SUPABASE_SERVICE_ROLE_KEY is not defined");
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -20,8 +31,37 @@ serve(async (req) => {
   try {
     console.log("Create prize_clues table function called");
     
+    // Check environment variables
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Missing required environment variables. Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
+    }
+    
     // Create authenticated Supabase client with service role key
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    console.log("Creating Supabase client with service role...");
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+    
+    // Test connection with a simple query
+    try {
+      console.log("Testing database connection...");
+      const { data, error } = await supabase
+        .from('prizes')
+        .select('count(*)', { count: 'exact', head: true });
+      
+      if (error) {
+        console.error("Database connection test failed:", error);
+        throw new Error(`Database connection test failed: ${error.message}`);
+      }
+      
+      console.log("Database connection test successful");
+    } catch (connError) {
+      console.error("Test diagnostico fallito: problema con SUPABASE_SERVICE_ROLE_KEY o rete", connError);
+      throw new Error(`Connection test failed: ${connError.message}`);
+    }
     
     // Create the table directly using the service role client
     try {
@@ -63,91 +103,80 @@ serve(async (req) => {
         $$;
       `;
       
-      // Execute a stored procedure query to avoid permissions issues
-      // This will use a Postgres function to run our SQL commands
-      // First, check if the prize_clues table exists
-      const { data, error } = await supabase
-        .from('prizes')  // Use a table we know exists
-        .select('count(*)', { count: 'exact', head: true });
-      
-      if (error) {
-        console.error("Database connection test failed:", error);
-        throw new Error(`Database connection test failed: ${error.message}`);
-      }
-      
-      console.log("Database connection test successful");
-      
       // Now check if prize_clues table exists
-      const { data: tableExists, error: tableError } = await supabase.rpc(
-        'check_table_exists',
-        { table_name: 'prize_clues' }
-      ).catch(() => {
-        // If the function doesn't exist, let's assume the table doesn't exist
-        return { data: false, error: null };
-      });
+      const { data: tableExists, error: tableError } = await supabase
+        .from('_rpc')
+        .select('check_table_exists')
+        .eq('table_name', 'prize_clues')
+        .single();
       
-      console.log("Table existence check result:", tableExists);
-      
-      if (tableExists === true) {
-        console.log("Table 'prize_clues' already exists");
-        return new Response(
-          JSON.stringify({ 
-            exists: true, 
-            message: "Table 'prize_clues' already exists" 
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json",
-              ...corsHeaders
-            }
-          }
-        );
-      }
-      
-      // Execute the SQL to create the table
-      // Use the REST API directly with the service role key
-      const res = await fetch(`${supabaseUrl}/rest/v1/rpc/execute_admin_command`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseServiceKey}`,
-          'apikey': supabaseServiceKey
-        },
-        body: JSON.stringify({ 
-          command: createTableQuery 
-        })
-      });
-      
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error(`API error: ${res.status} ${res.statusText}`, errorText);
+      if (tableError) {
+        console.log("Table check error, trying another method:", tableError);
         
-        // Since we encountered an error, we'll provide SQL for manual execution
-        return new Response(
-          JSON.stringify({
-            error: `API creation failed: ${res.status} ${res.statusText}`,
-            details: "Esegui il codice SQL manualmente tramite l'SQL Editor",
-            sql: createTableQuery
-          }),
-          { 
-            status: 500,
-            headers: {
-              "Content-Type": "application/json", 
-              ...corsHeaders
-            }
+        // Try alternative method to check if table exists
+        const { data: tables, error: schemaError } = await supabase
+          .rpc('check_table_exists', { table_name: 'prize_clues' });
+        
+        if (schemaError) {
+          console.log("Alternative table check also failed:", schemaError);
+        } else {
+          console.log("Table existence check result (alternative method):", tables);
+          
+          if (tables === true) {
+            console.log("Table 'prize_clues' already exists");
+            return new Response(
+              JSON.stringify({ 
+                exists: true, 
+                message: "Table 'prize_clues' already exists" 
+              }),
+              {
+                status: 200,
+                headers: {
+                  "Content-Type": "application/json",
+                  ...corsHeaders
+                }
+              }
+            );
           }
-        );
+        }
+      } else {
+        console.log("Table existence check result:", tableExists);
+        
+        if (tableExists === true) {
+          console.log("Table 'prize_clues' already exists");
+          return new Response(
+            JSON.stringify({ 
+              exists: true, 
+              message: "Table 'prize_clues' already exists" 
+            }),
+            {
+              status: 200,
+              headers: {
+                "Content-Type": "application/json",
+                ...corsHeaders
+              }
+            }
+          );
+        }
       }
+      
+      // Execute the SQL directly since RPC method might not be working
+      console.log("Executing SQL directly...");
+      const { data: result, error: sqlError } = await supabase
+        .rpc('query', { query_text: createTableQuery });
+      
+      if (sqlError) {
+        console.error("Error executing SQL:", sqlError);
+        throw new Error(`SQL execution error: ${sqlError.message}`);
+      }
+      
+      console.log("SQL executed successfully, verifying table...");
       
       // Verify the table was created successfully
-      console.log("Table creation command sent, verifying...");
-      
-      // Wait a moment for the table to be created
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Check if the table exists now
       try {
+        // Wait a moment for the table to be created
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         const { data: verifyData, error: verifyError } = await supabase
           .from('prize_clues')
           .select('count(*)', { count: 'exact', head: true });
@@ -235,7 +264,7 @@ CREATE POLICY IF NOT EXISTS "Admin users can manage prize clues"
       JSON.stringify({ 
         error: error.message || "Internal server error",
         stack: error.stack,
-        details: "Controlla i log della Edge Function per maggiori informazioni",
+        details: "Test diagnostico fallito: problema con SUPABASE_SERVICE_ROLE_KEY o rete",
         manual_sql: `
 CREATE TABLE IF NOT EXISTS public.prize_clues (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
