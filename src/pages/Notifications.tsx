@@ -7,6 +7,7 @@ import NotificationItem from "@/components/notifications/NotificationItem";
 import { Notification } from "@/hooks/useNotifications";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 // Define categories for filtering notifications
 type NotificationCategory = "all" | "location" | "car" | "interior" | "exterior" | "equipment";
@@ -33,7 +34,7 @@ const Notifications = () => {
       );
 
   return (
-    <div className="min-h-screen bg-black text-white pt-2 px-0 w-full">
+    <div className="min-h-screen bg-black text-white pt-2 px-0 w-full pb-20">
       <div className="rounded-lg bg-projectx-deep-blue bg-opacity-80 p-4 mx-2 text-center text-white">
         <div className="flex flex-col space-y-4">
           {/* Main Notifications Header */}
@@ -144,6 +145,8 @@ const Notifications = () => {
         open={!!selectedNotification}
         onClose={() => setSelectedNotification(null)}
       />
+
+      <BottomNavigation />
     </div>
   );
 };

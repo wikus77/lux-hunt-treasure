@@ -1,50 +1,26 @@
 
-import React, { useEffect, Suspense } from 'react';
-import { Outlet } from 'react-router-dom';
-import { ErrorBoundary } from '../error/ErrorBoundary';
-import LoadingScreen from '../index/LoadingScreen';
+import React, { ReactNode } from "react";
+import Footer from "./Footer";
 
-type PublicLayoutProps = {
-  children?: React.ReactNode;
-};
+interface PublicLayoutProps {
+  children: ReactNode;
+  showFooter?: boolean;
+}
 
-/**
- * Layout component for public routes
- * Wraps public pages with common layout elements
- */
-const PublicLayout: React.FC<PublicLayoutProps> = ({ children }: PublicLayoutProps) => {
-  // Add logging to debug component mounting issues
-  useEffect(() => {
-    console.log("PublicLayout mounted");
-    
-    // MIGLIORAMENTO: Diagnostica automatica per problemi routing
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log("Tab tornata attiva, controllo stato layout", { 
-          route: window.location.pathname,
-          docReady: document.readyState
-        });
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      console.log("PublicLayout unmounted");
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
-  
-  console.log("PublicLayout rendering");
-  
+const PublicLayout: React.FC<PublicLayoutProps> = ({
+  children,
+  showFooter = true
+}) => {
   return (
-    <ErrorBoundary>
-      <Suspense fallback={<LoadingScreen />}>
-        <div className="min-h-screen bg-black">
-          {children || <Outlet />}
-        </div>
-      </Suspense>
-    </ErrorBoundary>
+    <div className="min-h-screen bg-black text-white relative">
+      <div className="w-full h-full min-h-screen flex flex-col">
+        <main className="flex-1 w-full pt-[72px] pb-16 max-w-screen-xl mx-auto px-2 sm:px-4">
+          {children}
+        </main>
+        
+        {showFooter && <Footer />}
+      </div>
+    </div>
   );
 };
 

@@ -82,24 +82,22 @@ const AppRoutes = () => {
       <Route path="/payment-black" element={<PaymentBlack />} />
       
       {/* Public Routes */}
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<Index />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/kyc" element={<KYC />} />
-        <Route path="/verification" element={<EmailVerificationPage />} />
-        <Route path="/contact" element={<Contacts />} />
-        <Route path="/contatti" element={<Contacts />} /> {/* Italian alias */}
-        <Route path="/email-test" element={<EmailTest />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/termini-e-condizioni" element={<Terms />} /> {/* Italian alias */}
-        <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* Alternative path */}
-        <Route path="/cookie-policy" element={<CookiePolicy />} />
-        <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/access-denied" element={<AccessDenied />} />
-      </Route>
+      <Route path="/" element={<Index />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/kyc" element={<KYC />} />
+      <Route path="/verification" element={<EmailVerificationPage />} />
+      <Route path="/contact" element={<Contacts />} />
+      <Route path="/contatti" element={<Contacts />} /> {/* Italian alias */}
+      <Route path="/email-test" element={<EmailTest />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/termini-e-condizioni" element={<Terms />} /> {/* Italian alias */}
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* Alternative path */}
+      <Route path="/cookie-policy" element={<CookiePolicy />} />
+      <Route path="/how-it-works" element={<HowItWorks />} />
+      <Route path="/access-denied" element={<AccessDenied />} />
       
       {/* User Routes */}
       <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />

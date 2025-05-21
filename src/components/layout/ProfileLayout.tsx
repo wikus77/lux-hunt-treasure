@@ -20,7 +20,6 @@ const ProfileLayout = ({ children }: ProfileLayoutProps) => {
       <main className="pb-20 max-w-screen-xl mx-auto">
         {children}
       </main>
-      <BottomNavigation />
     </div>
   );
 };

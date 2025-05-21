@@ -12,7 +12,7 @@ import NotificationsBanner from "@/components/notifications/NotificationsBanner"
 import HomeLayout from "@/components/home/HomeLayout";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
-// Removed DynamicIsland import as it's now provided globally
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 const Home = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -83,8 +83,6 @@ const Home = () => {
         <title>M1SSION - Home</title>
       </Helmet>
 
-      {/* Removed DynamicIsland component from here as it's now provided globally */}
-
       <AnimatePresence>
         {isLoaded && (
           <motion.div
@@ -129,6 +127,8 @@ const Home = () => {
         onClose={() => setShowProfileModal(false)}
         profileImage={profileImage}
       />
+      
+      <BottomNavigation />
     </HomeLayout>
   );
 };

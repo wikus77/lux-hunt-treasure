@@ -5,6 +5,7 @@ import NotificationsBanner from "@/components/notifications/NotificationsBanner"
 import HomeHeader from "@/components/home/HomeHeader";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 type HomeLayoutProps = {
   children: React.ReactNode;

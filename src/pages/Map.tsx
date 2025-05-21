@@ -5,6 +5,7 @@ import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 const Map = () => {
   // Initialize the buzz clues context to make it available for dynamic pricing
@@ -72,14 +73,17 @@ const Map = () => {
 
   // Added improved wrapper with loading indicator
   return (
-    <div className={`pt-[180px] ${isMobile ? 'sm:pt-[170px]' : 'sm:pt-[170px]'} h-full relative`}>
-      <MapLogicProvider />
-      <div id="map-loading-indicator" className="hidden absolute inset-0 bg-black/70 z-50 flex items-center justify-center">
-        <div className="text-cyan-400 text-center">
-          <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Caricamento mappa...</p>
+    <div className="min-h-screen bg-black">
+      <div className={`pt-[180px] ${isMobile ? 'sm:pt-[170px]' : 'sm:pt-[170px]'} h-full relative pb-20`}>
+        <MapLogicProvider />
+        <div id="map-loading-indicator" className="hidden absolute inset-0 bg-black/70 z-50 flex items-center justify-center">
+          <div className="text-cyan-400 text-center">
+            <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p>Caricamento mappa...</p>
+          </div>
         </div>
       </div>
+      <BottomNavigation />
     </div>
   );
 };
