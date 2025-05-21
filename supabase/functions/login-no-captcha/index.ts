@@ -30,7 +30,7 @@ serve(async (req) => {
     
     // Valida le variabili d'ambiente obbligatorie
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error("Configurazione del server non valida: mancano URL o chiavi Supabase");
+      console.error("❌ Configurazione del server non valida: mancano URL o chiavi Supabase");
       return new Response(
         JSON.stringify({
           error: "Configurazione del server non valida: mancano URL o chiavi Supabase",
@@ -46,7 +46,7 @@ serve(async (req) => {
     const { email, password } = await req.json();
     
     if (!email || !password) {
-      console.error("Email e password sono obbligatorie");
+      console.error("❌ Email e password sono obbligatorie");
       return new Response(
         JSON.stringify({ error: "Email e password sono obbligatorie" }),
         {
@@ -59,7 +59,7 @@ serve(async (req) => {
     // Per sicurezza: verifica se la richiesta è per l'admin
     const adminEmail = "wikus77@hotmail.it";
     if (email !== adminEmail) {
-      console.error("Accesso negato per email non admin:", email);
+      console.error("⛔ Accesso negato per email non admin:", email);
       return new Response(
         JSON.stringify({ error: "Accesso non autorizzato" }),
         {
@@ -69,7 +69,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Tentativo di login admin per:", adminEmail);
+    console.log("👤 Tentativo di login admin per:", adminEmail);
 
     // Client con ruolo admin per le operazioni privilegiate
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -85,15 +85,21 @@ serve(async (req) => {
     });
 
     if (error || !data.session) {
-      console.error("Errore login admin:", error);
+      console.error("❌ Errore login admin:", error);
       return new Response(
-        JSON.stringify({ error: error?.message || "Login fallito" }),
+        JSON.stringify({ 
+          error: error?.message || "Login fallito",
+          details: error?.name || "Errore di autenticazione",
+          errorCode: error?.status || 401
+        }),
         {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
+
+    console.log("✅ Login riuscito, verifico profilo utente...");
 
     // Pulizia profili duplicati - prima di creare un nuovo profilo
     try {
@@ -103,7 +109,7 @@ serve(async (req) => {
         .eq("email", adminEmail);
       
       if (existingProfiles && existingProfiles.length > 0) {
-        console.log(`Trovati ${existingProfiles.length} profili per ${adminEmail}`);
+        console.log(`ℹ️ Trovati ${existingProfiles.length} profili per ${adminEmail}`);
         
         // Tieni traccia del profilo corretto (quello che corrisponde all'ID utente)
         const correctProfileIndex = existingProfiles.findIndex(p => p.id === data.user.id);
@@ -115,25 +121,29 @@ serve(async (req) => {
           // Se questo è il profilo corretto, assicurati che abbia il ruolo admin
           if (i === correctProfileIndex) {
             if (profile.role !== "admin") {
-              console.log(`Aggiornamento ruolo per il profilo corretto (ID: ${profile.id})`);
+              console.log(`⚙️ Aggiornamento ruolo per il profilo corretto (ID: ${profile.id})`);
               await supabaseAdmin
                 .from("profiles")
                 .update({ role: "admin" })
                 .eq("id", profile.id);
+            } else {
+              console.log(`✅ Il profilo corretto ha già ruolo admin (ID: ${profile.id})`);
             }
           } 
           // Altrimenti elimina il profilo duplicato
           else {
-            console.log(`Eliminazione profilo duplicato: ${profile.id}`);
+            console.log(`🗑️ Eliminazione profilo duplicato: ${profile.id}`);
             await supabaseAdmin
               .from("profiles")
               .delete()
               .eq("id", profile.id);
           }
         }
+      } else {
+        console.log(`ℹ️ Nessun profilo esistente per ${adminEmail}`);
       }
     } catch (cleanupErr) {
-      console.error("Errore pulizia profili:", cleanupErr);
+      console.error("⚠️ Errore pulizia profili:", cleanupErr);
       // Continua comunque, questo è solo un passaggio di pulizia
     }
 
@@ -145,11 +155,11 @@ serve(async (req) => {
       .maybeSingle();
 
     if (profileError && profileError.code !== "PGRST116") {
-      console.error("Errore verifica profilo:", profileError);
+      console.error("❌ Errore verifica profilo:", profileError);
     }
 
     if (!profileData) {
-      console.log("Profilo non trovato, creazione profilo admin...");
+      console.log("⚙️ Profilo non trovato, creazione profilo admin...");
       
       try {
         const { data: insertData, error: insertError } = await supabaseAdmin
@@ -165,24 +175,24 @@ serve(async (req) => {
           .single();
         
         if (insertError) {
-          console.error("Errore creazione profilo:", insertError);
+          console.error("❌ Errore creazione profilo:", insertError);
         } else {
-          console.log("Profilo admin creato con successo:", insertData);
+          console.log("✅ Profilo admin creato con successo:", insertData?.role);
         }
       } catch (insertErr) {
-        console.error("Eccezione durante l'inserimento del profilo:", insertErr);
+        console.error("❌ Eccezione durante l'inserimento del profilo:", insertErr);
       }
     } else if (profileData.role !== "admin") {
-      console.log("Aggiornamento ruolo a admin per il profilo esistente");
+      console.log("⚙️ Aggiornamento ruolo a admin per il profilo esistente");
       await supabaseAdmin
         .from("profiles")
         .update({ role: "admin" })
         .eq("id", data.user.id);
     } else {
-      console.log("Profilo admin già esistente e corretto");
+      console.log("✅ Profilo admin già esistente e corretto");
     }
 
-    console.log("Login completato con successo, generazione token");
+    console.log("✅ Login completato con successo, generazione token");
 
     // Preparazione della risposta con i token di sessione
     return new Response(
@@ -201,7 +211,7 @@ serve(async (req) => {
       }
     );
   } catch (err) {
-    console.error("Errore server:", err);
+    console.error("❌ Errore server:", err);
     return new Response(
       JSON.stringify({
         error: "Errore interno del server",

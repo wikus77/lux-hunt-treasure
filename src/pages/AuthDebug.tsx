@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useTurnstile } from "@/hooks/useTurnstile";
 import StyledInput from "@/components/ui/styled-input"; 
 import { Key, Mail, ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const AuthDebug = () => {
   const [email] = useState("wikus77@hotmail.it"); // Email predefinita e bloccata
@@ -17,7 +18,7 @@ const AuthDebug = () => {
   const navigate = useNavigate();
   
   // Utilizzo del hook useTurnstile per gestire la verifica captcha
-  const { setTurnstileToken, token } = useTurnstile({
+  const { setTurnstileToken } = useTurnstile({
     action: 'login',
     autoVerify: true
   });
@@ -33,30 +34,64 @@ const AuthDebug = () => {
   }, [setTurnstileToken]);
 
   const checkCurrentSession = async () => {
-    const { data, error } = await supabase.auth.getSession();
-    if (data.session) {
-      setStatusMessage(`Sessione attiva: ${data.session.user.email}`);
-      setDebugInfo({
-        userId: data.session.user.id,
-        email: data.session.user.email,
-        sessionExpiry: new Date(data.session.expires_at! * 1000).toLocaleString(),
-      });
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (data.session) {
+        setStatusMessage(`Sessione attiva: ${data.session.user.email}`);
+        setDebugInfo({
+          userId: data.session.user.id,
+          email: data.session.user.email,
+          sessionExpiry: new Date(data.session.expires_at! * 1000).toLocaleString(),
+        });
 
-      // Check admin role
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", data.session.user.id)
-        .maybeSingle();
-        
-      if (profileData) {
-        setDebugInfo(prev => ({
-          ...prev,
-          role: profileData.role
-        }));
+        // Check admin role
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", data.session.user.id)
+          .maybeSingle();
+          
+        if (profileData) {
+          setDebugInfo(prev => ({
+            ...prev,
+            role: profileData.role
+          }));
+          
+          // Se siamo già autenticati come admin, naviga alla pagina admin
+          if (profileData.role === 'admin') {
+            toast.info("Sessione admin già attiva", {
+              description: "Reindirizzamento alla dashboard admin"
+            });
+            setTimeout(() => navigate("/test-admin-ui"), 1500);
+          }
+        } else {
+          // Se non troviamo il profilo, proviamo a cercarlo per email
+          const { data: profileByEmail } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("email", data.session.user.email)
+            .maybeSingle();
+            
+          if (profileByEmail) {
+            setDebugInfo(prev => ({
+              ...prev,
+              role: profileByEmail.role
+            }));
+            
+            if (profileByEmail.role === 'admin') {
+              toast.info("Sessione admin già attiva", {
+                description: "Reindirizzamento alla dashboard admin"
+              });
+              setTimeout(() => navigate("/test-admin-ui"), 1500);
+            }
+          }
+        }
+      } else {
+        setStatusMessage("Nessuna sessione attiva");
       }
-    } else {
-      setStatusMessage("Nessuna sessione attiva");
+    } catch (checkErr) {
+      console.error("Errore nel controllo della sessione:", checkErr);
+      setStatusMessage("Errore nel controllo della sessione");
     }
   };
 
@@ -65,6 +100,33 @@ const AuthDebug = () => {
     const audio = new Audio('/sounds/notification.mp3');
     audio.volume = 0.5;
     audio.play().catch(e => console.log("Audio play failed:", e));
+  };
+
+  // Funzione di creazione profilo admin
+  const createAdminProfile = async (userId: string) => {
+    try {
+      const { data: newProfile, error: insertError } = await supabase
+        .from("profiles")
+        .insert({
+          id: userId,
+          email: email,
+          role: "admin",
+          full_name: "Admin Debug"
+        })
+        .select("*")
+        .single();
+        
+      if (insertError) {
+        console.error("❌ Errore nella creazione del profilo:", insertError);
+        return null;
+      }
+      
+      console.log("✅ Profilo admin creato:", newProfile);
+      return newProfile;
+    } catch (err) {
+      console.error("❌ Errore imprevisto:", err);
+      return null;
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -103,22 +165,9 @@ const AuthDebug = () => {
           
           if (!profileData) {
             console.log("Profilo non trovato, creazione automatica...");
-            const { data: newProfile, error: insertError } = await supabase
-              .from("profiles")
-              .insert({
-                id: authData.session.user.id,
-                email: email,
-                role: "admin",
-                full_name: "Admin Debug"
-              })
-              .select("*")
-              .single();
+            const newProfile = await createAdminProfile(authData.session.user.id);
               
-            if (insertError) {
-              console.error("⚠️ Errore nella creazione del profilo:", insertError.message);
-              setStatusMessage("Autenticazione riuscita, tentativo di creare il profilo fallito");
-            } else {
-              console.log("✅ Profilo creato con successo:", newProfile);
+            if (newProfile) {
               setDebugInfo(prev => ({
                 ...prev,
                 newProfile
@@ -153,6 +202,8 @@ const AuthDebug = () => {
           console.error("❌ Errore verifica profilo:", profileErr.message);
           setError(`Errore nella verifica del profilo: ${profileErr.message}`);
         }
+      } else {
+        console.error("❌ Login diretto fallito:", authError);
       }
       
       // Se siamo qui, il metodo diretto è fallito o il profilo non esiste, proviamo con la funzione edge
@@ -172,6 +223,12 @@ const AuthDebug = () => {
         }),
       });
 
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("❌ Errore dalla funzione edge:", errorData);
+        throw new Error(errorData.error || errorData.message || "Login fallito");
+      }
+
       const data = await res.json();
       console.log("📦 RISPOSTA login-no-captcha:", data);
       
@@ -180,10 +237,6 @@ const AuthDebug = () => {
         response: data,
         status: res.status,
       });
-
-      if (!res.ok) {
-        throw new Error(data.error || data.message || "Login fallito");
-      }
 
       const { access_token, refresh_token } = data;
 
@@ -278,6 +331,7 @@ const AuthDebug = () => {
               icon={<Mail size={16} />}
               placeholder="Email amministratore"
               className="bg-black/50 border-gray-700/50 cursor-not-allowed"
+              readOnly
             />
           </div>
 
@@ -296,12 +350,7 @@ const AuthDebug = () => {
             />
           </div>
 
-          {/* Indicatore di stato dell'autenticazione */}
-          <div className="text-xs text-cyan-500">
-            {token ? "Token bypass attivo" : "Nessun token disponibile"}
-          </div>
-
-          <button
+          <Button
             type="submit"
             className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-medium py-2 px-4 rounded-md transition-colors mt-4 flex items-center justify-center"
             disabled={isLoading}
@@ -312,17 +361,17 @@ const AuthDebug = () => {
                 <span>Autenticazione in corso...</span>
               </>
             ) : "Accedi"}
-          </button>
+          </Button>
           
           {/* Mostra bottone logout se c'è una sessione attiva */}
           {debugInfo?.userId && (
-            <button
+            <Button
               type="button"
               onClick={signOut}
               className="w-full mt-2 bg-red-900/30 hover:bg-red-900/50 text-white font-medium py-2 px-4 rounded-md transition-colors"
             >
               Logout
-            </button>
+            </Button>
           )}
         </form>
         
