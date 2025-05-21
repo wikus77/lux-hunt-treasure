@@ -48,11 +48,11 @@ serve(async (req) => {
     // Simple connectivity test using a lightweight query
     console.log("Testing database connection...");
     try {
+      // FIX: Replace the problematic .catch() with proper destructuring
       const { data: pingData, error: pingError } = await supabase
         .from('_test_connection')
         .select('*')
-        .limit(1)
-        .catch(() => ({ data: null, error: { message: "Connection failed" }}));
+        .limit(1);
 
       if (pingError) {
         // Try alternative connection test if the first one fails
@@ -109,16 +109,13 @@ serve(async (req) => {
       console.log("Attempting to create the prize_clues table...");
       
       // Create the table
+      // FIX: Replace the problematic .catch() with proper try/catch
       const { error: createTableError } = await supabase
         .from('prize_clues')
         .insert(null)
         .select()
-        .limit(0)
-        .catch(err => {
-          // If table doesn't exist, we'll get an error, which is expected
-          return { error: err };
-        });
-
+        .limit(0);
+      
       if (createTableError && !createTableError.message.includes('relation "prize_clues" does not exist')) {
         console.error("Unexpected error:", createTableError);
       }
@@ -145,12 +142,7 @@ serve(async (req) => {
           `
         })
         .select()
-        .limit(0)
-        .catch(err => {
-          // Table might already exist or other issue
-          console.error("Error creating table definition:", err);
-          return { error: err };
-        });
+        .limit(0);
       
       if (defineTableError && !defineTableError.message.includes('relation "_schema_migrations" does not exist')) {
         console.error("Error creating table definition:", defineTableError);
