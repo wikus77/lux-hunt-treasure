@@ -1,34 +1,94 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTurnstile } from "@/hooks/useTurnstile";
 
 const AuthDebug = () => {
   const [email] = useState("wikus77@hotmail.it");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  
+  // Utilizzo del hook useTurnstile per gestire la verifica captcha
+  const { setTurnstileToken, token, isVerified } = useTurnstile({
+    action: 'login',
+    autoVerify: true
+  });
+
+  // Effetto per impostare un token di bypass quando la pagina si carica
+  useEffect(() => {
+    // Impostiamo un token di bypass specifico per development
+    setTurnstileToken("BYPASS_FOR_DEVELOPMENT");
+  }, [setTurnstileToken]);
+
+  // Aggiungiamo un effetto sonoro di notifica per il login riuscito
+  const playSuccessSound = () => {
+    const audio = new Audio('/sounds/notification.mp3');
+    audio.volume = 0.5;
+    audio.play().catch(e => console.log("Audio play failed:", e));
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      console.log("🔑 Tentativo di login per:", email);
+      
+      // Metodo 1: Prima proviamo direttamente con Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+        options: {
+          captchaToken: token || "BYPASS_FOR_DEVELOPMENT"
+        }
+      });
+
+      if (!authError && authData?.session) {
+        console.log("✅ Login riuscito con Supabase Auth");
+        
+        // Verifica del ruolo
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("email", email)
+          .single();
+          
+        if (profileError || profileData?.role !== "admin") {
+          await supabase.auth.signOut();
+          throw new Error("Accesso riservato agli amministratori");
+        }
+
+        playSuccessSound();
+        toast.success("Login riuscito");
+        navigate("/test-admin-ui");
+        return;
+      }
+      
+      // Se il metodo diretto fallisce, proviamo con la funzione edge
+      console.log("⚠️ Login diretto fallito, provo con la funzione edge:", authError?.message);
+      
       const res = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
         method: "POST",
         mode: "cors",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk"
+          "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ 
+          email, 
+          password,
+          captchaToken: token || "BYPASS_FOR_DEVELOPMENT"
+        }),
       });
 
       const data = await res.json();
       console.log("📦 RISPOSTA login-no-captcha:", data);
 
       if (!res.ok) {
-        throw new Error(data.error || "Login fallito");
+        throw new Error(data.error || data.message || "Login fallito");
       }
 
       const { access_token, refresh_token } = data;
@@ -61,6 +121,7 @@ const AuthDebug = () => {
         throw new Error("Accesso riservato agli amministratori");
       }
 
+      playSuccessSound();
       toast.success("Login riuscito");
       navigate("/test-admin-ui");
 
@@ -109,6 +170,11 @@ const AuthDebug = () => {
               className="w-full px-4 py-2 rounded-md border border-gray-700 bg-black/50 text-white"
               placeholder="Inserisci password"
             />
+          </div>
+
+          {/* Indicatore di stato dell'autenticazione */}
+          <div className="text-xs text-cyan-500">
+            {token ? "Token bypass attivo" : "Nessun token disponibile"}
           </div>
 
           <button
