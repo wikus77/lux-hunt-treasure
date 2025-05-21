@@ -15,14 +15,14 @@ const BottomNavigation = () => {
   }, [location]);
 
   const isActive = (path: string) => {
-    if (path === "/" && activeRoute === "/") return true;
+    if (path === "/" && (activeRoute === "/" || activeRoute === "/home")) return true;
     if (path !== "/" && activeRoute.startsWith(path)) return true;
     return false;
   };
 
   const navigationItems = [
     {
-      path: "/home",
+      path: "/",
       icon: Home,
       label: "Home",
     },
@@ -74,13 +74,13 @@ const BottomNavigation = () => {
                   className="w-6 h-6 mb-1" 
                   style={{ 
                     filter: `drop-shadow(0 0 5px ${
-                      item.path === "/home" ? "rgba(0, 209, 255, 0.7)" :
+                      item.path === "/" ? "rgba(0, 209, 255, 0.7)" :
                       item.path === "/map" ? "rgba(0, 209, 255, 0.7)" :
                       item.path === "/buzz" ? "rgba(123, 46, 255, 0.7)" :
                       item.path === "/leaderboard" ? "rgba(240, 89, 255, 0.7)" :
                       "rgba(0, 209, 255, 0.7)"
                     })`,
-                    color: item.path === "/home" ? "#00D1FF" :
+                    color: item.path === "/" ? "#00D1FF" :
                            item.path === "/map" ? "#00D1FF" :
                            item.path === "/buzz" ? "#7B2EFF" :
                            item.path === "/leaderboard" ? "#F059FF" :
@@ -96,7 +96,7 @@ const BottomNavigation = () => {
                 }`}
                 style={{ 
                   color: isActive(item.path) ? 
-                    (item.path === "/home" ? "#00D1FF" :
+                    (item.path === "/" ? "#00D1FF" :
                      item.path === "/map" ? "#00D1FF" :
                      item.path === "/buzz" ? "#7B2EFF" :
                      item.path === "/leaderboard" ? "#F059FF" :
@@ -116,6 +116,6 @@ const BottomNavigation = () => {
       </div>
     </motion.nav>
   );
-};
+}
 
 export default BottomNavigation;

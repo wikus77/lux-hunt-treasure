@@ -34,14 +34,19 @@ const AppRoutes: React.FC = () => {
           {/* Landing page */}
           <Route path="/" element={<Index />} />
 
-          {/* Main App Routes */}
+          {/* Main App Routes - NOTE: "/" is the path for the home page, "/home" redirects there */}
           <Route
-            path="/home"
+            path="/"
             element={
               <ProtectedRoute>
                 <Home />
               </ProtectedRoute>
             }
+          />
+          
+          <Route 
+            path="/home" 
+            element={<Navigate to="/" replace />} 
           />
           
           <Route

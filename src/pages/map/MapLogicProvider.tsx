@@ -71,7 +71,7 @@ const MapLogicProvider = () => {
   }, [userLocation]);
   
   // Define map center based on availability
-  const mapCenter: [number, number] = userLocation || prizeLocation;
+  const mapCenter = userLocation || prizeLocation;
   
   return (
     <div style={{ height: '60vh', width: '100%', zIndex: 1 }} className="rounded-lg overflow-hidden">
@@ -100,8 +100,7 @@ const MapLogicProvider = () => {
         
         {/* User location marker */}
         {userLocation && (
-          <Marker position={userLocation}>
-          </Marker>
+          <Marker position={userLocation} />
         )}
         
         {/* Update the view when center changes */}

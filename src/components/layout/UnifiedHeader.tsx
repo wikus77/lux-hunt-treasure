@@ -4,9 +4,7 @@ import { Bell, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
-import AgentBadge from "@/components/AgentBadge";
 import { motion } from "framer-motion";
-import DynamicIsland from "@/components/DynamicIsland";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -38,19 +36,13 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               <Link
                 to="/home"
                 className="text-xl sm:text-2xl font-orbitron font-bold"
-                style={{ 
-                  color: "#00D1FF",
-                  textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-                }}
               >
-                M1SSION
+                <span className="text-[#00D1FF]" style={{ 
+                  textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+                }}>M1</span>
+                <span className="text-white">SSION</span>
               </Link>
             )}
-          </div>
-
-          {/* Center - Dynamic Island */}
-          <div className="absolute left-1/2 transform -translate-x-1/2">
-            <DynamicIsland />
           </div>
 
           {/* Right Section */}

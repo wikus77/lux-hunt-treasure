@@ -103,18 +103,19 @@ const Home = () => {
             )}
 
             <div className="container mx-auto px-3">
-              <motion.h1
-                className="text-4xl font-orbitron font-bold text-center mt-6 mb-8"
+              <motion.div
+                className="text-center my-6"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
-                style={{ 
-                  color: "#00D1FF",
-                  textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-                }}
               >
-                MISSION
-              </motion.h1>
+                <h1 className="text-4xl font-orbitron font-bold">
+                  <span className="text-[#00D1FF]" style={{ 
+                    textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+                  }}>M1</span>
+                  <span className="text-white">SSION</span>
+                </h1>
+              </motion.div>
 
               <main className="max-w-screen-xl mx-auto pb-20">
                 <CommandCenterHome />

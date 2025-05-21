@@ -1,7 +1,6 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Lock } from "lucide-react";
 
 interface PrizeVisionProps {
   progress: number;
@@ -9,79 +8,75 @@ interface PrizeVisionProps {
 }
 
 export function PrizeVision({ progress, status }: PrizeVisionProps) {
-  // Calculate blurring based on status
-  const getBlurValue = () => {
+  // Define blur level based on status
+  const getBlurLevel = () => {
     switch (status) {
-      case "locked":
-        return "blur-xl";
-      case "partial":
-        return "blur-lg";
-      case "near":
-        return "blur-sm";
-      case "unlocked":
-        return "";
-      default:
-        return "blur-xl";
-    }
-  };
-
-  // Get the appropriate message based on status
-  const getMessage = () => {
-    switch (status) {
-      case "locked":
-        return "Premio bloccato";
-      case "partial":
-        return "Visione parziale";
-      case "near":
-        return "Quasi sbloccato";
-      case "unlocked":
-        return "Premio sbloccato";
-      default:
-        return "Premio bloccato";
+      case "locked": return "blur(12px)";
+      case "partial": return "blur(8px)";
+      case "near": return "blur(4px)";
+      case "unlocked": return "blur(0px)";
+      default: return "blur(12px)";
     }
   };
 
   return (
-    <div className="w-full bg-black/50 rounded-xl sm:rounded-2xl border border-projectx-deep-blue/50 overflow-hidden shadow-xl">
-      {/* Progress indicator */}
-      <div className="w-full h-1 bg-gray-900">
-        <div
-          className="h-full bg-gradient-to-r from-cyan-400 to-purple-500"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
-      {/* Countdown text - Positioned ABOVE the prize box */}
-      <div className="pt-3 pb-1 px-4 text-center">
-        <span className="text-white/70 text-sm font-medium">
-          Sblocco completo in: <span className="text-cyan-400">45 giorni</span>
-        </span>
-      </div>
-
-      <div className="relative overflow-hidden">
-        {/* Prize image - blurred based on status */}
-        <div className={`relative w-full h-36 sm:h-48 ${getBlurValue()} transition-all duration-500`}>
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ 
-              backgroundImage: "url('/lovable-uploads/ef3cb1c4-5fb4-4291-8191-720d84a8e7f3.png')", 
-            }}
-          />
+    <div className="glass-card rounded-xl overflow-hidden" style={{ 
+      background: "linear-gradient(180deg, rgba(19, 21, 36, 0.5) 0%, rgba(0, 0, 0, 0.5) 100%)",
+      boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.06)"
+    }}>
+      <div className="p-4 border-b border-white/10 flex justify-between items-center">
+        <h2 className="text-lg md:text-xl font-orbitron font-bold">
+          <span className="text-[#00D1FF]" style={{ 
+            textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+          }}>M1</span>
+          <span className="text-white">SSION PRIZE</span>
+        </h2>
+        <div className="flex items-center space-x-2">
+          <span className="text-xs text-white/70">Visibilità: {progress}%</span>
         </div>
-
-        {/* Overlay with status info */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <motion.div 
-            className="bg-black/40 rounded-full p-4 backdrop-blur-sm"
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity, repeatType: "loop" }}
-          >
-            <Lock className="h-8 w-8 sm:h-10 sm:w-10 text-white/80" />
-          </motion.div>
+      </div>
+      
+      <div className="relative h-48 sm:h-56 md:h-64">
+        {/* Blurred prize image */}
+        <div 
+          className="w-full h-full bg-center bg-cover transition-all duration-700"
+          style={{ 
+            backgroundImage: "url('/assets/prize-placeholder.jpg')", 
+            filter: getBlurLevel(),
+            backgroundPosition: "center",
+          }}
+        ></div>
+        
+        {/* Status overlay */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          {status === "locked" && (
+            <motion.div 
+              className="p-3 rounded-full bg-black/50 backdrop-blur-sm"
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            >
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 11H5C3.89543 11 3 11.8954 3 13V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V13C21 11.8954 20.1046 11 19 11Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7 11V7C7 5.67392 7.52678 4.40215 8.46447 3.46447C9.40215 2.52678 10.6739 2 12 2C13.3261 2 14.5979 2.52678 15.5355 3.46447C16.4732 4.40215 17 5.67392 17 7V11" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </motion.div>
+          )}
           
-          <span className="mt-3 font-bold text-xl sm:text-2xl text-white text-center backdrop-blur-sm bg-black/20 px-3 py-1 rounded-full">
-            {getMessage()}
-          </span>
+          {status !== "locked" && status !== "unlocked" && (
+            <div className="p-4 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-center max-w-xs">
+              <p className="text-white font-medium">
+                {status === "partial" ? "Visibilità parziale. Acquista più indizi per sbloccare." : "Sei vicino! Ancora qualche indizio per la vittoria."}
+              </p>
+            </div>
+          )}
+        </div>
+        
+        {/* Progress bar */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
+          <div 
+            className="h-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF]"
+            style={{ width: `${progress}%` }}
+          ></div>
         </div>
       </div>
     </div>

@@ -16,7 +16,7 @@ export default function DynamicIsland() {
       <div className="relative">
         <motion.div
           layoutId="dynamic-island"
-          className={`dynamic-island z-50 flex items-center justify-center cursor-pointer text-sm font-medium shadow-md px-6`}
+          className="dynamic-island z-50 flex items-center justify-center cursor-pointer text-sm font-medium shadow-md px-6"
           whileHover={{ scale: isMobile ? 1 : 1.1 }} // Only apply hover animation on desktop
           whileTap={{ scale: 0.97 }}
           onClick={handleClick}
