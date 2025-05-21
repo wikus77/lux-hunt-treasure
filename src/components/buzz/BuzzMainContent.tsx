@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import BuzzButton from "@/components/buzz/BuzzButton";
 import { LightbulbIcon, Trash } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useBuzzFeature } from "./BuzzFeatureWrapper";
+import { useBuzzFeature } from "@/hooks/useBuzzFeature";
 
 export default function BuzzMainContent() {
   const [profileImage, setProfileImage] = useState<string | null>(null);
