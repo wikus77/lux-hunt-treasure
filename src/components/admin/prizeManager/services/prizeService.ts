@@ -220,6 +220,7 @@ export async function insertPrizeClues(clues: any[], prizeId: string) {
     }));
     
     console.log(`Inserting ${formattedClues.length} clues for prize ID: ${prizeId}`);
+    console.log("Clue data sample:", formattedClues[0]);
     
     const insertResponse = await fetch(
       "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/insert-prize-clues", 
@@ -233,12 +234,28 @@ export async function insertPrizeClues(clues: any[], prizeId: string) {
       }
     );
     
+    console.log(`Clue insertion response status: ${insertResponse.status} ${insertResponse.statusText}`);
+    
     if (!insertResponse.ok) {
       console.error(`Clue insertion error: ${insertResponse.status} ${insertResponse.statusText}`);
-      return { error: `Errore salvataggio indizi: ${insertResponse.statusText}` };
+      let errorDetails;
+      try {
+        errorDetails = await insertResponse.text();
+        console.error("Error response body:", errorDetails);
+      } catch (e) {
+        console.error("Could not parse error response:", e);
+      }
+      
+      return { 
+        error: `Errore salvataggio indizi: ${insertResponse.statusText}`,
+        statusCode: insertResponse.status,
+        details: errorDetails
+      };
     }
     
-    return await insertResponse.json();
+    const responseData = await insertResponse.json();
+    console.log("Clue insertion success:", responseData);
+    return responseData;
   } catch (error) {
     console.error("Clue insertion error:", error);
     return { error: `Errore durante il salvataggio degli indizi: ${error.message}` };

@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { usePrizeForm } from "./hooks/usePrizeForm";
 import PrizeForm from "./PrizeForm";
+import PrizeTableDebug from "./PrizeTableDebug";
 import { MapPinIcon, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -78,6 +79,8 @@ const AdminPrizeManager = () => {
         isAdmin={isAdmin}
         authDebugInfo={authDebugInfo}
       />
+      
+      <PrizeTableDebug />
     </div>
   );
 };
