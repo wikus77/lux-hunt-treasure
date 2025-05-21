@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { geocodeAddress, createPrize, generatePrizeClues, insertPrizeClues } from "../services/prizeService";
+import { geocodeAddress, createPrize, generatePrizeClues, insertPrizeClues, logAuthDebugInfo } from "../services/prizeService";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface PrizeFormValues {
@@ -23,19 +23,41 @@ export const usePrizeForm = () => {
   const [showManualCoordinates, setShowManualCoordinates] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [geocodeResponse, setGeocodeResponse] = useState<any | null>(null);
+  const [authDebugInfo, setAuthDebugInfo] = useState<any | null>(null);
   
   useEffect(() => {
     // Check authentication status on mount
     const checkAuth = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      const authenticated = !!data?.user?.id;
-      setIsAuthenticated(authenticated);
-      setUserId(data?.user?.id || null);
-      
-      console.log("🔐 Authentication check:", authenticated ? "Authenticated" : "Not authenticated");
-      console.log("🔑 User ID:", data?.user?.id || "None");
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        const authenticated = !!data?.user?.id;
+        setIsAuthenticated(authenticated);
+        setUserId(data?.user?.id || null);
+        
+        // Check admin status
+        if (authenticated && data?.user?.id) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.user.id)
+            .single();
+          
+          setIsAdmin(profileData?.role === 'admin' || data.user.email === 'wikus77@hotmail.it');
+        }
+        
+        // Update debug info
+        const debugInfo = await logAuthDebugInfo();
+        setAuthDebugInfo(debugInfo);
+        
+        console.log("🔐 Authentication check:", authenticated ? "Authenticated" : "Not authenticated");
+        console.log("🔑 User ID:", data?.user?.id || "None");
+        console.log("👑 Admin status:", isAdmin ? "Admin" : "Not admin");
+      } catch (err) {
+        console.error("Auth check error:", err);
+      }
     };
     
     checkAuth();
@@ -45,6 +67,26 @@ export const usePrizeForm = () => {
       const authenticated = !!session?.user?.id;
       setIsAuthenticated(authenticated);
       setUserId(session?.user?.id || null);
+      
+      // Check admin status on auth change
+      if (authenticated && session?.user) {
+        setIsAdmin(session.user.email === 'wikus77@hotmail.it');
+        
+        // Check profile role
+        supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profileData }) => {
+            if (profileData?.role === 'admin') {
+              setIsAdmin(true);
+            }
+          });
+      } else {
+        setIsAdmin(false);
+      }
+      
       console.log("🔄 Auth state changed:", event);
       console.log("🔑 User ID now:", session?.user?.id || "None");
     });
@@ -85,11 +127,23 @@ export const usePrizeForm = () => {
   };
 
   const onSubmit = async (values: PrizeFormValues) => {
-    // Check if user is authenticated before proceeding
+    // Check if user is authenticated and admin before proceeding
     if (!isAuthenticated) {
       toast.error("Utente non autenticato", { 
         description: "Devi effettuare il login prima di poter inserire premi." 
       });
+      return;
+    }
+    
+    // Special logging for authorization debugging
+    const authInfo = await logAuthDebugInfo();
+    setAuthDebugInfo(authInfo);
+    
+    if (!isAdmin && !authInfo.isAdmin) {
+      toast.error("Accesso non autorizzato", { 
+        description: "Solo gli amministratori possono inserire premi." 
+      });
+      console.error("User is not admin:", authInfo);
       return;
     }
     
@@ -98,6 +152,7 @@ export const usePrizeForm = () => {
       setGeocodeError(null);
       setGeocodeResponse(null);
       console.log("Submitting form with values:", values);
+      console.log("Auth status:", { isAuthenticated, isAdmin, userId });
       
       let lat: number;
       let lon: number;
@@ -224,6 +279,8 @@ export const usePrizeForm = () => {
     toggleManualCoordinates,
     handleRetry,
     isRetrying,
-    isAuthenticated
+    isAuthenticated,
+    isAdmin,
+    authDebugInfo
   };
 };

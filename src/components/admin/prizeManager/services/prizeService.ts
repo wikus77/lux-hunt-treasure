@@ -36,7 +36,8 @@ export async function geocodeAddress(city: string, address: string): Promise<Geo
       {
         method: "POST",
         headers: { 
-          "Content-Type": "application/json" 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${await getAuthToken()}`
         },
         body: JSON.stringify({ address, city })
       }
@@ -87,12 +88,59 @@ export async function geocodeAddress(city: string, address: string): Promise<Geo
 }
 
 /**
+ * Helper function to get the current auth token
+ */
+async function getAuthToken(): Promise<string> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token || '';
+}
+
+/**
+ * Logs the current user and session information for debugging
+ */
+export async function logAuthDebugInfo() {
+  const { data: session } = await supabase.auth.getSession();
+  const { data: userData } = await supabase.auth.getUser();
+  
+  console.group("🔐 Auth Debug Info");
+  console.log("Session:", session);
+  console.log("User ID:", session?.user?.id);
+  console.log("User Data:", userData);
+  console.log("Access Token:", session?.access_token ? "Present" : "Missing");
+  
+  // Check admin status in profiles
+  if (session?.user?.id) {
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, email, role")
+      .eq("id", session.user.id)
+      .single();
+    
+    console.log("Profile Data:", profile);
+    console.log("Profile Error:", profileError);
+    console.log("Is Admin:", profile?.role === 'admin');
+  }
+  console.groupEnd();
+  
+  return {
+    isAuthenticated: !!session?.user,
+    userId: session?.user?.id,
+    userEmail: session?.user?.email,
+    isAdmin: session?.user?.email === 'wikus77@hotmail.it'
+  };
+}
+
+/**
  * Creates a new prize in the database
  */
 export async function createPrize(values: PrizeFormValues, lat: number, lon: number) {
   try {
     console.log(`Creating prize at coordinates: ${lat}, ${lon}`);
-    return await supabase
+    
+    // Log auth debug info before insert
+    await logAuthDebugInfo();
+    
+    const result = await supabase
       .from("prizes")
       .insert({
         title: `Premio in ${values.city}`,
@@ -105,6 +153,18 @@ export async function createPrize(values: PrizeFormValues, lat: number, lon: num
         is_active: true
       })
       .select();
+    
+    console.log("Prize insert response:", result);
+    
+    if (result.error) {
+      if (result.error.message.includes("policy")) {
+        console.error("RLS policy error:", result.error);
+        throw new Error(`Errore di autorizzazione: solo gli admin possono inserire premi. ${result.error.message}`);
+      }
+      throw result.error;
+    }
+    
+    return result;
   } catch (error) {
     console.error("Error creating prize:", error);
     throw error;
@@ -121,7 +181,10 @@ export async function generatePrizeClues(params: ClueGenerationParams): Promise<
       "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/generate-prize-clues", 
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${await getAuthToken()}`
+        },
         body: JSON.stringify(params)
       }
     );
@@ -162,7 +225,10 @@ export async function insertPrizeClues(clues: any[], prizeId: string) {
       "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/insert-prize-clues", 
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${await getAuthToken()}`
+        },
         body: JSON.stringify({ clues_data: formattedClues })
       }
     );

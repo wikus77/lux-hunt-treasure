@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AlertCircle, Info, ChevronDown } from "lucide-react";
+import { AlertCircle, Info, ChevronDown, Lock, ShieldAlert } from "lucide-react";
 
 interface PrizeFormProps {
   form: UseFormReturn<PrizeFormValues>;
@@ -21,6 +21,8 @@ interface PrizeFormProps {
   handleRetry: () => void;
   isRetrying: boolean;
   isAuthenticated?: boolean;
+  isAdmin?: boolean;
+  authDebugInfo?: any;
 }
 
 const PrizeForm: React.FC<PrizeFormProps> = ({
@@ -33,10 +35,42 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
   toggleManualCoordinates,
   handleRetry,
   isRetrying,
-  isAuthenticated = true
+  isAuthenticated = true,
+  isAdmin = false,
+  authDebugInfo = null
 }) => {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      {/* Authentication status */}
+      {(!isAuthenticated || !isAdmin) && (
+        <Alert variant="destructive" className="bg-red-900/20 border-red-800">
+          <ShieldAlert className="h-4 w-4" />
+          <AlertTitle className="text-red-300">Accesso non autorizzato</AlertTitle>
+          <AlertDescription className="text-red-200">
+            {!isAuthenticated 
+              ? "Devi autenticarti prima di poter salvare premi." 
+              : "Solo gli amministratori possono salvare premi."}
+            
+            {authDebugInfo && (
+              <Collapsible className="mt-4 w-full">
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center w-full justify-start p-0 text-xs">
+                    <Info className="h-3 w-3 mr-1" />
+                    <span>Mostra dettagli autenticazione</span>
+                    <ChevronDown className="h-3 w-3 ml-1" />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="mt-2 p-2 bg-black/50 rounded text-xs overflow-auto max-h-32">
+                    <pre className="whitespace-pre-wrap">{JSON.stringify(authDebugInfo, null, 2)}</pre>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div>
         <Label htmlFor="city">Città</Label>
         <Input type="text" id="city" {...form.register("city", { required: "La città è obbligatoria" })} />
@@ -193,7 +227,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
         <Button 
           type="submit" 
           className="bg-green-600 hover:bg-green-700 text-white"
-          disabled={isLoading || isRetrying || !isAuthenticated}
+          disabled={isLoading || isRetrying || !isAuthenticated || !isAdmin}
         >
           {isLoading ? (
             <>
@@ -201,7 +235,12 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
               Salvataggio in corso...
             </>
           ) : (
-            'Salva e genera indizi'
+            <>
+              {(!isAuthenticated || !isAdmin) ? (
+                <Lock className="mr-2 h-4 w-4" />
+              ) : null}
+              Salva e genera indizi
+            </>
           )}
         </Button>
       </div>
@@ -209,6 +248,12 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
       {!isAuthenticated && (
         <div className="text-amber-400 text-sm mt-2">
           Devi autenticarti prima di poter salvare premi.
+        </div>
+      )}
+      
+      {isAuthenticated && !isAdmin && (
+        <div className="text-amber-400 text-sm mt-2">
+          Solo gli utenti con ruolo admin possono salvare premi.
         </div>
       )}
     </form>
