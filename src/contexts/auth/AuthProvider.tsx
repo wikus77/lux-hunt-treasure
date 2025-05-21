@@ -25,17 +25,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       try {
         setIsRoleLoading(true);
-        const { data, error } = await supabase
+        
+        // Prima prova con l'ID dell'utente
+        const { data: dataById, error: errorById } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', auth.user.id)
-          .single();
+          .maybeSingle();
 
-        if (error) {
-          console.error('Error fetching user role:', error);
+        if (dataById) {
+          console.log("Ruolo utente trovato tramite ID:", dataById.role);
+          setUserRole(dataById.role);
+          setIsRoleLoading(false);
+          return;
+        }
+        
+        if (errorById && errorById.code !== 'PGRST116') {
+          console.error('Error fetching user role by ID:', errorById);
+        }
+
+        // Se non trova tramite ID, prova con l'email
+        const { data: dataByEmail, error: errorByEmail } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('email', auth.user.email)
+          .maybeSingle();
+
+        if (errorByEmail) {
+          console.error('Error fetching user role by email:', errorByEmail);
           setUserRole(null);
         } else {
-          setUserRole(data?.role || null);
+          console.log("Ruolo utente trovato tramite email:", dataByEmail?.role);
+          setUserRole(dataByEmail?.role || null);
         }
       } catch (error) {
         console.error('Exception fetching user role:', error);

@@ -65,12 +65,21 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   /**
    * Login function using email and password
    */
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, captchaToken?: string) => {
     console.log("Login attempt for email:", email);
     try {
+      const options: any = {};
+      
+      if (captchaToken) {
+        options.options = {
+          captchaToken: captchaToken
+        };
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        ...options
       });
 
       if (error) {
@@ -168,19 +177,17 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     }
   };
 
-  // Modifica qui: restituisci isAuthenticated come boolean, non come funzione
   return {
     session,
     isLoading,
     isEmailVerified,
-    isAuthenticated: isAuthenticated(), // Chiamiamo la funzione per ottenere il valore booleano
+    isAuthenticated: isAuthenticated(), 
     login,
     logout,
     getCurrentUser,
     getAccessToken,
     resendVerificationEmail,
     resetPassword,
-    user, // Aggiungiamo l'utente direttamente qui per coerenza con AuthContextType
+    user,
   };
 }
-

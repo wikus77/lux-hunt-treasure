@@ -17,29 +17,33 @@ export const useTurnstile = (options: UseTurnstileOptions = {}) => {
   const [error, setError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
-  // For pages that bypass CAPTCHA, automatically set verified to true
+  // Per pagine di debug, automaticamente bypassiamo Turnstile
   useEffect(() => {
-    if (shouldBypassCaptcha(window.location.pathname)) {
+    if (shouldBypassCaptcha(window.location.pathname) || window.location.pathname === '/auth-debug') {
       console.log('Auto-bypassing Turnstile on developer path');
       setIsVerified(true);
       setToken('BYPASS_FOR_DEVELOPMENT');
-      onSuccess?.({ success: true, bypass: true });
+      if (onSuccess) {
+        onSuccess({ success: true, bypass: true });
+      }
     }
   }, [onSuccess]);
 
   // Auto-verify if requested and token is available
   useEffect(() => {
-    if (autoVerify && token && !isVerified && !isVerifying) {
+    if (autoVerify && token && !isVerified && !isVerifying && token !== 'BYPASS_FOR_DEVELOPMENT') {
       verifyToken(token).catch(console.error);
     }
   }, [token, autoVerify, isVerified, isVerifying]);
 
   const verifyToken = async (turnstileToken: string) => {
     // Skip verification if on bypass paths
-    if (shouldBypassCaptcha(window.location.pathname)) {
+    if (shouldBypassCaptcha(window.location.pathname) || window.location.pathname === '/auth-debug') {
       console.log('Bypassing verification on developer path');
       setIsVerified(true);
-      onSuccess?.({ success: true, bypass: true });
+      if (onSuccess) {
+        onSuccess({ success: true, bypass: true });
+      }
       return true;
     }
 
@@ -47,7 +51,9 @@ export const useTurnstile = (options: UseTurnstileOptions = {}) => {
     if (turnstileToken.startsWith('BYPASS_')) {
       console.log('Bypass token detected, skipping verification');
       setIsVerified(true);
-      onSuccess?.({ success: true, bypass: true });
+      if (onSuccess) {
+        onSuccess({ success: true, bypass: true });
+      }
       return true;
     }
 
@@ -55,7 +61,9 @@ export const useTurnstile = (options: UseTurnstileOptions = {}) => {
     if (!turnstileToken) {
       console.log('No token provided, but allowing functionality to continue');
       setIsVerified(true); // Allow functionality to continue
-      onSuccess?.({ success: true, noToken: true });
+      if (onSuccess) {
+        onSuccess({ success: true, noToken: true });
+      }
       return true;
     }
 
@@ -70,20 +78,26 @@ export const useTurnstile = (options: UseTurnstileOptions = {}) => {
       if (functionError) {
         console.warn('Error from verify-turnstile function, but allowing functionality to continue:', functionError);
         setIsVerified(true);
-        onSuccess?.({ success: true, functionError: true });
+        if (onSuccess) {
+          onSuccess({ success: true, functionError: true });
+        }
         return true;
       }
 
       if (!data?.success) {
         console.warn('Verification returned not successful, but allowing functionality to continue:', data);
         setIsVerified(true);
-        onSuccess?.({ success: true, verification: false });
+        if (onSuccess) {
+          onSuccess({ success: true, verification: false });
+        }
         return true;
       }
 
       console.log('Verification successful:', data);
       setIsVerified(true);
-      onSuccess?.(data);
+      if (onSuccess) {
+        onSuccess(data);
+      }
       return true;
     } catch (err: any) {
       const errorMessage = err.message || 'Verification failed';
@@ -103,6 +117,7 @@ export const useTurnstile = (options: UseTurnstileOptions = {}) => {
   };
 
   const setTurnstileToken = (newToken: string) => {
+    console.log("Turnstile token received:", newToken.substring(0, 10) + "...");
     setToken(newToken);
     return newToken;
   };

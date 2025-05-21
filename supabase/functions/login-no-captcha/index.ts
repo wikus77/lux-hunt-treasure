@@ -29,6 +29,7 @@ serve(async (req) => {
     
     // Valida le variabili d'ambiente obbligatorie
     if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Configurazione del server non valida: mancano URL o chiavi Supabase");
       return new Response(
         JSON.stringify({
           error: "Configurazione del server non valida: mancano URL o chiavi Supabase",
@@ -40,13 +41,11 @@ serve(async (req) => {
       );
     }
 
-    // Client con ruolo admin per le operazioni privilegiate
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-    
     // Estrai i dati dalla richiesta
     const { email, password } = await req.json();
     
     if (!email || !password) {
+      console.error("Email e password sono obbligatorie");
       return new Response(
         JSON.stringify({ error: "Email e password sono obbligatorie" }),
         {
@@ -59,6 +58,7 @@ serve(async (req) => {
     // Per debug: verifica se la richiesta è per l'admin
     const isAdminRequest = email === "wikus77@hotmail.it";
     if (!isAdminRequest) {
+      console.error("Accesso negato per email non admin:", email);
       return new Response(
         JSON.stringify({ error: "Accesso non autorizzato" }),
         {
@@ -68,6 +68,11 @@ serve(async (req) => {
       );
     }
 
+    console.log("Tentativo di login admin per:", email);
+
+    // Client con ruolo admin per le operazioni privilegiate
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    
     // Login amministratore con credenziali (bypassando captcha)
     const { data, error } = await supabaseAdmin.auth.signInWithPassword({
       email,
@@ -85,6 +90,45 @@ serve(async (req) => {
       );
     }
 
+    // Verifica se esiste un profilo per l'utente e crealo se necessario
+    const { data: profileData, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("*")
+      .eq("id", data.user.id)
+      .single();
+
+    if (profileError || !profileData) {
+      console.log("Profilo non trovato, creazione profilo admin...");
+      
+      const { error: insertError } = await supabaseAdmin
+        .from("profiles")
+        .insert({
+          id: data.user.id,
+          email: data.user.email,
+          role: "admin",
+          created_at: new Date().toISOString(),
+        });
+      
+      if (insertError) {
+        console.error("Errore creazione profilo:", insertError);
+      } else {
+        console.log("Profilo admin creato con successo");
+      }
+    } else {
+      console.log("Profilo esistente trovato:", profileData.id);
+      
+      // Assicurarsi che il ruolo sia admin
+      if (profileData.role !== "admin") {
+        console.log("Aggiornamento ruolo a admin...");
+        await supabaseAdmin
+          .from("profiles")
+          .update({ role: "admin" })
+          .eq("id", data.user.id);
+      }
+    }
+
+    console.log("Login completato con successo, generazione token");
+
     // Preparazione della risposta con i token di sessione
     return new Response(
       JSON.stringify({
@@ -94,6 +138,7 @@ serve(async (req) => {
           id: data.user.id,
           email: data.user.email,
         },
+        message: "Login riuscito con successo"
       }),
       {
         status: 200,
