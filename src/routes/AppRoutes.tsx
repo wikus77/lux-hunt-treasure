@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import DynamicIsland from "@/components/DynamicIsland";
 
 // Public routes
 import Index from "@/pages/Index";
@@ -30,11 +31,12 @@ const AppRoutes: React.FC = () => {
   return (
     <ErrorBoundary>
       <Suspense fallback={<div className="loading">Caricamento...</div>}>
+        <DynamicIsland />
         <Routes>
           {/* Landing page */}
-          <Route path="/" element={<Index />} />
+          <Route path="/landing" element={<Index />} />
 
-          {/* Main App Routes - NOTE: "/" is the path for the home page, "/home" redirects there */}
+          {/* Main App Routes */}
           <Route
             path="/"
             element={

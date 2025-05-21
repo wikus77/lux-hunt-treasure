@@ -82,8 +82,8 @@ const MapLogicProvider = () => {
         scrollWheelZoom={true}
       >
         <TileLayer
-          attribution={mapSettings.attribution}
           url={mapSettings.tileUrl}
+          attribution={mapSettings.attribution}
         />
         
         {/* Circle showing approximate prize location */}
