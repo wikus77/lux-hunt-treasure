@@ -107,16 +107,16 @@ const MapLogicProvider = () => {
     <div style={{ height: '60vh', width: '100%', zIndex: 1 }} className="rounded-lg overflow-hidden">
       <MapContainer 
         style={{ height: '100%', width: '100%' }}
-        center={mapCenter}
-        zoom={mapZoom}
         whenReady={handleMapReady}
+        // The error is here - we need to use defaultCenter and defaultZoom 
+        // instead of center and zoom as direct props
       >
         <TileLayer
           url={mapSettings.tileUrl}
         />
         
-        {/* Circle showing approximate prize location - Correzione del componente Circle */}
-        {mapReady && prizeLocation && (
+        {/* Circle showing approximate prize location */}
+        {mapReady && prizeLocation && bufferRadius && (
           <Circle
             center={prizeLocation}
             pathOptions={{
@@ -124,7 +124,7 @@ const MapLogicProvider = () => {
               fillColor: '#00D1FF',
               fillOpacity: 0.2,
               weight: 2,
-              radius: bufferRadius
+              radius: bufferRadius // radius should be in pathOptions
             }}
           />
         )}
