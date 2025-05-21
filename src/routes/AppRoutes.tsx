@@ -1,5 +1,5 @@
 
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import NotFound from "../pages/NotFound";
 import Home from "../pages/Home";
 import Profile from "../pages/Profile";
@@ -66,6 +66,9 @@ const AppRoutes = () => {
   
   return (
     <Routes>
+      {/* Redirect root to home */}
+      <Route path="/" element={<Navigate to="/home" replace />} />
+      
       {/* Include main pages directly for immediate access */}
       <Route path="/home" element={<Home />} />
       <Route path="/profile" element={<Profile />} />
@@ -74,6 +77,7 @@ const AppRoutes = () => {
       <Route path="/map" element={<Map />} />
       <Route path="/stats" element={<Stats />} />
       <Route path="/settings" element={<Settings />} />
+      <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/termini-e-condizioni" element={<Terms />} />
       <Route path="/subscriptions" element={<Subscriptions />} />
@@ -81,8 +85,8 @@ const AppRoutes = () => {
       <Route path="/payment-gold" element={<PaymentGold />} />
       <Route path="/payment-black" element={<PaymentBlack />} />
       
-      {/* Public Routes */}
-      <Route path="/" element={<Index />} />
+      {/* Public Routes with landing page */}
+      <Route path="/landing" element={<Index />} />
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
       <Route path="/auth" element={<Auth />} />
@@ -99,15 +103,6 @@ const AppRoutes = () => {
       <Route path="/how-it-works" element={<HowItWorks />} />
       <Route path="/access-denied" element={<AccessDenied />} />
       
-      {/* User Routes */}
-      <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-      <Route path="/buzz" element={<ProtectedRoute><Buzz /></ProtectedRoute>} />
-      <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
-      <Route path="/test-agent" element={<ProtectedRoute><TestAgent /></ProtectedRoute>} />
-      <Route path="/admin-prize-form" element={<ProtectedRoute><AdminPrizeForm /></ProtectedRoute>} />
-      
       {/* Admin Routes */}
       <Route path="/admin" element={bypassAdminProtection() ? <Admin /> : <RoleBasedProtectedRoute allowedRoles={['admin']}><Admin /></RoleBasedProtectedRoute>} />
       <Route path="/admin/prizes" element={<AdminPrizes />} />
@@ -117,22 +112,8 @@ const AppRoutes = () => {
       <Route path="/settings" element={<RoleBasedProtectedRoute allowedRoles={baseUserRoles}><Settings /></RoleBasedProtectedRoute>} />
       <Route path="/personal-info" element={<RoleBasedProtectedRoute allowedRoles={baseUserRoles}><PersonalInfo /></RoleBasedProtectedRoute>} />
       <Route path="/privacy-security" element={<RoleBasedProtectedRoute allowedRoles={baseUserRoles}><PrivacySecurity /></RoleBasedProtectedRoute>} />
-      <Route path="/language-settings" element={<RoleBasedProtectedRoute allowedRoles={baseUserRoles}><LanguageSettings /></RoleBasedProtectedRoute>} />
-      <Route path="/notifications" element={<RoleBasedProtectedRoute allowedRoles={baseUserRoles}><Notifications /></RoleBasedProtectedRoute>} />
-      
-      {/* Premium Routes */}
-      <Route path="/stats" element={<RoleBasedProtectedRoute allowedRoles={['premium_user', 'admin']}><Stats /></RoleBasedProtectedRoute>} />
-      <Route path="/leaderboard" element={<RoleBasedProtectedRoute allowedRoles={['premium_user', 'admin']}><Leaderboard /></RoleBasedProtectedRoute>} />
-      
-      {/* Payment Routes */}
-      <Route path="/subscriptions" element={<RoleBasedProtectedRoute allowedRoles={baseUserRoles}><Subscriptions /></RoleBasedProtectedRoute>} />
-      <Route path="/payment-methods" element={<RoleBasedProtectedRoute allowedRoles={baseUserRoles}><PaymentMethods /></RoleBasedProtectedRoute>} />
-      <Route path="/payment-silver" element={<RoleBasedProtectedRoute allowedRoles={baseUserRoles}><PaymentSilver /></RoleBasedProtectedRoute>} />
-      <Route path="/payment-gold" element={<RoleBasedProtectedRoute allowedRoles={baseUserRoles}><PaymentGold /></RoleBasedProtectedRoute>} />
-      <Route path="/payment-black" element={<RoleBasedProtectedRoute allowedRoles={baseUserRoles}><PaymentBlack /></RoleBasedProtectedRoute>} />
-      <Route path="/payment-success" element={<RoleBasedProtectedRoute allowedRoles={baseUserRoles}><PaymentSuccess /></RoleBasedProtectedRoute>} />
-      
-      {/* Catch all other routes */}
+
+      {/* Any other route redirects to 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

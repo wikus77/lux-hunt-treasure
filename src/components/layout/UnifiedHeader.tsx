@@ -6,6 +6,7 @@ import { useNotificationManager } from "@/hooks/useNotificationManager";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import AgentBadge from "@/components/AgentBadge";
 import { motion } from "framer-motion";
+import DynamicIsland from "@/components/DynamicIsland";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -35,17 +36,21 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               leftComponent
             ) : (
               <Link
-                to="/"
-                className="text-xl sm:text-2xl font-orbitron font-bold gradient-cyan-text glow-text"
+                to="/home"
+                className="text-xl sm:text-2xl font-orbitron font-bold"
+                style={{ 
+                  color: "#00D1FF",
+                  textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+                }}
               >
                 M1SSION
               </Link>
             )}
           </div>
 
-          {/* Center - Agent Badge */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:block">
-            <AgentBadge />
+          {/* Center - Dynamic Island */}
+          <div className="absolute left-1/2 transform -translate-x-1/2">
+            <DynamicIsland />
           </div>
 
           {/* Right Section */}
@@ -59,8 +64,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-projectx-pink rounded-full w-4 h-4 text-xs flex items-center justify-center">
-                  {unreadCount}
+                <span className="absolute -top-1 -right-1 bg-[#F059FF] rounded-full w-4 h-4 text-xs flex items-center justify-center text-white"
+                  style={{
+                    boxShadow: "0 0 8px rgba(240, 89, 255, 0.5)"
+                  }}
+                >
+                  {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
             </Button>
@@ -80,7 +89,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             <Link to="/profile">
               <ProfileAvatar
                 profileImage={profileImage}
-                className="w-10 h-10 border-2 border-projectx-blue/30 hover:border-projectx-blue transition-colors"
+                className="w-10 h-10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF] transition-colors"
               />
             </Link>
           </div>

@@ -1,93 +1,46 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Bell } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { it } from 'date-fns/locale';
-import { useNotifications } from "@/hooks/useNotifications";
+import React from "react";
+import { formatDistanceToNow } from "date-fns";
+import { it } from "date-fns/locale";
+import type { Notification } from "@/hooks/useNotifications";
+import { motion } from "framer-motion";
 
 interface NotificationItemProps {
-  notification: {
-    id: string;
-    title: string;
-    description: string;
-    date: string;
-    read: boolean;
-  };
+  notification: Notification;
   onSelect: () => void;
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onSelect }) => {
-  const { markAsRead } = useNotifications();
-  const [isRead, setIsRead] = useState(notification.read);
-  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
-  
-  const handleLongPress = useCallback(() => {
-    onSelect();
-  }, [onSelect]);
-
-  const handleClick = useCallback(() => {
-    if (isRead) return;
-    setIsRead(true);
-    markAsRead(notification.id);
-  }, [isRead, notification.id, markAsRead]);
-
-  const startLongPress = useCallback(() => {
-    const timer = setTimeout(() => {
-      handleLongPress();
-    }, 500);
-    setLongPressTimer(timer);
-  }, [handleLongPress]);
-
-  const endLongPress = useCallback(() => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
-    }
-  }, [longPressTimer]);
-
-  useEffect(() => {
-    return () => {
-      if (longPressTimer) {
-        clearTimeout(longPressTimer);
-      }
-    };
-  }, [longPressTimer]);
-
   const formattedDate = formatDistanceToNow(new Date(notification.date), {
     addSuffix: true,
-    locale: it
+    locale: it,
   });
 
   return (
-    <div
-      className={`p-3 rounded-md transition-colors cursor-pointer ${
-        isRead ? 'bg-projectx-deep-blue bg-opacity-30' : 'bg-projectx-deep-blue'
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onSelect}
+      className={`p-4 rounded-lg cursor-pointer backdrop-blur-md ${
+        notification.read ? "bg-[#131524]/30" : "bg-gradient-to-r from-[#131524]/40 to-[#0a0a1a]/40 border-l-4 border-[#00D1FF]"
       }`}
-      onClick={handleClick}
-      onMouseDown={startLongPress}
-      onMouseUp={endLongPress}
-      onMouseLeave={endLongPress}
-      onTouchStart={startLongPress}
-      onTouchEnd={endLongPress}
+      style={{
+        boxShadow: notification.read 
+          ? "0 4px 12px rgba(0, 0, 0, 0.1)" 
+          : "0 6px 16px rgba(0, 0, 0, 0.15), 0 0 8px rgba(0, 209, 255, 0.1)"
+      }}
     >
-      <div className="flex items-start">
-        <div className={`p-2 rounded-full mr-3 ${
-          isRead ? 'bg-gray-700' : 'bg-projectx-pink'
-        }`}>
-          <Bell className="h-4 w-4" />
-        </div>
-
-        <div className="flex-1">
-          <h4 className="text-sm font-medium">{notification.title}</h4>
-          <p className="text-xs text-muted-foreground mt-1">{notification.description}</p>
-          <span className="text-xs text-muted-foreground mt-2 block">{formattedDate}</span>
-        </div>
-
-        {!isRead && (
-          <div className="w-2 h-2 rounded-full bg-red-600"></div>
-        )}
+      <div className="flex justify-between items-start">
+        <h3 
+          className={`text-base font-medium ${notification.read ? "text-white/70" : "text-[#00D1FF]"}`}
+          style={!notification.read ? { textShadow: "0 0 5px rgba(0, 209, 255, 0.3)" } : {}}
+        >
+          {notification.title}
+        </h3>
+        <span className="text-xs text-white/40">{formattedDate}</span>
       </div>
-    </div>
+      <p className="mt-2 text-sm text-white/60 line-clamp-2">{notification.description}</p>
+    </motion.div>
   );
 };
 

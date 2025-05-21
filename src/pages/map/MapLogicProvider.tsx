@@ -1,133 +1,107 @@
 
-import React, { useEffect, Suspense } from "react";
-import { useLocation } from "react-router-dom";
-import MapArea from "@/pages/map/MapArea";
-import MapHeader from "./MapHeader";
-import LoadingScreen from "./LoadingScreen";
-import NotesSection from "./NotesSection";
-import { useMapLogic } from "./useMapLogic";
-import CluePopup from "./CluePopup";
-import BuzzMapBanner from "@/components/buzz/BuzzMapBanner";
-import { useIsMobile } from "@/hooks/use-mobile";
+import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Circle, Marker, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import { getDefaultMapSettings } from '@/utils/mapUtils';
+
+// Fix for marker icon in Leaflet with React
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: '/assets/marker-icon-2x.png',
+  iconUrl: '/assets/marker-icon.png',
+  shadowUrl: '/assets/marker-shadow.png',
+});
+
+const prizeIcon = new L.Icon({
+  iconUrl: '/assets/prize-marker.png',
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
+});
+
+// Custom component to update the map view
+function SetViewOnChange({ center, zoom }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, zoom, map]);
+  return null;
+}
 
 const MapLogicProvider = () => {
-  const {
-    isLoading,
-    markers,
-    searchAreas,
-    activeMarker,
-    activeSearchArea,
-    isAddingMarker,
-    isAddingSearchArea,
-    currentLocation,
-    buzzMapPrice,
-    showCluePopup,
-    clueMessage,
-    setShowCluePopup,
-    setActiveMarker,
-    setActiveSearchArea,
-    handleMapReady,
-    handleAddMarker,
-    handleAddArea,
-    handleHelp,
-    handleBuzz,
-    handleMapClick,
-    handleMapDoubleClick,
-    saveMarkerNote,
-    saveSearchArea,
-    editMarker,
-    editSearchArea,
-    deleteMarker,
-    deleteSearchArea,
-    clearAllMarkers,
-    location,
-  } = useMapLogic();
+  const [prizeLocation, setPrizeLocation] = useState([41.9027, 12.4963]); // Roma by default
+  const [userLocation, setUserLocation] = useState(null);
+  const [bufferRadius, setBufferRadius] = useState(1000); // 1km
+  const [mapSettings, setMapSettings] = useState(getDefaultMapSettings());
   
-  const isMobile = useIsMobile();
-  
-  // Effect to check if we're returning from payment page and handle map initialization
+  // Get user's location
   useEffect(() => {
-    if (location?.state?.paymentCompleted && location?.state?.mapBuzz) {
-      console.log("BuzzMap payment completed, generating search area...");
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation([latitude, longitude]);
+        },
+        (error) => {
+          console.error('Error getting user location:', error);
+        }
+      );
     }
-    
-    // Force re-render after a brief delay to ensure proper initialization
-    const initialRenderTimer = setTimeout(() => {
-      console.log("Ensuring map is properly initialized...");
-      handleMapReady();
-    }, 500);
-    
-    return () => clearTimeout(initialRenderTimer);
-  }, [location?.state, handleMapReady]);
-
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
+  }, []);
+  
+  // In a real application, this would come from your backend
+  useEffect(() => {
+    // Simulated prize location near user or default to Rome
+    setTimeout(() => {
+      if (userLocation) {
+        // Random offset within a certain range from user's location
+        const latOffset = (Math.random() - 0.5) * 0.05;
+        const lngOffset = (Math.random() - 0.5) * 0.05;
+        setPrizeLocation([
+          userLocation[0] + latOffset,
+          userLocation[1] + lngOffset
+        ]);
+        
+        // Set buffer radius based on clues unlocked (simulated)
+        const unlockedClues = parseInt(localStorage.getItem('unlockedClues') || '0');
+        const newRadius = Math.max(100, 2000 - unlockedClues * 200); // Shrinks as more clues are unlocked
+        setBufferRadius(newRadius);
+      }
+    }, 1000);
+  }, [userLocation]);
+  
+  // Define map center based on availability
+  const mapCenter = userLocation || prizeLocation;
+  
   return (
-    <div className="relative min-h-screen w-full p-2 sm:p-4 flex flex-col gap-3 sm:gap-4">
-      <MapHeader 
-        onAddMarker={handleAddMarker}
-        onAddArea={handleAddArea}
-        onHelp={handleHelp}
-        onBuzz={handleBuzz}
-        isAddingMarker={isAddingMarker}
-        isAddingArea={isAddingSearchArea}
-        buzzMapPrice={buzzMapPrice}
-      />
-
-      {/* Notification Area - Only one popup shows at a time */}
-      {showCluePopup ? (
-        <CluePopup 
-          open={showCluePopup} 
-          clueMessage={clueMessage} 
-          showBanner={false} 
-          onClose={() => setShowCluePopup(false)}
+    <div style={{ height: '60vh', width: '100%', zIndex: 1 }} className="rounded-lg overflow-hidden">
+      <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
+        <TileLayer
+          url={mapSettings.tileUrl}
+          attribution={mapSettings.attribution}
         />
-      ) : (
-        <BuzzMapBanner 
-          open={!!activeSearchArea} 
-          area={activeSearchArea ? {
-            lat: searchAreas.find(a => a.id === activeSearchArea)?.lat || 0,
-            lng: searchAreas.find(a => a.id === activeSearchArea)?.lng || 0,
-            radius: searchAreas.find(a => a.id === activeSearchArea)?.radius || 0,
-            label: searchAreas.find(a => a.id === activeSearchArea)?.label || '',
-            confidence: searchAreas.find(a => a.id === activeSearchArea)?.confidence || 'Media'
-          } : null} 
-          onClose={() => setActiveSearchArea(null)}
+        
+        {/* Circle showing approximate prize location */}
+        <Circle
+          center={prizeLocation}
+          radius={bufferRadius}
+          pathOptions={{
+            color: '#00D1FF',
+            fillColor: '#00D1FF',
+            fillOpacity: 0.2,
+            weight: 2
+          }}
         />
-      )}
-
-      {/* Map container with Suspense fallback */}
-      <Suspense fallback={<div className="w-full h-[60vh] sm:h-[70vh] bg-black/50 flex items-center justify-center">Loading map...</div>}>
-        <div className="w-full h-[60vh] sm:h-[70vh]">
-          <MapArea 
-            onMapReady={handleMapReady}
-            markers={markers}
-            searchAreas={searchAreas}
-            isAddingMarker={isAddingMarker}
-            isAddingSearchArea={isAddingSearchArea}
-            activeMarker={activeMarker}
-            activeSearchArea={activeSearchArea}
-            onMapClick={handleMapClick}
-            onMapDoubleClick={handleMapDoubleClick}
-            setActiveMarker={setActiveMarker}
-            setActiveSearchArea={setActiveSearchArea}
-            saveMarkerNote={saveMarkerNote}
-            saveSearchArea={saveSearchArea}
-            editMarker={editMarker}
-            editSearchArea={editSearchArea}
-            deleteMarker={deleteMarker}
-            deleteSearchArea={deleteSearchArea}
-            currentLocation={currentLocation}
-          />
-        </div>
-      </Suspense>
-
-      {/* Notes below the map, more compact on mobile */}
-      <div className="w-full bg-black/50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-projectx-deep-blue/40 shadow-xl">
-        <NotesSection />
-      </div>
+        
+        {/* User location marker */}
+        {userLocation && (
+          <Marker position={userLocation}>
+          </Marker>
+        )}
+        
+        {/* Update the view when center changes */}
+        <SetViewOnChange center={mapCenter} zoom={13} />
+      </MapContainer>
     </div>
   );
 };

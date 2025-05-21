@@ -1,21 +1,18 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import BriefProfileModal from "@/components/profile/BriefProfileModal";
 import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
-import HomeHeader from "@/components/home/HomeHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
-import HomeLayout from "@/components/home/HomeLayout";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
 
 const Home = () => {
-  const [showProfileModal, setShowProfileModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const { profileImage } = useProfileImage();
@@ -30,16 +27,6 @@ const Home = () => {
   } = useNotificationManager();
 
   const { isConnected } = useRealTimeNotifications();
-
-  const particles = Array.from({ length: isMobile ? 8 : 15 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 3 + 1,
-    top: Math.random() * 100,
-    left: Math.random() * 100,
-    delay: Math.random() * 5,
-    duration: Math.random() * 15 + 15,
-    color: i % 3 === 0 ? '#00E5FF' : i % 3 === 1 ? '#FFC300' : '#9b87f5',
-  }));
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -63,7 +50,7 @@ const Home = () => {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#131524]/70 to-black px-4">
+      <div className="flex min-h-screen items-center justify-center bg-[#070818] px-4">
         <div className="p-8 bg-red-800/30 rounded-xl text-center w-full max-w-sm glass-card">
           <h2 className="text-xl sm:text-2xl font-bold mb-4 text-red-300">Errore</h2>
           <p className="text-white/80">{error}</p>
@@ -81,10 +68,13 @@ const Home = () => {
   }
 
   return (
-    <HomeLayout profileImage={profileImage}>
+    <div className="min-h-screen bg-[#070818] pb-20 w-full">
       <Helmet>
         <title>M1SSION - Home</title>
       </Helmet>
+      
+      <UnifiedHeader profileImage={profileImage} />
+      <div className="h-[72px] w-full" />
 
       <AnimatePresence>
         {isLoaded && (
@@ -112,27 +102,30 @@ const Home = () => {
               </motion.div>
             )}
 
-            <HomeHeader 
-              profileImage={profileImage}
-              unreadCount={unreadCount}
-              onShowNotifications={openNotificationsBanner}
-            />
+            <div className="container mx-auto px-3">
+              <motion.h1
+                className="text-4xl font-orbitron font-bold text-center mt-6 mb-8"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                style={{ 
+                  color: "#00D1FF",
+                  textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+                }}
+              >
+                MISSION
+              </motion.h1>
 
-            <main className={`pt-[120px] ${isMobile ? 'sm:pt-44' : 'sm:pt-44'} px-2 sm:px-4 max-w-screen-xl mx-auto pb-20`}>
-              <CommandCenterHome />
-            </main>
+              <main className="max-w-screen-xl mx-auto pb-20">
+                <CommandCenterHome />
+              </main>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      <BriefProfileModal
-        open={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        profileImage={profileImage}
-      />
       
       <BottomNavigation />
-    </HomeLayout>
+    </div>
   );
 };
 
