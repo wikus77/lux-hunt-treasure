@@ -20,39 +20,16 @@ serve(async (req) => {
   try {
     console.log("Create prize_clues table function called");
     
+    // Create authenticated Supabase client with service role key
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // First check if table already exists by attempting a count query
+    // Create the table directly using the service role client
     try {
-      const { data, error } = await supabase
-        .from('prize_clues')
-        .select('count(*)', { count: 'exact', head: true });
+      console.log("Attempting direct table creation with SQL...");
       
-      if (!error) {
-        console.log("Table 'prize_clues' already exists");
-        return new Response(
-          JSON.stringify({ exists: true, message: "Table 'prize_clues' already exists" }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json",
-              ...corsHeaders
-            }
-          }
-        );
-      } else {
-        console.log("Table check error (expected if table doesn't exist):", error.message);
-      }
-    } catch (checkError) {
-      console.log("Check table error (expected if table doesn't exist):", checkError.message);
-    }
-    
-    // Table doesn't exist, create it using the public.query function we've created
-    console.log("Creating prize_clues table using public.query function");
-    
-    try {
-      // Create the table SQL
-      const createTableSQL = `
+      // Define the SQL query to create the table if it doesn't exist
+      const createTableQuery = `
+        -- Create the prize_clues table
         CREATE TABLE IF NOT EXISTS public.prize_clues (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           prize_id UUID REFERENCES public.prizes(id) NOT NULL,
@@ -66,78 +43,118 @@ serve(async (req) => {
           description_fr TEXT,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
         );
+
+        -- Enable RLS
+        ALTER TABLE public.prize_clues ENABLE ROW LEVEL SECURITY;
+
+        -- Add policy for admins
+        DO $$
+        BEGIN
+          -- Check if policy already exists to avoid error
+          IF NOT EXISTS (
+            SELECT 1 FROM pg_policies 
+            WHERE schemaname = 'public' 
+            AND tablename = 'prize_clues'
+            AND policyname = 'Admin users can manage prize clues'
+          ) THEN
+            EXECUTE 'CREATE POLICY "Admin users can manage prize clues" ON public.prize_clues USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = ''admin'')';
+          END IF;
+        END
+        $$;
       `;
       
-      // Run SQL to create table using our custom query function
-      const { error: createTableError } = await supabase.rpc(
-        'query',
-        { query_text: createTableSQL }
-      );
+      // Execute a stored procedure query to avoid permissions issues
+      // This will use a Postgres function to run our SQL commands
+      // First, check if the prize_clues table exists
+      const { data, error } = await supabase
+        .from('prizes')  // Use a table we know exists
+        .select('count(*)', { count: 'exact', head: true });
       
-      if (createTableError) {
-        console.error("Error creating table:", createTableError);
-        
-        // Try direct SQL as a fallback approach
-        try {
-          // Call custom function to execute SQL directly
-          console.log("Attempting to create table using direct SQL via execute_sql function");
-          
-          const { error: directSqlError } = await supabase.rpc(
-            'execute_sql',
-            { sql: createTableSQL }
-          );
-          
-          if (directSqlError) {
-            throw new Error(`Direct SQL execution failed: ${directSqlError.message}`);
-          }
-        } catch (directError) {
-          console.error("Direct SQL execution error:", directError);
-          throw directError;
-        }
+      if (error) {
+        console.error("Database connection test failed:", error);
+        throw new Error(`Database connection test failed: ${error.message}`);
       }
       
-      // Enable RLS
-      const enableRlsSQL = `ALTER TABLE public.prize_clues ENABLE ROW LEVEL SECURITY;`;
-      await supabase.rpc('query', { query_text: enableRlsSQL }).catch(e => {
-        console.log("Enable RLS error (continuing):", e.message);
+      console.log("Database connection test successful");
+      
+      // Now check if prize_clues table exists
+      const { data: tableExists, error: tableError } = await supabase.rpc(
+        'check_table_exists',
+        { table_name: 'prize_clues' }
+      ).catch(() => {
+        // If the function doesn't exist, let's assume the table doesn't exist
+        return { data: false, error: null };
       });
       
-      // Add policy for admins if it doesn't exist
-      const createPolicySQL = `
-        CREATE POLICY IF NOT EXISTS "Admin users can manage prize clues"
-          ON public.prize_clues
-          USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
-      `;
+      console.log("Table existence check result:", tableExists);
       
-      await supabase.rpc('query', { query_text: createPolicySQL }).catch(e => {
-        console.log("Create policy error (continuing):", e.message);
+      if (tableExists === true) {
+        console.log("Table 'prize_clues' already exists");
+        return new Response(
+          JSON.stringify({ 
+            exists: true, 
+            message: "Table 'prize_clues' already exists" 
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders
+            }
+          }
+        );
+      }
+      
+      // Execute the SQL to create the table
+      // Use the REST API directly with the service role key
+      const res = await fetch(`${supabaseUrl}/rest/v1/rpc/execute_admin_command`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'apikey': supabaseServiceKey
+        },
+        body: JSON.stringify({ 
+          command: createTableQuery 
+        })
       });
       
-      console.log("Table 'prize_clues' creation attempted successfully");
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`API error: ${res.status} ${res.statusText}`, errorText);
+        
+        // Since we encountered an error, we'll provide SQL for manual execution
+        return new Response(
+          JSON.stringify({
+            error: `API creation failed: ${res.status} ${res.statusText}`,
+            details: "Esegui il codice SQL manualmente tramite l'SQL Editor",
+            sql: createTableQuery
+          }),
+          { 
+            status: 500,
+            headers: {
+              "Content-Type": "application/json", 
+              ...corsHeaders
+            }
+          }
+        );
+      }
       
       // Verify the table was created successfully
+      console.log("Table creation command sent, verifying...");
+      
+      // Wait a moment for the table to be created
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Check if the table exists now
       try {
         const { data: verifyData, error: verifyError } = await supabase
           .from('prize_clues')
           .select('count(*)', { count: 'exact', head: true });
         
         if (verifyError) {
-          console.error("Table verification failed:", verifyError);
-          return new Response(
-            JSON.stringify({ 
-              exists: false, 
-              created: false, 
-              error: "Table creation attempted but verification failed", 
-              details: verifyError.message
-            }),
-            {
-              status: 500,
-              headers: {
-                "Content-Type": "application/json",
-                ...corsHeaders
-              }
-            }
-          );
+          console.error("Verification failed after creation:", verifyError);
+          throw new Error(`Verification failed: ${verifyError.message}`);
         }
         
         console.log("Table 'prize_clues' created and verified successfully");
@@ -156,7 +173,7 @@ serve(async (req) => {
           }
         );
       } catch (verifyError) {
-        console.error("Verification error:", verifyError);
+        console.error("Verification error after creation attempt:", verifyError);
         return new Response(
           JSON.stringify({ 
             error: verifyError.message || "Verification error",
@@ -174,6 +191,7 @@ serve(async (req) => {
     } catch (sqlError) {
       console.error("SQL execution error:", sqlError);
       
+      // Provide SQL for manual execution
       return new Response(
         JSON.stringify({ 
           error: sqlError.message || "SQL execution error",

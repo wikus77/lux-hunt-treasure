@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,120 +22,108 @@ const PrizeTableDebug = () => {
     setTableStatus({ checking: true });
     
     try {
-      // First, try to check via direct query with type assertion to bypass TypeScript error
-      const { data, error } = await supabase
-        .from('prize_clues' as any)
-        .select('count(*)', { count: 'exact', head: true });
-        
-      if (error) {
-        console.log("Table doesn't exist:", error.message);
-        setTableStatus({ 
-          checking: false, 
-          exists: false,
-          error: "La tabella 'prize_clues' non esiste nel database."
-        });
-        
-        // Automatically try the edge function if direct query fails
-        try {
-          console.log("Attempting to check/create table via edge function");
-          const response = await fetch(
-            "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/create-prize-clues-table",
-            {
-              method: "GET",
-              headers: {
-                "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
-                "Content-Type": "application/json"
-              },
-              cache: "no-store"
-            }
-          );
+      // Tenta la verifica diretta
+      console.log("Verifico l'esistenza della tabella prize_clues...");
+      
+      // Prima, prova a verificare con una query diretta
+      try {
+        const { data, error } = await supabase
+          .from('prize_clues')
+          .select('count(*)', { count: 'exact', head: true });
           
-          let result;
-          try {
-            result = await response.json();
-          } catch (jsonError) {
-            throw new Error(`Failed to parse response: ${await response.text()}`);
-          }
-          
-          console.log("Edge function response:", result);
-          setCreationResult(result);
-          
-          if (response.ok) {
-            setTableStatus({
-              checking: false,
-              exists: result.exists || result.created,
-              creationAttempted: true,
-              error: (!result.exists && !result.created) ? result.message : undefined
-            });
-          } else {
-            throw new Error(`API check failed: ${response.status} - ${result.error || result.message || 'Unknown error'}`);
-          }
-        } catch (apiError) {
-          console.error("Error checking via API:", apiError);
+        if (!error) {
+          console.log("La tabella 'prize_clues' esiste:", data);
           setTableStatus({ 
             checking: false, 
-            error: `Errore durante la verifica della tabella: ${error.message}`,
-            detailedError: apiError.message
+            exists: true
+          });
+          return;
+        } else {
+          console.log("Errore verifica tabella (atteso se la tabella non esiste):", error.message);
+        }
+      } catch (checkError) {
+        console.log("Errore verifica tabella (atteso se la tabella non esiste):", checkError.message);
+      }
+      
+      // Se la query diretta fallisce, usa l'edge function
+      console.log("Tentativo di verifica/creazione tabella tramite edge function");
+      
+      const response = await fetch(
+        "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/create-prize-clues-table",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          cache: "no-store"
+        }
+      );
+      
+      console.log(`Risposta edge function: ${response.status} ${response.statusText}`);
+      
+      let result;
+      try {
+        result = await response.json();
+        console.log("Dettagli risposta edge function:", result);
+      } catch (jsonError) {
+        const text = await response.text();
+        console.error(`Errore parsing risposta: ${jsonError.message}`, text);
+        throw new Error(`Errore parsing risposta: ${text}`);
+      }
+      
+      // Gestione della risposta
+      if (response.ok) {
+        setCreationResult(result);
+        
+        if (result.exists) {
+          console.log("Edge function conferma: la tabella esiste");
+          setTableStatus({
+            checking: false,
+            exists: true
+          });
+        } else if (result.created) {
+          console.log("Edge function conferma: la tabella è stata creata");
+          setTableStatus({
+            checking: false,
+            exists: true,
+            creationAttempted: true
+          });
+        } else {
+          console.log("Edge function non ha confermato né esistenza né creazione");
+          setTableStatus({
+            checking: false,
+            exists: false,
+            error: result.message || "Dettagli non disponibili",
+            creationAttempted: true
           });
         }
       } else {
-        console.log("Table exists, count result:", data);
-        setTableStatus({ 
-          checking: false, 
-          exists: true 
-        });
-      }
-    } catch (error) {
-      console.error("Error checking table:", error);
-      
-      // Try using the edge function as a fallback
-      try {
-        console.log("Attempting to check/create table via edge function");
-        const response = await fetch(
-          "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/create-prize-clues-table",
-          {
-            method: "GET",
-            headers: {
-              "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
-              "Content-Type": "application/json"
-            },
-            cache: "no-store"
-          }
-        );
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`API check failed: ${response.status} - ${errorText || 'Unknown error'}`);
-        }
-        
-        let result;
-        try {
-          result = await response.json();
-        } catch (e) {
-          throw new Error(`Failed to parse response as JSON: ${await response.text()}`);
-        }
-        
-        console.log("Edge function response:", result);
-        setCreationResult(result);
-        
-        if (result.error) {
-          throw new Error(result.error);
-        }
-        
+        console.error("Errore dall'edge function:", result);
         setTableStatus({
           checking: false,
-          exists: result.exists || result.created,
-          creationAttempted: true,
-          error: (!result.exists && !result.created) ? result.message : undefined
+          exists: false,
+          error: result.error || "Errore sconosciuto dalla edge function",
+          detailedError: JSON.stringify(result),
+          creationAttempted: true
         });
-      } catch (apiError) {
-        console.error("Error checking via API:", apiError);
-        setTableStatus({ 
-          checking: false, 
-          error: `Errore durante la verifica della tabella: ${apiError.message}`,
-          detailedError: JSON.stringify(apiError)
-        });
+        
+        // Se l'errore include SQL, lo mostriamo per l'esecuzione manuale
+        if (result.sql) {
+          setCreationResult({
+            ...result,
+            sql: result.sql
+          });
+        }
       }
+    } catch (error) {
+      console.error("Errore generale durante la verifica:", error);
+      
+      setTableStatus({
+        checking: false,
+        exists: false,
+        error: `Errore durante la verifica: ${error.message}`,
+        detailedError: error.stack || JSON.stringify(error)
+      });
     }
   };
   
@@ -247,9 +234,13 @@ const PrizeTableDebug = () => {
           <AlertTitle className="text-red-300">Problema rilevato</AlertTitle>
           <AlertDescription className="text-red-200">
             {tableStatus.error}
+            
             {tableStatus.detailedError && (
-              <div className="mt-1 text-xs text-red-300">
-                Dettaglio: {tableStatus.detailedError}
+              <div className="mt-1 text-xs text-red-300 overflow-auto max-h-[200px]">
+                <details>
+                  <summary className="cursor-pointer">Mostra dettagli errore</summary>
+                  <pre className="whitespace-pre-wrap">{tableStatus.detailedError}</pre>
+                </details>
               </div>
             )}
             
@@ -283,33 +274,14 @@ const PrizeTableDebug = () => {
               </Button>
             </div>
             
-            <div className="mt-3 p-3 bg-black/30 rounded text-xs font-mono overflow-auto">
-              <p>La tabella può essere creata manualmente eseguendo la seguente query SQL:</p>
-              <pre className="mt-2 text-green-400 whitespace-pre-wrap">
-{`CREATE TABLE public.prize_clues (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  prize_id UUID REFERENCES public.prizes(id) NOT NULL,
-  week INTEGER NOT NULL,
-  clue_type TEXT NOT NULL DEFAULT 'regular',
-  title_it TEXT NOT NULL,
-  title_en TEXT,
-  title_fr TEXT,
-  description_it TEXT NOT NULL,
-  description_en TEXT,
-  description_fr TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
-);
-
--- Enable RLS
-ALTER TABLE public.prize_clues ENABLE ROW LEVEL SECURITY;
-
--- Add policy for admins
-CREATE POLICY "Admin users can manage prize clues"
-  ON public.prize_clues
-  USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
-`}
-              </pre>
-            </div>
+            {creationResult?.sql && (
+              <div className="mt-3 p-3 bg-black/30 rounded text-xs font-mono overflow-auto">
+                <p>La tabella può essere creata manualmente eseguendo la seguente query SQL:</p>
+                <pre className="mt-2 text-green-400 whitespace-pre-wrap">
+                  {creationResult.sql}
+                </pre>
+              </div>
+            )}
           </AlertDescription>
         </Alert>
       ) : tableStatus.exists ? (
