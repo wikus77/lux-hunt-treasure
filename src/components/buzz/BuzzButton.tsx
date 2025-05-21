@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Zap } from "lucide-react";
 import { useBuzzSound } from '@/hooks/useBuzzSound';
 import { useSound } from '@/contexts/SoundContext';
+import { MAX_BUZZ_CLUES } from '@/utils/buzzConstants';
 
 interface BuzzButtonProps {
   onBuzzClick: () => void;
@@ -11,8 +12,6 @@ interface BuzzButtonProps {
   updateUnlockedClues?: (val: number) => void;
   isMapBuzz?: boolean;
 }
-
-const MAX_CLUES = 1000; // Consistent max clues limit
 
 const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz = false }: BuzzButtonProps) => {
   const [isVaultOpen, setIsVaultOpen] = useState(false);
@@ -51,10 +50,10 @@ const BuzzButton = ({ onBuzzClick, unlockedClues, updateUnlockedClues, isMapBuzz
 
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
-          Limite: {MAX_CLUES} indizi supplementari per evento
+          Limite: {MAX_BUZZ_CLUES} indizi supplementari per evento
         </p>
         <p className="text-sm mt-1 font-medium">
-          {unlockedClues}/{MAX_CLUES} indizi sbloccati
+          {unlockedClues}/{MAX_BUZZ_CLUES} indizi sbloccati
         </p>
       </div>
     </div>

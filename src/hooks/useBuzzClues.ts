@@ -1,42 +1,20 @@
 
 import { useState, useCallback, useEffect } from "react";
-import { toast } from "sonner";
 import { useNotifications } from "@/hooks/useNotifications";
-import { vagueBuzzClues } from "@/data/vagueBuzzClues";
-
-const MAX_CLUES = 1000;
-const STORAGE_KEY = 'unlockedCluesCount';
-const USED_CLUES_KEY = 'usedVagueBuzzClues';
-
-function getNextVagueClue(usedClues: string[]) {
-  const available = vagueBuzzClues.filter(clue => !usedClues.includes(clue));
-  if (available.length === 0) return vagueBuzzClues[0];
-  return available[Math.floor(Math.random() * available.length)];
-}
+import { 
+  getNextVagueClue, 
+  loadUnlockedCluesCount, 
+  loadUsedVagueClues,
+  saveUnlockedCluesCount,
+  saveUsedVagueClues 
+} from "@/utils/buzzClueUtils";
+import { displayNewClueNotification, showCluesLimitReachedNotification, showCluesResetNotification } from "@/utils/buzzNotificationUtils";
+import { BUZZ_STORAGE_KEYS, MAX_BUZZ_CLUES } from "@/utils/buzzConstants";
 
 export const useBuzzClues = () => {
-  // Initialize with 0 unlocked clues as default
-  const [unlockedClues, setUnlockedClues] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      // Default to 0 if no saved value exists or if it's null
-      return saved ? parseInt(saved, 10) : 0;
-    } catch (e) {
-      console.error("Error loading unlocked clues count:", e);
-      return 0;
-    }
-  });
-
-  const [usedVagueClues, setUsedVagueClues] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem(USED_CLUES_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      console.error("Error loading used clues:", e);
-      return [];
-    }
-  });
-
+  // Initialize with saved unlocked clues count or 0
+  const [unlockedClues, setUnlockedClues] = useState<number>(() => loadUnlockedCluesCount());
+  const [usedVagueClues, setUsedVagueClues] = useState<string[]>(() => loadUsedVagueClues());
   const [lastVagueClue, setLastVagueClue] = useState<string | null>(null);
 
   // Use a function to get notifications to avoid the "Invalid hook call" error
@@ -53,57 +31,37 @@ export const useBuzzClues = () => {
 
   const { addNotification } = getNotifications();
 
+  // Save unlocked clues count to localStorage when it changes
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, unlockedClues.toString());
-    } catch (e) {
-      console.error("Failed to save unlockedCluesCount to localStorage", e);
-    }
+    saveUnlockedCluesCount(unlockedClues);
   }, [unlockedClues]);
 
+  // Save used vague clues to localStorage when they change
   useEffect(() => {
-    try {
-      localStorage.setItem(USED_CLUES_KEY, JSON.stringify(usedVagueClues));
-    } catch (e) {
-      console.error("Failed to save usedVagueBuzzClues to localStorage", e);
-    }
+    saveUsedVagueClues(usedVagueClues);
   }, [usedVagueClues]);
 
   const incrementUnlockedCluesAndAddClue = useCallback(() => {
     let updatedCount = 0;
     setUnlockedClues(prevCount => {
       // Ensure we don't exceed MAX_CLUES
-      if (prevCount >= MAX_CLUES) {
-        toast("Hai già sbloccato tutti gli indizi disponibili!", {
-          duration: 3000,
-          position: "top-center"
-        });
+      if (prevCount >= MAX_BUZZ_CLUES) {
+        showCluesLimitReachedNotification();
         updatedCount = prevCount;
         return prevCount;
       }
-      updatedCount = Math.min(prevCount + 1, MAX_CLUES);
+      updatedCount = Math.min(prevCount + 1, MAX_BUZZ_CLUES);
       return updatedCount;
     });
 
-    if (updatedCount && updatedCount <= MAX_CLUES) {
+    if (updatedCount && updatedCount <= MAX_BUZZ_CLUES) {
       setUsedVagueClues(prevUsed => {
         const nextClue = getNextVagueClue(prevUsed);
         setLastVagueClue(nextClue);
         const newUsed = [...prevUsed, nextClue];
 
-        // Only try to add notification if addNotification is available
-        if (addNotification) {
-          const success = addNotification({
-            title: "Nuovo indizio extra!",
-            description: nextClue
-          });
-
-          if (!success) {
-            toast("Nuovo indizio extra! " + nextClue, { duration: 5000 });
-          }
-        } else {
-          toast("Nuovo indizio extra! " + nextClue, { duration: 5000 });
-        }
+        // Display notification for the new clue
+        displayNewClueNotification(nextClue, addNotification);
 
         return newUsed;
       });
@@ -116,12 +74,10 @@ export const useBuzzClues = () => {
     setUsedVagueClues([]);
     setLastVagueClue(null);
 
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(USED_CLUES_KEY);
+    localStorage.removeItem(BUZZ_STORAGE_KEYS.UNLOCKED_CLUES_COUNT);
+    localStorage.removeItem(BUZZ_STORAGE_KEYS.USED_VAGUE_CLUES);
     
-    toast.info("Contatore degli indizi azzerato", { 
-      duration: 3000 
-    });
+    showCluesResetNotification();
   }, []);
 
   return {
@@ -133,6 +89,6 @@ export const useBuzzClues = () => {
     incrementUnlockedCluesAndAddClue,
     resetUnlockedClues,
     getNextVagueClue: () => getNextVagueClue(usedVagueClues),
-    MAX_CLUES
+    MAX_CLUES: MAX_BUZZ_CLUES
   };
 };
