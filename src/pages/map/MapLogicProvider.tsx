@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useLoadScript, Marker, Circle } from '@react-google-maps/api';
 import { toast } from 'sonner';
@@ -219,7 +220,8 @@ const MapLogicProvider = () => {
             map.panTo({ lat: latitude, lng: longitude });
           }
           
-          setUserLocation && setUserLocation([latitude, longitude]);
+          // We don't have setUserLocation, the userLocation comes from the hook
+          // No need to update it directly as it's managed by useUserLocationPermission
           setLocationReceived(true);
           setRetryAttempts(0);
         },
@@ -246,7 +248,7 @@ const MapLogicProvider = () => {
         }
       };
     }
-  }, [isSecureContext, permission, map]);
+  }, [isSecureContext, permission, map, watchId]);
 
   // Request location permission immediately when component mounts
   useEffect(() => {
