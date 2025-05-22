@@ -1,70 +1,44 @@
 
-import React, { useEffect, useRef } from 'react';
-import { useMapEvents } from 'react-leaflet';
-import { SearchArea } from '@/components/maps/types';
-import { useCursorEffect } from '../hooks/useCursorEffect';
-import { useMapBounds } from '../hooks/useMapBounds';
-import MapClickHandler from './MapClickHandler';
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { SearchArea } from '@/components/maps/types';
+import MapClickHandler from './MapClickHandler';
+import { useCursorEffect } from '../hooks/useCursorEffect';
 
-type MapEventHandlerProps = {
+type MapEventHandlerComponentProps = {
   isAddingSearchArea: boolean;
   handleMapClickArea: (e: any) => void;
   searchAreas: SearchArea[];
   setPendingRadius: (radius: number) => void;
 };
 
-const MapEventHandlerComponent: React.FC<MapEventHandlerProps> = ({
+const MapEventHandlerComponent: React.FC<MapEventHandlerComponentProps> = ({
   isAddingSearchArea,
   handleMapClickArea,
   searchAreas,
   setPendingRadius
 }) => {
-  // Create a ref to store the map instance
-  const mapRef = useRef<L.Map | null>(null);
+  // Create a reference to the map instance
+  const mapRef = React.useRef<L.Map | null>(null);
   
-  // Get the map instance from useMapEvents
-  const map = useMapEvents({});
-  
-  // Store map reference
-  useEffect(() => {
-    if (map) {
-      mapRef.current = map;
-      console.log("Map reference stored in MapEventHandlerComponent");
-    }
-  }, [map]);
-  
-  // Log the isAddingSearchArea state
-  useEffect(() => {
-    console.log("MapEventHandlerComponent - isAddingSearchArea:", isAddingSearchArea);
-    
-    // Force cursor style
-    if (map && isAddingSearchArea) {
-      map.getContainer().style.cursor = 'crosshair';
-      map.getContainer().classList.add('force-crosshair');
-      map.getContainer().classList.add('crosshair-cursor-enabled');
-      console.log("FORCING CROSSHAIR IN MAPEVENTHANDLER");
-      console.log("🟢 Cursor set to crosshair in MapEventHandler");
-      
-      if (!isAddingSearchArea) {
-        console.warn("FLAG isAddingSearchArea NON ATTIVO IN MAPEVENTHANDLER");
-      }
-    }
-  }, [isAddingSearchArea, map]);
-  
-  // Use our custom hooks with map from ref
+  // Use cursor effect hook
+  const map = useMap();
   useCursorEffect(map, isAddingSearchArea);
-  useMapBounds(map, searchAreas);
   
-  // Debug: Log the search areas received by this component
+  // Log for debugging
   useEffect(() => {
-    console.log("MapEventHandlerComponent received searchAreas:", searchAreas);
-  }, [searchAreas]);
+    console.log("MapEventHandlerComponent rendered with isAddingSearchArea:", isAddingSearchArea);
+    console.log("Current search areas:", searchAreas);
+    
+    // Set default radius
+    setPendingRadius(500);
+  }, [isAddingSearchArea, searchAreas, setPendingRadius]);
   
   return (
     <MapClickHandler 
-      isAddingSearchArea={isAddingSearchArea}
-      handleMapClickArea={handleMapClickArea}
+      isAddingSearchArea={isAddingSearchArea} 
+      handleMapClickArea={handleMapClickArea} 
       mapRef={mapRef}
     />
   );

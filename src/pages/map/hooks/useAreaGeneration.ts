@@ -2,72 +2,55 @@
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import { SearchArea } from "@/components/maps/types";
-import { analyzeCluesForLocation } from "@/utils/clueAnalyzer";
-import { clues } from "@/data/cluesData";
 
 /**
- * Generates a search area based on clues and position data
+ * Generates a search area based on given parameters
  */
-export const generateSearchArea = (
-  defaultLocation: [number, number],
-  notifications: any[] | null,
-  radius?: number
-): { areaId: string; area: SearchArea } | null => {
+export function generateSearchArea(
+  location: [number, number],
+  notifications: any,
+  customRadius?: number
+): { areaId: string; area: SearchArea } | null {
   try {
-    // Utilizza l'analizzatore di indizi per determinare la posizione
-    const locationInfo = analyzeCluesForLocation(clues, notifications || []);
+    // Default radius if not provided
+    const radius = customRadius || 500;
     
-    let targetLat = defaultLocation[0];
-    let targetLng = defaultLocation[1];
-    let label = "Area generata";
-    let confidenceValue: string = "Media"; 
+    // Generate a unique ID for the area
+    const areaId = uuidv4();
     
-    if (locationInfo.lat && locationInfo.lng) {
-      targetLat = locationInfo.lat;
-      targetLng = locationInfo.lng;
-      label = locationInfo.description || "Area basata su indizi";
-      
-      // Converti la confidenza in italiano
-      if (locationInfo.confidence === "alta") confidenceValue = "Alta";
-      else if (locationInfo.confidence === "media") confidenceValue = "Media";
-      else confidenceValue = "Bassa";
-    }
-
-    // Usa il raggio fornito o il valore di default di 500km
-    const finalRadius = radius || 500000;
-
-    // Crea l'area di ricerca con stile viola neon
-    const newArea: SearchArea = {
-      id: uuidv4(),
-      lat: targetLat,
-      lng: targetLng,
-      radius: finalRadius,
-      label: label,
-      color: "#9b87f5", // Viola neon
-      position: { lat: targetLat, lng: targetLng },
-      isAI: true,
-      confidence: confidenceValue
+    // Create the area object
+    const area: SearchArea = {
+      id: areaId,
+      lat: location[0],
+      lng: location[1],
+      radius: radius,
+      label: "Area generata",
+      color: "#9b87f5",
+      position: { lat: location[0], lng: location[1] },
+      isAI: true
     };
     
-    console.log("Area generata:", newArea);
-    console.log("AREA CREATA");
+    console.log("Area generata:", area);
+    toast.success("Nuova area di ricerca generata");
     
-    // Log dei dettagli per debug
-    console.log("Area generata:", {
-      posizione: `${targetLat}, ${targetLng}`,
-      label,
-      confidence: confidenceValue,
-      radius: finalRadius / 1000 + " km"
-    });
+    // Optionally, show a notification
+    if (notifications?.length > 0) {
+      notifications.push({
+        id: areaId,
+        title: "Nuova area generata",
+        message: `Un'area di ${radius}m è stata generata`,
+        type: "success",
+        read: false
+      });
+    }
     
-    // Return the area and its ID for the caller
     return {
-      areaId: newArea.id,
-      area: newArea
+      areaId,
+      area
     };
   } catch (error) {
     console.error("Errore nella generazione dell'area:", error);
-    toast.error("Impossibile generare l'area di ricerca");
+    toast.error("Si è verificato un errore nella generazione dell'area");
     return null;
   }
-};
+}

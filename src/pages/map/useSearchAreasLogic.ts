@@ -8,6 +8,7 @@ import { generateSearchArea } from "./hooks/useAreaGeneration";
 import { useAreaOperations } from "./hooks/useAreaOperations";
 import { v4 as uuidv4 } from "uuid";
 import L from "leaflet";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useSearchAreasLogic(defaultLocation: [number, number]) {
   const { unlockedClues } = useBuzzClues();
@@ -32,6 +33,57 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
       console.log("🟢 FLAG isAddingSearchArea ATTIVO in useSearchAreasLogic");
     }
   }, [areaOperations.isAddingSearchArea]);
+
+  // Load areas from Supabase on mount
+  useEffect(() => {
+    const loadAreasFromSupabase = async () => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user?.user) {
+          console.log("No user found, skipping area loading");
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('user_search_areas')
+          .select('*')
+          .eq('user_id', user.user.id);
+
+        if (error) {
+          console.error("Error loading areas from Supabase:", error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          console.log("Areas loaded from Supabase:", data);
+          
+          // Convert to SearchArea format
+          const supabaseAreas: SearchArea[] = data.map(area => ({
+            id: area.id,
+            lat: area.lat,
+            lng: area.lng,
+            radius: area.radius,
+            label: "Area di ricerca",
+            color: "#00D1FF",
+            position: { lat: area.lat, lng: area.lng }
+          }));
+          
+          // Add to state without duplicates
+          areaOperations.setSearchAreas(prevAreas => {
+            const existingIds = new Set(prevAreas.map(a => a.id));
+            const newAreas = supabaseAreas.filter(a => !existingIds.has(a.id));
+            return [...prevAreas, ...newAreas];
+          });
+          
+          toast.success(`Caricate ${data.length} aree di ricerca`);
+        }
+      } catch (error) {
+        console.error("Error in loadAreasFromSupabase:", error);
+      }
+    };
+    
+    loadAreasFromSupabase();
+  }, []);
 
   const handleAddArea = (radius?: number) => {
     // Set the radius if provided
@@ -58,7 +110,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
   };
 
   // Updated to accept Leaflet event with direct circle rendering
-  const handleMapClickArea = (e: { latlng: { lat: number; lng: number } }) => {
+  const handleMapClickArea = async (e: { latlng: { lat: number; lng: number } }) => {
     console.log("Map click event received:", e);
     console.log("isAddingSearchArea state:", areaOperations.isAddingSearchArea);
 
@@ -95,7 +147,6 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         console.log("Area creata:", newArea);
         
         // Immediately draw the circle on the map without waiting for React rendering
-        // FIX: Use mapRef directly instead of getMapRef function that doesn't exist
         const mapInstance = areaOperations.mapRef?.current;
         if (mapInstance) {
           console.log("Drawing circle directly on map click");
@@ -123,6 +174,27 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         
         // Set the newly created area as active
         areaOperations.setActiveSearchArea(newAreaId);
+        
+        // Save to Supabase
+        try {
+          const { data: user } = await supabase.auth.getUser();
+          if (user?.user) {
+            const { data, error } = await supabase.from('user_search_areas').insert({
+              user_id: user.user.id,
+              lat,
+              lng,
+              radius
+            });
+            
+            if (error) {
+              console.error("Error saving area to Supabase:", error);
+            } else {
+              console.log("🔵 Area salvata su Supabase", lat, lng, radius);
+            }
+          }
+        } catch (supabaseError) {
+          console.error("Supabase error:", supabaseError);
+        }
         
         // Reset adding state
         areaOperations.setIsAddingSearchArea(false);

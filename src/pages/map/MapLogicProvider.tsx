@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { MapContainer } from 'react-leaflet';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
