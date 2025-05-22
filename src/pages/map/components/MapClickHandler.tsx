@@ -43,6 +43,27 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
       console.log('✅ TEST: CERCHIO STATICO INSERITO', lat, lng);
     }, 1500); // attende caricamento mappa
 
+    // NEW TEST CODE: Force draw a dynamic circle with simulated coordinates
+    setTimeout(() => {
+      if (!mapRef.current) return;
+
+      console.log("⚙️ FORZO DISEGNO CERCHIO DINAMICO a coordinate simulate");
+
+      const lat = 41.9035;
+      const lng = 12.4969;
+
+      const circle = L.circle([lat, lng], {
+        radius: 500,
+        color: "#FF00FF",
+        fillOpacity: 0.6
+      }).addTo(mapRef.current!);
+
+      // Store in global array
+      drawnCircles.push(circle);
+
+      console.log("✅ CERCHIO DINAMICO FORZATO", lat, lng);
+    }, 2000);
+
     // Remove any existing click handlers
     map.off('click');
 
