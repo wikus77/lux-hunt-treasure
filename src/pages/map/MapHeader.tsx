@@ -117,6 +117,15 @@ const MapHeader = ({
               <MapFilters onFilterChange={handleFilterChange} />
             </div>
           </div>
+          
+          {/* Buzz button for the map */}
+          <button
+            onClick={onBuzz}
+            className="flex items-center gap-1.5 py-1.5 px-3 sm:py-2 sm:px-4 rounded-md bg-gradient-to-r from-projectx-blue to-projectx-pink text-white text-sm font-medium shadow-[0_0_10px_rgba(217,70,239,0.3)] hover:shadow-[0_0_15px_rgba(217,70,239,0.5)] transition-all min-h-[40px]"
+          >
+            <Zap className="h-4 w-4" />
+            <span>Buzz {buzzMapPrice.toFixed(2)}€</span>
+          </button>
         </div>
       </div>
     </>

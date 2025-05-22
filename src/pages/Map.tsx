@@ -7,6 +7,7 @@ import MapLogicProvider from './map/MapLogicProvider';
 import MapInteractionControls from './map/MapInteractionControls';
 import NotesSection from './map/NotesSection';
 import SearchAreasSection from './map/SearchAreasSection';
+import BottomNavigation from '@/components/layout/BottomNavigation';
 
 const Map = () => {
   const mapLogic = useMapLogic();
@@ -23,19 +24,12 @@ const Map = () => {
         buzzMapPrice={mapLogic.buzzMapPrice}
       />
       
-      <div className="container mx-auto px-4 py-2 max-w-6xl">
+      {/* Added proper spacing to avoid header overlap */}
+      <div className="container mx-auto px-4 pt-28 pb-2 max-w-6xl">
         <div className="glass-card p-4 sm:p-6 mb-6">
-          {/* Map container with fixed height */}
           <MapLogicProvider />
           
-          <div className="mt-4">
-            <MapInteractionControls
-              handleAddMarker={mapLogic.handleAddMarker}
-              handleAddArea={mapLogic.handleAddArea}
-              isAddingMarker={mapLogic.isAddingMarker}
-              isAddingSearchArea={mapLogic.isAddingSearchArea}
-            />
-          </div>
+          {/* Remove the interaction controls that are no longer needed */}
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -59,6 +53,9 @@ const Map = () => {
           <p>Nell'area stimata troverai il premio. Più precisione = più possibilità!</p>
         </div>
       </div>
+      
+      {/* Restored Bottom Navigation */}
+      <BottomNavigation />
     </div>
   );
 };
