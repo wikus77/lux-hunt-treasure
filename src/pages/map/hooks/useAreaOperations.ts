@@ -99,6 +99,7 @@ export const useAreaOperations = () => {
   const startAddingArea = useCallback(() => {
     console.log("Starting area addition mode");
     setIsAddingSearchArea(true);
+    console.log("🟢 FLAG isAddingSearchArea ATTIVATO");
     console.log("ATTIVATA MODALITÀ AGGIUNTA AREA");
     console.log("Modalità aggiunta area attivata, cursore cambiato in crosshair");
   }, []);

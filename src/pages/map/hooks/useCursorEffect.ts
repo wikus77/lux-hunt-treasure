@@ -21,6 +21,7 @@ export function useCursorEffect(
       map.getContainer().classList.add('crosshair-cursor-enabled');
       map.getContainer().classList.add('force-crosshair');
       console.log("CURSORE SETTATO A crosshair", isAddingSearchArea);
+      console.log("🟢 FLAG isAddingSearchArea ATTIVO in useCursorEffect");
       toast.info("Clicca sulla mappa per posizionare l'area", {
         duration: 3000
       });

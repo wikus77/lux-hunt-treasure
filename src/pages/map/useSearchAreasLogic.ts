@@ -27,6 +27,8 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     console.log("useSearchAreasLogic - isAddingSearchArea:", areaOperations.isAddingSearchArea);
     if (!areaOperations.isAddingSearchArea) {
       console.warn("FLAG isAddingSearchArea NON ATTIVO");
+    } else {
+      console.log("🟢 FLAG isAddingSearchArea ATTIVO in useSearchAreasLogic");
     }
   }, [areaOperations.isAddingSearchArea]);
 
@@ -37,13 +39,15 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
       console.log("Setting pending radius to:", radius);
     }
 
-    // CRITICAL: Force setting isAddingSearchArea to true
+    // CRITICAL: Force setting isAddingSearchArea to true DIRECTLY
     areaOperations.setIsAddingSearchArea(true);
-    // Use startAddingArea function which handles the state update correctly
+    // Also use startAddingArea function for additional side effects
     areaOperations.startAddingArea();
     
+    console.log("🟢 FLAG isAddingSearchArea ATTIVATO esplicitamente");
     console.log("ATTIVATA MODALITÀ AGGIUNTA AREA");
-    console.log("Modalità aggiunta area attivata, cursore cambiato in crosshair");
+    console.log("AREAS STATE:", areaOperations.searchAreas);
+    
     toast.info("Clicca sulla mappa per aggiungere una nuova area di ricerca", {
       description: `L'area sarà creata con il raggio di ${pendingRadiusRef.current} metri`
     });

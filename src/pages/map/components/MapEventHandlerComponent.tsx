@@ -41,6 +41,7 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerProps> = ({
       map.getContainer().classList.add('force-crosshair');
       map.getContainer().classList.add('crosshair-cursor-enabled');
       console.log("FORCING CROSSHAIR IN MAPEVENTHANDLER");
+      console.log("🟢 Cursor set to crosshair in MapEventHandler");
       
       if (!isAddingSearchArea) {
         console.warn("FLAG isAddingSearchArea NON ATTIVO IN MAPEVENTHANDLER");

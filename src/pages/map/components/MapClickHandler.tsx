@@ -56,6 +56,7 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
       map.getContainer().classList.add('force-crosshair');
       map.getContainer().classList.add('crosshair-cursor-enabled');
       console.log("FORCING CROSSHAIR IN MAPCLICKHANDLER MOUNT");
+      console.log("🟢 Cursor set to crosshair in MapClickHandler");
     }
   }, [isAddingSearchArea, map]);
   
