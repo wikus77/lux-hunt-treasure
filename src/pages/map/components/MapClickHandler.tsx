@@ -71,68 +71,34 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
     if (isAddingSearchArea) {
       console.log("Adding click handler to map, radius:", selectedRadius);
       
-      // DIAGNOSTIC TEST: Use once to test click handling
-      map.once('click', function handleSingleClick(e) {
+      // Use on() instead of once() for continuous click handling
+      map.on('click', (e) => {
         const { lat, lng } = e.latlng;
-
-        console.log("✅ CLICK RICEVUTO:", lat, lng);
-        console.log("🧠 MAP REF ATTIVO:", mapRef.current);
-
-        if (!mapRef.current) {
-          console.error("❌ MAP REF NON DISPONIBILE");
-          return;
-        }
-
-        console.log("📍 CLICK SINGOLO:", lat, lng);
-
-        // Create and add the circle with diagnostic logging
-        const circle = L.circle([lat, lng], {
-          radius: 500,
-          color: "#FF0000",
-          fillOpacity: 0.5
-        }).addTo(mapRef.current!);
-
-        console.log("🔥 CERCHIO CLICK RENDERED:", circle.getLatLng());
-
-        // Store in global array to prevent garbage collection
-        drawnCircles.push(circle);
         
-        // Test: check for active circles on the map
-        mapRef.current.eachLayer((layer) => {
+        console.log("📍 CLICK NORMALE:", lat, lng);
+        
+        const newCircle = L.circle([lat, lng], {
+          radius: selectedRadius,
+          color: "#00BFFF",
+          fillOpacity: 0.4
+        })
+        .setStyle({ pane: 'overlayPane' })
+        .addTo(mapRef.current!);
+        
+        // Store in global array
+        drawnCircles.push(newCircle);
+        
+        console.log("✅ CERCHIO NORMALE INSERITO", newCircle.getLatLng(), "Total circles:", drawnCircles.length);
+        
+        // Check for all circles after adding a new one
+        mapRef.current?.eachLayer((layer) => {
           if (layer instanceof L.Circle) {
-            console.log("🟢 CERCHIO PRESENTE:", layer.getLatLng(), "Radius:", layer.getRadius());
+            console.log("🟢 CERCHIO PRESENTE DOPO AGGIUNTA:", layer.getLatLng(), "Radius:", layer.getRadius());
           }
         });
         
-        // Re-add the normal click handler for subsequent clicks
-        map.on('click', (e) => {
-          const { lat, lng } = e.latlng;
-          
-          console.log("📍 CLICK NORMALE:", lat, lng);
-          
-          const newCircle = L.circle([lat, lng], {
-            radius: selectedRadius,
-            color: "#00BFFF",
-            fillOpacity: 0.4
-          })
-          .setStyle({ pane: 'overlayPane' })
-          .addTo(mapRef.current!);
-          
-          // Store in global array
-          drawnCircles.push(newCircle);
-          
-          console.log("✅ CERCHIO NORMALE INSERITO", newCircle.getLatLng(), "Total circles:", drawnCircles.length);
-          
-          // Check for all circles after adding a new one
-          mapRef.current?.eachLayer((layer) => {
-            if (layer instanceof L.Circle) {
-              console.log("🟢 CERCHIO PRESENTE DOPO AGGIUNTA:", layer.getLatLng(), "Radius:", layer.getRadius());
-            }
-          });
-          
-          // Call the handler function
-          handleMapClickArea(e);
-        });
+        // Call the handler function
+        handleMapClickArea(e);
       });
     }
 
