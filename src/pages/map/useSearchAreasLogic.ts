@@ -34,55 +34,21 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     }
   }, [areaOperations.isAddingSearchArea]);
 
-  // Load areas from Supabase on mount
+  // Since user_search_areas was removed, we'll adapt this to use map_points or just avoid loading 
+  // areas from the database entirely since the feature was removed
   useEffect(() => {
+    // Since search areas feature was removed, this function is now just a placeholder
     const loadAreasFromSupabase = async () => {
       try {
-        const { data: user } = await supabase.auth.getUser();
-        if (!user?.user) {
-          console.log("No user found, skipping area loading");
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from('user_search_areas')
-          .select('*')
-          .eq('user_id', user.user.id);
-
-        if (error) {
-          console.error("Error loading areas from Supabase:", error);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          console.log("Areas loaded from Supabase:", data);
-          
-          // Convert to SearchArea format
-          const supabaseAreas: SearchArea[] = data.map(area => ({
-            id: area.id,
-            lat: area.lat,
-            lng: area.lng,
-            radius: area.radius,
-            label: "Area di ricerca",
-            color: "#00D1FF",
-            position: { lat: area.lat, lng: area.lng }
-          }));
-          
-          // Add to state without duplicates
-          areaOperations.setSearchAreas(prevAreas => {
-            const existingIds = new Set(prevAreas.map(a => a.id));
-            const newAreas = supabaseAreas.filter(a => !existingIds.has(a.id));
-            return [...prevAreas, ...newAreas];
-          });
-          
-          toast.success(`Caricate ${data.length} aree di ricerca`);
-        }
+        // We're no longer loading search areas since that feature was removed
+        console.log("Search areas feature has been removed, no areas to load");
       } catch (error) {
-        console.error("Error in loadAreasFromSupabase:", error);
+        console.error("Error:", error);
       }
     };
     
-    loadAreasFromSupabase();
+    // We don't need to call this function anymore since the feature was removed
+    // loadAreasFromSupabase();
   }, []);
 
   const handleAddArea = (radius?: number) => {
@@ -175,26 +141,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         // Set the newly created area as active
         areaOperations.setActiveSearchArea(newAreaId);
         
-        // Save to Supabase
-        try {
-          const { data: user } = await supabase.auth.getUser();
-          if (user?.user) {
-            const { data, error } = await supabase.from('user_search_areas').insert({
-              user_id: user.user.id,
-              lat,
-              lng,
-              radius
-            });
-            
-            if (error) {
-              console.error("Error saving area to Supabase:", error);
-            } else {
-              console.log("🔵 Area salvata su Supabase", lat, lng, radius);
-            }
-          }
-        } catch (supabaseError) {
-          console.error("Supabase error:", supabaseError);
-        }
+        // We're no longer saving to Supabase since we removed the search areas feature
         
         // Reset adding state
         areaOperations.setIsAddingSearchArea(false);

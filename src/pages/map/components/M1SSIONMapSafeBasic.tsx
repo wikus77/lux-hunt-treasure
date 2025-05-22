@@ -245,14 +245,23 @@ const M1SSIONMapSafeBasic = () => {
           
           toast.success('Point updated');
         } else {
-          // Create new point
+          // Create new point - need to get the authenticated user first
+          const { data: userData } = await supabase.auth.getUser();
+          if (!userData?.user) {
+            toast.error("You must be logged in to add points");
+            marker.removeFrom(mapRef.current!);
+            return;
+          }
+          
+          // Now insert with the user_id
           const { data, error } = await supabase
             .from('map_points')
             .insert({
               latitude: lat,
               longitude: lng,
               title,
-              note: note || null
+              note: note || null,
+              user_id: userData.user.id
             })
             .select();
             
