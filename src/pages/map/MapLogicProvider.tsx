@@ -101,11 +101,13 @@ const darkModeStyle = [
   },
 ];
 
+const mapLibraries: ["places"] = ["places"];
+
 const MapLogicProvider = () => {
   // Load the Google Maps script
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries: ["places"],
+    libraries: mapLibraries,
   });
 
   // Get user location information - request it immediately
@@ -123,10 +125,9 @@ const MapLogicProvider = () => {
 
   // Request location permission immediately when component mounts
   useEffect(() => {
-    if (permission === 'prompt') {
-      askPermission();
-    }
-  }, []);
+    console.log("MapLogicProvider mounted - requesting geolocation");
+    askPermission();
+  }, [askPermission]);
 
   // Handle user location updates with improved center management
   useEffect(() => {
@@ -143,7 +144,7 @@ const MapLogicProvider = () => {
         // Update the map center state
         setMapCenter({ lat: userLocation[0], lng: userLocation[1] });
         
-        // If map is already loaded, center it
+        // If map is already loaded, center it and zoom in
         if (map) {
           map.panTo({ lat: userLocation[0], lng: userLocation[1] });
           map.setZoom(mapZoom);
@@ -155,12 +156,13 @@ const MapLogicProvider = () => {
         });
       }
     } else if (permission === 'prompt') {
-      console.log("Requesting geolocation permission...");
+      console.log("Requesting geolocation permission again...");
+      // Automatically try again if we're still in prompt state
       askPermission();
     } else if (permission === 'denied') {
       console.log("Geolocation permission denied, using fallback to Roma");
       
-      // Set fallback location (Roma instead of Milano)
+      // Set fallback location (Roma)
       const fallbackLocation = { lat: 41.9028, lng: 12.4964 }; // Roma
       setMapCenter(fallbackLocation);
       
@@ -180,7 +182,13 @@ const MapLogicProvider = () => {
     if (!userLocation && permission !== 'denied') {
       askPermission();
     }
-  }, [userLocation, permission, askPermission]);
+    
+    // If we already have a location, center the map on it
+    if (userLocation && Array.isArray(userLocation) && userLocation.length === 2) {
+      map.panTo({ lat: userLocation[0], lng: userLocation[1] });
+      map.setZoom(mapZoom);
+    }
+  }, [userLocation, permission, askPermission, mapZoom]);
   
   // Retry getting location
   const retryGetLocation = () => {
@@ -204,12 +212,12 @@ const MapLogicProvider = () => {
       return { lat: userLocation[0], lng: userLocation[1] };
     }
     
-    // Fall back to Roma (not Milano)
+    // Fall back to Roma
     return { lat: 41.9028, lng: 12.4964 };
   };
 
   return (
-    <div style={{ height: '60vh', width: '100%', zIndex: 1 }} className="rounded-lg overflow-hidden relative">
+    <div style={{ height: '60vh', width: '100%', zIndex: 1 }} className="rounded-[24px] overflow-hidden relative">
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         center={getMapCenter()}

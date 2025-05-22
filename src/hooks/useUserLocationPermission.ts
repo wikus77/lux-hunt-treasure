@@ -49,6 +49,14 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
     console.log("Requesting user position...");
     
     try {
+      navigator.permissions && navigator.permissions.query({name: 'geolocation'})
+        .then(permissionStatus => {
+          console.log('Geolocation permission status:', permissionStatus.state);
+          
+          // Make sure we don't short-circuit the geolocation request if it was previously denied
+          // We'll still request it to give the user a chance to change their mind
+        });
+        
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
@@ -82,9 +90,9 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
           setLoading(false);
         },
         {
-          enableHighAccuracy: true, // Change to true for more accurate positioning
-          timeout: 8000, // 8 seconds timeout
-          maximumAge: 30000 // 30 seconds cache
+          enableHighAccuracy: true, // Using high accuracy for better positioning
+          timeout: 15000, // 15 seconds timeout - increased from previous setting
+          maximumAge: 0 // Don't use cached position - always get a fresh reading
         }
       );
     } catch (e) {
@@ -97,25 +105,22 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
 
   // Check stored permission and get location on initial load - IMMEDIATELY
   useEffect(() => {
-    const storedPermission = localStorage.getItem(GEO_PERMISSION_KEY);
+    // Clear any previous stored permission to ensure we always try to get location
+    // when the component mounts - this helps if the user previously denied but has
+    // since changed their browser settings
+    localStorage.removeItem(GEO_PERMISSION_KEY);
     
-    if (storedPermission === "granted") {
-      setPermission("granted");
-      // Still try to get the position to refresh it
-      getCurrentPosition();
-    } else if (storedPermission === "denied") {
-      setPermission("denied");
-      setLoading(false);
-    } else {
-      setPermission("prompt");
-      // Try to get position automatically on first load
-      getCurrentPosition();
-    }
+    // Always try to get the location on component mount
+    console.log("Initial geolocation request on component mount");
+    getCurrentPosition();
+    
+    // Don't rely on stored permission anymore, always prompt the user
+    setPermission("prompt");
   }, [getCurrentPosition]);
 
   // Function to explicitly ask for permission
   const askPermission = useCallback(() => {
-    console.log("Asking for geolocation permission");
+    console.log("Explicitly asking for geolocation permission");
     getCurrentPosition();
   }, [getCurrentPosition]);
 
