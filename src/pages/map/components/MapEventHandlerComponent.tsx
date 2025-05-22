@@ -33,6 +33,7 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerComponentProps> = ({
   useEffect(() => {
     if (map) {
       mapRef.current = map;
+      console.log("Map reference set and will be preserved");
     }
   }, [map]);
   

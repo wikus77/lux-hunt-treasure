@@ -2,6 +2,9 @@
 import React, { useEffect } from 'react';
 import L from 'leaflet';
 
+// Global array to store circles outside of React lifecycle
+const drawnCircles: L.Circle[] = [];
+
 type MapClickHandlerProps = {
   isAddingSearchArea: boolean;
   handleMapClickArea: (e: any) => void;
@@ -33,6 +36,9 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
       })
       .setStyle({ pane: 'overlayPane' })
       .addTo(mapRef.current!);
+
+      // Store in global array
+      drawnCircles.push(circle);
 
       console.log('✅ TEST: CERCHIO STATICO INSERITO', lat, lng);
     }, 1500); // attende caricamento mappa
@@ -67,13 +73,16 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
           
           // Set z-index high to ensure visibility using proper Leaflet options
           circle.setStyle({ 
-            pane: 'overlayPane'
+            pane: 'overlayPane' 
           });
           
           // Add to map with direct reference
           circle.addTo(mapRef.current);
           
-          console.log("✅ CERCHIO SINGOLO INSERITO", circle);
+          // Store in global array to prevent garbage collection
+          drawnCircles.push(circle);
+          
+          console.log("✅ CERCHIO SINGOLO INSERITO", circle.getLatLng(), "Total circles:", drawnCircles.length);
           
           // Re-add the normal click handler after successful single click test
           map.on('click', (e) => {
@@ -89,7 +98,10 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
             .setStyle({ pane: 'overlayPane' })
             .addTo(mapRef.current!);
             
-            console.log("✅ CERCHIO NORMALE INSERITO");
+            // Store in global array
+            drawnCircles.push(newCircle);
+            
+            console.log("✅ CERCHIO NORMALE INSERITO", newCircle.getLatLng(), "Total circles:", drawnCircles.length);
             
             // Call the handler function
             handleMapClickArea(e);
@@ -100,9 +112,11 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
       });
     }
 
+    // IMPORTANT: Do NOT clear any layers in this cleanup function
     return () => {
       if (map) {
         map.off('click');
+        // DO NOT clear layers or remove circles here
       }
     };
   }, [isAddingSearchArea, handleMapClickArea, mapRef, selectedRadius]);
