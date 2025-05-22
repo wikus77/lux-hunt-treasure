@@ -5,7 +5,6 @@ import { SearchArea } from "@/components/maps/types";
 import { v4 as uuidv4 } from "uuid";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import L from "leaflet";
-import { useMapContext } from "../context/MapContext";
 
 /**
  * Hook providing operations for managing search areas
@@ -16,8 +15,8 @@ export const useAreaOperations = () => {
   const [activeSearchArea, setActiveSearchArea] = useState<string | null>(null);
   const [isAddingSearchArea, setIsAddingSearchArea] = useState(false);
   
-  // Get map reference from context
-  const { mapRef } = useMapContext?.() || { mapRef: { current: null } };
+  // Create a ref for map instead of using context
+  const mapRef = useRef<L.Map | null>(null);
   
   // Ref to track state changes for debugging
   const isAddingRef = useRef(isAddingSearchArea);
@@ -79,7 +78,7 @@ export const useAreaOperations = () => {
       toast.error("Si è verificato un errore nell'aggiunta dell'area");
       return null;
     }
-  }, [mapRef]);
+  }, []);
   
   // Save (update) an existing area
   const saveSearchArea = useCallback((id: string, label: string, radius: number) => {
@@ -152,12 +151,13 @@ export const useAreaOperations = () => {
       return newAreas;
     });
     return area.id;
-  }, [mapRef]);
+  }, []);
   
-  // Get map reference for direct rendering
-  const getMapRef = useCallback(() => {
-    return mapRef.current;
-  }, [mapRef]);
+  // Set map reference
+  const setMap = useCallback((map: L.Map) => {
+    console.log("Map instance set directly in useAreaOperations");
+    mapRef.current = map;
+  }, []);
 
   return {
     searchAreas,
@@ -173,6 +173,7 @@ export const useAreaOperations = () => {
     saveSearchArea,
     deleteSearchArea,
     clearAllSearchAreas,
-    getMapRef
+    mapRef,
+    setMap
   };
 };

@@ -1,11 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useMapEvents } from 'react-leaflet';
 import { SearchArea } from '@/components/maps/types';
 import { useCursorEffect } from '../hooks/useCursorEffect';
 import { useMapBounds } from '../hooks/useMapBounds';
 import MapClickHandler from './MapClickHandler';
-import { useMapContext } from '../context/MapContext';
+import L from 'leaflet';
 
 type MapEventHandlerProps = {
   isAddingSearchArea: boolean;
@@ -20,16 +20,19 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerProps> = ({
   searchAreas,
   setPendingRadius
 }) => {
+  // Create a ref to store the map instance
+  const mapRef = useRef<L.Map | null>(null);
+  
   // Get the map instance from useMapEvents
   const map = useMapEvents({});
-  const { mapRef, setMap } = useMapContext();
   
-  // Store map reference in context
+  // Store map reference
   useEffect(() => {
     if (map) {
-      setMap(map);
+      mapRef.current = map;
+      console.log("Map reference stored in MapEventHandlerComponent");
     }
-  }, [map, setMap]);
+  }, [map]);
   
   // Log the isAddingSearchArea state
   useEffect(() => {
@@ -49,7 +52,7 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerProps> = ({
     }
   }, [isAddingSearchArea, map]);
   
-  // Use our custom hooks with map from context
+  // Use our custom hooks with map from ref
   useCursorEffect(map, isAddingSearchArea);
   useMapBounds(map, searchAreas);
   
@@ -62,6 +65,7 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerProps> = ({
     <MapClickHandler 
       isAddingSearchArea={isAddingSearchArea}
       handleMapClickArea={handleMapClickArea}
+      mapRef={mapRef}
     />
   );
 };

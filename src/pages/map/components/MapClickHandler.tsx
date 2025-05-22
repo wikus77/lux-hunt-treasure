@@ -2,11 +2,11 @@
 import React, { useEffect } from 'react';
 import { useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import { useMapContext } from '../context/MapContext';
 
 type MapClickHandlerProps = {
   isAddingSearchArea: boolean;
   handleMapClickArea: (e: any) => void;
+  mapRef: React.MutableRefObject<L.Map | null>;
 };
 
 /**
@@ -14,9 +14,9 @@ type MapClickHandlerProps = {
  */
 const MapClickHandler: React.FC<MapClickHandlerProps> = ({
   isAddingSearchArea,
-  handleMapClickArea
+  handleMapClickArea,
+  mapRef
 }) => {
-  const { mapRef, setMap } = useMapContext();
   
   const map = useMapEvents({
     click: (e) => {
@@ -38,13 +38,13 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
     }
   });
   
-  // Store map reference in context
+  // Store map reference directly
   useEffect(() => {
     if (map) {
-      setMap(map);
-      console.log("Map reference set in context from MapClickHandler");
+      mapRef.current = map;
+      console.log("Map reference set directly from MapClickHandler");
     }
-  }, [map, setMap]);
+  }, [map, mapRef]);
   
   // Add logging for component render with current state
   useEffect(() => {
