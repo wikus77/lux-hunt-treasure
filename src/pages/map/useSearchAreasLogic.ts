@@ -15,11 +15,11 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
   
   // Add a ref to store the radius temporarily while user selects map location
   const pendingRadiusRef = useRef<number>(500);
+  const isProcessingClickRef = useRef(false);
 
   // When search areas change, sync with localStorage
   useEffect(() => {
     console.log("useSearchAreasLogic - searchAreas updated:", areaOperations.searchAreas);
-    // The sync happens in useAreaOperations now
   }, [areaOperations.searchAreas]);
 
   // Log the isAddingSearchArea state changes
@@ -42,13 +42,21 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     });
   };
 
-  // Updated to accept Leaflet event
+  // Updated to accept Leaflet event with debouncing
   const handleMapClickArea = (e: { latlng: { lat: number; lng: number } }) => {
     console.log("Map click event received:", e);
     console.log("isAddingSearchArea state:", areaOperations.isAddingSearchArea);
 
+    // Prevent duplicate processing
+    if (isProcessingClickRef.current) {
+      console.log("Already processing a click, ignoring");
+      return null;
+    }
+
     if (areaOperations.isAddingSearchArea && e.latlng) {
       try {
+        isProcessingClickRef.current = true;
+        
         // Extract coordinates from the event
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;
@@ -86,11 +94,20 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         console.log("Modalità aggiunta area disattivata, cursore ripristinato");
         
         toast.success("Area di ricerca aggiunta alla mappa");
+        
+        // Reset processing flag after a delay
+        setTimeout(() => {
+          isProcessingClickRef.current = false;
+        }, 500);
+        
         return newAreaId;
       } catch (error) {
         console.error("Error adding search area:", error);
         areaOperations.setIsAddingSearchArea(false);
         toast.error("Si è verificato un errore nell'aggiunta dell'area");
+        
+        // Reset processing flag
+        isProcessingClickRef.current = false;
         return null;
       }
     } else {

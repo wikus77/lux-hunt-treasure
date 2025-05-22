@@ -15,3 +15,15 @@
 .crosshair-cursor-enabled * {
   cursor: crosshair !important;
 }
+
+/* Extra forceful crosshair style */
+.force-crosshair,
+.force-crosshair * {
+  cursor: crosshair !important;
+}
+
+/* Override any other cursor styles when in force-crosshair mode */
+.leaflet-container.force-crosshair,
+.leaflet-container.force-crosshair .leaflet-interactive {
+  cursor: crosshair !important;
+}

@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { v4 as uuidv4 } from 'uuid';
+import { useMapContext } from '../context/MapContext';
 
 type MapClickHandlerProps = {
   isAddingSearchArea: boolean;
@@ -16,6 +17,8 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
   isAddingSearchArea,
   handleMapClickArea
 }) => {
+  const { mapRef, setMap } = useMapContext();
+  
   const map = useMapEvents({
     click: (e) => {
       console.log("MAP CLICKED", e.latlng);
@@ -24,9 +27,10 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
       if (isAddingSearchArea) {
         console.log("Coordinate selezionate:", e.latlng.lat, e.latlng.lng);
         
-        // Force cursor style directly (extra enforcement)
+        // Force cursor style with highest priority
         if (map) {
           map.getContainer().style.cursor = 'crosshair';
+          map.getContainer().classList.add('force-crosshair');
         }
         
         // Pass the event to the click handler
@@ -35,6 +39,13 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
     }
   });
   
+  // Store map reference in context
+  useEffect(() => {
+    if (map) {
+      setMap(map);
+    }
+  }, [map, setMap]);
+  
   // Add logging for component render with current state
   useEffect(() => {
     console.log("MapClickHandler rendered with isAddingSearchArea:", isAddingSearchArea);
@@ -42,7 +53,9 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
     // Force cursor style on component mount/update if in adding mode
     if (map && isAddingSearchArea) {
       map.getContainer().style.cursor = 'crosshair';
+      map.getContainer().classList.add('force-crosshair');
       map.getContainer().classList.add('crosshair-cursor-enabled');
+      console.log("FORCING CROSSHAIR IN MAPCLICKHANDLER MOUNT");
     }
   }, [isAddingSearchArea, map]);
   

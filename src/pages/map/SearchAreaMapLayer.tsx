@@ -5,6 +5,7 @@ import { SearchArea } from '@/components/maps/types';
 import { Button } from '@/components/ui/button';
 import { Trash2, Edit } from 'lucide-react';
 import L from 'leaflet';
+import { useMapContext } from './context/MapContext';
 
 type SearchAreaMapLayerProps = {
   searchAreas: SearchArea[];
@@ -19,30 +20,52 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
 }) => {
   console.log("AREAS STATE:", searchAreas);
   const map = useMap();
+  const { mapRef } = useMapContext();
+  
+  // Ensure map reference is always available
+  useEffect(() => {
+    if (map) {
+      mapRef.current = map;
+    }
+  }, [map, mapRef]);
   
   // Fallback rendering using direct Leaflet API to ensure areas are visible
   useEffect(() => {
     console.log("RENDERING AREAS:", searchAreas);
-    if (map && searchAreas.length > 0) {
+    const currentMap = mapRef.current || map;
+    
+    if (currentMap && searchAreas.length > 0) {
       // Clear previous circles that might have been added directly to the map
-      map.eachLayer((layer) => {
+      currentMap.eachLayer((layer) => {
         if (layer instanceof L.Circle && !(layer instanceof Circle)) {
-          map.removeLayer(layer);
+          currentMap.removeLayer(layer);
         }
       });
       
       // Add circles directly to the map as a fallback
       searchAreas.forEach(area => {
-        L.circle([area.lat, area.lng], {
-          radius: area.radius,
-          color: area.isAI ? '#9b87f5' : '#00D1FF',
-          fillColor: area.isAI ? '#7E69AB' : '#00D1FF',
-          fillOpacity: 0.2,
-          weight: 2
-        }).addTo(map);
+        console.log("Drawing circle at:", area.lat, area.lng, "with radius:", area.radius);
+        try {
+          const circle = L.circle([area.lat, area.lng], {
+            radius: area.radius,
+            color: area.isAI ? '#9b87f5' : '#00D1FF',
+            fillColor: area.isAI ? '#7E69AB' : '#00D1FF',
+            fillOpacity: 0.2,
+            weight: 2
+          }).addTo(currentMap);
+          
+          circle.on('click', () => {
+            setActiveSearchArea(area.id);
+          });
+          
+        } catch (error) {
+          console.error("Error adding circle to map:", error);
+        }
       });
+    } else if (!currentMap) {
+      console.error("MAPPA NON DISPONIBILE PER IL DISEGNO");
     }
-  }, [searchAreas, map]);
+  }, [searchAreas, map, mapRef, setActiveSearchArea]);
   
   return (
     <>

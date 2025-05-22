@@ -13,6 +13,7 @@ import MapEventHandlerComponent from './components/MapEventHandlerComponent';
 import AddingAreaInstructions from './components/AddingAreaInstructions';
 import BuzzButton from './components/BuzzButton';
 import MapLayers from './components/MapLayers';
+import { MapProvider } from './context/MapContext';
 
 // Import the CSS for cursor styles
 import './styles/mapCursor.css';
@@ -67,59 +68,61 @@ const MapLogicProvider = () => {
   if (!mapLoaded) return <LoadingScreen />;
 
   return (
-    <div 
-      className="rounded-[24px] overflow-hidden relative w-full" 
-      style={{ 
-        height: '70vh', 
-        minHeight: '500px',
-        width: '100%',
-        display: 'block',
-        position: 'relative'
-      }}
-    >
-      <MapContainer 
-        center={[41.9028, 12.4964]} 
-        zoom={15}
+    <MapProvider>
+      <div 
+        className="rounded-[24px] overflow-hidden relative w-full" 
         style={{ 
-          height: '100%', 
+          height: '70vh', 
+          minHeight: '500px',
           width: '100%',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 1
+          display: 'block',
+          position: 'relative'
         }}
-        className="z-10"
-        whenReady={handleMapLoad}
       >
-        {/* Map Layers Component */}
-        <MapLayers />
-        
-        {/* Display search areas */}
-        <SearchAreaMapLayer 
-          searchAreas={searchAreas} 
-          setActiveSearchArea={setActiveSearchArea}
-          deleteSearchArea={deleteSearchArea}
-        />
-        
-        {/* Map event handler component */}
-        <MapEventHandlerComponent 
-          isAddingSearchArea={isAddingSearchArea} 
-          handleMapClickArea={handleMapClickArea}
-          searchAreas={searchAreas}
-          setPendingRadius={setPendingRadius}
-        />
-      </MapContainer>
+        <MapContainer 
+          center={[41.9028, 12.4964]} 
+          zoom={15}
+          style={{ 
+            height: '100%', 
+            width: '100%',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1
+          }}
+          className="z-10"
+          whenReady={handleMapLoad}
+        >
+          {/* Map Layers Component */}
+          <MapLayers />
+          
+          {/* Display search areas */}
+          <SearchAreaMapLayer 
+            searchAreas={searchAreas} 
+            setActiveSearchArea={setActiveSearchArea}
+            deleteSearchArea={deleteSearchArea}
+          />
+          
+          {/* Map event handler component */}
+          <MapEventHandlerComponent 
+            isAddingSearchArea={isAddingSearchArea} 
+            handleMapClickArea={handleMapClickArea}
+            searchAreas={searchAreas}
+            setPendingRadius={setPendingRadius}
+          />
+        </MapContainer>
 
-      {/* BUZZ button component */}
-      <BuzzButton handleBuzz={handleBuzz} buzzMapPrice={buzzMapPrice} />
+        {/* BUZZ button component */}
+        <BuzzButton handleBuzz={handleBuzz} buzzMapPrice={buzzMapPrice} />
 
-      {/* Adding Area Instructions Overlay */}
-      <AddingAreaInstructions isAddingSearchArea={isAddingSearchArea} />
+        {/* Adding Area Instructions Overlay */}
+        <AddingAreaInstructions isAddingSearchArea={isAddingSearchArea} />
 
-      <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
-    </div>
+        <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
+      </div>
+    </MapProvider>
   );
 };
 

@@ -5,6 +5,7 @@ import { SearchArea } from '@/components/maps/types';
 import { useCursorEffect } from '../hooks/useCursorEffect';
 import { useMapBounds } from '../hooks/useMapBounds';
 import MapClickHandler from './MapClickHandler';
+import { useMapContext } from '../context/MapContext';
 
 type MapEventHandlerProps = {
   isAddingSearchArea: boolean;
@@ -21,18 +22,29 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerProps> = ({
 }) => {
   // Get the map instance from useMapEvents
   const map = useMapEvents({});
+  const { mapRef, setMap } = useMapContext();
+  
+  // Store map reference in context
+  useEffect(() => {
+    if (map) {
+      setMap(map);
+    }
+  }, [map, setMap]);
   
   // Log the isAddingSearchArea state
   useEffect(() => {
     console.log("MapEventHandlerComponent - isAddingSearchArea:", isAddingSearchArea);
+    
     // Force cursor style
     if (map && isAddingSearchArea) {
       map.getContainer().style.cursor = 'crosshair';
+      map.getContainer().classList.add('force-crosshair');
       map.getContainer().classList.add('crosshair-cursor-enabled');
+      console.log("FORCING CROSSHAIR IN MAPEVENTHANDLER");
     }
   }, [isAddingSearchArea, map]);
   
-  // Use our custom hooks
+  // Use our custom hooks with map from context
   useCursorEffect(map, isAddingSearchArea);
   useMapBounds(map, searchAreas);
   
