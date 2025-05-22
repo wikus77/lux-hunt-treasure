@@ -9,14 +9,15 @@
     <!-- Favicon aggiornato -->
     <link rel="icon" href="/public/lovable-uploads/83efc483-d057-4f1b-ac21-93d56e796e1f.png" type="image/png" />
     
-    <!-- Script per reindirizzare HTTP a HTTPS -->
+    <!-- Script per reindirizzare HTTP a HTTPS - migliorato -->
     <script>
-      if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
+      // Redirect HTTP to HTTPS except on localhost
+      if (window.location.protocol === 'http:' && !window.location.hostname.match(/localhost|127.0.0.1/)) {
         window.location.href = window.location.href.replace('http:', 'https:');
       }
     </script>
     
-    <!-- Google tag (gtag.js) - Google Ads -->
+    <!-- Google tag (gtag.js) - Google Ads - HTTPS enforced -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-9824MZJZ63" crossorigin="anonymous"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -47,14 +48,14 @@
       gtag('config', 'G-9824MZJZ63');
     </script>
     
-    <!-- Cookie Script CMP -->
-    <script type="text/javascript" charset="UTF-8" src="//cdn.cookie-script.com/s/2db074620da1ba3a3cc6c19025d1d99d.js"></script>
-    <script type="text/javascript" charset="UTF-8" data-cookiescriptreport="report" src="//report.cookie-script.com/r/2db074620da1ba3a3cc6c19025d1d99d.js"></script>
+    <!-- Cookie Script CMP - aggiornato per HTTPS -->
+    <script type="text/plain" charset="UTF-8" src="https://cdn.cookie-script.com/s/2db074620da1ba3a3cc6c19025d1d99d.js"></script>
+    <script type="text/plain" charset="UTF-8" data-cookiescriptreport="report" src="https://report.cookie-script.com/r/2db074620da1ba3a3cc6c19025d1d99d.js"></script>
   </head>
 
   <body>
     <div id="root"></div>
-    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
+    <!-- IMPORTANTE: NON RIMUOVERE IL SEGUENTE SCRIPT TAG O QUESTO COMMENTO! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module" crossorigin="anonymous"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -20,63 +20,71 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
   const [error, setError] = useState<string | null>(null);
   const [lastAttempt, setLastAttempt] = useState<number | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [watchId, setWatchId] = useState<number | null>(null);
   const MAX_RETRIES = 3;
 
-  // Function to check if geolocation is available in the browser
-  const isGeolocationAvailable = () => {
-    return 'geolocation' in navigator;
-  };
+  // Function to check if we're in a secure context (needed for geolocation)
+  const isSecureContext = useCallback(() => {
+    return typeof window !== 'undefined' && (window.isSecureContext === true);
+  }, []);
 
-  // Get current position using Geolocation API with improved error handling
-  const getCurrentPosition = useCallback((isRetry = false) => {
+  // Function to check if geolocation is available in the browser
+  const isGeolocationAvailable = useCallback(() => {
+    return 'geolocation' in navigator && isSecureContext();
+  }, [isSecureContext]);
+
+  // Set up watchPosition for more reliable location updates
+  const setupWatchPosition = useCallback(() => {
     if (!isGeolocationAvailable()) {
-      console.error("Geolocation not available in this browser");
-      setError("La geolocalizzazione non è supportata dal tuo browser");
+      console.error("Geolocation not available in this browser or context not secure");
+      
+      if (!isSecureContext()) {
+        setError("Il contesto non è sicuro. La pagina deve essere caricata in HTTPS per utilizzare la geolocalizzazione.");
+        toast.error("Errore di sicurezza", {
+          description: "HTTPS è necessario per accedere alla geolocalizzazione."
+        });
+      } else {
+        setError("La geolocalizzazione non è supportata dal tuo browser");
+      }
+      
       setPermission("denied");
       localStorage.setItem(GEO_PERMISSION_KEY, "denied");
       setLoading(false);
-      return;
+      return null;
     }
 
-    // Prevent multiple simultaneous requests 
-    const now = Date.now();
-    if (!isRetry && lastAttempt && now - lastAttempt < 3000) {
-      console.log("Skipping duplicate geolocation request");
-      return;
+    // First check permission status if browser supports it
+    if (navigator.permissions && 'query' in navigator.permissions) {
+      navigator.permissions.query({name: 'geolocation'})
+        .then(permissionStatus => {
+          console.log('Geolocation permission status:', permissionStatus.state);
+          
+          // Add listener for permission changes
+          permissionStatus.onchange = () => {
+            console.log('Geolocation permission changed to:', permissionStatus.state);
+            if (permissionStatus.state === 'granted') {
+              // Re-request position if user grants permission
+              askPermission();
+            }
+          };
+        })
+        .catch(err => {
+          console.error('Error checking permission:', err);
+        });
     }
     
-    setLastAttempt(now);
-    setLoading(true);
-    setError(null);
-    
-    console.log("Requesting user position...");
-    
     try {
-      // First check permission status if browser supports it
-      if (navigator.permissions && 'query' in navigator.permissions) {
-        navigator.permissions.query({name: 'geolocation'})
-          .then(permissionStatus => {
-            console.log('Geolocation permission status:', permissionStatus.state);
-            
-            // Add listener for permission changes
-            permissionStatus.onchange = () => {
-              console.log('Geolocation permission changed to:', permissionStatus.state);
-              if (permissionStatus.state === 'granted') {
-                // Re-request position if user grants permission
-                getCurrentPosition();
-              }
-            };
-          })
-          .catch(err => {
-            console.error('Error checking permission:', err);
-          });
+      console.log("Setting up position watching...");
+      
+      // Clear any previous watch
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
       }
-        
-      // Request position with improved options
-      navigator.geolocation.getCurrentPosition(
+      
+      const id = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          console.log("Position obtained:", { latitude, longitude });
+          console.log("Watch position success:", { latitude, longitude });
           setUserLocation([latitude, longitude]);
           setPermission("granted");
           localStorage.setItem(GEO_PERMISSION_KEY, "granted");
@@ -90,7 +98,7 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
           });
         },
         (error) => {
-          console.error("Geolocation error:", error.message, error.code);
+          console.error("Watch position error:", error.message, error.code);
           
           let errorMessage = "Impossibile ottenere la tua posizione.";
           let shouldRetry = false;
@@ -131,26 +139,59 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
             
             // Progressive backoff for retries
             setTimeout(() => {
-              getCurrentPosition(true);
+              askPermission();
             }, 5000); // 5 seconds between retries
           }
         },
         {
           enableHighAccuracy: true,
-          timeout: 20000, // Increased to 20 seconds from 10 seconds
+          timeout: 20000, // Increased to 20 seconds for better reliability
           maximumAge: 0 // Don't use cached position
         }
       );
+      
+      setWatchId(id);
+      return id;
     } catch (e) {
-      console.error("Unexpected error in geolocation request:", e);
+      console.error("Unexpected error in geolocation watch:", e);
       setError("Errore imprevisto nella geolocalizzazione");
       setLoading(false);
       setPermission("denied");
       toast.error("Errore di geolocalizzazione", {
         description: "Si è verificato un errore imprevisto durante la richiesta della posizione."
       });
+      return null;
     }
-  }, [lastAttempt, retryCount]);
+  }, [isGeolocationAvailable, isSecureContext, watchId, retryCount]);
+
+  // Function to explicitly ask for permission
+  const askPermission = useCallback(() => {
+    // Prevent multiple simultaneous requests
+    const now = Date.now();
+    if (lastAttempt && now - lastAttempt < 3000) {
+      console.log("Skipping duplicate geolocation request");
+      return;
+    }
+    
+    setLastAttempt(now);
+    setLoading(true);
+    setError(null);
+    
+    if (!isSecureContext()) {
+      setError("Il contesto non è sicuro (HTTPS richiesto)");
+      setLoading(false);
+      setPermission("denied");
+      toast.error("Contesto non sicuro", {
+        description: "Questa pagina deve essere caricata in HTTPS per utilizzare la geolocalizzazione."
+      });
+      return;
+    }
+    
+    console.log("Explicitly asking for geolocation permission");
+    
+    // Setup watch position to continuously get updates
+    setupWatchPosition();
+  }, [lastAttempt, setupWatchPosition, isSecureContext]);
 
   // Force location request immediately on component mount
   useEffect(() => {
@@ -159,31 +200,16 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
     
     // Always try to get the location on component mount
     console.log("Initial geolocation request on component mount");
-    getCurrentPosition();
+    askPermission();
     
-    // Clear any possible watches to prevent memory leaks
+    // Cleanup function to clear watch
     return () => {
-      if ('geolocation' in navigator) {
-        navigator.geolocation.clearWatch(
-          navigator.geolocation.watchPosition(() => {}, () => {})
-        );
+      if (watchId !== null && 'geolocation' in navigator) {
+        console.log("Clearing watchPosition on unmount");
+        navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [getCurrentPosition]);
-
-  // Function to explicitly ask for permission
-  const askPermission = useCallback(() => {
-    console.log("Explicitly asking for geolocation permission");
-    setRetryCount(0); // Reset retry count
-    getCurrentPosition();
-    
-    // Try to clear any cached decisions in browser
-    if ('geolocation' in navigator) {
-      navigator.geolocation.clearWatch(
-        navigator.geolocation.watchPosition(() => {}, () => {})
-      );
-    }
-  }, [getCurrentPosition]);
+  }, [askPermission, watchId]);
 
   return { permission, userLocation, askPermission, loading, error };
 }

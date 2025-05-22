@@ -9,11 +9,22 @@ export function usePrizeLocation(userLocation: [number, number] | null) {
   const [prizeLocation, setPrizeLocation] = useState<[number, number]>(DEFAULT_FALLBACK);
   const [bufferRadius, setBufferRadius] = useState(1000); // 1km
   
+  // Check if we're in a secure context (required for geolocation)
+  const [isSecureContext] = useState(() => {
+    return typeof window !== 'undefined' && (window.isSecureContext === true);
+  });
+  
   // In a real application, this would come from your backend
   useEffect(() => {
     // Simulated prize location near user or default
     setTimeout(() => {
       try {
+        if (!isSecureContext) {
+          console.warn("Not running in secure context - using default prize location");
+          setPrizeLocation(DEFAULT_FALLBACK);
+          return;
+        }
+        
         // Use user location if available, otherwise use default
         const baseLocation = userLocation || DEFAULT_FALLBACK;
         
@@ -40,7 +51,7 @@ export function usePrizeLocation(userLocation: [number, number] | null) {
         setPrizeLocation(DEFAULT_FALLBACK);
       }
     }, 1000);
-  }, [userLocation]);
+  }, [userLocation, isSecureContext]);
 
   return { prizeLocation, bufferRadius };
 }
