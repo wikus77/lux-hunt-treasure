@@ -3,10 +3,11 @@ import React, { useEffect } from 'react';
 import { useMapEvents } from 'react-leaflet';
 import { toast } from 'sonner';
 import { SearchArea } from '@/components/maps/types';
+import L from 'leaflet'; // Adding proper Leaflet import
 
 type MapEventHandlerProps = {
   isAddingSearchArea: boolean;
-  handleMapClickArea: (e: google.maps.MapMouseEvent) => void;
+  handleMapClickArea: (e: { latlng: L.LatLng }) => void; // Updating type to match Leaflet event
   searchAreas: SearchArea[];
   setPendingRadius: (radius: number) => void;
 };
@@ -23,16 +24,8 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerProps> = ({
         console.log("MAP CLICKED", e.latlng);
         console.log("Coordinate selezionate:", e.latlng.lat, e.latlng.lng);
         
-        // Convert Leaflet event to format expected by handleMapClickArea
-        const simulatedGoogleMapEvent = {
-          latLng: {
-            lat: () => e.latlng.lat,
-            lng: () => e.latlng.lng
-          }
-        };
-        
-        // Call the handler to create the area
-        handleMapClickArea(simulatedGoogleMapEvent);
+        // Pass the Leaflet event directly - it already has the latlng property
+        handleMapClickArea(e);
       }
     }
   });

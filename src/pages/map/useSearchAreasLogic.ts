@@ -39,15 +39,16 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     });
   };
 
-  const handleMapClickArea = (e: google.maps.MapMouseEvent) => {
+  // Updated to accept Leaflet event
+  const handleMapClickArea = (e: { latlng: { lat: number; lng: number } }) => {
     console.log("Map click event received:", e);
     console.log("isAddingSearchArea state:", isAddingSearchArea);
 
-    if (isAddingSearchArea && e.latLng) {
+    if (isAddingSearchArea && e.latlng) {
       try {
         // Extract coordinates from the event
-        const lat = e.latLng.lat();
-        const lng = e.latLng.lng();
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
         const radius = pendingRadiusRef.current;
         
         console.log("Coordinate selezionate:", lat, lng);
