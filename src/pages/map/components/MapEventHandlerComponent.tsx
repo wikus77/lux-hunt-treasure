@@ -22,9 +22,19 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerComponentProps> = ({
   // Create a reference to the map instance
   const mapRef = React.useRef<L.Map | null>(null);
   
+  // Default radius value
+  const selectedRadius = 500; // Default to 500m
+  
   // Use cursor effect hook
   const map = useMap();
   useCursorEffect(map, isAddingSearchArea);
+  
+  // Store map reference
+  useEffect(() => {
+    if (map) {
+      mapRef.current = map;
+    }
+  }, [map]);
   
   // Log for debugging
   useEffect(() => {
@@ -32,7 +42,7 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerComponentProps> = ({
     console.log("Current search areas:", searchAreas);
     
     // Set default radius
-    setPendingRadius(500);
+    setPendingRadius(selectedRadius);
   }, [isAddingSearchArea, searchAreas, setPendingRadius]);
   
   return (
@@ -40,6 +50,7 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerComponentProps> = ({
       isAddingSearchArea={isAddingSearchArea} 
       handleMapClickArea={handleMapClickArea} 
       mapRef={mapRef}
+      selectedRadius={selectedRadius}
     />
   );
 };

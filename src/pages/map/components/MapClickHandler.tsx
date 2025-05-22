@@ -1,73 +1,66 @@
 
 import React, { useEffect } from 'react';
-import { useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 
 type MapClickHandlerProps = {
   isAddingSearchArea: boolean;
   handleMapClickArea: (e: any) => void;
   mapRef: React.MutableRefObject<L.Map | null>;
+  selectedRadius: number;
 };
 
-/**
- * Component dedicated to handling map click events
- */
 const MapClickHandler: React.FC<MapClickHandlerProps> = ({
   isAddingSearchArea,
   handleMapClickArea,
-  mapRef
+  mapRef,
+  selectedRadius
 }) => {
-  
-  const map = useMapEvents({
-    click: (e) => {
-      console.log("MAP CLICKED", e.latlng);
-      console.log("isAddingSearchArea state in click handler:", isAddingSearchArea);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Remove any existing click handlers
+    map.off('click');
+
+    // Only add click handler if we're in area adding mode
+    if (isAddingSearchArea) {
+      console.log("Adding click handler to map, radius:", selectedRadius);
       
-      if (isAddingSearchArea) {
-        console.log("Coordinate selezionate:", e.latlng.lat, e.latlng.lng);
+      // Use once to ensure handler is triggered only once
+      map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        console.log("Map clicked at:", lat, lng);
         
-        // Force cursor style with highest priority
-        if (map) {
-          map.getContainer().style.cursor = 'crosshair';
-          map.getContainer().classList.add('force-crosshair');
+        // Draw circle immediately on the map
+        if (mapRef.current) {
+          const circle = L.circle([lat, lng], {
+            radius: selectedRadius,
+            color: '#00BFFF',
+            fillOpacity: 0.4,
+          }).addTo(mapRef.current);
+          
+          console.log("✅ CERCHIO INSERITO SU MAPPA");
+          
+          // Debug: check all circles on the map
+          mapRef.current.eachLayer((layer) => {
+            if (layer instanceof L.Circle) {
+              console.log("👁️ CERCHIO TROVATO", layer.getLatLng());
+            }
+          });
         }
         
-        // Direct handling of click event
+        // Call the handler function to save to Supabase, etc.
         handleMapClickArea(e);
-      }
-    }
-  });
-  
-  // Store map reference directly
-  useEffect(() => {
-    if (map) {
-      mapRef.current = map;
-      console.log("Map reference set directly from MapClickHandler");
-    }
-  }, [map, mapRef]);
-  
-  // Add logging for component render with current state
-  useEffect(() => {
-    console.log("MapClickHandler rendered with isAddingSearchArea:", isAddingSearchArea);
-    
-    // Force cursor style on component mount/update if in adding mode
-    if (map && isAddingSearchArea) {
-      map.getContainer().style.cursor = 'crosshair';
-      map.getContainer().classList.add('force-crosshair');
-      map.getContainer().classList.add('crosshair-cursor-enabled');
-      document.body.classList.add('map-adding-mode');
-      console.log("FORCING CROSSHAIR IN MAPCLICKHANDLER MOUNT");
-      console.log("🟢 Cursor set to crosshair in MapClickHandler");
+      });
     }
 
-    // Clean up when unmounting or updating
     return () => {
-      if (!isAddingSearchArea && map) {
-        document.body.classList.remove('map-adding-mode');
+      if (map) {
+        map.off('click');
       }
     };
-  }, [isAddingSearchArea, map]);
-  
+  }, [isAddingSearchArea, handleMapClickArea, mapRef, selectedRadius]);
+
   return null;
 };
 
