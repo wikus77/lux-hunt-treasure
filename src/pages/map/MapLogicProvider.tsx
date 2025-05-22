@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { MapContainer, TileLayer, useMapEvents, Circle, Popup } from 'react-leaflet';
 import { toast } from 'sonner';
@@ -30,7 +31,7 @@ const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, 
     click: (e) => {
       if (isAddingSearchArea) {
         console.log("MAP CLICKED", e.latlng);
-        console.log("Cursore impostato su crosshair");
+        console.log("Coordinate selezionate:", e.latlng.lat, e.latlng.lng);
         
         // Convert Leaflet event to format expected by handleMapClickArea
         const simulatedGoogleMapEvent = {
@@ -52,7 +53,7 @@ const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, 
     
     if (isAddingSearchArea) {
       map.getContainer().style.cursor = 'crosshair';
-      console.log("Cursore cambiato in crosshair");
+      console.log("CURSORE CAMBIATO A CROSSHAIR");
       toast.info("Clicca sulla mappa per posizionare l'area", {
         duration: 3000
       });

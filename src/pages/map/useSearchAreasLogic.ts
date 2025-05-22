@@ -71,6 +71,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
           console.log("Aree precedenti:", prevAreas);
           const newAreas = [...prevAreas, newArea];
           console.log("Aree aggiornate:", newAreas);
+          console.log("AREA CREATA");
           return newAreas;
         });
 
@@ -131,6 +132,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
       };
       
       console.log("Area generata:", newArea);
+      console.log("AREA CREATA");
       setSearchAreas(prev => [...prev, newArea]);
       setActiveSearchArea(newArea.id);
       

@@ -51,7 +51,7 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
                       className="text-xs flex items-center gap-1 flex-1"
                       onClick={() => setActiveSearchArea(area.id)}
                     >
-                      <Edit className="w-3 h-3" /> Modifica
+                      <Edit className="mr-2 h-3 w-3" /> Modifica
                     </Button>
                     <Button 
                       size="sm" 
@@ -59,7 +59,7 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
                       className="text-xs flex items-center gap-1 flex-1"
                       onClick={() => deleteSearchArea(area.id)}
                     >
-                      <Trash2 className="w-3 h-3" /> Elimina
+                      <Trash2 className="mr-2 h-3 w-3" /> Elimina
                     </Button>
                   </div>
                 </div>
