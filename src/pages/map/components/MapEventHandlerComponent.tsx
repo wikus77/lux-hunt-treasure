@@ -25,7 +25,12 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerProps> = ({
   // Log the isAddingSearchArea state
   useEffect(() => {
     console.log("MapEventHandlerComponent - isAddingSearchArea:", isAddingSearchArea);
-  }, [isAddingSearchArea]);
+    // Force cursor style
+    if (map && isAddingSearchArea) {
+      map.getContainer().style.cursor = 'crosshair';
+      map.getContainer().classList.add('crosshair-cursor-enabled');
+    }
+  }, [isAddingSearchArea, map]);
   
   // Use our custom hooks
   useCursorEffect(map, isAddingSearchArea);

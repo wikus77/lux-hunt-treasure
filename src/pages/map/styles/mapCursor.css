@@ -11,3 +11,7 @@
   cursor: crosshair !important;
 }
 
+/* Force crosshair mode with highest priority */
+.crosshair-cursor-enabled * {
+  cursor: crosshair !important;
+}

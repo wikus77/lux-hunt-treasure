@@ -24,6 +24,11 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
       if (isAddingSearchArea) {
         console.log("Coordinate selezionate:", e.latlng.lat, e.latlng.lng);
         
+        // Force cursor style directly (extra enforcement)
+        if (map) {
+          map.getContainer().style.cursor = 'crosshair';
+        }
+        
         // Pass the event to the click handler
         handleMapClickArea(e);
       }
@@ -33,7 +38,13 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
   // Add logging for component render with current state
   useEffect(() => {
     console.log("MapClickHandler rendered with isAddingSearchArea:", isAddingSearchArea);
-  }, [isAddingSearchArea]);
+    
+    // Force cursor style on component mount/update if in adding mode
+    if (map && isAddingSearchArea) {
+      map.getContainer().style.cursor = 'crosshair';
+      map.getContainer().classList.add('crosshair-cursor-enabled');
+    }
+  }, [isAddingSearchArea, map]);
   
   return null;
 };

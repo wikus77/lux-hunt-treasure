@@ -14,6 +14,15 @@ export const useAreaOperations = () => {
   const [activeSearchArea, setActiveSearchArea] = useState<string | null>(null);
   const [isAddingSearchArea, setIsAddingSearchArea] = useState(false);
   
+  // Ref to track state changes for debugging
+  const isAddingRef = useRef(isAddingSearchArea);
+  
+  // Update ref when state changes
+  useEffect(() => {
+    isAddingRef.current = isAddingSearchArea;
+    console.log("useAreaOperations - isAddingSearchArea UPDATED:", isAddingSearchArea, "ref:", isAddingRef.current);
+  }, [isAddingSearchArea]);
+  
   // Sync areas with localStorage whenever they change
   useEffect(() => {
     console.log("Setting storage areas:", searchAreas);
