@@ -17,7 +17,7 @@ type SearchAreasSectionProps = {
   searchAreas: SearchArea[];
   setActiveSearchArea: (id: string | null) => void;
   clearAllSearchAreas: () => void;
-  handleAddArea: () => void;
+  handleAddArea: (radius?: number) => void;
   isAddingSearchArea: boolean;
 };
 
@@ -42,8 +42,8 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
     }
     
     setIsDialogOpen(false);
-    // Pass the radius value to handleAddArea - but first update useSearchAreasLogic to accept radius
-    handleAddArea();
+    // Pass the radius value to handleAddArea
+    handleAddArea(radius);
   };
 
   return (

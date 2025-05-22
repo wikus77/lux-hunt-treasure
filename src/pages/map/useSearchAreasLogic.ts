@@ -24,12 +24,16 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     setStorageAreas(searchAreas);
   }, [searchAreas, setStorageAreas]);
 
-  const handleAddArea = () => {
-    // Default radius of 500 meters if not specified
-    pendingRadiusRef.current = 500;
+  const handleAddArea = (radius?: number) => {
+    // Set the radius if provided
+    if (radius) {
+      pendingRadiusRef.current = radius;
+      console.log("Setting pending radius to:", radius);
+    }
+
     setIsAddingSearchArea(true);
     toast.info("Clicca sulla mappa per aggiungere una nuova area di ricerca", {
-      description: "L'area sarà creata con il raggio specificato"
+      description: `L'area sarà creata con il raggio di ${pendingRadiusRef.current} metri`
     });
   };
 
@@ -40,6 +44,9 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         const lng = e.latLng.lng();
         const radius = pendingRadiusRef.current; // Use the radius from ref
         
+        console.log("Map clicked at:", lat, lng);
+        console.log("Using radius:", radius);
+        
         const newArea: SearchArea = {
           id: uuidv4(),
           lat, lng,
@@ -49,6 +56,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
           position: { lat, lng }
         };
         
+        console.log("Adding new search area:", newArea);
         setSearchAreas(prev => [...prev, newArea]);
         setActiveSearchArea(newArea.id);
         setIsAddingSearchArea(false);

@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { MapContainer, TileLayer, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, useMapEvents, Circle, Popup } from 'react-leaflet';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION } from './useMapLogic';
 import HelpDialog from './HelpDialog';
@@ -26,10 +26,11 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // Component to handle map events
-const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas }) => {
+const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, setPendingRadius }) => {
   const map = useMapEvents({
     click: (e) => {
       if (isAddingSearchArea) {
+        console.log("Map clicked in MapEventHandler:", e.latlng);
         // Convert Leaflet event to format expected by handleMapClickArea
         const simulatedGoogleMapEvent = {
           latLng: {
@@ -90,6 +91,10 @@ const MapLogicProvider = () => {
     return () => clearTimeout(timer);
   }, [mapLoaded]);
 
+  useEffect(() => {
+    console.log("Current search areas:", searchAreas);
+  }, [searchAreas]);
+
   if (!mapLoaded) return <LoadingScreen />;
 
   return (
@@ -143,6 +148,7 @@ const MapLogicProvider = () => {
           isAddingSearchArea={isAddingSearchArea} 
           handleMapClickArea={handleMapClickArea}
           searchAreas={searchAreas}
+          setPendingRadius={setPendingRadius}
         />
       </MapContainer>
 
