@@ -36,6 +36,8 @@ export function usePrizeLocation(userLocation: [number, number] | null) {
         }
       } catch (err) {
         console.error("Error setting prize location:", err);
+        // Ensure we always have a valid prize location even if there's an error
+        setPrizeLocation(DEFAULT_FALLBACK);
       }
     }, 1000);
   }, [userLocation]);

@@ -16,9 +16,11 @@ export type UseUserLocationPermissionResult = {
 export function useUserLocationPermission(): UseUserLocationPermissionResult {
   const [permission, setPermission] = useState<"granted" | "denied" | "prompt">("prompt");
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-  const [loading, setLoading] = useState(true); // Initialize as loading
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastAttempt, setLastAttempt] = useState<number | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 3;
 
   // Function to check if geolocation is available in the browser
   const isGeolocationAvailable = () => {
@@ -26,7 +28,7 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
   };
 
   // Get current position using Geolocation API with improved error handling
-  const getCurrentPosition = useCallback(() => {
+  const getCurrentPosition = useCallback((isRetry = false) => {
     if (!isGeolocationAvailable()) {
       console.error("Geolocation not available in this browser");
       setError("La geolocalizzazione non è supportata dal tuo browser");
@@ -36,9 +38,9 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
       return;
     }
 
-    // Prevent multiple simultaneous requests
+    // Prevent multiple simultaneous requests 
     const now = Date.now();
-    if (lastAttempt && now - lastAttempt < 3000) {
+    if (!isRetry && lastAttempt && now - lastAttempt < 3000) {
       console.log("Skipping duplicate geolocation request");
       return;
     }
@@ -50,17 +52,17 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
     console.log("Requesting user position...");
     
     try {
-      // Prima verifichiamo lo stato dell'autorizzazione, se il browser lo supporta
+      // First check permission status if browser supports it
       if (navigator.permissions && 'query' in navigator.permissions) {
         navigator.permissions.query({name: 'geolocation'})
           .then(permissionStatus => {
             console.log('Geolocation permission status:', permissionStatus.state);
             
-            // Aggiungiamo un listener per i cambiamenti dello stato di autorizzazione
+            // Add listener for permission changes
             permissionStatus.onchange = () => {
               console.log('Geolocation permission changed to:', permissionStatus.state);
               if (permissionStatus.state === 'granted') {
-                // Richiediamo nuovamente la posizione se l'utente ha concesso l'autorizzazione
+                // Re-request position if user grants permission
                 getCurrentPosition();
               }
             };
@@ -70,7 +72,7 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
           });
       }
         
-      // Richiediamo la posizione con opzioni migliorate
+      // Request position with improved options
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
@@ -80,8 +82,9 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
           localStorage.setItem(GEO_PERMISSION_KEY, "granted");
           setLoading(false);
           setError(null);
+          setRetryCount(0); // Reset retry count on success
           
-          // Notifica di successo
+          // Success notification
           toast.success("Posizione rilevata con successo", {
             description: "La mappa è stata centrata sulla tua posizione attuale."
           });
@@ -90,12 +93,13 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
           console.error("Geolocation error:", error.message, error.code);
           
           let errorMessage = "Impossibile ottenere la tua posizione.";
+          let shouldRetry = false;
           
           switch (error.code) {
             case 1: // PERMISSION_DENIED
               errorMessage = "Accesso alla posizione negato dall'utente.";
               toast.error("Accesso alla posizione negato", {
-                description: "Attiva la geolocalizzazione nelle impostazioni del browser per utilizzare questa funzione."
+                description: "Per vedere la tua posizione sulla mappa, attiva la localizzazione nelle impostazioni del browser."
               });
               break;
             case 2: // POSITION_UNAVAILABLE
@@ -103,24 +107,38 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
               toast.error("Posizione non disponibile", {
                 description: "Il tuo dispositivo non è riuscito a determinare la tua posizione attuale."
               });
+              shouldRetry = true;
               break;
             case 3: // TIMEOUT
               errorMessage = "Timeout nella richiesta della posizione.";
               toast.error("Richiesta scaduta", {
                 description: "La richiesta della posizione ha impiegato troppo tempo. Riprova."
               });
+              shouldRetry = true;
               break;
           }
           
           setError(errorMessage);
-          setPermission("denied");
-          localStorage.setItem(GEO_PERMISSION_KEY, "denied");
+          setPermission(error.code === 1 ? "denied" : "prompt");
+          localStorage.setItem(GEO_PERMISSION_KEY, error.code === 1 ? "denied" : "prompt");
           setLoading(false);
+          
+          // Auto retry logic for timeout and position unavailable errors
+          if (shouldRetry && retryCount < MAX_RETRIES) {
+            const nextRetryCount = retryCount + 1;
+            setRetryCount(nextRetryCount);
+            console.log(`Retrying geolocation (${nextRetryCount}/${MAX_RETRIES})...`);
+            
+            // Progressive backoff for retries
+            setTimeout(() => {
+              getCurrentPosition(true);
+            }, 5000); // 5 seconds between retries
+          }
         },
         {
-          enableHighAccuracy: true, // Using high accuracy for better positioning
-          timeout: 10000, // 10 seconds timeout - reduced from previous setting
-          maximumAge: 0 // Don't use cached position - always get a fresh reading
+          enableHighAccuracy: true,
+          timeout: 20000, // Increased to 20 seconds from 10 seconds
+          maximumAge: 0 // Don't use cached position
         }
       );
     } catch (e) {
@@ -132,24 +150,39 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
         description: "Si è verificato un errore imprevisto durante la richiesta della posizione."
       });
     }
-  }, [lastAttempt]);
+  }, [lastAttempt, retryCount]);
 
-  // Forza la richiesta di localizzazione immediatamente al mount del componente
+  // Force location request immediately on component mount
   useEffect(() => {
     // Clear any previous stored permission to ensure we always try to get location
-    // when the component mounts - this helps if the user previously denied but has
-    // since changed their browser settings
     localStorage.removeItem(GEO_PERMISSION_KEY);
     
     // Always try to get the location on component mount
     console.log("Initial geolocation request on component mount");
     getCurrentPosition();
+    
+    // Clear any possible watches to prevent memory leaks
+    return () => {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.clearWatch(
+          navigator.geolocation.watchPosition(() => {}, () => {})
+        );
+      }
+    };
   }, [getCurrentPosition]);
 
   // Function to explicitly ask for permission
   const askPermission = useCallback(() => {
     console.log("Explicitly asking for geolocation permission");
+    setRetryCount(0); // Reset retry count
     getCurrentPosition();
+    
+    // Try to clear any cached decisions in browser
+    if ('geolocation' in navigator) {
+      navigator.geolocation.clearWatch(
+        navigator.geolocation.watchPosition(() => {}, () => {})
+      );
+    }
   }, [getCurrentPosition]);
 
   return { permission, userLocation, askPermission, loading, error };

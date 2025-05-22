@@ -28,36 +28,26 @@ export function useUserCurrentLocation() {
           error => {
             console.log("Geolocation error in useUserCurrentLocation:", error.message);
             
-            // Show specific error message based on error code
-            if (error.code === 1) { // PERMISSION_DENIED
-              toast.error("Accesso alla posizione negato", {
-                description: "Attiva la geolocalizzazione per visualizzare la mappa correttamente."
-              });
-            }
-            
-            // Default a Roma in caso di errore
+            // Roma as default location in case of error
             setCurrentLocation([41.9028, 12.4964]);
             setIsLoading(false);
           },
           { 
             enableHighAccuracy: true, 
-            timeout: 10000, 
+            timeout: 20000, // Increased timeout from 10s to 20s
             maximumAge: 0 // Always get fresh position
           }
         );
       } else {
         console.log("Geolocation non supportata");
-        toast.error("Geolocalizzazione non supportata", {
-          description: "Il tuo browser non supporta la geolocalizzazione."
-        });
         
-        // Default a Roma se geolocation non supportata
+        // Default to Roma if geolocation not supported
         setCurrentLocation([41.9028, 12.4964]);
         setIsLoading(false);
       }
     } catch (e) {
       console.error("Errore inaspettato nella geolocalizzazione:", e);
-      // Default a Roma in caso di errore generico
+      // Default to Roma in case of generic error
       setCurrentLocation([41.9028, 12.4964]);
       setIsLoading(false);
     }
