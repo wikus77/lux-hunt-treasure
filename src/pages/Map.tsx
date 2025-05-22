@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { useMapLogic } from './map/useMapLogic';
 import MapHeader from './map/MapHeader';
 import MapLogicProvider from './map/MapLogicProvider';
-import MapInteractionControls from './map/MapInteractionControls';
 import NotesSection from './map/NotesSection';
 import SearchAreasSection from './map/SearchAreasSection';
 import BottomNavigation from '@/components/layout/BottomNavigation';
@@ -15,12 +14,8 @@ const Map = () => {
   return (
     <div className="flex flex-col h-full bg-background">
       <MapHeader 
-        onAddMarker={mapLogic.handleAddMarker}
-        onAddArea={mapLogic.handleAddArea}
         onHelp={() => toast.info("Aiuto mappa", { description: "Questa funzione sarà disponibile presto" })}
         onBuzz={mapLogic.handleBuzz}
-        isAddingMarker={mapLogic.isAddingMarker}
-        isAddingArea={mapLogic.isAddingSearchArea}
         buzzMapPrice={mapLogic.buzzMapPrice}
       />
       
@@ -28,8 +23,6 @@ const Map = () => {
       <div className="container mx-auto px-4 pt-28 pb-2 max-w-6xl">
         <div className="glass-card p-4 sm:p-6 mb-6">
           <MapLogicProvider />
-          
-          {/* Remove the interaction controls that are no longer needed */}
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -54,7 +47,7 @@ const Map = () => {
         </div>
       </div>
       
-      {/* Restored Bottom Navigation */}
+      {/* Bottom Navigation */}
       <BottomNavigation />
     </div>
   );

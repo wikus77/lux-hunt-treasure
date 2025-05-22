@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import M1ssionText from "@/components/logo/M1ssionText";
 import HeaderCountdown from "@/components/layout/header/HeaderCountdown";
+import { useLocation } from "react-router-dom";
 
 interface HeaderLayoutProps {
   children?: React.ReactNode;
@@ -21,6 +22,11 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
   className = "",
 }) => {
   const isMobile = useIsMobile();
+  const location = useLocation();
+  
+  // Don't show countdown on map page
+  const isMapPage = location.pathname === "/map";
+  const shouldShowCountdown = showCountdown && !isMapPage;
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-black/50 border-b border-white/10 ${className}`}>
@@ -44,8 +50,8 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
           )}
         </div>
         
-        {/* Countdown Timer */}
-        {showCountdown && <HeaderCountdown isMobile={isMobile} />}
+        {/* Countdown Timer - only show if not on map page */}
+        {shouldShowCountdown && <HeaderCountdown isMobile={isMobile} />}
         
         {/* Children content - for additional elements */}
         {children}

@@ -5,6 +5,9 @@ import { toast } from 'sonner';
 import { DEFAULT_LOCATION } from './useMapLogic';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
+import { Zap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useMapLogic } from './useMapLogic';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -24,6 +27,7 @@ L.Marker.prototype.options.icon = DefaultIcon;
 const MapLogicProvider = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const { handleBuzz, buzzMapPrice } = useMapLogic();
   
   // Function to handle map load event
   const handleMapLoad = useCallback(() => {
@@ -82,6 +86,18 @@ const MapLogicProvider = () => {
           url='https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
         />
       </MapContainer>
+
+      {/* Mini BUZZ button */}
+      <div className="absolute bottom-4 right-4 z-20">
+        <Button
+          onClick={handleBuzz}
+          className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white shadow-[0_0_10px_rgba(217,70,239,0.5)] hover:shadow-[0_0_15px_rgba(217,70,239,0.7)]"
+          size="sm"
+        >
+          <Zap className="mr-1 h-4 w-4" />
+          BUZZ {buzzMapPrice.toFixed(2)}€
+        </Button>
+      </div>
 
       <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
     </div>
