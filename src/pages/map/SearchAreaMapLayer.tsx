@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Circle, Popup, useMap } from 'react-leaflet';
 import { SearchArea } from '@/components/maps/types';
@@ -30,10 +31,15 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
   
   // IMPROVED: Enhanced rendering using direct Leaflet API for guaranteed circle visibility
   useEffect(() => {
-    console.log("RENDERING AREAS:", searchAreas);
+    console.log("🎯 DISEGNO CERCHIO SU MAPPA:", searchAreas.length);
     const currentMap = mapRef.current || map;
     
-    if (currentMap && searchAreas.length > 0) {
+    if (!currentMap) {
+      console.warn("MAP REF NON DISPONIBILE PER IL DISEGNO");
+      return;
+    }
+    
+    if (searchAreas.length > 0) {
       // Clear previous circles that might have been added directly to the map
       // but keep other layers intact
       currentMap.eachLayer((layer) => {
@@ -59,6 +65,7 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
               setActiveSearchArea(area.id);
             });
             
+            console.log("✅ CERCHIO INSERITO:", area.lat, area.lng);
           } catch (error) {
             console.error("Error adding circle to map:", error);
           }
