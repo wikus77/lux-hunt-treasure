@@ -83,7 +83,7 @@ const MapArea: React.FC<MapAreaProps> = ({
             zoomControlOptions: isMobile ? { position: google.maps.ControlPosition.RIGHT_BOTTOM } : undefined,
             gestureHandling: isMobile ? "greedy" : "auto",
             zoomControl: true,
-            zoom: 14 // Default zoom level
+            // Removed the "zoom" property as it's not part of the expected type
           }}
         />
       </LoadScript>
