@@ -15,22 +15,23 @@ export function useCursorEffect(
     if (!map) return;
     
     if (isAddingSearchArea) {
-      // Use L.DomUtil to add the crosshair cursor class
-      L.DomUtil.addClass(map.getContainer(), 'crosshair-cursor-enabled');
+      // Use direct style setting for immediate effect
+      map.getContainer().style.cursor = 'crosshair';
       console.log("CURSORE CAMBIATO A CROSSHAIR");
       toast.info("Clicca sulla mappa per posizionare l'area", {
         duration: 3000
       });
     } else {
       // Remove the crosshair cursor class when not adding area
-      L.DomUtil.removeClass(map.getContainer(), 'crosshair-cursor-enabled');
       map.getContainer().style.cursor = 'grab';
       console.log("Cursore ripristinato a grab");
     }
     
+    console.log("CURSORE ATTIVO:", map.getContainer().style.cursor);
+    console.log("isAddingSearchArea:", isAddingSearchArea);
+    
     return () => {
       if (map) {
-        L.DomUtil.removeClass(map.getContainer(), 'crosshair-cursor-enabled');
         map.getContainer().style.cursor = 'grab';
       }
     };

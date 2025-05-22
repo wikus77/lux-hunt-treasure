@@ -18,8 +18,10 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
 }) => {
   const map = useMapEvents({
     click: (e) => {
+      console.log("MAP CLICKED", e.latlng);
+      console.log("isAddingSearchArea state in click handler:", isAddingSearchArea);
+      
       if (isAddingSearchArea) {
-        console.log("MAP CLICKED", e.latlng);
         console.log("Coordinate selezionate:", e.latlng.lat, e.latlng.lng);
         
         // Pass the event to the click handler
@@ -27,6 +29,11 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
       }
     }
   });
+  
+  // Add logging for component render with current state
+  useEffect(() => {
+    console.log("MapClickHandler rendered with isAddingSearchArea:", isAddingSearchArea);
+  }, [isAddingSearchArea]);
   
   return null;
 };

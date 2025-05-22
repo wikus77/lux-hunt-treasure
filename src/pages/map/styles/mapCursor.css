@@ -2,3 +2,11 @@
 .crosshair-cursor-enabled {
   cursor: crosshair !important;
 }
+
+.leaflet-container {
+  cursor: grab;
+}
+
+.leaflet-container.crosshair {
+  cursor: crosshair !important;
+}

@@ -19,6 +19,11 @@ export const useAreaOperations = () => {
     console.log("Setting storage areas:", searchAreas);
     setStorageAreas(searchAreas);
   }, [searchAreas, setStorageAreas]);
+
+  // Log state changes for debugging
+  useEffect(() => {
+    console.log("useAreaOperations - isAddingSearchArea changed:", isAddingSearchArea);
+  }, [isAddingSearchArea]);
   
   // Add a new area to the map based on coordinates
   const addArea = useCallback((lat: number, lng: number, radius: number) => {
@@ -81,14 +86,16 @@ export const useAreaOperations = () => {
     toast.success("Tutte le aree di ricerca sono state rimosse");
   }, []);
 
-  // Start the process of adding an area
+  // Start the process of adding an area - ensure this explicitly sets the state
   const startAddingArea = useCallback(() => {
+    console.log("Starting area addition mode");
     setIsAddingSearchArea(true);
     console.log("Modalità aggiunta area attivata, cursore cambiato in crosshair");
   }, []);
   
-  // Stop the process of adding an area
+  // Stop the process of adding an area - ensure this explicitly sets the state
   const stopAddingArea = useCallback(() => {
+    console.log("Stopping area addition mode");
     setIsAddingSearchArea(false);
     console.log("Modalità aggiunta area disattivata, cursore ripristinato");
   }, []);

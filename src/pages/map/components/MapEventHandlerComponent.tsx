@@ -22,6 +22,11 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerProps> = ({
   // Get the map instance from useMapEvents
   const map = useMapEvents({});
   
+  // Log the isAddingSearchArea state
+  useEffect(() => {
+    console.log("MapEventHandlerComponent - isAddingSearchArea:", isAddingSearchArea);
+  }, [isAddingSearchArea]);
+  
   // Use our custom hooks
   useCursorEffect(map, isAddingSearchArea);
   useMapBounds(map, searchAreas);
