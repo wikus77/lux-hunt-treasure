@@ -10,7 +10,7 @@ export const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
 
 export const useMapLogic = () => {
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
-  const searchAreasLogic = useSearchAreasLogic(DEFAULT_LOCATION);
+  const searchAreasLogic = useSearchAreasLogic();
   const markerLogic = useMapMarkersLogic(DEFAULT_LOCATION);
   const { buzzMapPrice, handlePayment } = usePricingLogic();
   

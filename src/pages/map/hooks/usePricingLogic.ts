@@ -1,8 +1,11 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
+import { useStripePayment } from '@/hooks/useStripePayment';
+import { toast } from 'sonner';
 
 export const usePricingLogic = () => {
   const [buzzMapPrice, setBuzzMapPrice] = useState(1.99);
+  const { processBuzzPurchase, loading } = useStripePayment();
   
   // Calculate radius based on price
   const calculateSearchAreaRadius = () => {
@@ -12,9 +15,29 @@ export const usePricingLogic = () => {
     return baseRadius;
   };
   
+  // Handle payment for map buzz
+  const handlePayment = useCallback(async () => {
+    try {
+      // Process the map buzz payment
+      const data = await processBuzzPurchase(true, buzzMapPrice);
+      
+      if (data) {
+        toast.info("Redirezione al pagamento in corso...");
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Errore durante il pagamento");
+      return false;
+    }
+  }, [buzzMapPrice, processBuzzPurchase]);
+  
   return {
     buzzMapPrice,
     setBuzzMapPrice,
-    calculateSearchAreaRadius
+    calculateSearchAreaRadius,
+    handlePayment,
+    loading
   };
 };
