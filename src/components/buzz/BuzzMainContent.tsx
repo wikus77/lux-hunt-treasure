@@ -30,7 +30,9 @@ const BuzzMainContent = () => {
         transition={{ duration: 0.5, delay: 0.1 }}
         className="mb-12 text-center"
       >
-        <h1 className="text-3xl sm:text-4xl font-bold mb-2 gradient-text-cyan glow-text">BUZZ</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-[#00D1FF] font-orbitron" style={{ 
+          textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+        }}>BUZZ</h1>
         <p className="text-white/70 max-w-md mx-auto">
           Premi il pulsante per ricevere indizi sulla posizione del premio
         </p>

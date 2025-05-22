@@ -8,6 +8,7 @@ import { useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
+import GradientBox from "@/components/ui/gradient-box";
 
 const Map = () => {
   // Initialize the buzz clues context to make it available for dynamic pricing
@@ -53,26 +54,36 @@ const Map = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.5 }}
       >
-        <h1 className="text-4xl font-bold gradient-text-cyan text-center mt-6 mb-8">MAPPA</h1>
+        <h1 className="text-4xl font-bold text-[#00D1FF] text-center mt-6 mb-8 font-orbitron" style={{ 
+          textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+        }}>MAPPA</h1>
       </motion.div>
       
       <div className={`pt-4 ${isMobile ? 'sm:pt-6' : 'sm:pt-6'} h-full relative pb-20`}>
         <motion.div
-          className="glass-card mx-4 mb-4 overflow-hidden"
+          className="mx-4 mb-4 overflow-hidden"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
         >
-          <MapLogicProvider />
+          <GradientBox className="overflow-hidden">
+            <MapLogicProvider />
+          </GradientBox>
         </motion.div>
         
         <motion.div
-          className="glass-card mx-4 p-4 text-center text-white/80"
+          className="mx-4 overflow-hidden"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.5 }}
         >
-          Ecco l'area stimata dove si trova il premio!
+          <GradientBox className="p-4 text-center">
+            <p className="text-[#00D1FF] font-medium" style={{ 
+              textShadow: "0 0 5px rgba(0, 209, 255, 0.4)"
+            }}>
+              Ecco l'area stimata dove si trova il premio!
+            </p>
+          </GradientBox>
         </motion.div>
       </div>
       
