@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import PublicLayout from "../../components/layout/PublicLayout";
@@ -16,7 +17,7 @@ import HowItWorks from "../../pages/HowItWorks";
 import AccessDenied from "../../pages/AccessDenied";
 import Index from "../../pages/Index";
 import { EmailVerificationPage } from "../../components/auth/EmailVerificationHandler";
-import MapTestPage from "../pages/MapTest";
+import MapTestPage from "../../pages/MapTest";
 
 const PublicRoutes = () => {
   // Feature flag for bottom navigation visibility (can be changed later)
