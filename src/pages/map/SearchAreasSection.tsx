@@ -52,6 +52,9 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
     console.log("Confirming area add with radius:", radius);
     // Pass the radius value to handleAddArea
     handleAddArea(radius);
+    
+    // Force log to confirm the action
+    console.log("ATTIVATA MODALITÀ AGGIUNTA AREA dalla Dialog");
   };
 
   return (

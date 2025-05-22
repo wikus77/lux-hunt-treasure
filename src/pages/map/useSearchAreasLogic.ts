@@ -25,6 +25,9 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
   // Log the isAddingSearchArea state changes
   useEffect(() => {
     console.log("useSearchAreasLogic - isAddingSearchArea:", areaOperations.isAddingSearchArea);
+    if (!areaOperations.isAddingSearchArea) {
+      console.warn("FLAG isAddingSearchArea NON ATTIVO");
+    }
   }, [areaOperations.isAddingSearchArea]);
 
   const handleAddArea = (radius?: number) => {
@@ -34,8 +37,12 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
       console.log("Setting pending radius to:", radius);
     }
 
-    // Ensure we explicitly set the state to true
+    // CRITICAL: Force setting isAddingSearchArea to true
     areaOperations.setIsAddingSearchArea(true);
+    // Use startAddingArea function which handles the state update correctly
+    areaOperations.startAddingArea();
+    
+    console.log("ATTIVATA MODALITÀ AGGIUNTA AREA");
     console.log("Modalità aggiunta area attivata, cursore cambiato in crosshair");
     toast.info("Clicca sulla mappa per aggiungere una nuova area di ricerca", {
       description: `L'area sarà creata con il raggio di ${pendingRadiusRef.current} metri`
