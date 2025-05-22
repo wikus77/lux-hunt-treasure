@@ -101,14 +101,14 @@ const darkModeStyle = [
   },
 ];
 
-const mapLibraries: ["places"] = ["places"];
+// Define map libraries as a constant outside the component to prevent rerendering
+const mapLibraries = ["places"] as ["places"];
 
 const MapLogicProvider = () => {
   // Load the Google Maps script
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries: mapLibraries,
-    loadingElement: <LoadingScreen />,
   });
 
   // Get user location information - request it immediately on component mount
