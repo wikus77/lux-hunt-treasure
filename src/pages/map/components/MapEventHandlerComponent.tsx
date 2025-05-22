@@ -44,6 +44,11 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerComponentProps> = ({
     
     // Set default radius
     setPendingRadius(selectedRadius);
+    
+    console.log("🔍 Map instance available:", !!mapRef.current);
+    if (mapRef.current) {
+      console.log("🗺️ Map bounds:", mapRef.current.getBounds().toString());
+    }
   }, [isAddingSearchArea, searchAreas, setPendingRadius]);
   
   return (
