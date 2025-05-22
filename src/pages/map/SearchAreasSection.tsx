@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Circle, Plus } from "lucide-react";
 import { SearchArea } from "@/components/maps/types";
@@ -31,6 +31,13 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [areaRadius, setAreaRadius] = useState("500");
 
+  // Handle dialog state - close it if we're already adding an area
+  useEffect(() => {
+    if (isAddingSearchArea) {
+      setIsDialogOpen(false);
+    }
+  }, [isAddingSearchArea]);
+
   const handleAddClick = () => {
     setIsDialogOpen(true);
   };
@@ -42,6 +49,7 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
     }
     
     setIsDialogOpen(false);
+    console.log("Confirming area add with radius:", radius);
     // Pass the radius value to handleAddArea
     handleAddArea(radius);
   };
@@ -68,6 +76,7 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
             variant="outline"
             size="sm"
             onClick={handleAddClick}
+            disabled={isAddingSearchArea}
             className="text-xs flex items-center gap-1 bg-black/40 hover:bg-black/60 text-[#00D1FF] hover:text-[#33D9FF]"
           >
             <Plus className="h-3.5 w-3.5" />

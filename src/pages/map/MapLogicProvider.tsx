@@ -43,6 +43,24 @@ const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, 
     }
   });
   
+  // Change cursor style based on the current action state
+  useEffect(() => {
+    if (!map) return;
+    
+    if (isAddingSearchArea) {
+      map.getContainer().style.cursor = 'crosshair';
+      toast.info("Clicca sulla mappa per posizionare l'area", {
+        duration: 3000
+      });
+    } else {
+      map.getContainer().style.cursor = '';
+    }
+    
+    return () => {
+      if (map) map.getContainer().style.cursor = '';
+    };
+  }, [isAddingSearchArea, map]);
+  
   // Ensure search areas are visible in the viewport
   useEffect(() => {
     if (searchAreas.length > 0 && map) {
@@ -152,12 +170,11 @@ const MapLogicProvider = () => {
         />
       </MapContainer>
 
-      {/* Mini BUZZ button */}
-      <div className="absolute bottom-4 right-4 z-20">
+      {/* BUZZ button - centered at bottom */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
         <Button
           onClick={handleBuzz}
           className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white shadow-[0_0_10px_rgba(217,70,239,0.5)] hover:shadow-[0_0_15px_rgba(217,70,239,0.7)]"
-          size="sm"
         >
           <Zap className="mr-1 h-4 w-4" />
           BUZZ {buzzMapPrice.toFixed(2)}€

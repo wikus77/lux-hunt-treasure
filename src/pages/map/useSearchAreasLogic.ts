@@ -22,6 +22,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
   // Sync areas with localStorage
   useEffect(() => {
     setStorageAreas(searchAreas);
+    console.log("Updated search areas in localStorage:", searchAreas);
   }, [searchAreas, setStorageAreas]);
 
   const handleAddArea = (radius?: number) => {
@@ -57,7 +58,12 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         };
         
         console.log("Adding new search area:", newArea);
-        setSearchAreas(prev => [...prev, newArea]);
+        setSearchAreas(prevAreas => {
+          console.log("Previous areas:", prevAreas);
+          const newAreas = [...prevAreas, newArea];
+          console.log("Updated areas:", newAreas);
+          return newAreas;
+        });
         setActiveSearchArea(newArea.id);
         setIsAddingSearchArea(false);
         
@@ -131,6 +137,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
   };
 
   const saveSearchArea = (id: string, label: string, radius: number) => {
+    console.log("Saving search area:", id, label, radius);
     setSearchAreas(searchAreas.map(area =>
       area.id === id ? { ...area, label, radius } : area
     ));
@@ -138,9 +145,17 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
   };
 
   const deleteSearchArea = (id: string) => {
+    console.log("Deleting search area:", id);
     setSearchAreas(searchAreas.filter(area => area.id !== id));
     if (activeSearchArea === id) setActiveSearchArea(null);
     toast.success("Area di ricerca rimossa");
+  };
+
+  const clearAllSearchAreas = () => {
+    console.log("Clearing all search areas");
+    setSearchAreas([]);
+    setActiveSearchArea(null);
+    toast.success("Tutte le aree di ricerca sono state rimosse");
   };
 
   const editSearchArea = (id: string) => setActiveSearchArea(id);
@@ -156,6 +171,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     handleMapClickArea,
     saveSearchArea,
     deleteSearchArea,
+    clearAllSearchAreas,
     editSearchArea,
     generateSearchArea,
     // Export a method to set the pending radius

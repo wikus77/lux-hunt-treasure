@@ -33,10 +33,7 @@ const Map = () => {
             <SearchAreasSection
               searchAreas={mapLogic.searchAreas}
               setActiveSearchArea={mapLogic.setActiveSearchArea}
-              clearAllSearchAreas={() => {
-                mapLogic.searchAreas.forEach(area => mapLogic.deleteSearchArea(area.id));
-                toast.success("Tutte le aree di ricerca sono state cancellate");
-              }}
+              clearAllSearchAreas={mapLogic.clearAllSearchAreas}
               handleAddArea={mapLogic.handleAddArea}
               isAddingSearchArea={mapLogic.isAddingSearchArea}
             />

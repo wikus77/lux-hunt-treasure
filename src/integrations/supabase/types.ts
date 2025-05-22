@@ -72,6 +72,33 @@ export type Database = {
         }
         Relationships: []
       }
+      buzz_map_actions: {
+        Row: {
+          clue_count: number
+          cost_eur: number
+          created_at: string
+          id: string
+          radius_generated: number
+          user_id: string
+        }
+        Insert: {
+          clue_count: number
+          cost_eur: number
+          created_at?: string
+          id?: string
+          radius_generated: number
+          user_id: string
+        }
+        Update: {
+          clue_count?: number
+          cost_eur?: number
+          created_at?: string
+          id?: string
+          radius_generated?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       buzz_purchases: {
         Row: {
           created_at: string

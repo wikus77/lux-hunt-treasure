@@ -12,7 +12,7 @@ export const useMapLogic = () => {
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
   const searchAreasLogic = useSearchAreasLogic(DEFAULT_LOCATION);
   const markerLogic = useMapMarkersLogic();
-  const { buzzMapPrice, handlePayment } = usePricingLogic();
+  const { buzzMapPrice, buzzRadiusMeters, handlePayment } = usePricingLogic();
   
   // Try to get user's location on component mount
   useEffect(() => {
@@ -43,15 +43,15 @@ export const useMapLogic = () => {
   const handleBuzz = useCallback(() => {
     handlePayment().then(success => {
       if (success) {
-        // Generate a search area after successful payment
-        const areaId = searchAreasLogic.generateSearchArea(5000);
+        // Generate a search area after successful payment using the calculated radius
+        const areaId = searchAreasLogic.generateSearchArea(buzzRadiusMeters);
         if (areaId) {
           toast.success('Area di ricerca generata con successo!');
           searchAreasLogic.setActiveSearchArea(areaId);
         }
       }
     });
-  }, [searchAreasLogic, handlePayment]);
+  }, [searchAreasLogic, handlePayment, buzzRadiusMeters]);
   
   return {
     // Location
