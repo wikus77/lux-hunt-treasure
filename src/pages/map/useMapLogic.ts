@@ -4,7 +4,9 @@ import { toast } from 'sonner';
 import { useSearchAreasLogic } from './useSearchAreasLogic';
 import { useMapMarkersLogic } from './useMapMarkersLogic';
 import { usePricingLogic } from './hooks/usePricingLogic';
-import { DEFAULT_LOCATION } from './constants/mapConstants';
+
+// Default location (Rome, Italy)
+export const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
 
 export const useMapLogic = () => {
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
