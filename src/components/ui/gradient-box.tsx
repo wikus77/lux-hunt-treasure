@@ -15,13 +15,10 @@ const GradientBox = ({
 }: GradientBoxProps) => {
   return (
     <div className={cn(
-      "relative glass-card overflow-hidden bg-black/30 backdrop-blur-sm border border-gray-800 rounded-[24px] shadow-lg",
+      "relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg",
       className
     )}>
-      {/* Gradient border at the top - matching exactly the reference image */}
-      {showTopGradient && (
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
-      )}
+      {/* The top gradient is now handled by the m1ssion-glass-card class */}
       {children}
     </div>
   );

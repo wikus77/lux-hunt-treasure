@@ -113,7 +113,7 @@ const NotesSection: React.FC = () => {
       {showInput && (
         <div className="mb-3 flex items-center gap-2">
           <input
-            className="flex-1 rounded bg-background/80 px-3 py-2 mr-2 text-white border border-projectx-deep-blue/50 focus:outline-none"
+            className="flex-1 rounded bg-black/60 px-3 py-2 mr-2 text-white border border-white/10 focus:outline-none"
             maxLength={120}
             value={noteText}
             placeholder={editingNote ? "Modifica nota..." : "Scrivi una nota..."}

@@ -1,8 +1,6 @@
 
 import { HelpCircle, Zap } from "lucide-react";
-import { toast } from "sonner";
 import M1ssionText from "@/components/logo/M1ssionText";
-import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AgentBadge from "@/components/AgentBadge";
 
@@ -54,7 +52,7 @@ const MapHeader = ({
             </div>
           </div>
           
-          {/* Removed Countdown Timer */}
+          {/* Line glow effect */}
           <div className="line-glow"></div>
         </div>
       </header>
