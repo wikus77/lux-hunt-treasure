@@ -33,46 +33,48 @@ const MapLogicProvider = () => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [mapZoom, setMapZoom] = useState(15);
   const [mapCenter, setMapCenter] = useState<google.maps.LatLngLiteral | null>(null);
-  const [retryAttempts, setRetryAttempts] = useState(0);
-  const MAX_AUTO_RETRY = 3;
 
-  // Geolocalizzazione diretta
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
       toast.error("Geolocalizzazione non supportata dal browser");
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const coords = [position.coords.latitude, position.coords.longitude] as [number, number];
-        setUserLocation(coords);
-        setMapCenter({ lat: coords[0], lng: coords[1] });
-        setLocationReceived(true);
-        setRetryAttempts(0);
-      },
-      (error) => {
-        console.warn("Errore geolocalizzazione:", error);
-        toast.error("Errore nella geolocalizzazione: " + error.message);
-        setMapCenter({ lat: 41.9028, lng: 12.4964 });
-      },
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-    );
+
+    const geoSuccess = (position: GeolocationPosition) => {
+      const coords = [position.coords.latitude, position.coords.longitude] as [number, number];
+      setUserLocation(coords);
+      setMapCenter({ lat: coords[0], lng: coords[1] });
+      setLocationReceived(true);
+    };
+
+    const geoError = (error: GeolocationPositionError) => {
+      console.warn("Errore geolocalizzazione:", error);
+      toast.error("Errore nella geolocalizzazione: " + error.message);
+      setMapCenter({ lat: 41.9028, lng: 12.4964 });
+    };
+
+    navigator.permissions?.query({ name: 'geolocation' as PermissionName }).then(result => {
+      if (result.state === 'granted' || result.state === 'prompt') {
+        navigator.geolocation.getCurrentPosition(geoSuccess, geoError, {
+          enableHighAccuracy: true,
+          timeout: 30000,
+          maximumAge: 0,
+        });
+      } else {
+        geoError({
+          code: 1,
+          message: 'Geolocalizzazione bloccata. Attiva i permessi nel browser.',
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3,
+        } as GeolocationPositionError);
+      }
+    });
   }, []);
 
   useEffect(() => {
     requestLocation();
   }, [requestLocation]);
-
-  useEffect(() => {
-    if (!userLocation && retryAttempts < MAX_AUTO_RETRY) {
-      const retryTimer = setTimeout(() => {
-        console.log(`Retry ${retryAttempts + 1}/${MAX_AUTO_RETRY}`);
-        requestLocation();
-        setRetryAttempts(prev => prev + 1);
-      }, 5000);
-      return () => clearTimeout(retryTimer);
-    }
-  }, [userLocation, retryAttempts, requestLocation]);
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -86,7 +88,6 @@ const MapLogicProvider = () => {
   const retryGetLocation = () => {
     setUserLocation(null);
     setLocationReceived(false);
-    setRetryAttempts(0);
     requestLocation();
     toast.info("Richiesta posizione in corso", {
       description: "Assicurati di concedere l'autorizzazione quando richiesto dal browser."
