@@ -7,6 +7,7 @@ import MapStatusMessages from './components/MapStatusMessages';
 import { usePrizeLocation } from './hooks/usePrizeLocation';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
+import ItalyRegions from './components/ItalyRegions';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -28,8 +29,29 @@ const MapLogicProvider = () => {
   const [locationReceived, setLocationReceived] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const { prizeLocation, bufferRadius } = usePrizeLocation(userLocation);
+  const [regionsData, setRegionsData] = useState<any>(null);
+
+  // Fetch Italy regions GeoJSON data
+  useEffect(() => {
+    fetch('/assets/italyRegions.geojson')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setRegionsData(data);
+      })
+      .catch(error => {
+        console.error('Error loading Italy regions data:', error);
+      });
+  }, []);
 
   const requestLocation = useCallback(() => {
+    // Check for stored permission
+    const geoPermission = localStorage.getItem('geoPermission');
+    
     if (!navigator.geolocation) {
       toast.error("Geolocalizzazione non supportata dal browser");
       return;
@@ -95,7 +117,7 @@ const MapLogicProvider = () => {
   return (
     <div style={{ height: '60vh', width: '100%', zIndex: 1 }} className="rounded-[24px] overflow-hidden relative">
       <MapContainer 
-        center={userLocation as [number, number]} 
+        center={userLocation} 
         zoom={15} 
         style={{ height: '100%', width: '100%' }}
       >
@@ -123,6 +145,8 @@ const MapLogicProvider = () => {
             radius={bufferRadius}
           />
         )}
+
+        {regionsData && <ItalyRegions geoJsonData={regionsData} />}
       </MapContainer>
 
       <MapStatusMessages
