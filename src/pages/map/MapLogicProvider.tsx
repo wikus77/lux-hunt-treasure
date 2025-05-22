@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { DEFAULT_LOCATION } from './utils/leafletIcons';
 import MapStatusMessages from './components/MapStatusMessages';
 import { usePrizeLocation } from './hooks/usePrizeLocation';
+import { useUserCurrentLocation } from './useUserCurrentLocation';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
 import 'leaflet/dist/leaflet.css';
@@ -24,93 +25,29 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const MapLogicProvider = () => {
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  // Use our optimized custom hook for user location
+  const userLocation = useUserCurrentLocation();
   const [locationReceived, setLocationReceived] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const { prizeLocation, bufferRadius } = usePrizeLocation(userLocation);
-  const [watchId, setWatchId] = useState<number | null>(null);
-
-  const requestLocation = useCallback(() => {
-    // Check for stored permission
-    const geoPermission = localStorage.getItem('geoPermission');
-    
-    if (!navigator.geolocation) {
-      toast.error("Geolocalizzazione non supportata dal browser");
-      return;
-    }
-
-    // Use watchPosition instead of getCurrentPosition for better accuracy
-    const id = navigator.geolocation.watchPosition(
-      (position) => {
-        const coords: [number, number] = [position.coords.latitude, position.coords.longitude];
-        console.log("Posizione rilevata:", coords);
-        setUserLocation(coords);
-        setLocationReceived(true);
-        localStorage.setItem('geoPermission', 'granted');
-      },
-      (error) => {
-        console.warn("Errore geolocalizzazione:", error);
-        toast.error("Errore nella geolocalizzazione: " + error.message);
-        
-        // IP-based fallback using ipapi.co
-        toast.info("Attivazione localizzazione approssimativa", {
-          description: "Utilizziamo la tua posizione IP per una stima approssimativa."
-        });
-        
-        fetch("https://ipapi.co/json/")
-          .then(res => res.json())
-          .then(data => {
-            const coords: [number, number] = [data.latitude, data.longitude];
-            setUserLocation(coords);
-            setLocationReceived(true);
-            toast.success("Posizione IP ottenuta", {
-              description: "Geolocalizzazione tramite IP approssimativa attivata."
-            });
-          })
-          .catch(err => {
-            console.error("Errore nel fallback IP:", err);
-            setUserLocation([41.9028, 12.4964]); // fallback Roma
-            toast.error("Impossibile determinare la posizione", {
-              description: "Utilizzando una posizione predefinita."
-            });
-          });
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 40000, // Increased timeout to 40s as requested
-        maximumAge: 0,
-      }
-    );
-
-    setWatchId(id);
-  }, []);
-
+  
+  // Update locationReceived state when userLocation changes
   useEffect(() => {
-    requestLocation();
-    
-    // Cleanup function to clear watch when component unmounts
-    return () => {
-      if (watchId !== null) {
-        navigator.geolocation.clearWatch(watchId);
-      }
-    };
-  }, [requestLocation, watchId]);
-
-  const retryGetLocation = () => {
-    setUserLocation(null);
-    setLocationReceived(false);
-    
-    // Clear previous watch
-    if (watchId !== null) {
-      navigator.geolocation.clearWatch(watchId);
-      setWatchId(null);
+    if (userLocation) {
+      console.log("Location received in MapLogicProvider:", userLocation);
+      setLocationReceived(true);
     }
-    
-    requestLocation();
+  }, [userLocation]);
+
+  // Retry function that uses our custom hook's functionality
+  const retryGetLocation = useCallback(() => {
+    setLocationReceived(false);
+    // Force page refresh to trigger new geolocation request
+    window.location.reload();
     toast.info("Richiesta posizione in corso", {
       description: "Assicurati di concedere l'autorizzazione quando richiesto dal browser."
     });
-  };
+  }, []);
 
   if (!userLocation) return <LoadingScreen />;
 
@@ -121,9 +58,16 @@ const MapLogicProvider = () => {
         zoom={15} 
         style={{ height: '100%', width: '100%' }}
       >
+        {/* Balanced tone TileLayer - not too dark, not too light */}
         <TileLayer
           attribution='&copy; CartoDB'
-          url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+          url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png'
+        />
+
+        {/* Add labels layer separately for better visibility and control */}
+        <TileLayer
+          attribution='&copy; CartoDB'
+          url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png'
         />
 
         <Marker
@@ -145,8 +89,6 @@ const MapLogicProvider = () => {
             radius={bufferRadius}
           />
         )}
-
-        {/* GeoJSON layer removed as requested */}
       </MapContainer>
 
       <MapStatusMessages
