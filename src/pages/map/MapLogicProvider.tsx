@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import { MapContainer, TileLayer } from 'react-leaflet';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION } from './useMapLogic';
 import HelpDialog from './HelpDialog';
