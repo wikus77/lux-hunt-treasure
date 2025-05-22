@@ -8,9 +8,10 @@ import { useUserLocationPermission } from '@/hooks/useUserLocationPermission';
 import { usePrizeLocation } from './hooks/usePrizeLocation';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
+import { GOOGLE_MAPS_API_KEY } from '@/config/apiKeys';
 
-// Google Maps API key from the project
-const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
+// Define map libraries as a constant outside the component to prevent rerendering
+const mapLibraries = ["places"] as ["places"];
 
 // Map container styles
 const mapContainerStyle = {

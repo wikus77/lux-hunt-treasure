@@ -31,6 +31,13 @@ export function useUserCurrentLocation() {
             // Roma as default location in case of error
             setCurrentLocation([41.9028, 12.4964]);
             setIsLoading(false);
+            
+            // Show toast only for permission denied
+            if (error.code === 1) {
+              toast.error("Accesso alla posizione negato", {
+                description: "Per vedere la tua posizione sulla mappa, attiva la localizzazione nelle impostazioni del browser."
+              });
+            }
           },
           { 
             enableHighAccuracy: true, 

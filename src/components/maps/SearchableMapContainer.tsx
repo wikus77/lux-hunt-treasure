@@ -6,6 +6,7 @@ import MapMarkerManager from "./MapMarkerManager";
 import { useToast } from "@/hooks/use-toast";
 import { allOptions, italianCities } from "./useFilteredLocations";
 import { City, useMapMarkers } from "./useMapMarkers";
+import { GOOGLE_MAPS_API_KEY } from "@/config/apiKeys";
 
 const containerStyle = {
   width: "100%",
@@ -15,7 +16,6 @@ const containerStyle = {
 
 const defaultCenter = { lat: 48.8566, lng: 10.3522 };
 const defaultZoom = 5;
-const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
 const mapLibraries: ["places"] = ["places"];
 
 const SearchableMapContainer: React.FC = () => {
