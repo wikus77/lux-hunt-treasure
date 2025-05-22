@@ -14,6 +14,9 @@ import AddingAreaInstructions from './components/AddingAreaInstructions';
 import BuzzButton from './components/BuzzButton';
 import MapLayers from './components/MapLayers';
 
+// Import the CSS for cursor styles
+import './styles/mapCursor.css';
+
 // Fix for Leaflet default icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
