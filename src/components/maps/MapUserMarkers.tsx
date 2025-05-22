@@ -2,14 +2,7 @@
 import React from "react";
 import { Marker, InfoWindow } from "@react-google-maps/api";
 import MapMarkerInfoWindow from "./MapMarkerInfoWindow";
-
-type MapMarker = {
-  id: string;
-  lat: number;
-  lng: number;
-  note: string;
-  editing?: boolean;
-};
+import { MapMarker } from "./types";
 
 type Props = {
   markers: MapMarker[];

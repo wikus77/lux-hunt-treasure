@@ -3,14 +3,7 @@ import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Pencil, X, Check, MapPinX } from "lucide-react";
-
-type MapMarker = {
-  id: string;
-  lat: number;
-  lng: number;
-  note: string;
-  editing?: boolean;
-};
+import { MapMarker } from "./types";
 
 type Props = {
   marker: MapMarker;

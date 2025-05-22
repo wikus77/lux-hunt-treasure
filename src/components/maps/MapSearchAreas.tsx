@@ -12,18 +12,7 @@ import {
   AlertDialogCancel,
   AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
-
-type SearchArea = {
-  id: string;
-  lat: number;
-  lng: number;
-  radius: number;
-  label: string;
-  confidence?: string;
-  editing?: boolean;
-  isAI?: boolean;
-  color?: string;
-};
+import { SearchArea } from "./types";
 
 type Props = {
   searchAreas: SearchArea[];

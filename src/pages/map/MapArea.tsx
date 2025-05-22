@@ -1,9 +1,10 @@
 
 import React from "react";
 import { LoadScript } from "@react-google-maps/api";
-import { MapMarkers, type MapMarker, type SearchArea } from "@/components/maps/MapMarkers";
+import { MapMarkers } from "@/components/maps/MapMarkers";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { GOOGLE_MAPS_API_KEY } from "@/config/apiKeys";
+import type { MapMarker, SearchArea } from "@/components/maps/types";
 
 const DEFAULT_CENTER = { lat: 41.9028, lng: 12.4964 }; // Center of Italy (Rome)
 

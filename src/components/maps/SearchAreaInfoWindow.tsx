@@ -1,16 +1,7 @@
+
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-
-type SearchArea = {
-  id: string;
-  lat: number;
-  lng: number;
-  radius: number;
-  label: string;
-  color?: string;
-  isAI?: boolean;
-  confidence?: string;
-};
+import { SearchArea } from "./types";
 
 type Props = {
   area: SearchArea;
