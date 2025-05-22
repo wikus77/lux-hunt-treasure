@@ -1,15 +1,16 @@
 
-import React from "react";
-import GradientBox from "@/components/ui/gradient-box";
+import React from 'react';
 
-const LoadingScreen = () => (
-  <GradientBox className="min-h-[60vh] flex items-center justify-center p-6">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00D1FF] mb-4"></div>
-      <p className="text-white/80">Caricamento mappa e localizzazione...</p>
-      <p className="text-white/60 text-sm mt-1">Un attimo di pazienza</p>
+const LoadingScreen = () => {
+  return (
+    <div className="flex items-center justify-center h-full min-h-[400px]">
+      <div className="relative">
+        <div className="w-12 h-12 border-t-2 border-b-2 border-[#00D1FF] rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-r-2 border-l-2 border-[#F059FF] rounded-full animate-spin absolute top-0 left-0" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+      </div>
+      <p className="ml-4 text-[#00D1FF] text-lg">Caricamento mappa...</p>
     </div>
-  </GradientBox>
-);
+  );
+};
 
 export default LoadingScreen;
