@@ -13,7 +13,15 @@ const Map = () => {
   
   return (
     <div className="flex flex-col h-full bg-background">
-      <MapHeader />
+      <MapHeader 
+        onAddMarker={mapLogic.handleAddMarker}
+        onAddArea={mapLogic.handleAddArea}
+        onHelp={() => toast.info("Aiuto mappa", { description: "Questa funzione sarà disponibile presto" })}
+        onBuzz={mapLogic.handleBuzz}
+        isAddingMarker={mapLogic.isAddingMarker}
+        isAddingArea={mapLogic.isAddingSearchArea}
+        buzzMapPrice={mapLogic.buzzMapPrice}
+      />
       
       <div className="container mx-auto px-4 py-2 max-w-6xl">
         <div className="glass-card p-4 sm:p-6 mb-6">
