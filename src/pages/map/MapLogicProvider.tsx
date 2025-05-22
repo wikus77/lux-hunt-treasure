@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useLoadScript, Marker, Circle } from '@react-google-maps/api';
 import { toast } from 'sonner';
@@ -101,9 +100,6 @@ const darkModeStyle = [
     stylers: [{ color: "#17263c" }],
   },
 ];
-
-// Define map libraries as a constant outside the component to prevent rerendering
-const mapLibraries = ["places"] as ["places"];
 
 const MapLogicProvider = () => {
   // Load the Google Maps script
