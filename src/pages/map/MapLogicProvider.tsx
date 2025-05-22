@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { MapContainer, TileLayer, useMapEvents, Circle, Popup } from 'react-leaflet';
 import { toast } from 'sonner';
@@ -30,8 +29,9 @@ const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, 
   const map = useMapEvents({
     click: (e) => {
       if (isAddingSearchArea) {
-        console.log("Map clicked in MapEventHandler:", e.latlng);
+        console.log("MAP CLICKED", e.latlng);
         console.log("Cursore impostato su crosshair");
+        
         // Convert Leaflet event to format expected by handleMapClickArea
         const simulatedGoogleMapEvent = {
           latLng: {
@@ -39,6 +39,8 @@ const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, 
             lng: () => e.latlng.lng
           }
         };
+        
+        // Call the handler to create the area
         handleMapClickArea(simulatedGoogleMapEvent);
       }
     }
