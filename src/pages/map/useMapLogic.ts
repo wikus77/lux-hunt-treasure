@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
-import { useUserCurrentLocation } from "./useUserCurrentLocation";
+import { useRefactoredUserLocation } from "./useRefactoredUserLocation";
 import { useMapMarkersLogic } from "./useMapMarkersLogic";
 import { useSearchAreasLogic } from "./useSearchAreasLogic";
 import { usePricingLogic } from "./hooks/usePricingLogic";
@@ -14,7 +15,7 @@ export const useMapLogic = () => {
   const [loadError, setLoadError] = useState<Error | null>(null);
   
   const location = useLocation();
-  const currentLocation = useUserCurrentLocation();
+  const { currentLocation } = useRefactoredUserLocation();
   const { getNextVagueClue } = useBuzzClues();
 
   // Hook composition
