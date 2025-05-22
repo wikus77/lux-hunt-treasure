@@ -1,58 +1,65 @@
 
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { toast } from "sonner";
+import { useBuzzClues } from "@/hooks/useBuzzClues";
+import { useNotifications } from "@/hooks/useNotifications";
 
-// Type for callback function
-type GenerateAreaCallback = (radius?: number) => string | null;
-
-export const usePaymentEffects = (generateAreaCallback: GenerateAreaCallback) => {
+export const usePaymentEffects = (generateSearchArea: (radius: number) => string | null) => {
+  const [showCluePopup, setShowCluePopup] = useState(false);
+  const [clueMessage, setClueMessage] = useState("");
+  const [processedSessionIds, setProcessedSessionIds] = useState<Set<string>>(new Set());
   const [isMapBuzzActive, setIsMapBuzzActive] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  
   const location = useLocation();
+  const { incrementUnlockedCluesAndAddClue } = useBuzzClues();
+  const { addNotification } = useNotifications();
 
-  // Handle successful payments returning from payment page
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const fromParam = params.get('from');
-    const statusParam = params.get('status');
-    const sessionParam = params.get('session');
-    
-    // If returning from a successful map buzz payment
-    if (fromParam === 'map' && statusParam === 'success' && sessionParam?.includes('map_buzz_') && !paymentSuccess) {
-      try {
-        setPaymentSuccess(true);
+    try {
+      if (
+        location.state?.paymentCompleted && 
+        location.state?.mapBuzz &&
+        location.state?.sessionId && 
+        !processedSessionIds.has(location.state.sessionId)
+      ) {
+        setProcessedSessionIds(prev => new Set(prev).add(location.state.sessionId));
         
-        // Generate search area with default radius (500km)
-        const areaId = generateAreaCallback(500000);
+        const clue = location.state?.clue;
+        incrementUnlockedCluesAndAddClue();
         
-        if (areaId) {
-          toast.success("Area di ricerca generata con successo!", {
-            description: "Un'area di ricerca è stata aggiunta alla tua mappa.",
-            duration: 5000,
-          });
-        } else {
-          toast.error("Errore nella generazione dell'area", {
-            description: "C'è stato un problema durante la generazione dell'area di ricerca.",
-            duration: 5000,
-          });
+        if (clue && clue.description) {
+          setTimeout(() => {
+            setClueMessage(clue.description);
+            setShowCluePopup(true);
+
+            addNotification({
+              title: "Nuovo indizio sbloccato",
+              description: clue.description,
+            });
+
+            // Fix: Pass a default radius value (e.g. 50000 for 50km) to generateSearchArea
+            const generatedAreaId = generateSearchArea(50000);
+            
+            if (generatedAreaId) {
+              toast.success("Area di ricerca generata!", {
+                description: "Controlla la mappa per vedere la nuova area basata sugli indizi disponibili."
+              });
+            }
+          }, 1000);
         }
-        
-        // Reset the URL to avoid duplicate operations on refresh
-        window.history.replaceState({}, document.title, '/map');
-      } catch (error) {
-        console.error("Errore nel processo di generazione area post-pagamento:", error);
-        toast.error("Errore nel processo", {
-          description: "Si è verificato un errore durante il processo. Riprova più tardi.",
-        });
       }
+    } catch (e) {
+      console.error("Errore nell'elaborazione dello stato:", e);
     }
-  }, [location, paymentSuccess, generateAreaCallback]);
+  }, [location.state, generateSearchArea, incrementUnlockedCluesAndAddClue, addNotification, processedSessionIds]);
 
   return {
+    showCluePopup,
+    setShowCluePopup,
+    clueMessage,
+    setClueMessage,
     isMapBuzzActive,
-    setIsMapBuzzActive,
-    paymentSuccess,
-    setPaymentSuccess
+    setIsMapBuzzActive
   };
 };

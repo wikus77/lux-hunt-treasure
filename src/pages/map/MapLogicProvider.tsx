@@ -1,14 +1,12 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { MapContainer, TileLayer, ZoomControl } from 'react-leaflet';
+import { MapContainer, TileLayer } from 'react-leaflet';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION } from './useMapLogic';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 // Fix for Leaflet default icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -43,15 +41,6 @@ const MapLogicProvider = () => {
     return () => clearTimeout(timer);
   }, [mapLoaded]);
 
-  // Function to handle the BUZZ button click
-  const handleBuzzClick = () => {
-    toast.success("Generazione area di ricerca in corso", {
-      description: "Stai per essere reindirizzato al pagamento"
-    });
-    // Redirect to payment page or open payment modal
-    window.location.href = '/payment-methods?from=map&price=1.99&session=map_buzz_' + Date.now();
-  };
-
   if (!mapLoaded) return <LoadingScreen />;
 
   return (
@@ -80,32 +69,19 @@ const MapLogicProvider = () => {
         }}
         className="z-10"
         whenReady={handleMapLoad}
-        zoomControl={false}
       >
-        {/* Dark map style for M1SSION theme */}
+        {/* Balanced tone TileLayer - not too dark, not too light */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          attribution='&copy; CartoDB'
           url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
         />
 
-        {/* Add labels layer separately for better visibility */}
+        {/* Add labels layer separately for better visibility and control */}
         <TileLayer
+          attribution='&copy; CartoDB'
           url='https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
         />
-        
-        <ZoomControl position="bottomright" />
       </MapContainer>
-
-      {/* Mini BUZZ button positioned in bottom right */}
-      <div className="absolute bottom-4 right-4 z-20">
-        <Button 
-          onClick={handleBuzzClick}
-          className="bg-gradient-to-r from-projectx-blue to-projectx-pink hover:shadow-[0_0_15px_rgba(217,70,239,0.5)] flex items-center gap-1.5 py-1.5 px-3 rounded-full text-sm font-medium"
-        >
-          <Zap className="h-4 w-4" />
-          <span>Buzz 1.99€</span>
-        </Button>
-      </div>
 
       <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
     </div>
