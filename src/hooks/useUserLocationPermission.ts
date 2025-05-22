@@ -40,7 +40,8 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
       if (!isSecureContext()) {
         const { errorMessage, permissionState } = handleSecurityError();
         setError(errorMessage);
-        setPermission(permissionState);
+        // Fix: Explicitly cast the string to the correct type
+        setPermission(permissionState as "denied" | "granted" | "prompt");
         localStorage.setItem(GEO_PERMISSION_KEY, permissionState);
       } else {
         setError("La geolocalizzazione non è supportata dal tuo browser");
@@ -90,7 +91,8 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
         const { errorMessage, shouldRetry, permissionState } = handleGeolocationError(error);
         
         setError(errorMessage);
-        setPermission(permissionState);
+        // Fix: Explicitly cast the string to the correct type
+        setPermission(permissionState as "denied" | "granted" | "prompt");
         localStorage.setItem(GEO_PERMISSION_KEY, permissionState);
         setLoading(false);
         

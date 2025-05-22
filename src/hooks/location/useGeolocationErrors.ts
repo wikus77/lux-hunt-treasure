@@ -11,10 +11,12 @@ export function useGeolocationErrors() {
     
     let errorMessage = "Impossibile ottenere la tua posizione.";
     let shouldRetry = false;
+    let permissionState: "denied" | "prompt" = "prompt";
     
     switch (error.code) {
       case 1: // PERMISSION_DENIED
         errorMessage = "Accesso alla posizione negato dall'utente.";
+        permissionState = "denied";
         toast.error("Accesso alla posizione negato", {
           description: "Per vedere la tua posizione sulla mappa, attiva la localizzazione nelle impostazioni del browser."
         });
@@ -35,7 +37,7 @@ export function useGeolocationErrors() {
         break;
     }
     
-    return { errorMessage, shouldRetry, permissionState: error.code === 1 ? "denied" : "prompt" };
+    return { errorMessage, shouldRetry, permissionState };
   }, []);
 
   const handleSecurityError = useCallback(() => {
@@ -45,7 +47,7 @@ export function useGeolocationErrors() {
       description: "HTTPS è necessario per accedere alla geolocalizzazione."
     });
     
-    return { errorMessage, shouldRetry: false, permissionState: "denied" };
+    return { errorMessage, shouldRetry: false, permissionState: "denied" as const };
   }, []);
 
   return { 
