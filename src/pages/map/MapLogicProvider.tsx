@@ -26,21 +26,53 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // Component to handle map events
-const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea }) => {
+const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas }) => {
   const map = useMapEvents({
     click: (e) => {
       if (isAddingSearchArea) {
-        handleMapClickArea(e);
+        // Convert Leaflet event to format expected by handleMapClickArea
+        const simulatedGoogleMapEvent = {
+          latLng: {
+            lat: () => e.latlng.lat,
+            lng: () => e.latlng.lng
+          }
+        };
+        handleMapClickArea(simulatedGoogleMapEvent);
       }
     }
   });
+  
+  // Ensure search areas are visible in the viewport
+  useEffect(() => {
+    if (searchAreas.length > 0 && map) {
+      const bounds = L.latLngBounds([]);
+      searchAreas.forEach(area => {
+        bounds.extend([area.lat, area.lng]);
+      });
+      
+      // Only fit bounds if we have valid bounds
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
+  }, [searchAreas, map]);
+  
   return null;
 };
 
 const MapLogicProvider = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
-  const { handleBuzz, buzzMapPrice, searchAreas, isAddingSearchArea, handleMapClickArea, setActiveSearchArea, deleteSearchArea } = useMapLogic();
+  const { 
+    handleBuzz, 
+    buzzMapPrice, 
+    searchAreas, 
+    isAddingSearchArea, 
+    handleMapClickArea, 
+    setActiveSearchArea, 
+    deleteSearchArea,
+    setPendingRadius
+  } = useMapLogic();
   
   // Function to handle map load event
   const handleMapLoad = useCallback(() => {
@@ -110,6 +142,7 @@ const MapLogicProvider = () => {
         <MapEventHandler 
           isAddingSearchArea={isAddingSearchArea} 
           handleMapClickArea={handleMapClickArea}
+          searchAreas={searchAreas}
         />
       </MapContainer>
 

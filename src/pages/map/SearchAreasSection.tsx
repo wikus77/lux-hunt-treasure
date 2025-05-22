@@ -42,7 +42,7 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
     }
     
     setIsDialogOpen(false);
-    // Convert meters to what the map expects and trigger the add area function
+    // Pass the radius value to handleAddArea - but first update useSearchAreasLogic to accept radius
     handleAddArea();
   };
 

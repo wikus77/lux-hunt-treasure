@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { SearchArea } from "@/components/maps/types";
 import { v4 as uuidv4 } from "uuid";
@@ -16,6 +16,8 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
   const [isAddingSearchArea, setIsAddingSearchArea] = useState(false);
   const { unlockedClues } = useBuzzClues();
   const { notifications } = useNotifications();
+  // Add a ref to store the radius temporarily while user selects map location
+  const pendingRadiusRef = useRef<number>(500);
 
   // Sync areas with localStorage
   useEffect(() => {
@@ -23,9 +25,11 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
   }, [searchAreas, setStorageAreas]);
 
   const handleAddArea = () => {
+    // Default radius of 500 meters if not specified
+    pendingRadiusRef.current = 500;
     setIsAddingSearchArea(true);
     toast.info("Clicca sulla mappa per aggiungere una nuova area di ricerca", {
-      description: "Potrai personalizzare il nome e il raggio dell'area"
+      description: "L'area sarà creata con il raggio specificato"
     });
   };
 
@@ -34,17 +38,21 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
       try {
         const lat = e.latLng.lat();
         const lng = e.latLng.lng();
+        const radius = pendingRadiusRef.current; // Use the radius from ref
+        
         const newArea: SearchArea = {
           id: uuidv4(),
           lat, lng,
-          radius: 500,
+          radius: radius,
           label: "Area di ricerca",
-          color: "#7209b7",
+          color: "#00D1FF", // Using the requested color
           position: { lat, lng }
         };
+        
         setSearchAreas(prev => [...prev, newArea]);
         setActiveSearchArea(newArea.id);
         setIsAddingSearchArea(false);
+        
         toast.success("Area di ricerca aggiunta alla mappa", {
           description: "Clicca sull'area per modificare il nome o il raggio"
         });
@@ -142,5 +150,9 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     deleteSearchArea,
     editSearchArea,
     generateSearchArea,
+    // Export a method to set the pending radius
+    setPendingRadius: (radius: number) => {
+      pendingRadiusRef.current = radius;
+    }
   };
 }

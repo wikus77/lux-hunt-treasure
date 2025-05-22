@@ -7,6 +7,7 @@ import NotesSection from './map/NotesSection';
 import SearchAreasSection from './map/SearchAreasSection';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
+import M1ssionText from '@/components/logo/M1ssionText';
 
 const Map = () => {
   const mapLogic = useMapLogic();
@@ -14,7 +15,7 @@ const Map = () => {
   return (
     <div className="flex flex-col h-full bg-background">
       <UnifiedHeader
-        leftComponent={<span className="text-xl font-semibold text-white">Mappa</span>}
+        leftComponent={<M1ssionText />}
       />
       
       {/* Proper spacing to avoid header overlap */}
