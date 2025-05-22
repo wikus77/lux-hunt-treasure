@@ -12,6 +12,7 @@ import Map from "../../pages/Map";
 import TestAgent from "../../pages/TestAgent";
 import AdminPrizeForm from "../../pages/AdminPrizeForm";
 import MapTestSafe from "../../pages/MapTestSafe";
+import MapSafe from "../../pages/MapSafe";
 
 const UserRoutes = () => {
   return (
@@ -63,6 +64,12 @@ const UserRoutes = () => {
           <ProtectedRoute>
             <MapTestSafe />
           </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/map-safe"
+        element={
+          <MapSafe />
         }
       />
       <Route
