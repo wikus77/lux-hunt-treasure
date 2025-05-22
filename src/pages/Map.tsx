@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { useMapLogic } from './map/useMapLogic';
 import MapLogicProvider from './map/MapLogicProvider';
 import NotesSection from './map/NotesSection';
-import SearchAreasSection from './map/SearchAreasSection';
+import MapPointsSection from './map/MapPointsSection';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import M1ssionText from '@/components/logo/M1ssionText';
@@ -30,12 +30,12 @@ const Map = () => {
           </div>
           
           <div className="m1ssion-glass-card p-4 sm:p-6">
-            <SearchAreasSection
-              searchAreas={mapLogic.searchAreas}
-              setActiveSearchArea={mapLogic.setActiveSearchArea}
-              clearAllSearchAreas={mapLogic.clearAllSearchAreas}
-              handleAddArea={mapLogic.handleAddArea}
-              isAddingSearchArea={mapLogic.isAddingSearchArea}
+            <MapPointsSection
+              mapPoints={mapLogic.mapPoints}
+              isAddingMapPoint={mapLogic.isAddingMapPoint}
+              toggleAddingMapPoint={mapLogic.toggleAddingMapPoint}
+              setActiveMapPoint={mapLogic.setActiveMapPoint}
+              deleteMapPoint={mapLogic.deleteMapPoint}
             />
           </div>
         </div>

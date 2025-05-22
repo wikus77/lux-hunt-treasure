@@ -1,15 +1,17 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
-import { MapContainer, TileLayer, useMapEvents, Circle, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, useMapEvents, Circle, Popup, Marker } from 'react-leaflet';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION } from './useMapLogic';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
-import { Circle as CircleIcon } from 'lucide-react';
+import { Circle as CircleIcon, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMapLogic } from './useMapLogic';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import SearchAreaMapLayer from './SearchAreaMapLayer';
+import MapPointPopup from './MapPointPopup';
 
 // Fix for Leaflet default icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -25,12 +27,18 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // Component to handle map events
-const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, setPendingRadius }) => {
+const MapEventHandler = ({ 
+  isAddingSearchArea, 
+  handleMapClickArea, 
+  searchAreas, 
+  setPendingRadius,
+  isAddingMapPoint,
+  onMapPointClick
+}) => {
   const map = useMapEvents({
     click: (e) => {
       if (isAddingSearchArea) {
-        console.log("MAP CLICKED", e.latlng);
-        console.log("Cursore impostato su crosshair");
+        console.log("MAP CLICKED FOR SEARCH AREA", e.latlng);
         
         // Convert Leaflet event to format expected by handleMapClickArea
         const simulatedGoogleMapEvent = {
@@ -42,6 +50,9 @@ const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, 
         
         // Call the handler to create the area
         handleMapClickArea(simulatedGoogleMapEvent);
+      } else if (isAddingMapPoint) {
+        console.log("MAP CLICKED FOR MAP POINT", e.latlng);
+        onMapPointClick(e.latlng.lat, e.latlng.lng);
       }
     }
   });
@@ -52,8 +63,14 @@ const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, 
     
     if (isAddingSearchArea) {
       map.getContainer().style.cursor = 'crosshair';
-      console.log("Cursore cambiato in crosshair");
+      console.log("Cursore cambiato in crosshair per area");
       toast.info("Clicca sulla mappa per posizionare l'area", {
+        duration: 3000
+      });
+    } else if (isAddingMapPoint) {
+      map.getContainer().style.cursor = 'crosshair';
+      console.log("Cursore cambiato in crosshair per punto");
+      toast.info("Clicca sulla mappa per posizionare il punto", {
         duration: 3000
       });
     } else {
@@ -64,7 +81,7 @@ const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, 
     return () => {
       if (map) map.getContainer().style.cursor = 'grab';
     };
-  }, [isAddingSearchArea, map]);
+  }, [isAddingSearchArea, isAddingMapPoint, map]);
   
   // Ensure search areas are visible in the viewport
   useEffect(() => {
@@ -87,6 +104,8 @@ const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, 
 const MapLogicProvider = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const [newPoint, setNewPoint] = useState(null);
+  
   const { 
     handleBuzz, 
     buzzMapPrice, 
@@ -95,7 +114,16 @@ const MapLogicProvider = () => {
     handleMapClickArea, 
     setActiveSearchArea, 
     deleteSearchArea,
-    setPendingRadius
+    setPendingRadius,
+    mapPoints,
+    isAddingMapPoint,
+    setIsAddingMapPoint,
+    activeMapPoint,
+    setActiveMapPoint,
+    addMapPoint,
+    updateMapPoint,
+    deleteMapPoint,
+    requestLocationPermission
   } = useMapLogic();
   
   // Function to handle map load event
@@ -114,9 +142,43 @@ const MapLogicProvider = () => {
     return () => clearTimeout(timer);
   }, [mapLoaded]);
 
-  useEffect(() => {
-    console.log("Current search areas:", searchAreas);
-  }, [searchAreas]);
+  // Handle map point click when adding a new point
+  const handleMapPointClick = (lat, lng) => {
+    setNewPoint({
+      id: 'new',
+      lat,
+      lng,
+      title: '',
+      note: '',
+      position: { lat, lng }
+    });
+    setIsAddingMapPoint(false);
+  };
+
+  // Handle save of new map point
+  const handleSaveNewPoint = async (title, note) => {
+    if (newPoint) {
+      await addMapPoint({
+        lat: newPoint.lat,
+        lng: newPoint.lng,
+        title,
+        note
+      });
+      setNewPoint(null);
+    }
+  };
+
+  // Handle update of existing map point
+  const handleUpdatePoint = async (id, title, note) => {
+    await updateMapPoint(id, { title, note });
+    setActiveMapPoint(null);
+  };
+
+  // Handle cancel of new point
+  const handleCancelNewPoint = () => {
+    setNewPoint(null);
+    toast.info('Aggiunta punto annullata');
+  };
 
   if (!mapLoaded) return <LoadingScreen />;
 
@@ -166,14 +228,64 @@ const MapLogicProvider = () => {
           deleteSearchArea={deleteSearchArea}
         />
         
+        {/* Display map points */}
+        {mapPoints.map(point => (
+          <Marker 
+            key={point.id}
+            position={[point.lat, point.lng]}
+            eventHandlers={{
+              click: () => setActiveMapPoint(point.id)
+            }}
+          >
+            {activeMapPoint === point.id && (
+              <Popup>
+                <MapPointPopup
+                  point={point}
+                  onSave={(title, note) => handleUpdatePoint(point.id, title, note)}
+                  onCancel={() => setActiveMapPoint(null)}
+                  onDelete={() => deleteMapPoint(point.id)}
+                />
+              </Popup>
+            )}
+          </Marker>
+        ))}
+        
+        {/* Display new point being added */}
+        {newPoint && (
+          <Marker position={[newPoint.lat, newPoint.lng]}>
+            <Popup>
+              <MapPointPopup
+                point={newPoint}
+                isNew={true}
+                onSave={handleSaveNewPoint}
+                onCancel={handleCancelNewPoint}
+              />
+            </Popup>
+          </Marker>
+        )}
+        
         {/* Map event handler */}
         <MapEventHandler 
           isAddingSearchArea={isAddingSearchArea} 
           handleMapClickArea={handleMapClickArea}
           searchAreas={searchAreas}
           setPendingRadius={setPendingRadius}
+          isAddingMapPoint={isAddingMapPoint}
+          onMapPointClick={handleMapPointClick}
         />
       </MapContainer>
+
+      {/* Location button */}
+      <div className="absolute top-4 right-4 z-20">
+        <Button
+          onClick={requestLocationPermission}
+          className="bg-black/50 hover:bg-black/70 text-white border border-white/20"
+          size="sm"
+        >
+          <MapPin className="mr-1 h-4 w-4" />
+          Posizione
+        </Button>
+      </div>
 
       {/* BUZZ button - centered at bottom */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
@@ -192,6 +304,16 @@ const MapLogicProvider = () => {
           <div className="bg-black/80 p-4 rounded-lg text-center max-w-md border border-[#00D1FF]/50 shadow-[0_0_15px_rgba(0,209,255,0.3)]">
             <p className="text-white font-medium">Clicca sulla mappa per posizionare l'area di interesse</p>
             <p className="text-sm text-gray-300 mt-1">L'area verrà creata nel punto selezionato</p>
+          </div>
+        </div>
+      )}
+
+      {/* Adding Point Instructions Overlay */}
+      {isAddingMapPoint && (
+        <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-30 pointer-events-none">
+          <div className="bg-black/80 p-4 rounded-lg text-center max-w-md border border-[#39FF14]/50 shadow-[0_0_15px_rgba(57,255,20,0.3)]">
+            <p className="text-white font-medium">Clicca sulla mappa per posizionare il punto di interesse</p>
+            <p className="text-sm text-gray-300 mt-1">Potrai aggiungere un titolo e una nota dopo aver posizionato il punto</p>
           </div>
         </div>
       )}
