@@ -1,6 +1,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import GradientBox from "@/components/ui/gradient-box";
 
 interface PrizeVisionProps {
   progress: number;
@@ -20,10 +21,7 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
   };
 
   return (
-    <div className="glass-card rounded-xl overflow-hidden" style={{ 
-      background: "linear-gradient(180deg, rgba(19, 21, 36, 0.5) 0%, rgba(0, 0, 0, 0.5) 100%)",
-      boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.06)"
-    }}>
+    <GradientBox className="w-full">
       <div className="p-4 border-b border-white/10 flex justify-between items-center">
         <h2 className="text-lg md:text-xl font-orbitron font-bold">
           <span className="text-[#00D1FF]" style={{ 
@@ -79,6 +77,6 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
           ></div>
         </div>
       </div>
-    </div>
+    </GradientBox>
   );
 }

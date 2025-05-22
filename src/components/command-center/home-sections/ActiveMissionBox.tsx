@@ -1,5 +1,6 @@
 
 import { motion } from "framer-motion";
+import GradientBox from "@/components/ui/gradient-box";
 
 interface MissionProps {
   mission: {
@@ -22,10 +23,7 @@ export function ActiveMissionBox({ mission }: MissionProps) {
   const timeProgressPercent = ((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100;
   
   return (
-    <div className="glass-card rounded-xl" style={{ 
-      background: "linear-gradient(180deg, rgba(19, 21, 36, 0.5) 0%, rgba(0, 0, 0, 0.5) 100%)",
-      boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.06)"
-    }}>
+    <GradientBox>
       <div className="p-4 border-b border-white/10">
         <div className="flex justify-between items-center">
           <h2 className="text-lg md:text-xl font-orbitron">
@@ -88,6 +86,6 @@ export function ActiveMissionBox({ mission }: MissionProps) {
           </motion.button>
         </div>
       </div>
-    </div>
+    </GradientBox>
   );
 }
