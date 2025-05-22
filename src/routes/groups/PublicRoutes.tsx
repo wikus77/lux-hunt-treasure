@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import PublicLayout from "../../components/layout/PublicLayout";
@@ -17,6 +16,7 @@ import HowItWorks from "../../pages/HowItWorks";
 import AccessDenied from "../../pages/AccessDenied";
 import Index from "../../pages/Index";
 import { EmailVerificationPage } from "../../components/auth/EmailVerificationHandler";
+import MapTestPage from "../pages/MapTest";
 
 const PublicRoutes = () => {
   // Feature flag for bottom navigation visibility (can be changed later)
@@ -40,6 +40,9 @@ const PublicRoutes = () => {
       <Route path="/cookie-policy" element={<PublicLayout showBottomNav={showBottomNav}><CookiePolicy /></PublicLayout>} />
       <Route path="/how-it-works" element={<PublicLayout showBottomNav={showBottomNav}><HowItWorks /></PublicLayout>} />
       <Route path="/access-denied" element={<PublicLayout showBottomNav={showBottomNav}><AccessDenied /></PublicLayout>} />
+      
+      {/* Add the MapTest route */}
+      <Route path="/map-test" element={<MapTestPage />} />
     </Routes>
   );
 };
