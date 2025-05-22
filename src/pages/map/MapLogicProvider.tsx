@@ -34,7 +34,7 @@ const MapLogicProvider = () => {
   // Get user location information using watchPosition for more reliable results
   const { permission, userLocation, askPermission, loading: locationLoading, error: locationError } = useUserLocationPermission();
   
-  // Setup location watcher
+  // Setup location watcher with improved error handling
   const {
     locationReceived,
     setupWatchPosition,
@@ -43,24 +43,33 @@ const MapLogicProvider = () => {
   
   // Get prize location based on user's location
   const { prizeLocation, bufferRadius } = usePrizeLocation(userLocation);
+
+  // Force HTTPS for geolocation - critical fix
+  useEffect(() => {
+    if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
+      window.location.href = window.location.href.replace('http:', 'https:');
+    }
+  }, []);
   
   // Check for stored permission immediately on mount
   useEffect(() => {
     const storedPermission = localStorage.getItem(GEO_PERMISSION_KEY);
+    
     if (storedPermission === 'granted' && isSecureContext) {
       console.log("Permission already granted, setting up watch position without prompting");
       setupWatchPosition();
     }
   }, [isSecureContext, setupWatchPosition]);
 
-  // Set up watchPosition instead of getCurrentPosition for more reliable updates
+  // Set up watchPosition for more reliable updates
   useEffect(() => {
     if (isSecureContext && permission === 'granted') {
+      console.log("Setting up watch position with granted permission");
       setupWatchPosition();
     }
   }, [isSecureContext, permission, setupWatchPosition]);
 
-  // Request location permission immediately when component mounts
+  // Request location permission immediately when component mounts - using watchPosition
   useEffect(() => {
     if (isSecureContext) {
       console.log("MapLogicProvider mounted - requesting geolocation");
@@ -79,6 +88,11 @@ const MapLogicProvider = () => {
         }, 3000);
         
         return () => clearTimeout(checkTimer);
+      } else {
+        // If permission was denied, show a helpful message
+        toast.error("Accesso alla posizione negato", {
+          description: "Per vedere la tua posizione sulla mappa, attiva la localizzazione nelle impostazioni del browser."
+        });
       }
     }
   }, [askPermission, permission, userLocation, isSecureContext]);

@@ -37,7 +37,7 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
     const storedPermission = localStorage.getItem(GEO_PERMISSION_KEY);
     if (storedPermission) {
       if (storedPermission === "granted" || storedPermission === "denied" || storedPermission === "prompt") {
-        setPermission(storedPermission);
+        setPermission(storedPermission as "granted" | "denied" | "prompt");
       }
     }
   }, []);
@@ -71,6 +71,12 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
           if (permissionStatus.state === 'granted') {
             // Re-request position if user grants permission
             askPermission();
+            
+            // Store the permission
+            localStorage.setItem(GEO_PERMISSION_KEY, 'granted');
+          } else if (permissionStatus.state === 'denied') {
+            setPermission('denied');
+            localStorage.setItem(GEO_PERMISSION_KEY, 'denied');
           }
         };
       }
@@ -91,10 +97,12 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
         setError(null);
         setRetryCount(0); // Reset retry count on success
         
-        // Success notification
-        toast.success("Posizione rilevata con successo", {
-          description: "La mappa è stata centrata sulla tua posizione attuale."
-        });
+        // Success notification - only show once
+        if (!userLocation) {
+          toast.success("Posizione rilevata con successo", {
+            description: "La mappa è stata centrata sulla tua posizione attuale."
+          });
+        }
       },
       onError: (error) => {
         const { errorMessage, shouldRetry, permissionState } = handleGeolocationError(error);
@@ -113,8 +121,13 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
           // Progressive backoff for retries
           setTimeout(() => {
             askPermission();
-          }, 5000); // 5 seconds between retries
+          }, 5000 * nextRetryCount); // Increasing delay between retries
         }
+      },
+      options: {
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 0
       }
     });
     
@@ -129,7 +142,8 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
     watchId, 
     startWatchingPosition, 
     handleGeolocationError, 
-    retryCount
+    retryCount,
+    userLocation
   ]);
 
   // Function to explicitly ask for permission
@@ -146,6 +160,7 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
     if (storedPermission === 'denied') {
       console.log("Permission previously denied, not asking again");
       setLoading(false);
+      setPermission('denied');
       return;
     }
     
@@ -180,6 +195,12 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
       setPermission("denied");
       setLoading(false);
       return;
+    }
+    
+    // If permission is granted, use it
+    if (storedPermission === 'granted') {
+      console.log("Stored permission is granted, requesting location immediately");
+      setPermission("granted");
     }
     
     // Always try to get the location on component mount
