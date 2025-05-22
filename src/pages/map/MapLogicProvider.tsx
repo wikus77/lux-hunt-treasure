@@ -45,6 +45,7 @@ const MapLogicProvider = () => {
       setUserLocation(coords);
       setMapCenter({ lat: coords[0], lng: coords[1] });
       setLocationReceived(true);
+      localStorage.setItem('geoPermission', 'granted');
     };
 
     const geoError = (error: GeolocationPositionError) => {
@@ -52,6 +53,17 @@ const MapLogicProvider = () => {
       toast.error("Errore nella geolocalizzazione: " + error.message);
       setMapCenter({ lat: 41.9028, lng: 12.4964 });
     };
+
+    const savedPermission = localStorage.getItem('geoPermission');
+
+    if (savedPermission === 'granted') {
+      navigator.geolocation.getCurrentPosition(geoSuccess, geoError, {
+        enableHighAccuracy: true,
+        timeout: 30000,
+        maximumAge: 0,
+      });
+      return;
+    }
 
     navigator.permissions?.query({ name: 'geolocation' as PermissionName }).then(result => {
       if (result.state === 'granted' || result.state === 'prompt') {
