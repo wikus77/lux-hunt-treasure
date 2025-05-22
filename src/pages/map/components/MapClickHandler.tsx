@@ -19,6 +19,24 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
     const map = mapRef.current;
     if (!map) return;
 
+    // TEST CODE: Add a static circle to verify rendering works
+    setTimeout(() => {
+      if (!mapRef.current) return;
+
+      const lat = 41.9028;
+      const lng = 12.4964;
+
+      const circle = L.circle([lat, lng], {
+        radius: 800,
+        color: '#00FF00',
+        fillOpacity: 0.6
+      })
+      .setStyle({ pane: 'overlayPane' })
+      .addTo(mapRef.current!);
+
+      console.log('✅ TEST: CERCHIO STATICO INSERITO', lat, lng);
+    }, 1500); // attende caricamento mappa
+
     // Remove any existing click handlers
     map.off('click');
 
