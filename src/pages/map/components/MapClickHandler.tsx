@@ -26,28 +26,34 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
     if (isAddingSearchArea) {
       console.log("Adding click handler to map, radius:", selectedRadius);
       
-      // Use once to ensure handler is triggered only once
+      // Add the new click handler with enhanced visibility
       map.on('click', (e) => {
         const { lat, lng } = e.latlng;
-        console.log("Map clicked at:", lat, lng);
-        
-        // Draw circle immediately on the map
-        if (mapRef.current) {
-          const circle = L.circle([lat, lng], {
-            radius: selectedRadius,
-            color: '#00BFFF',
-            fillOpacity: 0.4,
-          }).addTo(mapRef.current);
-          
-          console.log("✅ CERCHIO INSERITO SU MAPPA");
-          
-          // Debug: check all circles on the map
-          mapRef.current.eachLayer((layer) => {
-            if (layer instanceof L.Circle) {
-              console.log("👁️ CERCHIO TROVATO", layer.getLatLng());
-            }
-          });
+
+        if (!mapRef.current) {
+          console.error("❌ MAP REF NON DISPONIBILE");
+          return;
         }
+
+        console.log("📍 CLICK A:", lat, lng);
+        console.log("🎯 MAP REF:", mapRef.current);
+
+        const circle = L.circle([lat, lng], {
+          radius: selectedRadius,
+          color: "#00BFFF",
+          fillOpacity: 0.4
+        })
+        .setStyle({ pane: 'overlayPane' }) // forza visibilità su layer visibile
+        .addTo(mapRef.current);
+
+        console.log("✅ CERCHIO INSERITO SU MAPPA");
+        
+        // Debug: check all circles on the map
+        mapRef.current.eachLayer((layer) => {
+          if (layer instanceof L.Circle) {
+            console.log("👁️ CERCHIO TROVATO", layer.getLatLng());
+          }
+        });
         
         // Call the handler function to save to Supabase, etc.
         handleMapClickArea(e);
