@@ -304,3 +304,8 @@
 .transition-standard {
   @apply transition-all duration-300 ease-in-out;
 }
+
+/* Crosshair cursor for map area selection */
+.crosshair-cursor-enabled {
+  cursor: crosshair !important;
+}

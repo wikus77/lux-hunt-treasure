@@ -72,7 +72,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
           console.log("Aree precedenti:", prevAreas);
           const newAreas = [...prevAreas, newArea];
           console.log("Aree aggiornate:", newAreas);
-          console.log("AREA CREATA");
+          console.log("AREA CREATA CON RAGGIO", radius);
           return newAreas;
         });
 

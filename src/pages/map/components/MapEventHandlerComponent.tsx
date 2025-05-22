@@ -35,18 +35,24 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerProps> = ({
     if (!map) return;
     
     if (isAddingSearchArea) {
-      map.getContainer().style.cursor = 'crosshair';
+      // Use L.DomUtil to add the crosshair cursor class
+      L.DomUtil.addClass(map.getContainer(), 'crosshair-cursor-enabled');
       console.log("CURSORE CAMBIATO A CROSSHAIR");
       toast.info("Clicca sulla mappa per posizionare l'area", {
         duration: 3000
       });
     } else {
+      // Remove the crosshair cursor class when not adding area
+      L.DomUtil.removeClass(map.getContainer(), 'crosshair-cursor-enabled');
       map.getContainer().style.cursor = 'grab';
       console.log("Cursore ripristinato a grab");
     }
     
     return () => {
-      if (map) map.getContainer().style.cursor = 'grab';
+      if (map) {
+        L.DomUtil.removeClass(map.getContainer(), 'crosshair-cursor-enabled');
+        map.getContainer().style.cursor = 'grab';
+      }
     };
   }, [isAddingSearchArea, map]);
   
