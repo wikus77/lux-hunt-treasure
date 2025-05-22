@@ -94,7 +94,11 @@ const MapLogicProvider = () => {
 
   return (
     <div style={{ height: '60vh', width: '100%', zIndex: 1 }} className="rounded-[24px] overflow-hidden relative">
-      <MapContainer center={userLocation} zoom={15} style={{ height: '100%', width: '100%' }}>
+      <MapContainer 
+        center={userLocation as [number, number]} 
+        zoom={15} 
+        style={{ height: '100%', width: '100%' }}
+      >
         <TileLayer
           attribution='&copy; Stadia Maps, OpenMapTiles, OpenStreetMap'
           url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
@@ -110,7 +114,7 @@ const MapLogicProvider = () => {
 
         {prizeLocation && bufferRadius && (
           <Circle
-            center={{ lat: prizeLocation[0], lng: prizeLocation[1] }}
+            center={[prizeLocation[0], prizeLocation[1]]}
             pathOptions={{
               color: '#00D1FF',
               fillColor: '#00D1FF',
