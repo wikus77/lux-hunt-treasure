@@ -4,8 +4,9 @@ export type MapMarker = {
   lat: number;
   lng: number;
   note: string;
-  position: { lat: number; lng: number };
   editing?: boolean;
+  position: { lat: number; lng: number }; // Mandatory for compatibility
+  createdAt?: Date;     // Added for MapLogicProvider
 };
 
 export type SearchArea = {

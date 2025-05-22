@@ -1,16 +1,15 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
-import { useMapLogic } from './useMapLogic';
+import { MapContainer, TileLayer, useMapEvents, Circle, Popup } from 'react-leaflet';
+import { toast } from 'sonner';
 import { DEFAULT_LOCATION } from './useMapLogic';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
-import MapContainer from './components/MapContainer';
-import AddingMarkerOverlay from './components/AddingMarkerOverlay';
-import MapActionButtons from './components/MapActionButtons';
-import { AlertTriangle } from 'lucide-react';
+import { Circle as CircleIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useMapLogic } from './useMapLogic';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import SearchAreaMapLayer from './SearchAreaMapLayer';
 
 // Fix for Leaflet default icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -25,23 +24,78 @@ let DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
+// Component to handle map events
+const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, setPendingRadius }) => {
+  const map = useMapEvents({
+    click: (e) => {
+      if (isAddingSearchArea) {
+        console.log("MAP CLICKED", e.latlng);
+        console.log("Cursore impostato su crosshair");
+        
+        // Convert Leaflet event to format expected by handleMapClickArea
+        const simulatedGoogleMapEvent = {
+          latLng: {
+            lat: () => e.latlng.lat,
+            lng: () => e.latlng.lng
+          }
+        };
+        
+        // Call the handler to create the area
+        handleMapClickArea(simulatedGoogleMapEvent);
+      }
+    }
+  });
+  
+  // Change cursor style based on the current action state
+  useEffect(() => {
+    if (!map) return;
+    
+    if (isAddingSearchArea) {
+      map.getContainer().style.cursor = 'crosshair';
+      console.log("Cursore cambiato in crosshair");
+      toast.info("Clicca sulla mappa per posizionare l'area", {
+        duration: 3000
+      });
+    } else {
+      map.getContainer().style.cursor = 'grab';
+      console.log("Cursore ripristinato a grab");
+    }
+    
+    return () => {
+      if (map) map.getContainer().style.cursor = 'grab';
+    };
+  }, [isAddingSearchArea, map]);
+  
+  // Ensure search areas are visible in the viewport
+  useEffect(() => {
+    if (searchAreas.length > 0 && map) {
+      const bounds = L.latLngBounds([]);
+      searchAreas.forEach(area => {
+        bounds.extend([area.lat, area.lng]);
+      });
+      
+      // Only fit bounds if we have valid bounds
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
+  }, [searchAreas, map]);
+  
+  return null;
+};
+
 const MapLogicProvider = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const { 
     handleBuzz, 
     buzzMapPrice, 
-    markers,
-    isAddingMarker, 
-    handleMapClickMarker, 
-    activeMarker,
-    setActiveMarker,
-    saveMarkerNote,
-    deleteMarker,
-    handleAddMarker,
-    currentLocation,
-    locationPermissionState,
-    retryGeolocation
+    searchAreas, 
+    isAddingSearchArea, 
+    handleMapClickArea, 
+    setActiveSearchArea, 
+    deleteSearchArea,
+    setPendingRadius
   } = useMapLogic();
   
   // Function to handle map load event
@@ -61,8 +115,8 @@ const MapLogicProvider = () => {
   }, [mapLoaded]);
 
   useEffect(() => {
-    console.log("Current markers:", markers);
-  }, [markers]);
+    console.log("Current search areas:", searchAreas);
+  }, [searchAreas]);
 
   if (!mapLoaded) return <LoadingScreen />;
 
@@ -77,47 +131,70 @@ const MapLogicProvider = () => {
         position: 'relative'
       }}
     >
-      {/* Map Container */}
-      <MapContainer
-        center={currentLocation || DEFAULT_LOCATION}
-        handleMapLoad={handleMapLoad}
-        markers={markers}
-        isAddingMarker={isAddingMarker}
-        handleMapClickMarker={handleMapClickMarker}
-        activeMarker={activeMarker}
-        setActiveMarker={setActiveMarker}
-        saveMarkerNote={saveMarkerNote}
-        deleteMarker={deleteMarker}
-        currentLocation={currentLocation}
-      />
+      <MapContainer 
+        center={DEFAULT_LOCATION} 
+        zoom={15}
+        style={{ 
+          height: '100%', 
+          width: '100%',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1
+        }}
+        className="z-10"
+        whenReady={handleMapLoad}
+      >
+        {/* Balanced tone TileLayer - not too dark, not too light */}
+        <TileLayer
+          attribution='&copy; CartoDB'
+          url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        />
 
-      {/* Location Permission Alert */}
-      {locationPermissionState === 'denied' && (
-        <div className="absolute top-4 left-0 right-0 mx-auto w-max z-30">
-          <div className="bg-black/80 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 border border-yellow-500/50">
-            <AlertTriangle className="h-4 w-4 text-yellow-500" />
-            <span>Geolocalizzazione non attiva. Controlla le impostazioni del browser.</span>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="ml-2 bg-projectx-blue/20 text-white border-projectx-blue/50 hover:bg-projectx-blue/30"
-              onClick={retryGeolocation}
-            >
-              Riprova
-            </Button>
+        {/* Add labels layer separately for better visibility and control */}
+        <TileLayer
+          attribution='&copy; CartoDB'
+          url='https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
+        />
+        
+        {/* Display search areas */}
+        <SearchAreaMapLayer 
+          searchAreas={searchAreas} 
+          setActiveSearchArea={setActiveSearchArea}
+          deleteSearchArea={deleteSearchArea}
+        />
+        
+        {/* Map event handler */}
+        <MapEventHandler 
+          isAddingSearchArea={isAddingSearchArea} 
+          handleMapClickArea={handleMapClickArea}
+          searchAreas={searchAreas}
+          setPendingRadius={setPendingRadius}
+        />
+      </MapContainer>
+
+      {/* BUZZ button - centered at bottom */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+        <Button
+          onClick={handleBuzz}
+          className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white shadow-[0_0_10px_rgba(217,70,239,0.5)] hover:shadow-[0_0_15px_rgba(217,70,239,0.7)]"
+        >
+          <CircleIcon className="mr-1 h-4 w-4" />
+          BUZZ {buzzMapPrice.toFixed(2)}€
+        </Button>
+      </div>
+
+      {/* Adding Area Instructions Overlay */}
+      {isAddingSearchArea && (
+        <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-30 pointer-events-none">
+          <div className="bg-black/80 p-4 rounded-lg text-center max-w-md border border-[#00D1FF]/50 shadow-[0_0_15px_rgba(0,209,255,0.3)]">
+            <p className="text-white font-medium">Clicca sulla mappa per posizionare l'area di interesse</p>
+            <p className="text-sm text-gray-300 mt-1">L'area verrà creata nel punto selezionato</p>
           </div>
         </div>
       )}
-
-      {/* Bottom action buttons */}
-      <MapActionButtons 
-        handleAddMarker={handleAddMarker}
-        handleBuzz={handleBuzz}
-        buzzMapPrice={buzzMapPrice}
-      />
-
-      {/* Adding Marker Instructions Overlay */}
-      <AddingMarkerOverlay isAddingMarker={isAddingMarker} />
 
       <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
     </div>

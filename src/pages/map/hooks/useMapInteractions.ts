@@ -1,13 +1,15 @@
 
 import { useCallback } from 'react';
 
-export const useMapInteractions = (markerLogic: any) => {
-  // Handle click on map for adding markers
+export const useMapInteractions = (markerLogic: any, areaLogic: any) => {
+  // Handle click on map for adding markers or areas
   const onMapClick = useCallback((e: google.maps.MapMouseEvent) => {
     if (markerLogic.isAddingMarker) {
       markerLogic.handleMapClickMarker(e);
+    } else if (areaLogic.isAddingSearchArea) {
+      areaLogic.handleMapClickArea(e);
     }
-  }, [markerLogic]);
+  }, [markerLogic, areaLogic]);
   
   // Handle double click for future functionality
   const onMapDoubleClick = useCallback((e: google.maps.MapMouseEvent) => {

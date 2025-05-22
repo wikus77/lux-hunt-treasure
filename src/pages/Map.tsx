@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useMapLogic } from './map/useMapLogic';
 import MapLogicProvider from './map/MapLogicProvider';
 import NotesSection from './map/NotesSection';
+import SearchAreasSection from './map/SearchAreasSection';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import M1ssionText from '@/components/logo/M1ssionText';
@@ -23,14 +24,24 @@ const Map = () => {
           <MapLogicProvider />
         </div>
         
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="m1ssion-glass-card p-4 sm:p-6">
             <NotesSection />
+          </div>
+          
+          <div className="m1ssion-glass-card p-4 sm:p-6">
+            <SearchAreasSection
+              searchAreas={mapLogic.searchAreas}
+              setActiveSearchArea={mapLogic.setActiveSearchArea}
+              clearAllSearchAreas={mapLogic.clearAllSearchAreas}
+              handleAddArea={mapLogic.handleAddArea}
+              isAddingSearchArea={mapLogic.isAddingSearchArea}
+            />
           </div>
         </div>
         
         <div className="m1ssion-glass-card mx-4 p-4 text-center text-sm text-gray-400 mt-6 mb-20">
-          <p>Utilizza i punti di interesse per segnare le tue zone di indagine.</p>
+          <p>Nell'area stimata troverai il premio. Più precisione = più possibilità!</p>
         </div>
       </div>
       
