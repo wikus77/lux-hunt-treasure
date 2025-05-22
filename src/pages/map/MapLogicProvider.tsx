@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { MapContainer, TileLayer } from 'react-leaflet';
+import { MapContainer, TileLayer, useMapEvents } from 'react-leaflet';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION } from './useMapLogic';
 import HelpDialog from './HelpDialog';
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useMapLogic } from './useMapLogic';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import SearchAreaMapLayer from './SearchAreaMapLayer';
 
 // Fix for Leaflet default icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -24,10 +25,22 @@ let DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
+// Component to handle map events
+const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea }) => {
+  const map = useMapEvents({
+    click: (e) => {
+      if (isAddingSearchArea) {
+        handleMapClickArea(e);
+      }
+    }
+  });
+  return null;
+};
+
 const MapLogicProvider = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
-  const { handleBuzz, buzzMapPrice } = useMapLogic();
+  const { handleBuzz, buzzMapPrice, searchAreas, isAddingSearchArea, handleMapClickArea, setActiveSearchArea, deleteSearchArea } = useMapLogic();
   
   // Function to handle map load event
   const handleMapLoad = useCallback(() => {
@@ -85,6 +98,19 @@ const MapLogicProvider = () => {
           attribution='&copy; CartoDB'
           url='https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
         />
+        
+        {/* Display search areas */}
+        <SearchAreaMapLayer 
+          searchAreas={searchAreas} 
+          setActiveSearchArea={setActiveSearchArea}
+          deleteSearchArea={deleteSearchArea}
+        />
+        
+        {/* Map event handler */}
+        <MapEventHandler 
+          isAddingSearchArea={isAddingSearchArea} 
+          handleMapClickArea={handleMapClickArea}
+        />
       </MapContainer>
 
       {/* Mini BUZZ button */}
@@ -98,6 +124,16 @@ const MapLogicProvider = () => {
           BUZZ {buzzMapPrice.toFixed(2)}€
         </Button>
       </div>
+
+      {/* Adding Area Instructions Overlay */}
+      {isAddingSearchArea && (
+        <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-30 pointer-events-none">
+          <div className="bg-black/80 p-4 rounded-lg text-center max-w-md border border-[#00D1FF]/50 shadow-[0_0_15px_rgba(0,209,255,0.3)]">
+            <p className="text-white font-medium">Clicca sulla mappa per posizionare l'area di interesse</p>
+            <p className="text-sm text-gray-300 mt-1">L'area verrà creata nel punto selezionato</p>
+          </div>
+        </div>
+      )}
 
       <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
     </div>

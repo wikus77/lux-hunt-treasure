@@ -1,104 +1,71 @@
 
-import { useState } from "react";
-import { useLocation } from "react-router-dom";
-import { useBuzzClues } from "@/hooks/useBuzzClues";
-import { useMapMarkersLogic } from "./useMapMarkersLogic";
-import { useSearchAreasLogic } from "./useSearchAreasLogic";
-import { usePricingLogic } from "./hooks/usePricingLogic";
-import { usePaymentEffects } from "./hooks/usePaymentEffects";
-import { useMapInteractions } from "./hooks/useMapInteractions";
+import { useState, useCallback, useEffect } from 'react';
+import { toast } from 'sonner';
+import { useSearchAreasLogic } from './useSearchAreasLogic';
+import { useMapMarkersLogic } from './useMapMarkersLogic';
+import { usePricingLogic } from './hooks/usePricingLogic';
 
-// Default center of Italy (Rome)
+// Default location (Rome, Italy)
 export const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
 
 export const useMapLogic = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [mapReady, setMapReady] = useState(false);
-  const [loadError, setLoadError] = useState<Error | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
+  const searchAreasLogic = useSearchAreasLogic(DEFAULT_LOCATION);
+  const markerLogic = useMapMarkersLogic(DEFAULT_LOCATION);
+  const { buzzMapPrice, handlePayment } = usePricingLogic();
   
-  const location = useLocation();
-  const { getNextVagueClue } = useBuzzClues();
-
-  // Hook composition
-  const markerLogic = useMapMarkersLogic();
-  const areaLogic = useSearchAreasLogic(DEFAULT_LOCATION);
-  const { buzzMapPrice, calculateSearchAreaRadius } = usePricingLogic();
-  const mapInteractions = useMapInteractions(markerLogic, areaLogic);
-  
-  const paymentEffects = usePaymentEffects((radius?: number) => 
-    areaLogic.generateSearchArea(radius || calculateSearchAreaRadius())
-  );
-
-  const handleMapReady = () => {
-    try {
-      setMapReady(true);
-      setIsLoading(false);
-      console.log("Mappa pronta e caricata correttamente");
-    } catch (e) {
-      console.error("Errore nel segnare la mappa come pronta:", e);
-    }
-  };
-
-  const handleBuzz = () => {
-    const sessionId = `map_buzz_${Date.now()}`;
-    const price = buzzMapPrice.toFixed(2);
+  // Try to get user's location on component mount
+  useEffect(() => {
+    const getUserLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setCurrentLocation([latitude, longitude]);
+          },
+          (error) => {
+            console.log('Error getting location:', error);
+            // Fallback to default location
+            setCurrentLocation(DEFAULT_LOCATION);
+          }
+        );
+      } else {
+        console.log('Geolocation not supported');
+        // Fallback to default location
+        setCurrentLocation(DEFAULT_LOCATION);
+      }
+    };
     
-    window.location.href = `/payment-methods?from=map&price=${price}&session=${sessionId}`;
-    paymentEffects.setIsMapBuzzActive(true);
-  };
-
-  // Simple loading effect to ensure smooth transition
-  useState(() => {
-    try {
-      const timer = setTimeout(() => setIsLoading(false), 800);
-      return () => clearTimeout(timer);
-    } catch (e) {
-      console.error("Errore durante il caricamento:", e);
-      setIsLoading(false);
-      setLoadError(e instanceof Error ? e : new Error("Errore sconosciuto"));
-    }
-  });
-
+    getUserLocation();
+  }, []);
+  
+  // Handle Buzz button click
+  const handleBuzz = useCallback(() => {
+    handlePayment().then(success => {
+      if (success) {
+        // Generate a search area after successful payment
+        const areaId = searchAreasLogic.generateSearchArea(5000);
+        if (areaId) {
+          toast.success('Area di ricerca generata con successo!');
+          searchAreasLogic.setActiveSearchArea(areaId);
+        }
+      }
+    });
+  }, [searchAreasLogic, handlePayment]);
+  
   return {
-    // State
-    isLoading,
-    mapReady,
-    loadError,
-    location,
-    currentLocation: DEFAULT_LOCATION,
-    buzzMapPrice,
+    // Location
+    currentLocation,
+    setCurrentLocation,
     
-    // Marker Logic
-    markers: markerLogic.markers,
-    activeMarker: markerLogic.activeMarker,
-    isAddingMarker: markerLogic.isAddingMarker,
-    setActiveMarker: markerLogic.setActiveMarker,
-    handleAddMarker: markerLogic.handleAddMarker,
-    saveMarkerNote: markerLogic.saveMarkerNote,
-    deleteMarker: markerLogic.deleteMarker,
-    editMarker: markerLogic.editMarker,
-    clearAllMarkers: markerLogic.clearAllMarkers,
-
-    // Search Areas Logic
-    searchAreas: areaLogic.searchAreas,
-    activeSearchArea: areaLogic.activeSearchArea,
-    isAddingSearchArea: areaLogic.isAddingSearchArea,
-    setActiveSearchArea: areaLogic.setActiveSearchArea,
-    handleAddArea: areaLogic.handleAddArea,
-    saveSearchArea: areaLogic.saveSearchArea,
-    deleteSearchArea: areaLogic.deleteSearchArea,
-    editSearchArea: areaLogic.editSearchArea,
-    generateSearchArea: areaLogic.generateSearchArea,
-
-    // Payment Effects
-    ...paymentEffects,
-
-    // Map Interactions
-    ...mapInteractions,
-
-    // Map Ready Handler
-    handleMapReady,
+    // Search Areas
+    ...searchAreasLogic,
+    
+    // Markers
+    ...markerLogic,
+    
+    // Buzz functionality
+    buzzMapPrice,
     handleBuzz,
-    calculateSearchAreaRadius,
   };
 };
