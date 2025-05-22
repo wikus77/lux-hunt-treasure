@@ -65,10 +65,9 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
             weight: 3
           });
           
-          // Set z-index high to ensure visibility
+          // Set z-index high to ensure visibility using proper Leaflet options
           circle.setStyle({ 
-            pane: 'overlayPane',
-            zIndexOffset: 1000
+            pane: 'overlayPane'
           });
           
           // Add to map with direct reference
