@@ -238,36 +238,6 @@ export type Database = {
         }
         Relationships: []
       }
-      map_points: {
-        Row: {
-          created_at: string
-          id: string
-          latitude: number
-          longitude: number
-          note: string | null
-          title: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          latitude: number
-          longitude: number
-          note?: string | null
-          title: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          latitude?: number
-          longitude?: number
-          note?: string | null
-          title?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       missions: {
         Row: {
           created_at: string | null

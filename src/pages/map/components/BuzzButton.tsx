@@ -1,23 +1,23 @@
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Circle as CircleIcon } from 'lucide-react';
 
-interface BuzzButtonProps {
+type BuzzButtonProps = {
   handleBuzz: () => void;
   buzzMapPrice: number;
-}
+};
 
 const BuzzButton: React.FC<BuzzButtonProps> = ({ handleBuzz, buzzMapPrice }) => {
   return (
-    <div className="absolute bottom-24 right-6 z-50">
-      <button
+    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+      <Button
         onClick={handleBuzz}
-        className="bg-projectx-deep-blue hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg flex items-center justify-center space-x-2 transition-all duration-300 transform hover:scale-105"
+        className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white shadow-[0_0_10px_rgba(217,70,239,0.5)] hover:shadow-[0_0_15px_rgba(217,70,239,0.7)]"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-        </svg>
-        <span>BUZZ ({buzzMapPrice}€)</span>
-      </button>
+        <CircleIcon className="mr-1 h-4 w-4" />
+        BUZZ {buzzMapPrice.toFixed(2)}€
+      </Button>
     </div>
   );
 };

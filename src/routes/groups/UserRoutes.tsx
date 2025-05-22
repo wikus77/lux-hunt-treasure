@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Route } from 'react-router-dom';
 import { ProtectedRoute } from "../../components/auth/ProtectedRoute";
@@ -11,8 +10,6 @@ import Buzz from "../../pages/Buzz";
 import Map from "../../pages/Map";
 import TestAgent from "../../pages/TestAgent";
 import AdminPrizeForm from "../../pages/AdminPrizeForm";
-import MapTestSafe from "../../pages/MapTestSafe";
-import MapSafe from "../../pages/MapSafe";
 
 const UserRoutes = () => {
   return (
@@ -56,20 +53,6 @@ const UserRoutes = () => {
           <ProtectedRoute>
             <Map />
           </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/map-test-safe"
-        element={
-          <ProtectedRoute>
-            <MapTestSafe />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/map-safe"
-        element={
-          <MapSafe />
         }
       />
       <Route

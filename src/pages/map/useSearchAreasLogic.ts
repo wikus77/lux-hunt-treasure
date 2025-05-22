@@ -1,55 +1,29 @@
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { SearchArea } from "@/components/maps/types";
-import { useBuzzClues } from "@/hooks/useBuzzClues";
-import { useNotifications } from "@/hooks/useNotifications";
-import { generateSearchArea } from "./hooks/useAreaGeneration";
-import { useAreaOperations } from "./hooks/useAreaOperations";
 import { v4 as uuidv4 } from "uuid";
-import L from "leaflet";
-import { supabase } from "@/integrations/supabase/client";
+import { useBuzzClues } from "@/hooks/useBuzzClues";
+import { analyzeCluesForLocation } from "@/utils/clueAnalyzer";
+import { useNotifications } from "@/hooks/useNotifications";
+import { clues } from "@/data/cluesData";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export function useSearchAreasLogic(defaultLocation: [number, number]) {
+  const [storageAreas, setStorageAreas] = useLocalStorage<SearchArea[]>("map-search-areas", []);
+  const [searchAreas, setSearchAreas] = useState<SearchArea[]>(storageAreas || []);
+  const [activeSearchArea, setActiveSearchArea] = useState<string | null>(null);
+  const [isAddingSearchArea, setIsAddingSearchArea] = useState(false);
   const { unlockedClues } = useBuzzClues();
   const { notifications } = useNotifications();
-  const areaOperations = useAreaOperations();
-  
   // Add a ref to store the radius temporarily while user selects map location
   const pendingRadiusRef = useRef<number>(500);
-  const isProcessingClickRef = useRef(false);
 
-  // When search areas change, sync with localStorage
+  // Sync areas with localStorage
   useEffect(() => {
-    console.log("useSearchAreasLogic - searchAreas updated:", areaOperations.searchAreas);
-  }, [areaOperations.searchAreas]);
-
-  // Log the isAddingSearchArea state changes
-  useEffect(() => {
-    console.log("useSearchAreasLogic - isAddingSearchArea:", areaOperations.isAddingSearchArea);
-    if (!areaOperations.isAddingSearchArea) {
-      console.warn("FLAG isAddingSearchArea NON ATTIVO");
-    } else {
-      console.log("🟢 FLAG isAddingSearchArea ATTIVO in useSearchAreasLogic");
-    }
-  }, [areaOperations.isAddingSearchArea]);
-
-  // Since user_search_areas was removed, we'll adapt this to use map_points or just avoid loading 
-  // areas from the database entirely since the feature was removed
-  useEffect(() => {
-    // Since search areas feature was removed, this function is now just a placeholder
-    const loadAreasFromSupabase = async () => {
-      try {
-        // We're no longer loading search areas since that feature was removed
-        console.log("Search areas feature has been removed, no areas to load");
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    };
-    
-    // We don't need to call this function anymore since the feature was removed
-    // loadAreasFromSupabase();
-  }, []);
+    setStorageAreas(searchAreas);
+    console.log("Updated search areas in localStorage:", searchAreas);
+  }, [searchAreas, setStorageAreas]);
 
   const handleAddArea = (radius?: number) => {
     // Set the radius if provided
@@ -58,38 +32,20 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
       console.log("Setting pending radius to:", radius);
     }
 
-    // CRITICAL: Force setting isAddingSearchArea to true DIRECTLY
-    areaOperations.setIsAddingSearchArea(true);
-    // Also use startAddingArea function for additional side effects
-    areaOperations.startAddingArea();
-    
-    console.log("🟢 FLAG isAddingSearchArea ATTIVATO esplicitamente");
-    console.log("ATTIVATA MODALITÀ AGGIUNTA AREA");
-    console.log("AREAS STATE:", areaOperations.searchAreas);
-    
+    setIsAddingSearchArea(true);
+    console.log("Modalità aggiunta area attivata, cursore cambiato in crosshair");
     toast.info("Clicca sulla mappa per aggiungere una nuova area di ricerca", {
       description: `L'area sarà creata con il raggio di ${pendingRadiusRef.current} metri`
     });
-
-    // Force update document body class
-    document.body.classList.add('map-adding-mode');
   };
 
-  // Updated to accept Leaflet event with direct circle rendering
-  const handleMapClickArea = async (e: { latlng: { lat: number; lng: number } }) => {
+  // Updated to accept Leaflet event
+  const handleMapClickArea = (e: { latlng: { lat: number; lng: number } }) => {
     console.log("Map click event received:", e);
-    console.log("isAddingSearchArea state:", areaOperations.isAddingSearchArea);
+    console.log("isAddingSearchArea state:", isAddingSearchArea);
 
-    // Prevent duplicate processing
-    if (isProcessingClickRef.current) {
-      console.log("Already processing a click, ignoring");
-      return null;
-    }
-
-    if (areaOperations.isAddingSearchArea && e.latlng) {
+    if (isAddingSearchArea && e.latlng) {
       try {
-        isProcessingClickRef.current = true;
-        
         // Extract coordinates from the event
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;
@@ -98,105 +54,144 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         console.log("Coordinate selezionate:", lat, lng);
         console.log("Raggio utilizzato:", radius);
         
-        // Create a new area with the given coordinates and radius
-        const newAreaId = uuidv4();
+        // Create new search area object
         const newArea: SearchArea = {
-          id: newAreaId,
-          lat,
+          id: uuidv4(),
+          lat, 
           lng,
-          radius,
+          radius: radius,
           label: "Area di ricerca",
           color: "#00D1FF",
           position: { lat, lng }
         };
         
-        console.log("Area creata:", newArea);
-        
-        // Immediately draw the circle on the map without waiting for React rendering
-        const mapInstance = areaOperations.mapRef?.current;
-        if (mapInstance) {
-          console.log("Drawing circle directly on map click");
-          const circle = L.circle([lat, lng], {
-            radius: radius,
-            color: '#00D1FF',
-            fillColor: '#00D1FF',
-            fillOpacity: 0.2,
-            weight: 2
-          }).addTo(mapInstance);
-          
-          circle.on('click', () => {
-            areaOperations.setActiveSearchArea(newAreaId);
-          });
-          
-          console.log("✅ CERCHIO DISEGNATO DIRETTAMENTE:", lat, lng);
-        }
-        
-        // Add the area to the areas state
-        areaOperations.setSearchAreas(prevAreas => {
+        console.log("Area generata:", newArea);
+
+        // Update state with the new area
+        setSearchAreas(prevAreas => {
+          console.log("Aree precedenti:", prevAreas);
           const newAreas = [...prevAreas, newArea];
-          console.log("Nuovo stato aree:", newAreas);
+          console.log("Aree aggiornate:", newAreas);
+          console.log("AREA CREATA CON RAGGIO", radius);
           return newAreas;
         });
-        
+
         // Set the newly created area as active
-        areaOperations.setActiveSearchArea(newAreaId);
-        
-        // We're no longer saving to Supabase since we removed the search areas feature
+        setActiveSearchArea(newArea.id);
         
         // Reset adding state
-        areaOperations.setIsAddingSearchArea(false);
+        setIsAddingSearchArea(false);
         console.log("Modalità aggiunta area disattivata, cursore ripristinato");
         
-        // Reset body class
-        document.body.classList.remove('map-adding-mode');
-        
         toast.success("Area di ricerca aggiunta alla mappa");
-        
-        // Reset processing flag after a delay
-        setTimeout(() => {
-          isProcessingClickRef.current = false;
-        }, 500);
-        
-        return newAreaId;
       } catch (error) {
         console.error("Error adding search area:", error);
-        areaOperations.setIsAddingSearchArea(false);
-        document.body.classList.remove('map-adding-mode');
+        setIsAddingSearchArea(false);
         toast.error("Si è verificato un errore nell'aggiunta dell'area");
-        
-        // Reset processing flag
-        isProcessingClickRef.current = false;
-        return null;
       }
     } else {
       console.log("Not in adding search area mode or latLng is missing");
-      return null;
     }
   };
 
   // Generate area from clue with dynamic radius
-  const generateSearchAreaFromClues = (radius?: number) => {
-    const result = generateSearchArea(defaultLocation, notifications, radius);
-    
-    if (result) {
-      const { areaId, area } = result;
+  const generateSearchArea = (radius?: number) => {
+    try {
+      // Utilizza l'analizzatore di indizi per determinare la posizione
+      const locationInfo = analyzeCluesForLocation(clues, notifications || []);
       
-      // Add the area to the list
-      areaOperations.addSearchArea(area);
-      areaOperations.setActiveSearchArea(areaId);
+      let targetLat = defaultLocation[0];
+      let targetLng = defaultLocation[1];
+      let label = "Area generata";
+      let confidenceValue: string = "Media"; 
       
-      return areaId;
+      if (locationInfo.lat && locationInfo.lng) {
+        targetLat = locationInfo.lat;
+        targetLng = locationInfo.lng;
+        label = locationInfo.description || "Area basata su indizi";
+        
+        // Converti la confidenza in italiano
+        if (locationInfo.confidence === "alta") confidenceValue = "Alta";
+        else if (locationInfo.confidence === "media") confidenceValue = "Media";
+        else confidenceValue = "Bassa";
+      }
+
+      // Usa il raggio fornito o il valore di default di 500km
+      const finalRadius = radius || 500000;
+
+      // Crea l'area di ricerca con stile viola neon
+      const newArea: SearchArea = {
+        id: uuidv4(),
+        lat: targetLat,
+        lng: targetLng,
+        radius: finalRadius,
+        label: label,
+        color: "#9b87f5", // Viola neon
+        position: { lat: targetLat, lng: targetLng },
+        isAI: true,
+        confidence: confidenceValue
+      };
+      
+      console.log("Area generata:", newArea);
+      console.log("AREA CREATA");
+      setSearchAreas(prev => [...prev, newArea]);
+      setActiveSearchArea(newArea.id);
+      
+      // Log dei dettagli per debug
+      console.log("Area generata:", {
+        posizione: `${targetLat}, ${targetLng}`,
+        label,
+        confidence: confidenceValue,
+        radius: finalRadius / 1000 + " km"
+      });
+      
+      // Return the ID for the caller if needed
+      return newArea.id;
+    } catch (error) {
+      console.error("Errore nella generazione dell'area:", error);
+      toast.error("Impossibile generare l'area di ricerca");
+      return null;
     }
-    
-    return null;
   };
-  
-  // Export everything needed
+
+  const saveSearchArea = (id: string, label: string, radius: number) => {
+    console.log("Saving search area:", id, label, radius);
+    setSearchAreas(searchAreas.map(area =>
+      area.id === id ? { ...area, label, radius } : area
+    ));
+    toast.success("Area di ricerca aggiornata");
+  };
+
+  const deleteSearchArea = (id: string) => {
+    console.log("Deleting search area:", id);
+    setSearchAreas(searchAreas.filter(area => area.id !== id));
+    if (activeSearchArea === id) setActiveSearchArea(null);
+    toast.success("Area di ricerca rimossa");
+  };
+
+  const clearAllSearchAreas = () => {
+    console.log("Clearing all search areas");
+    setSearchAreas([]);
+    setActiveSearchArea(null);
+    toast.success("Tutte le aree di ricerca sono state rimosse");
+  };
+
+  const editSearchArea = (id: string) => setActiveSearchArea(id);
+
   return {
-    ...areaOperations,
+    searchAreas,
+    setSearchAreas,
+    activeSearchArea,
+    setActiveSearchArea,
+    isAddingSearchArea,
+    setIsAddingSearchArea,
     handleAddArea,
     handleMapClickArea,
-    generateSearchArea: generateSearchAreaFromClues,
+    saveSearchArea,
+    deleteSearchArea,
+    clearAllSearchAreas,
+    editSearchArea,
+    generateSearchArea,
     // Export a method to set the pending radius
     setPendingRadius: (radius: number) => {
       pendingRadiusRef.current = radius;

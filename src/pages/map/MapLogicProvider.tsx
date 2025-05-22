@@ -14,9 +14,6 @@ import AddingAreaInstructions from './components/AddingAreaInstructions';
 import BuzzButton from './components/BuzzButton';
 import MapLayers from './components/MapLayers';
 
-// Import the CSS for cursor styles
-import './styles/mapCursor.css';
-
 // Fix for Leaflet default icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -41,8 +38,7 @@ const MapLogicProvider = () => {
     handleMapClickArea, 
     setActiveSearchArea, 
     deleteSearchArea,
-    setPendingRadius,
-    mapRef
+    setPendingRadius
   } = useMapLogic();
   
   // Function to handle map load event
@@ -62,7 +58,7 @@ const MapLogicProvider = () => {
   }, [mapLoaded]);
 
   React.useEffect(() => {
-    console.log("MapLogicProvider - Current search areas:", searchAreas);
+    console.log("Current search areas:", searchAreas);
   }, [searchAreas]);
 
   if (!mapLoaded) return <LoadingScreen />;
@@ -102,7 +98,6 @@ const MapLogicProvider = () => {
           searchAreas={searchAreas} 
           setActiveSearchArea={setActiveSearchArea}
           deleteSearchArea={deleteSearchArea}
-          mapRef={mapRef}
         />
         
         {/* Map event handler component */}

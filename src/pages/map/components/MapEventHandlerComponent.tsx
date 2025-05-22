@@ -1,64 +1,77 @@
 
 import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
-import L from 'leaflet';
+import { useMapEvents } from 'react-leaflet';
+import { toast } from 'sonner';
 import { SearchArea } from '@/components/maps/types';
-import MapClickHandler from './MapClickHandler';
-import { useCursorEffect } from '../hooks/useCursorEffect';
+import L from 'leaflet'; // Adding proper Leaflet import
 
-type MapEventHandlerComponentProps = {
+type MapEventHandlerProps = {
   isAddingSearchArea: boolean;
-  handleMapClickArea: (e: any) => void;
+  handleMapClickArea: (e: { latlng: L.LatLng }) => void; // Updating type to match Leaflet event
   searchAreas: SearchArea[];
   setPendingRadius: (radius: number) => void;
 };
 
-const MapEventHandlerComponent: React.FC<MapEventHandlerComponentProps> = ({
+const MapEventHandlerComponent: React.FC<MapEventHandlerProps> = ({
   isAddingSearchArea,
   handleMapClickArea,
   searchAreas,
   setPendingRadius
 }) => {
-  // Create a reference to the map instance
-  const mapRef = React.useRef<L.Map | null>(null);
-  
-  // Default radius value
-  const selectedRadius = 500; // Default to 500m
-  
-  // Use cursor effect hook
-  const map = useMap();
-  useCursorEffect(map, isAddingSearchArea);
-  
-  // Store map reference
-  useEffect(() => {
-    if (map) {
-      mapRef.current = map;
-      console.log("Map reference set and will be preserved");
+  const map = useMapEvents({
+    click: (e) => {
+      if (isAddingSearchArea) {
+        console.log("MAP CLICKED", e.latlng);
+        console.log("Coordinate selezionate:", e.latlng.lat, e.latlng.lng);
+        
+        // Pass the Leaflet event directly - it already has the latlng property
+        handleMapClickArea(e);
+      }
     }
-  }, [map]);
+  });
   
-  // Log for debugging
+  // Change cursor style based on the current action state
   useEffect(() => {
-    console.log("MapEventHandlerComponent rendered with isAddingSearchArea:", isAddingSearchArea);
-    console.log("Current search areas:", searchAreas);
+    if (!map) return;
     
-    // Set default radius
-    setPendingRadius(selectedRadius);
-    
-    console.log("🔍 Map instance available:", !!mapRef.current);
-    if (mapRef.current) {
-      console.log("🗺️ Map bounds:", mapRef.current.getBounds().toString());
+    if (isAddingSearchArea) {
+      // Use L.DomUtil to add the crosshair cursor class
+      L.DomUtil.addClass(map.getContainer(), 'crosshair-cursor-enabled');
+      console.log("CURSORE CAMBIATO A CROSSHAIR");
+      toast.info("Clicca sulla mappa per posizionare l'area", {
+        duration: 3000
+      });
+    } else {
+      // Remove the crosshair cursor class when not adding area
+      L.DomUtil.removeClass(map.getContainer(), 'crosshair-cursor-enabled');
+      map.getContainer().style.cursor = 'grab';
+      console.log("Cursore ripristinato a grab");
     }
-  }, [isAddingSearchArea, searchAreas, setPendingRadius]);
+    
+    return () => {
+      if (map) {
+        L.DomUtil.removeClass(map.getContainer(), 'crosshair-cursor-enabled');
+        map.getContainer().style.cursor = 'grab';
+      }
+    };
+  }, [isAddingSearchArea, map]);
   
-  return (
-    <MapClickHandler 
-      isAddingSearchArea={isAddingSearchArea} 
-      handleMapClickArea={handleMapClickArea} 
-      mapRef={mapRef}
-      selectedRadius={selectedRadius}
-    />
-  );
+  // Ensure search areas are visible in the viewport
+  useEffect(() => {
+    if (searchAreas.length > 0 && map) {
+      const bounds = L.latLngBounds([]);
+      searchAreas.forEach(area => {
+        bounds.extend([area.lat, area.lng]);
+      });
+      
+      // Only fit bounds if we have valid bounds
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
+  }, [searchAreas, map]);
+  
+  return null;
 };
 
 export default MapEventHandlerComponent;

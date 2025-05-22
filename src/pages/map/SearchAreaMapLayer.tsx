@@ -1,88 +1,75 @@
 
-import React, { useEffect } from 'react';
-import { useMap } from 'react-leaflet';
-import L from 'leaflet';
+import React from 'react';
+import { Circle, Popup } from 'react-leaflet';
 import { SearchArea } from '@/components/maps/types';
+import { Button } from '@/components/ui/button';
+import { Trash2, Edit } from 'lucide-react';
 
 type SearchAreaMapLayerProps = {
   searchAreas: SearchArea[];
   setActiveSearchArea: (id: string | null) => void;
   deleteSearchArea: (id: string) => void;
-  mapRef: React.MutableRefObject<L.Map | null>;
 };
 
 const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
   searchAreas,
   setActiveSearchArea,
-  deleteSearchArea,
-  mapRef
+  deleteSearchArea
 }) => {
-  const map = useMap();
+  console.log("Rendering SearchAreaMapLayer with areas:", searchAreas);
   
-  // Store map reference
-  useEffect(() => {
-    if (map) {
-      mapRef.current = map;
-      console.log("Map reference set in SearchAreaMapLayer");
-    }
-  }, [map, mapRef]);
-  
-  // Draw search areas when they change
-  useEffect(() => {
-    if (!map) return;
-    
-    console.log("Drawing search areas on map:", searchAreas);
-    
-    // Create a map of existing circles by ID
-    const circleLayerGroup = L.layerGroup().addTo(map);
-    
-    searchAreas.forEach(area => {
-      console.log("Creating circle for area:", area);
-      const circle = L.circle([area.lat, area.lng], {
-        radius: area.radius,
-        color: area.color || '#00D1FF',
-        fillColor: area.color || '#00D1FF',
-        fillOpacity: 0.2,
-        weight: 2
-      }).addTo(circleLayerGroup);
-      
-      // Add click handler to select the area
-      circle.on('click', () => {
-        console.log("Circle clicked:", area.id);
-        setActiveSearchArea(area.id);
-      });
-      
-      // Add popup with area info
-      circle.bindPopup(`
-        <div>
-          <h3>${area.label || 'Area di ricerca'}</h3>
-          <p>Raggio: ${area.radius}m</p>
-          <button class="delete-area" data-id="${area.id}">Elimina</button>
-        </div>
-      `);
-      
-      // Handle popup open to attach event listener to delete button
-      circle.on('popupopen', () => {
-        setTimeout(() => {
-          const deleteButton = document.querySelector(`.delete-area[data-id="${area.id}"]`);
-          if (deleteButton) {
-            deleteButton.addEventListener('click', (e) => {
-              e.preventDefault();
-              deleteSearchArea(area.id);
-              map.closePopup();
-            });
-          }
-        }, 0);
-      });
-    });
-    
-    // Cleanup function to remove all circles
-    return () => {
-      map.removeLayer(circleLayerGroup);
-    };
-  }, [map, searchAreas, setActiveSearchArea, deleteSearchArea]);
-  
-  return null;
+  return (
+    <>
+      {searchAreas.map((area) => {
+        console.log("Rendering area:", area.id, area.lat, area.lng, area.radius);
+        return (
+          <React.Fragment key={area.id}>
+            <Circle
+              center={[area.lat, area.lng]}
+              radius={area.radius}
+              pathOptions={{
+                color: area.isAI ? '#9b87f5' : '#00D1FF',
+                fillColor: area.isAI ? '#7E69AB' : '#00D1FF',
+                fillOpacity: 0.2,
+                weight: 2
+              }}
+              eventHandlers={{
+                click: () => {
+                  setActiveSearchArea(area.id);
+                  console.log("Area selezionata:", area.id);
+                }
+              }}
+            >
+              <Popup>
+                <div className="p-1">
+                  <div className="font-medium mb-2">{area.label || "Area di interesse"}</div>
+                  <div className="text-sm mb-3">Raggio: {(area.radius/1000).toFixed(2)} km</div>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="text-xs flex items-center gap-1 flex-1"
+                      onClick={() => setActiveSearchArea(area.id)}
+                    >
+                      <Edit className="mr-2 h-3 w-3" /> Modifica
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="destructive"
+                      className="text-xs flex items-center gap-1 flex-1"
+                      onClick={() => deleteSearchArea(area.id)}
+                    >
+                      <Trash2 className="mr-2 h-3 w-3" /> Elimina
+                    </Button>
+                  </div>
+                </div>
+              </Popup>
+            </Circle>
+          </React.Fragment>
+        );
+      })}
+    </>
+  );
 };
 
 export default SearchAreaMapLayer;
