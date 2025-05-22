@@ -6,6 +6,7 @@ import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { useNotifications } from "@/hooks/useNotifications";
 import { generateSearchArea } from "./hooks/useAreaGeneration";
 import { useAreaOperations } from "./hooks/useAreaOperations";
+import { v4 as uuidv4 } from "uuid";
 
 export function useSearchAreasLogic(defaultLocation: [number, number]) {
   const { unlockedClues } = useBuzzClues();
@@ -49,26 +50,45 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         console.log("Coordinate selezionate:", lat, lng);
         console.log("Raggio utilizzato:", radius);
         
-        // Use the addArea function from useAreaOperations
-        const areaId = areaOperations.addArea(lat, lng, radius);
+        // Create a new area with the given coordinates and radius
+        const newAreaId = uuidv4();
+        const newArea: SearchArea = {
+          id: newAreaId,
+          lat,
+          lng,
+          radius,
+          label: "Area di ricerca",
+          color: "#00D1FF",
+          position: { lat, lng }
+        };
         
-        if (areaId) {
-          // Set the newly created area as active
-          areaOperations.setActiveSearchArea(areaId);
-          
-          // Reset adding state
-          areaOperations.setIsAddingSearchArea(false);
-          console.log("Modalità aggiunta area disattivata, cursore ripristinato");
-          
-          toast.success("Area di ricerca aggiunta alla mappa");
-        }
+        console.log("Area creata:", newArea);
+        
+        // Add the area to the areas state
+        areaOperations.setSearchAreas(prevAreas => {
+          const newAreas = [...prevAreas, newArea];
+          console.log("Nuovo stato aree:", newAreas);
+          return newAreas;
+        });
+        
+        // Set the newly created area as active
+        areaOperations.setActiveSearchArea(newAreaId);
+        
+        // Reset adding state
+        areaOperations.setIsAddingSearchArea(false);
+        console.log("Modalità aggiunta area disattivata, cursore ripristinato");
+        
+        toast.success("Area di ricerca aggiunta alla mappa");
+        return newAreaId;
       } catch (error) {
         console.error("Error adding search area:", error);
         areaOperations.setIsAddingSearchArea(false);
         toast.error("Si è verificato un errore nell'aggiunta dell'area");
+        return null;
       }
     } else {
       console.log("Not in adding search area mode or latLng is missing");
+      return null;
     }
   };
 
