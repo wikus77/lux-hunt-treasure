@@ -1,13 +1,11 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { MapContainer, TileLayer, useMapEvents, Circle, Popup, Marker } from 'react-leaflet';
 import { toast } from 'sonner';
-import { DEFAULT_LOCATION } from './useMapLogic';
+import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
 import { Circle as CircleIcon, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useMapLogic } from './useMapLogic';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import SearchAreaMapLayer from './SearchAreaMapLayer';

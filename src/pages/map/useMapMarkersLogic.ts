@@ -31,6 +31,7 @@ export function useMapMarkersLogic() {
         const newMarker: MapMarker = {
           id: uuidv4(),
           lat, lng,
+          title: "", // Add the title property, initially empty
           note: "",
           position: { lat, lng },
           createdAt: new Date(),
