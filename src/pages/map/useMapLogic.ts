@@ -1,7 +1,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
-import { useSearchAreasLogic } from './useSearchAreasLogic';
 import { useMapMarkersLogic } from './useMapMarkersLogic';
 import { usePricingLogic } from './hooks/usePricingLogic';
 
@@ -10,7 +9,6 @@ export const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
 
 export const useMapLogic = () => {
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
-  const searchAreasLogic = useSearchAreasLogic(DEFAULT_LOCATION);
   const markerLogic = useMapMarkersLogic();
   const { buzzMapPrice, buzzRadiusMeters, handlePayment } = usePricingLogic();
   
@@ -37,29 +35,22 @@ export const useMapLogic = () => {
     };
     
     getUserLocation();
-  }, []);
+    markerLogic.loadMarkers();
+  }, [markerLogic]);
   
   // Handle Buzz button click
   const handleBuzz = useCallback(() => {
     handlePayment().then(success => {
       if (success) {
-        // Generate a search area after successful payment using the calculated radius
-        const areaId = searchAreasLogic.generateSearchArea(buzzRadiusMeters);
-        if (areaId) {
-          toast.success('Area di ricerca generata con successo!');
-          searchAreasLogic.setActiveSearchArea(areaId);
-        }
+        toast.success('Azione completata con successo!');
       }
     });
-  }, [searchAreasLogic, handlePayment, buzzRadiusMeters]);
+  }, [handlePayment]);
   
   return {
     // Location
     currentLocation,
     setCurrentLocation,
-    
-    // Search Areas
-    ...searchAreasLogic,
     
     // Markers
     ...markerLogic,

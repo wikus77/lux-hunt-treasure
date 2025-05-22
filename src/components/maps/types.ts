@@ -1,12 +1,9 @@
-
 export type MapMarker = {
   id: string;
   lat: number;
   lng: number;
   note: string;
-  editing?: boolean;
-  position: { lat: number; lng: number }; // Mandatory for compatibility
-  createdAt?: Date;     // Added for MapLogicProvider
+  position: { lat: number; lng: number };
 };
 
 export type SearchArea = {
