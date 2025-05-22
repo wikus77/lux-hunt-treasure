@@ -51,6 +51,9 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     toast.info("Clicca sulla mappa per aggiungere una nuova area di ricerca", {
       description: `L'area sarà creata con il raggio di ${pendingRadiusRef.current} metri`
     });
+
+    // Force update document body class
+    document.body.classList.add('map-adding-mode');
   };
 
   // Updated to accept Leaflet event with debouncing
@@ -104,6 +107,9 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         areaOperations.setIsAddingSearchArea(false);
         console.log("Modalità aggiunta area disattivata, cursore ripristinato");
         
+        // Reset body class
+        document.body.classList.remove('map-adding-mode');
+        
         toast.success("Area di ricerca aggiunta alla mappa");
         
         // Reset processing flag after a delay
@@ -115,6 +121,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
       } catch (error) {
         console.error("Error adding search area:", error);
         areaOperations.setIsAddingSearchArea(false);
+        document.body.classList.remove('map-adding-mode');
         toast.error("Si è verificato un errore nell'aggiunta dell'area");
         
         // Reset processing flag

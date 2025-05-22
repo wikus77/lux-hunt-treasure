@@ -20,6 +20,10 @@ export function useCursorEffect(
       // Also add class for extra enforcement
       map.getContainer().classList.add('crosshair-cursor-enabled');
       map.getContainer().classList.add('force-crosshair');
+      
+      // Force cursor style throughout the document for maximum effectiveness
+      document.body.classList.add('map-adding-mode');
+      
       console.log("CURSORE SETTATO A crosshair", isAddingSearchArea);
       console.log("🟢 FLAG isAddingSearchArea ATTIVO in useCursorEffect");
       toast.info("Clicca sulla mappa per posizionare l'area", {
@@ -30,6 +34,7 @@ export function useCursorEffect(
       map.getContainer().style.cursor = 'grab';
       map.getContainer().classList.remove('crosshair-cursor-enabled');
       map.getContainer().classList.remove('force-crosshair');
+      document.body.classList.remove('map-adding-mode');
       console.log("CURSORE RIPRISTINATO A grab");
     }
     
@@ -41,6 +46,7 @@ export function useCursorEffect(
         map.getContainer().style.cursor = 'grab';
         map.getContainer().classList.remove('crosshair-cursor-enabled');
         map.getContainer().classList.remove('force-crosshair');
+        document.body.classList.remove('map-adding-mode');
       }
     };
   }, [isAddingSearchArea, map]);

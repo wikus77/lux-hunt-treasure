@@ -27,3 +27,14 @@
 .leaflet-container.force-crosshair .leaflet-interactive {
   cursor: crosshair !important;
 }
+
+/* Global body class for adding mode to ensure cursor is applied everywhere */
+.map-adding-mode .leaflet-container,
+.map-adding-mode .leaflet-container * {
+  cursor: crosshair !important;
+}
+
+/* Highest priority rule to overcome any other styles */
+body.map-adding-mode .leaflet-container .leaflet-interactive {
+  cursor: crosshair !important;
+}

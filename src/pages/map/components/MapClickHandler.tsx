@@ -2,7 +2,6 @@
 import React, { useEffect } from 'react';
 import { useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import { v4 as uuidv4 } from 'uuid';
 import { useMapContext } from '../context/MapContext';
 
 type MapClickHandlerProps = {
@@ -55,9 +54,17 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
       map.getContainer().style.cursor = 'crosshair';
       map.getContainer().classList.add('force-crosshair');
       map.getContainer().classList.add('crosshair-cursor-enabled');
+      document.body.classList.add('map-adding-mode');
       console.log("FORCING CROSSHAIR IN MAPCLICKHANDLER MOUNT");
       console.log("🟢 Cursor set to crosshair in MapClickHandler");
     }
+
+    // Clean up when unmounting or updating
+    return () => {
+      if (!isAddingSearchArea && map) {
+        document.body.classList.remove('map-adding-mode');
+      }
+    };
   }, [isAddingSearchArea, map]);
   
   return null;
