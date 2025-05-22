@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
 
 type MapClickHandlerProps = {
   isAddingSearchArea: boolean;
