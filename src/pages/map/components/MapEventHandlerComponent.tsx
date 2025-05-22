@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useMapEvents } from 'react-leaflet';
 import { SearchArea } from '@/components/maps/types';
 import { useCursorEffect } from '../hooks/useCursorEffect';
@@ -25,6 +25,11 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerProps> = ({
   // Use our custom hooks
   useCursorEffect(map, isAddingSearchArea);
   useMapBounds(map, searchAreas);
+  
+  // Debug: Log the search areas received by this component
+  useEffect(() => {
+    console.log("MapEventHandlerComponent received searchAreas:", searchAreas);
+  }, [searchAreas]);
   
   return (
     <MapClickHandler 

@@ -16,8 +16,8 @@ export const useAreaOperations = () => {
   
   // Sync areas with localStorage whenever they change
   useEffect(() => {
+    console.log("Setting storage areas:", searchAreas);
     setStorageAreas(searchAreas);
-    console.log("Updated search areas in localStorage:", searchAreas);
   }, [searchAreas, setStorageAreas]);
   
   // Add a new area to the map based on coordinates
@@ -37,6 +37,7 @@ export const useAreaOperations = () => {
       
       setSearchAreas(prevAreas => {
         const newAreas = [...prevAreas, newArea];
+        console.log("Updated search areas:", newAreas);
         return newAreas;
       });
       
@@ -94,8 +95,10 @@ export const useAreaOperations = () => {
   
   // Add an area with the given search area object
   const addSearchArea = useCallback((area: SearchArea) => {
+    console.log("Adding search area:", area);
     setSearchAreas(prevAreas => {
       const newAreas = [...prevAreas, area];
+      console.log("Updated search areas after adding:", newAreas);
       return newAreas;
     });
     return area.id;

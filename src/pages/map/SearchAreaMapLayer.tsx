@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Circle, Popup } from 'react-leaflet';
 import { SearchArea } from '@/components/maps/types';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
   setActiveSearchArea,
   deleteSearchArea
 }) => {
-  console.log("Rendering SearchAreaMapLayer with areas:", searchAreas);
+  console.log("AREAS STATE:", searchAreas);
   
   return (
     <>

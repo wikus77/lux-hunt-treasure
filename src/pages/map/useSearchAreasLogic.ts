@@ -18,6 +18,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
 
   // When search areas change, sync with localStorage
   useEffect(() => {
+    console.log("useSearchAreasLogic - searchAreas updated:", areaOperations.searchAreas);
     // The sync happens in useAreaOperations now
   }, [areaOperations.searchAreas]);
 

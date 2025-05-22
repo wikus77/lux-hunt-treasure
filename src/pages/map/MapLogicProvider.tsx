@@ -61,7 +61,7 @@ const MapLogicProvider = () => {
   }, [mapLoaded]);
 
   React.useEffect(() => {
-    console.log("Current search areas:", searchAreas);
+    console.log("MapLogicProvider - Current search areas:", searchAreas);
   }, [searchAreas]);
 
   if (!mapLoaded) return <LoadingScreen />;
