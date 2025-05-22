@@ -1,25 +1,6 @@
-
 .leaflet-container {
   width: 100%;
   height: 100%;
 }
 
-.region-tooltip {
-  background: rgba(0, 0, 0, 0.8);
-  border: 1px solid #00D1FF;
-  color: white;
-  font-family: 'Orbitron', sans-serif;
-  padding: 5px 10px;
-  border-radius: 4px;
-  box-shadow: 0 0 10px rgba(0, 209, 255, 0.5);
-}
-
-.region-highlight {
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { opacity: 0.8; }
-  50% { opacity: 1; }
-  100% { opacity: 0.8; }
-}
+/* Region-specific styles removed as requested */

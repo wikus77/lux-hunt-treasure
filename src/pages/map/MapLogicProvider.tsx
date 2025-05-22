@@ -7,7 +7,6 @@ import MapStatusMessages from './components/MapStatusMessages';
 import { usePrizeLocation } from './hooks/usePrizeLocation';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
-import ItalyRegions from './components/ItalyRegions';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -29,24 +28,7 @@ const MapLogicProvider = () => {
   const [locationReceived, setLocationReceived] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const { prizeLocation, bufferRadius } = usePrizeLocation(userLocation);
-  const [regionsData, setRegionsData] = useState<any>(null);
-
-  // Fetch Italy regions GeoJSON data
-  useEffect(() => {
-    fetch('/assets/italyRegions.geojson')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        setRegionsData(data);
-      })
-      .catch(error => {
-        console.error('Error loading Italy regions data:', error);
-      });
-  }, []);
+  const [watchId, setWatchId] = useState<number | null>(null);
 
   const requestLocation = useCallback(() => {
     // Check for stored permission
@@ -57,9 +39,11 @@ const MapLogicProvider = () => {
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
+    // Use watchPosition instead of getCurrentPosition for better accuracy
+    const id = navigator.geolocation.watchPosition(
       (position) => {
         const coords: [number, number] = [position.coords.latitude, position.coords.longitude];
+        console.log("Posizione rilevata:", coords);
         setUserLocation(coords);
         setLocationReceived(true);
         localStorage.setItem('geoPermission', 'granted');
@@ -93,19 +77,35 @@ const MapLogicProvider = () => {
       },
       {
         enableHighAccuracy: true,
-        timeout: 30000,
+        timeout: 40000, // Increased timeout to 40s as requested
         maximumAge: 0,
       }
     );
+
+    setWatchId(id);
   }, []);
 
   useEffect(() => {
     requestLocation();
-  }, [requestLocation]);
+    
+    // Cleanup function to clear watch when component unmounts
+    return () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [requestLocation, watchId]);
 
   const retryGetLocation = () => {
     setUserLocation(null);
     setLocationReceived(false);
+    
+    // Clear previous watch
+    if (watchId !== null) {
+      navigator.geolocation.clearWatch(watchId);
+      setWatchId(null);
+    }
+    
     requestLocation();
     toast.info("Richiesta posizione in corso", {
       description: "Assicurati di concedere l'autorizzazione quando richiesto dal browser."
@@ -122,8 +122,8 @@ const MapLogicProvider = () => {
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer
-          attribution='&copy; OpenMapTiles & OpenStreetMap contributors'
-          url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+          attribution='&copy; CartoDB'
+          url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
         />
 
         <Marker
@@ -146,7 +146,7 @@ const MapLogicProvider = () => {
           />
         )}
 
-        {regionsData && <ItalyRegions geoJsonData={regionsData} />}
+        {/* GeoJSON layer removed as requested */}
       </MapContainer>
 
       <MapStatusMessages

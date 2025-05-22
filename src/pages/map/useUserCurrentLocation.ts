@@ -28,7 +28,7 @@ export function useUserCurrentLocation() {
       }
 
       if (navigator.geolocation) {
-        console.log("Setting up watchPosition in useUserCurrentLocation...");
+        console.log("Setting up watchPosition for improved geolocation...");
         
         // Clear any possible cached positions
         if (watchId !== null) {
@@ -46,7 +46,35 @@ export function useUserCurrentLocation() {
           error => {
             console.log("Geolocation error in useUserCurrentLocation:", error.message);
             
-            // Roma as default location in case of error
+            // Try with getCurrentPosition as a fallback with different settings
+            navigator.geolocation.getCurrentPosition(
+              position => {
+                const { latitude, longitude } = position.coords;
+                console.log("Fallback position received:", latitude, longitude);
+                setCurrentLocation([latitude, longitude]);
+                setIsLoading(false);
+              },
+              fallbackError => {
+                console.log("Fallback geolocation also failed:", fallbackError.message);
+                // Roma as default location in case of error
+                setCurrentLocation([41.9028, 12.4964]);
+                setIsLoading(false);
+                
+                // Show toast only for permission denied
+                if (fallbackError.code === 1) {
+                  toast.error("Accesso alla posizione negato", {
+                    description: "Per vedere la tua posizione sulla mappa, attiva la localizzazione nelle impostazioni del browser."
+                  });
+                }
+              },
+              { 
+                enableHighAccuracy: false, 
+                timeout: 40000, // Increased timeout to 40s as requested
+                maximumAge: 60000 // Allow cached position up to 1 minute old
+              }
+            );
+            
+            // Default to Roma
             setCurrentLocation([41.9028, 12.4964]);
             setIsLoading(false);
             
@@ -59,7 +87,7 @@ export function useUserCurrentLocation() {
           },
           { 
             enableHighAccuracy: true, 
-            timeout: 20000, // Increased timeout to 20s
+            timeout: 40000, // Increased timeout to 40s as requested
             maximumAge: 0 // Always get fresh position
           }
         );
