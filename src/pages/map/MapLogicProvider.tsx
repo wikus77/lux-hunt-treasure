@@ -44,11 +44,30 @@ const MapLogicProvider = () => {
   if (!mapLoaded) return <LoadingScreen />;
 
   return (
-    <div style={{ height: '60vh', width: '100%', zIndex: 1 }} className="rounded-[24px] overflow-hidden relative">
+    <div 
+      className="rounded-[24px] overflow-hidden relative w-full" 
+      style={{ 
+        height: '70vh', 
+        minHeight: '500px',
+        width: '100%',
+        display: 'block',
+        position: 'relative'
+      }}
+    >
       <MapContainer 
         center={DEFAULT_LOCATION} 
         zoom={15}
-        style={{ height: '100%', width: '100%' }}
+        style={{ 
+          height: '100%', 
+          width: '100%',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1
+        }}
+        className="z-10"
         whenReady={handleMapLoad}
       >
         {/* Balanced tone TileLayer - not too dark, not too light */}
