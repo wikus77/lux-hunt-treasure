@@ -19,7 +19,7 @@ const Card = React.forwardRef<
     {...props}
   >
     {gradient && (
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent opacity-80" />
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
     )}
     {props.children}
   </div>

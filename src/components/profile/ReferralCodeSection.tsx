@@ -18,7 +18,7 @@ const ReferralCodeSection = () => {
   };
 
   return (
-    <GradientBox className="mt-4 p-3 rounded-md bg-black/30 border border-gray-800">
+    <GradientBox className="mt-4 p-3">
       <div className="flex items-center gap-2">
         <Link2 className="h-4 w-4 text-cyan-400" />
         <h4 className="text-sm font-bold">Codice referral</h4>
