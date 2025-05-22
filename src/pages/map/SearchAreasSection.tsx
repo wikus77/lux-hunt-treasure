@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Circle } from "lucide-react";
-import { SearchArea } from "@/components/maps/MapMarkers";
+import { SearchArea } from "@/components/maps/types";
 
 type SearchAreasSectionProps = {
   searchAreas: SearchArea[];

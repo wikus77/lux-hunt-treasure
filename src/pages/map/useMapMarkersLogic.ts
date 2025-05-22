@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { MapMarker } from "@/components/maps/MapMarkers";
+import { MapMarker } from "@/components/maps/types";
 import { v4 as uuidv4 } from "uuid";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 

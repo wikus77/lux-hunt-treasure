@@ -1,7 +1,8 @@
 
 import React from "react";
 import { LoadScript } from "@react-google-maps/api";
-import { MapMarkers, type MapMarker, type SearchArea } from "@/components/maps/MapMarkers";
+import { MapMarkers } from "./MapMarkers";
+import type { MapMarker, SearchArea } from "./types";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyDcPS0_nVl2-Waxcby_Vn3iu1ojh360oKQ";
 const DEFAULT_CENTER = { lat: 45.4642, lng: 9.19 };

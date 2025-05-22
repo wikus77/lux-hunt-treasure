@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { SearchArea } from "@/components/maps/MapMarkers";
+import { SearchArea } from "@/components/maps/types";
 import { v4 as uuidv4 } from "uuid";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { analyzeCluesForLocation } from "@/utils/clueAnalyzer";
