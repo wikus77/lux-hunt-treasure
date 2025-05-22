@@ -1,17 +1,26 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { MapMarker } from "@/components/maps/MapMarkers";
 import { v4 as uuidv4 } from "uuid";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export function useMapMarkersLogic() {
-  const [markers, setMarkers] = useState<MapMarker[]>([]);
+  const [storageMarkers, setStorageMarkers] = useLocalStorage<MapMarker[]>("map-markers", []);
+  const [markers, setMarkers] = useState<MapMarker[]>(storageMarkers || []);
   const [activeMarker, setActiveMarker] = useState<string | null>(null);
   const [isAddingMarker, setIsAddingMarker] = useState(false);
 
+  // Sync markers with localStorage
+  useEffect(() => {
+    setStorageMarkers(markers);
+  }, [markers, setStorageMarkers]);
+
   const handleAddMarker = () => {
     setIsAddingMarker(true);
-    toast.info("Clicca sulla mappa per aggiungere un nuovo punto");
+    toast.info("Clicca sulla mappa per aggiungere un nuovo punto", {
+      description: "Potrai aggiungere una nota al punto dopo averlo creato"
+    });
   };
 
   const handleMapClickMarker = (e: google.maps.MapMouseEvent) => {
@@ -29,7 +38,9 @@ export function useMapMarkersLogic() {
         setMarkers(prev => [...prev, newMarker]);
         setActiveMarker(newMarker.id);
         setIsAddingMarker(false);
-        toast.success("Punto aggiunto alla mappa");
+        toast.success("Punto aggiunto alla mappa", {
+          description: "Clicca sul punto per aggiungere una nota"
+        });
       } catch (error) {
         console.error("Errore nell'aggiunta del marker:", error);
         setIsAddingMarker(false);
@@ -42,6 +53,7 @@ export function useMapMarkersLogic() {
     setMarkers(markers.map(marker =>
       marker.id === id ? { ...marker, note } : marker
     ));
+    toast.success("Nota salvata");
   };
 
   const deleteMarker = (id: string) => {
@@ -50,12 +62,19 @@ export function useMapMarkersLogic() {
     toast.success("Punto rimosso dalla mappa");
   };
 
-  const editMarker = (id: string) => setActiveMarker(id);
+  const editMarker = (id: string) => {
+    const marker = markers.find(m => m.id === id);
+    if (marker) {
+      setActiveMarker(id);
+    }
+  };
 
   const clearAllMarkers = () => {
-    setMarkers([]);
-    setActiveMarker(null);
-    toast.success("Tutti i punti sono stati rimossi");
+    if (confirm("Sei sicuro di voler eliminare tutti i punti?")) {
+      setMarkers([]);
+      setActiveMarker(null);
+      toast.success("Tutti i punti sono stati rimossi");
+    }
   };
 
   return {

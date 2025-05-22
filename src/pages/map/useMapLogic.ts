@@ -2,12 +2,14 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
-import { useRefactoredUserLocation } from "./useRefactoredUserLocation";
 import { useMapMarkersLogic } from "./useMapMarkersLogic";
 import { useSearchAreasLogic } from "./useSearchAreasLogic";
 import { usePricingLogic } from "./hooks/usePricingLogic";
 import { usePaymentEffects } from "./hooks/usePaymentEffects";
 import { useMapInteractions } from "./hooks/useMapInteractions";
+
+// Default center of Italy (Rome)
+export const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
 
 export const useMapLogic = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -15,12 +17,11 @@ export const useMapLogic = () => {
   const [loadError, setLoadError] = useState<Error | null>(null);
   
   const location = useLocation();
-  const { currentLocation } = useRefactoredUserLocation();
   const { getNextVagueClue } = useBuzzClues();
 
   // Hook composition
   const markerLogic = useMapMarkersLogic();
-  const areaLogic = useSearchAreasLogic(currentLocation);
+  const areaLogic = useSearchAreasLogic(DEFAULT_LOCATION);
   const { buzzMapPrice, calculateSearchAreaRadius } = usePricingLogic();
   const mapInteractions = useMapInteractions(markerLogic, areaLogic);
   
@@ -31,6 +32,7 @@ export const useMapLogic = () => {
   const handleMapReady = () => {
     try {
       setMapReady(true);
+      setIsLoading(false);
       console.log("Mappa pronta e caricata correttamente");
     } catch (e) {
       console.error("Errore nel segnare la mappa come pronta:", e);
@@ -45,10 +47,10 @@ export const useMapLogic = () => {
     paymentEffects.setIsMapBuzzActive(true);
   };
 
-  // Initial loading effect
+  // Simple loading effect to ensure smooth transition
   useState(() => {
     try {
-      const timer = setTimeout(() => setIsLoading(false), 1000);
+      const timer = setTimeout(() => setIsLoading(false), 800);
       return () => clearTimeout(timer);
     } catch (e) {
       console.error("Errore durante il caricamento:", e);
@@ -63,7 +65,7 @@ export const useMapLogic = () => {
     mapReady,
     loadError,
     location,
-    currentLocation,
+    currentLocation: DEFAULT_LOCATION,
     buzzMapPrice,
     
     // Marker Logic

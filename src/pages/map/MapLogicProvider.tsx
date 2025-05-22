@@ -1,11 +1,8 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import { toast } from 'sonner';
-import { DEFAULT_LOCATION } from './utils/leafletIcons';
-import MapStatusMessages from './components/MapStatusMessages';
-import { usePrizeLocation } from './hooks/usePrizeLocation';
-import { useRefactoredUserLocation } from './useRefactoredUserLocation';
+import { DEFAULT_LOCATION } from './useMapLogic';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
 import 'leaflet/dist/leaflet.css';
@@ -25,38 +22,34 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const MapLogicProvider = () => {
-  // Use our optimized custom hook for user location
-  const { currentLocation: userLocation, isLoading } = useRefactoredUserLocation();
-  const [locationReceived, setLocationReceived] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
-  const { prizeLocation, bufferRadius } = usePrizeLocation(userLocation);
   
-  // Update locationReceived state when userLocation changes
-  useEffect(() => {
-    if (userLocation) {
-      console.log("Location received in MapLogicProvider:", userLocation);
-      setLocationReceived(true);
-    }
-  }, [userLocation]);
-
-  // Retry function that uses our custom hook's functionality
-  const retryGetLocation = useCallback(() => {
-    setLocationReceived(false);
-    // Force page refresh to trigger new geolocation request
-    window.location.reload();
-    toast.info("Richiesta posizione in corso", {
-      description: "Assicurati di concedere l'autorizzazione quando richiesto dal browser."
-    });
+  // Function to handle map load event
+  const handleMapLoad = useCallback(() => {
+    console.log("Map component mounted and ready");
+    setMapLoaded(true);
   }, []);
 
-  if (!userLocation) return <LoadingScreen />;
+  // Simulate a small loading delay for better UX
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!mapLoaded) {
+        setMapLoaded(true);
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [mapLoaded]);
+
+  if (!mapLoaded) return <LoadingScreen />;
 
   return (
     <div style={{ height: '60vh', width: '100%', zIndex: 1 }} className="rounded-[24px] overflow-hidden relative">
       <MapContainer 
-        center={userLocation} 
-        zoom={15} 
+        center={DEFAULT_LOCATION} 
+        zoom={15}
         style={{ height: '100%', width: '100%' }}
+        whenReady={handleMapLoad}
       >
         {/* Balanced tone TileLayer - not too dark, not too light */}
         <TileLayer
@@ -69,34 +62,7 @@ const MapLogicProvider = () => {
           attribution='&copy; CartoDB'
           url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png'
         />
-
-        <Marker
-          position={userLocation}
-          icon={L.icon({
-            iconUrl: '/assets/marker-icon.png',
-            iconSize: [30, 30],
-          })}
-        />
-
-        {prizeLocation && bufferRadius && (
-          <Circle
-            center={[prizeLocation[0], prizeLocation[1]]}
-            pathOptions={{
-              color: '#00D1FF',
-              fillColor: '#00D1FF',
-              fillOpacity: 0.2,
-            }}
-            radius={bufferRadius}
-          />
-        )}
       </MapContainer>
-
-      <MapStatusMessages
-        isLoading={isLoading}
-        locationReceived={locationReceived}
-        permissionDenied={false}
-        retryGetLocation={retryGetLocation}
-      />
 
       <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
     </div>

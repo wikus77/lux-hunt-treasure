@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { SearchArea } from "@/components/maps/MapMarkers";
 import { v4 as uuidv4 } from "uuid";
@@ -7,17 +7,26 @@ import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { analyzeCluesForLocation } from "@/utils/clueAnalyzer";
 import { useNotifications } from "@/hooks/useNotifications";
 import { clues } from "@/data/cluesData";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
-export function useSearchAreasLogic(currentLocation: [number, number] | null) {
-  const [searchAreas, setSearchAreas] = useState<SearchArea[]>([]);
+export function useSearchAreasLogic(defaultLocation: [number, number]) {
+  const [storageAreas, setStorageAreas] = useLocalStorage<SearchArea[]>("map-search-areas", []);
+  const [searchAreas, setSearchAreas] = useState<SearchArea[]>(storageAreas || []);
   const [activeSearchArea, setActiveSearchArea] = useState<string | null>(null);
   const [isAddingSearchArea, setIsAddingSearchArea] = useState(false);
   const { unlockedClues } = useBuzzClues();
   const { notifications } = useNotifications();
 
+  // Sync areas with localStorage
+  useEffect(() => {
+    setStorageAreas(searchAreas);
+  }, [searchAreas, setStorageAreas]);
+
   const handleAddArea = () => {
     setIsAddingSearchArea(true);
-    toast.info("Clicca sulla mappa per aggiungere una nuova area di ricerca");
+    toast.info("Clicca sulla mappa per aggiungere una nuova area di ricerca", {
+      description: "Potrai personalizzare il nome e il raggio dell'area"
+    });
   };
 
   const handleMapClickArea = (e: google.maps.MapMouseEvent) => {
@@ -36,7 +45,9 @@ export function useSearchAreasLogic(currentLocation: [number, number] | null) {
         setSearchAreas(prev => [...prev, newArea]);
         setActiveSearchArea(newArea.id);
         setIsAddingSearchArea(false);
-        toast.success("Area di ricerca aggiunta alla mappa");
+        toast.success("Area di ricerca aggiunta alla mappa", {
+          description: "Clicca sull'area per modificare il nome o il raggio"
+        });
       } catch (error) {
         console.error("Errore nell'aggiunta dell'area:", error);
         setIsAddingSearchArea(false);
@@ -51,8 +62,8 @@ export function useSearchAreasLogic(currentLocation: [number, number] | null) {
       // Utilizza l'analizzatore di indizi per determinare la posizione
       const locationInfo = analyzeCluesForLocation(clues, notifications || []);
       
-      let targetLat = 42.5047; // Default al centro dell'Italia
-      let targetLng = 12.5679;
+      let targetLat = defaultLocation[0];
+      let targetLng = defaultLocation[1];
       let label = "Area generata";
       let confidenceValue: string = "Media"; 
       
@@ -107,6 +118,7 @@ export function useSearchAreasLogic(currentLocation: [number, number] | null) {
     setSearchAreas(searchAreas.map(area =>
       area.id === id ? { ...area, label, radius } : area
     ));
+    toast.success("Area di ricerca aggiornata");
   };
 
   const deleteSearchArea = (id: string) => {

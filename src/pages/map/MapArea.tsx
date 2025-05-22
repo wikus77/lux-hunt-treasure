@@ -5,7 +5,7 @@ import { MapMarkers, type MapMarker, type SearchArea } from "@/components/maps/M
 import { useIsMobile } from "@/hooks/use-mobile";
 import { GOOGLE_MAPS_API_KEY } from "@/config/apiKeys";
 
-const DEFAULT_CENTER = { lat: 45.4642, lng: 9.19 };
+const DEFAULT_CENTER = { lat: 41.9028, lng: 9.19 }; // Center of Italy
 
 type MapAreaProps = {
   onMapReady?: () => void;
@@ -82,7 +82,8 @@ const MapArea: React.FC<MapAreaProps> = ({
             streetViewControl: !isMobile,
             zoomControlOptions: isMobile ? { position: google.maps.ControlPosition.RIGHT_BOTTOM } : undefined,
             gestureHandling: isMobile ? "greedy" : "auto",
-            zoomControl: true
+            zoomControl: true,
+            zoom: 14 // Default zoom level
           }}
         />
       </LoadScript>
