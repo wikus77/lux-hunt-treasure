@@ -1,9 +1,10 @@
 
 import React, { useEffect } from 'react';
-import { Circle, Popup } from 'react-leaflet';
+import { Circle, Popup, useMap } from 'react-leaflet';
 import { SearchArea } from '@/components/maps/types';
 import { Button } from '@/components/ui/button';
 import { Trash2, Edit } from 'lucide-react';
+import L from 'leaflet';
 
 type SearchAreaMapLayerProps = {
   searchAreas: SearchArea[];
@@ -17,6 +18,31 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
   deleteSearchArea
 }) => {
   console.log("AREAS STATE:", searchAreas);
+  const map = useMap();
+  
+  // Fallback rendering using direct Leaflet API to ensure areas are visible
+  useEffect(() => {
+    console.log("RENDERING AREAS:", searchAreas);
+    if (map && searchAreas.length > 0) {
+      // Clear previous circles that might have been added directly to the map
+      map.eachLayer((layer) => {
+        if (layer instanceof L.Circle && !(layer instanceof Circle)) {
+          map.removeLayer(layer);
+        }
+      });
+      
+      // Add circles directly to the map as a fallback
+      searchAreas.forEach(area => {
+        L.circle([area.lat, area.lng], {
+          radius: area.radius,
+          color: area.isAI ? '#9b87f5' : '#00D1FF',
+          fillColor: area.isAI ? '#7E69AB' : '#00D1FF',
+          fillOpacity: 0.2,
+          weight: 2
+        }).addTo(map);
+      });
+    }
+  }, [searchAreas, map]);
   
   return (
     <>
