@@ -7,6 +7,8 @@ import LoadingScreen from './LoadingScreen';
 import MapContainer from './components/MapContainer';
 import AddingMarkerOverlay from './components/AddingMarkerOverlay';
 import MapActionButtons from './components/MapActionButtons';
+import { AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -36,7 +38,10 @@ const MapLogicProvider = () => {
     setActiveMarker,
     saveMarkerNote,
     deleteMarker,
-    handleAddMarker
+    handleAddMarker,
+    currentLocation,
+    locationPermissionState,
+    retryGeolocation
   } = useMapLogic();
   
   // Function to handle map load event
@@ -74,7 +79,7 @@ const MapLogicProvider = () => {
     >
       {/* Map Container */}
       <MapContainer
-        center={DEFAULT_LOCATION}
+        center={currentLocation || DEFAULT_LOCATION}
         handleMapLoad={handleMapLoad}
         markers={markers}
         isAddingMarker={isAddingMarker}
@@ -83,7 +88,26 @@ const MapLogicProvider = () => {
         setActiveMarker={setActiveMarker}
         saveMarkerNote={saveMarkerNote}
         deleteMarker={deleteMarker}
+        currentLocation={currentLocation}
       />
+
+      {/* Location Permission Alert */}
+      {locationPermissionState === 'denied' && (
+        <div className="absolute top-4 left-0 right-0 mx-auto w-max z-30">
+          <div className="bg-black/80 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 border border-yellow-500/50">
+            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+            <span>Geolocalizzazione non attiva. Controlla le impostazioni del browser.</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="ml-2 bg-projectx-blue/20 text-white border-projectx-blue/50 hover:bg-projectx-blue/30"
+              onClick={retryGeolocation}
+            >
+              Riprova
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Bottom action buttons */}
       <MapActionButtons 

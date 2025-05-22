@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useMapEvents } from 'react-leaflet';
 import { toast } from 'sonner';
 import L from 'leaflet';
@@ -8,18 +8,21 @@ interface MapEventHandlerProps {
   isAddingMarker: boolean;
   handleMapClickMarker: (e: any) => void;
   markers: Array<any>;
+  currentLocation?: [number, number] | null;
 }
 
 const MapEventHandler: React.FC<MapEventHandlerProps> = ({
   isAddingMarker,
   handleMapClickMarker,
-  markers
+  markers,
+  currentLocation
 }) => {
+  const toastShownRef = useRef(false);
+  
   const map = useMapEvents({
     click: (e) => {
       if (isAddingMarker) {
         console.log("Map clicked in MapEventHandler:", e.latlng);
-        console.log("Cursore impostato su crosshair");
         // Convert Leaflet event to format expected by handleMapClickMarker
         const simulatedGoogleMapEvent = {
           latLng: {
@@ -38,13 +41,11 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
     
     if (isAddingMarker) {
       map.getContainer().style.cursor = 'crosshair';
-      console.log("Cursore cambiato in crosshair");
       toast.info("Clicca sulla mappa per posizionare il punto", {
         duration: 3000
       });
     } else {
       map.getContainer().style.cursor = 'grab';
-      console.log("Cursore ripristinato a grab");
     }
     
     return () => {
@@ -66,6 +67,17 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
       }
     }
   }, [markers, map]);
+  
+  // Center map on user's location if available
+  useEffect(() => {
+    if (currentLocation && map && !toastShownRef.current) {
+      try {
+        map.setView([currentLocation[0], currentLocation[1]], 13);
+      } catch (err) {
+        console.error("Error setting map view:", err);
+      }
+    }
+  }, [currentLocation, map]);
   
   return null;
 };
