@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { SearchArea } from "@/components/maps/types";
 import { v4 as uuidv4 } from "uuid";
