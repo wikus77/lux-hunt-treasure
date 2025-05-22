@@ -1,9 +1,13 @@
 
 import React from "react";
-import M1SSIONMapSafe from "./map/components/M1SSIONMapSafeBasic";
+import M1SSIONMapSafeBasic from "./map/components/M1SSIONMapSafeBasic";
 
 const MapSafe = () => {
-  return <M1SSIONMapSafe />;
+  return (
+    <div className="w-full h-screen">
+      <M1SSIONMapSafeBasic />
+    </div>
+  );
 };
 
 export default MapSafe;
