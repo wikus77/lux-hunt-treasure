@@ -100,8 +100,8 @@ const MapLogicProvider = () => {
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer
-          attribution='&copy; Stadia Maps, OpenMapTiles, OpenStreetMap'
-          url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+          attribution='&copy; OpenMapTiles & OpenStreetMap contributors'
+          url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
         />
 
         <Marker
