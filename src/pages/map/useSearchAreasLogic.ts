@@ -39,42 +39,54 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
   };
 
   const handleMapClickArea = (e: google.maps.MapMouseEvent) => {
+    console.log("Map click event received:", e);
+    console.log("isAddingSearchArea state:", isAddingSearchArea);
+
     if (isAddingSearchArea && e.latLng) {
       try {
+        // Extract coordinates from the event
         const lat = e.latLng.lat();
         const lng = e.latLng.lng();
-        const radius = pendingRadiusRef.current; // Use the radius from ref
+        const radius = pendingRadiusRef.current;
         
-        console.log("Map clicked at:", lat, lng);
+        console.log("Coordinates extracted: ", lat, lng);
         console.log("Using radius:", radius);
         
+        // Create new search area object
         const newArea: SearchArea = {
           id: uuidv4(),
-          lat, lng,
+          lat, 
+          lng,
           radius: radius,
           label: "Area di ricerca",
-          color: "#00D1FF", // Using the requested color
+          color: "#00D1FF",
           position: { lat, lng }
         };
         
-        console.log("Adding new search area:", newArea);
+        console.log("Creating new search area:", newArea);
+
+        // Update state with the new area
         setSearchAreas(prevAreas => {
           console.log("Previous areas:", prevAreas);
           const newAreas = [...prevAreas, newArea];
           console.log("Updated areas:", newAreas);
           return newAreas;
         });
+
+        // Set the newly created area as active
         setActiveSearchArea(newArea.id);
+        
+        // Reset adding state
         setIsAddingSearchArea(false);
         
-        toast.success("Area di ricerca aggiunta alla mappa", {
-          description: "Clicca sull'area per modificare il nome o il raggio"
-        });
+        toast.success("Area di ricerca aggiunta alla mappa");
       } catch (error) {
-        console.error("Errore nell'aggiunta dell'area:", error);
+        console.error("Error adding search area:", error);
         setIsAddingSearchArea(false);
-        toast.error("Si è verificato un errore durante l'aggiunta dell'area");
+        toast.error("Si è verificato un errore nell'aggiunta dell'area");
       }
+    } else {
+      console.log("Not in adding search area mode or latLng is missing");
     }
   };
 
@@ -116,6 +128,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         confidence: confidenceValue
       };
       
+      console.log("Generated area:", newArea);
       setSearchAreas(prev => [...prev, newArea]);
       setActiveSearchArea(newArea.id);
       

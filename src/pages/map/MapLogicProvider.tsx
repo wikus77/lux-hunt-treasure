@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { DEFAULT_LOCATION } from './useMapLogic';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
-import { Zap } from 'lucide-react';
+import { Circle as CircleIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMapLogic } from './useMapLogic';
 import 'leaflet/dist/leaflet.css';
@@ -53,11 +53,11 @@ const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, 
         duration: 3000
       });
     } else {
-      map.getContainer().style.cursor = '';
+      map.getContainer().style.cursor = 'grab';
     }
     
     return () => {
-      if (map) map.getContainer().style.cursor = '';
+      if (map) map.getContainer().style.cursor = 'grab';
     };
   }, [isAddingSearchArea, map]);
   
@@ -176,7 +176,7 @@ const MapLogicProvider = () => {
           onClick={handleBuzz}
           className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white shadow-[0_0_10px_rgba(217,70,239,0.5)] hover:shadow-[0_0_15px_rgba(217,70,239,0.7)]"
         >
-          <Zap className="mr-1 h-4 w-4" />
+          <CircleIcon className="mr-1 h-4 w-4" />
           BUZZ {buzzMapPrice.toFixed(2)}€
         </Button>
       </div>

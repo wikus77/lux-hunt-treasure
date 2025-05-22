@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   Home, 
   MapPin, 
-  Zap, 
+  Circle, 
   Trophy, 
   Bell
 } from "lucide-react";
@@ -57,7 +57,7 @@ const BottomNavigation = () => {
             className={`bottom-nav-item ${isActive('/buzz') ? 'active' : ''}`}
           >
             <div className="p-2">
-              <Zap 
+              <Circle 
                 size={iconSize} 
                 color={isActive('/buzz') ? iconColor : undefined}
                 className={`transition-all ${isActive('/buzz') ? 'active-gradient-icon' : ''}`}
