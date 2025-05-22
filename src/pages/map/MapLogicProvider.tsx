@@ -31,6 +31,7 @@ const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, 
     click: (e) => {
       if (isAddingSearchArea) {
         console.log("Map clicked in MapEventHandler:", e.latlng);
+        console.log("Cursore impostato su crosshair");
         // Convert Leaflet event to format expected by handleMapClickArea
         const simulatedGoogleMapEvent = {
           latLng: {
@@ -49,11 +50,13 @@ const MapEventHandler = ({ isAddingSearchArea, handleMapClickArea, searchAreas, 
     
     if (isAddingSearchArea) {
       map.getContainer().style.cursor = 'crosshair';
+      console.log("Cursore cambiato in crosshair");
       toast.info("Clicca sulla mappa per posizionare l'area", {
         duration: 3000
       });
     } else {
       map.getContainer().style.cursor = 'grab';
+      console.log("Cursore ripristinato a grab");
     }
     
     return () => {

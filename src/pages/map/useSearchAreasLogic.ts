@@ -33,6 +33,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     }
 
     setIsAddingSearchArea(true);
+    console.log("Modalità aggiunta area attivata, cursore cambiato in crosshair");
     toast.info("Clicca sulla mappa per aggiungere una nuova area di ricerca", {
       description: `L'area sarà creata con il raggio di ${pendingRadiusRef.current} metri`
     });
@@ -49,8 +50,8 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         const lng = e.latLng.lng();
         const radius = pendingRadiusRef.current;
         
-        console.log("Coordinates extracted: ", lat, lng);
-        console.log("Using radius:", radius);
+        console.log("Coordinate selezionate:", lat, lng);
+        console.log("Raggio utilizzato:", radius);
         
         // Create new search area object
         const newArea: SearchArea = {
@@ -63,13 +64,13 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
           position: { lat, lng }
         };
         
-        console.log("Creating new search area:", newArea);
+        console.log("Area generata:", newArea);
 
         // Update state with the new area
         setSearchAreas(prevAreas => {
-          console.log("Previous areas:", prevAreas);
+          console.log("Aree precedenti:", prevAreas);
           const newAreas = [...prevAreas, newArea];
-          console.log("Updated areas:", newAreas);
+          console.log("Aree aggiornate:", newAreas);
           return newAreas;
         });
 
@@ -78,6 +79,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         
         // Reset adding state
         setIsAddingSearchArea(false);
+        console.log("Modalità aggiunta area disattivata, cursore ripristinato");
         
         toast.success("Area di ricerca aggiunta alla mappa");
       } catch (error) {
@@ -128,7 +130,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         confidence: confidenceValue
       };
       
-      console.log("Generated area:", newArea);
+      console.log("Area generata:", newArea);
       setSearchAreas(prev => [...prev, newArea]);
       setActiveSearchArea(newArea.id);
       

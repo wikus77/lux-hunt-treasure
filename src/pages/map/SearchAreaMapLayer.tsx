@@ -36,6 +36,7 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
               eventHandlers={{
                 click: () => {
                   setActiveSearchArea(area.id);
+                  console.log("Area selezionata:", area.id);
                 }
               }}
             >
