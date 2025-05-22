@@ -95,8 +95,9 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         console.log("Area creata:", newArea);
         
         // Immediately draw the circle on the map without waiting for React rendering
-        const mapRef = areaOperations.getMapRef?.();
-        if (mapRef) {
+        // FIX: Use mapRef directly instead of getMapRef function that doesn't exist
+        const mapInstance = areaOperations.mapRef?.current;
+        if (mapInstance) {
           console.log("Drawing circle directly on map click");
           const circle = L.circle([lat, lng], {
             radius: radius,
@@ -104,7 +105,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
             fillColor: '#00D1FF',
             fillOpacity: 0.2,
             weight: 2
-          }).addTo(mapRef);
+          }).addTo(mapInstance);
           
           circle.on('click', () => {
             areaOperations.setActiveSearchArea(newAreaId);
