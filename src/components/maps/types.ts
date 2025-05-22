@@ -1,9 +1,11 @@
+
 export type MapMarker = {
   id: string;
   lat: number;
   lng: number;
   note: string;
   position: { lat: number; lng: number };
+  editing?: boolean;
 };
 
 export type SearchArea = {

@@ -22,9 +22,12 @@ const MapMarkerInfoWindow: React.FC<Props> = ({
 }) => {
   const newNoteRef = useRef<HTMLTextAreaElement>(null);
 
+  // Check if we're in editing mode based on a property or state
+  const isEditing = marker.editing || false;
+
   return (
     <div className="min-w-[170px]">
-      {marker.editing ? (
+      {isEditing ? (
         <div className="flex flex-col gap-2">
           <Textarea
             ref={newNoteRef}
