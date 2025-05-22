@@ -2,7 +2,7 @@
 import React from 'react';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
-import { MapPin } from 'lucide-react';
+import { MapPin, AlertCircle } from 'lucide-react';
 
 interface MapStatusMessagesProps {
   isLoading: boolean;
@@ -26,14 +26,14 @@ const MapStatusMessages: React.FC<MapStatusMessagesProps> = ({
                     hover:bg-black/80 transition-colors"
           onClick={retryGetLocation}
         >
-          <MapPin className="h-4 w-4 text-[#00D1FF]" />
-          <span>Posizione non disponibile. Tocca per attivare.</span>
+          <AlertCircle className="h-4 w-4 text-[#00D1FF]" />
+          <span>Accesso alla posizione negato. Tocca per riattivare.</span>
         </div>
       )}
       
       {isLoading && !locationReceived && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                      bg-black/60 text-white p-6 rounded-[16px] flex flex-col items-center">
+                      bg-black/60 text-white p-6 rounded-[24px] flex flex-col items-center">
           <Spinner size="md" className="border-[#00D1FF] mx-auto mb-3" />
           <p className="text-center">Rilevamento posizione in corso...</p>
           <p className="text-xs text-[#00D1FF]/80 mt-1">Ti chiediamo l'accesso alla tua posizione</p>

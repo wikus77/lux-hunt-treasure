@@ -108,9 +108,10 @@ const MapLogicProvider = () => {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries: mapLibraries,
+    loadingElement: <LoadingScreen />,
   });
 
-  // Get user location information - request it immediately
+  // Get user location information - request it immediately on component mount
   const { permission, userLocation, askPermission, loading, error } = useUserLocationPermission();
   const [locationReceived, setLocationReceived] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
@@ -123,11 +124,21 @@ const MapLogicProvider = () => {
   const [mapZoom, setMapZoom] = useState(15);
   const [mapCenter, setMapCenter] = useState<google.maps.LatLngLiteral | null>(null);
 
-  // Request location permission immediately when component mounts
+  // Request location permission immediately when component mounts (doppio controllo)
   useEffect(() => {
     console.log("MapLogicProvider mounted - requesting geolocation");
-    askPermission();
-  }, [askPermission]);
+    askPermission(); // Richiesta esplicita della posizione al mount
+    
+    // Ricontrolliamo lo stato dopo un breve ritardo per assicurarci che la richiesta venga processata
+    const checkTimer = setTimeout(() => {
+      if (permission === 'prompt' && !userLocation) {
+        console.log("Retrying permission request after timeout");
+        askPermission();
+      }
+    }, 3000);
+    
+    return () => clearTimeout(checkTimer);
+  }, [askPermission, permission, userLocation]);
 
   // Handle user location updates with improved center management
   useEffect(() => {
@@ -149,26 +160,19 @@ const MapLogicProvider = () => {
           map.panTo({ lat: userLocation[0], lng: userLocation[1] });
           map.setZoom(mapZoom);
         }
-        
-        // Show success toast
-        toast.success("Posizione localizzata", {
-          description: "La tua posizione è stata utilizzata per centrare la mappa."
-        });
       }
     } else if (permission === 'prompt') {
       console.log("Requesting geolocation permission again...");
-      // Automatically try again if we're still in prompt state
-      askPermission();
+      // Non richiedere automaticamente se siamo ancora in attesa
+      if (!loading) {
+        askPermission();
+      }
     } else if (permission === 'denied') {
       console.log("Geolocation permission denied, using fallback to Roma");
       
       // Set fallback location (Roma)
       const fallbackLocation = { lat: 41.9028, lng: 12.4964 }; // Roma
       setMapCenter(fallbackLocation);
-      
-      toast.error("Posizione non disponibile", {
-        description: "Non è stato possibile localizzarti. Alcune funzionalità potrebbero essere limitate."
-      });
     }
     
   }, [permission, userLocation, askPermission, loading, error, map, mapZoom]);
@@ -190,10 +194,24 @@ const MapLogicProvider = () => {
     }
   }, [userLocation, permission, askPermission, mapZoom]);
   
-  // Retry getting location
+  // Retry getting location - funzione migliorata per forzare un nuovo tentativo
   const retryGetLocation = () => {
     console.log("Retrying location detection...");
+    // Resetta lo stato di errore prima di ritentare
+    setLocationReceived(false);
+    
+    // Cerca di pulire eventuali permessi negati in cache del browser
+    navigator.geolocation.clearWatch(
+      navigator.geolocation.watchPosition(() => {}, () => {})
+    );
+    
+    // Richiedi nuovamente il permesso
     askPermission();
+    
+    // Mostra un toast per informare l'utente
+    toast.info("Richiesta posizione in corso", {
+      description: "Assicurati di concedere l'autorizzazione quando richiesto dal browser."
+    });
   };
 
   // Handle loading state and errors

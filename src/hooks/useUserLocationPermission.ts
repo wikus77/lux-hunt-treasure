@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 
 // Key for storing permission in localStorage
 const GEO_PERMISSION_KEY = "geo_permission_granted";
@@ -49,14 +50,27 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
     console.log("Requesting user position...");
     
     try {
-      navigator.permissions && navigator.permissions.query({name: 'geolocation'})
-        .then(permissionStatus => {
-          console.log('Geolocation permission status:', permissionStatus.state);
-          
-          // Make sure we don't short-circuit the geolocation request if it was previously denied
-          // We'll still request it to give the user a chance to change their mind
-        });
+      // Prima verifichiamo lo stato dell'autorizzazione, se il browser lo supporta
+      if (navigator.permissions && 'query' in navigator.permissions) {
+        navigator.permissions.query({name: 'geolocation'})
+          .then(permissionStatus => {
+            console.log('Geolocation permission status:', permissionStatus.state);
+            
+            // Aggiungiamo un listener per i cambiamenti dello stato di autorizzazione
+            permissionStatus.onchange = () => {
+              console.log('Geolocation permission changed to:', permissionStatus.state);
+              if (permissionStatus.state === 'granted') {
+                // Richiediamo nuovamente la posizione se l'utente ha concesso l'autorizzazione
+                getCurrentPosition();
+              }
+            };
+          })
+          .catch(err => {
+            console.error('Error checking permission:', err);
+          });
+      }
         
+      // Richiediamo la posizione con opzioni migliorate
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
@@ -66,6 +80,11 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
           localStorage.setItem(GEO_PERMISSION_KEY, "granted");
           setLoading(false);
           setError(null);
+          
+          // Notifica di successo
+          toast.success("Posizione rilevata con successo", {
+            description: "La mappa è stata centrata sulla tua posizione attuale."
+          });
         },
         (error) => {
           console.error("Geolocation error:", error.message, error.code);
@@ -75,12 +94,21 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
           switch (error.code) {
             case 1: // PERMISSION_DENIED
               errorMessage = "Accesso alla posizione negato dall'utente.";
+              toast.error("Accesso alla posizione negato", {
+                description: "Attiva la geolocalizzazione nelle impostazioni del browser per utilizzare questa funzione."
+              });
               break;
             case 2: // POSITION_UNAVAILABLE
               errorMessage = "Informazioni sulla posizione non disponibili.";
+              toast.error("Posizione non disponibile", {
+                description: "Il tuo dispositivo non è riuscito a determinare la tua posizione attuale."
+              });
               break;
             case 3: // TIMEOUT
               errorMessage = "Timeout nella richiesta della posizione.";
+              toast.error("Richiesta scaduta", {
+                description: "La richiesta della posizione ha impiegato troppo tempo. Riprova."
+              });
               break;
           }
           
@@ -91,7 +119,7 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
         },
         {
           enableHighAccuracy: true, // Using high accuracy for better positioning
-          timeout: 15000, // 15 seconds timeout - increased from previous setting
+          timeout: 10000, // 10 seconds timeout - reduced from previous setting
           maximumAge: 0 // Don't use cached position - always get a fresh reading
         }
       );
@@ -100,10 +128,13 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
       setError("Errore imprevisto nella geolocalizzazione");
       setLoading(false);
       setPermission("denied");
+      toast.error("Errore di geolocalizzazione", {
+        description: "Si è verificato un errore imprevisto durante la richiesta della posizione."
+      });
     }
   }, [lastAttempt]);
 
-  // Check stored permission and get location on initial load - IMMEDIATELY
+  // Forza la richiesta di localizzazione immediatamente al mount del componente
   useEffect(() => {
     // Clear any previous stored permission to ensure we always try to get location
     // when the component mounts - this helps if the user previously denied but has
@@ -113,9 +144,6 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
     // Always try to get the location on component mount
     console.log("Initial geolocation request on component mount");
     getCurrentPosition();
-    
-    // Don't rely on stored permission anymore, always prompt the user
-    setPermission("prompt");
   }, [getCurrentPosition]);
 
   // Function to explicitly ask for permission
