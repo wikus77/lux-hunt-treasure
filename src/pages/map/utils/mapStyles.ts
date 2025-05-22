@@ -2,17 +2,26 @@
 // Dark mode style for Google Maps
 export const darkModeStyle = [
   {
-    "featureType": "all",
-    "elementType": "labels.text",
+    "elementType": "geometry",
     "stylers": [
       {
-        "color": "#f9f9f9"
-      },
+        "color": "#0d0d1f"
+      }
+    ]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [
       {
-        "weight": "0.50"
-      },
+        "color": "#f8f8f8"
+      }
+    ]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [
       {
-        "visibility": "on"
+        "color": "#1a1a1a"
       }
     ]
   },
@@ -59,21 +68,6 @@ export const darkModeStyle = [
     ]
   },
   {
-    "featureType": "administrative.continent",
-    "elementType": "geometry.stroke",
-    "stylers": [
-      {
-        "color": "#1EAEDB"
-      },
-      {
-        "weight": 3
-      },
-      {
-        "visibility": "on"
-      }
-    ]
-  },
-  {
     "featureType": "landscape",
     "elementType": "geometry.fill",
     "stylers": [
@@ -103,6 +97,42 @@ export const darkModeStyle = [
       },
       {
         "visibility": "simplified"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#7B2EFF"
+      },
+      {
+        "weight": 0.8
+      }
+    ]
+  },
+  {
+    "featureType": "road.arterial",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#1EAEDB"
+      },
+      {
+        "weight": 0.6
+      }
+    ]
+  },
+  {
+    "featureType": "road.local",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#D946EF"
+      },
+      {
+        "weight": 0.4
       }
     ]
   },

@@ -10,6 +10,13 @@ import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import GradientBox from "@/components/ui/gradient-box";
 
+// Ensure we force HTTPS for geolocation
+useEffect(() => {
+  if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
+    window.location.href = window.location.href.replace('http:', 'https:');
+  }
+}, []);
+
 const Map = () => {
   // Initialize the buzz clues context to make it available for dynamic pricing
   const { unlockedClues } = useBuzzClues();

@@ -2,6 +2,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 
+// Key for storing permission in localStorage
+const GEO_PERMISSION_KEY = "geo_permission_granted";
+
 export const useLocationWatcher = (
   isSecureContext: boolean,
   permission: "granted" | "denied" | "prompt",
@@ -28,7 +31,14 @@ export const useLocationWatcher = (
       return;
     }
 
-    if ('geolocation' in navigator && permission === 'granted') {
+    // Check if permission is already granted in localStorage
+    const storedPermission = localStorage.getItem(GEO_PERMISSION_KEY);
+    if (storedPermission === 'denied') {
+      console.log("Geolocation permission previously denied, not requesting again");
+      return;
+    }
+
+    if ('geolocation' in navigator && (permission === 'granted' || permission === 'prompt')) {
       // Clear any previous watches
       clearWatch();
 
@@ -42,14 +52,16 @@ export const useLocationWatcher = (
             map.panTo({ lat: latitude, lng: longitude });
           }
           
-          // We don't have setUserLocation, the userLocation comes from the hook
-          // No need to update it directly as it's managed by useUserLocationPermission
+          // Store successful permission
+          localStorage.setItem(GEO_PERMISSION_KEY, 'granted');
+          
           setLocationReceived(true);
           setRetryAttempts(0);
         },
         (error) => {
           console.error("Watch position error:", error);
           if (error.code === 1) { // PERMISSION_DENIED
+            localStorage.setItem(GEO_PERMISSION_KEY, 'denied');
             toast.error("Accesso alla posizione negato", {
               description: "Per vedere la tua posizione sulla mappa, attiva la localizzazione nelle impostazioni del browser."
             });
@@ -84,10 +96,13 @@ export const useLocationWatcher = (
       return;
     }
     
+    // Reset permission in localStorage to try again
+    localStorage.removeItem(GEO_PERMISSION_KEY);
+    
     console.log("Retrying location detection...");
     // Reset location state before retrying
     setLocationReceived(false);
-    setRetryAttempts(0);
+    setRetryAttempts((prev) => prev + 1);
     
     // Clear any previous watch
     clearWatch();
@@ -96,7 +111,9 @@ export const useLocationWatcher = (
     toast.info("Richiesta posizione in corso", {
       description: "Assicurati di concedere l'autorizzazione quando richiesto dal browser."
     });
-  }, [isSecureContext, clearWatch]);
+    
+    setupWatchPosition();
+  }, [isSecureContext, clearWatch, setupWatchPosition]);
 
   return {
     watchId,

@@ -31,6 +31,16 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
   const { handleGeolocationError, handleSecurityError } = useGeolocationErrors();
   const { checkPermissionStatus } = useGeolocationPermission();
   const { startWatchingPosition, clearWatch } = useGeolocationWatch();
+  
+  // Check for stored permission on mount
+  useEffect(() => {
+    const storedPermission = localStorage.getItem(GEO_PERMISSION_KEY);
+    if (storedPermission) {
+      if (storedPermission === "granted" || storedPermission === "denied" || storedPermission === "prompt") {
+        setPermission(storedPermission);
+      }
+    }
+  }, []);
 
   // Setup watch position for more reliable location updates
   const setupWatchPosition = useCallback(() => {
@@ -40,8 +50,7 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
       if (!isSecureContext()) {
         const { errorMessage, permissionState } = handleSecurityError();
         setError(errorMessage);
-        // Fix: Explicitly cast the string to the correct type
-        setPermission(permissionState as "denied" | "granted" | "prompt");
+        setPermission(permissionState);
         localStorage.setItem(GEO_PERMISSION_KEY, permissionState);
       } else {
         setError("La geolocalizzazione non è supportata dal tuo browser");
@@ -91,8 +100,7 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
         const { errorMessage, shouldRetry, permissionState } = handleGeolocationError(error);
         
         setError(errorMessage);
-        // Fix: Explicitly cast the string to the correct type
-        setPermission(permissionState as "denied" | "granted" | "prompt");
+        setPermission(permissionState);
         localStorage.setItem(GEO_PERMISSION_KEY, permissionState);
         setLoading(false);
         
@@ -126,10 +134,18 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
 
   // Function to explicitly ask for permission
   const askPermission = useCallback(() => {
-    // Prevent multiple simultaneous requests
+    // Check if we already tried recently
     const now = Date.now();
     if (lastAttempt && now - lastAttempt < 3000) {
       console.log("Skipping duplicate geolocation request");
+      return;
+    }
+    
+    // Check if permission was previously denied
+    const storedPermission = localStorage.getItem(GEO_PERMISSION_KEY);
+    if (storedPermission === 'denied') {
+      console.log("Permission previously denied, not asking again");
+      setLoading(false);
       return;
     }
     
@@ -155,8 +171,16 @@ export function useUserLocationPermission(): UseUserLocationPermissionResult {
 
   // Force location request immediately on component mount
   useEffect(() => {
-    // Clear any previous stored permission to ensure we always try to get location
-    localStorage.removeItem(GEO_PERMISSION_KEY);
+    // Check if we have a stored permission
+    const storedPermission = localStorage.getItem(GEO_PERMISSION_KEY);
+    
+    // If permission is denied, don't ask again
+    if (storedPermission === 'denied') {
+      console.log("Stored permission is denied, not requesting location");
+      setPermission("denied");
+      setLoading(false);
+      return;
+    }
     
     // Always try to get the location on component mount
     console.log("Initial geolocation request on component mount");

@@ -13,6 +13,9 @@ import { useSecureContext } from './hooks/useSecureContext';
 import { useLocationWatcher } from './hooks/useLocationWatcher';
 import { mapContainerStyle, darkModeStyle } from './utils/mapStyles';
 
+// Key for storing permission in localStorage
+const GEO_PERMISSION_KEY = "geo_permission_granted";
+
 const MapLogicProvider = () => {
   // Check if we're in a secure context (required for geolocation)
   const { isSecureContext } = useSecureContext();
@@ -40,6 +43,15 @@ const MapLogicProvider = () => {
   
   // Get prize location based on user's location
   const { prizeLocation, bufferRadius } = usePrizeLocation(userLocation);
+  
+  // Check for stored permission immediately on mount
+  useEffect(() => {
+    const storedPermission = localStorage.getItem(GEO_PERMISSION_KEY);
+    if (storedPermission === 'granted' && isSecureContext) {
+      console.log("Permission already granted, setting up watch position without prompting");
+      setupWatchPosition();
+    }
+  }, [isSecureContext, setupWatchPosition]);
 
   // Set up watchPosition instead of getCurrentPosition for more reliable updates
   useEffect(() => {
@@ -52,17 +64,22 @@ const MapLogicProvider = () => {
   useEffect(() => {
     if (isSecureContext) {
       console.log("MapLogicProvider mounted - requesting geolocation");
-      askPermission(); // Explicit request on mount
       
-      // Check status after a delay to ensure the request is processed
-      const checkTimer = setTimeout(() => {
-        if (permission === 'prompt' && !userLocation) {
-          console.log("Retrying permission request after timeout");
-          askPermission();
-        }
-      }, 3000);
-      
-      return () => clearTimeout(checkTimer);
+      // Check if we already have permission stored
+      const storedPermission = localStorage.getItem(GEO_PERMISSION_KEY);
+      if (storedPermission !== 'denied') {
+        askPermission(); // Explicit request on mount
+        
+        // Check status after a delay to ensure the request is processed
+        const checkTimer = setTimeout(() => {
+          if (permission === 'prompt' && !userLocation) {
+            console.log("Retrying permission request after timeout");
+            askPermission();
+          }
+        }, 3000);
+        
+        return () => clearTimeout(checkTimer);
+      }
     }
   }, [askPermission, permission, userLocation, isSecureContext]);
 
