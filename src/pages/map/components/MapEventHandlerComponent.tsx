@@ -1,13 +1,14 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useMapEvents } from 'react-leaflet';
-import { toast } from 'sonner';
 import { SearchArea } from '@/components/maps/types';
-import L from 'leaflet'; // Adding proper Leaflet import
+import { useCursorEffect } from '../hooks/useCursorEffect';
+import { useMapBounds } from '../hooks/useMapBounds';
+import MapClickHandler from './MapClickHandler';
 
 type MapEventHandlerProps = {
   isAddingSearchArea: boolean;
-  handleMapClickArea: (e: { latlng: L.LatLng }) => void; // Updating type to match Leaflet event
+  handleMapClickArea: (e: any) => void;
   searchAreas: SearchArea[];
   setPendingRadius: (radius: number) => void;
 };
@@ -18,60 +19,19 @@ const MapEventHandlerComponent: React.FC<MapEventHandlerProps> = ({
   searchAreas,
   setPendingRadius
 }) => {
-  const map = useMapEvents({
-    click: (e) => {
-      if (isAddingSearchArea) {
-        console.log("MAP CLICKED", e.latlng);
-        console.log("Coordinate selezionate:", e.latlng.lat, e.latlng.lng);
-        
-        // Pass the Leaflet event directly - it already has the latlng property
-        handleMapClickArea(e);
-      }
-    }
-  });
+  // Get the map instance from useMapEvents
+  const map = useMapEvents({});
   
-  // Change cursor style based on the current action state
-  useEffect(() => {
-    if (!map) return;
-    
-    if (isAddingSearchArea) {
-      // Use L.DomUtil to add the crosshair cursor class
-      L.DomUtil.addClass(map.getContainer(), 'crosshair-cursor-enabled');
-      console.log("CURSORE CAMBIATO A CROSSHAIR");
-      toast.info("Clicca sulla mappa per posizionare l'area", {
-        duration: 3000
-      });
-    } else {
-      // Remove the crosshair cursor class when not adding area
-      L.DomUtil.removeClass(map.getContainer(), 'crosshair-cursor-enabled');
-      map.getContainer().style.cursor = 'grab';
-      console.log("Cursore ripristinato a grab");
-    }
-    
-    return () => {
-      if (map) {
-        L.DomUtil.removeClass(map.getContainer(), 'crosshair-cursor-enabled');
-        map.getContainer().style.cursor = 'grab';
-      }
-    };
-  }, [isAddingSearchArea, map]);
+  // Use our custom hooks
+  useCursorEffect(map, isAddingSearchArea);
+  useMapBounds(map, searchAreas);
   
-  // Ensure search areas are visible in the viewport
-  useEffect(() => {
-    if (searchAreas.length > 0 && map) {
-      const bounds = L.latLngBounds([]);
-      searchAreas.forEach(area => {
-        bounds.extend([area.lat, area.lng]);
-      });
-      
-      // Only fit bounds if we have valid bounds
-      if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [50, 50] });
-      }
-    }
-  }, [searchAreas, map]);
-  
-  return null;
+  return (
+    <MapClickHandler 
+      isAddingSearchArea={isAddingSearchArea}
+      handleMapClickArea={handleMapClickArea}
+    />
+  );
 };
 
 export default MapEventHandlerComponent;

@@ -309,3 +309,6 @@
 .crosshair-cursor-enabled {
   cursor: crosshair !important;
 }
+
+/* Map cursor styles */
+@import './pages/map/styles/mapCursor.css';
