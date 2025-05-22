@@ -1,39 +1,27 @@
 
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
+import { useSecureContextCheck } from "../../hooks/location/useSecureContextCheck";
+import { useGeolocationErrors } from "../../hooks/location/useGeolocationErrors";
+import { useGeolocationWatch } from "../../hooks/location/useGeolocationWatch";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 
-/**
- * Custom hook for getting user's current location with improved accuracy and error handling
- * 
- * This implementation:
- * - Uses watchPosition instead of getCurrentPosition for better accuracy
- * - Has increased timeout to allow time for GPS signal
- * - Implements multiple fallback strategies
- * - Provides detailed logging for debugging purposes
- */
-export function useUserCurrentLocation() {
+// Default fallback to Roma if geolocation fails
+const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
+const GEO_PERMISSION_KEY = "geoPermission";
+const MAX_ATTEMPTS = 3;
+
+export function useRefactoredUserLocation() {
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const watchIdRef = useRef<number | null>(null);
   const fallbackActivated = useRef<boolean>(false);
   const locationAttemptsRef = useRef<number>(0);
 
-  // Max attempts for getting location
-  const MAX_ATTEMPTS = 3;
-  
-  // Check if we're in a secure context (required for geolocation)
-  const [isSecureContext] = useState(() => {
-    return typeof window !== 'undefined' && (window.isSecureContext === true);
-  });
-  
-  // Clear any active geolocation watches
-  const clearWatches = () => {
-    if (watchIdRef.current !== null) {
-      console.log("Clearing previous watchPosition...");
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
-    }
-  };
+  const { isSecureContext, isGeolocationAvailable } = useSecureContextCheck();
+  const { handleGeolocationError } = useGeolocationErrors();
+  const { startWatchingPosition, clearWatch } = useGeolocationWatch();
+  const [geoPermission, setGeoPermission] = useLocalStorage<string>(GEO_PERMISSION_KEY, "prompt");
 
   // Function to handle success callback from geolocation
   const handlePositionSuccess = (position: GeolocationPosition) => {
@@ -47,17 +35,20 @@ export function useUserCurrentLocation() {
     setIsLoading(false);
     
     // Store permission status
-    localStorage.setItem('geoPermission', 'granted');
+    setGeoPermission("granted");
   };
-  
+
   // Function to attempt high accuracy geolocation
   const attemptHighAccuracyLocation = () => {
     console.log("Attempting high accuracy geolocation...");
-    clearWatches();
     
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      handlePositionSuccess,
-      (error) => {
+    if (watchIdRef.current !== null) {
+      clearWatch(watchIdRef.current);
+    }
+    
+    const id = startWatchingPosition({
+      onSuccess: handlePositionSuccess,
+      onError: (error) => {
         console.warn("High accuracy geolocation error:", error.message, error.code);
         
         // If high accuracy fails, try with lower accuracy
@@ -66,18 +57,25 @@ export function useUserCurrentLocation() {
           attemptLowAccuracyLocation();
         }
       },
-      { 
+      options: { 
         enableHighAccuracy: true, 
         timeout: 40000, // 40 seconds timeout as requested
         maximumAge: 0    // Don't use cached position
       }
-    );
+    });
+    
+    if (id) {
+      watchIdRef.current = id;
+    }
   };
   
   // Function to attempt lower accuracy geolocation
   const attemptLowAccuracyLocation = () => {
     console.log("Attempting low accuracy geolocation...");
-    clearWatches();
+    
+    if (watchIdRef.current !== null) {
+      clearWatch(watchIdRef.current);
+    }
     
     // Try with lower accuracy settings
     navigator.geolocation.getCurrentPosition(
@@ -107,7 +105,7 @@ export function useUserCurrentLocation() {
     // Only show specific toast for permission denied
     if (error.code === 1) {
       console.log("Geolocation permission denied");
-      localStorage.setItem('geoPermission', 'denied');
+      setGeoPermission("denied");
       toast.error("Accesso alla posizione negato", {
         description: "Per vedere la tua posizione sulla mappa, attiva la localizzazione nelle impostazioni del browser."
       });
@@ -121,7 +119,7 @@ export function useUserCurrentLocation() {
     
     // Default to Roma as fallback location
     console.log("Using fallback location (Roma)");
-    setCurrentLocation([41.9028, 12.4964]); // Roma as default
+    setCurrentLocation(DEFAULT_LOCATION);
     setIsLoading(false);
   };
 
@@ -134,36 +132,34 @@ export function useUserCurrentLocation() {
 
     try {      
       // Check for secure context first
-      if (!isSecureContext) {
+      if (!isSecureContext()) {
         console.error("Not running in secure context (HTTPS required for geolocation)");
         toast.error("Errore di sicurezza", {
           description: "La geolocalizzazione richiede una connessione HTTPS sicura."
         });
-        setCurrentLocation([41.9028, 12.4964]); // Roma as default
+        setCurrentLocation(DEFAULT_LOCATION);
         setIsLoading(false);
-        return () => clearWatches();
+        return;
       }
 
       // Check if geolocation is supported
-      if (!navigator.geolocation) {
+      if (!isGeolocationAvailable()) {
         console.error("Geolocation not supported");
         toast.error("Geolocalizzazione non supportata", {
           description: "Il tuo browser non supporta la geolocalizzazione."
         });
-        setCurrentLocation([41.9028, 12.4964]); // Roma as default
+        setCurrentLocation(DEFAULT_LOCATION);
         setIsLoading(false);
-        return () => clearWatches();
+        return;
       }
 
       // Get stored permission state
-      const geoPermission = localStorage.getItem('geoPermission');
-      
       // If permission was previously denied and we don't want to prompt again
       if (geoPermission === 'denied') {
         console.log("Geolocation previously denied, using fallback without prompting");
-        setCurrentLocation([41.9028, 12.4964]); // Roma as default
+        setCurrentLocation(DEFAULT_LOCATION);
         setIsLoading(false);
-        return () => clearWatches();
+        return;
       }
       
       console.log("Starting geolocation with watchPosition...");
@@ -172,13 +168,17 @@ export function useUserCurrentLocation() {
     } catch (e) {
       console.error("Unexpected error in geolocation setup:", e);
       // Default to Roma in case of generic error
-      setCurrentLocation([41.9028, 12.4964]);
+      setCurrentLocation(DEFAULT_LOCATION);
       setIsLoading(false);
     }
     
     // Cleanup function to clear watches when unmounting
-    return () => clearWatches();
-  }, [isSecureContext]);
+    return () => {
+      if (watchIdRef.current !== null) {
+        clearWatch(watchIdRef.current);
+      }
+    };
+  }, [isSecureContext, isGeolocationAvailable, geoPermission, setGeoPermission, clearWatch]);
 
-  return currentLocation;
+  return { currentLocation, isLoading };
 }

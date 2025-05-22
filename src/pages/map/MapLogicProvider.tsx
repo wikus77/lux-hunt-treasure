@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { DEFAULT_LOCATION } from './utils/leafletIcons';
 import MapStatusMessages from './components/MapStatusMessages';
 import { usePrizeLocation } from './hooks/usePrizeLocation';
-import { useUserCurrentLocation } from './useUserCurrentLocation';
+import { useRefactoredUserLocation } from './useRefactoredUserLocation';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
 import 'leaflet/dist/leaflet.css';
@@ -26,7 +26,7 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 const MapLogicProvider = () => {
   // Use our optimized custom hook for user location
-  const userLocation = useUserCurrentLocation();
+  const { currentLocation: userLocation, isLoading } = useRefactoredUserLocation();
   const [locationReceived, setLocationReceived] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const { prizeLocation, bufferRadius } = usePrizeLocation(userLocation);
@@ -92,7 +92,7 @@ const MapLogicProvider = () => {
       </MapContainer>
 
       <MapStatusMessages
-        isLoading={!locationReceived}
+        isLoading={isLoading}
         locationReceived={locationReceived}
         permissionDenied={false}
         retryGetLocation={retryGetLocation}
