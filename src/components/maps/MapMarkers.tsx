@@ -89,12 +89,6 @@ const neonMapStyles = [
     elementType: "geometry.stroke",
     stylers: [{ color: "#9b87f5" }, { weight: 1.5 }, { visibility: "on" }]
   },
-  // Continent borders - Keep cyan for visual hierarchy
-  {
-    featureType: "administrative.continent",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#1EAEDB" }, { weight: 3 }, { visibility: "on" }]
-  },
   // Background color - Dark blue
   {
     featureType: "landscape",
