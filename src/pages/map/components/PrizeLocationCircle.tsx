@@ -15,12 +15,12 @@ const PrizeLocationCircle: React.FC<PrizeLocationCircleProps> = ({ center, radiu
   return (
     <Circle
       center={center}
+      radius={radius}
       pathOptions={{
         color: '#00D1FF',
         fillColor: '#00D1FF',
         fillOpacity: 0.2,
-        weight: 2,
-        radius: radius
+        weight: 2
       }}
     />
   );
