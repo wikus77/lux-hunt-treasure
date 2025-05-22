@@ -27,7 +27,7 @@ const CluePopup: React.FC<CluePopupProps> = ({
     >
       <div
         className="relative pointer-events-auto
-        px-16 py-12 rounded-2xl border
+        px-16 py-12 rounded-[24px] border
         shadow-[0_0_60px_rgba(30,174,219,0.4)]
         glass-card
         bg-gradient-to-br from-[#181641] via-[#7E69AB] to-[#1EAEDB]

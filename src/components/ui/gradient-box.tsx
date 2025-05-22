@@ -15,7 +15,7 @@ const GradientBox = ({
 }: GradientBoxProps) => {
   return (
     <div className={cn(
-      "relative glass-card overflow-hidden bg-black/30 backdrop-blur-sm border border-gray-800 rounded-lg shadow-lg",
+      "relative glass-card overflow-hidden bg-black/30 backdrop-blur-sm border border-gray-800 rounded-[24px] shadow-lg",
       className
     )}>
       {/* Gradient border at the top - matching exactly the reference image */}

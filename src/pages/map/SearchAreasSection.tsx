@@ -41,7 +41,7 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
         searchAreas.map((area) => (
           <div
             key={`area-list-${area.id}`}
-            className={`p-3 rounded-md backdrop-blur-sm cursor-pointer transition-colors
+            className={`p-3 rounded-[16px] backdrop-blur-sm cursor-pointer transition-colors
               ${area.isAI
                 ? "bg-[#7E69AB]/40 hover:bg-[#7E69AB]/60 border-l-4 border-[#9b87f5]"
                 : "bg-projectx-deep-blue/40 hover:bg-projectx-deep-blue/60"
