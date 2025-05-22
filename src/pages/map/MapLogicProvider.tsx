@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Circle } from 'react-leaflet';
 import { toast } from 'sonner';
@@ -6,7 +7,21 @@ import MapStatusMessages from './components/MapStatusMessages';
 import { usePrizeLocation } from './hooks/usePrizeLocation';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
+import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+
+// Fix for Leaflet default icon issue
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
 
 const MapLogicProvider = () => {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -30,7 +45,29 @@ const MapLogicProvider = () => {
       (error) => {
         console.warn("Errore geolocalizzazione:", error);
         toast.error("Errore nella geolocalizzazione: " + error.message);
-        setUserLocation([41.9028, 12.4964]); // fallback Roma
+        
+        // IP-based fallback using ipapi.co
+        toast.info("Attivazione localizzazione approssimativa", {
+          description: "Utilizziamo la tua posizione IP per una stima approssimativa."
+        });
+        
+        fetch("https://ipapi.co/json/")
+          .then(res => res.json())
+          .then(data => {
+            const coords: [number, number] = [data.latitude, data.longitude];
+            setUserLocation(coords);
+            setLocationReceived(true);
+            toast.success("Posizione IP ottenuta", {
+              description: "Geolocalizzazione tramite IP approssimativa attivata."
+            });
+          })
+          .catch(err => {
+            console.error("Errore nel fallback IP:", err);
+            setUserLocation([41.9028, 12.4964]); // fallback Roma
+            toast.error("Impossibile determinare la posizione", {
+              description: "Utilizzando una posizione predefinita."
+            });
+          });
       },
       {
         enableHighAccuracy: true,
