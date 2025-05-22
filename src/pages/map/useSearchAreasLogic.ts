@@ -7,6 +7,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { generateSearchArea } from "./hooks/useAreaGeneration";
 import { useAreaOperations } from "./hooks/useAreaOperations";
 import { v4 as uuidv4 } from "uuid";
+import L from "leaflet";
 
 export function useSearchAreasLogic(defaultLocation: [number, number]) {
   const { unlockedClues } = useBuzzClues();
@@ -56,7 +57,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     document.body.classList.add('map-adding-mode');
   };
 
-  // Updated to accept Leaflet event with debouncing
+  // Updated to accept Leaflet event with direct circle rendering
   const handleMapClickArea = (e: { latlng: { lat: number; lng: number } }) => {
     console.log("Map click event received:", e);
     console.log("isAddingSearchArea state:", areaOperations.isAddingSearchArea);
@@ -92,6 +93,25 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         };
         
         console.log("Area creata:", newArea);
+        
+        // Immediately draw the circle on the map without waiting for React rendering
+        const mapRef = areaOperations.getMapRef?.();
+        if (mapRef) {
+          console.log("Drawing circle directly on map click");
+          const circle = L.circle([lat, lng], {
+            radius: radius,
+            color: '#00D1FF',
+            fillColor: '#00D1FF',
+            fillOpacity: 0.2,
+            weight: 2
+          }).addTo(mapRef);
+          
+          circle.on('click', () => {
+            areaOperations.setActiveSearchArea(newAreaId);
+          });
+          
+          console.log("✅ CERCHIO DISEGNATO DIRETTAMENTE:", lat, lng);
+        }
         
         // Add the area to the areas state
         areaOperations.setSearchAreas(prevAreas => {

@@ -32,7 +32,7 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
           map.getContainer().classList.add('force-crosshair');
         }
         
-        // Pass the event to the click handler
+        // Direct handling of click event
         handleMapClickArea(e);
       }
     }
@@ -42,6 +42,7 @@ const MapClickHandler: React.FC<MapClickHandlerProps> = ({
   useEffect(() => {
     if (map) {
       setMap(map);
+      console.log("Map reference set in context from MapClickHandler");
     }
   }, [map, setMap]);
   

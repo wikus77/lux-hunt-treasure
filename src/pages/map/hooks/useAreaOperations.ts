@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { SearchArea } from "@/components/maps/types";
 import { v4 as uuidv4 } from "uuid";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import L from "leaflet";
+import { useMapContext } from "../context/MapContext";
 
 /**
  * Hook providing operations for managing search areas
@@ -13,6 +15,9 @@ export const useAreaOperations = () => {
   const [searchAreas, setSearchAreas] = useState<SearchArea[]>(storageAreas || []);
   const [activeSearchArea, setActiveSearchArea] = useState<string | null>(null);
   const [isAddingSearchArea, setIsAddingSearchArea] = useState(false);
+  
+  // Get map reference from context
+  const { mapRef } = useMapContext?.() || { mapRef: { current: null } };
   
   // Ref to track state changes for debugging
   const isAddingRef = useRef(isAddingSearchArea);
@@ -49,6 +54,19 @@ export const useAreaOperations = () => {
       
       console.log("Area generata:", newArea);
       
+      // Directly draw circle on the map
+      if (mapRef.current) {
+        const circle = L.circle([lat, lng], {
+          radius: radius,
+          color: '#00D1FF',
+          fillColor: '#00D1FF',
+          fillOpacity: 0.2,
+          weight: 2
+        }).addTo(mapRef.current);
+        
+        console.log("✅ CERCHIO DISEGNATO DIRETTAMENTE IN addArea:", lat, lng);
+      }
+      
       setSearchAreas(prevAreas => {
         const newAreas = [...prevAreas, newArea];
         console.log("Updated search areas:", newAreas);
@@ -61,7 +79,7 @@ export const useAreaOperations = () => {
       toast.error("Si è verificato un errore nell'aggiunta dell'area");
       return null;
     }
-  }, []);
+  }, [mapRef]);
   
   // Save (update) an existing area
   const saveSearchArea = useCallback((id: string, label: string, radius: number) => {
@@ -114,13 +132,32 @@ export const useAreaOperations = () => {
   // Add an area with the given search area object
   const addSearchArea = useCallback((area: SearchArea) => {
     console.log("Adding search area:", area);
+    
+    // Directly draw circle on the map
+    if (mapRef.current) {
+      const circle = L.circle([area.lat, area.lng], {
+        radius: area.radius,
+        color: area.isAI ? '#9b87f5' : '#00D1FF',
+        fillColor: area.isAI ? '#7E69AB' : '#00D1FF',
+        fillOpacity: 0.2,
+        weight: 2
+      }).addTo(mapRef.current);
+      
+      console.log("✅ CERCHIO DISEGNATO DIRETTAMENTE IN addSearchArea:", area.lat, area.lng);
+    }
+    
     setSearchAreas(prevAreas => {
       const newAreas = [...prevAreas, area];
       console.log("Updated search areas after adding:", newAreas);
       return newAreas;
     });
     return area.id;
-  }, []);
+  }, [mapRef]);
+  
+  // Get map reference for direct rendering
+  const getMapRef = useCallback(() => {
+    return mapRef.current;
+  }, [mapRef]);
 
   return {
     searchAreas,
@@ -135,6 +172,7 @@ export const useAreaOperations = () => {
     addSearchArea,
     saveSearchArea,
     deleteSearchArea,
-    clearAllSearchAreas
+    clearAllSearchAreas,
+    getMapRef
   };
 };
