@@ -11,7 +11,16 @@ export function useMapLogic() {
   const [mapPoints, setMapPoints] = useState<MapMarker[]>([]);
   const [isAddingMapPoint, setIsAddingMapPoint] = useState(false);
   const [activeMapPoint, setActiveMapPoint] = useState<string | null>(null);
-
+  
+  // Search areas related state
+  const [searchAreas, setSearchAreas] = useState<any[]>([]);
+  const [isAddingSearchArea, setIsAddingSearchArea] = useState(false);
+  const [activeSearchArea, setActiveSearchArea] = useState<string | null>(null);
+  const [pendingRadius, setPendingRadius] = useState<number>(500);
+  
+  // Buzz related properties
+  const buzzMapPrice = 1.99; // Default price
+  
   // Add a new map point
   const addMapPoint = async (point: { lat: number; lng: number; title: string; note: string }) => {
     try {
@@ -128,6 +137,21 @@ export function useMapLogic() {
       toast.info('Clicca sulla mappa per aggiungere un punto di interesse');
     }
   };
+  
+  // Stub functions for search areas
+  const handleMapClickArea = (e: any) => {
+    console.log("Map area click", e);
+    setIsAddingSearchArea(false);
+  };
+  
+  const deleteSearchArea = (id: string) => {
+    setSearchAreas(prev => prev.filter(area => area.id !== id));
+  };
+  
+  // Buzz related functions
+  const handleBuzz = () => {
+    toast.info('Funzionalità BUZZ non ancora implementata');
+  };
 
   // Request location permission and handle geolocation
   const requestLocationPermission = useCallback(async () => {
@@ -219,6 +243,16 @@ export function useMapLogic() {
     updateMapPoint,
     deleteMapPoint,
     toggleAddingMapPoint,
-    requestLocationPermission
+    requestLocationPermission,
+    // Include the missing properties:
+    searchAreas,
+    isAddingSearchArea,
+    activeSearchArea,
+    setActiveSearchArea,
+    handleMapClickArea,
+    deleteSearchArea,
+    setPendingRadius,
+    buzzMapPrice,
+    handleBuzz
   };
 }
