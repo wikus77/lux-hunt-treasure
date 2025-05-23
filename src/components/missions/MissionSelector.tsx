@@ -146,7 +146,7 @@ function MissionCard({
         
         <div className="space-y-3">
           <Button
-            className="w-full py-6 rounded-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] hover:from-[#00D1FF] hover:to-[#F059FF] text-white font-bold shadow-[0_0_15px_rgba(0,209,255,0.3)] transition-all duration-300"
+            className="w-full py-6 rounded-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] hover:from-[#00D1FF] hover:to-[#F059FF] text-white font-bold shadow-[0_0_15px_rgba(0,209,255,0.3)] transition-all duration-300 hover:scale-105"
             size="lg"
             onClick={onClick}
           >

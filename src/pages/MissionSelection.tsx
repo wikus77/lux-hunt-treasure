@@ -1,11 +1,19 @@
 
 import React from "react";
-import MissionSelector from "@/components/missions/MissionSelector";
 import { motion } from "framer-motion";
+import { ArrowDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function MissionSelection() {
+  const navigate = useNavigate();
+
+  const handleSelectMission = (gender: "uomo" | "donna") => {
+    navigate(`/register?preference=${gender}`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black overflow-hidden">
+      {/* Background particles */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -16,8 +24,147 @@ export default function MissionSelection() {
         <div className="absolute top-[30%] right-[10%] w-3 h-3 rounded-full bg-[#F059FF] opacity-60 animate-pulse" style={{ animationDelay: '1s' }}></div>
         <div className="absolute bottom-[20%] left-[15%] w-2 h-2 rounded-full bg-[#7B2EFF] opacity-70 animate-pulse" style={{ animationDelay: '2s' }}></div>
       </motion.div>
-      
-      <MissionSelector />
+
+      {/* Header Section */}
+      <motion.div
+        className="text-center pt-16 pb-8 px-4"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <h1 
+          className="text-4xl md:text-6xl font-orbitron mb-4"
+          style={{ 
+            background: "linear-gradient(to right, #00D1FF, #7B2EFF, #F059FF)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            textShadow: "0 0 15px rgba(0, 209, 255, 0.5)"
+          }}
+        >
+          SCEGLI LA TUA MISSIONE
+        </h1>
+        
+        <p className="text-white/80 max-w-2xl mx-auto text-lg">
+          Partecipa alle missioni che fanno per te. Due missioni ogni mese. Grandi premi reali in palio.
+        </p>
+      </motion.div>
+
+      {/* For Him Section */}
+      <motion.section
+        className="px-4 py-12 max-w-6xl mx-auto"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        <div className="mb-6">
+          <h2 className="text-3xl font-orbitron text-white mb-2">
+            FOR HIM – Premi in palio per la tua missione
+          </h2>
+          <p className="text-white/70">
+            Supercar, orologi di lusso, moto da corsa e molto altro
+          </p>
+        </div>
+        
+        <div className="relative mb-8">
+          <div className="rounded-2xl overflow-hidden border border-[#00D1FF]/30 shadow-[0_0_20px_rgba(0,209,255,0.2)]">
+            <img 
+              src="/lovable-uploads/507c2f6d-4ed0-46dc-b53c-79e1d5b7515e.png" 
+              alt="Luxury Men's Prizes" 
+              className="w-full h-auto object-cover"
+            />
+          </div>
+          
+          <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-sm px-4 py-3 rounded-lg border border-white/10">
+            <p className="text-[#00D1FF] text-sm">
+              Lamborghini Huracán · Rolex Daytona Gold · Ducati Panigale V4 R
+            </p>
+          </div>
+        </div>
+        
+        <motion.button
+          className="w-full py-4 rounded-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white font-bold text-lg shadow-[0_0_15px_rgba(0,209,255,0.3)] transition-all duration-300"
+          whileHover={{ 
+            scale: 1.03, 
+            boxShadow: "0 0 30px rgba(0, 209, 255, 0.5)"
+          }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => handleSelectMission("uomo")}
+        >
+          PARTECIPA ALLE MISSIONI FOR HIM
+        </motion.button>
+      </motion.section>
+
+      {/* For Her Section */}
+      <motion.section
+        className="px-4 py-12 max-w-6xl mx-auto"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+      >
+        <div className="mb-6">
+          <h2 className="text-3xl font-orbitron text-white mb-2">
+            FOR HER – Premi in palio per la tua missione
+          </h2>
+          <p className="text-white/70">
+            Borse iconiche, gioielli, orologi in oro rosa, accessori di alta moda
+          </p>
+        </div>
+        
+        <div className="relative mb-8">
+          <div className="rounded-2xl overflow-hidden border border-[#F059FF]/30 shadow-[0_0_20px_rgba(240,89,255,0.2)]">
+            <img 
+              src="/lovable-uploads/55b484c2-04bc-4fb2-a650-1910fd650b89.png" 
+              alt="Luxury Women's Prizes" 
+              className="w-full h-auto object-cover"
+            />
+            
+            {/* Reflection effect */}
+            <div 
+              className="absolute bottom-0 left-0 w-full h-[20%] bg-gradient-to-t from-black/60 to-transparent"
+              style={{ backdropFilter: "blur(2px)" }}
+            ></div>
+          </div>
+          
+          <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-sm px-4 py-3 rounded-lg border border-white/10">
+            <p className="text-[#F059FF] text-sm">
+              Birkin Hermès · Chanel Classic Flap · Rolex Day-Date Oro Rosa
+            </p>
+          </div>
+        </div>
+        
+        <motion.button
+          className="w-full py-4 rounded-full bg-gradient-to-r from-[#F059FF] to-[#7B2EFF] text-white font-bold text-lg shadow-[0_0_15px_rgba(240,89,255,0.3)] transition-all duration-300"
+          whileHover={{ 
+            scale: 1.03, 
+            boxShadow: "0 0 30px rgba(240, 89, 255, 0.5)"
+          }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => handleSelectMission("donna")}
+        >
+          PARTECIPA ALLE MISSIONI FOR HER
+        </motion.button>
+      </motion.section>
+
+      {/* Info Block */}
+      <motion.div 
+        className="text-center px-4 py-12 max-w-2xl mx-auto"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
+      >
+        <p className="text-white/70 mb-2">Potrai sempre cambiare tipo di missione in seguito</p>
+        <p className="text-white/70 mb-2">Ogni mese nuovi premi, nuove sfide e solo un vincitore</p>
+        <p className="text-white/70 mb-8">Le missioni sono vere. I premi sono reali.</p>
+        
+        {/* Animated scroll arrow */}
+        <motion.div 
+          className="flex justify-center" 
+          animate={{ y: [0, 10, 0] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+        >
+          <ArrowDown className="text-[#00D1FF] w-8 h-8" />
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
