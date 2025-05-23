@@ -65,8 +65,15 @@ export default function MissionSelection() {
         </p>
         
         {/* Countdown Timer */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-4">
           <CountdownTimer targetDate={targetDate} />
+        </div>
+
+        {/* SELECT M1SSION text */}
+        <div className="flex justify-center items-center mb-8">
+          <h2 className="font-orbitron text-2xl">
+            SELECT <span className="text-[#00D1FF]">M1</span><span className="text-white">SSION</span>
+          </h2>
         </div>
       </motion.div>
 
@@ -83,17 +90,11 @@ export default function MissionSelection() {
             <div className="relative md:w-1/2">
               <div className="relative h-[300px] md:h-full">
                 <img 
-                  src="/lovable-uploads/507c2f6d-4ed0-46dc-b53c-79e1d5b7515e.png" 
+                  src="/lovable-uploads/c893d261-4ae4-4c9b-b360-cda568b713ee.png" 
                   alt="Luxury Men's Prizes" 
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent md:bg-gradient-to-r"></div>
-                
-                <div className="absolute bottom-4 left-4 md:bottom-auto md:top-4 bg-black/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-white/10">
-                  <p className="text-[#00D1FF] text-sm">
-                    Lamborghini · Rolex · Ducati
-                  </p>
-                </div>
               </div>
             </div>
             
@@ -161,17 +162,11 @@ export default function MissionSelection() {
             <div className="relative md:w-1/2">
               <div className="relative h-[300px] md:h-full">
                 <img 
-                  src="/lovable-uploads/55b484c2-04bc-4fb2-a650-1910fd650b89.png" 
+                  src="/lovable-uploads/07729def-3181-4138-88fb-baad9abcc616.png" 
                   alt="Luxury Women's Prizes" 
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent md:bg-gradient-to-l"></div>
-                
-                <div className="absolute bottom-4 right-4 md:bottom-auto md:top-4 bg-black/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-white/10">
-                  <p className="text-[#F059FF] text-sm">
-                    Hermès · Chanel · Rolex
-                  </p>
-                </div>
               </div>
             </div>
             
