@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { MapMarker } from '@/components/maps/types';
@@ -7,7 +6,7 @@ export function useMapPoints(
   mapPoints: MapMarker[], 
   setActiveMapPoint: (id: string | null) => void,
   addMapPoint: (point: { lat: number; lng: number; title: string; note: string }) => Promise<string | null>,
-  updateMapPoint: (id: string, updates: { title?: string; note?: string }) => Promise<boolean>,
+  updateMapPoint: (id: string, updates: { title?: string; note?: string }) => Promise<void>,
   deleteMapPoint: (id: string) => Promise<boolean>
 ) {
   // State for the new point being created
@@ -106,20 +105,14 @@ export function useMapPoints(
   };
 
   // Handle update of existing map point
-  const handleUpdatePoint = async (id: string, title: string, note: string) => {
+  const handleUpdatePoint = async (id: string, title: string, note: string): Promise<void> => {
     console.log("📝 Aggiornamento punto esistente:", id, title, note);
     
     try {
-      const success = await updateMapPoint(id, { title, note });
-      
-      if (success) {
-        console.log("✅ Punto aggiornato con successo");
-        setActiveMapPoint(null);
-        toast.success("Punto di interesse aggiornato");
-      } else {
-        console.error("❌ Errore nell'aggiornare il punto");
-        toast.error("Errore nell'aggiornare il punto");
-      }
+      await updateMapPoint(id, { title, note });
+      console.log("✅ Punto aggiornato con successo");
+      setActiveMapPoint(null);
+      toast.success("Punto di interesse aggiornato");
     } catch (error) {
       console.error("❌ Errore nell'aggiornamento del punto:", error);
       toast.error("Errore nell'aggiornare il punto");

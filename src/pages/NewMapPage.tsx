@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -132,8 +131,8 @@ const NewMapPage = () => {
   };
 
   // Update an existing point
-  const updateMapPoint = async (id: string, title: string, note: string) => {
-    if (!user?.id) return false;
+  const updateMapPoint = async (id: string, title: string, note: string): Promise<void> => {
+    if (!user?.id) return;
     
     try {
       const { error } = await supabase
@@ -148,7 +147,7 @@ const NewMapPage = () => {
       if (error) {
         console.error("Error updating map point:", error);
         toast.error("Errore nell'aggiornare il punto");
-        return false;
+        return;
       }
 
       // Update local state
@@ -158,11 +157,9 @@ const NewMapPage = () => {
       
       toast.success("Punto aggiornato con successo");
       setActiveMapPoint(null);
-      return true;
     } catch (err) {
       console.error("Exception updating map point:", err);
       toast.error("Errore nell'aggiornare il punto");
-      return false;
     }
   };
 
