@@ -153,9 +153,9 @@ const NewMapPage = () => {
     }
   };
 
-  // Update an existing point
-  const updateMapPoint = async (id: string, title: string, note: string): Promise<void> => {
-    if (!user?.id) return;
+  // Update an existing point - MODIFIED to return boolean
+  const updateMapPoint = async (id: string, title: string, note: string): Promise<boolean> => {
+    if (!user?.id) return false; // Return false if no user
     
     try {
       const { error } = await supabase
@@ -170,7 +170,7 @@ const NewMapPage = () => {
       if (error) {
         console.error("Error updating map point:", error);
         toast.error("Errore nell'aggiornare il punto");
-        return;
+        return false; // Return false on error
       }
 
       // Update local state
@@ -180,9 +180,11 @@ const NewMapPage = () => {
       
       toast.success("Punto aggiornato con successo");
       setActiveMapPoint(null);
+      return true; // Return true on success
     } catch (err) {
       console.error("Exception updating map point:", err);
       toast.error("Errore nell'aggiornare il punto");
+      return false; // Return false on exception
     }
   };
 
