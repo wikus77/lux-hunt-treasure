@@ -2,20 +2,31 @@
 import React from 'react';
 
 interface MapInstructionsOverlayProps {
-  isAddingSearchArea: boolean;
   isAddingMapPoint: boolean;
+  isAddingSearchArea: boolean;
 }
 
-const MapInstructionsOverlay: React.FC<MapInstructionsOverlayProps> = ({ 
-  isAddingSearchArea, 
-  isAddingMapPoint 
+const MapInstructionsOverlay: React.FC<MapInstructionsOverlayProps> = ({
+  isAddingMapPoint,
+  isAddingSearchArea
 }) => {
   if (!isAddingMapPoint && !isAddingSearchArea) return null;
-
+  
   return (
-    <div className="absolute top-4 left-4 right-4 z-20 bg-black/70 text-white p-4 rounded-lg text-center">
-      {isAddingMapPoint && <p>Clicca sulla mappa per posizionare un nuovo punto</p>}
-      {isAddingSearchArea && <p>Clicca sulla mappa per definire un'area di ricerca</p>}
+    <div className="absolute top-16 left-0 right-0 z-50 flex justify-center pointer-events-none">
+      <div className="bg-black/80 text-white px-4 py-2 rounded-lg shadow-lg border border-white/10 backdrop-blur-md">
+        {isAddingMapPoint && (
+          <p className="text-sm">
+            <span className="text-cyan-400 font-medium">Clicca sulla mappa</span> per aggiungere un punto di interesse
+          </p>
+        )}
+        
+        {isAddingSearchArea && (
+          <p className="text-sm">
+            <span className="text-cyan-400 font-medium">Clicca sulla mappa</span> per creare un'area di ricerca
+          </p>
+        )}
+      </div>
     </div>
   );
 };

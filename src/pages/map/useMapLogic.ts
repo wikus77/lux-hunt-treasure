@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +16,8 @@ export function useMapLogic() {
   const [searchAreas, setSearchAreas] = useState<any[]>([]);
   const [isAddingSearchArea, setIsAddingSearchArea] = useState(false);
   const [activeSearchArea, setActiveSearchArea] = useState<string | null>(null);
-  const [pendingRadius, setPendingRadius] = useState<number>(500);
+  const [pendingRadius, setPendingRadius] = useState<number>(100000); // 100km default radius
+  const [currentWeekAreaCount, setCurrentWeekAreaCount] = useState<number>(0);
   
   // Buzz related properties
   const buzzMapPrice = 1.99; // Default price
@@ -155,14 +157,123 @@ export function useMapLogic() {
     });
   }, []);
 
-  // Stub functions for search areas
-  const handleMapClickArea = (e: any) => {
-    console.log("Map area click", e);
-    setIsAddingSearchArea(false);
+  // Toggle adding search area state
+  const toggleAddingSearchArea = useCallback(() => {
+    setIsAddingSearchArea(prev => {
+      const newState = !prev;
+      
+      // If we're enabling search area mode, disable map point mode
+      if (newState) {
+        setIsAddingMapPoint(false);
+        
+        // Calculate the current radius based on the number of areas created
+        const radius = Math.max(5000, 100000 * Math.pow(0.95, currentWeekAreaCount)); // Minimum 5km
+        setPendingRadius(radius);
+        
+        // Show toast instructions with the current radius
+        toast.info(`Clicca sulla mappa per creare un'area di ricerca (raggio: ${(radius/1000).toFixed(1)}km)`);
+      }
+      
+      return newState;
+    });
+  }, [currentWeekAreaCount]);
+
+  // Handle map click for search area
+  const handleMapClickArea = async (e: any) => {
+    if (!isAddingSearchArea) return;
+    
+    try {
+      // Get the current user
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      
+      if (!userId) {
+        toast.error('Utente non autenticato');
+        return;
+      }
+      
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
+      const radius = pendingRadius;
+      
+      console.log("Creando area di ricerca:", { lat, lng, radius });
+      
+      // Save to database
+      const { data, error } = await supabase
+        .from('user_map_areas')
+        .insert({
+          user_id: userId,
+          lat: lat,
+          lng: lng,
+          radius_km: radius / 1000, // Convert to km for storage
+          week: getCurrentWeek() // Current week function (implementation below)
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error adding search area:', error);
+        toast.error('Errore nel creare l\'area di ricerca');
+        return;
+      }
+      
+      // Create the area object for local state
+      const newArea = {
+        id: data.id,
+        lat: data.lat,
+        lng: data.lng,
+        radius: data.radius_km * 1000, // Convert back to meters for display
+        label: `Area di ricerca ${searchAreas.length + 1}`,
+        color: '#00f0ff', // Neon blue as specified
+        position: { lat: data.lat, lng: data.lng }
+      };
+      
+      // Add to local state
+      setSearchAreas(prev => [...prev, newArea]);
+      
+      // Update the count of areas created this week
+      setCurrentWeekAreaCount(prev => prev + 1);
+      
+      // Turn off adding mode
+      setIsAddingSearchArea(false);
+      
+      toast.success('Area di ricerca creata');
+    } catch (error) {
+      console.error('Error in handleMapClickArea:', error);
+      toast.error('Errore nel creare l\'area di ricerca');
+      setIsAddingSearchArea(false);
+    }
   };
   
-  const deleteSearchArea = (id: string) => {
-    setSearchAreas(prev => prev.filter(area => area.id !== id));
+  // Simple function to get current week number 
+  // (placeholder - you might want to sync with your business logic)
+  const getCurrentWeek = () => {
+    return 1; // For simplicity, always return week 1
+  };
+  
+  const deleteSearchArea = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_map_areas')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error deleting search area:', error);
+        toast.error('Errore nell\'eliminare l\'area di ricerca');
+        return false;
+      }
+      
+      // Update the local state
+      setSearchAreas(prev => prev.filter(area => area.id !== id));
+      
+      toast.success('Area di ricerca eliminata');
+      return true;
+    } catch (error) {
+      console.error('Error in deleteSearchArea:', error);
+      toast.error('Errore nell\'eliminare l\'area di ricerca');
+      return false;
+    }
   };
   
   // Buzz related functions
@@ -208,49 +319,78 @@ export function useMapLogic() {
     }
   }, []);
 
-  // Load map points on component mount
+  // Load map points and search areas on component mount
   useEffect(() => {
-    const loadMapPoints = async () => {
+    const loadData = async () => {
       try {
         const { data: userData } = await supabase.auth.getUser();
         const userId = userData.user?.id;
         
         if (!userId) {
-          console.log('User not authenticated, skipping map points load');
+          console.log('User not authenticated, skipping data load');
           return;
         }
         
-        console.log("Caricamento punti mappa per utente:", userId);
-        const { data, error } = await supabase
+        // Load map points
+        const { data: pointsData, error: pointsError } = await supabase
           .from('map_points')
           .select('*')
           .order('created_at', { ascending: false });
         
-        if (error) {
-          console.error('Error loading map points:', error);
-          return;
+        if (pointsError) {
+          console.error('Error loading map points:', pointsError);
+        } else {
+          console.log("Punti mappa caricati:", pointsData?.length || 0);
+          
+          // Transform the data to match our MapMarker type
+          const points: MapMarker[] = pointsData.map(point => ({
+            id: point.id,
+            lat: point.latitude,
+            lng: point.longitude,
+            title: point.title,
+            note: point.note || '',
+            position: { lat: point.latitude, lng: point.longitude },
+            createdAt: new Date(point.created_at)
+          }));
+          
+          setMapPoints(points);
         }
         
-        console.log("Punti mappa caricati:", data?.length || 0);
+        // Load search areas
+        const { data: areasData, error: areasError } = await supabase
+          .from('user_map_areas')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
         
-        // Transform the data to match our MapMarker type
-        const points: MapMarker[] = data.map(point => ({
-          id: point.id,
-          lat: point.latitude,
-          lng: point.longitude,
-          title: point.title,
-          note: point.note || '',
-          position: { lat: point.latitude, lng: point.longitude },
-          createdAt: new Date(point.created_at)
-        }));
-        
-        setMapPoints(points);
+        if (areasError) {
+          console.error('Error loading search areas:', areasError);
+        } else {
+          console.log("Aree di ricerca caricate:", areasData?.length || 0);
+          
+          // Transform the data for our local state
+          const areas = areasData.map((area, index) => ({
+            id: area.id,
+            lat: area.lat,
+            lng: area.lng,
+            radius: area.radius_km * 1000, // Convert km to meters for display
+            label: `Area di ricerca ${index + 1}`,
+            color: '#00f0ff', // Neon blue
+            position: { lat: area.lat, lng: area.lng }
+          }));
+          
+          setSearchAreas(areas);
+          
+          // Count areas for the current week to determine the next radius
+          const currentWeekAreas = areasData.filter(area => area.week === getCurrentWeek());
+          setCurrentWeekAreaCount(currentWeekAreas.length);
+        }
       } catch (error) {
-        console.error('Error in loadMapPoints:', error);
+        console.error('Error loading data:', error);
       }
     };
     
-    loadMapPoints();
+    loadData();
   }, []);
 
   return {
@@ -264,14 +404,18 @@ export function useMapLogic() {
     deleteMapPoint,
     toggleAddingMapPoint,
     requestLocationPermission,
-    // Include the missing properties:
+    // Search area related
     searchAreas,
     isAddingSearchArea,
+    setIsAddingSearchArea,
     activeSearchArea,
     setActiveSearchArea,
     handleMapClickArea,
     deleteSearchArea,
+    toggleAddingSearchArea,
+    pendingRadius,
     setPendingRadius,
+    // Buzz related
     buzzMapPrice,
     handleBuzz
   };

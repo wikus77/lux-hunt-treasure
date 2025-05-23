@@ -21,6 +21,23 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
 }) => {
   const map = useMap();
   
+  // Handle cursor style based on mode
+  useEffect(() => {
+    if (!map) return;
+    
+    const mapContainer = map.getContainer();
+    
+    if (isAddingMapPoint || isAddingSearchArea) {
+      mapContainer.style.cursor = 'crosshair'; // Change cursor to crosshair for both modes
+    } else {
+      mapContainer.style.cursor = 'grab';
+    }
+    
+    return () => {
+      mapContainer.style.cursor = 'grab';
+    };
+  }, [map, isAddingMapPoint, isAddingSearchArea]);
+  
   // Handle map click events
   useEffect(() => {
     if (!map) return;
@@ -28,8 +45,9 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
     const handleMapClick = (e: L.LeafletMouseEvent) => {
       if (isAddingSearchArea) {
         handleMapClickArea(e);
+      } else if (isAddingMapPoint) {
+        onMapPointClick(e.latlng.lat, e.latlng.lng);
       }
-      // The main click handler for adding points is in MapController
     };
     
     map.on('click', handleMapClick);

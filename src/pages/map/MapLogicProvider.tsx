@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { toast } from 'sonner';
@@ -14,6 +15,7 @@ import MapPopupManager from './components/MapPopupManager';
 import MapInstructionsOverlay from './components/MapInstructionsOverlay';
 import LocationButton from './components/LocationButton';
 import BuzzButton from './components/BuzzButton';
+import SearchAreaButton from './components/SearchAreaButton';
 import { useMapPoints } from './hooks/useMapPoints';
 import { SetViewOnChange } from './hooks/useMapView';
 
@@ -56,6 +58,7 @@ const MapLogicProvider = () => {
     setActiveSearchArea, 
     deleteSearchArea,
     setPendingRadius,
+    toggleAddingSearchArea,
     mapPoints,
     isAddingMapPoint: mapLogicIsAddingMapPoint,
     setIsAddingMapPoint: mapLogicSetIsAddingMapPoint,
@@ -135,13 +138,17 @@ const MapLogicProvider = () => {
     map.on('click', (e: L.LeafletMouseEvent) => {
       console.log("🔍 DIRECT MAP CLICK via mapRef", {
         isAdding: hookIsAddingMapPoint || mapLogicIsAddingMapPoint,
+        isAddingArea: isAddingSearchArea,
         latlng: e.latlng
       });
       
       // Only handle if in adding mode
       if (hookIsAddingMapPoint || mapLogicIsAddingMapPoint) {
-        console.log("✅ Processing direct map click");
+        console.log("✅ Processing direct map click for point");
         handleMapPointClick(e.latlng.lat, e.latlng.lng);
+      } else if (isAddingSearchArea) {
+        console.log("✅ Processing direct map click for search area");
+        handleMapClickArea(e);
       }
     });
     
@@ -151,7 +158,7 @@ const MapLogicProvider = () => {
       zoom: map.getZoom(),
       center: map.getCenter()
     });
-  }, [hookIsAddingMapPoint, mapLogicIsAddingMapPoint, handleMapPointClick]);
+  }, [hookIsAddingMapPoint, mapLogicIsAddingMapPoint, isAddingSearchArea, handleMapPointClick, handleMapClickArea]);
 
   // Simulate a small loading delay for better UX
   useEffect(() => {
@@ -170,9 +177,11 @@ const MapLogicProvider = () => {
     mapRef: mapRef.current ? "ACTIVE" : "NOT INITIALIZED",
     isAddingPointHook: hookIsAddingMapPoint,
     isAddingPointLogic: mapLogicIsAddingMapPoint,
+    isAddingSearchArea: isAddingSearchArea,
     newPointStatus: newPoint ? "CREATED" : "NOT CREATED",
     leafletStatus: L ? "LOADED" : "NOT LOADED",
     mapPoints: mapPoints.length,
+    searchAreas: searchAreas.length,
     targetPane: mapRef.current?.getPane('markerPane') ? "EXISTS" : "MISSING",
   });
 
@@ -253,6 +262,12 @@ const MapLogicProvider = () => {
 
       {/* Use the LocationButton component */}
       <LocationButton requestLocationPermission={requestLocationPermission} />
+
+      {/* Use the SearchAreaButton component */}
+      <SearchAreaButton 
+        toggleAddingSearchArea={toggleAddingSearchArea} 
+        isAddingSearchArea={isAddingSearchArea} 
+      />
 
       {/* Use the BuzzButton component */}
       <BuzzButton handleBuzz={handleBuzz} buzzMapPrice={buzzMapPrice} />

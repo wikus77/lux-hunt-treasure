@@ -8,7 +8,7 @@ import { Trash2, Edit } from 'lucide-react';
 type SearchAreaMapLayerProps = {
   searchAreas: SearchArea[];
   setActiveSearchArea: (id: string | null) => void;
-  deleteSearchArea: (id: string) => void;
+  deleteSearchArea: (id: string) => Promise<boolean>;
 };
 
 const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
@@ -18,8 +18,23 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
 }) => {
   console.log("Rendering SearchAreaMapLayer with areas:", searchAreas);
   
+  // Define the pulse animation class
+  const pulseStyle = `
+    @keyframes pulse {
+      0% { opacity: 0.4; }
+      50% { opacity: 0.6; }
+      100% { opacity: 0.4; }
+    }
+    .search-area-pulse {
+      animation: pulse 3s infinite ease-in-out;
+    }
+  `;
+  
   return (
     <>
+      {/* Add the pulse animation style */}
+      <style>{pulseStyle}</style>
+      
       {searchAreas.map((area) => {
         console.log("Rendering area:", area.id, area.lat, area.lng, area.radius);
         return (
@@ -27,11 +42,13 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
             <Circle
               center={[area.lat, area.lng]}
               radius={area.radius}
+              className="search-area-pulse"
               pathOptions={{
-                color: area.isAI ? '#9b87f5' : '#00D1FF',
-                fillColor: area.isAI ? '#7E69AB' : '#00D1FF',
-                fillOpacity: 0.2,
-                weight: 2
+                color: '#00f0ff', // Neon blue as specified
+                fillColor: '#00f0ff',
+                fillOpacity: 0.1,
+                weight: 2,
+                opacity: 0.8
               }}
               eventHandlers={{
                 click: () => {
@@ -42,17 +59,9 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
             >
               <Popup>
                 <div className="p-1">
-                  <div className="font-medium mb-2">{area.label || "Area di interesse"}</div>
-                  <div className="text-sm mb-3">Raggio: {(area.radius/1000).toFixed(2)} km</div>
+                  <div className="font-medium mb-2">{area.label || "Area di ricerca"}</div>
+                  <div className="text-sm mb-3">Raggio: {(area.radius/1000).toFixed(1)} km</div>
                   <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      className="text-xs flex items-center gap-1 flex-1"
-                      onClick={() => setActiveSearchArea(area.id)}
-                    >
-                      <Edit className="w-3 h-3" /> Modifica
-                    </Button>
                     <Button 
                       size="sm" 
                       variant="destructive"

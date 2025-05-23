@@ -1,26 +1,27 @@
 
-export type MapMarker = {
+// If this file doesn't exist, we'll create it with the necessary types
+
+export interface MapMarker {
   id: string;
   lat: number;
   lng: number;
   title: string;
   note: string;
-  editing?: boolean;
-  position: { lat: number; lng: number }; // Mandatory for compatibility
-  createdAt?: Date;     // Added for MapLogicProvider
-};
+  position: { lat: number; lng: number };
+  createdAt?: Date;
+}
 
-export type SearchArea = {
+export interface SearchArea {
   id: string;
   lat: number;
   lng: number;
   radius: number;
   label: string;
-  color?: string;
-  position?: { lat: number; lng: number };
+  color: string;
+  position: { lat: number; lng: number };
   isAI?: boolean;
-  confidence?: string; // Added confidence property
-};
+  confidence?: string;
+}
 
 export interface MapMarkersProps {
   isLoaded: boolean;
@@ -40,14 +41,6 @@ export interface MapMarkersProps {
   editSearchArea: (id: string) => void;
   deleteMarker: (id: string) => void;
   deleteSearchArea: (id: string) => void;
-  center?: { lat: number; lng: number };
-  mapOptions?: {
-    mapTypeControl?: boolean;
-    fullscreenControl?: boolean;
-    streetViewControl?: boolean;
-    zoomControlOptions?: google.maps.ZoomControlOptions;
-    gestureHandling?: "cooperative" | "greedy" | "auto" | "none";
-    zoomControl?: boolean;
-    disableDefaultUI?: boolean;
-  };
+  center?: google.maps.LatLngLiteral;
+  mapOptions?: google.maps.MapOptions;
 }
