@@ -9,14 +9,14 @@ import { useQueryParams } from "@/hooks/useQueryParams";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
-  const queryParams = useQueryParams();
+  const queryParams = useQueryParams<{ plan?: string }>();
   const [plan, setPlan] = useState<string>("Base");
   const [showExplosion, setShowExplosion] = useState(false);
   const [fadeOutExplosion, setFadeOutExplosion] = useState(false);
 
   useEffect(() => {
     // Get the plan from query parameters
-    const planParam = queryParams.get("plan");
+    const planParam = queryParams.plan;
     if (planParam && ["Silver", "Gold", "Black"].includes(planParam)) {
       setPlan(planParam);
       

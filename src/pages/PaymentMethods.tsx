@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from "uuid";
 const PaymentMethods = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const queryParams = useQueryParams();
+  const queryParams = useQueryParams<{ from?: string; price?: string; session?: string }>();
   const { toast: toastHandler } = useToast();
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
   const [isMapBuzz, setIsMapBuzz] = useState(false);
@@ -26,9 +26,9 @@ const PaymentMethods = () => {
 
   useEffect(() => {
     // Check if we're coming from the map page
-    const fromMap = queryParams.get("from") === "map";
-    const queryPrice = queryParams.get("price");
-    const querySession = queryParams.get("session");
+    const fromMap = queryParams.from === "map";
+    const queryPrice = queryParams.price;
+    const querySession = queryParams.session;
     
     if (fromMap) {
       setIsMapBuzz(true);
