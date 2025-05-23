@@ -76,6 +76,7 @@ const BottomNavigation = () => {
                 width={iconSize}
                 height={iconSize}
                 className={`transition-all ${isActive('/leaderboard') ? 'brightness-125 filter drop-shadow-[0_0_4px_#00D1FF]' : 'filter brightness-90'}`}
+                style={{ objectFit: 'contain' }} /* Ensure icon maintains proportions */
               />
             </div>
             <span className="text-xs">Classifica</span>
