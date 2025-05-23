@@ -98,7 +98,7 @@ const MapLogicProvider = () => {
       {hookState: hookIsAddingMapPoint, mapLogicState: mapLogicIsAddingMapPoint});
   }, [hookIsAddingMapPoint, mapLogicIsAddingMapPoint]);
   
-  // Function to handle map load event - FIXED typescript error by removing map parameter from arrow function
+  // Function to handle map load event
   const handleMapLoad = useCallback(() => {
     console.log("🗺️ Map component mounted and ready");
     
@@ -181,8 +181,8 @@ const MapLogicProvider = () => {
           zIndex: 1
         }}
         className="z-10"
-        whenReady={(map) => {
-          mapRef.current = map.target;
+        whenReady={(mapEvent) => {
+          mapRef.current = mapEvent.target;
           handleMapLoad();
         }}
       >
