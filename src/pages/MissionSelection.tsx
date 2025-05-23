@@ -57,7 +57,7 @@ export default function MissionSelection() {
             textShadow: "0 0 15px rgba(0, 209, 255, 0.5)"
           }}
         >
-          SCEGLI LA TUA MISSIONE
+          SELECT <span className="text-[#00D1FF]">M1</span><span className="text-white">SSION</span>
         </h1>
         
         <p className="text-white/80 max-w-2xl mx-auto text-lg mb-6">
@@ -84,7 +84,11 @@ export default function MissionSelection() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        <div className="bg-black/40 backdrop-blur-md border border-[#00D1FF]/20 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(0,209,255,0.15)]">
+        <motion.div 
+          className="bg-black/40 backdrop-blur-md border border-[#00D1FF]/20 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(0,209,255,0.15)]"
+          whileHover={{ scale: 1.1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
           <div className="md:flex">
             {/* Image container - on top in mobile, on left in desktop */}
             <div className="relative md:w-1/2">
@@ -101,7 +105,7 @@ export default function MissionSelection() {
             {/* Content container */}
             <div className="p-6 md:w-1/2 flex flex-col justify-center">
               <h2 className="text-2xl md:text-3xl font-orbitron text-white mb-3">
-                FOR HIM – M1SSION
+                FOR HIM – <span className="text-[#00D1FF]">M1</span><span className="text-white">SSION</span>
               </h2>
               
               <p className="text-white/80 mb-4">
@@ -146,7 +150,7 @@ export default function MissionSelection() {
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
       </motion.section>
 
       {/* For Her Section */}
@@ -156,7 +160,11 @@ export default function MissionSelection() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4 }}
       >
-        <div className="bg-black/40 backdrop-blur-md border border-[#F059FF]/20 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(240,89,255,0.15)]">
+        <motion.div 
+          className="bg-black/40 backdrop-blur-md border border-[#F059FF]/20 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(240,89,255,0.15)]"
+          whileHover={{ scale: 1.1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
           <div className="md:flex flex-row-reverse">
             {/* Image container - on top in mobile, on right in desktop */}
             <div className="relative md:w-1/2">
@@ -173,7 +181,7 @@ export default function MissionSelection() {
             {/* Content container */}
             <div className="p-6 md:w-1/2 flex flex-col justify-center">
               <h2 className="text-2xl md:text-3xl font-orbitron text-white mb-3">
-                FOR HER – M1SSION
+                FOR HER – <span className="text-[#00D1FF]">M1</span><span className="text-white">SSION</span>
               </h2>
               
               <p className="text-white/80 mb-4">
@@ -218,7 +226,7 @@ export default function MissionSelection() {
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
       </motion.section>
 
       {/* Info Block */}
@@ -230,7 +238,7 @@ export default function MissionSelection() {
       >
         <h3 className="text-2xl font-orbitron text-white mb-4">Hai scelto la tua missione?</h3>
         <p className="text-white/70 mb-6">
-          Dopo la scelta, accederai al modulo di registrazione per diventare un agente M1SSION. Potrai sempre cambiare missione più avanti.
+          Dopo la scelta, accederai al modulo di registrazione per diventare un agente <span className="text-[#00D1FF]">M1</span><span className="text-white">SSION</span>. Potrai sempre cambiare missione più avanti.
         </p>
         
         <div className="mb-4 text-sm text-white/60">
