@@ -68,7 +68,17 @@ const MapLogicProvider = () => {
     requestLocationPermission
   } = useMapLogic();
   
-  // Use our custom hook for map points
+  // Modified updateMapPoint wrapper to properly match the expected Promise<void> type
+  const updateMapPointWrapper = async (id: string, updates: { title?: string; note?: string }): Promise<void> => {
+    try {
+      await updateMapPoint(id, updates);
+    } catch (error) {
+      console.error("Error in updateMapPointWrapper:", error);
+      throw error; // Rethrow to let the caller handle it
+    }
+  };
+  
+  // Use our custom hook for map points with the modified wrapper function
   const {
     newPoint,
     handleMapPointClick,
@@ -81,7 +91,7 @@ const MapLogicProvider = () => {
     mapPoints,
     setActiveMapPoint,
     addMapPoint,
-    updateMapPoint,
+    updateMapPointWrapper, // Use the wrapper function here
     deleteMapPoint
   );
   

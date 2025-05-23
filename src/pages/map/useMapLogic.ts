@@ -81,7 +81,7 @@ export function useMapLogic() {
   };
 
   // Update an existing map point
-  const updateMapPoint = async (id: string, updates: { title?: string; note?: string }) => {
+  const updateMapPoint = async (id: string, updates: { title?: string; note?: string }): Promise<void> => {
     try {
       const { error } = await supabase
         .from('map_points')
@@ -94,7 +94,7 @@ export function useMapLogic() {
       if (error) {
         console.error('Error updating map point:', error);
         toast.error('Errore nell\'aggiornare il punto di interesse');
-        return false;
+        return;
       }
       
       // Update the local state
@@ -105,11 +105,9 @@ export function useMapLogic() {
       ));
       
       toast.success('Punto di interesse aggiornato');
-      return true;
     } catch (error) {
       console.error('Error in updateMapPoint:', error);
       toast.error('Errore nell\'aggiornare il punto di interesse');
-      return false;
     }
   };
 
