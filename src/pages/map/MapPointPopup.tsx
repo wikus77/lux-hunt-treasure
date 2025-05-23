@@ -1,16 +1,18 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { MapMarker } from '@/components/maps/types';
+import React, { useState } from 'react';
 
 interface MapPointPopupProps {
-  point: MapMarker;
+  point: {
+    id: string;
+    lat: number;
+    lng: number;
+    title: string;
+    note: string;
+  };
   isNew?: boolean;
   onSave: (title: string, note: string) => void;
   onCancel: () => void;
-  onDelete?: () => void;
+  onDelete?: () => Promise<boolean>;
 }
 
 const MapPointPopup: React.FC<MapPointPopupProps> = ({
@@ -20,141 +22,45 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
   onCancel,
   onDelete
 }) => {
-  const [title, setTitle] = useState(point.title || '');
-  const [note, setNote] = useState(point.note || '');
-  const inputRef = useRef<HTMLInputElement>(null);
-  
-  // Effect to focus on title input when popup opens
-  useEffect(() => {
-    console.log("🔍 MapPointPopup mounted - attempting to focus input field");
-    
-    // Multiple focus attempts with increasing timeouts
-    const attemptFocus = () => {
-      console.log("🔎 Trying to focus input...");
-      
-      if (inputRef.current) {
-        try {
-          inputRef.current.focus();
-          console.log("✅ Focus successful on title input");
-          return true;
-        } catch (err) {
-          console.error("❌ Focus error:", err);
-        }
-      } else {
-        console.log("❌ Input ref not available yet");
-      }
-      return false;
-    };
-    
-    // Try immediately
-    if (!attemptFocus()) {
-      // Try after a short delay
-      setTimeout(() => {
-        if (!attemptFocus()) {
-          // Try after a medium delay
-          setTimeout(() => {
-            if (!attemptFocus()) {
-              // Try after a longer delay
-              setTimeout(attemptFocus, 300);
-            }
-          }, 100);
-        }
-      }, 50);
-    }
-  }, []);
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("📝 Saving point with title:", title);
-    onSave(title, note);
-  };
-  
-  // Prevent clicks from propagating to map
-  const handlePopupClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-  
+  const [title, setTitle] = useState(point.title);
+  const [note, setNote] = useState(point.note);
+
   return (
-    <div 
-      className="p-2 min-w-[280px] point-popup" 
-      onClick={handlePopupClick}
-      onMouseDown={(e) => e.stopPropagation()}
-      onMouseUp={(e) => e.stopPropagation()}
-    >
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium mb-1">
-            Titolo
-          </label>
-          <Input
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Titolo del punto"
-            required
-            className="w-full text-black"
-            ref={inputRef}
-            autoFocus={true}
-            // Ensure input is ready to receive focus
-            onFocus={() => console.log("✅ Title input focused")}
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="note" className="block text-sm font-medium mb-1">
-            Nota
-          </label>
-          <Textarea
-            id="note"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Aggiungi una nota (opzionale)"
-            className="w-full min-h-[80px] text-black"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-        
-        <div className="flex justify-between gap-2 pt-2">
-          {!isNew && onDelete && (
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onDelete();
-              }}
-            >
-              Elimina
-            </Button>
-          )}
-          
-          <div className={`flex gap-2 ${!isNew && onDelete ? 'ml-auto' : 'w-full justify-end'}`}>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onCancel();
-              }}
-            >
-              Annulla
-            </Button>
-            
-            <Button
-              type="submit"
-              variant="default"
-              size="sm"
-            >
-              Salva
-            </Button>
-          </div>
-        </div>
-      </form>
+    <div className="p-2 point-popup">
+      <h3 className="font-bold mb-2">{isNew ? "Nuovo Punto" : "Modifica Punto"}</h3>
+      <div className="mb-2">
+        <label className="block text-sm mb-1">Titolo</label>
+        <input
+          className="w-full p-1 border rounded text-white bg-black/50"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Titolo"
+        />
+      </div>
+      <div className="mb-3">
+        <label className="block text-sm mb-1">Nota</label>
+        <textarea
+          className="w-full p-1 border rounded text-white bg-black/50"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Nota"
+          rows={3}
+        />
+      </div>
+      <div className="flex justify-between">
+        <button 
+          className="px-3 py-1 bg-red-500 text-white rounded"
+          onClick={onDelete ? onDelete : onCancel}
+        >
+          {onDelete ? "Elimina" : "Annulla"}
+        </button>
+        <button 
+          className="px-3 py-1 bg-green-500 text-white rounded"
+          onClick={() => onSave(title, note)}
+        >
+          Salva
+        </button>
+      </div>
     </div>
   );
 };

@@ -33,7 +33,8 @@ const MapPopupManager: React.FC<MapPopupManagerProps> = ({
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    shadowSize: [41, 41],
+    className: 'neon-marker-icon'
   });
   
   // Create a custom icon for the new point (different color)
@@ -43,7 +44,8 @@ const MapPopupManager: React.FC<MapPopupManagerProps> = ({
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    shadowSize: [41, 41],
+    className: 'neon-marker-icon'
   });
 
   console.log("🗺️ MapPopupManager rendering:", { 
@@ -68,7 +70,7 @@ const MapPopupManager: React.FC<MapPopupManagerProps> = ({
                 setActiveMapPoint(point.id);
               }
             }}
-            pane="markerPane" // Use the default marker pane
+            pane="markerPane"
           >
             {activeMapPoint === point.id && (
               <Popup
@@ -93,7 +95,7 @@ const MapPopupManager: React.FC<MapPopupManagerProps> = ({
         <Marker 
           position={[newPoint.lat, newPoint.lng]} 
           icon={newPointIcon}
-          pane="markerPane" // Use the default marker pane
+          pane="markerPane"
         >
           <Popup
             closeButton={false}

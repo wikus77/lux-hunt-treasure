@@ -1,148 +1,134 @@
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Plus, X, Trash2 } from "lucide-react";
-import MapNoteList from "@/components/maps/MapNoteList";
-import NoteColorBanner from "@/components/maps/NoteColorBanner";
+import { PlusCircle, FileText, Edit2, Trash2 } from "lucide-react";
+import MapNoteList from '@/components/maps/MapNoteList';
 
-type Importance = "high" | "medium" | "low";
-type LocalNote = {
+interface Note {
   id: string;
   note: string;
-  importance: Importance;
-};
+  importance: 'high' | 'medium' | 'low';
+}
 
-const NotesSection: React.FC = () => {
-  const [notes, setNotes] = useState<LocalNote[]>([]);
-  const [showInput, setShowInput] = useState(false);
-  const [noteText, setNoteText] = useState("");
-  const [editingNote, setEditingNote] = useState<LocalNote | null>(null);
-  const [showColorBanner, setShowColorBanner] = useState(false);
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+const NotesSection = () => {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [newNote, setNewNote] = useState('');
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
 
+  // Toggle showing the note input
+  const toggleNoteInput = () => {
+    setShowNoteInput(!showNoteInput);
+    setEditingNote(null);
+    setNewNote('');
+  };
+
+  // Add a new note
   const addNote = () => {
-    if (noteText.trim().length === 0) return;
-    
-    if (editingNote) {
-      setNotes(notes.map(note => 
-        note.id === editingNote.id 
-          ? { ...note, note: noteText.trim() }
-          : note
-      ));
-      setEditingNote(null);
-    } else {
-      setNotes([
-        ...notes,
-        { id: Date.now().toString(), note: noteText.trim(), importance: "medium" }
-      ]);
+    if (newNote.trim()) {
+      if (editingNote) {
+        // Update existing note
+        setNotes(notes.map(note => 
+          note.id === editingNote.id 
+            ? { ...note, note: newNote.trim() } 
+            : note
+        ));
+        setEditingNote(null);
+      } else {
+        // Add new note
+        const newNoteItem = {
+          id: Date.now().toString(),
+          note: newNote.trim(),
+          importance: 'medium' as 'high' | 'medium' | 'low'
+        };
+        setNotes([...notes, newNoteItem]);
+      }
+      setNewNote('');
+      setShowNoteInput(false);
     }
-    
-    setNoteText("");
-    setShowInput(false);
   };
 
-  const handleEditNote = (note: LocalNote) => {
-    setEditingNote(note);
-    setNoteText(note.note);
-    setShowInput(true);
-  };
-
+  // Cycle through importance levels
   const handleImportanceClick = (id: string) => {
-    setSelectedNoteId(id);
-    setShowColorBanner(true);
+    setNotes(notes.map(note => {
+      if (note.id === id) {
+        const importanceOrder: ('high' | 'medium' | 'low')[] = ['high', 'medium', 'low'];
+        const currentIndex = importanceOrder.indexOf(note.importance);
+        const nextIndex = (currentIndex + 1) % importanceOrder.length;
+        return { ...note, importance: importanceOrder[nextIndex] };
+      }
+      return note;
+    }));
   };
 
-  const handleColorSelect = (importance: Importance) => {
-    if (selectedNoteId) {
-      setNotes(notes.map(note =>
-        note.id === selectedNoteId
-          ? { ...note, importance }
-          : note
-      ));
-      setShowColorBanner(false);
-      setSelectedNoteId(null);
-    }
+  // Edit note
+  const handleEditNote = (note: Note) => {
+    setEditingNote(note);
+    setNewNote(note.note);
+    setShowNoteInput(true);
   };
 
-  const deleteNote = (id: string) => {
+  // Delete note
+  const handleDeleteNote = (id: string) => {
     setNotes(notes.filter(note => note.id !== id));
   };
 
-  const clearAllNotes = () => {
-    if (confirm("Sei sicuro di voler eliminare tutte le note?")) {
-      setNotes([]);
-    }
-  };
-
   return (
-    <>
-      <div className="flex justify-between mt-4 mb-2 items-center">
-        <h2 className="text-lg font-medium text-white flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-lime-400" />
+    <Card gradient className="h-full overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5 text-cyan-400" />
           Le tue note
-        </h2>
-        <div className="flex gap-2 items-center">
-          {notes.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={clearAllNotes}
-              className="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20"
-            >
-              <Trash2 className="h-3.5 w-3.5 mr-1" />
-              Cancella tutto
-            </Button>
-          )}
-          <Button
-            size="icon"
-            variant="secondary"
-            className="ml-2 bg-gradient-to-r from-projectx-blue to-projectx-pink text-white rounded-full"
-            onClick={() => {
-              if (!showInput) {
-                setEditingNote(null);
-                setNoteText("");
-              }
-              setShowInput(v => !v);
-            }}
-            aria-label={editingNote ? "Annulla modifica" : "Aggiungi nota"}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {showNoteInput ? (
+          <div className="space-y-3">
+            <textarea
+              className="w-full h-24 p-3 bg-black/50 border border-cyan-500/30 rounded-[24px] text-white resize-none focus:outline-none focus:border-cyan-500/60"
+              placeholder="Scrivi una nota..."
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+            />
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={toggleNoteInput}
+                className="rounded-full"
+              >
+                Annulla
+              </Button>
+              <Button 
+                variant="default"
+                size="sm" 
+                onClick={addNote}
+                className="rounded-full"
+              >
+                {editingNote ? 'Aggiorna' : 'Aggiungi'}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button 
+            variant="outline" 
+            className="w-full flex items-center justify-center gap-2 rounded-full border border-cyan-500/30 hover:border-cyan-500/60"
+            onClick={toggleNoteInput}
           >
-            {showInput ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+            <PlusCircle className="h-5 w-5 text-cyan-400" />
+            Aggiungi nota
           </Button>
-        </div>
-      </div>
-      {showInput && (
-        <div className="mb-3 flex items-center gap-2">
-          <input
-            className="flex-1 rounded bg-black/60 px-3 py-2 mr-2 text-white border border-white/10 focus:outline-none"
-            maxLength={120}
-            value={noteText}
-            placeholder={editingNote ? "Modifica nota..." : "Scrivi una nota..."}
-            onChange={e => setNoteText(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") addNote() }}
-            autoFocus
-          />
-          <Button
-            variant="default"
-            size="sm"
-            onClick={addNote}
-            disabled={noteText.trim().length === 0}
-          >
-            {editingNote ? "Modifica" : "Salva"}
-          </Button>
-        </div>
-      )}
-      <MapNoteList
-        notes={notes}
-        onImportanceClick={handleImportanceClick}
-        onEditNote={handleEditNote}
-        onDeleteNote={deleteNote}
-      />
-      <NoteColorBanner
-        open={showColorBanner}
-        onClose={() => setShowColorBanner(false)}
-        onSelectColor={handleColorSelect}
-      />
-    </>
+        )}
+
+        <MapNoteList 
+          notes={notes}
+          onImportanceClick={handleImportanceClick}
+          onEditNote={handleEditNote}
+          onDeleteNote={handleDeleteNote}
+        />
+      </CardContent>
+    </Card>
   );
 };
 

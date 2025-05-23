@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { MapPin } from "lucide-react";
+import { Locate } from "lucide-react";
 
 interface LocationButtonProps {
   requestLocationPermission: () => void;
@@ -9,14 +9,14 @@ interface LocationButtonProps {
 
 const LocationButton: React.FC<LocationButtonProps> = ({ requestLocationPermission }) => {
   return (
-    <div className="absolute top-4 right-4 z-20">
+    <div className="absolute top-6 right-6 z-20">
       <Button
         onClick={requestLocationPermission}
-        className="bg-black/50 hover:bg-black/70 text-white border border-white/20"
-        size="sm"
+        variant="outline"
+        size="icon"
+        className="bg-black/50 border border-cyan-500/30 rounded-full h-10 w-10 hover:bg-black/70 hover:border-cyan-500/60"
       >
-        <MapPin className="mr-1 h-4 w-4" />
-        Posizione
+        <Locate className="h-5 w-5 text-cyan-400" />
       </Button>
     </div>
   );
