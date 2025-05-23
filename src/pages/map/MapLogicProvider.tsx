@@ -44,8 +44,8 @@ const MapLogicProvider = () => {
     deleteSearchArea,
     setPendingRadius,
     mapPoints,
-    isAddingMapPoint,
-    setIsAddingMapPoint,
+    isAddingMapPoint: mapLogicIsAddingMapPoint,
+    setIsAddingMapPoint: mapLogicSetIsAddingMapPoint,
     activeMapPoint,
     setActiveMapPoint,
     addMapPoint,
@@ -55,13 +55,15 @@ const MapLogicProvider = () => {
     requestLocationPermission
   } = useMapLogic();
   
-  // Use our new custom hook for map points
+  // Use our custom hook for map points, passing down the setIsAddingMapPoint handler
   const {
     newPoint,
     handleMapPointClick,
     handleSaveNewPoint,
     handleUpdatePoint,
-    handleCancelNewPoint
+    handleCancelNewPoint,
+    isAddingMapPoint: hookIsAddingMapPoint,
+    setIsAddingMapPoint: hookSetIsAddingMapPoint
   } = useMapPoints(
     mapPoints,
     setActiveMapPoint,
@@ -69,6 +71,25 @@ const MapLogicProvider = () => {
     updateMapPoint,
     deleteMapPoint
   );
+  
+  // Synchronize isAddingMapPoint state between hook and mapLogic
+  useEffect(() => {
+    if (mapLogicIsAddingMapPoint !== hookIsAddingMapPoint) {
+      hookSetIsAddingMapPoint(mapLogicIsAddingMapPoint);
+    }
+  }, [mapLogicIsAddingMapPoint, hookIsAddingMapPoint, hookSetIsAddingMapPoint]);
+
+  // Also propagate state from hook to parent if needed
+  useEffect(() => {
+    if (hookIsAddingMapPoint !== mapLogicIsAddingMapPoint) {
+      mapLogicSetIsAddingMapPoint(hookIsAddingMapPoint);
+    }
+  }, [hookIsAddingMapPoint, mapLogicIsAddingMapPoint, mapLogicSetIsAddingMapPoint]);
+  
+  // Debug logging for isAddingMapPoint state
+  useEffect(() => {
+    console.log("🔍 MapLogicProvider - isAddingMapPoint:", mapLogicIsAddingMapPoint);
+  }, [mapLogicIsAddingMapPoint]);
   
   // Function to handle map load event
   const handleMapLoad = useCallback(() => {
@@ -85,11 +106,6 @@ const MapLogicProvider = () => {
     }, 800);
     return () => clearTimeout(timer);
   }, [mapLoaded]);
-
-  // Log whenever isAddingMapPoint changes
-  useEffect(() => {
-    console.log("isAddingMapPoint changed:", isAddingMapPoint);
-  }, [isAddingMapPoint]);
   
   if (!mapLoaded) return <LoadingScreen />;
 
@@ -139,7 +155,7 @@ const MapLogicProvider = () => {
           deleteSearchArea={deleteSearchArea}
         />
         
-        {/* Use the new MapPopupManager component */}
+        {/* Use the MapPopupManager component */}
         <MapPopupManager 
           mapPoints={mapPoints}
           activeMapPoint={activeMapPoint}
@@ -151,27 +167,27 @@ const MapLogicProvider = () => {
           handleCancelNewPoint={handleCancelNewPoint}
         />
         
-        {/* Use the new MapEventHandler component */}
+        {/* Use the MapEventHandler component with properly synced isAddingMapPoint state */}
         <MapEventHandler 
           isAddingSearchArea={isAddingSearchArea} 
           handleMapClickArea={handleMapClickArea}
           searchAreas={searchAreas}
           setPendingRadius={setPendingRadius}
-          isAddingMapPoint={isAddingMapPoint}
+          isAddingMapPoint={mapLogicIsAddingMapPoint}
           onMapPointClick={handleMapPointClick}
         />
       </MapContainer>
 
-      {/* Use the new LocationButton component */}
+      {/* Use the LocationButton component */}
       <LocationButton requestLocationPermission={requestLocationPermission} />
 
-      {/* Use the new BuzzButton component */}
+      {/* Use the BuzzButton component */}
       <BuzzButton handleBuzz={handleBuzz} buzzMapPrice={buzzMapPrice} />
 
-      {/* Use the new MapInstructionsOverlay component */}
+      {/* Use the MapInstructionsOverlay component */}
       <MapInstructionsOverlay 
         isAddingSearchArea={isAddingSearchArea} 
-        isAddingMapPoint={isAddingMapPoint} 
+        isAddingMapPoint={mapLogicIsAddingMapPoint} 
       />
 
       <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />

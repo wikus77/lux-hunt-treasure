@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -157,7 +156,7 @@ export function useMapLogic() {
       return newState;
     });
   }, []);
-  
+
   // Stub functions for search areas
   const handleMapClickArea = (e: any) => {
     console.log("Map area click", e);

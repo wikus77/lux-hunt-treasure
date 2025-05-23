@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { MapMarker } from '@/components/maps/types';
 
@@ -11,10 +11,22 @@ export function useMapPoints(
   deleteMapPoint: (id: string) => Promise<boolean>
 ) {
   const [newPoint, setNewPoint] = useState<MapMarker | null>(null);
+  const [isAddingNewPoint, setIsAddingNewPoint] = useState(false);
+
+  // Debug logging for isAddingNewPoint state changes
+  useEffect(() => {
+    console.log("🔁 useMapPoints - isAddingNewPoint state:", isAddingNewPoint);
+  }, [isAddingNewPoint]);
 
   // Handle map point click when adding a new point
   const handleMapPointClick = (lat: number, lng: number) => {
     console.log("Map point click detected at:", lat, lng);
+    console.log("isAddingNewPoint state at click time:", isAddingNewPoint);
+    
+    if (!isAddingNewPoint) {
+      console.log("Not in adding point mode, ignoring click");
+      return;
+    }
     
     // Create a new point and set it in state
     setNewPoint({
@@ -25,6 +37,9 @@ export function useMapPoints(
       note: '',
       position: { lat, lng }
     });
+    
+    // Reset the adding state after successful point creation
+    setIsAddingNewPoint(false);
     
     toast.success("Punto posizionato. Inserisci titolo e nota.", {
       duration: 3000
@@ -85,6 +100,8 @@ export function useMapPoints(
   return {
     newPoint,
     setNewPoint,
+    isAddingMapPoint: isAddingNewPoint,
+    setIsAddingMapPoint: setIsAddingNewPoint,
     handleMapPointClick,
     handleSaveNewPoint,
     handleUpdatePoint,

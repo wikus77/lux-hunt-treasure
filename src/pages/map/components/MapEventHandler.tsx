@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { useMapEvents } from 'react-leaflet';
 import { toast } from 'sonner';
+import L from 'leaflet';  // Add missing import
 
 interface MapEventHandlerProps {
   isAddingSearchArea: boolean;
