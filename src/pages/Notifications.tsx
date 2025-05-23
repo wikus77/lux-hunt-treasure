@@ -41,22 +41,23 @@ const categoryConfig = [
 ];
 
 const Notifications = () => {
-  const { notifications, markAllAsRead, deleteNotification } = useNotifications();
+  const { notifications, markAllAsRead, deleteNotification, reloadNotifications } = useNotifications();
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const isMobile = useIsMobile();
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    setTimeout(() => {
+    // Force reload notifications when the page loads
+    reloadNotifications().then(() => {
       setIsLoaded(true);
       // Mark all notifications as read when this page loads
       markAllAsRead();
-    }, 300);
+    });
     
     // Initialize with all categories expanded
     setExpandedCategories(categoryConfig.map(cat => cat.id));
-  }, [markAllAsRead]);
+  }, [markAllAsRead, reloadNotifications]);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => 

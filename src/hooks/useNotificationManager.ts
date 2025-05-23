@@ -46,38 +46,51 @@ export function useNotificationManager() {
   }, [setShowNotifications]);
 
   // Create notification with proper type checking and categorization
-  const createNotification = useCallback((title: string, description: string, type = NOTIFICATION_CATEGORIES.GENERIC) => {
+  const createNotification = useCallback(async (title: string, description: string, type = NOTIFICATION_CATEGORIES.GENERIC) => {
+    console.log(`Creating notification of type ${type}: ${title}`);
+    
     // Use sonner toast to show notification
     toast(title, {
       description
     });
     
     // Add to notification system
-    return addNotification({ 
-      title, 
-      description, 
-      type 
-    });
+    try {
+      const result = await addNotification({ 
+        title, 
+        description, 
+        type 
+      });
+      
+      if (!result) {
+        console.error("Failed to create notification");
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Error creating notification:", error);
+      return false;
+    }
   }, [addNotification]);
 
   // Create BUZZ notification
-  const createBuzzNotification = useCallback((title: string, description: string) => {
-    return createNotification(title, description, NOTIFICATION_CATEGORIES.BUZZ);
+  const createBuzzNotification = useCallback(async (title: string, description: string) => {
+    return await createNotification(title, description, NOTIFICATION_CATEGORIES.BUZZ);
   }, [createNotification]);
 
   // Create Map BUZZ notification
-  const createMapBuzzNotification = useCallback((title: string, description: string) => {
-    return createNotification(title, description, NOTIFICATION_CATEGORIES.MAP_BUZZ);
+  const createMapBuzzNotification = useCallback(async (title: string, description: string) => {
+    return await createNotification(title, description, NOTIFICATION_CATEGORIES.MAP_BUZZ);
   }, [createNotification]);
 
   // Create Leaderboard notification
-  const createLeaderboardNotification = useCallback((title: string, description: string) => {
-    return createNotification(title, description, NOTIFICATION_CATEGORIES.LEADERBOARD);
+  const createLeaderboardNotification = useCallback(async (title: string, description: string) => {
+    return await createNotification(title, description, NOTIFICATION_CATEGORIES.LEADERBOARD);
   }, [createNotification]);
 
   // Create Weekly notification
-  const createWeeklyNotification = useCallback((title: string, description: string) => {
-    return createNotification(title, description, NOTIFICATION_CATEGORIES.WEEKLY);
+  const createWeeklyNotification = useCallback(async (title: string, description: string) => {
+    return await createNotification(title, description, NOTIFICATION_CATEGORIES.WEEKLY);
   }, [createNotification]);
 
   return {

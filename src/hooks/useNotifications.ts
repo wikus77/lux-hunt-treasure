@@ -45,9 +45,10 @@ export function useNotifications() {
     }
   }, []);
 
-  // Carica le notifiche da localStorage
+  // Carica le notifiche da localStorage e/o Supabase
   const reloadNotifications = useCallback(async () => {
     try {
+      console.log("Reloading notifications...");
       // First try to get from local storage (for offline support)
       const stored = localStorage.getItem(STORAGE_KEY);
       let notifs: Notification[] = stored ? JSON.parse(stored) : [];
@@ -64,6 +65,7 @@ export function useNotifications() {
         if (error) {
           console.error("Error fetching notifications from Supabase:", error);
         } else if (supabaseNotifs && supabaseNotifs.length > 0) {
+          console.log("Loaded notifications from Supabase:", supabaseNotifs);
           // Convert Supabase notifications to our format
           notifs = supabaseNotifs.map(n => ({
             id: n.id,
@@ -82,10 +84,12 @@ export function useNotifications() {
       console.log("Loaded notifications:", notifs);
       setNotifications(notifs);
       setUnreadCount(notifs.filter(n => !n.read).length);
+      return true;
     } catch (e) {
       console.error("Errore nel caricamento delle notifiche:", e);
       setNotifications([]);
       setUnreadCount(0);
+      return false;
     }
   }, [saveNotifications]);
 
@@ -180,6 +184,7 @@ export function useNotifications() {
   // Delete a notification
   const deleteNotification = useCallback(async (id: string) => {
     try {
+      console.log("Deleting notification:", id);
       // Try to delete from Supabase if user is authenticated
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -214,18 +219,19 @@ export function useNotifications() {
     // Determine notification type
     const type = notification.type || NOTIFICATION_CATEGORIES.GENERIC;
     
-    // Crea un nuovo oggetto notifica con ID, data e stato di lettura
-    const newNotification = {
-      id: Date.now().toString(),
-      title: notification.title,
-      description: notification.description,
-      date: new Date().toISOString(),
-      read: false,
-      type
-    };
-    
     try {
-      console.log("Adding new notification:", newNotification);
+      console.log("Adding new notification:", notification);
+      
+      // Generate a temporary ID that will be replaced by Supabase ID if available
+      let tempId = Date.now().toString();
+      let newNotification = {
+        id: tempId,
+        title: notification.title,
+        description: notification.description,
+        date: new Date().toISOString(),
+        read: false,
+        type
+      };
       
       // Try to save to Supabase if user is authenticated
       const { data: { user } } = await supabase.auth.getUser();
