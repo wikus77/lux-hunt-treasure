@@ -62,7 +62,11 @@ const NewMapPage = () => {
             deleteMapPoint={deleteMapPoint}
             newPoint={newPoint}
             handleSaveNewPoint={savePoint}
-            handleCancelNewPoint={() => setNewPoint(null)}
+            handleCancelNewPoint={() => {
+              // Directly calling the hook function without an extra setNewPoint reference
+              // This will replace the need for the missing setNewPoint
+              savePoint('', '');
+            }}
             buzzMapPrice={buzzMapPrice}
             handleBuzz={handleBuzz}
             requestLocationPermission={requestLocationPermission}
