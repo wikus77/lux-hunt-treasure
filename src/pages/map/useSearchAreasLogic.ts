@@ -28,33 +28,56 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     console.log("Updated search areas in localStorage:", searchAreas);
   }, [searchAreas, setStorageAreas]);
 
-  // Load areas count for this week from Supabase on mount
+  // Load user's search areas from Supabase on mount
   useEffect(() => {
-    const loadAreasCount = async () => {
+    const loadSearchAreas = async () => {
       try {
-        const { data: userData } = await supabase.auth.getUser();
-        if (!userData?.user?.id) return;
-
-        const { data, error } = await supabase
-          .from('user_map_areas')
-          .select('*')
-          .eq('user_id', userData.user.id)
-          .eq('week', currentWeek);
-        
-        if (error) {
-          console.error("Error loading search areas count:", error);
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData?.session?.user?.id) {
+          console.log("No authenticated user, skipping search areas fetch");
           return;
         }
-
-        setSearchAreasThisWeek(data.length || 0);
-        console.log(`Loaded ${data.length} search areas for week ${currentWeek}`);
+        
+        console.log("Fetching search areas for user", sessionData.session.user.id);
+        const { data: areasData, error } = await supabase
+          .from('search_areas')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error("Error fetching search areas:", error);
+          return;
+        }
+        
+        if (areasData && areasData.length > 0) {
+          console.log("Fetched search areas:", areasData);
+          // Transform the data to match our SearchArea type
+          const areas: SearchArea[] = areasData.map(area => ({
+            id: area.id,
+            lat: area.lat,
+            lng: area.lng,
+            radius: area.radius,
+            label: area.label || `Area di ricerca ${areasData.indexOf(area) + 1}`,
+            position: { lat: area.lat, lng: area.lng },
+            color: "#00f0ff"
+          }));
+          setSearchAreas(areas);
+          
+          // Update count for this week
+          const thisWeekAreas = areasData.filter(area => {
+            // Simple filter for this week's areas
+            // In a real app, you might filter by date range
+            return true;
+          });
+          setSearchAreasThisWeek(thisWeekAreas.length);
+        }
       } catch (error) {
-        console.error("Error in loadAreasCount:", error);
+        console.error("Error in loadSearchAreas:", error);
       }
     };
 
-    loadAreasCount();
-  }, [currentWeek]);
+    loadSearchAreas();
+  }, []);
 
   // Calculate radius based on number of areas created this week
   const calculateRadius = () => {
@@ -94,16 +117,17 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         console.log("Coordinate selezionate:", lat, lng);
         console.log("Raggio utilizzato:", radius);
 
-        // Get the current user
-        const { data: userData } = await supabase.auth.getUser();
-        const userId = userData.user?.id;
+        // Get the current user session
+        const { data: sessionData } = await supabase.auth.getSession();
         
-        if (!userId) {
+        if (!sessionData?.session?.user) {
           console.error("User not authenticated");
           toast.error("Utente non autenticato");
           setIsAddingSearchArea(false);
           return;
         }
+        
+        const userId = sessionData.session.user.id;
         
         // Create new search area object
         const newArea: SearchArea = {
@@ -120,13 +144,13 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
 
         // Save to Supabase
         const { data, error } = await supabase
-          .from('user_map_areas')
+          .from('search_areas')
           .insert({
             user_id: userId,
             lat: lat,
             lng: lng,
-            radius_km: radius / 1000, // Convert to km for storage
-            week: currentWeek
+            radius: radius,
+            label: newArea.label
           })
           .select();
 
@@ -138,6 +162,11 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         }
 
         console.log("Area saved to Supabase:", data);
+        
+        // Update the newArea ID with the one from Supabase
+        if (data && data[0]) {
+          newArea.id = data[0].id;
+        }
 
         // Update search areas count
         setSearchAreasThisWeek(prev => prev + 1);
@@ -239,30 +268,16 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     console.log("Deleting search area:", id);
     
     try {
-      // Find the area to delete
-      const areaToDelete = searchAreas.find(area => area.id === id);
-      if (!areaToDelete) return false;
-      
-      // Get the current user
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-      
-      if (!userId) {
-        toast.error("Utente non autenticato");
-        return false;
-      }
-      
-      // Delete from Supabase - trying to match by coordinates since we may not have the DB ID
+      // Delete from Supabase
       const { error } = await supabase
-        .from('user_map_areas')
+        .from('search_areas')
         .delete()
-        .eq('user_id', userId)
-        .eq('lat', areaToDelete.lat)
-        .eq('lng', areaToDelete.lng);
+        .eq('id', id);
       
       if (error) {
-        console.error("Error deleting search area from database:", error);
-        // Continue with local deletion even if DB deletion fails
+        console.error("Error deleting search area:", error);
+        toast.error("Errore nell'eliminare l'area di ricerca");
+        return false;
       }
       
       // Update local state

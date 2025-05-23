@@ -609,6 +609,36 @@ export type Database = {
         }
         Relationships: []
       }
+      search_areas: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          lat: number
+          lng: number
+          radius: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          lat: number
+          lng: number
+          radius: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          lat?: number
+          lng?: number
+          radius?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
