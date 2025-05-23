@@ -79,7 +79,7 @@ const MapEventHandler = ({
         });
       } else if (isAddingMapPoint) {
         mapContainer.style.cursor = 'crosshair';
-        console.log("Cursore cambiato in crosshair per punto");
+        console.log("Cursore cambiato in crosshair per punto", isAddingMapPoint);
         toast.info("Clicca sulla mappa per posizionare il punto", {
           duration: 3000
         });
@@ -174,31 +174,36 @@ const MapLogicProvider = () => {
 
   // Handle map point click when adding a new point
   const handleMapPointClick = (lat, lng) => {
-    console.log("Map point click detected at:", lat, lng);
+    console.log("Map point click detected at:", lat, lng, "isAddingMapPoint:", isAddingMapPoint);
     
-    // Create a new point and set it in state
-    setNewPoint({
-      id: 'new',
-      lat,
-      lng,
-      title: '',
-      note: '',
-      position: { lat, lng }
-    });
-    
-    // Disable adding map point mode after placing the point
-    setIsAddingMapPoint(false);
-    
-    // Change cursor back to grab after adding a point
-    document.querySelectorAll('.leaflet-container').forEach(container => {
-      if (container instanceof HTMLElement) {
-        container.style.cursor = 'grab';
-      }
-    });
-    
-    toast.success("Punto posizionato. Inserisci titolo e nota.", {
-      duration: 3000
-    });
+    if (isAddingMapPoint) {
+      // Create a new point and set it in state
+      setNewPoint({
+        id: 'new',
+        lat,
+        lng,
+        title: '',
+        note: '',
+        position: { lat, lng }
+      });
+      
+      // Disable adding map point mode after placing the point
+      setIsAddingMapPoint(false);
+      console.log("Disattivata modalità inserimento punto, isAddingMapPoint:", false);
+      
+      // Change cursor back to grab after adding a point
+      document.querySelectorAll('.leaflet-container').forEach(container => {
+        if (container instanceof HTMLElement) {
+          container.style.cursor = 'grab';
+        }
+      });
+      
+      toast.success("Punto posizionato. Inserisci titolo e nota.", {
+        duration: 3000
+      });
+    } else {
+      console.log("Click sulla mappa ignorato: modalità inserimento punto non attiva");
+    }
   };
 
   // Handle save of new map point
@@ -306,11 +311,18 @@ const MapLogicProvider = () => {
             key={point.id}
             position={[point.lat, point.lng]}
             eventHandlers={{
-              click: () => setActiveMapPoint(point.id)
+              click: () => {
+                console.log("Marcatore esistente cliccato, ID:", point.id);
+                setActiveMapPoint(point.id);
+              }
             }}
           >
             {activeMapPoint === point.id && (
-              <Popup>
+              <Popup
+                closeButton={true}
+                autoClose={false}
+                closeOnClick={false}
+              >
                 <MapPointPopup
                   point={point}
                   onSave={(title, note) => handleUpdatePoint(point.id, title, note)}

@@ -20,19 +20,28 @@ export function useMapLogic() {
   
   // Buzz related properties
   const buzzMapPrice = 1.99; // Default price
+
+  // Debug the state of isAddingMapPoint
+  useEffect(() => {
+    console.log("Estado de isAddingMapPoint cambió a:", isAddingMapPoint);
+  }, [isAddingMapPoint]);
   
   // Add a new map point
   const addMapPoint = async (point: { lat: number; lng: number; title: string; note: string }) => {
     try {
+      console.log("Tentativo di aggiungere un nuovo punto:", point);
+      
       // Get the current user first
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
       
       if (!userId) {
+        console.error("Utente non autenticato");
         toast.error('Utente non autenticato');
         return null;
       }
       
+      console.log("Inserendo punto in database per utente:", userId);
       const { data, error } = await supabase
         .from('map_points')
         .insert({
@@ -51,6 +60,7 @@ export function useMapLogic() {
         return null;
       }
       
+      console.log("Punto inserito con successo:", data);
       const newPoint: MapMarker = {
         id: data.id,
         lat: data.latitude,
@@ -131,12 +141,22 @@ export function useMapLogic() {
   };
 
   // Toggle adding map point state
-  const toggleAddingMapPoint = () => {
-    setIsAddingMapPoint(prev => !prev);
-    if (!isAddingMapPoint) {
-      toast.info('Clicca sulla mappa per aggiungere un punto di interesse');
-    }
-  };
+  const toggleAddingMapPoint = useCallback(() => {
+    setIsAddingMapPoint(prev => {
+      const newState = !prev;
+      console.log("TOGGLE isAddingMapPoint:", prev, "→", newState);
+      
+      // If we're enabling map point mode, disable search area mode
+      if (newState) {
+        setIsAddingSearchArea(false);
+        
+        // Show toast instructions
+        toast.info('Clicca sulla mappa per posizionare un nuovo punto di interesse');
+      }
+      
+      return newState;
+    });
+  }, []);
   
   // Stub functions for search areas
   const handleMapClickArea = (e: any) => {
@@ -203,6 +223,7 @@ export function useMapLogic() {
           return;
         }
         
+        console.log("Caricamento punti mappa per utente:", userId);
         const { data, error } = await supabase
           .from('map_points')
           .select('*')
@@ -212,6 +233,8 @@ export function useMapLogic() {
           console.error('Error loading map points:', error);
           return;
         }
+        
+        console.log("Punti mappa caricati:", data?.length || 0);
         
         // Transform the data to match our MapMarker type
         const points: MapMarker[] = data.map(point => ({

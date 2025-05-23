@@ -26,8 +26,9 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
   
   // Effect to focus on title input when popup opens
   useEffect(() => {
-    if (isNew && inputRef.current) {
+    if (inputRef.current) {
       // Ensure the popup is fully rendered and then focus
+      console.log("Attempting to focus title field");
       setTimeout(() => {
         if (inputRef.current) {
           console.log("Auto-focusing title field");
@@ -35,7 +36,7 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
         }
       }, 100);
     }
-  }, [isNew]);
+  }, []);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +59,6 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
             placeholder="Titolo del punto"
             required
             className="w-full"
-            autoFocus={isNew}
             ref={inputRef}
           />
         </div>
