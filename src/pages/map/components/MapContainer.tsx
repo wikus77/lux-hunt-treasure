@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -19,7 +18,7 @@ interface MapContainerProps {
   mapPoints: any[];
   activeMapPoint: string | null;
   setActiveMapPoint: (id: string | null) => void;
-  handleUpdatePoint: (id: string, title: string, note: string) => Promise<void>;
+  handleUpdatePoint: (id: string, title: string, note: string) => Promise<boolean>;
   deleteMapPoint: (id: string) => Promise<boolean>;
   newPoint: any | null;
   handleSaveNewPoint: (title: string, note: string) => void;
