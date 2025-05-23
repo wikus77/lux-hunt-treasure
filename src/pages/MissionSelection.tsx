@@ -57,7 +57,7 @@ export default function MissionSelection() {
             textShadow: "0 0 15px rgba(0, 209, 255, 0.5)"
           }}
         >
-          SELECT <span className="text-[#00D1FF]">M1</span><span className="text-white">SSION</span>
+          <span className="text-[#00D1FF]">SELECT</span> <span className="text-[#00D1FF]">M1</span><span className="text-white">SSION</span>
         </h1>
         
         <p className="text-white/80 max-w-2xl mx-auto text-lg mb-6">
@@ -67,13 +67,6 @@ export default function MissionSelection() {
         {/* Countdown Timer */}
         <div className="flex justify-center mb-4">
           <CountdownTimer targetDate={targetDate} />
-        </div>
-
-        {/* SELECT M1SSION text */}
-        <div className="flex justify-center items-center mb-8">
-          <h2 className="font-orbitron text-2xl">
-            SELECT <span className="text-[#00D1FF]">M1</span><span className="text-white">SSION</span>
-          </h2>
         </div>
       </motion.div>
 
@@ -86,7 +79,7 @@ export default function MissionSelection() {
       >
         <motion.div 
           className="bg-black/40 backdrop-blur-md border border-[#00D1FF]/20 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(0,209,255,0.15)]"
-          whileHover={{ scale: 1.1 }}
+          whileHover={{ scale: 1.05 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
           <div className="md:flex">
@@ -162,7 +155,7 @@ export default function MissionSelection() {
       >
         <motion.div 
           className="bg-black/40 backdrop-blur-md border border-[#F059FF]/20 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(240,89,255,0.15)]"
-          whileHover={{ scale: 1.1 }}
+          whileHover={{ scale: 1.05 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
           <div className="md:flex flex-row-reverse">
@@ -170,7 +163,7 @@ export default function MissionSelection() {
             <div className="relative md:w-1/2">
               <div className="relative h-[300px] md:h-full">
                 <img 
-                  src="/lovable-uploads/07729def-3181-4138-88fb-baad9abcc616.png" 
+                  src="/lovable-uploads/f996d464-f915-4a83-92bd-f1799ef28c1f.png" 
                   alt="Luxury Women's Prizes" 
                   className="w-full h-full object-cover"
                 />
