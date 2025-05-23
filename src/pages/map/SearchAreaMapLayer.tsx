@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Circle, Popup } from 'react-leaflet';
 import { SearchArea } from '@/components/maps/types';
 import { Button } from '@/components/ui/button';
-import { Trash2, Edit } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 type SearchAreaMapLayerProps = {
   searchAreas: SearchArea[];

@@ -6,7 +6,7 @@ import {
   MapPin, 
   Circle, 
   Trophy, 
-  Bell
+  Radar
 } from "lucide-react";
 
 const BottomNavigation = () => {
@@ -85,7 +85,7 @@ const BottomNavigation = () => {
             className={`bottom-nav-item ${isActive('/notifications') ? 'active' : ''}`}
           >
             <div className="p-2">
-              <Bell 
+              <Radar 
                 size={iconSize} 
                 color={isActive('/notifications') ? iconColor : undefined}
                 className={`transition-all ${isActive('/notifications') ? 'active-gradient-icon' : ''}`}

@@ -1,17 +1,17 @@
-
 import React from 'react';
 import { Marker, Popup } from 'react-leaflet';
-import { MapMarker } from '@/components/maps/types';
-import MapPointPopup from '../MapPointPopup';
-import L from 'leaflet';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useState } from 'react';
 
 interface MapPopupManagerProps {
-  mapPoints: MapMarker[];
+  mapPoints: any[];
   activeMapPoint: string | null;
   setActiveMapPoint: (id: string | null) => void;
   handleUpdatePoint: (id: string, title: string, note: string) => Promise<boolean>;
   deleteMapPoint: (id: string) => Promise<boolean>;
-  newPoint: MapMarker | null;
+  newPoint: any;
   handleSaveNewPoint: (title: string, note: string) => void;
   handleCancelNewPoint: () => void;
 }
@@ -26,91 +26,129 @@ const MapPopupManager: React.FC<MapPopupManagerProps> = ({
   handleSaveNewPoint,
   handleCancelNewPoint
 }) => {
-  // Create a custom icon for better visibility
-  const pointIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
-    className: 'neon-marker-icon'
-  });
-  
-  // Create a custom icon for the new point (different color)
-  const newPointIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
-    className: 'neon-marker-icon'
-  });
+  const [title, setTitle] = useState('');
+  const [note, setNote] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+  const [editNote, setEditNote] = useState('');
 
-  console.log("🗺️ MapPopupManager rendering:", { 
-    mapPointsCount: mapPoints.length, 
-    activeMapPoint, 
-    newPoint: newPoint ? "YES" : "NO" 
-  });
-  
+  // Define the pulse animation for map points
+  const mapPointPulseStyle = `
+    @keyframes mapPointPulse {
+      0% { box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(0, 240, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 240, 255, 0); }
+    }
+    .map-point-marker {
+      filter: drop-shadow(0 0 6px #00f0ff);
+    }
+    .leaflet-marker-icon {
+      animation: mapPointPulse 2s infinite;
+    }
+  `;
+
   return (
     <>
-      {/* Display existing map points */}
-      {mapPoints.map(point => {
-        console.log("📍 Rendering map point:", point.id, point.lat, point.lng);
-        return (
-          <Marker 
-            key={point.id}
-            position={[point.lat, point.lng]}
-            icon={pointIcon}
-            eventHandlers={{
-              click: () => {
-                console.log("📍 Existing marker clicked, ID:", point.id);
-                setActiveMapPoint(point.id);
-              }
-            }}
-            pane="markerPane"
-          >
-            {activeMapPoint === point.id && (
-              <Popup
-                closeButton={true}
-                autoClose={false}
-                closeOnClick={false}
-              >
-                <MapPointPopup
-                  point={point}
-                  onSave={(title, note) => handleUpdatePoint(point.id, title, note)}
-                  onCancel={() => setActiveMapPoint(null)}
-                  onDelete={() => deleteMapPoint(point.id)}
+      {/* Add the map point pulse style */}
+      <style>{mapPointPulseStyle}</style>
+    
+      {/* Existing map points */}
+      {mapPoints.map(point => (
+        <Marker 
+          key={point.id} 
+          position={[point.lat, point.lng]} 
+          eventHandlers={{
+            click: () => {
+              setActiveMapPoint(point.id);
+              setEditTitle(point.title || '');
+              setEditNote(point.note || '');
+            }
+          }}
+          icon={L.divIcon({
+            className: 'map-point-marker',
+            html: `<div style="width: 10px; height: 10px; background-color: #00f0ff; border-radius: 50%;"></div>`,
+            iconSize: [10, 10],
+            iconAnchor: [5, 5]
+          })}
+        >
+          {activeMapPoint === point.id && (
+            <Popup onClose={() => setActiveMapPoint(null)}>
+              <div className="p-2 space-y-2">
+                <Input 
+                  value={editTitle} 
+                  onChange={e => setEditTitle(e.target.value)} 
+                  placeholder="Titolo punto" 
+                  className="mb-2"
                 />
-              </Popup>
-            )}
-          </Marker>
-        );
-      })}
-      
-      {/* Display new point being added */}
+                <Textarea 
+                  value={editNote} 
+                  onChange={e => setEditNote(e.target.value)}
+                  placeholder="Note aggiuntive"
+                  className="mb-2"
+                  rows={3}
+                />
+                <div className="flex space-x-2">
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleUpdatePoint(point.id, editTitle, editNote)}
+                  >
+                    Salva
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="destructive"
+                    onClick={() => deleteMapPoint(point.id)}
+                  >
+                    Elimina
+                  </Button>
+                </div>
+              </div>
+            </Popup>
+          )}
+        </Marker>
+      ))}
+
+      {/* New point being added */}
       {newPoint && (
         <Marker 
-          position={[newPoint.lat, newPoint.lng]} 
-          icon={newPointIcon}
-          pane="markerPane"
+          position={[newPoint.lat, newPoint.lng]}
+          icon={L.divIcon({
+            className: 'map-point-marker',
+            html: `<div style="width: 10px; height: 10px; background-color: #00f0ff; border-radius: 50%;"></div>`,
+            iconSize: [10, 10],
+            iconAnchor: [5, 5]
+          })}
         >
-          <Popup
-            closeButton={false}
-            autoClose={false}
-            closeOnClick={false}
-            closeOnEscapeKey={false}
-            autoPan={true}
-            className="point-popup"
-          >
-            <MapPointPopup
-              point={newPoint}
-              isNew={true}
-              onSave={handleSaveNewPoint}
-              onCancel={handleCancelNewPoint}
-            />
+          <Popup onClose={handleCancelNewPoint} autoPan>
+            <div className="p-2 space-y-2">
+              <Input 
+                value={title} 
+                onChange={e => setTitle(e.target.value)} 
+                placeholder="Titolo punto" 
+                className="mb-2"
+              />
+              <Textarea 
+                value={note} 
+                onChange={e => setNote(e.target.value)}
+                placeholder="Note aggiuntive"
+                className="mb-2"
+                rows={3}
+              />
+              <div className="flex space-x-2">
+                <Button 
+                  size="sm" 
+                  onClick={() => handleSaveNewPoint(title, note)}
+                >
+                  Salva
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={handleCancelNewPoint}
+                >
+                  Annulla
+                </Button>
+              </div>
+            </div>
           </Popup>
         </Marker>
       )}
