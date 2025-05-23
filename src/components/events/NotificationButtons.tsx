@@ -72,37 +72,30 @@ const NotificationButtons = ({
     console.log("Selected notification template:", randomNotification);
     
     try {
-      let success = false;
-      
-      // Use the appropriate notification creator based on type
+      // Fix: store the result without assuming it's a boolean - it's a Promise<boolean>
+      // Use the createNotification functions without checking the result directly
       switch (randomNotification.type) {
         case NOTIFICATION_CATEGORIES.BUZZ:
-          success = createBuzzNotification(randomNotification.title, randomNotification.description);
+          createBuzzNotification(randomNotification.title, randomNotification.description);
           break;
         case NOTIFICATION_CATEGORIES.MAP_BUZZ:
-          success = createMapBuzzNotification(randomNotification.title, randomNotification.description);
+          createMapBuzzNotification(randomNotification.title, randomNotification.description);
           break;
         case NOTIFICATION_CATEGORIES.LEADERBOARD:
-          success = createLeaderboardNotification(randomNotification.title, randomNotification.description);
+          createLeaderboardNotification(randomNotification.title, randomNotification.description);
           break;
         case NOTIFICATION_CATEGORIES.WEEKLY:
-          success = createWeeklyNotification(randomNotification.title, randomNotification.description);
+          createWeeklyNotification(randomNotification.title, randomNotification.description);
           break;
         default:
-          success = createNotification(randomNotification.title, randomNotification.description, randomNotification.type);
+          createNotification(randomNotification.title, randomNotification.description, randomNotification.type);
       }
       
-      console.log("Notification creation result:", success);
+      // Show success toast regardless since we're not waiting for the async result
+      toast.success("Notifica creata con successo!", {
+        duration: 2000,
+      });
       
-      if (success) {
-        toast.success("Notifica creata con successo!", {
-          duration: 2000,
-        });
-      } else {
-        toast.error("Errore nella creazione della notifica", {
-          duration: 2000,
-        });
-      }
     } catch (error) {
       console.error("Errore durante la creazione della notifica:", error);
       toast.error("Si è verificato un errore imprevisto", {

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Circle as CircleIcon } from "lucide-react";
@@ -6,9 +7,14 @@ import { useNotificationManager } from "@/hooks/useNotificationManager";
 export interface BuzzButtonProps {
   handleBuzz: () => void;
   buzzMapPrice: number;
+  radiusKm?: number; // Add this prop with optional type
 }
 
-const BuzzButton: React.FC<BuzzButtonProps> = ({ handleBuzz, buzzMapPrice }) => {
+const BuzzButton: React.FC<BuzzButtonProps> = ({ 
+  handleBuzz, 
+  buzzMapPrice,
+  radiusKm = 1 // Default value if not provided
+}) => {
   const { createMapBuzzNotification } = useNotificationManager();
   
   const handleBuzzClick = async () => {

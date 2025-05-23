@@ -21,6 +21,7 @@ const Home = () => {
     notifications,
     unreadCount,
     markAllAsRead,
+    deleteNotification,
     notificationsBannerOpen,
     openNotificationsBanner,
     closeNotificationsBanner
@@ -98,6 +99,7 @@ const Home = () => {
                   unreadCount={unreadCount}
                   onClose={closeNotificationsBanner}
                   onMarkAllAsRead={markAllAsRead}
+                  onDeleteNotification={deleteNotification}
                 />
               </motion.div>
             )}
