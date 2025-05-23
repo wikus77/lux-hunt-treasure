@@ -36,6 +36,12 @@ const MapEventHandler = ({
 }) => {
   const map = useMapEvents({
     click: (e) => {
+      console.log("MAP CLICK DETECTED", { 
+        isAddingSearchArea, 
+        isAddingMapPoint, 
+        coords: [e.latlng.lat, e.latlng.lng] 
+      });
+      
       if (isAddingSearchArea) {
         console.log("MAP CLICKED FOR SEARCH AREA", e.latlng);
         
@@ -51,6 +57,7 @@ const MapEventHandler = ({
         handleMapClickArea(simulatedGoogleMapEvent);
       } else if (isAddingMapPoint) {
         console.log("MAP CLICKED FOR MAP POINT", e.latlng);
+        // This is the critical function call that handles adding a new point
         onMapPointClick(e.latlng.lat, e.latlng.lng);
       }
     }
@@ -82,8 +89,26 @@ const MapEventHandler = ({
       }
     }, 0);
     
+    // Force cursor update to all leaflet containers
+    document.querySelectorAll('.leaflet-container').forEach(container => {
+      if (container instanceof HTMLElement) {
+        if (isAddingSearchArea || isAddingMapPoint) {
+          container.style.cursor = 'crosshair';
+        } else {
+          container.style.cursor = 'grab';
+        }
+      }
+    });
+    
     return () => {
-      if (map) mapContainer.style.cursor = 'grab';
+      if (map) {
+        mapContainer.style.cursor = 'grab';
+        document.querySelectorAll('.leaflet-container').forEach(container => {
+          if (container instanceof HTMLElement) {
+            container.style.cursor = 'grab';
+          }
+        });
+      }
     };
   }, [isAddingSearchArea, isAddingMapPoint, map]);
   
@@ -150,6 +175,8 @@ const MapLogicProvider = () => {
   // Handle map point click when adding a new point
   const handleMapPointClick = (lat, lng) => {
     console.log("Map point click detected at:", lat, lng);
+    
+    // Create a new point and set it in state
     setNewPoint({
       id: 'new',
       lat,
@@ -158,11 +185,12 @@ const MapLogicProvider = () => {
       note: '',
       position: { lat, lng }
     });
+    
+    // Disable adding map point mode after placing the point
     setIsAddingMapPoint(false);
     
     // Change cursor back to grab after adding a point
-    const mapContainers = document.querySelectorAll('.leaflet-container');
-    mapContainers.forEach(container => {
+    document.querySelectorAll('.leaflet-container').forEach(container => {
       if (container instanceof HTMLElement) {
         container.style.cursor = 'grab';
       }
@@ -175,26 +203,51 @@ const MapLogicProvider = () => {
 
   // Handle save of new map point
   const handleSaveNewPoint = async (title, note) => {
+    console.log("Tentativo di salvare il nuovo punto con titolo:", title);
     if (newPoint) {
-      console.log("Salvando nuovo punto con titolo:", title);
-      await addMapPoint({
-        lat: newPoint.lat,
-        lng: newPoint.lng,
-        title,
-        note
-      });
-      setNewPoint(null);
+      console.log("Salvando nuovo punto con titolo:", title, "e coordinate:", newPoint.lat, newPoint.lng);
+      try {
+        const pointId = await addMapPoint({
+          lat: newPoint.lat,
+          lng: newPoint.lng,
+          title,
+          note
+        });
+        console.log("Punto salvato con successo, ID:", pointId);
+        setNewPoint(null);
+        toast.success("Punto di interesse salvato");
+      } catch (error) {
+        console.error("Errore nel salvare il punto:", error);
+        toast.error("Errore nel salvare il punto. Riprova.");
+      }
+    } else {
+      console.error("Tentativo di salvare un punto inesistente");
+      toast.error("Errore: punto non disponibile");
     }
   };
 
   // Handle update of existing map point
   const handleUpdatePoint = async (id, title, note) => {
-    await updateMapPoint(id, { title, note });
-    setActiveMapPoint(null);
+    console.log("Aggiornamento punto esistente:", id, title, note);
+    try {
+      const success = await updateMapPoint(id, { title, note });
+      if (success) {
+        console.log("Punto aggiornato con successo");
+        setActiveMapPoint(null);
+        toast.success("Punto di interesse aggiornato");
+      } else {
+        console.error("Errore nell'aggiornare il punto");
+        toast.error("Errore nell'aggiornare il punto");
+      }
+    } catch (error) {
+      console.error("Errore nell'aggiornamento del punto:", error);
+      toast.error("Errore nell'aggiornare il punto");
+    }
   };
 
   // Handle cancel of new point
   const handleCancelNewPoint = () => {
+    console.log("Annullamento aggiunta nuovo punto");
     setNewPoint(null);
     toast.info('Aggiunta punto annullata');
   };

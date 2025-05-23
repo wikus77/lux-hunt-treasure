@@ -27,10 +27,13 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
   // Effect to focus on title input when popup opens
   useEffect(() => {
     if (isNew && inputRef.current) {
+      // Ensure the popup is fully rendered and then focus
       setTimeout(() => {
-        inputRef.current?.focus();
-        console.log("Auto-focusing title field");
-      }, 100); // Small delay to ensure popup is fully rendered
+        if (inputRef.current) {
+          console.log("Auto-focusing title field");
+          inputRef.current.focus();
+        }
+      }, 100);
     }
   }, [isNew]);
   
