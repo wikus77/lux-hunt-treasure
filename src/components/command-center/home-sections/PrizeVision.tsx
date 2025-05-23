@@ -35,11 +35,11 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
       </div>
       
       <div className="relative h-48 sm:h-56 md:h-64">
-        {/* Blurred prize image */}
+        {/* Updated prize image with the new car covered by cloth on red carpet */}
         <div 
           className="w-full h-full bg-center bg-cover transition-all duration-700"
           style={{ 
-            backgroundImage: "url('/assets/prize-placeholder.jpg')", 
+            backgroundImage: "url('/lovable-uploads/4c6e1a87-13cd-49d8-89dc-83704f46ebd5.png')", 
             filter: getBlurLevel(),
             backgroundPosition: "center",
           }}
