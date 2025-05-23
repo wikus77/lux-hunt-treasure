@@ -1,4 +1,3 @@
-
 import { HelpCircle, Zap } from "lucide-react";
 import M1ssionText from "@/components/logo/M1ssionText";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -19,7 +18,6 @@ const MapHeader = ({
 
   return (
     <>
-      {/* Main Header - Similar structure to other pages */}
       <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-black/40 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-2 sm:px-4">
           <div className="flex items-center justify-between h-14 sm:h-16">
@@ -27,12 +25,10 @@ const MapHeader = ({
               <M1ssionText />
             </div>
 
-            {/* Center section with agent badge - visible on all screen sizes */}
             <div className="flex items-center justify-center">
               <AgentBadge />
             </div>
             
-            {/* Right side actions */}
             <div className="flex items-center gap-2">
               <button
                 onClick={onHelp}
@@ -52,7 +48,6 @@ const MapHeader = ({
             </div>
           </div>
           
-          {/* Line glow effect */}
           <div className="line-glow"></div>
         </div>
       </header>

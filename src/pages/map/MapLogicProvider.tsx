@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { toast } from 'sonner';
@@ -171,7 +170,7 @@ const MapLogicProvider = () => {
   }, [mapLoaded]);
   
   if (!mapLoaded) return <LoadingScreen />;
-
+  
   // TECHNICAL REPORT
   console.log("🧪 TECHNICAL REPORT - MAP SYSTEM STATUS:", {
     mapRef: mapRef.current ? "ACTIVE" : "NOT INITIALIZED",

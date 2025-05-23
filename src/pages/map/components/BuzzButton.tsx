@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Circle as CircleIcon } from "lucide-react";
 
-interface BuzzButtonProps {
+export interface BuzzButtonProps {
   handleBuzz: () => void;
   buzzMapPrice: number;
 }
