@@ -5,8 +5,7 @@ import {
   Home, 
   MapPin, 
   Circle, 
-  Trophy, 
-  Radar
+  AtSign
 } from "lucide-react";
 
 const BottomNavigation = () => {
@@ -71,10 +70,13 @@ const BottomNavigation = () => {
             className={`bottom-nav-item ${isActive('/leaderboard') ? 'active' : ''}`}
           >
             <div className="p-2">
-              <Trophy 
-                size={iconSize} 
-                color={isActive('/leaderboard') ? iconColor : undefined}
-                className={`transition-all ${isActive('/leaderboard') ? 'active-gradient-icon' : ''}`}
+              {/* Using sun icon to replace the Trophy for "Classifica" */}
+              <img 
+                src="/lovable-uploads/4d80134b-0da5-47d5-9ffb-ac076ddbf6e0.png" 
+                alt="Classifica"
+                width={iconSize}
+                height={iconSize}
+                className={`transition-all ${isActive('/leaderboard') ? 'brightness-125 filter drop-shadow-[0_0_4px_#00D1FF]' : 'filter brightness-90'}`}
               />
             </div>
             <span className="text-xs">Classifica</span>
@@ -85,7 +87,8 @@ const BottomNavigation = () => {
             className={`bottom-nav-item ${isActive('/notifications') ? 'active' : ''}`}
           >
             <div className="p-2">
-              <Radar 
+              {/* Replacing Radar icon with AtSign icon from lucide-react */}
+              <AtSign 
                 size={iconSize} 
                 color={isActive('/notifications') ? iconColor : undefined}
                 className={`transition-all ${isActive('/notifications') ? 'active-gradient-icon' : ''}`}
