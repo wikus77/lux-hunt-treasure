@@ -20,7 +20,7 @@ const BottomNavigation = () => {
 
   return (
     <motion.div 
-      className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-[#070818] border-t border-[#131524] px-3"
+      className="fixed bottom-0 left-0 right-0 z-50 h-16 backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 border-t border-white/10 px-3"
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
@@ -30,7 +30,7 @@ const BottomNavigation = () => {
           <Link
             key={link.path}
             to={link.path}
-            className={`relative flex flex-col items-center justify-center w-16 h-16 ${
+            className={`relative flex flex-col items-center justify-center w-16 h-16 transition-colors ${
               currentPath === link.path
                 ? "text-[#00D1FF]"
                 : "text-gray-400 hover:text-gray-300"
@@ -39,7 +39,7 @@ const BottomNavigation = () => {
             <div className="relative">
               {link.icon}
               {link.badge && (
-                <div className="absolute -top-1 -right-1 flex items-center justify-center h-4 w-4 bg-[#FF59F8] rounded-full animate-pulse">
+                <div className="absolute -top-1 -right-1 flex items-center justify-center h-4 w-4 bg-[#FF59F8] rounded-full animate-pulse shadow-[0_0_8px_rgba(240,89,255,0.5)]">
                   <span className="text-[8px] font-bold text-white">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
@@ -53,11 +53,17 @@ const BottomNavigation = () => {
                 layoutId="navigation-underline"
                 initial={false}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                style={{ 
+                  boxShadow: "0 0 8px rgba(0, 209, 255, 0.5)" 
+                }}
               />
             )}
           </Link>
         ))}
       </div>
+      
+      {/* Add the horizontal line glow effect matching the header */}
+      <div className="line-glow absolute top-0 left-0 w-full"></div>
     </motion.div>
   );
 };

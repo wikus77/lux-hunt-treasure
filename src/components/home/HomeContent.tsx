@@ -27,7 +27,7 @@ export default function HomeContent() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
-          className="space-y-6 pb-12"
+          className="space-y-6 pb-20" // Increased padding at bottom to account for navigation
         >
           {/* Dark Zone Title */}
           <DarkZoneTitle />

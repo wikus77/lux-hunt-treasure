@@ -26,7 +26,7 @@ const HomeLayout: React.FC<HomeLayoutProps> = ({
   } = useNotificationManager();
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-black text-white relative overflow-x-hidden pb-16">
       <CookiebotInit />
       <div className="relative z-20">
         {notificationsBannerOpen && (
@@ -49,6 +49,9 @@ const HomeLayout: React.FC<HomeLayoutProps> = ({
         )}
         {children}
       </div>
+      
+      {/* Bottom Navigation */}
+      <BottomNavigation />
     </div>
   );
 };
