@@ -70,9 +70,8 @@ const BottomNavigation = () => {
             className={`bottom-nav-item ${isActive('/leaderboard') ? 'active' : ''}`}
           >
             <div className="p-2">
-              {/* Replacing existing icon with the newly uploaded image */}
               <img 
-                src="/lovable-uploads/5167893b-894b-4eab-84c7-b04875e02832.png" 
+                src="/lovable-uploads/97d29c7a-1c8b-40f7-a171-1bcbbbbedc40.png" 
                 alt="Classifica"
                 width={iconSize}
                 height={iconSize}
