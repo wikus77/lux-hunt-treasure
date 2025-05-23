@@ -7,7 +7,7 @@ import { useNotificationManager } from "@/hooks/useNotificationManager";
 export interface BuzzButtonProps {
   handleBuzz: () => void;
   buzzMapPrice: number;
-  radiusKm?: number; // Add this prop with optional type
+  radiusKm?: number; // Optional radius parameter
 }
 
 const BuzzButton: React.FC<BuzzButtonProps> = ({ 
@@ -18,13 +18,19 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const { createMapBuzzNotification } = useNotificationManager();
   
   const handleBuzzClick = async () => {
+    // Execute the main buzz function
     handleBuzz();
     
-    // Add notification for Map Buzz action
-    createMapBuzzNotification(
-      "Mappa generata con BUZZ", 
-      `Area di raggio ${radiusKm}km creata con successo.`
-    );
+    // Create a notification and ensure it's created successfully
+    try {
+      await createMapBuzzNotification(
+        "Mappa generata con BUZZ", 
+        `Area di raggio ${radiusKm}km creata con successo.`
+      );
+      console.log("Map Buzz notification created successfully");
+    } catch (error) {
+      console.error("Failed to create Map Buzz notification:", error);
+    }
   };
   
   return (

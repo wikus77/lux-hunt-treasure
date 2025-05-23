@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
 import useBuzzSound from "@/hooks/useBuzzSound";
@@ -8,6 +8,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useBuzzUiState } from "@/hooks/buzz/useBuzzUiState";
 import { useBuzzNavigation } from "@/hooks/buzz/useBuzzNavigation";
 import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
+import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useBuzzFeature() {
@@ -19,6 +20,7 @@ export function useBuzzFeature() {
   const { hasPaymentMethod, savePaymentMethod } = useHasPaymentMethod();
   const { initializeSound, playSound } = useBuzzSound();
   const { addNotification, reloadNotifications } = useNotifications();
+  const { createBuzzNotification } = useNotificationManager();
   const { callBuzzApi } = useBuzzApi();
 
   const {
@@ -30,14 +32,27 @@ export function useBuzzFeature() {
     getNextVagueClue
   } = useBuzzClues();
 
+  // Cache for frequently used values
+  const [cachedUserId, setCachedUserId] = useState<string | null>(null);
+
+  // Optimize initial loading
   useEffect(() => {
+    // Prefetch user ID for quick access later
+    const prefetchUserId = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.user?.id) {
+        setCachedUserId(sessionData.session.user.id);
+      }
+    };
+
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
     const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
-    try {
-      initializeSound(soundPreference, volume);
-    } catch (error) {
-      // Can ignore
-    }
+    
+    // Run in parallel
+    Promise.all([
+      prefetchUserId(),
+      initializeSound(soundPreference, volume)
+    ]).catch(error => console.error("Error during initialization:", error));
     
     // Only handle payment completed from location state
     if (location.state?.paymentCompleted && location.state?.fromRegularBuzz) {
@@ -46,10 +61,9 @@ export function useBuzzFeature() {
         // Show explosion animation
         setShowExplosion(true);
       } catch (error) {
-        // Ignore
+        console.error("Error handling payment completion:", error);
       }
     }
-    // eslint-disable-next-line
   }, [location.state, savePaymentMethod, navigate, initializeSound]);
 
   const handleBuzzClick = async () => {
@@ -60,8 +74,7 @@ export function useBuzzFeature() {
     
     // If user is authenticated, call the Edge Function directly
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
+      const userId = cachedUserId || (await supabase.auth.getUser()).data.session?.user?.id;
       
       if (!userId) {
         toast.error("Devi effettuare l'accesso per utilizzare questa funzione");
@@ -82,13 +95,11 @@ export function useBuzzFeature() {
       setTimeout(() => {
         setShowDialog(false);
         
-        // Add notification for the new clue
-        const success = addNotification({
-          title: "Nuovo Indizio Buzz!",
-          description: response.clue_text || ""
-        });
-        
-        if (success) {
+        // Create notification for the new clue
+        createBuzzNotification(
+          "Nuovo Indizio Buzz!", 
+          response.clue_text || "Hai sbloccato un nuovo indizio!"
+        ).then(() => {
           // Reload notifications to update the counter
           reloadNotifications();
           
@@ -99,11 +110,12 @@ export function useBuzzFeature() {
           
           // Show explosion animation
           setShowExplosion(true);
-        } else {
+        }).catch(error => {
+          console.error("Error creating notification:", error);
           toast.error("Errore nel salvataggio dell'indizio", {
             duration: 3000,
           });
-        }
+        });
       }, 1500);
     } catch (error) {
       console.error("Error in buzz process:", error);
@@ -117,8 +129,7 @@ export function useBuzzFeature() {
     playSound();
     
     // Try to get authenticated user
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData?.session?.user?.id;
+    const userId = cachedUserId || (await supabase.auth.getUser()).data.session?.user?.id;
     
     if (!userId) {
       toast.error("Devi effettuare l'accesso per utilizzare questa funzione");
@@ -145,13 +156,11 @@ export function useBuzzFeature() {
       // Increase unlocked clue count and show explosion/animation
       incrementUnlockedCluesAndAddClue();
       
-      // Add notification for the new clue
-      const success = addNotification({
-        title: "Nuovo Indizio Extra!",
-        description: newClue
-      });
-      
-      if (success) {
+      // Create notification for the new clue
+      createBuzzNotification(
+        "Nuovo Indizio Extra!", 
+        newClue
+      ).then(() => {
         // Reload notifications to update the counter
         reloadNotifications();
         
@@ -163,12 +172,13 @@ export function useBuzzFeature() {
         // Hide dialog and show explosion
         setShowDialog(false);
         setShowExplosion(true);
-      } else {
+      }).catch(error => {
+        console.error("Error creating notification:", error);
         toast.error("Errore nel salvataggio dell'indizio", {
           duration: 3000,
         });
         setShowDialog(false);
-      }
+      });
     } catch (error) {
       console.error("Error in handle clue button click:", error);
       toast.error("Si è verificato un errore");
@@ -180,7 +190,7 @@ export function useBuzzFeature() {
     setShowDialog(false);
     setTimeout(() => {
       navigateToPaymentMethods(getNextVagueClue());
-    }, 1200);
+    }, 400); // Reduced the delay for better responsiveness
   };
 
   const handleExplosionCompletedCallback = () => {

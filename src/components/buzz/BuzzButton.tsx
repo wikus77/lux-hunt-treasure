@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
+import { useNotificationManager } from "@/hooks/useNotificationManager";
 
 interface BuzzButtonProps {
   isLoading: boolean;
@@ -21,6 +22,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   onSuccess
 }) => {
   const { callBuzzApi } = useBuzzApi();
+  const { createBuzzNotification } = useNotificationManager();
 
   const handleBuzzPress = async () => {
     if (isLoading || !userId) return;
@@ -35,9 +37,22 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       });
       
       if (response.success) {
+        // Create toast notification
         toast.success("Nuovo indizio sbloccato!", {
           description: response.clue_text,
         });
+        
+        // Create app notification in the BUZZ category
+        try {
+          await createBuzzNotification(
+            "Nuovo Indizio Buzz", 
+            response.clue_text || "Hai sbloccato un nuovo indizio!"
+          );
+          console.log("Buzz notification created successfully");
+        } catch (notifError) {
+          console.error("Failed to create Buzz notification:", notifError);
+        }
+        
         onSuccess();
       } else {
         setError(response.error || "Errore sconosciuto");

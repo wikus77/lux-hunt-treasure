@@ -1,8 +1,8 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useProfileNotifications } from "@/hooks/profile/useProfileNotifications";
 import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
-import { toast } from "sonner"; // Use sonner toast consistently
+import { toast } from "sonner";
 
 export function useNotificationManager() {
   const { showNotifications, setShowNotifications } = useProfileNotifications();
@@ -17,10 +17,35 @@ export function useNotificationManager() {
   } = useNotifications();
   
   const [notificationsBannerOpen, setNotificationsBannerOpen] = useState(false);
-
-  // Update notifications on mount and when showNotifications changes
+  
+  // Add a polling mechanism for notifications with debounce logic
+  const pollingIntervalRef = useRef<number | null>(null);
+  
+  // Setup notification polling - check every 30 seconds for new notifications
   useEffect(() => {
-    reloadNotifications();
+    const startPolling = () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+      
+      // Poll every 30 seconds
+      pollingIntervalRef.current = window.setInterval(() => {
+        console.log('Polling for new notifications...');
+        reloadNotifications();
+      }, 30000) as unknown as number;
+    };
+    
+    // Initial load
+    reloadNotifications().then(() => {
+      console.log('Initial notifications loaded');
+      startPolling();
+    });
+    
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
   }, [reloadNotifications]);
 
   // Handle opening notifications banner
@@ -37,13 +62,20 @@ export function useNotificationManager() {
   // Handle opening notifications drawer
   const openNotificationsDrawer = useCallback(() => {
     setShowNotifications(true);
-    reloadNotifications();
+    // Force reload notifications when drawer is opened
+    reloadNotifications().then(() => {
+      console.log('Notifications reloaded on drawer open');
+    });
   }, [setShowNotifications, reloadNotifications]);
 
   // Handle closing notifications drawer
   const closeNotificationsDrawer = useCallback(() => {
     setShowNotifications(false);
-  }, [setShowNotifications]);
+    // Mark notifications as read when drawer is closed
+    markAllAsRead().then(() => {
+      console.log('All notifications marked as read on drawer close');
+    });
+  }, [setShowNotifications, markAllAsRead]);
 
   // Create notification with proper type checking and categorization
   const createNotification = useCallback(async (title: string, description: string, type = NOTIFICATION_CATEGORIES.GENERIC) => {
@@ -66,12 +98,14 @@ export function useNotificationManager() {
         console.error("Failed to create notification");
       }
       
+      // Force reload notifications after creating a new one
+      await reloadNotifications();
       return result;
     } catch (error) {
       console.error("Error creating notification:", error);
       return false;
     }
-  }, [addNotification]);
+  }, [addNotification, reloadNotifications]);
 
   // Create BUZZ notification
   const createBuzzNotification = useCallback(async (title: string, description: string) => {

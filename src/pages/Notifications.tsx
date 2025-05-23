@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -11,6 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import NotificationDialog from "@/components/notifications/NotificationDialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 const categoryConfig = [
   { 
@@ -47,16 +48,46 @@ const Notifications = () => {
   const isMobile = useIsMobile();
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
 
+  // Group notifications by category
+  const notificationsByCategory = useMemo(() => {
+    const result = categoryConfig.reduce((acc, category) => {
+      const categoryNotifications = notifications.filter(n => n.type === category.id);
+      if (categoryNotifications.length > 0) {
+        acc[category.id] = categoryNotifications;
+      }
+      return acc;
+    }, {} as Record<string, typeof notifications>);
+
+    // Add uncategorized notifications to "generic"
+    const uncategorized = notifications.filter(n => !n.type || !Object.values(NOTIFICATION_CATEGORIES).includes(n.type));
+    if (uncategorized.length > 0) {
+      if (result[NOTIFICATION_CATEGORIES.GENERIC]) {
+        result[NOTIFICATION_CATEGORIES.GENERIC] = [
+          ...result[NOTIFICATION_CATEGORIES.GENERIC],
+          ...uncategorized
+        ];
+      } else {
+        result[NOTIFICATION_CATEGORIES.GENERIC] = uncategorized;
+      }
+    }
+
+    return result;
+  }, [notifications]);
+
   useEffect(() => {
     // Force reload notifications when the page loads
-    reloadNotifications().then(() => {
+    const loadData = async () => {
+      await reloadNotifications();
       setIsLoaded(true);
       // Mark all notifications as read when this page loads
-      markAllAsRead();
-    });
+      await markAllAsRead();
+      
+      // Initialize with all categories that have notifications expanded
+      const categoriesToExpand = Object.keys(notificationsByCategory);
+      setExpandedCategories(categoriesToExpand);
+    };
     
-    // Initialize with all categories expanded
-    setExpandedCategories(categoryConfig.map(cat => cat.id));
+    loadData();
   }, [markAllAsRead, reloadNotifications]);
 
   const toggleCategory = (categoryId: string) => {
@@ -67,32 +98,16 @@ const Notifications = () => {
     );
   };
 
-  const handleDeleteNotification = (id: string) => {
-    deleteNotification(id);
-    toast.success("Notifica eliminata");
+  const handleDeleteNotification = async (id: string) => {
+    const success = await deleteNotification(id);
+    if (success) {
+      toast.success("Notifica eliminata");
+    }
   };
 
-  // Group notifications by category
-  const notificationsByCategory = categoryConfig.reduce((acc, category) => {
-    const categoryNotifications = notifications.filter(n => n.type === category.id);
-    if (categoryNotifications.length > 0) {
-      acc[category.id] = categoryNotifications;
-    }
-    return acc;
-  }, {} as Record<string, typeof notifications>);
-
-  // Add uncategorized notifications to "generic"
-  const uncategorized = notifications.filter(n => !n.type || !Object.values(NOTIFICATION_CATEGORIES).includes(n.type));
-  if (uncategorized.length > 0) {
-    if (notificationsByCategory[NOTIFICATION_CATEGORIES.GENERIC]) {
-      notificationsByCategory[NOTIFICATION_CATEGORIES.GENERIC] = [
-        ...notificationsByCategory[NOTIFICATION_CATEGORIES.GENERIC],
-        ...uncategorized
-      ];
-    } else {
-      notificationsByCategory[NOTIFICATION_CATEGORIES.GENERIC] = uncategorized;
-    }
-  }
+  const handleOpen = (notification: any) => {
+    setSelectedNotification(notification);
+  };
 
   return (
     <div className="min-h-screen bg-[#070818] pb-20 w-full">
@@ -127,39 +142,56 @@ const Notifications = () => {
                     const categoryNotifs = notificationsByCategory[category.id];
                     if (!categoryNotifs || categoryNotifs.length === 0) return null;
                     
+                    const unreadInCategory = categoryNotifs.filter(n => !n.read).length;
+                    
                     return (
                       <AccordionItem 
                         key={category.id} 
                         value={category.id}
-                        className="border border-white/10 rounded-lg bg-black/30 overflow-hidden"
+                        className="border border-[#00D1FF]/20 rounded-[24px] bg-black/80 overflow-hidden shadow-lg hover:shadow-[0_0_15px_rgba(0,209,255,0.2)]"
                       >
                         <AccordionTrigger 
-                          onClick={() => toggleCategory(category.id)}
-                          className="px-4 py-3 hover:no-underline hover:bg-white/5"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleCategory(category.id);
+                          }}
+                          className="px-4 py-4 hover:no-underline hover:bg-white/5 data-[state=open]:bg-[#00D1FF]/5"
                         >
                           <div className="flex items-center gap-3">
                             {category.icon}
                             <span className="text-white font-medium">{category.name}</span>
-                            <span className="bg-[#00D1FF]/20 text-[#00D1FF] text-xs px-2 py-0.5 rounded-full">
+                            <Badge 
+                              className="bg-[#00D1FF]/20 text-[#00D1FF] hover:bg-[#00D1FF]/30 ml-2"
+                            >
                               {categoryNotifs.length}
-                            </span>
+                            </Badge>
+                            {unreadInCategory > 0 && (
+                              <div className="h-2 w-2 rounded-full bg-[#FF59F8] animate-pulse ml-1"></div>
+                            )}
                           </div>
                         </AccordionTrigger>
-                        <AccordionContent className="bg-black/10 p-3">
+                        <AccordionContent className="bg-black/30 px-4 py-3">
                           <div className="space-y-3">
                             {categoryNotifs
                               .sort((a, b) => (new Date(b.date).getTime() - new Date(a.date).getTime()))
                               .map(notification => (
                                 <div 
                                   key={notification.id} 
-                                  className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors relative"
+                                  className="p-4 rounded-[24px] border border-[#00D1FF]/10 hover:border-[#00D1FF]/30 bg-gradient-to-br from-black/90 to-[#131524]/80 hover:from-black hover:to-[#131524]/90 transition-all duration-200 shadow-md relative cursor-pointer"
+                                  onClick={() => handleOpen(notification)}
                                 >
                                   <div className="flex items-start gap-3">
                                     <div className="flex-shrink-0">
                                       {category.icon}
                                     </div>
                                     <div className="flex-1">
-                                      <h3 className="text-white font-medium">{notification.title}</h3>
+                                      <h3 className={`text-white font-medium ${!notification.read ? 'text-[#00D1FF]' : ''}`}>
+                                        {notification.title}
+                                        {!notification.read && (
+                                          <span className="inline-block h-2 w-2 rounded-full bg-[#FF59F8] ml-2 animate-pulse"></span>
+                                        )}
+                                      </h3>
                                       <p className="text-white/70 text-sm mt-1">{notification.description}</p>
                                       <div className="mt-1 text-xs text-white/40">
                                         {notification.date ? new Date(notification.date).toLocaleString() : "Ora"}
@@ -168,7 +200,10 @@ const Notifications = () => {
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => handleDeleteNotification(notification.id)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteNotification(notification.id);
+                                      }}
                                       className="p-1 h-auto rounded-full text-red-400 hover:text-red-300 hover:bg-red-900/20"
                                     >
                                       <Trash2 className="h-4 w-4" />
@@ -198,6 +233,12 @@ const Notifications = () => {
           </motion.div>
         </div>
       </div>
+      
+      <NotificationDialog
+        notification={selectedNotification}
+        open={!!selectedNotification}
+        onClose={() => setSelectedNotification(null)}
+      />
       
       <BottomNavigation />
     </div>

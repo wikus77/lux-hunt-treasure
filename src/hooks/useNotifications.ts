@@ -31,6 +31,7 @@ export const NOTIFICATION_CATEGORIES = {
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Funzione sicura per salvare le notifiche
   const saveNotifications = useCallback((notifs: Notification[]) => {
@@ -49,6 +50,8 @@ export function useNotifications() {
   const reloadNotifications = useCallback(async () => {
     try {
       console.log("Reloading notifications...");
+      setIsLoading(true);
+      
       // First try to get from local storage (for offline support)
       const stored = localStorage.getItem(STORAGE_KEY);
       let notifs: Notification[] = stored ? JSON.parse(stored) : [];
@@ -60,6 +63,7 @@ export function useNotifications() {
           .from('user_notifications')
           .select('*')
           .eq('is_deleted', false)
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false });
           
         if (error) {
@@ -84,11 +88,13 @@ export function useNotifications() {
       console.log("Loaded notifications:", notifs);
       setNotifications(notifs);
       setUnreadCount(notifs.filter(n => !n.read).length);
+      setIsLoading(false);
       return true;
     } catch (e) {
       console.error("Errore nel caricamento delle notifiche:", e);
       setNotifications([]);
       setUnreadCount(0);
+      setIsLoading(false);
       return false;
     }
   }, [saveNotifications]);
@@ -104,7 +110,8 @@ export function useNotifications() {
         const { error } = await supabase
           .from('user_notifications')
           .update({ is_read: true })
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .eq('is_deleted', false);
           
         if (error) {
           console.error("Error marking notifications as read in Supabase:", error);
@@ -140,13 +147,45 @@ export function useNotifications() {
     };
     window.addEventListener('storage', storageEvent);
 
-    // Iniziale
+    // Load on mount
     reloadNotifications();
 
     return () => {
       listeners = listeners.filter(fn => fn !== listener);
       window.removeEventListener('storage', storageEvent);
     };
+  }, [reloadNotifications]);
+
+  // Setup Supabase realtime subscription
+  useEffect(() => {
+    // Add realtime subscription for user_notifications table
+    const setupRealtimeSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const channel = supabase
+        .channel('notification-changes')
+        .on('postgres_changes', 
+            {
+              event: '*', 
+              schema: 'public', 
+              table: 'user_notifications',
+              filter: `user_id=eq.${user.id}`
+            }, 
+            (payload) => {
+              console.log('Realtime notification update:', payload);
+              // Reload notifications when changes are detected
+              reloadNotifications();
+            }
+        )
+        .subscribe();
+      
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+    
+    setupRealtimeSubscription();
   }, [reloadNotifications]);
 
   // Singola notifica come letta
@@ -254,23 +293,24 @@ export function useNotifications() {
         else if (data) {
           // Use the Supabase-generated ID instead
           newNotification.id = data.id;
+          console.log("Notification saved to Supabase with ID:", data.id);
         }
       }
       
-      // Ottieni prima le notifiche attuali per assicurarci di avere i dati più recenti
+      // Get current notifications to ensure we have the latest data
       const stored = localStorage.getItem(STORAGE_KEY);
       const currentNotifs: Notification[] = stored ? JSON.parse(stored) : [];
       
-      // Aggiungi la nuova notifica
+      // Add the new notification
       const updated = [...currentNotifs, newNotification];
       const saved = saveNotifications(updated);
       
       if (saved) {
-        // Aggiorna lo stato locale
+        // Update local state
         setNotifications(updated);
         setUnreadCount(prev => prev + 1);
         
-        // Notifica altri listener
+        // Notify other listeners
         listeners.forEach(fn => fn());
         console.log("Notification added successfully:", newNotification);
       }
@@ -290,6 +330,7 @@ export function useNotifications() {
   return {
     notifications,
     unreadCount,
+    isLoading,
     reloadNotifications,
     markAllAsRead,
     markAsRead,

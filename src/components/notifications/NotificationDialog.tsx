@@ -25,9 +25,9 @@ const NotificationDialog = ({ notification, open, onClose }: NotificationDialogP
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-black border border-projectx-blue">
+      <DialogContent className="max-w-md bg-black border border-[#00D1FF]/30 rounded-[24px] shadow-[0_0_20px_rgba(0,209,255,0.2)]">
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold text-white">
+          <DialogTitle className="text-lg font-bold text-[#00D1FF]" style={{ textShadow: "0 0 5px rgba(0, 209, 255, 0.3)" }}>
             {notification.title}
           </DialogTitle>
         </DialogHeader>
@@ -35,7 +35,7 @@ const NotificationDialog = ({ notification, open, onClose }: NotificationDialogP
           <p className="text-white/90 text-base leading-relaxed">
             {notification.description}
           </p>
-          <p className="text-sm text-muted-foreground mt-4">{formattedDate}</p>
+          <p className="text-sm text-[#00D1FF]/60 mt-4">{formattedDate}</p>
         </div>
       </DialogContent>
     </Dialog>
