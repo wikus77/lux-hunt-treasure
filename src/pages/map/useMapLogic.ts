@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useBuzzMapPricing } from './hooks/useBuzzMapPricing';
@@ -22,10 +23,12 @@ export const useMapLogic = () => {
     setMapPoints(prev =>
       prev.map(point => (point.id === id ? { ...point, ...updates } : point))
     );
+    return true; // Return boolean value to match expected type
   };
 
   const deleteMapPoint = async (id: string) => {
     setMapPoints(prev => prev.filter(point => point.id !== id));
+    return true; // Return boolean value to match expected type
   };
 
   const toggleAddingMapPoint = () => {
@@ -70,7 +73,7 @@ export const useMapLogic = () => {
         setIsAddingSearchArea(false);
         toast.success('Area di ricerca aggiunta!');
       } else {
-        toast.warn('Definisci prima il raggio di ricerca.');
+        toast.error('Definisci prima il raggio di ricerca.'); // Changed from warn to error
       }
     }
   };
