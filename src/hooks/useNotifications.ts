@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Tipizzazione
@@ -32,6 +32,9 @@ export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastReloadTimeRef = useRef<number>(0);
+  const isInitialLoadRef = useRef<boolean>(true);
 
   // Funzione sicura per salvare le notifiche
   const saveNotifications = useCallback((notifs: Notification[]) => {
@@ -46,11 +49,27 @@ export function useNotifications() {
     }
   }, []);
 
-  // Carica le notifiche da localStorage e/o Supabase
-  const reloadNotifications = useCallback(async () => {
+  // Carica le notifiche da localStorage e/o Supabase con rate limiting
+  const reloadNotifications = useCallback(async (force = false) => {
+    // Rate limiting: no more than one reload every 5 seconds unless forced
+    const now = Date.now();
+    if (!force && now - lastReloadTimeRef.current < 5000 && !isInitialLoadRef.current) {
+      console.log("Skipping reload due to rate limiting");
+      return true;
+    }
+    
     try {
       console.log("Reloading notifications...");
-      setIsLoading(true);
+      
+      // Only show loading state on initial load or if it's been more than 5 seconds since the last load
+      if (isInitialLoadRef.current || now - lastReloadTimeRef.current > 5000) {
+        setIsLoading(true);
+      }
+      
+      // Set a timeout to ensure loading state isn't shown too briefly (prevents flickering)
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
       
       // First try to get from local storage (for offline support)
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -88,7 +107,17 @@ export function useNotifications() {
       console.log("Loaded notifications:", notifs);
       setNotifications(notifs);
       setUnreadCount(notifs.filter(n => !n.read).length);
-      setIsLoading(false);
+      
+      // Use timeout to ensure loading state isn't toggled too quickly
+      loadingTimeoutRef.current = setTimeout(() => {
+        setIsLoading(false);
+        loadingTimeoutRef.current = null;
+      }, 300);
+      
+      // Update last reload time
+      lastReloadTimeRef.current = now;
+      isInitialLoadRef.current = false;
+      
       return true;
     } catch (e) {
       console.error("Errore nel caricamento delle notifiche:", e);
@@ -135,28 +164,44 @@ export function useNotifications() {
   }, [notifications, saveNotifications]);
 
   // Aggiorna in realtime se qualcuno chiama reload da altrove (es: altro tab o altra sezione)
+  // But limit how often we update to prevent flickering
   useEffect(() => {
-    const listener = () => reloadNotifications();
+    const listener = () => {
+      // Rate limiting for listener calls
+      const now = Date.now();
+      if (now - lastReloadTimeRef.current > 5000 || isInitialLoadRef.current) {
+        reloadNotifications();
+      }
+    };
     listeners.push(listener);
 
     // Eventuale cross-tab sync
     const storageEvent = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY) {
-        reloadNotifications();
+        // Rate limiting for storage events
+        const now = Date.now();
+        if (now - lastReloadTimeRef.current > 5000 || isInitialLoadRef.current) {
+          reloadNotifications();
+        }
       }
     };
     window.addEventListener('storage', storageEvent);
 
-    // Load on mount
-    reloadNotifications();
+    // Load on mount - initial load should always happen
+    if (isInitialLoadRef.current) {
+      reloadNotifications();
+    }
 
     return () => {
       listeners = listeners.filter(fn => fn !== listener);
       window.removeEventListener('storage', storageEvent);
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
     };
   }, [reloadNotifications]);
 
-  // Setup Supabase realtime subscription
+  // Setup Supabase realtime subscription - more efficient than polling
   useEffect(() => {
     // Add realtime subscription for user_notifications table
     const setupRealtimeSubscription = async () => {
@@ -174,8 +219,16 @@ export function useNotifications() {
             }, 
             (payload) => {
               console.log('Realtime notification update:', payload);
-              // Reload notifications when changes are detected
-              reloadNotifications();
+              // Don't reload instantly - use rate limiting to prevent flickering
+              const now = Date.now();
+              if (now - lastReloadTimeRef.current > 5000) {
+                reloadNotifications(true); // force reload on realtime event
+              } else {
+                // Schedule a reload after the rate limit expires
+                setTimeout(() => {
+                  reloadNotifications(true);
+                }, 5000 - (now - lastReloadTimeRef.current));
+              }
             }
         )
         .subscribe();

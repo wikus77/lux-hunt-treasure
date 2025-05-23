@@ -48,9 +48,9 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       <style>
         {`
         @keyframes buzzGlow {
-          0% { box-shadow: 0 0 7px rgba(255, 0, 204, 0.6); }
-          50% { box-shadow: 0 0 20px rgba(255, 0, 204, 0.8), 0 0 30px rgba(0, 207, 255, 0.4); }
-          100% { box-shadow: 0 0 7px rgba(255, 0, 204, 0.6); }
+          0% { box-shadow: 0 0 8px rgba(255, 0, 204, 0.66); }
+          50% { box-shadow: 0 0 22px rgba(255, 0, 204, 0.88), 0 0 33px rgba(0, 207, 255, 0.55); }
+          100% { box-shadow: 0 0 8px rgba(255, 0, 204, 0.66); }
         }
         `}
       </style>

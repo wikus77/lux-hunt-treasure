@@ -20,26 +20,30 @@ export function useNotificationManager() {
   
   // Add a polling mechanism for notifications with debounce logic
   const pollingIntervalRef = useRef<number | null>(null);
+  const isInitialLoadDone = useRef(false);
   
-  // Setup notification polling - check every 30 seconds for new notifications
+  // Setup notification polling - check every 60 seconds for new notifications (reduced frequency)
   useEffect(() => {
     const startPolling = () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
       
-      // Poll every 30 seconds
+      // Poll every 60 seconds instead of 30 seconds to reduce flickering
       pollingIntervalRef.current = window.setInterval(() => {
         console.log('Polling for new notifications...');
         reloadNotifications();
-      }, 30000) as unknown as number;
+      }, 60000) as unknown as number;
     };
     
-    // Initial load
-    reloadNotifications().then(() => {
-      console.log('Initial notifications loaded');
-      startPolling();
-    });
+    // Initial load - only if not done yet
+    if (!isInitialLoadDone.current) {
+      reloadNotifications().then(() => {
+        console.log('Initial notifications loaded');
+        isInitialLoadDone.current = true;
+        startPolling();
+      });
+    }
     
     return () => {
       if (pollingIntervalRef.current) {
@@ -51,8 +55,8 @@ export function useNotificationManager() {
   // Handle opening notifications banner
   const openNotificationsBanner = useCallback(() => {
     setNotificationsBannerOpen(true);
-    reloadNotifications();
-  }, [reloadNotifications]);
+    // We don't need to reload on every open - helps reduce flickering
+  }, []);
 
   // Handle closing notifications banner
   const closeNotificationsBanner = useCallback(() => {
@@ -62,10 +66,13 @@ export function useNotificationManager() {
   // Handle opening notifications drawer
   const openNotificationsDrawer = useCallback(() => {
     setShowNotifications(true);
-    // Force reload notifications when drawer is opened
-    reloadNotifications().then(() => {
-      console.log('Notifications reloaded on drawer open');
-    });
+    // Only reload if we haven't loaded recently
+    if (!isInitialLoadDone.current || Date.now() - (isInitialLoadDone.current as any) > 60000) {
+      reloadNotifications().then(() => {
+        console.log('Notifications reloaded on drawer open');
+        isInitialLoadDone.current = Date.now();
+      });
+    }
   }, [setShowNotifications, reloadNotifications]);
 
   // Handle closing notifications drawer
@@ -98,14 +105,15 @@ export function useNotificationManager() {
         console.error("Failed to create notification");
       }
       
-      // Force reload notifications after creating a new one
-      await reloadNotifications();
+      // Don't force reload notifications after creating a new one - this helps reduce flickering
+      // Instead, the polling system will pick up the new notification on its next run
+      
       return result;
     } catch (error) {
       console.error("Error creating notification:", error);
       return false;
     }
-  }, [addNotification, reloadNotifications]);
+  }, [addNotification]);
 
   // Create BUZZ notification
   const createBuzzNotification = useCallback(async (title: string, description: string) => {
@@ -126,6 +134,12 @@ export function useNotificationManager() {
   const createWeeklyNotification = useCallback(async (title: string, description: string) => {
     return await createNotification(title, description, NOTIFICATION_CATEGORIES.WEEKLY);
   }, [createNotification]);
+
+  // Manual reload function that can be called by components
+  const manualReload = useCallback(async () => {
+    console.log("Manual notification reload requested");
+    return await reloadNotifications();
+  }, [reloadNotifications]);
 
   return {
     // Notification data
@@ -154,6 +168,6 @@ export function useNotificationManager() {
     createLeaderboardNotification,
     createWeeklyNotification,
     
-    reloadNotifications
+    reloadNotifications: manualReload
   };
 }

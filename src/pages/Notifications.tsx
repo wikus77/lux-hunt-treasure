@@ -48,6 +48,7 @@ const Notifications = () => {
   const [selectedNotification, setSelectedNotification] = useState(null);
   const isMobile = useIsMobile();
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   // Group notifications by category
   const notificationsByCategory = useMemo(() => {
@@ -75,32 +76,37 @@ const Notifications = () => {
     return result;
   }, [notifications]);
 
-  // Load notifications when component mounts and start regular polling
+  // Load notifications when component mounts - fixed to avoid excessive reloading
   useEffect(() => {
     // Show page structure immediately
     setIsLoaded(true);
     
-    // Load notifications data
+    // Load notifications data only once on initial mount
     const loadData = async () => {
-      await reloadNotifications();
-      
-      // Mark all as read when this page is fully loaded
-      await markAllAsRead();
-      
-      // Initialize with categories that have notifications expanded
-      const categoriesToExpand = Object.keys(notificationsByCategory);
-      setExpandedCategories(categoriesToExpand);
+      if (!initialLoadComplete) {
+        await reloadNotifications();
+        
+        // Mark all as read when this page is fully loaded
+        await markAllAsRead();
+        
+        // Initialize with categories that have notifications expanded
+        const categoriesToExpand = Object.keys(notificationsByCategory);
+        setExpandedCategories(categoriesToExpand);
+        
+        // Mark initial load as complete
+        setInitialLoadComplete(true);
+      }
     };
     
     loadData();
     
-    // Set up polling for fresh notifications
+    // Remove the high-frequency polling and only check occasionally
     const refreshInterval = setInterval(() => {
       reloadNotifications();
-    }, 30000); // Poll every 30 seconds
+    }, 60000); // Poll only every minute instead of every second
     
     return () => clearInterval(refreshInterval);
-  }, [markAllAsRead, reloadNotifications]);
+  }, [markAllAsRead, reloadNotifications, initialLoadComplete, notificationsByCategory]);
 
   // Handle toggle of each notification category
   const toggleCategory = (categoryId: string) => {
@@ -120,6 +126,12 @@ const Notifications = () => {
 
   const handleOpen = (notification: any) => {
     setSelectedNotification(notification);
+  };
+
+  // Manual refresh function for user-triggered reloads
+  const handleManualRefresh = async () => {
+    await reloadNotifications();
+    toast.success("Notifiche aggiornate");
   };
 
   // Skeleton loader for notifications
@@ -162,8 +174,20 @@ const Notifications = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
+            <div className="flex justify-end mb-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleManualRefresh}
+                disabled={isLoading}
+                className="text-xs bg-[#131524]/30 hover:bg-[#131524]/50 border-[#00D1FF]/30"
+              >
+                Aggiorna notifiche
+              </Button>
+            </div>
+            
             <GradientBox className="p-5">
-              {isLoading ? (
+              {isLoading && !initialLoadComplete ? (
                 <NotificationSkeleton />
               ) : notifications && notifications.length > 0 ? (
                 <Accordion 
