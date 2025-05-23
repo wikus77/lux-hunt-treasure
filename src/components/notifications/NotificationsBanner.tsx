@@ -11,6 +11,7 @@ interface NotificationsBannerProps {
   unreadCount: number;
   onClose: () => void;
   onMarkAllAsRead: () => void;
+  onDeleteNotification: (id: string) => void;
 }
 
 const SWIPE_THRESHOLD = 64;
@@ -21,6 +22,7 @@ const NotificationsBanner: React.FC<NotificationsBannerProps> = ({
   unreadCount,
   onClose,
   onMarkAllAsRead,
+  onDeleteNotification
 }) => {
   const bannerRef = useRef<HTMLDivElement>(null);
   // swipe gesture state
@@ -122,6 +124,7 @@ const NotificationsBanner: React.FC<NotificationsBannerProps> = ({
                 key={notification.id} 
                 notification={notification} 
                 onSelect={() => handleSelectNotification(notification)}
+                onDelete={() => onDeleteNotification(notification.id)}
               />
             ))}
           </div>

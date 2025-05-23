@@ -2,13 +2,14 @@
 import { Bell, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useNotificationManager } from "@/hooks/useNotificationManager";
+import { NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
 
 interface NotificationButtonsProps {
   openNotificationsDrawer: () => void;
   isConnected: boolean;
   isSupported: boolean;
   permission: string;
-  createNotification: (title: string, description: string) => boolean;
   broadcastNotification: (title: string, description: string) => Promise<boolean>;
   onShowNotificationRequest: () => void;
   onResetClues: () => void;
@@ -19,31 +20,51 @@ const NotificationButtons = ({
   isConnected,
   isSupported,
   permission,
-  createNotification,
   broadcastNotification,
   onShowNotificationRequest,
   onResetClues
 }: NotificationButtonsProps) => {
+  const { 
+    createNotification, 
+    createBuzzNotification, 
+    createMapBuzzNotification,
+    createLeaderboardNotification,
+    createWeeklyNotification
+  } = useNotificationManager();
   
   const generateRandomNotification = () => {
     console.log("Generating random notification...");
     
     const notificationTemplates = [
       { 
+        type: NOTIFICATION_CATEGORIES.BUZZ,
         title: "Indizio Extra", 
         description: "Hai sbloccato un nuovo dettaglio sul mistero!" 
       },
       { 
+        type: NOTIFICATION_CATEGORIES.BUZZ,
         title: "Buzz Attivo", 
         description: "Un nuovo suggerimento è disponibile per te!" 
       },
       { 
+        type: NOTIFICATION_CATEGORIES.GENERIC,
         title: "Aggiornamento Evento", 
         description: "Nuove informazioni sono state aggiunte all'evento corrente." 
       },
       { 
+        type: NOTIFICATION_CATEGORIES.MAP_BUZZ,
         title: "Scoperta", 
         description: "Un nuovo elemento è stato rivelato nel tuo percorso investigativo." 
+      },
+      {
+        type: NOTIFICATION_CATEGORIES.LEADERBOARD,
+        title: "Aggiornamento Classifica",
+        description: "La tua posizione in classifica è cambiata! Controlla ora."
+      },
+      {
+        type: NOTIFICATION_CATEGORIES.WEEKLY,
+        title: "Riepilogo Settimanale",
+        description: "Ecco il riepilogo delle tue attività della settimana."
       }
     ];
 
@@ -51,7 +72,26 @@ const NotificationButtons = ({
     console.log("Selected notification template:", randomNotification);
     
     try {
-      const success = createNotification(randomNotification.title, randomNotification.description);
+      let success = false;
+      
+      // Use the appropriate notification creator based on type
+      switch (randomNotification.type) {
+        case NOTIFICATION_CATEGORIES.BUZZ:
+          success = createBuzzNotification(randomNotification.title, randomNotification.description);
+          break;
+        case NOTIFICATION_CATEGORIES.MAP_BUZZ:
+          success = createMapBuzzNotification(randomNotification.title, randomNotification.description);
+          break;
+        case NOTIFICATION_CATEGORIES.LEADERBOARD:
+          success = createLeaderboardNotification(randomNotification.title, randomNotification.description);
+          break;
+        case NOTIFICATION_CATEGORIES.WEEKLY:
+          success = createWeeklyNotification(randomNotification.title, randomNotification.description);
+          break;
+        default:
+          success = createNotification(randomNotification.title, randomNotification.description, randomNotification.type);
+      }
+      
       console.log("Notification creation result:", success);
       
       if (success) {

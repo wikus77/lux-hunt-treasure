@@ -3,9 +3,9 @@ import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import NotificationItem from "./NotificationItem";
 import NotificationDialog from "./NotificationDialog";
-import { Bell, MapPin, Car, Home, Briefcase, Wrench } from "lucide-react";
+import { Bell, MapPin, Car, Trophy, Circle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
 import type { Notification } from "@/hooks/useNotifications";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,29 +15,21 @@ interface NotificationsDrawerProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type NotificationCategory = "all" | "location" | "car" | "interior" | "exterior" | "equipment";
+type NotificationCategory = "all" | "leaderboard" | "buzz" | "map" | "weekly" | "generic";
+
+const categoryMapping = {
+  all: "",
+  leaderboard: NOTIFICATION_CATEGORIES.LEADERBOARD,
+  buzz: NOTIFICATION_CATEGORIES.BUZZ,
+  map: NOTIFICATION_CATEGORIES.MAP_BUZZ,
+  weekly: NOTIFICATION_CATEGORIES.WEEKLY,
+  generic: NOTIFICATION_CATEGORIES.GENERIC
+};
 
 const NotificationsDrawer = ({ open, onOpenChange }: NotificationsDrawerProps) => {
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [activeCategory, setActiveCategory] = useState<NotificationCategory>("all");
-  const { notifications, unreadCount, markAllAsRead, reloadNotifications } = useNotifications();
-
-  // Define category filters
-  const categoryFilters: Record<string, RegExp> = {
-    location: /luogo|posizione|dove|zona|area|quartiere|città|regione|coordinate/i,
-    car: /auto|veicolo|macchina|automobile|modello|marca|carrozzeria/i,
-    interior: /interni|sedili|cruscotto|abitacolo|stereo|console|volante/i,
-    exterior: /esterni|vernice|fari|paraurti|portiera|cofano|tetto|cerchi/i,
-    equipment: /equipaggiamento|accessori|optional|dotazione|strumento|navigatore|radio/i
-  };
-
-  // Filter notifications based on selected category
-  const filteredNotifications = activeCategory === "all" 
-    ? notifications 
-    : notifications.filter(notification => 
-        categoryFilters[activeCategory].test(notification.title) || 
-        categoryFilters[activeCategory].test(notification.description)
-      );
+  const { notifications, unreadCount, markAllAsRead, reloadNotifications, deleteNotification } = useNotifications();
 
   // Reload notifications when the drawer opens
   useEffect(() => {
@@ -56,6 +48,16 @@ const NotificationsDrawer = ({ open, onOpenChange }: NotificationsDrawerProps) =
     console.log("Selected notification:", notification);
     setSelectedNotification(notification);
   };
+
+  const handleDeleteNotification = (id: string) => {
+    console.log("Deleting notification:", id);
+    deleteNotification(id);
+  };
+
+  // Filter notifications based on selected category
+  const filteredNotifications = activeCategory === "all" 
+    ? notifications 
+    : notifications.filter(n => n.type === categoryMapping[activeCategory]);
 
   return (
     <>
@@ -83,25 +85,25 @@ const NotificationsDrawer = ({ open, onOpenChange }: NotificationsDrawerProps) =
                   <Bell className="h-3 w-3" />
                   <span className="sr-only sm:not-sr-only sm:ml-1">Tutti</span>
                 </TabsTrigger>
-                <TabsTrigger value="location" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
+                <TabsTrigger value="leaderboard" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
+                  <Trophy className="h-3 w-3" />
+                  <span className="sr-only sm:not-sr-only sm:ml-1">Classifica</span>
+                </TabsTrigger>
+                <TabsTrigger value="buzz" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
+                  <Circle className="h-3 w-3" />
+                  <span className="sr-only sm:not-sr-only sm:ml-1">Buzz</span>
+                </TabsTrigger>
+                <TabsTrigger value="map" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
                   <MapPin className="h-3 w-3" />
-                  <span className="sr-only sm:not-sr-only sm:ml-1">Luogo</span>
+                  <span className="sr-only sm:not-sr-only sm:ml-1">Mappa</span>
                 </TabsTrigger>
-                <TabsTrigger value="car" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
-                  <Car className="h-3 w-3" />
-                  <span className="sr-only sm:not-sr-only sm:ml-1">Auto</span>
+                <TabsTrigger value="weekly" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
+                  <Calendar className="h-3 w-3" />
+                  <span className="sr-only sm:not-sr-only sm:ml-1">Settimanale</span>
                 </TabsTrigger>
-                <TabsTrigger value="interior" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
-                  <Home className="h-3 w-3" />
-                  <span className="sr-only sm:not-sr-only sm:ml-1">Interni</span>
-                </TabsTrigger>
-                <TabsTrigger value="exterior" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
-                  <Briefcase className="h-3 w-3" />
-                  <span className="sr-only sm:not-sr-only sm:ml-1">Esterni</span>
-                </TabsTrigger>
-                <TabsTrigger value="equipment" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
-                  <Wrench className="h-3 w-3" />
-                  <span className="sr-only sm:not-sr-only sm:ml-1">Equip.</span>
+                <TabsTrigger value="generic" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
+                  <Bell className="h-3 w-3" />
+                  <span className="sr-only sm:not-sr-only sm:ml-1">Altre</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -119,6 +121,7 @@ const NotificationsDrawer = ({ open, onOpenChange }: NotificationsDrawerProps) =
                           key={notification.id}
                           notification={notification}
                           onSelect={() => handleSelectNotification(notification)}
+                          onDelete={() => handleDeleteNotification(notification.id)}
                         />
                       ))}
                   </div>

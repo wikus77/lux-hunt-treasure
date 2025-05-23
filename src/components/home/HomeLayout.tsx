@@ -22,6 +22,7 @@ const HomeLayout: React.FC<HomeLayoutProps> = ({
     notificationsBannerOpen,
     closeNotificationsBanner,
     markAllAsRead,
+    deleteNotification
   } = useNotificationManager();
 
   return (
@@ -42,6 +43,7 @@ const HomeLayout: React.FC<HomeLayoutProps> = ({
               unreadCount={unreadCount}
               onClose={closeNotificationsBanner}
               onMarkAllAsRead={markAllAsRead}
+              onDeleteNotification={deleteNotification}
             />
           </motion.div>
         )}

@@ -868,6 +868,39 @@ export type Database = {
           },
         ]
       }
+      user_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_deleted: boolean | null
+          is_read: boolean | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          is_read?: boolean | null
+          message: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

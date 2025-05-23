@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useProfileNotifications } from "@/hooks/profile/useProfileNotifications";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
 import { toast } from "sonner"; // Use sonner toast consistently
 
 export function useNotificationManager() {
@@ -12,6 +12,7 @@ export function useNotificationManager() {
     markAllAsRead, 
     markAsRead, 
     addNotification, 
+    deleteNotification,
     reloadNotifications 
   } = useNotifications();
   
@@ -44,15 +45,40 @@ export function useNotificationManager() {
     setShowNotifications(false);
   }, [setShowNotifications]);
 
-  // Create notification with proper type checking
-  const createNotification = useCallback((title: string, description: string) => {
-    // Use sonner toast instead of any potential custom toast implementation
+  // Create notification with proper type checking and categorization
+  const createNotification = useCallback((title: string, description: string, type = NOTIFICATION_CATEGORIES.GENERIC) => {
+    // Use sonner toast to show notification
     toast(title, {
       description
     });
     
-    return addNotification({ title, description });
+    // Add to notification system
+    return addNotification({ 
+      title, 
+      description, 
+      type 
+    });
   }, [addNotification]);
+
+  // Create BUZZ notification
+  const createBuzzNotification = useCallback((title: string, description: string) => {
+    return createNotification(title, description, NOTIFICATION_CATEGORIES.BUZZ);
+  }, [createNotification]);
+
+  // Create Map BUZZ notification
+  const createMapBuzzNotification = useCallback((title: string, description: string) => {
+    return createNotification(title, description, NOTIFICATION_CATEGORIES.MAP_BUZZ);
+  }, [createNotification]);
+
+  // Create Leaderboard notification
+  const createLeaderboardNotification = useCallback((title: string, description: string) => {
+    return createNotification(title, description, NOTIFICATION_CATEGORIES.LEADERBOARD);
+  }, [createNotification]);
+
+  // Create Weekly notification
+  const createWeeklyNotification = useCallback((title: string, description: string) => {
+    return createNotification(title, description, NOTIFICATION_CATEGORIES.WEEKLY);
+  }, [createNotification]);
 
   return {
     // Notification data
@@ -72,7 +98,15 @@ export function useNotificationManager() {
     // Actions
     markAllAsRead,
     markAsRead,
-    createNotification,
+    deleteNotification,
+    
+    // Create notifications by category
+    createNotification, // Generic
+    createBuzzNotification,
+    createMapBuzzNotification,
+    createLeaderboardNotification,
+    createWeeklyNotification,
+    
     reloadNotifications
   };
 }

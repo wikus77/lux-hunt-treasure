@@ -8,9 +8,11 @@ import {
   AtSign,
   Trophy
 } from "lucide-react";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const BottomNavigation = () => {
   const location = useLocation();
+  const { unreadCount } = useNotifications();
 
   // Check if current route matches the nav item
   const isActive = (path: string) => {
@@ -82,7 +84,7 @@ const BottomNavigation = () => {
           
           <Link 
             to="/notifications" 
-            className={`bottom-nav-item ${isActive('/notifications') ? 'active' : ''}`}
+            className={`bottom-nav-item ${isActive('/notifications') ? 'active' : ''} relative`}
           >
             <div className="p-2">
               <AtSign 
@@ -90,6 +92,11 @@ const BottomNavigation = () => {
                 color={isActive('/notifications') ? iconColor : undefined}
                 className={`transition-all ${isActive('/notifications') ? 'active-gradient-icon' : ''}`}
               />
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </div>
             <span className="text-xs">Notifiche</span>
           </Link>
