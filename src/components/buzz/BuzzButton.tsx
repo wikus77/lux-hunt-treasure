@@ -73,18 +73,21 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 
   return (
     <motion.button
-      className="w-60 h-60 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl hover:shadow-[0_0_30px_rgba(123,46,255,0.6)] focus:outline-none"
+      className="w-60 h-60 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl hover:shadow-[0_0_35px_rgba(123,46,255,0.7)] focus:outline-none"
       onClick={handleBuzzPress}
       disabled={isLoading}
       whileTap={{ scale: 0.95 }}
       whileHover={{ scale: 1.05 }}
       initial={{ boxShadow: "0 0 0px rgba(123, 46, 255, 0)" }}
       animate={{ 
-        boxShadow: ["0 0 10px rgba(123, 46, 255, 0.3)", "0 0 30px rgba(0, 209, 255, 0.6)", "0 0 10px rgba(123, 46, 255, 0.3)"]
+        boxShadow: ["0 0 12px rgba(123, 46, 255, 0.35)", "0 0 35px rgba(0, 209, 255, 0.7)", "0 0 12px rgba(123, 46, 255, 0.35)"]
       }}
       transition={{ 
         boxShadow: { repeat: Infinity, duration: 3 },
         scale: { type: "spring", stiffness: 300, damping: 20 }
+      }}
+      style={{
+        animation: "buzzButtonGlow 3s infinite ease-in-out"
       }}
     >
       {/* Radial gradient overlay */}
@@ -94,7 +97,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       <motion.div
         className="absolute inset-0 rounded-full"
         initial={{ opacity: 0.4, scale: 1 }}
-        animate={{ opacity: [0.4, 0.6, 0.4], scale: [1, 1.05, 1] }}
+        animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.05, 1] }}
         transition={{ repeat: Infinity, duration: 3 }}
       />
       
@@ -103,7 +106,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         className="absolute -inset-1 rounded-full blur-xl"
         style={{ background: "linear-gradient(to right, #7B2EFF, #00D1FF, #FF59F8)", opacity: 0.5 }}
         initial={{ opacity: 0.2 }}
-        animate={{ opacity: [0.2, 0.4, 0.2] }}
+        animate={{ opacity: [0.2, 0.45, 0.2] }}
         transition={{ repeat: Infinity, duration: 2 }}
       />
       
@@ -117,6 +120,17 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           </span>
         )}
       </div>
+
+      <style jsx>{`
+        @keyframes buzzButtonGlow {
+          0% { box-shadow: 0 0 8px rgba(255, 89, 248, 0.6); }
+          50% { box-shadow: 0 0 22px rgba(255, 89, 248, 0.8), 0 0 35px rgba(0, 209, 255, 0.5); }
+          100% { box-shadow: 0 0 8px rgba(255, 89, 248, 0.6); }
+        }
+        .glow-text {
+          text-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(0, 209, 255, 0.6);
+        }
+      `}</style>
     </motion.button>
   );
 };

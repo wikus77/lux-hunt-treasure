@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Bell, Map, Home, Zap, User } from "lucide-react";
+import { Bell, Map, Home, Trophy, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
 
@@ -13,9 +13,9 @@ const BottomNavigation = () => {
   const links = [
     { icon: <Home className="h-6 w-6" />, label: "Home", path: "/" },
     { icon: <Map className="h-6 w-6" />, label: "Mappa", path: "/map" },
-    { icon: <Zap className="h-6 w-6" />, label: "Buzz", path: "/buzz" },
+    { icon: <Circle strokeWidth={2} className="h-6 w-6" />, label: "Buzz", path: "/buzz" },
     { icon: <Bell className="h-6 w-6" />, label: "Notifiche", path: "/notifications", badge: unreadCount > 0 },
-    { icon: <User className="h-6 w-6" />, label: "Profilo", path: "/profile" },
+    { icon: <Trophy className="h-6 w-6" />, label: "Classifica", path: "/leaderboard" },
   ];
 
   return (

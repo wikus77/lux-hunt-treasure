@@ -12,6 +12,7 @@ import NotificationDialog from "@/components/notifications/NotificationDialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const categoryConfig = [
   { 
@@ -42,7 +43,7 @@ const categoryConfig = [
 ];
 
 const Notifications = () => {
-  const { notifications, markAllAsRead, deleteNotification, reloadNotifications } = useNotifications();
+  const { notifications, markAllAsRead, deleteNotification, reloadNotifications, isLoading } = useNotifications();
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const isMobile = useIsMobile();
@@ -74,22 +75,34 @@ const Notifications = () => {
     return result;
   }, [notifications]);
 
+  // Load notifications when component mounts and start regular polling
   useEffect(() => {
-    // Force reload notifications when the page loads
+    // Show page structure immediately
+    setIsLoaded(true);
+    
+    // Load notifications data
     const loadData = async () => {
       await reloadNotifications();
-      setIsLoaded(true);
-      // Mark all notifications as read when this page loads
+      
+      // Mark all as read when this page is fully loaded
       await markAllAsRead();
       
-      // Initialize with all categories that have notifications expanded
+      // Initialize with categories that have notifications expanded
       const categoriesToExpand = Object.keys(notificationsByCategory);
       setExpandedCategories(categoriesToExpand);
     };
     
     loadData();
+    
+    // Set up polling for fresh notifications
+    const refreshInterval = setInterval(() => {
+      reloadNotifications();
+    }, 30000); // Poll every 30 seconds
+    
+    return () => clearInterval(refreshInterval);
   }, [markAllAsRead, reloadNotifications]);
 
+  // Handle toggle of each notification category
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => 
       prev.includes(categoryId) 
@@ -108,6 +121,24 @@ const Notifications = () => {
   const handleOpen = (notification: any) => {
     setSelectedNotification(notification);
   };
+
+  // Skeleton loader for notifications
+  const NotificationSkeleton = () => (
+    <div className="space-y-4">
+      {[1, 2, 3].map(i => (
+        <div key={i} className="p-4 rounded-[24px] border border-[#00D1FF]/10 bg-black/90">
+          <div className="flex items-start gap-3">
+            <Skeleton className="h-5 w-5 bg-gray-700 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-5 w-40 bg-gray-700" />
+              <Skeleton className="h-3 w-full bg-gray-800" />
+              <Skeleton className="h-3 w-20 bg-gray-900" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#070818] pb-20 w-full">
@@ -132,7 +163,9 @@ const Notifications = () => {
             transition={{ duration: 0.6 }}
           >
             <GradientBox className="p-5">
-              {notifications && notifications.length > 0 ? (
+              {isLoading ? (
+                <NotificationSkeleton />
+              ) : notifications && notifications.length > 0 ? (
                 <Accordion 
                   type="multiple" 
                   value={expandedCategories}
@@ -151,11 +184,7 @@ const Notifications = () => {
                         className="border border-[#00D1FF]/20 rounded-[24px] bg-black/80 overflow-hidden shadow-lg hover:shadow-[0_0_15px_rgba(0,209,255,0.2)]"
                       >
                         <AccordionTrigger 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            toggleCategory(category.id);
-                          }}
+                          onClick={() => toggleCategory(category.id)}
                           className="px-4 py-4 hover:no-underline hover:bg-white/5 data-[state=open]:bg-[#00D1FF]/5"
                         >
                           <div className="flex items-center gap-3">
