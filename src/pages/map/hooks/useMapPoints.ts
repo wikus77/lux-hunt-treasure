@@ -22,12 +22,9 @@ export function useMapPoints(
   }, [isAddingMapPoint]);
 
   // Handler for map point click - CRITICAL FIX
-  // We directly destructure lat,lng and use them immediately without any state updates
   const handleMapPointClick = useCallback(async (lat: number, lng: number): Promise<string> => {
     console.log("⭐ Map point click HANDLER executed at coordinates:", lat, lng);
     
-    // CRITICAL FIX: Check if we're already in adding point mode BEFORE any state updates
-    // This ensures the click is processed regardless of asynchronous state updates
     const currentlyAddingPoint = isAddingMapPoint;
     console.log("📊 Current adding point state at click time:", currentlyAddingPoint);
     
@@ -55,7 +52,6 @@ export function useMapPoints(
     
     // IMPORTANT: Only reset adding state AFTER setting the new point
     // Use a small delay to ensure the point is created before turning off the mode
-    // This is critical to avoid race conditions with the state
     setTimeout(() => {
       setIsAddingMapPoint(false);
       console.log("🔄 Reset isAddingMapPoint to false AFTER point creation");

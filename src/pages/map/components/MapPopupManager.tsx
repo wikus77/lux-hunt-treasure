@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import { MapMarker } from '@/components/maps/types';
@@ -8,7 +9,7 @@ interface MapPopupManagerProps {
   mapPoints: MapMarker[];
   activeMapPoint: string | null;
   setActiveMapPoint: (id: string | null) => void;
-  handleUpdatePoint: (id: string, title: string, note: string) => Promise<void>;
+  handleUpdatePoint: (id: string, title: string, note: string) => Promise<boolean>;
   deleteMapPoint: (id: string) => Promise<boolean>;
   newPoint: MapMarker | null;
   handleSaveNewPoint: (title: string, note: string) => void;
