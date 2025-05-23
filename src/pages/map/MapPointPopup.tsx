@@ -29,13 +29,22 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
     if (inputRef.current) {
       // Ensure the popup is fully rendered and then focus
       console.log("Attempting to focus title field");
-      setTimeout(() => {
+      // Use a more aggressive approach to ensure focus works
+      const focusInterval = setInterval(() => {
         if (inputRef.current) {
           console.log("Auto-focusing title field");
           inputRef.current.focus();
+          clearInterval(focusInterval);
         }
-      }, 100);
+      }, 50);
+      
+      // Clear interval after 500ms to prevent infinite loop
+      setTimeout(() => clearInterval(focusInterval), 500);
     }
+    
+    return () => {
+      // Cleanup any event handlers if needed
+    };
   }, []);
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -60,6 +69,7 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
             required
             className="w-full"
             ref={inputRef}
+            autoFocus={true}
           />
         </div>
         

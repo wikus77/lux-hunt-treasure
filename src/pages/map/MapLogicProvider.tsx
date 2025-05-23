@@ -1,16 +1,21 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { MapContainer, TileLayer, useMapEvents, Circle, Popup, Marker } from 'react-leaflet';
+import { MapContainer, TileLayer } from 'react-leaflet';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
 import HelpDialog from './HelpDialog';
 import LoadingScreen from './LoadingScreen';
-import { Circle as CircleIcon, MapPin } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import SearchAreaMapLayer from './SearchAreaMapLayer';
-import MapPointPopup from './MapPointPopup';
+
+// Import newly created components
+import MapEventHandler from './components/MapEventHandler';
+import MapPopupManager from './components/MapPopupManager';
+import MapInstructionsOverlay from './components/MapInstructionsOverlay';
+import LocationButton from './components/LocationButton';
+import BuzzButton from './components/BuzzButton';
+import { useMapPoints } from './hooks/useMapPoints';
 
 // Fix for Leaflet default icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -25,115 +30,9 @@ let DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Component to handle map events
-const MapEventHandler = ({ 
-  isAddingSearchArea, 
-  handleMapClickArea, 
-  searchAreas, 
-  setPendingRadius,
-  isAddingMapPoint,
-  onMapPointClick
-}) => {
-  const map = useMapEvents({
-    click: (e) => {
-      console.log("MAP CLICK DETECTED", { 
-        isAddingSearchArea, 
-        isAddingMapPoint, 
-        coords: [e.latlng.lat, e.latlng.lng] 
-      });
-      
-      if (isAddingSearchArea) {
-        console.log("MAP CLICKED FOR SEARCH AREA", e.latlng);
-        
-        // Convert Leaflet event to format expected by handleMapClickArea
-        const simulatedGoogleMapEvent = {
-          latLng: {
-            lat: () => e.latlng.lat,
-            lng: () => e.latlng.lng
-          }
-        };
-        
-        // Call the handler to create the area
-        handleMapClickArea(simulatedGoogleMapEvent);
-      } else if (isAddingMapPoint) {
-        console.log("MAP CLICKED FOR MAP POINT", e.latlng);
-        // This is the critical function call that handles adding a new point
-        onMapPointClick(e.latlng.lat, e.latlng.lng);
-      }
-    }
-  });
-  
-  // Change cursor style based on the current action state - IMPROVED IMMEDIATE CURSOR CHANGE
-  useEffect(() => {
-    if (!map) return;
-    
-    const mapContainer = map.getContainer();
-    
-    // Force an immediate cursor change with timeout of 0ms
-    setTimeout(() => {
-      if (isAddingSearchArea) {
-        mapContainer.style.cursor = 'crosshair';
-        console.log("Cursore cambiato in crosshair per area");
-        toast.info("Clicca sulla mappa per posizionare l'area", {
-          duration: 3000
-        });
-      } else if (isAddingMapPoint) {
-        mapContainer.style.cursor = 'crosshair';
-        console.log("Cursore cambiato in crosshair per punto", isAddingMapPoint);
-        toast.info("Clicca sulla mappa per posizionare il punto", {
-          duration: 3000
-        });
-      } else {
-        mapContainer.style.cursor = 'grab';
-        console.log("Cursore ripristinato a grab");
-      }
-    }, 0);
-    
-    // Force cursor update to all leaflet containers
-    document.querySelectorAll('.leaflet-container').forEach(container => {
-      if (container instanceof HTMLElement) {
-        if (isAddingSearchArea || isAddingMapPoint) {
-          container.style.cursor = 'crosshair';
-        } else {
-          container.style.cursor = 'grab';
-        }
-      }
-    });
-    
-    return () => {
-      if (map) {
-        mapContainer.style.cursor = 'grab';
-        document.querySelectorAll('.leaflet-container').forEach(container => {
-          if (container instanceof HTMLElement) {
-            container.style.cursor = 'grab';
-          }
-        });
-      }
-    };
-  }, [isAddingSearchArea, isAddingMapPoint, map]);
-  
-  // Ensure search areas are visible in the viewport
-  useEffect(() => {
-    if (searchAreas.length > 0 && map) {
-      const bounds = L.latLngBounds([]);
-      searchAreas.forEach(area => {
-        bounds.extend([area.lat, area.lng]);
-      });
-      
-      // Only fit bounds if we have valid bounds
-      if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [50, 50] });
-      }
-    }
-  }, [searchAreas, map]);
-  
-  return null;
-};
-
 const MapLogicProvider = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
-  const [newPoint, setNewPoint] = useState(null);
   
   const { 
     handleBuzz, 
@@ -156,6 +55,21 @@ const MapLogicProvider = () => {
     requestLocationPermission
   } = useMapLogic();
   
+  // Use our new custom hook for map points
+  const {
+    newPoint,
+    handleMapPointClick,
+    handleSaveNewPoint,
+    handleUpdatePoint,
+    handleCancelNewPoint
+  } = useMapPoints(
+    mapPoints,
+    setActiveMapPoint,
+    addMapPoint,
+    updateMapPoint,
+    deleteMapPoint
+  );
+  
   // Function to handle map load event
   const handleMapLoad = useCallback(() => {
     console.log("Map component mounted and ready");
@@ -172,91 +86,11 @@ const MapLogicProvider = () => {
     return () => clearTimeout(timer);
   }, [mapLoaded]);
 
-  // Handle map point click when adding a new point
-  const handleMapPointClick = (lat, lng) => {
-    console.log("Map point click detected at:", lat, lng, "isAddingMapPoint:", isAddingMapPoint);
-    
-    if (isAddingMapPoint) {
-      // Create a new point and set it in state
-      setNewPoint({
-        id: 'new',
-        lat,
-        lng,
-        title: '',
-        note: '',
-        position: { lat, lng }
-      });
-      
-      // Disable adding map point mode after placing the point
-      setIsAddingMapPoint(false);
-      console.log("Disattivata modalità inserimento punto, isAddingMapPoint:", false);
-      
-      // Change cursor back to grab after adding a point
-      document.querySelectorAll('.leaflet-container').forEach(container => {
-        if (container instanceof HTMLElement) {
-          container.style.cursor = 'grab';
-        }
-      });
-      
-      toast.success("Punto posizionato. Inserisci titolo e nota.", {
-        duration: 3000
-      });
-    } else {
-      console.log("Click sulla mappa ignorato: modalità inserimento punto non attiva");
-    }
-  };
-
-  // Handle save of new map point
-  const handleSaveNewPoint = async (title, note) => {
-    console.log("Tentativo di salvare il nuovo punto con titolo:", title);
-    if (newPoint) {
-      console.log("Salvando nuovo punto con titolo:", title, "e coordinate:", newPoint.lat, newPoint.lng);
-      try {
-        const pointId = await addMapPoint({
-          lat: newPoint.lat,
-          lng: newPoint.lng,
-          title,
-          note
-        });
-        console.log("Punto salvato con successo, ID:", pointId);
-        setNewPoint(null);
-        toast.success("Punto di interesse salvato");
-      } catch (error) {
-        console.error("Errore nel salvare il punto:", error);
-        toast.error("Errore nel salvare il punto. Riprova.");
-      }
-    } else {
-      console.error("Tentativo di salvare un punto inesistente");
-      toast.error("Errore: punto non disponibile");
-    }
-  };
-
-  // Handle update of existing map point
-  const handleUpdatePoint = async (id, title, note) => {
-    console.log("Aggiornamento punto esistente:", id, title, note);
-    try {
-      const success = await updateMapPoint(id, { title, note });
-      if (success) {
-        console.log("Punto aggiornato con successo");
-        setActiveMapPoint(null);
-        toast.success("Punto di interesse aggiornato");
-      } else {
-        console.error("Errore nell'aggiornare il punto");
-        toast.error("Errore nell'aggiornare il punto");
-      }
-    } catch (error) {
-      console.error("Errore nell'aggiornamento del punto:", error);
-      toast.error("Errore nell'aggiornare il punto");
-    }
-  };
-
-  // Handle cancel of new point
-  const handleCancelNewPoint = () => {
-    console.log("Annullamento aggiunta nuovo punto");
-    setNewPoint(null);
-    toast.info('Aggiunta punto annullata');
-  };
-
+  // Log whenever isAddingMapPoint changes
+  useEffect(() => {
+    console.log("isAddingMapPoint changed:", isAddingMapPoint);
+  }, [isAddingMapPoint]);
+  
   if (!mapLoaded) return <LoadingScreen />;
 
   return (
@@ -305,57 +139,19 @@ const MapLogicProvider = () => {
           deleteSearchArea={deleteSearchArea}
         />
         
-        {/* Display map points */}
-        {mapPoints.map(point => (
-          <Marker 
-            key={point.id}
-            position={[point.lat, point.lng]}
-            eventHandlers={{
-              click: () => {
-                console.log("Marcatore esistente cliccato, ID:", point.id);
-                setActiveMapPoint(point.id);
-              }
-            }}
-          >
-            {activeMapPoint === point.id && (
-              <Popup
-                closeButton={true}
-                autoClose={false}
-                closeOnClick={false}
-              >
-                <MapPointPopup
-                  point={point}
-                  onSave={(title, note) => handleUpdatePoint(point.id, title, note)}
-                  onCancel={() => setActiveMapPoint(null)}
-                  onDelete={() => deleteMapPoint(point.id)}
-                />
-              </Popup>
-            )}
-          </Marker>
-        ))}
+        {/* Use the new MapPopupManager component */}
+        <MapPopupManager 
+          mapPoints={mapPoints}
+          activeMapPoint={activeMapPoint}
+          setActiveMapPoint={setActiveMapPoint}
+          handleUpdatePoint={handleUpdatePoint}
+          deleteMapPoint={deleteMapPoint}
+          newPoint={newPoint}
+          handleSaveNewPoint={handleSaveNewPoint}
+          handleCancelNewPoint={handleCancelNewPoint}
+        />
         
-        {/* Display new point being added */}
-        {newPoint && (
-          <Marker position={[newPoint.lat, newPoint.lng]}>
-            <Popup
-              closeButton={false}
-              autoClose={false}
-              closeOnClick={false}
-              closeOnEscapeKey={false}
-              autoPan={true}
-              className="point-popup"
-            >
-              <MapPointPopup
-                point={newPoint}
-                isNew={true}
-                onSave={handleSaveNewPoint}
-                onCancel={handleCancelNewPoint}
-              />
-            </Popup>
-          </Marker>
-        )}
-        
-        {/* Map event handler */}
+        {/* Use the new MapEventHandler component */}
         <MapEventHandler 
           isAddingSearchArea={isAddingSearchArea} 
           handleMapClickArea={handleMapClickArea}
@@ -366,48 +162,17 @@ const MapLogicProvider = () => {
         />
       </MapContainer>
 
-      {/* Location button */}
-      <div className="absolute top-4 right-4 z-20">
-        <Button
-          onClick={requestLocationPermission}
-          className="bg-black/50 hover:bg-black/70 text-white border border-white/20"
-          size="sm"
-        >
-          <MapPin className="mr-1 h-4 w-4" />
-          Posizione
-        </Button>
-      </div>
+      {/* Use the new LocationButton component */}
+      <LocationButton requestLocationPermission={requestLocationPermission} />
 
-      {/* BUZZ button - centered at bottom */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
-        <Button
-          onClick={handleBuzz}
-          className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white shadow-[0_0_10px_rgba(217,70,239,0.5)] hover:shadow-[0_0_15px_rgba(217,70,239,0.7)]"
-        >
-          <CircleIcon className="mr-1 h-4 w-4" />
-          BUZZ {buzzMapPrice.toFixed(2)}€
-        </Button>
-      </div>
+      {/* Use the new BuzzButton component */}
+      <BuzzButton handleBuzz={handleBuzz} buzzMapPrice={buzzMapPrice} />
 
-      {/* Adding Area Instructions Overlay */}
-      {isAddingSearchArea && (
-        <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-30 pointer-events-none">
-          <div className="bg-black/80 p-4 rounded-lg text-center max-w-md border border-[#00D1FF]/50 shadow-[0_0_15px_rgba(0,209,255,0.3)]">
-            <p className="text-white font-medium">Clicca sulla mappa per posizionare l'area di interesse</p>
-            <p className="text-sm text-gray-300 mt-1">L'area verrà creata nel punto selezionato</p>
-          </div>
-        </div>
-      )}
-
-      {/* Adding Point Instructions Overlay */}
-      {isAddingMapPoint && (
-        <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-30 pointer-events-none">
-          <div className="bg-black/80 p-4 rounded-lg text-center max-w-md border border-[#39FF14]/50 shadow-[0_0_15px_rgba(57,255,20,0.3)]">
-            <p className="text-white font-medium">Clicca sulla mappa per posizionare il punto di interesse</p>
-            <p className="text-sm text-gray-300 mt-1">Potrai aggiungere un titolo e una nota dopo aver posizionato il punto</p>
-          </div>
-        </div>
-      )}
+      {/* Use the new MapInstructionsOverlay component */}
+      <MapInstructionsOverlay 
+        isAddingSearchArea={isAddingSearchArea} 
+        isAddingMapPoint={isAddingMapPoint} 
+      />
 
       <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
     </div>
