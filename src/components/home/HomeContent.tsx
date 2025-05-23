@@ -46,11 +46,11 @@ export default function HomeContent() {
           
           {/* Luxury Cars Section */}
           <LuxuryCarsSection />
-          
-          {/* M1SSION GAMES Section */}
-          <MissionGamesSection />
         </motion.div>
       )}
+      
+      {/* FORZARE SEMPRE VISIBILE - Mission Games Section rendered outside the conditional block */}
+      <MissionGamesSection />
     </div>
   );
 }
