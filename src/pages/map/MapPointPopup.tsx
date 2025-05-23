@@ -25,6 +25,7 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     onSave(title, note);
   };
   
@@ -42,6 +43,7 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
             placeholder="Titolo del punto"
             required
             className="w-full"
+            autoFocus={isNew}
           />
         </div>
         
@@ -64,7 +66,11 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
               type="button"
               variant="destructive"
               size="sm"
-              onClick={onDelete}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDelete();
+              }}
             >
               Elimina
             </Button>
@@ -75,7 +81,11 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
               type="button"
               variant="outline"
               size="sm"
-              onClick={onCancel}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onCancel();
+              }}
             >
               Annulla
             </Button>

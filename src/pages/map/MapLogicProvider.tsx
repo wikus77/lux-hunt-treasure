@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { MapContainer, TileLayer, useMapEvents, Circle, Popup, Marker } from 'react-leaflet';
 import { toast } from 'sonner';
@@ -121,6 +122,7 @@ const MapLogicProvider = () => {
     addMapPoint,
     updateMapPoint,
     deleteMapPoint,
+    toggleAddingMapPoint,
     requestLocationPermission
   } = useMapLogic();
   
@@ -142,6 +144,7 @@ const MapLogicProvider = () => {
 
   // Handle map point click when adding a new point
   const handleMapPointClick = (lat, lng) => {
+    console.log("Map point click detected at:", lat, lng);
     setNewPoint({
       id: 'new',
       lat,
@@ -251,7 +254,14 @@ const MapLogicProvider = () => {
         {/* Display new point being added */}
         {newPoint && (
           <Marker position={[newPoint.lat, newPoint.lng]}>
-            <Popup>
+            <Popup
+              closeButton={false}
+              autoClose={false}
+              closeOnClick={false}
+              closeOnEscapeKey={false}
+              autoPan={true}
+              className="point-popup"
+            >
               <MapPointPopup
                 point={newPoint}
                 isNew={true}
