@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Bell, Map, Home, Trophy, User } from "lucide-react";
+import { Bell, Map, Home, Trophy, User, Circle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
 

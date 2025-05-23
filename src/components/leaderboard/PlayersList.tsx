@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PlayerCard } from './PlayerCard';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { LoadingSpinner } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Loader } from "lucide-react";
 
 interface PlayersListProps {
   players: any[];
@@ -53,7 +54,12 @@ export const PlayersList = ({
               disabled={isLoading}
               onClick={onLoadMore}
             >
-              {isLoading ? <LoadingSpinner size="sm" /> : "Carica altri giocatori"}
+              {isLoading ? (
+                <span className="flex items-center">
+                  <Loader className="h-4 w-4 mr-2 animate-spin" />
+                  Caricamento...
+                </span>
+              ) : "Carica altri giocatori"}
             </Button>
           </div>
         )}

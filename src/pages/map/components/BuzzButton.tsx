@@ -45,13 +45,15 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         <CircleIcon className="mr-2 h-4 w-4" />
         BUZZ {buzzMapPrice.toFixed(2)}€
       </Button>
-      <style jsx>{`
+      <style>
+        {`
         @keyframes buzzGlow {
           0% { box-shadow: 0 0 7px rgba(255, 0, 204, 0.6); }
           50% { box-shadow: 0 0 20px rgba(255, 0, 204, 0.8), 0 0 30px rgba(0, 207, 255, 0.4); }
           100% { box-shadow: 0 0 7px rgba(255, 0, 204, 0.6); }
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };

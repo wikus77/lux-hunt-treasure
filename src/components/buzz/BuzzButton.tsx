@@ -121,7 +121,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         )}
       </div>
 
-      <style jsx>{`
+      <style>
+        {`
         @keyframes buzzButtonGlow {
           0% { box-shadow: 0 0 8px rgba(255, 89, 248, 0.6); }
           50% { box-shadow: 0 0 22px rgba(255, 89, 248, 0.8), 0 0 35px rgba(0, 209, 255, 0.5); }
@@ -130,7 +131,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         .glow-text {
           text-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(0, 209, 255, 0.6);
         }
-      `}</style>
+        `}
+      </style>
     </motion.button>
   );
 };
