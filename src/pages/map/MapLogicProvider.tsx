@@ -1,22 +1,15 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
-import HelpDialog from './HelpDialog';
+import { useMapPoints } from './hooks/useMapPoints';
+import { useMapInitialization } from './hooks/useMapInitialization';
 import LoadingScreen from './LoadingScreen';
+import MapContent from './components/MapContent';
+import MapControls from './components/MapControls';
+import TechnicalStatus from './components/TechnicalStatus';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import SearchAreaMapLayer from './SearchAreaMapLayer';
-
-// Import components
-import MapEventHandler from './components/MapEventHandler';
-import MapPopupManager from './components/MapPopupManager';
-import MapInstructionsOverlay from './components/MapInstructionsOverlay';
-import LocationButton from './components/LocationButton';
-import BuzzButton from './components/BuzzButton';
-import SearchAreaButton from './components/SearchAreaButton';
-import { useMapPoints } from './hooks/useMapPoints';
-import { SetViewOnChange } from './hooks/useMapView';
 
 // Fix for Leaflet default icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -31,24 +24,10 @@ let DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Create a new component to handle map initialization
-const MapInitializer = ({ onMapReady }: { onMapReady: (map: L.Map) => void }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    // Call the onMapReady callback with the map instance
-    onMapReady(map);
-  }, [map, onMapReady]);
-  
-  return null;
-};
-
 const MapLogicProvider = () => {
-  const [mapLoaded, setMapLoaded] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
-  const mapRef = useRef<L.Map | null>(null);
   
-  // Rename variables to match the return type of useMapLogic
+  // Get map logic from our custom hook
   const { 
     handleBuzz, 
     buzzMapPrice, 
@@ -67,12 +46,11 @@ const MapLogicProvider = () => {
     addMapPoint,
     updateMapPoint,
     deleteMapPoint,
-    toggleAddingMapPoint,
     requestLocationPermission
   } = useMapLogic();
   
   // Modified to return a Promise<string> with correct parameter structure
-  const handleMapPointClick = useCallback(async (point: { lat: number; lng: number; title: string; note: string }): Promise<string> => {
+  const handleMapPointClick = async (point: { lat: number; lng: number; title: string; note: string }): Promise<string> => {
     const newPointId = `point-${Date.now()}`;
     addMapPoint({
       id: newPointId,
@@ -82,9 +60,9 @@ const MapLogicProvider = () => {
       note: point.note || ''
     });
     return newPointId; // Return the new point ID
-  }, [addMapPoint]);
+  };
 
-  // Use our custom hook for map points with the modified wrapper function
+  // Use our custom hook for map points
   const {
     newPoint,
     handleMapPointClick: hookHandleMapPointClick,
@@ -99,6 +77,20 @@ const MapLogicProvider = () => {
     handleMapPointClick,
     updateMapPoint,
     deleteMapPoint
+  );
+  
+  // Use our custom hook for map initialization
+  const {
+    mapLoaded,
+    setMapLoaded,
+    mapRef,
+    handleMapLoad
+  } = useMapInitialization(
+    isAddingMapPoint,
+    isAddingPoint,
+    isAddingSearchArea,
+    hookHandleMapPointClick,
+    handleMapClickArea
   );
   
   // Synchronize isAddingMapPoint state between hook and mapLogic to ensure consistency
@@ -126,43 +118,6 @@ const MapLogicProvider = () => {
       {hookState: isAddingMapPoint, mapLogicState: isAddingPoint});
   }, [isAddingMapPoint, isAddingPoint]);
   
-  // Function to handle map load event
-  const handleMapLoad = useCallback((map: L.Map) => {
-    console.log("🗺️ Map component mounted and ready");
-    
-    if (!map) {
-      console.log("❌ Map reference not available");
-      return;
-    }
-    
-    setMapLoaded(true);
-    
-    // Add direct click handler to the map as a fallback mechanism
-    map.on('click', (e: L.LeafletMouseEvent) => {
-      console.log("🔍 DIRECT MAP CLICK via mapRef", {
-        isAdding: isAddingMapPoint || isAddingPoint,
-        isAddingArea: isAddingSearchArea,
-        latlng: e.latlng
-      });
-      
-      // Only handle if in adding mode
-      if (isAddingMapPoint || isAddingPoint) {
-        console.log("✅ Processing direct map click for point");
-        hookHandleMapPointClick(e.latlng.lat, e.latlng.lng);
-      } else if (isAddingSearchArea) {
-        console.log("✅ Processing direct map click for search area");
-        handleMapClickArea(e);
-      }
-    });
-    
-    // Debug layer structure
-    console.log("🔍 Leaflet map layers:", {
-      panes: map.getPanes(),
-      zoom: map.getZoom(),
-      center: map.getCenter()
-    });
-  }, [isAddingMapPoint, isAddingPoint, isAddingSearchArea, hookHandleMapPointClick, handleMapClickArea]);
-
   // Simulate a small loading delay for better UX
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -171,23 +126,11 @@ const MapLogicProvider = () => {
       }
     }, 800);
     return () => clearTimeout(timer);
-  }, [mapLoaded]);
+  }, [mapLoaded, setMapLoaded]);
   
   if (!mapLoaded) return <LoadingScreen />;
   
-  // TECHNICAL REPORT
-  console.log("🧪 TECHNICAL REPORT - MAP SYSTEM STATUS:", {
-    mapRef: mapRef.current ? "ACTIVE" : "NOT INITIALIZED",
-    isAddingPointHook: isAddingMapPoint,
-    isAddingPointLogic: isAddingPoint,
-    isAddingSearchArea: isAddingSearchArea,
-    newPointStatus: newPoint ? "CREATED" : "NOT CREATED",
-    leafletStatus: L ? "LOADED" : "NOT LOADED",
-    mapPoints: mapPoints.length,
-    searchAreas: searchAreas.length,
-    targetPane: mapRef.current?.getPane('markerPane') ? "EXISTS" : "MISSING",
-  });
-
+  // Technical status logging component (invisible)
   return (
     <div 
       className="rounded-[24px] overflow-hidden relative w-full" 
@@ -199,89 +142,50 @@ const MapLogicProvider = () => {
         position: 'relative'
       }}
     >
-      <MapContainer 
-        center={DEFAULT_LOCATION} 
-        zoom={15}
-        style={{ 
-          height: '100%', 
-          width: '100%',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 1
-        }}
-        className="z-10"
-        whenReady={() => {}} // Empty function to satisfy the type requirement
-      >
-        {/* Add the MapInitializer component to handle map initialization */}
-        <MapInitializer onMapReady={(map) => {
-          mapRef.current = map;
-          handleMapLoad(map);
-        }} />
-        
-        {/* Balanced tone TileLayer - not too dark, not too light */}
-        <TileLayer
-          attribution='&copy; CartoDB'
-          url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        />
-
-        {/* Add labels layer separately for better visibility and control */}
-        <TileLayer
-          attribution='&copy; CartoDB'
-          url='https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
-        />
-        
-        {/* Display search areas */}
-        <SearchAreaMapLayer 
-          searchAreas={searchAreas} 
-          setActiveSearchArea={setActiveSearchArea}
-          deleteSearchArea={deleteSearchArea}
-        />
-        
-        {/* Use the MapPopupManager component */}
-        <MapPopupManager 
-          mapPoints={mapPoints}
-          activeMapPoint={activeMapPoint}
-          setActiveMapPoint={setActiveMapPoint}
-          handleUpdatePoint={handleUpdatePoint}
-          deleteMapPoint={deleteMapPoint}
-          newPoint={newPoint}
-          handleSaveNewPoint={handleSaveNewPoint}
-          handleCancelNewPoint={handleCancelNewPoint}
-        />
-        
-        {/* Use the MapEventHandler component with properly synced isAddingMapPoint state */}
-        <MapEventHandler 
-          isAddingSearchArea={isAddingSearchArea} 
-          handleMapClickArea={handleMapClickArea}
-          searchAreas={searchAreas}
-          setPendingRadius={setPendingRadius}
-          isAddingMapPoint={isAddingMapPoint || isAddingPoint} // Use either state as true
-          onMapPointClick={hookHandleMapPointClick}
-        />
-      </MapContainer>
-
-      {/* Use the LocationButton component */}
-      <LocationButton requestLocationPermission={requestLocationPermission} />
-
-      {/* Use the SearchAreaButton component */}
-      <SearchAreaButton 
-        toggleAddingSearchArea={toggleAddingSearchArea} 
-        isAddingSearchArea={isAddingSearchArea} 
+      {/* Map content */}
+      <MapContent 
+        mapRef={mapRef}
+        handleMapLoad={handleMapLoad}
+        searchAreas={searchAreas}
+        setActiveSearchArea={setActiveSearchArea}
+        deleteSearchArea={deleteSearchArea}
+        mapPoints={mapPoints}
+        activeMapPoint={activeMapPoint}
+        setActiveMapPoint={setActiveMapPoint}
+        handleUpdatePoint={handleUpdatePoint}
+        deleteMapPoint={deleteMapPoint}
+        newPoint={newPoint}
+        handleSaveNewPoint={handleSaveNewPoint}
+        handleCancelNewPoint={handleCancelNewPoint}
+        isAddingSearchArea={isAddingSearchArea}
+        handleMapClickArea={handleMapClickArea}
+        setPendingRadius={setPendingRadius}
+        isAddingMapPoint={isAddingMapPoint || isAddingPoint}
+        hookHandleMapPointClick={hookHandleMapPointClick}
       />
 
-      {/* Use the BuzzButton component */}
-      <BuzzButton handleBuzz={handleBuzz} buzzMapPrice={buzzMapPrice} />
-
-      {/* Use the MapInstructionsOverlay component */}
-      <MapInstructionsOverlay 
-        isAddingSearchArea={isAddingSearchArea} 
-        isAddingMapPoint={isAddingMapPoint || isAddingPoint} // Use either state as true
+      {/* Map controls */}
+      <MapControls
+        requestLocationPermission={requestLocationPermission}
+        toggleAddingSearchArea={toggleAddingSearchArea}
+        isAddingSearchArea={isAddingSearchArea}
+        handleBuzz={handleBuzz}
+        buzzMapPrice={buzzMapPrice}
+        isAddingMapPoint={isAddingMapPoint || isAddingPoint}
+        showHelpDialog={showHelpDialog}
+        setShowHelpDialog={setShowHelpDialog}
       />
-
-      <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
+      
+      {/* Technical status logger */}
+      <TechnicalStatus 
+        mapRef={mapRef}
+        isAddingMapPoint={isAddingMapPoint}
+        isAddingPoint={isAddingPoint}
+        isAddingSearchArea={isAddingSearchArea}
+        newPoint={newPoint}
+        mapPoints={mapPoints}
+        searchAreas={searchAreas}
+      />
     </div>
   );
 };
