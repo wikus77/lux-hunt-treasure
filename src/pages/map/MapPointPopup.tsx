@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,15 +22,27 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
 }) => {
   const [title, setTitle] = useState(point.title || '');
   const [note, setNote] = useState(point.note || '');
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  
+  // Effect to focus on title input when popup opens
+  useEffect(() => {
+    if (isNew && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+        console.log("Auto-focusing title field");
+      }, 100); // Small delay to ensure popup is fully rendered
+    }
+  }, [isNew]);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log("Saving point with title:", title);
     onSave(title, note);
   };
   
   return (
-    <div className="p-2 min-w-[280px]">
+    <div className="p-2 min-w-[280px]" onClick={(e) => e.stopPropagation()}>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label htmlFor="title" className="block text-sm font-medium mb-1">
@@ -44,6 +56,7 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
             required
             className="w-full"
             autoFocus={isNew}
+            ref={inputRef}
           />
         </div>
         
@@ -57,6 +70,7 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
             onChange={(e) => setNote(e.target.value)}
             placeholder="Aggiungi una nota (opzionale)"
             className="w-full min-h-[80px]"
+            onClick={(e) => e.stopPropagation()}
           />
         </div>
         

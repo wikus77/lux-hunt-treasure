@@ -56,29 +56,34 @@ const MapEventHandler = ({
     }
   });
   
-  // Change cursor style based on the current action state
+  // Change cursor style based on the current action state - IMPROVED IMMEDIATE CURSOR CHANGE
   useEffect(() => {
     if (!map) return;
     
-    if (isAddingSearchArea) {
-      map.getContainer().style.cursor = 'crosshair';
-      console.log("Cursore cambiato in crosshair per area");
-      toast.info("Clicca sulla mappa per posizionare l'area", {
-        duration: 3000
-      });
-    } else if (isAddingMapPoint) {
-      map.getContainer().style.cursor = 'crosshair';
-      console.log("Cursore cambiato in crosshair per punto");
-      toast.info("Clicca sulla mappa per posizionare il punto", {
-        duration: 3000
-      });
-    } else {
-      map.getContainer().style.cursor = 'grab';
-      console.log("Cursore ripristinato a grab");
-    }
+    const mapContainer = map.getContainer();
+    
+    // Force an immediate cursor change with timeout of 0ms
+    setTimeout(() => {
+      if (isAddingSearchArea) {
+        mapContainer.style.cursor = 'crosshair';
+        console.log("Cursore cambiato in crosshair per area");
+        toast.info("Clicca sulla mappa per posizionare l'area", {
+          duration: 3000
+        });
+      } else if (isAddingMapPoint) {
+        mapContainer.style.cursor = 'crosshair';
+        console.log("Cursore cambiato in crosshair per punto");
+        toast.info("Clicca sulla mappa per posizionare il punto", {
+          duration: 3000
+        });
+      } else {
+        mapContainer.style.cursor = 'grab';
+        console.log("Cursore ripristinato a grab");
+      }
+    }, 0);
     
     return () => {
-      if (map) map.getContainer().style.cursor = 'grab';
+      if (map) mapContainer.style.cursor = 'grab';
     };
   }, [isAddingSearchArea, isAddingMapPoint, map]);
   
@@ -154,11 +159,24 @@ const MapLogicProvider = () => {
       position: { lat, lng }
     });
     setIsAddingMapPoint(false);
+    
+    // Change cursor back to grab after adding a point
+    const mapContainers = document.querySelectorAll('.leaflet-container');
+    mapContainers.forEach(container => {
+      if (container instanceof HTMLElement) {
+        container.style.cursor = 'grab';
+      }
+    });
+    
+    toast.success("Punto posizionato. Inserisci titolo e nota.", {
+      duration: 3000
+    });
   };
 
   // Handle save of new map point
   const handleSaveNewPoint = async (title, note) => {
     if (newPoint) {
+      console.log("Salvando nuovo punto con titolo:", title);
       await addMapPoint({
         lat: newPoint.lat,
         lng: newPoint.lng,

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { MapPin, Plus } from "lucide-react";
+import { MapPin, Plus, Crosshair } from "lucide-react";
 import { MapMarker } from '@/components/maps/types';
 
 interface MapPointsSectionProps {
@@ -30,6 +30,22 @@ const MapPointsSection: React.FC<MapPointsSectionProps> = ({
     setShowConfirmDelete(null);
   };
 
+  const handleToggleAddPoint = () => {
+    console.log("Toggling add point mode. Current state:", isAddingMapPoint);
+    toggleAddingMapPoint();
+    
+    // Force cursor update on all map containers immediately
+    setTimeout(() => {
+      const mapContainers = document.querySelectorAll('.leaflet-container');
+      mapContainers.forEach(container => {
+        if (container instanceof HTMLElement) {
+          container.style.cursor = isAddingMapPoint ? 'grab' : 'crosshair';
+          console.log("Forced cursor style:", isAddingMapPoint ? 'grab' : 'crosshair');
+        }
+      });
+    }, 0);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
@@ -37,12 +53,15 @@ const MapPointsSection: React.FC<MapPointsSectionProps> = ({
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={toggleAddingMapPoint}
-          disabled={isAddingMapPoint}
-          className={`group ${isAddingMapPoint ? 'bg-green-700/20' : ''}`}
+          onClick={handleToggleAddPoint}
+          className={`group ${isAddingMapPoint ? 'bg-green-700/20 border-green-500/50' : ''}`}
         >
-          <Plus className="mr-1 h-4 w-4" />
-          Aggiungi Punto
+          {isAddingMapPoint ? (
+            <Crosshair className="mr-1 h-4 w-4 text-green-400" />
+          ) : (
+            <Plus className="mr-1 h-4 w-4" />
+          )}
+          {isAddingMapPoint ? 'Annulla' : 'Aggiungi Punto'}
         </Button>
       </div>
 
