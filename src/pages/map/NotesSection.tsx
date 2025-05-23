@@ -96,7 +96,7 @@ const NotesSection: React.FC = () => {
           <Button
             size="icon"
             variant="secondary"
-            className="ml-2"
+            className="ml-2 bg-gradient-to-r from-projectx-blue to-projectx-pink text-white rounded-full"
             onClick={() => {
               if (!showInput) {
                 setEditingNote(null);

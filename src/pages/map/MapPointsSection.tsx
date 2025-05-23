@@ -54,7 +54,7 @@ const MapPointsSection: React.FC<MapPointsSectionProps> = ({
           variant="outline" 
           size="sm" 
           onClick={handleToggleAddPoint}
-          className={`group ${isAddingMapPoint ? 'bg-green-700/20 border-green-500/50' : ''}`}
+          className={`group bg-gradient-to-r from-projectx-blue to-projectx-pink text-white rounded-full ${isAddingMapPoint ? 'bg-green-700/20 border-green-500/50' : ''}`}
         >
           {isAddingMapPoint ? (
             <Crosshair className="mr-1 h-4 w-4 text-green-400" />

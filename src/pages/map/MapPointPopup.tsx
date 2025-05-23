@@ -77,7 +77,7 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
   
   return (
     <div 
-      className="p-2 min-w-[280px]" 
+      className="p-2 min-w-[280px] point-popup" 
       onClick={handlePopupClick}
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}
@@ -93,7 +93,7 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Titolo del punto"
             required
-            className="w-full"
+            className="w-full text-black"
             ref={inputRef}
             autoFocus={true}
             // Ensure input is ready to receive focus
@@ -110,7 +110,7 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Aggiungi una nota (opzionale)"
-            className="w-full min-h-[80px]"
+            className="w-full min-h-[80px] text-black"
             onClick={(e) => e.stopPropagation()}
           />
         </div>
