@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { toast } from 'sonner';
@@ -60,8 +61,8 @@ const MapLogicProvider = () => {
     setPendingRadius,
     toggleAddingSearchArea,
     mapPoints,
-    isAddingPoint, // Use this instead of isAddingMapPoint
-    setIsAddingPoint, // Use this instead of setIsAddingMapPoint
+    isAddingPoint,
+    setIsAddingPoint,
     activeMapPoint,
     setActiveMapPoint,
     addMapPoint,
@@ -71,18 +72,18 @@ const MapLogicProvider = () => {
     requestLocationPermission
   } = useMapLogic();
   
-  // Modified to return a Promise<string> if needed
-  const handleMapPointClick = async (lat: number, lng: number): Promise<string> => {
+  // Modified to return a Promise<string> with correct parameter structure
+  const handleMapPointClick = useCallback(async (point: { lat: number; lng: number; title: string; note: string }): Promise<string> => {
     const newPointId = `point-${Date.now()}`;
     addMapPoint({
       id: newPointId,
-      lat,
-      lng,
-      title: '',
-      note: ''
+      lat: point.lat,
+      lng: point.lng,
+      title: point.title || '',
+      note: point.note || ''
     });
     return newPointId; // Return the new point ID
-  };
+  }, [addMapPoint]);
 
   // Use our custom hook for map points with the modified wrapper function
   const {
@@ -91,12 +92,12 @@ const MapLogicProvider = () => {
     handleSaveNewPoint,
     handleUpdatePoint,
     handleCancelNewPoint,
-    isAddingMapPoint: hookIsAddingMapPoint,
-    setIsAddingMapPoint: hookSetIsAddingMapPoint
+    isAddingMapPoint,
+    setIsAddingMapPoint
   } = useMapPoints(
     mapPoints,
     setActiveMapPoint,
-    handleMapPointClick, // Use our Promise<string> implementation
+    handleMapPointClick,
     updateMapPoint,
     deleteMapPoint
   );
@@ -104,27 +105,27 @@ const MapLogicProvider = () => {
   // Synchronize isAddingMapPoint state between hook and mapLogic to ensure consistency
   useEffect(() => {
     console.log("🔄 Synchronizing isAddingMapPoint states:", 
-      {hookState: hookIsAddingMapPoint, mapLogicState: isAddingPoint});
+      {hookState: isAddingMapPoint, mapLogicState: isAddingPoint});
     
-    if (isAddingPoint !== hookIsAddingMapPoint) {
+    if (isAddingPoint !== isAddingMapPoint) {
       console.log("🔄 Setting hook isAddingMapPoint to:", isAddingPoint);
-      hookSetIsAddingMapPoint(isAddingPoint);
+      setIsAddingMapPoint(isAddingPoint);
     }
-  }, [isAddingPoint, hookIsAddingMapPoint, hookSetIsAddingMapPoint]);
+  }, [isAddingPoint, isAddingMapPoint, setIsAddingMapPoint]);
 
   // Also propagate state from hook to parent if needed
   useEffect(() => {
-    if (hookIsAddingMapPoint !== isAddingPoint) {
-      console.log("🔄 Setting mapLogic isAddingMapPoint to:", hookIsAddingMapPoint);
-      setIsAddingPoint(hookIsAddingMapPoint);
+    if (isAddingMapPoint !== isAddingPoint) {
+      console.log("🔄 Setting mapLogic isAddingMapPoint to:", isAddingMapPoint);
+      setIsAddingPoint(isAddingMapPoint);
     }
-  }, [hookIsAddingMapPoint, isAddingPoint, setIsAddingPoint]);
+  }, [isAddingMapPoint, isAddingPoint, setIsAddingPoint]);
   
   // Debug logging for isAddingMapPoint state
   useEffect(() => {
     console.log("🔍 MapLogicProvider - Current isAddingMapPoint:", 
-      {hookState: hookIsAddingMapPoint, mapLogicState: isAddingPoint});
-  }, [hookIsAddingMapPoint, isAddingPoint]);
+      {hookState: isAddingMapPoint, mapLogicState: isAddingPoint});
+  }, [isAddingMapPoint, isAddingPoint]);
   
   // Function to handle map load event
   const handleMapLoad = useCallback((map: L.Map) => {
@@ -140,13 +141,13 @@ const MapLogicProvider = () => {
     // Add direct click handler to the map as a fallback mechanism
     map.on('click', (e: L.LeafletMouseEvent) => {
       console.log("🔍 DIRECT MAP CLICK via mapRef", {
-        isAdding: hookIsAddingMapPoint || isAddingPoint,
+        isAdding: isAddingMapPoint || isAddingPoint,
         isAddingArea: isAddingSearchArea,
         latlng: e.latlng
       });
       
       // Only handle if in adding mode
-      if (hookIsAddingMapPoint || isAddingPoint) {
+      if (isAddingMapPoint || isAddingPoint) {
         console.log("✅ Processing direct map click for point");
         hookHandleMapPointClick(e.latlng.lat, e.latlng.lng);
       } else if (isAddingSearchArea) {
@@ -161,7 +162,7 @@ const MapLogicProvider = () => {
       zoom: map.getZoom(),
       center: map.getCenter()
     });
-  }, [hookIsAddingMapPoint, isAddingPoint, isAddingSearchArea, hookHandleMapPointClick, handleMapClickArea]);
+  }, [isAddingMapPoint, isAddingPoint, isAddingSearchArea, hookHandleMapPointClick, handleMapClickArea]);
 
   // Simulate a small loading delay for better UX
   useEffect(() => {
@@ -178,7 +179,7 @@ const MapLogicProvider = () => {
   // TECHNICAL REPORT
   console.log("🧪 TECHNICAL REPORT - MAP SYSTEM STATUS:", {
     mapRef: mapRef.current ? "ACTIVE" : "NOT INITIALIZED",
-    isAddingPointHook: hookIsAddingMapPoint,
+    isAddingPointHook: isAddingMapPoint,
     isAddingPointLogic: isAddingPoint,
     isAddingSearchArea: isAddingSearchArea,
     newPointStatus: newPoint ? "CREATED" : "NOT CREATED",
@@ -258,7 +259,7 @@ const MapLogicProvider = () => {
           handleMapClickArea={handleMapClickArea}
           searchAreas={searchAreas}
           setPendingRadius={setPendingRadius}
-          isAddingMapPoint={hookIsAddingMapPoint || isAddingPoint} // Use either state as true
+          isAddingMapPoint={isAddingMapPoint || isAddingPoint} // Use either state as true
           onMapPointClick={hookHandleMapPointClick}
         />
       </MapContainer>
@@ -278,7 +279,7 @@ const MapLogicProvider = () => {
       {/* Use the MapInstructionsOverlay component */}
       <MapInstructionsOverlay 
         isAddingSearchArea={isAddingSearchArea} 
-        isAddingMapPoint={hookIsAddingMapPoint || isAddingPoint} // Use either state as true
+        isAddingMapPoint={isAddingMapPoint || isAddingPoint} // Use either state as true
       />
 
       <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />

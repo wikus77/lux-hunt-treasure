@@ -17,16 +17,17 @@ export const useMapLogic = () => {
   
   const addMapPoint = (point) => {
     setMapPoints(prev => [...prev, point]);
+    return Promise.resolve(point.id);
   };
 
-  const updateMapPoint = async (id: string, updates: { title?: string; note?: string }) => {
+  const updateMapPoint = async (id: string, updates: { title?: string; note?: string }): Promise<boolean> => {
     setMapPoints(prev =>
       prev.map(point => (point.id === id ? { ...point, ...updates } : point))
     );
     return true; // Return boolean value to match expected type
   };
 
-  const deleteMapPoint = async (id: string) => {
+  const deleteMapPoint = async (id: string): Promise<boolean> => {
     setMapPoints(prev => prev.filter(point => point.id !== id));
     return true; // Return boolean value to match expected type
   };
@@ -78,7 +79,7 @@ export const useMapLogic = () => {
     }
   };
 
-  const deleteSearchArea = async (id: string) => {
+  const deleteSearchArea = async (id: string): Promise<boolean> => {
     setSearchAreas(prevAreas => prevAreas.filter(area => area.id !== id));
     return true;
   };

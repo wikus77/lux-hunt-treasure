@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { MapMarker } from '@/components/maps/types';
@@ -5,8 +6,8 @@ import { MapMarker } from '@/components/maps/types';
 export function useMapPoints(
   mapPoints: MapMarker[], 
   setActiveMapPoint: (id: string | null) => void,
-  addMapPoint: (point: { lat: number; lng: number; title: string; note: string }) => Promise<string | null>,
-  updateMapPoint: (id: string, updates: { title?: string; note?: string }) => Promise<void>,
+  addMapPoint: (point: { lat: number; lng: number; title: string; note: string }) => Promise<string>,
+  updateMapPoint: (id: string, updates: { title?: string; note?: string }) => Promise<boolean>,
   deleteMapPoint: (id: string) => Promise<boolean>
 ) {
   // State for the new point being created
@@ -22,7 +23,7 @@ export function useMapPoints(
 
   // Handler for map point click - CRITICAL FIX
   // We directly destructure lat,lng and use them immediately without any state updates
-  const handleMapPointClick = useCallback((lat: number, lng: number) => {
+  const handleMapPointClick = useCallback(async (lat: number, lng: number): Promise<string> => {
     console.log("⭐ Map point click HANDLER executed at coordinates:", lat, lng);
     
     // CRITICAL FIX: Check if we're already in adding point mode BEFORE any state updates
@@ -33,7 +34,7 @@ export function useMapPoints(
     // Guard clause - if not in adding point mode, exit early
     if (!currentlyAddingPoint) {
       console.log("❌ Not in adding point mode, ignoring click");
-      return;
+      return Promise.resolve(""); // Return empty string as we didn't add a point
     }
     
     // Create a new point and set it in state - CRITICAL FIX
@@ -63,6 +64,9 @@ export function useMapPoints(
     toast.success("Punto posizionato. Inserisci titolo e nota.", {
       duration: 3000
     });
+
+    // Return a temporary ID that will be replaced when the point is saved
+    return Promise.resolve("new");
   }, [isAddingMapPoint]);
 
   // Handle save of new map point
@@ -105,17 +109,19 @@ export function useMapPoints(
   };
 
   // Handle update of existing map point
-  const handleUpdatePoint = async (id: string, title: string, note: string): Promise<void> => {
+  const handleUpdatePoint = async (id: string, title: string, note: string): Promise<boolean> => {
     console.log("📝 Aggiornamento punto esistente:", id, title, note);
     
     try {
-      await updateMapPoint(id, { title, note });
+      const result = await updateMapPoint(id, { title, note });
       console.log("✅ Punto aggiornato con successo");
       setActiveMapPoint(null);
       toast.success("Punto di interesse aggiornato");
+      return result;
     } catch (error) {
       console.error("❌ Errore nell'aggiornamento del punto:", error);
       toast.error("Errore nell'aggiornare il punto");
+      return false;
     }
   };
 
