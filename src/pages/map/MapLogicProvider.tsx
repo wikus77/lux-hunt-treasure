@@ -98,10 +98,17 @@ const MapLogicProvider = () => {
       {hookState: hookIsAddingMapPoint, mapLogicState: mapLogicIsAddingMapPoint});
   }, [hookIsAddingMapPoint, mapLogicIsAddingMapPoint]);
   
-  // Function to handle map load event
-  const handleMapLoad = useCallback((map: L.Map) => {
+  // Function to handle map load event - FIXED typescript error by removing map parameter from arrow function
+  const handleMapLoad = useCallback(() => {
     console.log("🗺️ Map component mounted and ready");
-    mapRef.current = map;
+    
+    // Get map instance from the whenReady callback outside
+    const map = mapRef.current;
+    if (!map) {
+      console.log("❌ Map reference not available");
+      return;
+    }
+    
     setMapLoaded(true);
     
     // Add direct click handler to the map as a fallback mechanism
@@ -174,7 +181,10 @@ const MapLogicProvider = () => {
           zIndex: 1
         }}
         className="z-10"
-        whenReady={(map) => handleMapLoad(map.target)}
+        whenReady={(map) => {
+          mapRef.current = map.target;
+          handleMapLoad();
+        }}
       >
         {/* Balanced tone TileLayer - not too dark, not too light */}
         <TileLayer

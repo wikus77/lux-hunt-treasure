@@ -30,7 +30,8 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
         isAddingMapPoint, 
         coords: [e.latlng.lat, e.latlng.lng],
         target: e.originalEvent.target,
-        isLeafletContainer: e.originalEvent.target.closest('.leaflet-container') !== null,
+        isLeafletContainer: e.originalEvent.target instanceof Element && 
+          (e.originalEvent.target as Element).closest('.leaflet-container') !== null,
         eventType: e.type
       });
       

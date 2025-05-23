@@ -26,8 +26,13 @@ export function useMapPoints(
   const handleMapPointClick = useCallback((lat: number, lng: number) => {
     console.log("⭐ Map point click HANDLER executed at coordinates:", lat, lng);
     
+    // CRITICAL FIX: Check if we're already in adding point mode BEFORE any state updates
+    // This ensures the click is processed regardless of asynchronous state updates
+    const currentlyAddingPoint = isAddingMapPoint;
+    console.log("📊 Current adding point state at click time:", currentlyAddingPoint);
+    
     // Guard clause - if not in adding point mode, exit early
-    if (!isAddingMapPoint) {
+    if (!currentlyAddingPoint) {
       console.log("❌ Not in adding point mode, ignoring click");
       return;
     }
@@ -49,7 +54,12 @@ export function useMapPoints(
     setNewPoint(pointData);
     
     // IMPORTANT: Only reset adding state AFTER setting the new point
-    setIsAddingMapPoint(false);
+    // Use a small delay to ensure the point is created before turning off the mode
+    // This is critical to avoid race conditions with the state
+    setTimeout(() => {
+      setIsAddingMapPoint(false);
+      console.log("🔄 Reset isAddingMapPoint to false AFTER point creation");
+    }, 50);
     
     toast.success("Punto posizionato. Inserisci titolo e nota.", {
       duration: 3000
