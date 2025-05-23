@@ -70,9 +70,9 @@ const BottomNavigation = () => {
             className={`bottom-nav-item ${isActive('/leaderboard') ? 'active' : ''}`}
           >
             <div className="p-2">
-              {/* Using sun icon to replace the Trophy for "Classifica" */}
+              {/* Replacing existing icon with the newly uploaded image */}
               <img 
-                src="/lovable-uploads/4d80134b-0da5-47d5-9ffb-ac076ddbf6e0.png" 
+                src="/lovable-uploads/5167893b-894b-4eab-84c7-b04875e02832.png" 
                 alt="Classifica"
                 width={iconSize}
                 height={iconSize}
@@ -87,7 +87,6 @@ const BottomNavigation = () => {
             className={`bottom-nav-item ${isActive('/notifications') ? 'active' : ''}`}
           >
             <div className="p-2">
-              {/* Replacing Radar icon with AtSign icon from lucide-react */}
               <AtSign 
                 size={iconSize} 
                 color={isActive('/notifications') ? iconColor : undefined}
