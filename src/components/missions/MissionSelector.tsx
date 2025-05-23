@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Check } from "lucide-react";
 
 export interface MissionSelectorProps {
   onSelect?: (gender: "uomo" | "donna") => void;
