@@ -4,14 +4,16 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LockKeyholeIcon, Brain, Bomb, Fingerprint, MapPin, Satellite, MessageSquare } from "lucide-react";
+import type { GameKey } from "@/types/minigames";
 
 interface GameCardProps {
   title: string;
   description: string;
   icon: React.ReactNode;
+  gameKey: GameKey;
 }
 
-const GameCard = ({ title, description, icon }: GameCardProps) => {
+const GameCard = ({ title, description, icon, gameKey }: GameCardProps) => {
   return (
     <Card className="m1ssion-glass-card border border-white/10 bg-black/40 hover:shadow-[0_0_15px_rgba(0,209,255,0.2)] transition-all duration-300">
       <CardHeader className="pb-2">
@@ -42,32 +44,38 @@ export default function MissionGamesSection() {
     {
       title: "Memory Hack",
       description: "Metti alla prova la tua memoria visiva",
-      icon: <Brain className="text-[#00D1FF] w-5 h-5" />
+      icon: <Brain className="text-[#00D1FF] w-5 h-5" />,
+      gameKey: "memory_hack" as GameKey
     },
     {
       title: "Disinnesca la Bomba",
       description: "Trova la sequenza corretta in tempo",
-      icon: <Bomb className="text-[#00D1FF] w-5 h-5" />
+      icon: <Bomb className="text-[#00D1FF] w-5 h-5" />,
+      gameKey: "bomb_defuse" as GameKey
     },
     {
       title: "Cracca la Combinazione",
       description: "Decifra il codice segreto",
-      icon: <Fingerprint className="text-[#00D1FF] w-5 h-5" />
+      icon: <Fingerprint className="text-[#00D1FF] w-5 h-5" />,
+      gameKey: "crack_combination" as GameKey
     },
     {
       title: "Trova il Punto sulla Mappa",
       description: "Localizza obiettivi segreti",
-      icon: <MapPin className="text-[#00D1FF] w-5 h-5" />
+      icon: <MapPin className="text-[#00D1FF] w-5 h-5" />,
+      gameKey: "find_map_point" as GameKey
     },
     {
       title: "Tracciamento Satellitare",
       description: "Intercetta segnali nascosti",
-      icon: <Satellite className="text-[#00D1FF] w-5 h-5" />
+      icon: <Satellite className="text-[#00D1FF] w-5 h-5" />,
+      gameKey: "satellite_tracking" as GameKey
     },
     {
       title: "Interrogatorio Lampo",
       description: "Rispondi velocemente alle domande",
-      icon: <MessageSquare className="text-[#00D1FF] w-5 h-5" />
+      icon: <MessageSquare className="text-[#00D1FF] w-5 h-5" />,
+      gameKey: "flash_interrogation" as GameKey
     }
   ];
 
@@ -93,7 +101,7 @@ export default function MissionGamesSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {games.map((game, index) => (
             <motion.div
-              key={game.title}
+              key={game.gameKey}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.1 + index * 0.1 }}
@@ -101,7 +109,8 @@ export default function MissionGamesSection() {
               <GameCard 
                 title={game.title} 
                 description={game.description} 
-                icon={game.icon} 
+                icon={game.icon}
+                gameKey={game.gameKey}
               />
             </motion.div>
           ))}

@@ -32,7 +32,7 @@ export default function HomeContent() {
           {/* Dark Zone Title */}
           <DarkZoneTitle />
 
-          {/* Command Center Modules with Dark Zone concept */}
+          {/* Command Modules Section with Dark Zone concept */}
           <CommandModulesSection 
             unlockedModules={unlockedModules}
             handleModuleClick={handleModuleClick}
