@@ -20,7 +20,7 @@ export function useNotificationManager() {
   
   // Add a polling mechanism for notifications with debounce logic
   const pollingIntervalRef = useRef<number | null>(null);
-  const isInitialLoadDone = useRef(false);
+  const isInitialLoadDone = useRef<boolean>(false);
   
   // Setup notification polling - check every 60 seconds for new notifications (reduced frequency)
   useEffect(() => {
@@ -67,10 +67,11 @@ export function useNotificationManager() {
   const openNotificationsDrawer = useCallback(() => {
     setShowNotifications(true);
     // Only reload if we haven't loaded recently
-    if (!isInitialLoadDone.current || Date.now() - (isInitialLoadDone.current as any) > 60000) {
+    const lastLoadTime = isInitialLoadDone.current === true ? 0 : Date.now() - 60000;
+    if (!isInitialLoadDone.current || lastLoadTime > 60000) {
       reloadNotifications().then(() => {
         console.log('Notifications reloaded on drawer open');
-        isInitialLoadDone.current = Date.now();
+        isInitialLoadDone.current = true;
       });
     }
   }, [setShowNotifications, reloadNotifications]);
