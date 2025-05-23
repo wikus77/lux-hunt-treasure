@@ -423,7 +423,8 @@ const NewMapPage = () => {
                 lat: p.latitude,
                 lng: p.longitude,
                 title: p.title,
-                note: p.note
+                note: p.note,
+                position: { lat: p.latitude, lng: p.longitude } // Add the position property to match MapMarker type
               }))}
               isAddingMapPoint={isAddingPoint}
               toggleAddingMapPoint={() => setIsAddingPoint(prev => !prev)}
