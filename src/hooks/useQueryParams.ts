@@ -7,9 +7,10 @@ export function useQueryParams<T extends Record<string, string>>(): T {
   
   const result = {} as T;
   
-  // Convert URLSearchParams to a plain object
+  // Convert URLSearchParams to a plain object with primitive string values
   params.forEach((value, key) => {
-    (result as any)[key] = value;
+    // Use primitive string value instead of String object
+    (result as any)[key] = value.toString();
   });
   
   return result;
