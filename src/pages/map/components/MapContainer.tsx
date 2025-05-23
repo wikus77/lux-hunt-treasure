@@ -1,42 +1,53 @@
-
-import React from 'react';
-import { MapContainer, TileLayer } from 'react-leaflet';
+import React, { useState, useCallback, useRef } from 'react';
+import { MapContainer as LeafletMap, TileLayer, Marker, Popup, useMapEvents, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { DEFAULT_LOCATION } from '../useMapLogic';
-import MapController from './MapController';
-import MapPopupManager from './MapPopupManager';
-import SearchAreaMapLayer from '../SearchAreaMapLayer';
-import MapEventHandler from './MapEventHandler';
+import { Button } from "@/components/ui/button";
+import { DEFAULT_LOCATION } from '@/pages/map/useMapLogic';
+import { MapMarker, SearchArea } from '@/components/maps/types';
+import { useToast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from 'uuid';
 import BuzzButton from './BuzzButton';
-import LocationButton from './LocationButton';
-import MapInstructionsOverlay from './MapInstructionsOverlay';
-import SearchAreaButton from './SearchAreaButton';
 
 interface MapContainerProps {
   isAddingPoint: boolean;
-  setIsAddingPoint: (value: boolean) => void;
+  setIsAddingPoint: (isAdding: boolean) => void;
   addNewPoint: (lat: number, lng: number) => void;
-  mapPoints: any[];
+  mapPoints: MapMarker[];
   activeMapPoint: string | null;
   setActiveMapPoint: (id: string | null) => void;
   handleUpdatePoint: (id: string, title: string, note: string) => Promise<void>;
   deleteMapPoint: (id: string) => Promise<boolean>;
-  newPoint: any | null;
-  handleSaveNewPoint: (title: string, note: string) => void;
+  newPoint: MapMarker | null;
+  handleSaveNewPoint: (title: string, note: string) => Promise<void>;
   handleCancelNewPoint: () => void;
-  buzzMapPrice: number;
   handleBuzz: () => void;
-  isAddingSearchArea?: boolean;
-  handleMapClickArea?: (e: any) => void;
-  searchAreas?: any[];
-  setActiveSearchArea?: (id: string | null) => void;
-  deleteSearchArea?: (id: string) => Promise<boolean>;
-  setPendingRadius?: (value: number) => void;
-  requestLocationPermission?: () => void;
-  toggleAddingSearchArea?: () => void;
+  requestLocationPermission: () => void;
+  // Search area props
+  isAddingSearchArea: boolean;
+  handleMapClickArea: (e: any) => Promise<void>;
+  searchAreas: SearchArea[];
+  setActiveSearchArea: (id: string | null) => void;
+  deleteSearchArea: (id: string) => Promise<boolean>;
+  setPendingRadius: (radius: number) => void;
+  toggleAddingSearchArea: () => void;
 }
 
-const MapContainerComponent: React.FC<MapContainerProps> = ({
+function MapEventHandler({ isAddingPoint, addNewPoint, isAddingSearchArea, handleMapClickArea }: { isAddingPoint: boolean; addNewPoint: (lat: number, lng: number) => void, isAddingSearchArea: boolean, handleMapClickArea: (e: any) => Promise<void> }) {
+  useMapEvents({
+    click: (e) => {
+      if (isAddingPoint) {
+        addNewPoint(e.latlng.lat, e.latlng.lng);
+      }
+      if (isAddingSearchArea) {
+        handleMapClickArea(e);
+      }
+    }
+  });
+
+  return null;
+}
+
+const MapContainer = ({ 
   isAddingPoint,
   setIsAddingPoint,
   addNewPoint,
@@ -48,110 +59,202 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   newPoint,
   handleSaveNewPoint,
   handleCancelNewPoint,
-  buzzMapPrice,
   handleBuzz,
-  isAddingSearchArea = false,
-  handleMapClickArea = () => {},
-  searchAreas = [],
-  setActiveSearchArea = () => {},
-  deleteSearchArea = async () => false,
-  setPendingRadius = () => {},
-  requestLocationPermission = () => {},
-  toggleAddingSearchArea = () => {}
-}) => {
+  requestLocationPermission,
+  // Search area props
+  isAddingSearchArea,
+  handleMapClickArea,
+  searchAreas,
+  setActiveSearchArea,
+  deleteSearchArea,
+  setPendingRadius,
+  toggleAddingSearchArea,
+}: MapContainerProps) => {
+  const { toast } = useToast();
+  const [editTitle, setEditTitle] = useState('');
+  const [editNote, setEditNote] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [mapCenter, setMapCenter] = useState(DEFAULT_LOCATION);
+  const mapRef = useRef<L.Map | null>(null);
+
+  const handleSave = async () => {
+    if (!activeMapPoint) return;
+    await handleUpdatePoint(activeMapPoint, editTitle, editNote);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditTitle('');
+    setEditNote('');
+    setActiveMapPoint(null);
+  };
+
+  const handleDelete = async () => {
+    if (!activeMapPoint) return;
+    const success = await deleteMapPoint(activeMapPoint);
+    if (success) {
+      setIsEditing(false);
+      setEditTitle('');
+      setEditNote('');
+      setActiveMapPoint(null);
+    }
+  };
+
+  const handleNewSave = async () => {
+    if (!newPoint) return;
+    await handleSaveNewPoint(editTitle, editNote);
+    setIsEditing(false);
+  };
+
+  const handleNewCancel = () => {
+    handleCancelNewPoint();
+    setIsEditing(false);
+    setEditTitle('');
+    setEditNote('');
+  };
+
   return (
-    <div 
-      className="rounded-[24px] overflow-hidden relative w-full" 
-      style={{ 
-        height: '70vh', 
-        minHeight: '500px',
-        width: '100%',
-        display: 'block',
-        position: 'relative'
-      }}
-    >
-      <MapContainer 
-        center={DEFAULT_LOCATION} 
-        zoom={15}
-        style={{ 
-          height: '100%', 
-          width: '100%',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 1
-        }}
-        className="z-10"
+    <div className="relative h-[50vh] sm:h-[60vh] w-full rounded-xl overflow-hidden border border-white/10">
+      <LeafletMap
+        center={mapCenter}
+        zoom={6}
+        style={{ height: "100%", width: "100%" }}
+        className="rounded-xl"
+        ref={mapRef}
       >
-        <MapController 
-          isAddingPoint={isAddingPoint}
-          setIsAddingPoint={setIsAddingPoint}
-          addNewPoint={addNewPoint}
-        />
-        
-        {/* Balanced tone TileLayer - not too dark, not too light */}
         <TileLayer
-          attribution='&copy; CartoDB'
-          url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        />
-
-        {/* Add labels layer separately for better visibility and control */}
-        <TileLayer
-          attribution='&copy; CartoDB'
-          url='https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {/* Display search areas */}
-        <SearchAreaMapLayer 
-          searchAreas={searchAreas} 
-          setActiveSearchArea={setActiveSearchArea}
-          deleteSearchArea={deleteSearchArea}
-        />
-        
-        {/* Use the MapPopupManager component */}
-        <MapPopupManager 
-          mapPoints={mapPoints}
-          activeMapPoint={activeMapPoint}
-          setActiveMapPoint={setActiveMapPoint}
-          handleUpdatePoint={handleUpdatePoint}
-          deleteMapPoint={deleteMapPoint}
-          newPoint={newPoint}
-          handleSaveNewPoint={handleSaveNewPoint}
-          handleCancelNewPoint={handleCancelNewPoint}
-        />
-        
-        {/* Use the MapEventHandler component */}
         <MapEventHandler 
-          isAddingSearchArea={isAddingSearchArea} 
+          isAddingPoint={isAddingPoint} 
+          addNewPoint={addNewPoint}
+          isAddingSearchArea={isAddingSearchArea}
           handleMapClickArea={handleMapClickArea}
-          searchAreas={searchAreas}
-          setPendingRadius={setPendingRadius}
-          isAddingMapPoint={isAddingPoint} 
-          onMapPointClick={addNewPoint}
         />
-      </MapContainer>
 
-      {/* Use the LocationButton component */}
-      <LocationButton requestLocationPermission={requestLocationPermission} />
+        {mapPoints.map(point => (
+          <Marker
+            key={point.id}
+            position={[point.lat, point.lng]}
+            eventHandlers={{
+              click: () => {
+                setActiveMapPoint(point.id);
+                setEditTitle(point.title);
+                setEditNote(point.note);
+                setIsEditing(true);
+              },
+            }}
+          >
+            <Popup>
+              <div>
+                <h4 className="font-bold">{point.title}</h4>
+                <p>{point.note}</p>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
 
-      {/* Add SearchAreaButton component */}
-      <SearchAreaButton 
-        toggleAddingSearchArea={toggleAddingSearchArea} 
-        isAddingSearchArea={isAddingSearchArea} 
-      />
+        {newPoint && (
+          <Marker position={[newPoint.lat, newPoint.lng]}>
+            <Popup>
+              <div>
+                <h4 className="font-bold">Nuovo Punto</h4>
+                <input
+                  type="text"
+                  placeholder="Titolo"
+                  className="w-full p-2 border rounded mb-2 text-black"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                />
+                <textarea
+                  placeholder="Note"
+                  className="w-full p-2 border rounded mb-2 text-black"
+                  value={editNote}
+                  onChange={(e) => setEditNote(e.target.value)}
+                />
+                <div className="flex justify-between">
+                  <Button size="sm" variant="secondary" onClick={handleNewSave}>Salva</Button>
+                  <Button size="sm" variant="ghost" onClick={handleNewCancel}>Annulla</Button>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        )}
 
-      {/* Use the BuzzButton component */}
-      <BuzzButton handleBuzz={handleBuzz} buzzMapPrice={buzzMapPrice} />
+        {searchAreas.map(area => (
+          <Circle
+            key={area.id}
+            center={[area.lat, area.lng]}
+            radius={area.radius}
+            color={area.color}
+            fillColor={area.color}
+            fillOpacity={0.2}
+            eventHandlers={{
+              click: () => {
+                setActiveSearchArea(area.id);
+              },
+            }}
+          >
+            <Popup>
+              <div>
+                <h4 className="font-bold">{area.label}</h4>
+                <p>Raggio: {(area.radius / 1000).toFixed(1)} km</p>
+                {activeSearchArea === area.id && (
+                  <Button size="sm" variant="destructive" onClick={() => deleteSearchArea(area.id)}>
+                    Elimina
+                  </Button>
+                )}
+              </div>
+            </Popup>
+          </Circle>
+        ))}
+      </LeafletMap>
 
-      {/* Use the MapInstructionsOverlay component */}
-      <MapInstructionsOverlay 
-        isAddingSearchArea={isAddingSearchArea} 
-        isAddingMapPoint={isAddingPoint}
-      />
+      {isEditing && activeMapPoint && (
+        <div className="absolute top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center">
+          <div className="bg-white text-black p-4 rounded-md">
+            <h4 className="text-lg font-bold mb-2">Modifica Punto</h4>
+            <input
+              type="text"
+              placeholder="Titolo"
+              className="w-full p-2 border rounded mb-2"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+            />
+            <textarea
+              placeholder="Note"
+              className="w-full p-2 border rounded mb-2"
+              value={editNote}
+              onChange={(e) => setEditNote(e.target.value)}
+            />
+            <div className="flex justify-between">
+              <Button size="sm" variant="secondary" onClick={handleSave}>Salva</Button>
+              <Button size="sm" variant="ghost" onClick={handleCancel}>Annulla</Button>
+              <Button size="sm" variant="destructive" onClick={handleDelete}>Elimina</Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* BuzzButton - updated to remove buzzMapPrice prop */}
+      <BuzzButton handleBuzz={handleBuzz} />
+      
+      <div className="absolute top-2 left-2 flex gap-2">
+        <Button size="sm" onClick={requestLocationPermission}>
+          Richiedi Posizione
+        </Button>
+        <Button size="sm" variant={isAddingPoint ? 'secondary' : 'outline'} onClick={() => setIsAddingPoint(prev => !prev)}>
+          {isAddingPoint ? 'Annulla Punto' : 'Aggiungi Punto'}
+        </Button>
+        <Button size="sm" variant={isAddingSearchArea ? 'secondary' : 'outline'} onClick={toggleAddingSearchArea}>
+          {isAddingSearchArea ? 'Annulla Area' : 'Aggiungi Area'}
+        </Button>
+      </div>
     </div>
   );
 };
 
-export default MapContainerComponent;
+export default MapContainer;
