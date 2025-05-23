@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
+import * as L from 'leaflet'; // Import Leaflet properly
 
 interface MapPopupManagerProps {
   mapPoints: any[];
@@ -71,7 +73,11 @@ const MapPopupManager: React.FC<MapPopupManagerProps> = ({
           })}
         >
           {activeMapPoint === point.id && (
-            <Popup onClose={() => setActiveMapPoint(null)}>
+            <Popup 
+              eventHandlers={{
+                close: () => setActiveMapPoint(null)
+              }}
+            >
               <div className="p-2 space-y-2">
                 <Input 
                   value={editTitle} 
@@ -118,7 +124,12 @@ const MapPopupManager: React.FC<MapPopupManagerProps> = ({
             iconAnchor: [5, 5]
           })}
         >
-          <Popup onClose={handleCancelNewPoint} autoPan>
+          <Popup 
+            eventHandlers={{
+              close: handleCancelNewPoint
+            }}
+            autoPan
+          >
             <div className="p-2 space-y-2">
               <Input 
                 value={title} 
