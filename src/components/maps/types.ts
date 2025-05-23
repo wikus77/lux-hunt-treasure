@@ -9,6 +9,7 @@ export interface MapMarker {
   note: string;
   position: { lat: number; lng: number };
   createdAt?: Date;
+  editing?: boolean;
 }
 
 export interface SearchArea {

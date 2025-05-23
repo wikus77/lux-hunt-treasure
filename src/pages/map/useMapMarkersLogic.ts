@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { MapMarker } from "@/components/maps/types";
@@ -51,7 +52,7 @@ export function useMapMarkersLogic() {
 
   const saveMarkerNote = (id: string, note: string) => {
     setMarkers(markers.map(marker =>
-      marker.id === id ? { ...marker, note } : marker
+      marker.id === id ? { ...marker, note, editing: false } : marker
     ));
     toast.success("Nota salvata");
   };
@@ -63,10 +64,10 @@ export function useMapMarkersLogic() {
   };
 
   const editMarker = (id: string) => {
-    const marker = markers.find(m => m.id === id);
-    if (marker) {
-      setActiveMarker(id);
-    }
+    setMarkers(markers.map(marker => 
+      marker.id === id ? { ...marker, editing: true } : marker
+    ));
+    setActiveMarker(id);
   };
 
   const clearAllMarkers = () => {
