@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
@@ -89,9 +88,8 @@ const Notifications = () => {
         // Mark all as read when this page is fully loaded
         await markAllAsRead();
         
-        // Initialize with categories that have notifications expanded
-        const categoriesToExpand = Object.keys(notificationsByCategory);
-        setExpandedCategories(categoriesToExpand);
+        // Don't set any categories as expanded initially
+        // This fixes the issue with accordion auto-opening
         
         // Mark initial load as complete
         setInitialLoadComplete(true);
@@ -106,7 +104,7 @@ const Notifications = () => {
     }, 60000); // Poll only every minute instead of every second
     
     return () => clearInterval(refreshInterval);
-  }, [markAllAsRead, reloadNotifications, initialLoadComplete, notificationsByCategory]);
+  }, [markAllAsRead, reloadNotifications, initialLoadComplete]);
 
   // Handle toggle of each notification category
   const toggleCategory = (categoryId: string) => {
