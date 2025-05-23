@@ -7,9 +7,11 @@ import NotesSection from './map/NotesSection';
 import SidebarLayout from './map/components/SidebarLayout';
 import RightSidebarContent from './map/components/RightSidebarContent';
 import { useNewMapPage } from './map/hooks/useNewMapPage';
+import { useBuzzMapPricing } from './map/hooks/useBuzzMapPricing';
 
 const NewMapPage = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const { buzzMapPrice } = useBuzzMapPricing();
   const {
     isAddingPoint,
     setIsAddingPoint,
@@ -17,7 +19,6 @@ const NewMapPage = () => {
     newPoint,
     activeMapPoint,
     setActiveMapPoint,
-    buzzMapPrice,
     searchAreas,
     isAddingSearchArea,
     activeSearchArea,
