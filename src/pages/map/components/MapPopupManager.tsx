@@ -75,7 +75,7 @@ const MapPopupManager: React.FC<MapPopupManagerProps> = ({
           {activeMapPoint === point.id && (
             <Popup 
               eventHandlers={{
-                close: () => setActiveMapPoint(null)
+                popupclose: () => setActiveMapPoint(null)
               }}
             >
               <div className="p-2 space-y-2">
@@ -126,7 +126,7 @@ const MapPopupManager: React.FC<MapPopupManagerProps> = ({
         >
           <Popup 
             eventHandlers={{
-              close: handleCancelNewPoint
+              popupclose: handleCancelNewPoint
             }}
             autoPan
           >
