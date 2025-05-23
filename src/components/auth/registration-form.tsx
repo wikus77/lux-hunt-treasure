@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRegistration } from '@/hooks/use-registration';
 import { Mail, User, Lock } from 'lucide-react';
 import FormField from './form-field';
@@ -9,7 +9,11 @@ import { Loader2 } from 'lucide-react';
 import TurnstileWidget from '@/components/security/TurnstileWidget';
 import { toast } from 'sonner';
 
-export const RegistrationForm: React.FC = () => {
+interface RegistrationFormProps {
+  missionPreference: 'uomo' | 'donna' | null;
+}
+
+export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPreference }) => {
   const {
     formData,
     errors,
@@ -21,7 +25,8 @@ export const RegistrationForm: React.FC = () => {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
-    originalHandleSubmit(e, turnstileToken || undefined);
+    // Add mission preference to submission
+    originalHandleSubmit(e, turnstileToken || undefined, missionPreference);
   };
 
   return (

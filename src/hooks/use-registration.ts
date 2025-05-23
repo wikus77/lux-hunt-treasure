@@ -37,7 +37,7 @@ export const useRegistration = () => {
     }
   };
 
-  const handleSubmit = async (e: FormEvent, turnstileToken?: string) => {
+  const handleSubmit = async (e: FormEvent, turnstileToken?: string, missionPreference?: 'uomo' | 'donna' | null) => {
     e.preventDefault();
 
     // Validazione client-side
@@ -96,6 +96,7 @@ export const useRegistration = () => {
           emailRedirectTo: window.location.origin + '/auth',
           data: {
             full_name: name,
+            mission_preference: missionPreference || null
           },
           captchaToken: turnstileToken // Pass the turnstile token here
         }

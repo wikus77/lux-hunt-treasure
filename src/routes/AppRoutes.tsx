@@ -19,6 +19,7 @@ const Settings = lazy(() => import("@/pages/Settings"));
 // Auth routes
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
+const MissionSelection = lazy(() => import("@/pages/MissionSelection"));
 
 // Additional routes
 const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
@@ -94,6 +95,7 @@ const AppRoutes: React.FC = () => {
           {/* Auth routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/select-mission" element={<MissionSelection />} />
           
           {/* Other routes */}
           <Route path="/how-it-works" element={<HowItWorks />} />

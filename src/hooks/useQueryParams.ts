@@ -1,9 +1,16 @@
 
-import { useMemo } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from 'react-router-dom';
 
-export function useQueryParams() {
+export function useQueryParams<T extends Record<string, string>>(): T {
   const { search } = useLocation();
+  const params = new URLSearchParams(search);
   
-  return useMemo(() => new URLSearchParams(search), [search]);
+  const result = {} as T;
+  
+  // Convert URLSearchParams to a plain object
+  params.forEach((value, key) => {
+    (result as any)[key] = value;
+  });
+  
+  return result;
 }
