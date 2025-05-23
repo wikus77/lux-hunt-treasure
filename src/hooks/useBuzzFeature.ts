@@ -74,7 +74,9 @@ export function useBuzzFeature() {
     
     // If user is authenticated, call the Edge Function directly
     try {
-      const userId = cachedUserId || (await supabase.auth.getUser()).data.session?.user?.id;
+      // Fix: Use getSession() instead of getUser() to access user ID
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = cachedUserId || sessionData?.session?.user?.id;
       
       if (!userId) {
         toast.error("Devi effettuare l'accesso per utilizzare questa funzione");
@@ -129,7 +131,9 @@ export function useBuzzFeature() {
     playSound();
     
     // Try to get authenticated user
-    const userId = cachedUserId || (await supabase.auth.getUser()).data.session?.user?.id;
+    // Fix: Use getSession() instead of getUser() to access user ID
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = cachedUserId || sessionData?.session?.user?.id;
     
     if (!userId) {
       toast.error("Devi effettuare l'accesso per utilizzare questa funzione");
