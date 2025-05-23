@@ -106,6 +106,7 @@ const NewMapPage = () => {
               clearAllSearchAreas={clearAllSearchAreas}
               handleAddArea={handleAddArea}
               isAddingSearchArea={isAddingSearchArea}
+              deleteSearchArea={deleteSearchArea}
             />
           }
         />

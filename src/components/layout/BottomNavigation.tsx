@@ -5,7 +5,8 @@ import {
   Home, 
   MapPin, 
   Circle, 
-  AtSign
+  AtSign,
+  Trophy
 } from "lucide-react";
 
 const BottomNavigation = () => {
@@ -70,13 +71,10 @@ const BottomNavigation = () => {
             className={`bottom-nav-item ${isActive('/leaderboard') ? 'active' : ''}`}
           >
             <div className="p-2">
-              <img 
-                src="/lovable-uploads/97d29c7a-1c8b-40f7-a171-1bcbbbbedc40.png" 
-                alt="Classifica"
-                width={iconSize}
-                height={iconSize}
-                className={`transition-all ${isActive('/leaderboard') ? 'brightness-125 filter drop-shadow-[0_0_4px_#00D1FF]' : 'filter brightness-90'}`}
-                style={{ objectFit: 'contain' }} /* Ensure icon maintains proportions */
+              <Trophy 
+                size={iconSize} 
+                color={isActive('/leaderboard') ? iconColor : undefined}
+                className={`transition-all ${isActive('/leaderboard') ? 'active-gradient-icon' : ''}`}
               />
             </div>
             <span className="text-xs">Classifica</span>

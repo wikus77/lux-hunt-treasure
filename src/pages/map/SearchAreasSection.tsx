@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Circle, Plus } from "lucide-react";
+import { Circle, Plus, Trash2 } from "lucide-react";
 import { SearchArea } from "@/components/maps/types";
 import {
   Dialog,
@@ -19,6 +19,7 @@ type SearchAreasSectionProps = {
   clearAllSearchAreas: () => void;
   handleAddArea: (radius?: number) => void;
   isAddingSearchArea: boolean;
+  deleteSearchArea: (id: string) => Promise<boolean>;
 };
 
 const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
@@ -26,7 +27,8 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
   setActiveSearchArea,
   clearAllSearchAreas,
   handleAddArea,
-  isAddingSearchArea
+  isAddingSearchArea,
+  deleteSearchArea
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [areaRadius, setAreaRadius] = useState("500");
@@ -98,13 +100,26 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
                   ? "bg-[#7E69AB]/40 hover:bg-[#7E69AB]/60 border-l-4 border-[#9b87f5]"
                   : "bg-black/40 hover:bg-black/50"
                 }`}
-              onClick={() => setActiveSearchArea(area.id)}
             >
               <div className="flex items-start gap-2">
                 <Circle className={`w-5 h-5 flex-shrink-0 ${area.isAI ? "text-[#9b87f5]" : "text-cyan-400"}`} />
                 <div className="flex-1">
                   <div className="text-sm font-medium">{area.label}</div>
                   <div className="text-xs text-gray-400">Raggio: {area.radius/1000}km</div>
+                </div>
+                <div className="flex items-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent activating the area
+                      deleteSearchArea(area.id);
+                    }}
+                    className="h-8 w-8 p-0 rounded-full text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Elimina area</span>
+                  </Button>
                 </div>
               </div>
             </div>

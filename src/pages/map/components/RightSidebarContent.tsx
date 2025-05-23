@@ -15,6 +15,7 @@ interface RightSidebarContentProps {
   clearAllSearchAreas: () => void;
   handleAddArea: (area: any) => void;
   isAddingSearchArea: boolean;
+  deleteSearchArea: (id: string) => Promise<boolean>;
 }
 
 const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
@@ -27,7 +28,8 @@ const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
   setActiveSearchArea,
   clearAllSearchAreas,
   handleAddArea,
-  isAddingSearchArea
+  isAddingSearchArea,
+  deleteSearchArea
 }) => {
   return (
     <>
@@ -50,6 +52,7 @@ const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
           clearAllSearchAreas={clearAllSearchAreas}
           handleAddArea={handleAddArea}
           isAddingSearchArea={isAddingSearchArea}
+          deleteSearchArea={deleteSearchArea}
         />
       </div>
     </>
