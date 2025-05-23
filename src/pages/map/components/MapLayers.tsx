@@ -14,17 +14,18 @@ const MapLayers: React.FC<MapLayersProps> = ({
   setActiveSearchArea, 
   deleteSearchArea 
 }) => {
-  // Define the pulse animation for map points
+  // Define the pulse animation for map points with enhanced neon effect
   const mapPointPulseStyle = `
     @keyframes mapPointPulse {
-      0% { box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.4); }
-      70% { box-shadow: 0 0 0 10px rgba(0, 240, 255, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(0, 240, 255, 0); }
+      0% { box-shadow: 0 0 4px rgba(0, 240, 255, 0.7); }
+      50% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.9); }
+      100% { box-shadow: 0 0 4px rgba(0, 240, 255, 0.7); }
     }
     .map-point {
       background-color: #00f0ff;
       border-radius: 50%;
       animation: mapPointPulse 2s infinite;
+      filter: drop-shadow(0 0 6px #00f0ff);
     }
   `;
 
