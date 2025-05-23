@@ -55,7 +55,7 @@ const MapLogicProvider = () => {
     requestLocationPermission
   } = useMapLogic();
   
-  // Use our custom hook for map points, passing down the setIsAddingMapPoint handler
+  // Use our custom hook for map points
   const {
     newPoint,
     handleMapPointClick,
@@ -72,9 +72,13 @@ const MapLogicProvider = () => {
     deleteMapPoint
   );
   
-  // Synchronize isAddingMapPoint state between hook and mapLogic
+  // Synchronize isAddingMapPoint state between hook and mapLogic to ensure consistency
   useEffect(() => {
+    console.log("Synchronizing isAddingMapPoint states:", 
+      {hookState: hookIsAddingMapPoint, mapLogicState: mapLogicIsAddingMapPoint});
+    
     if (mapLogicIsAddingMapPoint !== hookIsAddingMapPoint) {
+      console.log("Setting hook isAddingMapPoint to:", mapLogicIsAddingMapPoint);
       hookSetIsAddingMapPoint(mapLogicIsAddingMapPoint);
     }
   }, [mapLogicIsAddingMapPoint, hookIsAddingMapPoint, hookSetIsAddingMapPoint]);
@@ -82,14 +86,16 @@ const MapLogicProvider = () => {
   // Also propagate state from hook to parent if needed
   useEffect(() => {
     if (hookIsAddingMapPoint !== mapLogicIsAddingMapPoint) {
+      console.log("Setting mapLogic isAddingMapPoint to:", hookIsAddingMapPoint);
       mapLogicSetIsAddingMapPoint(hookIsAddingMapPoint);
     }
   }, [hookIsAddingMapPoint, mapLogicIsAddingMapPoint, mapLogicSetIsAddingMapPoint]);
   
   // Debug logging for isAddingMapPoint state
   useEffect(() => {
-    console.log("🔍 MapLogicProvider - isAddingMapPoint:", mapLogicIsAddingMapPoint);
-  }, [mapLogicIsAddingMapPoint]);
+    console.log("🔍 MapLogicProvider - Current isAddingMapPoint:", 
+      {hookState: hookIsAddingMapPoint, mapLogicState: mapLogicIsAddingMapPoint});
+  }, [hookIsAddingMapPoint, mapLogicIsAddingMapPoint]);
   
   // Function to handle map load event
   const handleMapLoad = useCallback(() => {
@@ -106,6 +112,19 @@ const MapLogicProvider = () => {
     }, 800);
     return () => clearTimeout(timer);
   }, [mapLoaded]);
+  
+  // Additional direct click handler as a fallback
+  const manualMapClickHandler = (e: L.LeafletMouseEvent) => {
+    console.log("MANUAL MAP CLICK HANDLER", {
+      hookIsAddingMapPoint, 
+      mapLogicIsAddingMapPoint, 
+      coords: [e.latlng.lat, e.latlng.lng]
+    });
+    
+    if (hookIsAddingMapPoint || mapLogicIsAddingMapPoint) {
+      handleMapPointClick(e.latlng.lat, e.latlng.lng);
+    }
+  };
   
   if (!mapLoaded) return <LoadingScreen />;
 
@@ -173,7 +192,7 @@ const MapLogicProvider = () => {
           handleMapClickArea={handleMapClickArea}
           searchAreas={searchAreas}
           setPendingRadius={setPendingRadius}
-          isAddingMapPoint={mapLogicIsAddingMapPoint}
+          isAddingMapPoint={hookIsAddingMapPoint || mapLogicIsAddingMapPoint} // Use either state as true
           onMapPointClick={handleMapPointClick}
         />
       </MapContainer>
@@ -187,7 +206,7 @@ const MapLogicProvider = () => {
       {/* Use the MapInstructionsOverlay component */}
       <MapInstructionsOverlay 
         isAddingSearchArea={isAddingSearchArea} 
-        isAddingMapPoint={mapLogicIsAddingMapPoint} 
+        isAddingMapPoint={hookIsAddingMapPoint || mapLogicIsAddingMapPoint} // Use either state as true
       />
 
       <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />

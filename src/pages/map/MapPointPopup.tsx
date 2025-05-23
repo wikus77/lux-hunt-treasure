@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,29 +22,38 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
 }) => {
   const [title, setTitle] = useState(point.title || '');
   const [note, setNote] = useState(point.note || '');
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   
   // Effect to focus on title input when popup opens
   useEffect(() => {
-    if (inputRef.current) {
-      // Ensure the popup is fully rendered and then focus
-      console.log("Attempting to focus title field");
-      // Use a more aggressive approach to ensure focus works
-      const focusInterval = setInterval(() => {
-        if (inputRef.current) {
-          console.log("Auto-focusing title field");
-          inputRef.current.focus();
-          clearInterval(focusInterval);
+    console.log("MapPointPopup mounted - attempting to focus input field");
+    
+    // Ensure the popup is fully rendered then focus with multiple attempts
+    const focusInput = () => {
+      if (inputRef.current) {
+        console.log("Focusing title input field...");
+        inputRef.current.focus();
+        return true;
+      }
+      return false;
+    };
+
+    // First immediate attempt
+    if (!focusInput()) {
+      // If failed, try with a short delay
+      const firstDelay = setTimeout(() => {
+        if (!focusInput()) {
+          // If still failed, try with a longer delay
+          const secondDelay = setTimeout(() => {
+            focusInput();
+          }, 300);
+          
+          return () => clearTimeout(secondDelay);
         }
       }, 50);
       
-      // Clear interval after 500ms to prevent infinite loop
-      setTimeout(() => clearInterval(focusInterval), 500);
+      return () => clearTimeout(firstDelay);
     }
-    
-    return () => {
-      // Cleanup any event handlers if needed
-    };
   }, []);
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -70,6 +79,8 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
             className="w-full"
             ref={inputRef}
             autoFocus={true}
+            // Ensure input is ready to receive focus
+            onFocus={() => console.log("Title input focused")}
           />
         </div>
         

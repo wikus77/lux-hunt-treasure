@@ -29,6 +29,7 @@ export function useMapPoints(
     }
     
     // Create a new point and set it in state
+    console.log("✅ Creating new point at", lat, lng);
     setNewPoint({
       id: 'new',
       lat,

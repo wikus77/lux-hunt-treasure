@@ -42,9 +42,12 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
         
         // Call the handler to create the area
         handleMapClickArea(simulatedGoogleMapEvent);
-      } else if (isAddingMapPoint) {
-        console.log("MAP CLICKED FOR MAP POINT", e.latlng);
-        // This is the critical function call that handles adding a new point
+      } 
+      
+      // Critical fix: Handle map point click directly here without any conditional checks
+      // that might interfere with the state changes
+      if (isAddingMapPoint) {
+        console.log("MAP CLICKED FOR MAP POINT - HANDLER TRIGGERED", e.latlng);
         onMapPointClick(e.latlng.lat, e.latlng.lng);
       }
     }
@@ -86,6 +89,8 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
         }
       }
     });
+    
+    console.log("Forced cursor style:", isAddingMapPoint ? "crosshair" : "grab");
     
     return () => {
       if (map) {
