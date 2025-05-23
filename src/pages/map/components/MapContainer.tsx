@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef } from 'react';
 import { MapContainer as LeafletMap, TileLayer, Marker, Popup, useMapEvents, Circle, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -75,6 +76,7 @@ const MapContainer = ({
   const [editNote, setEditNote] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [mapCenter, setMapCenter] = useState(DEFAULT_LOCATION);
+  const [activeSearchAreaId, setActiveSearchAreaId] = useState<string | null>(null); // Add local state for active search area
   const mapRef = useRef<L.Map | null>(null);
 
   const handleSave = async () => {
@@ -194,6 +196,7 @@ const MapContainer = ({
             fillOpacity={0.2}
             eventHandlers={{
               click: () => {
+                setActiveSearchAreaId(area.id); // Use local state instead
                 setActiveSearchArea(area.id);
               },
             }}
@@ -202,7 +205,7 @@ const MapContainer = ({
               <div>
                 <h4 className="font-bold">{area.label}</h4>
                 <p>Raggio: {(area.radius / 1000).toFixed(1)} km</p>
-                {activeSearchArea === area.id && (
+                {activeSearchAreaId === area.id && ( // Use local state
                   <Button size="sm" variant="destructive" onClick={() => deleteSearchArea(area.id)}>
                     Elimina
                   </Button>
@@ -239,14 +242,14 @@ const MapContainer = ({
         </div>
       )}
       
-      {/* BuzzButton - updated to remove buzzMapPrice prop */}
+      {/* BuzzButton component */}
       <BuzzButton handleBuzz={handleBuzz} />
       
       <div className="absolute top-2 left-2 flex gap-2">
         <Button size="sm" onClick={requestLocationPermission}>
           Richiedi Posizione
         </Button>
-        <Button size="sm" variant={isAddingPoint ? 'secondary' : 'outline'} onClick={() => setIsAddingPoint(prev => !prev)}>
+        <Button size="sm" variant={isAddingPoint ? 'secondary' : 'outline'} onClick={() => setIsAddingPoint(!isAddingPoint)}>
           {isAddingPoint ? 'Annulla Punto' : 'Aggiungi Punto'}
         </Button>
         <Button size="sm" variant={isAddingSearchArea ? 'secondary' : 'outline'} onClick={toggleAddingSearchArea}>

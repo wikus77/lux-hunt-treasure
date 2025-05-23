@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { toast } from 'sonner';
@@ -269,8 +268,8 @@ const MapLogicProvider = () => {
         isAddingSearchArea={isAddingSearchArea} 
       />
 
-      {/* Use the BuzzButton component */}
-      <BuzzButton handleBuzz={handleBuzz} buzzMapPrice={buzzMapPrice} />
+      {/* Use the BuzzButton component - fixed to only pass handleBuzz prop */}
+      <BuzzButton handleBuzz={handleBuzz} />
 
       {/* Use the MapInstructionsOverlay component */}
       <MapInstructionsOverlay 
