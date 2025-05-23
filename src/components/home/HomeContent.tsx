@@ -47,7 +47,7 @@ export default function HomeContent() {
           {/* Luxury Cars Section */}
           <LuxuryCarsSection />
           
-          {/* M1SSION GAMES Section - nuova sezione aggiunta alla fine */}
+          {/* M1SSION GAMES Section */}
           <MissionGamesSection />
         </motion.div>
       )}
