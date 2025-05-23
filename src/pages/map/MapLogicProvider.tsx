@@ -1,6 +1,5 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
 import HelpDialog from './HelpDialog';
@@ -16,6 +15,7 @@ import MapInstructionsOverlay from './components/MapInstructionsOverlay';
 import LocationButton from './components/LocationButton';
 import BuzzButton from './components/BuzzButton';
 import { useMapPoints } from './hooks/useMapPoints';
+import { SetViewOnChange } from './hooks/useMapView';
 
 // Fix for Leaflet default icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -29,6 +29,18 @@ let DefaultIcon = L.icon({
 });
 
 L.Marker.prototype.options.icon = DefaultIcon;
+
+// Create a new component to handle map initialization
+const MapInitializer = ({ onMapReady }: { onMapReady: (map: L.Map) => void }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    // Call the onMapReady callback with the map instance
+    onMapReady(map);
+  }, [map, onMapReady]);
+  
+  return null;
+};
 
 const MapLogicProvider = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -99,11 +111,9 @@ const MapLogicProvider = () => {
   }, [hookIsAddingMapPoint, mapLogicIsAddingMapPoint]);
   
   // Function to handle map load event
-  const handleMapLoad = useCallback(() => {
+  const handleMapLoad = useCallback((map: L.Map) => {
     console.log("🗺️ Map component mounted and ready");
     
-    // Get map instance from the whenReady callback outside
-    const map = mapRef.current;
     if (!map) {
       console.log("❌ Map reference not available");
       return;
@@ -181,11 +191,14 @@ const MapLogicProvider = () => {
           zIndex: 1
         }}
         className="z-10"
-        whenReady={(mapEvent) => {
-          mapRef.current = mapEvent.target;
-          handleMapLoad();
-        }}
+        whenReady={() => {}} // Empty function to satisfy the type requirement
       >
+        {/* Add the MapInitializer component to handle map initialization */}
+        <MapInitializer onMapReady={(map) => {
+          mapRef.current = map;
+          handleMapLoad(map);
+        }} />
+        
         {/* Balanced tone TileLayer - not too dark, not too light */}
         <TileLayer
           attribution='&copy; CartoDB'
