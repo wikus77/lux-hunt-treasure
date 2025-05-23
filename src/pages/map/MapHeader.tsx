@@ -3,19 +3,19 @@ import { HelpCircle, Zap } from "lucide-react";
 import M1ssionText from "@/components/logo/M1ssionText";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AgentBadge from "@/components/AgentBadge";
-import { useBuzzMapPricing } from "./hooks/useBuzzMapPricing";
 
 interface MapHeaderProps {
   onHelp: () => void;
   onBuzz: () => void;
+  buzzMapPrice: number;
 }
 
 const MapHeader = ({
   onHelp,
   onBuzz,
+  buzzMapPrice,
 }: MapHeaderProps) => {
   const isMobile = useIsMobile();
-  const { buzzMapPrice } = useBuzzMapPricing();
 
   return (
     <>

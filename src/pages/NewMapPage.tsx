@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -49,8 +50,7 @@ const NewMapPage = () => {
   const [newPoint, setNewPoint] = useState<MapMarker | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeMapPoint, setActiveMapPoint] = useState<string | null>(null);
-  // Remove the static buzzMapPrice definition since we're now getting it from the hook
-  // const buzzMapPrice = 1.99; <- Remove this line
+  const buzzMapPrice = 1.99;
 
   // Initialize search areas logic
   const { 
@@ -249,7 +249,7 @@ const NewMapPage = () => {
       {/* Main content with proper spacing */}
       <div className="container mx-auto px-4 pt-20 pb-2 max-w-6xl">
         <div className="m1ssion-glass-card p-4 sm:p-6 mb-6">
-          {/* Map container - remove buzzMapPrice prop */}
+          {/* Map container */}
           <MapContainer
             isAddingPoint={isAddingPoint}
             setIsAddingPoint={setIsAddingPoint}
@@ -260,7 +260,7 @@ const NewMapPage = () => {
               lng: p.longitude,
               title: p.title,
               note: p.note,
-              position: { lat: p.latitude, lng: p.longitude }
+              position: { lat: p.latitude, lng: p.longitude } // Add position property
             }))}
             activeMapPoint={activeMapPoint}
             setActiveMapPoint={setActiveMapPoint}
@@ -269,6 +269,7 @@ const NewMapPage = () => {
             newPoint={newPoint}
             handleSaveNewPoint={savePoint}
             handleCancelNewPoint={() => setNewPoint(null)}
+            buzzMapPrice={buzzMapPrice}
             handleBuzz={handleBuzz}
             requestLocationPermission={requestLocationPermission}
             // Search area props
@@ -300,7 +301,7 @@ const NewMapPage = () => {
                   lng: p.longitude,
                   title: p.title,
                   note: p.note,
-                  position: { lat: p.latitude, lng: p.longitude }
+                  position: { lat: p.latitude, lng: p.longitude } // Add position property
                 }))}
                 isAddingMapPoint={isAddingPoint}
                 toggleAddingMapPoint={() => setIsAddingPoint(prev => !prev)}
