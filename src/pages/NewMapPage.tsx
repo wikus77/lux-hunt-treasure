@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -351,7 +350,7 @@ const NewMapPage = () => {
                     closeOnClick={false}
                     closeOnEscapeKey={false}
                   >
-                    <div className="p-2">
+                    <div className="p-2 point-popup">
                       <h3 className="font-bold mb-2">Nuovo Punto</h3>
                       <div className="mb-2">
                         <label className="block text-sm mb-1">Titolo</label>
@@ -392,15 +391,8 @@ const NewMapPage = () => {
               )}
             </MapContainer>
             
-            {/* BUZZ Button (centered at bottom with enhanced styling) */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
-              <button
-                onClick={handleBuzz}
-                className="buzz-button bg-gradient-to-r from-[#00cfff] via-[#ff00cc] to-[#7f00ff] text-white px-6 py-2 rounded-full shadow-lg"
-              >
-                BUZZ {buzzMapPrice.toFixed(2)}€
-              </button>
-            </div>
+            {/* BUZZ Button */}
+            <BuzzButton handleBuzz={handleBuzz} buzzMapPrice={buzzMapPrice} />
             
             {/* Map instructions overlay */}
             {isAddingPoint && (

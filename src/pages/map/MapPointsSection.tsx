@@ -49,7 +49,10 @@ const MapPointsSection: React.FC<MapPointsSectionProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-medium text-white">Punti di interesse</h2>
+        <h2 className="text-lg font-medium text-white flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-cyan-400" />
+          Punti di interesse
+        </h2>
         <Button 
           variant="outline" 
           size="sm" 
@@ -66,7 +69,7 @@ const MapPointsSection: React.FC<MapPointsSectionProps> = ({
       </div>
 
       {mapPoints.length === 0 ? (
-        <div className="p-4 border border-dashed border-gray-500 rounded-md text-center text-gray-400">
+        <div className="p-4 border border-dashed border-gray-600 rounded-[24px] text-center text-gray-400">
           <p>Nessun punto di interesse salvato</p>
           <p className="text-sm mt-1">Clicca su "Aggiungi Punto" per iniziare</p>
         </div>
@@ -75,16 +78,20 @@ const MapPointsSection: React.FC<MapPointsSectionProps> = ({
           {mapPoints.map((point) => (
             <div 
               key={point.id} 
-              className="p-3 bg-black/30 border border-projectx-deep-blue/40 rounded-md hover:bg-black/40 transition-colors"
+              className="p-4 bg-[#0b0b0b] border border-cyan-500/20 rounded-[24px] hover:border-cyan-500/40 transition-all"
+              style={{boxShadow: '0 0 6px rgba(0, 255, 255, 0.15)'}}
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <h3 className="font-medium text-white truncate">{point.title || 'Punto senza titolo'}</h3>
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-cyan-500 animate-pulse"/>
+                    <h3 className="font-medium text-white text-lg">{point.title || 'Punto senza titolo'}</h3>
+                  </div>
                   {point.note && (
-                    <p className="text-sm text-gray-300 mt-1 line-clamp-2">{point.note}</p>
+                    <p className="text-sm text-gray-300 mt-2 line-clamp-2">{point.note}</p>
                   )}
-                  <div className="text-xs text-gray-400 mt-1 flex items-center">
-                    <MapPin className="h-3 w-3 mr-1" />
+                  <div className="text-xs text-gray-400 mt-2 flex items-center">
+                    <MapPin className="h-3 w-3 mr-1 text-cyan-400" />
                     <span>{point.lat.toFixed(6)}, {point.lng.toFixed(6)}</span>
                   </div>
                 </div>
@@ -95,6 +102,7 @@ const MapPointsSection: React.FC<MapPointsSectionProps> = ({
                         variant="destructive" 
                         size="sm" 
                         onClick={() => confirmDelete(point.id)}
+                        className="rounded-full"
                       >
                         Conferma
                       </Button>
@@ -102,6 +110,7 @@ const MapPointsSection: React.FC<MapPointsSectionProps> = ({
                         variant="outline" 
                         size="sm" 
                         onClick={() => setShowConfirmDelete(null)}
+                        className="rounded-full"
                       >
                         Annulla
                       </Button>
@@ -112,6 +121,7 @@ const MapPointsSection: React.FC<MapPointsSectionProps> = ({
                         variant="outline" 
                         size="sm" 
                         onClick={() => setActiveMapPoint(point.id)}
+                        className="rounded-full text-cyan-400 border-cyan-500/50 hover:bg-cyan-950/30"
                       >
                         Visualizza
                       </Button>
@@ -119,6 +129,7 @@ const MapPointsSection: React.FC<MapPointsSectionProps> = ({
                         variant="destructive" 
                         size="sm" 
                         onClick={() => handleDeleteClick(point.id)}
+                        className="rounded-full"
                       >
                         Elimina
                       </Button>
