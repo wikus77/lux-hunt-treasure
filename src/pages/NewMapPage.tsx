@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -85,13 +86,14 @@ let DefaultIcon = L.icon({
 // Set as default marker icon
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Create a green icon for new points
-const NewPointIcon = L.icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+// Create a neon blue icon for new points with pulsing effect
+const NeonPointIcon = L.icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
-  popupAnchor: [1, -34]
+  popupAnchor: [1, -34],
+  className: 'neon-marker-icon'
 });
 
 const NewMapPage = () => {
@@ -326,6 +328,7 @@ const NewMapPage = () => {
                 <Marker 
                   key={point.id}
                   position={[point.latitude, point.longitude]}
+                  icon={NeonPointIcon}
                 >
                   <Popup closeButton={true}>
                     <div className="p-2">
@@ -340,7 +343,7 @@ const NewMapPage = () => {
               {newPoint && (
                 <Marker 
                   position={[newPoint.lat, newPoint.lng]}
-                  icon={NewPointIcon}
+                  icon={NeonPointIcon}
                 >
                   <Popup
                     closeButton={false}
@@ -389,11 +392,11 @@ const NewMapPage = () => {
               )}
             </MapContainer>
             
-            {/* BUZZ Button (centered at bottom) */}
+            {/* BUZZ Button (centered at bottom with enhanced styling) */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
               <button
                 onClick={handleBuzz}
-                className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white px-6 py-2 rounded-full shadow-lg"
+                className="buzz-button bg-gradient-to-r from-[#00cfff] via-[#ff00cc] to-[#7f00ff] text-white px-6 py-2 rounded-full shadow-lg"
               >
                 BUZZ {buzzMapPrice.toFixed(2)}€
               </button>
@@ -411,12 +414,12 @@ const NewMapPage = () => {
         {/* Split into two columns */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-20">
           {/* Left column: Notes section */}
-          <div className="m1ssion-glass-card p-4 sm:p-6">
+          <div className="m1ssion-glass-card p-4 sm:p-6 rounded-[24px]">
             <NotesSection />
           </div>
           
           {/* Right column: Map points list section */}
-          <div className="m1ssion-glass-card p-4 sm:p-6">
+          <div className="m1ssion-glass-card p-4 sm:p-6 rounded-[24px]">
             <MapPointsSection 
               mapPoints={mapPoints.map(p => ({
                 id: p.id,

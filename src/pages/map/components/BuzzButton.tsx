@@ -13,7 +13,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({ handleBuzz, buzzMapPrice }) => 
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
       <Button
         onClick={handleBuzz}
-        className="bg-gradient-to-r from-projectx-blue to-projectx-pink text-white shadow-[0_0_10px_rgba(217,70,239,0.5)] hover:shadow-[0_0_15px_rgba(217,70,239,0.7)]"
+        className="buzz-button bg-gradient-to-r from-[#00cfff] via-[#ff00cc] to-[#7f00ff] text-white shadow-[0_0_15px_5px_rgba(255,0,128,0.4)] hover:shadow-[0_0_20px_8px_rgba(255,0,128,0.6)] transition-all duration-300"
       >
         <CircleIcon className="mr-1 h-4 w-4" />
         BUZZ {buzzMapPrice.toFixed(2)}€

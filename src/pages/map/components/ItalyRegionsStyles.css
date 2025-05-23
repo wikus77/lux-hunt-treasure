@@ -65,3 +65,70 @@
   outline: none;
   box-shadow: 0 0 5px rgba(0, 209, 255, 0.3);
 }
+
+/* Enhanced BUZZ Button styles */
+.buzz-button {
+  background: linear-gradient(90deg, #00cfff, #ff00cc, #7f00ff);
+  box-shadow: 0 0 15px 5px rgba(255, 0, 128, 0.4);
+  transition: transform 0.2s, box-shadow 0.3s;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  padding: 10px 20px;
+}
+
+.buzz-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px 8px rgba(255, 0, 128, 0.6);
+}
+
+.buzz-button:active {
+  transform: scale(0.98);
+}
+
+/* Neon marker styles */
+.neon-marker-icon {
+  filter: drop-shadow(0 0 8px #00f0ff) drop-shadow(0 0 16px rgba(0, 240, 255, 0.7));
+  animation: marker-pulse 2s infinite;
+}
+
+@keyframes marker-pulse {
+  0% {
+    filter: drop-shadow(0 0 5px #00f0ff) drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px #00f0ff) drop-shadow(0 0 20px rgba(0, 240, 255, 0.8));
+  }
+  100% {
+    filter: drop-shadow(0 0 5px #00f0ff) drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
+  }
+}
+
+/* M1SSION glass card enhancements for map sections */
+.m1ssion-glass-card {
+  border-radius: 24px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(123, 46, 255, 0.15);
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(123, 46, 255, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.m1ssion-glass-card:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, #00D1FF, #7B2EFF, #F059FF);
+  opacity: 0.8;
+}
+
+/* Input text color fix */
+input, textarea {
+  color: black !important;
+}
