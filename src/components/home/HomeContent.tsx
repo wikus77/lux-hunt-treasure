@@ -10,6 +10,7 @@ import CommandModulesSection from "./CommandModulesSection";
 import CommandCenterWrapper from "./CommandCenterWrapper";
 import LuxuryCarsSection from "./LuxuryCarsSection";
 import ExclusivePrizesSection from "./ExclusivePrizesSection";
+import MissionGamesSection from "./MissionGamesSection";
 
 export default function HomeContent() {
   console.log("[HomeContent] COMPONENT MOUNTED!");
@@ -45,6 +46,9 @@ export default function HomeContent() {
           
           {/* Luxury Cars Section */}
           <LuxuryCarsSection />
+          
+          {/* M1SSION GAMES Section - nuova sezione aggiunta alla fine */}
+          <MissionGamesSection />
         </motion.div>
       )}
     </div>

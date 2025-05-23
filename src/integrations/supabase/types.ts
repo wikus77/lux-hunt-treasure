@@ -868,6 +868,33 @@ export type Database = {
           },
         ]
       }
+      user_minigames_progress: {
+        Row: {
+          completed: boolean
+          game_key: string
+          id: string
+          last_played: string | null
+          score: number
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          game_key: string
+          id?: string
+          last_played?: string | null
+          score?: number
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          game_key?: string
+          id?: string
+          last_played?: string | null
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_notifications: {
         Row: {
           created_at: string | null
