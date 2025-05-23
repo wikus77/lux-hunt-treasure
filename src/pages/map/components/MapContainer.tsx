@@ -10,6 +10,7 @@ import BuzzButton from './BuzzButton';
 import LocationButton from './LocationButton';
 import MapInstructionsOverlay from './MapInstructionsOverlay';
 import SearchAreaButton from './SearchAreaButton';
+import HelpDialog from '../HelpDialog';
 
 interface MapContainerProps {
   isAddingPoint: boolean;
@@ -33,6 +34,8 @@ interface MapContainerProps {
   setPendingRadius?: (value: number) => void;
   requestLocationPermission?: () => void;
   toggleAddingSearchArea?: () => void;
+  showHelpDialog?: boolean;
+  setShowHelpDialog?: (show: boolean) => void;
 }
 
 const MapContainerComponent: React.FC<MapContainerProps> = ({
@@ -56,7 +59,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   deleteSearchArea = async () => false,
   setPendingRadius = () => {},
   requestLocationPermission = () => {},
-  toggleAddingSearchArea = () => {}
+  toggleAddingSearchArea = () => {},
+  showHelpDialog = false,
+  setShowHelpDialog = () => {}
 }) => {
   return (
     <div 
@@ -149,6 +154,11 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         isAddingSearchArea={isAddingSearchArea} 
         isAddingMapPoint={isAddingPoint}
       />
+      
+      {/* Help Dialog */}
+      {setShowHelpDialog && 
+        <HelpDialog open={showHelpDialog || false} setOpen={setShowHelpDialog} />
+      }
     </div>
   );
 };
