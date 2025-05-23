@@ -10,7 +10,7 @@ import CommandModulesSection from "./CommandModulesSection";
 import CommandCenterWrapper from "./CommandCenterWrapper";
 import LuxuryCarsSection from "./LuxuryCarsSection";
 import ExclusivePrizesSection from "./ExclusivePrizesSection";
-import MissionGamesSection from "@/components/mission/MissionGamesSection";
+import MissionGamesDebugSection from "@/components/mission/MissionGamesDebugSection";
 
 export default function HomeContent() {
   console.log("[HomeContent] COMPONENT MOUNTED!");
@@ -50,7 +50,7 @@ export default function HomeContent() {
       )}
       
       {/* FORZARE SEMPRE VISIBILE - Mission Games Section rendered outside the conditional block */}
-      <MissionGamesSection />
+      <MissionGamesDebugSection />
     </div>
   );
 }

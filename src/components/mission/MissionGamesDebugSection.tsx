@@ -1,9 +1,9 @@
 
 import React, { useEffect } from "react";
 
-export default function MissionGamesSection() {
+export default function MissionGamesDebugSection() {
   useEffect(() => {
-    console.log("✅ MissionGamesSection RENDERED");
+    console.log("✅ MissionGamesDebugSection RENDERED");
   }, []);
 
   return (
