@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Circle, Popup } from 'react-leaflet';
 import { SearchArea } from '@/components/maps/types';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
   deleteSearchArea
 }) => {
   console.log("Rendering SearchAreaMapLayer with areas:", searchAreas);
+  const [hoveredArea, setHoveredArea] = useState<string | null>(null);
   
   // Define the pulse animation class
   const pulseStyle = `
@@ -37,6 +38,9 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
       
       {searchAreas.map((area) => {
         console.log("Rendering area:", area.id, area.lat, area.lng, area.radius);
+        // Determine if this area is being hovered
+        const isHovered = hoveredArea === area.id;
+        
         return (
           <React.Fragment key={area.id}>
             <Circle
@@ -44,17 +48,19 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
               radius={area.radius}
               className="search-area-pulse"
               pathOptions={{
-                color: '#00f0ff', // Neon blue as specified
-                fillColor: '#00f0ff',
-                fillOpacity: 0.1,
-                weight: 2,
-                opacity: 0.8
+                color: area.isAI ? '#9b87f5' : '#00f0ff', // Use specified color or default to neon blue
+                fillColor: area.isAI ? '#9b87f5' : '#00f0ff',
+                fillOpacity: isHovered ? 0.15 : 0.1,
+                weight: isHovered ? 3 : 2,
+                opacity: isHovered ? 1 : 0.8
               }}
               eventHandlers={{
                 click: () => {
                   setActiveSearchArea(area.id);
                   console.log("Area selezionata:", area.id);
-                }
+                },
+                mouseover: () => setHoveredArea(area.id),
+                mouseout: () => setHoveredArea(null)
               }}
             >
               <Popup>

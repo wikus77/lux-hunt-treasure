@@ -8,6 +8,7 @@ import { analyzeCluesForLocation } from "@/utils/clueAnalyzer";
 import { useNotifications } from "@/hooks/useNotifications";
 import { clues } from "@/data/cluesData";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useSearchAreasLogic(defaultLocation: [number, number]) {
   const [storageAreas, setStorageAreas] = useLocalStorage<SearchArea[]>("map-search-areas", []);
@@ -18,6 +19,8 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
   const { notifications } = useNotifications();
   // Add a ref to store the radius temporarily while user selects map location
   const pendingRadiusRef = useRef<number>(500);
+  const [currentWeek] = useState<number>(1); // Default to week 1 for now
+  const [searchAreasThisWeek, setSearchAreasThisWeek] = useState<number>(0);
 
   // Sync areas with localStorage
   useEffect(() => {
@@ -25,46 +28,119 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     console.log("Updated search areas in localStorage:", searchAreas);
   }, [searchAreas, setStorageAreas]);
 
-  const handleAddArea = (radius?: number) => {
-    // Set the radius if provided
-    if (radius) {
-      pendingRadiusRef.current = radius;
-      console.log("Setting pending radius to:", radius);
-    }
+  // Load areas count for this week from Supabase on mount
+  useEffect(() => {
+    const loadAreasCount = async () => {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData?.user?.id) return;
 
+        const { data, error } = await supabase
+          .from('user_map_areas')
+          .select('*')
+          .eq('user_id', userData.user.id)
+          .eq('week', currentWeek);
+        
+        if (error) {
+          console.error("Error loading search areas count:", error);
+          return;
+        }
+
+        setSearchAreasThisWeek(data.length || 0);
+        console.log(`Loaded ${data.length} search areas for week ${currentWeek}`);
+      } catch (error) {
+        console.error("Error in loadAreasCount:", error);
+      }
+    };
+
+    loadAreasCount();
+  }, [currentWeek]);
+
+  // Calculate radius based on number of areas created this week
+  const calculateRadius = () => {
+    // Base radius: 100km = 100,000m
+    const baseRadius = 100000;
+    // Calculate radius with 5% decrease for each area already created
+    // R = R0 * 0.95^N, with minimum of 5000m
+    const decreaseFactor = Math.pow(0.95, searchAreasThisWeek);
+    const calculatedRadius = Math.max(5000, baseRadius * decreaseFactor);
+    console.log(`Calculated radius: ${calculatedRadius}m (${calculatedRadius/1000}km), areas this week: ${searchAreasThisWeek}`);
+    return calculatedRadius;
+  };
+
+  const handleAddArea = (radius?: number) => {
+    // Calculate the radius if not provided
+    const calculatedRadius = radius || calculateRadius();
+    pendingRadiusRef.current = calculatedRadius;
+    
     setIsAddingSearchArea(true);
-    console.log("Modalità aggiunta area attivata, cursore cambiato in crosshair");
+    console.log("Search area mode activated, cursor changed to crosshair");
     toast.info("Clicca sulla mappa per aggiungere una nuova area di ricerca", {
-      description: `L'area sarà creata con il raggio di ${pendingRadiusRef.current} metri`
+      description: `L'area sarà creata con il raggio di ${(pendingRadiusRef.current/1000).toFixed(1)} km`
     });
   };
 
-  const handleMapClickArea = (e: google.maps.MapMouseEvent) => {
+  const handleMapClickArea = async (e: any) => {
     console.log("Map click event received:", e);
     console.log("isAddingSearchArea state:", isAddingSearchArea);
 
-    if (isAddingSearchArea && e.latLng) {
+    if (isAddingSearchArea && e.latlng) {
       try {
         // Extract coordinates from the event
-        const lat = e.latLng.lat();
-        const lng = e.latLng.lng();
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
         const radius = pendingRadiusRef.current;
         
         console.log("Coordinate selezionate:", lat, lng);
         console.log("Raggio utilizzato:", radius);
+
+        // Get the current user
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData.user?.id;
+        
+        if (!userId) {
+          console.error("User not authenticated");
+          toast.error("Utente non autenticato");
+          setIsAddingSearchArea(false);
+          return;
+        }
         
         // Create new search area object
         const newArea: SearchArea = {
           id: uuidv4(),
           lat, 
           lng,
-          radius: radius,
-          label: "Area di ricerca",
-          color: "#00D1FF",
+          radius,
+          label: `Area di ricerca ${searchAreasThisWeek + 1}`,
+          color: "#00f0ff",
           position: { lat, lng }
         };
         
         console.log("Area generata:", newArea);
+
+        // Save to Supabase
+        const { data, error } = await supabase
+          .from('user_map_areas')
+          .insert({
+            user_id: userId,
+            lat: lat,
+            lng: lng,
+            radius_km: radius / 1000, // Convert to km for storage
+            week: currentWeek
+          })
+          .select();
+
+        if (error) {
+          console.error("Error saving search area:", error);
+          toast.error("Si è verificato un errore nel salvare l'area di ricerca");
+          setIsAddingSearchArea(false);
+          return;
+        }
+
+        console.log("Area saved to Supabase:", data);
+
+        // Update search areas count
+        setSearchAreasThisWeek(prev => prev + 1);
 
         // Update state with the new area
         setSearchAreas(prevAreas => {
@@ -159,11 +235,46 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     toast.success("Area di ricerca aggiornata");
   };
 
-  const deleteSearchArea = (id: string) => {
+  const deleteSearchArea = async (id: string) => {
     console.log("Deleting search area:", id);
-    setSearchAreas(searchAreas.filter(area => area.id !== id));
-    if (activeSearchArea === id) setActiveSearchArea(null);
-    toast.success("Area di ricerca rimossa");
+    
+    try {
+      // Find the area to delete
+      const areaToDelete = searchAreas.find(area => area.id === id);
+      if (!areaToDelete) return false;
+      
+      // Get the current user
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      
+      if (!userId) {
+        toast.error("Utente non autenticato");
+        return false;
+      }
+      
+      // Delete from Supabase - trying to match by coordinates since we may not have the DB ID
+      const { error } = await supabase
+        .from('user_map_areas')
+        .delete()
+        .eq('user_id', userId)
+        .eq('lat', areaToDelete.lat)
+        .eq('lng', areaToDelete.lng);
+      
+      if (error) {
+        console.error("Error deleting search area from database:", error);
+        // Continue with local deletion even if DB deletion fails
+      }
+      
+      // Update local state
+      setSearchAreas(searchAreas.filter(area => area.id !== id));
+      if (activeSearchArea === id) setActiveSearchArea(null);
+      toast.success("Area di ricerca rimossa");
+      return true;
+    } catch (error) {
+      console.error("Error in deleteSearchArea:", error);
+      toast.error("Errore nell'eliminare l'area di ricerca");
+      return false;
+    }
   };
 
   const clearAllSearchAreas = () => {
@@ -174,6 +285,15 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
   };
 
   const editSearchArea = (id: string) => setActiveSearchArea(id);
+
+  const toggleAddingSearchArea = () => {
+    setIsAddingSearchArea(prev => !prev);
+    if (!isAddingSearchArea) {
+      const radius = calculateRadius();
+      pendingRadiusRef.current = radius;
+      toast.info(`Clicca sulla mappa per creare un'area di ricerca (raggio: ${(radius/1000).toFixed(1)}km)`);
+    }
+  };
 
   return {
     searchAreas,
@@ -189,6 +309,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     clearAllSearchAreas,
     editSearchArea,
     generateSearchArea,
+    toggleAddingSearchArea,
     // Export a method to set the pending radius
     setPendingRadius: (radius: number) => {
       pendingRadiusRef.current = radius;

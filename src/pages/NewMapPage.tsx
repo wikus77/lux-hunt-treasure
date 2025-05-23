@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,7 +10,9 @@ import './map/components/ItalyRegionsStyles.css';
 import MapPointsSection from './map/MapPointsSection';
 import NotesSection from './map/NotesSection';
 import MapContainer from './map/components/MapContainer';
-import { MapMarker } from '@/components/maps/types'; // Import the MapMarker type
+import SearchAreasSection from './map/SearchAreasSection';
+import { MapMarker, SearchArea } from '@/components/maps/types';
+import { useSearchAreasLogic } from './map/useSearchAreasLogic';
 import L from 'leaflet';
 
 // Fix for Leaflet default icon issue
@@ -49,6 +52,20 @@ const NewMapPage = () => {
   const [activeMapPoint, setActiveMapPoint] = useState<string | null>(null);
   const buzzMapPrice = 1.99;
 
+  // Initialize search areas logic
+  const { 
+    searchAreas,
+    isAddingSearchArea,
+    activeSearchArea,
+    setActiveSearchArea,
+    handleAddArea,
+    handleMapClickArea,
+    deleteSearchArea,
+    clearAllSearchAreas,
+    toggleAddingSearchArea,
+    setPendingRadius
+  } = useSearchAreasLogic(DEFAULT_LOCATION);
+
   // Fetch existing map points on mount
   useEffect(() => {
     const fetchMapPoints = async () => {
@@ -76,6 +93,7 @@ const NewMapPage = () => {
       }
     };
 
+    // Also fetch search areas here if needed
     fetchMapPoints();
   }, [user]);
 
@@ -90,7 +108,12 @@ const NewMapPage = () => {
       note: '',
       position: { lat, lng } // Adding position property to match MapMarker type
     });
-  }, []);
+    
+    // Reset search area adding mode if active
+    if (isAddingSearchArea) {
+      toggleAddingSearchArea();
+    }
+  }, [isAddingSearchArea, toggleAddingSearchArea]);
 
   // Save the point to Supabase
   const savePoint = async (title: string, note: string) => {
@@ -249,6 +272,14 @@ const NewMapPage = () => {
             buzzMapPrice={buzzMapPrice}
             handleBuzz={handleBuzz}
             requestLocationPermission={requestLocationPermission}
+            // Search area props
+            isAddingSearchArea={isAddingSearchArea}
+            handleMapClickArea={handleMapClickArea}
+            searchAreas={searchAreas}
+            setActiveSearchArea={setActiveSearchArea}
+            deleteSearchArea={deleteSearchArea}
+            setPendingRadius={setPendingRadius}
+            toggleAddingSearchArea={toggleAddingSearchArea}
           />
         </div>
         
@@ -259,22 +290,36 @@ const NewMapPage = () => {
             <NotesSection />
           </div>
           
-          {/* Right column: Map points list section */}
-          <div className="m1ssion-glass-card p-4 sm:p-6 rounded-[24px]">
-            <MapPointsSection 
-              mapPoints={mapPoints.map(p => ({
-                id: p.id,
-                lat: p.latitude,
-                lng: p.longitude,
-                title: p.title,
-                note: p.note,
-                position: { lat: p.latitude, lng: p.longitude } // Add position property
-              }))}
-              isAddingMapPoint={isAddingPoint}
-              toggleAddingMapPoint={() => setIsAddingPoint(prev => !prev)}
-              setActiveMapPoint={setActiveMapPoint}
-              deleteMapPoint={deleteMapPoint}
-            />
+          {/* Right column: Map points and search areas */}
+          <div className="space-y-6">
+            {/* Map points list section */}
+            <div className="m1ssion-glass-card p-4 sm:p-6 rounded-[24px]">
+              <MapPointsSection 
+                mapPoints={mapPoints.map(p => ({
+                  id: p.id,
+                  lat: p.latitude,
+                  lng: p.longitude,
+                  title: p.title,
+                  note: p.note,
+                  position: { lat: p.latitude, lng: p.longitude } // Add position property
+                }))}
+                isAddingMapPoint={isAddingPoint}
+                toggleAddingMapPoint={() => setIsAddingPoint(prev => !prev)}
+                setActiveMapPoint={setActiveMapPoint}
+                deleteMapPoint={deleteMapPoint}
+              />
+            </div>
+            
+            {/* Search areas section */}
+            <div className="m1ssion-glass-card p-4 sm:p-6 rounded-[24px]">
+              <SearchAreasSection
+                searchAreas={searchAreas}
+                setActiveSearchArea={setActiveSearchArea}
+                clearAllSearchAreas={clearAllSearchAreas}
+                handleAddArea={handleAddArea}
+                isAddingSearchArea={isAddingSearchArea}
+              />
+            </div>
           </div>
         </div>
       </div>

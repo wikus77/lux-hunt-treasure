@@ -10,6 +10,7 @@ import MapEventHandler from './MapEventHandler';
 import BuzzButton from './BuzzButton';
 import LocationButton from './LocationButton';
 import MapInstructionsOverlay from './MapInstructionsOverlay';
+import SearchAreaButton from './SearchAreaButton';
 
 interface MapContainerProps {
   isAddingPoint: boolean;
@@ -32,6 +33,7 @@ interface MapContainerProps {
   deleteSearchArea?: (id: string) => Promise<boolean>;
   setPendingRadius?: (value: number) => void;
   requestLocationPermission?: () => void;
+  toggleAddingSearchArea?: () => void;
 }
 
 const MapContainerComponent: React.FC<MapContainerProps> = ({
@@ -54,7 +56,8 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   setActiveSearchArea = () => {},
   deleteSearchArea = async () => false,
   setPendingRadius = () => {},
-  requestLocationPermission = () => {}
+  requestLocationPermission = () => {},
+  toggleAddingSearchArea = () => {}
 }) => {
   return (
     <div 
@@ -132,6 +135,12 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
 
       {/* Use the LocationButton component */}
       <LocationButton requestLocationPermission={requestLocationPermission} />
+
+      {/* Add SearchAreaButton component */}
+      <SearchAreaButton 
+        toggleAddingSearchArea={toggleAddingSearchArea} 
+        isAddingSearchArea={isAddingSearchArea} 
+      />
 
       {/* Use the BuzzButton component */}
       <BuzzButton handleBuzz={handleBuzz} buzzMapPrice={buzzMapPrice} />

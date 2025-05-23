@@ -58,7 +58,7 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
     <>
       <div className="flex justify-between mt-6 mb-2">
         <h2 className="text-lg font-medium text-white flex items-center gap-2">
-          <Circle className="h-4 w-4 text-lime-400" />
+          <Circle className="h-4 w-4 text-cyan-400" />
           Aree di interesse
         </h2>
         <div className="flex gap-2">
@@ -101,7 +101,7 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
               onClick={() => setActiveSearchArea(area.id)}
             >
               <div className="flex items-start gap-2">
-                <Circle className={`w-5 h-5 flex-shrink-0 ${area.isAI ? "text-[#9b87f5]" : "text-lime-400"}`} />
+                <Circle className={`w-5 h-5 flex-shrink-0 ${area.isAI ? "text-[#9b87f5]" : "text-cyan-400"}`} />
                 <div className="flex-1">
                   <div className="text-sm font-medium">{area.label}</div>
                   <div className="text-xs text-gray-400">Raggio: {area.radius/1000}km</div>

@@ -13,7 +13,7 @@ const SearchAreaButton: React.FC<SearchAreaButtonProps> = ({ toggleAddingSearchA
       onClick={toggleAddingSearchArea}
       className={`absolute left-20 top-4 z-20 rounded-full w-10 h-10 flex items-center justify-center transition-all ${
         isAddingSearchArea
-          ? 'bg-blue-400/80 hover:bg-blue-500/80'
+          ? 'bg-[#00f0ff]/80 hover:bg-[#00f0ff]/90'
           : 'bg-black/50 hover:bg-black/70'
       }`}
       title="Crea area di ricerca"

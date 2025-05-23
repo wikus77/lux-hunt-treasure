@@ -29,8 +29,10 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
     
     if (isAddingMapPoint || isAddingSearchArea) {
       mapContainer.style.cursor = 'crosshair'; // Change cursor to crosshair for both modes
+      console.log(`Cursor changed to crosshair (Adding ${isAddingMapPoint ? 'point' : 'search area'})`);
     } else {
       mapContainer.style.cursor = 'grab';
+      console.log("Cursor changed to grab (normal mode)");
     }
     
     return () => {
@@ -43,9 +45,16 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
     if (!map) return;
     
     const handleMapClick = (e: L.LeafletMouseEvent) => {
+      console.log("Map click detected:", {
+        mode: isAddingSearchArea ? "search area" : isAddingMapPoint ? "map point" : "normal",
+        latlng: e.latlng
+      });
+      
       if (isAddingSearchArea) {
+        console.log("Handling click for search area");
         handleMapClickArea(e);
       } else if (isAddingMapPoint) {
+        console.log("Handling click for map point");
         onMapPointClick(e.latlng.lat, e.latlng.lng);
       }
     };
