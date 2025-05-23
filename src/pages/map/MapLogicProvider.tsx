@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
@@ -9,7 +9,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import SearchAreaMapLayer from './SearchAreaMapLayer';
 
-// Import newly created components
+// Import components
 import MapEventHandler from './components/MapEventHandler';
 import MapPopupManager from './components/MapPopupManager';
 import MapInstructionsOverlay from './components/MapInstructionsOverlay';
@@ -33,6 +33,7 @@ L.Marker.prototype.options.icon = DefaultIcon;
 const MapLogicProvider = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const mapRef = useRef<L.Map | null>(null);
   
   const { 
     handleBuzz, 
@@ -74,11 +75,11 @@ const MapLogicProvider = () => {
   
   // Synchronize isAddingMapPoint state between hook and mapLogic to ensure consistency
   useEffect(() => {
-    console.log("Synchronizing isAddingMapPoint states:", 
+    console.log("🔄 Synchronizing isAddingMapPoint states:", 
       {hookState: hookIsAddingMapPoint, mapLogicState: mapLogicIsAddingMapPoint});
     
     if (mapLogicIsAddingMapPoint !== hookIsAddingMapPoint) {
-      console.log("Setting hook isAddingMapPoint to:", mapLogicIsAddingMapPoint);
+      console.log("🔄 Setting hook isAddingMapPoint to:", mapLogicIsAddingMapPoint);
       hookSetIsAddingMapPoint(mapLogicIsAddingMapPoint);
     }
   }, [mapLogicIsAddingMapPoint, hookIsAddingMapPoint, hookSetIsAddingMapPoint]);
@@ -86,7 +87,7 @@ const MapLogicProvider = () => {
   // Also propagate state from hook to parent if needed
   useEffect(() => {
     if (hookIsAddingMapPoint !== mapLogicIsAddingMapPoint) {
-      console.log("Setting mapLogic isAddingMapPoint to:", hookIsAddingMapPoint);
+      console.log("🔄 Setting mapLogic isAddingMapPoint to:", hookIsAddingMapPoint);
       mapLogicSetIsAddingMapPoint(hookIsAddingMapPoint);
     }
   }, [hookIsAddingMapPoint, mapLogicIsAddingMapPoint, mapLogicSetIsAddingMapPoint]);
@@ -98,10 +99,32 @@ const MapLogicProvider = () => {
   }, [hookIsAddingMapPoint, mapLogicIsAddingMapPoint]);
   
   // Function to handle map load event
-  const handleMapLoad = useCallback(() => {
-    console.log("Map component mounted and ready");
+  const handleMapLoad = useCallback((map: L.Map) => {
+    console.log("🗺️ Map component mounted and ready");
+    mapRef.current = map;
     setMapLoaded(true);
-  }, []);
+    
+    // Add direct click handler to the map as a fallback mechanism
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      console.log("🔍 DIRECT MAP CLICK via mapRef", {
+        isAdding: hookIsAddingMapPoint || mapLogicIsAddingMapPoint,
+        latlng: e.latlng
+      });
+      
+      // Only handle if in adding mode
+      if (hookIsAddingMapPoint || mapLogicIsAddingMapPoint) {
+        console.log("✅ Processing direct map click");
+        handleMapPointClick(e.latlng.lat, e.latlng.lng);
+      }
+    });
+    
+    // Debug layer structure
+    console.log("🔍 Leaflet map layers:", {
+      panes: map.getPanes(),
+      zoom: map.getZoom(),
+      center: map.getCenter()
+    });
+  }, [hookIsAddingMapPoint, mapLogicIsAddingMapPoint, handleMapPointClick]);
 
   // Simulate a small loading delay for better UX
   useEffect(() => {
@@ -113,20 +136,18 @@ const MapLogicProvider = () => {
     return () => clearTimeout(timer);
   }, [mapLoaded]);
   
-  // Additional direct click handler as a fallback
-  const manualMapClickHandler = (e: L.LeafletMouseEvent) => {
-    console.log("MANUAL MAP CLICK HANDLER", {
-      hookIsAddingMapPoint, 
-      mapLogicIsAddingMapPoint, 
-      coords: [e.latlng.lat, e.latlng.lng]
-    });
-    
-    if (hookIsAddingMapPoint || mapLogicIsAddingMapPoint) {
-      handleMapPointClick(e.latlng.lat, e.latlng.lng);
-    }
-  };
-  
   if (!mapLoaded) return <LoadingScreen />;
+
+  // TECHNICAL REPORT
+  console.log("🧪 TECHNICAL REPORT - MAP SYSTEM STATUS:", {
+    mapRef: mapRef.current ? "ACTIVE" : "NOT INITIALIZED",
+    isAddingPointHook: hookIsAddingMapPoint,
+    isAddingPointLogic: mapLogicIsAddingMapPoint,
+    newPointStatus: newPoint ? "CREATED" : "NOT CREATED",
+    leafletStatus: L ? "LOADED" : "NOT LOADED",
+    mapPoints: mapPoints.length,
+    targetPane: mapRef.current?.getPane('markerPane') ? "EXISTS" : "MISSING",
+  });
 
   return (
     <div 
@@ -153,7 +174,7 @@ const MapLogicProvider = () => {
           zIndex: 1
         }}
         className="z-10"
-        whenReady={handleMapLoad}
+        whenReady={(map) => handleMapLoad(map.target)}
       >
         {/* Balanced tone TileLayer - not too dark, not too light */}
         <TileLayer

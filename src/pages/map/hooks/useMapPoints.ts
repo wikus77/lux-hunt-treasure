@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { MapMarker } from '@/components/maps/types';
 
@@ -10,102 +10,134 @@ export function useMapPoints(
   updateMapPoint: (id: string, updates: { title?: string; note?: string }) => Promise<boolean>,
   deleteMapPoint: (id: string) => Promise<boolean>
 ) {
+  // State for the new point being created
   const [newPoint, setNewPoint] = useState<MapMarker | null>(null);
-  const [isAddingNewPoint, setIsAddingNewPoint] = useState(false);
+  
+  // State for tracking if we're currently in "add point" mode
+  const [isAddingMapPoint, setIsAddingMapPoint] = useState(false);
 
-  // Debug logging for isAddingNewPoint state changes
+  // Debug logging for isAddingMapPoint state changes
   useEffect(() => {
-    console.log("🔁 useMapPoints - isAddingNewPoint state:", isAddingNewPoint);
-  }, [isAddingNewPoint]);
+    console.log("🔄 useMapPoints - isAddingMapPoint state changed:", isAddingMapPoint);
+  }, [isAddingMapPoint]);
 
-  // Handle map point click when adding a new point
-  const handleMapPointClick = (lat: number, lng: number) => {
-    console.log("Map point click detected at:", lat, lng);
-    console.log("isAddingNewPoint state at click time:", isAddingNewPoint);
+  // Handler for map point click - CRITICAL FIX
+  // We directly destructure lat,lng and use them immediately without any state updates
+  const handleMapPointClick = useCallback((lat: number, lng: number) => {
+    console.log("⭐ Map point click HANDLER executed at coordinates:", lat, lng);
     
-    if (!isAddingNewPoint) {
-      console.log("Not in adding point mode, ignoring click");
+    // Guard clause - if not in adding point mode, exit early
+    if (!isAddingMapPoint) {
+      console.log("❌ Not in adding point mode, ignoring click");
       return;
     }
     
-    // Create a new point and set it in state
+    // Create a new point and set it in state - CRITICAL FIX
     console.log("✅ Creating new point at", lat, lng);
-    setNewPoint({
+    
+    // IMPORTANT: Create the point object IMMEDIATELY after the click
+    const pointData: MapMarker = {
       id: 'new',
       lat,
       lng,
       title: '',
       note: '',
       position: { lat, lng }
-    });
+    };
     
-    // Reset the adding state after successful point creation
-    setIsAddingNewPoint(false);
+    // Set the new point data to trigger popup
+    setNewPoint(pointData);
+    
+    // IMPORTANT: Only reset adding state AFTER setting the new point
+    setIsAddingMapPoint(false);
     
     toast.success("Punto posizionato. Inserisci titolo e nota.", {
       duration: 3000
     });
-  };
+  }, [isAddingMapPoint]);
 
   // Handle save of new map point
   const handleSaveNewPoint = async (title: string, note: string) => {
-    console.log("Tentativo di salvare il nuovo punto con titolo:", title);
-    if (newPoint) {
-      console.log("Salvando nuovo punto con titolo:", title, "e coordinate:", newPoint.lat, newPoint.lng);
-      try {
-        const pointId = await addMapPoint({
-          lat: newPoint.lat,
-          lng: newPoint.lng,
-          title,
-          note
-        });
-        console.log("Punto salvato con successo, ID:", pointId);
-        setNewPoint(null);
-        toast.success("Punto di interesse salvato");
-      } catch (error) {
-        console.error("Errore nel salvare il punto:", error);
-        toast.error("Errore nel salvare il punto. Riprova.");
-      }
-    } else {
-      console.error("Tentativo di salvare un punto inesistente");
+    console.log("📝 Tentativo di salvare il nuovo punto con titolo:", title);
+    
+    if (!newPoint) {
+      console.error("❌ Tentativo di salvare un punto inesistente");
       toast.error("Errore: punto non disponibile");
+      return;
+    }
+    
+    console.log("📝 Salvando nuovo punto:", {
+      lat: newPoint.lat, 
+      lng: newPoint.lng,
+      title,
+      note
+    });
+    
+    try {
+      // Call the API to save the point
+      const pointId = await addMapPoint({
+        lat: newPoint.lat,
+        lng: newPoint.lng,
+        title,
+        note
+      });
+      
+      console.log("✅ Punto salvato con successo, ID:", pointId);
+      
+      // Reset new point state
+      setNewPoint(null);
+      
+      // Show success message
+      toast.success("Punto di interesse salvato");
+    } catch (error) {
+      console.error("❌ Errore nel salvare il punto:", error);
+      toast.error("Errore nel salvare il punto. Riprova.");
     }
   };
 
   // Handle update of existing map point
   const handleUpdatePoint = async (id: string, title: string, note: string) => {
-    console.log("Aggiornamento punto esistente:", id, title, note);
+    console.log("📝 Aggiornamento punto esistente:", id, title, note);
+    
     try {
       const success = await updateMapPoint(id, { title, note });
+      
       if (success) {
-        console.log("Punto aggiornato con successo");
+        console.log("✅ Punto aggiornato con successo");
         setActiveMapPoint(null);
         toast.success("Punto di interesse aggiornato");
       } else {
-        console.error("Errore nell'aggiornare il punto");
+        console.error("❌ Errore nell'aggiornare il punto");
         toast.error("Errore nell'aggiornare il punto");
       }
     } catch (error) {
-      console.error("Errore nell'aggiornamento del punto:", error);
+      console.error("❌ Errore nell'aggiornamento del punto:", error);
       toast.error("Errore nell'aggiornare il punto");
     }
   };
 
   // Handle cancel of new point
-  const handleCancelNewPoint = () => {
-    console.log("Annullamento aggiunta nuovo punto");
+  const handleCancelNewPoint = useCallback(() => {
+    console.log("❌ Annullamento aggiunta nuovo punto");
     setNewPoint(null);
     toast.info('Aggiunta punto annullata');
-  };
+  }, []);
+  
+  // Reset point creation mode
+  const resetPointMode = useCallback(() => {
+    setIsAddingMapPoint(false);
+    setNewPoint(null);
+  }, []);
 
   return {
     newPoint,
     setNewPoint,
-    isAddingMapPoint: isAddingNewPoint,
-    setIsAddingMapPoint: setIsAddingNewPoint,
+    isAddingMapPoint,
+    setIsAddingMapPoint,
     handleMapPointClick,
     handleSaveNewPoint,
     handleUpdatePoint,
-    handleCancelNewPoint
+    handleCancelNewPoint,
+    resetPointMode
   };
 }

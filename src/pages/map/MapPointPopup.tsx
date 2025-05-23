@@ -26,45 +26,62 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
   
   // Effect to focus on title input when popup opens
   useEffect(() => {
-    console.log("MapPointPopup mounted - attempting to focus input field");
+    console.log("🔍 MapPointPopup mounted - attempting to focus input field");
     
-    // Ensure the popup is fully rendered then focus with multiple attempts
-    const focusInput = () => {
+    // Multiple focus attempts with increasing timeouts
+    const attemptFocus = () => {
+      console.log("🔎 Trying to focus input...");
+      
       if (inputRef.current) {
-        console.log("Focusing title input field...");
-        inputRef.current.focus();
-        return true;
+        try {
+          inputRef.current.focus();
+          console.log("✅ Focus successful on title input");
+          return true;
+        } catch (err) {
+          console.error("❌ Focus error:", err);
+        }
+      } else {
+        console.log("❌ Input ref not available yet");
       }
       return false;
     };
-
-    // First immediate attempt
-    if (!focusInput()) {
-      // If failed, try with a short delay
-      const firstDelay = setTimeout(() => {
-        if (!focusInput()) {
-          // If still failed, try with a longer delay
-          const secondDelay = setTimeout(() => {
-            focusInput();
-          }, 300);
-          
-          return () => clearTimeout(secondDelay);
+    
+    // Try immediately
+    if (!attemptFocus()) {
+      // Try after a short delay
+      setTimeout(() => {
+        if (!attemptFocus()) {
+          // Try after a medium delay
+          setTimeout(() => {
+            if (!attemptFocus()) {
+              // Try after a longer delay
+              setTimeout(attemptFocus, 300);
+            }
+          }, 100);
         }
       }, 50);
-      
-      return () => clearTimeout(firstDelay);
     }
   }, []);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Saving point with title:", title);
+    console.log("📝 Saving point with title:", title);
     onSave(title, note);
   };
   
+  // Prevent clicks from propagating to map
+  const handlePopupClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+  
   return (
-    <div className="p-2 min-w-[280px]" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className="p-2 min-w-[280px]" 
+      onClick={handlePopupClick}
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
+    >
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label htmlFor="title" className="block text-sm font-medium mb-1">
@@ -80,7 +97,7 @@ const MapPointPopup: React.FC<MapPointPopupProps> = ({
             ref={inputRef}
             autoFocus={true}
             // Ensure input is ready to receive focus
-            onFocus={() => console.log("Title input focused")}
+            onFocus={() => console.log("✅ Title input focused")}
           />
         </div>
         
