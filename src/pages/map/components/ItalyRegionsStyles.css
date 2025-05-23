@@ -1,32 +1,67 @@
 
-.leaflet-container {
-  width: 100%;
-  height: 100%;
+/* Styles for Italy regions overlay */
+.italy-region {
+  fill: rgba(123, 46, 255, 0.1);
+  stroke: rgba(0, 209, 255, 0.5);
+  stroke-width: 1;
+  transition: all 0.3s ease;
 }
 
-/* Add subtle styling for map elements */
-.leaflet-control-zoom a {
-  color: #00D1FF !important;
-  background-color: rgba(0, 0, 0, 0.6) !important;
-  border: 1px solid #00D1FF !important;
+.italy-region:hover {
+  fill: rgba(123, 46, 255, 0.3);
+  stroke: rgba(0, 209, 255, 0.8);
+  stroke-width: 2;
 }
 
-.leaflet-control-zoom a:hover {
-  background-color: rgba(0, 209, 255, 0.2) !important;
+.italy-region.active {
+  fill: rgba(123, 46, 255, 0.5);
+  stroke: rgba(0, 209, 255, 1);
+  stroke-width: 2;
 }
 
-/* Enhanced marker style */
-.custom-marker {
-  filter: drop-shadow(0 0 5px rgba(0, 209, 255, 0.8));
+/* Map button style */
+.map-control-button {
+  @apply bg-gradient-to-r from-[#7B2EFF] to-[#00D1FF] text-white px-4 py-2 rounded-full shadow-lg;
+  transition: all 0.2s ease;
 }
 
-/* Improved popup style */
+.map-control-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(0, 209, 255, 0.5);
+}
+
+.map-control-button.cancel {
+  @apply bg-gradient-to-r from-red-600 to-red-500;
+}
+
+/* Custom popup styles */
 .leaflet-popup-content-wrapper {
-  background-color: rgba(20, 20, 35, 0.9);
+  background: rgba(0, 0, 0, 0.85);
   color: white;
-  border: 1px solid #00D1FF;
+  border: 1px solid rgba(0, 209, 255, 0.3);
+  border-radius: 12px;
 }
 
 .leaflet-popup-tip {
-  background-color: #00D1FF;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(0, 209, 255, 0.3);
+}
+
+.point-popup label {
+  color: rgba(0, 209, 255, 0.9);
+  font-weight: 500;
+}
+
+.point-popup input,
+.point-popup textarea {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.point-popup input:focus,
+.point-popup textarea:focus {
+  border: 1px solid rgba(0, 209, 255, 0.6);
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 209, 255, 0.3);
 }
