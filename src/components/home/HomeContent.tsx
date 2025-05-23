@@ -10,7 +10,7 @@ import CommandModulesSection from "./CommandModulesSection";
 import CommandCenterWrapper from "./CommandCenterWrapper";
 import LuxuryCarsSection from "./LuxuryCarsSection";
 import ExclusivePrizesSection from "./ExclusivePrizesSection";
-import MissionGamesSection from "./MissionGamesSection";
+import MissionGamesSection from "@/components/mission/MissionGamesSection";
 
 export default function HomeContent() {
   console.log("[HomeContent] COMPONENT MOUNTED!");
