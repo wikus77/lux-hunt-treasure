@@ -19,7 +19,7 @@ const AgentRegistrationContainer: React.FC<AgentRegistrationContainerProps> = ({
     
     // UNICO punto di notifica - questo è l'UNICO posto dove il toast di successo dovrebbe apparire
     toast.success("Registrazione completata!", {
-      description: "Sei ufficialmente un agente M1SSION. Controlla la tua email."
+      description: "Sei ufficialmente un agente M1SSION™. Controlla la tua email."
     });
     
     // Aggiorna lo stato per mostrare la vista di successo

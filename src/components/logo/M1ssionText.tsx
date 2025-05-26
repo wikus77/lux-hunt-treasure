@@ -25,7 +25,7 @@ const M1ssionText = () => {
       >
         M1
       </span>
-      <span className="text-white">SSION™</span>
+      <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
     </button>
   );
 };

@@ -15,7 +15,7 @@ const ContactHero = () => {
       </h1>
       
       <p className="text-xl text-white/70 max-w-2xl mx-auto">
-        Hai bisogno di aiuto o vuoi contattare il team M1SSION? Usa i seguenti canali:
+        Hai bisogno di aiuto o vuoi contattare il team M1SSION<span className="text-xs align-top">™</span>? Usa i seguenti canali:
       </p>
     </motion.div>
   );

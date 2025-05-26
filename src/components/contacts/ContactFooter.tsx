@@ -14,7 +14,7 @@ const ContactFooter = () => {
           </Button>
         </Link>
         <p className="text-sm text-white/50 mt-4">
-          © {new Date().getFullYear()} M1SSION. Tutti i diritti riservati.
+          © {new Date().getFullYear()} M1SSION<span className="text-xs align-top">™</span>. Tutti i diritti riservati.
         </p>
       </div>
     </div>

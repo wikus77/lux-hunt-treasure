@@ -72,7 +72,7 @@ const CTASection = ({ onRegisterClick, countdownCompleted = false }: CTASectionP
           data-parallax="scroll"
           data-parallax-speed="0.15"
         >
-          Unisciti a noi e inizia l'avventura! Registrati per essere il primo a sapere quando inizia <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION™</span>!
+          Unisciti a noi e inizia l'avventura! Registrati per essere il primo a sapere quando inizia <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>!
         </motion.p>
         
         <motion.button

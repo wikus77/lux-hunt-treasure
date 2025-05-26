@@ -32,9 +32,9 @@ export default function InviteMissionText() {
         aria-label="Invita in M1SSION"
       >
         <span className="text-cyan-400 text-[1.6em] font-bold drop-shadow-lg">M1</span>
-        <span className="text-white text-[1.3em] font-bold drop-shadow-lg">SSION</span>
+        <span className="text-white text-[1.3em] font-bold drop-shadow-lg">SSION<span className="text-xs align-top">™</span></span>
         <span className="ml-4 text-cyan-300 text-base md:text-lg font-orbitron underline decoration-cyan-400 decoration-2 hover:brightness-125 transition-all">
-          Invita in M1SSION
+          Invita in M1SSION<span className="text-xs align-top">™</span>
         </span>
       </motion.div>
 
@@ -52,7 +52,7 @@ export default function InviteMissionText() {
           transition: { duration: 0.3 }
         }}
       >
-        Invita un amico in <span className="font-bold neon-text-cyan">M1SSION</span> e ottieni indizi esclusivi e 5 pressioni gratuite del <span className="font-bold text-yellow-300">tasto Buzz</span>!
+        Invita un amico in <span className="font-bold neon-text-cyan">M1SSION<span className="text-xs align-top">™</span></span> e ottieni indizi esclusivi e 5 pressioni gratuite del <span className="font-bold text-yellow-300">tasto Buzz</span>!
       </motion.div>
       <InviteOptionsDialog open={dialogOpen} onOpenChange={setDialogOpen} showIconsOnly />
     </section>

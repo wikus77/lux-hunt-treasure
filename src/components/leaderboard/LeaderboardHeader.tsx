@@ -16,7 +16,7 @@ export const LeaderboardHeader = ({ onSimulateRankChange, onFilterChange }: Lead
       <div>
         <h1 className="text-3xl font-bold mb-2">
           <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-            M1SSION
+            M1SSION<span className="text-xs align-top">™</span>
           </span>
         </h1>
         <div className="flex items-center gap-2">
