@@ -28,7 +28,7 @@ const Login = () => {
       });
     }
 
-    // Redirect to home if already authenticated
+    // SOLO SE GIÀ AUTENTICATO, redirect to home - NON FORZARE LOGIN
     if (!authLoading && isAuthenticated) {
       navigate('/home');
     }
@@ -96,6 +96,11 @@ const Login = () => {
               Non hai un account?{" "}
               <Link to="/register" className="text-cyan-400 hover:text-cyan-300 transition-colors">
                 Registrati
+              </Link>
+            </p>
+            <p className="text-sm text-white/50 mt-2">
+              <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                ← Torna alla homepage
               </Link>
             </p>
           </div>

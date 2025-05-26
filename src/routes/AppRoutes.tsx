@@ -34,7 +34,7 @@ const AppRoutes: React.FC = () => {
       <Suspense fallback={<div className="loading">Caricamento...</div>}>
         <DynamicIsland />
         <Routes>
-          {/* Landing page - NOW PUBLIC */}
+          {/* Landing page - SEMPRE PUBBLICA, NESSUN REDIRECT */}
           <Route path="/" element={<Index />} />
 
           {/* Main App Routes - PROTECTED */}
@@ -97,9 +97,6 @@ const AppRoutes: React.FC = () => {
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
-          
-          {/* Legacy route redirect */}
-          <Route path="/landing" element={<Navigate to="/" replace />} />
           
           {/* 404 route */}
           <Route path="*" element={<NotFound />} />

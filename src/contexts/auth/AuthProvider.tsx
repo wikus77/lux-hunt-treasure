@@ -74,9 +74,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fetch user role when auth state changes
+  // Fetch user role when auth state changes - NON FORZARE REDIRECT
   useEffect(() => {
     const fetchUserRole = async () => {
+      // Se non c'è utente autenticato, NON fare nulla - lascia che vedano la landing
       if (!auth.isAuthenticated || !auth.user) {
         setUserRole(null);
         setIsRoleLoading(false);
