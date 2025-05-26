@@ -8,7 +8,7 @@ import EmailVerificationAlert from './EmailVerificationAlert';
 interface ProtectedRouteProps {
   redirectTo?: string;
   requireEmailVerification?: boolean;
-  children?: React.ReactNode; // Add this to accept children
+  children?: React.ReactNode;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 

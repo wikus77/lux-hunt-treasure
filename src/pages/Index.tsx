@@ -7,7 +7,7 @@ import MainContent from "./index/MainContent";
 import { useEventHandlers } from "./index/EventHandlers";
 
 const Index = () => {
-  console.log("Index component rendering");
+  console.log("Index component rendering - PUBLIC LANDING PAGE");
   
   // State management
   const [pageLoaded, setPageLoaded] = useState(false);
@@ -15,7 +15,7 @@ const Index = () => {
   const [introCompleted, setIntroCompleted] = useState(false);
   const [countdownCompleted, setCountdownCompleted] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [retryCount, setRetryCount] = useState(0); // Tracking per tentativi di recovery
+  const [retryCount, setRetryCount] = useState(0);
   
   // Get event handlers
   const {
@@ -28,7 +28,7 @@ const Index = () => {
     closeInviteFriend
   } = useEventHandlers(countdownCompleted);
   
-  // AGGIUNTA: Tentativo di recovery automatico in caso di problemi
+  // Recovery automatico in caso di problemi
   useEffect(() => {
     if (error && retryCount < 2) {
       const recoveryTimeout = setTimeout(() => {
@@ -44,27 +44,23 @@ const Index = () => {
   // Verifica se l'intro è già stata mostrata in precedenza
   useEffect(() => {
     try {
-      // Controlla solo se introCompleted deve essere true basandosi su stato precedente
       if (typeof window !== 'undefined') {
         const skipIntro = localStorage.getItem("skipIntro");
         if (skipIntro === "true") {
           console.log("Intro already shown, skipping...");
           setIntroCompleted(true);
         } else {
-          // Solo se non c'è flag, impostiamo a false (inizia l'intro)
           console.log("No skipIntro flag found, will show intro");
           setIntroCompleted(false);
-          // Non rimuoviamo qui il flag, per evitare cicli infiniti
         }
       }
     } catch (error) {
       console.error("localStorage error:", error);
-      // In caso di errore, assumiamo che l'intro debba essere mostrata
       setIntroCompleted(false);
     }
   }, []);
 
-  // MIGLIORAMENTO: Protezione contro errori di rendering
+  // Protezione contro errori di rendering
   useEffect(() => {
     try {
       const observer = new MutationObserver(() => {
@@ -94,13 +90,11 @@ const Index = () => {
       };
     } catch (err) {
       console.error("Errore nel setup MutationObserver:", err);
-      // Non propaghiamo questo errore, è solo per logging
     }
   }, []);
   
-  // MIGLIORAMENTO: Controllo periodico della salute del componente
+  // Controllo periodico della salute del componente
   useEffect(() => {
-    // Se il contenuto non viene mai renderizzato dopo un certo tempo, consideriamo un errore
     const healthCheckTimeout = setTimeout(() => {
       if (!renderContent && pageLoaded) {
         console.warn("❌ Health check fallito: contenuto non renderizzato dopo 8 secondi");
@@ -122,7 +116,6 @@ const Index = () => {
   const handleIntroComplete = useCallback(() => {
     console.log("Intro completed callback, setting introCompleted to true");
     setIntroCompleted(true);
-    // Memorizziamo che l'intro è stata mostrata
     try {
       if (typeof window !== 'undefined') {
         localStorage.setItem("skipIntro", "true");
@@ -143,21 +136,16 @@ const Index = () => {
     window.location.reload();
   }, []);
 
-  // Console logging state for debugging
   console.log("Index render state:", { introCompleted, pageLoaded, renderContent });
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
-      {/* CookiebotInit sempre disponibile */}
       <CookiebotInit />
       
-      {/* Loading Manager */}
       <LoadingManager onLoaded={handleLoaded} />
       
-      {/* Countdown Manager */}
       <CountdownManager onCountdownComplete={handleCountdownComplete} />
       
-      {/* Main Content */}
       <MainContent 
         pageLoaded={pageLoaded}
         introCompleted={introCompleted}
@@ -179,6 +167,3 @@ const Index = () => {
 };
 
 export default Index;
-<div className="text-white text-xl animate-glow mt-10">
-  Test Animazione Glow dopo 2s
-</div>
