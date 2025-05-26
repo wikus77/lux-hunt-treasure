@@ -17,7 +17,7 @@ const LandingFooter = () => {
           <div className="mb-6 md:mb-0">
             <h2 className="text-2xl font-bold">
               <span className="text-[#00E5FF]">M1</span>
-              <span className="text-white">SSION</span>
+              <span className="text-white">SSION™</span>
             </h2>
           </div>
           <div className="flex flex-wrap gap-4 justify-center md:justify-end">
@@ -29,7 +29,15 @@ const LandingFooter = () => {
         </div>
         <div className="border-t border-white/10 pt-6 text-center md:text-left">
           <p className="text-sm text-white/50">
-            © 2025 M1SSION. Tutti i diritti riservati.
+            © 2025 <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION™</span>. Tutti i diritti riservati.
+          </p>
+        </div>
+        
+        {/* SafeCreative Registration Block */}
+        <div className="mt-6 pt-6 border-t border-white/10">
+          <p className="text-sm text-gray-500 text-center">
+            © 2024 – <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION™</span> is a protected work registered on SafeCreative.<br />
+            Registration Code: 2505261861325
           </p>
         </div>
       </div>

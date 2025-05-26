@@ -71,7 +71,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-[#070818] pb-20 w-full">
       <Helmet>
-        <title>M1SSION - Home</title>
+        <title>M1SSION™ - Home</title>
       </Helmet>
       
       <UnifiedHeader profileImage={profileImage} />
@@ -115,7 +115,7 @@ const Home = () => {
                   <span className="text-[#00D1FF]" style={{ 
                     textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
                   }}>M1</span>
-                  <span className="text-white">SSION</span>
+                  <span className="text-white">SSION™</span>
                 </h1>
               </motion.div>
 

@@ -67,7 +67,7 @@ const LandingHeader = ({ countdownCompleted = false }: LandingHeaderProps) => {
           WELCOME TO{" "}
           <span>
             <span className="text-[#00E5FF]">M1</span>
-            <span className="text-white">SSION</span>
+            <span className="text-white">SSION™</span>
           </span>
         </h1>
         
@@ -80,7 +80,7 @@ const LandingHeader = ({ countdownCompleted = false }: LandingHeaderProps) => {
           Un premio attende chi sa vedere oltre.
           Gli indizi non sono nascosti: sono camuffati.
           Serve logica, freddezza e visione.
-          La sfida è iniziata. Questa è <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span>.
+          La sfida è iniziata. Questa è <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION™</span>.
         </p>
         
         <p className="text-yellow-300 text-sm md:text-base font-orbitron tracking-widest mb-10">

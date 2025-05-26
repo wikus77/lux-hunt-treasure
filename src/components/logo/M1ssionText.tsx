@@ -18,14 +18,14 @@ const M1ssionText = () => {
       style={{ cursor: 'pointer' }}
     >
       <span 
-        className="text-[#00D1FF]" 
+        className="text-[#00E5FF]" 
         style={{ 
           textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" 
         }}
       >
         M1
       </span>
-      <span className="text-white">SSION</span>
+      <span className="text-white">SSION™</span>
     </button>
   );
 };

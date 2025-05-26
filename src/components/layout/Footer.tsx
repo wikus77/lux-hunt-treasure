@@ -13,7 +13,10 @@ export const Footer = () => {
         <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-3'} gap-8`}>
           {/* Company Info */}
           <div>
-            <h3 className="font-sans font-semibold mb-4 text-white">M1SSION</h3>
+            <h3 className="font-sans font-semibold mb-4 text-white">
+              <span className="text-[#00E5FF]">M1</span>
+              <span className="text-white">SSION™</span>
+            </h3>
             <p className="text-sm text-gray-400">
               La tua piattaforma per scoprire indizi ed eventi esclusivi.
             </p>
@@ -70,7 +73,7 @@ export const Footer = () => {
         
         <div className="border-t mt-6 pt-6 text-center border-gray-800">
           <p className="text-sm text-gray-400">
-            © {new Date().getFullYear()} M1SSION. Tutti i diritti riservati.
+            © {new Date().getFullYear()} <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION™</span>. Tutti i diritti riservati.
           </p>
         </div>
       </div>

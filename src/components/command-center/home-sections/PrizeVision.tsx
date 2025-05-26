@@ -27,7 +27,7 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
           <span className="text-[#00D1FF]" style={{ 
             textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
           }}>M1</span>
-          <span className="text-white">SSION PRIZE</span>
+          <span className="text-white">SSION™ PRIZE</span>
         </h2>
         <div className="flex items-center space-x-2">
           <span className="text-xs text-white/70">Visibilità: {progress}%</span>
