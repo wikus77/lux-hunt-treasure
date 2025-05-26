@@ -15,7 +15,6 @@ import PrivacyPolicy from "../../pages/PrivacyPolicy";
 import CookiePolicy from "../../pages/CookiePolicy";
 import HowItWorks from "../../pages/HowItWorks";
 import AccessDenied from "../../pages/AccessDenied";
-import Index from "../../pages/Index";
 import { EmailVerificationPage } from "../../components/auth/EmailVerificationHandler";
 
 const PublicRoutes = () => {
@@ -24,7 +23,7 @@ const PublicRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<PublicLayout showBottomNav={showBottomNav}><Index /></PublicLayout>} />
+      {/* Remove the "/" route from here since it's handled in main AppRoutes */}
       <Route path="/register" element={<PublicLayout showBottomNav={showBottomNav}><Register /></PublicLayout>} />
       <Route path="/login" element={<PublicLayout showBottomNav={showBottomNav}><Login /></PublicLayout>} />
       <Route path="/auth" element={<PublicLayout showBottomNav={showBottomNav}><Auth /></PublicLayout>} />
