@@ -1,136 +1,74 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { useBuzzFeature } from "@/hooks/useBuzzFeature";
 import BuzzButton from "./BuzzButton";
-import BuzzUnlockDialog from "./BuzzUnlockDialog";
-import BuzzExplosionHandler from "./BuzzExplosionHandler";
-import ClueBanner from "./ClueBanner";
+import { useBuzzClues } from "@/hooks/buzz/useBuzzClues";
+import { useAuth } from "@/hooks/useAuth";
+import ErrorFallback from "../error/ErrorFallback";
 import GradientBox from "@/components/ui/gradient-box";
-import { supabase } from "@/integrations/supabase/client";
-import BuzzResetCounter from "./BuzzResetCounter";
 
 const BuzzMainContent = () => {
-  const {
-    showDialog,
-    showExplosion,
-    showClueBanner,
-    setShowClueBanner,
-    lastDynamicClue,
-    handleBuzzClick,
-    handlePayment,
-    handleExplosionCompleted
-  } = useBuzzFeature();
-
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string>("");
-  const [resetTrigger, setResetTrigger] = useState<number>(0);
+  const { incrementUnlockedCluesAndAddClue } = useBuzzClues();
 
-  useEffect(() => {
-    const getUserId = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-      }
-    };
-    getUserId();
-  }, []);
-
-  const handleSuccess = () => {
-    console.log("✅ BUZZ completato con successo");
-    setIsLoading(false);
-    setError(null);
-  };
-
-  const handleCounterReset = () => {
-    console.log("🔄 Counter resettato, aggiornamento componenti...");
-    // Incrementa resetTrigger per forzare il reload del BuzzButton
-    setResetTrigger(prev => prev + 1);
-    // Reset degli stati locali
-    setIsLoading(false);
-    setError(null);
-    console.log("✅ Componenti aggiornati dopo reset");
-  };
+  if (error) {
+    return <ErrorFallback message={error} onRetry={() => setError(null)} />;
+  }
 
   return (
-    <>
+    <motion.div 
+      className="min-h-[80vh] flex flex-col items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <motion.div
-        className="flex flex-col items-center justify-center min-h-[60vh] px-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="mb-12 text-center"
       >
-        <GradientBox className="w-full max-w-md p-8 text-center">
-          <motion.div
-            className="mb-8"
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-          >
-            <h2 className="text-2xl font-orbitron font-bold text-[#00D1FF] mb-4">
-              SISTEMA BUZZ ATTIVO
-            </h2>
-            <p className="text-white/70 text-sm mb-6">
-              Premi il bottone per generare un nuovo indizio esclusivo
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="flex flex-col items-center gap-6"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-          >
-            <BuzzButton
-              isLoading={isLoading}
-              setIsLoading={setIsLoading}
-              setError={setError}
-              userId={userId}
-              onSuccess={handleSuccess}
-              resetTrigger={resetTrigger}
-            />
-
-            {error && (
-              <motion.div
-                className="text-red-400 text-sm text-center bg-red-900/20 p-3 rounded-lg border border-red-500/30"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                {error}
-              </motion.div>
-            )}
-
-            {/* Reset Counter per testing */}
-            {userId && (
-              <div className="mt-4 pt-4 border-t border-white/10">
-                <p className="text-xs text-white/50 mb-2">Solo per testing:</p>
-                <BuzzResetCounter 
-                  userId={userId} 
-                  onReset={handleCounterReset}
-                />
-              </div>
-            )}
-          </motion.div>
-        </GradientBox>
+        <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-[#00D1FF] font-orbitron" style={{ 
+          textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+        }}>BUZZ</h1>
+        <p className="text-white/70 max-w-md mx-auto">
+          Premi il pulsante per ricevere indizi sulla posizione del premio
+        </p>
       </motion.div>
 
-      <BuzzUnlockDialog
-        open={showDialog}
-        onPayment={handlePayment}
-      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ 
+          type: "spring",
+          stiffness: 260,
+          damping: 20,
+          delay: 0.2
+        }}
+      >
+        <BuzzButton 
+          isLoading={isLoading}
+          setIsLoading={setIsLoading}
+          setError={setError}
+          userId={user?.id || ""}
+          onSuccess={incrementUnlockedCluesAndAddClue}
+        />
+      </motion.div>
 
-      <BuzzExplosionHandler
-        showExplosion={showExplosion}
-        onExplosionCompleted={handleExplosionCompleted}
-      />
-
-      <ClueBanner
-        open={showClueBanner}
-        message={lastDynamicClue}
-        onClose={() => setShowClueBanner(false)}
-      />
-    </>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
+      >
+        <GradientBox className="mt-12 text-center max-w-md p-6">
+          <p className="text-white/80">
+            Effettua il pagamento e premiati puoi ottenere degli indizi esclusivi
+          </p>
+        </GradientBox>
+      </motion.div>
+    </motion.div>
   );
 };
 

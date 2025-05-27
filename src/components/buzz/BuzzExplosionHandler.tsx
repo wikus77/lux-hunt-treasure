@@ -4,16 +4,16 @@ import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
 import { toast } from "sonner";
 
 interface BuzzExplosionHandlerProps {
-  showExplosion: boolean;
-  onExplosionCompleted: () => void;
+  show: boolean;
+  onCompleted: () => void;
 }
 
-const BuzzExplosionHandler = ({ showExplosion, onExplosionCompleted }: BuzzExplosionHandlerProps) => {
+const BuzzExplosionHandler = ({ show, onCompleted }: BuzzExplosionHandlerProps) => {
   const [explosionFadeOut, setExplosionFadeOut] = useState(false);
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (showExplosion) {
+    if (show) {
       setExplosionFadeOut(false);
       timerRef.current = window.setTimeout(() => {
         setExplosionFadeOut(true);
@@ -22,11 +22,11 @@ const BuzzExplosionHandler = ({ showExplosion, onExplosionCompleted }: BuzzExplo
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [showExplosion]);
+  }, [show]);
 
   function handleExplosionFadeOutComplete() {
     setExplosionFadeOut(false);
-    onExplosionCompleted();
+    onCompleted();
     toast.success("Indizio sbloccato!", {
       description: "Controlla la sezione Notifiche per vedere l'indizio extra."
     });
@@ -34,7 +34,7 @@ const BuzzExplosionHandler = ({ showExplosion, onExplosionCompleted }: BuzzExplo
 
   return (
     <ClueUnlockedExplosion
-      open={showExplosion}
+      open={show}
       fadeOut={explosionFadeOut}
       onFadeOutEnd={handleExplosionFadeOutComplete}
     />
