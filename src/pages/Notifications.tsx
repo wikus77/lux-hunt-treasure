@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
@@ -328,11 +327,13 @@ const Notifications = () => {
       
       <BottomNavigation />
 
-      <style jsx>{`
+      <style>
+        {`
         .glow-text-strong {
           text-shadow: 0 0 20px rgba(0, 209, 255, 0.9), 0 0 40px rgba(255, 89, 248, 0.7) !important;
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
