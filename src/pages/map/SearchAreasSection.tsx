@@ -40,20 +40,57 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
     }
   }, [isAddingSearchArea]);
 
+  // CRITICAL DEBUG: Log search areas changes
+  useEffect(() => {
+    console.log("📊 SECTION: SearchAreasSection - Areas updated:", {
+      count: searchAreas.length,
+      areas: searchAreas.map(area => ({
+        id: area.id,
+        label: area.label,
+        radius: area.radius
+      })),
+      timestamp: new Date().toISOString()
+    });
+  }, [searchAreas]);
+
   const handleAddClick = () => {
+    console.log("➕ ADD CLICK: Add area button clicked");
     setIsDialogOpen(true);
   };
 
   const handleConfirmAddArea = () => {
     const radius = parseInt(areaRadius);
     if (isNaN(radius) || radius <= 0) {
+      console.log("❌ INVALID RADIUS: Invalid radius value:", areaRadius);
       return;
     }
     
     setIsDialogOpen(false);
-    console.log("Confirming area add with radius:", radius);
-    // Pass the radius value to handleAddArea
+    console.log("✅ CONFIRM ADD: Confirming area add with radius:", radius);
     handleAddArea(radius);
+  };
+
+  // Handle individual area deletion with enhanced logging
+  const handleDeleteArea = async (areaId: string, areaLabel: string) => {
+    console.log("🗑️ SECTION DELETE: Delete requested from section for area:", areaId, areaLabel);
+    
+    const confirmed = window.confirm(`Sei sicuro di voler eliminare l'area "${areaLabel}"?`);
+    if (!confirmed) {
+      console.log("❌ SECTION DELETE CANCEL: User cancelled deletion");
+      return;
+    }
+    
+    console.log("✅ SECTION DELETE PROCEED: User confirmed deletion, proceeding");
+    try {
+      const success = await deleteSearchArea(areaId);
+      if (success) {
+        console.log("✅ SECTION DELETE SUCCESS: Area successfully deleted from section");
+      } else {
+        console.log("❌ SECTION DELETE FAILED: Area deletion failed from section");
+      }
+    } catch (error) {
+      console.error("❌ SECTION DELETE ERROR: Exception during deletion from section:", error);
+    }
   };
 
   return (
@@ -61,14 +98,17 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
       <div className="flex justify-between mt-6 mb-2">
         <h2 className="text-lg font-medium text-white flex items-center gap-2">
           <Circle className="h-4 w-4 text-cyan-400" />
-          Aree di interesse
+          Aree di interesse ({searchAreas.length})
         </h2>
         <div className="flex gap-2">
           {searchAreas.length > 0 && (
             <Button
               variant="outline"
               size="sm"
-              onClick={clearAllSearchAreas}
+              onClick={() => {
+                console.log("🧹 CLEAR ALL: Clear all areas button clicked");
+                clearAllSearchAreas();
+              }}
               className="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20"
             >
               Cancella tutto
@@ -95,25 +135,26 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
           searchAreas.map((area) => (
             <div
               key={`area-list-${area.id}`}
-              className={`p-3 rounded-[16px] backdrop-blur-sm cursor-pointer transition-colors
-                ${area.isAI
-                  ? "bg-[#7E69AB]/40 hover:bg-[#7E69AB]/60 border-l-4 border-[#9b87f5]"
-                  : "bg-black/40 hover:bg-black/50"
-                }`}
+              className="p-3 rounded-[16px] backdrop-blur-sm cursor-pointer transition-colors bg-black/40 hover:bg-black/50"
+              onClick={() => {
+                console.log("🎯 SECTION CLICK: Area clicked in section:", area.id);
+                setActiveSearchArea(area.id);
+              }}
             >
               <div className="flex items-start gap-2">
-                <Circle className={`w-5 h-5 flex-shrink-0 ${area.isAI ? "text-[#9b87f5]" : "text-cyan-400"}`} />
+                <Circle className="w-5 h-5 flex-shrink-0 text-cyan-400" />
                 <div className="flex-1">
                   <div className="text-sm font-medium">{area.label}</div>
-                  <div className="text-xs text-gray-400">Raggio: {area.radius/1000}km</div>
+                  <div className="text-xs text-gray-400">Raggio: {(area.radius/1000).toFixed(1)}km</div>
                 </div>
                 <div className="flex items-center">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={(e) => {
-                      e.stopPropagation(); // Prevent activating the area
-                      deleteSearchArea(area.id);
+                      e.stopPropagation();
+                      console.log("🗑️ SECTION BUTTON: Delete button clicked in section for area:", area.id);
+                      handleDeleteArea(area.id, area.label || "Area di ricerca");
                     }}
                     className="h-8 w-8 p-0 rounded-full text-red-400 hover:text-red-300 hover:bg-red-900/20"
                   >
@@ -145,13 +186,13 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
               id="radius"
               type="number"
               min="100"
-              max="10000"
+              max="100000"
               className="bg-black/60 border-white/20"
               value={areaRadius}
               onChange={(e) => setAreaRadius(e.target.value)}
             />
             <p className="text-xs text-gray-400 mt-2">
-              Valore minimo: 100m, Valore massimo: 10000m
+              Valore minimo: 100m, Valore massimo: 100000m
             </p>
           </div>
           
