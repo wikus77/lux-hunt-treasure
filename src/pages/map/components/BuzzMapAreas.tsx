@@ -17,40 +17,40 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
   console.log('🔢 BuzzMapAreas - Render count:', ++renderCountRef.current);
   console.log('🔍 BuzzMapAreas - Map instance available:', !!map);
 
-  // CRITICO: Gestione completa dei layer
+  // CRITICO: FORZATURA DISTRUZIONE E RICREAZIONE DEL CERCHIO
   useEffect(() => {
-    console.log('🔄 BuzzMapAreas useEffect triggered with areas:', areas);
-    console.log('🗑️ Current layers to remove:', previousLayersRef.current.length);
+    console.log('🚨 CRITICAL FIX - BuzzMapAreas useEffect triggered with areas:', areas);
+    console.log('🗑️ DESTROYING all previous layers:', previousLayersRef.current.length);
     
-    // Rimuovi tutti i layer precedenti dalla mappa
+    // STEP 1: RIMUOVI FORZATAMENTE tutti i layer precedenti dalla mappa
     previousLayersRef.current.forEach((layer, index) => {
       if (map.hasLayer(layer)) {
-        console.log(`🗑️ Removing layer ${index} from map`);
+        console.log(`🗑️ FORCE REMOVING layer ${index} from map`);
         map.removeLayer(layer);
       }
     });
     
-    // Pulisci l'array dei layer precedenti
+    // STEP 2: PULISCI completamente l'array dei layer precedenti
     previousLayersRef.current = [];
+    console.log('🧹 ALL previous BUZZ layers FORCEFULLY REMOVED from map');
     
-    console.log('🗑️ All previous BUZZ layers REMOVED from map');
-    
-    // CRITICO: Forza la visualizzazione se ci sono aree
+    // STEP 3: SE CI SONO AREE, CREA NUOVI LAYER FORZATAMENTE
     if (areas && areas.length > 0) {
-      console.log('🎯 FORCING MANUAL LAYER CREATION for areas:', areas.length);
+      console.log('🔥 FORCE CREATING NEW LAYERS for areas:', areas.length);
       
       areas.forEach((area, index) => {
         const radiusInMeters = area.radius_km * 1000;
-        console.log(`📏 Creating manual layer for area ${area.id}:`, {
+        console.log(`🎯 FORCE CREATING new layer for area ${area.id}:`, {
           lat: area.lat,
           lng: area.lng,
           radius_km: area.radius_km,
-          radiusInMeters: radiusInMeters
+          radiusInMeters: radiusInMeters,
+          timestamp: new Date().toISOString()
         });
         
-        // Crea manualmente il cerchio usando l'API Leaflet diretta
+        // CREA MANUALMENTE il cerchio usando l'API Leaflet diretta
         const circle = L.circle([area.lat, area.lng], {
-          radius: radiusInMeters,
+          radius: radiusInMeters, // VALORE AGGIORNATO DAL DB
           color: '#00cfff',
           fillColor: '#00cfff',
           fillOpacity: 0.15,
@@ -58,41 +58,52 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
           opacity: 1,
         });
         
-        // Aggiungi FORZATAMENTE alla mappa
+        // AGGIUNGI FORZATAMENTE alla mappa
         circle.addTo(map);
-        console.log('✅ MANUAL LAYER ADDED to map for area:', area.id);
+        console.log('✅ NEW LAYER FORCEFULLY ADDED to map for area:', area.id, 'with radius:', area.radius_km, 'km');
         
-        // Salva il riferimento
+        // SALVA il riferimento per la prossima distruzione
         previousLayersRef.current.push(circle);
         
-        // Forza il layer in primo piano
+        // FORZA il layer in primo piano
         circle.bringToFront();
+        
+        // LOG DETTAGLIATO per debug
+        console.log('🔍 Layer verification:', {
+          layerOnMap: map.hasLayer(circle),
+          layerLatLng: circle.getLatLng(),
+          layerRadius: circle.getRadius(),
+          expectedRadius: radiusInMeters
+        });
       });
+      
+      console.log('🎉 ALL NEW LAYERS CREATED AND ADDED TO MAP');
+    } else {
+      console.log('❌ No BUZZ areas to display - map cleared');
     }
     
-    // Forza un refresh della mappa
+    // STEP 4: FORZA un refresh della mappa
     setTimeout(() => {
       map.invalidateSize();
-      console.log('🔄 Map size invalidated for refresh');
+      console.log('🔄 Map size FORCEFULLY invalidated for refresh');
     }, 50);
     
-  }, [areas, map]);
+  }, [areas, map]); // DIPENDE da areas E map per triggerare ad ogni cambiamento
 
-  // Se non ci sono aree da mostrare, non renderizzare nulla
+  // RENDERIZZA anche i componenti React-Leaflet con KEY DINAMICA per forzare re-render
   if (!areas || areas.length === 0) {
-    console.log('❌ No BUZZ areas to display');
+    console.log('❌ No BUZZ areas to display with React-Leaflet');
     return null;
   }
 
-  console.log('✅ Rendering', areas.length, 'BUZZ areas');
+  console.log('✅ Rendering', areas.length, 'BUZZ areas with React-Leaflet');
 
   return (
     <>
       {areas.map((area, index) => {
-        // CONVERSIONE CORRETTA: radius_km → metri per Leaflet
         const radiusInMeters = area.radius_km * 1000;
         
-        console.log(`📏 Rendering area ${area.id} (${index}):`, {
+        console.log(`📏 React-Leaflet rendering area ${area.id} (${index}):`, {
           lat: area.lat,
           lng: area.lng,
           radius_km: area.radius_km,
@@ -100,45 +111,44 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
           created_at: area.created_at
         });
         
-        // Key unica per forzare re-render completo
-        const uniqueKey = `buzz-area-${area.id}-${area.created_at}-${renderCountRef.current}-${index}`;
+        // KEY DINAMICA che include RAGGIO per forzare re-render quando cambia
+        const dynamicKey = `buzz-area-${area.id}-${area.radius_km}-${area.created_at}-${renderCountRef.current}-${index}`;
         
         return (
           <Circle
-            key={uniqueKey}
+            key={dynamicKey} // CRITICO: Key dinamica che include il raggio
             center={[area.lat, area.lng]}
-            radius={radiusInMeters} // CRITICO: Converti km in metri per Leaflet
+            radius={radiusInMeters} // VALORE AGGIORNATO DAL DB
             pathOptions={{
-              color: '#00cfff', // Neon blu M1SSION
+              color: '#00cfff',
               fillColor: '#00cfff',
               fillOpacity: 0.15,
               weight: 3,
-              opacity: 1, // Sempre visibile al 100%
+              opacity: 1,
             }}
             className="buzz-map-area"
             eventHandlers={{
               add: (e) => {
-                // Salva il riferimento al layer appena aggiunto
                 const layer = e.target as L.Circle;
-                console.log('✅ REACT-LEAFLET Circle added to map:', {
+                console.log('✅ React-Leaflet Circle FORCEFULLY added to map:', {
                   id: area.id,
                   radius_km: area.radius_km,
                   radiusInMeters: radiusInMeters,
                   layerRadius: layer.getRadius(),
                   layerLatLng: layer.getLatLng(),
-                  uniqueKey: uniqueKey
+                  dynamicKey: dynamicKey
                 });
                 
-                // Forza il layer in primo piano
                 layer.bringToFront();
-                
-                // Verifica che sia effettivamente sulla mappa
-                console.log('🔍 Layer is on map:', map.hasLayer(layer));
+                console.log('🔍 React-Leaflet layer verification:', {
+                  isOnMap: map.hasLayer(layer),
+                  radiusMatch: layer.getRadius() === radiusInMeters
+                });
               },
               remove: (e) => {
-                console.log('🗑️ REACT-LEAFLET Circle removed from map:', {
+                console.log('🗑️ React-Leaflet Circle FORCEFULLY removed from map:', {
                   id: area.id,
-                  uniqueKey: uniqueKey
+                  dynamicKey: dynamicKey
                 });
               }
             }}

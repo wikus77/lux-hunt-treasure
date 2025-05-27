@@ -50,12 +50,18 @@ const MapContent: React.FC<MapContentProps> = ({
   isAddingMapPoint,
   hookHandleMapPointClick
 }) => {
-  // Ottieni le aree BUZZ correnti dall'hook
-  const { currentWeekAreas, debugCurrentState } = useBuzzMapLogic();
+  // Ottieni le aree BUZZ correnti dall'hook - CRITICO per aggiornamenti
+  const { currentWeekAreas, debugCurrentState, reloadAreas } = useBuzzMapLogic();
   
-  // DEBUG: Log ogni cambio delle aree
+  // CRITICAL FIX: Force reload areas ogni volta che il componente si monta o cambia
   useEffect(() => {
-    console.log('🗺️ MapContent - Current BUZZ areas changed:', {
+    console.log('🚨 CRITICAL - MapContent mounted, forcing areas reload');
+    reloadAreas(); // Forza il reload delle aree dal DB
+  }, [reloadAreas]);
+  
+  // ENHANCED DEBUG: Log dettagliato ogni cambio delle aree
+  useEffect(() => {
+    console.log('🗺️ CRITICAL - MapContent area state changed:', {
       areas: currentWeekAreas,
       count: currentWeekAreas.length,
       timestamp: new Date().toISOString()
@@ -66,7 +72,7 @@ const MapContent: React.FC<MapContentProps> = ({
     
     if (currentWeekAreas.length > 0) {
       const area = currentWeekAreas[0];
-      console.log('🎯 MapContent - Area to display:', {
+      console.log('🎯 CRITICAL - Latest area to display:', {
         id: area.id,
         lat: area.lat,
         lng: area.lng,
@@ -75,17 +81,24 @@ const MapContent: React.FC<MapContentProps> = ({
         radiusInMeters: area.radius_km * 1000
       });
       
-      // VERIFICA CRITICA: assicurati che i dati siano validi
+      // VERIFICA CRITICA: assicurati che i dati siano validi e aggiornati
       if (!area.lat || !area.lng || !area.radius_km) {
-        console.error('❌ MapContent - Invalid area data:', area);
+        console.error('❌ CRITICAL - Invalid area data:', area);
       } else {
-        console.log('✅ MapContent - Area data is valid and ready for rendering');
+        console.log('✅ CRITICAL - Area data is valid and ready for FORCED rendering');
       }
+    } else {
+      console.log('❌ CRITICAL - No areas available for rendering');
     }
   }, [currentWeekAreas, debugCurrentState]);
 
   // DEBUG: Verifica che il componente si re-renderizzi quando cambiano le aree
-  console.log('🔄 MapContent re-rendering with areas count:', currentWeekAreas.length);
+  console.log('🔄 CRITICAL - MapContent re-rendering with areas count:', currentWeekAreas.length);
+  
+  // Log del raggio attuale per verificare aggiornamenti
+  if (currentWeekAreas.length > 0) {
+    console.log('📏 CRITICAL - Current area radius:', currentWeekAreas[0].radius_km, 'km');
+  }
 
   return (
     <MapContainer 
@@ -108,7 +121,7 @@ const MapContent: React.FC<MapContentProps> = ({
       <MapInitializer onMapReady={(map) => {
         mapRef.current = map;
         handleMapLoad(map);
-        console.log('🗺️ MapContent - Map initialized and ready');
+        console.log('🗺️ CRITICAL - Map initialized and ready for BUZZ areas');
         
         // DEBUG: Verifica che la mappa sia pronta per ricevere layer
         console.log('🔍 Map instance available for BUZZ areas:', !!map);
@@ -121,7 +134,7 @@ const MapContent: React.FC<MapContentProps> = ({
         deleteSearchArea={deleteSearchArea}
       />
       
-      {/* BUZZ Map Areas - CRITICO: Visualizza sempre, anche se array vuoto per debugging */}
+      {/* BUZZ Map Areas - CRITICO: Passa SEMPRE l'array aggiornato per forzare re-render */}
       <BuzzMapAreas areas={currentWeekAreas} />
       
       {/* Use the MapPopupManager component */}
