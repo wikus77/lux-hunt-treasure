@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import HomeLayout from "@/components/home/HomeLayout";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import MemoryHackGame from "@/components/games/MemoryHackGame";
+import DisarmTheBombGame from "@/components/games/DisarmTheBombGame";
 
 interface GameCardProps {
   title: string;
@@ -70,7 +71,8 @@ const Games = () => {
       title: "Disinnesca la Bomba",
       description: "Trova la sequenza corretta in tempo",
       icon: <Bomb className="text-[#00D1FF] w-5 h-5" />,
-      gameKey: "bomb_defuse"
+      gameKey: "disarm_the_bomb",
+      isPlayable: true
     },
     {
       title: "Cracca la Combinazione",
@@ -151,7 +153,7 @@ const Games = () => {
           </div>
         </motion.div>
 
-        {/* Game Modal */}
+        {/* Memory Hack Game Modal */}
         <Dialog open={activeGame === 'memory_hack'} onOpenChange={closeGame}>
           <DialogContent className="max-w-4xl w-full bg-black/95 border-white/10">
             <DialogHeader>
@@ -170,6 +172,28 @@ const Games = () => {
               </div>
             </DialogHeader>
             <MemoryHackGame />
+          </DialogContent>
+        </Dialog>
+
+        {/* Disarm The Bomb Game Modal */}
+        <Dialog open={activeGame === 'disarm_the_bomb'} onOpenChange={closeGame}>
+          <DialogContent className="max-w-4xl w-full bg-black/95 border-white/10">
+            <DialogHeader>
+              <div className="flex items-center justify-between">
+                <DialogTitle className="text-2xl font-orbitron text-white">
+                  <span className="text-red-400">DISINNESCA</span> LA BOMBA
+                </DialogTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={closeGame}
+                  className="text-white hover:text-[#00D1FF]"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </DialogHeader>
+            <DisarmTheBombGame />
           </DialogContent>
         </Dialog>
       </div>
