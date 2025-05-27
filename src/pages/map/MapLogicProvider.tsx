@@ -64,9 +64,7 @@ const MapLogicProvider = () => {
   };
 
   // Wrapper function to match the expected signature for updateMapPoint
-  const handleUpdatePoint = async (id: string, updates: { title?: string; note?: string }): Promise<boolean> => {
-    const title = updates.title || '';
-    const note = updates.note || '';
+  const handleUpdatePoint = async (id: string, title: string, note: string): Promise<boolean> => {
     return updateMapPoint(id, title, note);
   };
 
