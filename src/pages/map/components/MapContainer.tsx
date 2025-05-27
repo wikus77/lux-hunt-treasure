@@ -103,9 +103,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           zIndex: 1
         }}
         className="z-10"
-        whenReady={(map) => {
-          mapRef.current = map.target as L.Map;
-          map.target.on('moveend', handleMapMove);
+        whenReady={(mapEvent) => {
+          mapRef.current = mapEvent.target;
+          mapEvent.target.on('moveend', handleMapMove);
         }}
       >
         <MapController 

@@ -11,6 +11,7 @@ export interface BuzzMapArea {
   radius_km: number;
   week_id: string;
   created_at: string;
+  user_id?: string;
 }
 
 export const useBuzzMapLogic = () => {
@@ -46,7 +47,18 @@ export const useBuzzMapLogic = () => {
         return;
       }
 
-      setCurrentWeekAreas(data || []);
+      // Trasforma i dati dal formato del database al formato dell'interfaccia BuzzMapArea
+      const formattedData: BuzzMapArea[] = data?.map(item => ({
+        id: item.id,
+        latitude: item.latitude,
+        longitude: item.longitude,
+        radius_km: item.radius_km,
+        week_id: item.week_id,
+        created_at: item.created_at,
+        user_id: item.user_id
+      })) || [];
+      
+      setCurrentWeekAreas(formattedData);
     } catch (err) {
       console.error('Exception loading map areas:', err);
     }
@@ -95,6 +107,7 @@ export const useBuzzMapLogic = () => {
         areaCount: currentWeekAreas.length
       });
 
+      // Assicuriamoci che la struttura dati corrisponda a quella della tabella del database
       const newArea = {
         user_id: user.id,
         latitude: centerLat,
@@ -117,12 +130,23 @@ export const useBuzzMapLogic = () => {
 
       console.log('✅ Area BUZZ MAPPA salvata:', data);
       
+      // Trasforma il dato dal formato del database al formato dell'interfaccia BuzzMapArea
+      const formattedNewArea: BuzzMapArea = {
+        id: data.id,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        radius_km: data.radius_km,
+        week_id: data.week_id,
+        created_at: data.created_at,
+        user_id: data.user_id
+      };
+      
       // Aggiorna lo stato locale
-      setCurrentWeekAreas(prev => [...prev, data]);
+      setCurrentWeekAreas(prev => [...prev, formattedNewArea]);
       
       toast.success(`Area di ricerca generata! Raggio: ${radiusKm.toFixed(1)} km`);
       
-      return data;
+      return formattedNewArea;
     } catch (err) {
       console.error('Exception generating map area:', err);
       toast.error('Errore durante la generazione dell\'area');
