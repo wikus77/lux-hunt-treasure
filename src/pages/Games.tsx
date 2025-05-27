@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Brain, Bomb, Fingerprint, MapPin, Satellite, MessageSquare, LockKeyholeIcon, X } from "lucide-react";
@@ -118,7 +119,7 @@ const Games = () => {
   return (
     <HomeLayout profileImage={profileImage}>
       <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
-        {/* Header Section - NOW ADDED */}
+        {/* Header Section with proper M1SSION styling */}
         <div className="pt-20 pb-8 px-4">
           <div className="max-w-6xl mx-auto">
             <motion.div
@@ -129,7 +130,7 @@ const Games = () => {
             >
               <h1 className="text-4xl md:text-5xl font-orbitron font-bold mb-4">
                 <span className="text-[#00D1FF]" style={{ 
-                  textShadow: "0 0 10px rgba(0, 209, 255, 0.5)"
+                  textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
                 }}>M1</span>
                 <span className="text-white">SSION<span className="text-xs align-top">™</span> GAMES</span>
               </h1>

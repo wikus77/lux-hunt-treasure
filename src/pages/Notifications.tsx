@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
@@ -42,7 +43,7 @@ const categoryConfig = [
 ];
 
 const Notifications = () => {
-  const { notifications, markAllAsRead, deleteNotification, reloadNotifications, isLoading } = useNotifications();
+  const { notifications, markAllAsRead, markAsRead, deleteNotification, reloadNotifications, isLoading } = useNotifications();
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const isMobile = useIsMobile();
@@ -122,7 +123,11 @@ const Notifications = () => {
     }
   };
 
-  const handleOpen = (notification: any) => {
+  const handleOpen = async (notification: any) => {
+    // Mark as read when opened
+    if (!notification.read) {
+      await markAsRead(notification.id);
+    }
     setSelectedNotification(notification);
   };
 
@@ -229,7 +234,11 @@ const Notifications = () => {
                               .map(notification => (
                                 <div 
                                   key={notification.id} 
-                                  className="p-4 rounded-[24px] border border-[#00D1FF]/10 hover:border-[#00D1FF]/30 bg-gradient-to-br from-black/90 to-[#131524]/80 hover:from-black hover:to-[#131524]/90 transition-all duration-200 shadow-md relative cursor-pointer"
+                                  className={`p-4 rounded-[24px] border transition-all duration-200 shadow-md relative cursor-pointer ${
+                                    !notification.read 
+                                      ? "border-l-4 border-[#00D1FF] bg-gradient-to-br from-[#00D1FF]/10 to-black/90 hover:from-[#00D1FF]/15 hover:to-black shadow-[0_0_15px_rgba(0,209,255,0.2)]" 
+                                      : "border-[#00D1FF]/10 hover:border-[#00D1FF]/30 bg-gradient-to-br from-black/90 to-[#131524]/80 hover:from-black hover:to-[#131524]/90"
+                                  }`}
                                   onClick={() => handleOpen(notification)}
                                 >
                                   <div className="flex items-start gap-3">
@@ -237,12 +246,23 @@ const Notifications = () => {
                                       {category.icon}
                                     </div>
                                     <div className="flex-1">
-                                      <h3 className={`text-white font-medium ${!notification.read ? 'text-[#00D1FF]' : ''}`}>
-                                        {notification.title}
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <h3 className={`font-medium ${
+                                          !notification.read 
+                                            ? 'text-[#00D1FF] font-bold' 
+                                            : 'text-white'
+                                        }`}>
+                                          {notification.title}
+                                        </h3>
                                         {!notification.read && (
-                                          <span className="inline-block h-2 w-2 rounded-full bg-[#FF59F8] ml-2 animate-pulse"></span>
+                                          <div className="flex items-center gap-1">
+                                            <div className="h-2 w-2 rounded-full bg-[#FF59F8] animate-pulse"></div>
+                                            <span className="text-xs font-bold text-[#FF59F8] bg-[#FF59F8]/20 px-2 py-1 rounded-full">
+                                              NUOVA
+                                            </span>
+                                          </div>
                                         )}
-                                      </h3>
+                                      </div>
                                       <p className="text-white/70 text-sm mt-1">{notification.description}</p>
                                       <div className="mt-1 text-xs text-white/40">
                                         {notification.date ? new Date(notification.date).toLocaleString() : "Ora"}
