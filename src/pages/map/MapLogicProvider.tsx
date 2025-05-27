@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
@@ -63,8 +64,10 @@ const MapLogicProvider = () => {
   };
 
   // Wrapper function to match the expected signature for updateMapPoint
-  const handleUpdatePoint = async (id: string, title: string, note: string): Promise<boolean> => {
-    return updateMapPoint(id, { title, note });
+  const handleUpdatePoint = async (id: string, updates: { title?: string; note?: string }): Promise<boolean> => {
+    const title = updates.title || '';
+    const note = updates.note || '';
+    return updateMapPoint(id, title, note);
   };
 
   // Use our custom hook for map points

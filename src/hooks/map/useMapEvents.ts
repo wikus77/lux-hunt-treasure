@@ -7,7 +7,7 @@ import { MapMarker } from '@/components/maps/types';
 interface UseMapEventsProps {
   user: any;
   mapPoints: any[];
-  setMapPoints: (points: any[]) => void;
+  setMapPoints: (points: any[] | ((prev: any[]) => any[])) => void;
   newPoint: MapMarker | null;
   setNewPoint: (point: MapMarker | null) => void;
   setActiveMapPoint: (id: string | null) => void;
