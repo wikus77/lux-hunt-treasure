@@ -20,17 +20,18 @@ const GameCard: React.FC<GameCardProps> = ({ card, onClick, disabled }) => {
     if (card.isFlipped) {
       return 'border-[#00D1FF]/70 bg-[#00D1FF]/20 shadow-[0_0_10px_rgba(0,209,255,0.3)]';
     }
-    return 'border-white/20 bg-[#1b1b1b] hover:border-[#00D1FF]/40 hover:bg-[#00D1FF]/5';
+    return 'border-white/20 bg-[#1b1b1b] hover:border-[#00D1FF]/40 hover:bg-[#00D1FF]/5 cursor-pointer';
   };
 
   const shouldShowIcon = card.isFlipped || card.isMatched;
+  const isClickable = !disabled && !card.isMatched && !card.isFlipped;
 
   return (
     <motion.div
-      className="aspect-square cursor-pointer"
-      whileHover={{ scale: disabled || card.isMatched ? 1 : 1.05 }}
-      whileTap={{ scale: disabled || card.isMatched ? 1 : 0.95 }}
-      onClick={() => !disabled && !card.isMatched && onClick(card.id)}
+      className="aspect-square"
+      whileHover={isClickable ? { scale: 1.05 } : { scale: 1 }}
+      whileTap={isClickable ? { scale: 0.95 } : { scale: 1 }}
+      onClick={() => isClickable && onClick(card.id)}
     >
       <Card className={`w-full h-full border-2 transition-all duration-500 rounded-xl ${getCardStyle()}`}>
         <CardContent className="flex items-center justify-center h-full p-0">

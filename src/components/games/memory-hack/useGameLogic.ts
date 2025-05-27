@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -16,17 +17,29 @@ export const useGameLogic = () => {
 
   // Initialize game
   const initializeGame = useCallback(() => {
-    // Create pairs by duplicating each icon
-    const pairs = gameIconsData.concat(gameIconsData);
-    const shuffled = pairs
-      .map((iconData, index) => ({
-        id: index,
-        symbol: iconData.type, // Use type string for matching
+    // Create pairs by duplicating each icon with unique IDs
+    const pairs: GameCard[] = [];
+    gameIconsData.forEach((iconData, index) => {
+      // First card of the pair
+      pairs.push({
+        id: index * 2,
+        symbol: iconData.type,
         icon: iconData.icon,
         isFlipped: false,
         isMatched: false
-      }))
-      .sort(() => Math.random() - 0.5);
+      });
+      // Second card of the pair
+      pairs.push({
+        id: index * 2 + 1,
+        symbol: iconData.type,
+        icon: iconData.icon,
+        isFlipped: false,
+        isMatched: false
+      });
+    });
+    
+    // Shuffle the cards
+    const shuffled = pairs.sort(() => Math.random() - 0.5);
     
     setCards(shuffled);
     setFlippedCards([]);
@@ -50,7 +63,8 @@ export const useGameLogic = () => {
   // Handle card click
   const handleCardClick = (cardId: number) => {
     // Prevent clicks if interactions are disabled or card is already flipped/matched
-    if (disableInteraction || cards[cardId].isFlipped || cards[cardId].isMatched) {
+    const targetCard = cards.find(card => card.id === cardId);
+    if (disableInteraction || !targetCard || targetCard.isFlipped || targetCard.isMatched) {
       return;
     }
 
@@ -71,10 +85,15 @@ export const useGameLogic = () => {
     if (newFlippedCards.length === 2) {
       setDisableInteraction(true);
       const [firstId, secondId] = newFlippedCards;
-      const firstCard = cards[firstId];
-      const secondCard = cards[secondId];
+      const firstCard = cards.find(card => card.id === firstId);
+      const secondCard = cards.find(card => card.id === secondId);
 
-      // Compare symbols (primitive strings)
+      if (!firstCard || !secondCard) {
+        setDisableInteraction(false);
+        return;
+      }
+
+      // Compare symbols (strings)
       const isMatch = firstCard.symbol === secondCard.symbol;
 
       setTimeout(() => {
