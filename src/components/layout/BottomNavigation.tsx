@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Bell, Map, Home, Trophy, User, Circle } from "lucide-react";
+import { Bell, Map, Home, Trophy, User, Circle, Gamepad2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
 
@@ -11,9 +11,10 @@ const BottomNavigation = () => {
   const { unreadCount } = useNotifications();
 
   const links = [
-    { icon: <Home className="h-6 w-6" />, label: "Home", path: "/" },
+    { icon: <Home className="h-6 w-6" />, label: "Home", path: "/home" },
     { icon: <Map className="h-6 w-6" />, label: "Mappa", path: "/map" },
     { icon: <Circle strokeWidth={2} className="h-6 w-6" />, label: "Buzz", path: "/buzz" },
+    { icon: <Gamepad2 className="h-6 w-6" />, label: "Games", path: "/games" },
     { icon: <Bell className="h-6 w-6" />, label: "Notifiche", path: "/notifications", badge: unreadCount > 0 },
     { icon: <Trophy className="h-6 w-6" />, label: "Classifica", path: "/leaderboard" },
   ];

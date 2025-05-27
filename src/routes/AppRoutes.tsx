@@ -1,3 +1,4 @@
+
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -11,6 +12,7 @@ import Index from "@/pages/Index";
 const Home = lazy(() => import("@/pages/Home"));
 const Map = lazy(() => import("@/pages/Map"));
 const Buzz = lazy(() => import("@/pages/Buzz"));
+const Games = lazy(() => import("@/pages/Games"));
 const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
 const Profile = lazy(() => import("@/pages/Profile"));
@@ -61,6 +63,15 @@ const AppRoutes: React.FC = () => {
             element={
               <ProtectedRoute>
                 <Buzz />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/games"
+            element={
+              <ProtectedRoute>
+                <Games />
               </ProtectedRoute>
             }
           />
