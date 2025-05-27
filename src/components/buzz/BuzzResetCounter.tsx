@@ -14,22 +14,32 @@ const BuzzResetCounter: React.FC<BuzzResetCounterProps> = ({ userId, onReset }) 
     try {
       console.log("🔄 RESET COUNTER BUZZ per testing...");
       
-      // Reset del counter giornaliero
-      const { error: counterError } = await supabase
+      // Reset completo del counter giornaliero - DELETE di tutti i record per oggi
+      const today = new Date().toISOString().split('T')[0];
+      console.log("📅 Data di reset:", today);
+      
+      const { error: counterError, data: deletedRecords } = await supabase
         .from('user_buzz_counter')
         .delete()
         .eq('user_id', userId)
-        .eq('date', new Date().toISOString().split('T')[0]);
+        .eq('date', today)
+        .select();
 
       if (counterError) {
         console.error("❌ Errore reset counter:", counterError);
         throw counterError;
       }
 
-      console.log("✅ Counter buzz resettato con successo");
+      console.log("✅ Record eliminati:", deletedRecords);
+      console.log("✅ Counter buzz resettato completamente per la data:", today);
+      
+      // Forza un refresh della pagina per aggiornare tutti i componenti
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       
       toast.success("Counter Buzz resettato!", {
-        description: "Ora puoi testare nuovamente il sistema BUZZ",
+        description: "La pagina si aggiornerà automaticamente per applicare le modifiche",
         duration: 3000,
       });
       

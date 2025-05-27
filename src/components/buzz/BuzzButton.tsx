@@ -33,15 +33,19 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       if (!userId) return;
       
       try {
+        console.log("📊 Caricamento dati buzz per user:", userId);
+        
         // Ottieni il conteggio giornaliero attuale
+        const today = new Date().toISOString().split('T')[0];
         const { data: countData, error: countError } = await supabase
           .from('user_buzz_counter')
           .select('buzz_count')
           .eq('user_id', userId)
-          .eq('date', new Date().toISOString().split('T')[0])
+          .eq('date', today)
           .single();
 
         const currentCount = countData?.buzz_count || 0;
+        console.log("📈 Conteggio attuale buzz:", currentCount);
         setDailyCount(currentCount);
 
         // Calcola il costo per il prossimo buzz
@@ -54,7 +58,9 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           return;
         }
 
-        setBuzzCost(costData || 1.99);
+        const newCost = costData || 1.99;
+        console.log("💰 Costo calcolato per prossimo buzz:", newCost);
+        setBuzzCost(newCost);
       } catch (error) {
         console.error("Errore nel caricamento del costo buzz:", error);
       }
@@ -80,9 +86,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         console.log("✅ Risposta BUZZ API ricevuta:", response);
         
         // Aggiorna il costo per il prossimo utilizzo
-        setDailyCount(prev => prev + 1);
+        const newDailyCount = dailyCount + 1;
+        setDailyCount(newDailyCount);
+        
         const { data: newCostData } = await supabase.rpc('calculate_buzz_price', {
-          daily_count: dailyCount + 2
+          daily_count: newDailyCount + 1
         });
         if (newCostData) setBuzzCost(newCostData);
 
@@ -152,7 +160,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   };
 
   // Determina se il buzz è bloccato (oltre 50 utilizzi giornalieri)
-  const isBlocked = buzzCost <= 0;
+  const isBlocked = dailyCount >= 50 || buzzCost <= 0;
 
   return (
     <motion.button
