@@ -2,9 +2,11 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 import { BuzzMapArea } from './useBuzzMapLogic';
 
 export const useBuzzAreaManagement = (userId: string | undefined) => {
+  const { user } = useAuth();
   const [currentWeekAreas, setCurrentWeekAreas] = useState<BuzzMapArea[]>([]);
   const [forceUpdateCounter, setForceUpdateCounter] = useState(0);
 
@@ -47,8 +49,9 @@ export const useBuzzAreaManagement = (userId: string | undefined) => {
   }, [getActiveArea]);
 
   // Load current week areas
-  const loadCurrentWeekAreas = useCallback(async (forceRefresh: boolean = false) => {
-    if (!userId) {
+  const loadCurrentWeekAreas = useCallback(async () => {
+    const currentUserId = user?.id || userId;
+    if (!currentUserId) {
       console.log('❌ No user ID for loading areas');
       return;
     }
@@ -56,12 +59,12 @@ export const useBuzzAreaManagement = (userId: string | undefined) => {
     const currentWeek = getCurrentWeek();
     
     try {
-      console.log('🔄 CRITICAL RADIUS - Loading BUZZ areas for user:', userId, 'week:', currentWeek, 'forceRefresh:', forceRefresh);
+      console.log('🔄 CRITICAL RADIUS - Loading BUZZ areas for user:', currentUserId, 'week:', currentWeek);
       
       const { data, error } = await supabase
         .from('user_map_areas')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', currentUserId)
         .eq('week', currentWeek)
         .order('created_at', { ascending: false })
         .limit(1);
@@ -100,21 +103,22 @@ export const useBuzzAreaManagement = (userId: string | undefined) => {
     } catch (err) {
       console.error('❌ Exception loading map areas:', err);
     }
-  }, [userId, currentWeekAreas]);
+  }, [user, userId, currentWeekAreas]);
 
   // Remove previous area
   const removePreviousArea = useCallback(async (): Promise<boolean> => {
-    if (!userId) return false;
+    const currentUserId = user?.id || userId;
+    if (!currentUserId) return false;
 
     const currentWeek = getCurrentWeek();
     
     try {
-      console.log('🗑️ ELIMINAZIONE area precedente per user:', userId, 'settimana:', currentWeek);
+      console.log('🗑️ ELIMINAZIONE area precedente per user:', currentUserId, 'settimana:', currentWeek);
       
       const { error } = await supabase
         .from('user_map_areas')
         .delete()
-        .eq('user_id', userId)
+        .eq('user_id', currentUserId)
         .eq('week', currentWeek);
 
       if (error) {
@@ -128,7 +132,7 @@ export const useBuzzAreaManagement = (userId: string | undefined) => {
       console.error('❌ Exception removing previous area:', err);
       return false;
     }
-  }, [userId]);
+  }, [user, userId]);
 
   return {
     currentWeekAreas,

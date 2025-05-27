@@ -7,6 +7,7 @@ import { useBuzzPricing } from './useBuzzPricing';
 import { useBuzzCounter } from './useBuzzCounter';
 import { useBuzzDatabase } from './useBuzzDatabase';
 import { useBuzzMapCounter } from './useBuzzMapCounter';
+import { useBuzzMapUtils } from './buzz/useBuzzMapUtils';
 
 export interface BuzzMapArea {
   id: string;
@@ -22,6 +23,14 @@ export const useBuzzMapLogic = () => {
   const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Use utility functions
+  const { 
+    getCurrentWeek, 
+    getActiveAreaFromList, 
+    calculateNextRadiusFromArea, 
+    createDebugReport 
+  } = useBuzzMapUtils();
+
   // Use specialized hooks
   const {
     currentWeekAreas,
@@ -30,7 +39,6 @@ export const useBuzzMapLogic = () => {
     calculateNextRadius,
     loadCurrentWeekAreas,
     removePreviousArea,
-    getCurrentWeek,
     setCurrentWeekAreas
   } = useBuzzAreaManagement(user?.id);
 
@@ -111,7 +119,7 @@ export const useBuzzMapLogic = () => {
       // Force reload for safety
       setTimeout(async () => {
         console.log('🔄 CRITICAL RADIUS - Double-check reload after area creation...');
-        await loadCurrentWeekAreas(true);
+        await loadCurrentWeekAreas();
         await loadDailyBuzzCounter();
       }, 200);
       
@@ -130,20 +138,20 @@ export const useBuzzMapLogic = () => {
 
   // Debug function
   const debugCurrentState = useCallback(() => {
-    console.log('🔍 DEBUG STATE REPORT:', {
-      user: user?.id,
+    const debugData = createDebugReport(
+      user,
       currentWeekAreas,
-      areasCount: currentWeekAreas.length,
       userCluesCount,
       isGenerating,
-      activeArea: getActiveArea(),
-      nextRadius: calculateNextRadius(),
-      price: calculateBuzzMapPrice(),
-      forceUpdateCounter: forceUpdateCounter,
-      dailyBuzzCounter: dailyBuzzCounter,
-      dailyBuzzMapCounter: dailyBuzzMapCounter, // NEW: separate counter
-      stateTimestamp: new Date().toISOString()
-    });
+      forceUpdateCounter,
+      dailyBuzzCounter,
+      dailyBuzzMapCounter,
+      getActiveArea,
+      calculateNextRadius,
+      calculateBuzzMapPrice
+    );
+    
+    console.log('🔍 DEBUG STATE REPORT:', debugData);
     
     if (currentWeekAreas.length > 0) {
       currentWeekAreas.forEach((area, index) => {
@@ -157,7 +165,7 @@ export const useBuzzMapLogic = () => {
         });
       });
     }
-  }, [user, currentWeekAreas, userCluesCount, isGenerating, getActiveArea, calculateNextRadius, calculateBuzzMapPrice, forceUpdateCounter, dailyBuzzCounter, dailyBuzzMapCounter]);
+  }, [user, currentWeekAreas, userCluesCount, isGenerating, getActiveArea, calculateNextRadius, calculateBuzzMapPrice, forceUpdateCounter, dailyBuzzCounter, dailyBuzzMapCounter, createDebugReport]);
 
   // Load initial data
   useEffect(() => {
@@ -174,7 +182,7 @@ export const useBuzzMapLogic = () => {
       count: currentWeekAreas.length,
       forceUpdateCounter: forceUpdateCounter,
       dailyBuzzCounter: dailyBuzzCounter,
-      dailyBuzzMapCounter: dailyBuzzMapCounter, // NEW: separate counter logging
+      dailyBuzzMapCounter: dailyBuzzMapCounter,
       timestamp: new Date().toISOString()
     });
     
@@ -192,12 +200,12 @@ export const useBuzzMapLogic = () => {
     isGenerating,
     userCluesCount,
     dailyBuzzCounter,
-    dailyBuzzMapCounter, // NEW: expose the separate BUZZ MAPPA counter
+    dailyBuzzMapCounter,
     calculateNextRadius,
     calculateBuzzMapPrice,
     generateBuzzMapArea,
     getActiveArea,
-    reloadAreas: () => loadCurrentWeekAreas(true),
+    reloadAreas: () => loadCurrentWeekAreas(),
     testCalculationLogic,
     debugCurrentState,
     forceUpdateCounter
