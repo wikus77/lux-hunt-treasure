@@ -1,20 +1,24 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Brain, Bomb, Fingerprint, MapPin, Satellite, MessageSquare, LockKeyholeIcon } from "lucide-react";
+import { Brain, Bomb, Fingerprint, MapPin, Satellite, MessageSquare, LockKeyholeIcon, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import HomeLayout from "@/components/home/HomeLayout";
 import { useProfileImage } from "@/hooks/useProfileImage";
+import MemoryHackGame from "@/components/games/MemoryHackGame";
 
 interface GameCardProps {
   title: string;
   description: string;
   icon: React.ReactNode;
   gameKey: string;
+  isPlayable?: boolean;
+  onPlay?: () => void;
 }
 
-const GameCard = ({ title, description, icon, gameKey }: GameCardProps) => {
+const GameCard = ({ title, description, icon, gameKey, isPlayable = false, onPlay }: GameCardProps) => {
   return (
     <Card className="m1ssion-glass-card border border-white/10 bg-black/40 hover:shadow-[0_0_15px_rgba(0,209,255,0.2)] transition-all duration-300">
       <CardHeader className="pb-2">
@@ -28,12 +32,22 @@ const GameCard = ({ title, description, icon, gameKey }: GameCardProps) => {
       </CardHeader>
       <CardContent>
         <Button 
-          disabled
+          disabled={!isPlayable}
+          onClick={onPlay}
           className="w-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white" 
           size="sm"
         >
-          <LockKeyholeIcon className="w-4 h-4 mr-2" />
-          GIOCA
+          {isPlayable ? (
+            <>
+              <Brain className="w-4 h-4 mr-2" />
+              GIOCA
+            </>
+          ) : (
+            <>
+              <LockKeyholeIcon className="w-4 h-4 mr-2" />
+              GIOCA
+            </>
+          )}
         </Button>
       </CardContent>
     </Card>
@@ -42,13 +56,15 @@ const GameCard = ({ title, description, icon, gameKey }: GameCardProps) => {
 
 const Games = () => {
   const { profileImage } = useProfileImage();
+  const [activeGame, setActiveGame] = useState<string | null>(null);
 
   const games = [
     {
       title: "Memory Hack",
       description: "Metti alla prova la tua memoria visiva",
       icon: <Brain className="text-[#00D1FF] w-5 h-5" />,
-      gameKey: "memory_hack"
+      gameKey: "memory_hack",
+      isPlayable: true
     },
     {
       title: "Disinnesca la Bomba",
@@ -81,6 +97,14 @@ const Games = () => {
       gameKey: "flash_interrogation"
     }
   ];
+
+  const handlePlayGame = (gameKey: string) => {
+    setActiveGame(gameKey);
+  };
+
+  const closeGame = () => {
+    setActiveGame(null);
+  };
 
   return (
     <HomeLayout profileImage={profileImage}>
@@ -119,11 +143,35 @@ const Games = () => {
                   description={game.description} 
                   icon={game.icon}
                   gameKey={game.gameKey}
+                  isPlayable={game.isPlayable}
+                  onPlay={() => handlePlayGame(game.gameKey)}
                 />
               </motion.div>
             ))}
           </div>
         </motion.div>
+
+        {/* Game Modal */}
+        <Dialog open={activeGame === 'memory_hack'} onOpenChange={closeGame}>
+          <DialogContent className="max-w-4xl w-full bg-black/95 border-white/10">
+            <DialogHeader>
+              <div className="flex items-center justify-between">
+                <DialogTitle className="text-2xl font-orbitron text-white">
+                  <span className="text-[#00D1FF]">MEMORY</span> HACK
+                </DialogTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={closeGame}
+                  className="text-white hover:text-[#00D1FF]"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </DialogHeader>
+            <MemoryHackGame />
+          </DialogContent>
+        </Dialog>
       </div>
     </HomeLayout>
   );
