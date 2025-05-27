@@ -15,6 +15,7 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
   
   console.log('🗺️ BuzzMapAreas - Rendering BUZZ map areas:', areas);
   console.log('🔢 BuzzMapAreas - Render count:', ++renderCountRef.current);
+  console.log('🔍 BuzzMapAreas - Map instance available:', !!map);
 
   // CRITICO: Gestione completa dei layer
   useEffect(() => {
@@ -33,6 +34,41 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
     previousLayersRef.current = [];
     
     console.log('🗑️ All previous BUZZ layers REMOVED from map');
+    
+    // CRITICO: Forza la visualizzazione se ci sono aree
+    if (areas && areas.length > 0) {
+      console.log('🎯 FORCING MANUAL LAYER CREATION for areas:', areas.length);
+      
+      areas.forEach((area, index) => {
+        const radiusInMeters = area.radius_km * 1000;
+        console.log(`📏 Creating manual layer for area ${area.id}:`, {
+          lat: area.lat,
+          lng: area.lng,
+          radius_km: area.radius_km,
+          radiusInMeters: radiusInMeters
+        });
+        
+        // Crea manualmente il cerchio usando l'API Leaflet diretta
+        const circle = L.circle([area.lat, area.lng], {
+          radius: radiusInMeters,
+          color: '#00cfff',
+          fillColor: '#00cfff',
+          fillOpacity: 0.15,
+          weight: 3,
+          opacity: 1,
+        });
+        
+        // Aggiungi FORZATAMENTE alla mappa
+        circle.addTo(map);
+        console.log('✅ MANUAL LAYER ADDED to map for area:', area.id);
+        
+        // Salva il riferimento
+        previousLayersRef.current.push(circle);
+        
+        // Forza il layer in primo piano
+        circle.bringToFront();
+      });
+    }
     
     // Forza un refresh della mappa
     setTimeout(() => {
@@ -84,8 +120,7 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
               add: (e) => {
                 // Salva il riferimento al layer appena aggiunto
                 const layer = e.target as L.Circle;
-                previousLayersRef.current.push(layer);
-                console.log('✅ NEW BUZZ layer added to map:', {
+                console.log('✅ REACT-LEAFLET Circle added to map:', {
                   id: area.id,
                   radius_km: area.radius_km,
                   radiusInMeters: radiusInMeters,
@@ -96,9 +131,12 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
                 
                 // Forza il layer in primo piano
                 layer.bringToFront();
+                
+                // Verifica che sia effettivamente sulla mappa
+                console.log('🔍 Layer is on map:', map.hasLayer(layer));
               },
               remove: (e) => {
-                console.log('🗑️ BUZZ layer removed from map:', {
+                console.log('🗑️ REACT-LEAFLET Circle removed from map:', {
                   id: area.id,
                   uniqueKey: uniqueKey
                 });

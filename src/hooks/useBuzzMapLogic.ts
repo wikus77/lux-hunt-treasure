@@ -75,7 +75,7 @@ export const useBuzzMapLogic = () => {
     return 29.99;
   };
 
-  // Carica le aree della settimana corrente - MIGLIORATA CON LOGGING
+  // Carica le aree della settimana corrente - MIGLIORATA CON LOGGING E VERIFICA DB
   const loadCurrentWeekAreas = async () => {
     if (!user?.id) {
       console.log('❌ No user ID for loading areas');
@@ -101,6 +101,27 @@ export const useBuzzMapLogic = () => {
       }
 
       console.log('✅ BUZZ areas loaded for week', currentWeek, ':', data);
+      
+      // VERIFICA CRITICA: dati dal DB
+      if (data && data.length > 0) {
+        const area = data[0];
+        console.log('🔍 DB VERIFICATION - Area data:', {
+          id: area.id,
+          user_id: area.user_id,
+          lat: area.lat,
+          lng: area.lng,
+          radius_km: area.radius_km,
+          week: area.week,
+          created_at: area.created_at,
+          dataValid: !!(area.lat && area.lng && area.radius_km)
+        });
+        
+        if (!area.lat || !area.lng || !area.radius_km) {
+          console.error('❌ CRITICAL: Invalid area data from DB');
+        } else {
+          console.log('✅ VERIFIED: Area data is valid from DB');
+        }
+      }
       
       // DEBUG: Log prima e dopo l'aggiornamento dello stato
       console.log('📝 Setting currentWeekAreas state from:', currentWeekAreas, 'to:', data || []);
@@ -174,7 +195,7 @@ export const useBuzzMapLogic = () => {
     }
   };
 
-  // Genera una nuova area BUZZ MAPPA - MIGLIORATA CON LOGGING DETTAGLIATO
+  // Genera una nuova area BUZZ MAPPA - MIGLIORATA CON VERIFICA E LOGGING COMPLETO
   const generateBuzzMapArea = async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
@@ -238,13 +259,26 @@ export const useBuzzMapLogic = () => {
 
       console.log('✅ NUOVA area BUZZ MAPPA salvata in DB:', data);
       
-      // STEP 4: Aggiorna lo stato locale IMMEDIATAMENTE
+      // VERIFICA CRITICA: dati salvati
+      console.log('🔍 DB SAVE VERIFICATION:', {
+        id: data.id,
+        lat: data.lat,
+        lng: data.lng,
+        radius_km: data.radius_km,
+        week: data.week,
+        created_at: data.created_at,
+        saveSuccessful: true
+      });
+      
+      // STEP 4: Aggiorna lo stato locale IMMEDIATAMENTE con verifica
       console.log('🔄 Updating local state immediately with new area:', data);
       setCurrentWeekAreas([data]);
       
-      // STEP 5: Verifica che lo stato sia stato aggiornato
+      // STEP 5: Verifica multipla che lo stato sia stato aggiornato
       setTimeout(() => {
         console.log('🔍 Verification - currentWeekAreas after update should contain:', data);
+        console.log('🔍 Quick state check...');
+        debugCurrentState();
       }, 50);
       
       // STEP 6: Messaggio con il valore REALE salvato
@@ -293,12 +327,15 @@ export const useBuzzMapLogic = () => {
     console.log('💰 Current price:', calculateBuzzMapPrice());
   }, [userCluesCount]);
 
-  // DEBUG: Log quando cambiano le aree correnti
+  // DEBUG: Log quando cambiano le aree correnti - CRITICO
   useEffect(() => {
     console.log('🗺️ Current week areas state updated:', currentWeekAreas);
+    if (currentWeekAreas.length > 0) {
+      console.log('🎯 AREA READY FOR RENDERING:', currentWeekAreas[0]);
+    }
   }, [currentWeekAreas]);
 
-  // DEBUG: Funzione per verificare lo stato corrente
+  // DEBUG: Funzione per verificare lo stato corrente - MIGLIORATA
   const debugCurrentState = () => {
     console.log('🔍 DEBUG STATE REPORT:', {
       user: user?.id,
@@ -308,8 +345,21 @@ export const useBuzzMapLogic = () => {
       isGenerating,
       activeArea: getActiveArea(),
       nextRadius: calculateNextRadius(),
-      price: calculateBuzzMapPrice()
+      price: calculateBuzzMapPrice(),
+      stateTimestamp: new Date().toISOString()
     });
+    
+    // Verifica dettagliata delle aree
+    if (currentWeekAreas.length > 0) {
+      currentWeekAreas.forEach((area, index) => {
+        console.log(`🔍 Area ${index}:`, {
+          id: area.id,
+          coordinates: `${area.lat}, ${area.lng}`,
+          radius: area.radius_km,
+          valid: !!(area.lat && area.lng && area.radius_km)
+        });
+      });
+    }
   };
 
   return {
@@ -322,6 +372,6 @@ export const useBuzzMapLogic = () => {
     getActiveArea,
     reloadAreas: loadCurrentWeekAreas,
     testCalculationLogic,
-    debugCurrentState // Per debug
+    debugCurrentState // Per debug completo
   };
 };

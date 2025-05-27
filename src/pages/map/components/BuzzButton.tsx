@@ -26,7 +26,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     generateBuzzMapArea,
     getActiveArea,
     userCluesCount,
-    reloadAreas
+    reloadAreas,
+    debugCurrentState
   } = useBuzzMapLogic();
   
   const nextRadius = calculateNextRadius();
@@ -43,6 +44,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const handleBuzzMapClick = async () => {
     console.log('🚀 BUZZ MAPPA TEST FIRENZE - Starting generation');
     
+    // VERIFICA CRITICA: stato iniziale
+    console.log('🔍 Initial state check before generation:');
+    debugCurrentState();
+    
     // STEP 1: Usa coordinate fisse di Firenze per il test
     const centerLat = FIRENZE_TEST_COORDS.lat;
     const centerLng = FIRENZE_TEST_COORDS.lng;
@@ -56,6 +61,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     console.log('💰 Prezzo calcolato:', buzzMapPrice, '€');
     
     // STEP 2: Genera l'area usando la logica dedicata
+    console.log('💾 Generating area in database...');
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
@@ -67,15 +73,30 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         created_at: newArea.created_at
       });
       
-      // STEP 3: Forza il reload delle aree PRIMA del centering
+      // STEP 3: Forza il reload delle aree PRIMA del centering con verifica
       console.log('🔄 Forzando reload delle aree...');
       await reloadAreas();
+      
+      // VERIFICA CRITICA: stato dopo reload
+      setTimeout(() => {
+        console.log('🔍 State check after reload:');
+        debugCurrentState();
+      }, 100);
       
       // STEP 4: Aspetta un momento prima di centrare per assicurarsi che l'area sia stata caricata
       setTimeout(() => {
         console.log('🎯 Centrando mappa sulla nuova area di Firenze...');
+        console.log('📏 Area radius for centering:', newArea.radius_km, 'km');
+        
         if (onAreaGenerated) {
+          console.log('🔄 Calling onAreaGenerated with coordinates:', {
+            lat: newArea.lat,
+            lng: newArea.lng,
+            radius: newArea.radius_km
+          });
           onAreaGenerated(newArea.lat, newArea.lng, newArea.radius_km);
+        } else {
+          console.log('⚠️ onAreaGenerated callback not available');
         }
       }, 200);
       
@@ -94,6 +115,13 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       if (handleBuzz) {
         handleBuzz();
       }
+      
+      // VERIFICA FINALE: stato dopo tutte le operazioni
+      setTimeout(() => {
+        console.log('🔍 FINAL STATE CHECK after all operations:');
+        debugCurrentState();
+      }, 500);
+      
     } else {
       console.error('❌ Failed to create new area (TEST FIRENZE)');
     }

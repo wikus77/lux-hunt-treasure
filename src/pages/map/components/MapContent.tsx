@@ -51,7 +51,7 @@ const MapContent: React.FC<MapContentProps> = ({
   hookHandleMapPointClick
 }) => {
   // Ottieni le aree BUZZ correnti dall'hook
-  const { currentWeekAreas } = useBuzzMapLogic();
+  const { currentWeekAreas, debugCurrentState } = useBuzzMapLogic();
   
   // DEBUG: Log ogni cambio delle aree
   useEffect(() => {
@@ -61,6 +61,9 @@ const MapContent: React.FC<MapContentProps> = ({
       timestamp: new Date().toISOString()
     });
     
+    // DEBUG: Stato completo del hook
+    debugCurrentState();
+    
     if (currentWeekAreas.length > 0) {
       const area = currentWeekAreas[0];
       console.log('🎯 MapContent - Area to display:', {
@@ -68,10 +71,21 @@ const MapContent: React.FC<MapContentProps> = ({
         lat: area.lat,
         lng: area.lng,
         radius_km: area.radius_km,
-        created_at: area.created_at
+        created_at: area.created_at,
+        radiusInMeters: area.radius_km * 1000
       });
+      
+      // VERIFICA CRITICA: assicurati che i dati siano validi
+      if (!area.lat || !area.lng || !area.radius_km) {
+        console.error('❌ MapContent - Invalid area data:', area);
+      } else {
+        console.log('✅ MapContent - Area data is valid and ready for rendering');
+      }
     }
-  }, [currentWeekAreas]);
+  }, [currentWeekAreas, debugCurrentState]);
+
+  // DEBUG: Verifica che il componente si re-renderizzi quando cambiano le aree
+  console.log('🔄 MapContent re-rendering with areas count:', currentWeekAreas.length);
 
   return (
     <MapContainer 
@@ -95,6 +109,9 @@ const MapContent: React.FC<MapContentProps> = ({
         mapRef.current = map;
         handleMapLoad(map);
         console.log('🗺️ MapContent - Map initialized and ready');
+        
+        // DEBUG: Verifica che la mappa sia pronta per ricevere layer
+        console.log('🔍 Map instance available for BUZZ areas:', !!map);
       }} />
       
       {/* Map Layers */}
@@ -104,17 +121,11 @@ const MapContent: React.FC<MapContentProps> = ({
         deleteSearchArea={deleteSearchArea}
       />
       
-      {/* BUZZ Map Areas - CRITICO: Visualizza le aree BUZZ con logging */}
-      {currentWeekAreas.length > 0 ? (
-        <>
-          {console.log('✅ MapContent - Rendering BuzzMapAreas component with areas:', currentWeekAreas)}
-          <BuzzMapAreas areas={currentWeekAreas} />
-        </>
-      ) : (
-        <>
-          {console.log('❌ MapContent - No BUZZ areas to render')}
-        </>
-      )}
+      {/* BUZZ Map Areas - CRITICO: Visualizza sempre, anche se array vuoto per debugging */}
+      <BuzzMapAreas areas={currentWeekAreas} />
+      
+      {/* DEBUG: Log per verificare il rendering */}
+      {console.log('✅ MapContent - BuzzMapAreas component rendered with areas:', currentWeekAreas.length)}
       
       {/* Use the MapPopupManager component */}
       <MapPopupManager 
