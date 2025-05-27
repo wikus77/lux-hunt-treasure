@@ -12,7 +12,7 @@ export const useGameLogic = () => {
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
   const [matchedPairs, setMatchedPairs] = useState(0);
   const [errors, setErrors] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(60); // Extended to 60 seconds
+  const [timeLeft, setTimeLeft] = useState(60);
   const [disableInteraction, setDisableInteraction] = useState(false);
 
   // Initialize game
@@ -45,7 +45,7 @@ export const useGameLogic = () => {
     setFlippedCards([]);
     setMatchedPairs(0);
     setErrors(0);
-    setTimeLeft(60); // Reset to 60 seconds
+    setTimeLeft(60);
     setDisableInteraction(false);
     setGameState('playing');
   }, []);
@@ -133,7 +133,7 @@ export const useGameLogic = () => {
   const saveGameProgress = async () => {
     if (!user) return;
 
-    const isSuccess = errors <= 3 && timeLeft > 0;
+    const isSuccess = errors <= 5 && timeLeft > 0;
     const score = isSuccess ? 10 : 0;
 
     try {

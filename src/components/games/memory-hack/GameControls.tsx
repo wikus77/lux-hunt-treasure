@@ -25,7 +25,7 @@ const GameControls: React.FC<GameControlsProps> = ({ gameState, errors, onStartG
   }
 
   if (gameState === 'completed') {
-    const isSuccess = errors <= 3;
+    const isSuccess = errors <= 5;
     
     return (
       <motion.div 
@@ -79,7 +79,7 @@ const GameControls: React.FC<GameControlsProps> = ({ gameState, errors, onStartG
           transition={{ delay: 0.4, duration: 0.5 }}
         >
           {isSuccess 
-            ? `Errori: ${errors}/3 - Hai guadagnato 10 crediti!`
+            ? `Errori: ${errors}/5 - Hai guadagnato 10 crediti!`
             : `Troppi errori (${errors}) - Riprova per ottenere i crediti`
           }
         </motion.p>

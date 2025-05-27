@@ -33,16 +33,16 @@ const GameCard: React.FC<GameCardProps> = ({ card, onClick, disabled }) => {
       whileTap={isClickable ? { scale: 0.95 } : { scale: 1 }}
       onClick={() => isClickable && onClick(card.id)}
     >
-      <Card className={`w-full h-full border-2 transition-all duration-500 rounded-xl ${getCardStyle()}`}>
+      <Card className={`w-full h-full border-2 transition-all duration-300 rounded-xl ${getCardStyle()}`}>
         <CardContent className="flex items-center justify-center h-full p-0">
           <AnimatePresence mode="wait">
             {shouldShowIcon ? (
               <motion.div
                 key="front"
-                initial={{ rotateY: 180, scale: 0.8 }}
-                animate={{ rotateY: 0, scale: 1 }}
-                exit={{ rotateY: 180, scale: 0.8 }}
-                transition={{ duration: 0.6, ease: "easeInOut" }}
+                initial={{ rotateY: 180, opacity: 0 }}
+                animate={{ rotateY: 0, opacity: 1 }}
+                exit={{ rotateY: 180, opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
               >
                 <IconComponent className={`w-8 h-8 ${
                   card.isMatched ? 'text-green-400' : 'text-[#00D1FF]'
@@ -51,22 +51,18 @@ const GameCard: React.FC<GameCardProps> = ({ card, onClick, disabled }) => {
             ) : (
               <motion.div
                 key="back"
-                initial={{ rotateY: 0, scale: 1 }}
-                animate={{ rotateY: 0, scale: 1 }}
-                exit={{ rotateY: 180, scale: 0.8 }}
-                transition={{ duration: 0.6, ease: "easeInOut" }}
+                initial={{ rotateY: 0, opacity: 1 }}
+                animate={{ rotateY: 0, opacity: 1 }}
+                exit={{ rotateY: 180, opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
                 className="w-full h-full flex items-center justify-center relative"
               >
                 <div className="text-center">
-                  <span className="text-[#00D1FF] font-orbitron font-bold text-lg tracking-wider drop-shadow-[0_0_8px_rgba(0,209,255,0.6)]">
-                    M1
-                  </span>
-                  <span className="text-white font-orbitron font-bold text-lg tracking-wider">
-                    SSION
-                  </span>
-                  <span className="text-white font-orbitron text-xs align-top">
-                    ™
-                  </span>
+                  <img 
+                    src="/assets/logo-m1ssion.png" 
+                    alt="M1ssion Logo"
+                    className="w-12 h-12 mx-auto opacity-80 drop-shadow-[0_0_8px_rgba(0,209,255,0.4)]"
+                  />
                 </div>
               </motion.div>
             )}
