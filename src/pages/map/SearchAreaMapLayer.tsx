@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Circle, Popup } from 'react-leaflet';
 import { SearchArea } from '@/components/maps/types';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,16 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
   setActiveSearchArea,
   deleteSearchArea
 }) => {
-  console.log("Rendering SearchAreaMapLayer with areas:", searchAreas);
   const [hoveredArea, setHoveredArea] = useState<string | null>(null);
+  
+  // Debug logging per verificare che le aree vengano ricevute
+  useEffect(() => {
+    console.log("🗺️ SearchAreaMapLayer - Aree ricevute:", {
+      count: searchAreas.length,
+      areas: searchAreas,
+      timestamp: new Date().toISOString()
+    });
+  }, [searchAreas]);
   
   // Define the pulse animation class
   const pulseStyle = `
@@ -37,12 +45,19 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
       <style>{pulseStyle}</style>
       
       {searchAreas.map((area) => {
-        console.log("Rendering area:", area.id, area.lat, area.lng, area.radius);
+        console.log("🔵 Rendering search area:", {
+          id: area.id,
+          lat: area.lat,
+          lng: area.lng,
+          radius: area.radius,
+          label: area.label
+        });
+        
         // Determine if this area is being hovered
         const isHovered = hoveredArea === area.id;
         
         return (
-          <React.Fragment key={area.id}>
+          <React.Fragment key={`search-area-${area.id}`}>
             <Circle
               center={[area.lat, area.lng]}
               radius={area.radius}
@@ -56,8 +71,8 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
               }}
               eventHandlers={{
                 click: () => {
+                  console.log("🔵 Area search cliccata:", area.id);
                   setActiveSearchArea(area.id);
-                  console.log("Area selezionata:", area.id);
                 },
                 mouseover: () => setHoveredArea(area.id),
                 mouseout: () => setHoveredArea(null)

@@ -7,6 +7,7 @@ import MapLayers from './MapLayers';
 import MapPopupManager from './MapPopupManager';
 import MapEventHandler from './MapEventHandler';
 import BuzzMapAreas from './BuzzMapAreas';
+import SearchAreaMapLayer from '../SearchAreaMapLayer';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 
 interface MapContentProps {
@@ -100,8 +101,18 @@ const MapContent: React.FC<MapContentProps> = ({
     }
   }, [currentWeekAreas, debugCurrentState]);
 
+  // DEBUG: Search areas logging
+  useEffect(() => {
+    console.log('🔍 SEARCH AREAS in MapContent:', {
+      count: searchAreas.length,
+      areas: searchAreas,
+      timestamp: new Date().toISOString()
+    });
+  }, [searchAreas]);
+
   // DEBUG: Verify component re-renders when areas change
   console.log('🔄 CRITICAL RADIUS - DIRECT LEAFLET MapContent re-rendering with areas count:', currentWeekAreas.length);
+  console.log('🔍 Search areas count:', searchAreas.length);
   
   // Log current radius for update verification
   if (currentWeekAreas.length > 0) {
@@ -137,6 +148,13 @@ const MapContent: React.FC<MapContentProps> = ({
       
       {/* Map Layers */}
       <MapLayers 
+        searchAreas={searchAreas}
+        setActiveSearchArea={setActiveSearchArea}
+        deleteSearchArea={deleteSearchArea}
+      />
+      
+      {/* SEARCH AREAS Layer - CRITICAL: Separate layer for search areas */}
+      <SearchAreaMapLayer 
         searchAreas={searchAreas}
         setActiveSearchArea={setActiveSearchArea}
         deleteSearchArea={deleteSearchArea}
