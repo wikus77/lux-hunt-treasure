@@ -105,7 +105,7 @@ export const useBuzzMapLogic = () => {
       
       // Force reload for safety
       setTimeout(async () => {
-        const areas = await loadCurrentWeekAreas(true);
+        const areas = await loadCurrentWeekAreas();
         setCurrentWeekAreas(areas);
         await loadDailyBuzzCounter();
       }, 200);
@@ -192,7 +192,7 @@ export const useBuzzMapLogic = () => {
     calculateBuzzMapPrice: () => calculateBuzzMapPrice(dailyBuzzMapCounter),
     generateBuzzMapArea,
     getActiveArea,
-    reloadAreas: () => loadCurrentWeekAreas(true).then(setCurrentWeekAreas),
+    reloadAreas: () => loadCurrentWeekAreas().then(setCurrentWeekAreas),
     testCalculationLogic,
     debugCurrentState,
     forceUpdateCounter
