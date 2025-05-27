@@ -151,7 +151,6 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           zIndex: 1
         }}
         className="z-10"
-        // Optimized smooth zoom and pan configuration for better fluidity
         zoomControl={true}
         scrollWheelZoom={true}
         doubleClickZoom={true}
@@ -167,14 +166,10 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         zoomDelta={0.25}
         wheelPxPerZoomLevel={60}
         preferCanvas={false}
-        // Add inertia for smoother panning
         inertia={true}
         inertiaDeceleration={3000}
         inertiaMaxSpeed={Infinity}
         easeLinearity={0.2}
-        // Optimize rendering performance
-        updateWhenIdle={false}
-        updateWhenZooming={true}
         keepInView={false}
       >
         <MapInitializer onMapReady={handleMapReady} />
