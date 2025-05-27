@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -54,12 +53,12 @@ export function useNotifications() {
     // Rate limiting: no more than one reload every 5 seconds unless forced
     const now = Date.now();
     if (!force && now - lastReloadTimeRef.current < 5000 && !isInitialLoadRef.current) {
-      console.log("Skipping reload due to rate limiting");
+      console.log("⏱️ Skipping reload due to rate limiting");
       return true;
     }
     
     try {
-      console.log("Reloading notifications...");
+      console.log("🔄 Reloading notifications...");
       
       // Only show loading state on initial load or if it's been more than 5 seconds since the last load
       if (isInitialLoadRef.current || now - lastReloadTimeRef.current > 5000) {
@@ -78,6 +77,7 @@ export function useNotifications() {
       // If user is authenticated, fetch notifications from Supabase
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        console.log("👤 Utente autenticato, caricamento da Supabase...");
         const { data: supabaseNotifs, error } = await supabase
           .from('user_notifications')
           .select('*')
@@ -86,16 +86,16 @@ export function useNotifications() {
           .order('created_at', { ascending: false });
           
         if (error) {
-          console.error("Error fetching notifications from Supabase:", error);
+          console.error("❌ Error fetching notifications from Supabase:", error);
         } else if (supabaseNotifs && supabaseNotifs.length > 0) {
-          console.log("Loaded notifications from Supabase:", supabaseNotifs);
+          console.log("✅ Loaded notifications from Supabase:", supabaseNotifs.length);
           // Convert Supabase notifications to our format
           notifs = supabaseNotifs.map(n => ({
             id: n.id,
             title: n.title,
             description: n.message,
             date: n.created_at,
-            read: n.is_read,
+            read: n.is_read === true, // Ensure boolean conversion
             type: n.type
           }));
           
@@ -104,7 +104,7 @@ export function useNotifications() {
         }
       }
       
-      console.log("Loaded notifications:", notifs);
+      console.log("📊 Loaded notifications:", notifs.length, "Unread:", notifs.filter(n => !n.read).length);
       setNotifications(notifs);
       setUnreadCount(notifs.filter(n => !n.read).length);
       
@@ -120,7 +120,7 @@ export function useNotifications() {
       
       return true;
     } catch (e) {
-      console.error("Errore nel caricamento delle notifiche:", e);
+      console.error("❌ Errore nel caricamento delle notifiche:", e);
       setNotifications([]);
       setUnreadCount(0);
       setIsLoading(false);
@@ -132,6 +132,7 @@ export function useNotifications() {
   const markAllAsRead = useCallback(async () => {
     if (notifications.length === 0) return;
     
+    console.log("📖 Marcando tutte le notifiche come lette...");
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -143,8 +144,10 @@ export function useNotifications() {
           .eq('is_deleted', false);
           
         if (error) {
-          console.error("Error marking notifications as read in Supabase:", error);
+          console.error("❌ Error marking notifications as read in Supabase:", error);
           return;
+        } else {
+          console.log("✅ Tutte le notifiche marcate come lette su Supabase");
         }
       }
       
@@ -157,9 +160,10 @@ export function useNotifications() {
         setUnreadCount(0);
         // Notifica gli altri listener del cambiamento
         listeners.forEach(fn => fn());
+        console.log("✅ Stato locale aggiornato");
       }
     } catch (error) {
-      console.error("Error in markAllAsRead:", error);
+      console.error("❌ Error in markAllAsRead:", error);
     }
   }, [notifications, saveNotifications]);
 
@@ -243,6 +247,7 @@ export function useNotifications() {
 
   // Singola notifica come letta
   const markAsRead = useCallback(async (id: string) => {
+    console.log("📖 Marcando notifica come letta:", id);
     try {
       // Update in Supabase if user is authenticated
       const { data: { user } } = await supabase.auth.getUser();
@@ -253,7 +258,9 @@ export function useNotifications() {
           .eq('id', id);
           
         if (error) {
-          console.error("Error marking notification as read in Supabase:", error);
+          console.error("❌ Error marking notification as read in Supabase:", error);
+        } else {
+          console.log("✅ Notifica marcata come letta su Supabase");
         }
       }
       
@@ -265,10 +272,11 @@ export function useNotifications() {
         setNotifications(updated);
         setUnreadCount(updated.filter(n => !n.read).length);
         listeners.forEach(fn => fn());
+        console.log("✅ Stato locale aggiornato per notifica:", id);
       }
       return saved;
     } catch (error) {
-      console.error("Error in markAsRead:", error);
+      console.error("❌ Error in markAsRead:", error);
       return false;
     }
   }, [notifications, saveNotifications]);

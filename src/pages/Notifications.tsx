@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
@@ -77,12 +78,14 @@ const Notifications = () => {
 
   // Load notifications when component mounts - fixed to avoid excessive reloading
   useEffect(() => {
+    console.log("📱 Caricamento pagina notifiche...");
     // Show page structure immediately
     setIsLoaded(true);
     
     // Load notifications data only once on initial mount
     const loadData = async () => {
       if (!initialLoadComplete) {
+        console.log("🔄 Ricaricamento notifiche...");
         await reloadNotifications();
         
         // Mark all as read when this page is fully loaded
@@ -93,6 +96,7 @@ const Notifications = () => {
         
         // Mark initial load as complete
         setInitialLoadComplete(true);
+        console.log("✅ Caricamento iniziale completato");
       }
     };
     
@@ -100,6 +104,7 @@ const Notifications = () => {
     
     // Remove the high-frequency polling and only check occasionally
     const refreshInterval = setInterval(() => {
+      console.log("🔄 Aggiornamento periodico notifiche...");
       reloadNotifications();
     }, 60000); // Poll only every minute instead of every second
     
@@ -116,6 +121,7 @@ const Notifications = () => {
   };
 
   const handleDeleteNotification = async (id: string) => {
+    console.log("🗑️ Eliminazione notifica:", id);
     const success = await deleteNotification(id);
     if (success) {
       toast.success("Notifica eliminata");
@@ -123,8 +129,10 @@ const Notifications = () => {
   };
 
   const handleOpen = async (notification: any) => {
+    console.log("👆 Apertura notifica:", notification.id, "Read status:", notification.read);
     // Mark as read when opened
     if (!notification.read) {
+      console.log("📖 Marcando notifica come letta...");
       await markAsRead(notification.id);
     }
     setSelectedNotification(notification);
@@ -132,6 +140,7 @@ const Notifications = () => {
 
   // Manual refresh function for user-triggered reloads
   const handleManualRefresh = async () => {
+    console.log("🔄 Aggiornamento manuale richiesto");
     await reloadNotifications();
     toast.success("Notifiche aggiornate");
   };

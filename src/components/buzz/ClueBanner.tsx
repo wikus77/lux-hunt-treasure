@@ -18,10 +18,12 @@ const ClueBanner: React.FC<ClueBannerProps> = ({ open, message, onClose }) => {
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            // Ottieni l'ultima notifica BUZZ dell'utente
+            console.log("🔍 Caricamento ultimo indizio per ClueBanner...");
+            
+            // Ottieni l'ultima notifica BUZZ dell'utente (la più recente)
             const { data: latestNotification, error } = await supabase
               .from('user_notifications')
-              .select('message')
+              .select('message, created_at')
               .eq('user_id', user.id)
               .eq('type', 'buzz')
               .order('created_at', { ascending: false })
@@ -29,26 +31,30 @@ const ClueBanner: React.FC<ClueBannerProps> = ({ open, message, onClose }) => {
               .single();
 
             if (!error && latestNotification?.message) {
+              console.log("✅ Ultimo indizio caricato da notifiche:", latestNotification.message);
               setDynamicMessage(latestNotification.message);
             } else {
+              console.log("⚠️ Nessuna notifica BUZZ trovata, fallback a user_clues");
               // Fallback all'ultimo indizio dalla tabella user_clues
               const { data: latestClue, error: clueError } = await supabase
                 .from('user_clues')
-                .select('description_it')
+                .select('description_it, created_at')
                 .eq('user_id', user.id)
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .single();
 
               if (!clueError && latestClue?.description_it) {
+                console.log("✅ Ultimo indizio caricato da user_clues:", latestClue.description_it);
                 setDynamicMessage(latestClue.description_it);
               } else {
+                console.log("❌ Nessun indizio trovato, uso messaggio di default");
                 setDynamicMessage(message || "Hai sbloccato un nuovo indizio!");
               }
             }
           }
         } catch (error) {
-          console.error("Errore caricamento indizio dinamico:", error);
+          console.error("❌ Errore caricamento indizio dinamico:", error);
           setDynamicMessage(message || "Hai sbloccato un nuovo indizio!");
         }
       }

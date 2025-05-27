@@ -75,29 +75,34 @@ export function useBuzzFeature() {
         return;
       }
       
+      console.log("🚀 Avvio processo BUZZ completo per:", userId);
       setShowDialog(true);
       
       const response = await callBuzzApi({ userId, generateMap: false });
       
       if (!response.success) {
+        console.error("❌ Errore risposta BUZZ API:", response.error);
         toast.error(response.error || "Errore durante l'elaborazione dell'indizio");
         setShowDialog(false);
         return;
       }
       
       // Salva il contenuto dinamico reale
-      const dynamicClueContent = response.clue_text || "Hai sbloccato un nuovo indizio!";
+      const dynamicClueContent = response.clue_text || `Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`;
+      console.log("📝 Contenuto dinamico salvato:", dynamicClueContent);
       setLastDynamicClue(dynamicClueContent);
       setLastVagueClue(dynamicClueContent);
       
       setTimeout(() => {
         setShowDialog(false);
         
+        console.log("💾 Creando notifica BUZZ con contenuto dinamico...");
         // Registra immediatamente la notifica con contenuto dinamico
         createBuzzNotification(
           "Nuovo Indizio Buzz!", 
           dynamicClueContent
         ).then(() => {
+          console.log("✅ Notifica BUZZ creata con successo");
           reloadNotifications();
           
           toast.success("Hai ricevuto un nuovo indizio!", {
@@ -107,14 +112,14 @@ export function useBuzzFeature() {
           
           setShowExplosion(true);
         }).catch(error => {
-          console.error("Error creating notification:", error);
+          console.error("❌ Error creating notification:", error);
           toast.error("Errore nel salvataggio dell'indizio", {
             duration: 3000,
           });
         });
       }, 1500);
     } catch (error) {
-      console.error("Error in buzz process:", error);
+      console.error("❌ Error in buzz process:", error);
       toast.error("Si è verificato un errore");
       setShowDialog(false);
     }
@@ -131,27 +136,32 @@ export function useBuzzFeature() {
       return;
     }
     
+    console.log("🎯 Avvio processo indizio extra per:", userId);
     setShowDialog(true);
     
     try {
       const response = await callBuzzApi({ userId, generateMap: false });
       
       if (!response.success) {
+        console.error("❌ Errore risposta API indizio extra:", response.error);
         toast.error(response.error || "Errore durante l'elaborazione dell'indizio");
         setShowDialog(false);
         return;
       }
       
-      const newClue = response.clue_text || "";
+      const newClue = response.clue_text || `Indizio extra generato alle ${new Date().toLocaleTimeString()}`;
+      console.log("📝 Nuovo indizio extra:", newClue);
       setLastVagueClue(newClue);
       setLastDynamicClue(newClue);
       
       incrementUnlockedCluesAndAddClue();
       
+      console.log("💾 Creando notifica indizio extra...");
       createBuzzNotification(
         "Nuovo Indizio Extra!", 
         newClue
       ).then(() => {
+        console.log("✅ Notifica indizio extra creata");
         reloadNotifications();
         
         toast.success("Hai ricevuto un nuovo indizio!", {
@@ -162,14 +172,14 @@ export function useBuzzFeature() {
         setShowDialog(false);
         setShowExplosion(true);
       }).catch(error => {
-        console.error("Error creating notification:", error);
+        console.error("❌ Error creating notification:", error);
         toast.error("Errore nel salvataggio dell'indizio", {
           duration: 3000,
         });
         setShowDialog(false);
       });
     } catch (error) {
-      console.error("Error in handle clue button click:", error);
+      console.error("❌ Error in handle clue button click:", error);
       toast.error("Si è verificato un errore");
       setShowDialog(false);
     }
