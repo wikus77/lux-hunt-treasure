@@ -15,7 +15,7 @@ export interface Notification {
 let listeners: (() => void)[] = [];
 
 // Costanti per la gestione dello storage
-const MAX_NOTIFICATIONS = 100;
+const MAX_NOTIFICATIONS = 200;
 const STORAGE_KEY = 'notifications';
 
 // Notification categories
@@ -47,18 +47,18 @@ export function useNotifications() {
     }
   }, []);
 
-  // Carica le notifiche da Supabase con ordinamento corretto
+  // Carica le notifiche da Supabase con ordinamento GARANTITO
   const reloadNotifications = useCallback(async (force = false) => {
     const now = Date.now();
-    if (!force && now - lastReloadTimeRef.current < 2000 && !isInitialLoadRef.current) {
-      console.log("⏱️ Skipping reload due to rate limiting");
+    if (!force && now - lastReloadTimeRef.current < 1000 && !isInitialLoadRef.current) {
+      console.log("⏱️ Rate limiting attivo");
       return true;
     }
     
     try {
-      console.log("🔄 Reloading notifications UNIVOCHE con ordinamento corretto...");
+      console.log("🔄 RELOAD NOTIFICHE CON ORDINAMENTO GARANTITO...");
       
-      if (isInitialLoadRef.current || now - lastReloadTimeRef.current > 2000) {
+      if (isInitialLoadRef.current || now - lastReloadTimeRef.current > 1000) {
         setIsLoading(true);
       }
       
@@ -75,7 +75,7 @@ export function useNotifications() {
       if (user) {
         console.log("👤 Utente autenticato, caricamento da Supabase...");
         
-        // QUERY ORDINATA: NON LETTE PRIMA, POI PER DATA
+        // QUERY CON ORDINAMENTO PERFETTO: NON LETTE PRIMA, POI PER DATA
         const { data: supabaseNotifs, error } = await supabase
           .from('user_notifications')
           .select('*')
@@ -85,11 +85,11 @@ export function useNotifications() {
           .order('created_at', { ascending: false }); // più recenti prima
           
         if (error) {
-          console.error("❌ Error fetching notifications from Supabase:", error);
+          console.error("❌ Errore fetch notifiche:", error);
         } else if (supabaseNotifs && supabaseNotifs.length > 0) {
-          console.log("✅ Loaded UNIQUE notifications from Supabase:", supabaseNotifs.length);
+          console.log("✅ NOTIFICHE CARICATE CON ORDINAMENTO PERFETTO:", supabaseNotifs.length);
           
-          // Converti notifiche Supabase al nostro formato CON ORDINAMENTO CORRETTO
+          // Converti notifiche Supabase al nostro formato
           notifs = supabaseNotifs.map(n => ({
             id: n.id,
             title: n.title,
@@ -99,7 +99,7 @@ export function useNotifications() {
             type: n.type
           }));
           
-          console.log("📋 Prime 3 notifiche ordinate:");
+          console.log("📋 PRIME 3 NOTIFICHE ORDINATE:");
           notifs.slice(0, 3).forEach((n, i) => {
             console.log(`${i + 1}. ${n.read ? '✅ LETTA' : '🔥 NON LETTA'} - ${n.title}: ${n.description.substring(0, 50)}...`);
           });
@@ -110,7 +110,7 @@ export function useNotifications() {
       }
       
       const unreadCount = notifs.filter(n => !n.read).length;
-      console.log("📊 Loaded notifications:", notifs.length, "Unread:", unreadCount);
+      console.log("📊 NOTIFICHE TOTALI:", notifs.length, "NON LETTE:", unreadCount);
       
       setNotifications(notifs);
       setUnreadCount(unreadCount);
@@ -125,7 +125,7 @@ export function useNotifications() {
       
       return true;
     } catch (e) {
-      console.error("❌ Errore nel caricamento delle notifiche:", e);
+      console.error("❌ ERRORE RELOAD NOTIFICHE:", e);
       setNotifications([]);
       setUnreadCount(0);
       setIsLoading(false);
@@ -242,7 +242,7 @@ export function useNotifications() {
     const type = notification.type || NOTIFICATION_CATEGORIES.GENERIC;
     
     try {
-      console.log("Adding UNIQUE notification:", notification);
+      console.log("AGGIUNTA NOTIFICA UNIVOCA:", notification);
       
       // Genera ID temporaneo con timestamp per garantire unicità
       let tempId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -274,7 +274,7 @@ export function useNotifications() {
         } 
         else if (data) {
           newNotification.id = data.id;
-          console.log("✅ UNIQUE Notification saved to Supabase with ID:", data.id);
+          console.log("✅ NOTIFICA SALVATA SU SUPABASE CON ID:", data.id);
         }
       }
       
@@ -289,7 +289,7 @@ export function useNotifications() {
         setNotifications(updated);
         setUnreadCount(prev => prev + 1);
         listeners.forEach(fn => fn());
-        console.log("✅ UNIQUE Notification added successfully:", newNotification);
+        console.log("✅ NOTIFICA AGGIUNTA CON SUCCESSO:", newNotification);
       }
       
       return saved;

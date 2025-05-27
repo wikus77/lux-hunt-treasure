@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Bell, MapPin, Circle, Trophy, Calendar, Trash2, Sparkles } from "lucide-react";
+import { Bell, MapPin, Circle, Trophy, Calendar, Trash2, Sparkles, MessageSquare } from "lucide-react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import GradientBox from "@/components/ui/gradient-box";
@@ -50,15 +50,17 @@ const Notifications = () => {
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
-  // Group notifications by category CON ORDINAMENTO CORRETTO
+  // Group notifications by category CON ORDINAMENTO PERFETTO: NON LETTE PRIMA
   const notificationsByCategory = useMemo(() => {
     const result = categoryConfig.reduce((acc, category) => {
       const categoryNotifications = notifications.filter(n => n.type === category.id);
       if (categoryNotifications.length > 0) {
-        // ORDINAMENTO: NON LETTE PRIMA, POI PER DATA
+        // ORDINAMENTO GARANTITO: NON LETTE PRIMA, POI PER DATA DECRESCENTE
         const sortedNotifications = categoryNotifications.sort((a, b) => {
-          if (a.read !== b.read) return a.read ? 1 : -1; // Non lette prima
-          return new Date(b.date).getTime() - new Date(a.date).getTime(); // Più recenti prima
+          // Prima le non lette (read = false)
+          if (a.read !== b.read) return a.read ? 1 : -1;
+          // Poi per data, più recenti prima
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
         });
         acc[category.id] = sortedNotifications;
       }
@@ -86,14 +88,14 @@ const Notifications = () => {
     return result;
   }, [notifications]);
 
-  // Load notifications when component mounts
+  // Load notifications when component mounts + polling per sincronizzazione live
   useEffect(() => {
-    console.log("📱 Caricamento pagina notifiche...");
+    console.log("📱 CARICAMENTO PAGINA NOTIFICHE CON POLLING LIVE...");
     setIsLoaded(true);
     
     const loadData = async () => {
       if (!initialLoadComplete) {
-        console.log("🔄 Ricaricamento notifiche...");
+        console.log("🔄 Ricaricamento notifiche iniziale...");
         await reloadNotifications(true);
         await markAllAsRead();
         setInitialLoadComplete(true);
@@ -103,11 +105,11 @@ const Notifications = () => {
     
     loadData();
     
-    // Polling ridotto per aggiornamenti in tempo reale
+    // POLLING LIVE POTENZIATO per garantire sincronizzazione BUZZ
     const refreshInterval = setInterval(() => {
-      console.log("🔄 Aggiornamento periodico notifiche...");
+      console.log("🔄 Polling automatico notifiche (ogni 3s)...");
       reloadNotifications();
-    }, 15000); // Poll ogni 15 secondi per sincronizzazione
+    }, 3000); // Poll ogni 3 secondi per sincronizzazione garantita
     
     return () => clearInterval(refreshInterval);
   }, [markAllAsRead, reloadNotifications, initialLoadComplete]);
@@ -230,43 +232,48 @@ const Notifications = () => {
                               {categoryNotifs.length}
                             </Badge>
                             {unreadInCategory > 0 && (
-                              <div className="h-2 w-2 rounded-full bg-[#FF59F8] animate-pulse ml-1 shadow-[0_0_10px_#FF59F8]"></div>
+                              <div className="h-3 w-3 rounded-full bg-[#FF59F8] animate-pulse ml-1 shadow-[0_0_15px_#FF59F8]"></div>
                             )}
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="bg-black/30 px-4 py-3">
                           <div className="space-y-3">
                             {categoryNotifs.map(notification => (
-                              <div 
+                              <motion.div 
                                 key={notification.id} 
                                 className={`relative cursor-pointer p-4 rounded-[24px] transition-all duration-300 shadow-md group ${
                                   !notification.read 
-                                    ? "border-l-4 border-[#00cfff] bg-[#1a1a1a] shadow-[0_0_15px_#00cfff] animate-pulse" 
+                                    ? "border-l-4 border-[#00cfff] bg-[#1a1a1a] shadow-[0_0_20px_#00cfff] hover:scale-105 animate-pulse" 
                                     : "border border-[#00D1FF]/10 hover:border-[#00D1FF]/30 bg-gradient-to-br from-black/90 to-[#131524]/80 hover:from-black hover:to-[#131524]/90"
                                 }`}
                                 onClick={() => handleOpen(notification)}
+                                whileHover={{ scale: !notification.read ? 1.02 : 1.01 }}
+                                whileTap={{ scale: 0.98 }}
                               >
                                 <div className="flex items-start gap-3">
-                                  <div className="flex-shrink-0">
+                                  <div className="flex-shrink-0 relative">
                                     {category.icon}
                                     {!notification.read && (
-                                      <Sparkles className="w-3 h-3 text-[#FF59F8] absolute -top-1 -right-1 animate-pulse" />
+                                      <div className="absolute -top-2 -right-2">
+                                        <MessageSquare className="w-4 h-4 text-[#FF59F8] animate-bounce" />
+                                      </div>
                                     )}
                                   </div>
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
-                                      <h3 className={`font-medium ${
+                                      <h3 className={`font-medium flex items-center gap-2 ${
                                         !notification.read 
                                           ? 'text-[#00cfff] font-extrabold text-lg' 
                                           : 'text-white'
                                       }`} style={!notification.read ? {
                                         textShadow: "0 0 10px rgba(0, 207, 255, 0.8)"
                                       } : {}}>
+                                        {!notification.read && <span className="text-xl">📩</span>}
                                         {notification.title}
                                       </h3>
                                       {!notification.read && (
-                                        <Badge className="bg-[#ff007f] text-white rounded-full px-2 py-1 text-xs font-extrabold animate-pulse shadow-[0_0_10px_#ff007f]">
-                                          NUOVA
+                                        <Badge className="bg-[#ff007f] text-white rounded-full px-2 py-1 text-xs font-extrabold animate-pulse shadow-[0_0_15px_#ff007f]">
+                                          🆕 NUOVA
                                         </Badge>
                                       )}
                                     </div>
@@ -290,7 +297,7 @@ const Notifications = () => {
                                     <span className="sr-only">Elimina notifica</span>
                                   </Button>
                                 </div>
-                              </div>
+                              </motion.div>
                             ))}
                           </div>
                         </AccordionContent>

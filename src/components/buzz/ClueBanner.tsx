@@ -11,45 +11,49 @@ interface ClueBannerProps {
 const ClueBanner: React.FC<ClueBannerProps> = ({ open, message, onClose }) => {
   const [dynamicMessage, setDynamicMessage] = useState<string>(message);
 
-  // Carica l'ULTIMO indizio UNIVOCO quando il banner si apre
+  // Carica l'ULTIMA notifica BUZZ con contenuto REALE e TIMESTAMP
   useEffect(() => {
-    const loadLatestClue = async () => {
+    const loadLatestBuzzClue = async () => {
       if (open) {
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            console.log("🔍 Caricamento ULTIMO indizio UNIVOCO per ClueBanner...");
+            console.log("🔍 CARICAMENTO ULTIMA NOTIFICA BUZZ per sincronizzazione banner...");
             
             // Ottieni l'ULTIMA notifica BUZZ (ordinata per created_at DESC)
             const { data: latestNotification, error } = await supabase
               .from('user_notifications')
-              .select('message, created_at, id')
+              .select('message, created_at, id, is_read')
               .eq('user_id', user.id)
               .eq('type', 'buzz')
+              .eq('is_deleted', false)
               .order('created_at', { ascending: false })
               .limit(1)
               .single();
 
             if (!error && latestNotification?.message) {
-              console.log("✅ ULTIMO indizio REALE caricato:", latestNotification.message);
-              console.log("📅 Timestamp:", latestNotification.created_at);
-              console.log("🆔 ID notifica:", latestNotification.id);
+              console.log("✅ ULTIMA NOTIFICA BUZZ CARICATA:", {
+                id: latestNotification.id,
+                message: latestNotification.message,
+                created_at: latestNotification.created_at,
+                is_read: latestNotification.is_read
+              });
               setDynamicMessage(latestNotification.message);
             } else {
-              console.log("⚠️ Nessuna notifica BUZZ trovata, fallback a contenuto con timestamp");
-              const timestampClue = `Indizio sbloccato alle ${new Date().toLocaleTimeString()} - Cerca dove la tecnologia incontra la tradizione italiana`;
+              console.log("⚠️ Nessuna notifica BUZZ trovata, usando fallback con timestamp");
+              const timestampClue = `🔍 Indizio BUZZ generato alle ${new Date().toLocaleTimeString()} - Contenuto di backup con timestamp univoco`;
               setDynamicMessage(timestampClue);
             }
           }
         } catch (error) {
-          console.error("❌ Errore caricamento indizio dinamico:", error);
-          const errorClue = `Nuovo indizio generato - ${new Date().toLocaleString()}`;
+          console.error("❌ ERRORE caricamento notifica BUZZ:", error);
+          const errorClue = `⚡ Indizio BUZZ - ${new Date().toLocaleString()} - Contenuto di emergenza`;
           setDynamicMessage(errorClue);
         }
       }
     };
 
-    loadLatestClue();
+    loadLatestBuzzClue();
   }, [open, message]);
 
   return (
@@ -57,10 +61,10 @@ const ClueBanner: React.FC<ClueBannerProps> = ({ open, message, onClose }) => {
       className={`fixed top-0 left-0 right-0 z-[105] flex justify-center w-full pointer-events-none transition-all duration-500 ${open ? "translate-y-0 opacity-100" : "-translate-y-32 opacity-0"}`}
       style={{ transitionProperty: "transform, opacity" }}
     >
-      <div className="bg-black/95 border-2 border-[#00D1FF] text-white py-4 px-8 rounded-b-2xl shadow-[0_0_20px_rgba(0,209,255,0.6)] flex items-center gap-3 animate-fade-in pointer-events-auto w-full max-w-screen-lg mx-auto backdrop-blur-md">
-        <div className="w-3 h-3 rounded-full bg-[#00D1FF] animate-pulse shadow-[0_0_10px_#00D1FF]"></div>
+      <div className="bg-black/95 border-2 border-[#00D1FF] text-white py-4 px-8 rounded-b-2xl shadow-[0_0_25px_rgba(0,209,255,0.7)] flex items-center gap-3 animate-fade-in pointer-events-auto w-full max-w-screen-lg mx-auto backdrop-blur-md">
+        <div className="w-3 h-3 rounded-full bg-[#00D1FF] animate-pulse shadow-[0_0_15px_#00D1FF]"></div>
         <span className="font-semibold text-[#00D1FF]" style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6)" }}>
-          Indizio Sbloccato:
+          🔥 Indizio Sbloccato:
         </span>
         <span className="text-white font-medium flex-1">
           {dynamicMessage}
