@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
@@ -50,7 +49,7 @@ const MapLogicProvider = () => {
     requestLocationPermission
   } = useMapLogic();
   
-  // Modified to return a Promise<string> with correct parameter structure
+  // Modified to match the expected signature
   const handleMapPointClick = async (point: { lat: number; lng: number; title: string; note: string }): Promise<string> => {
     const newPointId = `point-${Date.now()}`;
     addMapPoint({
@@ -60,7 +59,12 @@ const MapLogicProvider = () => {
       title: point.title || '',
       note: point.note || ''
     });
-    return newPointId; // Return the new point ID
+    return newPointId;
+  };
+
+  // Wrapper function to match the expected signature for updateMapPoint
+  const handleUpdatePoint = async (id: string, title: string, note: string): Promise<boolean> => {
+    return updateMapPoint(id, { title, note });
   };
 
   // Use our custom hook for map points
@@ -68,7 +72,6 @@ const MapLogicProvider = () => {
     newPoint,
     handleMapPointClick: hookHandleMapPointClick,
     handleSaveNewPoint,
-    handleUpdatePoint,
     handleCancelNewPoint,
     isAddingMapPoint,
     setIsAddingMapPoint
@@ -76,7 +79,7 @@ const MapLogicProvider = () => {
     mapPoints,
     setActiveMapPoint,
     handleMapPointClick,
-    updateMapPoint,
+    handleUpdatePoint,
     deleteMapPoint
   );
   
@@ -160,7 +163,7 @@ const MapLogicProvider = () => {
     activeMapPoint,
     setActiveMapPoint,
     addMapPoint,
-    updateMapPoint,
+    updateMapPoint: handleUpdatePoint,
     deleteMapPoint,
     requestLocationPermission,
     showHelpDialog,
@@ -174,7 +177,7 @@ const MapLogicProvider = () => {
     newPoint,
     handleMapPointClick: hookHandleMapPointClick,
     handleSaveNewPoint,
-    handleUpdatePoint,
+    handleUpdatePoint: handleUpdatePoint,
     handleCancelNewPoint,
     isAddingMapPoint,
     setIsAddingMapPoint,
