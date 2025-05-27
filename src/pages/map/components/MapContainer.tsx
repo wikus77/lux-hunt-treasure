@@ -155,20 +155,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         doubleClickZoom={true}
         dragging={true}
         zoomAnimation={true}
-        zoomAnimationThreshold={4}
         fadeAnimation={true}
         markerZoomAnimation={true}
-        trackResize={true}
-        touchZoom={true}
-        bounceAtZoomLimits={false}
-        zoomSnap={0.25}
-        zoomDelta={0.25}
-        wheelPxPerZoomLevel={60}
-        preferCanvas={false}
         inertia={true}
-        inertiaDeceleration={3000}
-        inertiaMaxSpeed={2000}
-        easeLinearity={0.25}
       >
         <MapInitializer onMapReady={handleMapReady} />
         
