@@ -5,6 +5,7 @@ import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
 import { useMapPoints } from './hooks/useMapPoints';
 import { useMapInitialization } from './hooks/useMapInitialization';
 import { MapContext, MapContextType } from '@/contexts/mapContext';
+import { useMapStore } from '@/stores/mapStore';
 import LoadingScreen from './LoadingScreen';
 import MapContent from './components/MapContent';
 import MapControls from './components/MapControls';
@@ -29,21 +30,29 @@ const MapLogicProvider = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   
+  // Get state from centralized store
+  const {
+    isAddingPoint,
+    isAddingMapPoint,
+    isAddingSearchArea,
+    mapLoaded,
+    activeMapPoint,
+    setIsAddingPoint,
+    setIsAddingMapPoint,
+    setMapLoaded,
+    setActiveMapPoint
+  } = useMapStore();
+  
   // Get map logic from our custom hook
   const { 
     handleBuzz, 
     searchAreas, 
-    isAddingSearchArea, 
     handleMapClickArea, 
     setActiveSearchArea, 
     deleteSearchArea,
     setPendingRadius,
     toggleAddingSearchArea,
     mapPoints,
-    isAddingPoint,
-    setIsAddingPoint,
-    activeMapPoint,
-    setActiveMapPoint,
     addMapPoint,
     updateMapPoint,
     deleteMapPoint,
@@ -69,21 +78,17 @@ const MapLogicProvider = () => {
     handleMapPointClick: hookHandleMapPointClick,
     handleSaveNewPoint,
     handleUpdatePoint,
-    handleCancelNewPoint,
-    isAddingMapPoint,
-    setIsAddingMapPoint
+    handleCancelNewPoint
   } = useMapPoints(
     mapPoints,
     setActiveMapPoint,
     handleMapPointClick,
-    updateMapPoint,
+    (id: string, updates: { title?: string; note?: string }) => updateMapPoint(id, updates.title || '', updates.note || ''),
     deleteMapPoint
   );
   
   // Use our custom hook for map initialization
   const {
-    mapLoaded,
-    setMapLoaded,
     mapRef,
     handleMapLoad
   } = useMapInitialization(
@@ -160,7 +165,7 @@ const MapLogicProvider = () => {
     activeMapPoint,
     setActiveMapPoint,
     addMapPoint,
-    updateMapPoint,
+    updateMapPoint: (id: string, title: string, note: string) => updateMapPoint(id, title, note),
     deleteMapPoint,
     requestLocationPermission,
     showHelpDialog,

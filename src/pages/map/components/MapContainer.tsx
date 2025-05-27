@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { DEFAULT_LOCATION } from '../useMapLogic';
+import { useMapStore } from '@/stores/mapStore';
 import MapController from './MapController';
 import MapPopupManager from './MapPopupManager';
 import SearchAreaMapLayer from '../SearchAreaMapLayer';
@@ -74,7 +75,15 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
 }) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   const mapRef = useRef<L.Map | null>(null);
+  
+  // Get buzz state from centralized store
   const { currentWeekAreas } = useBuzzMapLogic();
+  
+  // Get centralized state
+  const { 
+    isAddingMapPoint,
+    setMapStatus 
+  } = useMapStore();
 
   // Debug logging for point addition state
   React.useEffect(() => {
@@ -86,6 +95,11 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   const handleMapReadyCallback = handleMapReady(mapRef, handleMapMoveCallback);
   const handleAddNewPointCallback = handleAddNewPoint(isAddingPoint, addNewPoint, setIsAddingPoint);
   const handleAreaGeneratedCallback = handleAreaGenerated(mapRef);
+
+  // Update map status when map loads
+  React.useEffect(() => {
+    setMapStatus('ready');
+  }, [setMapStatus]);
 
   return (
     <div 
