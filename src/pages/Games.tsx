@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Brain, Bomb, Fingerprint, MapPin, Satellite, MessageSquare, LockKeyholeIcon, X } from "lucide-react";
@@ -9,6 +8,7 @@ import HomeLayout from "@/components/home/HomeLayout";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import MemoryHackGame from "@/components/games/MemoryHackGame";
 import DisarmTheBombGame from "@/components/games/DisarmTheBombGame";
+import CrackTheCombinationGame from "@/components/games/CrackTheCombinationGame";
 
 interface GameCardProps {
   title: string;
@@ -78,7 +78,8 @@ const Games = () => {
       title: "Cracca la Combinazione",
       description: "Decifra il codice segreto",
       icon: <Fingerprint className="text-[#00D1FF] w-5 h-5" />,
-      gameKey: "crack_combination"
+      gameKey: "crack_combination",
+      isPlayable: true
     },
     {
       title: "Trova il Punto sulla Mappa",
@@ -194,6 +195,28 @@ const Games = () => {
               </div>
             </DialogHeader>
             <DisarmTheBombGame />
+          </DialogContent>
+        </Dialog>
+
+        {/* Crack The Combination Game Modal */}
+        <Dialog open={activeGame === 'crack_combination'} onOpenChange={closeGame}>
+          <DialogContent className="max-w-4xl w-full bg-black/95 border-white/10">
+            <DialogHeader>
+              <div className="flex items-center justify-between">
+                <DialogTitle className="text-2xl font-orbitron text-white">
+                  <span className="text-[#00D1FF]">CRACCA</span> LA COMBINAZIONE
+                </DialogTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={closeGame}
+                  className="text-white hover:text-[#00D1FF]"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </DialogHeader>
+            <CrackTheCombinationGame />
           </DialogContent>
         </Dialog>
       </div>
