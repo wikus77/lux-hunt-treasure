@@ -1,5 +1,6 @@
 
 import { useCallback } from 'react';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { useSearchAreasLogic } from './useSearchAreasLogic';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
