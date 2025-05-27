@@ -18,8 +18,8 @@ export const useBuzzMapLogic = () => {
   const [currentWeekAreas, setCurrentWeekAreas] = useState<BuzzMapArea[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [userCluesCount, setUserCluesCount] = useState(0);
-  const [forceUpdateCounter, setForceUpdateCounter] = useState(0); // CRITICO: Force re-render
-  const [dailyBuzzCounter, setDailyBuzzCounter] = useState(0); // NEW: For dynamic color calculation
+  const [forceUpdateCounter, setForceUpdateCounter] = useState(0); // CRITICAL: Force re-render
+  const [dailyBuzzCounter, setDailyBuzzCounter] = useState(0); // For dynamic color calculation
 
   // Calcola la settimana corrente
   const getCurrentWeek = (): number => {
@@ -102,7 +102,7 @@ export const useBuzzMapLogic = () => {
     return 29.99;
   };
 
-  // ENHANCED: Carica le aree della settimana corrente con forzatura aggiornamento
+  // ENHANCED: Load current week areas with FORCED radius update verification
   const loadCurrentWeekAreas = async (forceRefresh: boolean = false) => {
     if (!user?.id) {
       console.log('❌ No user ID for loading areas');
@@ -112,7 +112,7 @@ export const useBuzzMapLogic = () => {
     const currentWeek = getCurrentWeek();
     
     try {
-      console.log('🔄 CRITICAL - Loading BUZZ areas for user:', user.id, 'week:', currentWeek, 'forceRefresh:', forceRefresh);
+      console.log('🔄 CRITICAL RADIUS - Loading BUZZ areas for user:', user.id, 'week:', currentWeek, 'forceRefresh:', forceRefresh);
       
       const { data, error } = await supabase
         .from('user_map_areas')
@@ -127,12 +127,12 @@ export const useBuzzMapLogic = () => {
         return;
       }
 
-      console.log('✅ CRITICAL - BUZZ areas loaded for week', currentWeek, ':', data);
+      console.log('✅ CRITICAL RADIUS - BUZZ areas loaded for week', currentWeek, ':', data);
       
-      // VERIFICA CRITICA: dati dal DB
+      // CRITICAL RADIUS VERIFICATION: data from DB
       if (data && data.length > 0) {
         const area = data[0];
-        console.log('🔍 DB VERIFICATION - Area data:', {
+        console.log('🔍 RADIUS DB VERIFICATION - Area data:', {
           id: area.id,
           user_id: area.user_id,
           lat: area.lat,
@@ -143,24 +143,31 @@ export const useBuzzMapLogic = () => {
           dataValid: !!(area.lat && area.lng && area.radius_km)
         });
         
+        console.log('📏 RADIUS FROM DATABASE:', {
+          radius_km: area.radius_km,
+          radius_meters: area.radius_km * 1000,
+          area_id: area.id,
+          timestamp: new Date().toISOString()
+        });
+        
         if (!area.lat || !area.lng || !area.radius_km) {
           console.error('❌ CRITICAL: Invalid area data from DB');
         } else {
-          console.log('✅ CRITICAL: Area data is valid from DB - radius:', area.radius_km, 'km');
+          console.log('✅ CRITICAL RADIUS: Area data is valid from DB - radius:', area.radius_km, 'km');
         }
       }
       
-      // CRITICAL FIX: Forza sempre l'aggiornamento dello stato anche se i dati sembrano uguali
-      console.log('📝 CRITICAL - FORCE updating currentWeekAreas state from:', currentWeekAreas, 'to:', data || []);
+      // CRITICAL FIX: Always force state update even if data seems the same
+      console.log('📝 CRITICAL RADIUS - FORCE updating currentWeekAreas state from:', currentWeekAreas, 'to:', data || []);
       setCurrentWeekAreas(data || []);
       
-      // FORZA un counter aggiuntivo per triggerare re-render
+      // FORCE additional counter to trigger re-render
       setForceUpdateCounter(prev => prev + 1);
       console.log('🔥 FORCED update counter incremented to:', forceUpdateCounter + 1);
       
-      // Verifica immediata dello stato
+      // Immediate state verification
       setTimeout(() => {
-        console.log('🔍 CRITICAL - State verification - currentWeekAreas should now be:', data || []);
+        console.log('🔍 CRITICAL RADIUS - State verification - currentWeekAreas should now be:', data || []);
       }, 100);
       
     } catch (err) {
@@ -226,14 +233,14 @@ export const useBuzzMapLogic = () => {
     }
   };
 
-  // ENHANCED: Genera una nuova area BUZZ MAPPA con forzatura immediata del refresh
+  // ENHANCED: Generate new BUZZ MAPPA area with FORCED immediate radius refresh
   const generateBuzzMapArea = async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
       return null;
     }
 
-    // Verifica coordinate valide
+    // Verify valid coordinates
     if (!centerLat || !centerLng || isNaN(centerLat) || isNaN(centerLng)) {
       toast.error('Coordinate della mappa non valide');
       return null;
@@ -246,7 +253,7 @@ export const useBuzzMapLogic = () => {
       const radiusKm = calculateNextRadius();
       const price = calculateBuzzMapPrice();
 
-      console.log('🗺️ CRITICAL - Generando area BUZZ MAPPA:', {
+      console.log('🗺️ CRITICAL RADIUS - Generating BUZZ MAPPA area:', {
         lat: centerLat,
         lng: centerLng,
         radius_km: radiusKm,
@@ -255,19 +262,19 @@ export const useBuzzMapLogic = () => {
         currentBuzzCounter: dailyBuzzCounter
       });
 
-      // STEP 1: ELIMINA l'area precedente della settimana corrente
-      console.log('🗑️ CRITICAL - Removing previous area...');
+      // STEP 1: REMOVE previous area of current week
+      console.log('🗑️ CRITICAL RADIUS - Removing previous area...');
       const removed = await removePreviousArea();
       if (!removed) {
         toast.error('Errore nel rimuovere l\'area precedente');
         return null;
       }
 
-      // STEP 2: Pulisci lo stato locale PRIMA di creare la nuova area
-      console.log('🧹 CRITICAL - Clearing local state...');
+      // STEP 2: Clear local state BEFORE creating new area
+      console.log('🧹 CRITICAL RADIUS - Clearing local state...');
       setCurrentWeekAreas([]);
       
-      // STEP 3: Crea la nuova area con il raggio calcolato
+      // STEP 3: Create new area with calculated radius
       const newArea = {
         user_id: user.id,
         lat: centerLat,
@@ -276,7 +283,7 @@ export const useBuzzMapLogic = () => {
         week: currentWeek
       };
 
-      console.log('💾 CRITICAL - Inserting new area into database:', newArea);
+      console.log('💾 CRITICAL RADIUS - Inserting new area into database:', newArea);
       const { data, error } = await supabase
         .from('user_map_areas')
         .insert(newArea)
@@ -289,36 +296,42 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      console.log('✅ CRITICAL - NUOVA area BUZZ MAPPA salvata in DB:', data);
+      console.log('✅ CRITICAL RADIUS - NEW BUZZ MAPPA area saved in DB:', data);
+      console.log('📏 NEW RADIUS SAVED:', {
+        radius_km: data.radius_km,
+        radius_meters: data.radius_km * 1000,
+        area_id: data.id,
+        previous_radius_should_be_different: true
+      });
       
-      // STEP 4: AGGIORNA il counter BUZZ giornaliero per il calcolo del colore
+      // STEP 4: UPDATE daily BUZZ counter for color calculation
       const newBuzzCounter = dailyBuzzCounter + 1;
       setDailyBuzzCounter(newBuzzCounter);
       console.log('🎨 DYNAMIC COLOR - Updated buzz counter for color calculation:', newBuzzCounter);
       
-      // STEP 5: FORZA l'aggiornamento dello stato locale IMMEDIATAMENTE
-      console.log('🔄 CRITICAL - FORCE updating local state immediately with new area:', data);
+      // STEP 5: FORCE local state update IMMEDIATELY
+      console.log('🔄 CRITICAL RADIUS - FORCE updating local state immediately with new area:', data);
       setCurrentWeekAreas([data]);
       
-      // FORZA il counter per triggerare re-render di tutti i componenti che dipendono dalle aree
+      // FORCE counter to trigger re-render of all components depending on areas
       setForceUpdateCounter(prev => prev + 1);
-      console.log('🔥 CRITICAL - FORCED update counter incremented for immediate re-render');
+      console.log('🔥 CRITICAL RADIUS - FORCED update counter incremented for immediate re-render');
       
-      // STEP 6: Aspetta un momento e poi forza un reload completo per sicurezza
+      // STEP 6: Wait a moment then force complete reload for safety
       setTimeout(async () => {
-        console.log('🔄 CRITICAL - Double-check reload after area creation...');
+        console.log('🔄 CRITICAL RADIUS - Double-check reload after area creation...');
         await loadCurrentWeekAreas(true); // Force refresh
         await loadDailyBuzzCounter(); // Refresh buzz counter
       }, 200);
       
-      // STEP 7: Verifica multipla che lo stato sia stato aggiornato
+      // STEP 7: Multiple verification that state has been updated
       setTimeout(() => {
-        console.log('🔍 CRITICAL - Verification - currentWeekAreas after update should contain:', data);
-        console.log('🔍 CRITICAL - Quick state check...');
+        console.log('🔍 CRITICAL RADIUS - Verification - currentWeekAreas after update should contain:', data);
+        console.log('🔍 CRITICAL RADIUS - Quick state check...');
         debugCurrentState();
       }, 300);
       
-      // STEP 8: Messaggio con il valore REALE salvato
+      // STEP 8: Message with REAL saved value
       const colorNames = ['GIALLO NEON', 'ROSA NEON', 'VERDE NEON', 'FUCSIA NEON'];
       const currentColorName = colorNames[newBuzzCounter % 4];
       toast.success(`Area BUZZ MAPPA generata! Raggio: ${data.radius_km.toFixed(1)} km - Colore: ${currentColorName} - Prezzo: ${price.toFixed(2)}€`);
@@ -422,7 +435,7 @@ export const useBuzzMapLogic = () => {
     currentWeekAreas,
     isGenerating,
     userCluesCount,
-    dailyBuzzCounter, // NEW: Expose buzz counter for color calculation
+    dailyBuzzCounter, // Expose buzz counter for color calculation
     calculateNextRadius,
     calculateBuzzMapPrice,
     generateBuzzMapArea,

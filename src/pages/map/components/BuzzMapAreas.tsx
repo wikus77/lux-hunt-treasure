@@ -6,7 +6,7 @@ import L from 'leaflet';
 
 interface BuzzMapAreasProps {
   areas: BuzzMapArea[];
-  buzzCounter?: number; // NEW: Counter for dynamic color
+  buzzCounter?: number; // For dynamic color calculation
 }
 
 const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) => {
@@ -25,22 +25,22 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) =
   
   const currentColor = getCurrentColor();
   
-  console.log('🗺️ BuzzMapAreas - Rendering BUZZ map areas with DYNAMIC COLOR:', {
+  console.log('🗺️ BuzzMapAreas - Rendering BUZZ map areas with UPDATED RADIUS:', {
     areas: areas,
     buzzCounter: buzzCounter,
     currentColor: currentColor,
     renderCount: ++renderCountRef.current
   });
 
-  // CRITICO: FORZATURA DISTRUZIONE E RICREAZIONE DEL CERCHIO CON COLORE DINAMICO
+  // CRITICAL: FORCED DESTRUCTION AND RECREATION OF CIRCLE WITH UPDATED RADIUS
   useEffect(() => {
-    console.log('🚨 CRITICAL FIX - BuzzMapAreas useEffect triggered with DYNAMIC COLOR:', {
+    console.log('🚨 CRITICAL RADIUS FIX - BuzzMapAreas useEffect triggered:', {
       areas: areas,
       buzzCounter: buzzCounter,
       currentColor: currentColor
     });
     
-    // STEP 1: RIMUOVI FORZATAMENTE tutti i layer precedenti dalla mappa
+    // STEP 1: FORCEFULLY REMOVE all previous layers from map
     previousLayersRef.current.forEach((layer, index) => {
       if (map.hasLayer(layer)) {
         console.log(`🗑️ FORCE REMOVING layer ${index} from map`);
@@ -48,17 +48,17 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) =
       }
     });
     
-    // STEP 2: PULISCI completamente l'array dei layer precedenti
+    // STEP 2: COMPLETELY CLEAR the previous layers array
     previousLayersRef.current = [];
     console.log('🧹 ALL previous BUZZ layers FORCEFULLY REMOVED from map');
     
-    // STEP 3: SE CI SONO AREE, CREA NUOVI LAYER FORZATAMENTE CON COLORE DINAMICO
+    // STEP 3: IF THERE ARE AREAS, CREATE NEW LAYERS FORCEFULLY WITH UPDATED RADIUS
     if (areas && areas.length > 0) {
-      console.log('🔥 FORCE CREATING NEW LAYERS with DYNAMIC COLOR:', currentColor);
+      console.log('🔥 FORCE CREATING NEW LAYERS with UPDATED RADIUS and DYNAMIC COLOR:', currentColor);
       
       areas.forEach((area, index) => {
         const radiusInMeters = area.radius_km * 1000;
-        console.log(`🎯 FORCE CREATING new layer for area ${area.id} with DYNAMIC COLOR:`, {
+        console.log(`🎯 CRITICAL RADIUS - FORCE CREATING new layer for area ${area.id}:`, {
           lat: area.lat,
           lng: area.lng,
           radius_km: area.radius_km,
@@ -68,69 +68,78 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) =
           timestamp: new Date().toISOString()
         });
         
-        // CREA MANUALMENTE il cerchio usando l'API Leaflet diretta CON COLORE DINAMICO
+        // VERIFY RADIUS IS UPDATED
+        console.log(`📏 RADIUS VERIFICATION - Area ${area.id} radius:`, {
+          radius_km_from_db: area.radius_km,
+          radius_meters_calculated: radiusInMeters,
+          should_be_different_from_previous: true
+        });
+        
+        // CREATE MANUALLY the circle using direct Leaflet API WITH UPDATED RADIUS
         const circle = L.circle([area.lat, area.lng], {
-          radius: radiusInMeters, // VALORE AGGIORNATO DAL DB
-          color: currentColor, // COLORE DINAMICO BASATO SU BUZZ COUNTER
-          fillColor: currentColor, // COLORE DINAMICO BASATO SU BUZZ COUNTER
+          radius: radiusInMeters, // UPDATED VALUE FROM DB
+          color: currentColor, // DYNAMIC COLOR
+          fillColor: currentColor, // DYNAMIC COLOR
           fillOpacity: 0.25,
           weight: 3,
           opacity: 1,
         });
         
-        // AGGIUNGI FORZATAMENTE alla mappa
+        // FORCEFULLY ADD to map
         circle.addTo(map);
-        console.log('✅ NEW LAYER with DYNAMIC COLOR FORCEFULLY ADDED to map:', {
+        console.log('✅ NEW LAYER with UPDATED RADIUS FORCEFULLY ADDED to map:', {
           areaId: area.id,
-          radius: area.radius_km + ' km',
+          radius_km: area.radius_km,
+          radius_meters: radiusInMeters,
           color: currentColor,
           buzzGeneration: buzzCounter + 1
         });
         
-        // SALVA il riferimento per la prossima distruzione
+        // SAVE reference for next destruction
         previousLayersRef.current.push(circle);
         
-        // FORZA il layer in primo piano
+        // FORCE layer to front
         circle.bringToFront();
         
-        // LOG DETTAGLIATO per debug con colore
-        console.log('🔍 Layer verification with DYNAMIC COLOR:', {
+        // DETAILED LOG for radius verification
+        console.log('🔍 RADIUS Layer verification:', {
           layerOnMap: map.hasLayer(circle),
           layerLatLng: circle.getLatLng(),
           layerRadius: circle.getRadius(),
           expectedRadius: radiusInMeters,
           layerColor: currentColor,
+          radiusMatch: circle.getRadius() === radiusInMeters,
           buzzGeneration: buzzCounter + 1
         });
       });
       
-      console.log('🎉 ALL NEW LAYERS with DYNAMIC COLOR CREATED AND ADDED TO MAP');
+      console.log('🎉 ALL NEW LAYERS with UPDATED RADIUS CREATED AND ADDED TO MAP');
     } else {
-      console.log('❌ No BUZZ areas to display with DYNAMIC COLOR - map cleared');
+      console.log('❌ No BUZZ areas to display - map cleared');
     }
     
-    // STEP 4: FORZA un refresh della mappa
+    // STEP 4: FORCE a map refresh
     setTimeout(() => {
       map.invalidateSize();
-      console.log('🔄 Map size FORCEFULLY invalidated for refresh with DYNAMIC COLOR');
+      console.log('🔄 Map size FORCEFULLY invalidated for refresh with UPDATED RADIUS');
     }, 50);
     
-  }, [areas, map, currentColor, buzzCounter]); // DIPENDE da areas, map, colore E buzzCounter
+  }, [areas, map, currentColor, buzzCounter]); // Depends on areas, map, color AND buzzCounter
 
-  // RENDERIZZA anche i componenti React-Leaflet con KEY DINAMICA e COLORE DINAMICO
+  // RENDER React-Leaflet components with DYNAMIC KEY and UPDATED RADIUS
   if (!areas || areas.length === 0) {
-    console.log('❌ No BUZZ areas to display with React-Leaflet and DYNAMIC COLOR');
+    console.log('❌ No BUZZ areas to display with React-Leaflet');
     return null;
   }
 
-  console.log('✅ Rendering', areas.length, 'BUZZ areas with React-Leaflet and DYNAMIC COLOR:', currentColor);
+  console.log('✅ Rendering', areas.length, 'BUZZ areas with React-Leaflet and UPDATED RADIUS');
 
   return (
     <>
       {areas.map((area, index) => {
         const radiusInMeters = area.radius_km * 1000;
         
-        console.log(`📏 React-Leaflet rendering area ${area.id} (${index}) with DYNAMIC COLOR:`, {
+        console.log(`📏 CRITICAL RADIUS - React-Leaflet rendering area ${area.id} (${index}):`, {
           lat: area.lat,
           lng: area.lng,
           radius_km: area.radius_km,
@@ -140,17 +149,17 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) =
           created_at: area.created_at
         });
         
-        // KEY DINAMICA che include RAGGIO E COLORE per forzare re-render quando cambia
-        const dynamicKey = `buzz-area-${area.id}-${area.radius_km}-${currentColor}-${buzzCounter}-${area.created_at}-${renderCountRef.current}-${index}`;
+        // CRITICAL: DYNAMIC KEY that includes RADIUS AND COLOR to force re-render when changed
+        const dynamicKey = `buzz-area-${area.id}-${area.radius_km}-${currentColor}-${buzzCounter}-${area.created_at}-${renderCountRef.current}-${index}-${Date.now()}`;
         
         return (
           <Circle
-            key={dynamicKey} // CRITICO: Key dinamica che include il raggio E il colore
+            key={dynamicKey} // CRITICAL: Dynamic key including radius for forced re-render
             center={[area.lat, area.lng]}
-            radius={radiusInMeters} // VALORE AGGIORNATO DAL DB
+            radius={radiusInMeters} // UPDATED VALUE FROM DB
             pathOptions={{
-              color: currentColor, // COLORE DINAMICO BASATO SU BUZZ COUNTER
-              fillColor: currentColor, // COLORE DINAMICO BASATO SU BUZZ COUNTER
+              color: currentColor, // DYNAMIC COLOR
+              fillColor: currentColor, // DYNAMIC COLOR
               fillOpacity: 0.25,
               weight: 3,
               opacity: 1,
@@ -159,26 +168,29 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) =
             eventHandlers={{
               add: (e) => {
                 const layer = e.target as L.Circle;
-                console.log('✅ React-Leaflet Circle with DYNAMIC COLOR FORCEFULLY added to map:', {
+                console.log('✅ RADIUS VERIFICATION - React-Leaflet Circle FORCEFULLY added to map:', {
                   id: area.id,
                   radius_km: area.radius_km,
                   radiusInMeters: radiusInMeters,
                   layerRadius: layer.getRadius(),
                   layerLatLng: layer.getLatLng(),
                   color: currentColor,
+                  radiusMatch: layer.getRadius() === radiusInMeters,
                   buzzGeneration: buzzCounter + 1,
                   dynamicKey: dynamicKey
                 });
                 
                 layer.bringToFront();
-                console.log('🔍 React-Leaflet layer verification with DYNAMIC COLOR:', {
+                console.log('🔍 FINAL RADIUS VERIFICATION:', {
                   isOnMap: map.hasLayer(layer),
-                  radiusMatch: layer.getRadius() === radiusInMeters,
-                  expectedColor: currentColor
+                  radiusCorrect: layer.getRadius() === radiusInMeters,
+                  expectedColor: currentColor,
+                  actualRadius: layer.getRadius(),
+                  expectedRadius: radiusInMeters
                 });
               },
               remove: (e) => {
-                console.log('🗑️ React-Leaflet Circle with DYNAMIC COLOR FORCEFULLY removed from map:', {
+                console.log('🗑️ React-Leaflet Circle FORCEFULLY removed from map:', {
                   id: area.id,
                   color: currentColor,
                   dynamicKey: dynamicKey
