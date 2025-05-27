@@ -11,17 +11,20 @@ interface BuzzMapAreasProps {
 const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
   const map = useMap();
   const previousLayersRef = useRef<L.Circle[]>([]);
+  const renderCountRef = useRef(0);
   
   console.log('🗺️ BuzzMapAreas - Rendering BUZZ map areas:', areas);
+  console.log('🔢 BuzzMapAreas - Render count:', ++renderCountRef.current);
 
-  // CRITICO: Rimuovi tutti i layer precedenti prima di renderizzare la nuova area
+  // CRITICO: Gestione completa dei layer
   useEffect(() => {
     console.log('🔄 BuzzMapAreas useEffect triggered with areas:', areas);
+    console.log('🗑️ Current layers to remove:', previousLayersRef.current.length);
     
     // Rimuovi tutti i layer precedenti dalla mappa
-    previousLayersRef.current.forEach(layer => {
+    previousLayersRef.current.forEach((layer, index) => {
       if (map.hasLayer(layer)) {
-        console.log('🗑️ Removing previous layer from map');
+        console.log(`🗑️ Removing layer ${index} from map`);
         map.removeLayer(layer);
       }
     });
@@ -30,6 +33,13 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
     previousLayersRef.current = [];
     
     console.log('🗑️ All previous BUZZ layers REMOVED from map');
+    
+    // Forza un refresh della mappa
+    setTimeout(() => {
+      map.invalidateSize();
+      console.log('🔄 Map size invalidated for refresh');
+    }, 50);
+    
   }, [areas, map]);
 
   // Se non ci sono aree da mostrare, non renderizzare nulla
@@ -46,7 +56,7 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
         // CONVERSIONE CORRETTA: radius_km → metri per Leaflet
         const radiusInMeters = area.radius_km * 1000;
         
-        console.log(`📏 Rendering area ${area.id}:`, {
+        console.log(`📏 Rendering area ${area.id} (${index}):`, {
           lat: area.lat,
           lng: area.lng,
           radius_km: area.radius_km,
@@ -54,9 +64,12 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
           created_at: area.created_at
         });
         
+        // Key unica per forzare re-render completo
+        const uniqueKey = `buzz-area-${area.id}-${area.created_at}-${renderCountRef.current}-${index}`;
+        
         return (
           <Circle
-            key={`buzz-area-${area.id}-${area.created_at}-${index}`} // Key unica per forzare re-render
+            key={uniqueKey}
             center={[area.lat, area.lng]}
             radius={radiusInMeters} // CRITICO: Converti km in metri per Leaflet
             pathOptions={{
@@ -64,7 +77,7 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
               fillColor: '#00cfff',
               fillOpacity: 0.15,
               weight: 3,
-              opacity: 1, // Sempre visibile al 100% - solo UNA area mostrata
+              opacity: 1, // Sempre visibile al 100%
             }}
             className="buzz-map-area"
             eventHandlers={{
@@ -76,7 +89,18 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
                   id: area.id,
                   radius_km: area.radius_km,
                   radiusInMeters: radiusInMeters,
-                  layerRadius: layer.getRadius()
+                  layerRadius: layer.getRadius(),
+                  layerLatLng: layer.getLatLng(),
+                  uniqueKey: uniqueKey
+                });
+                
+                // Forza il layer in primo piano
+                layer.bringToFront();
+              },
+              remove: (e) => {
+                console.log('🗑️ BUZZ layer removed from map:', {
+                  id: area.id,
+                  uniqueKey: uniqueKey
                 });
               }
             }}
@@ -89,6 +113,7 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
         .buzz-map-area {
           filter: drop-shadow(0 0 12px rgba(0, 207, 255, 0.7));
           animation: buzzGlow 3s infinite ease-in-out;
+          z-index: 1000 !important;
         }
         
         @keyframes buzzGlow {

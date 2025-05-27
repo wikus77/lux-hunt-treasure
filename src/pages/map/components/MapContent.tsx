@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { MapContainer } from 'react-leaflet';
 import { DEFAULT_LOCATION } from '../useMapLogic';
 import MapInitializer from './MapInitializer';
@@ -50,10 +50,28 @@ const MapContent: React.FC<MapContentProps> = ({
   isAddingMapPoint,
   hookHandleMapPointClick
 }) => {
-  // Ottieni direttamente le aree BUZZ correnti dall'hook
+  // Ottieni le aree BUZZ correnti dall'hook
   const { currentWeekAreas } = useBuzzMapLogic();
   
-  console.log('🗺️ MapContent - Current BUZZ areas:', currentWeekAreas);
+  // DEBUG: Log ogni cambio delle aree
+  useEffect(() => {
+    console.log('🗺️ MapContent - Current BUZZ areas changed:', {
+      areas: currentWeekAreas,
+      count: currentWeekAreas.length,
+      timestamp: new Date().toISOString()
+    });
+    
+    if (currentWeekAreas.length > 0) {
+      const area = currentWeekAreas[0];
+      console.log('🎯 MapContent - Area to display:', {
+        id: area.id,
+        lat: area.lat,
+        lng: area.lng,
+        radius_km: area.radius_km,
+        created_at: area.created_at
+      });
+    }
+  }, [currentWeekAreas]);
 
   return (
     <MapContainer 
@@ -76,6 +94,7 @@ const MapContent: React.FC<MapContentProps> = ({
       <MapInitializer onMapReady={(map) => {
         mapRef.current = map;
         handleMapLoad(map);
+        console.log('🗺️ MapContent - Map initialized and ready');
       }} />
       
       {/* Map Layers */}
@@ -85,8 +104,17 @@ const MapContent: React.FC<MapContentProps> = ({
         deleteSearchArea={deleteSearchArea}
       />
       
-      {/* BUZZ Map Areas - Visualizza le aree BUZZ direttamente qui */}
-      <BuzzMapAreas areas={currentWeekAreas} />
+      {/* BUZZ Map Areas - CRITICO: Visualizza le aree BUZZ con logging */}
+      {currentWeekAreas.length > 0 ? (
+        <>
+          {console.log('✅ MapContent - Rendering BuzzMapAreas component with areas:', currentWeekAreas)}
+          <BuzzMapAreas areas={currentWeekAreas} />
+        </>
+      ) : (
+        <>
+          {console.log('❌ MapContent - No BUZZ areas to render')}
+        </>
+      )}
       
       {/* Use the MapPopupManager component */}
       <MapPopupManager 

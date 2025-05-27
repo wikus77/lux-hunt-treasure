@@ -33,49 +33,69 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const buzzMapPrice = calculateBuzzMapPrice();
   const activeArea = getActiveArea();
   
+  // TEST FIRENZE - Coordinate fisse per debugging
+  const FIRENZE_TEST_COORDS = {
+    lat: 43.7807,
+    lng: 11.2760,
+    address: "Via Mazzini 19, Firenze, Italia"
+  };
+  
   const handleBuzzMapClick = async () => {
-    // Se non c'è centro mappa, usa coordinate di fallback (Roma)
-    const centerLat = mapCenter?.[0] || 41.9028;
-    const centerLng = mapCenter?.[1] || 12.4964;
+    console.log('🚀 BUZZ MAPPA TEST FIRENZE - Starting generation');
     
-    console.log('🚀 BUZZ MAPPA pressed - Generating area at:', { centerLat, centerLng });
+    // STEP 1: Usa coordinate fisse di Firenze per il test
+    const centerLat = FIRENZE_TEST_COORDS.lat;
+    const centerLng = FIRENZE_TEST_COORDS.lng;
+    
+    console.log('📍 TEST FIRENZE - Using fixed coordinates:', { 
+      centerLat, 
+      centerLng, 
+      address: FIRENZE_TEST_COORDS.address 
+    });
     console.log('📏 Prossimo raggio calcolato:', nextRadius, 'km');
     console.log('💰 Prezzo calcolato:', buzzMapPrice, '€');
     
-    // STEP 1: Genera l'area usando la logica dedicata
+    // STEP 2: Genera l'area usando la logica dedicata
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
-      console.log('✅ NUOVA AREA CREATA:', newArea);
+      console.log('✅ NUOVA AREA CREATA (TEST FIRENZE):', {
+        id: newArea.id,
+        lat: newArea.lat,
+        lng: newArea.lng,
+        radius_km: newArea.radius_km,
+        created_at: newArea.created_at
+      });
       
-      // STEP 2: Forza il reload delle aree per garantire la visualizzazione
+      // STEP 3: Forza il reload delle aree PRIMA del centering
       console.log('🔄 Forzando reload delle aree...');
       await reloadAreas();
       
-      // STEP 3: Crea notifica con il raggio REALE salvato su Supabase
+      // STEP 4: Aspetta un momento prima di centrare per assicurarsi che l'area sia stata caricata
+      setTimeout(() => {
+        console.log('🎯 Centrando mappa sulla nuova area di Firenze...');
+        if (onAreaGenerated) {
+          onAreaGenerated(newArea.lat, newArea.lng, newArea.radius_km);
+        }
+      }, 200);
+      
+      // STEP 5: Crea notifica con il raggio REALE salvato su Supabase
       try {
         await createMapBuzzNotification(
-          "Area BUZZ MAPPA Generata", 
-          `Nuova area di ricerca creata con raggio ${newArea.radius_km.toFixed(1)}km`
+          "Area BUZZ MAPPA Generata (TEST FIRENZE)", 
+          `Nuova area di ricerca creata a ${FIRENZE_TEST_COORDS.address} con raggio ${newArea.radius_km.toFixed(1)}km`
         );
-        console.log("✅ BUZZ Map notification created successfully");
-        console.log("📏 Notifica inviata con raggio ESATTO:", newArea.radius_km.toFixed(1), "km");
+        console.log("✅ BUZZ Map notification created successfully (TEST FIRENZE)");
       } catch (error) {
         console.error("❌ Failed to create BUZZ Map notification:", error);
       }
       
-      // STEP 4: Centra automaticamente la mappa sulla nuova area
-      if (onAreaGenerated) {
-        console.log('🎯 Centrando mappa sulla nuova area...');
-        onAreaGenerated(newArea.lat, newArea.lng, newArea.radius_km);
-      }
-      
-      // STEP 5: Esegui callback opzionale
+      // STEP 6: Esegui callback opzionale
       if (handleBuzz) {
         handleBuzz();
       }
     } else {
-      console.error('❌ Failed to create new area');
+      console.error('❌ Failed to create new area (TEST FIRENZE)');
     }
   };
   
@@ -99,7 +119,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           {activeArea ? `(Attivo: ${activeArea.radius_km.toFixed(1)}km)` : `(R: ${nextRadius.toFixed(1)}km)`}
         </span>
         <div className="text-xs opacity-70 mt-1">
-          {userCluesCount} indizi
+          {userCluesCount} indizi - TEST FIRENZE
         </div>
       </Button>
       <style>
