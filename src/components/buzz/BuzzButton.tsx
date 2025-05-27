@@ -13,6 +13,7 @@ interface BuzzButtonProps {
   setError: (error: string | null) => void;
   userId: string;
   onSuccess: () => void;
+  resetTrigger?: number; // Nuovo prop per forzare il reload
 }
 
 const BuzzButton: React.FC<BuzzButtonProps> = ({
@@ -20,14 +21,15 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   setIsLoading,
   setError,
   userId,
-  onSuccess
+  onSuccess,
+  resetTrigger = 0
 }) => {
   const { callBuzzApi } = useBuzzApi();
   const { createBuzzNotification } = useNotificationManager();
   const [buzzCost, setBuzzCost] = useState<number>(1.99);
   const [dailyCount, setDailyCount] = useState<number>(0);
 
-  // Carica il costo attuale del buzz
+  // Carica il costo attuale del buzz - con dependency su resetTrigger
   useEffect(() => {
     const loadBuzzCost = async () => {
       if (!userId) return;
@@ -67,7 +69,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     };
 
     loadBuzzCost();
-  }, [userId]);
+  }, [userId, resetTrigger]); // Aggiunta dependency su resetTrigger
 
   const handleBuzzPress = async () => {
     if (isLoading || !userId) return;
