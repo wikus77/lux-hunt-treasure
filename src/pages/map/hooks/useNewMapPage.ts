@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -191,7 +192,7 @@ export const useNewMapPage = () => {
   };
 
   // Handle BUZZ button click - Updated for BUZZ MAPPA
-  const handleBuzz = () => {
+  const handleBuzz = useCallback(() => {
     const activeArea = getActiveArea();
     if (activeArea) {
       toast.success(`Area BUZZ MAPPA attiva: ${activeArea.radius_km.toFixed(1)} km`, {
@@ -200,7 +201,7 @@ export const useNewMapPage = () => {
     } else {
       toast.info("Premi BUZZ MAPPA per generare una nuova area di ricerca!");
     }
-  };
+  }, [getActiveArea]);
 
   // Request user location
   const requestLocationPermission = () => {
