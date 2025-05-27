@@ -24,12 +24,7 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
       {/* Circle rendering logic */}
       <BuzzCircleRenderer areas={areas} />
       
-      {/* Debug overlay */}
-      <BuzzDebugOverlay 
-        areas={areas}
-        currentColor={currentColor}
-        currentColorName={currentColorName}
-      />
+      {/* Debug overlay is now disabled */}
       
       {/* Glow styles */}
       <style>

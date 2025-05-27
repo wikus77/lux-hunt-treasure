@@ -13,37 +13,8 @@ const BuzzDebugOverlay: React.FC<BuzzDebugOverlayProps> = ({
   currentColor,
   currentColorName
 }) => {
-  if (areas.length === 0) {
-    return null;
-  }
-
-  const area = areas[0];
-
-  return (
-    <div 
-      style={{
-        position: 'absolute',
-        top: '10px',
-        right: '10px',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        color: 'white',
-        padding: '10px',
-        borderRadius: '8px',
-        fontFamily: 'monospace',
-        fontSize: '12px',
-        zIndex: 1000,
-        border: `2px solid ${currentColor}`,
-        boxShadow: `0 0 10px ${currentColor}50`
-      }}
-    >
-      <div>🎯 BUZZ AREA DEBUG</div>
-      <div>AREA: {area.radius_km.toFixed(1)} km</div>
-      <div>COLORE: {currentColorName}</div>
-      <div>COORDINATE: {area.lat.toFixed(4)}, {area.lng.toFixed(4)}</div>
-      <div style={{ color: currentColor }}>████ {currentColor}</div>
-      <div>✅ FIXED NEON CYAN</div>
-    </div>
-  );
+  // Debug overlay is now disabled - returning null to hide it completely
+  return null;
 };
 
 export default BuzzDebugOverlay;
