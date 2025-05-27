@@ -45,17 +45,12 @@ const MapLogicProvider = () => {
     activeMapPoint,
     setActiveMapPoint,
     addMapPoint,
-    updateMapPoint: originalUpdateMapPoint,
+    updateMapPoint,
     deleteMapPoint,
     requestLocationPermission
   } = useMapLogic();
   
-  // Fix the updateMapPoint function signature to match the expected context type
-  const updateMapPoint = async (id: string, title: string, note: string): Promise<boolean> => {
-    return await originalUpdateMapPoint(id, { title, note });
-  };
-
-  // Fix the handleMapPointClick function signature to match the expected context type
+  // Modified to return a Promise<string> with correct parameter structure
   const handleMapPointClick = async (point: { lat: number; lng: number; title: string; note: string }): Promise<string> => {
     const newPointId = `point-${Date.now()}`;
     addMapPoint({
@@ -65,7 +60,7 @@ const MapLogicProvider = () => {
       title: point.title || '',
       note: point.note || ''
     });
-    return newPointId;
+    return newPointId; // Return the new point ID
   };
 
   // Use our custom hook for map points
@@ -177,7 +172,7 @@ const MapLogicProvider = () => {
     mapRef,
     handleMapLoad,
     newPoint,
-    handleMapPointClick,
+    handleMapPointClick: hookHandleMapPointClick,
     handleSaveNewPoint,
     handleUpdatePoint,
     handleCancelNewPoint,
