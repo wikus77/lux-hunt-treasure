@@ -18,33 +18,27 @@ const MapController: React.FC<MapControllerProps> = ({
   const map = useMap();
   
   useEffect(() => {
+    if (!map) return;
+    
+    console.log("🔄 MapController - State changed:", { isAddingPoint });
+    
     // Change cursor style based on the current mode
     const mapContainer = map.getContainer();
     
     if (isAddingPoint) {
       mapContainer.style.cursor = 'crosshair';
+      console.log("🎯 MapController - Cursor set to crosshair for point addition");
       toast.info("Clicca sulla mappa per posizionare il punto", { duration: 3000 });
     } else {
       mapContainer.style.cursor = 'grab';
+      console.log("🎯 MapController - Cursor set to grab");
     }
     
-    // Add click handler to the map
-    const handleMapClick = (e: L.LeafletMouseEvent) => {
-      if (isAddingPoint) {
-        console.log("📍 Map clicked while in add point mode:", e.latlng);
-        addNewPoint(e.latlng.lat, e.latlng.lng);
-        setIsAddingPoint(false);
-      }
-    };
-
-    map.on('click', handleMapClick);
-    
-    // Cleanup
+    // Cleanup cursor on unmount
     return () => {
       mapContainer.style.cursor = 'grab';
-      map.off('click', handleMapClick);
     };
-  }, [map, isAddingPoint, setIsAddingPoint, addNewPoint]);
+  }, [map, isAddingPoint]);
   
   return null;
 };

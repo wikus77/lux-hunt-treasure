@@ -28,11 +28,11 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
     const mapContainer = map.getContainer();
     
     if (isAddingMapPoint || isAddingSearchArea) {
-      mapContainer.style.cursor = 'crosshair'; // Change cursor to crosshair for both modes
-      console.log(`Cursor changed to crosshair (Adding ${isAddingMapPoint ? 'point' : 'search area'})`);
+      mapContainer.style.cursor = 'crosshair';
+      console.log(`🎯 Cursor changed to crosshair (Adding ${isAddingMapPoint ? 'point' : 'search area'})`);
     } else {
       mapContainer.style.cursor = 'grab';
-      console.log("Cursor changed to grab (normal mode)");
+      console.log("🎯 Cursor changed to grab (normal mode)");
     }
     
     return () => {
@@ -45,24 +45,36 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
     if (!map) return;
     
     const handleMapClick = (e: L.LeafletMouseEvent) => {
-      console.log("Map click detected:", {
-        mode: isAddingSearchArea ? "search area" : isAddingMapPoint ? "map point" : "normal",
-        latlng: e.latlng
+      console.log("🗺️ clic su mappa registrato:", {
+        isAddingMapPoint,
+        isAddingSearchArea,
+        coordinates: e.latlng
       });
       
       if (isAddingSearchArea) {
-        console.log("Handling click for search area");
+        console.log("🔵 Handling click for search area");
         handleMapClickArea(e);
       } else if (isAddingMapPoint) {
-        console.log("Handling click for map point");
+        console.log("⭐ Handling click for map point at:", e.latlng.lat, e.latlng.lng);
         onMapPointClick(e.latlng.lat, e.latlng.lng);
+      } else {
+        console.log("❌ Click ignored - not in adding mode");
       }
     };
     
+    // Add the click listener
     map.on('click', handleMapClick);
+    
+    // Debug logging for current state
+    console.log("🔄 MapEventHandler - Current state:", {
+      isAddingMapPoint,
+      isAddingSearchArea,
+      hasMapClickListener: true
+    });
     
     return () => {
       map.off('click', handleMapClick);
+      console.log("🗑️ Map click listener removed");
     };
   }, [map, isAddingSearchArea, isAddingMapPoint, handleMapClickArea, onMapPointClick]);
   

@@ -70,6 +70,11 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   const mapRef = useRef<L.Map | null>(null);
   const { currentWeekAreas } = useBuzzMapLogic();
 
+  // Debug logging for point addition state
+  React.useEffect(() => {
+    console.log("🔄 MapContainer - isAddingPoint state:", isAddingPoint);
+  }, [isAddingPoint]);
+
   // Funzione per aggiornare il centro quando la mappa si muove
   const handleMapMove = () => {
     if (mapRef.current) {
@@ -82,6 +87,22 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   const handleMapReady = (map: L.Map) => {
     mapRef.current = map;
     map.on('moveend', handleMapMove);
+    console.log("🗺️ Map initialized and ready for point addition");
+  };
+
+  // Enhanced addNewPoint handler with proper logging
+  const handleAddNewPoint = (lat: number, lng: number) => {
+    console.log("⭐ handleAddNewPoint called with coordinates:", { lat, lng });
+    console.log("🔄 Current isAddingPoint state:", isAddingPoint);
+    
+    if (isAddingPoint) {
+      console.log("✅ Creating new point at coordinates:", lat, lng);
+      addNewPoint(lat, lng);
+      setIsAddingPoint(false);
+      console.log("🔄 isAddingPoint set to false after point creation");
+    } else {
+      console.log("❌ Not in adding point mode, ignoring click");
+    }
   };
 
   // Funzione per centrare la mappa su una nuova area generata
@@ -136,7 +157,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         <MapController 
           isAddingPoint={isAddingPoint}
           setIsAddingPoint={setIsAddingPoint}
-          addNewPoint={addNewPoint}
+          addNewPoint={handleAddNewPoint}
         />
         
         {/* Balanced tone TileLayer - not too dark, not too light */}
@@ -173,14 +194,14 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           handleCancelNewPoint={handleCancelNewPoint}
         />
         
-        {/* Use the MapEventHandler component */}
+        {/* Use the MapEventHandler component with enhanced point click handling */}
         <MapEventHandler 
           isAddingSearchArea={isAddingSearchArea} 
           handleMapClickArea={handleMapClickArea}
           searchAreas={searchAreas}
           setPendingRadius={setPendingRadius}
           isAddingMapPoint={isAddingPoint} 
-          onMapPointClick={addNewPoint}
+          onMapPointClick={handleAddNewPoint}
         />
       </MapContainer>
 
