@@ -5,11 +5,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 
 interface BuzzUnlockDialogProps {
   open: boolean;
-  onOpenChange: (v: boolean) => void;
-  handlePayment: () => void;
+  onOpenChange?: (v: boolean) => void;
+  onPayment: () => void;
 }
 
-const BuzzUnlockDialog = ({ open, onOpenChange, handlePayment }: BuzzUnlockDialogProps) => (
+const BuzzUnlockDialog = ({ open, onOpenChange, onPayment }: BuzzUnlockDialogProps) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent>
       <DialogHeader>
@@ -29,7 +29,7 @@ const BuzzUnlockDialog = ({ open, onOpenChange, handlePayment }: BuzzUnlockDialo
           </p>
         </div>
         <Button
-          onClick={handlePayment}
+          onClick={onPayment}
           className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
         >
           Sblocca indizio 1,99€
