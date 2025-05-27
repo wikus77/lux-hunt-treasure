@@ -51,7 +51,7 @@ const MapContent: React.FC<MapContentProps> = ({
   hookHandleMapPointClick
 }) => {
   // Ottieni le aree BUZZ correnti dall'hook - CRITICO per aggiornamenti
-  const { currentWeekAreas, debugCurrentState, reloadAreas } = useBuzzMapLogic();
+  const { currentWeekAreas, debugCurrentState, reloadAreas, dailyBuzzCounter } = useBuzzMapLogic();
   
   // CRITICAL FIX: Force reload areas ogni volta che il componente si monta o cambia
   useEffect(() => {
@@ -59,11 +59,12 @@ const MapContent: React.FC<MapContentProps> = ({
     reloadAreas(); // Forza il reload delle aree dal DB
   }, [reloadAreas]);
   
-  // ENHANCED DEBUG: Log dettagliato ogni cambio delle aree
+  // ENHANCED DEBUG: Log dettagliato ogni cambio delle aree con colore dinamico
   useEffect(() => {
-    console.log('🗺️ CRITICAL - MapContent area state changed:', {
+    console.log('🗺️ CRITICAL - MapContent area state changed with DYNAMIC COLOR:', {
       areas: currentWeekAreas,
       count: currentWeekAreas.length,
+      buzzCounter: dailyBuzzCounter,
       timestamp: new Date().toISOString()
     });
     
@@ -72,32 +73,38 @@ const MapContent: React.FC<MapContentProps> = ({
     
     if (currentWeekAreas.length > 0) {
       const area = currentWeekAreas[0];
-      console.log('🎯 CRITICAL - Latest area to display:', {
+      const colors = ['#FFFF00', '#FF00FF', '#00FF00', '#FF66CC'];
+      const currentColor = colors[dailyBuzzCounter % 4];
+      
+      console.log('🎯 CRITICAL - Latest area to display with DYNAMIC COLOR:', {
         id: area.id,
         lat: area.lat,
         lng: area.lng,
         radius_km: area.radius_km,
         created_at: area.created_at,
-        radiusInMeters: area.radius_km * 1000
+        radiusInMeters: area.radius_km * 1000,
+        buzzCounter: dailyBuzzCounter,
+        dynamicColor: currentColor,
+        colorName: ['GIALLO NEON', 'ROSA NEON', 'VERDE NEON', 'FUCSIA NEON'][dailyBuzzCounter % 4]
       });
       
       // VERIFICA CRITICA: assicurati che i dati siano validi e aggiornati
       if (!area.lat || !area.lng || !area.radius_km) {
         console.error('❌ CRITICAL - Invalid area data:', area);
       } else {
-        console.log('✅ CRITICAL - Area data is valid and ready for FORCED rendering');
+        console.log('✅ CRITICAL - Area data is valid and ready for FORCED rendering with DYNAMIC COLOR');
       }
     } else {
       console.log('❌ CRITICAL - No areas available for rendering');
     }
-  }, [currentWeekAreas, debugCurrentState]);
+  }, [currentWeekAreas, debugCurrentState, dailyBuzzCounter]);
 
   // DEBUG: Verifica che il componente si re-renderizzi quando cambiano le aree
-  console.log('🔄 CRITICAL - MapContent re-rendering with areas count:', currentWeekAreas.length);
+  console.log('🔄 CRITICAL - MapContent re-rendering with areas count:', currentWeekAreas.length, 'and buzz counter:', dailyBuzzCounter);
   
   // Log del raggio attuale per verificare aggiornamenti
   if (currentWeekAreas.length > 0) {
-    console.log('📏 CRITICAL - Current area radius:', currentWeekAreas[0].radius_km, 'km');
+    console.log('📏 CRITICAL - Current area radius:', currentWeekAreas[0].radius_km, 'km with buzz counter:', dailyBuzzCounter);
   }
 
   return (
@@ -121,7 +128,7 @@ const MapContent: React.FC<MapContentProps> = ({
       <MapInitializer onMapReady={(map) => {
         mapRef.current = map;
         handleMapLoad(map);
-        console.log('🗺️ CRITICAL - Map initialized and ready for BUZZ areas');
+        console.log('🗺️ CRITICAL - Map initialized and ready for BUZZ areas with DYNAMIC COLOR');
         
         // DEBUG: Verifica che la mappa sia pronta per ricevere layer
         console.log('🔍 Map instance available for BUZZ areas:', !!map);
@@ -134,8 +141,11 @@ const MapContent: React.FC<MapContentProps> = ({
         deleteSearchArea={deleteSearchArea}
       />
       
-      {/* BUZZ Map Areas - CRITICO: Passa SEMPRE l'array aggiornato per forzare re-render */}
-      <BuzzMapAreas areas={currentWeekAreas} />
+      {/* BUZZ Map Areas - CRITICO: Passa SEMPRE l'array aggiornato E il buzz counter per forzare re-render */}
+      <BuzzMapAreas 
+        areas={currentWeekAreas} 
+        buzzCounter={dailyBuzzCounter}
+      />
       
       {/* Use the MapPopupManager component */}
       <MapPopupManager 

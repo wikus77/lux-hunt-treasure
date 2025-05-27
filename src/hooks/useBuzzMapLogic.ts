@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +19,7 @@ export const useBuzzMapLogic = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [userCluesCount, setUserCluesCount] = useState(0);
   const [forceUpdateCounter, setForceUpdateCounter] = useState(0); // CRITICO: Force re-render
+  const [dailyBuzzCounter, setDailyBuzzCounter] = useState(0); // NEW: For dynamic color calculation
 
   // Calcola la settimana corrente
   const getCurrentWeek = (): number => {
@@ -28,6 +28,31 @@ export const useBuzzMapLogic = () => {
     const diff = now.getTime() - start.getTime();
     const oneWeek = 1000 * 60 * 60 * 24 * 7;
     return Math.ceil(diff / oneWeek);
+  };
+
+  // NEW: Carica il conteggio BUZZ giornaliero per il calcolo del colore
+  const loadDailyBuzzCounter = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_buzz_counter')
+        .select('buzz_count')
+        .eq('user_id', user.id)
+        .eq('date', new Date().toISOString().split('T')[0])
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Error loading daily buzz counter:', error);
+        return;
+      }
+
+      const buzzCount = data?.buzz_count || 0;
+      setDailyBuzzCounter(buzzCount);
+      console.log('📊 DYNAMIC COLOR - Daily buzz counter loaded:', buzzCount);
+    } catch (err) {
+      console.error('Exception loading daily buzz counter:', err);
+    }
   };
 
   // Carica il conteggio degli indizi utente per calcolare il prezzo
@@ -226,7 +251,8 @@ export const useBuzzMapLogic = () => {
         lng: centerLng,
         radius_km: radiusKm,
         week: currentWeek,
-        price: price
+        price: price,
+        currentBuzzCounter: dailyBuzzCounter
       });
 
       // STEP 1: ELIMINA l'area precedente della settimana corrente
@@ -265,18 +291,12 @@ export const useBuzzMapLogic = () => {
 
       console.log('✅ CRITICAL - NUOVA area BUZZ MAPPA salvata in DB:', data);
       
-      // VERIFICA CRITICA: dati salvati
-      console.log('🔍 DB SAVE VERIFICATION:', {
-        id: data.id,
-        lat: data.lat,
-        lng: data.lng,
-        radius_km: data.radius_km,
-        week: data.week,
-        created_at: data.created_at,
-        saveSuccessful: true
-      });
+      // STEP 4: AGGIORNA il counter BUZZ giornaliero per il calcolo del colore
+      const newBuzzCounter = dailyBuzzCounter + 1;
+      setDailyBuzzCounter(newBuzzCounter);
+      console.log('🎨 DYNAMIC COLOR - Updated buzz counter for color calculation:', newBuzzCounter);
       
-      // STEP 4: FORZA l'aggiornamento dello stato locale IMMEDIATAMENTE
+      // STEP 5: FORZA l'aggiornamento dello stato locale IMMEDIATAMENTE
       console.log('🔄 CRITICAL - FORCE updating local state immediately with new area:', data);
       setCurrentWeekAreas([data]);
       
@@ -284,21 +304,24 @@ export const useBuzzMapLogic = () => {
       setForceUpdateCounter(prev => prev + 1);
       console.log('🔥 CRITICAL - FORCED update counter incremented for immediate re-render');
       
-      // STEP 5: Aspetta un momento e poi forza un reload completo per sicurezza
+      // STEP 6: Aspetta un momento e poi forza un reload completo per sicurezza
       setTimeout(async () => {
         console.log('🔄 CRITICAL - Double-check reload after area creation...');
         await loadCurrentWeekAreas(true); // Force refresh
+        await loadDailyBuzzCounter(); // Refresh buzz counter
       }, 200);
       
-      // STEP 6: Verifica multipla che lo stato sia stato aggiornato
+      // STEP 7: Verifica multipla che lo stato sia stato aggiornato
       setTimeout(() => {
         console.log('🔍 CRITICAL - Verification - currentWeekAreas after update should contain:', data);
         console.log('🔍 CRITICAL - Quick state check...');
         debugCurrentState();
       }, 300);
       
-      // STEP 7: Messaggio con il valore REALE salvato
-      toast.success(`Area BUZZ MAPPA generata! Raggio: ${data.radius_km.toFixed(1)} km - Prezzo: ${price.toFixed(2)}€`);
+      // STEP 8: Messaggio con il valore REALE salvato
+      const colorNames = ['GIALLO NEON', 'ROSA NEON', 'VERDE NEON', 'FUCSIA NEON'];
+      const currentColorName = colorNames[newBuzzCounter % 4];
+      toast.success(`Area BUZZ MAPPA generata! Raggio: ${data.radius_km.toFixed(1)} km - Colore: ${currentColorName} - Prezzo: ${price.toFixed(2)}€`);
       
       return data;
     } catch (err) {
@@ -317,6 +340,7 @@ export const useBuzzMapLogic = () => {
     console.log('Calculated price:', calculateBuzzMapPrice());
     console.log('Active area:', getActiveArea());
     console.log('Next radius:', calculateNextRadius());
+    console.log('Daily buzz counter:', dailyBuzzCounter);
     
     // Test pricing logic
     const testCases = [5, 15, 25, 35, 45];
@@ -334,6 +358,7 @@ export const useBuzzMapLogic = () => {
       console.log('🔄 CRITICAL - Loading initial BUZZ MAPPA data for user:', user.id);
       loadUserCluesCount();
       loadCurrentWeekAreas();
+      loadDailyBuzzCounter(); // NEW: Load buzz counter for color calculation
     }
   }, [user]);
 
@@ -349,16 +374,18 @@ export const useBuzzMapLogic = () => {
       areas: currentWeekAreas,
       count: currentWeekAreas.length,
       forceUpdateCounter: forceUpdateCounter,
+      dailyBuzzCounter: dailyBuzzCounter,
       timestamp: new Date().toISOString()
     });
     
     if (currentWeekAreas.length > 0) {
       console.log('🎯 CRITICAL - AREA READY FOR RENDERING:', {
         ...currentWeekAreas[0],
-        forceUpdateCounter: forceUpdateCounter
+        forceUpdateCounter: forceUpdateCounter,
+        buzzCounterForColor: dailyBuzzCounter
       });
     }
-  }, [currentWeekAreas, forceUpdateCounter]);
+  }, [currentWeekAreas, forceUpdateCounter, dailyBuzzCounter]);
 
   // DEBUG: Funzione per verificare lo stato corrente - MIGLIORATA
   const debugCurrentState = () => {
@@ -372,6 +399,7 @@ export const useBuzzMapLogic = () => {
       nextRadius: calculateNextRadius(),
       price: calculateBuzzMapPrice(),
       forceUpdateCounter: forceUpdateCounter,
+      dailyBuzzCounter: dailyBuzzCounter,
       stateTimestamp: new Date().toISOString()
     });
     
@@ -383,7 +411,8 @@ export const useBuzzMapLogic = () => {
           coordinates: `${area.lat}, ${area.lng}`,
           radius: area.radius_km,
           valid: !!(area.lat && area.lng && area.radius_km),
-          forceUpdateCounter: forceUpdateCounter
+          forceUpdateCounter: forceUpdateCounter,
+          buzzCounterForColor: dailyBuzzCounter
         });
       });
     }
@@ -393,6 +422,7 @@ export const useBuzzMapLogic = () => {
     currentWeekAreas,
     isGenerating,
     userCluesCount,
+    dailyBuzzCounter, // NEW: Expose buzz counter for color calculation
     calculateNextRadius,
     calculateBuzzMapPrice,
     generateBuzzMapArea,
