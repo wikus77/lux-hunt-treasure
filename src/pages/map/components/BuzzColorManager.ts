@@ -1,18 +1,14 @@
 
 // Color management utility for BUZZ areas
-export const NEON_COLORS = ['#FFFF00', '#FF00FF', '#00FF00', '#FF66CC']; // Yellow, Pink, Green, Fuchsia
-export const NEON_COLOR_NAMES = ['GIALLO NEON', 'ROSA NEON', 'VERDE NEON', 'FUCSIA NEON'];
+export const BUZZ_NEON_COLOR = '#00FFFF'; // Azzurro neon fisso M1SSION
 
-export const getCurrentColor = (buzzCounter: number): string => {
-  const colorIndex = buzzCounter % 4;
-  const selectedColor = NEON_COLORS[colorIndex];
-  console.log('🎨 DYNAMIC COLOR - Selected color for generation', buzzCounter + 1, ':', selectedColor, '(index:', colorIndex, ')');
-  return selectedColor;
+export const getCurrentColor = (): string => {
+  console.log('🎨 BUZZ COLOR - Using fixed neon cyan:', BUZZ_NEON_COLOR);
+  return BUZZ_NEON_COLOR;
 };
 
-export const getCurrentColorName = (buzzCounter: number): string => {
-  const colorIndex = buzzCounter % 4;
-  return NEON_COLOR_NAMES[colorIndex];
+export const getCurrentColorName = (): string => {
+  return 'AZZURRO NEON';
 };
 
 export const getBuzzGlowStyles = (currentColor: string): string => {

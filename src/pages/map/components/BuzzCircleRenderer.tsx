@@ -7,18 +7,16 @@ import { getCurrentColor } from './BuzzColorManager';
 
 interface BuzzCircleRendererProps {
   areas: BuzzMapArea[];
-  buzzCounter: number;
 }
 
-const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas, buzzCounter }) => {
+const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   const map = useMap();
   const buzzCircleRef = useRef<L.Circle | null>(null);
   
-  const currentColor = getCurrentColor(buzzCounter);
+  const currentColor = getCurrentColor();
   
-  console.log('🗺️ BuzzCircleRenderer - DIRECT LEAFLET RENDERING with UPDATED RADIUS:', {
+  console.log('🗺️ BuzzCircleRenderer - DIRECT LEAFLET RENDERING with FIXED COLOR:', {
     areas: areas,
-    buzzCounter: buzzCounter,
     currentColor: currentColor
   });
 
@@ -26,7 +24,6 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas, buzzCoun
   useEffect(() => {
     console.log('🚨 DIRECT LEAFLET - BuzzCircleRenderer useEffect triggered:', {
       areas: areas,
-      buzzCounter: buzzCounter,
       currentColor: currentColor
     });
     
@@ -48,13 +45,12 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas, buzzCoun
       const area = areas[0]; // Get the latest area
       const radiusInMeters = area.radius_km * 1000;
       
-      console.log('🔥 DIRECT LEAFLET - FORCE CREATING new circle with UPDATED RADIUS and DYNAMIC COLOR:', {
+      console.log('🔥 DIRECT LEAFLET - FORCE CREATING new circle with UPDATED RADIUS and FIXED NEON COLOR:', {
         lat: area.lat,
         lng: area.lng,
         radius_km: area.radius_km,
         radiusInMeters: radiusInMeters,
         color: currentColor,
-        buzzCounter: buzzCounter,
         timestamp: new Date().toISOString()
       });
       
@@ -66,11 +62,11 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas, buzzCoun
         color: currentColor
       });
       
-      // CREATE CIRCLE using DIRECT Leaflet API WITH UPDATED RADIUS AND COLOR
+      // CREATE CIRCLE using DIRECT Leaflet API WITH UPDATED RADIUS AND FIXED COLOR
       const circle = L.circle([area.lat, area.lng], {
         radius: radiusInMeters, // UPDATED VALUE FROM DB
-        color: currentColor, // DYNAMIC COLOR
-        fillColor: currentColor, // DYNAMIC COLOR
+        color: currentColor, // FIXED NEON CYAN COLOR
+        fillColor: currentColor, // FIXED NEON CYAN COLOR
         fillOpacity: 0.25,
         weight: 3,
         opacity: 1,
@@ -81,12 +77,11 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas, buzzCoun
       circle.addTo(map);
       buzzCircleRef.current = circle;
       
-      console.log('🟢 DIRECT LEAFLET - Cerchio BUZZ ridisegnato:', {
+      console.log('🟢 DIRECT LEAFLET - Cerchio BUZZ ridisegnato con COLORE FISSO:', {
         areaId: area.id,
         radius_km: area.radius_km,
         radius_meters: radiusInMeters,
         color: currentColor,
-        buzzGeneration: buzzCounter + 1,
         circleOnMap: map.hasLayer(circle)
       });
       
@@ -101,10 +96,10 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas, buzzCoun
         expectedRadius: radiusInMeters,
         layerColor: currentColor,
         radiusMatch: circle.getRadius() === radiusInMeters,
-        buzzGeneration: buzzCounter + 1
+        fixedColorApplied: true
       });
       
-      console.log('🎉 DIRECT LEAFLET - NEW CIRCLE with UPDATED RADIUS AND COLOR CREATED AND ADDED TO MAP');
+      console.log('🎉 DIRECT LEAFLET - NEW CIRCLE with UPDATED RADIUS AND FIXED NEON COLOR CREATED AND ADDED TO MAP');
     } else {
       console.log('❌ No BUZZ areas to display - map cleared');
     }
@@ -115,7 +110,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas, buzzCoun
       console.log('🔄 Map size FORCEFULLY invalidated for refresh with DIRECT LEAFLET');
     }, 50);
     
-  }, [areas, map, currentColor, buzzCounter]); // Depends on areas, map, color AND buzzCounter
+  }, [areas, map, currentColor]); // Depends on areas, map, and fixed color
 
   return null; // This component only manages circle rendering, no JSX needed
 };

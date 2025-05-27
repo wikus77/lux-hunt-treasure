@@ -7,16 +7,14 @@ import { getCurrentColor, getCurrentColorName, getBuzzGlowStyles } from './BuzzC
 
 interface BuzzMapAreasProps {
   areas: BuzzMapArea[];
-  buzzCounter?: number; // For dynamic color calculation
 }
 
-const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) => {
-  const currentColor = getCurrentColor(buzzCounter);
-  const currentColorName = getCurrentColorName(buzzCounter);
+const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
+  const currentColor = getCurrentColor();
+  const currentColorName = getCurrentColorName();
   
-  console.log('🗺️ BuzzMapAreas - Main component rendering with:', {
+  console.log('🗺️ BuzzMapAreas - Main component rendering with FIXED COLOR:', {
     areas: areas,
-    buzzCounter: buzzCounter,
     currentColor: currentColor,
     currentColorName: currentColorName
   });
@@ -24,12 +22,11 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) =
   return (
     <>
       {/* Circle rendering logic */}
-      <BuzzCircleRenderer areas={areas} buzzCounter={buzzCounter} />
+      <BuzzCircleRenderer areas={areas} />
       
       {/* Debug overlay */}
       <BuzzDebugOverlay 
         areas={areas}
-        buzzCounter={buzzCounter}
         currentColor={currentColor}
         currentColorName={currentColorName}
       />

@@ -51,7 +51,7 @@ const MapContent: React.FC<MapContentProps> = ({
   hookHandleMapPointClick
 }) => {
   // Get current BUZZ areas from hook - CRITICAL for updates
-  const { currentWeekAreas, debugCurrentState, reloadAreas, dailyBuzzCounter } = useBuzzMapLogic();
+  const { currentWeekAreas, debugCurrentState, reloadAreas } = useBuzzMapLogic();
   
   // CRITICAL FIX: Force reload areas every time component mounts or changes
   useEffect(() => {
@@ -64,7 +64,6 @@ const MapContent: React.FC<MapContentProps> = ({
     console.log('🗺️ CRITICAL RADIUS - DIRECT LEAFLET MapContent area state changed:', {
       areas: currentWeekAreas,
       count: currentWeekAreas.length,
-      buzzCounter: dailyBuzzCounter,
       timestamp: new Date().toISOString()
     });
     
@@ -73,47 +72,40 @@ const MapContent: React.FC<MapContentProps> = ({
     
     if (currentWeekAreas.length > 0) {
       const area = currentWeekAreas[0];
-      const colors = ['#FFFF00', '#FF00FF', '#00FF00', '#FF66CC'];
-      const colorNames = ['GIALLO NEON', 'ROSA NEON', 'VERDE NEON', 'FUCSIA NEON'];
-      const currentColor = colors[dailyBuzzCounter % 4];
-      const currentColorName = colorNames[dailyBuzzCounter % 4];
       
-      console.log('🎯 CRITICAL RADIUS - DIRECT LEAFLET Latest area to display:', {
+      console.log('🎯 CRITICAL RADIUS - DIRECT LEAFLET Latest area to display with FIXED COLOR:', {
         id: area.id,
         lat: area.lat,
         lng: area.lng,
         radius_km: area.radius_km,
         created_at: area.created_at,
         radiusInMeters: area.radius_km * 1000,
-        buzzCounter: dailyBuzzCounter,
-        dynamicColor: currentColor,
-        colorName: currentColorName
+        fixedColor: '#00FFFF'
       });
       
       // CRITICAL VERIFICATION: ensure data is valid and updated
       if (!area.lat || !area.lng || !area.radius_km) {
         console.error('❌ CRITICAL RADIUS - Invalid area data:', area);
       } else {
-        console.log('✅ CRITICAL RADIUS - DIRECT LEAFLET Area data is valid and ready for FORCED rendering');
+        console.log('✅ CRITICAL RADIUS - DIRECT LEAFLET Area data is valid and ready for FORCED rendering with FIXED COLOR');
         console.log('📏 RENDERING RADIUS with DIRECT LEAFLET:', {
           radius_km: area.radius_km,
           radius_meters: area.radius_km * 1000,
           should_be_updated: true,
-          color: currentColor,
-          colorName: currentColorName
+          fixedColor: '#00FFFF'
         });
       }
     } else {
       console.log('❌ CRITICAL RADIUS - No areas available for rendering');
     }
-  }, [currentWeekAreas, debugCurrentState, dailyBuzzCounter]);
+  }, [currentWeekAreas, debugCurrentState]);
 
   // DEBUG: Verify component re-renders when areas change
-  console.log('🔄 CRITICAL RADIUS - DIRECT LEAFLET MapContent re-rendering with areas count:', currentWeekAreas.length, 'and buzz counter:', dailyBuzzCounter);
+  console.log('🔄 CRITICAL RADIUS - DIRECT LEAFLET MapContent re-rendering with areas count:', currentWeekAreas.length);
   
   // Log current radius for update verification
   if (currentWeekAreas.length > 0) {
-    console.log('📏 CRITICAL RADIUS - DIRECT LEAFLET Current area radius for rendering:', currentWeekAreas[0].radius_km, 'km with buzz counter:', dailyBuzzCounter);
+    console.log('📏 CRITICAL RADIUS - DIRECT LEAFLET Current area radius for rendering:', currentWeekAreas[0].radius_km, 'km with FIXED NEON COLOR');
   }
 
   return (
@@ -137,7 +129,7 @@ const MapContent: React.FC<MapContentProps> = ({
       <MapInitializer onMapReady={(map) => {
         mapRef.current = map;
         handleMapLoad(map);
-        console.log('🗺️ CRITICAL RADIUS - DIRECT LEAFLET Map initialized and ready for BUZZ areas with UPDATED RADIUS');
+        console.log('🗺️ CRITICAL RADIUS - DIRECT LEAFLET Map initialized and ready for BUZZ areas with UPDATED RADIUS and FIXED COLOR');
         
         // DEBUG: Verify map is ready to receive layers
         console.log('🔍 Map instance available for BUZZ areas:', !!map);
@@ -150,11 +142,8 @@ const MapContent: React.FC<MapContentProps> = ({
         deleteSearchArea={deleteSearchArea}
       />
       
-      {/* BUZZ Map Areas - CRITICAL: DIRECT LEAFLET RENDERING with updated array AND buzz counter */}
-      <BuzzMapAreas 
-        areas={currentWeekAreas} 
-        buzzCounter={dailyBuzzCounter}
-      />
+      {/* BUZZ Map Areas - CRITICAL: DIRECT LEAFLET RENDERING with updated array and FIXED COLOR */}
+      <BuzzMapAreas areas={currentWeekAreas} />
       
       {/* Use the MapPopupManager component */}
       <MapPopupManager 

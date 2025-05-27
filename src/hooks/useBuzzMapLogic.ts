@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
@@ -108,9 +107,7 @@ export const useBuzzMapLogic = () => {
       }, 200);
       
       // Success message
-      const colorNames = ['GIALLO NEON', 'ROSA NEON', 'VERDE NEON', 'FUCSIA NEON'];
-      const currentColorName = colorNames[newBuzzCounter % 4];
-      toast.success(`Area BUZZ MAPPA generata! Raggio: ${newArea.radius_km.toFixed(1)} km - Colore: ${currentColorName} - Prezzo: ${price.toFixed(2)}€`);
+      toast.success(`Area BUZZ MAPPA generata! Raggio: ${newArea.radius_km.toFixed(1)} km - Colore: AZZURRO NEON - Prezzo: ${price.toFixed(2)}€`);
       
       return newArea;
     } catch (err) {
