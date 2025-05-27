@@ -10,26 +10,23 @@ import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { supabase } from "@/integrations/supabase/client";
 
-// Generatore di contenuti BUZZ realmente univoci con timestamp preciso
+// Funzione per generare indizi realmente univoci
 const generateUniqueClue = (userId: string, buzzCount: number): string => {
   const timestamp = Date.now();
-  const timeString = new Date().toLocaleTimeString('it-IT');
-  const dateString = new Date().toLocaleDateString('it-IT');
-  
-  const dynamicClues = [
-    `🔍 Indizio #${buzzCount} (${timeString}): Il metallo lucente riflette i segreti dove tradizione e innovazione si incontrano`,
-    `🎯 Missione ${buzzCount} del ${dateString}: La velocità italiana nasconde tesori tra motori e design d'eccellenza`,
-    `⚡ Flash ${buzzCount} - Timestamp ${timestamp}: Potenza e eleganza convergono verso il prestigio motoristico padano`,
-    `🏁 Target ${buzzCount} (ore ${timeString}): Il gioiello ingegneristico attende dove il futuro incontra la tradizione`,
-    `🔥 Secrets ${buzzCount} - ${dateString}: L'eccellenza vibra di energia in una location speciale del nord Italia`,
-    `💎 Elite ${buzzCount} alle ${timeString}: Un premio di valore si cela tra innovazione e storia automobilistica`,
-    `🌟 Premium ${buzzCount} (${timestamp}): La tecnologia suprema attende nel cuore della Motor Valley italiana`,
-    `🚀 Dynamic ${buzzCount} del ${dateString}: Il tuo obiettivo pulsa di potenza dove design e prestazioni convivono`
+  const uniqueClues = [
+    `Cerca dove l'innovazione italiana splende (${new Date().toLocaleTimeString()})`,
+    `Il tuo obiettivo si nasconde tra passato e futuro - Indizio #${buzzCount}`,
+    `Nelle terre del design e della velocità troverai la risposta (${timestamp})`,
+    `Dove il metallo lucente incontra la maestria artigianale - ${new Date().toLocaleDateString()}`,
+    `Tra le curve eleganti e la potenza nascosta ${buzzCount}° segreto`,
+    `Il premio attende dove tradizione e tecnologia si fondono (${userId.slice(-4)})`,
+    `Cerca nella città dove i sogni diventano realtà motoristica - ${new Date().getHours()}:${new Date().getMinutes()}`,
+    `L'eccellenza italiana ti guida verso la meta finale #${buzzCount}`
   ];
   
-  const userHash = parseInt(userId.slice(-8), 16) || 1;
-  const index = (userHash + timestamp + buzzCount) % dynamicClues.length;
-  return dynamicClues[index];
+  // Usa l'hash dell'userId e timestamp per garantire unicità
+  const index = (timestamp + buzzCount + parseInt(userId.slice(-4), 16)) % uniqueClues.length;
+  return uniqueClues[index];
 };
 
 export function useBuzzFeature() {
@@ -98,10 +95,10 @@ export function useBuzzFeature() {
         return;
       }
       
-      console.log("🚀 AVVIO PROCESSO BUZZ UNIVOCO GARANTITO per:", userId);
+      console.log("🚀 Avvio processo BUZZ UNIVOCO per:", userId);
       setShowDialog(true);
       
-      // Incrementa il counter per garantire unicità ASSOLUTA
+      // Incrementa il counter per garantire unicità
       const newBuzzCount = buzzCounter + 1;
       setBuzzCounter(newBuzzCount);
       
@@ -114,67 +111,43 @@ export function useBuzzFeature() {
         return;
       }
       
-      // GENERA CONTENUTO REALMENTE UNIVOCO CON TIMESTAMP PRECISO
-      const uniqueClueContent = generateUniqueClue(userId, newBuzzCount);
-      console.log("📝 CONTENUTO BUZZ UNIVOCO GENERATO:", uniqueClueContent);
-      console.log("🕐 Timestamp preciso di generazione:", new Date().toISOString());
+      // Genera contenuto REALMENTE UNIVOCO
+      const uniqueClueContent = response.clue_text || generateUniqueClue(userId, newBuzzCount);
+      console.log("📝 Contenuto UNIVOCO generato:", uniqueClueContent);
+      console.log("🕐 Timestamp generazione:", new Date().toISOString());
       
       setLastDynamicClue(uniqueClueContent);
       setLastVagueClue(uniqueClueContent);
       
-      setTimeout(async () => {
+      setTimeout(() => {
         setShowDialog(false);
         
-        console.log("💾 INSERIMENTO DIRETTO NOTIFICA BUZZ SU SUPABASE (INSERT ONLY)...");
-        
-        try {
-          // STEP 1: INSERT DIRETTO (NO UPSERT) con contenuto reale
-          const { error: directInsertError, data: insertedNotification } = await supabase
-            .from('user_notifications')
-            .insert({
-              user_id: userId,
-              type: 'buzz',
-              title: 'Nuovo Indizio Buzz!',
-              message: uniqueClueContent,
-              is_read: false,  // ESPLICITAMENTE FALSE
-              created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-
-          if (directInsertError) {
-            console.error("❌ ERRORE INSERT NOTIFICA:", directInsertError);
-            throw directInsertError;
-          }
+        console.log("💾 Creando notifica BUZZ UNIVOCA con contenuto reale...");
+        // Registra IMMEDIATAMENTE la notifica con contenuto univoco
+        createBuzzNotification(
+          "Nuovo Indizio Buzz!", 
+          uniqueClueContent
+        ).then(async () => {
+          console.log("✅ Notifica BUZZ UNIVOCA creata con successo");
           
-          console.log("✅ NOTIFICA BUZZ INSERITA CON SUCCESSO - ID:", insertedNotification.id);
-          console.log("📋 Contenuto salvato:", insertedNotification.message);
-          console.log("🔍 Read status:", insertedNotification.is_read);
-          
-          // STEP 2: RELOAD FORZATO per garantire sincronizzazione
+          // Forza reload immediato delle notifiche
           await reloadNotifications(true);
-          console.log("🔄 Reload notifiche completato");
           
-          // STEP 3: Toast con contenuto identico
-          toast.success("Nuovo indizio sbloccato!", {
+          toast.success("Hai ricevuto un nuovo indizio univoco!", {
             description: uniqueClueContent,
             duration: 4000,
           });
           
-          // STEP 4: Mostra esplosione
           setShowExplosion(true);
-          
-          console.log("✅ PROCESSO BUZZ COMPLETATO CON SUCCESSO");
-          
-        } catch (error) {
-          console.error("❌ ERRORE DURANTE CREAZIONE NOTIFICA:", error);
+        }).catch(error => {
+          console.error("❌ Error creating notification:", error);
           toast.error("Errore nel salvataggio dell'indizio", {
             duration: 3000,
           });
-        }
+        });
       }, 1500);
     } catch (error) {
-      console.error("❌ ERRORE GENERALE PROCESSO BUZZ:", error);
+      console.error("❌ Error in buzz process:", error);
       toast.error("Si è verificato un errore");
       setShowDialog(false);
     }
@@ -191,7 +164,7 @@ export function useBuzzFeature() {
       return;
     }
     
-    console.log("🎯 AVVIO PROCESSO INDIZIO EXTRA UNIVOCO per:", userId);
+    console.log("🎯 Avvio processo indizio extra UNIVOCO per:", userId);
     setShowDialog(true);
     
     try {
@@ -207,45 +180,37 @@ export function useBuzzFeature() {
         return;
       }
       
-      const uniqueClue = generateUniqueClue(userId, newBuzzCount);
-      console.log("📝 INDIZIO EXTRA UNIVOCO:", uniqueClue);
+      const uniqueClue = response.clue_text || generateUniqueClue(userId, newBuzzCount);
+      console.log("📝 Nuovo indizio extra UNIVOCO:", uniqueClue);
       setLastVagueClue(uniqueClue);
       setLastDynamicClue(uniqueClue);
       
       incrementUnlockedCluesAndAddClue();
       
-      console.log("💾 INSERIMENTO NOTIFICA INDIZIO EXTRA...");
-      
-      // INSERT diretto su Supabase
-      const { error: insertError } = await supabase
-        .from('user_notifications')
-        .insert({
-          user_id: userId,
-          type: 'buzz',
-          title: 'Nuovo Indizio Extra!',
-          message: uniqueClue,
-          is_read: false,
-          created_at: new Date().toISOString()
+      console.log("💾 Creando notifica indizio extra UNIVOCA...");
+      createBuzzNotification(
+        "Nuovo Indizio Extra!", 
+        uniqueClue
+      ).then(async () => {
+        console.log("✅ Notifica indizio extra UNIVOCA creata");
+        await reloadNotifications(true);
+        
+        toast.success("Hai ricevuto un nuovo indizio extra!", {
+          description: uniqueClue,
+          duration: 4000,
         });
-
-      if (insertError) {
-        console.error("❌ Errore inserimento notifica extra:", insertError);
-        throw insertError;
-      }
-      
-      console.log("✅ NOTIFICA INDIZIO EXTRA INSERITA");
-      await reloadNotifications(true);
-      
-      toast.success("Hai ricevuto un nuovo indizio extra!", {
-        description: uniqueClue,
-        duration: 4000,
+        
+        setShowDialog(false);
+        setShowExplosion(true);
+      }).catch(error => {
+        console.error("❌ Error creating notification:", error);
+        toast.error("Errore nel salvataggio dell'indizio", {
+          duration: 3000,
+        });
+        setShowDialog(false);
       });
-      
-      setShowDialog(false);
-      setShowExplosion(true);
-      
     } catch (error) {
-      console.error("❌ ERRORE INDIZIO EXTRA:", error);
+      console.error("❌ Error in handle clue button click:", error);
       toast.error("Si è verificato un errore");
       setShowDialog(false);
     }
