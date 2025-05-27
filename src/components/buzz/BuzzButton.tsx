@@ -83,18 +83,41 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         });
         if (newCostData) setBuzzCost(newCostData);
 
-        // Create toast notification
+        // Ottieni il contenuto dinamico reale dell'indizio
+        const dynamicClueContent = response.clue_text || "Hai sbloccato un nuovo indizio!";
+        
+        // Registra immediatamente la notifica su Supabase con il contenuto reale
+        try {
+          const { error: notificationError } = await supabase
+            .from('user_notifications')
+            .insert({
+              user_id: userId,
+              type: 'buzz',
+              title: 'Nuovo Indizio Buzz',
+              message: dynamicClueContent,
+              is_read: false,
+              created_at: new Date().toISOString()
+            });
+
+          if (notificationError) {
+            console.error("Errore inserimento notifica:", notificationError);
+          }
+        } catch (notifError) {
+          console.error("Errore creazione notifica:", notifError);
+        }
+
+        // Create toast notification con contenuto dinamico
         toast.success("Nuovo indizio sbloccato!", {
-          description: response.clue_text,
+          description: dynamicClueContent,
         });
         
-        // Create app notification in the BUZZ category
+        // Create app notification in the BUZZ category con contenuto reale
         try {
           await createBuzzNotification(
             "Nuovo Indizio Buzz", 
-            response.clue_text || "Hai sbloccato un nuovo indizio!"
+            dynamicClueContent
           );
-          console.log("Buzz notification created successfully");
+          console.log("Buzz notification created successfully with dynamic content");
         } catch (notifError) {
           console.error("Failed to create Buzz notification:", notifError);
         }
@@ -142,7 +165,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       {/* Radial gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-[#7B2EFF] via-[#00D1FF] to-[#FF59F8] opacity-90 rounded-full" />
       
-      {/* Animated pulse effect */}
       {!isBlocked && (
         <motion.div
           className="absolute inset-0 rounded-full"
@@ -152,7 +174,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         />
       )}
       
-      {/* Glow effect */}
       {!isBlocked && (
         <motion.div
           className="absolute -inset-1 rounded-full blur-xl"
@@ -163,7 +184,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         />
       )}
       
-      {/* Button content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full z-10">
         {isLoading ? (
           <Loader className="w-12 h-12 animate-spin text-white" />

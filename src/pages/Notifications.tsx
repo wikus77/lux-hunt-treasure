@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
@@ -238,11 +237,16 @@ const Notifications = () => {
                                   key={notification.id} 
                                   className={`p-4 rounded-[24px] border transition-all duration-200 shadow-md relative cursor-pointer ${
                                     !notification.read 
-                                      ? "border-l-4 border-[#00D1FF] bg-gradient-to-br from-[#00D1FF]/15 to-black/90 hover:from-[#00D1FF]/20 hover:to-black shadow-[0_0_20px_rgba(0,209,255,0.3)]" 
+                                      ? "border-l-8 border-[#FF59F8] bg-gradient-to-br from-[#FF59F8]/25 via-[#00D1FF]/20 to-black/95 hover:from-[#FF59F8]/35 hover:via-[#00D1FF]/25 hover:to-black shadow-[0_0_30px_rgba(255,89,248,0.4),0_0_15px_rgba(0,209,255,0.3)] animate-pulse" 
                                       : "border-[#00D1FF]/10 hover:border-[#00D1FF]/30 bg-gradient-to-br from-black/90 to-[#131524]/80 hover:from-black hover:to-[#131524]/90"
                                   }`}
                                   onClick={() => handleOpen(notification)}
                                 >
+                                  {/* Scia laterale pulsante per notifiche non lette */}
+                                  {!notification.read && (
+                                    <div className="absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b from-[#FF59F8] via-[#00D1FF] to-[#FF59F8] rounded-l-[24px] animate-pulse shadow-[0_0_10px_rgba(255,89,248,0.8)]"></div>
+                                  )}
+                                  
                                   <div className="flex items-start gap-3">
                                     <div className="flex-shrink-0">
                                       {category.icon}
@@ -251,24 +255,24 @@ const Notifications = () => {
                                       <div className="flex items-center gap-2 mb-1">
                                         <h3 className={`font-medium ${
                                           !notification.read 
-                                            ? 'text-[#00D1FF] font-bold text-lg' 
+                                            ? 'text-[#00D1FF] font-extrabold text-lg' 
                                             : 'text-white'
                                         }`} style={!notification.read ? {
-                                          textShadow: "0 0 10px rgba(0, 209, 255, 0.6)"
+                                          textShadow: "0 0 15px rgba(0, 209, 255, 0.8), 0 0 30px rgba(255, 89, 248, 0.6)"
                                         } : {}}>
                                           {notification.title}
                                         </h3>
                                         {!notification.read && (
-                                          <div className="flex items-center gap-1">
-                                            <div className="h-2 w-2 rounded-full bg-[#FF59F8] animate-pulse"></div>
-                                            <span className="text-xs font-bold text-[#FF59F8] bg-[#FF59F8]/20 px-2 py-1 rounded-full">
+                                          <div className="flex items-center gap-2">
+                                            <div className="h-3 w-3 rounded-full bg-[#FF59F8] animate-ping shadow-[0_0_10px_rgba(255,89,248,0.8)]"></div>
+                                            <span className="text-xs font-extrabold text-white bg-gradient-to-r from-[#FF59F8] to-[#00D1FF] px-3 py-1 rounded-full shadow-[0_0_15px_rgba(255,89,248,0.6)] animate-pulse">
                                               NUOVA
                                             </span>
                                           </div>
                                         )}
                                       </div>
                                       <p className={`text-sm mt-1 ${
-                                        !notification.read ? 'text-white/90 font-medium' : 'text-white/70'
+                                        !notification.read ? 'text-white font-semibold' : 'text-white/70'
                                       }`}>{notification.description}</p>
                                       <div className="mt-1 text-xs text-white/40">
                                         {notification.date ? new Date(notification.date).toLocaleString() : "Ora"}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
@@ -32,12 +31,10 @@ export function useBuzzFeature() {
     getNextVagueClue
   } = useBuzzClues();
 
-  // Cache for frequently used values
   const [cachedUserId, setCachedUserId] = useState<string | null>(null);
+  const [lastDynamicClue, setLastDynamicClue] = useState<string>("");
 
-  // Optimize initial loading
   useEffect(() => {
-    // Prefetch user ID for quick access later
     const prefetchUserId = async () => {
       const { data: sessionData } = await supabase.auth.getSession();
       if (sessionData?.session?.user?.id) {
@@ -48,17 +45,14 @@ export function useBuzzFeature() {
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
     const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
     
-    // Run in parallel
     Promise.all([
       prefetchUserId(),
       initializeSound(soundPreference, volume)
     ]).catch(error => console.error("Error during initialization:", error));
     
-    // Only handle payment completed from location state
     if (location.state?.paymentCompleted && location.state?.fromRegularBuzz) {
       try {
         savePaymentMethod();
-        // Show explosion animation
         setShowExplosion(true);
       } catch (error) {
         console.error("Error handling payment completion:", error);
@@ -72,9 +66,7 @@ export function useBuzzFeature() {
       return;
     }
     
-    // If user is authenticated, call the Edge Function directly
     try {
-      // Fix: Use getSession() instead of getUser() to access user ID
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = cachedUserId || sessionData?.session?.user?.id;
       
@@ -93,24 +85,26 @@ export function useBuzzFeature() {
         return;
       }
       
-      // Simulate payment completed
+      // Salva il contenuto dinamico reale
+      const dynamicClueContent = response.clue_text || "Hai sbloccato un nuovo indizio!";
+      setLastDynamicClue(dynamicClueContent);
+      setLastVagueClue(dynamicClueContent);
+      
       setTimeout(() => {
         setShowDialog(false);
         
-        // Create notification for the new clue
+        // Registra immediatamente la notifica con contenuto dinamico
         createBuzzNotification(
           "Nuovo Indizio Buzz!", 
-          response.clue_text || "Hai sbloccato un nuovo indizio!"
+          dynamicClueContent
         ).then(() => {
-          // Reload notifications to update the counter
           reloadNotifications();
           
-          // Show success message
           toast.success("Hai ricevuto un nuovo indizio!", {
+            description: dynamicClueContent,
             duration: 3000,
           });
           
-          // Show explosion animation
           setShowExplosion(true);
         }).catch(error => {
           console.error("Error creating notification:", error);
@@ -127,11 +121,8 @@ export function useBuzzFeature() {
   };
 
   const handleClueButtonClick = async () => {
-    // Play sound
     playSound();
     
-    // Try to get authenticated user
-    // Fix: Use getSession() instead of getUser() to access user ID
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = cachedUserId || sessionData?.session?.user?.id;
     
@@ -140,10 +131,8 @@ export function useBuzzFeature() {
       return;
     }
     
-    // Show payment dialog
     setShowDialog(true);
     
-    // Call the Edge Function
     try {
       const response = await callBuzzApi({ userId, generateMap: false });
       
@@ -153,27 +142,23 @@ export function useBuzzFeature() {
         return;
       }
       
-      // Generate a random clue from the vague clues
       const newClue = response.clue_text || "";
       setLastVagueClue(newClue);
+      setLastDynamicClue(newClue);
       
-      // Increase unlocked clue count and show explosion/animation
       incrementUnlockedCluesAndAddClue();
       
-      // Create notification for the new clue
       createBuzzNotification(
         "Nuovo Indizio Extra!", 
         newClue
       ).then(() => {
-        // Reload notifications to update the counter
         reloadNotifications();
         
-        // Show success message
         toast.success("Hai ricevuto un nuovo indizio!", {
+          description: newClue,
           duration: 3000,
         });
         
-        // Hide dialog and show explosion
         setShowDialog(false);
         setShowExplosion(true);
       }).catch(error => {
@@ -194,18 +179,14 @@ export function useBuzzFeature() {
     setShowDialog(false);
     setTimeout(() => {
       navigateToPaymentMethods(getNextVagueClue());
-    }, 400); // Reduced the delay for better responsiveness
+    }, 400);
   };
 
   const handleExplosionCompletedCallback = () => {
     handleExplosionCompleted(() => {
-      // Increment ONE clue when the explosion animation completes
       incrementUnlockedCluesAndAddClue();
-      
-      // Show the banner with the clue
       setShowClueBanner(true);
       
-      // Navigate to notifications after a delay
       setTimeout(() => {
         navigateToNotifications();
       }, 1800);
@@ -226,6 +207,7 @@ export function useBuzzFeature() {
     showClueBanner,
     setShowClueBanner,
     unlockedClues,
+    lastDynamicClue,
     handleBuzzClick,
     handleClueButtonClick,
     handlePayment,
