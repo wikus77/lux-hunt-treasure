@@ -59,7 +59,7 @@ const MapLogicProvider = () => {
     requestLocationPermission
   } = useMapLogic();
   
-  // Modified to return a Promise<string> with correct parameter structure
+  // Fixed to match the expected signature from useMapPoints
   const handleMapPointClick = async (point: { lat: number; lng: number; title: string; note: string }): Promise<string> => {
     const newPointId = `point-${Date.now()}`;
     addMapPoint({
@@ -69,7 +69,7 @@ const MapLogicProvider = () => {
       title: point.title || '',
       note: point.note || ''
     });
-    return newPointId; // Return the new point ID
+    return newPointId;
   };
 
   // Use our custom hook for map points
@@ -83,6 +83,7 @@ const MapLogicProvider = () => {
     mapPoints,
     setActiveMapPoint,
     handleMapPointClick,
+    // Fix: updateMapPoint signature to match expected interface
     (id: string, updates: { title?: string; note?: string }) => updateMapPoint(id, updates.title || '', updates.note || ''),
     deleteMapPoint
   );
@@ -165,6 +166,7 @@ const MapLogicProvider = () => {
     activeMapPoint,
     setActiveMapPoint,
     addMapPoint,
+    // Fix: Use wrapper function with correct signature
     updateMapPoint: (id: string, title: string, note: string) => updateMapPoint(id, title, note),
     deleteMapPoint,
     requestLocationPermission,
@@ -179,7 +181,8 @@ const MapLogicProvider = () => {
     newPoint,
     handleMapPointClick: hookHandleMapPointClick,
     handleSaveNewPoint,
-    handleUpdatePoint,
+    // Fix: Use wrapper function with correct signature  
+    handleUpdatePoint: (id: string, title: string, note: string) => handleUpdatePoint(id, title, note),
     handleCancelNewPoint,
     isAddingMapPoint,
     setIsAddingMapPoint,
@@ -210,7 +213,7 @@ const MapLogicProvider = () => {
           mapPoints={mapPoints}
           activeMapPoint={activeMapPoint}
           setActiveMapPoint={setActiveMapPoint}
-          handleUpdatePoint={handleUpdatePoint}
+          handleUpdatePoint={(id: string, title: string, note: string) => handleUpdatePoint(id, title, note)}
           deleteMapPoint={deleteMapPoint}
           newPoint={newPoint}
           handleSaveNewPoint={handleSaveNewPoint}
