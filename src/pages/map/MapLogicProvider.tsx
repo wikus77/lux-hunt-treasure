@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
 import { useMapPoints } from './hooks/useMapPoints';
 import { useMapInitialization } from './hooks/useMapInitialization';
+import { MapContext, MapContextType } from '@/contexts/mapContext';
 import LoadingScreen from './LoadingScreen';
 import MapContent from './components/MapContent';
 import MapControls from './components/MapControls';
@@ -93,16 +94,16 @@ const MapLogicProvider = () => {
     handleMapClickArea
   );
 
-  // Funzione per gestire la centratura automatica dopo la generazione di un'area
+  // Handle area generation callback
   const handleAreaGenerated = (lat: number, lng: number, radius: number) => {
     console.log('🎯 Area generated, updating map center:', { lat, lng, radius });
     setMapCenter([lat, lng]);
     
-    // Opzionalmente, aggiorna anche il riferimento della mappa se disponibile
+    // Update map reference if available
     if (mapRef.current) {
       mapRef.current.setView([lat, lng], 13);
       
-      // Calcola lo zoom appropriato per il raggio
+      // Calculate appropriate zoom for radius
       const radiusMeters = radius * 1000;
       const bounds = L.latLng(lat, lng).toBounds(radiusMeters * 2);
       
@@ -133,12 +134,6 @@ const MapLogicProvider = () => {
     }
   }, [isAddingMapPoint, isAddingPoint, setIsAddingPoint]);
   
-  // Debug logging for isAddingMapPoint state
-  useEffect(() => {
-    console.log("🔍 MapLogicProvider - Current isAddingMapPoint:", 
-      {hookState: isAddingMapPoint, mapLogicState: isAddingPoint});
-  }, [isAddingMapPoint, isAddingPoint]);
-  
   // Simulate a small loading delay for better UX
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -148,67 +143,105 @@ const MapLogicProvider = () => {
     }, 800);
     return () => clearTimeout(timer);
   }, [mapLoaded, setMapLoaded]);
+
+  // Create context value
+  const contextValue: MapContextType = {
+    handleBuzz,
+    searchAreas,
+    isAddingSearchArea,
+    handleMapClickArea,
+    setActiveSearchArea,
+    deleteSearchArea,
+    setPendingRadius,
+    toggleAddingSearchArea,
+    mapPoints,
+    isAddingPoint,
+    setIsAddingPoint,
+    activeMapPoint,
+    setActiveMapPoint,
+    addMapPoint,
+    updateMapPoint,
+    deleteMapPoint,
+    requestLocationPermission,
+    showHelpDialog,
+    setShowHelpDialog,
+    mapCenter,
+    setMapCenter,
+    mapLoaded,
+    setMapLoaded,
+    mapRef,
+    handleMapLoad,
+    newPoint,
+    handleMapPointClick: hookHandleMapPointClick,
+    handleSaveNewPoint,
+    handleUpdatePoint,
+    handleCancelNewPoint,
+    isAddingMapPoint,
+    setIsAddingMapPoint,
+    onAreaGenerated: handleAreaGenerated
+  };
   
   if (!mapLoaded) return <LoadingScreen />;
   
-  // Technical status logging component (invisible)
   return (
-    <div 
-      className="rounded-[24px] overflow-hidden relative w-full" 
-      style={{ 
-        height: '70vh', 
-        minHeight: '500px',
-        width: '100%',
-        display: 'block',
-        position: 'relative'
-      }}
-    >
-      {/* Map content */}
-      <MapContent 
-        mapRef={mapRef}
-        handleMapLoad={handleMapLoad}
-        searchAreas={searchAreas}
-        setActiveSearchArea={setActiveSearchArea}
-        deleteSearchArea={deleteSearchArea}
-        mapPoints={mapPoints}
-        activeMapPoint={activeMapPoint}
-        setActiveMapPoint={setActiveMapPoint}
-        handleUpdatePoint={handleUpdatePoint}
-        deleteMapPoint={deleteMapPoint}
-        newPoint={newPoint}
-        handleSaveNewPoint={handleSaveNewPoint}
-        handleCancelNewPoint={handleCancelNewPoint}
-        isAddingSearchArea={isAddingSearchArea}
-        handleMapClickArea={handleMapClickArea}
-        setPendingRadius={setPendingRadius}
-        isAddingMapPoint={isAddingMapPoint || isAddingPoint}
-        hookHandleMapPointClick={hookHandleMapPointClick}
-      />
+    <MapContext.Provider value={contextValue}>
+      <div 
+        className="rounded-[24px] overflow-hidden relative w-full" 
+        style={{ 
+          height: '70vh', 
+          minHeight: '500px',
+          width: '100%',
+          display: 'block',
+          position: 'relative'
+        }}
+      >
+        {/* Map content */}
+        <MapContent 
+          mapRef={mapRef}
+          handleMapLoad={handleMapLoad}
+          searchAreas={searchAreas}
+          setActiveSearchArea={setActiveSearchArea}
+          deleteSearchArea={deleteSearchArea}
+          mapPoints={mapPoints}
+          activeMapPoint={activeMapPoint}
+          setActiveMapPoint={setActiveMapPoint}
+          handleUpdatePoint={handleUpdatePoint}
+          deleteMapPoint={deleteMapPoint}
+          newPoint={newPoint}
+          handleSaveNewPoint={handleSaveNewPoint}
+          handleCancelNewPoint={handleCancelNewPoint}
+          isAddingSearchArea={isAddingSearchArea}
+          handleMapClickArea={handleMapClickArea}
+          setPendingRadius={setPendingRadius}
+          isAddingMapPoint={isAddingMapPoint || isAddingPoint}
+          hookHandleMapPointClick={hookHandleMapPointClick}
+        />
 
-      {/* Map controls */}
-      <MapControls
-        requestLocationPermission={requestLocationPermission}
-        toggleAddingSearchArea={toggleAddingSearchArea}
-        isAddingSearchArea={isAddingSearchArea}
-        handleBuzz={handleBuzz}
-        isAddingMapPoint={isAddingMapPoint || isAddingPoint}
-        showHelpDialog={showHelpDialog}
-        setShowHelpDialog={setShowHelpDialog}
-        mapCenter={mapCenter}
-        onAreaGenerated={handleAreaGenerated}
-      />
-      
-      {/* Technical status logger */}
-      <TechnicalStatus 
-        mapRef={mapRef}
-        isAddingMapPoint={isAddingMapPoint}
-        isAddingPoint={isAddingPoint}
-        isAddingSearchArea={isAddingSearchArea}
-        newPoint={newPoint}
-        mapPoints={mapPoints}
-        searchAreas={searchAreas}
-      />
-    </div>
+        {/* Map controls */}
+        <MapControls
+          requestLocationPermission={requestLocationPermission}
+          toggleAddingSearchArea={toggleAddingSearchArea}
+          isAddingSearchArea={isAddingSearchArea}
+          handleBuzz={handleBuzz}
+          isAddingMapPoint={isAddingMapPoint || isAddingPoint}
+          showHelpDialog={showHelpDialog}
+          setShowHelpDialog={setShowHelpDialog}
+          mapCenter={mapCenter}
+          onAreaGenerated={handleAreaGenerated}
+        />
+        
+        {/* Technical status logger */}
+        <TechnicalStatus 
+          mapRef={mapRef}
+          isAddingMapPoint={isAddingMapPoint}
+          isAddingPoint={isAddingPoint}
+          isAddingSearchArea={isAddingSearchArea}
+          newPoint={newPoint}
+          mapPoints={mapPoints}
+          searchAreas={searchAreas}
+        />
+      </div>
+    </MapContext.Provider>
   );
 };
 
