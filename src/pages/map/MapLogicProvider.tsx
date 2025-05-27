@@ -5,7 +5,6 @@ import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
 import { useMapPoints } from './hooks/useMapPoints';
 import { useMapInitialization } from './hooks/useMapInitialization';
 import { MapContext, MapContextType } from '@/contexts/mapContext';
-import { useMapStore } from '@/stores/mapStore';
 import LoadingScreen from './LoadingScreen';
 import MapContent from './components/MapContent';
 import MapControls from './components/MapControls';
@@ -30,36 +29,28 @@ const MapLogicProvider = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   
-  // Get state from centralized store
-  const {
-    isAddingPoint,
-    isAddingMapPoint,
-    isAddingSearchArea,
-    mapLoaded,
-    activeMapPoint,
-    setIsAddingPoint,
-    setIsAddingMapPoint,
-    setMapLoaded,
-    setActiveMapPoint
-  } = useMapStore();
-  
   // Get map logic from our custom hook
   const { 
     handleBuzz, 
     searchAreas, 
+    isAddingSearchArea, 
     handleMapClickArea, 
     setActiveSearchArea, 
     deleteSearchArea,
     setPendingRadius,
     toggleAddingSearchArea,
     mapPoints,
+    isAddingPoint,
+    setIsAddingPoint,
+    activeMapPoint,
+    setActiveMapPoint,
     addMapPoint,
     updateMapPoint,
     deleteMapPoint,
     requestLocationPermission
   } = useMapLogic();
   
-  // Fixed to match the expected signature from useMapPoints
+  // Modified to return a Promise<string> with correct parameter structure
   const handleMapPointClick = async (point: { lat: number; lng: number; title: string; note: string }): Promise<string> => {
     const newPointId = `point-${Date.now()}`;
     addMapPoint({
@@ -69,7 +60,7 @@ const MapLogicProvider = () => {
       title: point.title || '',
       note: point.note || ''
     });
-    return newPointId;
+    return newPointId; // Return the new point ID
   };
 
   // Use our custom hook for map points
@@ -78,18 +69,21 @@ const MapLogicProvider = () => {
     handleMapPointClick: hookHandleMapPointClick,
     handleSaveNewPoint,
     handleUpdatePoint,
-    handleCancelNewPoint
+    handleCancelNewPoint,
+    isAddingMapPoint,
+    setIsAddingMapPoint
   } = useMapPoints(
     mapPoints,
     setActiveMapPoint,
     handleMapPointClick,
-    // Fix: updateMapPoint signature to match expected interface
-    (id: string, updates: { title?: string; note?: string }) => updateMapPoint(id, updates.title || '', updates.note || ''),
+    updateMapPoint,
     deleteMapPoint
   );
   
   // Use our custom hook for map initialization
   const {
+    mapLoaded,
+    setMapLoaded,
     mapRef,
     handleMapLoad
   } = useMapInitialization(
@@ -166,8 +160,7 @@ const MapLogicProvider = () => {
     activeMapPoint,
     setActiveMapPoint,
     addMapPoint,
-    // Fix: Use wrapper function with correct signature
-    updateMapPoint: (id: string, title: string, note: string) => updateMapPoint(id, title, note),
+    updateMapPoint,
     deleteMapPoint,
     requestLocationPermission,
     showHelpDialog,
@@ -181,8 +174,7 @@ const MapLogicProvider = () => {
     newPoint,
     handleMapPointClick: hookHandleMapPointClick,
     handleSaveNewPoint,
-    // Fix: Use wrapper function with correct signature  
-    handleUpdatePoint: (id: string, title: string, note: string) => handleUpdatePoint(id, title, note),
+    handleUpdatePoint,
     handleCancelNewPoint,
     isAddingMapPoint,
     setIsAddingMapPoint,
@@ -213,7 +205,7 @@ const MapLogicProvider = () => {
           mapPoints={mapPoints}
           activeMapPoint={activeMapPoint}
           setActiveMapPoint={setActiveMapPoint}
-          handleUpdatePoint={(id: string, title: string, note: string) => handleUpdatePoint(id, title, note)}
+          handleUpdatePoint={handleUpdatePoint}
           deleteMapPoint={deleteMapPoint}
           newPoint={newPoint}
           handleSaveNewPoint={handleSaveNewPoint}
