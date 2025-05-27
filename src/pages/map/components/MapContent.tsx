@@ -124,9 +124,6 @@ const MapContent: React.FC<MapContentProps> = ({
       {/* BUZZ Map Areas - CRITICO: Visualizza sempre, anche se array vuoto per debugging */}
       <BuzzMapAreas areas={currentWeekAreas} />
       
-      {/* DEBUG: Log per verificare il rendering */}
-      {console.log('✅ MapContent - BuzzMapAreas component rendered with areas:', currentWeekAreas.length)}
-      
       {/* Use the MapPopupManager component */}
       <MapPopupManager 
         mapPoints={mapPoints}
