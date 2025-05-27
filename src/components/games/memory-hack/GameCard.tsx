@@ -59,9 +59,9 @@ const GameCard: React.FC<GameCardProps> = ({ card, onClick, disabled }) => {
               >
                 <div className="text-center">
                   <img 
-                    src="/assets/logo-m1ssion.png" 
-                    alt="M1ssion Logo"
-                    className="w-12 h-12 mx-auto opacity-80 drop-shadow-[0_0_8px_rgba(0,209,255,0.4)]"
+                    src="/assets/m1ssion-logo.png" 
+                    alt="Logo M1SSION"
+                    className="w-14 h-14 object-contain opacity-90 mx-auto"
                   />
                 </div>
               </motion.div>
