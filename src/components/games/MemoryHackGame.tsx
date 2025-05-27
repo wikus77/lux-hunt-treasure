@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 
 interface GameCard {
   id: number;
+  iconType: string;
   icon: React.ReactNode;
   isFlipped: boolean;
   isMatched: boolean;
@@ -25,25 +26,26 @@ const MemoryHackGame = () => {
   const [timeLeft, setTimeLeft] = useState(45);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Icons for the cards (8 pairs)
-  const gameIcons = [
-    <Brain className="w-6 h-6 text-[#00D1FF]" />,
-    <Shield className="w-6 h-6 text-[#00D1FF]" />,
-    <Zap className="w-6 h-6 text-[#00D1FF]" />,
-    <Eye className="w-6 h-6 text-[#00D1FF]" />,
-    <Target className="w-6 h-6 text-[#00D1FF]" />,
-    <Lock className="w-6 h-6 text-[#00D1FF]" />,
-    <Star className="w-6 h-6 text-[#00D1FF]" />,
-    <Cpu className="w-6 h-6 text-[#00D1FF]" />
+  // Icons for the cards (8 pairs) - using string identifiers
+  const gameIconsData = [
+    { type: 'brain', icon: <Brain className="w-6 h-6 text-[#00D1FF]" /> },
+    { type: 'shield', icon: <Shield className="w-6 h-6 text-[#00D1FF]" /> },
+    { type: 'zap', icon: <Zap className="w-6 h-6 text-[#00D1FF]" /> },
+    { type: 'eye', icon: <Eye className="w-6 h-6 text-[#00D1FF]" /> },
+    { type: 'target', icon: <Target className="w-6 h-6 text-[#00D1FF]" /> },
+    { type: 'lock', icon: <Lock className="w-6 h-6 text-[#00D1FF]" /> },
+    { type: 'star', icon: <Star className="w-6 h-6 text-[#00D1FF]" /> },
+    { type: 'cpu', icon: <Cpu className="w-6 h-6 text-[#00D1FF]" /> }
   ];
 
   // Initialize game
   const initializeGame = useCallback(() => {
-    const pairs = gameIcons.concat(gameIcons);
+    const pairs = gameIconsData.concat(gameIconsData);
     const shuffled = pairs
-      .map((icon, index) => ({
+      .map((iconData, index) => ({
         id: index,
-        icon,
+        iconType: iconData.type,
+        icon: iconData.icon,
         isFlipped: false,
         isMatched: false
       }))
@@ -88,8 +90,8 @@ const MemoryHackGame = () => {
       const firstCard = cards[firstId];
       const secondCard = cards[secondId];
 
-      // Check if icons match (compare the type of the icon)
-      const isMatch = firstCard.icon.type === secondCard.icon.type;
+      // Check if icons match using the iconType string
+      const isMatch = firstCard.iconType === secondCard.iconType;
 
       setTimeout(() => {
         if (isMatch) {
@@ -145,16 +147,25 @@ const MemoryHackGame = () => {
       if (error) throw error;
 
       if (isSuccess) {
-        // Add credits to user profile
-        const { error: creditsError } = await supabase
+        // Add credits to user profile using proper update query
+        const { data: currentProfile, error: fetchError } = await supabase
           .from('profiles')
-          .update({ credits: supabase.rpc('coalesce', { value: 'credits', fallback: 0 }) + 10 })
-          .eq('id', user.id);
+          .select('credits')
+          .eq('id', user.id)
+          .single();
 
-        if (!creditsError) {
-          toast.success("Missione completata!", {
-            description: `Hai guadagnato ${score} crediti!`
-          });
+        if (!fetchError && currentProfile) {
+          const currentCredits = currentProfile.credits || 0;
+          const { error: creditsError } = await supabase
+            .from('profiles')
+            .update({ credits: currentCredits + 10 })
+            .eq('id', user.id);
+
+          if (!creditsError) {
+            toast.success("Missione completata!", {
+              description: `Hai guadagnato ${score} crediti!`
+            });
+          }
         }
       }
     } catch (error) {
