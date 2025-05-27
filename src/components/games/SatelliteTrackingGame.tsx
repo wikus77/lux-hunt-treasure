@@ -372,7 +372,7 @@ const SatelliteTrackingGame = () => {
           
           <p className="text-white/70 mb-4 font-sans">
             Precisione: {clickResult.accuracy.toFixed(1)} pixel<br />
-            Troppo lontano dal bersaglio (>{PRECISION_THRESHOLD}px)
+            Troppo lontano dal bersaglio ({`>${PRECISION_THRESHOLD}`}px)
           </p>
           
           <Button 
