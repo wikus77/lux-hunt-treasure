@@ -61,7 +61,7 @@ const MapContent: React.FC<MapContentProps> = ({
   
   // ENHANCED DEBUG: Detailed log every area change with radius verification
   useEffect(() => {
-    console.log('🗺️ CRITICAL RADIUS - MapContent area state changed:', {
+    console.log('🗺️ CRITICAL RADIUS - DIRECT LEAFLET MapContent area state changed:', {
       areas: currentWeekAreas,
       count: currentWeekAreas.length,
       buzzCounter: dailyBuzzCounter,
@@ -74,9 +74,11 @@ const MapContent: React.FC<MapContentProps> = ({
     if (currentWeekAreas.length > 0) {
       const area = currentWeekAreas[0];
       const colors = ['#FFFF00', '#FF00FF', '#00FF00', '#FF66CC'];
+      const colorNames = ['GIALLO NEON', 'ROSA NEON', 'VERDE NEON', 'FUCSIA NEON'];
       const currentColor = colors[dailyBuzzCounter % 4];
+      const currentColorName = colorNames[dailyBuzzCounter % 4];
       
-      console.log('🎯 CRITICAL RADIUS - Latest area to display:', {
+      console.log('🎯 CRITICAL RADIUS - DIRECT LEAFLET Latest area to display:', {
         id: area.id,
         lat: area.lat,
         lng: area.lng,
@@ -85,18 +87,20 @@ const MapContent: React.FC<MapContentProps> = ({
         radiusInMeters: area.radius_km * 1000,
         buzzCounter: dailyBuzzCounter,
         dynamicColor: currentColor,
-        colorName: ['GIALLO NEON', 'ROSA NEON', 'VERDE NEON', 'FUCSIA NEON'][dailyBuzzCounter % 4]
+        colorName: currentColorName
       });
       
       // CRITICAL VERIFICATION: ensure data is valid and updated
       if (!area.lat || !area.lng || !area.radius_km) {
         console.error('❌ CRITICAL RADIUS - Invalid area data:', area);
       } else {
-        console.log('✅ CRITICAL RADIUS - Area data is valid and ready for FORCED rendering');
-        console.log('📏 RENDERING RADIUS:', {
+        console.log('✅ CRITICAL RADIUS - DIRECT LEAFLET Area data is valid and ready for FORCED rendering');
+        console.log('📏 RENDERING RADIUS with DIRECT LEAFLET:', {
           radius_km: area.radius_km,
           radius_meters: area.radius_km * 1000,
-          should_be_updated: true
+          should_be_updated: true,
+          color: currentColor,
+          colorName: currentColorName
         });
       }
     } else {
@@ -105,11 +109,11 @@ const MapContent: React.FC<MapContentProps> = ({
   }, [currentWeekAreas, debugCurrentState, dailyBuzzCounter]);
 
   // DEBUG: Verify component re-renders when areas change
-  console.log('🔄 CRITICAL RADIUS - MapContent re-rendering with areas count:', currentWeekAreas.length, 'and buzz counter:', dailyBuzzCounter);
+  console.log('🔄 CRITICAL RADIUS - DIRECT LEAFLET MapContent re-rendering with areas count:', currentWeekAreas.length, 'and buzz counter:', dailyBuzzCounter);
   
   // Log current radius for update verification
   if (currentWeekAreas.length > 0) {
-    console.log('📏 CRITICAL RADIUS - Current area radius for rendering:', currentWeekAreas[0].radius_km, 'km with buzz counter:', dailyBuzzCounter);
+    console.log('📏 CRITICAL RADIUS - DIRECT LEAFLET Current area radius for rendering:', currentWeekAreas[0].radius_km, 'km with buzz counter:', dailyBuzzCounter);
   }
 
   return (
@@ -133,7 +137,7 @@ const MapContent: React.FC<MapContentProps> = ({
       <MapInitializer onMapReady={(map) => {
         mapRef.current = map;
         handleMapLoad(map);
-        console.log('🗺️ CRITICAL RADIUS - Map initialized and ready for BUZZ areas with UPDATED RADIUS');
+        console.log('🗺️ CRITICAL RADIUS - DIRECT LEAFLET Map initialized and ready for BUZZ areas with UPDATED RADIUS');
         
         // DEBUG: Verify map is ready to receive layers
         console.log('🔍 Map instance available for BUZZ areas:', !!map);
@@ -146,7 +150,7 @@ const MapContent: React.FC<MapContentProps> = ({
         deleteSearchArea={deleteSearchArea}
       />
       
-      {/* BUZZ Map Areas - CRITICAL: Always pass updated array AND buzz counter to force re-render */}
+      {/* BUZZ Map Areas - CRITICAL: DIRECT LEAFLET RENDERING with updated array AND buzz counter */}
       <BuzzMapAreas 
         areas={currentWeekAreas} 
         buzzCounter={dailyBuzzCounter}

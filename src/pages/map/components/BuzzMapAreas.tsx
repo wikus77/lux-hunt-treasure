@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef } from 'react';
-import { Circle, useMap } from 'react-leaflet';
+import { useMap } from 'react-leaflet';
 import { BuzzMapArea } from '@/hooks/useBuzzMapLogic';
 import L from 'leaflet';
 
@@ -11,11 +11,12 @@ interface BuzzMapAreasProps {
 
 const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) => {
   const map = useMap();
-  const previousLayersRef = useRef<L.Circle[]>([]);
-  const renderCountRef = useRef(0);
+  const buzzCircleRef = useRef<L.Circle | null>(null);
   
   // DYNAMIC COLOR SYSTEM - Neon colors that cycle every 4 generations
   const NEON_COLORS = ['#FFFF00', '#FF00FF', '#00FF00', '#FF66CC']; // Yellow, Pink, Green, Fuchsia
+  const NEON_COLOR_NAMES = ['GIALLO NEON', 'ROSA NEON', 'VERDE NEON', 'FUCSIA NEON'];
+  
   const getCurrentColor = () => {
     const colorIndex = buzzCounter % 4;
     const selectedColor = NEON_COLORS[colorIndex];
@@ -23,99 +24,109 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) =
     return selectedColor;
   };
   
-  const currentColor = getCurrentColor();
+  const getCurrentColorName = () => {
+    const colorIndex = buzzCounter % 4;
+    return NEON_COLOR_NAMES[colorIndex];
+  };
   
-  console.log('🗺️ BuzzMapAreas - Rendering BUZZ map areas with UPDATED RADIUS:', {
+  const currentColor = getCurrentColor();
+  const currentColorName = getCurrentColorName();
+  
+  console.log('🗺️ BuzzMapAreas - DIRECT LEAFLET RENDERING with UPDATED RADIUS:', {
     areas: areas,
     buzzCounter: buzzCounter,
     currentColor: currentColor,
-    renderCount: ++renderCountRef.current
+    currentColorName: currentColorName
   });
 
-  // CRITICAL: FORCED DESTRUCTION AND RECREATION OF CIRCLE WITH UPDATED RADIUS
+  // CRITICAL: DIRECT LEAFLET API RENDERING - FORCED DESTRUCTION AND RECREATION
   useEffect(() => {
-    console.log('🚨 CRITICAL RADIUS FIX - BuzzMapAreas useEffect triggered:', {
+    console.log('🚨 DIRECT LEAFLET - BuzzMapAreas useEffect triggered:', {
       areas: areas,
       buzzCounter: buzzCounter,
-      currentColor: currentColor
+      currentColor: currentColor,
+      currentColorName: currentColorName
     });
     
-    // STEP 1: FORCEFULLY REMOVE ALL PREVIOUS BUZZ LAYERS FROM MAP
-    console.log('🧹 FORCE REMOVING ALL BUZZ LAYERS from map...');
+    // STEP 1: FORCEFULLY REMOVE ALL CIRCLES FROM MAP (not just buzz circles)
+    console.log('🧹 FORCE REMOVING ALL CIRCLES from map using DIRECT LEAFLET API...');
     map.eachLayer((layer) => {
-      if (layer instanceof L.Circle && layer.options.className === 'buzz-map-area') {
-        console.log('🗑️ FORCE REMOVING BUZZ layer from map:', layer);
+      if (layer instanceof L.Circle) {
+        console.log('🗑️ FORCE REMOVING Circle layer from map:', layer);
         map.removeLayer(layer);
       }
     });
     
-    // STEP 2: CLEAR PREVIOUS LAYERS ARRAY
-    previousLayersRef.current = [];
-    console.log('🧹 ALL previous BUZZ layers FORCEFULLY REMOVED from map');
+    // STEP 2: CLEAR REFERENCE
+    buzzCircleRef.current = null;
+    console.log('🧹 ALL Circle layers FORCEFULLY REMOVED from map');
     
-    // STEP 3: IF THERE ARE AREAS, CREATE NEW LAYERS FORCEFULLY WITH UPDATED RADIUS
+    // STEP 3: IF THERE ARE AREAS, CREATE NEW CIRCLE USING DIRECT LEAFLET API
     if (areas && areas.length > 0) {
-      console.log('🔥 FORCE CREATING NEW LAYERS with UPDATED RADIUS and DYNAMIC COLOR:', currentColor);
+      const area = areas[0]; // Get the latest area
+      const radiusInMeters = area.radius_km * 1000;
       
-      areas.forEach((area, index) => {
-        const radiusInMeters = area.radius_km * 1000;
-        console.log(`🎯 CRITICAL RADIUS - FORCE CREATING new layer for area ${area.id}:`, {
-          lat: area.lat,
-          lng: area.lng,
-          radius_km: area.radius_km,
-          radiusInMeters: radiusInMeters,
-          color: currentColor,
-          buzzCounter: buzzCounter,
-          timestamp: new Date().toISOString()
-        });
-        
-        // VERIFY RADIUS IS UPDATED
-        console.log(`📏 RADIUS VERIFICATION - Area ${area.id} radius:`, {
-          radius_km_from_db: area.radius_km,
-          radius_meters_calculated: radiusInMeters,
-          should_be_different_from_previous: true
-        });
-        
-        // CREATE MANUALLY the circle using direct Leaflet API WITH UPDATED RADIUS
-        const circle = L.circle([area.lat, area.lng], {
-          radius: radiusInMeters, // UPDATED VALUE FROM DB
-          color: currentColor, // DYNAMIC COLOR
-          fillColor: currentColor, // DYNAMIC COLOR
-          fillOpacity: 0.25,
-          weight: 3,
-          opacity: 1,
-          className: 'buzz-map-area' // For identification
-        });
-        
-        // FORCEFULLY ADD to map
-        circle.addTo(map);
-        console.log('✅ NEW LAYER with UPDATED RADIUS FORCEFULLY ADDED to map:', {
-          areaId: area.id,
-          radius_km: area.radius_km,
-          radius_meters: radiusInMeters,
-          color: currentColor,
-          buzzGeneration: buzzCounter + 1
-        });
-        
-        // SAVE reference for next destruction
-        previousLayersRef.current.push(circle);
-        
-        // FORCE layer to front
-        circle.bringToFront();
-        
-        // DETAILED LOG for radius verification
-        console.log('🔍 RADIUS Layer verification:', {
-          layerOnMap: map.hasLayer(circle),
-          layerLatLng: circle.getLatLng(),
-          layerRadius: circle.getRadius(),
-          expectedRadius: radiusInMeters,
-          layerColor: currentColor,
-          radiusMatch: circle.getRadius() === radiusInMeters,
-          buzzGeneration: buzzCounter + 1
-        });
+      console.log('🔥 DIRECT LEAFLET - FORCE CREATING new circle with UPDATED RADIUS and DYNAMIC COLOR:', {
+        lat: area.lat,
+        lng: area.lng,
+        radius_km: area.radius_km,
+        radiusInMeters: radiusInMeters,
+        color: currentColor,
+        colorName: currentColorName,
+        buzzCounter: buzzCounter,
+        timestamp: new Date().toISOString()
       });
       
-      console.log('🎉 ALL NEW LAYERS with UPDATED RADIUS CREATED AND ADDED TO MAP');
+      // CRITICAL RADIUS VERIFICATION
+      console.log(`📏 DIRECT LEAFLET RADIUS VERIFICATION - Area ${area.id}:`, {
+        radius_km_from_db: area.radius_km,
+        radius_meters_calculated: radiusInMeters,
+        should_be_different_from_previous: true,
+        color: currentColor,
+        colorName: currentColorName
+      });
+      
+      // CREATE CIRCLE using DIRECT Leaflet API WITH UPDATED RADIUS AND COLOR
+      const circle = L.circle([area.lat, area.lng], {
+        radius: radiusInMeters, // UPDATED VALUE FROM DB
+        color: currentColor, // DYNAMIC COLOR
+        fillColor: currentColor, // DYNAMIC COLOR
+        fillOpacity: 0.25,
+        weight: 3,
+        opacity: 1,
+        className: 'buzz-map-area-direct' // For identification
+      });
+      
+      // FORCEFULLY ADD to map
+      circle.addTo(map);
+      buzzCircleRef.current = circle;
+      
+      console.log('🟢 DIRECT LEAFLET - Cerchio BUZZ ridisegnato:', {
+        areaId: area.id,
+        radius_km: area.radius_km,
+        radius_meters: radiusInMeters,
+        color: currentColor,
+        colorName: currentColorName,
+        buzzGeneration: buzzCounter + 1,
+        circleOnMap: map.hasLayer(circle)
+      });
+      
+      // FORCE layer to front
+      circle.bringToFront();
+      
+      // DETAILED LOG for radius verification
+      console.log('🔍 DIRECT LEAFLET - Final circle verification:', {
+        layerOnMap: map.hasLayer(circle),
+        layerLatLng: circle.getLatLng(),
+        layerRadius: circle.getRadius(),
+        expectedRadius: radiusInMeters,
+        layerColor: currentColor,
+        colorName: currentColorName,
+        radiusMatch: circle.getRadius() === radiusInMeters,
+        buzzGeneration: buzzCounter + 1
+      });
+      
+      console.log('🎉 DIRECT LEAFLET - NEW CIRCLE with UPDATED RADIUS AND COLOR CREATED AND ADDED TO MAP');
     } else {
       console.log('❌ No BUZZ areas to display - map cleared');
     }
@@ -123,89 +134,46 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) =
     // STEP 4: FORCE a map refresh
     setTimeout(() => {
       map.invalidateSize();
-      console.log('🔄 Map size FORCEFULLY invalidated for refresh with UPDATED RADIUS');
+      console.log('🔄 Map size FORCEFULLY invalidated for refresh with DIRECT LEAFLET');
     }, 50);
     
   }, [areas, map, currentColor, buzzCounter]); // Depends on areas, map, color AND buzzCounter
 
-  // RENDER React-Leaflet components with DYNAMIC KEY and UPDATED RADIUS
-  if (!areas || areas.length === 0) {
-    console.log('❌ No BUZZ areas to display with React-Leaflet');
-    return null;
-  }
+  // DEBUG OVERLAY - Visual confirmation of current values
+  const debugOverlay = areas.length > 0 ? (
+    <div 
+      style={{
+        position: 'absolute',
+        top: '10px',
+        right: '10px',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        color: 'white',
+        padding: '10px',
+        borderRadius: '8px',
+        fontFamily: 'monospace',
+        fontSize: '12px',
+        zIndex: 1000,
+        border: `2px solid ${currentColor}`,
+        boxShadow: `0 0 10px ${currentColor}50`
+      }}
+    >
+      <div>🎯 BUZZ AREA DEBUG</div>
+      <div>AREA: {areas[0].radius_km.toFixed(1)} km</div>
+      <div>COLORE: {currentColorName}</div>
+      <div>GENERAZIONE: {buzzCounter + 1}</div>
+      <div>COORDINATE: {areas[0].lat.toFixed(4)}, {areas[0].lng.toFixed(4)}</div>
+      <div style={{ color: currentColor }}>████ {currentColor}</div>
+    </div>
+  ) : null;
 
-  console.log('✅ Rendering', areas.length, 'BUZZ areas with React-Leaflet and UPDATED RADIUS');
-
+  // Return debug overlay and glow style
   return (
     <>
-      {areas.map((area, index) => {
-        const radiusInMeters = area.radius_km * 1000;
-        
-        console.log(`📏 CRITICAL RADIUS - React-Leaflet rendering area ${area.id} (${index}):`, {
-          lat: area.lat,
-          lng: area.lng,
-          radius_km: area.radius_km,
-          radiusInMeters: radiusInMeters,
-          color: currentColor,
-          buzzCounter: buzzCounter,
-          created_at: area.created_at
-        });
-        
-        // CRITICAL: DYNAMIC KEY that includes RADIUS AND COLOR AND TIMESTAMP to force re-render
-        const dynamicKey = `buzz-area-${area.id}-${area.radius_km}-${currentColor}-${buzzCounter}-${area.created_at}-${renderCountRef.current}-${index}-${Date.now()}`;
-        
-        return (
-          <Circle
-            key={dynamicKey} // CRITICAL: Dynamic key including radius and timestamp for forced re-render
-            center={[area.lat, area.lng]}
-            radius={radiusInMeters} // UPDATED VALUE FROM DB
-            pathOptions={{
-              color: currentColor, // DYNAMIC COLOR
-              fillColor: currentColor, // DYNAMIC COLOR
-              fillOpacity: 0.25,
-              weight: 3,
-              opacity: 1,
-              className: 'buzz-map-area' // For identification
-            }}
-            eventHandlers={{
-              add: (e) => {
-                const layer = e.target as L.Circle;
-                console.log('✅ RADIUS VERIFICATION - React-Leaflet Circle FORCEFULLY added to map:', {
-                  id: area.id,
-                  radius_km: area.radius_km,
-                  radiusInMeters: radiusInMeters,
-                  layerRadius: layer.getRadius(),
-                  layerLatLng: layer.getLatLng(),
-                  color: currentColor,
-                  radiusMatch: layer.getRadius() === radiusInMeters,
-                  buzzGeneration: buzzCounter + 1,
-                  dynamicKey: dynamicKey
-                });
-                
-                layer.bringToFront();
-                console.log('🔍 FINAL RADIUS VERIFICATION:', {
-                  isOnMap: map.hasLayer(layer),
-                  radiusCorrect: layer.getRadius() === radiusInMeters,
-                  expectedColor: currentColor,
-                  actualRadius: layer.getRadius(),
-                  expectedRadius: radiusInMeters
-                });
-              },
-              remove: (e) => {
-                console.log('🗑️ React-Leaflet Circle FORCEFULLY removed from map:', {
-                  id: area.id,
-                  color: currentColor,
-                  dynamicKey: dynamicKey
-                });
-              }
-            }}
-          />
-        );
-      })}
+      {debugOverlay}
       
       <style>
         {`
-        .buzz-map-area {
+        .buzz-map-area-direct {
           filter: drop-shadow(0 0 12px ${currentColor}77);
           animation: buzzGlow 3s infinite ease-in-out;
           z-index: 1000 !important;
