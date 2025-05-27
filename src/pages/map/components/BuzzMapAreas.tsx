@@ -12,13 +12,16 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
   const map = useMap();
   const previousLayersRef = useRef<L.Circle[]>([]);
   
-  console.log('🗺️ Rendering BUZZ map areas:', areas);
+  console.log('🗺️ BuzzMapAreas - Rendering BUZZ map areas:', areas);
 
   // CRITICO: Rimuovi tutti i layer precedenti prima di renderizzare la nuova area
   useEffect(() => {
+    console.log('🔄 BuzzMapAreas useEffect triggered with areas:', areas);
+    
     // Rimuovi tutti i layer precedenti dalla mappa
     previousLayersRef.current.forEach(layer => {
       if (map.hasLayer(layer)) {
+        console.log('🗑️ Removing previous layer from map');
         map.removeLayer(layer);
       }
     });
@@ -26,13 +29,16 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
     // Pulisci l'array dei layer precedenti
     previousLayersRef.current = [];
     
-    console.log('🗑️ Layer precedenti RIMOSSI dalla mappa');
+    console.log('🗑️ All previous BUZZ layers REMOVED from map');
   }, [areas, map]);
 
   // Se non ci sono aree da mostrare, non renderizzare nulla
   if (!areas || areas.length === 0) {
+    console.log('❌ No BUZZ areas to display');
     return null;
   }
+
+  console.log('✅ Rendering', areas.length, 'BUZZ areas');
 
   return (
     <>
@@ -40,11 +46,17 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
         // CONVERSIONE CORRETTA: radius_km → metri per Leaflet
         const radiusInMeters = area.radius_km * 1000;
         
-        console.log(`📏 Area ${area.id}: radius_km=${area.radius_km} → ${radiusInMeters}m per Leaflet`);
+        console.log(`📏 Rendering area ${area.id}:`, {
+          lat: area.lat,
+          lng: area.lng,
+          radius_km: area.radius_km,
+          radiusInMeters: radiusInMeters,
+          created_at: area.created_at
+        });
         
         return (
           <Circle
-            key={`${area.id}-${area.created_at}`} // Key unica per forzare re-render
+            key={`buzz-area-${area.id}-${area.created_at}-${index}`} // Key unica per forzare re-render
             center={[area.lat, area.lng]}
             radius={radiusInMeters} // CRITICO: Converti km in metri per Leaflet
             pathOptions={{
@@ -60,8 +72,12 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
                 // Salva il riferimento al layer appena aggiunto
                 const layer = e.target as L.Circle;
                 previousLayersRef.current.push(layer);
-                console.log('✅ Nuovo layer BUZZ aggiunto alla mappa');
-                console.log('📏 Raggio layer:', radiusInMeters, 'metri');
+                console.log('✅ NEW BUZZ layer added to map:', {
+                  id: area.id,
+                  radius_km: area.radius_km,
+                  radiusInMeters: radiusInMeters,
+                  layerRadius: layer.getRadius()
+                });
               }
             }}
           />

@@ -6,6 +6,8 @@ import MapInitializer from './MapInitializer';
 import MapLayers from './MapLayers';
 import MapPopupManager from './MapPopupManager';
 import MapEventHandler from './MapEventHandler';
+import BuzzMapAreas from './BuzzMapAreas';
+import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 
 interface MapContentProps {
   mapRef: React.MutableRefObject<L.Map | null>;
@@ -48,6 +50,11 @@ const MapContent: React.FC<MapContentProps> = ({
   isAddingMapPoint,
   hookHandleMapPointClick
 }) => {
+  // Ottieni direttamente le aree BUZZ correnti dall'hook
+  const { currentWeekAreas } = useBuzzMapLogic();
+  
+  console.log('🗺️ MapContent - Current BUZZ areas:', currentWeekAreas);
+
   return (
     <MapContainer 
       center={DEFAULT_LOCATION} 
@@ -77,6 +84,9 @@ const MapContent: React.FC<MapContentProps> = ({
         setActiveSearchArea={setActiveSearchArea}
         deleteSearchArea={deleteSearchArea}
       />
+      
+      {/* BUZZ Map Areas - Visualizza le aree BUZZ direttamente qui */}
+      <BuzzMapAreas areas={currentWeekAreas} />
       
       {/* Use the MapPopupManager component */}
       <MapPopupManager 

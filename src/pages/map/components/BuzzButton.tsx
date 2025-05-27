@@ -25,7 +25,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     calculateBuzzMapPrice,
     generateBuzzMapArea,
     getActiveArea,
-    userCluesCount
+    userCluesCount,
+    reloadAreas
   } = useBuzzMapLogic();
   
   const nextRadius = calculateNextRadius();
@@ -45,7 +46,13 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
-      // STEP 2: Crea notifica con il raggio REALE salvato su Supabase
+      console.log('✅ NUOVA AREA CREATA:', newArea);
+      
+      // STEP 2: Forza il reload delle aree per garantire la visualizzazione
+      console.log('🔄 Forzando reload delle aree...');
+      await reloadAreas();
+      
+      // STEP 3: Crea notifica con il raggio REALE salvato su Supabase
       try {
         await createMapBuzzNotification(
           "Area BUZZ MAPPA Generata", 
@@ -57,15 +64,18 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         console.error("❌ Failed to create BUZZ Map notification:", error);
       }
       
-      // STEP 3: Centra automaticamente la mappa sulla nuova area
+      // STEP 4: Centra automaticamente la mappa sulla nuova area
       if (onAreaGenerated) {
+        console.log('🎯 Centrando mappa sulla nuova area...');
         onAreaGenerated(newArea.lat, newArea.lng, newArea.radius_km);
       }
       
-      // STEP 4: Esegui callback opzionale
+      // STEP 5: Esegui callback opzionale
       if (handleBuzz) {
         handleBuzz();
       }
+    } else {
+      console.error('❌ Failed to create new area');
     }
   };
   

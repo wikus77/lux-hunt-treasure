@@ -76,13 +76,15 @@ export const useBuzzMapLogic = () => {
     return 29.99;
   };
 
-  // Carica le aree della settimana corrente
+  // Carica le aree della settimana corrente - MIGLIORATA
   const loadCurrentWeekAreas = async () => {
     if (!user?.id) return;
 
     const currentWeek = getCurrentWeek();
     
     try {
+      console.log('🔄 Loading BUZZ areas for user:', user.id, 'week:', currentWeek);
+      
       const { data, error } = await supabase
         .from('user_map_areas')
         .select('*')
@@ -92,14 +94,22 @@ export const useBuzzMapLogic = () => {
         .limit(1);
 
       if (error) {
-        console.error('Error loading map areas:', error);
+        console.error('❌ Error loading map areas:', error);
         return;
       }
 
-      console.log('🗺️ Aree caricate per settimana', currentWeek, ':', data);
+      console.log('✅ BUZZ areas loaded for week', currentWeek, ':', data);
       setCurrentWeekAreas(data || []);
+      
+      // Force immediate state update
+      if (data && data.length > 0) {
+        console.log('🎯 Setting current week areas immediately:', data);
+        setTimeout(() => {
+          setCurrentWeekAreas([...data]);
+        }, 50);
+      }
     } catch (err) {
-      console.error('Exception loading map areas:', err);
+      console.error('❌ Exception loading map areas:', err);
     }
   };
 
@@ -161,7 +171,7 @@ export const useBuzzMapLogic = () => {
     }
   };
 
-  // Genera una nuova area BUZZ MAPPA
+  // Genera una nuova area BUZZ MAPPA - MIGLIORATA CON REFRESH IMMEDIATO
   const generateBuzzMapArea = async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
@@ -196,7 +206,10 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      // STEP 2: Crea la nuova area con il raggio calcolato
+      // STEP 2: Pulisci lo stato locale PRIMA di creare la nuova area
+      setCurrentWeekAreas([]);
+
+      // STEP 3: Crea la nuova area con il raggio calcolato
       const newArea = {
         user_id: user.id,
         lat: centerLat,
@@ -221,10 +234,17 @@ export const useBuzzMapLogic = () => {
       console.log('📏 Raggio ESATTO salvato:', data.radius_km, 'km');
       console.log('💰 Prezzo applicato:', price, '€');
       
-      // STEP 3: Aggiorna lo stato locale con la SOLA nuova area
+      // STEP 4: Aggiorna lo stato locale IMMEDIATAMENTE con la nuova area
+      console.log('🔄 Aggiornamento stato locale IMMEDIATO');
       setCurrentWeekAreas([data]);
       
-      // STEP 4: Messaggio con il valore REALE salvato
+      // STEP 5: Forza un re-render aggiuntivo per garantire la visualizzazione
+      setTimeout(() => {
+        console.log('🔄 Secondo aggiornamento stato per forzare re-render');
+        setCurrentWeekAreas([data]);
+      }, 100);
+      
+      // STEP 6: Messaggio con il valore REALE salvato
       toast.success(`Area BUZZ MAPPA generata! Raggio: ${data.radius_km.toFixed(1)} km - Prezzo: ${price.toFixed(2)}€`);
       
       return data;
@@ -255,19 +275,25 @@ export const useBuzzMapLogic = () => {
     });
   };
 
-  // Carica i dati iniziali
+  // Carica i dati iniziali - MIGLIORATO
   useEffect(() => {
     if (user?.id) {
+      console.log('🔄 Loading initial BUZZ MAPPA data for user:', user.id);
       loadUserCluesCount();
       loadCurrentWeekAreas();
     }
   }, [user]);
 
-  // DEBUG: Log quando cambiano i valori chiave
+  // DEBUG: Log quando cambiano i valori chiave - MIGLIORATO
   useEffect(() => {
     console.log('📊 User clues count updated:', userCluesCount);
     console.log('💰 Current price:', calculateBuzzMapPrice());
   }, [userCluesCount]);
+
+  // DEBUG: Log quando cambiano le aree correnti
+  useEffect(() => {
+    console.log('🗺️ Current week areas state updated:', currentWeekAreas);
+  }, [currentWeekAreas]);
 
   return {
     currentWeekAreas,
