@@ -30,7 +30,6 @@ const MapLogicProvider = () => {
   // Get map logic from our custom hook
   const { 
     handleBuzz, 
-    buzzMapPrice, 
     searchAreas, 
     isAddingSearchArea, 
     handleMapClickArea, 
@@ -170,7 +169,6 @@ const MapLogicProvider = () => {
         toggleAddingSearchArea={toggleAddingSearchArea}
         isAddingSearchArea={isAddingSearchArea}
         handleBuzz={handleBuzz}
-        buzzMapPrice={buzzMapPrice}
         isAddingMapPoint={isAddingMapPoint || isAddingPoint}
         showHelpDialog={showHelpDialog}
         setShowHelpDialog={setShowHelpDialog}
