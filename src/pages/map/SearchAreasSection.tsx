@@ -12,6 +12,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { toast } from 'sonner';
 
 type SearchAreasSectionProps = {
   searchAreas: SearchArea[];
@@ -32,6 +33,8 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [areaRadius, setAreaRadius] = useState("500");
+  const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   // Handle dialog state - close it if we're already adding an area
   useEffect(() => {
@@ -70,26 +73,30 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
     handleAddArea(radius);
   };
 
-  // Handle individual area deletion with enhanced logging
-  const handleDeleteArea = async (areaId: string, areaLabel: string) => {
-    console.log("🗑️ SECTION DELETE: Delete requested from section for area:", areaId, areaLabel);
+  const handleDeleteClick = (areaId: string) => {
+    console.log("🗑️ Delete button clicked for area:", areaId);
+    setShowConfirmDelete(areaId);
+  };
+
+  const confirmDelete = async (areaId: string, areaLabel: string) => {
+    console.log("✅ Confirming deletion for area:", areaId, areaLabel);
+    setIsDeleting(areaId);
     
-    const confirmed = window.confirm(`Sei sicuro di voler eliminare l'area "${areaLabel}"?`);
-    if (!confirmed) {
-      console.log("❌ SECTION DELETE CANCEL: User cancelled deletion");
-      return;
-    }
-    
-    console.log("✅ SECTION DELETE PROCEED: User confirmed deletion, proceeding");
     try {
       const success = await deleteSearchArea(areaId);
       if (success) {
-        console.log("✅ SECTION DELETE SUCCESS: Area successfully deleted from section");
+        console.log("✅ Area successfully deleted from database and UI");
+        toast.success("Area di interesse eliminata");
       } else {
-        console.log("❌ SECTION DELETE FAILED: Area deletion failed from section");
+        console.log("❌ Area deletion failed");
+        toast.error("Errore durante l'eliminazione dell'area");
       }
     } catch (error) {
-      console.error("❌ SECTION DELETE ERROR: Exception during deletion from section:", error);
+      console.error("❌ Error deleting area:", error);
+      toast.error("Errore durante l'eliminazione dell'area");
+    } finally {
+      setIsDeleting(null);
+      setShowConfirmDelete(null);
     }
   };
 
@@ -147,20 +154,50 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
                   <div className="text-sm font-medium">{area.label}</div>
                   <div className="text-xs text-gray-400">Raggio: {(area.radius/1000).toFixed(1)}km</div>
                 </div>
-                <div className="flex items-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log("🗑️ SECTION BUTTON: Delete button clicked in section for area:", area.id);
-                      handleDeleteArea(area.id, area.label || "Area di ricerca");
-                    }}
-                    className="h-8 w-8 p-0 rounded-full text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Elimina area</span>
-                  </Button>
+                <div className="flex items-center gap-2">
+                  {showConfirmDelete === area.id ? (
+                    <>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          confirmDelete(area.id, area.label || "Area di ricerca");
+                        }}
+                        className="h-8 rounded-full text-xs"
+                        disabled={isDeleting === area.id}
+                      >
+                        {isDeleting === area.id ? 'Eliminando...' : 'Conferma'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowConfirmDelete(null);
+                        }}
+                        className="h-8 rounded-full text-xs"
+                        disabled={isDeleting === area.id}
+                      >
+                        Annulla
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log("🗑️ SECTION BUTTON: Delete button clicked in section for area:", area.id);
+                        handleDeleteClick(area.id);
+                      }}
+                      className="h-8 w-8 p-0 rounded-full text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                      disabled={isDeleting !== null}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Elimina area</span>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

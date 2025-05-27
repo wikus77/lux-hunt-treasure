@@ -51,26 +51,19 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
     }
   `;
 
-  // Handle delete with confirmation
-  const handleDeleteWithConfirm = async (areaId: string, areaLabel: string) => {
-    console.log("🗑️ DELETE CONFIRM: Delete requested for area:", areaId, areaLabel);
+  // Handle delete - now without browser confirm
+  const handleDelete = async (areaId: string, areaLabel: string) => {
+    console.log("🗑️ DELETE FROM POPUP: Delete requested for area:", areaId, areaLabel);
     
-    const confirmed = window.confirm(`Sei sicuro di voler eliminare l'area "${areaLabel}"?`);
-    if (!confirmed) {
-      console.log("❌ DELETE CANCEL: User cancelled deletion");
-      return;
-    }
-    
-    console.log("✅ DELETE PROCEED: User confirmed deletion, proceeding");
     try {
       const success = await deleteSearchArea(areaId);
       if (success) {
-        console.log("✅ DELETE SUCCESS: Area successfully deleted");
+        console.log("✅ DELETE SUCCESS: Area successfully deleted from popup");
       } else {
-        console.log("❌ DELETE FAILED: Area deletion failed");
+        console.log("❌ DELETE FAILED: Area deletion failed from popup");
       }
     } catch (error) {
-      console.error("❌ DELETE ERROR: Exception during deletion:", error);
+      console.error("❌ DELETE ERROR: Exception during deletion from popup:", error);
     }
   };
   
@@ -132,10 +125,10 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
                       onClick={(e) => {
                         e.stopPropagation();
                         console.log("🗑️ POPUP DELETE: Delete button clicked for area:", area.id);
-                        handleDeleteWithConfirm(area.id, area.label || "Area di ricerca");
+                        handleDelete(area.id, area.label || "Area di ricerca");
                       }}
                     >
-                      <Trash2 className="w-3 h-3" /> Elimina
+                      <Trash2 className="w-3 h-3" /> 🗑 Elimina
                     </Button>
                   </div>
                 </div>
