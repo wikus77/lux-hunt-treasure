@@ -13,7 +13,7 @@ interface BuzzButtonProps {
   setError: (error: string | null) => void;
   userId: string;
   onSuccess: () => void;
-  resetTrigger?: number; // Nuovo prop per forzare il reload
+  resetTrigger?: number;
 }
 
 const BuzzButton: React.FC<BuzzButtonProps> = ({
@@ -28,48 +28,59 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const { createBuzzNotification } = useNotificationManager();
   const [buzzCost, setBuzzCost] = useState<number>(1.99);
   const [dailyCount, setDailyCount] = useState<number>(0);
+  const [isLoaderKey, setIsLoaderKey] = useState<number>(0);
 
-  // Carica il costo attuale del buzz - con dependency su resetTrigger
-  useEffect(() => {
-    const loadBuzzCost = async () => {
-      if (!userId) return;
+  // Forza il reload dei dati ogni volta che resetTrigger cambia o quando il componente si monta
+  const loadBuzzData = async () => {
+    if (!userId) return;
+    
+    try {
+      console.log("📊 Caricamento FORZATO dati buzz per user:", userId);
       
-      try {
-        console.log("📊 Caricamento dati buzz per user:", userId);
-        
-        // Ottieni il conteggio giornaliero attuale
-        const today = new Date().toISOString().split('T')[0];
-        const { data: countData, error: countError } = await supabase
-          .from('user_buzz_counter')
-          .select('buzz_count')
-          .eq('user_id', userId)
-          .eq('date', today)
-          .single();
+      // Ottieni il conteggio giornaliero attuale con query fresh
+      const today = new Date().toISOString().split('T')[0];
+      const { data: countData, error: countError } = await supabase
+        .from('user_buzz_counter')
+        .select('buzz_count')
+        .eq('user_id', userId)
+        .eq('date', today)
+        .maybeSingle();
 
-        const currentCount = countData?.buzz_count || 0;
-        console.log("📈 Conteggio attuale buzz:", currentCount);
-        setDailyCount(currentCount);
-
-        // Calcola il costo per il prossimo buzz
-        const { data: costData, error: costError } = await supabase.rpc('calculate_buzz_price', {
-          daily_count: currentCount + 1
-        });
-
-        if (costError) {
-          console.error("Errore nel calcolo del costo:", costError);
-          return;
-        }
-
-        const newCost = costData || 1.99;
-        console.log("💰 Costo calcolato per prossimo buzz:", newCost);
-        setBuzzCost(newCost);
-      } catch (error) {
-        console.error("Errore nel caricamento del costo buzz:", error);
+      if (countError && countError.code !== 'PGRST116') {
+        console.error("Errore nel caricamento del counter:", countError);
+        return;
       }
-    };
 
-    loadBuzzCost();
-  }, [userId, resetTrigger]); // Aggiunta dependency su resetTrigger
+      const currentCount = countData?.buzz_count || 0;
+      console.log("📈 Conteggio ATTUALE buzz:", currentCount);
+      setDailyCount(currentCount);
+
+      // Calcola il costo per il prossimo buzz
+      const { data: costData, error: costError } = await supabase.rpc('calculate_buzz_price', {
+        daily_count: currentCount + 1
+      });
+
+      if (costError) {
+        console.error("Errore nel calcolo del costo:", costError);
+        return;
+      }
+
+      const newCost = costData || 1.99;
+      console.log("💰 Costo calcolato per prossimo buzz:", newCost);
+      setBuzzCost(newCost);
+
+      // Forza un re-render del componente
+      setIsLoaderKey(prev => prev + 1);
+      
+    } catch (error) {
+      console.error("Errore nel caricamento del costo buzz:", error);
+    }
+  };
+
+  // Carica i dati ogni volta che resetTrigger cambia o il componente si monta
+  useEffect(() => {
+    loadBuzzData();
+  }, [userId, resetTrigger]);
 
   const handleBuzzPress = async () => {
     if (isLoading || !userId) return;
@@ -87,14 +98,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       if (response.success) {
         console.log("✅ Risposta BUZZ API ricevuta:", response);
         
-        // Aggiorna il costo per il prossimo utilizzo
-        const newDailyCount = dailyCount + 1;
-        setDailyCount(newDailyCount);
-        
-        const { data: newCostData } = await supabase.rpc('calculate_buzz_price', {
-          daily_count: newDailyCount + 1
-        });
-        if (newCostData) setBuzzCost(newCostData);
+        // Ricarica i dati dopo il successo
+        await loadBuzzData();
 
         // Ottieni il contenuto dinamico reale dell'indizio
         const dynamicClueContent = response.clue_text || `Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`;
@@ -166,6 +171,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 
   return (
     <motion.button
+      key={`buzz-button-${isLoaderKey}`} // Forza re-render con key dinamica
       className="w-60 h-60 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl hover:shadow-[0_0_35px_rgba(123,46,255,0.7)] focus:outline-none disabled:opacity-50"
       onClick={handleBuzzPress}
       disabled={isLoading || isBlocked}

@@ -25,7 +25,7 @@ const BuzzMainContent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string>("");
-  const [resetTrigger, setResetTrigger] = useState<number>(0);
+  const [resetTrigger, setResetTrigger] = useState<number>(Date.now());
 
   useEffect(() => {
     const getUserId = async () => {
@@ -44,13 +44,13 @@ const BuzzMainContent = () => {
   };
 
   const handleCounterReset = () => {
-    console.log("🔄 Counter resettato, aggiornamento componenti...");
-    // Incrementa resetTrigger per forzare il reload del BuzzButton
-    setResetTrigger(prev => prev + 1);
+    console.log("🔄 Counter resettato, forzando aggiornamento componenti...");
+    // Forza un aggiornamento immediato con timestamp unico
+    setResetTrigger(Date.now());
     // Reset degli stati locali
     setIsLoading(false);
     setError(null);
-    console.log("✅ Componenti aggiornati dopo reset");
+    console.log("✅ Componenti aggiornati dopo reset con nuovo trigger:", Date.now());
   };
 
   return (

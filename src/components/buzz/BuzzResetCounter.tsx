@@ -12,7 +12,7 @@ interface BuzzResetCounterProps {
 const BuzzResetCounter: React.FC<BuzzResetCounterProps> = ({ userId, onReset }) => {
   const handleResetCounter = async () => {
     try {
-      console.log("🔄 RESET COUNTER BUZZ COMPLETO per testing...");
+      console.log("🔄 RESET COUNTER BUZZ IMMEDIATO per user:", userId);
       
       // Reset completo del counter giornaliero - DELETE di tutti i record per oggi
       const today = new Date().toISOString().split('T')[0];
@@ -44,10 +44,11 @@ const BuzzResetCounter: React.FC<BuzzResetCounterProps> = ({ userId, onReset }) 
         duration: 3000,
       });
       
-      // Forza un refresh della pagina dopo un breve delay per garantire sincronizzazione
+      // Forza un refresh completo della pagina per garantire sincronizzazione totale
+      console.log("🔄 Forzando refresh completo della pagina...");
       setTimeout(() => {
         window.location.reload();
-      }, 500);
+      }, 1000);
       
     } catch (error) {
       console.error("❌ Errore durante reset counter:", error);
