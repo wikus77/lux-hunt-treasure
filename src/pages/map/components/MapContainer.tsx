@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { DEFAULT_LOCATION } from '../useMapLogic';
@@ -11,6 +11,9 @@ import LocationButton from './LocationButton';
 import MapInstructionsOverlay from './MapInstructionsOverlay';
 import SearchAreaButton from './SearchAreaButton';
 import HelpDialog from '../HelpDialog';
+import BuzzMapAreas from './BuzzMapAreas';
+import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
+import L from 'leaflet';
 
 interface MapContainerProps {
   isAddingPoint: boolean;
@@ -63,6 +66,18 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   showHelpDialog = false,
   setShowHelpDialog = () => {}
 }) => {
+  const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
+  const mapRef = useRef<L.Map | null>(null);
+  const { currentWeekAreas } = useBuzzMapLogic();
+
+  // Funzione per aggiornare il centro quando la mappa si muove
+  const handleMapMove = () => {
+    if (mapRef.current) {
+      const center = mapRef.current.getCenter();
+      setMapCenter([center.lat, center.lng]);
+    }
+  };
+
   return (
     <div 
       className="rounded-[24px] overflow-hidden relative w-full" 
@@ -88,6 +103,10 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           zIndex: 1
         }}
         className="z-10"
+        whenReady={(map) => {
+          mapRef.current = map.target as L.Map;
+          map.target.on('moveend', handleMapMove);
+        }}
       >
         <MapController 
           isAddingPoint={isAddingPoint}
@@ -106,6 +125,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           attribution='&copy; CartoDB'
           url='https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
         />
+        
+        {/* Visualizza le aree BUZZ MAPPA */}
+        <BuzzMapAreas areas={currentWeekAreas} />
         
         {/* Display search areas */}
         <SearchAreaMapLayer 
@@ -146,8 +168,12 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         isAddingSearchArea={isAddingSearchArea} 
       />
 
-      {/* Use the BuzzButton component */}
-      <BuzzButton handleBuzz={handleBuzz} buzzMapPrice={buzzMapPrice} />
+      {/* Use the BuzzButton component with map center */}
+      <BuzzButton 
+        handleBuzz={handleBuzz} 
+        buzzMapPrice={buzzMapPrice} 
+        mapCenter={mapCenter}
+      />
 
       {/* Use the MapInstructionsOverlay component */}
       <MapInstructionsOverlay 
