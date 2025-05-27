@@ -20,7 +20,7 @@ export const gameIconsData: GameIconData[] = [
 
 export interface GameCard {
   id: number;
-  iconType: string;
+  symbol: string; // This is what we'll use for matching
   icon: LucideIcon;
   isFlipped: boolean;
   isMatched: boolean;

@@ -19,7 +19,7 @@ const MemoryHackGame = () => {
   } = useGameLogic();
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-6 bg-black/40 backdrop-blur-md border border-white/10 rounded-xl">
+    <div className="w-full max-w-2xl mx-auto p-6 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl">
       {/* Header */}
       <div className="text-center mb-6">
         <h2 className="text-2xl font-orbitron font-bold mb-2">

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -13,15 +12,16 @@ export const useGameLogic = () => {
   const [matchedPairs, setMatchedPairs] = useState(0);
   const [errors, setErrors] = useState(0);
   const [timeLeft, setTimeLeft] = useState(45);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [disableInteraction, setDisableInteraction] = useState(false);
 
   // Initialize game
   const initializeGame = useCallback(() => {
+    // Create pairs by duplicating each icon
     const pairs = gameIconsData.concat(gameIconsData);
     const shuffled = pairs
       .map((iconData, index) => ({
         id: index,
-        iconType: iconData.type,
+        symbol: iconData.type, // Use type string for matching
         icon: iconData.icon,
         isFlipped: false,
         isMatched: false
@@ -33,6 +33,7 @@ export const useGameLogic = () => {
     setMatchedPairs(0);
     setErrors(0);
     setTimeLeft(45);
+    setDisableInteraction(false);
     setGameState('playing');
   }, []);
 
@@ -48,39 +49,45 @@ export const useGameLogic = () => {
 
   // Handle card click
   const handleCardClick = (cardId: number) => {
-    if (isProcessing || flippedCards.length === 2 || cards[cardId].isFlipped || cards[cardId].isMatched) {
+    // Prevent clicks if interactions are disabled or card is already flipped/matched
+    if (disableInteraction || cards[cardId].isFlipped || cards[cardId].isMatched) {
+      return;
+    }
+
+    // Prevent more than 2 cards being flipped
+    if (flippedCards.length >= 2) {
       return;
     }
 
     const newFlippedCards = [...flippedCards, cardId];
     setFlippedCards(newFlippedCards);
 
-    // Update card state
+    // Flip the card
     setCards(prev => prev.map(card => 
       card.id === cardId ? { ...card, isFlipped: true } : card
     ));
 
     // Check for match when 2 cards are flipped
     if (newFlippedCards.length === 2) {
-      setIsProcessing(true);
+      setDisableInteraction(true);
       const [firstId, secondId] = newFlippedCards;
       const firstCard = cards[firstId];
       const secondCard = cards[secondId];
 
-      // Check if icons match using the iconType string
-      const isMatch = firstCard.iconType === secondCard.iconType;
+      // Compare symbols (primitive strings)
+      const isMatch = firstCard.symbol === secondCard.symbol;
 
       setTimeout(() => {
         if (isMatch) {
-          // Match found
+          // Match found - mark as matched and keep visible
           setCards(prev => prev.map(card => 
             card.id === firstId || card.id === secondId 
-              ? { ...card, isMatched: true } 
+              ? { ...card, isMatched: true, isFlipped: true } 
               : card
           ));
           setMatchedPairs(prev => prev + 1);
         } else {
-          // No match
+          // No match - flip cards back
           setCards(prev => prev.map(card => 
             card.id === firstId || card.id === secondId 
               ? { ...card, isFlipped: false } 
@@ -90,7 +97,7 @@ export const useGameLogic = () => {
         }
         
         setFlippedCards([]);
-        setIsProcessing(false);
+        setDisableInteraction(false);
       }, 1000);
     }
   };
@@ -124,7 +131,7 @@ export const useGameLogic = () => {
       if (error) throw error;
 
       if (isSuccess) {
-        // Add credits to user profile using proper update query
+        // Add credits to user profile
         const { data: currentProfile, error: fetchError } = await supabase
           .from('profiles')
           .select('credits')
@@ -161,7 +168,7 @@ export const useGameLogic = () => {
     matchedPairs,
     errors,
     timeLeft,
-    isProcessing,
+    isProcessing: disableInteraction,
     handleCardClick,
     initializeGame,
     resetGame
