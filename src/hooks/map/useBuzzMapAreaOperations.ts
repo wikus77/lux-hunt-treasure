@@ -6,12 +6,12 @@ import { BuzzMapArea } from '../useBuzzMapLogic';
 import { getCurrentWeek } from '@/utils/buzzMapUtils';
 
 export const useBuzzMapAreaOperations = (userId?: string) => {
-  const loadCurrentWeekAreas = useCallback(async (force = false): Promise<BuzzMapArea[]> => {
+  const loadCurrentWeekAreas = useCallback(async (force: boolean = false): Promise<BuzzMapArea[]> => {
     if (!userId) return [];
     
     try {
       const currentWeek = getCurrentWeek();
-      console.log('🔄 Loading current week areas for week:', currentWeek);
+      console.log('🔄 Loading current week areas for week:', currentWeek, force ? '(forced)' : '');
       
       const { data, error } = await supabase
         .from('user_map_areas')
