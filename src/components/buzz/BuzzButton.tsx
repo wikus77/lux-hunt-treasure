@@ -1,10 +1,11 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BuzzButtonProps {
   isLoading: boolean;
@@ -23,6 +24,44 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 }) => {
   const { callBuzzApi } = useBuzzApi();
   const { createBuzzNotification } = useNotificationManager();
+  const [buzzCost, setBuzzCost] = useState<number>(1.99);
+  const [dailyCount, setDailyCount] = useState<number>(0);
+
+  // Carica il costo attuale del buzz
+  useEffect(() => {
+    const loadBuzzCost = async () => {
+      if (!userId) return;
+      
+      try {
+        // Ottieni il conteggio giornaliero attuale
+        const { data: countData, error: countError } = await supabase
+          .from('user_buzz_counter')
+          .select('buzz_count')
+          .eq('user_id', userId)
+          .eq('date', new Date().toISOString().split('T')[0])
+          .single();
+
+        const currentCount = countData?.buzz_count || 0;
+        setDailyCount(currentCount);
+
+        // Calcola il costo per il prossimo buzz
+        const { data: costData, error: costError } = await supabase.rpc('calculate_buzz_price', {
+          daily_count: currentCount + 1
+        });
+
+        if (costError) {
+          console.error("Errore nel calcolo del costo:", costError);
+          return;
+        }
+
+        setBuzzCost(costData || 1.99);
+      } catch (error) {
+        console.error("Errore nel caricamento del costo buzz:", error);
+      }
+    };
+
+    loadBuzzCost();
+  }, [userId]);
 
   const handleBuzzPress = async () => {
     if (isLoading || !userId) return;
@@ -37,6 +76,13 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       });
       
       if (response.success) {
+        // Aggiorna il costo per il prossimo utilizzo
+        setDailyCount(prev => prev + 1);
+        const { data: newCostData } = await supabase.rpc('calculate_buzz_price', {
+          daily_count: dailyCount + 2
+        });
+        if (newCostData) setBuzzCost(newCostData);
+
         // Create toast notification
         toast.success("Nuovo indizio sbloccato!", {
           description: response.clue_text,
@@ -71,11 +117,14 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     }
   };
 
+  // Determina se il buzz è bloccato (oltre 50 utilizzi giornalieri)
+  const isBlocked = buzzCost <= 0;
+
   return (
     <motion.button
-      className="w-60 h-60 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl hover:shadow-[0_0_35px_rgba(123,46,255,0.7)] focus:outline-none"
+      className="w-60 h-60 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl hover:shadow-[0_0_35px_rgba(123,46,255,0.7)] focus:outline-none disabled:opacity-50"
       onClick={handleBuzzPress}
-      disabled={isLoading}
+      disabled={isLoading || isBlocked}
       whileTap={{ scale: 0.95 }}
       whileHover={{ scale: 1.05 }}
       initial={{ boxShadow: "0 0 0px rgba(123, 46, 255, 0)" }}
@@ -87,37 +136,58 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         scale: { type: "spring", stiffness: 300, damping: 20 }
       }}
       style={{
-        animation: "buzzButtonGlow 3s infinite ease-in-out"
+        animation: isBlocked ? "none" : "buzzButtonGlow 3s infinite ease-in-out"
       }}
     >
       {/* Radial gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-[#7B2EFF] via-[#00D1FF] to-[#FF59F8] opacity-90 rounded-full" />
       
       {/* Animated pulse effect */}
-      <motion.div
-        className="absolute inset-0 rounded-full"
-        initial={{ opacity: 0.4, scale: 1 }}
-        animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.05, 1] }}
-        transition={{ repeat: Infinity, duration: 3 }}
-      />
+      {!isBlocked && (
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          initial={{ opacity: 0.4, scale: 1 }}
+          animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.05, 1] }}
+          transition={{ repeat: Infinity, duration: 3 }}
+        />
+      )}
       
       {/* Glow effect */}
-      <motion.div
-        className="absolute -inset-1 rounded-full blur-xl"
-        style={{ background: "linear-gradient(to right, #7B2EFF, #00D1FF, #FF59F8)", opacity: 0.5 }}
-        initial={{ opacity: 0.2 }}
-        animate={{ opacity: [0.2, 0.45, 0.2] }}
-        transition={{ repeat: Infinity, duration: 2 }}
-      />
+      {!isBlocked && (
+        <motion.div
+          className="absolute -inset-1 rounded-full blur-xl"
+          style={{ background: "linear-gradient(to right, #7B2EFF, #00D1FF, #FF59F8)", opacity: 0.5 }}
+          initial={{ opacity: 0.2 }}
+          animate={{ opacity: [0.2, 0.45, 0.2] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+        />
+      )}
       
       {/* Button content */}
-      <div className="absolute inset-0 flex items-center justify-center rounded-full z-10">
+      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full z-10">
         {isLoading ? (
           <Loader className="w-12 h-12 animate-spin text-white" />
+        ) : isBlocked ? (
+          <>
+            <span className="text-2xl font-bold text-red-300 tracking-wider">
+              BLOCCATO
+            </span>
+            <span className="text-xs text-red-200 mt-1">
+              Limite giornaliero raggiunto
+            </span>
+          </>
         ) : (
-          <span className="text-3xl font-bold text-white tracking-wider glow-text">
-            BUZZ!
-          </span>
+          <>
+            <span className="text-3xl font-bold text-white tracking-wider glow-text">
+              BUZZ!
+            </span>
+            <span className="text-sm text-white/90 mt-1 font-medium">
+              €{buzzCost.toFixed(2)}
+            </span>
+            <span className="text-xs text-white/70">
+              {dailyCount}/50 oggi
+            </span>
+          </>
         )}
       </div>
 
