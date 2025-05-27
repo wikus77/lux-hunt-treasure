@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -103,9 +104,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           zIndex: 1
         }}
         className="z-10"
-        whenReady={(mapEvent) => {
-          mapRef.current = mapEvent.target;
-          mapEvent.target.on('moveend', handleMapMove);
+        whenCreated={(map) => {
+          mapRef.current = map;
+          map.on('moveend', handleMapMove);
         }}
       >
         <MapController 

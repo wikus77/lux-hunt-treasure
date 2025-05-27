@@ -15,7 +15,7 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
       {areas.map((area, index) => (
         <Circle
           key={area.id}
-          center={[area.latitude, area.longitude]}
+          center={[area.lat, area.lng]}
           radius={area.radius_km * 1000} // Converti km in metri per Leaflet
           pathOptions={{
             color: '#00cfff', // Neon blu M1SSION

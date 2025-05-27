@@ -6,10 +6,10 @@ import { useAuth } from '@/hooks/use-auth';
 
 export interface BuzzMapArea {
   id: string;
-  latitude: number;
-  longitude: number;
+  lat: number;
+  lng: number;
   radius_km: number;
-  week_id: string;
+  week: number;
   created_at: string;
   user_id?: string;
 }
@@ -20,12 +20,12 @@ export const useBuzzMapLogic = () => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Calcola la settimana corrente (esempio: settimana dell'anno)
-  const getCurrentWeek = () => {
+  const getCurrentWeek = (): number => {
     const now = new Date();
     const start = new Date(now.getFullYear(), 0, 1);
     const diff = now.getTime() - start.getTime();
     const oneWeek = 1000 * 60 * 60 * 24 * 7;
-    return `${now.getFullYear()}-W${Math.ceil(diff / oneWeek)}`;
+    return Math.ceil(diff / oneWeek);
   };
 
   // Carica le aree della settimana corrente
@@ -39,7 +39,7 @@ export const useBuzzMapLogic = () => {
         .from('user_map_areas')
         .select('*')
         .eq('user_id', user.id)
-        .eq('week_id', currentWeek)
+        .eq('week', currentWeek)
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -47,18 +47,8 @@ export const useBuzzMapLogic = () => {
         return;
       }
 
-      // Trasforma i dati dal formato del database al formato dell'interfaccia BuzzMapArea
-      const formattedData: BuzzMapArea[] = data?.map(item => ({
-        id: item.id,
-        latitude: item.latitude,
-        longitude: item.longitude,
-        radius_km: item.radius_km,
-        week_id: item.week_id,
-        created_at: item.created_at,
-        user_id: item.user_id
-      })) || [];
-      
-      setCurrentWeekAreas(formattedData);
+      // I dati del database sono già nel formato corretto
+      setCurrentWeekAreas(data || []);
     } catch (err) {
       console.error('Exception loading map areas:', err);
     }
@@ -107,13 +97,13 @@ export const useBuzzMapLogic = () => {
         areaCount: currentWeekAreas.length
       });
 
-      // Assicuriamoci che la struttura dati corrisponda a quella della tabella del database
+      // Struttura dati corrispondente alla tabella del database
       const newArea = {
         user_id: user.id,
-        latitude: centerLat,
-        longitude: centerLng,
+        lat: centerLat,
+        lng: centerLng,
         radius_km: radiusKm,
-        week_id: currentWeek
+        week: currentWeek
       };
 
       const { data, error } = await supabase
@@ -130,23 +120,12 @@ export const useBuzzMapLogic = () => {
 
       console.log('✅ Area BUZZ MAPPA salvata:', data);
       
-      // Trasforma il dato dal formato del database al formato dell'interfaccia BuzzMapArea
-      const formattedNewArea: BuzzMapArea = {
-        id: data.id,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        radius_km: data.radius_km,
-        week_id: data.week_id,
-        created_at: data.created_at,
-        user_id: data.user_id
-      };
-      
       // Aggiorna lo stato locale
-      setCurrentWeekAreas(prev => [...prev, formattedNewArea]);
+      setCurrentWeekAreas(prev => [...prev, data]);
       
       toast.success(`Area di ricerca generata! Raggio: ${radiusKm.toFixed(1)} km`);
       
-      return formattedNewArea;
+      return data;
     } catch (err) {
       console.error('Exception generating map area:', err);
       toast.error('Errore durante la generazione dell\'area');
