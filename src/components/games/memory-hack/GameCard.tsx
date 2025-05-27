@@ -58,11 +58,11 @@ const GameCard: React.FC<GameCardProps> = ({ card, onClick, disabled }) => {
                 className="w-full h-full flex items-center justify-center relative"
               >
                 <div className="text-center">
-                  <img 
-                    src="/assets/m1ssion-logo.png" 
-                    alt="Logo M1SSION"
-                    className="w-14 h-14 object-contain opacity-90 mx-auto"
-                  />
+                  <div className="w-14 h-14 mx-auto flex items-center justify-center bg-gradient-to-br from-[#00D1FF]/10 to-[#7B2EFF]/10 rounded-lg border border-[#00D1FF]/20">
+                    <div className="text-[#00D1FF] font-orbitron font-bold text-lg tracking-wider">
+                      M1
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}
