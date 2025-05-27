@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -9,14 +8,14 @@ export interface Notification {
   description: string;
   date: string;
   read: boolean;
-  type?: string; // Added type for categorization
+  type?: string;
 }
 
 // Listener globale per sincronizzazione istantanea tra component
 let listeners: (() => void)[] = [];
 
 // Costanti per la gestione dello storage
-const MAX_NOTIFICATIONS = 50;
+const MAX_NOTIFICATIONS = 100;
 const STORAGE_KEY = 'notifications';
 
 // Notification categories
@@ -39,7 +38,6 @@ export function useNotifications() {
   // Funzione sicura per salvare le notifiche
   const saveNotifications = useCallback((notifs: Notification[]) => {
     try {
-      // Limita il numero di notifiche salvate
       const limitedNotifs = notifs.slice(-MAX_NOTIFICATIONS);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(limitedNotifs));
       return true;
@@ -49,35 +47,33 @@ export function useNotifications() {
     }
   }, []);
 
-  // Carica le notifiche da localStorage e/o Supabase con rate limiting
+  // Carica le notifiche da Supabase con rate limiting migliorato
   const reloadNotifications = useCallback(async (force = false) => {
-    // Rate limiting: no more than one reload every 5 seconds unless forced
     const now = Date.now();
-    if (!force && now - lastReloadTimeRef.current < 5000 && !isInitialLoadRef.current) {
-      console.log("Skipping reload due to rate limiting");
+    if (!force && now - lastReloadTimeRef.current < 3000 && !isInitialLoadRef.current) {
+      console.log("⏱️ Skipping reload due to rate limiting");
       return true;
     }
     
     try {
-      console.log("Reloading notifications...");
+      console.log("🔄 Reloading notifications UNIVOCHE...");
       
-      // Only show loading state on initial load or if it's been more than 5 seconds since the last load
-      if (isInitialLoadRef.current || now - lastReloadTimeRef.current > 5000) {
+      if (isInitialLoadRef.current || now - lastReloadTimeRef.current > 3000) {
         setIsLoading(true);
       }
       
-      // Set a timeout to ensure loading state isn't shown too briefly (prevents flickering)
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
       
-      // First try to get from local storage (for offline support)
+      // Carica da localStorage come fallback
       const stored = localStorage.getItem(STORAGE_KEY);
       let notifs: Notification[] = stored ? JSON.parse(stored) : [];
       
-      // If user is authenticated, fetch notifications from Supabase
+      // Se l'utente è autenticato, carica da Supabase
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        console.log("👤 Utente autenticato, caricamento da Supabase...");
         const { data: supabaseNotifs, error } = await supabase
           .from('user_notifications')
           .select('*')
@@ -86,41 +82,50 @@ export function useNotifications() {
           .order('created_at', { ascending: false });
           
         if (error) {
-          console.error("Error fetching notifications from Supabase:", error);
+          console.error("❌ Error fetching notifications from Supabase:", error);
         } else if (supabaseNotifs && supabaseNotifs.length > 0) {
-          console.log("Loaded notifications from Supabase:", supabaseNotifs);
-          // Convert Supabase notifications to our format
-          notifs = supabaseNotifs.map(n => ({
-            id: n.id,
-            title: n.title,
-            description: n.message,
-            date: n.created_at,
-            read: n.is_read,
-            type: n.type
-          }));
+          console.log("✅ Loaded UNIQUE notifications from Supabase:", supabaseNotifs.length);
           
-          // Update local storage with server data
+          // Converti notifiche Supabase al nostro formato, ordinando per timestamp
+          notifs = supabaseNotifs
+            .map(n => ({
+              id: n.id,
+              title: n.title,
+              description: n.message,
+              date: n.created_at,
+              read: n.is_read === true,
+              type: n.type
+            }))
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          
+          // Aggiorna localStorage con dati server
           saveNotifications(notifs);
         }
       }
       
-      console.log("Loaded notifications:", notifs);
-      setNotifications(notifs);
-      setUnreadCount(notifs.filter(n => !n.read).length);
+      const unreadCount = notifs.filter(n => !n.read).length;
+      console.log("📊 Loaded notifications:", notifs.length, "Unread:", unreadCount);
+      console.log("🔍 Checking for unique content...");
       
-      // Use timeout to ensure loading state isn't toggled too quickly
+      // Log dei contenuti per verificare unicità
+      notifs.slice(0, 3).forEach((n, i) => {
+        console.log(`📝 Notifica ${i + 1}:`, n.description.substring(0, 50) + "...");
+      });
+      
+      setNotifications(notifs);
+      setUnreadCount(unreadCount);
+      
       loadingTimeoutRef.current = setTimeout(() => {
         setIsLoading(false);
         loadingTimeoutRef.current = null;
-      }, 300);
+      }, 200);
       
-      // Update last reload time
       lastReloadTimeRef.current = now;
       isInitialLoadRef.current = false;
       
       return true;
     } catch (e) {
-      console.error("Errore nel caricamento delle notifiche:", e);
+      console.error("❌ Errore nel caricamento delle notifiche:", e);
       setNotifications([]);
       setUnreadCount(0);
       setIsLoading(false);
@@ -132,10 +137,11 @@ export function useNotifications() {
   const markAllAsRead = useCallback(async () => {
     if (notifications.length === 0) return;
     
+    console.log("📖 Marcando tutte le notifiche come lette...");
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Update in Supabase
+        // Aggiorna su Supabase
         const { error } = await supabase
           .from('user_notifications')
           .update({ is_read: true })
@@ -143,23 +149,25 @@ export function useNotifications() {
           .eq('is_deleted', false);
           
         if (error) {
-          console.error("Error marking notifications as read in Supabase:", error);
+          console.error("❌ Error marking notifications as read in Supabase:", error);
           return;
+        } else {
+          console.log("✅ Tutte le notifiche marcate come lette su Supabase");
         }
       }
       
-      // Update locally
+      // Aggiorna localmente
       const updated = notifications.map(n => ({ ...n, read: true }));
       const saved = saveNotifications(updated);
       
       if (saved) {
         setNotifications(updated);
         setUnreadCount(0);
-        // Notifica gli altri listener del cambiamento
         listeners.forEach(fn => fn());
+        console.log("✅ Stato locale aggiornato");
       }
     } catch (error) {
-      console.error("Error in markAllAsRead:", error);
+      console.error("❌ Error in markAllAsRead:", error);
     }
   }, [notifications, saveNotifications]);
 
@@ -167,27 +175,23 @@ export function useNotifications() {
   // But limit how often we update to prevent flickering
   useEffect(() => {
     const listener = () => {
-      // Rate limiting for listener calls
       const now = Date.now();
-      if (now - lastReloadTimeRef.current > 5000 || isInitialLoadRef.current) {
+      if (now - lastReloadTimeRef.current > 3000 || isInitialLoadRef.current) {
         reloadNotifications();
       }
     };
     listeners.push(listener);
 
-    // Eventuale cross-tab sync
     const storageEvent = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY) {
-        // Rate limiting for storage events
         const now = Date.now();
-        if (now - lastReloadTimeRef.current > 5000 || isInitialLoadRef.current) {
+        if (now - lastReloadTimeRef.current > 3000 || isInitialLoadRef.current) {
           reloadNotifications();
         }
       }
     };
     window.addEventListener('storage', storageEvent);
 
-    // Load on mount - initial load should always happen
     if (isInitialLoadRef.current) {
       reloadNotifications();
     }
@@ -201,9 +205,8 @@ export function useNotifications() {
     };
   }, [reloadNotifications]);
 
-  // Setup Supabase realtime subscription - more efficient than polling
+  // Setup Supabase realtime subscription
   useEffect(() => {
-    // Add realtime subscription for user_notifications table
     const setupRealtimeSubscription = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -219,15 +222,13 @@ export function useNotifications() {
             }, 
             (payload) => {
               console.log('Realtime notification update:', payload);
-              // Don't reload instantly - use rate limiting to prevent flickering
               const now = Date.now();
-              if (now - lastReloadTimeRef.current > 5000) {
-                reloadNotifications(true); // force reload on realtime event
+              if (now - lastReloadTimeRef.current > 3000) {
+                reloadNotifications(true);
               } else {
-                // Schedule a reload after the rate limit expires
                 setTimeout(() => {
                   reloadNotifications(true);
-                }, 5000 - (now - lastReloadTimeRef.current));
+                }, 3000 - (now - lastReloadTimeRef.current));
               }
             }
         )
@@ -243,8 +244,8 @@ export function useNotifications() {
 
   // Singola notifica come letta
   const markAsRead = useCallback(async (id: string) => {
+    console.log("📖 Marcando notifica come letta:", id);
     try {
-      // Update in Supabase if user is authenticated
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { error } = await supabase
@@ -253,11 +254,12 @@ export function useNotifications() {
           .eq('id', id);
           
         if (error) {
-          console.error("Error marking notification as read in Supabase:", error);
+          console.error("❌ Error marking notification as read in Supabase:", error);
+        } else {
+          console.log("✅ Notifica marcata come letta su Supabase");
         }
       }
       
-      // Update locally regardless of Supabase result
       const updated = notifications.map(n => n.id === id ? { ...n, read: true } : n);
       const saved = saveNotifications(updated);
       
@@ -265,10 +267,11 @@ export function useNotifications() {
         setNotifications(updated);
         setUnreadCount(updated.filter(n => !n.read).length);
         listeners.forEach(fn => fn());
+        console.log("✅ Stato locale aggiornato per notifica:", id);
       }
       return saved;
     } catch (error) {
-      console.error("Error in markAsRead:", error);
+      console.error("❌ Error in markAsRead:", error);
       return false;
     }
   }, [notifications, saveNotifications]);
@@ -277,7 +280,6 @@ export function useNotifications() {
   const deleteNotification = useCallback(async (id: string) => {
     try {
       console.log("Deleting notification:", id);
-      // Try to delete from Supabase if user is authenticated
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { error } = await supabase
@@ -290,7 +292,6 @@ export function useNotifications() {
         }
       }
       
-      // Delete locally regardless of Supabase result
       const updated = notifications.filter(n => n.id !== id);
       const saved = saveNotifications(updated);
       
@@ -306,16 +307,15 @@ export function useNotifications() {
     }
   }, [notifications, saveNotifications]);
 
-  // Aggiungi una nuova notifica
+  // Aggiungi una nuova notifica UNIVOCA
   const addNotification = useCallback(async (notification: {title: string, description: string, type?: string}) => {
-    // Determine notification type
     const type = notification.type || NOTIFICATION_CATEGORIES.GENERIC;
     
     try {
-      console.log("Adding new notification:", notification);
+      console.log("Adding UNIQUE notification:", notification);
       
-      // Generate a temporary ID that will be replaced by Supabase ID if available
-      let tempId = Date.now().toString();
+      // Genera ID temporaneo con timestamp per garantire unicità
+      let tempId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       let newNotification = {
         id: tempId,
         title: notification.title,
@@ -325,7 +325,6 @@ export function useNotifications() {
         type
       };
       
-      // Try to save to Supabase if user is authenticated
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { error, data } = await supabase
@@ -344,28 +343,23 @@ export function useNotifications() {
           console.error("Error saving notification to Supabase:", error);
         } 
         else if (data) {
-          // Use the Supabase-generated ID instead
           newNotification.id = data.id;
-          console.log("Notification saved to Supabase with ID:", data.id);
+          console.log("✅ UNIQUE Notification saved to Supabase with ID:", data.id);
         }
       }
       
-      // Get current notifications to ensure we have the latest data
       const stored = localStorage.getItem(STORAGE_KEY);
       const currentNotifs: Notification[] = stored ? JSON.parse(stored) : [];
       
-      // Add the new notification
-      const updated = [...currentNotifs, newNotification];
+      // Aggiungi la nuova notifica in cima alla lista
+      const updated = [newNotification, ...currentNotifs];
       const saved = saveNotifications(updated);
       
       if (saved) {
-        // Update local state
         setNotifications(updated);
         setUnreadCount(prev => prev + 1);
-        
-        // Notify other listeners
         listeners.forEach(fn => fn());
-        console.log("Notification added successfully:", newNotification);
+        console.log("✅ UNIQUE Notification added successfully:", newNotification);
       }
       
       return saved;

@@ -1,301 +1,236 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 import { useSearchAreasLogic } from './useSearchAreasLogic';
-
-interface MapPoint {
-  id: string;
-  latitude: number;
-  longitude: number;
-  title: string;
-  note: string;
-}
-
-interface NewPoint {
-  latitude: number | null;
-  longitude: number | null;
-}
+import { MapMarker } from '@/components/maps/types';
 
 export const useNewMapPage = () => {
-  const [mapPoints, setMapPoints] = useLocalStorage<MapPoint[]>('map-points', []);
+  const { user } = useAuth();
   const [isAddingPoint, setIsAddingPoint] = useState(false);
-  const [newPoint, setNewPoint] = useState<NewPoint>({ latitude: null, longitude: null });
+  const [mapPoints, setMapPoints] = useState<any[]>([]);
+  const [newPoint, setNewPoint] = useState<MapMarker | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeMapPoint, setActiveMapPoint] = useState<string | null>(null);
-  const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
+  const buzzMapPrice = 1.99;
 
-  const defaultLocation: [number, number] = [41.9028, 12.4964]; // Rome, Italy
+  // Default location (Rome, Italy)
+  const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
 
-  // Use search areas logic with validated default location
-  const searchAreasLogic = useSearchAreasLogic(defaultLocation);
+  // Initialize search areas logic
+  const { 
+    searchAreas,
+    isAddingSearchArea,
+    activeSearchArea,
+    setActiveSearchArea,
+    handleAddArea,
+    handleMapClickArea,
+    deleteSearchArea,
+    clearAllSearchAreas,
+    toggleAddingSearchArea,
+    setPendingRadius
+  } = useSearchAreasLogic(DEFAULT_LOCATION);
 
-  // Get current map center or use fallback coordinates
-  const getValidCoordinates = useCallback((): [number, number] => {
-    // Priority: current location > default location
-    if (currentLocation && currentLocation[0] && currentLocation[1]) {
-      return currentLocation;
-    }
-    return defaultLocation;
-  }, [currentLocation]);
-
-  // Generate search area function with coordinate validation
-  const generateSearchArea = useCallback(() => {
-    try {
-      console.log("Generating search area from BUZZ MAPPA button...");
-      
-      // Get validated coordinates
-      const [lat, lng] = getValidCoordinates();
-      
-      // Validate coordinates before proceeding
-      if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-        console.error("Invalid coordinates:", { lat, lng });
-        toast.error("Errore nella posizione. Impossibile generare l'area di ricerca.", {
-          description: "Ricarica la pagina o concedi i permessi di geolocalizzazione"
-        });
-        return null;
-      }
-
-      console.log("Using validated coordinates:", { lat, lng });
-      
-      // Calculate radius based on existing areas this week
-      const calculatedRadius = searchAreasLogic.calculateRadius ? searchAreasLogic.calculateRadius() : 100000; // 100km default
-      
-      // Validate radius
-      if (!calculatedRadius || calculatedRadius <= 0) {
-        console.error("Invalid radius calculated:", calculatedRadius);
-        toast.error("Errore nel calcolo del raggio area");
-        return null;
-      }
-
-      // Set the pending radius
-      searchAreasLogic.setPendingRadius(calculatedRadius);
-      
-      // Generate area directly with validated coordinates
-      if (searchAreasLogic.generateSearchArea) {
-        const areaId = searchAreasLogic.generateSearchArea(calculatedRadius);
-        
-        if (areaId) {
-          console.log(`Search area generated successfully with ID: ${areaId}, coords: ${lat}, ${lng}, radius: ${calculatedRadius/1000}km`);
-          toast.success("Area di ricerca BUZZ generata sulla mappa!", {
-            description: `Raggio: ${(calculatedRadius/1000).toFixed(1)}km - Posizione: ${lat.toFixed(4)}, ${lng.toFixed(4)}`
-          });
-          return areaId;
-        }
-      }
-      
-      // Fallback: activate manual placement mode
-      searchAreasLogic.setIsAddingSearchArea(true);
-      
-      console.log(`Search area generation initiated with radius: ${calculatedRadius/1000}km`);
-      toast.info("Clicca sulla mappa per posizionare l'area di ricerca BUZZ", {
-        description: `Raggio: ${(calculatedRadius/1000).toFixed(1)}km`
-      });
-      
-      return Date.now().toString();
-    } catch (error) {
-      console.error("Error generating search area:", error);
-      toast.error("Errore nella generazione dell'area di ricerca", {
-        description: "Controlla la console per dettagli"
-      });
-      return null;
-    }
-  }, [searchAreasLogic, getValidCoordinates]);
-
-  // Load map points from Supabase
+  // Fetch existing map points on mount
   useEffect(() => {
-    const loadMapPoints = async () => {
+    const fetchMapPoints = async () => {
+      if (!user?.id) return;
+      
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: points, error } = await supabase
+        const { data, error } = await supabase
           .from('map_points')
           .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .eq('user_id', user.id);
 
         if (error) {
-          console.error('Error loading map points:', error);
+          console.error("Error fetching map points:", error);
+          toast.error("Errore nel caricamento dei punti");
           return;
         }
 
-        if (points) {
-          setMapPoints(points);
-        }
-      } catch (error) {
-        console.error('Error in loadMapPoints:', error);
+        console.log("📍 Fetched map points:", data);
+        setMapPoints(data || []);
+      } catch (err) {
+        console.error("Exception fetching map points:", err);
+        toast.error("Errore nel caricamento dei punti");
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    loadMapPoints();
-  }, [setMapPoints]);
+    fetchMapPoints();
+  }, [user]);
 
+  // Add a new point to the map
   const addNewPoint = useCallback((lat: number, lng: number) => {
-    // Validate coordinates before adding point
-    if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-      toast.error("Coordinate non valide per il nuovo punto");
-      return;
-    }
+    console.log("📍 Adding new point at:", lat, lng);
+    setNewPoint({
+      id: 'new',
+      lat,
+      lng,
+      title: '',
+      note: '',
+      position: { lat, lng } // Adding position property to match MapMarker type
+    });
     
-    setNewPoint({ latitude: lat, longitude: lng });
-    setIsAddingPoint(true);
-  }, []);
-
-  const savePoint = useCallback(async (title: string, note: string) => {
-    if (!newPoint.latitude || !newPoint.longitude || !title.trim()) {
-      toast.error('Titolo richiesto per salvare il punto');
-      return;
+    // Reset search area adding mode if active
+    if (isAddingSearchArea) {
+      toggleAddingSearchArea();
     }
+  }, [isAddingSearchArea, toggleAddingSearchArea]);
 
+  // Save the point to Supabase
+  const savePoint = async (title: string, note: string) => {
+    if (!newPoint || !user?.id) return;
+    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('Devi essere autenticato per salvare punti');
-        return;
-      }
-
       const { data, error } = await supabase
         .from('map_points')
-        .insert({
+        .insert([{
           user_id: user.id,
-          latitude: newPoint.latitude,
-          longitude: newPoint.longitude,
-          title: title.trim(),
-          note: note.trim() || ''
-        })
-        .select()
-        .single();
+          latitude: newPoint.lat,
+          longitude: newPoint.lng,
+          title,
+          note
+        }])
+        .select();
 
       if (error) {
-        console.error('Error saving point:', error);
-        toast.error('Errore nel salvare il punto');
+        console.error("Error saving map point:", error);
+        toast.error("Errore nel salvare il punto");
         return;
       }
 
-      if (data) {
-        setMapPoints(prev => [...prev, data]);
-        toast.success('Punto salvato con successo');
+      console.log("📍 Saved new point:", data);
+      toast.success("Punto salvato con successo");
+      
+      // Add the new point to the current list
+      if (data && data.length > 0) {
+        setMapPoints(prev => [...prev, data[0]]);
       }
-
-      // Reset form
-      setNewPoint({ latitude: null, longitude: null });
-      setIsAddingPoint(false);
-    } catch (error) {
-      console.error('Error in savePoint:', error);
-      toast.error('Errore nel salvare il punto');
+      
+      // Reset new point state
+      setNewPoint(null);
+    } catch (err) {
+      console.error("Exception saving map point:", err);
+      toast.error("Errore nel salvare il punto");
     }
-  }, [newPoint, setMapPoints]);
+  };
 
-  const updateMapPoint = useCallback(async (id: string, title: string, note: string): Promise<boolean> => {
+  // Update an existing point - MODIFIED to return boolean
+  const updateMapPoint = async (id: string, title: string, note: string): Promise<boolean> => {
+    if (!user?.id) return false; // Return false if no user
+    
     try {
       const { error } = await supabase
         .from('map_points')
-        .update({ title: title.trim(), note: note.trim() })
-        .eq('id', id);
+        .update({
+          title,
+          note
+        })
+        .eq('id', id)
+        .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error updating point:', error);
-        toast.error('Errore nell\'aggiornare il punto');
-        return false;
+        console.error("Error updating map point:", error);
+        toast.error("Errore nell'aggiornare il punto");
+        return false; // Return false on error
       }
 
+      // Update local state
       setMapPoints(prev => prev.map(point => 
-        point.id === id ? { ...point, title: title.trim(), note: note.trim() } : point
+        point.id === id ? { ...point, title, note } : point
       ));
-      toast.success('Punto aggiornato con successo');
-      return true;
-    } catch (error) {
-      console.error('Error in updateMapPoint:', error);
-      toast.error('Errore nell\'aggiornare il punto');
-      return false;
+      
+      toast.success("Punto aggiornato con successo");
+      setActiveMapPoint(null);
+      return true; // Return true on success
+    } catch (err) {
+      console.error("Exception updating map point:", err);
+      toast.error("Errore nell'aggiornare il punto");
+      return false; // Return false on exception
     }
-  }, [setMapPoints]);
+  };
 
-  const deleteMapPoint = useCallback(async (id: string): Promise<boolean> => {
+  // Delete a map point
+  const deleteMapPoint = async (id: string): Promise<boolean> => {
+    if (!user?.id) return false;
+    
     try {
       const { error } = await supabase
         .from('map_points')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error deleting point:', error);
-        toast.error('Errore nell\'eliminare il punto');
+        console.error("Error deleting map point:", error);
+        toast.error("Errore nell'eliminare il punto");
         return false;
       }
 
+      // Update local state
       setMapPoints(prev => prev.filter(point => point.id !== id));
-      toast.success('Punto eliminato con successo');
+      setActiveMapPoint(null);
+      toast.success("Punto eliminato con successo");
       return true;
-    } catch (error) {
-      console.error('Error in deleteMapPoint:', error);
-      toast.error('Errore nell\'eliminare il punto');
+    } catch (err) {
+      console.error("Exception deleting map point:", err);
+      toast.error("Errore nell'eliminare il punto");
       return false;
     }
-  }, [setMapPoints]);
+  };
 
-  // BUZZ MAPPA functionality - generates search area using validated coordinates
-  const handleBuzz = useCallback(() => {
-    console.log("Executing BUZZ MAPPA - generating search area...");
-    
-    // Use the generateSearchArea function with coordinate validation
-    const areaId = generateSearchArea();
-    
-    if (areaId) {
-      console.log("Search area generated successfully with ID:", areaId);
-      // Success message already shown in generateSearchArea
+  // Handle BUZZ button click
+  const handleBuzz = () => {
+    toast.info("Funzione BUZZ in arrivo presto!");
+  };
+
+  // Request user location
+  const requestLocationPermission = () => {
+    if (navigator.geolocation) {
+      toast.info("Rilevamento posizione in corso...");
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          // Here you would update the map center
+          toast.success("Posizione rilevata");
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          toast.error("Errore nel rilevare la posizione");
+        }
+      );
     } else {
-      console.error("Failed to generate search area - check coordinates and permissions");
+      toast.error("Geolocalizzazione non supportata dal browser");
     }
-  }, [generateSearchArea]);
-
-  const requestLocationPermission = useCallback(async () => {
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 300000
-        });
-      });
-
-      const newLocation: [number, number] = [position.coords.latitude, position.coords.longitude];
-      setCurrentLocation(newLocation);
-      
-      toast.success('Posizione ottenuta con successo', {
-        description: `Lat: ${newLocation[0].toFixed(4)}, Lng: ${newLocation[1].toFixed(4)}`
-      });
-      
-      return newLocation;
-    } catch (error) {
-      console.error('Error getting location:', error);
-      toast.error('Impossibile ottenere la posizione', {
-        description: 'Verrà utilizzata la posizione predefinita (Roma)'
-      });
-      
-      // Set default location if geolocation fails
-      setCurrentLocation(defaultLocation);
-      return defaultLocation;
-    }
-  }, [defaultLocation]);
+  };
 
   return {
-    mapPoints,
     isAddingPoint,
     setIsAddingPoint,
+    mapPoints,
     newPoint,
+    isLoading,
     activeMapPoint,
     setActiveMapPoint,
+    buzzMapPrice,
+    searchAreas,
+    isAddingSearchArea,
+    activeSearchArea,
+    setActiveSearchArea,
+    handleAddArea,
+    handleMapClickArea,
+    deleteSearchArea,
+    clearAllSearchAreas,
+    toggleAddingSearchArea,
+    setPendingRadius,
     addNewPoint,
     savePoint,
     updateMapPoint,
     deleteMapPoint,
-    handleBuzz, // This connects to the BUZZ MAPPA button with coordinate validation
+    handleBuzz,
     requestLocationPermission,
-    currentLocation, // Export current location for use in components
-    // Search areas - spread all properties from searchAreasLogic
-    ...searchAreasLogic,
-    generateSearchArea // Add the validated generateSearchArea function
   };
 };

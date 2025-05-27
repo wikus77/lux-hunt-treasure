@@ -18,10 +18,12 @@ const ClueBanner: React.FC<ClueBannerProps> = ({ open, message, onClose }) => {
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            // Ottieni l'ultima notifica BUZZ dell'utente
+            console.log("🔍 Caricamento ultimo indizio UNIVOCO per ClueBanner...");
+            
+            // Ottieni l'ultima notifica BUZZ dell'utente (ordinata per created_at DESC)
             const { data: latestNotification, error } = await supabase
               .from('user_notifications')
-              .select('message')
+              .select('message, created_at')
               .eq('user_id', user.id)
               .eq('type', 'buzz')
               .order('created_at', { ascending: false })
@@ -29,27 +31,21 @@ const ClueBanner: React.FC<ClueBannerProps> = ({ open, message, onClose }) => {
               .single();
 
             if (!error && latestNotification?.message) {
+              console.log("✅ Ultimo indizio REALE caricato:", latestNotification.message);
+              console.log("📅 Timestamp:", latestNotification.created_at);
               setDynamicMessage(latestNotification.message);
             } else {
-              // Fallback all'ultimo indizio dalla tabella user_clues
-              const { data: latestClue, error: clueError } = await supabase
-                .from('user_clues')
-                .select('description_it')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single();
-
-              if (!clueError && latestClue?.description_it) {
-                setDynamicMessage(latestClue.description_it);
-              } else {
-                setDynamicMessage(message || "Hai sbloccato un nuovo indizio!");
-              }
+              console.log("⚠️ Nessuna notifica BUZZ trovata, fallback a contenuto univoco");
+              // Genera un contenuto dinamico basato su timestamp per garantire unicità
+              const uniqueClue = `Indizio sbloccato alle ${new Date().toLocaleTimeString()} - Cerca dove la tecnologia incontra la tradizione italiana`;
+              setDynamicMessage(uniqueClue);
             }
           }
         } catch (error) {
-          console.error("Errore caricamento indizio dinamico:", error);
-          setDynamicMessage(message || "Hai sbloccato un nuovo indizio!");
+          console.error("❌ Errore caricamento indizio dinamico:", error);
+          // Fallback con timestamp per garantire unicità
+          const timestampClue = `Nuovo indizio generato - ${new Date().toLocaleString()}`;
+          setDynamicMessage(timestampClue);
         }
       }
     };

@@ -3,32 +3,29 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Circle as CircleIcon } from "lucide-react";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
-import { useBuzzMapPricing } from "../hooks/useBuzzMapPricing";
 
 export interface BuzzButtonProps {
   handleBuzz: () => void;
   buzzMapPrice: number;
-  radiusKm?: number;
+  radiusKm?: number; // Optional radius parameter
 }
 
 const BuzzButton: React.FC<BuzzButtonProps> = ({ 
   handleBuzz, 
   buzzMapPrice,
-  radiusKm = 1
+  radiusKm = 1 // Default value if not provided
 }) => {
   const { createMapBuzzNotification } = useNotificationManager();
   
   const handleBuzzClick = async () => {
-    console.log("BUZZ MAPPA pressed - generating search area with radius:", radiusKm, "km");
-    
-    // Execute the main buzz function (generates search area)
+    // Execute the main buzz function
     handleBuzz();
     
-    // Create a notification for the generated area
+    // Create a notification and ensure it's created successfully
     try {
       await createMapBuzzNotification(
-        "Area BUZZ Generata", 
-        `Nuova area di ricerca creata con raggio ${radiusKm}km sulla mappa.`
+        "Mappa generata con BUZZ", 
+        `Area di raggio ${radiusKm}km creata con successo.`
       );
       console.log("Map Buzz notification created successfully");
     } catch (error) {
@@ -46,7 +43,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         }}
       >
         <CircleIcon className="mr-2 h-4 w-4" />
-        BUZZ MAPPA €{buzzMapPrice.toFixed(2)}
+        BUZZ {buzzMapPrice.toFixed(2)}€
       </Button>
       <style>
         {`

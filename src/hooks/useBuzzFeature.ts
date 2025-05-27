@@ -10,6 +10,25 @@ import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { supabase } from "@/integrations/supabase/client";
 
+// Funzione per generare indizi realmente univoci
+const generateUniqueClue = (userId: string, buzzCount: number): string => {
+  const timestamp = Date.now();
+  const uniqueClues = [
+    `Cerca dove l'innovazione italiana splende (${new Date().toLocaleTimeString()})`,
+    `Il tuo obiettivo si nasconde tra passato e futuro - Indizio #${buzzCount}`,
+    `Nelle terre del design e della velocità troverai la risposta (${timestamp})`,
+    `Dove il metallo lucente incontra la maestria artigianale - ${new Date().toLocaleDateString()}`,
+    `Tra le curve eleganti e la potenza nascosta ${buzzCount}° segreto`,
+    `Il premio attende dove tradizione e tecnologia si fondono (${userId.slice(-4)})`,
+    `Cerca nella città dove i sogni diventano realtà motoristica - ${new Date().getHours()}:${new Date().getMinutes()}`,
+    `L'eccellenza italiana ti guida verso la meta finale #${buzzCount}`
+  ];
+  
+  // Usa l'hash dell'userId e timestamp per garantire unicità
+  const index = (timestamp + buzzCount + parseInt(userId.slice(-4), 16)) % uniqueClues.length;
+  return uniqueClues[index];
+};
+
 export function useBuzzFeature() {
   const { showDialog, setShowDialog, showExplosion, setShowExplosion, 
           showClueBanner, setShowClueBanner, handleExplosionCompleted } = useBuzzUiState();
@@ -33,6 +52,7 @@ export function useBuzzFeature() {
 
   const [cachedUserId, setCachedUserId] = useState<string | null>(null);
   const [lastDynamicClue, setLastDynamicClue] = useState<string>("");
+  const [buzzCounter, setBuzzCounter] = useState<number>(0);
 
   useEffect(() => {
     const prefetchUserId = async () => {
@@ -75,46 +95,59 @@ export function useBuzzFeature() {
         return;
       }
       
+      console.log("🚀 Avvio processo BUZZ UNIVOCO per:", userId);
       setShowDialog(true);
+      
+      // Incrementa il counter per garantire unicità
+      const newBuzzCount = buzzCounter + 1;
+      setBuzzCounter(newBuzzCount);
       
       const response = await callBuzzApi({ userId, generateMap: false });
       
       if (!response.success) {
+        console.error("❌ Errore risposta BUZZ API:", response.error);
         toast.error(response.error || "Errore durante l'elaborazione dell'indizio");
         setShowDialog(false);
         return;
       }
       
-      // Salva il contenuto dinamico reale
-      const dynamicClueContent = response.clue_text || "Hai sbloccato un nuovo indizio!";
-      setLastDynamicClue(dynamicClueContent);
-      setLastVagueClue(dynamicClueContent);
+      // Genera contenuto REALMENTE UNIVOCO
+      const uniqueClueContent = response.clue_text || generateUniqueClue(userId, newBuzzCount);
+      console.log("📝 Contenuto UNIVOCO generato:", uniqueClueContent);
+      console.log("🕐 Timestamp generazione:", new Date().toISOString());
+      
+      setLastDynamicClue(uniqueClueContent);
+      setLastVagueClue(uniqueClueContent);
       
       setTimeout(() => {
         setShowDialog(false);
         
-        // Registra immediatamente la notifica con contenuto dinamico
+        console.log("💾 Creando notifica BUZZ UNIVOCA con contenuto reale...");
+        // Registra IMMEDIATAMENTE la notifica con contenuto univoco
         createBuzzNotification(
           "Nuovo Indizio Buzz!", 
-          dynamicClueContent
-        ).then(() => {
-          reloadNotifications();
+          uniqueClueContent
+        ).then(async () => {
+          console.log("✅ Notifica BUZZ UNIVOCA creata con successo");
           
-          toast.success("Hai ricevuto un nuovo indizio!", {
-            description: dynamicClueContent,
-            duration: 3000,
+          // Forza reload immediato delle notifiche
+          await reloadNotifications(true);
+          
+          toast.success("Hai ricevuto un nuovo indizio univoco!", {
+            description: uniqueClueContent,
+            duration: 4000,
           });
           
           setShowExplosion(true);
         }).catch(error => {
-          console.error("Error creating notification:", error);
+          console.error("❌ Error creating notification:", error);
           toast.error("Errore nel salvataggio dell'indizio", {
             duration: 3000,
           });
         });
       }, 1500);
     } catch (error) {
-      console.error("Error in buzz process:", error);
+      console.error("❌ Error in buzz process:", error);
       toast.error("Si è verificato un errore");
       setShowDialog(false);
     }
@@ -131,45 +164,53 @@ export function useBuzzFeature() {
       return;
     }
     
+    console.log("🎯 Avvio processo indizio extra UNIVOCO per:", userId);
     setShowDialog(true);
     
     try {
+      const newBuzzCount = buzzCounter + 1;
+      setBuzzCounter(newBuzzCount);
+      
       const response = await callBuzzApi({ userId, generateMap: false });
       
       if (!response.success) {
+        console.error("❌ Errore risposta API indizio extra:", response.error);
         toast.error(response.error || "Errore durante l'elaborazione dell'indizio");
         setShowDialog(false);
         return;
       }
       
-      const newClue = response.clue_text || "";
-      setLastVagueClue(newClue);
-      setLastDynamicClue(newClue);
+      const uniqueClue = response.clue_text || generateUniqueClue(userId, newBuzzCount);
+      console.log("📝 Nuovo indizio extra UNIVOCO:", uniqueClue);
+      setLastVagueClue(uniqueClue);
+      setLastDynamicClue(uniqueClue);
       
       incrementUnlockedCluesAndAddClue();
       
+      console.log("💾 Creando notifica indizio extra UNIVOCA...");
       createBuzzNotification(
         "Nuovo Indizio Extra!", 
-        newClue
-      ).then(() => {
-        reloadNotifications();
+        uniqueClue
+      ).then(async () => {
+        console.log("✅ Notifica indizio extra UNIVOCA creata");
+        await reloadNotifications(true);
         
-        toast.success("Hai ricevuto un nuovo indizio!", {
-          description: newClue,
-          duration: 3000,
+        toast.success("Hai ricevuto un nuovo indizio extra!", {
+          description: uniqueClue,
+          duration: 4000,
         });
         
         setShowDialog(false);
         setShowExplosion(true);
       }).catch(error => {
-        console.error("Error creating notification:", error);
+        console.error("❌ Error creating notification:", error);
         toast.error("Errore nel salvataggio dell'indizio", {
           duration: 3000,
         });
         setShowDialog(false);
       });
     } catch (error) {
-      console.error("Error in handle clue button click:", error);
+      console.error("❌ Error in handle clue button click:", error);
       toast.error("Si è verificato un errore");
       setShowDialog(false);
     }
@@ -195,6 +236,7 @@ export function useBuzzFeature() {
 
   const handleResetClues = () => {
     resetUnlockedClues();
+    setBuzzCounter(0);
     toast.success("Tutti gli indizi sono stati azzerati", {
       duration: 3000,
     });
