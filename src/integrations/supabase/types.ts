@@ -772,6 +772,33 @@ export type Database = {
           },
         ]
       }
+      user_buzz_map_counter: {
+        Row: {
+          buzz_map_count: number
+          created_at: string
+          date: string
+          id: string
+          user_id: string
+          week_map_counts: number[] | null
+        }
+        Insert: {
+          buzz_map_count?: number
+          created_at?: string
+          date?: string
+          id?: string
+          user_id: string
+          week_map_counts?: number[] | null
+        }
+        Update: {
+          buzz_map_count?: number
+          created_at?: string
+          date?: string
+          id?: string
+          user_id?: string
+          week_map_counts?: number[] | null
+        }
+        Relationships: []
+      }
       user_clues: {
         Row: {
           buzz_cost: number
@@ -1013,6 +1040,10 @@ export type Database = {
         Returns: undefined
       }
       increment_buzz_counter: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      increment_buzz_map_counter: {
         Args: { p_user_id: string }
         Returns: number
       }

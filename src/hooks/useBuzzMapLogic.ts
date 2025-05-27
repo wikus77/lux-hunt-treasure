@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
@@ -5,6 +6,7 @@ import { useBuzzAreaManagement } from './useBuzzAreaManagement';
 import { useBuzzPricing } from './useBuzzPricing';
 import { useBuzzCounter } from './useBuzzCounter';
 import { useBuzzDatabase } from './useBuzzDatabase';
+import { useBuzzMapCounter } from './useBuzzMapCounter';
 
 export interface BuzzMapArea {
   id: string;
@@ -44,6 +46,12 @@ export const useBuzzMapLogic = () => {
     updateDailyBuzzCounter
   } = useBuzzCounter(user?.id);
 
+  // NEW: Use the dedicated BUZZ MAPPA counter
+  const {
+    dailyBuzzMapCounter,
+    updateDailyBuzzMapCounter
+  } = useBuzzMapCounter(user?.id);
+
   const { createBuzzMapArea } = useBuzzDatabase();
 
   // Generate new BUZZ MAPPA area
@@ -71,7 +79,7 @@ export const useBuzzMapLogic = () => {
         radius_km: radiusKm,
         week: currentWeek,
         price: price,
-        currentBuzzCounter: dailyBuzzCounter
+        currentBuzzMapCounter: dailyBuzzMapCounter
       });
 
       // Remove previous area
@@ -92,8 +100,9 @@ export const useBuzzMapLogic = () => {
         return null;
       }
       
-      // Update buzz counter
-      const newBuzzCounter = await updateDailyBuzzCounter();
+      // Update BUZZ MAPPA counter (NEW - separate from regular buzz counter)
+      const newBuzzMapCounter = await updateDailyBuzzMapCounter();
+      console.log('📊 BUZZ MAPPA counter updated to:', newBuzzMapCounter);
       
       // Update local state
       console.log('🔄 CRITICAL RADIUS - FORCE updating local state immediately with new area:', newArea);
@@ -117,7 +126,7 @@ export const useBuzzMapLogic = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, getCurrentWeek, calculateNextRadius, calculateBuzzMapPrice, dailyBuzzCounter, removePreviousArea, createBuzzMapArea, updateDailyBuzzCounter, setCurrentWeekAreas, loadCurrentWeekAreas, loadDailyBuzzCounter]);
+  }, [user, getCurrentWeek, calculateNextRadius, calculateBuzzMapPrice, dailyBuzzMapCounter, removePreviousArea, createBuzzMapArea, updateDailyBuzzMapCounter, setCurrentWeekAreas, loadCurrentWeekAreas, loadDailyBuzzCounter]);
 
   // Debug function
   const debugCurrentState = useCallback(() => {
@@ -132,6 +141,7 @@ export const useBuzzMapLogic = () => {
       price: calculateBuzzMapPrice(),
       forceUpdateCounter: forceUpdateCounter,
       dailyBuzzCounter: dailyBuzzCounter,
+      dailyBuzzMapCounter: dailyBuzzMapCounter, // NEW: separate counter
       stateTimestamp: new Date().toISOString()
     });
     
@@ -147,7 +157,7 @@ export const useBuzzMapLogic = () => {
         });
       });
     }
-  }, [user, currentWeekAreas, userCluesCount, isGenerating, getActiveArea, calculateNextRadius, calculateBuzzMapPrice, forceUpdateCounter, dailyBuzzCounter]);
+  }, [user, currentWeekAreas, userCluesCount, isGenerating, getActiveArea, calculateNextRadius, calculateBuzzMapPrice, forceUpdateCounter, dailyBuzzCounter, dailyBuzzMapCounter]);
 
   // Load initial data
   useEffect(() => {
@@ -164,6 +174,7 @@ export const useBuzzMapLogic = () => {
       count: currentWeekAreas.length,
       forceUpdateCounter: forceUpdateCounter,
       dailyBuzzCounter: dailyBuzzCounter,
+      dailyBuzzMapCounter: dailyBuzzMapCounter, // NEW: separate counter logging
       timestamp: new Date().toISOString()
     });
     
@@ -174,13 +185,14 @@ export const useBuzzMapLogic = () => {
         buzzCounterForColor: dailyBuzzCounter
       });
     }
-  }, [currentWeekAreas, forceUpdateCounter, dailyBuzzCounter]);
+  }, [currentWeekAreas, forceUpdateCounter, dailyBuzzCounter, dailyBuzzMapCounter]);
 
   return {
     currentWeekAreas,
     isGenerating,
     userCluesCount,
     dailyBuzzCounter,
+    dailyBuzzMapCounter, // NEW: expose the separate BUZZ MAPPA counter
     calculateNextRadius,
     calculateBuzzMapPrice,
     generateBuzzMapArea,
