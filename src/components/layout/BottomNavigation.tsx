@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { BellRing, Map, Home, Award, User, Circle, Gamepad2 } from "lucide-react";
+import { Mail, Map, Home, Award, User, Circle, Gamepad2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
 
@@ -21,7 +21,7 @@ const BottomNavigation = () => {
     },
     { icon: <Gamepad2 className="h-6 w-6" />, label: "Games", path: "/games" },
     { 
-      icon: <BellRing className="h-6 w-6" />, 
+      icon: <Mail className="h-6 w-6" />, 
       label: "Notifiche", 
       path: "/notifications", 
       badge: unreadCount > 0 

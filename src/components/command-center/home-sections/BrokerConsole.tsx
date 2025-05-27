@@ -1,121 +1,238 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { ShoppingCart, Zap, Lock, Star } from "lucide-react";
 import GradientBox from "@/components/ui/gradient-box";
+import { useLongPress } from "@/hooks/useLongPress";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-interface ClueItem {
+interface ClueData {
   id: string;
   code: string;
   title: string;
   description: string;
   cost: number;
+  type: "basic" | "premium" | "exclusive";
   progressValue: number;
-  alreadyPurchased?: boolean;
 }
 
 interface BrokerConsoleProps {
   credits: number;
-  onPurchaseClue: (clue: ClueItem) => void;
+  onPurchaseClue: (clue: ClueData) => void;
 }
 
 export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
-  // Sample clues data
-  const clues: ClueItem[] = [
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const isMobile = useIsMobile();
+
+  // Long press functionality for mobile fullscreen
+  const longPressProps = useLongPress(
+    () => {
+      if (isMobile) {
+        setIsFullscreen(true);
+      }
+    },
     {
-      id: "c1",
+      threshold: 800, // 800ms for long press
+    }
+  );
+
+  const availableClues: ClueData[] = [
+    {
+      id: "clue_001",
       code: "CLU-001",
-      title: "Posizione approssimativa",
-      description: "La merce si trova in un raggio di 500m dal punto indicato sulla mappa.",
-      cost: 200,
-      progressValue: 5,
+      title: "Coordinate Base",
+      description: "Rivela la zona generale dell'obiettivo",
+      cost: 50,
+      type: "basic",
+      progressValue: 5
     },
     {
-      id: "c2",
+      id: "clue_002", 
       code: "CLU-002",
-      title: "Tipologia edificio",
-      description: "La merce è nascosta all'interno di un edificio storico.",
-      cost: 350,
-      progressValue: 8,
+      title: "Dettaglio Architettonico",
+      description: "Informazioni specifiche sull'edificio target",
+      cost: 120,
+      type: "premium",
+      progressValue: 10
     },
     {
-      id: "c3",
-      code: "CLU-003",
-      title: "Accesso riservato",
-      description: "Per accedere alla location è necessario un codice speciale.",
-      cost: 500,
-      progressValue: 12,
-    },
-    {
-      id: "c4",
-      code: "CLU-004",
-      title: "Orari disponibilità",
-      description: "La merce è accessibile solo in determinati orari.",
-      cost: 150,
-      progressValue: 4,
-    },
+      id: "clue_003",
+      code: "CLU-003", 
+      title: "Intel Esclusivo",
+      description: "Accesso a intelligence riservata di alto livello",
+      cost: 250,
+      type: "exclusive",
+      progressValue: 20
+    }
   ];
 
-  const [hoveredClue, setHoveredClue] = useState<string | null>(null);
+  const getClueIcon = (type: string) => {
+    switch (type) {
+      case "basic":
+        return <Zap className="w-4 h-4 text-blue-400" />;
+      case "premium":
+        return <Star className="w-4 h-4 text-yellow-400" />;
+      case "exclusive":
+        return <Lock className="w-4 h-4 text-purple-400" />;
+      default:
+        return <Zap className="w-4 h-4 text-blue-400" />;
+    }
+  };
+
+  const getClueStyle = (type: string) => {
+    switch (type) {
+      case "basic":
+        return "border-blue-500/30 bg-blue-500/10";
+      case "premium":
+        return "border-yellow-500/30 bg-yellow-500/10";
+      case "exclusive":
+        return "border-purple-500/30 bg-purple-500/10";
+      default:
+        return "border-blue-500/30 bg-blue-500/10";
+    }
+  };
+
+  // Fullscreen component
+  const FullscreenView = () => (
+    <motion.div
+      className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.3 }}
+      onClick={() => setIsFullscreen(false)}
+    >
+      <div className="h-full w-full p-6 overflow-y-auto">
+        <GradientBox>
+          <div className="p-4 border-b border-white/10 flex justify-between items-center">
+            <h2 className="text-xl md:text-2xl font-orbitron font-bold">
+              <span className="text-[#00D1FF]" style={{ 
+                textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+              }}>M1</span>
+              <span className="text-white">SSION CONSOLE</span>
+            </h2>
+            
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-white/70">Crediti disponibili</span>
+              <span className="text-lg font-bold text-[#00D1FF]">{credits}</span>
+            </div>
+          </div>
+          
+          <div className="p-4">
+            <p className="text-white/70 text-sm mb-4">
+              Acquista indizi per avvicinarti all'obiettivo principale.
+            </p>
+            
+            <div className="space-y-3">
+              {availableClues.map((clue, index) => (
+                <motion.div
+                  key={clue.id}
+                  className={`p-4 rounded-lg border ${getClueStyle(clue.type)} hover:scale-105 transition-all duration-200`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center space-x-2">
+                      {getClueIcon(clue.type)}
+                      <span className="text-white/80 text-xs font-mono">{clue.code}</span>
+                    </div>
+                    <span className="text-[#00D1FF] font-bold">{clue.cost} crediti</span>
+                  </div>
+                  
+                  <h3 className="text-white font-bold text-sm mb-1">{clue.title}</h3>
+                  <p className="text-white/60 text-xs mb-3">{clue.description}</p>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-green-400 text-xs">+{clue.progressValue}% progresso</span>
+                    <button
+                      className={`px-3 py-1 rounded text-xs transition-all ${
+                        credits >= clue.cost
+                          ? "bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white hover:scale-105"
+                          : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                      }`}
+                      disabled={credits < clue.cost}
+                      onClick={() => onPurchaseClue(clue)}
+                    >
+                      <ShoppingCart className="w-3 h-3 inline mr-1" />
+                      Acquista
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </GradientBox>
+      </div>
+    </motion.div>
+  );
 
   return (
-    <GradientBox>
-      <div className="p-4 border-b border-white/10 flex justify-between items-center">
-        <h2 className="text-lg md:text-xl font-orbitron font-bold">
-          <span className="text-[#00D1FF]" style={{ 
-            textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-          }}>M1</span>
-          <span className="text-white">SSION CONSOLE</span>
-        </h2>
-        
-        <div className="px-3 py-1 rounded-full bg-gradient-to-r from-[#7B2EFF] to-[#00D1FF] text-white text-sm font-medium">
-          {credits} Crediti
-        </div>
-      </div>
-      
-      <div className="p-4 space-y-3">
-        <div className="text-white/70 text-sm mb-2">
-          Acquista indizi per progredire nella missione:
+    <>
+      <GradientBox {...(isMobile ? longPressProps : {})}>
+        <div className="p-4 border-b border-white/10 flex justify-between items-center">
+          <h2 className="text-lg md:text-xl font-orbitron font-bold">
+            <span className="text-[#00D1FF]" style={{ 
+              textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+            }}>M1</span>
+            <span className="text-white">SSION CONSOLE</span>
+          </h2>
+          
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-white/70">Crediti disponibili</span>
+            <span className="text-lg font-bold text-[#00D1FF]">{credits}</span>
+          </div>
         </div>
         
-        {clues.map((clue) => (
-          <motion.div
-            key={clue.id}
-            className="p-3 rounded-lg border border-white/10 bg-black/20 hover:bg-black/30 transition-colors"
-            whileHover={{ scale: 1.01 }}
-            onMouseEnter={() => setHoveredClue(clue.id)}
-            onMouseLeave={() => setHoveredClue(null)}
-          >
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="flex items-center">
-                  <span className="text-xs font-mono bg-white/10 px-2 py-0.5 rounded text-white/70">
-                    {clue.code}
-                  </span>
-                  <h3 className="text-white ml-2 font-medium">{clue.title}</h3>
-                </div>
-                {(hoveredClue === clue.id) && (
-                  <motion.p 
-                    className="text-xs text-white/60 mt-1 ml-1"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {clue.description}
-                  </motion.p>
-                )}
-              </div>
-              
-              <button
-                className="px-3 py-1 rounded-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white text-sm font-medium hover:shadow-[0_0_10px_rgba(0,209,255,0.4)] transition-all"
-                onClick={() => onPurchaseClue(clue)}
-                disabled={credits < clue.cost}
+        <div className="p-4">
+          <p className="text-white/70 text-sm mb-4">
+            Acquista indizi per avvicinarti all'obiettivo principale.
+          </p>
+          
+          <div className="space-y-3 max-h-[calc(100vh-25rem)] overflow-y-auto pr-1 custom-scrollbar">
+            {availableClues.map((clue, index) => (
+              <motion.div
+                key={clue.id}
+                className={`p-4 rounded-lg border ${getClueStyle(clue.type)} hover:scale-105 transition-all duration-200`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                {clue.cost} CR
-              </button>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </GradientBox>
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center space-x-2">
+                    {getClueIcon(clue.type)}
+                    <span className="text-white/80 text-xs font-mono">{clue.code}</span>
+                  </div>
+                  <span className="text-[#00D1FF] font-bold">{clue.cost} crediti</span>
+                </div>
+                
+                <h3 className="text-white font-bold text-sm mb-1">{clue.title}</h3>
+                <p className="text-white/60 text-xs mb-3">{clue.description}</p>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-green-400 text-xs">+{clue.progressValue}% progresso</span>
+                  <button
+                    className={`px-3 py-1 rounded text-xs transition-all ${
+                      credits >= clue.cost
+                        ? "bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white hover:scale-105"
+                        : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    }`}
+                    disabled={credits < clue.cost}
+                    onClick={() => onPurchaseClue(clue)}
+                  >
+                    <ShoppingCart className="w-3 h-3 inline mr-1" />
+                    Acquista
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </GradientBox>
+
+      {/* Fullscreen overlay for mobile */}
+      {isFullscreen && <FullscreenView />}
+    </>
   );
 }

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Brain, Bomb, Fingerprint, MapPin, Satellite, MessageSquare, LockKeyholeIcon, X } from "lucide-react";
@@ -119,7 +118,7 @@ const Games = () => {
   return (
     <HomeLayout profileImage={profileImage}>
       <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
-        {/* Header Section */}
+        {/* Header Section - NOW ADDED */}
         <div className="pt-20 pb-8 px-4">
           <div className="max-w-6xl mx-auto">
             <motion.div
@@ -163,7 +162,7 @@ const Games = () => {
           </div>
         </div>
 
-        {/* Memory Hack Game Modal */}
+        {/* Game Modals - keep existing code for all modals */}
         <Dialog open={activeGame === 'memory_hack'} onOpenChange={closeGame}>
           <DialogContent className="max-w-4xl w-full bg-black/95 border-white/10">
             <DialogHeader>
@@ -185,7 +184,6 @@ const Games = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Disarm The Bomb Game Modal */}
         <Dialog open={activeGame === 'disarm_the_bomb'} onOpenChange={closeGame}>
           <DialogContent className="max-w-4xl w-full bg-black/95 border-white/10">
             <DialogHeader>
@@ -207,7 +205,6 @@ const Games = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Crack The Combination Game Modal */}
         <Dialog open={activeGame === 'crack_combination'} onOpenChange={closeGame}>
           <DialogContent className="max-w-4xl w-full bg-black/95 border-white/10">
             <DialogHeader>
@@ -229,7 +226,6 @@ const Games = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Find Map Point Game Modal */}
         <Dialog open={activeGame === 'find_map_point'} onOpenChange={closeGame}>
           <DialogContent className="max-w-5xl w-full bg-black/95 border-white/10">
             <DialogHeader>
@@ -251,7 +247,6 @@ const Games = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Satellite Tracking Game Modal */}
         <Dialog open={activeGame === 'satellite_tracking'} onOpenChange={closeGame}>
           <DialogContent className="max-w-2xl w-full bg-black/95 border-white/10">
             <DialogHeader>
@@ -273,7 +268,6 @@ const Games = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Flash Interrogation Game Modal */}
         <Dialog open={activeGame === 'flash_interrogation'} onOpenChange={closeGame}>
           <DialogContent className="max-w-3xl w-full bg-black/95 border-white/10">
             <DialogHeader>
