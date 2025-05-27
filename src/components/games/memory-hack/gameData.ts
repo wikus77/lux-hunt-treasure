@@ -1,9 +1,10 @@
 
 import { Brain, Shield, Zap, Eye, Target, Lock, Star, Cpu } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 export interface GameIconData {
   type: string;
-  icon: React.ReactNode;
+  icon: LucideIcon;
 }
 
 export const gameIconsData: GameIconData[] = [
@@ -20,7 +21,7 @@ export const gameIconsData: GameIconData[] = [
 export interface GameCard {
   id: number;
   iconType: string;
-  icon: React.ReactNode;
+  icon: LucideIcon;
   isFlipped: boolean;
   isMatched: boolean;
 }

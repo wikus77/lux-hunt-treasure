@@ -11,7 +11,7 @@ interface GameCardProps {
 }
 
 const GameCard: React.FC<GameCardProps> = ({ card, onClick, disabled }) => {
-  const IconComponent = card.icon as React.ComponentType<{ className?: string }>;
+  const IconComponent = card.icon;
 
   return (
     <motion.div
