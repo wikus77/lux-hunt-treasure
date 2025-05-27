@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { SearchArea } from "@/components/maps/types";
@@ -13,6 +14,14 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
   // Add a ref to store the radius temporarily while user selects map location
   const pendingRadiusRef = useRef<number>(500);
   const [searchAreasThisWeek, setSearchAreasThisWeek] = useState<number>(0);
+
+  // Validate coordinates helper function
+  const validateCoordinates = (lat: number, lng: number): boolean => {
+    return !isNaN(lat) && !isNaN(lng) && 
+           lat >= -90 && lat <= 90 && 
+           lng >= -180 && lng <= 180 &&
+           lat !== 0 && lng !== 0; // Avoid null island
+  };
 
   // Sync areas with localStorage
   useEffect(() => {
@@ -106,6 +115,14 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
         const lng = e.latlng.lng;
         const radius = pendingRadiusRef.current;
         
+        // Validate coordinates
+        if (!validateCoordinates(lat, lng)) {
+          console.error("Invalid coordinates from map click:", lat, lng);
+          toast.error("Coordinate non valide selezionate sulla mappa");
+          setIsAddingSearchArea(false);
+          return;
+        }
+        
         console.log("Coordinate selezionate:", lat, lng);
         console.log("Raggio utilizzato:", radius);
 
@@ -189,6 +206,67 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     }
   };
 
+  // Generate search area function with coordinate validation
+  const generateSearchArea = (radius?: number, targetLat?: number, targetLng?: number) => {
+    try {
+      // Use provided coordinates or fallback to default location
+      const lat = targetLat ?? defaultLocation[0];
+      const lng = targetLng ?? defaultLocation[1];
+      
+      // Validate coordinates
+      if (!validateCoordinates(lat, lng)) {
+        console.error("Invalid coordinates for area generation:", lat, lng);
+        toast.error("Coordinate non valide per la generazione dell'area", {
+          description: "Utilizza il tasto di geolocalizzazione o ricarica la pagina"
+        });
+        return null;
+      }
+
+      // Use the provided radius or calculate it
+      const finalRadius = radius || calculateRadius();
+      
+      // Validate radius
+      if (!finalRadius || finalRadius <= 0) {
+        console.error("Invalid radius for area generation:", finalRadius);
+        toast.error("Raggio non valido per la generazione dell'area");
+        return null;
+      }
+
+      // Create the search area with purple neon style
+      const newArea: SearchArea = {
+        id: uuidv4(),
+        lat: lat,
+        lng: lng,
+        radius: finalRadius,
+        label: `Area BUZZ ${searchAreasThisWeek + 1}`,
+        color: "#9b87f5", // Purple neon
+        position: { lat: lat, lng: lng },
+        isAI: true,
+        confidence: "Media"
+      };
+      
+      console.log("Area generata con coordinate validate:", {
+        id: newArea.id,
+        posizione: `${lat}, ${lng}`,
+        radius: finalRadius / 1000 + " km",
+        label: newArea.label
+      });
+      
+      setSearchAreas(prev => [...prev, newArea]);
+      setActiveSearchArea(newArea.id);
+      setSearchAreasThisWeek(prev => prev + 1);
+      
+      // Return the ID for the caller
+      return newArea.id;
+    } catch (error) {
+      console.error("Errore nella generazione dell'area:", error);
+      toast.error("Impossibile generare l'area di ricerca", {
+        description: "Controlla la console per maggiori dettagli"
+      });
+      return null;
+    }
+  };
+
   const saveSearchArea = (id: string, label: string, radius: number) => {
     console.log("Saving search area:", id, label, radius);
     setSearchAreas(searchAreas.map(area =>
@@ -255,6 +333,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     clearAllSearchAreas,
     toggleAddingSearchArea,
     calculateRadius, // Export the calculateRadius function
+    generateSearchArea, // Export the validated generateSearchArea function
     // Export a method to set the pending radius
     setPendingRadius: (radius: number) => {
       pendingRadiusRef.current = radius;

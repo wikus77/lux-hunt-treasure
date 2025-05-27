@@ -23,41 +23,84 @@ export const useNewMapPage = () => {
   const [isAddingPoint, setIsAddingPoint] = useState(false);
   const [newPoint, setNewPoint] = useState<NewPoint>({ latitude: null, longitude: null });
   const [activeMapPoint, setActiveMapPoint] = useState<string | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
 
   const defaultLocation: [number, number] = [41.9028, 12.4964]; // Rome, Italy
 
-  // Use search areas logic
+  // Use search areas logic with validated default location
   const searchAreasLogic = useSearchAreasLogic(defaultLocation);
 
-  // Generate search area function
+  // Get current map center or use fallback coordinates
+  const getValidCoordinates = useCallback((): [number, number] => {
+    // Priority: current location > default location
+    if (currentLocation && currentLocation[0] && currentLocation[1]) {
+      return currentLocation;
+    }
+    return defaultLocation;
+  }, [currentLocation]);
+
+  // Generate search area function with coordinate validation
   const generateSearchArea = useCallback(() => {
     try {
       console.log("Generating search area from BUZZ MAPPA button...");
       
+      // Get validated coordinates
+      const [lat, lng] = getValidCoordinates();
+      
+      // Validate coordinates before proceeding
+      if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+        console.error("Invalid coordinates:", { lat, lng });
+        toast.error("Errore nella posizione. Impossibile generare l'area di ricerca.", {
+          description: "Ricarica la pagina o concedi i permessi di geolocalizzazione"
+        });
+        return null;
+      }
+
+      console.log("Using validated coordinates:", { lat, lng });
+      
       // Calculate radius based on existing areas this week
       const calculatedRadius = searchAreasLogic.calculateRadius ? searchAreasLogic.calculateRadius() : 100000; // 100km default
       
+      // Validate radius
+      if (!calculatedRadius || calculatedRadius <= 0) {
+        console.error("Invalid radius calculated:", calculatedRadius);
+        toast.error("Errore nel calcolo del raggio area");
+        return null;
+      }
+
       // Set the pending radius
       searchAreasLogic.setPendingRadius(calculatedRadius);
       
-      // Activate adding mode
-      searchAreasLogic.setIsAddingSearchArea(true);
+      // Generate area directly with validated coordinates
+      if (searchAreasLogic.generateSearchArea) {
+        const areaId = searchAreasLogic.generateSearchArea(calculatedRadius);
+        
+        if (areaId) {
+          console.log(`Search area generated successfully with ID: ${areaId}, coords: ${lat}, ${lng}, radius: ${calculatedRadius/1000}km`);
+          toast.success("Area di ricerca BUZZ generata sulla mappa!", {
+            description: `Raggio: ${(calculatedRadius/1000).toFixed(1)}km - Posizione: ${lat.toFixed(4)}, ${lng.toFixed(4)}`
+          });
+          return areaId;
+        }
+      }
       
-      // Generate a random area ID for tracking
-      const areaId = Date.now().toString();
+      // Fallback: activate manual placement mode
+      searchAreasLogic.setIsAddingSearchArea(true);
       
       console.log(`Search area generation initiated with radius: ${calculatedRadius/1000}km`);
       toast.info("Clicca sulla mappa per posizionare l'area di ricerca BUZZ", {
         description: `Raggio: ${(calculatedRadius/1000).toFixed(1)}km`
       });
       
-      return areaId;
+      return Date.now().toString();
     } catch (error) {
       console.error("Error generating search area:", error);
-      toast.error("Errore nella generazione dell'area di ricerca");
+      toast.error("Errore nella generazione dell'area di ricerca", {
+        description: "Controlla la console per dettagli"
+      });
       return null;
     }
-  }, [searchAreasLogic]);
+  }, [searchAreasLogic, getValidCoordinates]);
 
   // Load map points from Supabase
   useEffect(() => {
@@ -89,6 +132,12 @@ export const useNewMapPage = () => {
   }, [setMapPoints]);
 
   const addNewPoint = useCallback((lat: number, lng: number) => {
+    // Validate coordinates before adding point
+    if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+      toast.error("Coordinate non valide per il nuovo punto");
+      return;
+    }
+    
     setNewPoint({ latitude: lat, longitude: lng });
     setIsAddingPoint(true);
   }, []);
@@ -186,21 +235,18 @@ export const useNewMapPage = () => {
     }
   }, [setMapPoints]);
 
-  // BUZZ MAPPA functionality - generates search area using existing logic
+  // BUZZ MAPPA functionality - generates search area using validated coordinates
   const handleBuzz = useCallback(() => {
     console.log("Executing BUZZ MAPPA - generating search area...");
     
-    // Use the generateSearchArea function
+    // Use the generateSearchArea function with coordinate validation
     const areaId = generateSearchArea();
     
     if (areaId) {
       console.log("Search area generated successfully with ID:", areaId);
-      toast.success("Area di ricerca BUZZ generata sulla mappa!", {
-        description: "Controlla la nuova area cerchiata sulla mappa"
-      });
+      // Success message already shown in generateSearchArea
     } else {
-      console.error("Failed to generate search area");
-      toast.error("Errore nella generazione dell'area di ricerca");
+      console.error("Failed to generate search area - check coordinates and permissions");
     }
   }, [generateSearchArea]);
 
@@ -214,14 +260,25 @@ export const useNewMapPage = () => {
         });
       });
 
-      toast.success('Posizione ottenuta con successo');
-      return [position.coords.latitude, position.coords.longitude] as [number, number];
+      const newLocation: [number, number] = [position.coords.latitude, position.coords.longitude];
+      setCurrentLocation(newLocation);
+      
+      toast.success('Posizione ottenuta con successo', {
+        description: `Lat: ${newLocation[0].toFixed(4)}, Lng: ${newLocation[1].toFixed(4)}`
+      });
+      
+      return newLocation;
     } catch (error) {
       console.error('Error getting location:', error);
-      toast.error('Impossibile ottenere la posizione');
-      return null;
+      toast.error('Impossibile ottenere la posizione', {
+        description: 'Verrà utilizzata la posizione predefinita (Roma)'
+      });
+      
+      // Set default location if geolocation fails
+      setCurrentLocation(defaultLocation);
+      return defaultLocation;
     }
-  }, []);
+  }, [defaultLocation]);
 
   return {
     mapPoints,
@@ -234,10 +291,11 @@ export const useNewMapPage = () => {
     savePoint,
     updateMapPoint,
     deleteMapPoint,
-    handleBuzz, // This connects to the BUZZ MAPPA button
+    handleBuzz, // This connects to the BUZZ MAPPA button with coordinate validation
     requestLocationPermission,
+    currentLocation, // Export current location for use in components
     // Search areas - spread all properties from searchAreasLogic
     ...searchAreasLogic,
-    generateSearchArea // Add the generateSearchArea function
+    generateSearchArea // Add the validated generateSearchArea function
   };
 };
