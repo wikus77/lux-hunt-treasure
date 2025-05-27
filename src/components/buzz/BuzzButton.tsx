@@ -66,7 +66,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const handleBuzzPress = async () => {
     if (isLoading || !userId) return;
     
-    console.log("🚀 Iniziando processo BUZZ per user:", userId);
     setIsLoading(true);
     setError(null);
     
@@ -77,8 +76,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       });
       
       if (response.success) {
-        console.log("✅ Risposta BUZZ API ricevuta:", response);
-        
         // Aggiorna il costo per il prossimo utilizzo
         setDailyCount(prev => prev + 1);
         const { data: newCostData } = await supabase.rpc('calculate_buzz_price', {
@@ -87,14 +84,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         if (newCostData) setBuzzCost(newCostData);
 
         // Ottieni il contenuto dinamico reale dell'indizio
-        const dynamicClueContent = response.clue_text || `Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`;
+        const dynamicClueContent = response.clue_text || "Hai sbloccato un nuovo indizio!";
         
-        console.log("📝 Contenuto dinamico indizio:", dynamicClueContent);
-
         // Registra immediatamente la notifica su Supabase con il contenuto reale
         try {
-          console.log("💾 Inserendo notifica in Supabase...");
-          const { error: notificationError, data: insertedNotification } = await supabase
+          const { error: notificationError } = await supabase
             .from('user_notifications')
             .insert({
               user_id: userId,
@@ -103,17 +97,13 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
               message: dynamicClueContent,
               is_read: false,
               created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
+            });
 
           if (notificationError) {
-            console.error("❌ Errore inserimento notifica:", notificationError);
-          } else {
-            console.log("✅ Notifica inserita con successo:", insertedNotification);
+            console.error("Errore inserimento notifica:", notificationError);
           }
         } catch (notifError) {
-          console.error("❌ Errore creazione notifica:", notifError);
+          console.error("Errore creazione notifica:", notifError);
         }
 
         // Create toast notification con contenuto dinamico
@@ -127,21 +117,20 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             "Nuovo Indizio Buzz", 
             dynamicClueContent
           );
-          console.log("✅ Buzz notification created successfully with dynamic content");
+          console.log("Buzz notification created successfully with dynamic content");
         } catch (notifError) {
-          console.error("❌ Failed to create Buzz notification:", notifError);
+          console.error("Failed to create Buzz notification:", notifError);
         }
         
         onSuccess();
       } else {
-        console.error("❌ Errore risposta BUZZ API:", response.error);
         setError(response.error || "Errore sconosciuto");
         toast.error("Errore", {
           description: response.error || "Si è verificato un errore durante l'elaborazione dell'indizio",
         });
       }
     } catch (error) {
-      console.error("❌ Errore durante la chiamata a Buzz API:", error);
+      console.error("Errore durante la chiamata a Buzz API:", error);
       setError("Si è verificato un errore di comunicazione con il server");
       toast.error("Errore di connessione", {
         description: "Impossibile contattare il server. Riprova più tardi.",

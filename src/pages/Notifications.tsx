@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Bell, MapPin, Circle, Trophy, Calendar, Trash2, Sparkles } from "lucide-react";
+import { Bell, MapPin, Circle, Trophy, Calendar, Trash2 } from "lucide-react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import GradientBox from "@/components/ui/gradient-box";
@@ -76,32 +75,38 @@ const Notifications = () => {
     return result;
   }, [notifications]);
 
-  // Load notifications when component mounts
+  // Load notifications when component mounts - fixed to avoid excessive reloading
   useEffect(() => {
-    console.log("📱 Caricamento pagina notifiche...");
+    // Show page structure immediately
     setIsLoaded(true);
     
+    // Load notifications data only once on initial mount
     const loadData = async () => {
       if (!initialLoadComplete) {
-        console.log("🔄 Ricaricamento notifiche...");
-        await reloadNotifications(true);
+        await reloadNotifications();
+        
+        // Mark all as read when this page is fully loaded
         await markAllAsRead();
+        
+        // Don't set any categories as expanded initially
+        // This fixes the issue with accordion auto-opening
+        
+        // Mark initial load as complete
         setInitialLoadComplete(true);
-        console.log("✅ Caricamento iniziale completato");
       }
     };
     
     loadData();
     
-    // Polling ridotto per aggiornamenti in tempo reale
+    // Remove the high-frequency polling and only check occasionally
     const refreshInterval = setInterval(() => {
-      console.log("🔄 Aggiornamento periodico notifiche...");
       reloadNotifications();
-    }, 30000); // Poll ogni 30 secondi
+    }, 60000); // Poll only every minute instead of every second
     
     return () => clearInterval(refreshInterval);
   }, [markAllAsRead, reloadNotifications, initialLoadComplete]);
 
+  // Handle toggle of each notification category
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => 
       prev.includes(categoryId) 
@@ -111,7 +116,6 @@ const Notifications = () => {
   };
 
   const handleDeleteNotification = async (id: string) => {
-    console.log("🗑️ Eliminazione notifica:", id);
     const success = await deleteNotification(id);
     if (success) {
       toast.success("Notifica eliminata");
@@ -119,20 +123,20 @@ const Notifications = () => {
   };
 
   const handleOpen = async (notification: any) => {
-    console.log("👆 Apertura notifica:", notification.id, "Read status:", notification.read);
+    // Mark as read when opened
     if (!notification.read) {
-      console.log("📖 Marcando notifica come letta...");
       await markAsRead(notification.id);
     }
     setSelectedNotification(notification);
   };
 
+  // Manual refresh function for user-triggered reloads
   const handleManualRefresh = async () => {
-    console.log("🔄 Aggiornamento manuale richiesto");
-    await reloadNotifications(true);
+    await reloadNotifications();
     toast.success("Notifiche aggiornate");
   };
 
+  // Skeleton loader for notifications
   const NotificationSkeleton = () => (
     <div className="space-y-4">
       {[1, 2, 3].map(i => (
@@ -231,28 +235,16 @@ const Notifications = () => {
                               .map(notification => (
                                 <div 
                                   key={notification.id} 
-                                  className={`p-4 rounded-[24px] border transition-all duration-300 shadow-md relative cursor-pointer ${
+                                  className={`p-4 rounded-[24px] border transition-all duration-200 shadow-md relative cursor-pointer ${
                                     !notification.read 
-                                      ? "border-l-8 border-[#FF59F8] bg-gradient-to-br from-[#FF59F8]/35 via-[#00D1FF]/25 to-black/95 hover:from-[#FF59F8]/45 hover:via-[#00D1FF]/35 hover:to-black shadow-[0_0_40px_rgba(255,89,248,0.6),0_0_20px_rgba(0,209,255,0.4)] animate-pulse" 
+                                      ? "border-l-8 border-[#FF59F8] bg-gradient-to-br from-[#FF59F8]/25 via-[#00D1FF]/20 to-black/95 hover:from-[#FF59F8]/35 hover:via-[#00D1FF]/25 hover:to-black shadow-[0_0_30px_rgba(255,89,248,0.4),0_0_15px_rgba(0,209,255,0.3)] animate-pulse" 
                                       : "border-[#00D1FF]/10 hover:border-[#00D1FF]/30 bg-gradient-to-br from-black/90 to-[#131524]/80 hover:from-black hover:to-[#131524]/90"
                                   }`}
                                   onClick={() => handleOpen(notification)}
-                                  style={!notification.read ? {
-                                    boxShadow: "0 0 30px rgba(255, 89, 248, 0.4), 0 0 15px rgba(0, 209, 255, 0.3), inset 0 0 20px rgba(255, 89, 248, 0.1)"
-                                  } : {}}
                                 >
-                                  {/* EVIDENZA VISIVA MASSIMA per notifiche non lette */}
+                                  {/* Scia laterale pulsante per notifiche non lette */}
                                   {!notification.read && (
-                                    <>
-                                      {/* Scia laterale NEON pulsante */}
-                                      <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-b from-[#FF59F8] via-[#00D1FF] to-[#FF59F8] rounded-l-[24px] animate-pulse shadow-[0_0_15px_rgba(255,89,248,0.8)]"></div>
-                                      
-                                      {/* Icona NUOVA pulsante */}
-                                      <div className="absolute top-2 right-2 flex items-center gap-1">
-                                        <Sparkles className="w-4 h-4 text-[#FF59F8] animate-pulse" />
-                                        <div className="h-3 w-3 rounded-full bg-[#FF59F8] animate-ping shadow-[0_0_10px_rgba(255,89,248,0.8)]"></div>
-                                      </div>
-                                    </>
+                                    <div className="absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b from-[#FF59F8] via-[#00D1FF] to-[#FF59F8] rounded-l-[24px] animate-pulse shadow-[0_0_10px_rgba(255,89,248,0.8)]"></div>
                                   )}
                                   
                                   <div className="flex items-start gap-3">
@@ -263,17 +255,20 @@ const Notifications = () => {
                                       <div className="flex items-center gap-2 mb-1">
                                         <h3 className={`font-medium ${
                                           !notification.read 
-                                            ? 'text-[#00D1FF] font-extrabold text-lg glow-text-strong' 
+                                            ? 'text-[#00D1FF] font-extrabold text-lg' 
                                             : 'text-white'
                                         }`} style={!notification.read ? {
-                                          textShadow: "0 0 20px rgba(0, 209, 255, 0.9), 0 0 40px rgba(255, 89, 248, 0.7)"
+                                          textShadow: "0 0 15px rgba(0, 209, 255, 0.8), 0 0 30px rgba(255, 89, 248, 0.6)"
                                         } : {}}>
                                           {notification.title}
                                         </h3>
                                         {!notification.read && (
-                                          <Badge className="bg-gradient-to-r from-[#FF59F8] to-[#00D1FF] text-white font-extrabold px-3 py-1 animate-pulse shadow-[0_0_15px_rgba(255,89,248,0.6)]">
-                                            🆕 NUOVA
-                                          </Badge>
+                                          <div className="flex items-center gap-2">
+                                            <div className="h-3 w-3 rounded-full bg-[#FF59F8] animate-ping shadow-[0_0_10px_rgba(255,89,248,0.8)]"></div>
+                                            <span className="text-xs font-extrabold text-white bg-gradient-to-r from-[#FF59F8] to-[#00D1FF] px-3 py-1 rounded-full shadow-[0_0_15px_rgba(255,89,248,0.6)] animate-pulse">
+                                              NUOVA
+                                            </span>
+                                          </div>
                                         )}
                                       </div>
                                       <p className={`text-sm mt-1 ${
@@ -327,12 +322,6 @@ const Notifications = () => {
       />
       
       <BottomNavigation />
-
-      <style jsx>{`
-        .glow-text-strong {
-          text-shadow: 0 0 20px rgba(0, 209, 255, 0.9), 0 0 40px rgba(255, 89, 248, 0.7) !important;
-        }
-      `}</style>
     </div>
   );
 };
