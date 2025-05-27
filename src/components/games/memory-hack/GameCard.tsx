@@ -11,6 +11,8 @@ interface GameCardProps {
 }
 
 const GameCard: React.FC<GameCardProps> = ({ card, onClick, disabled }) => {
+  const IconComponent = card.icon as React.ComponentType<{ className?: string }>;
+
   return (
     <motion.div
       className="aspect-square cursor-pointer"
@@ -33,7 +35,7 @@ const GameCard: React.FC<GameCardProps> = ({ card, onClick, disabled }) => {
                 exit={{ rotateY: 180 }}
                 transition={{ duration: 0.3 }}
               >
-                {card.icon}
+                <IconComponent className="w-6 h-6 text-[#00D1FF]" />
               </motion.div>
             ) : (
               <motion.div

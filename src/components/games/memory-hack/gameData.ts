@@ -7,14 +7,14 @@ export interface GameIconData {
 }
 
 export const gameIconsData: GameIconData[] = [
-  { type: 'brain', icon: <Brain className="w-6 h-6 text-[#00D1FF]" /> },
-  { type: 'shield', icon: <Shield className="w-6 h-6 text-[#00D1FF]" /> },
-  { type: 'zap', icon: <Zap className="w-6 h-6 text-[#00D1FF]" /> },
-  { type: 'eye', icon: <Eye className="w-6 h-6 text-[#00D1FF]" /> },
-  { type: 'target', icon: <Target className="w-6 h-6 text-[#00D1FF]" /> },
-  { type: 'lock', icon: <Lock className="w-6 h-6 text-[#00D1FF]" /> },
-  { type: 'star', icon: <Star className="w-6 h-6 text-[#00D1FF]" /> },
-  { type: 'cpu', icon: <Cpu className="w-6 h-6 text-[#00D1FF]" /> }
+  { type: 'brain', icon: Brain },
+  { type: 'shield', icon: Shield },
+  { type: 'zap', icon: Zap },
+  { type: 'eye', icon: Eye },
+  { type: 'target', icon: Target },
+  { type: 'lock', icon: Lock },
+  { type: 'star', icon: Star },
+  { type: 'cpu', icon: Cpu }
 ];
 
 export interface GameCard {
