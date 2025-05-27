@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
@@ -226,34 +227,21 @@ const Notifications = () => {
                         <AccordionContent className="bg-black/30 px-4 py-3">
                           <div className="space-y-3">
                             {categoryNotifs
-                              .sort((a, b) => (new Date(b.date).getTime() - new Date(a.date).getTime()))
+                              .sort((a, b) => {
+                                // Sort unread first, then by date
+                                if (a.read !== b.read) return a.read ? 1 : -1;
+                                return new Date(b.date).getTime() - new Date(a.date).getTime();
+                              })
                               .map(notification => (
                                 <div 
                                   key={notification.id} 
-                                  className={`p-4 rounded-[24px] border transition-all duration-300 shadow-md relative cursor-pointer ${
+                                  className={`relative cursor-pointer p-4 rounded-[24px] transition-all duration-300 shadow-md ${
                                     !notification.read 
-                                      ? "border-l-8 border-[#FF59F8] bg-gradient-to-br from-[#FF59F8]/35 via-[#00D1FF]/25 to-black/95 hover:from-[#FF59F8]/45 hover:via-[#00D1FF]/35 hover:to-black shadow-[0_0_40px_rgba(255,89,248,0.6),0_0_20px_rgba(0,209,255,0.4)] animate-pulse" 
-                                      : "border-[#00D1FF]/10 hover:border-[#00D1FF]/30 bg-gradient-to-br from-black/90 to-[#131524]/80 hover:from-black hover:to-[#131524]/90"
+                                      ? "border-l-4 border-[#00cfff] bg-[#1a1a1a] shadow-[0_0_15px_#00cfff] animate-pulse" 
+                                      : "border border-[#00D1FF]/10 hover:border-[#00D1FF]/30 bg-gradient-to-br from-black/90 to-[#131524]/80 hover:from-black hover:to-[#131524]/90"
                                   }`}
                                   onClick={() => handleOpen(notification)}
-                                  style={!notification.read ? {
-                                    boxShadow: "0 0 30px rgba(255, 89, 248, 0.4), 0 0 15px rgba(0, 209, 255, 0.3), inset 0 0 20px rgba(255, 89, 248, 0.1)"
-                                  } : {}}
                                 >
-                                  {/* EVIDENZA VISIVA MASSIMA per notifiche non lette */}
-                                  {!notification.read && (
-                                    <>
-                                      {/* Scia laterale NEON pulsante */}
-                                      <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-b from-[#FF59F8] via-[#00D1FF] to-[#FF59F8] rounded-l-[24px] animate-pulse shadow-[0_0_15px_rgba(255,89,248,0.8)]"></div>
-                                      
-                                      {/* Icona NUOVA pulsante */}
-                                      <div className="absolute top-2 right-2 flex items-center gap-1">
-                                        <Sparkles className="w-4 h-4 text-[#FF59F8] animate-pulse" />
-                                        <div className="h-3 w-3 rounded-full bg-[#FF59F8] animate-ping shadow-[0_0_10px_rgba(255,89,248,0.8)]"></div>
-                                      </div>
-                                    </>
-                                  )}
-                                  
                                   <div className="flex items-start gap-3">
                                     <div className="flex-shrink-0">
                                       {category.icon}
@@ -262,16 +250,16 @@ const Notifications = () => {
                                       <div className="flex items-center gap-2 mb-1">
                                         <h3 className={`font-medium ${
                                           !notification.read 
-                                            ? 'text-[#00D1FF] font-extrabold text-lg glow-text-strong' 
+                                            ? 'text-[#00cfff] font-extrabold text-lg' 
                                             : 'text-white'
                                         }`} style={!notification.read ? {
-                                          textShadow: "0 0 20px rgba(0, 209, 255, 0.9), 0 0 40px rgba(255, 89, 248, 0.7)"
+                                          textShadow: "0 0 10px rgba(0, 207, 255, 0.8)"
                                         } : {}}>
                                           {notification.title}
                                         </h3>
                                         {!notification.read && (
-                                          <Badge className="bg-gradient-to-r from-[#FF59F8] to-[#00D1FF] text-white font-extrabold px-3 py-1 animate-pulse shadow-[0_0_15px_rgba(255,89,248,0.6)]">
-                                            🆕 NUOVA
+                                          <Badge className="bg-[#ff007f] text-white rounded-full px-2 py-1 text-xs font-extrabold animate-pulse">
+                                            NUOVA
                                           </Badge>
                                         )}
                                       </div>
@@ -326,14 +314,6 @@ const Notifications = () => {
       />
       
       <BottomNavigation />
-
-      <style>
-        {`
-        .glow-text-strong {
-          text-shadow: 0 0 20px rgba(0, 209, 255, 0.9), 0 0 40px rgba(255, 89, 248, 0.7) !important;
-        }
-        `}
-      </style>
     </div>
   );
 };
