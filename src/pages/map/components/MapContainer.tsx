@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -15,6 +16,12 @@ import BuzzMapAreas from './BuzzMapAreas';
 import MapInitializer from './MapInitializer';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import L from 'leaflet';
+import { 
+  handleMapMove, 
+  handleMapReady, 
+  handleAddNewPoint, 
+  handleAreaGenerated 
+} from '@/components/map/utils/mapContainerUtils';
 
 interface MapContainerProps {
   isAddingPoint: boolean;
@@ -74,56 +81,11 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     console.log("🔄 MapContainer - isAddingPoint state:", isAddingPoint);
   }, [isAddingPoint]);
 
-  // Funzione per aggiornare il centro quando la mappa si muove
-  const handleMapMove = () => {
-    if (mapRef.current) {
-      const center = mapRef.current.getCenter();
-      setMapCenter([center.lat, center.lng]);
-    }
-  };
-
-  // Callback for when map is ready
-  const handleMapReady = (map: L.Map) => {
-    mapRef.current = map;
-    map.on('moveend', handleMapMove);
-    console.log("🗺️ Map initialized and ready for point addition");
-  };
-
-  // Enhanced addNewPoint handler with proper logging
-  const handleAddNewPoint = (lat: number, lng: number) => {
-    console.log("⭐ handleAddNewPoint called with coordinates:", { lat, lng });
-    console.log("🔄 Current isAddingPoint state:", isAddingPoint);
-    
-    if (isAddingPoint) {
-      console.log("✅ Creating new point at coordinates:", lat, lng);
-      addNewPoint(lat, lng);
-      setIsAddingPoint(false);
-      console.log("🔄 isAddingPoint set to false after point creation");
-    } else {
-      console.log("❌ Not in adding point mode, ignoring click");
-    }
-  };
-
-  // Funzione per centrare la mappa su una nuova area generata
-  const handleAreaGenerated = (lat: number, lng: number, radiusKm: number) => {
-    if (mapRef.current) {
-      console.log('🎯 Centrando mappa su nuova area:', { lat, lng, radiusKm });
-      
-      // Centra la mappa sulle nuove coordinate
-      mapRef.current.setView([lat, lng], 13);
-      
-      // Calcola lo zoom appropriato per visualizzare l'area completa
-      const radiusMeters = radiusKm * 1000;
-      const bounds = L.latLng(lat, lng).toBounds(radiusMeters * 2); // Diametro completo
-      
-      // Adatta lo zoom per mostrare l'area con un po' di margine
-      setTimeout(() => {
-        if (mapRef.current) {
-          mapRef.current.fitBounds(bounds, { padding: [50, 50] });
-        }
-      }, 100);
-    }
-  };
+  // Create utility functions using the extracted helpers
+  const handleMapMoveCallback = handleMapMove(mapRef, setMapCenter);
+  const handleMapReadyCallback = handleMapReady(mapRef, handleMapMoveCallback);
+  const handleAddNewPointCallback = handleAddNewPoint(isAddingPoint, addNewPoint, setIsAddingPoint);
+  const handleAreaGeneratedCallback = handleAreaGenerated(mapRef);
 
   return (
     <div 
@@ -159,12 +121,12 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         markerZoomAnimation={true}
         inertia={true}
       >
-        <MapInitializer onMapReady={handleMapReady} />
+        <MapInitializer onMapReady={handleMapReadyCallback} />
         
         <MapController 
           isAddingPoint={isAddingPoint}
           setIsAddingPoint={setIsAddingPoint}
-          addNewPoint={handleAddNewPoint}
+          addNewPoint={handleAddNewPointCallback}
         />
         
         {/* Balanced tone TileLayer - not too dark, not too light */}
@@ -208,7 +170,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           searchAreas={searchAreas}
           setPendingRadius={setPendingRadius}
           isAddingMapPoint={isAddingPoint} 
-          onMapPointClick={handleAddNewPoint}
+          onMapPointClick={handleAddNewPointCallback}
         />
       </MapContainer>
 
@@ -225,7 +187,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       <BuzzButton 
         handleBuzz={handleBuzz} 
         mapCenter={mapCenter}
-        onAreaGenerated={handleAreaGenerated}
+        onAreaGenerated={handleAreaGeneratedCallback}
       />
 
       {/* Use the MapInstructionsOverlay component */}
