@@ -233,7 +233,7 @@ export const useBuzzMapLogic = () => {
     }
   };
 
-  // ENHANCED: Generate new BUZZ MAPPA area with FORCED immediate radius refresh
+  // ENHANCED: Generate new BUZZ MAPPA area with FORCED immediate radius and color refresh
   const generateBuzzMapArea = async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
@@ -304,8 +304,19 @@ export const useBuzzMapLogic = () => {
         previous_radius_should_be_different: true
       });
       
-      // STEP 4: UPDATE daily BUZZ counter for color calculation
+      // STEP 4: UPDATE daily BUZZ counter for color calculation FIRST
       const newBuzzCounter = dailyBuzzCounter + 1;
+      
+      // Update buzz counter in database
+      await supabase
+        .from('user_buzz_counter')
+        .upsert({
+          user_id: user.id,
+          date: new Date().toISOString().split('T')[0],
+          buzz_count: newBuzzCounter
+        });
+      
+      // Update local state
       setDailyBuzzCounter(newBuzzCounter);
       console.log('🎨 DYNAMIC COLOR - Updated buzz counter for color calculation:', newBuzzCounter);
       

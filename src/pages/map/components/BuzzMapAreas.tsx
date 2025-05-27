@@ -40,15 +40,16 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) =
       currentColor: currentColor
     });
     
-    // STEP 1: FORCEFULLY REMOVE all previous layers from map
-    previousLayersRef.current.forEach((layer, index) => {
-      if (map.hasLayer(layer)) {
-        console.log(`🗑️ FORCE REMOVING layer ${index} from map`);
+    // STEP 1: FORCEFULLY REMOVE ALL PREVIOUS BUZZ LAYERS FROM MAP
+    console.log('🧹 FORCE REMOVING ALL BUZZ LAYERS from map...');
+    map.eachLayer((layer) => {
+      if (layer instanceof L.Circle && layer.options.className === 'buzz-map-area') {
+        console.log('🗑️ FORCE REMOVING BUZZ layer from map:', layer);
         map.removeLayer(layer);
       }
     });
     
-    // STEP 2: COMPLETELY CLEAR the previous layers array
+    // STEP 2: CLEAR PREVIOUS LAYERS ARRAY
     previousLayersRef.current = [];
     console.log('🧹 ALL previous BUZZ layers FORCEFULLY REMOVED from map');
     
@@ -83,6 +84,7 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) =
           fillOpacity: 0.25,
           weight: 3,
           opacity: 1,
+          className: 'buzz-map-area' // For identification
         });
         
         // FORCEFULLY ADD to map
@@ -149,12 +151,12 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) =
           created_at: area.created_at
         });
         
-        // CRITICAL: DYNAMIC KEY that includes RADIUS AND COLOR to force re-render when changed
+        // CRITICAL: DYNAMIC KEY that includes RADIUS AND COLOR AND TIMESTAMP to force re-render
         const dynamicKey = `buzz-area-${area.id}-${area.radius_km}-${currentColor}-${buzzCounter}-${area.created_at}-${renderCountRef.current}-${index}-${Date.now()}`;
         
         return (
           <Circle
-            key={dynamicKey} // CRITICAL: Dynamic key including radius for forced re-render
+            key={dynamicKey} // CRITICAL: Dynamic key including radius and timestamp for forced re-render
             center={[area.lat, area.lng]}
             radius={radiusInMeters} // UPDATED VALUE FROM DB
             pathOptions={{
@@ -163,8 +165,8 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, buzzCounter = 0 }) =
               fillOpacity: 0.25,
               weight: 3,
               opacity: 1,
+              className: 'buzz-map-area' // For identification
             }}
-            className="buzz-map-area"
             eventHandlers={{
               add: (e) => {
                 const layer = e.target as L.Circle;
