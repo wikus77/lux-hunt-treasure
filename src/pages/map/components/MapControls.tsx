@@ -14,6 +14,8 @@ interface MapControlsProps {
   isAddingMapPoint: boolean;
   showHelpDialog: boolean;
   setShowHelpDialog: (show: boolean) => void;
+  mapCenter?: [number, number];
+  onAreaGenerated?: (lat: number, lng: number, radius: number) => void;
 }
 
 const MapControls: React.FC<MapControlsProps> = ({
@@ -23,7 +25,9 @@ const MapControls: React.FC<MapControlsProps> = ({
   handleBuzz,
   isAddingMapPoint,
   showHelpDialog,
-  setShowHelpDialog
+  setShowHelpDialog,
+  mapCenter,
+  onAreaGenerated
 }) => {
   return (
     <>
@@ -37,7 +41,11 @@ const MapControls: React.FC<MapControlsProps> = ({
       />
 
       {/* Use the BuzzButton component */}
-      <BuzzButton handleBuzz={handleBuzz} />
+      <BuzzButton 
+        handleBuzz={handleBuzz} 
+        mapCenter={mapCenter}
+        onAreaGenerated={onAreaGenerated}
+      />
 
       {/* Use the MapInstructionsOverlay component */}
       <MapInstructionsOverlay 

@@ -26,6 +26,7 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 const MapLogicProvider = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   
   // Get map logic from our custom hook
   const { 
@@ -91,6 +92,27 @@ const MapLogicProvider = () => {
     hookHandleMapPointClick,
     handleMapClickArea
   );
+
+  // Funzione per gestire la centratura automatica dopo la generazione di un'area
+  const handleAreaGenerated = (lat: number, lng: number, radius: number) => {
+    console.log('🎯 Area generated, updating map center:', { lat, lng, radius });
+    setMapCenter([lat, lng]);
+    
+    // Opzionalmente, aggiorna anche il riferimento della mappa se disponibile
+    if (mapRef.current) {
+      mapRef.current.setView([lat, lng], 13);
+      
+      // Calcola lo zoom appropriato per il raggio
+      const radiusMeters = radius * 1000;
+      const bounds = L.latLng(lat, lng).toBounds(radiusMeters * 2);
+      
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+        }
+      }, 100);
+    }
+  };
   
   // Synchronize isAddingMapPoint state between hook and mapLogic to ensure consistency
   useEffect(() => {
@@ -172,6 +194,8 @@ const MapLogicProvider = () => {
         isAddingMapPoint={isAddingMapPoint || isAddingPoint}
         showHelpDialog={showHelpDialog}
         setShowHelpDialog={setShowHelpDialog}
+        mapCenter={mapCenter}
+        onAreaGenerated={handleAreaGenerated}
       />
       
       {/* Technical status logger */}

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -81,6 +82,27 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   const handleMapReady = (map: L.Map) => {
     mapRef.current = map;
     map.on('moveend', handleMapMove);
+  };
+
+  // Funzione per centrare la mappa su una nuova area generata
+  const handleAreaGenerated = (lat: number, lng: number, radiusKm: number) => {
+    if (mapRef.current) {
+      console.log('🎯 Centrando mappa su nuova area:', { lat, lng, radiusKm });
+      
+      // Centra la mappa sulle nuove coordinate
+      mapRef.current.setView([lat, lng], 13);
+      
+      // Calcola lo zoom appropriato per visualizzare l'area completa
+      const radiusMeters = radiusKm * 1000;
+      const bounds = L.latLng(lat, lng).toBounds(radiusMeters * 2); // Diametro completo
+      
+      // Adatta lo zoom per mostrare l'area con un po' di margine
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+        }
+      }, 100);
+    }
   };
 
   return (
@@ -171,10 +193,11 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         isAddingSearchArea={isAddingSearchArea} 
       />
 
-      {/* Use the BuzzButton component with map center */}
+      {/* Use the BuzzButton component with map center and area generation callback */}
       <BuzzButton 
         handleBuzz={handleBuzz} 
         mapCenter={mapCenter}
+        onAreaGenerated={handleAreaGenerated}
       />
 
       {/* Use the MapInstructionsOverlay component */}

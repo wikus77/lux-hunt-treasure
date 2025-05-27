@@ -9,12 +9,14 @@ export interface BuzzButtonProps {
   handleBuzz?: () => void;
   radiusKm?: number;
   mapCenter?: [number, number];
+  onAreaGenerated?: (lat: number, lng: number, radius: number) => void;
 }
 
 const BuzzButton: React.FC<BuzzButtonProps> = ({ 
   handleBuzz, 
   radiusKm = 1,
-  mapCenter
+  mapCenter,
+  onAreaGenerated
 }) => {
   const { createMapBuzzNotification } = useNotificationManager();
   const { 
@@ -55,7 +57,12 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         console.error("❌ Failed to create BUZZ Map notification:", error);
       }
       
-      // STEP 3: Esegui callback opzionale
+      // STEP 3: Centra automaticamente la mappa sulla nuova area
+      if (onAreaGenerated) {
+        onAreaGenerated(newArea.lat, newArea.lng, newArea.radius_km);
+      }
+      
+      // STEP 4: Esegui callback opzionale
       if (handleBuzz) {
         handleBuzz();
       }

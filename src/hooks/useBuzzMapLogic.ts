@@ -44,18 +44,35 @@ export const useBuzzMapLogic = () => {
         return;
       }
 
-      setUserCluesCount(count || 0);
+      const cluesCount = count || 0;
+      setUserCluesCount(cluesCount);
+      console.log('📊 User clues count loaded:', cluesCount);
     } catch (err) {
       console.error('Exception loading user clues count:', err);
     }
   };
 
-  // Calcola il prezzo BUZZ MAPPA basato sul numero di indizi
+  // Calcola il prezzo BUZZ MAPPA basato sul numero di indizi - CORRETTO
   const calculateBuzzMapPrice = (): number => {
-    if (userCluesCount <= 10) return 7.99;
-    if (userCluesCount <= 20) return 9.99;
-    if (userCluesCount <= 30) return 13.99;
-    if (userCluesCount <= 40) return 19.99;
+    console.log('💰 Calculating price for clues count:', userCluesCount);
+    
+    if (userCluesCount <= 10) {
+      console.log('💰 Price tier: 1-10 clues = 7.99€');
+      return 7.99;
+    }
+    if (userCluesCount <= 20) {
+      console.log('💰 Price tier: 11-20 clues = 9.99€');
+      return 9.99;
+    }
+    if (userCluesCount <= 30) {
+      console.log('💰 Price tier: 21-30 clues = 13.99€');
+      return 13.99;
+    }
+    if (userCluesCount <= 40) {
+      console.log('💰 Price tier: 31-40 clues = 19.99€');
+      return 19.99;
+    }
+    console.log('💰 Price tier: 41+ clues = 29.99€');
     return 29.99;
   };
 
@@ -92,7 +109,7 @@ export const useBuzzMapLogic = () => {
     return currentWeekAreas[0];
   };
 
-  // Calcola il raggio per la prossima area (decremento -5% dal precedente)
+  // Calcola il raggio per la prossima area (decremento -5% dal precedente) - CORRETTO
   const calculateNextRadius = (): number => {
     const BASE_RADIUS = 100; // 100 km iniziale
     const MIN_RADIUS = 5; // 5 km minimo
@@ -101,13 +118,19 @@ export const useBuzzMapLogic = () => {
     const activeArea = getActiveArea();
     
     if (!activeArea) {
+      console.log('📏 No active area, using base radius:', BASE_RADIUS, 'km');
       return BASE_RADIUS;
     }
 
     // Calcola il nuovo raggio: precedente * 0.95
     const nextRadius = activeArea.radius_km * REDUCTION_FACTOR;
+    const finalRadius = Math.max(MIN_RADIUS, nextRadius);
     
-    return Math.max(MIN_RADIUS, nextRadius);
+    console.log('📏 Previous radius:', activeArea.radius_km, 'km');
+    console.log('📏 Calculated next radius:', nextRadius, 'km');
+    console.log('📏 Final radius (with minimum):', finalRadius, 'km');
+    
+    return finalRadius;
   };
 
   // Rimuovi l'area precedente della settimana corrente
@@ -156,12 +179,14 @@ export const useBuzzMapLogic = () => {
     try {
       const currentWeek = getCurrentWeek();
       const radiusKm = calculateNextRadius();
+      const price = calculateBuzzMapPrice();
 
       console.log('🗺️ Generando area BUZZ MAPPA:', {
         lat: centerLat,
         lng: centerLng,
         radius_km: radiusKm,
-        week: currentWeek
+        week: currentWeek,
+        price: price
       });
 
       // STEP 1: ELIMINA l'area precedente della settimana corrente
@@ -194,12 +219,13 @@ export const useBuzzMapLogic = () => {
 
       console.log('✅ NUOVA area BUZZ MAPPA salvata:', data);
       console.log('📏 Raggio ESATTO salvato:', data.radius_km, 'km');
+      console.log('💰 Prezzo applicato:', price, '€');
       
       // STEP 3: Aggiorna lo stato locale con la SOLA nuova area
       setCurrentWeekAreas([data]);
       
       // STEP 4: Messaggio con il valore REALE salvato
-      toast.success(`Area BUZZ MAPPA generata! Raggio: ${data.radius_km.toFixed(1)} km`);
+      toast.success(`Area BUZZ MAPPA generata! Raggio: ${data.radius_km.toFixed(1)} km - Prezzo: ${price.toFixed(2)}€`);
       
       return data;
     } catch (err) {
@@ -211,6 +237,24 @@ export const useBuzzMapLogic = () => {
     }
   };
 
+  // Test della logica di calcolo - AGGIUNTO PER DEBUG
+  const testCalculationLogic = () => {
+    console.log('🧪 TESTING BUZZ MAPPA LOGIC:');
+    console.log('Current user clues:', userCluesCount);
+    console.log('Calculated price:', calculateBuzzMapPrice());
+    console.log('Active area:', getActiveArea());
+    console.log('Next radius:', calculateNextRadius());
+    
+    // Test pricing logic
+    const testCases = [5, 15, 25, 35, 45];
+    testCases.forEach(clues => {
+      const oldCount = userCluesCount;
+      setUserCluesCount(clues);
+      console.log(`With ${clues} clues: ${calculateBuzzMapPrice()}€`);
+      setUserCluesCount(oldCount);
+    });
+  };
+
   // Carica i dati iniziali
   useEffect(() => {
     if (user?.id) {
@@ -218,6 +262,12 @@ export const useBuzzMapLogic = () => {
       loadCurrentWeekAreas();
     }
   }, [user]);
+
+  // DEBUG: Log quando cambiano i valori chiave
+  useEffect(() => {
+    console.log('📊 User clues count updated:', userCluesCount);
+    console.log('💰 Current price:', calculateBuzzMapPrice());
+  }, [userCluesCount]);
 
   return {
     currentWeekAreas,
@@ -227,6 +277,7 @@ export const useBuzzMapLogic = () => {
     calculateBuzzMapPrice,
     generateBuzzMapArea,
     getActiveArea,
-    reloadAreas: loadCurrentWeekAreas
+    reloadAreas: loadCurrentWeekAreas,
+    testCalculationLogic // Per debug
   };
 };
