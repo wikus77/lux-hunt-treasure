@@ -196,7 +196,7 @@ const FindMapPointGame = () => {
             <span className="text-[#00D1FF] neon-text" style={{ 
               textShadow: "0 0 10px rgba(0, 209, 255, 0.6)"
             }}>TROVA</span>{' '}
-            <span className="text-white">IL PUNTO SULLA MAPPA</span>
+            <span className="text-white">IL PUNTO MAPPA</span>
           </h2>
         </div>
         <p className="text-[#00D1FF] font-sans text-sm mb-1">Individua il punto preciso seguendo l'indizio</p>

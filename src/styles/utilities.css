@@ -172,7 +172,7 @@
 
   /* Animation utilities */
   .animate-spin-slow {
-    animation: spin 12s linear infinite;
+    animation: spin 8s linear infinite;
   }
 
   @keyframes spin {

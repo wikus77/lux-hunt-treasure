@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Brain, Bomb, Fingerprint, MapPin, Satellite, MessageSquare, LockKeyholeIcon, X } from "lucide-react";
@@ -85,7 +86,7 @@ const Games = () => {
       isPlayable: true
     },
     {
-      title: "Trova il Punto sulla Mappa",
+      title: "Trova il Punto Mappa",
       description: "Localizza obiettivi segreti",
       icon: <MapPin className="text-[#00D1FF] w-5 h-5" />,
       gameKey: "find_map_point",
@@ -117,48 +118,50 @@ const Games = () => {
 
   return (
     <HomeLayout profileImage={profileImage}>
-      <div className="min-h-screen bg-black text-white p-4 pt-20">
-        <motion.div
-          className="max-w-6xl mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-orbitron font-bold mb-4">
-              <span className="text-[#00D1FF]" style={{ 
-                textShadow: "0 0 10px rgba(0, 209, 255, 0.5)"
-              }}>M1</span>
-              <span className="text-white">SSION<span className="text-xs align-top">™</span> GAMES</span>
-            </h1>
+      <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
+        {/* Header Section */}
+        <div className="pt-20 pb-8 px-4">
+          <div className="max-w-6xl mx-auto">
+            <motion.div
+              className="text-center mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <h1 className="text-4xl md:text-5xl font-orbitron font-bold mb-4">
+                <span className="text-[#00D1FF]" style={{ 
+                  textShadow: "0 0 10px rgba(0, 209, 255, 0.5)"
+                }}>M1</span>
+                <span className="text-white">SSION<span className="text-xs align-top">™</span> GAMES</span>
+              </h1>
+              
+              <p className="text-xl text-white/70 mb-8">
+                Mini giochi quotidiani per veri agenti.
+              </p>
+            </motion.div>
             
-            <p className="text-xl text-white/70 mb-8">
-              Mini giochi quotidiani per veri agenti.
-            </p>
+            {/* Games Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {games.map((game, index) => (
+                <motion.div
+                  key={game.gameKey}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 + index * 0.1 }}
+                >
+                  <GameCard 
+                    title={game.title} 
+                    description={game.description} 
+                    icon={game.icon}
+                    gameKey={game.gameKey}
+                    isPlayable={game.isPlayable}
+                    onPlay={() => handlePlayGame(game.gameKey)}
+                  />
+                </motion.div>
+              ))}
+            </div>
           </div>
-          
-          {/* Games Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {games.map((game, index) => (
-              <motion.div
-                key={game.gameKey}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 + index * 0.1 }}
-              >
-                <GameCard 
-                  title={game.title} 
-                  description={game.description} 
-                  icon={game.icon}
-                  gameKey={game.gameKey}
-                  isPlayable={game.isPlayable}
-                  onPlay={() => handlePlayGame(game.gameKey)}
-                />
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+        </div>
 
         {/* Memory Hack Game Modal */}
         <Dialog open={activeGame === 'memory_hack'} onOpenChange={closeGame}>
@@ -232,7 +235,7 @@ const Games = () => {
             <DialogHeader>
               <div className="flex items-center justify-between">
                 <DialogTitle className="text-2xl font-orbitron text-white">
-                  <span className="text-[#00D1FF]">TROVA</span> IL PUNTO SULLA MAPPA
+                  <span className="text-[#00D1FF]">TROVA</span> IL PUNTO MAPPA
                 </DialogTitle>
                 <Button
                   variant="ghost"

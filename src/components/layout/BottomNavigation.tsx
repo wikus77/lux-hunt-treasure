@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Bell, Map, Home, Trophy, User, Circle, Gamepad2 } from "lucide-react";
+import { BellRing, Map, Home, Award, User, Circle, Gamepad2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
 
@@ -13,10 +13,20 @@ const BottomNavigation = () => {
   const links = [
     { icon: <Home className="h-6 w-6" />, label: "Home", path: "/home" },
     { icon: <Map className="h-6 w-6" />, label: "Mappa", path: "/map" },
-    { icon: <Circle strokeWidth={2} className="h-6 w-6" />, label: "Buzz", path: "/buzz" },
+    { 
+      icon: <Circle strokeWidth={2} className="h-6 w-6" />, 
+      label: "Buzz", 
+      path: "/buzz",
+      isSpecial: true
+    },
     { icon: <Gamepad2 className="h-6 w-6" />, label: "Games", path: "/games" },
-    { icon: <Bell className="h-6 w-6" />, label: "Notifiche", path: "/notifications", badge: unreadCount > 0 },
-    { icon: <Trophy className="h-6 w-6" />, label: "Classifica", path: "/leaderboard" },
+    { 
+      icon: <BellRing className="h-6 w-6" />, 
+      label: "Notifiche", 
+      path: "/notifications", 
+      badge: unreadCount > 0 
+    },
+    { icon: <Award className="h-6 w-6" />, label: "Classifica", path: "/leaderboard" },
   ];
 
   return (
@@ -38,7 +48,24 @@ const BottomNavigation = () => {
             }`}
           >
             <div className="relative">
-              {link.icon}
+              {/* Special BUZZ icon with permanent neon glow effect */}
+              {link.isSpecial ? (
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] opacity-30 blur-sm animate-pulse" />
+                  <div className="absolute inset-0 rounded-full border-2 border-[#00D1FF]/60 animate-spin-slow" style={{
+                    animation: 'spin 8s linear infinite'
+                  }} />
+                  <div className="relative z-10 text-[#00D1FF]" style={{
+                    filter: 'drop-shadow(0 0 8px rgba(0, 209, 255, 0.8))',
+                    textShadow: '0 0 10px rgba(0, 209, 255, 0.6)'
+                  }}>
+                    {link.icon}
+                  </div>
+                </div>
+              ) : (
+                link.icon
+              )}
+              
               {link.badge && (
                 <div className="absolute -top-1 -right-1 flex items-center justify-center h-4 w-4 bg-[#FF59F8] rounded-full animate-pulse shadow-[0_0_8px_rgba(240,89,255,0.5)]">
                   <span className="text-[8px] font-bold text-white">

@@ -60,7 +60,7 @@ export default function MissionGamesSection() {
       gameKey: "crack_combination" as GameKey
     },
     {
-      title: "Trova il Punto sulla Mappa",
+      title: "Trova il Punto Mappa",
       description: "Localizza obiettivi segreti",
       icon: <MapPin className="text-[#00D1FF] w-5 h-5" />,
       gameKey: "find_map_point" as GameKey
