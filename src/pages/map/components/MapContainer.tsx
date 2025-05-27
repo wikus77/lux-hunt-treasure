@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -167,8 +168,8 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         preferCanvas={false}
         inertia={true}
         inertiaDeceleration={3000}
-        inertiaMaxSpeed={Infinity}
-        easeLinearity={0.2}
+        inertiaMaxSpeed={2000}
+        easeLinearity={0.25}
       >
         <MapInitializer onMapReady={handleMapReady} />
         
