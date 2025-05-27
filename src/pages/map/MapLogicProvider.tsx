@@ -1,8 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
+import { useMapPoints } from './hooks/useMapPoints';
+import { useMapInitialization } from './hooks/useMapInitialization';
 import LoadingScreen from './LoadingScreen';
-import MapLogicCore from '@/components/map/MapLogicCore';
+import MapContent from './components/MapContent';
+import MapControls from './components/MapControls';
+import TechnicalStatus from './components/TechnicalStatus';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -43,13 +48,110 @@ const MapLogicProvider = () => {
     deleteMapPoint,
     requestLocationPermission
   } = useMapLogic();
+  
+  // Modified to return a Promise<string> with correct parameter structure
+  const handleMapPointClick = async (point: { lat: number; lng: number; title: string; note: string }): Promise<string> => {
+    const newPointId = `point-${Date.now()}`;
+    addMapPoint({
+      id: newPointId,
+      lat: point.lat,
+      lng: point.lng,
+      title: point.title || '',
+      note: point.note || ''
+    });
+    return newPointId; // Return the new point ID
+  };
+
+  // Use our custom hook for map points
+  const {
+    newPoint,
+    handleMapPointClick: hookHandleMapPointClick,
+    handleSaveNewPoint,
+    handleUpdatePoint,
+    handleCancelNewPoint,
+    isAddingMapPoint,
+    setIsAddingMapPoint
+  } = useMapPoints(
+    mapPoints,
+    setActiveMapPoint,
+    handleMapPointClick,
+    updateMapPoint,
+    deleteMapPoint
+  );
+  
+  // Use our custom hook for map initialization
+  const {
+    mapLoaded,
+    setMapLoaded,
+    mapRef,
+    handleMapLoad
+  } = useMapInitialization(
+    isAddingMapPoint,
+    isAddingPoint,
+    isAddingSearchArea,
+    hookHandleMapPointClick,
+    handleMapClickArea
+  );
 
   // Funzione per gestire la centratura automatica dopo la generazione di un'area
   const handleAreaGenerated = (lat: number, lng: number, radius: number) => {
     console.log('🎯 Area generated, updating map center:', { lat, lng, radius });
     setMapCenter([lat, lng]);
+    
+    // Opzionalmente, aggiorna anche il riferimento della mappa se disponibile
+    if (mapRef.current) {
+      mapRef.current.setView([lat, lng], 13);
+      
+      // Calcola lo zoom appropriato per il raggio
+      const radiusMeters = radius * 1000;
+      const bounds = L.latLng(lat, lng).toBounds(radiusMeters * 2);
+      
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+        }
+      }, 100);
+    }
   };
   
+  // Synchronize isAddingMapPoint state between hook and mapLogic to ensure consistency
+  useEffect(() => {
+    console.log("🔄 Synchronizing isAddingMapPoint states:", 
+      {hookState: isAddingMapPoint, mapLogicState: isAddingPoint});
+    
+    if (isAddingPoint !== isAddingMapPoint) {
+      console.log("🔄 Setting hook isAddingMapPoint to:", isAddingPoint);
+      setIsAddingMapPoint(isAddingPoint);
+    }
+  }, [isAddingPoint, isAddingMapPoint, setIsAddingMapPoint]);
+
+  // Also propagate state from hook to parent if needed
+  useEffect(() => {
+    if (isAddingMapPoint !== isAddingPoint) {
+      console.log("🔄 Setting mapLogic isAddingMapPoint to:", isAddingMapPoint);
+      setIsAddingPoint(isAddingMapPoint);
+    }
+  }, [isAddingMapPoint, isAddingPoint, setIsAddingPoint]);
+  
+  // Debug logging for isAddingMapPoint state
+  useEffect(() => {
+    console.log("🔍 MapLogicProvider - Current isAddingMapPoint:", 
+      {hookState: isAddingMapPoint, mapLogicState: isAddingPoint});
+  }, [isAddingMapPoint, isAddingPoint]);
+  
+  // Simulate a small loading delay for better UX
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!mapLoaded) {
+        setMapLoaded(true);
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [mapLoaded, setMapLoaded]);
+  
+  if (!mapLoaded) return <LoadingScreen />;
+  
+  // Technical status logging component (invisible)
   return (
     <div 
       className="rounded-[24px] overflow-hidden relative w-full" 
@@ -61,28 +163,50 @@ const MapLogicProvider = () => {
         position: 'relative'
       }}
     >
-      <MapLogicCore
-        handleBuzz={handleBuzz}
+      {/* Map content */}
+      <MapContent 
+        mapRef={mapRef}
+        handleMapLoad={handleMapLoad}
         searchAreas={searchAreas}
-        isAddingSearchArea={isAddingSearchArea}
-        handleMapClickArea={handleMapClickArea}
         setActiveSearchArea={setActiveSearchArea}
         deleteSearchArea={deleteSearchArea}
-        setPendingRadius={setPendingRadius}
-        toggleAddingSearchArea={toggleAddingSearchArea}
         mapPoints={mapPoints}
-        isAddingPoint={isAddingPoint}
-        setIsAddingPoint={setIsAddingPoint}
         activeMapPoint={activeMapPoint}
         setActiveMapPoint={setActiveMapPoint}
-        addMapPoint={addMapPoint}
-        updateMapPoint={updateMapPoint}
+        handleUpdatePoint={handleUpdatePoint}
         deleteMapPoint={deleteMapPoint}
+        newPoint={newPoint}
+        handleSaveNewPoint={handleSaveNewPoint}
+        handleCancelNewPoint={handleCancelNewPoint}
+        isAddingSearchArea={isAddingSearchArea}
+        handleMapClickArea={handleMapClickArea}
+        setPendingRadius={setPendingRadius}
+        isAddingMapPoint={isAddingMapPoint || isAddingPoint}
+        hookHandleMapPointClick={hookHandleMapPointClick}
+      />
+
+      {/* Map controls */}
+      <MapControls
         requestLocationPermission={requestLocationPermission}
+        toggleAddingSearchArea={toggleAddingSearchArea}
+        isAddingSearchArea={isAddingSearchArea}
+        handleBuzz={handleBuzz}
+        isAddingMapPoint={isAddingMapPoint || isAddingPoint}
         showHelpDialog={showHelpDialog}
         setShowHelpDialog={setShowHelpDialog}
         mapCenter={mapCenter}
         onAreaGenerated={handleAreaGenerated}
+      />
+      
+      {/* Technical status logger */}
+      <TechnicalStatus 
+        mapRef={mapRef}
+        isAddingMapPoint={isAddingMapPoint}
+        isAddingPoint={isAddingPoint}
+        isAddingSearchArea={isAddingSearchArea}
+        newPoint={newPoint}
+        mapPoints={mapPoints}
+        searchAreas={searchAreas}
       />
     </div>
   );
