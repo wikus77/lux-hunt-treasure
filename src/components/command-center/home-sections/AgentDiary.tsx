@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import GradientBox from "@/components/ui/gradient-box";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -52,6 +51,13 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
     setEditContent("");
   };
 
+  // Handle click for desktop
+  const handleClick = () => {
+    if (!isMobile) {
+      setIsFullscreen(true);
+    }
+  };
+
   // Long press functionality for mobile fullscreen
   const longPressProps = useLongPress(
     () => {
@@ -81,7 +87,7 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
       onClick={() => setIsFullscreen(false)}
     >
       <div className="h-full w-full p-6 overflow-y-auto">
-        <GradientBox>
+        <div className="rounded-2xl bg-[#121212] border border-[#2c2c2c] shadow-lg backdrop-blur-xl overflow-hidden">
           <div className="p-4 border-b border-white/10 flex justify-between items-center">
             <h2 className="text-xl md:text-2xl font-orbitron font-bold">
               <span className="text-[#00D1FF]" style={{ 
@@ -100,14 +106,14 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
             <div className="flex mb-4">
               <input
                 type="text"
-                className="flex-1 bg-black/20 border border-white/10 rounded-l-lg px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-[#00D1FF]"
+                className="flex-1 bg-[#121212] border border-[#2c2c2c] rounded-l-2xl px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-[#00D1FF]"
                 placeholder="Aggiungi una nota personale..."
                 value={newNote}
                 onChange={(e) => setNewNote(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddNote()}
               />
               <button
-                className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white px-4 py-2 rounded-r-lg hover:opacity-90"
+                className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white px-4 py-2 rounded-r-2xl hover:opacity-90"
                 onClick={handleAddNote}
               >
                 Salva
@@ -128,10 +134,10 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
                   return (
                     <motion.div
                       key={index}
-                      className={`p-3 rounded-lg cursor-pointer ${
-                        entry.type === "purchase" ? "bg-[#7B2EFF]/10 border border-[#7B2EFF]/30" :
-                        entry.type === "achievement" ? "bg-amber-500/10 border border-amber-500/30" :
-                        "bg-black/20 border border-white/10"
+                      className={`p-3 rounded-2xl cursor-pointer shadow-md bg-[#121212] border ${
+                        entry.type === "purchase" ? "border-[#7B2EFF]/30" :
+                        entry.type === "achievement" ? "border-amber-500/30" :
+                        "border-[#2c2c2c]"
                       }`}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -143,7 +149,7 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
                           {isEditing ? (
                             <div className="space-y-2">
                               <textarea
-                                className="w-full bg-black/30 border border-[#00D1FF]/50 rounded px-2 py-1 text-white text-sm resize-none focus:outline-none focus:ring-1 focus:ring-[#00D1FF]"
+                                className="w-full bg-[#121212] border border-[#00D1FF]/50 rounded-2xl px-2 py-1 text-white text-sm resize-none focus:outline-none focus:ring-1 focus:ring-[#00D1FF]"
                                 value={editContent}
                                 onChange={(e) => setEditContent(e.target.value)}
                                 rows={3}
@@ -177,6 +183,11 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
                             </>
                           )}
                         </div>
+                        {entry.type === "note" && !isEditing && (
+                          <div className="text-white/40 hover:text-white/60 text-xs ml-2">
+                            ✏️
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   );
@@ -184,14 +195,18 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
               )}
             </div>
           </div>
-        </GradientBox>
+        </div>
       </div>
     </motion.div>
   );
   
   return (
     <>
-      <GradientBox {...(isMobile ? longPressProps : {})}>
+      <div 
+        className="rounded-2xl bg-[#121212] border border-[#2c2c2c] shadow-lg backdrop-blur-xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+        onClick={handleClick}
+        {...(isMobile ? longPressProps : {})}
+      >
         <div className="p-4 border-b border-white/10 flex justify-between items-center">
           <h2 className="text-lg md:text-xl font-orbitron font-bold">
             <span className="text-[#00D1FF]" style={{ 
@@ -210,15 +225,18 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
           <div className="flex mb-4">
             <input
               type="text"
-              className="flex-1 bg-black/20 border border-white/10 rounded-l-lg px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-[#00D1FF]"
+              className="flex-1 bg-[#121212] border border-[#2c2c2c] rounded-l-2xl px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-[#00D1FF]"
               placeholder="Aggiungi una nota personale..."
               value={newNote}
               onChange={(e) => setNewNote(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddNote()}
             />
             <button
-              className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white px-4 py-2 rounded-r-lg hover:opacity-90"
-              onClick={handleAddNote}
+              className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white px-4 py-2 rounded-r-2xl hover:opacity-90"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddNote();
+              }}
             >
               Salva
             </button>
@@ -238,22 +256,25 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
                 return (
                   <motion.div
                     key={index}
-                    className={`p-3 rounded-lg cursor-pointer ${
-                      entry.type === "purchase" ? "bg-[#7B2EFF]/10 border border-[#7B2EFF]/30" :
-                      entry.type === "achievement" ? "bg-amber-500/10 border border-amber-500/30" :
-                      "bg-black/20 border border-white/10"
+                    className={`p-3 rounded-2xl cursor-pointer shadow-md bg-[#121212] border ${
+                      entry.type === "purchase" ? "border-[#7B2EFF]/30" :
+                      entry.type === "achievement" ? "border-amber-500/30" :
+                      "border-[#2c2c2c]"
                     }`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
-                    onClick={() => handleEditEntry(entry, index)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditEntry(entry, index);
+                    }}
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         {isEditing ? (
                           <div className="space-y-2">
                             <textarea
-                              className="w-full bg-black/30 border border-[#00D1FF]/50 rounded px-2 py-1 text-white text-sm resize-none focus:outline-none focus:ring-1 focus:ring-[#00D1FF]"
+                              className="w-full bg-[#121212] border border-[#00D1FF]/50 rounded-2xl px-2 py-1 text-white text-sm resize-none focus:outline-none focus:ring-1 focus:ring-[#00D1FF]"
                               value={editContent}
                               onChange={(e) => setEditContent(e.target.value)}
                               rows={3}
@@ -299,9 +320,9 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
             )}
           </div>
         </div>
-      </GradientBox>
+      </div>
 
-      {/* Fullscreen overlay for mobile */}
+      {/* Fullscreen overlay for mobile and desktop */}
       {isFullscreen && <FullscreenView />}
     </>
   );

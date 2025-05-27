@@ -93,6 +93,13 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
     }
   };
 
+  // Handle click for desktop
+  const handleClick = () => {
+    if (!isMobile) {
+      setIsFullscreen(true);
+    }
+  };
+
   // Fullscreen component
   const FullscreenView = () => (
     <motion.div
@@ -104,7 +111,7 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
       onClick={() => setIsFullscreen(false)}
     >
       <div className="h-full w-full p-6 overflow-y-auto">
-        <GradientBox>
+        <div className="rounded-2xl bg-[#121212] border border-[#2c2c2c] shadow-lg backdrop-blur-xl overflow-hidden">
           <div className="p-4 border-b border-white/10 flex justify-between items-center">
             <h2 className="text-xl md:text-2xl font-orbitron font-bold">
               <span className="text-[#00D1FF]" style={{ 
@@ -128,7 +135,7 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
               {availableClues.map((clue, index) => (
                 <motion.div
                   key={clue.id}
-                  className={`p-4 rounded-lg border ${getClueStyle(clue.type)} hover:scale-105 transition-all duration-200`}
+                  className={`p-4 rounded-2xl border ${getClueStyle(clue.type)} hover:scale-105 transition-all duration-200 bg-[#121212] shadow-md`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -163,14 +170,18 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
               ))}
             </div>
           </div>
-        </GradientBox>
+        </div>
       </div>
     </motion.div>
   );
 
   return (
     <>
-      <GradientBox {...(isMobile ? longPressProps : {})}>
+      <div 
+        className="rounded-2xl bg-[#121212] border border-[#2c2c2c] shadow-lg backdrop-blur-xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+        onClick={handleClick}
+        {...(isMobile ? longPressProps : {})}
+      >
         <div className="p-4 border-b border-white/10 flex justify-between items-center">
           <h2 className="text-lg md:text-xl font-orbitron font-bold">
             <span className="text-[#00D1FF]" style={{ 
@@ -194,7 +205,7 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
             {availableClues.map((clue, index) => (
               <motion.div
                 key={clue.id}
-                className={`p-4 rounded-lg border ${getClueStyle(clue.type)} hover:scale-105 transition-all duration-200`}
+                className={`p-4 rounded-2xl border ${getClueStyle(clue.type)} hover:scale-105 transition-all duration-200 bg-[#121212] shadow-md`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -219,7 +230,10 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
                         : "bg-gray-600 text-gray-400 cursor-not-allowed"
                     }`}
                     disabled={credits < clue.cost}
-                    onClick={() => onPurchaseClue(clue)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPurchaseClue(clue);
+                    }}
                   >
                     <ShoppingCart className="w-3 h-3 inline mr-1" />
                     Acquista
@@ -229,9 +243,9 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
             ))}
           </div>
         </div>
-      </GradientBox>
+      </div>
 
-      {/* Fullscreen overlay for mobile */}
+      {/* Fullscreen overlay for mobile and desktop */}
       {isFullscreen && <FullscreenView />}
     </>
   );
