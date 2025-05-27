@@ -12,7 +12,7 @@ export const useGameLogic = () => {
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
   const [matchedPairs, setMatchedPairs] = useState(0);
   const [errors, setErrors] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(45);
+  const [timeLeft, setTimeLeft] = useState(60); // Extended to 60 seconds
   const [disableInteraction, setDisableInteraction] = useState(false);
 
   // Initialize game
@@ -45,7 +45,7 @@ export const useGameLogic = () => {
     setFlippedCards([]);
     setMatchedPairs(0);
     setErrors(0);
-    setTimeLeft(45);
+    setTimeLeft(60); // Reset to 60 seconds
     setDisableInteraction(false);
     setGameState('playing');
   }, []);
@@ -129,7 +129,7 @@ export const useGameLogic = () => {
     }
   }, [matchedPairs, gameState]);
 
-  // Save progress to Supabase
+  // Save progress to Supabase and update credits
   const saveGameProgress = async () => {
     if (!user) return;
 
@@ -137,7 +137,8 @@ export const useGameLogic = () => {
     const score = isSuccess ? 10 : 0;
 
     try {
-      const { error } = await supabase
+      // Save game progress
+      const { error: gameError } = await supabase
         .from('user_minigames_progress')
         .upsert({
           user_id: user.id,
@@ -147,29 +148,50 @@ export const useGameLogic = () => {
           last_played: new Date().toISOString()
         });
 
-      if (error) throw error;
+      if (gameError) throw gameError;
 
       if (isSuccess) {
-        // Add credits to user profile
-        const { data: currentProfile, error: fetchError } = await supabase
+        // Get current credits or create record if doesn't exist
+        const { data: creditsData, error: fetchError } = await supabase
+          .from('user_credits')
+          .select('credits')
+          .eq('user_id', user.id)
+          .single();
+
+        if (fetchError && fetchError.code !== 'PGRST116') {
+          throw fetchError;
+        }
+
+        const currentCredits = creditsData?.credits || 0;
+
+        // Update or insert credits
+        const { error: creditsError } = await supabase
+          .from('user_credits')
+          .upsert({
+            user_id: user.id,
+            credits: currentCredits + 10
+          });
+
+        if (creditsError) throw creditsError;
+
+        // Also update profiles table if it exists (for compatibility)
+        const { data: profileData } = await supabase
           .from('profiles')
           .select('credits')
           .eq('id', user.id)
           .single();
 
-        if (!fetchError && currentProfile) {
-          const currentCredits = currentProfile.credits || 0;
-          const { error: creditsError } = await supabase
+        if (profileData) {
+          const profileCurrentCredits = profileData.credits || 0;
+          await supabase
             .from('profiles')
-            .update({ credits: currentCredits + 10 })
+            .update({ credits: profileCurrentCredits + 10 })
             .eq('id', user.id);
-
-          if (!creditsError) {
-            toast.success("Missione completata!", {
-              description: `Hai guadagnato ${score} crediti!`
-            });
-          }
         }
+
+        toast.success("MISSIONE COMPLETATA!", {
+          description: `Hai guadagnato ${score} crediti!`
+        });
       }
     } catch (error) {
       console.error('Error saving game progress:', error);

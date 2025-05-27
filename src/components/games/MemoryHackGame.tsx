@@ -25,7 +25,7 @@ const MemoryHackGame = () => {
         <h2 className="text-2xl font-orbitron font-bold mb-2">
           <span className="text-[#00D1FF]">MEMORY</span> <span className="text-white">HACK</span>
         </h2>
-        <p className="text-white/70 font-sans">Trova tutte le coppie in 45 secondi</p>
+        <p className="text-white/70 font-sans">Trova tutte le coppie in 60 secondi</p>
       </div>
 
       {/* Game Stats */}

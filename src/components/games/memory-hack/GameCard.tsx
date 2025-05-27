@@ -55,9 +55,19 @@ const GameCard: React.FC<GameCardProps> = ({ card, onClick, disabled }) => {
                 animate={{ rotateY: 0, scale: 1 }}
                 exit={{ rotateY: 180, scale: 0.8 }}
                 transition={{ duration: 0.6, ease: "easeInOut" }}
-                className="w-8 h-8 bg-gradient-to-br from-[#00D1FF]/30 to-[#7B2EFF]/30 rounded-lg flex items-center justify-center"
+                className="w-full h-full flex items-center justify-center relative"
               >
-                <div className="w-4 h-4 bg-white/10 rounded"></div>
+                <div className="text-center">
+                  <span className="text-[#00D1FF] font-orbitron font-bold text-lg tracking-wider drop-shadow-[0_0_8px_rgba(0,209,255,0.6)]">
+                    M1
+                  </span>
+                  <span className="text-white font-orbitron font-bold text-lg tracking-wider">
+                    SSION
+                  </span>
+                  <span className="text-white font-orbitron text-xs align-top">
+                    ™
+                  </span>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
