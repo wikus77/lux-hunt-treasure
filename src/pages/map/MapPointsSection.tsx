@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { MapPin, Plus, Crosshair } from "lucide-react";
 import { MapMarker } from '@/components/maps/types';
+import { toast } from 'sonner';
 
 interface MapPointsSectionProps {
   mapPoints: MapMarker[];
@@ -20,14 +21,33 @@ const MapPointsSection: React.FC<MapPointsSectionProps> = ({
   deleteMapPoint
 }) => {
   const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const handleDeleteClick = (id: string) => {
+    console.log("🗑️ Delete button clicked for point:", id);
     setShowConfirmDelete(id);
   };
 
   const confirmDelete = async (id: string) => {
-    await deleteMapPoint(id);
-    setShowConfirmDelete(null);
+    console.log("✅ Confirming deletion for point:", id);
+    setIsDeleting(id);
+    
+    try {
+      const success = await deleteMapPoint(id);
+      if (success) {
+        console.log("✅ Point successfully deleted from database and UI");
+        toast.success("Punto di interesse eliminato");
+      } else {
+        console.log("❌ Point deletion failed");
+        toast.error("Errore durante l'eliminazione del punto");
+      }
+    } catch (error) {
+      console.error("❌ Error deleting point:", error);
+      toast.error("Errore durante l'eliminazione del punto");
+    } finally {
+      setIsDeleting(null);
+      setShowConfirmDelete(null);
+    }
   };
 
   const handleToggleAddPoint = () => {
@@ -103,14 +123,16 @@ const MapPointsSection: React.FC<MapPointsSectionProps> = ({
                         size="sm" 
                         onClick={() => confirmDelete(point.id)}
                         className="rounded-full"
+                        disabled={isDeleting === point.id}
                       >
-                        Conferma
+                        {isDeleting === point.id ? 'Eliminando...' : 'Conferma'}
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm" 
                         onClick={() => setShowConfirmDelete(null)}
                         className="rounded-full"
+                        disabled={isDeleting === point.id}
                       >
                         Annulla
                       </Button>
@@ -130,8 +152,9 @@ const MapPointsSection: React.FC<MapPointsSectionProps> = ({
                         size="sm" 
                         onClick={() => handleDeleteClick(point.id)}
                         className="rounded-full"
+                        disabled={isDeleting !== null}
                       >
-                        Elimina
+                        🗑 Elimina
                       </Button>
                     </>
                   )}

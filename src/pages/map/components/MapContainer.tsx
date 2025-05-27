@@ -151,6 +151,22 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           zIndex: 1
         }}
         className="z-10"
+        // Enhanced smooth zoom and pan configuration
+        zoomControl={true}
+        scrollWheelZoom={true}
+        doubleClickZoom={true}
+        dragging={true}
+        zoomAnimation={true}
+        zoomAnimationThreshold={4}
+        fadeAnimation={true}
+        markerZoomAnimation={true}
+        trackResize={true}
+        touchZoom={true}
+        bounceAtZoomLimits={false}
+        zoomSnap={0.25}
+        zoomDelta={0.25}
+        wheelPxPerZoomLevel={60}
+        preferCanvas={false}
       >
         <MapInitializer onMapReady={handleMapReady} />
         
