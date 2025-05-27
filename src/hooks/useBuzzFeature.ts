@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
@@ -10,23 +11,28 @@ import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { supabase } from "@/integrations/supabase/client";
 
-// Funzione per generare indizi realmente univoci
+// Funzione per generare indizi REALMENTE univoci con contenuto dinamico
 const generateUniqueClue = (userId: string, buzzCount: number): string => {
-  const timestamp = Date.now();
-  const uniqueClues = [
-    `Cerca dove l'innovazione italiana splende (${new Date().toLocaleTimeString()})`,
-    `Il tuo obiettivo si nasconde tra passato e futuro - Indizio #${buzzCount}`,
-    `Nelle terre del design e della velocità troverai la risposta (${timestamp})`,
-    `Dove il metallo lucente incontra la maestria artigianale - ${new Date().toLocaleDateString()}`,
-    `Tra le curve eleganti e la potenza nascosta ${buzzCount}° segreto`,
-    `Il premio attende dove tradizione e tecnologia si fondono (${userId.slice(-4)})`,
-    `Cerca nella città dove i sogni diventano realtà motoristica - ${new Date().getHours()}:${new Date().getMinutes()}`,
-    `L'eccellenza italiana ti guida verso la meta finale #${buzzCount}`
+  const now = new Date();
+  const timestamp = now.getTime();
+  const timeString = now.toLocaleTimeString('it-IT');
+  const dateString = now.toLocaleDateString('it-IT');
+  
+  const dynamicClues = [
+    `🔍 Indizio ${buzzCount}: Cerca dove il metallo lucente riflette il sole di oggi (${timeString})`,
+    `🎯 Missione #${buzzCount}: La tua meta si nasconde tra innovazione e tradizione - ${dateString}`,
+    `⚡ Flash ${buzzCount}: Velocità e eleganza si incontrano nell'eccellenza italiana (ora: ${timeString})`,
+    `🏁 Target ${buzzCount}: Il prestigio motoristico attende in una location speciale - ${dateString}`,
+    `🔥 Secrets ${buzzCount}: Potenza e design convergono verso il tuo obiettivo (${timestamp})`,
+    `💎 Elite ${buzzCount}: Un gioiello di ingegneria nascosto nella pianura padana - ${timeString}`,
+    `🌟 Premium ${buzzCount}: L'eccellenza si cela dove tradizione e futuro convivono (${dateString})`,
+    `🚀 Dynamic ${buzzCount}: Il tuo premio vibra di energia in una città del nord Italia - ora ${timeString}`
   ];
   
-  // Usa l'hash dell'userId e timestamp per garantire unicità
-  const index = (timestamp + buzzCount + parseInt(userId.slice(-4), 16)) % uniqueClues.length;
-  return uniqueClues[index];
+  // Usa hash dell'userId + timestamp per garantire unicità totale
+  const userHash = parseInt(userId.slice(-8), 16) || 1;
+  const index = (userHash + timestamp + buzzCount) % dynamicClues.length;
+  return dynamicClues[index];
 };
 
 export function useBuzzFeature() {
@@ -98,7 +104,7 @@ export function useBuzzFeature() {
       console.log("🚀 Avvio processo BUZZ UNIVOCO per:", userId);
       setShowDialog(true);
       
-      // Incrementa il counter per garantire unicità
+      // Incrementa il counter per garantire unicità ASSOLUTA
       const newBuzzCount = buzzCounter + 1;
       setBuzzCounter(newBuzzCount);
       
@@ -111,40 +117,60 @@ export function useBuzzFeature() {
         return;
       }
       
-      // Genera contenuto REALMENTE UNIVOCO
-      const uniqueClueContent = response.clue_text || generateUniqueClue(userId, newBuzzCount);
+      // Genera contenuto REALMENTE UNIVOCO con timestamp e info dinamiche
+      const uniqueClueContent = generateUniqueClue(userId, newBuzzCount);
       console.log("📝 Contenuto UNIVOCO generato:", uniqueClueContent);
       console.log("🕐 Timestamp generazione:", new Date().toISOString());
       
       setLastDynamicClue(uniqueClueContent);
       setLastVagueClue(uniqueClueContent);
       
-      setTimeout(() => {
+      setTimeout(async () => {
         setShowDialog(false);
         
-        console.log("💾 Creando notifica BUZZ UNIVOCA con contenuto reale...");
-        // Registra IMMEDIATAMENTE la notifica con contenuto univoco
-        createBuzzNotification(
-          "Nuovo Indizio Buzz!", 
-          uniqueClueContent
-        ).then(async () => {
-          console.log("✅ Notifica BUZZ UNIVOCA creata con successo");
+        console.log("💾 Creando notifica BUZZ UNIVOCA con INSERT (non upsert)...");
+        
+        // STEP 1: Inserimento diretto su Supabase con INSERT (NON UPSERT)
+        try {
+          const { error: directInsertError, data: insertedNotification } = await supabase
+            .from('user_notifications')
+            .insert({
+              user_id: userId,
+              type: 'buzz',
+              title: 'Nuovo Indizio Buzz!',
+              message: uniqueClueContent,
+              is_read: false,  // ESPLICITAMENTE FALSE per evidenza visiva
+              created_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+          if (directInsertError) {
+            console.error("❌ Errore INSERT diretto notifica:", directInsertError);
+            throw directInsertError;
+          }
           
-          // Forza reload immediato delle notifiche
+          console.log("✅ Notifica UNIVOCA inserita con ID:", insertedNotification.id);
+          console.log("📋 Contenuto salvato:", insertedNotification.message);
+          
+          // STEP 2: Reload FORZATO delle notifiche per sync immediato
           await reloadNotifications(true);
           
+          // STEP 3: Toast con contenuto reale
           toast.success("Hai ricevuto un nuovo indizio univoco!", {
             description: uniqueClueContent,
             duration: 4000,
           });
           
+          // STEP 4: Mostra esplosione
           setShowExplosion(true);
-        }).catch(error => {
+          
+        } catch (error) {
           console.error("❌ Error creating notification:", error);
           toast.error("Errore nel salvataggio dell'indizio", {
             duration: 3000,
           });
-        });
+        }
       }, 1500);
     } catch (error) {
       console.error("❌ Error in buzz process:", error);
@@ -180,7 +206,7 @@ export function useBuzzFeature() {
         return;
       }
       
-      const uniqueClue = response.clue_text || generateUniqueClue(userId, newBuzzCount);
+      const uniqueClue = generateUniqueClue(userId, newBuzzCount);
       console.log("📝 Nuovo indizio extra UNIVOCO:", uniqueClue);
       setLastVagueClue(uniqueClue);
       setLastDynamicClue(uniqueClue);
@@ -188,27 +214,35 @@ export function useBuzzFeature() {
       incrementUnlockedCluesAndAddClue();
       
       console.log("💾 Creando notifica indizio extra UNIVOCA...");
-      createBuzzNotification(
-        "Nuovo Indizio Extra!", 
-        uniqueClue
-      ).then(async () => {
-        console.log("✅ Notifica indizio extra UNIVOCA creata");
-        await reloadNotifications(true);
-        
-        toast.success("Hai ricevuto un nuovo indizio extra!", {
-          description: uniqueClue,
-          duration: 4000,
+      
+      // INSERT diretto su Supabase
+      const { error: insertError } = await supabase
+        .from('user_notifications')
+        .insert({
+          user_id: userId,
+          type: 'buzz',
+          title: 'Nuovo Indizio Extra!',
+          message: uniqueClue,
+          is_read: false,
+          created_at: new Date().toISOString()
         });
-        
-        setShowDialog(false);
-        setShowExplosion(true);
-      }).catch(error => {
-        console.error("❌ Error creating notification:", error);
-        toast.error("Errore nel salvataggio dell'indizio", {
-          duration: 3000,
-        });
-        setShowDialog(false);
+
+      if (insertError) {
+        console.error("❌ Errore inserimento notifica extra:", insertError);
+        throw insertError;
+      }
+      
+      console.log("✅ Notifica indizio extra UNIVOCA creata");
+      await reloadNotifications(true);
+      
+      toast.success("Hai ricevuto un nuovo indizio extra!", {
+        description: uniqueClue,
+        duration: 4000,
       });
+      
+      setShowDialog(false);
+      setShowExplosion(true);
+      
     } catch (error) {
       console.error("❌ Error in handle clue button click:", error);
       toast.error("Si è verificato un errore");

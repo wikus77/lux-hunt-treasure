@@ -47,18 +47,18 @@ export function useNotifications() {
     }
   }, []);
 
-  // Carica le notifiche da Supabase con rate limiting migliorato
+  // Carica le notifiche da Supabase con ordinamento corretto
   const reloadNotifications = useCallback(async (force = false) => {
     const now = Date.now();
-    if (!force && now - lastReloadTimeRef.current < 3000 && !isInitialLoadRef.current) {
+    if (!force && now - lastReloadTimeRef.current < 2000 && !isInitialLoadRef.current) {
       console.log("⏱️ Skipping reload due to rate limiting");
       return true;
     }
     
     try {
-      console.log("🔄 Reloading notifications UNIVOCHE...");
+      console.log("🔄 Reloading notifications UNIVOCHE con ordinamento corretto...");
       
-      if (isInitialLoadRef.current || now - lastReloadTimeRef.current > 3000) {
+      if (isInitialLoadRef.current || now - lastReloadTimeRef.current > 2000) {
         setIsLoading(true);
       }
       
@@ -74,29 +74,35 @@ export function useNotifications() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         console.log("👤 Utente autenticato, caricamento da Supabase...");
+        
+        // QUERY ORDINATA: NON LETTE PRIMA, POI PER DATA
         const { data: supabaseNotifs, error } = await supabase
           .from('user_notifications')
           .select('*')
           .eq('is_deleted', false)
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('is_read', { ascending: true })  // false (non lette) prima
+          .order('created_at', { ascending: false }); // più recenti prima
           
         if (error) {
           console.error("❌ Error fetching notifications from Supabase:", error);
         } else if (supabaseNotifs && supabaseNotifs.length > 0) {
           console.log("✅ Loaded UNIQUE notifications from Supabase:", supabaseNotifs.length);
           
-          // Converti notifiche Supabase al nostro formato, ordinando per timestamp
-          notifs = supabaseNotifs
-            .map(n => ({
-              id: n.id,
-              title: n.title,
-              description: n.message,
-              date: n.created_at,
-              read: n.is_read === true,
-              type: n.type
-            }))
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          // Converti notifiche Supabase al nostro formato CON ORDINAMENTO CORRETTO
+          notifs = supabaseNotifs.map(n => ({
+            id: n.id,
+            title: n.title,
+            description: n.message,
+            date: n.created_at,
+            read: n.is_read === true,
+            type: n.type
+          }));
+          
+          console.log("📋 Prime 3 notifiche ordinate:");
+          notifs.slice(0, 3).forEach((n, i) => {
+            console.log(`${i + 1}. ${n.read ? '✅ LETTA' : '🔥 NON LETTA'} - ${n.title}: ${n.description.substring(0, 50)}...`);
+          });
           
           // Aggiorna localStorage con dati server
           saveNotifications(notifs);
@@ -105,12 +111,6 @@ export function useNotifications() {
       
       const unreadCount = notifs.filter(n => !n.read).length;
       console.log("📊 Loaded notifications:", notifs.length, "Unread:", unreadCount);
-      console.log("🔍 Checking for unique content...");
-      
-      // Log dei contenuti per verificare unicità
-      notifs.slice(0, 3).forEach((n, i) => {
-        console.log(`📝 Notifica ${i + 1}:`, n.description.substring(0, 50) + "...");
-      });
       
       setNotifications(notifs);
       setUnreadCount(unreadCount);
@@ -171,78 +171,7 @@ export function useNotifications() {
     }
   }, [notifications, saveNotifications]);
 
-  // Aggiorna in realtime se qualcuno chiama reload da altrove (es: altro tab o altra sezione)
-  // But limit how often we update to prevent flickering
-  useEffect(() => {
-    const listener = () => {
-      const now = Date.now();
-      if (now - lastReloadTimeRef.current > 3000 || isInitialLoadRef.current) {
-        reloadNotifications();
-      }
-    };
-    listeners.push(listener);
-
-    const storageEvent = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY) {
-        const now = Date.now();
-        if (now - lastReloadTimeRef.current > 3000 || isInitialLoadRef.current) {
-          reloadNotifications();
-        }
-      }
-    };
-    window.addEventListener('storage', storageEvent);
-
-    if (isInitialLoadRef.current) {
-      reloadNotifications();
-    }
-
-    return () => {
-      listeners = listeners.filter(fn => fn !== listener);
-      window.removeEventListener('storage', storageEvent);
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
-      }
-    };
-  }, [reloadNotifications]);
-
-  // Setup Supabase realtime subscription
-  useEffect(() => {
-    const setupRealtimeSubscription = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      const channel = supabase
-        .channel('notification-changes')
-        .on('postgres_changes', 
-            {
-              event: '*', 
-              schema: 'public', 
-              table: 'user_notifications',
-              filter: `user_id=eq.${user.id}`
-            }, 
-            (payload) => {
-              console.log('Realtime notification update:', payload);
-              const now = Date.now();
-              if (now - lastReloadTimeRef.current > 3000) {
-                reloadNotifications(true);
-              } else {
-                setTimeout(() => {
-                  reloadNotifications(true);
-                }, 3000 - (now - lastReloadTimeRef.current));
-              }
-            }
-        )
-        .subscribe();
-      
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    };
-    
-    setupRealtimeSubscription();
-  }, [reloadNotifications]);
-
-  // Singola notifica come letta
+  // Singola notifica come letta con AGGIORNAMENTO LIVE
   const markAsRead = useCallback(async (id: string) => {
     console.log("📖 Marcando notifica come letta:", id);
     try {
@@ -260,6 +189,7 @@ export function useNotifications() {
         }
       }
       
+      // AGGIORNAMENTO IMMEDIATO LOCALE
       const updated = notifications.map(n => n.id === id ? { ...n, read: true } : n);
       const saved = saveNotifications(updated);
       
@@ -373,6 +303,76 @@ export function useNotifications() {
   const getNotificationsByCategory = useCallback((category: string) => {
     return notifications.filter(n => n.type === category);
   }, [notifications]);
+
+  // Aggiorna in realtime se qualcuno chiama reload da altrove (es: altro tab o altra sezione)
+  useEffect(() => {
+    const listener = () => {
+      const now = Date.now();
+      if (now - lastReloadTimeRef.current > 2000 || isInitialLoadRef.current) {
+        reloadNotifications();
+      }
+    };
+    listeners.push(listener);
+
+    const storageEvent = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) {
+        const now = Date.now();
+        if (now - lastReloadTimeRef.current > 2000 || isInitialLoadRef.current) {
+          reloadNotifications();
+        }
+      }
+    };
+    window.addEventListener('storage', storageEvent);
+
+    if (isInitialLoadRef.current) {
+      reloadNotifications();
+    }
+
+    return () => {
+      listeners = listeners.filter(fn => fn !== listener);
+      window.removeEventListener('storage', storageEvent);
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, [reloadNotifications]);
+
+  // Setup Supabase realtime subscription
+  useEffect(() => {
+    const setupRealtimeSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const channel = supabase
+        .channel('notification-changes')
+        .on('postgres_changes', 
+            {
+              event: '*', 
+              schema: 'public', 
+              table: 'user_notifications',
+              filter: `user_id=eq.${user.id}`
+            }, 
+            (payload) => {
+              console.log('Realtime notification update:', payload);
+              const now = Date.now();
+              if (now - lastReloadTimeRef.current > 2000) {
+                reloadNotifications(true);
+              } else {
+                setTimeout(() => {
+                  reloadNotifications(true);
+                }, 2000 - (now - lastReloadTimeRef.current));
+              }
+            }
+        )
+        .subscribe();
+      
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+    
+    setupRealtimeSubscription();
+  }, [reloadNotifications]);
 
   return {
     notifications,

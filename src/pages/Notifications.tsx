@@ -50,12 +50,17 @@ const Notifications = () => {
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
-  // Group notifications by category
+  // Group notifications by category CON ORDINAMENTO CORRETTO
   const notificationsByCategory = useMemo(() => {
     const result = categoryConfig.reduce((acc, category) => {
       const categoryNotifications = notifications.filter(n => n.type === category.id);
       if (categoryNotifications.length > 0) {
-        acc[category.id] = categoryNotifications;
+        // ORDINAMENTO: NON LETTE PRIMA, POI PER DATA
+        const sortedNotifications = categoryNotifications.sort((a, b) => {
+          if (a.read !== b.read) return a.read ? 1 : -1; // Non lette prima
+          return new Date(b.date).getTime() - new Date(a.date).getTime(); // Più recenti prima
+        });
+        acc[category.id] = sortedNotifications;
       }
       return acc;
     }, {} as Record<string, typeof notifications>);
@@ -63,13 +68,18 @@ const Notifications = () => {
     // Add uncategorized notifications to "generic"
     const uncategorized = notifications.filter(n => !n.type || !Object.values(NOTIFICATION_CATEGORIES).includes(n.type));
     if (uncategorized.length > 0) {
+      const sortedUncategorized = uncategorized.sort((a, b) => {
+        if (a.read !== b.read) return a.read ? 1 : -1;
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
+      
       if (result[NOTIFICATION_CATEGORIES.GENERIC]) {
         result[NOTIFICATION_CATEGORIES.GENERIC] = [
           ...result[NOTIFICATION_CATEGORIES.GENERIC],
-          ...uncategorized
+          ...sortedUncategorized
         ];
       } else {
-        result[NOTIFICATION_CATEGORIES.GENERIC] = uncategorized;
+        result[NOTIFICATION_CATEGORIES.GENERIC] = sortedUncategorized;
       }
     }
 
@@ -97,7 +107,7 @@ const Notifications = () => {
     const refreshInterval = setInterval(() => {
       console.log("🔄 Aggiornamento periodico notifiche...");
       reloadNotifications();
-    }, 30000); // Poll ogni 30 secondi
+    }, 15000); // Poll ogni 15 secondi per sincronizzazione
     
     return () => clearInterval(refreshInterval);
   }, [markAllAsRead, reloadNotifications, initialLoadComplete]);
@@ -220,71 +230,68 @@ const Notifications = () => {
                               {categoryNotifs.length}
                             </Badge>
                             {unreadInCategory > 0 && (
-                              <div className="h-2 w-2 rounded-full bg-[#FF59F8] animate-pulse ml-1"></div>
+                              <div className="h-2 w-2 rounded-full bg-[#FF59F8] animate-pulse ml-1 shadow-[0_0_10px_#FF59F8]"></div>
                             )}
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="bg-black/30 px-4 py-3">
                           <div className="space-y-3">
-                            {categoryNotifs
-                              .sort((a, b) => {
-                                // Sort unread first, then by date
-                                if (a.read !== b.read) return a.read ? 1 : -1;
-                                return new Date(b.date).getTime() - new Date(a.date).getTime();
-                              })
-                              .map(notification => (
-                                <div 
-                                  key={notification.id} 
-                                  className={`relative cursor-pointer p-4 rounded-[24px] transition-all duration-300 shadow-md ${
-                                    !notification.read 
-                                      ? "border-l-4 border-[#00cfff] bg-[#1a1a1a] shadow-[0_0_15px_#00cfff] animate-pulse" 
-                                      : "border border-[#00D1FF]/10 hover:border-[#00D1FF]/30 bg-gradient-to-br from-black/90 to-[#131524]/80 hover:from-black hover:to-[#131524]/90"
-                                  }`}
-                                  onClick={() => handleOpen(notification)}
-                                >
-                                  <div className="flex items-start gap-3">
-                                    <div className="flex-shrink-0">
-                                      {category.icon}
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <h3 className={`font-medium ${
-                                          !notification.read 
-                                            ? 'text-[#00cfff] font-extrabold text-lg' 
-                                            : 'text-white'
-                                        }`} style={!notification.read ? {
-                                          textShadow: "0 0 10px rgba(0, 207, 255, 0.8)"
-                                        } : {}}>
-                                          {notification.title}
-                                        </h3>
-                                        {!notification.read && (
-                                          <Badge className="bg-[#ff007f] text-white rounded-full px-2 py-1 text-xs font-extrabold animate-pulse">
-                                            NUOVA
-                                          </Badge>
-                                        )}
-                                      </div>
-                                      <p className={`text-sm mt-1 ${
-                                        !notification.read ? 'text-white font-semibold' : 'text-white/70'
-                                      }`}>{notification.description}</p>
-                                      <div className="mt-1 text-xs text-white/40">
-                                        {notification.date ? new Date(notification.date).toLocaleString() : "Ora"}
-                                      </div>
-                                    </div>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteNotification(notification.id);
-                                      }}
-                                      className="p-1 h-auto rounded-full text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                      <span className="sr-only">Elimina notifica</span>
-                                    </Button>
+                            {categoryNotifs.map(notification => (
+                              <div 
+                                key={notification.id} 
+                                className={`relative cursor-pointer p-4 rounded-[24px] transition-all duration-300 shadow-md group ${
+                                  !notification.read 
+                                    ? "border-l-4 border-[#00cfff] bg-[#1a1a1a] shadow-[0_0_15px_#00cfff] animate-pulse" 
+                                    : "border border-[#00D1FF]/10 hover:border-[#00D1FF]/30 bg-gradient-to-br from-black/90 to-[#131524]/80 hover:from-black hover:to-[#131524]/90"
+                                }`}
+                                onClick={() => handleOpen(notification)}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className="flex-shrink-0">
+                                    {category.icon}
+                                    {!notification.read && (
+                                      <Sparkles className="w-3 h-3 text-[#FF59F8] absolute -top-1 -right-1 animate-pulse" />
+                                    )}
                                   </div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h3 className={`font-medium ${
+                                        !notification.read 
+                                          ? 'text-[#00cfff] font-extrabold text-lg' 
+                                          : 'text-white'
+                                      }`} style={!notification.read ? {
+                                        textShadow: "0 0 10px rgba(0, 207, 255, 0.8)"
+                                      } : {}}>
+                                        {notification.title}
+                                      </h3>
+                                      {!notification.read && (
+                                        <Badge className="bg-[#ff007f] text-white rounded-full px-2 py-1 text-xs font-extrabold animate-pulse shadow-[0_0_10px_#ff007f]">
+                                          NUOVA
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <p className={`text-sm mt-1 ${
+                                      !notification.read ? 'text-white font-semibold' : 'text-white/70'
+                                    }`}>{notification.description}</p>
+                                    <div className="mt-1 text-xs text-white/40">
+                                      {notification.date ? new Date(notification.date).toLocaleString() : "Ora"}
+                                    </div>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteNotification(notification.id);
+                                    }}
+                                    className="p-1 h-auto rounded-full text-red-400 hover:text-red-300 hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    <span className="sr-only">Elimina notifica</span>
+                                  </Button>
                                 </div>
-                              ))}
+                              </div>
+                            ))}
                           </div>
                         </AccordionContent>
                       </AccordionItem>
