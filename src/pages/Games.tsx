@@ -11,6 +11,7 @@ import DisarmTheBombGame from "@/components/games/DisarmTheBombGame";
 import CrackTheCombinationGame from "@/components/games/CrackTheCombinationGame";
 import FindMapPointGame from "@/components/games/FindMapPointGame";
 import SatelliteTrackingGame from "@/components/games/SatelliteTrackingGame";
+import FlashInterrogationGame from "@/components/games/FlashInterrogationGame";
 
 interface GameCardProps {
   title: string;
@@ -101,7 +102,8 @@ const Games = () => {
       title: "Interrogatorio Lampo",
       description: "Rispondi velocemente alle domande",
       icon: <MessageSquare className="text-[#00D1FF] w-5 h-5" />,
-      gameKey: "flash_interrogation"
+      gameKey: "flash_interrogation",
+      isPlayable: true
     }
   ];
 
@@ -265,6 +267,28 @@ const Games = () => {
               </div>
             </DialogHeader>
             <SatelliteTrackingGame />
+          </DialogContent>
+        </Dialog>
+
+        {/* Flash Interrogation Game Modal */}
+        <Dialog open={activeGame === 'flash_interrogation'} onOpenChange={closeGame}>
+          <DialogContent className="max-w-3xl w-full bg-black/95 border-white/10">
+            <DialogHeader>
+              <div className="flex items-center justify-between">
+                <DialogTitle className="text-2xl font-orbitron text-white">
+                  <span className="text-[#00D1FF]">INTERROGATORIO</span> LAMPO
+                </DialogTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={closeGame}
+                  className="text-white hover:text-[#00D1FF]"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </DialogHeader>
+            <FlashInterrogationGame />
           </DialogContent>
         </Dialog>
       </div>
