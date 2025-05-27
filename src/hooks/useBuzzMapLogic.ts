@@ -18,14 +18,45 @@ export const useBuzzMapLogic = () => {
   const { user } = useAuth();
   const [currentWeekAreas, setCurrentWeekAreas] = useState<BuzzMapArea[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [userCluesCount, setUserCluesCount] = useState(0);
 
-  // Calcola la settimana corrente (esempio: settimana dell'anno)
+  // Calcola la settimana corrente
   const getCurrentWeek = (): number => {
     const now = new Date();
     const start = new Date(now.getFullYear(), 0, 1);
     const diff = now.getTime() - start.getTime();
     const oneWeek = 1000 * 60 * 60 * 24 * 7;
     return Math.ceil(diff / oneWeek);
+  };
+
+  // Carica il conteggio degli indizi utente per calcolare il prezzo
+  const loadUserCluesCount = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { count, error } = await supabase
+        .from('user_clues')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error loading user clues count:', error);
+        return;
+      }
+
+      setUserCluesCount(count || 0);
+    } catch (err) {
+      console.error('Exception loading user clues count:', err);
+    }
+  };
+
+  // Calcola il prezzo BUZZ MAPPA basato sul numero di indizi
+  const calculateBuzzMapPrice = (): number => {
+    if (userCluesCount <= 10) return 7.99;
+    if (userCluesCount <= 20) return 9.99;
+    if (userCluesCount <= 30) return 13.99;
+    if (userCluesCount <= 40) return 19.99;
+    return 29.99;
   };
 
   // Carica le aree della settimana corrente
@@ -40,7 +71,8 @@ export const useBuzzMapLogic = () => {
         .select('*')
         .eq('user_id', user.id)
         .eq('week', currentWeek)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false })
+        .limit(1);
 
       if (error) {
         console.error('Error loading map areas:', error);
@@ -57,7 +89,7 @@ export const useBuzzMapLogic = () => {
   // Ottieni l'area attiva più recente per la settimana corrente
   const getActiveArea = (): BuzzMapArea | null => {
     if (currentWeekAreas.length === 0) return null;
-    return currentWeekAreas[currentWeekAreas.length - 1];
+    return currentWeekAreas[0];
   };
 
   // Calcola il raggio per la prossima area (decremento -5% dal precedente)
@@ -78,14 +110,14 @@ export const useBuzzMapLogic = () => {
     return Math.max(MIN_RADIUS, nextRadius);
   };
 
-  // 🚨 STEP CRITICO: Rimuovi TUTTE le aree precedenti della settimana corrente
-  const removeAllCurrentWeekAreas = async (): Promise<boolean> => {
+  // Rimuovi l'area precedente della settimana corrente
+  const removePreviousArea = async (): Promise<boolean> => {
     if (!user?.id) return false;
 
     const currentWeek = getCurrentWeek();
     
     try {
-      console.log('🗑️ ELIMINAZIONE aree precedenti per user:', user.id, 'settimana:', currentWeek);
+      console.log('🗑️ ELIMINAZIONE area precedente per user:', user.id, 'settimana:', currentWeek);
       
       const { error } = await supabase
         .from('user_map_areas')
@@ -94,14 +126,14 @@ export const useBuzzMapLogic = () => {
         .eq('week', currentWeek);
 
       if (error) {
-        console.error('❌ Error removing previous areas:', error);
+        console.error('❌ Error removing previous area:', error);
         return false;
       }
 
-      console.log('✅ TUTTE le aree precedenti ELIMINATE per settimana:', currentWeek);
+      console.log('✅ Area precedente ELIMINATA per settimana:', currentWeek);
       return true;
     } catch (err) {
-      console.error('❌ Exception removing previous areas:', err);
+      console.error('❌ Exception removing previous area:', err);
       return false;
     }
   };
@@ -129,18 +161,17 @@ export const useBuzzMapLogic = () => {
         lat: centerLat,
         lng: centerLng,
         radius_km: radiusKm,
-        week: currentWeek,
-        eliminandoPrecedenti: currentWeekAreas.length > 0
+        week: currentWeek
       });
 
-      // 🚨 STEP 1: ELIMINA TUTTE le aree precedenti della settimana corrente
-      const removed = await removeAllCurrentWeekAreas();
+      // STEP 1: ELIMINA l'area precedente della settimana corrente
+      const removed = await removePreviousArea();
       if (!removed) {
-        toast.error('Errore nel rimuovere le aree precedenti');
+        toast.error('Errore nel rimuovere l\'area precedente');
         return null;
       }
 
-      // 🚨 STEP 2: Crea la nuova area con il raggio calcolato
+      // STEP 2: Crea la nuova area con il raggio calcolato
       const newArea = {
         user_id: user.id,
         lat: centerLat,
@@ -164,10 +195,10 @@ export const useBuzzMapLogic = () => {
       console.log('✅ NUOVA area BUZZ MAPPA salvata:', data);
       console.log('📏 Raggio ESATTO salvato:', data.radius_km, 'km');
       
-      // 🚨 STEP 3: Aggiorna lo stato locale con la SOLA nuova area
+      // STEP 3: Aggiorna lo stato locale con la SOLA nuova area
       setCurrentWeekAreas([data]);
       
-      // 🚨 STEP 4: Messaggio allineato al valore REALE salvato
+      // STEP 4: Messaggio con il valore REALE salvato
       toast.success(`Area BUZZ MAPPA generata! Raggio: ${data.radius_km.toFixed(1)} km`);
       
       return data;
@@ -180,14 +211,20 @@ export const useBuzzMapLogic = () => {
     }
   };
 
+  // Carica i dati iniziali
   useEffect(() => {
-    loadCurrentWeekAreas();
+    if (user?.id) {
+      loadUserCluesCount();
+      loadCurrentWeekAreas();
+    }
   }, [user]);
 
   return {
     currentWeekAreas,
     isGenerating,
+    userCluesCount,
     calculateNextRadius,
+    calculateBuzzMapPrice,
     generateBuzzMapArea,
     getActiveArea,
     reloadAreas: loadCurrentWeekAreas

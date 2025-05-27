@@ -7,14 +7,12 @@ import { useBuzzMapLogic } from "@/hooks/useBuzzMapLogic";
 
 export interface BuzzButtonProps {
   handleBuzz?: () => void;
-  buzzMapPrice: number;
   radiusKm?: number;
   mapCenter?: [number, number];
 }
 
 const BuzzButton: React.FC<BuzzButtonProps> = ({ 
   handleBuzz, 
-  buzzMapPrice,
   radiusKm = 1,
   mapCenter
 }) => {
@@ -22,11 +20,14 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const { 
     isGenerating, 
     calculateNextRadius, 
+    calculateBuzzMapPrice,
     generateBuzzMapArea,
-    getActiveArea 
+    getActiveArea,
+    userCluesCount
   } = useBuzzMapLogic();
   
   const nextRadius = calculateNextRadius();
+  const buzzMapPrice = calculateBuzzMapPrice();
   const activeArea = getActiveArea();
   
   const handleBuzzMapClick = async () => {
@@ -36,12 +37,13 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     
     console.log('🚀 BUZZ MAPPA pressed - Generating area at:', { centerLat, centerLng });
     console.log('📏 Prossimo raggio calcolato:', nextRadius, 'km');
+    console.log('💰 Prezzo calcolato:', buzzMapPrice, '€');
     
-    // 🚨 STEP 1: Genera l'area usando la logica dedicata (con eliminazione automatica precedenti)
+    // STEP 1: Genera l'area usando la logica dedicata
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
-      // 🚨 STEP 2: Crea notifica con il raggio REALE salvato su Supabase
+      // STEP 2: Crea notifica con il raggio REALE salvato su Supabase
       try {
         await createMapBuzzNotification(
           "Area BUZZ MAPPA Generata", 
@@ -53,7 +55,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         console.error("❌ Failed to create BUZZ Map notification:", error);
       }
       
-      // 🚨 STEP 3: Esegui callback opzionale
+      // STEP 3: Esegui callback opzionale
       if (handleBuzz) {
         handleBuzz();
       }
@@ -79,6 +81,9 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         <span className="ml-2 text-xs opacity-80">
           {activeArea ? `(Attivo: ${activeArea.radius_km.toFixed(1)}km)` : `(R: ${nextRadius.toFixed(1)}km)`}
         </span>
+        <div className="text-xs opacity-70 mt-1">
+          {userCluesCount} indizi
+        </div>
       </Button>
       <style>
         {`

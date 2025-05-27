@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -29,7 +28,6 @@ interface MapContainerProps {
   newPoint: any | null;
   handleSaveNewPoint: (title: string, note: string) => void;
   handleCancelNewPoint: () => void;
-  buzzMapPrice: number;
   handleBuzz: () => void;
   isAddingSearchArea?: boolean;
   handleMapClickArea?: (e: any) => void;
@@ -55,7 +53,6 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   newPoint,
   handleSaveNewPoint,
   handleCancelNewPoint,
-  buzzMapPrice,
   handleBuzz,
   isAddingSearchArea = false,
   handleMapClickArea = () => {},
@@ -177,7 +174,6 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       {/* Use the BuzzButton component with map center */}
       <BuzzButton 
         handleBuzz={handleBuzz} 
-        buzzMapPrice={buzzMapPrice} 
         mapCenter={mapCenter}
       />
 

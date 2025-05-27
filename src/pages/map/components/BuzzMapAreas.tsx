@@ -14,7 +14,7 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
   
   console.log('🗺️ Rendering BUZZ map areas:', areas);
 
-  // 🚨 CRITICO: Rimuovi tutti i layer precedenti prima di renderizzare la nuova area
+  // CRITICO: Rimuovi tutti i layer precedenti prima di renderizzare la nuova area
   useEffect(() => {
     // Rimuovi tutti i layer precedenti dalla mappa
     previousLayersRef.current.forEach(layer => {
@@ -29,19 +29,24 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
     console.log('🗑️ Layer precedenti RIMOSSI dalla mappa');
   }, [areas, map]);
 
+  // Se non ci sono aree da mostrare, non renderizzare nulla
+  if (!areas || areas.length === 0) {
+    return null;
+  }
+
   return (
     <>
       {areas.map((area, index) => {
-        // 🚨 CONVERSIONE CORRETTA: radius_km → metri per Leaflet
+        // CONVERSIONE CORRETTA: radius_km → metri per Leaflet
         const radiusInMeters = area.radius_km * 1000;
         
         console.log(`📏 Area ${area.id}: radius_km=${area.radius_km} → ${radiusInMeters}m per Leaflet`);
         
         return (
           <Circle
-            key={area.id}
+            key={`${area.id}-${area.created_at}`} // Key unica per forzare re-render
             center={[area.lat, area.lng]}
-            radius={radiusInMeters} // 🚨 CRITICO: Converti km in metri per Leaflet
+            radius={radiusInMeters} // CRITICO: Converti km in metri per Leaflet
             pathOptions={{
               color: '#00cfff', // Neon blu M1SSION
               fillColor: '#00cfff',
@@ -56,6 +61,7 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
                 const layer = e.target as L.Circle;
                 previousLayersRef.current.push(layer);
                 console.log('✅ Nuovo layer BUZZ aggiunto alla mappa');
+                console.log('📏 Raggio layer:', radiusInMeters, 'metri');
               }
             }}
           />

@@ -23,7 +23,8 @@ export const useNewMapPage = () => {
     currentWeekAreas, 
     isGenerating: isBuzzGenerating,
     generateBuzzMapArea,
-    getActiveArea 
+    getActiveArea,
+    calculateBuzzMapPrice
   } = useBuzzMapLogic();
 
   // Initialize search areas logic
@@ -194,7 +195,7 @@ export const useNewMapPage = () => {
   const handleBuzz = useCallback(() => {
     const activeArea = getActiveArea();
     if (activeArea) {
-      // 🚨 MESSAGGIO ALLINEATO: usa il valore ESATTO salvato in Supabase
+      // MESSAGGIO ALLINEATO: usa il valore ESATTO salvato in Supabase
       toast.success(`Area BUZZ MAPPA attiva: ${activeArea.radius_km.toFixed(1)} km`, {
         description: "L'area è già visibile sulla mappa"
       });
@@ -232,7 +233,7 @@ export const useNewMapPage = () => {
     isLoading,
     activeMapPoint,
     setActiveMapPoint,
-    buzzMapPrice,
+    buzzMapPrice: calculateBuzzMapPrice(),
     searchAreas,
     isAddingSearchArea,
     activeSearchArea,
