@@ -14,7 +14,7 @@ const BuzzResetCounter: React.FC<BuzzResetCounterProps> = ({ userId, onReset }) 
     try {
       console.log("🔄 RESET COUNTER BUZZ IMMEDIATO per user:", userId);
       
-      // Reset completo del counter giornaliero - DELETE di tutti i record per oggi
+      // STEP 1: Reset completo del counter giornaliero - DELETE di tutti i record per oggi
       const today = new Date().toISOString().split('T')[0];
       console.log("📅 Data di reset:", today);
       
@@ -33,22 +33,30 @@ const BuzzResetCounter: React.FC<BuzzResetCounterProps> = ({ userId, onReset }) 
       console.log("✅ Record eliminati:", deletedRecords);
       console.log("✅ Counter buzz resettato completamente per la data:", today);
       
-      // Callback immediato per aggiornare il parent component
+      // STEP 2: Callback immediato per aggiornare il parent component
       if (onReset) {
         onReset();
       }
       
-      // Toast di successo
+      // STEP 3: Toast di successo
       toast.success("Counter Buzz resettato!", {
         description: "Il sistema è pronto per nuovi test. Counter azzerato a 0/50.",
         duration: 3000,
       });
       
+      // STEP 4: Invalida qualsiasi cache del browser e forza refresh completo
+      console.log("🔄 Invalidando cache e forzando refresh completo...");
+      
+      // Cancella eventuali cache locali
+      localStorage.removeItem('buzzCounter');
+      localStorage.removeItem('dailyBuzzCount');
+      sessionStorage.clear();
+      
       // Forza un refresh completo della pagina per garantire sincronizzazione totale
-      console.log("🔄 Forzando refresh completo della pagina...");
       setTimeout(() => {
+        console.log("🔄 Eseguendo refresh completo della pagina...");
         window.location.reload();
-      }, 1000);
+      }, 1500);
       
     } catch (error) {
       console.error("❌ Errore durante reset counter:", error);
@@ -60,14 +68,19 @@ const BuzzResetCounter: React.FC<BuzzResetCounterProps> = ({ userId, onReset }) 
   };
 
   return (
-    <Button
-      onClick={handleResetCounter}
-      variant="outline"
-      size="sm"
-      className="bg-red-900/20 hover:bg-red-800/30 border-red-500/30 text-red-300 hover:text-red-200"
-    >
-      🔄 Reset Counter (TEST)
-    </Button>
+    <div className="flex flex-col items-center gap-2">
+      <Button
+        onClick={handleResetCounter}
+        variant="outline"
+        size="sm"
+        className="bg-red-900/20 hover:bg-red-800/30 border-red-500/30 text-red-300 hover:text-red-200"
+      >
+        🔄 Reset Counter (TEST)
+      </Button>
+      <p className="text-xs text-white/50 text-center">
+        Azzera il limite giornaliero per test
+      </p>
+    </div>
   );
 };
 

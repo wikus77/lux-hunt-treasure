@@ -29,13 +29,17 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const [buzzCost, setBuzzCost] = useState<number>(1.99);
   const [dailyCount, setDailyCount] = useState<number>(0);
   const [isLoaderKey, setIsLoaderKey] = useState<number>(0);
+  const [forceRefresh, setForceRefresh] = useState<number>(0);
 
-  // Forza il reload dei dati ogni volta che resetTrigger cambia o quando il componente si monta
-  const loadBuzzData = async () => {
+  // FUNZIONE DI CARICAMENTO DATI FORZATO CON INVALIDAZIONE CACHE
+  const loadBuzzData = async (forceReload = false) => {
     if (!userId) return;
     
     try {
-      console.log("📊 Caricamento FORZATO dati buzz per user:", userId);
+      console.log("📊 Caricamento FORZATO dati buzz per user:", userId, "forceReload:", forceReload);
+      
+      // INVALIDAZIONE CACHE: aggiungiamo timestamp per bypassare eventuali cache
+      const cacheBypass = forceReload ? `?t=${Date.now()}` : '';
       
       // Ottieni il conteggio giornaliero attuale con query fresh
       const today = new Date().toISOString().split('T')[0];
@@ -53,6 +57,9 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 
       const currentCount = countData?.buzz_count || 0;
       console.log("📈 Conteggio ATTUALE buzz:", currentCount);
+      console.log("🔍 Stato blocco calcolato:", currentCount >= 50 ? "BLOCCATO" : "LIBERO");
+      
+      // AGGIORNAMENTO FORZATO DELLO STATO
       setDailyCount(currentCount);
 
       // Calcola il costo per il prossimo buzz
@@ -69,18 +76,33 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       console.log("💰 Costo calcolato per prossimo buzz:", newCost);
       setBuzzCost(newCost);
 
-      // Forza un re-render del componente
+      // Forza un re-render completo del componente
       setIsLoaderKey(prev => prev + 1);
+      setForceRefresh(prev => prev + 1);
+      
+      console.log("✅ Dati buzz aggiornati - Count:", currentCount, "Cost:", newCost, "Blocked:", currentCount >= 50);
       
     } catch (error) {
       console.error("Errore nel caricamento del costo buzz:", error);
     }
   };
 
-  // Carica i dati ogni volta che resetTrigger cambia o il componente si monta
+  // Effect principale che carica i dati ogni volta che resetTrigger cambia
   useEffect(() => {
-    loadBuzzData();
-  }, [userId, resetTrigger]);
+    console.log("🔄 Effect triggered - resetTrigger:", resetTrigger, "forceRefresh:", forceRefresh);
+    loadBuzzData(true); // Sempre forza reload
+  }, [userId, resetTrigger, forceRefresh]);
+
+  // Effect aggiuntivo per ascoltare cambiamenti del resetTrigger
+  useEffect(() => {
+    if (resetTrigger > 0) {
+      console.log("🔄 Reset trigger ricevuto:", resetTrigger);
+      // Delay per assicurarsi che il DB sia aggiornato
+      setTimeout(() => {
+        loadBuzzData(true);
+      }, 500);
+    }
+  }, [resetTrigger]);
 
   const handleBuzzPress = async () => {
     if (isLoading || !userId) return;
@@ -99,7 +121,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         console.log("✅ Risposta BUZZ API ricevuta:", response);
         
         // Ricarica i dati dopo il successo
-        await loadBuzzData();
+        await loadBuzzData(true);
 
         // Ottieni il contenuto dinamico reale dell'indizio
         const dynamicClueContent = response.clue_text || `Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`;
@@ -168,10 +190,13 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 
   // Determina se il buzz è bloccato (oltre 50 utilizzi giornalieri)
   const isBlocked = dailyCount >= 50 || buzzCost <= 0;
+  
+  // DEBUG: Log dello stato corrente
+  console.log("🔍 DEBUG BuzzButton - dailyCount:", dailyCount, "isBlocked:", isBlocked, "buzzCost:", buzzCost);
 
   return (
     <motion.button
-      key={`buzz-button-${isLoaderKey}`} // Forza re-render con key dinamica
+      key={`buzz-button-${isLoaderKey}-${forceRefresh}`} // Forza re-render con key dinamica
       className="w-60 h-60 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl hover:shadow-[0_0_35px_rgba(123,46,255,0.7)] focus:outline-none disabled:opacity-50"
       onClick={handleBuzzPress}
       disabled={isLoading || isBlocked}
@@ -221,6 +246,9 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             </span>
             <span className="text-xs text-red-200 mt-1">
               Limite giornaliero raggiunto
+            </span>
+            <span className="text-xs text-red-200 mt-1">
+              ({dailyCount}/50)
             </span>
           </>
         ) : (

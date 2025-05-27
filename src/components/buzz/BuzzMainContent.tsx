@@ -45,12 +45,20 @@ const BuzzMainContent = () => {
 
   const handleCounterReset = () => {
     console.log("🔄 Counter resettato, forzando aggiornamento componenti...");
-    // Forza un aggiornamento immediato con timestamp unico
-    setResetTrigger(Date.now());
+    // Forza un aggiornamento immediato con timestamp unico per invalidare cache
+    const newTrigger = Date.now();
+    setResetTrigger(newTrigger);
+    
     // Reset degli stati locali
     setIsLoading(false);
     setError(null);
-    console.log("✅ Componenti aggiornati dopo reset con nuovo trigger:", Date.now());
+    
+    console.log("✅ Componenti aggiornati dopo reset con nuovo trigger:", newTrigger);
+    
+    // Forza un re-render aggiuntivo dopo un breve delay
+    setTimeout(() => {
+      setResetTrigger(Date.now());
+    }, 100);
   };
 
   return (
@@ -83,6 +91,7 @@ const BuzzMainContent = () => {
             transition={{ delay: 0.5, duration: 0.5 }}
           >
             <BuzzButton
+              key={`buzz-btn-${resetTrigger}`} // Forza re-mount del componente
               isLoading={isLoading}
               setIsLoading={setIsLoading}
               setError={setError}
@@ -111,6 +120,12 @@ const BuzzMainContent = () => {
                 />
               </div>
             )}
+
+            {/* DEBUG INFO */}
+            <div className="mt-2 p-2 bg-black/20 rounded text-xs text-white/60">
+              <p>🔍 Reset Trigger: {resetTrigger}</p>
+              <p>👤 User ID: {userId ? `${userId.substring(0, 8)}...` : 'Loading...'}</p>
+            </div>
           </motion.div>
         </GradientBox>
       </motion.div>
