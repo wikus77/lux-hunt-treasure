@@ -7,11 +7,9 @@ import NotesSection from './map/NotesSection';
 import SidebarLayout from './map/components/SidebarLayout';
 import RightSidebarContent from './map/components/RightSidebarContent';
 import { useNewMapPage } from './map/hooks/useNewMapPage';
-import { useBuzzMapPricing } from './map/hooks/useBuzzMapPricing';
 
 const NewMapPage = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
-  const { buzzMapPrice } = useBuzzMapPricing();
   const {
     isAddingPoint,
     setIsAddingPoint,
@@ -55,7 +53,7 @@ const NewMapPage = () => {
               lng: p.longitude,
               title: p.title,
               note: p.note,
-              position: { lat: p.latitude, lng: p.longitude } // Add position property
+              position: { lat: p.latitude, lng: p.longitude }
             }))}
             activeMapPoint={activeMapPoint}
             setActiveMapPoint={setActiveMapPoint}
@@ -64,11 +62,8 @@ const NewMapPage = () => {
             newPoint={newPoint}
             handleSaveNewPoint={savePoint}
             handleCancelNewPoint={() => {
-              // Directly calling the hook function without an extra setNewPoint reference
-              // This will replace the need for the missing setNewPoint
               savePoint('', '');
             }}
-            buzzMapPrice={buzzMapPrice}
             handleBuzz={handleBuzz}
             requestLocationPermission={requestLocationPermission}
             // Search area props
@@ -95,7 +90,7 @@ const NewMapPage = () => {
                 lng: p.longitude,
                 title: p.title,
                 note: p.note,
-                position: { lat: p.latitude, lng: p.longitude } // Add position property
+                position: { lat: p.latitude, lng: p.longitude }
               }))}
               isAddingMapPoint={isAddingPoint}
               toggleAddingMapPoint={() => setIsAddingPoint(prev => !prev)}

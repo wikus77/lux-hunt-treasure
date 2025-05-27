@@ -11,7 +11,6 @@ interface MapControlsProps {
   toggleAddingSearchArea: () => void;
   isAddingSearchArea: boolean;
   handleBuzz: () => void;
-  buzzMapPrice: number;
   isAddingMapPoint: boolean;
   showHelpDialog: boolean;
   setShowHelpDialog: (show: boolean) => void;
@@ -22,7 +21,6 @@ const MapControls: React.FC<MapControlsProps> = ({
   toggleAddingSearchArea,
   isAddingSearchArea,
   handleBuzz,
-  buzzMapPrice,
   isAddingMapPoint,
   showHelpDialog,
   setShowHelpDialog
@@ -39,7 +37,7 @@ const MapControls: React.FC<MapControlsProps> = ({
       />
 
       {/* Use the BuzzButton component */}
-      <BuzzButton handleBuzz={handleBuzz} buzzMapPrice={buzzMapPrice} />
+      <BuzzButton handleBuzz={handleBuzz} />
 
       {/* Use the MapInstructionsOverlay component */}
       <MapInstructionsOverlay 
