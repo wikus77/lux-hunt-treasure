@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { SearchArea } from "@/components/maps/types";
@@ -255,6 +254,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     deleteSearchArea,
     clearAllSearchAreas,
     toggleAddingSearchArea,
+    calculateRadius, // Export the calculateRadius function
     // Export a method to set the pending radius
     setPendingRadius: (radius: number) => {
       pendingRadiusRef.current = radius;

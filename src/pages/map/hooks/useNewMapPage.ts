@@ -27,19 +27,37 @@ export const useNewMapPage = () => {
   const defaultLocation: [number, number] = [41.9028, 12.4964]; // Rome, Italy
 
   // Use search areas logic
-  const {
-    searchAreas,
-    activeSearchArea,
-    setActiveSearchArea,
-    isAddingSearchArea,
-    handleAddArea,
-    handleMapClickArea,
-    deleteSearchArea,
-    clearAllSearchAreas,
-    toggleAddingSearchArea,
-    setPendingRadius,
-    generateSearchArea
-  } = useSearchAreasLogic(defaultLocation);
+  const searchAreasLogic = useSearchAreasLogic(defaultLocation);
+
+  // Generate search area function
+  const generateSearchArea = useCallback(() => {
+    try {
+      console.log("Generating search area from BUZZ MAPPA button...");
+      
+      // Calculate radius based on existing areas this week
+      const calculatedRadius = searchAreasLogic.calculateRadius ? searchAreasLogic.calculateRadius() : 100000; // 100km default
+      
+      // Set the pending radius
+      searchAreasLogic.setPendingRadius(calculatedRadius);
+      
+      // Activate adding mode
+      searchAreasLogic.setIsAddingSearchArea(true);
+      
+      // Generate a random area ID for tracking
+      const areaId = Date.now().toString();
+      
+      console.log(`Search area generation initiated with radius: ${calculatedRadius/1000}km`);
+      toast.info("Clicca sulla mappa per posizionare l'area di ricerca BUZZ", {
+        description: `Raggio: ${(calculatedRadius/1000).toFixed(1)}km`
+      });
+      
+      return areaId;
+    } catch (error) {
+      console.error("Error generating search area:", error);
+      toast.error("Errore nella generazione dell'area di ricerca");
+      return null;
+    }
+  }, [searchAreasLogic]);
 
   // Load map points from Supabase
   useEffect(() => {
@@ -120,7 +138,7 @@ export const useNewMapPage = () => {
     }
   }, [newPoint, setMapPoints]);
 
-  const updateMapPoint = useCallback(async (id: string, title: string, note: string) => {
+  const updateMapPoint = useCallback(async (id: string, title: string, note: string): Promise<boolean> => {
     try {
       const { error } = await supabase
         .from('map_points')
@@ -130,20 +148,22 @@ export const useNewMapPage = () => {
       if (error) {
         console.error('Error updating point:', error);
         toast.error('Errore nell\'aggiornare il punto');
-        return;
+        return false;
       }
 
       setMapPoints(prev => prev.map(point => 
         point.id === id ? { ...point, title: title.trim(), note: note.trim() } : point
       ));
       toast.success('Punto aggiornato con successo');
+      return true;
     } catch (error) {
       console.error('Error in updateMapPoint:', error);
       toast.error('Errore nell\'aggiornare il punto');
+      return false;
     }
   }, [setMapPoints]);
 
-  const deleteMapPoint = useCallback(async (id: string) => {
+  const deleteMapPoint = useCallback(async (id: string): Promise<boolean> => {
     try {
       const { error } = await supabase
         .from('map_points')
@@ -153,14 +173,16 @@ export const useNewMapPage = () => {
       if (error) {
         console.error('Error deleting point:', error);
         toast.error('Errore nell\'eliminare il punto');
-        return;
+        return false;
       }
 
       setMapPoints(prev => prev.filter(point => point.id !== id));
       toast.success('Punto eliminato con successo');
+      return true;
     } catch (error) {
       console.error('Error in deleteMapPoint:', error);
       toast.error('Errore nell\'eliminare il punto');
+      return false;
     }
   }, [setMapPoints]);
 
@@ -168,8 +190,7 @@ export const useNewMapPage = () => {
   const handleBuzz = useCallback(() => {
     console.log("Executing BUZZ MAPPA - generating search area...");
     
-    // Use the existing generateSearchArea function from useSearchAreasLogic
-    // This function already implements the radius calculation and area generation logic
+    // Use the generateSearchArea function
     const areaId = generateSearchArea();
     
     if (areaId) {
@@ -215,16 +236,8 @@ export const useNewMapPage = () => {
     deleteMapPoint,
     handleBuzz, // This connects to the BUZZ MAPPA button
     requestLocationPermission,
-    // Search areas
-    searchAreas,
-    activeSearchArea,
-    setActiveSearchArea,
-    isAddingSearchArea,
-    handleAddArea,
-    handleMapClickArea,
-    deleteSearchArea,
-    clearAllSearchAreas,
-    toggleAddingSearchArea,
-    setPendingRadius
+    // Search areas - spread all properties from searchAreasLogic
+    ...searchAreasLogic,
+    generateSearchArea // Add the generateSearchArea function
   };
 };
