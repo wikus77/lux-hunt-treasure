@@ -1,14 +1,33 @@
 
-import React from 'react';
-import { Circle } from 'react-leaflet';
+import React, { useEffect, useRef } from 'react';
+import { Circle, useMap } from 'react-leaflet';
 import { BuzzMapArea } from '@/hooks/useBuzzMapLogic';
+import L from 'leaflet';
 
 interface BuzzMapAreasProps {
   areas: BuzzMapArea[];
 }
 
 const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
+  const map = useMap();
+  const previousLayersRef = useRef<L.Circle[]>([]);
+  
   console.log('🗺️ Rendering BUZZ map areas:', areas);
+
+  // 🚨 CRITICO: Rimuovi tutti i layer precedenti prima di renderizzare la nuova area
+  useEffect(() => {
+    // Rimuovi tutti i layer precedenti dalla mappa
+    previousLayersRef.current.forEach(layer => {
+      if (map.hasLayer(layer)) {
+        map.removeLayer(layer);
+      }
+    });
+    
+    // Pulisci l'array dei layer precedenti
+    previousLayersRef.current = [];
+    
+    console.log('🗑️ Layer precedenti RIMOSSI dalla mappa');
+  }, [areas, map]);
 
   return (
     <>
@@ -31,6 +50,14 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
               opacity: 1, // Sempre visibile al 100% - solo UNA area mostrata
             }}
             className="buzz-map-area"
+            eventHandlers={{
+              add: (e) => {
+                // Salva il riferimento al layer appena aggiunto
+                const layer = e.target as L.Circle;
+                previousLayersRef.current.push(layer);
+                console.log('✅ Nuovo layer BUZZ aggiunto alla mappa');
+              }
+            }}
           />
         );
       })}

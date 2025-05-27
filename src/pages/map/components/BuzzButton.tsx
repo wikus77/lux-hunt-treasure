@@ -37,7 +37,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     console.log('🚀 BUZZ MAPPA pressed - Generating area at:', { centerLat, centerLng });
     console.log('📏 Prossimo raggio calcolato:', nextRadius, 'km');
     
-    // 🚨 STEP 1: Genera l'area usando la logica dedicata
+    // 🚨 STEP 1: Genera l'area usando la logica dedicata (con eliminazione automatica precedenti)
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
@@ -48,7 +48,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           `Nuova area di ricerca creata con raggio ${newArea.radius_km.toFixed(1)}km`
         );
         console.log("✅ BUZZ Map notification created successfully");
-        console.log("📏 Notifica inviata con raggio:", newArea.radius_km.toFixed(1), "km");
+        console.log("📏 Notifica inviata con raggio ESATTO:", newArea.radius_km.toFixed(1), "km");
       } catch (error) {
         console.error("❌ Failed to create BUZZ Map notification:", error);
       }
