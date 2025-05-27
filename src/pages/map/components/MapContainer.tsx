@@ -13,6 +13,7 @@ import MapInstructionsOverlay from './MapInstructionsOverlay';
 import SearchAreaButton from './SearchAreaButton';
 import HelpDialog from '../HelpDialog';
 import BuzzMapAreas from './BuzzMapAreas';
+import MapInitializer from './MapInitializer';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import L from 'leaflet';
 
@@ -79,6 +80,12 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     }
   };
 
+  // Callback for when map is ready
+  const handleMapReady = (map: L.Map) => {
+    mapRef.current = map;
+    map.on('moveend', handleMapMove);
+  };
+
   return (
     <div 
       className="rounded-[24px] overflow-hidden relative w-full" 
@@ -104,11 +111,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           zIndex: 1
         }}
         className="z-10"
-        whenReady={(mapEvent) => {
-          mapRef.current = mapEvent.target;
-          mapEvent.target.on('moveend', handleMapMove);
-        }}
       >
+        <MapInitializer onMapReady={handleMapReady} />
+        
         <MapController 
           isAddingPoint={isAddingPoint}
           setIsAddingPoint={setIsAddingPoint}
