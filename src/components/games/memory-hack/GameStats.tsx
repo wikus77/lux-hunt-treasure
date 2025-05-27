@@ -10,10 +10,10 @@ interface GameStatsProps {
 
 const GameStats: React.FC<GameStatsProps> = ({ timeLeft, errors, matchedPairs, totalPairs }) => {
   return (
-    <div className="flex justify-between items-center mb-4 text-white">
+    <div className="flex justify-between items-center mb-4 text-white font-sans">
       <div className="flex items-center gap-4">
         <span>Tempo: <span className="text-[#00D1FF] font-bold">{timeLeft}s</span></span>
-        <span>Errori: <span className="text-red-400 font-bold">{errors}</span></span>
+        <span>Errori: <span className={`font-bold ${errors > 3 ? 'text-red-400' : 'text-yellow-400'}`}>{errors}/3</span></span>
       </div>
       <div>
         Coppie: <span className="text-green-400 font-bold">{matchedPairs}/{totalPairs}</span>

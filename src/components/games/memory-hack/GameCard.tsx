@@ -16,14 +16,16 @@ const GameCard: React.FC<GameCardProps> = ({ card, onClick, disabled }) => {
   return (
     <motion.div
       className="aspect-square cursor-pointer"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: disabled ? 1 : 1.05 }}
+      whileTap={{ scale: disabled ? 1 : 0.95 }}
       onClick={() => !disabled && onClick(card.id)}
     >
       <Card className={`w-full h-full border-2 transition-all duration-300 ${
-        card.isFlipped || card.isMatched 
-          ? 'border-[#00D1FF]/50 bg-[#00D1FF]/10' 
-          : 'border-white/20 bg-white/5 hover:border-[#00D1FF]/30'
+        card.isMatched 
+          ? 'border-green-400/50 bg-green-400/10 shadow-[0_0_10px_rgba(34,197,94,0.3)]' 
+          : card.isFlipped 
+            ? 'border-[#00D1FF]/50 bg-[#00D1FF]/10' 
+            : 'border-white/20 bg-white/5 hover:border-[#00D1FF]/30'
       }`}>
         <CardContent className="flex items-center justify-center h-full p-0">
           <AnimatePresence mode="wait">
@@ -35,7 +37,9 @@ const GameCard: React.FC<GameCardProps> = ({ card, onClick, disabled }) => {
                 exit={{ rotateY: 180 }}
                 transition={{ duration: 0.3 }}
               >
-                <IconComponent className="w-6 h-6 text-[#00D1FF]" />
+                <IconComponent className={`w-6 h-6 ${
+                  card.isMatched ? 'text-green-400' : 'text-[#00D1FF]'
+                }`} />
               </motion.div>
             ) : (
               <motion.div
