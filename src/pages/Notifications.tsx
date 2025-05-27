@@ -162,13 +162,15 @@ const Notifications = () => {
       
       <div className="container mx-auto px-3">
         <motion.h1
-          className="text-4xl font-orbitron font-bold text-[#00D1FF] text-center mt-6 mb-8"
+          className="text-4xl font-orbitron font-bold text-center mt-6 mb-8"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}
         >
-          LE MIE NOTIFICHE
+          <span className="text-[#00D1FF]" style={{ 
+            textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+          }}>LE MIE</span>
+          <span className="text-white"> NOTIFICHE</span>
         </motion.h1>
 
         <div className="max-w-3xl mx-auto">
@@ -236,7 +238,7 @@ const Notifications = () => {
                                   key={notification.id} 
                                   className={`p-4 rounded-[24px] border transition-all duration-200 shadow-md relative cursor-pointer ${
                                     !notification.read 
-                                      ? "border-l-4 border-[#00D1FF] bg-gradient-to-br from-[#00D1FF]/10 to-black/90 hover:from-[#00D1FF]/15 hover:to-black shadow-[0_0_15px_rgba(0,209,255,0.2)]" 
+                                      ? "border-l-4 border-[#00D1FF] bg-gradient-to-br from-[#00D1FF]/15 to-black/90 hover:from-[#00D1FF]/20 hover:to-black shadow-[0_0_20px_rgba(0,209,255,0.3)]" 
                                       : "border-[#00D1FF]/10 hover:border-[#00D1FF]/30 bg-gradient-to-br from-black/90 to-[#131524]/80 hover:from-black hover:to-[#131524]/90"
                                   }`}
                                   onClick={() => handleOpen(notification)}
@@ -249,9 +251,11 @@ const Notifications = () => {
                                       <div className="flex items-center gap-2 mb-1">
                                         <h3 className={`font-medium ${
                                           !notification.read 
-                                            ? 'text-[#00D1FF] font-bold' 
+                                            ? 'text-[#00D1FF] font-bold text-lg' 
                                             : 'text-white'
-                                        }`}>
+                                        }`} style={!notification.read ? {
+                                          textShadow: "0 0 10px rgba(0, 209, 255, 0.6)"
+                                        } : {}}>
                                           {notification.title}
                                         </h3>
                                         {!notification.read && (
@@ -263,7 +267,9 @@ const Notifications = () => {
                                           </div>
                                         )}
                                       </div>
-                                      <p className="text-white/70 text-sm mt-1">{notification.description}</p>
+                                      <p className={`text-sm mt-1 ${
+                                        !notification.read ? 'text-white/90 font-medium' : 'text-white/70'
+                                      }`}>{notification.description}</p>
                                       <div className="mt-1 text-xs text-white/40">
                                         {notification.date ? new Date(notification.date).toLocaleString() : "Ora"}
                                       </div>

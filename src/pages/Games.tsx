@@ -1,11 +1,11 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Brain, Bomb, Fingerprint, MapPin, Satellite, MessageSquare, LockKeyholeIcon, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import HomeLayout from "@/components/home/HomeLayout";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import MemoryHackGame from "@/components/games/MemoryHackGame";
 import DisarmTheBombGame from "@/components/games/DisarmTheBombGame";
@@ -25,7 +25,7 @@ interface GameCardProps {
 
 const GameCard = ({ title, description, icon, gameKey, isPlayable = false, onPlay }: GameCardProps) => {
   return (
-    <Card className="m1ssion-glass-card border border-white/10 bg-black/40 hover:shadow-[0_0_15px_rgba(0,209,255,0.2)] transition-all duration-300">
+    <Card className="m1ssion-glass-card border border-white/10 bg-black/40 hover:shadow-[0_0_15px_rgba(0,209,255,0.2)] transition-all duration-300 rounded-2xl">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00D1FF]/20 to-[#7B2EFF]/20 flex items-center justify-center">
@@ -117,180 +117,184 @@ const Games = () => {
   };
 
   return (
-    <HomeLayout profileImage={profileImage}>
-      <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
-        {/* Header Section with proper M1SSION styling */}
-        <div className="pt-20 pb-8 px-4">
-          <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#070818] pb-20 w-full">
+      <UnifiedHeader profileImage={profileImage} />
+      <div className="h-[72px] w-full" />
+      
+      <div className="container mx-auto px-3">
+        {/* Standard M1SSION Header */}
+        <motion.h1
+          className="text-4xl font-orbitron font-bold text-center mt-6 mb-2"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
+          <span className="text-[#00D1FF]" style={{ 
+            textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+          }}>M1</span>
+          <span className="text-white">SSION<span className="text-xs align-top">™</span> GAMES</span>
+        </motion.h1>
+        
+        <motion.p
+          className="text-xl text-white/70 text-center mb-8"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          Mini giochi quotidiani per veri agenti.
+        </motion.p>
+            
+        {/* Games Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {games.map((game, index) => (
             <motion.div
-              className="text-center mb-8"
+              key={game.gameKey}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.4, delay: 0.1 + index * 0.1 }}
             >
-              <h1 className="text-4xl md:text-5xl font-orbitron font-bold mb-4">
-                <span className="text-[#00D1FF]" style={{ 
-                  textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-                }}>M1</span>
-                <span className="text-white">SSION<span className="text-xs align-top">™</span> GAMES</span>
-              </h1>
-              
-              <p className="text-xl text-white/70 mb-8">
-                Mini giochi quotidiani per veri agenti.
-              </p>
+              <GameCard 
+                title={game.title} 
+                description={game.description} 
+                icon={game.icon}
+                gameKey={game.gameKey}
+                isPlayable={game.isPlayable}
+                onPlay={() => handlePlayGame(game.gameKey)}
+              />
             </motion.div>
-            
-            {/* Games Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {games.map((game, index) => (
-                <motion.div
-                  key={game.gameKey}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.1 + index * 0.1 }}
-                >
-                  <GameCard 
-                    title={game.title} 
-                    description={game.description} 
-                    icon={game.icon}
-                    gameKey={game.gameKey}
-                    isPlayable={game.isPlayable}
-                    onPlay={() => handlePlayGame(game.gameKey)}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
-
-        {/* Game Modals - keep existing code for all modals */}
-        <Dialog open={activeGame === 'memory_hack'} onOpenChange={closeGame}>
-          <DialogContent className="max-w-4xl w-full bg-black/95 border-white/10">
-            <DialogHeader>
-              <div className="flex items-center justify-between">
-                <DialogTitle className="text-2xl font-orbitron text-white">
-                  <span className="text-[#00D1FF]">MEMORY</span> HACK
-                </DialogTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={closeGame}
-                  className="text-white hover:text-[#00D1FF]"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </DialogHeader>
-            <MemoryHackGame />
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={activeGame === 'disarm_the_bomb'} onOpenChange={closeGame}>
-          <DialogContent className="max-w-4xl w-full bg-black/95 border-white/10">
-            <DialogHeader>
-              <div className="flex items-center justify-between">
-                <DialogTitle className="text-2xl font-orbitron text-white">
-                  <span className="text-red-400">DISINNESCA</span> LA BOMBA
-                </DialogTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={closeGame}
-                  className="text-white hover:text-[#00D1FF]"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </DialogHeader>
-            <DisarmTheBombGame />
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={activeGame === 'crack_combination'} onOpenChange={closeGame}>
-          <DialogContent className="max-w-4xl w-full bg-black/95 border-white/10">
-            <DialogHeader>
-              <div className="flex items-center justify-between">
-                <DialogTitle className="text-2xl font-orbitron text-white">
-                  <span className="text-[#00D1FF]">CRACCA</span> LA COMBINAZIONE
-                </DialogTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={closeGame}
-                  className="text-white hover:text-[#00D1FF]"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </DialogHeader>
-            <CrackTheCombinationGame />
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={activeGame === 'find_map_point'} onOpenChange={closeGame}>
-          <DialogContent className="max-w-5xl w-full bg-black/95 border-white/10">
-            <DialogHeader>
-              <div className="flex items-center justify-between">
-                <DialogTitle className="text-2xl font-orbitron text-white">
-                  <span className="text-[#00D1FF]">TROVA</span> IL PUNTO MAPPA
-                </DialogTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={closeGame}
-                  className="text-white hover:text-[#00D1FF]"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </DialogHeader>
-            <FindMapPointGame />
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={activeGame === 'satellite_tracking'} onOpenChange={closeGame}>
-          <DialogContent className="max-w-2xl w-full bg-black/95 border-white/10">
-            <DialogHeader>
-              <div className="flex items-center justify-between">
-                <DialogTitle className="text-2xl font-orbitron text-white">
-                  <span className="text-[#00D1FF]">TRACCIAMENTO</span> SATELLITARE
-                </DialogTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={closeGame}
-                  className="text-white hover:text-[#00D1FF]"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </DialogHeader>
-            <SatelliteTrackingGame />
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={activeGame === 'flash_interrogation'} onOpenChange={closeGame}>
-          <DialogContent className="max-w-3xl w-full bg-black/95 border-white/10">
-            <DialogHeader>
-              <div className="flex items-center justify-between">
-                <DialogTitle className="text-2xl font-orbitron text-white">
-                  <span className="text-[#00D1FF]">INTERROGATORIO</span> LAMPO
-                </DialogTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={closeGame}
-                  className="text-white hover:text-[#00D1FF]"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </DialogHeader>
-            <FlashInterrogationGame />
-          </DialogContent>
-        </Dialog>
       </div>
-    </HomeLayout>
+
+      {/* Game Modals - keep existing code for all modals */}
+      <Dialog open={activeGame === 'memory_hack'} onOpenChange={closeGame}>
+        <DialogContent className="max-w-4xl w-full bg-black/95 border-white/10">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl font-orbitron text-white">
+                <span className="text-[#00D1FF]">MEMORY</span> HACK
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeGame}
+                className="text-white hover:text-[#00D1FF]"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <MemoryHackGame />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={activeGame === 'disarm_the_bomb'} onOpenChange={closeGame}>
+        <DialogContent className="max-w-4xl w-full bg-black/95 border-white/10">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl font-orbitron text-white">
+                <span className="text-red-400">DISINNESCA</span> LA BOMBA
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeGame}
+                className="text-white hover:text-[#00D1FF]"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <DisarmTheBombGame />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={activeGame === 'crack_combination'} onOpenChange={closeGame}>
+        <DialogContent className="max-w-4xl w-full bg-black/95 border-white/10">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl font-orbitron text-white">
+                <span className="text-[#00D1FF]">CRACCA</span> LA COMBINAZIONE
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeGame}
+                className="text-white hover:text-[#00D1FF]"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <CrackTheCombinationGame />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={activeGame === 'find_map_point'} onOpenChange={closeGame}>
+        <DialogContent className="max-w-5xl w-full bg-black/95 border-white/10">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl font-orbitron text-white">
+                <span className="text-[#00D1FF]">TROVA</span> IL PUNTO MAPPA
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeGame}
+                className="text-white hover:text-[#00D1FF]"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <FindMapPointGame />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={activeGame === 'satellite_tracking'} onOpenChange={closeGame}>
+        <DialogContent className="max-w-2xl w-full bg-black/95 border-white/10">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl font-orbitron text-white">
+                <span className="text-[#00D1FF]">TRACCIAMENTO</span> SATELLITARE
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeGame}
+                className="text-white hover:text-[#00D1FF]"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <SatelliteTrackingGame />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={activeGame === 'flash_interrogation'} onOpenChange={closeGame}>
+        <DialogContent className="max-w-3xl w-full bg-black/95 border-white/10">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl font-orbitron text-white">
+                <span className="text-[#00D1FF]">INTERROGATORIO</span> LAMPO
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeGame}
+                className="text-white hover:text-[#00D1FF]"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <FlashInterrogationGame />
+        </DialogContent>
+      </Dialog>
+      
+      <BottomNavigation />
+    </div>
   );
 };
 
