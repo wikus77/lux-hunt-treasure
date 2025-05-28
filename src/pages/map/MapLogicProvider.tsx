@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
@@ -59,7 +60,7 @@ const MapLogicProvider = () => {
     requestLocationPermission
   } = useMapLogic();
   
-  // Modified to return a Promise<string> with correct parameter structure
+  // Modified to match the expected signature: (point: { lat: number; lng: number; title: string; note: string }) => Promise<string>
   const handleMapPointClick = async (point: { lat: number; lng: number; title: string; note: string }): Promise<string> => {
     const newPointId = `point-${Date.now()}`;
     addMapPoint({
@@ -72,9 +73,9 @@ const MapLogicProvider = () => {
     return newPointId; // Return the new point ID
   };
 
-  // Wrapper function to match the expected signature in MapContext
-  const handleUpdatePointWrapper = async (id: string, title: string, note: string): Promise<boolean> => {
-    return await updateMapPoint(id, { title, note });
+  // Wrapper function to match the expected signature: (id: string, updates: { title?: string; note?: string }) => Promise<boolean>
+  const handleUpdatePointWrapper = async (id: string, updates: { title?: string; note?: string }): Promise<boolean> => {
+    return await updateMapPoint(id, updates);
   };
 
   // Use our custom hook for map points
