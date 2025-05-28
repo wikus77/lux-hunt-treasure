@@ -36,47 +36,178 @@ const PLAN_DETAILS = {
   }
 };
 
+// Get environment variables
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+// In-memory rate limiting store (simple implementation)
+const rateLimitStore = new Map<string, number>();
+const RATE_LIMIT_WINDOW = 60000; // 60 seconds
+
+// Rate limiting check
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const lastRequest = rateLimitStore.get(userId);
+  
+  if (lastRequest && (now - lastRequest) < RATE_LIMIT_WINDOW) {
+    return false; // Rate limit exceeded
+  }
+  
+  rateLimitStore.set(userId, now);
+  return true;
+}
+
+// Validazione UUID v4
+function isValidUuid(uuid: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+}
+
 serve(async (req) => {
+  console.log(`Processing ${req.method} request to create-checkout`);
+  
   // Handle preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    console.log("Handling CORS preflight request");
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // Parse request
-    const { planType, customPrice, redirectUrl, isBuzz, isMapBuzz, sessionId, paymentMethod } = await req.json();
-    
-    // Validate required params
-    if (!planType) {
-      throw new Error("Tipo di abbonamento non specificato");
-    }
-    
-    if (!PLAN_DETAILS[planType] && !customPrice) {
-      throw new Error("Piano non valido e prezzo personalizzato non specificato");
-    }
-
-    // Get authentication header
-    const authHeader = req.headers.get("Authorization");
+    // 1. AUTENTICAZIONE - Verifica Authorization Header
+    const authHeader = req.headers.get("authorization");
     if (!authHeader) {
-      throw new Error("Autenticazione richiesta");
+      console.error("Missing authorization header");
+      return new Response(
+        JSON.stringify({ success: false, error: "Token di autorizzazione mancante" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
-    // Setup Supabase client
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") || "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "",
-      { auth: { persistSession: false } }
-    );
-
-    // Get user from token
+    // Estrai il token Bearer
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (userError || !userData.user) {
-      throw new Error("Utente non autenticato");
+    if (!token) {
+      console.error("Invalid authorization format");
+      return new Response(
+        JSON.stringify({ success: false, error: "Formato token di autorizzazione non valido" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
+
+    // Create authenticated Supabase client for token verification
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+
+    // Verifica il token con Supabase Auth
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     
-    const user = userData.user;
+    if (authError || !user) {
+      console.error("Invalid token:", authError?.message);
+      return new Response(
+        JSON.stringify({ success: false, error: "Token di autorizzazione non valido" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const authenticatedUserId = user.id;
+
+    // Parse request body
+    let requestData;
+    try {
+      requestData = await req.json();
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Formato della richiesta non valido" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // 2. VALIDAZIONE INPUT COMPLETA
+    const { planType, customPrice, redirectUrl, isBuzz, isMapBuzz, sessionId, paymentMethod } = requestData;
+
+    // Validazione planType (obbligatorio)
+    if (!planType || typeof planType !== 'string') {
+      console.error("Missing or invalid planType parameter");
+      return new Response(
+        JSON.stringify({ success: false, error: "Parametro planType mancante o non valido" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validazione che planType sia tra quelli consentiti
+    const validPlans = ['Silver', 'Gold', 'Black', 'Buzz', 'BuzzMap'];
+    if (!validPlans.includes(planType) && !customPrice) {
+      console.error("Invalid planType");
+      return new Response(
+        JSON.stringify({ success: false, error: "Piano non valido e prezzo personalizzato non specificato" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validazione customPrice se presente
+    if (customPrice !== undefined && (typeof customPrice !== 'number' || customPrice <= 0)) {
+      console.error("Invalid customPrice parameter");
+      return new Response(
+        JSON.stringify({ success: false, error: "Parametro customPrice deve essere un numero positivo" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validazione parametri booleani
+    if (isBuzz !== undefined && typeof isBuzz !== 'boolean') {
+      console.error("Invalid isBuzz parameter");
+      return new Response(
+        JSON.stringify({ success: false, error: "Parametro isBuzz deve essere un boolean" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (isMapBuzz !== undefined && typeof isMapBuzz !== 'boolean') {
+      console.error("Invalid isMapBuzz parameter");
+      return new Response(
+        JSON.stringify({ success: false, error: "Parametro isMapBuzz deve essere un boolean" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validazione sessionId se presente
+    if (sessionId !== undefined && typeof sessionId !== 'string') {
+      console.error("Invalid sessionId parameter");
+      return new Response(
+        JSON.stringify({ success: false, error: "Parametro sessionId deve essere una stringa" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validazione redirectUrl se presente
+    if (redirectUrl !== undefined && typeof redirectUrl !== 'string') {
+      console.error("Invalid redirectUrl parameter");
+      return new Response(
+        JSON.stringify({ success: false, error: "Parametro redirectUrl deve essere una stringa" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validazione paymentMethod se presente
+    if (paymentMethod !== undefined && typeof paymentMethod !== 'string') {
+      console.error("Invalid paymentMethod parameter");
+      return new Response(
+        JSON.stringify({ success: false, error: "Parametro paymentMethod deve essere una stringa" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // 3. RATE LIMITING - Controllo spam (1 checkout ogni 60 secondi)
+    if (!checkRateLimit(authenticatedUserId)) {
+      console.error(`Rate limit exceeded for user: ${authenticatedUserId}`);
+      return new Response(
+        JSON.stringify({ success: false, error: "Troppi tentativi. Attendi 60 secondi prima di creare un nuovo checkout" }),
+        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`✅ Security checks passed for user: ${authenticatedUserId}`);
 
     // Create Stripe instance
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -219,11 +350,14 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    // Handle errors
+    // Handle errors securely
     console.error("Stripe checkout error:", error);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false, 
+        error: "Errore del server durante l'elaborazione della richiesta" 
+      }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
