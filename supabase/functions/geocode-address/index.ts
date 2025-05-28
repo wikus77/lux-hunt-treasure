@@ -1,4 +1,6 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 type GeocodingResponse = {
   lat?: string;
@@ -6,7 +8,7 @@ type GeocodingResponse = {
   display_name?: string;
   error?: string;
   statusCode?: number;
-  errorType?: 'rate_limit' | 'not_found' | 'service_error' | 'network_error' | 'format_error';
+  errorType?: 'rate_limit' | 'not_found' | 'service_error' | 'network_error' | 'format_error' | 'validation_error' | 'auth_error';
   debug?: any;
   suggestions?: string[];
 };
@@ -17,10 +19,33 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "*", // Allow all headers to ensure frontend requests work
 };
 
+// Get environment variables
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+// In-memory rate limiting store (simple implementation)
+const rateLimitStore = new Map<string, number>();
+const RATE_LIMIT_WINDOW = 10000; // 10 seconds
+
+// Rate limiting check
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const lastRequest = rateLimitStore.get(userId);
+  
+  if (lastRequest && (now - lastRequest) < RATE_LIMIT_WINDOW) {
+    return false; // Rate limit exceeded
+  }
+  
+  rateLimitStore.set(userId, now);
+  return true;
+}
+
 // Enable debug mode for detailed logging
 const DEBUG_MODE = true;
 
 serve(async (req) => {
+  console.log(`Processing ${req.method} request to geocode-address`);
+  
   // Enable CORS
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -29,9 +54,150 @@ serve(async (req) => {
   }
   
   try {
-    const { address, city } = await req.json();
+    // 1. AUTHENTICATION - Verify Authorization Header
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) {
+      console.error("Missing authorization header");
+      return new Response(
+        JSON.stringify({ 
+          error: "Token di autorizzazione mancante",
+          errorType: "auth_error"
+        }),
+        { 
+          status: 401,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    // Extract Bearer token
+    const token = authHeader.replace("Bearer ", "");
+    if (!token) {
+      console.error("Invalid authorization format");
+      return new Response(
+        JSON.stringify({ 
+          error: "Formato token di autorizzazione non valido",
+          errorType: "auth_error"
+        }),
+        { 
+          status: 401,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    // Create authenticated Supabase client for token verification
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+
+    // Verify token with Supabase Auth
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     
-    if (!address || !city) {
+    if (authError || !user) {
+      console.error("Invalid token:", authError?.message);
+      return new Response(
+        JSON.stringify({ 
+          error: "Token di autorizzazione non valido",
+          errorType: "auth_error"
+        }),
+        { 
+          status: 401,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    const authenticatedUserId = user.id;
+
+    // Parse request body
+    let requestData;
+    try {
+      requestData = await req.json();
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return new Response(
+        JSON.stringify({ 
+          error: "Formato della richiesta non valido",
+          errorType: "validation_error"
+        }),
+        { 
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    const { address, city } = requestData;
+    
+    // 2. INPUT VALIDATION - Validate required fields
+    if (!address || typeof address !== 'string') {
+      console.error("Missing or invalid address parameter");
+      return new Response(
+        JSON.stringify({ 
+          error: "Parametro address mancante o non valido",
+          errorType: "validation_error"
+        }),
+        { 
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    // Validate address length (max 255 characters)
+    if (address.length > 255) {
+      console.error("Address too long");
+      return new Response(
+        JSON.stringify({ 
+          error: "Indirizzo troppo lungo (massimo 255 caratteri)",
+          errorType: "validation_error"
+        }),
+        { 
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    // Check for HTML/script tags in address field
+    const htmlScriptRegex = /<[^>]*>/g;
+    if (htmlScriptRegex.test(address) || (city && htmlScriptRegex.test(city))) {
+      console.error("HTML/script tags detected in input");
+      return new Response(
+        JSON.stringify({ 
+          error: "L'indirizzo non può contenere tag HTML o script",
+          errorType: "validation_error"
+        }),
+        { 
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    if (!city) {
       return new Response(
         JSON.stringify({ 
           error: "Address and city are required",
@@ -46,6 +212,26 @@ serve(async (req) => {
         }
       );
     }
+
+    // 3. RATE LIMITING - Check rate limit (1 request every 10 seconds per user)
+    if (!checkRateLimit(authenticatedUserId)) {
+      console.error(`Rate limit exceeded for user: ${authenticatedUserId}`);
+      return new Response(
+        JSON.stringify({ 
+          error: "Troppi tentativi. Attendi 10 secondi prima di fare una nuova richiesta",
+          errorType: "rate_limit"
+        }),
+        { 
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    console.log(`✅ Security checks passed for user: ${authenticatedUserId}`);
 
     // Format variations of the address to try
     const addressFormats = [
@@ -128,7 +314,7 @@ serve(async (req) => {
               ]
             }),
             { 
-              status: response.status,
+              status: 502,
               headers: {
                 "Content-Type": "application/json",
                 ...corsHeaders
