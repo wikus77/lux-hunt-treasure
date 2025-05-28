@@ -1,9 +1,11 @@
+
 import { Route } from 'react-router-dom';
 import Admin from '@/pages/Admin'; // Ensure correct import path
 import RoleBasedProtectedRoute from '@/components/auth/RoleBasedProtectedRoute';
 import { useState, useEffect } from 'react';
 import AdminPrizeClues from '@/pages/AdminPrizeClues';
 import AdminPrizes from '@/pages/AdminPrizes';
+import AbuseLogsPage from '@/pages/AbuseLogsPage';
 
 export default function AdminRoutes() {
   const [bypassProtection, setBypassProtection] = useState(false);
@@ -47,6 +49,20 @@ export default function AdminRoutes() {
       <Route 
         path="/admin/prize-clues" 
         element={<AdminPrizeClues />} 
+      />
+
+      {/* Abuse Logs Registry - Admin only */}
+      <Route 
+        path="/admin/abuse-logs" 
+        element={
+          bypassProtection ? (
+            <AbuseLogsPage />
+          ) : (
+            <RoleBasedProtectedRoute allowedRoles={['admin']}>
+              <AbuseLogsPage />
+            </RoleBasedProtectedRoute>
+          )
+        } 
       />
     </>
   );
