@@ -10,6 +10,8 @@ export interface GameCard {
   symbol: string;
 }
 
+export type GameState = 'idle' | 'playing' | 'complete' | 'waiting' | 'completed' | 'failed';
+
 export const gameSymbols = [
   { value: 'power', icon: Zap, symbol: '⚡' },
   { value: 'network', icon: Wifi, symbol: '📡' },
