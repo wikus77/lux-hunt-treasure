@@ -1,9 +1,19 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import * as Sentry from "@sentry/react";
+import { BrowserTracing } from "@sentry/tracing";
 import App from './App';
 import './index.css';
 import { Toaster } from 'sonner';
+
+// Initialize Sentry
+Sentry.init({
+  dsn: "[INSERISCI LA TUA DSN DI SENTRY QUI]",
+  integrations: [
+    new BrowserTracing(),
+  ],
+  tracesSampleRate: 1.0,
+});
 
 // Gestione errori globale migliorata
 const renderApp = () => {
