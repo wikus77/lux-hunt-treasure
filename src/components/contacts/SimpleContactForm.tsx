@@ -70,10 +70,10 @@ const SimpleContactForm: React.FC = () => {
       
       // Create properly typed contact data after Zod validation
       const contactData: ContactFormData = {
-        name: data.name!,
-        email: data.email!,
+        name: data.name || '',
+        email: data.email || '',
         subject: data.subject || '',
-        message: data.message!,
+        message: data.message || '',
         phone: data.phone || '',
         type: data.type || 'contact'
       };
