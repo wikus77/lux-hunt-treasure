@@ -12,7 +12,7 @@ interface ReferralData {
  */
 export const createReferral = async (data: ReferralData): Promise<boolean> => {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('referrals')
       .insert([{
         invited_email: data.invitedEmail.toLowerCase().trim(),
@@ -36,7 +36,7 @@ export const createReferral = async (data: ReferralData): Promise<boolean> => {
  */
 export const updateReferralStatus = async (invitedEmail: string, status: 'pending' | 'completed' | 'expired'): Promise<boolean> => {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('referrals')
       .update({ status })
       .eq('invited_email', invitedEmail.toLowerCase().trim());
@@ -58,7 +58,7 @@ export const updateReferralStatus = async (invitedEmail: string, status: 'pendin
  */
 export const getReferralsByCode = async (referrerCode: string) => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('referrals')
       .select('*')
       .eq('referrer_code', referrerCode.trim());

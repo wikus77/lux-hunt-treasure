@@ -7,16 +7,29 @@ import { useGameLogic } from './memory-hack/useGameLogic';
 
 const MemoryHackGame = () => {
   const {
-    gameState,
     cards,
+    flippedCards,
     matchedPairs,
-    errors,
-    timeLeft,
-    isProcessing,
-    handleCardClick,
-    initializeGame,
+    moves,
+    isGameComplete,
+    gameStarted,
+    timeElapsed,
+    startGame,
+    flipCard,
     resetGame
   } = useGameLogic();
+
+  // Calculate derived values for UI
+  const timeLeft = Math.max(60 - timeElapsed, 0);
+  const errors = Math.max(moves - matchedPairs, 0);
+  const isProcessing = flippedCards.length === 2;
+  const gameState = !gameStarted ? 'idle' : isGameComplete ? 'complete' : 'playing';
+
+  const handleCardClick = (cardId: number) => {
+    if (!isProcessing && gameStarted && !isGameComplete) {
+      flipCard(cardId);
+    }
+  };
 
   return (
     <div className="w-full max-w-2xl mx-auto p-6 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl">
@@ -57,7 +70,7 @@ const MemoryHackGame = () => {
         <GameControls
           gameState={gameState}
           errors={errors}
-          onStartGame={initializeGame}
+          onStartGame={startGame}
           onResetGame={resetGame}
         />
       </div>

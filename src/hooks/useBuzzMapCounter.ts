@@ -8,8 +8,6 @@ interface BuzzMapCounterData {
   user_id: string;
   date: string;
   buzz_map_count: number;
-  last_price_used: number;
-  precision_mode: 'high' | 'low';
   created_at: string;
 }
 
@@ -41,8 +39,9 @@ export const useBuzzMapCounter = (userId?: string) => {
 
       if (data) {
         setDailyBuzzMapCounter(data.buzz_map_count);
-        setLastPriceUsed(data.last_price_used);
-        setPrecisionMode(data.precision_mode);
+        // Set default values for missing columns
+        setLastPriceUsed(0);
+        setPrecisionMode('high');
       } else {
         setDailyBuzzMapCounter(0);
         setLastPriceUsed(0);
@@ -73,8 +72,6 @@ export const useBuzzMapCounter = (userId?: string) => {
           user_id: userId,
           date: weekStart,
           buzz_map_count: dailyBuzzMapCounter + 1,
-          last_price_used: finalPrice,
-          precision_mode: precision
         }, {
           onConflict: 'user_id,date'
         })
@@ -89,8 +86,8 @@ export const useBuzzMapCounter = (userId?: string) => {
 
       if (data) {
         setDailyBuzzMapCounter(data.buzz_map_count);
-        setLastPriceUsed(data.last_price_used);
-        setPrecisionMode(data.precision_mode);
+        setLastPriceUsed(finalPrice);
+        setPrecisionMode(precision);
         return data.buzz_map_count;
       }
 

@@ -2,13 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-export interface GameCard {
-  id: number;
-  isFlipped: boolean;
-  isMatched: boolean;
-  value: string;
-}
+import { GameCard, gameSymbols } from './gameData';
 
 export const useGameLogic = () => {
   const [cards, setCards] = useState<GameCard[]>([]);
@@ -32,14 +26,27 @@ export const useGameLogic = () => {
   }, [isTimerRunning, isGameComplete]);
 
   const generateCards = useCallback(() => {
-    const symbols = ['🚗', '🏎️', '🚙', '🚕', '🚐', '🚛', '🏁', '⚡'];
     const gameCards: GameCard[] = [];
     
-    symbols.forEach((symbol, index) => {
+    gameSymbols.forEach((symbolData, index) => {
       // Add two cards for each symbol
       gameCards.push(
-        { id: index * 2, isFlipped: false, isMatched: false, value: symbol },
-        { id: index * 2 + 1, isFlipped: false, isMatched: false, value: symbol }
+        { 
+          id: index * 2, 
+          isFlipped: false, 
+          isMatched: false, 
+          value: symbolData.value,
+          icon: symbolData.icon,
+          symbol: symbolData.symbol
+        },
+        { 
+          id: index * 2 + 1, 
+          isFlipped: false, 
+          isMatched: false, 
+          value: symbolData.value,
+          icon: symbolData.icon,
+          symbol: symbolData.symbol
+        }
       );
     });
     
