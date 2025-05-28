@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
 interface ContactSubmitButtonProps {
-  isLoading: boolean;
+  isSubmitting: boolean;
+  progress: number;
   disabled?: boolean;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export const ContactSubmitButton = ({ 
-  isLoading, 
+  isSubmitting, 
+  progress,
   disabled = false, 
   children 
 }: ContactSubmitButtonProps) => {
@@ -24,7 +26,7 @@ export const ContactSubmitButton = ({
     }
   };
 
-  const isDisabled = disabled || isLoading || hasBeenClicked;
+  const isDisabled = disabled || isSubmitting || hasBeenClicked;
 
   return (
     <Button
@@ -33,7 +35,7 @@ export const ContactSubmitButton = ({
       disabled={isDisabled}
       className="w-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] hover:from-[#00B8E6] hover:to-[#6A25CC] text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      {isLoading ? (
+      {isSubmitting ? (
         <div className="flex items-center justify-center gap-2">
           <Spinner size="sm" className="text-white" />
           Invio in corso...
@@ -41,7 +43,7 @@ export const ContactSubmitButton = ({
       ) : hasBeenClicked ? (
         "Inviato..."
       ) : (
-        children
+        children || "Invia Messaggio"
       )}
     </Button>
   );
