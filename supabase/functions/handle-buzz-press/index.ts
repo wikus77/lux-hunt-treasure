@@ -6,9 +6,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// CORS headers - aggiornati per supportare il dominio specifico
+// CORS headers
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // Possiamo restringere a https://m1ssion.com in produzione
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -16,6 +16,8 @@ interface BuzzRequest {
   userId: string;
   generateMap: boolean;
   prizeId?: string;
+  coordinates?: { lat: number; lng: number };
+  sessionId?: string;
 }
 
 interface BuzzResponse {
@@ -33,10 +35,37 @@ interface BuzzResponse {
   error?: string;
 }
 
+// In-memory rate limiting store (simple implementation)
+const rateLimitStore = new Map<string, number>();
+const RATE_LIMIT_WINDOW = 5000; // 5 seconds
+
 // Validazione UUID v4
 function isValidUuid(uuid: string): boolean {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(uuid);
+}
+
+// Rate limiting check
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const lastRequest = rateLimitStore.get(userId);
+  
+  if (lastRequest && (now - lastRequest) < RATE_LIMIT_WINDOW) {
+    return false; // Rate limit exceeded
+  }
+  
+  rateLimitStore.set(userId, now);
+  return true;
+}
+
+// Validate coordinates
+function isValidCoordinates(coords: any): coords is { lat: number; lng: number } {
+  return coords && 
+         typeof coords === 'object' && 
+         typeof coords.lat === 'number' && 
+         typeof coords.lng === 'number' &&
+         coords.lat >= -90 && coords.lat <= 90 &&
+         coords.lng >= -180 && coords.lng <= 180;
 }
 
 serve(async (req) => {
@@ -46,32 +75,111 @@ serve(async (req) => {
   }
 
   try {
-    // Create authenticated Supabase client
+    // 1. AUTENTICAZIONE - Verifica Authorization Header
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) {
+      console.error("Missing authorization header");
+      return new Response(
+        JSON.stringify({ success: false, error: "Token di autorizzazione mancante" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Estrai il token Bearer
+    const token = authHeader.replace("Bearer ", "");
+    if (!token) {
+      console.error("Invalid authorization format");
+      return new Response(
+        JSON.stringify({ success: false, error: "Formato token di autorizzazione non valido" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Create authenticated Supabase client for token verification
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
+    // Verifica il token con Supabase Auth
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      console.error("Invalid token:", authError?.message);
+      return new Response(
+        JSON.stringify({ success: false, error: "Token di autorizzazione non valido" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const authenticatedUserId = user.id;
+
+    // 2. RATE LIMITING - Controllo spam (1 BUZZ ogni 5 secondi)
+    if (!checkRateLimit(authenticatedUserId)) {
+      console.error(`Rate limit exceeded for user: ${authenticatedUserId}`);
+      return new Response(
+        JSON.stringify({ success: false, error: "Troppi tentativi. Attendi 5 secondi prima di fare un nuovo BUZZ" }),
+        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     // Parse request body
     const requestData = await req.json();
-    const { userId, generateMap, prizeId } = requestData as BuzzRequest;
+    const { userId, generateMap, prizeId, coordinates, sessionId } = requestData as BuzzRequest;
     
-    // Validazione migliorata per userId
+    // 3. VALIDAZIONE INPUT COMPLETA
     if (!userId) {
-      console.error("Richiesta invalida: userId mancante");
+      console.error("Missing userId parameter");
       return new Response(
-        JSON.stringify({ success: false, error: "UserID è un campo obbligatorio" }),
+        JSON.stringify({ success: false, error: "Parametro userId mancante" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (typeof generateMap !== 'boolean') {
+      console.error("Invalid generateMap parameter");
+      return new Response(
+        JSON.stringify({ success: false, error: "Parametro generateMap deve essere un boolean" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
     // Verifica che userId sia un UUID valido
     if (!isValidUuid(userId)) {
-      console.error(`Richiesta invalida: userId non è un UUID v4 valido: ${userId}`);
+      console.error(`Invalid userId format: ${userId}`);
       return new Response(
-        JSON.stringify({ success: false, error: "UserID non è in formato UUID v4 valido" }),
+        JSON.stringify({ success: false, error: "Formato userId non valido" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
+
+    // Verifica che l'userId nel payload corrisponda all'utente autenticato
+    if (userId !== authenticatedUserId) {
+      console.error(`UserId mismatch: payload=${userId}, authenticated=${authenticatedUserId}`);
+      return new Response(
+        JSON.stringify({ success: false, error: "UserId non corrispondente all'utente autenticato" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Se generateMap è true, le coordinate devono essere presenti e valide
+    if (generateMap && !isValidCoordinates(coordinates)) {
+      console.error("Invalid or missing coordinates for map generation");
+      return new Response(
+        JSON.stringify({ success: false, error: "Coordinate mancanti o non valide per la generazione mappa" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validazione opzionale sessionId se presente
+    if (sessionId && typeof sessionId !== 'string') {
+      console.error("Invalid sessionId parameter");
+      return new Response(
+        JSON.stringify({ success: false, error: "Parametro sessionId deve essere una stringa" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`✅ Security checks passed for user: ${authenticatedUserId}`);
 
     // Get current week since mission start
     const { data: weekData, error: weekError } = await supabase.rpc('get_current_mission_week');
