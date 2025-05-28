@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,7 +5,7 @@ import { Form } from "@/components/ui/form";
 import { contactFormSchema, ContactFormData } from "./contactFormSchema";
 import { useContactFormSubmit } from "./useContactFormSubmit";
 import ContactFormFields from "./ContactFormFields";
-import ContactSubmitButton from "./ContactSubmitButton";
+import { ContactSubmitButton } from "./ContactSubmitButton";
 import TurnstileWidget from "@/components/security/TurnstileWidget";
 import { useTurnstile } from "@/hooks/useTurnstile";
 import { toast } from "sonner";

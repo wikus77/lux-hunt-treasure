@@ -1,11 +1,10 @@
-
 import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { contactFormSchema, ContactFormData } from "./contactFormSchema";
 import { Form } from "@/components/ui/form";
 import ContactFormFields from "./ContactFormFields";
-import ContactSubmitButton from "./ContactSubmitButton";
+import { ContactSubmitButton } from "./ContactSubmitButton";
 import { useContactFormSubmit } from "./useContactFormSubmit";
 import { EmailSendingStatus } from "./EmailSendingStatus";
 import TurnstileWidget from "@/components/security/TurnstileWidget";
