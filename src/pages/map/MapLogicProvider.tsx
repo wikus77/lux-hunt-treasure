@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
 import { useMapPoints } from './hooks/useMapPoints';
 import { useMapInitialization } from './hooks/useMapInitialization';
-import { MapContext, MapContextType } from '@/contexts/mapContext';
 import LoadingScreen from './LoadingScreen';
 import MapContent from './components/MapContent';
 import MapControls from './components/MapControls';
@@ -25,6 +24,45 @@ let DefaultIcon = L.icon({
 });
 
 L.Marker.prototype.options.icon = DefaultIcon;
+
+// Simple context type for internal use
+interface MapContextType {
+  handleBuzz: () => void;
+  searchAreas: any[];
+  isAddingSearchArea: boolean;
+  handleMapClickArea: (e: any) => void;
+  setActiveSearchArea: (id: string | null) => void;
+  deleteSearchArea: (id: string) => Promise<boolean>;
+  setPendingRadius: (value: number) => void;
+  toggleAddingSearchArea: () => void;
+  mapPoints: any[];
+  isAddingPoint: boolean;
+  setIsAddingPoint: (value: boolean) => void;
+  activeMapPoint: string | null;
+  setActiveMapPoint: (id: string | null) => void;
+  addMapPoint: (point: any) => void;
+  updateMapPoint: (id: string, title: string, note: string) => Promise<boolean>;
+  deleteMapPoint: (id: string) => Promise<boolean>;
+  requestLocationPermission: () => void;
+  showHelpDialog: boolean;
+  setShowHelpDialog: (show: boolean) => void;
+  mapCenter: [number, number];
+  setMapCenter: (center: [number, number]) => void;
+  mapLoaded: boolean;
+  setMapLoaded: (loaded: boolean) => void;
+  mapRef: React.RefObject<any>;
+  handleMapLoad: (map: any) => void;
+  newPoint: any | null;
+  handleMapPointClick: (point: { lat: number; lng: number; title: string; note: string }) => Promise<string>;
+  handleSaveNewPoint: (title: string, note: string) => void;
+  handleUpdatePoint: (id: string, title: string, note: string) => Promise<boolean>;
+  handleCancelNewPoint: () => void;
+  isAddingMapPoint: boolean;
+  setIsAddingMapPoint: (value: boolean) => void;
+  onAreaGenerated: (lat: number, lng: number, radius: number) => void;
+}
+
+const MapContext = React.createContext<MapContextType | undefined>(undefined);
 
 const MapLogicProvider = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
