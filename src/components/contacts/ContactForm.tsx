@@ -62,16 +62,16 @@ const ContactForm = () => {
         throw new Error('Security verification failed');
       }
       
-      // Data is already properly typed as ContactFormData from the form
-      // Just ensure all required fields are present with fallbacks
-      const contactData: ContactFormData = {
+      // Since the data comes from a validated form with zodResolver,
+      // we can safely cast it to ensure all required fields are present
+      const contactData = {
         name: data.name,
         email: data.email,
         subject: data.subject,
         message: data.message,
         phone: data.phone,
         type: data.type || 'contact'
-      };
+      } as ContactFormData;
       
       // If verification passes, submit the form
       const result = await contactHandleSubmit(contactData);
