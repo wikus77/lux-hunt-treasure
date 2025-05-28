@@ -6,13 +6,14 @@ import App from './App';
 import './index.css';
 import { Toaster } from 'sonner';
 
-// Initialize Sentry
+// Initialize Sentry - temporarily disabled
 Sentry.init({
   dsn: "[INSERISCI LA TUA DSN DI SENTRY QUI]",
   integrations: [
     new BrowserTracing(),
   ],
   tracesSampleRate: 1.0,
+  enabled: false // Disabilitato temporaneamente
 });
 
 // Gestione errori globale migliorata
