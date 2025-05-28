@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -164,9 +165,34 @@ const FlashInterrogationGame = () => {
 
     try {
       if (allCorrect) {
-        toast.success("INTERROGATORIO SUPERATO!", {
-          description: `Tutte le risposte corrette! Eccellente prestazione!`
-        });
+        // Save game progress only if all correct
+        const { error: gameError } = await supabase
+          .from('user_minigames_progress')
+          .upsert({
+            user_id: user.id,
+            game_key: 'lightning_interrogation',
+            completed: true,
+            score: 5,
+            last_played: new Date().toISOString()
+          });
+
+        if (gameError) throw gameError;
+
+        // Add buzz bonus
+        const { error: bonusError } = await supabase
+          .from('user_buzz_bonuses')
+          .insert({
+            user_id: user.id,
+            bonus_type: 'discount',
+            game_reference: 'lightning_interrogation',
+            awarded_at: new Date().toISOString()
+          });
+
+        if (!bonusError) {
+          toast.success("INTERROGATORIO SUPERATO!", {
+            description: `Tutte le risposte corrette! Bonus sconto sbloccato!`
+          });
+        }
       }
     } catch (error) {
       console.error('Error saving game progress:', error);
@@ -346,7 +372,7 @@ const FlashInterrogationGame = () => {
                   Tutte le risposte corrette!<br />
                   Tempo medio: {(averageTime / 1000).toFixed(1)}s
                   <span className="block text-yellow-400 font-bold mt-2">
-                    🏆 PRESTAZIONE ECCELLENTE!
+                    🏆 BONUS SCONTO SBLOCCATO!
                   </span>
                 </p>
               </>

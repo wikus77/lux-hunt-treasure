@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
@@ -151,9 +152,7 @@ const MapLogicProvider = () => {
 
   // Handle area generation callback
   const handleAreaGenerated = (lat: number, lng: number, radius: number) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🎯 Area generated, updating map center:', { lat, lng, radius });
-    }
+    console.log('🎯 Area generated, updating map center:', { lat, lng, radius });
     setMapCenter([lat, lng]);
     
     // Update map reference if available
@@ -174,10 +173,8 @@ const MapLogicProvider = () => {
   
   // Synchronize point states using Zustand
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log("🔄 Synchronizing point states via Zustand:", 
-        {isAddingPoint, isAddingMapPoint});
-    }
+    console.log("🔄 Synchronizing point states via Zustand:", 
+      {isAddingPoint, isAddingMapPoint});
     
     // Keep states in sync
     if (isAddingPoint !== isAddingMapPoint) {

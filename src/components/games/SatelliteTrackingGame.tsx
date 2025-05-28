@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -125,14 +126,39 @@ const SatelliteTrackingGame = () => {
     if (!user) return;
 
     try {
+      // Save game progress
+      const { error: gameError } = await supabase
+        .from('user_minigames_progress')
+        .upsert({
+          user_id: user.id,
+          game_key: 'satellite_tracking',
+          completed: success,
+          score: success ? 3 : 0,
+          last_played: new Date().toISOString()
+        });
+
+      if (gameError) throw gameError;
+
       if (success) {
         if (perfect) {
-          toast.success("COLPO PERFETTO!", {
-            description: "Precisione incredibile! Hai colpito il centro!"
-          });
+          // Add special unlock for perfect shot
+          const { error: unlockError } = await supabase
+            .from('user_buzz_bonuses')
+            .insert({
+              user_id: user.id,
+              bonus_type: 'radar_skin',
+              game_reference: 'satellite_tracking',
+              awarded_at: new Date().toISOString()
+            });
+
+          if (!unlockError) {
+            toast.success("COLPO PERFETTO!", {
+              description: "Hai sbloccato una skin radar speciale!"
+            });
+          }
         } else {
           toast.success("BERSAGLIO COLPITO!", {
-            description: `Precisione: ${accuracy.toFixed(1)}px - Ottimo lavoro!`
+            description: `Precisione: ${accuracy.toFixed(1)}px - 3 crediti assegnati!`
           });
         }
       }
@@ -314,7 +340,7 @@ const SatelliteTrackingGame = () => {
             Precisione: {clickResult.accuracy.toFixed(1)} pixel
             {clickResult.accuracy <= PERFECT_THRESHOLD && (
               <span className="block text-yellow-400 font-bold mt-2">
-                🏆 PRECISIONE INCREDIBILE!
+                🏆 SKIN RADAR SBLOCCATA!
               </span>
             )}
           </p>
