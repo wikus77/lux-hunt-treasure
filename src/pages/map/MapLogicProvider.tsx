@@ -73,9 +73,9 @@ const MapLogicProvider = () => {
     return newPointId; // Return the new point ID
   };
 
-  // Wrapper function to match the expected signature: (id: string, updates: { title?: string; note?: string }) => Promise<boolean>
-  const handleUpdatePointWrapper = async (id: string, updates: { title?: string; note?: string }): Promise<boolean> => {
-    return await updateMapPoint(id, updates);
+  // Wrapper function to match the expected signature: (id: string, title: string, note: string) => Promise<boolean>
+  const handleUpdatePointWrapper = async (id: string, title: string, note: string): Promise<boolean> => {
+    return await updateMapPoint(id, { title, note });
   };
 
   // Use our custom hook for map points
@@ -179,7 +179,7 @@ const MapLogicProvider = () => {
     mapRef,
     handleMapLoad,
     newPoint,
-    handleMapPointClick: hookHandleMapPointClick,
+    handleMapPointClick,
     handleSaveNewPoint,
     handleUpdatePoint,
     handleCancelNewPoint,
