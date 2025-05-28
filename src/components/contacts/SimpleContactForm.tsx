@@ -20,7 +20,8 @@ const SimpleContactForm: React.FC = () => {
       email: "",
       phone: "",
       subject: "",
-      message: ""
+      message: "",
+      type: "contact"
     }
   });
 
@@ -53,7 +54,7 @@ const SimpleContactForm: React.FC = () => {
       // If verification passes, submit the form
       const submitResult = await contactHandleSubmit(data);
       
-      if (!isSubmitting && submitResult?.success) {
+      if (submitResult?.success) {
         form.reset();
         setTurnstileToken(null);
       }

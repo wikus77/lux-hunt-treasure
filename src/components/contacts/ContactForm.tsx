@@ -21,6 +21,7 @@ const ContactForm = () => {
       phone: "",
       subject: "",
       message: "",
+      type: "contact",
     },
   });
 

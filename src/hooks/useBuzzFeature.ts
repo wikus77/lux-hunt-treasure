@@ -124,7 +124,7 @@ export function useBuzzFeature() {
       setLastDynamicClue(uniqueClueContent);
       setLastVagueClue(uniqueClueContent);
       
-      setTimeout(() => {
+      setTimeout(async () => {
         setShowDialog(false);
         
         // Track clue unlocked event
