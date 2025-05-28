@@ -68,14 +68,14 @@ const SimpleContactForm: React.FC = () => {
         throw new Error('Security verification failed');
       }
       
-      // Create properly typed contact data after Zod validation
+      // Since data is already validated by Zod, we can assert the types
       const contactData: ContactFormData = {
-        name: data.name || '',
-        email: data.email || '',
-        subject: data.subject || '',
-        message: data.message || '',
-        phone: data.phone || '',
-        type: data.type || 'contact'
+        name: data.name as string,
+        email: data.email as string,
+        subject: data.subject as string,
+        message: data.message as string,
+        phone: data.phone as string,
+        type: data.type as string
       };
       
       // Log abuse event (don't await to avoid blocking)
