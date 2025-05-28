@@ -96,6 +96,11 @@ export const usePricingLogic = () => {
   // Handle payment for map buzz
   const handlePayment = useCallback(async () => {
     try {
+      // Track checkout start event for map buzz
+      if (typeof window !== 'undefined' && window.plausible) {
+        window.plausible('checkout_start');
+      }
+
       // Calculate the radius before processing payment
       const calculatedRadius = await calculateSearchAreaRadius();
       

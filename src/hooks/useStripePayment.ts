@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -21,6 +22,11 @@ export const useStripePayment = () => {
     setError(null);
 
     try {
+      // Track checkout start event
+      if (typeof window !== 'undefined' && window.plausible) {
+        window.plausible('checkout_start');
+      }
+
       // Log the payment method being used
       const paymentMethodLog = options.paymentMethod 
         ? `Usando ${options.paymentMethod === 'apple_pay' ? 'Apple Pay' : options.paymentMethod === 'google_pay' ? 'Google Pay' : 'carta di credito'}`
