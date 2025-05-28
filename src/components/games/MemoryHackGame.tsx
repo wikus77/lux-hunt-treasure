@@ -1,79 +1,100 @@
 
-import React from 'react';
-import GameCard from './memory-hack/GameCard';
-import GameStats from './memory-hack/GameStats';
-import GameControls from './memory-hack/GameControls';
-import { useGameLogic } from './memory-hack/useGameLogic';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { useGameLogic } from "./memory-hack/useGameLogic";
+import GameStats from "./memory-hack/GameStats";
+import GameControls from "./memory-hack/GameControls";
+import GameCard from "./memory-hack/GameCard";
 
-const MemoryHackGame = () => {
+const MemoryHackGame: React.FC = () => {
   const {
     cards,
     flippedCards,
-    matchedPairs,
+    matchedCards,
     moves,
-    isGameComplete,
-    gameStarted,
     timeElapsed,
-    startGame,
-    flipCard,
-    resetGame
+    gameStatus,
+    difficulty,
+    score,
+    handleCardClick,
+    resetGame,
+    setDifficulty
   } = useGameLogic();
 
-  // Calculate derived values for UI
-  const timeLeft = Math.max(60 - timeElapsed, 0);
-  const errors = Math.max(moves - matchedPairs, 0);
-  const isProcessing = flippedCards.length === 2;
-  const gameState = !gameStarted ? 'idle' : isGameComplete ? 'complete' : 'playing';
+  const [isCompleted, setIsCompleted] = useState(false);
 
-  const handleCardClick = (cardId: number) => {
-    if (!isProcessing && gameStarted && !isGameComplete) {
-      flipCard(cardId);
+  useEffect(() => {
+    if (gameStatus === 'completed' && !isCompleted) {
+      setIsCompleted(true);
+      
+      // Track mission completed event
+      if (typeof window !== 'undefined' && window.plausible) {
+        window.plausible('mission_completed');
+      }
+      
+      toast.success("Missione completata!", {
+        description: `Hai completato il Memory Hack in ${moves} mosse!`
+      });
     }
-  };
+  }, [gameStatus, isCompleted, moves]);
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-6 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl">
-      {/* Header */}
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-orbitron font-bold mb-2">
-          <span className="text-[#00D1FF]">MEMORY</span> <span className="text-white">HACK</span>
-        </h2>
-        <p className="text-white/70 font-sans">Trova tutte le coppie in 60 secondi</p>
-      </div>
-
-      {/* Game Stats */}
-      {gameState === 'playing' && (
-        <GameStats 
-          timeLeft={timeLeft}
-          errors={errors}
-          matchedPairs={matchedPairs}
-          totalPairs={8}
-        />
-      )}
-
-      {/* Game Board */}
-      {gameState === 'playing' && (
-        <div className="grid grid-cols-4 gap-3 mb-6">
-          {cards.map((card) => (
-            <GameCard
-              key={card.id}
-              card={card}
-              onClick={handleCardClick}
-              disabled={isProcessing}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Game Controls */}
+    <div className="p-6 space-y-6">
       <div className="text-center">
-        <GameControls
-          gameState={gameState}
-          errors={errors}
-          onStartGame={startGame}
-          onResetGame={resetGame}
-        />
+        <h2 className="text-2xl font-bold text-cyan-400 mb-2">Memory Hack</h2>
+        <p className="text-gray-300">Trova tutte le coppie per hackerare il sistema</p>
       </div>
+
+      <GameStats 
+        moves={moves}
+        timeElapsed={timeElapsed}
+        score={score}
+      />
+
+      <GameControls 
+        difficulty={difficulty}
+        onDifficultyChange={setDifficulty}
+        onResetGame={() => {
+          resetGame();
+          setIsCompleted(false);
+        }}
+        gameStatus={gameStatus}
+      />
+
+      <div className={`grid gap-4 mx-auto max-w-2xl ${
+        difficulty === 'easy' ? 'grid-cols-4' : 
+        difficulty === 'medium' ? 'grid-cols-6' : 'grid-cols-8'
+      }`}>
+        {cards.map((card) => (
+          <GameCard
+            key={card.id}
+            card={card}
+            isFlipped={flippedCards.includes(card.id)}
+            isMatched={matchedCards.includes(card.id)}
+            onClick={() => handleCardClick(card.id)}
+            disabled={gameStatus !== 'playing'}
+          />
+        ))}
+      </div>
+
+      {gameStatus === 'completed' && (
+        <Card className="p-6 bg-green-900/20 border-green-500/30">
+          <div className="text-center">
+            <h3 className="text-xl font-bold text-green-400 mb-2">
+              🎉 Sistema Hackerato!
+            </h3>
+            <p className="text-gray-300 mb-4">
+              Hai completato la missione in {moves} mosse e {Math.floor(timeElapsed / 60)}:{(timeElapsed % 60).toString().padStart(2, '0')} minuti!
+            </p>
+            <Badge variant="outline" className="text-cyan-400 border-cyan-400">
+              Punteggio: {score}
+            </Badge>
+          </div>
+        </Card>
+      )}
     </div>
   );
 };

@@ -1,79 +1,79 @@
 
-import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { SocialShareButtons } from "@/components/social/SocialShareButtons";
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Share2, Copy, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface InviteFriendDialogProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
 }
 
-const InviteFriendDialog: React.FC<InviteFriendDialogProps> = ({
-  open,
-  onClose
-}) => {
-  const shareTitle = "Unisciti a M1SSION - La sfida inizia presto!";
-  const shareDescription = "Ho scoperto questo nuovo gioco chiamato M1SSION e penso che ti piacerà. Dai un'occhiata e preparati per la sfida!";
-  const shareUrl = window.location.href;
+const InviteFriendDialog: React.FC<InviteFriendDialogProps> = ({ isOpen, onClose }) => {
+  const [shareUrl] = useState("https://m1ssion.lovable.app");
+  const [isCopied, setIsCopied] = useState(false);
 
-  const handleCopyLink = () => {
+  const handleCopyUrl = () => {
     navigator.clipboard.writeText(shareUrl);
-    toast.success("Link copiato negli appunti!", {
-      description: "Ora puoi condividerlo con i tuoi amici"
-    });
+    setIsCopied(true);
+    toast.success("Link copiato!");
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  const handleWhatsAppShare = () => {
+    const message = encodeURIComponent(`🚗 Scopri M1SSION! La caccia al tesoro per vincere auto di lusso! ${shareUrl}`);
+    const whatsappUrl = `https://wa.me/?text=${message}`;
+    
+    // Track WhatsApp share event
+    if (typeof window !== 'undefined' && window.plausible) {
+      window.plausible('share_whatsapp');
+    }
+    
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md glass-card border-cyan-500/20">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md bg-black/90 border-cyan-400/30">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-orbitron gradient-text-cyan text-center">
-            Invita un amico
-          </DialogTitle>
-          <DialogDescription className="text-center text-gray-300">
-            Condividi M1SSION con i tuoi amici e preparatevi insieme all'avventura
+          <DialogTitle className="text-cyan-400">Invita un Amico</DialogTitle>
+          <DialogDescription className="text-white/70">
+            Condividi M1SSION con i tuoi amici e partecipate insieme alla caccia!
           </DialogDescription>
         </DialogHeader>
         
-        <div className="py-4">
-          {/* Sharing URL display */}
-          <div className="flex items-center mb-6 bg-black/50 border border-white/10 rounded-lg p-2">
-            <div className="flex-1 overflow-hidden">
-              <p className="truncate text-sm text-white/70">{shareUrl}</p>
-            </div>
-            <button 
-              onClick={handleCopyLink}
-              className="ml-2 px-3 py-1 text-sm bg-cyan-700/30 hover:bg-cyan-700/50 text-cyan-400 rounded-md transition-colors"
-            >
-              Copia
-            </button>
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Input 
+              value={shareUrl}
+              readOnly
+              className="bg-gray-800/50 border-gray-700 text-white"
+            />
+            <Button onClick={handleCopyUrl} size="icon" variant="outline">
+              <Copy className="h-4 w-4" />
+            </Button>
           </div>
           
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-sm text-gray-400 mb-2 font-semibold">Condividi sui social</h3>
-              <div className="flex justify-center">
-                <SocialShareButtons 
-                  title={shareTitle} 
-                  description={shareDescription} 
-                  url={shareUrl} 
-                  className="justify-center"
-                />
-              </div>
-            </div>
+          {isCopied && (
+            <p className="text-green-400 text-sm">✓ Link copiato negli appunti!</p>
+          )}
+          
+          <div className="flex gap-2">
+            <Button onClick={handleWhatsAppShare} className="flex-1 bg-green-600 hover:bg-green-700">
+              <MessageCircle className="mr-2 h-4 w-4" />
+              WhatsApp
+            </Button>
             
-            <div className="pt-2 border-t border-white/10">
-              <p className="text-center text-xs text-gray-400 mt-4">
-                Ogni amico che si iscrive attraverso il tuo invito riceverà un bonus speciale all'avvio del gioco!
-              </p>
-            </div>
+            <Button 
+              onClick={handleCopyUrl}
+              variant="outline" 
+              className="flex-1"
+            >
+              <Share2 className="mr-2 h-4 w-4" />
+              Copia Link
+            </Button>
           </div>
         </div>
       </DialogContent>
