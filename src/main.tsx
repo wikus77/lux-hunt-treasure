@@ -1,7 +1,7 @@
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as Sentry from "@sentry/react";
-import { BrowserTracing } from "@sentry/tracing";
 import App from './App';
 import './index.css';
 import { Toaster } from 'sonner';
@@ -10,7 +10,7 @@ import { Toaster } from 'sonner';
 Sentry.init({
   dsn: "[INSERISCI LA TUA DSN DI SENTRY QUI]",
   integrations: [
-    new BrowserTracing(),
+    Sentry.browserTracingIntegration(),
   ],
   tracesSampleRate: 1.0,
   enabled: false // Disabilitato temporaneamente
