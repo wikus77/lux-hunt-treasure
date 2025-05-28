@@ -80,13 +80,15 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   // Use Zustand store for consistent state management
   const { isAddingMapPoint, mapStatus } = useMapStore();
 
-  // Debug logging for point addition state
+  // Debug logging for point addition state (development only)
   React.useEffect(() => {
-    console.log("🔄 MapContainer - State from Zustand:", { 
-      isAddingPoint, 
-      isAddingMapPoint, 
-      mapStatus 
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log("🔄 MapContainer - State from Zustand:", { 
+        isAddingPoint, 
+        isAddingMapPoint, 
+        mapStatus 
+      });
+    }
   }, [isAddingPoint, isAddingMapPoint, mapStatus]);
 
   // Create utility functions using the extracted helpers

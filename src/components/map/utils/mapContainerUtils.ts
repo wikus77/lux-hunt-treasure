@@ -17,7 +17,9 @@ export const handleMapReady = (
   return (map: L.Map) => {
     mapRef.current = map;
     map.on('moveend', handleMapMove);
-    console.log("🗺️ Map initialized and ready for point addition");
+    if (process.env.NODE_ENV === 'development') {
+      console.log("🗺️ Map initialized and ready for point addition");
+    }
   };
 };
 
@@ -27,16 +29,24 @@ export const handleAddNewPoint = (
   setIsAddingPoint: (value: boolean) => void
 ) => {
   return (lat: number, lng: number) => {
-    console.log("⭐ handleAddNewPoint called with coordinates:", { lat, lng });
-    console.log("🔄 Current isAddingPoint state:", isAddingPoint);
+    if (process.env.NODE_ENV === 'development') {
+      console.log("⭐ handleAddNewPoint called with coordinates:", { lat, lng });
+      console.log("🔄 Current isAddingPoint state:", isAddingPoint);
+    }
     
     if (isAddingPoint) {
-      console.log("✅ Creating new point at coordinates:", lat, lng);
+      if (process.env.NODE_ENV === 'development') {
+        console.log("✅ Creating new point at coordinates:", lat, lng);
+      }
       addNewPoint(lat, lng);
       setIsAddingPoint(false);
-      console.log("🔄 isAddingPoint set to false after point creation");
+      if (process.env.NODE_ENV === 'development') {
+        console.log("🔄 isAddingPoint set to false after point creation");
+      }
     } else {
-      console.log("❌ Not in adding point mode, ignoring click");
+      if (process.env.NODE_ENV === 'development') {
+        console.log("❌ Not in adding point mode, ignoring click");
+      }
     }
   };
 };
@@ -46,7 +56,9 @@ export const handleAreaGenerated = (
 ) => {
   return (lat: number, lng: number, radiusKm: number) => {
     if (mapRef.current) {
-      console.log('🎯 Centrando mappa su nuova area:', { lat, lng, radiusKm });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🎯 Centrando mappa su nuova area:', { lat, lng, radiusKm });
+      }
       
       // Centra la mappa sulle nuove coordinate
       mapRef.current.setView([lat, lng], 13);

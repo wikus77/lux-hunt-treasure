@@ -91,17 +91,17 @@ export const useBuzzMapLogic = () => {
       const radiusKm = calculateNextRadius();
       const price = calculateBuzzMapPrice();
 
-      console.log('🗺️ CRITICAL RADIUS - Generating BUZZ MAPPA area:', {
-        lat: centerLat,
-        lng: centerLng,
-        radius_km: radiusKm,
-        week: currentWeek,
-        price: price,
-        currentBuzzMapCounter: dailyBuzzMapCounter
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🗺️ Generating BUZZ MAPPA area:', {
+          lat: centerLat,
+          lng: centerLng,
+          radius_km: radiusKm,
+          week: currentWeek,
+          price: price
+        });
+      }
 
       // Remove previous area
-      console.log('🗑️ CRITICAL RADIUS - Removing previous area...');
       const removed = await removePreviousArea();
       if (!removed) {
         toast.error('Errore nel rimuovere l\'area precedente');
@@ -109,7 +109,6 @@ export const useBuzzMapLogic = () => {
       }
 
       // Clear local state
-      console.log('🧹 CRITICAL RADIUS - Clearing local state...');
       setCurrentWeekAreas([]);
       
       // Create new area
@@ -120,19 +119,16 @@ export const useBuzzMapLogic = () => {
       
       // Update BUZZ MAPPA counter (NEW - separate from regular buzz counter)
       const newBuzzMapCounter = await updateDailyBuzzMapCounter();
-      console.log('📊 BUZZ MAPPA counter updated to:', newBuzzMapCounter);
       
       // Update centralized state
       setAreaCreated(true);
       incrementBuzzCount();
       
       // Update local state
-      console.log('🔄 CRITICAL RADIUS - FORCE updating local state immediately with new area:', newArea);
       setCurrentWeekAreas([newArea]);
       
       // Force reload for safety
       setTimeout(async () => {
-        console.log('🔄 CRITICAL RADIUS - Double-check reload after area creation...');
         await loadCurrentWeekAreas();
         await loadDailyBuzzCounter();
       }, 200);
@@ -142,50 +138,56 @@ export const useBuzzMapLogic = () => {
       
       return newArea;
     } catch (err) {
-      console.error('❌ Exception generating map area:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('❌ Exception generating map area:', err);
+      }
       toast.error('Errore durante la generazione dell\'area');
       return null;
     } finally {
       setIsGenerating(false);
     }
-  }, [user, getCurrentWeek, calculateNextRadius, calculateBuzzMapPrice, dailyBuzzMapCounter, removePreviousArea, createBuzzMapArea, updateDailyBuzzMapCounter, setCurrentWeekAreas, loadCurrentWeekAreas, loadDailyBuzzCounter, setAreaCreated, incrementBuzzCount]);
+  }, [user, getCurrentWeek, calculateNextRadius, calculateBuzzMapPrice, removePreviousArea, createBuzzMapArea, updateDailyBuzzMapCounter, setCurrentWeekAreas, loadCurrentWeekAreas, loadDailyBuzzCounter, setAreaCreated, incrementBuzzCount]);
 
   // Debug function
   const debugCurrentState = useCallback(() => {
-    const debugData = createDebugReport(
-      user,
-      currentWeekAreas,
-      userCluesCount,
-      isGenerating,
-      forceUpdateCounter,
-      dailyBuzzCounter,
-      dailyBuzzMapCounter,
-      getActiveArea,
-      calculateNextRadius,
-      calculateBuzzMapPrice
-    );
-    
-    console.log('🔍 DEBUG STATE REPORT:', debugData);
-    console.log('🔍 ZUSTAND STATE:', { areaCreated, buzzCount });
-    
-    if (currentWeekAreas.length > 0) {
-      currentWeekAreas.forEach((area, index) => {
-        console.log(`🔍 Area ${index}:`, {
-          id: area.id,
-          coordinates: `${area.lat}, ${area.lng}`,
-          radius: area.radius_km,
-          valid: !!(area.lat && area.lng && area.radius_km),
-          forceUpdateCounter: forceUpdateCounter,
-          buzzCounterForColor: dailyBuzzCounter
+    if (process.env.NODE_ENV === 'development') {
+      const debugData = createDebugReport(
+        user,
+        currentWeekAreas,
+        userCluesCount,
+        isGenerating,
+        forceUpdateCounter,
+        dailyBuzzCounter,
+        dailyBuzzMapCounter,
+        getActiveArea,
+        calculateNextRadius,
+        calculateBuzzMapPrice
+      );
+      
+      console.log('🔍 DEBUG STATE REPORT:', debugData);
+      console.log('🔍 ZUSTAND STATE:', { areaCreated, buzzCount });
+      
+      if (currentWeekAreas.length > 0) {
+        currentWeekAreas.forEach((area, index) => {
+          console.log(`🔍 Area ${index}:`, {
+            id: area.id,
+            coordinates: `${area.lat}, ${area.lng}`,
+            radius: area.radius_km,
+            valid: !!(area.lat && area.lng && area.radius_km),
+            forceUpdateCounter: forceUpdateCounter,
+            buzzCounterForColor: dailyBuzzCounter
+          });
         });
-      });
+      }
     }
   }, [user, currentWeekAreas, userCluesCount, isGenerating, getActiveArea, calculateNextRadius, calculateBuzzMapPrice, forceUpdateCounter, dailyBuzzCounter, dailyBuzzMapCounter, createDebugReport, areaCreated, buzzCount]);
 
   // Load initial data
   useEffect(() => {
     if (user?.id) {
-      console.log('🔄 CRITICAL - Loading initial BUZZ MAPPA data for user:', user.id);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 Loading initial BUZZ MAPPA data for user:', user.id);
+      }
       loadCurrentWeekAreas();
     }
   }, [user, loadCurrentWeekAreas]);
@@ -195,25 +197,27 @@ export const useBuzzMapLogic = () => {
     setBuzzCount(dailyBuzzCounter);
   }, [dailyBuzzCounter, setBuzzCount]);
 
-  // Debug logging for state changes
+  // Debug logging for state changes (development only)
   useEffect(() => {
-    console.log('🗺️ CRITICAL - Current week areas state updated:', {
-      areas: currentWeekAreas,
-      count: currentWeekAreas.length,
-      forceUpdateCounter: forceUpdateCounter,
-      dailyBuzzCounter: dailyBuzzCounter,
-      dailyBuzzMapCounter: dailyBuzzMapCounter,
-      areaCreated: areaCreated,
-      buzzCount: buzzCount,
-      timestamp: new Date().toISOString()
-    });
-    
-    if (currentWeekAreas.length > 0) {
-      console.log('🎯 CRITICAL - AREA READY FOR RENDERING:', {
-        ...currentWeekAreas[0],
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🗺️ Current week areas state updated:', {
+        areas: currentWeekAreas,
+        count: currentWeekAreas.length,
         forceUpdateCounter: forceUpdateCounter,
-        buzzCounterForColor: dailyBuzzCounter
+        dailyBuzzCounter: dailyBuzzCounter,
+        dailyBuzzMapCounter: dailyBuzzMapCounter,
+        areaCreated: areaCreated,
+        buzzCount: buzzCount,
+        timestamp: new Date().toISOString()
       });
+      
+      if (currentWeekAreas.length > 0) {
+        console.log('🎯 AREA READY FOR RENDERING:', {
+          ...currentWeekAreas[0],
+          forceUpdateCounter: forceUpdateCounter,
+          buzzCounterForColor: dailyBuzzCounter
+        });
+      }
     }
   }, [currentWeekAreas, forceUpdateCounter, dailyBuzzCounter, dailyBuzzMapCounter, areaCreated, buzzCount]);
 

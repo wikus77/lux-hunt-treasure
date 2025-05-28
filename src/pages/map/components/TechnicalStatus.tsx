@@ -22,19 +22,21 @@ const TechnicalStatus: React.FC<TechnicalStatusProps> = ({
   searchAreas
 }) => {
   // This component doesn't render anything visible
-  // It's just for logging technical status to the console
+  // It's just for logging technical status to the console in development
   
-  console.log("🧪 TECHNICAL REPORT - MAP SYSTEM STATUS:", {
-    mapRef: mapRef.current ? "ACTIVE" : "NOT INITIALIZED",
-    isAddingPointHook: isAddingMapPoint,
-    isAddingPointLogic: isAddingPoint,
-    isAddingSearchArea: isAddingSearchArea,
-    newPointStatus: newPoint ? "CREATED" : "NOT CREATED",
-    leafletStatus: L ? "LOADED" : "NOT LOADED",
-    mapPoints: mapPoints.length,
-    searchAreas: searchAreas.length,
-    targetPane: mapRef.current?.getPane('markerPane') ? "EXISTS" : "MISSING",
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log("🧪 TECHNICAL REPORT - MAP SYSTEM STATUS:", {
+      mapRef: mapRef.current ? "ACTIVE" : "NOT INITIALIZED",
+      isAddingPointHook: isAddingMapPoint,
+      isAddingPointLogic: isAddingPoint,
+      isAddingSearchArea: isAddingSearchArea,
+      newPointStatus: newPoint ? "CREATED" : "NOT CREATED",
+      leafletStatus: L ? "LOADED" : "NOT LOADED",
+      mapPoints: mapPoints.length,
+      searchAreas: searchAreas.length,
+      targetPane: mapRef.current?.getPane('markerPane') ? "EXISTS" : "MISSING",
+    });
+  }
   
   return null;
 };
