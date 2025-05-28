@@ -68,14 +68,21 @@ const SimpleContactForm: React.FC = () => {
         throw new Error('Security verification failed');
       }
       
-      // After Zod validation, we can safely cast to ensure TypeScript compatibility
-      const safeData = data as ContactFormData;
+      // Create properly typed contact data after Zod validation
+      const contactData: ContactFormData = {
+        name: data.name || '',
+        email: data.email || '',
+        subject: data.subject || '',
+        message: data.message || '',
+        phone: data.phone || '',
+        type: data.type || 'contact'
+      };
       
       // Log abuse event (don't await to avoid blocking)
       logAbuseEvent();
       
       // If verification passes, submit the form
-      const submitResult = await contactHandleSubmit(safeData);
+      const submitResult = await contactHandleSubmit(contactData);
       
       if (submitResult?.success) {
         // Track successful contact submission in Plausible
