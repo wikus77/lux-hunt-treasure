@@ -81,7 +81,7 @@ const SimpleContactForm: React.FC = () => {
       // Log abuse event (don't await to avoid blocking)
       logAbuseEvent();
       
-      // If verification passes, submit the form
+      // If verification passes, submit the form with our properly typed data
       const submitResult = await contactHandleSubmit(contactData);
       
       if (submitResult?.success) {
