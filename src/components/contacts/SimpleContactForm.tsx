@@ -51,14 +51,15 @@ const SimpleContactForm: React.FC = () => {
         throw new Error('Security verification failed');
       }
       
-      // Construct ContactFormData with all required fields properly defined
+      // Data is already properly typed as ContactFormData from the form
+      // Just ensure all required fields are present with fallbacks
       const contactData: ContactFormData = {
-        name: data.name || '',
-        email: data.email || '',
-        subject: data.subject || '',
-        message: data.message || '',
-        phone: data.phone || '',
-        type: 'contact'
+        name: data.name,
+        email: data.email,
+        subject: data.subject,
+        message: data.message,
+        phone: data.phone,
+        type: data.type || 'contact'
       };
       
       // If verification passes, submit the form
