@@ -117,9 +117,44 @@ export const useGameLogic = () => {
       setIsGameComplete(true);
       setIsTimerRunning(false);
       
-      // Save progress locally
-      const score = Math.max(1000 - (moves * 10) - timeElapsed, 100);
-      toast.success(`Gioco completato! Punteggio: ${score}`);
+      // Save progress to database
+      const saveProgress = async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) return;
+
+          const score = Math.max(1000 - (moves * 10) - timeElapsed, 100);
+          
+          // Use type assertion for now until types are updated
+          await (supabase as any)
+            .from('user_minigames_progress')
+            .upsert({
+              user_id: user.id,
+              game_key: 'memory_hack',
+              score: score,
+              completed: true,
+              last_played: new Date().toISOString()
+            }, {
+              onConflict: 'user_id,game_key'
+            });
+
+          // Award bonus
+          await (supabase as any)
+            .from('user_buzz_bonuses')
+            .insert({
+              user_id: user.id,
+              bonus_type: 'memory_hack_completion',
+              game_reference: 'memory_hack',
+              used: false
+            });
+
+          toast.success(`Gioco completato! Punteggio: ${score}`);
+        } catch (error) {
+          console.error('Error saving game progress:', error);
+        }
+      };
+
+      saveProgress();
     }
   }, [matchedPairs, gameStarted, moves, timeElapsed]);
 

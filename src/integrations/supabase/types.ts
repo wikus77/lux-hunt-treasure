@@ -595,6 +595,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_buzz_bonuses: {
+        Row: {
+          awarded_at: string
+          bonus_type: string
+          created_at: string
+          game_reference: string
+          id: string
+          used: boolean
+          user_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          bonus_type: string
+          created_at?: string
+          game_reference: string
+          id?: string
+          used?: boolean
+          user_id: string
+        }
+        Update: {
+          awarded_at?: string
+          bonus_type?: string
+          created_at?: string
+          game_reference?: string
+          id?: string
+          used?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_buzz_counter: {
         Row: {
           buzz_count: number
@@ -782,6 +812,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_minigames_progress: {
+        Row: {
+          completed: boolean
+          created_at: string
+          game_key: string
+          id: string
+          last_played: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          game_key: string
+          id?: string
+          last_played?: string
+          score?: number
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          game_key?: string
+          id?: string
+          last_played?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       user_notifications: {
         Row: {

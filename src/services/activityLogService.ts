@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 interface ActivityLogEntry {
@@ -74,3 +75,12 @@ export class ActivityLogService {
 }
 
 export const activityLogger = ActivityLogService.getInstance();
+
+// Export the logActivity function for backward compatibility
+export const logActivity = async (params: { 
+  userEmail: string; 
+  action: string; 
+  metadata?: Record<string, any> 
+}) => {
+  return activityLogger.logActivity(params.userEmail, params.action, params.metadata || {});
+};
