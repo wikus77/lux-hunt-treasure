@@ -15,4 +15,12 @@ export const contactFormSchema = z.object({
   type: z.string().optional().default('contact'),
 });
 
-export type ContactFormData = z.infer<typeof contactFormSchema>;
+// Updated type definition to match actual validation requirements
+export type ContactFormData = {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  phone?: string;
+  type?: string;
+};

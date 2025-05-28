@@ -68,21 +68,11 @@ const SimpleContactForm: React.FC = () => {
         throw new Error('Security verification failed');
       }
       
-      // Since data is already validated by Zod, we can assert the types
-      const contactData: ContactFormData = {
-        name: data.name as string,
-        email: data.email as string,
-        subject: data.subject as string,
-        message: data.message as string,
-        phone: data.phone as string,
-        type: data.type as string
-      };
-      
       // Log abuse event (don't await to avoid blocking)
       logAbuseEvent();
       
-      // If verification passes, submit the form with our properly typed data
-      const submitResult = await contactHandleSubmit(contactData);
+      // Data is already properly typed after Zod validation
+      const submitResult = await contactHandleSubmit(data);
       
       if (submitResult?.success) {
         // Track successful contact submission in Plausible
