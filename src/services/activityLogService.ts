@@ -1,82 +1,76 @@
+import { supabase } from '@/integrations/supabase/client';
 
-import { supabase } from "@/integrations/supabase/client";
-
-interface ActivityLogData {
-  userEmail?: string;
+interface ActivityLogEntry {
+  user_email: string;
   action: string;
-  metadata?: Record<string, any>;
+  metadata: Record<string, any>;
 }
 
-/**
- * Logs an activity in the system
- */
-export const logActivity = async (data: ActivityLogData): Promise<boolean> => {
-  try {
-    // Format the data for insertion
-    const logData = {
-      user_email: data.userEmail?.toLowerCase().trim(),
-      action: data.action,
-      metadata: data.metadata || {},
+export class ActivityLogService {
+  private static instance: ActivityLogService;
+  private logQueue: ActivityLogEntry[] = [];
+  private isProcessing = false;
+
+  private constructor() {}
+
+  public static getInstance(): ActivityLogService {
+    if (!ActivityLogService.instance) {
+      ActivityLogService.instance = new ActivityLogService();
+    }
+    return ActivityLogService.instance;
+  }
+
+  public async logActivity(userEmail: string, action: string, metadata: Record<string, any> = {}) {
+    // Store activity in local storage for now
+    const logEntry = {
+      user_email: userEmail,
+      action,
+      metadata,
+      timestamp: new Date().toISOString()
     };
 
-    const { error } = await supabase
-      .from('activity_logs')
-      .insert([logData]);
-    
-    if (error) {
-      console.error("Error logging activity:", error);
-      return false;
+    try {
+      const existingLogs = localStorage.getItem('activity_logs');
+      const logs = existingLogs ? JSON.parse(existingLogs) : [];
+      logs.push(logEntry);
+      
+      // Keep only last 100 entries
+      if (logs.length > 100) {
+        logs.splice(0, logs.length - 100);
+      }
+      
+      localStorage.setItem('activity_logs', JSON.stringify(logs));
+    } catch (error) {
+      console.error('Failed to log activity:', error);
     }
-    
-    return true;
-  } catch (error) {
-    console.error("Exception logging activity:", error);
-    return false;
   }
-};
 
-/**
- * Gets activity logs for a specific user
- */
-export const getUserActivityLogs = async (userEmail: string) => {
-  try {
-    const { data, error } = await supabase
-      .from('activity_logs')
-      .select('*')
-      .eq('user_email', userEmail.toLowerCase().trim())
-      .order('timestamp', { ascending: false });
-    
-    if (error) {
-      console.error("Error fetching activity logs:", error);
+  public async getActivityLogs(userEmail: string, limit: number = 50): Promise<ActivityLogEntry[]> {
+    try {
+      const existingLogs = localStorage.getItem('activity_logs');
+      const logs = existingLogs ? JSON.parse(existingLogs) : [];
+      
+      return logs
+        .filter((log: any) => log.user_email === userEmail)
+        .slice(-limit)
+        .reverse();
+    } catch (error) {
+      console.error('Failed to get activity logs:', error);
       return [];
     }
-    
-    return data || [];
-  } catch (error) {
-    console.error("Exception fetching activity logs:", error);
-    return [];
   }
-};
 
-/**
- * Gets recent system-wide activity logs
- */
-export const getRecentActivityLogs = async (limit = 20) => {
-  try {
-    const { data, error } = await supabase
-      .from('activity_logs')
-      .select('*')
-      .order('timestamp', { ascending: false })
-      .limit(limit);
-    
-    if (error) {
-      console.error("Error fetching recent activity logs:", error);
-      return [];
+  public async clearLogs(userEmail: string): Promise<void> {
+    try {
+      const existingLogs = localStorage.getItem('activity_logs');
+      const logs = existingLogs ? JSON.parse(existingLogs) : [];
+      
+      const filteredLogs = logs.filter((log: any) => log.user_email !== userEmail);
+      localStorage.setItem('activity_logs', JSON.stringify(filteredLogs));
+    } catch (error) {
+      console.error('Failed to clear logs:', error);
     }
-    
-    return data || [];
-  } catch (error) {
-    console.error("Exception fetching recent activity logs:", error);
-    return [];
   }
-};
+}
+
+export const activityLogger = ActivityLogService.getInstance();

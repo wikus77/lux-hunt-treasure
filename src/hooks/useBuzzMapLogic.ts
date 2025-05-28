@@ -64,15 +64,46 @@ export const useBuzzMapLogic = () => {
     updateDailyBuzzCounter
   } = useBuzzCounter(user?.id);
 
-  // NEW: Use the dedicated BUZZ MAPPA counter
+  // NEW: Use the dedicated BUZZ MAPPA counter with progressive pricing
   const {
     dailyBuzzMapCounter,
-    updateDailyBuzzMapCounter
+    updateDailyBuzzMapCounter,
+    calculateProgressivePrice,
+    calculateEscalatedPrice,
+    showUnder5kmWarning,
+    precisionMode
   } = useBuzzMapCounter(user?.id);
 
   const { createBuzzMapArea } = useBuzzDatabase();
 
-  // Generate new BUZZ MAPPA area
+  // Determine precision mode based on recent clue activity
+  const determinePrecisionMode = useCallback((): 'high' | 'low' => {
+    // Check if user has received new clues since last BUZZ MAPPA
+    // For now, we'll use a simple heuristic based on clue count vs buzz map count
+    if (userCluesCount > dailyBuzzMapCounter) {
+      return 'high'; // More clues than buzzes = high precision
+    }
+    return 'low'; // Same or fewer clues = low precision
+  }, [userCluesCount, dailyBuzzMapCounter]);
+
+  // Apply precision mode to coordinates
+  const applyPrecisionFuzz = useCallback((lat: number, lng: number, precision: 'high' | 'low') => {
+    if (precision === 'high') {
+      return { lat, lng }; // No fuzz for high precision
+    }
+    
+    // Apply fuzz for low precision (up to 0.01 degrees ~1km)
+    const fuzzFactor = 0.01;
+    const fuzzLat = (Math.random() - 0.5) * fuzzFactor;
+    const fuzzLng = (Math.random() - 0.5) * fuzzFactor;
+    
+    return {
+      lat: lat + fuzzLat,
+      lng: lng + fuzzLng
+    };
+  }, []);
+
+  // Generate new BUZZ MAPPA area with progressive pricing and precision
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
@@ -89,19 +120,35 @@ export const useBuzzMapLogic = () => {
     try {
       const currentWeek = getCurrentWeek();
       const radiusKm = calculateNextRadius();
-      const price = calculateBuzzMapPrice();
+      const basePrice = calculateBuzzMapPrice();
+      const precision = determinePrecisionMode();
+      
+      // Calculate final price with progressive pricing and escalation
+      let finalPrice: number;
+      if (radiusKm < 5) {
+        finalPrice = calculateEscalatedPrice(basePrice, radiusKm);
+        showUnder5kmWarning(); // Show warning on first time under 5km
+      } else {
+        finalPrice = calculateProgressivePrice(basePrice);
+      }
 
-      console.log('🗺️ CRITICAL RADIUS - Generating BUZZ MAPPA area:', {
-        lat: centerLat,
-        lng: centerLng,
-        radius_km: radiusKm,
-        week: currentWeek,
-        price: price,
-        currentBuzzMapCounter: dailyBuzzMapCounter
-      });
+      // Apply precision fuzz to coordinates
+      const { lat: finalLat, lng: finalLng } = applyPrecisionFuzz(centerLat, centerLng, precision);
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🗺️ BUZZ MAPPA - Generating area:', {
+          originalCoords: { lat: centerLat, lng: centerLng },
+          finalCoords: { lat: finalLat, lng: finalLng },
+          radius_km: radiusKm,
+          week: currentWeek,
+          basePrice: basePrice,
+          finalPrice: finalPrice,
+          precision: precision,
+          currentBuzzMapCounter: dailyBuzzMapCounter
+        });
+      }
 
       // Remove previous area
-      console.log('🗑️ CRITICAL RADIUS - Removing previous area...');
       const removed = await removePreviousArea();
       if (!removed) {
         toast.error('Errore nel rimuovere l\'area precedente');
@@ -109,36 +156,36 @@ export const useBuzzMapLogic = () => {
       }
 
       // Clear local state
-      console.log('🧹 CRITICAL RADIUS - Clearing local state...');
       setCurrentWeekAreas([]);
       
-      // Create new area
-      const newArea = await createBuzzMapArea(user.id, centerLat, centerLng, radiusKm, currentWeek);
+      // Create new area with final coordinates and pricing
+      const newArea = await createBuzzMapArea(user.id, finalLat, finalLng, radiusKm, currentWeek);
       if (!newArea) {
         return null;
       }
       
-      // Update BUZZ MAPPA counter (NEW - separate from regular buzz counter)
-      const newBuzzMapCounter = await updateDailyBuzzMapCounter();
-      console.log('📊 BUZZ MAPPA counter updated to:', newBuzzMapCounter);
+      // Update BUZZ MAPPA counter with new pricing logic
+      const newBuzzMapCounter = await updateDailyBuzzMapCounter(basePrice, precision);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📊 BUZZ MAPPA counter updated to:', newBuzzMapCounter);
+      }
       
       // Update centralized state
       setAreaCreated(true);
       incrementBuzzCount();
       
       // Update local state
-      console.log('🔄 CRITICAL RADIUS - FORCE updating local state immediately with new area:', newArea);
       setCurrentWeekAreas([newArea]);
       
       // Force reload for safety
       setTimeout(async () => {
-        console.log('🔄 CRITICAL RADIUS - Double-check reload after area creation...');
         await loadCurrentWeekAreas();
         await loadDailyBuzzCounter();
       }, 200);
       
-      // Success message
-      toast.success(`Area BUZZ MAPPA generata! Raggio: ${newArea.radius_km.toFixed(1)} km - Colore: AZZURRO NEON - Prezzo: ${price.toFixed(2)}€`);
+      // Success message with pricing info
+      const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
+      toast.success(`Area BUZZ MAPPA generata! Raggio: ${newArea.radius_km.toFixed(1)} km - ${precisionText} - Prezzo: ${finalPrice.toFixed(2)}€`);
       
       return newArea;
     } catch (err) {
@@ -148,44 +195,37 @@ export const useBuzzMapLogic = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, getCurrentWeek, calculateNextRadius, calculateBuzzMapPrice, dailyBuzzMapCounter, removePreviousArea, createBuzzMapArea, updateDailyBuzzMapCounter, setCurrentWeekAreas, loadCurrentWeekAreas, loadDailyBuzzCounter, setAreaCreated, incrementBuzzCount]);
+  }, [user, getCurrentWeek, calculateNextRadius, calculateBuzzMapPrice, dailyBuzzMapCounter, removePreviousArea, createBuzzMapArea, updateDailyBuzzMapCounter, setCurrentWeekAreas, loadCurrentWeekAreas, loadDailyBuzzCounter, setAreaCreated, incrementBuzzCount, determinePrecisionMode, applyPrecisionFuzz, calculateProgressivePrice, calculateEscalatedPrice, showUnder5kmWarning]);
 
   // Debug function
   const debugCurrentState = useCallback(() => {
-    const debugData = createDebugReport(
-      user,
-      currentWeekAreas,
-      userCluesCount,
-      isGenerating,
-      forceUpdateCounter,
-      dailyBuzzCounter,
-      dailyBuzzMapCounter,
-      getActiveArea,
-      calculateNextRadius,
-      calculateBuzzMapPrice
-    );
-    
-    console.log('🔍 DEBUG STATE REPORT:', debugData);
-    console.log('🔍 ZUSTAND STATE:', { areaCreated, buzzCount });
-    
-    if (currentWeekAreas.length > 0) {
-      currentWeekAreas.forEach((area, index) => {
-        console.log(`🔍 Area ${index}:`, {
-          id: area.id,
-          coordinates: `${area.lat}, ${area.lng}`,
-          radius: area.radius_km,
-          valid: !!(area.lat && area.lng && area.radius_km),
-          forceUpdateCounter: forceUpdateCounter,
-          buzzCounterForColor: dailyBuzzCounter
-        });
+    if (process.env.NODE_ENV === 'development') {
+      const debugData = createDebugReport(
+        user,
+        currentWeekAreas,
+        userCluesCount,
+        isGenerating,
+        forceUpdateCounter,
+        dailyBuzzCounter,
+        dailyBuzzMapCounter,
+        getActiveArea,
+        calculateNextRadius,
+        calculateBuzzMapPrice
+      );
+      
+      console.log('🔍 DEBUG STATE REPORT:', debugData);
+      console.log('🔍 ZUSTAND STATE:', { areaCreated, buzzCount });
+      console.log('🔍 PRICING INFO:', {
+        basePrice: calculateBuzzMapPrice(),
+        progressivePrice: calculateProgressivePrice(calculateBuzzMapPrice()),
+        precision: precisionMode
       });
     }
-  }, [user, currentWeekAreas, userCluesCount, isGenerating, getActiveArea, calculateNextRadius, calculateBuzzMapPrice, forceUpdateCounter, dailyBuzzCounter, dailyBuzzMapCounter, createDebugReport, areaCreated, buzzCount]);
+  }, [user, currentWeekAreas, userCluesCount, isGenerating, getActiveArea, calculateNextRadius, calculateBuzzMapPrice, forceUpdateCounter, dailyBuzzCounter, dailyBuzzMapCounter, createDebugReport, areaCreated, buzzCount, calculateProgressivePrice, precisionMode]);
 
   // Load initial data
   useEffect(() => {
     if (user?.id) {
-      console.log('🔄 CRITICAL - Loading initial BUZZ MAPPA data for user:', user.id);
       loadCurrentWeekAreas();
     }
   }, [user, loadCurrentWeekAreas]);
@@ -195,36 +235,22 @@ export const useBuzzMapLogic = () => {
     setBuzzCount(dailyBuzzCounter);
   }, [dailyBuzzCounter, setBuzzCount]);
 
-  // Debug logging for state changes
-  useEffect(() => {
-    console.log('🗺️ CRITICAL - Current week areas state updated:', {
-      areas: currentWeekAreas,
-      count: currentWeekAreas.length,
-      forceUpdateCounter: forceUpdateCounter,
-      dailyBuzzCounter: dailyBuzzCounter,
-      dailyBuzzMapCounter: dailyBuzzMapCounter,
-      areaCreated: areaCreated,
-      buzzCount: buzzCount,
-      timestamp: new Date().toISOString()
-    });
-    
-    if (currentWeekAreas.length > 0) {
-      console.log('🎯 CRITICAL - AREA READY FOR RENDERING:', {
-        ...currentWeekAreas[0],
-        forceUpdateCounter: forceUpdateCounter,
-        buzzCounterForColor: dailyBuzzCounter
-      });
-    }
-  }, [currentWeekAreas, forceUpdateCounter, dailyBuzzCounter, dailyBuzzMapCounter, areaCreated, buzzCount]);
-
   return {
     currentWeekAreas,
     isGenerating,
     userCluesCount,
     dailyBuzzCounter,
     dailyBuzzMapCounter,
+    precisionMode,
     calculateNextRadius,
-    calculateBuzzMapPrice,
+    calculateBuzzMapPrice: useCallback(() => {
+      const basePrice = calculateBuzzMapPrice();
+      const activeArea = getActiveArea();
+      if (activeArea && activeArea.radius_km < 5) {
+        return calculateEscalatedPrice(basePrice, activeArea.radius_km);
+      }
+      return calculateProgressivePrice(basePrice);
+    }, [calculateBuzzMapPrice, getActiveArea, calculateEscalatedPrice, calculateProgressivePrice]),
     generateBuzzMapArea,
     getActiveArea,
     reloadAreas: () => loadCurrentWeekAreas(),

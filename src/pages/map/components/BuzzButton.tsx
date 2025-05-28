@@ -27,7 +27,9 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     getActiveArea,
     userCluesCount,
     reloadAreas,
-    debugCurrentState
+    debugCurrentState,
+    dailyBuzzMapCounter,
+    precisionMode
   } = useBuzzMapLogic();
   
   const nextRadius = calculateNextRadius();
@@ -35,88 +37,73 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const activeArea = getActiveArea();
   
   const handleBuzzMapClick = async () => {
-    console.log('🚀 BUZZ MAPPA - Starting generation');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🚀 BUZZ MAPPA - Starting generation');
+      debugCurrentState();
+    }
     
-    // VERIFICA CRITICA: stato iniziale
-    console.log('🔍 Initial state check before generation:');
-    debugCurrentState();
-    
-    // STEP 1: Usa le coordinate del centro mappa corrente o coordinate predefinite
-    const centerLat = mapCenter ? mapCenter[0] : 41.9028; // Default to Rome center
+    // Use map center coordinates or default to Rome
+    const centerLat = mapCenter ? mapCenter[0] : 41.9028;
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
-    console.log('📍 Using map center coordinates:', { 
-      centerLat, 
-      centerLng
-    });
-    console.log('📏 Prossimo raggio calcolato:', nextRadius, 'km');
-    console.log('💰 Prezzo calcolato:', buzzMapPrice, '€');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📍 Using map center coordinates:', { 
+        centerLat, 
+        centerLng,
+        nextRadius: nextRadius,
+        price: buzzMapPrice,
+        precision: precisionMode,
+        weeklyCount: dailyBuzzMapCounter
+      });
+    }
     
-    // STEP 2: Genera l'area usando la logica dedicata
-    console.log('💾 Generating area in database...');
+    // Generate the area using the advanced pricing logic
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
-      console.log('✅ NUOVA AREA CREATA:', {
-        id: newArea.id,
-        lat: newArea.lat,
-        lng: newArea.lng,
-        radius_km: newArea.radius_km,
-        created_at: newArea.created_at
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ NUOVA AREA CREATA:', {
+          id: newArea.id,
+          lat: newArea.lat,
+          lng: newArea.lng,
+          radius_km: newArea.radius_km,
+          created_at: newArea.created_at
+        });
+      }
       
-      // STEP 3: Forza il reload delle aree PRIMA del centering con verifica
-      console.log('🔄 Forzando reload delle aree...');
+      // Force reload areas
       await reloadAreas();
       
-      // VERIFICA CRITICA: stato dopo reload
+      // Center map on new area
       setTimeout(() => {
-        console.log('🔍 State check after reload:');
-        debugCurrentState();
-      }, 100);
-      
-      // STEP 4: Aspetta un momento prima di centrare per assicurarsi che l'area sia stata caricata
-      setTimeout(() => {
-        console.log('🎯 Centrando mappa sulla nuova area...');
-        console.log('📏 Area radius for centering:', newArea.radius_km, 'km');
-        
         if (onAreaGenerated) {
-          console.log('🔄 Calling onAreaGenerated with coordinates:', {
-            lat: newArea.lat,
-            lng: newArea.lng,
-            radius: newArea.radius_km
-          });
           onAreaGenerated(newArea.lat, newArea.lng, newArea.radius_km);
-        } else {
-          console.log('⚠️ onAreaGenerated callback not available');
         }
       }, 200);
       
-      // STEP 5: Crea notifica con il raggio REALE salvato su Supabase
+      // Create notification
       try {
+        const precisionText = precisionMode === 'high' ? 'Alta Precisione' : 'Precisione Ridotta';
         await createMapBuzzNotification(
           "Area BUZZ MAPPA Generata", 
-          `Nuova area di ricerca creata con raggio ${newArea.radius_km.toFixed(1)}km`
+          `Nuova area di ricerca creata con raggio ${newArea.radius_km.toFixed(1)}km - ${precisionText}`
         );
-        console.log("✅ BUZZ Map notification created successfully");
       } catch (error) {
         console.error("❌ Failed to create BUZZ Map notification:", error);
       }
       
-      // STEP 6: Esegui callback opzionale
+      // Execute optional callback
       if (handleBuzz) {
         handleBuzz();
       }
-      
-      // VERIFICA FINALE: stato dopo tutte le operazioni
-      setTimeout(() => {
-        console.log('🔍 FINAL STATE CHECK after all operations:');
-        debugCurrentState();
-      }, 500);
-      
-    } else {
-      console.error('❌ Failed to create new area');
     }
+  };
+  
+  const getPrecisionIndicator = () => {
+    if (precisionMode === 'high') {
+      return '🎯'; // High precision
+    }
+    return '📍'; // Lower precision
   };
   
   return (
@@ -137,9 +124,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         {isGenerating ? 'Generando...' : `BUZZ ${buzzMapPrice.toFixed(2)}€`}
         <span className="ml-2 text-xs opacity-80">
           {activeArea ? `(Attivo: ${activeArea.radius_km.toFixed(1)}km)` : `(R: ${nextRadius.toFixed(1)}km)`}
+          {getPrecisionIndicator()}
         </span>
         <div className="text-xs opacity-70 mt-1">
-          {userCluesCount} indizi
+          {userCluesCount} indizi • {dailyBuzzMapCounter} BUZZ settimana
         </div>
       </Button>
       <style>

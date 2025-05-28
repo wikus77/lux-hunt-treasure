@@ -9,30 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      activity_logs: {
-        Row: {
-          action: string
-          id: string
-          metadata: Json | null
-          timestamp: string | null
-          user_email: string | null
-        }
-        Insert: {
-          action: string
-          id?: string
-          metadata?: Json | null
-          timestamp?: string | null
-          user_email?: string | null
-        }
-        Update: {
-          action?: string
-          id?: string
-          metadata?: Json | null
-          timestamp?: string | null
-          user_email?: string | null
-        }
-        Relationships: []
-      }
       app_messages: {
         Row: {
           content: string
@@ -98,41 +74,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      buzz_purchases: {
-        Row: {
-          created_at: string
-          id: string
-          transaction_id: string | null
-          used: boolean
-          used_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          transaction_id?: string | null
-          used?: boolean
-          used_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          transaction_id?: string | null
-          used?: boolean
-          used_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "buzz_purchases_transaction_id_fkey"
-            columns: ["transaction_id"]
-            isOneToOne: false
-            referencedRelation: "payment_transactions"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       clues: {
         Row: {
@@ -585,30 +526,6 @@ export type Database = {
         }
         Relationships: []
       }
-      referrals: {
-        Row: {
-          created_at: string | null
-          id: string
-          invited_email: string
-          referrer_code: string
-          status: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          invited_email: string
-          referrer_code: string
-          status?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          invited_email?: string
-          referrer_code?: string
-          status?: string | null
-        }
-        Relationships: []
-      }
       search_areas: {
         Row: {
           created_at: string
@@ -674,30 +591,6 @@ export type Database = {
           status?: string
           tier?: string
           updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_buzz_bonuses: {
-        Row: {
-          awarded_at: string
-          bonus_type: string
-          game_reference: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          awarded_at?: string
-          bonus_type: string
-          game_reference: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          awarded_at?: string
-          bonus_type?: string
-          game_reference?: string
-          id?: string
           user_id?: string
         }
         Relationships: []
@@ -849,27 +742,6 @@ export type Database = {
           },
         ]
       }
-      user_credits: {
-        Row: {
-          created_at: string | null
-          credits: number
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          credits?: number
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          credits?: number
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_map_areas: {
         Row: {
           clue_id: string | null
@@ -910,62 +782,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      user_message_reads: {
-        Row: {
-          id: string
-          message_id: string
-          read_at: string | null
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          message_id: string
-          read_at?: string | null
-          user_id: string
-        }
-        Update: {
-          id?: string
-          message_id?: string
-          read_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_message_reads_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "app_messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_minigames_progress: {
-        Row: {
-          completed: boolean
-          game_key: string
-          id: string
-          last_played: string | null
-          score: number
-          user_id: string
-        }
-        Insert: {
-          completed?: boolean
-          game_key: string
-          id?: string
-          last_played?: string | null
-          score?: number
-          user_id: string
-        }
-        Update: {
-          completed?: boolean
-          game_key?: string
-          id?: string
-          last_played?: string | null
-          score?: number
-          user_id?: string
-        }
-        Relationships: []
       }
       user_notifications: {
         Row: {
