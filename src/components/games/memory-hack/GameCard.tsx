@@ -6,25 +6,37 @@ import type { GameCard as GameCardType } from './gameData';
 
 interface GameCardProps {
   card: GameCardType;
+  isFlipped?: boolean;
+  isMatched?: boolean;
   onClick: (cardId: number) => void;
   disabled: boolean;
 }
 
-const GameCard: React.FC<GameCardProps> = ({ card, onClick, disabled }) => {
+const GameCard: React.FC<GameCardProps> = ({ 
+  card, 
+  isFlipped: propIsFlipped,
+  isMatched: propIsMatched,
+  onClick, 
+  disabled 
+}) => {
   const IconComponent = card.icon;
+  
+  // Use props if provided, otherwise fall back to card properties
+  const isFlipped = propIsFlipped !== undefined ? propIsFlipped : card.isFlipped;
+  const isMatched = propIsMatched !== undefined ? propIsMatched : card.isMatched;
 
   const getCardStyle = () => {
-    if (card.isMatched) {
+    if (isMatched) {
       return 'border-green-400/70 bg-green-400/20 shadow-[0_0_15px_rgba(34,197,94,0.4)]';
     }
-    if (card.isFlipped) {
+    if (isFlipped) {
       return 'border-[#00D1FF]/70 bg-[#00D1FF]/20 shadow-[0_0_10px_rgba(0,209,255,0.3)]';
     }
     return 'border-white/20 bg-[#1b1b1b] hover:border-[#00D1FF]/40 hover:bg-[#00D1FF]/5 cursor-pointer';
   };
 
-  const shouldShowIcon = card.isFlipped || card.isMatched;
-  const isClickable = !disabled && !card.isMatched && !card.isFlipped;
+  const shouldShowIcon = isFlipped || isMatched;
+  const isClickable = !disabled && !isMatched && !isFlipped;
 
   return (
     <motion.div
@@ -45,7 +57,7 @@ const GameCard: React.FC<GameCardProps> = ({ card, onClick, disabled }) => {
                 transition={{ duration: 0.4, ease: "easeInOut" }}
               >
                 <IconComponent className={`w-8 h-8 ${
-                  card.isMatched ? 'text-green-400' : 'text-[#00D1FF]'
+                  isMatched ? 'text-green-400' : 'text-[#00D1FF]'
                 }`} />
               </motion.div>
             ) : (

@@ -13,21 +13,26 @@ const MemoryHackGame: React.FC = () => {
   const {
     cards,
     flippedCards,
-    matchedCards,
+    matchedPairs,
     moves,
+    isGameComplete,
+    gameStarted,
     timeElapsed,
-    gameStatus,
-    difficulty,
-    score,
-    handleCardClick,
-    resetGame,
-    setDifficulty
+    startGame,
+    flipCard,
+    resetGame
   } = useGameLogic();
 
   const [isCompleted, setIsCompleted] = useState(false);
 
+  // Calculate score
+  const score = Math.max(1000 - (moves * 10) - timeElapsed, 100);
+  
+  // Calculate game status
+  const gameStatus = isGameComplete ? 'completed' : (gameStarted ? 'playing' : 'waiting');
+
   useEffect(() => {
-    if (gameStatus === 'completed' && !isCompleted) {
+    if (isGameComplete && !isCompleted) {
       setIsCompleted(true);
       
       // Track mission completed event
@@ -39,7 +44,16 @@ const MemoryHackGame: React.FC = () => {
         description: `Hai completato il Memory Hack in ${moves} mosse!`
       });
     }
-  }, [gameStatus, isCompleted, moves]);
+  }, [isGameComplete, isCompleted, moves]);
+
+  const handleCardClick = (cardId: number) => {
+    flipCard(cardId);
+  };
+
+  const handleResetGame = () => {
+    resetGame();
+    setIsCompleted(false);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -55,32 +69,27 @@ const MemoryHackGame: React.FC = () => {
       />
 
       <GameControls 
-        difficulty={difficulty}
-        onDifficultyChange={setDifficulty}
-        onResetGame={() => {
-          resetGame();
-          setIsCompleted(false);
-        }}
         gameStatus={gameStatus}
+        onResetGame={handleResetGame}
+        onStartGame={startGame}
       />
 
-      <div className={`grid gap-4 mx-auto max-w-2xl ${
-        difficulty === 'easy' ? 'grid-cols-4' : 
-        difficulty === 'medium' ? 'grid-cols-6' : 'grid-cols-8'
-      }`}>
-        {cards.map((card) => (
-          <GameCard
-            key={card.id}
-            card={card}
-            isFlipped={flippedCards.includes(card.id)}
-            isMatched={matchedCards.includes(card.id)}
-            onClick={() => handleCardClick(card.id)}
-            disabled={gameStatus !== 'playing'}
-          />
-        ))}
-      </div>
+      {gameStarted && (
+        <div className="grid gap-4 mx-auto max-w-2xl grid-cols-4">
+          {cards.map((card) => (
+            <GameCard
+              key={card.id}
+              card={card}
+              isFlipped={flippedCards.includes(card.id)}
+              isMatched={card.isMatched}
+              onClick={handleCardClick}
+              disabled={!gameStarted || isGameComplete}
+            />
+          ))}
+        </div>
+      )}
 
-      {gameStatus === 'completed' && (
+      {isGameComplete && (
         <Card className="p-6 bg-green-900/20 border-green-500/30">
           <div className="text-center">
             <h3 className="text-xl font-bold text-green-400 mb-2">

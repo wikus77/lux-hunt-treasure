@@ -27,7 +27,7 @@ const ModalManager = ({
       />
       
       <InviteFriendDialog
-        open={showInviteFriend}
+        isOpen={showInviteFriend}
         onClose={onCloseInviteFriend}
       />
     </>

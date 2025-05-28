@@ -6,17 +6,31 @@ import { Trophy, Sparkles } from 'lucide-react';
 import type { GameState } from './gameData';
 
 interface GameControlsProps {
-  gameState: GameState;
-  errors: number;
-  onStartGame: () => void;
+  gameState?: GameState;
+  gameStatus?: string;
+  difficulty?: string;
+  errors?: number;
+  onStartGame?: () => void;
   onResetGame: () => void;
+  onDifficultyChange?: (difficulty: string) => void;
 }
 
-const GameControls: React.FC<GameControlsProps> = ({ gameState, errors, onStartGame, onResetGame }) => {
-  if (gameState === 'waiting') {
+const GameControls: React.FC<GameControlsProps> = ({ 
+  gameState = 'idle',
+  gameStatus = 'idle',
+  difficulty = 'medium',
+  errors = 0,
+  onStartGame,
+  onResetGame,
+  onDifficultyChange
+}) => {
+  // Use gameStatus if provided, otherwise fall back to gameState
+  const currentState = gameStatus || gameState;
+
+  if (currentState === 'waiting' || currentState === 'idle') {
     return (
       <Button 
-        onClick={onStartGame}
+        onClick={onStartGame || onResetGame}
         className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white px-8 py-3 rounded-full font-sans"
       >
         INIZIA MEMORY HACK
@@ -24,7 +38,7 @@ const GameControls: React.FC<GameControlsProps> = ({ gameState, errors, onStartG
     );
   }
 
-  if (gameState === 'completed') {
+  if (currentState === 'completed' || currentState === 'complete') {
     const isSuccess = errors <= 5;
     
     return (
@@ -100,7 +114,7 @@ const GameControls: React.FC<GameControlsProps> = ({ gameState, errors, onStartG
     );
   }
 
-  if (gameState === 'failed') {
+  if (currentState === 'failed') {
     return (
       <motion.div 
         className="text-center"
