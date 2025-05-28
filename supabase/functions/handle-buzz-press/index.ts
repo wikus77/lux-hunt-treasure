@@ -113,7 +113,29 @@ serve(async (req) => {
 
     const authenticatedUserId = user.id;
 
-    // 2. RATE LIMITING - Controllo spam (1 BUZZ ogni 5 secondi)
+    // 2. CONTROLLO ANTIFLOOD - Verifica abusi con il nuovo sistema
+    const { data: isAbuse, error: abuseError } = await supabase.rpc('log_potential_abuse', {
+      p_event_type: 'buzz_click',
+      p_user_id: authenticatedUserId
+    });
+
+    if (abuseError) {
+      console.error("Errore nel sistema antiflood:", abuseError);
+      // Non blocchiamo l'operazione per errori di logging, ma logghiamo
+    }
+
+    if (isAbuse) {
+      console.error(`ANTIFLOOD TRIGGERED: User ${authenticatedUserId} exceeded buzz click limit`);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Troppe richieste BUZZ ravvicinate. Attendi 30 secondi prima di riprovare." 
+        }),
+        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // 3. RATE LIMITING AGGIUNTIVO - Controllo spam (1 BUZZ ogni 5 secondi)
     if (!checkRateLimit(authenticatedUserId)) {
       console.error(`Rate limit exceeded for user: ${authenticatedUserId}`);
       return new Response(
@@ -126,7 +148,7 @@ serve(async (req) => {
     const requestData = await req.json();
     const { userId, generateMap, prizeId, coordinates, sessionId } = requestData as BuzzRequest;
     
-    // 3. VALIDAZIONE INPUT COMPLETA
+    // 4. VALIDAZIONE INPUT COMPLETA
     if (!userId) {
       console.error("Missing userId parameter");
       return new Response(

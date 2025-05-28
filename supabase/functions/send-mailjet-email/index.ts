@@ -149,7 +149,29 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // 3. RATE LIMITING - Check rate limit (1 email every 30 seconds per user)
+    // 3. CONTROLLO ANTIFLOOD - Log dell'evento email
+    const { data: isAbuse, error: abuseError } = await supabase.rpc('log_potential_abuse', {
+      p_event_type: 'email_send',
+      p_user_id: authenticatedUserId
+    });
+
+    if (abuseError) {
+      console.error("Errore nel sistema antiflood per email:", abuseError);
+      // Non blocchiamo l'operazione per errori di logging, ma logghiamo
+    }
+
+    if (isAbuse) {
+      console.error(`ANTIFLOOD TRIGGERED: User ${authenticatedUserId} exceeded email send limit`);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Troppe email inviate di recente. Attendi 30 secondi prima di riprovare." 
+        }),
+        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // 4. RATE LIMITING - Check rate limit (1 email every 30 seconds per user)
     if (!checkRateLimit(authenticatedUserId)) {
       console.error(`Rate limit exceeded for user: ${authenticatedUserId}`);
       return new Response(

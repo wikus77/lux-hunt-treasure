@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      abuse_alerts: {
+        Row: {
+          alert_timestamp: string
+          event_count: number
+          event_type: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          alert_timestamp?: string
+          event_count: number
+          event_type: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          alert_timestamp?: string
+          event_count?: number
+          event_type?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      abuse_logs: {
+        Row: {
+          event_type: string
+          id: string
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          event_type: string
+          id?: string
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_messages: {
         Row: {
           content: string
@@ -889,6 +937,14 @@ export type Database = {
         Args: { daily_count: number }
         Returns: number
       }
+      check_abuse_limit: {
+        Args: { p_event_type: string; p_user_id: string }
+        Returns: boolean
+      }
+      cleanup_old_abuse_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       execute_sql: {
         Args: { sql: string }
         Returns: undefined
@@ -926,6 +982,10 @@ export type Database = {
       increment_map_generation_counter: {
         Args: { p_user_id: string; p_week: number }
         Returns: number
+      }
+      log_potential_abuse: {
+        Args: { p_event_type: string; p_user_id: string }
+        Returns: boolean
       }
       update_user_subscription_tier: {
         Args: { target_user_id: string; new_tier: string }
