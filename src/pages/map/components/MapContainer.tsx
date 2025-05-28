@@ -15,6 +15,7 @@ import HelpDialog from '../HelpDialog';
 import BuzzMapAreas from './BuzzMapAreas';
 import MapInitializer from './MapInitializer';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
+import { useMapStore } from '@/stores/mapStore';
 import L from 'leaflet';
 import { 
   handleMapMove, 
@@ -75,11 +76,18 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   const mapRef = useRef<L.Map | null>(null);
   const { currentWeekAreas } = useBuzzMapLogic();
+  
+  // Use Zustand store for consistent state management
+  const { isAddingMapPoint, mapStatus } = useMapStore();
 
   // Debug logging for point addition state
   React.useEffect(() => {
-    console.log("🔄 MapContainer - isAddingPoint state:", isAddingPoint);
-  }, [isAddingPoint]);
+    console.log("🔄 MapContainer - State from Zustand:", { 
+      isAddingPoint, 
+      isAddingMapPoint, 
+      mapStatus 
+    });
+  }, [isAddingPoint, isAddingMapPoint, mapStatus]);
 
   // Create utility functions using the extracted helpers
   const handleMapMoveCallback = handleMapMove(mapRef, setMapCenter);

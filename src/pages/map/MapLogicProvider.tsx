@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
@@ -9,6 +8,7 @@ import LoadingScreen from './LoadingScreen';
 import MapContent from './components/MapContent';
 import MapControls from './components/MapControls';
 import TechnicalStatus from './components/TechnicalStatus';
+import { useMapStore } from '@/stores/mapStore';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -29,6 +29,17 @@ const MapLogicProvider = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   
+  // Use Zustand store for centralized state management
+  const { 
+    isAddingPoint, 
+    isAddingMapPoint, 
+    mapStatus,
+    setIsAddingPoint, 
+    setIsAddingMapPoint,
+    syncPointStates,
+    setMapStatus
+  } = useMapStore();
+  
   // Get map logic from our custom hook
   const { 
     handleBuzz, 
@@ -40,8 +51,6 @@ const MapLogicProvider = () => {
     setPendingRadius,
     toggleAddingSearchArea,
     mapPoints,
-    isAddingPoint,
-    setIsAddingPoint,
     activeMapPoint,
     setActiveMapPoint,
     addMapPoint,
@@ -63,20 +72,23 @@ const MapLogicProvider = () => {
     return newPointId; // Return the new point ID
   };
 
+  // Wrapper function to match the expected signature in MapContext
+  const handleUpdatePointWrapper = async (id: string, title: string, note: string): Promise<boolean> => {
+    return await updateMapPoint(id, { title, note });
+  };
+
   // Use our custom hook for map points
   const {
     newPoint,
     handleMapPointClick: hookHandleMapPointClick,
     handleSaveNewPoint,
     handleUpdatePoint,
-    handleCancelNewPoint,
-    isAddingMapPoint,
-    setIsAddingMapPoint
+    handleCancelNewPoint
   } = useMapPoints(
     mapPoints,
     setActiveMapPoint,
     handleMapPointClick,
-    updateMapPoint,
+    handleUpdatePointWrapper,
     deleteMapPoint
   );
   
@@ -115,34 +127,28 @@ const MapLogicProvider = () => {
     }
   };
   
-  // Synchronize isAddingMapPoint state between hook and mapLogic to ensure consistency
+  // Synchronize point states using Zustand
   useEffect(() => {
-    console.log("🔄 Synchronizing isAddingMapPoint states:", 
-      {hookState: isAddingMapPoint, mapLogicState: isAddingPoint});
+    console.log("🔄 Synchronizing point states via Zustand:", 
+      {isAddingPoint, isAddingMapPoint});
     
+    // Keep states in sync
     if (isAddingPoint !== isAddingMapPoint) {
-      console.log("🔄 Setting hook isAddingMapPoint to:", isAddingPoint);
-      setIsAddingMapPoint(isAddingPoint);
+      syncPointStates(isAddingPoint);
     }
-  }, [isAddingPoint, isAddingMapPoint, setIsAddingMapPoint]);
-
-  // Also propagate state from hook to parent if needed
-  useEffect(() => {
-    if (isAddingMapPoint !== isAddingPoint) {
-      console.log("🔄 Setting mapLogic isAddingMapPoint to:", isAddingMapPoint);
-      setIsAddingPoint(isAddingMapPoint);
-    }
-  }, [isAddingMapPoint, isAddingPoint, setIsAddingPoint]);
+  }, [isAddingPoint, isAddingMapPoint, syncPointStates]);
   
   // Simulate a small loading delay for better UX
   useEffect(() => {
+    setMapStatus('loading');
     const timer = setTimeout(() => {
       if (!mapLoaded) {
         setMapLoaded(true);
+        setMapStatus('ready');
       }
     }, 800);
     return () => clearTimeout(timer);
-  }, [mapLoaded, setMapLoaded]);
+  }, [mapLoaded, setMapLoaded, setMapStatus]);
 
   // Create context value
   const contextValue: MapContextType = {
@@ -160,7 +166,7 @@ const MapLogicProvider = () => {
     activeMapPoint,
     setActiveMapPoint,
     addMapPoint,
-    updateMapPoint,
+    updateMapPoint: handleUpdatePointWrapper,
     deleteMapPoint,
     requestLocationPermission,
     showHelpDialog,
