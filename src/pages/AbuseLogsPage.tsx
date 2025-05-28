@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AlertTriangle, Search, Filter, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface AbuseLogEntry {
   id: string;
@@ -24,6 +26,9 @@ const AbuseLogsPage = () => {
   const [searchUserId, setSearchUserId] = useState('');
   const [eventTypeFilter, setEventTypeFilter] = useState('all');
   const [eventTypes, setEventTypes] = useState<string[]>([]);
+
+  // Debounce search input (300ms delay)
+  const debouncedSearchUserId = useDebounce(searchUserId, 300);
 
   // Fetch abuse logs from Supabase
   const fetchAbuseLogs = async () => {
@@ -64,9 +69,9 @@ const AbuseLogsPage = () => {
     }
 
     // Filter by user ID (case insensitive partial match)
-    if (searchUserId.trim()) {
+    if (debouncedSearchUserId.trim()) {
       filtered = filtered.filter(log => 
-        log.user_id.toLowerCase().includes(searchUserId.toLowerCase().trim())
+        log.user_id.toLowerCase().includes(debouncedSearchUserId.toLowerCase().trim())
       );
     }
 
@@ -78,10 +83,10 @@ const AbuseLogsPage = () => {
     fetchAbuseLogs();
   }, []);
 
-  // Apply filters when search or filter changes
+  // Apply filters when search or filter changes (using debounced search)
   useEffect(() => {
     applyFilters();
-  }, [logs, searchUserId, eventTypeFilter]);
+  }, [logs, debouncedSearchUserId, eventTypeFilter]);
 
   const formatTimestamp = (timestamp: string) => {
     return new Date(timestamp).toLocaleString('it-IT', {
@@ -106,6 +111,18 @@ const AbuseLogsPage = () => {
         return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     }
   };
+
+  const LoadingSkeleton = () => (
+    <div className="space-y-4">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="flex space-x-4">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
@@ -195,10 +212,7 @@ const AbuseLogsPage = () => {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex justify-center items-center py-8">
-                <RefreshCw className="w-6 h-6 animate-spin text-blue-400" />
-                <span className="ml-2 text-gray-400">Caricamento log...</span>
-              </div>
+              <LoadingSkeleton />
             ) : filteredLogs.length === 0 ? (
               <div className="text-center py-8 text-gray-400">
                 <AlertTriangle className="w-12 h-12 mx-auto mb-4 opacity-50" />

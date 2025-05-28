@@ -4,11 +4,12 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import DynamicIsland from "@/components/DynamicIsland";
+import { Spinner } from "@/components/ui/spinner";
 
 // Public routes
 import Index from "@/pages/Index";
 
-// Main app routes
+// Main app routes with lazy loading
 const Home = lazy(() => import("@/pages/Home"));
 const Map = lazy(() => import("@/pages/Map"));
 const Buzz = lazy(() => import("@/pages/Buzz"));
@@ -30,10 +31,20 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const Terms = lazy(() => import("@/pages/Terms"));
 
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="min-h-screen bg-black flex items-center justify-center">
+    <div className="flex flex-col items-center gap-4">
+      <Spinner size="lg" className="text-[#00D1FF]" />
+      <p className="text-gray-400">Caricamento...</p>
+    </div>
+  </div>
+);
+
 const AppRoutes: React.FC = () => {
   return (
     <ErrorBoundary>
-      <Suspense fallback={<div className="loading">Caricamento...</div>}>
+      <Suspense fallback={<LoadingFallback />}>
         <DynamicIsland />
         <Routes>
           {/* Landing page - SEMPRE PUBBLICA, NESSUN REDIRECT */}

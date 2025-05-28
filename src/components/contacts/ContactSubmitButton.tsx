@@ -1,40 +1,48 @@
 
-import React from "react";
-import { Send } from "lucide-react";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { Spinner } from "@/components/ui/spinner";
 
 interface ContactSubmitButtonProps {
-  isSubmitting: boolean;
-  progress: number;
-  disabled?: boolean; // We've added this prop as optional
+  isLoading: boolean;
+  disabled?: boolean;
+  children: React.ReactNode;
 }
 
-const ContactSubmitButton: React.FC<ContactSubmitButtonProps> = ({ isSubmitting, progress, disabled = false }) => {
+export const ContactSubmitButton = ({ 
+  isLoading, 
+  disabled = false, 
+  children 
+}: ContactSubmitButtonProps) => {
+  const [hasBeenClicked, setHasBeenClicked] = useState(false);
+
+  const handleClick = () => {
+    if (!hasBeenClicked) {
+      setHasBeenClicked(true);
+      // Reset after 3 seconds to allow retry if needed
+      setTimeout(() => setHasBeenClicked(false), 3000);
+    }
+  };
+
+  const isDisabled = disabled || isLoading || hasBeenClicked;
+
   return (
-    <div className="space-y-2">
-      {isSubmitting && (
-        <Progress 
-          value={progress} 
-          className="h-1.5 bg-black/30"
-          indicatorClassName="bg-gradient-to-r from-cyan-400 to-blue-600" 
-        />
+    <Button
+      type="submit"
+      onClick={handleClick}
+      disabled={isDisabled}
+      className="w-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] hover:from-[#00B8E6] hover:to-[#6A25CC] text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {isLoading ? (
+        <div className="flex items-center justify-center gap-2">
+          <Spinner size="sm" className="text-white" />
+          Invio in corso...
+        </div>
+      ) : hasBeenClicked ? (
+        "Inviato..."
+      ) : (
+        children
       )}
-      <Button
-        type="submit"
-        className="bg-gradient-to-r from-cyan-400 to-blue-600 text-black px-6 py-2 rounded-full font-medium flex items-center gap-2 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
-        disabled={isSubmitting || disabled}
-      >
-        {isSubmitting ? (
-          <>Invio in corso...</>
-        ) : (
-          <>
-            Invia Messaggio <Send size={16} />
-          </>
-        )}
-      </Button>
-    </div>
+    </Button>
   );
 };
-
-export default ContactSubmitButton;

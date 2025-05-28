@@ -1,13 +1,22 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
 import { useGameLogic } from "./memory-hack/useGameLogic";
-import GameStats from "./memory-hack/GameStats";
-import GameControls from "./memory-hack/GameControls";
-import GameCard from "./memory-hack/GameCard";
+
+// Lazy load game components
+const GameStats = lazy(() => import("./memory-hack/GameStats"));
+const GameControls = lazy(() => import("./memory-hack/GameControls"));
+const GameCard = lazy(() => import("./memory-hack/GameCard"));
+
+const GameLoadingFallback = () => (
+  <div className="flex items-center justify-center p-8">
+    <Spinner size="md" className="text-[#00D1FF]" />
+  </div>
+);
 
 const MemoryHackGame: React.FC = () => {
   const {
@@ -62,31 +71,35 @@ const MemoryHackGame: React.FC = () => {
         <p className="text-gray-300">Trova tutte le coppie per hackerare il sistema</p>
       </div>
 
-      <GameStats 
-        moves={moves}
-        timeElapsed={timeElapsed}
-        score={score}
-      />
+      <Suspense fallback={<GameLoadingFallback />}>
+        <GameStats 
+          moves={moves}
+          timeElapsed={timeElapsed}
+          score={score}
+        />
 
-      <GameControls 
-        gameStatus={gameStatus}
-        onResetGame={handleResetGame}
-        onStartGame={startGame}
-      />
+        <GameControls 
+          gameStatus={gameStatus}
+          onResetGame={handleResetGame}
+          onStartGame={startGame}
+        />
+      </Suspense>
 
       {gameStarted && (
-        <div className="grid gap-4 mx-auto max-w-2xl grid-cols-4">
-          {cards.map((card) => (
-            <GameCard
-              key={card.id}
-              card={card}
-              isFlipped={flippedCards.includes(card.id)}
-              isMatched={card.isMatched}
-              onClick={handleCardClick}
-              disabled={!gameStarted || isGameComplete}
-            />
-          ))}
-        </div>
+        <Suspense fallback={<GameLoadingFallback />}>
+          <div className="grid gap-4 mx-auto max-w-2xl grid-cols-4">
+            {cards.map((card) => (
+              <GameCard
+                key={card.id}
+                card={card}
+                isFlipped={flippedCards.includes(card.id)}
+                isMatched={card.isMatched}
+                onClick={handleCardClick}
+                disabled={!gameStarted || isGameComplete}
+              />
+            ))}
+          </div>
+        </Suspense>
       )}
 
       {isGameComplete && (
