@@ -79,21 +79,14 @@ const ContactForm = () => {
         throw new Error('Security verification failed');
       }
       
-      // Create properly typed contact data
-      const contactData: ContactFormData = {
-        name: data.name!,
-        email: data.email!,
-        subject: data.subject!,
-        message: data.message!,
-        phone: data.phone || '',
-        type: data.type || 'contact'
-      };
+      // After Zod validation, we can safely cast to ensure TypeScript compatibility
+      const safeData = data as ContactFormData;
       
       // Log abuse event (don't await to avoid blocking)
       logAbuseEvent();
       
       // If verification passes, submit the form
-      const result = await contactHandleSubmit(contactData);
+      const result = await contactHandleSubmit(safeData);
       if (result.success) {
         // Track successful contact submission in Plausible
         if (typeof window !== 'undefined' && window.plausible) {
