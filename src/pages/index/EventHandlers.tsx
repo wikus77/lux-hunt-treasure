@@ -22,6 +22,11 @@ export const useEventHandlers = (countdownCompleted: boolean): EventHandlersResu
 
   // Event handlers
   const handleRegisterClick = () => {
+    // Track Plausible event
+    if (typeof window !== 'undefined' && window.plausible) {
+      window.plausible('click_cta_join');
+    }
+    
     if (countdownCompleted) {
       setShowAgeVerification(true);
     } else {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Loader } from "lucide-react";
@@ -66,6 +65,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const handleBuzzPress = async () => {
     if (isLoading || !userId) return;
     
+    // Track Plausible event
+    if (typeof window !== 'undefined' && window.plausible) {
+      window.plausible('buzz_click');
+    }
+    
     console.log("🚀 Iniziando processo BUZZ per user:", userId);
     setIsLoading(true);
     setError(null);
@@ -78,6 +82,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       
       if (response.success) {
         console.log("✅ Risposta BUZZ API ricevuta:", response);
+        
+        // Track clue unlocked event
+        if (typeof window !== 'undefined' && window.plausible) {
+          window.plausible('clue_unlocked');
+        }
         
         // Aggiorna il costo per il prossimo utilizzo
         setDailyCount(prev => prev + 1);

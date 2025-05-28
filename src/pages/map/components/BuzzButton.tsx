@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Circle as CircleIcon, Loader } from "lucide-react";
@@ -37,9 +36,9 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const activeArea = getActiveArea();
   
   const handleBuzzMapClick = async () => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🚀 BUZZ MAPPA - Starting generation');
-      debugCurrentState();
+    // Track Plausible event
+    if (typeof window !== 'undefined' && window.plausible) {
+      window.plausible('buzz_click');
     }
     
     // Use map center coordinates or default to Rome
@@ -61,6 +60,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
+      // Track clue unlocked event for map buzz
+      if (typeof window !== 'undefined' && window.plausible) {
+        window.plausible('clue_unlocked');
+      }
+      
       if (process.env.NODE_ENV === 'development') {
         console.log('✅ NUOVA AREA CREATA:', {
           id: newArea.id,

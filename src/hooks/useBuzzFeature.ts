@@ -95,6 +95,11 @@ export function useBuzzFeature() {
         return;
       }
       
+      // Track Plausible event
+      if (typeof window !== 'undefined' && window.plausible) {
+        window.plausible('buzz_click');
+      }
+      
       console.log("🚀 Avvio processo BUZZ UNIVOCO per:", userId);
       setShowDialog(true);
       
@@ -122,29 +127,20 @@ export function useBuzzFeature() {
       setTimeout(() => {
         setShowDialog(false);
         
-        console.log("💾 Creando notifica BUZZ UNIVOCA con contenuto reale...");
-        // Registra IMMEDIATAMENTE la notifica con contenuto univoco
-        createBuzzNotification(
-          "Nuovo Indizio Buzz!", 
-          uniqueClueContent
-        ).then(async () => {
-          console.log("✅ Notifica BUZZ UNIVOCA creata con successo");
-          
-          // Forza reload immediato delle notifiche
-          await reloadNotifications(true);
-          
-          toast.success("Hai ricevuto un nuovo indizio univoco!", {
-            description: uniqueClueContent,
-            duration: 4000,
-          });
-          
-          setShowExplosion(true);
-        }).catch(error => {
-          console.error("❌ Error creating notification:", error);
-          toast.error("Errore nel salvataggio dell'indizio", {
-            duration: 3000,
-          });
+        // Track clue unlocked event
+        if (typeof window !== 'undefined' && window.plausible) {
+          window.plausible('clue_unlocked');
+        }
+        
+        // Forza reload immediato delle notifiche
+        await reloadNotifications(true);
+        
+        toast.success("Hai ricevuto un nuovo indizio univoco!", {
+          description: uniqueClueContent,
+          duration: 4000,
         });
+        
+        setShowExplosion(true);
       }, 1500);
     } catch (error) {
       console.error("❌ Error in buzz process:", error);
@@ -162,6 +158,11 @@ export function useBuzzFeature() {
     if (!userId) {
       toast.error("Devi effettuare l'accesso per utilizzare questa funzione");
       return;
+    }
+    
+    // Track Plausible event
+    if (typeof window !== 'undefined' && window.plausible) {
+      window.plausible('buzz_click');
     }
     
     console.log("🎯 Avvio processo indizio extra UNIVOCO per:", userId);
