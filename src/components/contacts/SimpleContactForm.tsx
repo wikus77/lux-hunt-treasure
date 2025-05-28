@@ -51,15 +51,18 @@ const SimpleContactForm: React.FC = () => {
         throw new Error('Security verification failed');
       }
       
-      // The data from react-hook-form is already properly typed as ContactFormData
-      // Just ensure type has a default value
-      const formData: ContactFormData = {
-        ...data,
-        type: data.type || 'contact',
+      // Construct ContactFormData with all required fields properly defined
+      const contactData: ContactFormData = {
+        name: data.name || '',
+        email: data.email || '',
+        subject: data.subject || '',
+        message: data.message || '',
+        phone: data.phone || '',
+        type: 'contact'
       };
       
       // If verification passes, submit the form
-      const submitResult = await contactHandleSubmit(formData);
+      const submitResult = await contactHandleSubmit(contactData);
       
       if (submitResult?.success) {
         form.reset();
