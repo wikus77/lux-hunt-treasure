@@ -62,8 +62,18 @@ const ContactForm = () => {
         throw new Error('Security verification failed');
       }
       
+      // Ensure all required fields are present before submitting
+      const formData: ContactFormData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        subject: data.subject,
+        message: data.message,
+        type: data.type || 'contact',
+      };
+      
       // If verification passes, submit the form
-      const result = await contactHandleSubmit(data);
+      const result = await contactHandleSubmit(formData);
       if (result.success) {
         form.reset();
         setTurnstileToken(null);

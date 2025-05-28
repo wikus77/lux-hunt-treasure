@@ -51,8 +51,18 @@ const SimpleContactForm: React.FC = () => {
         throw new Error('Security verification failed');
       }
       
+      // Ensure all required fields are present before submitting
+      const formData: ContactFormData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        subject: data.subject,
+        message: data.message,
+        type: data.type || 'contact',
+      };
+      
       // If verification passes, submit the form
-      const submitResult = await contactHandleSubmit(data);
+      const submitResult = await contactHandleSubmit(formData);
       
       if (submitResult?.success) {
         form.reset();
