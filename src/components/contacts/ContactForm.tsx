@@ -10,6 +10,7 @@ import ContactSubmitButton from "./ContactSubmitButton";
 import TurnstileWidget from "@/components/security/TurnstileWidget";
 import { useTurnstile } from "@/hooks/useTurnstile";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const ContactForm = () => {
   // Initialize react-hook-form with zod resolver
@@ -36,6 +37,22 @@ const ContactForm = () => {
       });
     }
   });
+
+  // Log abuse event to Supabase
+  const logAbuseEvent = async () => {
+    try {
+      const user = await supabase.auth.getUser();
+      const userId = user.data.user?.id || 'anonymous';
+      
+      await supabase.from('abuse_logs').insert({
+        event_type: 'email_send',
+        user_id: userId
+      });
+    } catch (error) {
+      // Don't block the form if logging fails
+      console.log('Abuse logging failed:', error);
+    }
+  };
   
   // Log when the component mounts to debug routing issues
   useEffect(() => {
@@ -62,20 +79,27 @@ const ContactForm = () => {
         throw new Error('Security verification failed');
       }
       
-      // Since the data comes from a validated form with zodResolver,
-      // we can safely cast it to ensure all required fields are present
-      const contactData = {
-        name: data.name,
-        email: data.email,
-        subject: data.subject,
-        message: data.message,
-        phone: data.phone,
+      // Create properly typed contact data
+      const contactData: ContactFormData = {
+        name: data.name!,
+        email: data.email!,
+        subject: data.subject!,
+        message: data.message!,
+        phone: data.phone || '',
         type: data.type || 'contact'
-      } as ContactFormData;
+      };
+      
+      // Log abuse event (don't await to avoid blocking)
+      logAbuseEvent();
       
       // If verification passes, submit the form
       const result = await contactHandleSubmit(contactData);
       if (result.success) {
+        // Track successful contact submission in Plausible
+        if (typeof window !== 'undefined' && window.plausible) {
+          window.plausible('contact_submit');
+        }
+        
         form.reset();
         setTurnstileToken(null);
       }
