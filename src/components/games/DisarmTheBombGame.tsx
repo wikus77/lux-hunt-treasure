@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -113,36 +112,11 @@ const DisarmTheBombGame = () => {
     if (!user) return;
 
     try {
-      // Save game progress
-      const { error: gameError } = await supabase
-        .from('user_minigames_progress')
-        .upsert({
-          user_id: user.id,
-          game_key: 'disarm_the_bomb',
-          completed: success,
-          score: success ? 3 : 0,
-          last_played: new Date().toISOString()
-        });
-
-      if (gameError) throw gameError;
-
       if (success) {
-        // Check if completed in under 5 seconds for bonus
         if (timeTaken <= 5) {
-          const { error: bonusError } = await supabase
-            .from('user_buzz_bonuses')
-            .insert({
-              user_id: user.id,
-              bonus_type: 'discount',
-              game_reference: 'disarm_the_bomb',
-              awarded_at: new Date().toISOString()
-            });
-
-          if (!bonusError) {
-            toast.success("BONUS VELOCITÀ!", {
-              description: `Bomba disinnescata in ${timeTaken.toFixed(1)}s! Hai ottenuto un bonus sconto!`
-            });
-          }
+          toast.success("BONUS VELOCITÀ!", {
+            description: `Bomba disinnescata in ${timeTaken.toFixed(1)}s! Incredibile velocità!`
+          });
         } else {
           toast.success("BOMBA DISINNESCATA!", {
             description: `Missione completata in ${timeTaken.toFixed(1)} secondi!`
@@ -331,7 +305,7 @@ const DisarmTheBombGame = () => {
             Missione completata in {completionTime.toFixed(1)} secondi
             {completionTime <= 5 && (
               <span className="block text-yellow-400 font-bold mt-2">
-                🏆 BONUS VELOCITÀ SBLOCCATO!
+                🏆 VELOCITÀ INCREDIBILE!
               </span>
             )}
           </p>

@@ -1,9 +1,7 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet';
 import { LatLng } from 'leaflet';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { MapPin, CheckCircle, X, RotateCcw, Clock } from 'lucide-react';
@@ -133,35 +131,10 @@ const FindMapPointGame = () => {
     if (!user) return;
 
     try {
-      // Save game progress
-      const { error: gameError } = await supabase
-        .from('user_minigames_progress')
-        .upsert({
-          user_id: user.id,
-          game_key: 'map_target_game',
-          completed: success,
-          score: success ? 5 : 0,
-          last_played: new Date().toISOString()
-        });
-
-      if (gameError) throw gameError;
-
       if (success) {
-        // Add buzz bonus
-        const { error: bonusError } = await supabase
-          .from('user_buzz_bonuses')
-          .insert({
-            user_id: user.id,
-            bonus_type: 'free_buzz',
-            game_reference: 'map_target_game',
-            awarded_at: new Date().toISOString()
-          });
-
-        if (!bonusError) {
-          toast.success("PUNTO TROVATO!", {
-            description: "Hai ottenuto un BUZZ gratuito!"
-          });
-        }
+        toast.success("PUNTO TROVATO!", {
+          description: "Missione completata con successo!"
+        });
       }
     } catch (error) {
       console.error('Error saving game progress:', error);
@@ -329,7 +302,7 @@ const FindMapPointGame = () => {
           <p className="text-white/70 mb-4 font-sans">
             Distanza dal target: {distance.toFixed(0)} metri
             <span className="block text-yellow-400 font-bold mt-2">
-              🏆 BUZZ GRATUITO ASSEGNATO!
+              🏆 MISSIONE COMPLETATA!
             </span>
           </p>
           

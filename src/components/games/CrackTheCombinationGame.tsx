@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,7 +38,9 @@ const CrackTheCombinationGame = () => {
     setAttempts([]);
     setGameState('playing');
     setIsUnlocking(false);
-    console.log('Target combination:', newTarget); // For debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Target combination:', newTarget);
+    }
   }, [generateRandomCombination]);
 
   const calculateFeedback = useCallback((guess: number[], target: number[]) => {
@@ -108,37 +109,11 @@ const CrackTheCombinationGame = () => {
     if (!user) return;
 
     try {
-      // Save game progress
-      const { error: gameError } = await supabase
-        .from('user_minigames_progress')
-        .upsert({
-          user_id: user.id,
-          game_key: 'crack_the_combination',
-          completed: success,
-          score: success ? 10 : 0,
-          last_played: new Date().toISOString()
-        });
-
-      if (gameError) throw gameError;
-
       if (success) {
         if (firstTry) {
-          // Add bonus clue for first-try success
-          const { error: clueError } = await supabase
-            .from('user_clues')
-            .insert({
-              user_id: user.id,
-              clue_type: 'bonus',
-              title_it: 'Indizio Bonus',
-              description_it: 'Hai ottenuto questo indizio per aver risolto la combinazione al primo tentativo!',
-              buzz_cost: 0
-            });
-
-          if (!clueError) {
-            toast.success("COMBINAZIONE CRACCATA!", {
-              description: "Primo tentativo! Hai ottenuto un indizio bonus!"
-            });
-          }
+          toast.success("COMBINAZIONE CRACCATA!", {
+            description: "Primo tentativo! Perfetto!"
+          });
         } else {
           toast.success("COMBINAZIONE CRACCATA!", {
             description: `Cassaforte sbloccata in ${attempts.length + 1} tentativi!`
@@ -359,7 +334,7 @@ const CrackTheCombinationGame = () => {
             Cassaforte sbloccata in {attempts.length} tentativ{attempts.length === 1 ? 'o' : 'i'}
             {attempts.length === 1 && (
               <span className="block text-yellow-400 font-bold mt-2">
-                🏆 PRIMO TENTATIVO! INDIZIO BONUS SBLOCCATO!
+                🏆 PRIMO TENTATIVO! PERFETTO!
               </span>
             )}
           </p>
