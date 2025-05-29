@@ -2,10 +2,6 @@
   "appId": "com.m1ssion.app",
   "appName": "M1SSION",
   "webDir": "dist",
-  "server": {
-    "url": "http://192.168.178.115:8080",
-    "cleartext": true
-  },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 3000,
