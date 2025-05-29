@@ -1,8 +1,7 @@
-{
+{{
   "appId": "com.m1ssion.app",
   "appName": "M1SSION",
   "webDir": "build",
-  "bundledWebRuntime": false,
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 3000,
@@ -15,5 +14,6 @@
       "iosSpinnerStyle": "small",
       "spinnerColor": "#999999"
     }
-  }
+  },
+  "bundledWebRuntime": false
 }
