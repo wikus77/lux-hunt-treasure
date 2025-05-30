@@ -1,4 +1,6 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap');
+@import './styles/mobile-optimizations.css';
 
 @tailwind base;
 @tailwind components;
@@ -9,6 +11,10 @@
     @apply bg-black text-white;
     overflow-x: hidden !important;
     background-image: radial-gradient(circle at 50% 10%, rgba(19, 21, 36, 0.5) 0%, rgba(0, 0, 0, 0.8) 80%);
+    /* iOS optimizations */
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -29,11 +35,11 @@
   /* Mobile optimization - better touch targets */
   @media (max-width: 640px) {
     button, a {
-      @apply touch-manipulation min-h-[44px] min-w-[44px];
+      @apply touch-manipulation mobile-touch-target;
     }
     
     input, select, textarea {
-      @apply text-base; /* Prevent zoom on iOS */
+      @apply text-base mobile-optimized; /* Prevent zoom on iOS */
     }
     
     .content-section {

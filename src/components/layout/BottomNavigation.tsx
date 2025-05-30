@@ -31,7 +31,7 @@ const BottomNavigation = () => {
 
   return (
     <motion.div 
-      className="fixed bottom-0 left-0 right-0 z-50 h-16 backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 border-t border-white/10 px-3"
+      className="fixed bottom-0 left-0 right-0 z-50 h-16 backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 border-t border-white/10 px-3 safe-area-bottom safe-area-left safe-area-right"
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
@@ -41,7 +41,7 @@ const BottomNavigation = () => {
           <Link
             key={link.path}
             to={link.path}
-            className={`relative flex flex-col items-center justify-center w-16 h-16 transition-colors ${
+            className={`relative flex flex-col items-center justify-center w-16 h-16 transition-colors mobile-touch-target ${
               currentPath === link.path
                 ? "text-[#00D1FF]"
                 : "text-gray-400 hover:text-gray-300"

@@ -5,6 +5,7 @@ import LoadingManager from "./index/LoadingManager";
 import CountdownManager from "./index/CountdownManager";
 import MainContent from "./index/MainContent";
 import { useEventHandlers } from "./index/EventHandlers";
+import DeveloperAccess from "@/components/auth/DeveloperAccess";
 
 const Index = () => {
   console.log("Index component rendering - PUBLIC LANDING PAGE");
@@ -16,6 +17,25 @@ const Index = () => {
   const [countdownCompleted, setCountdownCompleted] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [hasAccess, setHasAccess] = useState(false);
+  
+  // Check for developer access on mount
+  useEffect(() => {
+    const checkAccess = () => {
+      const userAgent = navigator.userAgent;
+      const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
+      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      
+      if (isMobile && hasStoredAccess) {
+        setHasAccess(true);
+      } else if (!isMobile) {
+        // Web users always see landing page
+        setHasAccess(true);
+      }
+    };
+    
+    checkAccess();
+  }, []);
   
   // Get event handlers
   const {
@@ -112,7 +132,6 @@ const Index = () => {
     setRenderContent(canRender);
   }, []);
 
-  // Callback per quando l'intro è completa
   const handleIntroComplete = useCallback(() => {
     console.log("Intro completed callback, setting introCompleted to true");
     setIntroCompleted(true);
@@ -125,21 +144,28 @@ const Index = () => {
     }
   }, []);
 
-  // Callback for when countdown completes
   const handleCountdownComplete = useCallback((isCompleted: boolean) => {
     setCountdownCompleted(isCompleted);
   }, []);
 
-  // Function to handle page retry on error
   const handleRetry = useCallback(() => {
     console.log("Retry richiesto dall'utente");
     window.location.reload();
   }, []);
 
+  const handleAccessGranted = useCallback(() => {
+    setHasAccess(true);
+  }, []);
+
+  // Show developer access screen for mobile users without access
+  if (!hasAccess) {
+    return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
+  }
+
   console.log("Index render state:", { introCompleted, pageLoaded, renderContent });
 
   return (
-    <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden">
+    <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden full-viewport smooth-scroll">
       <CookiebotInit />
       
       <LoadingManager onLoaded={handleLoaded} />
