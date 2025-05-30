@@ -1,0 +1,6 @@
+
+<!-- Add these keys to your existing Info.plist -->
+<key>NSSupportsLiveActivities</key>
+<true/>
+<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+<true/>
