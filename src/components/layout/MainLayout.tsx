@@ -20,16 +20,25 @@ import M1ssionText from "@/components/logo/M1ssionText";
 import { AIAssistant } from '@/components/ai/AIAssistant';
 import { useIsMobile } from "@/hooks/use-mobile";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
+import { useAuthContext } from "@/contexts/auth";
+import { Navigate } from "react-router-dom";
+import "@/styles/mobile-optimizations.css";
 
 const MainLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { isAuthenticated, user } = useAuthContext();
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileName, setProfileName] = useState<string>("Utente");
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  
+  // Controllo accesso: solo sviluppatore autorizzato
+  if (!isAuthenticated || user?.email !== 'wikus77@hotmail.it') {
+    return <Navigate to="/" replace />;
+  }
   
   const updateUnreadCount = () => {
     try {
@@ -80,14 +89,14 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-projectx-dark transition-colors duration-300 text-white relative">
+    <div className="min-h-screen w-full bg-projectx-dark transition-colors duration-300 text-white relative mobile-scroll retina-optimized">
       <CookiebotInit />
-      <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-projectx-card/40 border-b border-white/10 transition-all duration-300">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-projectx-card/40 border-b border-white/10 transition-all duration-300 mobile-safe-header">
         <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center">
           <div className="flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="outline-none focus-visible:ring-2 focus-visible:ring-white/30 p-2 min-w-[44px] min-h-[44px]" aria-label="Menu profilo">
+                <button className="outline-none focus-visible:ring-2 focus-visible:ring-white/30 p-2 mobile-touch-target" aria-label="Menu profilo">
                   <span className="profile-custom-ring">
                     <Avatar className="w-8 h-8 border border-white/20 bg-black hover:border-white/40 transition-colors cursor-pointer">
                       <AvatarImage src={profileImage || ""} alt="Profile" className="object-cover" />
@@ -126,7 +135,7 @@ const MainLayout = () => {
             <button
               type="button"
               aria-label="Notifications"
-              className="p-2 relative rounded-full bg-black/60 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer min-w-[44px] min-h-[44px]"
+              className="p-2 relative rounded-full bg-black/60 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer mobile-touch-target"
               onClick={handleShowNotifications}
             >
               <Mail className="w-5 h-5" />
@@ -137,7 +146,7 @@ const MainLayout = () => {
               )}
             </button>
             <button
-              className="p-2 rounded-full bg-black/60 hover:bg-white/10 border border-white/10 transition-colors min-w-[44px] min-h-[44px]"
+              className="p-2 rounded-full bg-black/60 hover:bg-white/10 border border-white/10 transition-colors mobile-touch-target"
               onClick={() => navigate("/settings")}
               aria-label="Impostazioni"
             >
@@ -147,7 +156,7 @@ const MainLayout = () => {
         </div>
       </header>
       
-      <main className="flex-1 w-full relative pt-[72px] pb-16 max-w-screen-xl mx-auto px-2 sm:px-4">
+      <main className="flex-1 w-full relative pt-[72px] pb-16 max-w-screen-xl mx-auto px-2 sm:px-4 mobile-safe-content">
         <Outlet />
       </main>
       
