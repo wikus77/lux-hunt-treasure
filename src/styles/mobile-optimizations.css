@@ -20,22 +20,22 @@
   }
 }
 
-/* Enhanced Safe Area Support with Dynamic Island compatibility */
+/* Enhanced Safe Area Support with Dynamic Island compatibility - FIXED */
 @supports (height: 100dvh) {
   .safe-area-header {
-    height: calc(72px + env(safe-area-inset-top) + 8px);
-    padding-top: calc(env(safe-area-inset-top) + 8px);
+    height: calc(72px + env(safe-area-inset-top) + 20px);
+    padding-top: calc(env(safe-area-inset-top) + 20px);
   }
   
   .safe-area-content {
-    padding-top: calc(72px + env(safe-area-inset-top) + 8px);
+    padding-top: calc(72px + env(safe-area-inset-top) + 20px);
   }
 }
 
-/* Additional spacing for header positioning on iPhone */
+/* Additional spacing for header positioning on iPhone - INCREASED */
 .header-safe-spacing {
-  padding-top: calc(env(safe-area-inset-top) + 12px);
-  height: calc(72px + env(safe-area-inset-top) + 12px);
+  padding-top: calc(env(safe-area-inset-top) + 24px);
+  height: calc(72px + env(safe-area-inset-top) + 24px);
 }
 
 /* iOS Device Detection and Optimizations */

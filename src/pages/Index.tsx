@@ -17,7 +17,6 @@ const Index = () => {
   const [countdownCompleted, setCountdownCompleted] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [hasAccess, setHasAccess] = useState(false);
   const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
   
   // Check for developer access on mount
@@ -27,14 +26,15 @@ const Index = () => {
       const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
       const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
       
-      if (isMobile && hasStoredAccess) {
-        setHasAccess(true);
-      } else if (!isMobile) {
-        // Web users always see landing page
-        setHasAccess(true);
-      } else if (isMobile && !hasStoredAccess) {
+      if (isMobile && !hasStoredAccess) {
         // Mobile users without access need to login
         setShowDeveloperAccess(true);
+      } else if (!isMobile) {
+        // Web users always see landing page
+        setShowDeveloperAccess(false);
+      } else {
+        // Mobile users with access see landing page
+        setShowDeveloperAccess(false);
       }
     };
     
@@ -158,8 +158,9 @@ const Index = () => {
   }, []);
 
   const handleAccessGranted = useCallback(() => {
-    setHasAccess(true);
     setShowDeveloperAccess(false);
+    // Redirect to home after access granted
+    window.location.href = '/home';
   }, []);
 
   // Show developer access screen for mobile users without access

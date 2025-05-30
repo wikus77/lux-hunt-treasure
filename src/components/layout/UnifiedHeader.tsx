@@ -39,6 +39,18 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     checkAccess();
   }, []);
 
+  const handleProfileClick = () => {
+    const userAgent = navigator.userAgent;
+    const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
+    const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+    
+    if (isMobile && !hasStoredAccess) {
+      // Trigger developer access screen
+      localStorage.removeItem('developer_access');
+      window.location.reload();
+    }
+  };
+
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
@@ -46,8 +58,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="fixed top-0 left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70"
       style={{ 
-        height: 'calc(72px + env(safe-area-inset-top))',
-        paddingTop: 'env(safe-area-inset-top)'
+        height: 'calc(72px + env(safe-area-inset-top) + 24px)',
+        paddingTop: 'calc(env(safe-area-inset-top) + 24px)'
       }}
     >
       <div className="container mx-auto h-full max-w-screen-xl">
@@ -116,7 +128,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               </Button>
             )}
 
-            {/* Profile Avatar - Now clickable for developer access */}
+            {/* Profile Avatar - Always clickable for developer access */}
             {hasAccess ? (
               <Link to="/profile">
                 <ProfileAvatar
@@ -125,17 +137,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                 />
               </Link>
             ) : (
-              <div
-                onClick={() => {
-                  // On mobile devices, trigger developer access check
-                  const userAgent = navigator.userAgent;
-                  const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
-                  if (isMobile) {
-                    window.location.reload(); // This will trigger the developer access screen
-                  }
-                }}
-                className="cursor-pointer"
-              >
+              <div onClick={handleProfileClick} className="cursor-pointer">
                 <ProfileAvatar
                   profileImage={profileImage}
                   className="w-10 h-10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF] transition-colors"

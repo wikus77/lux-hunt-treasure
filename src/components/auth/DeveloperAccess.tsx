@@ -36,17 +36,14 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
     
     if (email === 'wikus77@hotmail.it' && password === '000000') {
       localStorage.setItem('developer_access', 'granted');
+      console.log('Developer access granted');
       onAccessGranted();
     } else {
       setError('Credenziali non valide');
     }
   };
 
-  // Don't show on web browsers
-  if (!isMobile) {
-    return null;
-  }
-
+  // Show on all devices for testing, but only work on mobile
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center p-4 z-50">
       <div className="w-full max-w-sm bg-black/80 backdrop-blur-lg border border-white/10 rounded-lg p-6">
