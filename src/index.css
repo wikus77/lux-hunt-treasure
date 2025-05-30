@@ -1,42 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import './styles/mobile-optimizations.css';
-
-/* Variabili CSS personalizzate per M1SSION */
-:root {
-  --projectx-dark: #0a0a0a;
-  --projectx-card: #1a1a1a;
-  --projectx-border: rgba(255, 255, 255, 0.1);
-  --projectx-accent: #00E5FF;
-  --projectx-accent-dark: #0077FF;
-  --projectx-text: #ffffff;
-  --projectx-text-muted: rgba(255, 255, 255, 0.7);
-}
-
-/* Reset base ottimizzato per mobile */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  -webkit-text-size-adjust: 100%;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: var(--projectx-dark);
-  color: var(--projectx-text);
-  line-height: 1.6;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-}
 
 @layer base {
   html, body {
