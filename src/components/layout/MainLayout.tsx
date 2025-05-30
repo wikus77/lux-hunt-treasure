@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { User, Mail, MoreVertical } from "lucide-react";
@@ -30,7 +29,7 @@ const MainLayout = () => {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  
+
   const updateUnreadCount = () => {
     try {
       const stored = localStorage.getItem('notifications');
@@ -56,19 +55,16 @@ const MainLayout = () => {
     if (savedProfileName) {
       setProfileName(savedProfileName);
     }
-    
+
     updateUnreadCount();
-    
     const interval = setInterval(updateUnreadCount, 5000);
-    
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'notifications') {
         updateUnreadCount();
       }
     };
-    
+
     window.addEventListener('storage', handleStorageChange);
-    
     return () => {
       clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
@@ -82,7 +78,8 @@ const MainLayout = () => {
   return (
     <div className="min-h-screen w-full bg-projectx-dark transition-colors duration-300 text-white relative full-viewport retina-optimized">
       <CookiebotInit />
-      <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-projectx-card/40 border-b border-white/10 transition-all duration-300 header-safe-area">
+
+      <header className="z-50 w-full backdrop-blur-xl bg-projectx-card/40 border-b border-white/10 transition-all duration-300 header-safe-area pt-[env(safe-area-inset-top)]">
         <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center safe-area-left safe-area-right">
           <div className="flex items-center">
             <DropdownMenu>
@@ -146,22 +143,17 @@ const MainLayout = () => {
           </div>
         </div>
       </header>
-      
-      <main className="flex-1 w-full relative pb-16 max-w-screen-xl mx-auto px-2 sm:px-4 smooth-scroll safe-area-bottom" style={{ paddingTop: 'calc(72px + env(safe-area-inset-top))' }}>
+
+      <main className="flex-1 w-full relative pb-16 max-w-screen-xl mx-auto px-2 sm:px-4 smooth-scroll safe-area-bottom" style={{ paddingTop: 'calc(100px + env(safe-area-inset-top))' }}>
         <Outlet />
       </main>
-      
+
       {showHowItWorks && (
         <HowItWorksModal open={showHowItWorks} onClose={() => setShowHowItWorks(false)} />
       )}
-      
-      <NotificationsDrawer
-        open={showNotifications}
-        onOpenChange={setShowNotifications}
-      />
-      
+
+      <NotificationsDrawer open={showNotifications} onOpenChange={setShowNotifications} />
       <AIAssistant />
-      
       <Footer />
       <BottomNavigation />
     </div>
@@ -169,3 +161,4 @@ const MainLayout = () => {
 };
 
 export default MainLayout;
+
