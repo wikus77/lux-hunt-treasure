@@ -7,6 +7,7 @@ import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import GlobalLayout from "./components/layout/GlobalLayout";
 import AppRoutes from "./routes/AppRoutes";
+import SafeAreaToggle from "./components/debug/SafeAreaToggle";
 
 function App() {
   return (
@@ -27,10 +28,12 @@ function App() {
               </div>
             </div>
           }>
-            <GlobalLayout>
-              <AppRoutes />
-              <Toaster position="top-right" />
-            </GlobalLayout>
+            <SafeAreaToggle>
+              <GlobalLayout>
+                <AppRoutes />
+                <Toaster position="top-right" />
+              </GlobalLayout>
+            </SafeAreaToggle>
           </ErrorBoundary>
         </AuthProvider>
       </SoundProvider>
