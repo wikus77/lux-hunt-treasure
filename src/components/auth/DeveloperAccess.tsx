@@ -22,7 +22,7 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
       const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       setIsMobile(isMobileDevice);
       
-      console.log('DeveloperAccess device check:', { isMobileDevice, isCapacitorApp });
+      console.log('DeveloperAccess device check (Capacitor):', { isMobileDevice, isCapacitorApp });
     };
     
     checkMobile();
@@ -32,7 +32,7 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
     e.preventDefault();
     setError('');
     
-    console.log('Login attempt:', { email, isMobile });
+    console.log('Developer login attempt (Capacitor):', { email, isMobile });
     
     // Allow login on mobile devices (including Capacitor)
     if (!isMobile) {
@@ -46,7 +46,7 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
       localStorage.setItem('developer_access', 'granted');
       localStorage.setItem('developer_user', 'true');
       localStorage.setItem('full_access_granted', 'true');
-      console.log('Developer access granted - Full access enabled');
+      console.log('Developer access granted - Full access enabled (Capacitor)');
       onAccessGranted();
     } else {
       setError('Credenziali non valide');

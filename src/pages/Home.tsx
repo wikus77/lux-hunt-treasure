@@ -18,6 +18,7 @@ const Home = () => {
   const { profileImage } = useProfileImage();
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
+  const [isCapacitor, setIsCapacitor] = useState(false);
   const {
     notifications,
     unreadCount,
@@ -30,12 +31,17 @@ const Home = () => {
 
   const { isConnected } = useRealTimeNotifications();
 
-  // Check for developer access on mount
+  // Check for developer access and Capacitor environment
   useEffect(() => {
     const checkAccess = () => {
+      const isCapacitorApp = !!(window as any).Capacitor;
+      setIsCapacitor(isCapacitorApp);
+      
       const userAgent = navigator.userAgent;
-      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
+      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      
+      console.log('Home access check (Capacitor):', { isMobileDevice, hasStoredAccess, isCapacitorApp });
       
       if (isMobileDevice && hasStoredAccess) {
         setHasAccess(true);
@@ -73,6 +79,19 @@ const Home = () => {
     }
   }, [error]);
 
+  const getContentPaddingClass = () => {
+    return isCapacitor ? "capacitor-safe-content" : "";
+  };
+
+  const getContentPaddingStyle = () => {
+    if (!isCapacitor) {
+      return { 
+        paddingTop: 'calc(72px + env(safe-area-inset-top) + 50px)' 
+      };
+    }
+    return {};
+  };
+
   // Show developer access screen for mobile users without access
   if (isMobile && !hasAccess) {
     return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
@@ -105,12 +124,8 @@ const Home = () => {
       
       <UnifiedHeader profileImage={profileImage} />
       <div 
-        className="w-full" 
-        style={{ 
-          height: (window as any).Capacitor 
-            ? 'calc(72px + env(safe-area-inset-top, 59px) + 20px)'
-            : 'calc(72px + env(safe-area-inset-top) + 50px)' 
-        }} 
+        className={getContentPaddingClass()}
+        style={getContentPaddingStyle()}
       />
 
       <AnimatePresence>
@@ -127,12 +142,10 @@ const Home = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="fixed inset-x-0 z-[60] px-2 md:px-4"
-                style={{ 
-                  top: (window as any).Capacitor 
-                    ? 'calc(72px + env(safe-area-inset-top, 59px) + 20px)'
-                    : 'calc(72px + env(safe-area-inset-top) + 50px)' 
-                }}
+                className={`fixed inset-x-0 z-[60] px-2 md:px-4 ${isCapacitor ? 'capacitor-safe-content' : ''}`}
+                style={!isCapacitor ? { 
+                  top: 'calc(72px + env(safe-area-inset-top) + 50px)'
+                } : {}}
               >
                 <NotificationsBanner
                   notifications={notifications}

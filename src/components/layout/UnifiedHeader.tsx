@@ -29,21 +29,21 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       const isCapacitorApp = !!(window as any).Capacitor;
       setIsCapacitor(isCapacitorApp);
       
-      // More robust mobile detection including Capacitor
+      // Enhanced mobile detection including Capacitor
       const userAgent = navigator.userAgent;
       const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
       
-      console.log('Access check:', { isMobile, hasStoredAccess, isCapacitorApp });
+      console.log('UnifiedHeader access check:', { isMobile, hasStoredAccess, isCapacitorApp });
       
-      // DEVELOPER ACCESS: Grant access if developer credentials are stored OR if it's the developer email
+      // DEVELOPER ACCESS: Grant access if developer credentials are stored
       if (isMobile && hasStoredAccess) {
         setHasAccess(true);
       } else if (!isMobile) {
         // Web users can't access profile functionality
         setHasAccess(false);
       } else {
-        // Mobile without access
+        // Mobile without access - should trigger developer login
         setHasAccess(false);
       }
     };
@@ -57,28 +57,35 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
     const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
     
-    console.log('Profile click:', { isMobile, hasStoredAccess, isCapacitorApp });
+    console.log('Profile click - Capacitor:', { isMobile, hasStoredAccess, isCapacitorApp });
     
     if (isMobile && !hasStoredAccess) {
-      // Trigger developer access screen by removing stored access and reloading
+      // Clear any existing access and reload to trigger login
       localStorage.removeItem('developer_access');
+      localStorage.removeItem('developer_user');
+      localStorage.removeItem('full_access_granted');
+      console.log('Triggering developer login for Capacitor');
       window.location.reload();
     }
   };
 
-  // Calculate proper header height for different environments
-  const getHeaderStyle = () => {
+  // Get proper header classes for Capacitor
+  const getHeaderClasses = () => {
     if (isCapacitor) {
-      return {
-        height: 'calc(72px + env(safe-area-inset-top, 59px) + 20px)',
-        paddingTop: 'calc(env(safe-area-inset-top, 59px) + 20px)'
-      };
+      return "fixed top-0 left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 capacitor-safe-header";
     } else {
+      return "fixed top-0 left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70";
+    }
+  };
+
+  const getHeaderStyle = () => {
+    if (!isCapacitor) {
       return {
         height: 'calc(72px + env(safe-area-inset-top) + 50px)',
         paddingTop: 'calc(env(safe-area-inset-top) + 50px)'
       };
     }
+    return {};
   };
 
   return (
@@ -86,7 +93,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="fixed top-0 left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70"
+      className={getHeaderClasses()}
       style={getHeaderStyle()}
     >
       <div className="container mx-auto h-full max-w-screen-xl">
@@ -115,7 +122,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
           {/* Right Section */}
           <div className="flex items-center space-x-1 sm:space-x-3">
-            {/* Notifications - Always show and enable for developer */}
+            {/* Notifications - Enable for developer or web users */}
             <Button
               variant="ghost"
               size="icon"
@@ -133,7 +140,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               )}
             </Button>
 
-            {/* Settings - Always show and enable for developer */}
+            {/* Settings - Enable for developer */}
             {hasAccess ? (
               <Link to="/settings">
                 <Button
@@ -155,7 +162,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               </Button>
             )}
 
-            {/* Profile Avatar - Always clickable for developer access */}
+            {/* Profile Avatar - ALWAYS CLICKABLE for developer access */}
             {hasAccess ? (
               <Link to="/profile">
                 <ProfileAvatar
