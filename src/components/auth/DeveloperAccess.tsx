@@ -45,6 +45,7 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
       <div className="w-full max-w-sm bg-black/80 backdrop-blur-lg border border-white/10 rounded-lg p-6">
         <form onSubmit={handleLogin} className="space-y-4">
           <StyledInput
+            id="developer-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -54,6 +55,7 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
           />
           
           <StyledInput
+            id="developer-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
