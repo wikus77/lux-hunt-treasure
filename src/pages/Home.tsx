@@ -75,7 +75,7 @@ const Home = () => {
       </Helmet>
       
       <UnifiedHeader profileImage={profileImage} />
-      <div className="h-[72px] w-full" />
+      <div className="w-full" style={{ height: 'calc(72px + env(safe-area-inset-top))' }} />
 
       <AnimatePresence>
         {isLoaded && (
@@ -91,7 +91,8 @@ const Home = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="fixed inset-x-0 top-0 z-[60] px-2 md:px-4 mt-16"
+                className="fixed inset-x-0 z-[60] px-2 md:px-4"
+                style={{ top: 'calc(72px + env(safe-area-inset-top))' }}
               >
                 <NotificationsBanner
                   notifications={notifications}

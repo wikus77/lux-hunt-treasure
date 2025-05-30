@@ -20,6 +20,18 @@
   }
 }
 
+/* Enhanced Safe Area Support with Dynamic Island compatibility */
+@supports (height: 100dvh) {
+  .safe-area-header {
+    height: calc(72px + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-content {
+    padding-top: calc(72px + env(safe-area-inset-top));
+  }
+}
+
 /* iOS Device Detection and Optimizations */
 @media screen and (max-width: 430px) {
   /* iPhone Pro Max and smaller */

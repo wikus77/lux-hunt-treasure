@@ -24,10 +24,14 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="fixed top-0 left-0 right-0 z-50 glass-backdrop h-[72px] backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70"
+      className="fixed top-0 left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70"
+      style={{ 
+        height: 'calc(72px + env(safe-area-inset-top))',
+        paddingTop: 'env(safe-area-inset-top)'
+      }}
     >
       <div className="container mx-auto h-full max-w-screen-xl">
-        <div className="flex items-center justify-between h-full px-3 sm:px-4">
+        <div className="flex items-center justify-between h-[72px] px-3 sm:px-4">
           {/* Left Section */}
           <div className="flex items-center">
             {leftComponent ? (
