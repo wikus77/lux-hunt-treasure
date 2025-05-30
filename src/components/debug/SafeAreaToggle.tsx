@@ -16,13 +16,17 @@ const SafeAreaToggle: React.FC<SafeAreaToggleProps> = ({ children }) => {
       {process.env.NODE_ENV === 'development' && (
         <button
           onClick={() => setShowVisualizer(!showVisualizer)}
-          className="fixed bottom-4 right-4 z-[140] p-3 rounded-full bg-cyan-400/20 hover:bg-cyan-400/30 border border-cyan-400/50 backdrop-blur-sm"
+          className="fixed bottom-4 right-4 z-[140] p-4 rounded-full bg-cyan-500 hover:bg-cyan-600 border-2 border-cyan-300 shadow-lg transition-all duration-300"
           title="Toggle Safe Area Preview"
+          style={{ 
+            background: 'linear-gradient(45deg, #00D4FF, #0099CC)',
+            boxShadow: '0 0 20px rgba(0, 212, 255, 0.5)'
+          }}
         >
           {showVisualizer ? (
-            <EyeOff className="w-5 h-5 text-cyan-400" />
+            <EyeOff className="w-6 h-6 text-white" />
           ) : (
-            <Eye className="w-5 h-5 text-cyan-400" />
+            <Eye className="w-6 h-6 text-white" />
           )}
         </button>
       )}

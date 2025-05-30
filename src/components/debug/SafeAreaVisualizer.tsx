@@ -12,9 +12,19 @@ const SafeAreaVisualizer: React.FC<SafeAreaVisualizerProps> = ({ children, onClo
   const [variant, setVariant] = useState<'notch' | 'no-notch' | 'dynamic-island'>('dynamic-island');
 
   return (
-    <div className="fixed inset-0 z-[150] bg-black/95 backdrop-blur-lg">
+    <div className="fixed inset-0 z-[150] bg-black">
+      {/* Status Bar Simulator - SEMPRE VISIBILE */}
+      <StatusBarSimulator variant={variant} />
+      
       {/* Controls */}
-      <div className="fixed top-4 left-4 right-4 z-[160] flex justify-between items-center">
+      <div className="fixed z-[160] flex justify-between items-center bg-gray-900/95 backdrop-blur-sm border-b border-gray-700" 
+           style={{ 
+             top: variant === 'no-notch' ? '20px' : variant === 'notch' ? '44px' : '59px',
+             left: 0,
+             right: 0,
+             height: '60px',
+             padding: '0 16px'
+           }}>
         <div className="flex items-center gap-4">
           <Smartphone className="w-5 h-5 text-cyan-400" />
           <span className="text-white font-medium">Safe Area Preview</span>
@@ -63,32 +73,26 @@ const SafeAreaVisualizer: React.FC<SafeAreaVisualizerProps> = ({ children, onClo
         )}
       </div>
 
-      {/* iPhone Frame Simulation */}
-      <div className="w-full h-full relative">
-        {/* Status Bar Simulator */}
-        <StatusBarSimulator variant={variant} />
-        
-        {/* App Content with Safe Area */}
-        <div 
-          className="w-full h-full"
-          style={{ 
-            paddingTop: variant === 'no-notch' ? '20px' : variant === 'notch' ? '44px' : '59px'
-          }}
-        >
-          {children}
-        </div>
-        
-        {/* Safe Area Visual Guide */}
-        <div 
-          className="absolute left-0 right-0 bg-cyan-400/10 border-b-2 border-cyan-400"
-          style={{ 
-            top: 0,
-            height: variant === 'no-notch' ? '20px' : variant === 'notch' ? '44px' : '59px'
-          }}
-        >
-          <div className="absolute bottom-0 left-4 text-xs text-cyan-400 font-mono">
-            Safe Area: {variant === 'no-notch' ? '20pt' : variant === 'notch' ? '44pt' : '59pt'}
-          </div>
+      {/* App Content with Safe Area */}
+      <div 
+        className="w-full h-full overflow-auto"
+        style={{ 
+          paddingTop: variant === 'no-notch' ? '80px' : variant === 'notch' ? '104px' : '119px'
+        }}
+      >
+        {children}
+      </div>
+      
+      {/* Safe Area Visual Guide */}
+      <div 
+        className="absolute left-0 right-0 bg-cyan-400/20 border-b-2 border-cyan-400 pointer-events-none"
+        style={{ 
+          top: 0,
+          height: variant === 'no-notch' ? '80px' : variant === 'notch' ? '104px' : '119px'
+        }}
+      >
+        <div className="absolute bottom-2 left-4 text-xs text-cyan-400 font-mono bg-black/50 px-2 py-1 rounded">
+          Safe Area: {variant === 'no-notch' ? '20pt' : variant === 'notch' ? '44pt' : '59pt'} + Controls: 60pt
         </div>
       </div>
     </div>
