@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import IntroAnimationOptions from "@/components/intro/IntroAnimationOptions";
 import IndexContent from "@/components/index/IndexContent";
-import InviteFriendModal from "@/components/modals/InviteFriendModal";
+import InviteFriendDialog from "@/components/landing/InviteFriendDialog";
 import { useAuthContext } from "@/contexts/auth";
 import { toast } from "sonner";
 import DeveloperLogin from "@/components/auth/DeveloperLogin";
@@ -78,9 +78,9 @@ const Index = () => {
         openInviteFriend={openInviteFriend}
       />
       
-      <InviteFriendModal 
-        open={inviteFriendOpen} 
-        onOpenChange={setInviteFriendOpen} 
+      <InviteFriendDialog 
+        isOpen={inviteFriendOpen} 
+        onClose={() => setInviteFriendOpen(false)} 
       />
     </div>
   );
