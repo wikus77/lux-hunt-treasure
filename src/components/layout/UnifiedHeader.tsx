@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -18,6 +19,25 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   onClickMail,
 }) => {
   const { unreadCount, openNotificationsDrawer } = useNotificationManager();
+  const [hasAccess, setHasAccess] = useState(false);
+
+  // Check for developer access
+  useEffect(() => {
+    const checkAccess = () => {
+      const userAgent = navigator.userAgent;
+      const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
+      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      
+      if (isMobile && hasStoredAccess) {
+        setHasAccess(true);
+      } else if (!isMobile) {
+        // Web users can't access profile functionality
+        setHasAccess(false);
+      }
+    };
+    
+    checkAccess();
+  }, []);
 
   return (
     <motion.header
@@ -62,6 +82,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               size="icon"
               onClick={onClickMail || openNotificationsDrawer}
               className="relative rounded-full hover:bg-white/10"
+              disabled={!hasAccess}
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
@@ -74,23 +95,41 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             </Button>
 
             {/* Settings */}
-            <Link to="/settings">
+            {hasAccess ? (
+              <Link to="/settings">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full hover:bg-white/10"
+                >
+                  <Settings className="w-5 h-5" />
+                </Button>
+              </Link>
+            ) : (
               <Button
                 variant="ghost"
                 size="icon"
                 className="rounded-full hover:bg-white/10"
+                disabled
               >
                 <Settings className="w-5 h-5" />
               </Button>
-            </Link>
+            )}
 
             {/* Profile Avatar */}
-            <Link to="/profile">
+            {hasAccess ? (
+              <Link to="/profile">
+                <ProfileAvatar
+                  profileImage={profileImage}
+                  className="w-10 h-10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF] transition-colors"
+                />
+              </Link>
+            ) : (
               <ProfileAvatar
                 profileImage={profileImage}
-                className="w-10 h-10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF] transition-colors"
+                className="w-10 h-10 border-2 border-[#00D1FF]/30 opacity-50 cursor-not-allowed"
               />
-            </Link>
+            )}
           </div>
         </div>
       </div>

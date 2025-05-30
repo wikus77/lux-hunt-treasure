@@ -7,14 +7,20 @@ import { cn } from "@/lib/utils";
 interface ProfileAvatarProps {
   profileImage?: string | null;
   className?: string;
+  disabled?: boolean;
 }
 
 const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ 
   profileImage, 
-  className 
+  className,
+  disabled = false
 }) => {
   return (
-    <Avatar className={cn("rounded-full border-2 border-[#00D1FF]/30", className)}>
+    <Avatar className={cn(
+      "rounded-full border-2 border-[#00D1FF]/30", 
+      disabled && "opacity-50 cursor-not-allowed",
+      className
+    )}>
       {profileImage ? (
         <AvatarImage src={profileImage} alt="Profile" />
       ) : (

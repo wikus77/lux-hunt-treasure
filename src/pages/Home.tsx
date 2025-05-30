@@ -11,12 +11,14 @@ import { Helmet } from "react-helmet";
 import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
+import DeveloperAccess from "@/components/auth/DeveloperAccess";
 
 const Home = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const { profileImage } = useProfileImage();
   const isMobile = useIsMobile();
+  const [hasAccess, setHasAccess] = useState(false);
   const {
     notifications,
     unreadCount,
@@ -28,6 +30,29 @@ const Home = () => {
   } = useNotificationManager();
 
   const { isConnected } = useRealTimeNotifications();
+
+  // Check for developer access on mount
+  useEffect(() => {
+    const checkAccess = () => {
+      const userAgent = navigator.userAgent;
+      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
+      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      
+      if (isMobileDevice && hasStoredAccess) {
+        setHasAccess(true);
+      } else if (!isMobileDevice) {
+        // Web users get redirected to landing page
+        window.location.href = '/';
+        return;
+      }
+    };
+    
+    checkAccess();
+  }, []);
+
+  const handleAccessGranted = () => {
+    setHasAccess(true);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -48,6 +73,11 @@ const Home = () => {
       });
     }
   }, [error]);
+
+  // Show developer access screen for mobile users without access
+  if (isMobile && !hasAccess) {
+    return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
+  }
 
   if (error) {
     return (
