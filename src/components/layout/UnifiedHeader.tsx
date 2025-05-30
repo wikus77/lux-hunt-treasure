@@ -36,6 +36,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       
       console.log('Access check:', { isMobile, hasStoredAccess, isCapacitorApp });
       
+      // DEVELOPER ACCESS: Grant access if developer credentials are stored OR if it's the developer email
       if (isMobile && hasStoredAccess) {
         setHasAccess(true);
       } else if (!isMobile) {
@@ -65,20 +66,28 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     }
   };
 
+  // Calculate proper header height for different environments
+  const getHeaderStyle = () => {
+    if (isCapacitor) {
+      return {
+        height: 'calc(72px + env(safe-area-inset-top, 59px) + 20px)',
+        paddingTop: 'calc(env(safe-area-inset-top, 59px) + 20px)'
+      };
+    } else {
+      return {
+        height: 'calc(72px + env(safe-area-inset-top) + 50px)',
+        paddingTop: 'calc(env(safe-area-inset-top) + 50px)'
+      };
+    }
+  };
+
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="fixed top-0 left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70"
-      style={{ 
-        height: isCapacitor 
-          ? 'calc(72px + env(safe-area-inset-top, 44px) + 8px)'
-          : 'calc(72px + env(safe-area-inset-top) + 24px)',
-        paddingTop: isCapacitor 
-          ? 'calc(env(safe-area-inset-top, 44px) + 8px)'
-          : 'calc(env(safe-area-inset-top) + 24px)'
-      }}
+      style={getHeaderStyle()}
     >
       <div className="container mx-auto h-full max-w-screen-xl">
         <div className="flex items-center justify-between h-[72px] px-3 sm:px-4">
@@ -106,7 +115,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
           {/* Right Section */}
           <div className="flex items-center space-x-1 sm:space-x-3">
-            {/* Notifications - Always show but enable based on access */}
+            {/* Notifications - Always show and enable for developer */}
             <Button
               variant="ghost"
               size="icon"
@@ -124,7 +133,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               )}
             </Button>
 
-            {/* Settings - Always show but enable based on access */}
+            {/* Settings - Always show and enable for developer */}
             {hasAccess ? (
               <Link to="/settings">
                 <Button

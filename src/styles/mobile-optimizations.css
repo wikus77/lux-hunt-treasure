@@ -20,35 +20,35 @@
   }
 }
 
-/* Enhanced Safe Area Support with Dynamic Island compatibility - FIXED */
+/* FIXED: Enhanced Safe Area Support with Dynamic Island compatibility */
 @supports (height: 100dvh) {
   .safe-area-header {
-    height: calc(72px + env(safe-area-inset-top) + 20px);
-    padding-top: calc(env(safe-area-inset-top) + 20px);
+    height: calc(72px + env(safe-area-inset-top) + 50px);
+    padding-top: calc(env(safe-area-inset-top) + 50px);
   }
   
   .safe-area-content {
-    padding-top: calc(72px + env(safe-area-inset-top) + 20px);
+    padding-top: calc(72px + env(safe-area-inset-top) + 50px);
   }
 }
 
-/* Capacitor specific safe area handling */
+/* Capacitor specific safe area handling - ENHANCED */
 @media screen and (max-width: 430px) {
   /* Capacitor WebView specific adjustments */
   .capacitor-webview .safe-area-header {
-    height: calc(72px + env(safe-area-inset-top, 44px) + 8px) !important;
-    padding-top: calc(env(safe-area-inset-top, 44px) + 8px) !important;
+    height: calc(72px + env(safe-area-inset-top, 59px) + 20px) !important;
+    padding-top: calc(env(safe-area-inset-top, 59px) + 20px) !important;
   }
   
   .capacitor-webview .safe-area-content {
-    padding-top: calc(72px + env(safe-area-inset-top, 44px) + 8px) !important;
+    padding-top: calc(72px + env(safe-area-inset-top, 59px) + 20px) !important;
   }
 }
 
-/* Additional spacing for header positioning on iPhone - INCREASED */
+/* Additional spacing for header positioning on iPhone - ENHANCED */
 .header-safe-spacing {
-  padding-top: calc(env(safe-area-inset-top) + 24px);
-  height: calc(72px + env(safe-area-inset-top) + 24px);
+  padding-top: calc(env(safe-area-inset-top) + 50px);
+  height: calc(72px + env(safe-area-inset-top) + 50px);
 }
 
 /* iOS Device Detection and Optimizations */

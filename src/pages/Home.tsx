@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
@@ -105,7 +104,14 @@ const Home = () => {
       </Helmet>
       
       <UnifiedHeader profileImage={profileImage} />
-      <div className="w-full" style={{ height: 'calc(72px + env(safe-area-inset-top))' }} />
+      <div 
+        className="w-full" 
+        style={{ 
+          height: (window as any).Capacitor 
+            ? 'calc(72px + env(safe-area-inset-top, 59px) + 20px)'
+            : 'calc(72px + env(safe-area-inset-top) + 50px)' 
+        }} 
+      />
 
       <AnimatePresence>
         {isLoaded && (
@@ -122,7 +128,11 @@ const Home = () => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
                 className="fixed inset-x-0 z-[60] px-2 md:px-4"
-                style={{ top: 'calc(72px + env(safe-area-inset-top))' }}
+                style={{ 
+                  top: (window as any).Capacitor 
+                    ? 'calc(72px + env(safe-area-inset-top, 59px) + 20px)'
+                    : 'calc(72px + env(safe-area-inset-top) + 50px)' 
+                }}
               >
                 <NotificationsBanner
                   notifications={notifications}

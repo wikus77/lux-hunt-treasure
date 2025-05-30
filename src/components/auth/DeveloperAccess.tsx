@@ -40,9 +40,13 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
       return;
     }
     
+    // DEVELOPER ACCESS: Check for exact developer credentials
     if (email === 'wikus77@hotmail.it' && password === '000000') {
+      // Grant complete access for developer
       localStorage.setItem('developer_access', 'granted');
-      console.log('Developer access granted');
+      localStorage.setItem('developer_user', 'true');
+      localStorage.setItem('full_access_granted', 'true');
+      console.log('Developer access granted - Full access enabled');
       onAccessGranted();
     } else {
       setError('Credenziali non valide');
