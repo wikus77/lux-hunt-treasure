@@ -69,32 +69,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     }
   };
 
-  // Get proper header classes for Capacitor
-  const getHeaderClasses = () => {
-    if (isCapacitor) {
-      return "fixed top-0 left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 capacitor-safe-header";
-    } else {
-      return "fixed top-0 left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70";
-    }
-  };
-
-  const getHeaderStyle = () => {
-    if (!isCapacitor) {
-      return {
-        height: 'calc(72px + env(safe-area-inset-top) + 50px)',
-        paddingTop: 'calc(env(safe-area-inset-top) + 50px)'
-      };
-    }
-    return {};
-  };
-
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className={getHeaderClasses()}
-      style={getHeaderStyle()}
+      className="fixed top-0 left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 header-safe-area"
     >
       <div className="container mx-auto h-full max-w-screen-xl">
         <div className="flex items-center justify-between h-[72px] px-3 sm:px-4">

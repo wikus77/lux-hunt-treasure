@@ -20,29 +20,57 @@
   }
 }
 
+/* UNIVERSAL HEADER SAFE AREA - Works for all headers */
+.header-safe-area {
+  padding-top: env(safe-area-inset-top, 20px) !important;
+  margin-top: 0 !important;
+}
+
+/* Enhanced header positioning for all device types */
+@media screen and (max-device-width: 812px) {
+  /* iPhone X and newer with notch/Dynamic Island */
+  .header-safe-area {
+    padding-top: env(safe-area-inset-top, 44px) !important;
+  }
+}
+
+@media screen and (max-device-width: 430px) and (min-device-width: 390px) {
+  /* iPhone 14 Pro and Pro Max with Dynamic Island */
+  .header-safe-area {
+    padding-top: env(safe-area-inset-top, 59px) !important;
+  }
+}
+
 /* CAPACITOR SPECIFIC: Enhanced Safe Area for iOS WebView */
 .capacitor-safe-header {
-  height: calc(72px + env(safe-area-inset-top, 44px) + 20px) !important;
-  padding-top: calc(env(safe-area-inset-top, 44px) + 20px) !important;
+  height: calc(72px + env(safe-area-inset-top, 44px)) !important;
+  padding-top: env(safe-area-inset-top, 44px) !important;
 }
 
 /* Dynamic Island and Notch support for Capacitor */
 @media screen and (max-width: 430px) {
   .capacitor-safe-header {
-    height: calc(72px + env(safe-area-inset-top, 59px) + 25px) !important;
-    padding-top: calc(env(safe-area-inset-top, 59px) + 25px) !important;
+    height: calc(72px + env(safe-area-inset-top, 59px)) !important;
+    padding-top: env(safe-area-inset-top, 59px) !important;
   }
 }
 
 /* Content offset for Capacitor Safe Area */
 .capacitor-safe-content {
-  padding-top: calc(72px + env(safe-area-inset-top, 44px) + 20px) !important;
+  padding-top: calc(72px + env(safe-area-inset-top, 44px)) !important;
 }
 
 @media screen and (max-width: 430px) {
   .capacitor-safe-content {
-    padding-top: calc(72px + env(safe-area-inset-top, 59px) + 25px) !important;
+    padding-top: calc(72px + env(safe-area-inset-top, 59px)) !important;
   }
+}
+
+/* Universal header content positioning */
+.header-content-safe {
+  position: relative;
+  top: env(safe-area-inset-top, 20px);
+  padding-top: 1rem;
 }
 
 /* iOS Device Detection and Optimizations */

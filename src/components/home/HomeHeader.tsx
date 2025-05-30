@@ -18,7 +18,7 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
   const { isConnected } = useRealTimeNotifications();
   
   return (
-    <header className="fixed top-0 left-0 w-full z-50 backdrop-blur-md bg-gradient-to-r from-black/80 to-black/80 border-b border-projectx-deep-blue/30">
+    <header className="fixed top-0 left-0 w-full z-50 backdrop-blur-md bg-gradient-to-r from-black/80 to-black/80 border-b border-projectx-deep-blue/30 header-safe-area">
       <div className="max-w-screen-xl mx-auto flex justify-between items-center px-4 py-3">
         {/* Logo and Brand */}
         <div 
