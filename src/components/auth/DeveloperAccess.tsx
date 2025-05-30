@@ -12,6 +12,7 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isMobile, setIsMobile] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     // Check if running on mobile device
@@ -26,12 +27,18 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     
-    if (!isMobile) return;
+    if (!isMobile) {
+      setError('Accesso disponibile solo da dispositivi mobili');
+      return;
+    }
     
     if (email === 'wikus77@hotmail.it' && password === '000000') {
       localStorage.setItem('developer_access', 'granted');
       onAccessGranted();
+    } else {
+      setError('Credenziali non valide');
     }
   };
 
@@ -43,6 +50,11 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center p-4 z-50">
       <div className="w-full max-w-sm bg-black/80 backdrop-blur-lg border border-white/10 rounded-lg p-6">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-orbitron text-[#00D1FF] mb-2">Developer Access</h2>
+          <p className="text-white/70 text-sm">Accesso riservato allo sviluppatore</p>
+        </div>
+        
         <form onSubmit={handleLogin} className="space-y-4">
           <StyledInput
             id="developer-email"
@@ -64,11 +76,17 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
             className="mobile-optimized"
           />
           
+          {error && (
+            <div className="text-red-500 text-sm text-center">
+              {error}
+            </div>
+          )}
+          
           <Button
             type="submit"
-            className="w-full mobile-touch-target"
+            className="w-full mobile-touch-target bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF]"
           >
-            Access
+            Accedi
           </Button>
         </form>
       </div>

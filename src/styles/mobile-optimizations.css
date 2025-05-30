@@ -23,13 +23,19 @@
 /* Enhanced Safe Area Support with Dynamic Island compatibility */
 @supports (height: 100dvh) {
   .safe-area-header {
-    height: calc(72px + env(safe-area-inset-top));
-    padding-top: env(safe-area-inset-top);
+    height: calc(72px + env(safe-area-inset-top) + 8px);
+    padding-top: calc(env(safe-area-inset-top) + 8px);
   }
   
   .safe-area-content {
-    padding-top: calc(72px + env(safe-area-inset-top));
+    padding-top: calc(72px + env(safe-area-inset-top) + 8px);
   }
+}
+
+/* Additional spacing for header positioning on iPhone */
+.header-safe-spacing {
+  padding-top: calc(env(safe-area-inset-top) + 12px);
+  height: calc(72px + env(safe-area-inset-top) + 12px);
 }
 
 /* iOS Device Detection and Optimizations */

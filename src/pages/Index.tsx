@@ -18,6 +18,7 @@ const Index = () => {
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [hasAccess, setHasAccess] = useState(false);
+  const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
   
   // Check for developer access on mount
   useEffect(() => {
@@ -31,6 +32,9 @@ const Index = () => {
       } else if (!isMobile) {
         // Web users always see landing page
         setHasAccess(true);
+      } else if (isMobile && !hasStoredAccess) {
+        // Mobile users without access need to login
+        setShowDeveloperAccess(true);
       }
     };
     
@@ -155,10 +159,11 @@ const Index = () => {
 
   const handleAccessGranted = useCallback(() => {
     setHasAccess(true);
+    setShowDeveloperAccess(false);
   }, []);
 
   // Show developer access screen for mobile users without access
-  if (!hasAccess) {
+  if (showDeveloperAccess) {
     return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
   }
 

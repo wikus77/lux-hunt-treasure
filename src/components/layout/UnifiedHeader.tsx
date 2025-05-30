@@ -116,19 +116,31 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               </Button>
             )}
 
-            {/* Profile Avatar */}
+            {/* Profile Avatar - Now clickable for developer access */}
             {hasAccess ? (
               <Link to="/profile">
                 <ProfileAvatar
                   profileImage={profileImage}
-                  className="w-10 h-10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF] transition-colors"
+                  className="w-10 h-10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF] transition-colors cursor-pointer"
                 />
               </Link>
             ) : (
-              <ProfileAvatar
-                profileImage={profileImage}
-                className="w-10 h-10 border-2 border-[#00D1FF]/30 opacity-50 cursor-not-allowed"
-              />
+              <div
+                onClick={() => {
+                  // On mobile devices, trigger developer access check
+                  const userAgent = navigator.userAgent;
+                  const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
+                  if (isMobile) {
+                    window.location.reload(); // This will trigger the developer access screen
+                  }
+                }}
+                className="cursor-pointer"
+              >
+                <ProfileAvatar
+                  profileImage={profileImage}
+                  className="w-10 h-10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF] transition-colors"
+                />
+              </div>
             )}
           </div>
         </div>
