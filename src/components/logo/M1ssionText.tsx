@@ -1,14 +1,37 @@
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const M1ssionText = () => {
   const navigate = useNavigate();
+  const [tapCount, setTapCount] = useState(0);
+  const [tapTimer, setTapTimer] = useState<NodeJS.Timeout | null>(null);
 
-  const handleClick = () => {
-    // Now this navigates to the home route, not the landing page
-    navigate('/');
-  };
+  const handleClick = useCallback(() => {
+    // Reset developer access on double tap
+    setTapCount(prev => prev + 1);
+    
+    if (tapTimer) {
+      clearTimeout(tapTimer);
+    }
+    
+    const timer = setTimeout(() => {
+      if (tapCount + 1 >= 2) {
+        // Double tap detected - reset developer access
+        localStorage.removeItem('developer_access');
+        console.log('Developer access reset via double tap');
+        window.location.reload();
+      }
+      setTapCount(0);
+    }, 300);
+    
+    setTapTimer(timer);
+    
+    // Navigate to home after reset check
+    if (tapCount < 1) {
+      navigate('/');
+    }
+  }, [navigate, tapCount, tapTimer]);
 
   return (
     <button 

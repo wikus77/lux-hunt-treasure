@@ -45,7 +45,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
     
     if (isMobile && !hasStoredAccess) {
-      // Trigger developer access screen
+      // Trigger developer access screen by removing stored access and reloading
       localStorage.removeItem('developer_access');
       window.location.reload();
     }
@@ -88,7 +88,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
           {/* Right Section */}
           <div className="flex items-center space-x-1 sm:space-x-3">
-            {/* Notifications */}
+            {/* Notifications - Always show but enable based on access */}
             <Button
               variant="ghost"
               size="icon"
@@ -106,7 +106,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               )}
             </Button>
 
-            {/* Settings */}
+            {/* Settings - Always show but enable based on access */}
             {hasAccess ? (
               <Link to="/settings">
                 <Button

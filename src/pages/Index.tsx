@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 import LoadingManager from "./index/LoadingManager";
@@ -22,6 +21,13 @@ const Index = () => {
   // Check for developer access on mount
   useEffect(() => {
     const checkAccess = () => {
+      // Check for URL parameter to reset access
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('resetDevAccess') === 'true') {
+        localStorage.removeItem('developer_access');
+        console.log('Developer access reset via URL parameter');
+      }
+      
       const userAgent = navigator.userAgent;
       const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
       const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
