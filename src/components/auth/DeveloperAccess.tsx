@@ -15,11 +15,14 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Check if running on mobile device
+    // Enhanced mobile detection including Capacitor
     const checkMobile = () => {
+      const isCapacitorApp = !!(window as any).Capacitor;
       const userAgent = navigator.userAgent;
-      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
+      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       setIsMobile(isMobileDevice);
+      
+      console.log('DeveloperAccess device check:', { isMobileDevice, isCapacitorApp });
     };
     
     checkMobile();
@@ -29,6 +32,9 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
     e.preventDefault();
     setError('');
     
+    console.log('Login attempt:', { email, isMobile });
+    
+    // Allow login on mobile devices (including Capacitor)
     if (!isMobile) {
       setError('Accesso disponibile solo da dispositivi mobili');
       return;
@@ -43,7 +49,6 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
     }
   };
 
-  // Show on all devices for testing, but only work on mobile
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center p-4 z-50">
       <div className="w-full max-w-sm bg-black/80 backdrop-blur-lg border border-white/10 rounded-lg p-6">

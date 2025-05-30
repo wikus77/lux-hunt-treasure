@@ -28,9 +28,13 @@ const Index = () => {
         console.log('Developer access reset via URL parameter');
       }
       
+      // Enhanced mobile detection including Capacitor
+      const isCapacitorApp = !!(window as any).Capacitor;
       const userAgent = navigator.userAgent;
-      const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
+      const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      
+      console.log('Index access check:', { isMobile, hasStoredAccess, isCapacitorApp });
       
       if (isMobile && !hasStoredAccess) {
         // Mobile users without access need to login

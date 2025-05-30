@@ -20,18 +20,29 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 }) => {
   const { unreadCount, openNotificationsDrawer } = useNotificationManager();
   const [hasAccess, setHasAccess] = useState(false);
+  const [isCapacitor, setIsCapacitor] = useState(false);
 
-  // Check for developer access
+  // Check for Capacitor environment and device type
   useEffect(() => {
     const checkAccess = () => {
+      // Detect Capacitor environment
+      const isCapacitorApp = !!(window as any).Capacitor;
+      setIsCapacitor(isCapacitorApp);
+      
+      // More robust mobile detection including Capacitor
       const userAgent = navigator.userAgent;
-      const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
+      const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      
+      console.log('Access check:', { isMobile, hasStoredAccess, isCapacitorApp });
       
       if (isMobile && hasStoredAccess) {
         setHasAccess(true);
       } else if (!isMobile) {
         // Web users can't access profile functionality
+        setHasAccess(false);
+      } else {
+        // Mobile without access
         setHasAccess(false);
       }
     };
@@ -40,9 +51,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   }, []);
 
   const handleProfileClick = () => {
+    const isCapacitorApp = !!(window as any).Capacitor;
     const userAgent = navigator.userAgent;
-    const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
+    const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
     const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+    
+    console.log('Profile click:', { isMobile, hasStoredAccess, isCapacitorApp });
     
     if (isMobile && !hasStoredAccess) {
       // Trigger developer access screen by removing stored access and reloading
@@ -58,8 +72,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="fixed top-0 left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70"
       style={{ 
-        height: 'calc(72px + env(safe-area-inset-top) + 24px)',
-        paddingTop: 'calc(env(safe-area-inset-top) + 24px)'
+        height: isCapacitor 
+          ? 'calc(72px + env(safe-area-inset-top, 44px) + 8px)'
+          : 'calc(72px + env(safe-area-inset-top) + 24px)',
+        paddingTop: isCapacitor 
+          ? 'calc(env(safe-area-inset-top, 44px) + 8px)'
+          : 'calc(env(safe-area-inset-top) + 24px)'
       }}
     >
       <div className="container mx-auto h-full max-w-screen-xl">

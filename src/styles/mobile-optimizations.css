@@ -32,6 +32,19 @@
   }
 }
 
+/* Capacitor specific safe area handling */
+@media screen and (max-width: 430px) {
+  /* Capacitor WebView specific adjustments */
+  .capacitor-webview .safe-area-header {
+    height: calc(72px + env(safe-area-inset-top, 44px) + 8px) !important;
+    padding-top: calc(env(safe-area-inset-top, 44px) + 8px) !important;
+  }
+  
+  .capacitor-webview .safe-area-content {
+    padding-top: calc(72px + env(safe-area-inset-top, 44px) + 8px) !important;
+  }
+}
+
 /* Additional spacing for header positioning on iPhone - INCREASED */
 .header-safe-spacing {
   padding-top: calc(env(safe-area-inset-top) + 24px);
@@ -70,4 +83,13 @@
 .smooth-scroll {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
+}
+
+/* Force hardware acceleration for better performance in WebView */
+.hardware-accelerated {
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  -o-transform: translateZ(0);
+  transform: translateZ(0);
 }
