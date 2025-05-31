@@ -1,7 +1,9 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Navigate } from 'react-router-dom';
 import { Toaster } from "sonner";
-import { AuthProvider, useCustomAuth } from "./contexts/auth/AuthProvider";
+import { AuthProvider } from "./contexts/auth/AuthProvider";
+import { useAuthContext } from "./contexts/auth/useAuthContext";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import GlobalLayout from "./components/layout/GlobalLayout";
@@ -9,7 +11,7 @@ import AppRoutes from "./routes/AppRoutes";
 import SafeAreaToggle from "./components/debug/SafeAreaToggle";
 
 function InternalApp() {
-  const { user, isLoading } = useCustomAuth();
+  const { user, isLoading } = useAuthContext();
 
   if (isLoading) {
     return (
