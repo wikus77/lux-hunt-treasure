@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { BrowserRouter as Router, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { useAuthContext } from "./contexts/auth/useAuthContext";
@@ -12,6 +11,7 @@ import SafeAreaToggle from "./components/debug/SafeAreaToggle";
 
 function InternalApp() {
   const { user, isLoading } = useAuthContext();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -21,17 +21,28 @@ function InternalApp() {
     );
   }
 
-  // 🔐 Accesso diretto alla home solo per lo sviluppatore
-  if (user?.email === "joseph@m1ssion.com" && window.location.pathname === "/") {
+  // ✅ Accesso sviluppatore
+  if (user?.email === "wikus77@hotmail.it" && location.pathname !== "/home") {
     return <Navigate to="/home" replace />;
   }
 
   return (
     <SafeAreaToggle>
-      <GlobalLayout>
-        <AppRoutes />
-        <Toaster position="top-right" />
-      </GlobalLayout>
+      <div
+        style={{
+          paddingTop: "env(safe-area-inset-top)",
+          paddingBottom: "env(safe-area-inset-bottom)",
+          paddingLeft: "env(safe-area-inset-left)",
+          paddingRight: "env(safe-area-inset-right)",
+          minHeight: "100vh",
+          backgroundColor: "black"
+        }}
+      >
+        <GlobalLayout>
+          <AppRoutes />
+          <Toaster position="top-right" />
+        </GlobalLayout>
+      </div>
     </SafeAreaToggle>
   );
 }
