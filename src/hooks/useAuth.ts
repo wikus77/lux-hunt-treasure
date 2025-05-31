@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -20,20 +19,19 @@ export function useAuth() {
   });
 
   useEffect(() => {
-    // Controlla se c'è già una sessione attiva
     const fetchSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           throw error;
         }
-        
+
         const session = data?.session;
         const user = session?.user || null;
-        
+
         console.log("Stato autenticazione:", user ? "Autenticato" : "Non autenticato");
-        
+
         setAuthState({
           user,
           session,
@@ -51,14 +49,12 @@ export function useAuth() {
       }
     };
 
-    // Carica la sessione all'avvio
     fetchSession();
 
-    // Imposta listener per i cambiamenti di autenticazione
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Evento di autenticazione:", event);
-        
+
         setAuthState({
           user: session?.user || null,
           session,
@@ -68,7 +64,6 @@ export function useAuth() {
       }
     );
 
-    // Pulizia dell'effetto
     return () => {
       if (authListener && authListener.subscription) {
         authListener.subscription.unsubscribe();
@@ -87,6 +82,12 @@ export function useAuth() {
         throw error;
       }
 
+      // ✅ Salvataggio email sviluppatore
+      if (data?.user?.email === "wikus77@hotmail.it") {
+        localStorage.setItem("developer_email", "wikus77@hotmail.it");
+        console.log("✅ Email sviluppatore salvata nel localStorage");
+      }
+
       toast.success("Login effettuato con successo");
       return data;
     } catch (error: any) {
@@ -101,11 +102,11 @@ export function useAuth() {
   const logout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
         throw error;
       }
-      
+
       toast.success("Logout effettuato con successo");
     } catch (error: any) {
       console.error("Errore durante il logout:", error);
