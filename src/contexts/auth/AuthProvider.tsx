@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,8 +5,11 @@ import AuthContext from './AuthContext';
 import { useAuth } from '@/hooks/use-auth';
 import { AuthContextType } from './types';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const navigate = useNavigate();
+  
   // We get the base authentication functionality from our useAuth hook
   const auth = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -73,6 +75,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
   };
+
+  // Special handling for developer access
+  useEffect(() => {
+    const handleDeveloperAccess = () => {
+      if (auth.isAuthenticated && auth.user?.email === 'joseph@m1ssion.com') {
+        // Check if we're on landing page and redirect to home
+        if (window.location.pathname === '/') {
+          console.log('Developer detected on landing page, redirecting to /home');
+          navigate('/home');
+        }
+      }
+    };
+
+    handleDeveloperAccess();
+  }, [auth.isAuthenticated, auth.user, navigate]);
 
   // Fetch user role when auth state changes - NON FORZARE REDIRECT
   useEffect(() => {
