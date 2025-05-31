@@ -30,9 +30,6 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       const hasStoredAccess = localStorage.getItem("developer_access") === "granted";
 
-      // DEBUG:
-      // console.log("UnifiedHeader access check:", { isMobile, hasStoredAccess, isCapacitorApp });
-
       if (isMobile && hasStoredAccess) {
         setHasAccess(true);
       } else {
@@ -49,9 +46,6 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
     const hasStoredAccess = localStorage.getItem("developer_access") === "granted";
 
-    // DEBUG:
-    // console.log("Profile click - Capacitor:", { isMobile, hasStoredAccess, isCapacitorApp });
-
     if (isMobile && !hasStoredAccess) {
       localStorage.removeItem("developer_access");
       localStorage.removeItem("developer_user");
@@ -66,7 +60,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] min-h-[calc(44px+env(safe-area-inset-top))] glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 header-safe-area"
+      style={{ paddingTop: 'env(safe-area-inset-top)', WebkitPaddingTop: 'env(safe-area-inset-top)' }}
+      className="fixed top-0 left-0 right-0 z-50 min-h-[calc(44px+env(safe-area-inset-top))] glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 header-safe-area"
     >
       <div className="container mx-auto h-full max-w-screen-xl">
         <div className="flex items-center justify-between h-[72px] px-3 sm:px-4">
@@ -75,14 +70,18 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             {leftComponent ? (
               leftComponent
             ) : (
-              <Link
-                to="/home"
-                className="text-xl sm:text-2xl font-orbitron font-bold"
-              >
-                <span className="text-[#00D1FF]" style={{ 
-                  textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" 
-                }}>M1</span>
-                <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+              <Link to="/home" className="text-xl sm:text-2xl font-orbitron font-bold">
+                <span
+                  className="text-[#00D1FF]"
+                  style={{
+                    textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)",
+                  }}
+                >
+                  M1
+                </span>
+                <span className="text-white">
+                  SSION<span className="text-xs align-top">™</span>
+                </span>
               </Link>
             )}
           </div>
@@ -101,9 +100,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#F059FF] rounded-full w-2 h-2" style={{
-                  boxShadow: "0 0 8px rgba(240, 89, 255, 0.5)"
-                }}></span>
+                <span
+                  className="absolute -top-1 -right-1 bg-[#F059FF] rounded-full w-2 h-2"
+                  style={{
+                    boxShadow: "0 0 8px rgba(240, 89, 255, 0.5)",
+                  }}
+                ></span>
               )}
             </Button>
 
@@ -142,4 +144,3 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 };
 
 export default UnifiedHeader;
-
