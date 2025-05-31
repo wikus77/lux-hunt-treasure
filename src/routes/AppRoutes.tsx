@@ -6,10 +6,10 @@ import DynamicIsland from "@/components/DynamicIsland";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuthContext } from "@/contexts/auth/useAuthContext";
 
-// Landing
+// Import pubblico
 import Index from "@/pages/Index";
 
-// Lazy imports
+// Lazy import protette
 const Home = lazy(() => import("@/pages/Home"));
 const Map = lazy(() => import("@/pages/Map"));
 const Buzz = lazy(() => import("@/pages/Buzz"));
@@ -37,20 +37,9 @@ const LoadingFallback = () => (
 );
 
 const AppRoutes: React.FC = () => {
-  const { user, isLoading } = useAuthContext();
+  const { user } = useAuthContext();
   const location = useLocation();
   const isDeveloper = user?.email === "wikus77@hotmail.it";
-
-  // Safe redirect for dev
-  if (
-    !isLoading &&
-    isDeveloper &&
-    location.pathname === "/" &&
-    typeof window !== "undefined"
-  ) {
-    window.location.replace("/home");
-    return null;
-  }
 
   return (
     <ErrorBoundary>
@@ -68,10 +57,11 @@ const AppRoutes: React.FC = () => {
           }}
         >
           <Routes>
-            {/* Landing page solo su / */}
+
+            {/* Landing page pubblica */}
             <Route path="/" element={<Index />} />
 
-            {/* Home vera dell'app su /home */}
+            {/* Home dell'app protetta */}
             <Route
               path="/home"
               element={
@@ -81,10 +71,10 @@ const AppRoutes: React.FC = () => {
               }
             />
 
-            {/* Redirect /dashboard → /home */}
+            {/* Redirect compatibilità */}
             <Route path="/dashboard" element={<Navigate to="/home" replace />} />
 
-            {/* Sezioni protette */}
+            {/* Rotte protette */}
             <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
             <Route path="/buzz" element={<ProtectedRoute><Buzz /></ProtectedRoute>} />
             <Route path="/games" element={<ProtectedRoute><Games /></ProtectedRoute>} />
@@ -92,21 +82,17 @@ const AppRoutes: React.FC = () => {
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
-            {/* Notifiche */}
+            {/* Rotte pubbliche */}
             <Route path="/notifications" element={<Notifications />} />
-
-            {/* Auth */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/select-mission" element={<MissionSelection />} />
-
-            {/* Extra */}
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />
 
-            {/* 404 */}
+            {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
