@@ -29,7 +29,7 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
   const shouldShowCountdown = showCountdown && !isMapPage;
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-black/50 border-b border-white/10 header-safe-area ${className}`}>
+    <header className={`fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] min-h-[calc(44px+env(safe-area-inset-top))] w-full backdrop-blur-xl bg-black/50 border-b border-white/10 header-safe-area ${className}`}>
       <div className="max-w-7xl mx-auto px-2 sm:px-4">
         <div className="flex items-center justify-between h-14 sm:h-16">
           <div className="flex items-center">
