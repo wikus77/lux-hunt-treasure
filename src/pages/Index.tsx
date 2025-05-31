@@ -9,7 +9,7 @@ import DeveloperAccess from "@/components/auth/DeveloperAccess";
 const Index = () => {
   console.log("Index component rendering - PUBLIC LANDING PAGE");
 
-  // For developer auto-redirect
+  // 🔁 Redirect automatico se sviluppatore
   useEffect(() => {
     const email = localStorage.getItem("developer_email");
     if (email === "wikus77@hotmail.it") {
@@ -29,16 +29,18 @@ const Index = () => {
   useEffect(() => {
     const checkAccess = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('resetDevAccess') === 'true') {
-        localStorage.removeItem('developer_access');
-        console.log('Developer access reset via URL parameter');
+      if (urlParams.get("resetDevAccess") === "true") {
+        localStorage.removeItem("developer_access");
+        localStorage.removeItem("developer_email");
+        console.log("🔄 Developer access reset via URL");
       }
+
       const isCapacitorApp = !!(window as any).Capacitor;
       const userAgent = navigator.userAgent;
       const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      const hasStoredAccess = localStorage.getItem("developer_access") === "granted";
 
-      console.log('Index access check:', { isMobile, hasStoredAccess, isCapacitorApp });
+      console.log("Index access check:", { isMobile, hasStoredAccess, isCapacitorApp });
 
       if (isMobile && !hasStoredAccess) {
         setShowDeveloperAccess(true);
@@ -46,6 +48,7 @@ const Index = () => {
         setShowDeveloperAccess(false);
       }
     };
+
     checkAccess();
   }, []);
 
@@ -56,7 +59,7 @@ const Index = () => {
     handleAgeVerified,
     openInviteFriend,
     closeAgeVerification,
-    closeInviteFriend
+    closeInviteFriend,
   } = useEventHandlers(countdownCompleted);
 
   useEffect(() => {
@@ -64,7 +67,7 @@ const Index = () => {
       const recoveryTimeout = setTimeout(() => {
         console.log(`⚠️ Tentativo di recovery automatico #${retryCount + 1}`);
         setError(null);
-        setRetryCount(prev => prev + 1);
+        setRetryCount((prev) => prev + 1);
       }, 2000);
       return () => clearTimeout(recoveryTimeout);
     }
@@ -72,7 +75,7 @@ const Index = () => {
 
   useEffect(() => {
     try {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         const skipIntro = localStorage.getItem("skipIntro");
         if (skipIntro === "true") {
           console.log("Intro already shown, skipping...");
@@ -138,7 +141,7 @@ const Index = () => {
     console.log("Intro completed callback, setting introCompleted to true");
     setIntroCompleted(true);
     try {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         localStorage.setItem("skipIntro", "true");
       }
     } catch (error) {
@@ -157,8 +160,9 @@ const Index = () => {
 
   const handleAccessGranted = useCallback(() => {
     setShowDeveloperAccess(false);
+    localStorage.setItem("developer_access", "granted");
     localStorage.setItem("developer_email", "wikus77@hotmail.it");
-    window.location.href = '/home';
+    window.location.href = "/home";
   }, []);
 
   if (showDeveloperAccess) {
@@ -172,7 +176,7 @@ const Index = () => {
       <CookiebotInit />
       <LoadingManager onLoaded={handleLoaded} />
       <CountdownManager onCountdownComplete={handleCountdownComplete} />
-      <MainContent 
+      <MainContent
         pageLoaded={pageLoaded}
         introCompleted={introCompleted}
         renderContent={renderContent}
