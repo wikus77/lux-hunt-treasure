@@ -1,4 +1,3 @@
-
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -7,10 +6,10 @@ import DynamicIsland from "@/components/DynamicIsland";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuthContext } from "@/contexts/auth/useAuthContext";
 
-// Public routes
+// Public route
 import Index from "@/pages/Index";
 
-// Main app routes with lazy loading
+// Lazy-loaded protected routes
 const Home = lazy(() => import("@/pages/Home"));
 const Map = lazy(() => import("@/pages/Map"));
 const Buzz = lazy(() => import("@/pages/Buzz"));
@@ -20,19 +19,18 @@ const Notifications = lazy(() => import("@/pages/Notifications"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Settings = lazy(() => import("@/pages/Settings"));
 
-// Auth routes
+// Auth pages
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
 const MissionSelection = lazy(() => import("@/pages/MissionSelection"));
 
-// Additional routes
+// Informational routes
 const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
 const Contacts = lazy(() => import("@/pages/Contacts"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const Terms = lazy(() => import("@/pages/Terms"));
 
-// Loading fallback component
 const LoadingFallback = () => (
   <div className="min-h-screen bg-black flex items-center justify-center">
     <div className="flex flex-col items-center gap-4">
@@ -44,7 +42,6 @@ const LoadingFallback = () => (
 
 const AppRoutes: React.FC = () => {
   const { user } = useAuthContext();
-
   const isDeveloper = user?.email === "wikus77@hotmail.it";
 
   return (
@@ -52,10 +49,10 @@ const AppRoutes: React.FC = () => {
       <Suspense fallback={<LoadingFallback />}>
         <DynamicIsland />
         <Routes>
-          {/* Landing page - SEMPRE PUBBLICA */}
+          {/* Landing page */}
           <Route path="/" element={<Index />} />
 
-          {/* Home page - la vera Home dell'app protetta */}
+          {/* Vera Home dell'app (protetta) */}
           <Route
             path="/home"
             element={
@@ -65,65 +62,18 @@ const AppRoutes: React.FC = () => {
             }
           />
 
-          {/* Dashboard redirect to home */}
+          {/* Redirect da /dashboard verso /home */}
           <Route path="/dashboard" element={<Navigate to="/home" replace />} />
 
-          {/* Altre rotte protette */}
-          <Route
-            path="/map"
-            element={
-              <ProtectedRoute>
-                <Map />
-              </ProtectedRoute>
-            }
-          />
+          {/* Altre pagine protette */}
+          <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
+          <Route path="/buzz" element={<ProtectedRoute><Buzz /></ProtectedRoute>} />
+          <Route path="/games" element={<ProtectedRoute><Games /></ProtectedRoute>} />
+          <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
-          <Route
-            path="/buzz"
-            element={
-              <ProtectedRoute>
-                <Buzz />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/games"
-            element={
-              <ProtectedRoute>
-                <Games />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/leaderboard"
-            element={
-              <ProtectedRoute>
-                <Leaderboard />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Notifiche visibili anche senza protezione */}
+          {/* Notifiche (anche non protette) */}
           <Route path="/notifications" element={<Notifications />} />
 
           {/* Auth routes */}
@@ -131,13 +81,13 @@ const AppRoutes: React.FC = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/select-mission" element={<MissionSelection />} />
 
-          {/* Other routes */}
+          {/* Extra */}
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
 
-          {/* 404 route */}
+          {/* 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
@@ -146,3 +96,4 @@ const AppRoutes: React.FC = () => {
 };
 
 export default AppRoutes;
+
