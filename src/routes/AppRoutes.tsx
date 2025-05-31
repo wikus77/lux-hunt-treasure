@@ -1,15 +1,15 @@
 import React, { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import DynamicIsland from "@/components/DynamicIsland";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuthContext } from "@/contexts/auth/useAuthContext";
 
-// Public route
+// Landing
 import Index from "@/pages/Index";
 
-// Lazy-loaded protected routes
+// Lazy imports
 const Home = lazy(() => import("@/pages/Home"));
 const Map = lazy(() => import("@/pages/Map"));
 const Buzz = lazy(() => import("@/pages/Buzz"));
@@ -18,13 +18,9 @@ const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Settings = lazy(() => import("@/pages/Settings"));
-
-// Auth pages
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
 const MissionSelection = lazy(() => import("@/pages/MissionSelection"));
-
-// Informational routes
 const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
 const Contacts = lazy(() => import("@/pages/Contacts"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -41,59 +37,82 @@ const LoadingFallback = () => (
 );
 
 const AppRoutes: React.FC = () => {
-  const { user } = useAuthContext();
+  const { user, isLoading } = useAuthContext();
+  const location = useLocation();
   const isDeveloper = user?.email === "wikus77@hotmail.it";
+
+  // Safe redirect for dev
+  if (
+    !isLoading &&
+    isDeveloper &&
+    location.pathname === "/" &&
+    typeof window !== "undefined"
+  ) {
+    window.location.replace("/home");
+    return null;
+  }
 
   return (
     <ErrorBoundary>
       <Suspense fallback={<LoadingFallback />}>
         <DynamicIsland />
-        <Routes>
-          {/* Landing page */}
-          <Route path="/" element={<Index />} />
 
-          {/* Vera Home dell'app (protetta) */}
-          <Route
-            path="/home"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
+        <div
+          style={{
+            paddingTop: "env(safe-area-inset-top)",
+            paddingBottom: "env(safe-area-inset-bottom)",
+            paddingLeft: "env(safe-area-inset-left)",
+            paddingRight: "env(safe-area-inset-right)",
+            minHeight: "100vh",
+            backgroundColor: "black",
+          }}
+        >
+          <Routes>
+            {/* Landing page solo su / */}
+            <Route path="/" element={<Index />} />
 
-          {/* Redirect da /dashboard verso /home */}
-          <Route path="/dashboard" element={<Navigate to="/home" replace />} />
+            {/* Home vera dell'app su /home */}
+            <Route
+              path="/home"
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Altre pagine protette */}
-          <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
-          <Route path="/buzz" element={<ProtectedRoute><Buzz /></ProtectedRoute>} />
-          <Route path="/games" element={<ProtectedRoute><Games /></ProtectedRoute>} />
-          <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            {/* Redirect /dashboard → /home */}
+            <Route path="/dashboard" element={<Navigate to="/home" replace />} />
 
-          {/* Notifiche (anche non protette) */}
-          <Route path="/notifications" element={<Notifications />} />
+            {/* Sezioni protette */}
+            <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
+            <Route path="/buzz" element={<ProtectedRoute><Buzz /></ProtectedRoute>} />
+            <Route path="/games" element={<ProtectedRoute><Games /></ProtectedRoute>} />
+            <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
-          {/* Auth routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/select-mission" element={<MissionSelection />} />
+            {/* Notifiche */}
+            <Route path="/notifications" element={<Notifications />} />
 
-          {/* Extra */}
-          <Route path="/how-it-works" element={<HowItWorks />} />
-          <Route path="/contacts" element={<Contacts />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<Terms />} />
+            {/* Auth */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/select-mission" element={<MissionSelection />} />
 
-          {/* 404 */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            {/* Extra */}
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/contacts" element={<Contacts />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+
+            {/* 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
       </Suspense>
     </ErrorBoundary>
   );
 };
 
 export default AppRoutes;
-
