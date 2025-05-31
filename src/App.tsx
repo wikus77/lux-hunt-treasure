@@ -1,9 +1,7 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Navigate } from 'react-router-dom';
 import { Toaster } from "sonner";
-import { AuthProvider } from "./contexts/auth/AuthProvider";
-import { useAuthContext } from "./contexts/auth/useAuthContext";
+import { AuthProvider, useCustomAuth } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import GlobalLayout from "./components/layout/GlobalLayout";
@@ -11,7 +9,7 @@ import AppRoutes from "./routes/AppRoutes";
 import SafeAreaToggle from "./components/debug/SafeAreaToggle";
 
 function InternalApp() {
-  const { user, isLoading } = useAuthContext();
+  const { user, isLoading } = useCustomAuth();
 
   if (isLoading) {
     return (
@@ -22,7 +20,7 @@ function InternalApp() {
   }
 
   // 🔐 Accesso diretto alla home solo per lo sviluppatore
-  if (user?.email === "joseph@m1ssion.com" && window.location.pathname === "/") {
+  if (user?.email === "wikus77@hotmail.it" && window.location.pathname === "/") {
     return <Navigate to="/home" replace />;
   }
 
