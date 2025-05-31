@@ -10,12 +10,13 @@
     @apply bg-black text-white;
     overflow-x: hidden !important;
 
+    /* ✅ Safe Area fix */
     padding-top: env(safe-area-inset-top);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
     padding-bottom: env(safe-area-inset-bottom);
 
-    background-color: black;
+    background-color: black !important;
     background-image: radial-gradient(circle at 50% 10%, rgba(19, 21, 36, 0.5) 0%, rgba(0, 0, 0, 0.8) 80%);
 
     -webkit-text-size-adjust: 100%;
