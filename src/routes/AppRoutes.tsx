@@ -1,5 +1,6 @@
-import React, { lazy, Suspense } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+
+import React, { lazy, Suspense, useEffect } from "react";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import DynamicIsland from "@/components/DynamicIsland";
@@ -39,7 +40,15 @@ const LoadingFallback = () => (
 const AppRoutes: React.FC = () => {
   const { user } = useAuthContext();
   const location = useLocation();
+  const navigate = useNavigate();
   const isDeveloper = user?.email === "wikus77@hotmail.it";
+
+  // Automatic redirect for developer from landing to app home
+  useEffect(() => {
+    if (isDeveloper && location.pathname === "/") {
+      navigate("/home", { replace: true });
+    }
+  }, [isDeveloper, location.pathname, navigate]);
 
   return (
     <ErrorBoundary>
@@ -57,7 +66,6 @@ const AppRoutes: React.FC = () => {
           }}
         >
           <Routes>
-
             {/* Landing page pubblica */}
             <Route path="/" element={<Index />} />
 
