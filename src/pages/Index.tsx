@@ -8,8 +8,16 @@ import DeveloperAccess from "@/components/auth/DeveloperAccess";
 
 const Index = () => {
   console.log("Index component rendering - PUBLIC LANDING PAGE");
-  
-  // State management
+
+  // For developer auto-redirect
+  useEffect(() => {
+    const email = localStorage.getItem("developer_email");
+    if (email === "wikus77@hotmail.it") {
+      console.log("🔁 Redirect sviluppatore a /home");
+      window.location.replace("/home");
+    }
+  }, []);
+
   const [pageLoaded, setPageLoaded] = useState(false);
   const [renderContent, setRenderContent] = useState(false);
   const [introCompleted, setIntroCompleted] = useState(false);
@@ -17,41 +25,30 @@ const Index = () => {
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
-  
-  // Check for developer access on mount
+
   useEffect(() => {
     const checkAccess = () => {
-      // Check for URL parameter to reset access
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('resetDevAccess') === 'true') {
         localStorage.removeItem('developer_access');
         console.log('Developer access reset via URL parameter');
       }
-      
-      // Enhanced mobile detection including Capacitor
       const isCapacitorApp = !!(window as any).Capacitor;
       const userAgent = navigator.userAgent;
       const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
-      
+
       console.log('Index access check:', { isMobile, hasStoredAccess, isCapacitorApp });
-      
+
       if (isMobile && !hasStoredAccess) {
-        // Mobile users without access need to login
         setShowDeveloperAccess(true);
-      } else if (!isMobile) {
-        // Web users always see landing page
-        setShowDeveloperAccess(false);
       } else {
-        // Mobile users with access see landing page
         setShowDeveloperAccess(false);
       }
     };
-    
     checkAccess();
   }, []);
-  
-  // Get event handlers
+
   const {
     showAgeVerification,
     showInviteFriend,
@@ -61,8 +58,7 @@ const Index = () => {
     closeAgeVerification,
     closeInviteFriend
   } = useEventHandlers(countdownCompleted);
-  
-  // Recovery automatico in caso di problemi
+
   useEffect(() => {
     if (error && retryCount < 2) {
       const recoveryTimeout = setTimeout(() => {
@@ -70,12 +66,10 @@ const Index = () => {
         setError(null);
         setRetryCount(prev => prev + 1);
       }, 2000);
-      
       return () => clearTimeout(recoveryTimeout);
     }
   }, [error, retryCount]);
-  
-  // Verifica se l'intro è già stata mostrata in precedenza
+
   useEffect(() => {
     try {
       if (typeof window !== 'undefined') {
@@ -94,7 +88,6 @@ const Index = () => {
     }
   }, []);
 
-  // Protezione contro errori di rendering
   useEffect(() => {
     try {
       const observer = new MutationObserver(() => {
@@ -112,12 +105,10 @@ const Index = () => {
           }
         });
       });
-
       observer.observe(document.body, {
         childList: true,
         subtree: true,
       });
-
       return () => {
         observer.disconnect();
         console.log("🛑 MutationObserver disattivato.");
@@ -126,8 +117,7 @@ const Index = () => {
       console.error("Errore nel setup MutationObserver:", err);
     }
   }, []);
-  
-  // Controllo periodico della salute del componente
+
   useEffect(() => {
     const healthCheckTimeout = setTimeout(() => {
       if (!renderContent && pageLoaded) {
@@ -135,11 +125,9 @@ const Index = () => {
         setError(new Error("Timeout di rendering del contenuto"));
       }
     }, 8000);
-    
     return () => clearTimeout(healthCheckTimeout);
   }, [renderContent, pageLoaded]);
-  
-  // Handlers for child components
+
   const handleLoaded = useCallback((isLoaded: boolean, canRender: boolean) => {
     console.log("handleLoaded chiamato con:", { isLoaded, canRender });
     setPageLoaded(isLoaded);
@@ -169,11 +157,10 @@ const Index = () => {
 
   const handleAccessGranted = useCallback(() => {
     setShowDeveloperAccess(false);
-    // Redirect to home after access granted
+    localStorage.setItem("developer_email", "wikus77@hotmail.it");
     window.location.href = '/home';
   }, []);
 
-  // Show developer access screen for mobile users without access
   if (showDeveloperAccess) {
     return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
   }
@@ -183,11 +170,8 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden full-viewport smooth-scroll">
       <CookiebotInit />
-      
       <LoadingManager onLoaded={handleLoaded} />
-      
       <CountdownManager onCountdownComplete={handleCountdownComplete} />
-      
       <MainContent 
         pageLoaded={pageLoaded}
         introCompleted={introCompleted}
