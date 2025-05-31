@@ -20,21 +20,25 @@ function InternalApp() {
   const [hasRedirected, setHasRedirected] = React.useState(false);
 
   React.useEffect(() => {
-    if (
-      !isLoading &&
-      user?.email === 'wikus77@hotmail.it' &&
-      location.pathname !== '/home' &&
-      !hasRedirected
-    ) {
+    const isDeveloper = user?.email === 'wikus77@hotmail.it';
+    const isOnValidPage =
+      location.pathname === '/home' || location.pathname === '/login';
+
+    if (!isLoading && isDeveloper && !isOnValidPage && !hasRedirected) {
       setHasRedirected(true);
       navigate('/home', { replace: true });
     }
-  }, [user, isLoading, location, hasRedirected, navigate]);
+  }, [user, isLoading, location.pathname, hasRedirected, navigate]);
 
-  if (isLoading) {
+  if (
+    isLoading ||
+    (user?.email === 'wikus77@hotmail.it' &&
+      !hasRedirected &&
+      location.pathname !== '/home')
+  ) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <p>Caricamento...</p>
+        <p>MISSION sta caricando...</p>
       </div>
     );
   }
@@ -69,7 +73,9 @@ function App() {
             fallback={
               <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
                 <div className="glass-card p-6 max-w-md mx-auto text-center">
-                  <h2 className="text-xl font-bold mb-4">Si è verificato un errore</h2>
+                  <h2 className="text-xl font-bold mb-4">
+                    Si è verificato un errore
+                  </h2>
                   <p className="mb-6">
                     Qualcosa è andato storto durante il caricamento
                     dell'applicazione.
@@ -93,3 +99,4 @@ function App() {
 }
 
 export default App;
+
