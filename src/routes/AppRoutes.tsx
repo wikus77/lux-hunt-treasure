@@ -5,7 +5,6 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import DynamicIsland from "@/components/DynamicIsland";
 import { Spinner } from "@/components/ui/spinner";
-import { useAuthContext } from "@/contexts/auth/useAuthContext";
 
 // Public routes
 import Index from "@/pages/Index";
@@ -43,32 +42,24 @@ const LoadingFallback = () => (
 );
 
 const AppRoutes: React.FC = () => {
-  const { user } = useAuthContext();
-
-  const isDeveloper = user?.email === "wikus77@hotmail.it";
-
   return (
     <ErrorBoundary>
       <Suspense fallback={<LoadingFallback />}>
         <DynamicIsland />
         <Routes>
-          {/* Landing page - SEMPRE PUBBLICA */}
+          {/* Landing page - SEMPRE PUBBLICA, NESSUN REDIRECT */}
           <Route path="/" element={<Index />} />
 
-          {/* Redirect /home to landing page */}
-          <Route path="/home" element={<Navigate to="/" replace />} />
-
-          {/* Dashboard page - la vera Home dell'app protetta */}
+          {/* Main App Routes - PROTECTED */}
           <Route
-            path="/dashboard"
+            path="/home"
             element={
               <ProtectedRoute>
                 <Home />
               </ProtectedRoute>
             }
           />
-
-          {/* Altre rotte protette */}
+          
           <Route
             path="/map"
             element={
@@ -77,7 +68,7 @@ const AppRoutes: React.FC = () => {
               </ProtectedRoute>
             }
           />
-
+          
           <Route
             path="/buzz"
             element={
@@ -86,7 +77,7 @@ const AppRoutes: React.FC = () => {
               </ProtectedRoute>
             }
           />
-
+          
           <Route
             path="/games"
             element={
@@ -95,7 +86,7 @@ const AppRoutes: React.FC = () => {
               </ProtectedRoute>
             }
           />
-
+          
           <Route
             path="/leaderboard"
             element={
@@ -104,7 +95,9 @@ const AppRoutes: React.FC = () => {
               </ProtectedRoute>
             }
           />
-
+          
+          <Route path="/notifications" element={<Notifications />} />
+          
           <Route
             path="/profile"
             element={
@@ -113,30 +106,20 @@ const AppRoutes: React.FC = () => {
               </ProtectedRoute>
             }
           />
-
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Notifiche visibili anche senza protezione */}
-          <Route path="/notifications" element={<Notifications />} />
+          
+          <Route path="/settings" element={<Settings />} />
 
           {/* Auth routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/select-mission" element={<MissionSelection />} />
-
+          
           {/* Other routes */}
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
-
+          
           {/* 404 route */}
           <Route path="*" element={<NotFound />} />
         </Routes>

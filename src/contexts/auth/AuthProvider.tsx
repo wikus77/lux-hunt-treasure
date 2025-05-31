@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -197,20 +196,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchUserRole();
     
     // Mark auth as initialized after first load
-    if (!authInitialized && !auth.loading) {
+    if (!authInitialized && !auth.isLoading) {
       setAuthInitialized(true);
     }
     
-  }, [auth.isAuthenticated, auth.user, auth.loading]);
+  }, [auth.isAuthenticated, auth.user, auth.isLoading]);
 
   // Show loading state on first initialization
   useEffect(() => {
-    if (auth.loading && !authInitialized) {
+    if (auth.isLoading && !authInitialized) {
       console.log('🔄 Auth is initializing...');
     } else if (authInitialized) {
       console.log('✅ Auth initialization complete');
     }
-  }, [auth.loading, authInitialized]);
+  }, [auth.isLoading, authInitialized]);
 
   // Check if user has a specific role
   const hasRole = (role: string): boolean => {
@@ -221,52 +220,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return userRole === role;
   };
 
-  // Placeholder functions to match AuthContextType interface
-  const getAccessToken = (): string | null => {
-    return auth.session?.access_token || null;
-  };
-
-  const resendVerificationEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email
-      });
-      
-      if (error) {
-        return { success: false, error: error.message };
-      }
-      
-      return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
-    }
-  };
-
-  const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      
-      if (error) {
-        return { success: false, error: error.message };
-      }
-      
-      return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
-    }
-  };
-
   // Create the complete context value by combining auth hook values with role information
   const authContextValue: AuthContextType = {
     ...auth,
-    isLoading: auth.loading, // Map loading to isLoading for interface compatibility
     userRole,
     hasRole,
-    isRoleLoading,
-    getAccessToken,
-    resendVerificationEmail,
-    resetPassword
+    isRoleLoading
   };
 
   return (
