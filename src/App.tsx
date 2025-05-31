@@ -1,29 +1,35 @@
 import React from 'react';
-import { BrowserRouter as Router, useLocation } from 'react-router-dom';
-import { Toaster } from "sonner";
-import { AuthProvider } from "./contexts/auth/AuthProvider";
-import { useAuthContext } from "./contexts/auth/useAuthContext";
-import { SoundProvider } from "./contexts/SoundContext";
-import { ErrorBoundary } from "./components/error/ErrorBoundary";
-import GlobalLayout from "./components/layout/GlobalLayout";
-import AppRoutes from "./routes/AppRoutes";
-import SafeAreaToggle from "./components/debug/SafeAreaToggle";
+import {
+  BrowserRouter as Router,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { AuthProvider } from './contexts/auth/AuthProvider';
+import { useAuthContext } from './contexts/auth/useAuthContext';
+import { SoundProvider } from './contexts/SoundContext';
+import { ErrorBoundary } from './components/error/ErrorBoundary';
+import GlobalLayout from './components/layout/GlobalLayout';
+import AppRoutes from './routes/AppRoutes';
+import SafeAreaToggle from './components/debug/SafeAreaToggle';
 
 function InternalApp() {
   const { user, isLoading } = useAuthContext();
   const location = useLocation();
-  const [redirected, setRedirected] = React.useState(false);
+  const navigate = useNavigate();
+  const [hasRedirected, setHasRedirected] = React.useState(false);
 
   React.useEffect(() => {
     if (
-      user?.email === "wikus77@hotmail.it" &&
-      location.pathname !== "/home" &&
-      !redirected
+      !isLoading &&
+      user?.email === 'wikus77@hotmail.it' &&
+      location.pathname !== '/home' &&
+      !hasRedirected
     ) {
-      setRedirected(true);
-      window.location.replace("/home");
+      setHasRedirected(true);
+      navigate('/home', { replace: true });
     }
-  }, [user, location, redirected]);
+  }, [user, isLoading, location, hasRedirected, navigate]);
 
   if (isLoading) {
     return (
@@ -37,12 +43,12 @@ function InternalApp() {
     <SafeAreaToggle>
       <div
         style={{
-          paddingTop: "env(safe-area-inset-top)",
-          paddingBottom: "env(safe-area-inset-bottom)",
-          paddingLeft: "env(safe-area-inset-left)",
-          paddingRight: "env(safe-area-inset-right)",
-          minHeight: "100vh",
-          backgroundColor: "black"
+          paddingTop: 'env(safe-area-inset-top)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          paddingLeft: 'env(safe-area-inset-left)',
+          paddingRight: 'env(safe-area-inset-right)',
+          minHeight: '100vh',
+          backgroundColor: 'black',
         }}
       >
         <GlobalLayout>
@@ -59,20 +65,25 @@ function App() {
     <Router>
       <SoundProvider>
         <AuthProvider>
-          <ErrorBoundary fallback={
-            <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
-              <div className="glass-card p-6 max-w-md mx-auto text-center">
-                <h2 className="text-xl font-bold mb-4">Si è verificato un errore</h2>
-                <p className="mb-6">Qualcosa è andato storto durante il caricamento dell'applicazione.</p>
-                <button 
-                  onClick={() => window.location.reload()}
-                  className="px-4 py-2 bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-md"
-                >
-                  Riprova
-                </button>
+          <ErrorBoundary
+            fallback={
+              <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
+                <div className="glass-card p-6 max-w-md mx-auto text-center">
+                  <h2 className="text-xl font-bold mb-4">Si è verificato un errore</h2>
+                  <p className="mb-6">
+                    Qualcosa è andato storto durante il caricamento
+                    dell'applicazione.
+                  </p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-md"
+                  >
+                    Riprova
+                  </button>
+                </div>
               </div>
-            </div>
-          }>
+            }
+          >
             <InternalApp />
           </ErrorBoundary>
         </AuthProvider>
@@ -82,4 +93,3 @@ function App() {
 }
 
 export default App;
-
