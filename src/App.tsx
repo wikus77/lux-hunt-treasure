@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, useNavigate, useLocation } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/auth/AuthProvider';
 import { useAuthContext } from './contexts/auth/useAuthContext';
@@ -11,16 +11,18 @@ import SafeAreaToggle from './components/debug/SafeAreaToggle';
 
 function InternalApp() {
   const { user, isLoading } = useAuthContext();
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // ✅ Redirect sviluppatore
-  useEffect(() => {
-    const isDeveloper = user?.email === 'wikus77@hotmail.it';
-    if (isDeveloper && location.pathname === '/') {
-      navigate('/home', { replace: true });
+  React.useEffect(() => {
+    if (
+      !isLoading &&
+      user?.email === "wikus77@hotmail.it" &&
+      location.pathname === "/"
+    ) {
+      navigate("/home", { replace: true });
     }
-  }, [user, location, navigate]);
+  }, [isLoading, user, location, navigate]);
 
   if (isLoading) {
     return (
@@ -60,13 +62,8 @@ function App() {
             fallback={
               <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
                 <div className="glass-card p-6 max-w-md mx-auto text-center">
-                  <h2 className="text-xl font-bold mb-4">
-                    Si è verificato un errore
-                  </h2>
-                  <p className="mb-6">
-                    Qualcosa è andato storto durante il caricamento
-                    dell'applicazione.
-                  </p>
+                  <h2 className="text-xl font-bold mb-4">Si è verificato un errore</h2>
+                  <p className="mb-6">Qualcosa è andato storto durante il caricamento dell'applicazione.</p>
                   <button
                     onClick={() => window.location.reload()}
                     className="px-4 py-2 bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-md"
@@ -86,3 +83,4 @@ function App() {
 }
 
 export default App;
+
