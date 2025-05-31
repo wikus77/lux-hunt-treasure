@@ -1,4 +1,3 @@
-
 import React from 'react';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import M1ssionText from '@/components/logo/M1ssionText';
@@ -6,7 +5,11 @@ import M1ssionText from '@/components/logo/M1ssionText';
 const MapPageHeader: React.FC = () => {
   return (
     <UnifiedHeader
-      leftComponent={<M1ssionText />}
+      leftComponent={
+        <div className="flex items-center">
+          <M1ssionText />
+        </div>
+      }
     />
   );
 };
