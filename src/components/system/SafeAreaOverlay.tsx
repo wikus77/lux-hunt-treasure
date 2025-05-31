@@ -1,4 +1,3 @@
-
 import React from "react";
 
 const SafeAreaOverlay = () => {
@@ -19,3 +18,4 @@ const SafeAreaOverlay = () => {
 };
 
 export default SafeAreaOverlay;
+
