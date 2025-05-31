@@ -55,8 +55,8 @@ const AppRoutes: React.FC = () => {
           {/* Landing page - SEMPRE PUBBLICA */}
           <Route path="/" element={<Index />} />
 
-          {/* Home page ora punta alla landing */}
-          <Route path="/home" element={<Index />} />
+          {/* Redirect /home to landing page */}
+          <Route path="/home" element={<Navigate to="/" replace />} />
 
           {/* Dashboard page - la vera Home dell'app protetta */}
           <Route
