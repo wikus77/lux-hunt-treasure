@@ -1,13 +1,38 @@
-
 import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate } from 'react-router-dom';
 import { Toaster } from "sonner";
-import { AuthProvider } from "./contexts/auth/AuthProvider";
+import { AuthProvider, useCustomAuth } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import GlobalLayout from "./components/layout/GlobalLayout";
 import AppRoutes from "./routes/AppRoutes";
 import SafeAreaToggle from "./components/debug/SafeAreaToggle";
+
+function InternalApp() {
+  const { user, isLoading } = useCustomAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <p>Caricamento...</p>
+      </div>
+    );
+  }
+
+  // 🔐 Accesso diretto alla home solo per lo sviluppatore
+  if (user?.email === "joseph@m1ssion.com" && window.location.pathname === "/") {
+    return <Navigate to="/home" replace />;
+  }
+
+  return (
+    <SafeAreaToggle>
+      <GlobalLayout>
+        <AppRoutes />
+        <Toaster position="top-right" />
+      </GlobalLayout>
+    </SafeAreaToggle>
+  );
+}
 
 function App() {
   return (
@@ -28,12 +53,7 @@ function App() {
               </div>
             </div>
           }>
-            <SafeAreaToggle>
-              <GlobalLayout>
-                <AppRoutes />
-                <Toaster position="top-right" />
-              </GlobalLayout>
-            </SafeAreaToggle>
+            <InternalApp />
           </ErrorBoundary>
         </AuthProvider>
       </SoundProvider>
