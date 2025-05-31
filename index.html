@@ -15,9 +15,24 @@
       type="image/png"
     />
 
+    <!-- Redirect sviluppatore a /home se Capacitor + email valida -->
+    <script>
+      (function () {
+        try {
+          const isCapacitor = !!window.Capacitor;
+          const email = localStorage.getItem("developer_email");
+          if (isCapacitor && email === "wikus77@hotmail.it" && location.pathname === "/") {
+            console.log("🔁 Redirect sviluppatore a /home via index.html");
+            window.location.replace("/home");
+          }
+        } catch (e) {
+          console.warn("Redirect fallito:", e);
+        }
+      })();
+    </script>
+
     <!-- Script per reindirizzare HTTP a HTTPS - migliorato -->
     <script>
-      // Redirect HTTP to HTTPS except on localhost
       if (
         window.location.protocol === "http:" &&
         !window.location.hostname.match(/localhost|127.0.0.1/)
@@ -50,10 +65,7 @@
     />
     <meta name="author" content="M1SSION Team" />
 
-    <meta
-      property="og:title"
-      content="M1SSION - La sfida inizia presto"
-    />
+    <meta property="og:title" content="M1SSION - La sfida inizia presto" />
     <meta
       property="og:description"
       content="Un'esperienza di gioco rivoluzionaria che unisce caccia al tesoro, enigmi e premi esclusivi"
