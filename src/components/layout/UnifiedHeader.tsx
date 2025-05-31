@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Bell, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -60,7 +61,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      style={{ paddingTop: 'env(safe-area-inset-top)', WebkitPaddingTop: 'env(safe-area-inset-top)' }}
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
       className="fixed top-0 left-0 right-0 z-50 min-h-[calc(44px+env(safe-area-inset-top))] glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 header-safe-area"
     >
       <div className="container mx-auto h-full max-w-screen-xl">
