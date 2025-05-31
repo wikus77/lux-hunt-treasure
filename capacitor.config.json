@@ -1,3 +1,4 @@
+
 {
   "appId": "com.m1ssion.app",
   "appName": "M1SSION",
@@ -15,5 +16,8 @@
       "spinnerColor": "#999999"
     }
   },
-  "bundledWebRuntime": false
+  "bundledWebRuntime": false,
+  "ios": {
+    "contentInset": "always"
+  }
 }
