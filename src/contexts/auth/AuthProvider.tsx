@@ -6,8 +6,11 @@ import AuthContext from './AuthContext';
 import { useAuth } from '@/hooks/use-auth';
 import { AuthContextType } from './types';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const navigate = useNavigate();
+  
   // We get the base authentication functionality from our useAuth hook
   const auth = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -73,6 +76,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
   };
+
+  // Special handling for developer access
+  useEffect(() => {
+    const handleDeveloperAccess = () => {
+      if (auth.isAuthenticated && auth.user?.email === 'joseph@m1ssion.com') {
+        // Check if we're on landing page and redirect to home
+        if (window.location.pathname === '/') {
+          console.log('Developer detected on landing page, redirecting to /home');
+          navigate('/home');
+        }
+      }
+    };
+
+    handleDeveloperAccess();
+  }, [auth.isAuthenticated, auth.user, navigate]);
 
   // Fetch user role when auth state changes - NON FORZARE REDIRECT
   useEffect(() => {
@@ -179,20 +197,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchUserRole();
     
     // Mark auth as initialized after first load
-    if (!authInitialized && !auth.isLoading) {
+    if (!authInitialized && !auth.loading) {
       setAuthInitialized(true);
     }
     
-  }, [auth.isAuthenticated, auth.user, auth.isLoading]);
+  }, [auth.isAuthenticated, auth.user, auth.loading]);
 
   // Show loading state on first initialization
   useEffect(() => {
-    if (auth.isLoading && !authInitialized) {
+    if (auth.loading && !authInitialized) {
       console.log('🔄 Auth is initializing...');
     } else if (authInitialized) {
       console.log('✅ Auth initialization complete');
     }
-  }, [auth.isLoading, authInitialized]);
+  }, [auth.loading, authInitialized]);
 
   // Check if user has a specific role
   const hasRole = (role: string): boolean => {
@@ -203,12 +221,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return userRole === role;
   };
 
+  // Placeholder functions to match AuthContextType interface
+  const getAccessToken = (): string | null => {
+    return auth.session?.access_token || null;
+  };
+
+  const resendVerificationEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email
+      });
+      
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  };
+
   // Create the complete context value by combining auth hook values with role information
   const authContextValue: AuthContextType = {
     ...auth,
+    isLoading: auth.loading, // Map loading to isLoading for interface compatibility
     userRole,
     hasRole,
-    isRoleLoading
+    isRoleLoading,
+    getAccessToken,
+    resendVerificationEmail,
+    resetPassword
   };
 
   return (

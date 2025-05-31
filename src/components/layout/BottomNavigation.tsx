@@ -11,7 +11,7 @@ const BottomNavigation = () => {
   const { unreadCount } = useNotifications();
 
   const links = [
-    { icon: <Home className="h-6 w-6" />, label: "Home", path: "/home" },
+    { icon: <Home className="h-6 w-6" />, label: "Home", path: "/dashboard" },
     { icon: <Map className="h-6 w-6" />, label: "Mappa", path: "/map" },
     { 
       icon: <Circle strokeWidth={2} className="h-6 w-6" />, 
