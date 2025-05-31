@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  BrowserRouter as Router,
-  useLocation,
-  useNavigate,
-} from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/auth/AuthProvider';
 import { useAuthContext } from './contexts/auth/useAuthContext';
@@ -14,28 +10,9 @@ import AppRoutes from './routes/AppRoutes';
 import SafeAreaToggle from './components/debug/SafeAreaToggle';
 
 function InternalApp() {
-  const { user, isLoading } = useAuthContext();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [hasRedirected, setHasRedirected] = React.useState(false);
+  const { isLoading } = useAuthContext();
 
-  React.useEffect(() => {
-    const isDeveloper = user?.email === 'wikus77@hotmail.it';
-    const isOnValidPage =
-      location.pathname === '/home' || location.pathname === '/login';
-
-    if (!isLoading && isDeveloper && !isOnValidPage && !hasRedirected) {
-      setHasRedirected(true);
-      navigate('/home', { replace: true });
-    }
-  }, [user, isLoading, location.pathname, hasRedirected, navigate]);
-
-  if (
-    isLoading ||
-    (user?.email === 'wikus77@hotmail.it' &&
-      !hasRedirected &&
-      location.pathname !== '/home')
-  ) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
         <p>MISSION sta caricando...</p>
@@ -99,4 +76,3 @@ function App() {
 }
 
 export default App;
-
