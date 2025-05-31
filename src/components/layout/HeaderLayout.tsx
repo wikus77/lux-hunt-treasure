@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import M1ssionText from "@/components/logo/M1ssionText";

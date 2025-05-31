@@ -22,7 +22,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] min-h-[calc(44px+env(safe-area-inset-top)+48px)] backdrop-blur-md bg-gradient-to-r from-black/80 to-black/80 border-b border-white/10 header-safe-area">
+    <header className="fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] min-h-[calc(44px+env(safe-area-inset-top))] backdrop-blur-md bg-gradient-to-r from-black/80 to-black/80 border-b border-white/10 header-safe-area">
       <div className="max-w-screen-xl mx-auto flex justify-between items-center px-4 h-[72px]">
         {/* Logo */}
         <div 
