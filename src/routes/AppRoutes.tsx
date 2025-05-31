@@ -1,3 +1,4 @@
+
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -54,15 +55,16 @@ const AppRoutes: React.FC = () => {
           {/* Landing page - SEMPRE PUBBLICA */}
           <Route path="/" element={<Index />} />
 
-          {/* Home page - pubblica SOLO per lo sviluppatore */}
+          {/* Home page ora punta alla landing */}
+          <Route path="/home" element={<Index />} />
+
+          {/* Dashboard page - la vera Home dell'app protetta */}
           <Route
-            path="/home"
+            path="/dashboard"
             element={
-              isDeveloper ? <Home /> : (
-                <ProtectedRoute>
-                  <Home />
-                </ProtectedRoute>
-              )
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
             }
           />
 
