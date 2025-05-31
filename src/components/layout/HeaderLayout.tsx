@@ -1,6 +1,4 @@
-
 import React from "react";
-import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import M1ssionText from "@/components/logo/M1ssionText";
 import HeaderCountdown from "@/components/layout/header/HeaderCountdown";
@@ -23,42 +21,39 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const location = useLocation();
-  
-  // Don't show countdown on map page
+
   const isMapPage = location.pathname === "/map";
   const shouldShowCountdown = showCountdown && !isMapPage;
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] min-h-[calc(44px+env(safe-area-inset-top))] w-full backdrop-blur-xl bg-black/50 border-b border-white/10 header-safe-area ${className}`}>
-      <div className="max-w-7xl mx-auto px-2 sm:px-4">
-        <div className="flex items-center justify-between h-14 sm:h-16">
+    <header className={`fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] min-h-[calc(44px+env(safe-area-inset-top))] w-full backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 border-b border-white/10 header-safe-area ${className}`}>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4">
+        <div className="flex items-center justify-between h-[72px]">
+          {/* Left logo o contenuto */}
           <div className="flex items-center">
-            {leftContent}
-            {!leftContent && <M1ssionText />}
-          </div>
-          
-          {/* Center section - removed M1-AGENT badge */}
-          <div className="flex items-center justify-center">
-            {/* Empty center area */}
+            {leftContent || <M1ssionText />}
           </div>
 
-          {/* Right side content */}
+          {/* Center (vuoto per ora) */}
+          <div className="flex items-center justify-center" />
+
+          {/* Right actions */}
           {rightContent && (
             <div className="flex items-center gap-1.5 sm:gap-2">
               {rightContent}
             </div>
           )}
         </div>
-        
-        {/* Countdown Timer - only show if not on map page */}
+
+        {/* Countdown opzionale */}
         {shouldShowCountdown && <HeaderCountdown isMobile={isMobile} />}
-        
-        {/* Children content - for additional elements */}
+
+        {/* Extra contenuto (eventuale) */}
         {children}
       </div>
-      
-      {/* Horizontal line with animation */}
-      <div className="line-glow"></div>
+
+      {/* Glow line inferiore */}
+      <div className="line-glow" />
     </header>
   );
 };
