@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/auth/AuthProvider';
 import { useAuthContext } from './contexts/auth/useAuthContext';
@@ -10,7 +10,17 @@ import AppRoutes from './routes/AppRoutes';
 import SafeAreaToggle from './components/debug/SafeAreaToggle';
 
 function InternalApp() {
-  const { isLoading } = useAuthContext();
+  const { user, isLoading } = useAuthContext();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // ✅ Redirect sviluppatore
+  useEffect(() => {
+    const isDeveloper = user?.email === 'wikus77@hotmail.it';
+    if (isDeveloper && location.pathname === '/') {
+      navigate('/home', { replace: true });
+    }
+  }, [user, location, navigate]);
 
   if (isLoading) {
     return (
