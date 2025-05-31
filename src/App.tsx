@@ -15,11 +15,16 @@ function InternalApp() {
   const navigate = useNavigate();
 
   React.useEffect(() => {
+    const isCapacitorApp = !!(window as any).Capacitor;
+    const email = user?.email;
+
     if (
       !isLoading &&
-      user?.email === "wikus77@hotmail.it" &&
-      location.pathname === "/"
+      email === "wikus77@hotmail.it" &&
+      location.pathname === "/" &&
+      isCapacitorApp
     ) {
+      console.log("🔁 Redirect sviluppatore (Capacitor) verso /home");
       navigate("/home", { replace: true });
     }
   }, [isLoading, user, location, navigate]);
