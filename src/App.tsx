@@ -21,8 +21,15 @@ function InternalApp() {
     );
   }
 
-  // ✅ Accesso sviluppatore
-  if (user?.email === "wikus77@hotmail.it" && location.pathname !== "/home") {
+  const isOnHome = location.pathname.startsWith("/home");
+  const isOnLogin = location.pathname.startsWith("/login");
+
+  // ✅ Redirezione solo se non già su /home o /login, per evitare loop
+  if (
+    user?.email === "wikus77@hotmail.it" &&
+    !isOnHome &&
+    !isOnLogin
+  ) {
     return <Navigate to="/home" replace />;
   }
 
