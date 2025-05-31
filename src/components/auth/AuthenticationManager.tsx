@@ -35,29 +35,20 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
         if (session?.user) {
           console.log("Session found, user ID:", session.user.id);
           
-          // Special handling for developer access
-          if (session.user.email === 'joseph@m1ssion.com') {
-            console.log("Developer access detected");
-            onAuthenticated(session.user.id);
-            
-            // Redirect to home if on landing page
-            if (location.pathname === '/') {
-              navigate('/home');
-            }
-            return;
-          }
-          
-          // Check if the email is verified for normal users
+          // Check if the email is verified
           if (!session.user.email_confirmed_at) {
             console.log("Email not verified, redirecting to verification page");
+            // Email not verified
             onEmailNotVerified();
             return;
           }
           
           console.log("User is fully authenticated");
+          // Email is verified, user is authenticated
           onAuthenticated(session.user.id);
         } else {
           console.log("No active session found");
+          // No session, user is not authenticated
           onNotAuthenticated();
         }
       } catch (error) {
@@ -76,15 +67,7 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
         if (event === "SIGNED_IN" && session) {
           console.log("User signed in:", session.user.id);
           
-          // Special handling for developer access
-          if (session.user.email === 'joseph@m1ssion.com') {
-            console.log("Developer signed in, redirecting to home");
-            onAuthenticated(session.user.id);
-            navigate('/home');
-            return;
-          }
-          
-          // Check if email is verified for normal users
+          // Check if email is verified
           if (!session.user.email_confirmed_at) {
             console.log("Email not verified after sign in");
             onEmailNotVerified();
@@ -122,7 +105,7 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
     };
   }, [onAuthenticated, onNotAuthenticated, onEmailNotVerified, navigate, location.pathname]);
 
-  return null;
+  return null; // This is a logic component, it doesn't render anything
 };
 
 export default AuthenticationManager;

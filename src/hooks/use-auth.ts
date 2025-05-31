@@ -1,144 +1,193 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Session, User } from "@supabase/supabase-js";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 
-interface AuthState {
-  user: User | null;
-  session: Session | null;
-  loading: boolean;
-  error: Error | null;
-  isAuthenticated: boolean;
-  isEmailVerified: boolean;
-}
+import { useState, useEffect, useCallback } from 'react';
+import { AuthError, Session, User } from '@supabase/supabase-js';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { AuthContextType } from '@/contexts/auth/types';
 
-export function useAuth() {
-  const navigate = useNavigate();
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    session: null,
-    loading: true,
-    error: null,
-    isAuthenticated: false,
-    isEmailVerified: false,
-  });
+/**
+ * Hook for authentication functionality using Supabase Auth.
+ * Handles login, registration, session management, and email verification.
+ */
+export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRoleLoading'> {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
 
+  // Initialize auth state
   useEffect(() => {
-    // Controlla se c'è già una sessione attiva
-    const fetchSession = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
+    console.log("useAuth: Initializing auth state");
+    
+    // First set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        console.log("Auth state changed:", event);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
         
-        if (error) {
-          throw error;
+        // Update email verification status
+        if (currentSession?.user) {
+          setIsEmailVerified(!!currentSession.user.email_confirmed_at);
+          console.log("Email verification status:", !!currentSession.user.email_confirmed_at);
+        } else {
+          setIsEmailVerified(false);
         }
         
-        const session = data?.session;
-        const user = session?.user || null;
-        
-        console.log("Stato autenticazione:", user ? "Autenticato" : "Non autenticato");
-        
-        setAuthState({
-          user,
-          session,
-          loading: false,
-          error: null,
-          isAuthenticated: !!user,
-          isEmailVerified: !!user?.email_confirmed_at,
-        });
-      } catch (error) {
-        console.error("Errore durante il controllo della sessione:", error);
-        setAuthState({
-          user: null,
-          session: null,
-          loading: false,
-          error: error as Error,
-          isAuthenticated: false,
-          isEmailVerified: false,
-        });
-      }
-    };
-
-    // Carica la sessione all'avvio
-    fetchSession();
-
-    // Imposta listener per i cambiamenti di autenticazione
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log("Evento di autenticazione:", event);
-        
-        setAuthState({
-          user: session?.user || null,
-          session,
-          loading: false,
-          error: null,
-          isAuthenticated: !!session?.user,
-          isEmailVerified: !!session?.user?.email_confirmed_at,
-        });
+        // Mark loading as complete after auth state changes
+        setIsLoading(false);
       }
     );
-
-    // Pulizia dell'effetto
-    return () => {
-      if (authListener && authListener.subscription) {
-        authListener.subscription.unsubscribe();
+    
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      console.log("Initial session check:", initialSession ? "Found session" : "No session");
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
+      
+      // Update email verification status
+      if (initialSession?.user) {
+        setIsEmailVerified(!!initialSession.user.email_confirmed_at);
+        console.log("Initial email verification status:", !!initialSession.user.email_confirmed_at);
       }
+      
+      // Mark loading as complete after initial check
+      setIsLoading(false);
+    });
+    
+    // Clean up subscription on unmount
+    return () => {
+      console.log("useAuth: Cleaning up subscription");
+      subscription.unsubscribe();
     };
   }, []);
 
-  const login = async (email: string, password: string, turnstileToken?: string) => {
+  /**
+   * Login function using email and password
+   */
+  const login = async (email: string, password: string, captchaToken?: string) => {
+    console.log("Login attempt for email:", email);
     try {
+      const options: any = {};
+      
+      if (captchaToken) {
+        options.options = {
+          captchaToken: captchaToken
+        };
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        ...options
       });
 
       if (error) {
-        throw error;
+        console.error("Login error:", error.message);
+        return { success: false, error };
       }
 
-      // Special redirect for developer access
-      if (email === 'joseph@m1ssion.com') {
-        console.log('Developer access detected, redirecting to /home');
-        navigate('/home');
-      }
-
-      toast.success("Login effettuato con successo");
+      console.log("Login successful for:", email);
+      
       return { success: true, data };
-    } catch (error: any) {
-      console.error("Errore durante il login:", error);
-      toast.error("Errore durante il login", {
-        description: error.message || "Controlla le tue credenziali e riprova",
-      });
-      return { success: false, error };
+    } catch (error) {
+      console.error("Unexpected login error:", error);
+      return {
+        success: false,
+        error: { message: "Si è verificato un errore imprevisto durante l'accesso." } as AuthError
+      };
     }
   };
 
+  /**
+   * Logout function
+   */
   const logout = async () => {
+    console.log("Logging out user");
     try {
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast.success("Logout effettuato con successo");
-    } catch (error: any) {
-      console.error("Errore durante il logout:", error);
-      toast.error("Errore durante il logout", {
-        description: error.message || "Si è verificato un errore durante il logout",
-      });
-      throw error;
+      await supabase.auth.signOut();
+      toast.success("Logout effettuato");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Errore durante il logout");
     }
   };
 
-  const getCurrentUser = () => authState.user;
+  /**
+   * Check if user is authenticated
+   */
+  const isAuthenticated = useCallback(() => {
+    return !!user && !!session;
+  }, [user, session]);
+
+  /**
+   * Get current authenticated user
+   */
+  const getCurrentUser = useCallback(() => {
+    return user;
+  }, [user]);
+
+  /**
+   * Get access token
+   */
+  const getAccessToken = useCallback(() => {
+    return session?.access_token || null;
+  }, [session]);
+
+  /**
+   * Sends a verification email to the specified email address
+   */
+  const resendVerificationEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+      });
+
+      if (error) {
+        console.error("Error sending verification email:", error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      console.error("Exception sending verification email:", error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  /**
+   * Sends a password reset email to the specified email address
+   */
+  const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+
+      if (error) {
+        console.error("Error sending password reset email:", error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      console.error("Exception sending password reset email:", error);
+      return { success: false, error: error.message };
+    }
+  };
 
   return {
-    ...authState,
+    session,
+    isLoading,
+    isEmailVerified,
+    isAuthenticated: isAuthenticated(), 
     login,
     logout,
     getCurrentUser,
+    getAccessToken,
+    resendVerificationEmail,
+    resetPassword,
+    user,
   };
 }
