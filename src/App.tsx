@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { useAuthContext } from "./contexts/auth/useAuthContext";
@@ -12,6 +12,18 @@ import SafeAreaToggle from "./components/debug/SafeAreaToggle";
 function InternalApp() {
   const { user, isLoading } = useAuthContext();
   const location = useLocation();
+  const [redirected, setRedirected] = React.useState(false);
+
+  React.useEffect(() => {
+    if (
+      user?.email === "wikus77@hotmail.it" &&
+      location.pathname !== "/home" &&
+      !redirected
+    ) {
+      setRedirected(true);
+      window.location.replace("/home");
+    }
+  }, [user, location, redirected]);
 
   if (isLoading) {
     return (
@@ -19,18 +31,6 @@ function InternalApp() {
         <p>Caricamento...</p>
       </div>
     );
-  }
-
-  const isOnHome = location.pathname.startsWith("/home");
-  const isOnLogin = location.pathname.startsWith("/login");
-
-  // ✅ Redirezione solo se non già su /home o /login, per evitare loop
-  if (
-    user?.email === "wikus77@hotmail.it" &&
-    !isOnHome &&
-    !isOnLogin
-  ) {
-    return <Navigate to="/home" replace />;
   }
 
   return (
@@ -82,3 +82,4 @@ function App() {
 }
 
 export default App;
+
