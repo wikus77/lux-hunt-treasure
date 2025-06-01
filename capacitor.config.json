@@ -2,7 +2,7 @@
 {
   "appId": "com.m1ssion.app",
   "appName": "M1SSION",
-  "webDir": "build",
+  "webDir": "dist",
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 3000,
