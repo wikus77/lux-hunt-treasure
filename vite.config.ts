@@ -1,8 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-
-// ❌ RIMOSSO: lovable-tagger
+import lovableTagger from "lovable-tagger"; // ✅ Import ESM compatibile
 
 export default defineConfig({
   server: {
@@ -10,7 +9,8 @@ export default defineConfig({
     port: 8080,
   },
   plugins: [
-    react()
+    react(),
+    lovableTagger(), // ✅ Usa il plugin correttamente
   ],
   resolve: {
     alias: {
