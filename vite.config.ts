@@ -1,8 +1,9 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { lovableTagger } from "lovable-tagger";
+
+// Importa come CommonJS
+import lovableTagger from "lovable-tagger";
 
 export default defineConfig({
   server: {
@@ -11,7 +12,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    lovableTagger(),
+    lovableTagger(), // Chiama direttamente il plugin
   ],
   resolve: {
     alias: {
