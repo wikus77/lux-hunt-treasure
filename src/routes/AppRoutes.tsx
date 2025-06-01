@@ -9,6 +9,7 @@ import { useAuthContext } from "@/contexts/auth/useAuthContext";
 
 // Import pubblico
 import Index from "@/pages/Index";
+import Landing from "@/pages/Landing"; // ✅ AGGIUNTO
 
 // Lazy import protette
 const Home = lazy(() => import("@/pages/Home"));
@@ -43,7 +44,6 @@ const AppRoutes: React.FC = () => {
   const navigate = useNavigate();
   const isDeveloper = user?.email === "wikus77@hotmail.it";
 
-  // Automatic redirect for developer from landing to app home
   useEffect(() => {
     if (isDeveloper && location.pathname === "/") {
       navigate("/home", { replace: true });
@@ -68,6 +68,7 @@ const AppRoutes: React.FC = () => {
           <Routes>
             {/* Landing page pubblica */}
             <Route path="/" element={<Index />} />
+            <Route path="/landing" element={<Landing />} /> {/* ✅ AGGIUNTO */}
 
             {/* Home dell'app protetta */}
             <Route
@@ -110,3 +111,4 @@ const AppRoutes: React.FC = () => {
 };
 
 export default AppRoutes;
+
