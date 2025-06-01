@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-// ❌ Disabilitato temporaneamente per evitare errore ESM con esbuild
+// ❌ Rimosso: non compatibile con CommonJS
 // import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    // mode === 'development' && componentTagger(), // 🔁 Rimuovi commento solo se configurato come ESM puro
+    // mode === 'development' && componentTagger(), // ← Disattivato temporaneamente
   ].filter(Boolean),
   resolve: {
     alias: {
