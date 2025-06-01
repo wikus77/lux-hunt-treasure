@@ -9,7 +9,7 @@ import { useAuthContext } from "@/contexts/auth/useAuthContext";
 
 // Import pubblico
 import Index from "@/pages/Index";
-import Landing from "@/pages/Landing"; // ✅ AGGIUNTO
+import Landing from "@/pages/Landing"; // ✅ Landing statico, visibile subito
 
 // Lazy import protette
 const Home = lazy(() => import("@/pages/Home"));
@@ -68,7 +68,7 @@ const AppRoutes: React.FC = () => {
           <Routes>
             {/* Landing page pubblica */}
             <Route path="/" element={<Index />} />
-            <Route path="/landing" element={<Landing />} /> {/* ✅ AGGIUNTO */}
+            <Route path="/landing" element={<Landing />} /> {/* ✅ Registrata */}
 
             {/* Home dell'app protetta */}
             <Route
@@ -111,4 +111,5 @@ const AppRoutes: React.FC = () => {
 };
 
 export default AppRoutes;
+
 
