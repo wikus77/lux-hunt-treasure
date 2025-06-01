@@ -69,8 +69,13 @@
     <script type="text/plain" charset="UTF-8" data-cookiescriptreport="report" src="https://report.cookie-script.com/r/2db074620da1ba3a3cc6c19025d1d99d.js"></script>
   </head>
 
-  <body>
+  <body style="margin: 0; padding: 0; background: black">
+    <!-- ✅ Forza safe-area su iOS -->
+    <div id="ios-safezone-fix" style="height: env(safe-area-inset-top); background: black;"></div>
+
+    <!-- App root -->
     <div id="root"></div>
+
     <!-- IMPORTANTE: NON RIMUOVERE IL SEGUENTE SCRIPT TAG O QUESTO COMMENTO! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module" crossorigin="anonymous"></script>
     <script type="module" src="/src/main.tsx"></script>
