@@ -2,8 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
-// ❌ ATTENZIONE: rimosso `lovable-tagger` perché incompatibile con CommonJS
-// Se in futuro passerai a ESM puro, potrai reintegrarlo in modo corretto
+// ✅ RIMOSSO componentTagger di lovable-tagger perché incompatibile con CommonJS
 
 export default defineConfig({
   server: {
