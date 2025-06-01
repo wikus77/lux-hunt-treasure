@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
-// ✅ RIMOSSO: import { componentTagger } from "lovable-tagger";
+// ⚠️ Rimosso: import { componentTagger } from "lovable-tagger";
 
 export default defineConfig({
   server: {
@@ -11,7 +11,7 @@ export default defineConfig({
   },
   plugins: [
     react()
-    // ✅ RIMOSSO: componentTagger() – causa crash per incompatibilità ESM
+    // ⚠️ Rimosso: componentTagger()
   ],
   resolve: {
     alias: {
