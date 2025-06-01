@@ -2,23 +2,20 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import * as lovableTaggerModule from "lovable-tagger";
+import { componentTagger } from "lovable-tagger";
 
-// Estrai manualmente la funzione se esiste
-const lovableTagger = (lovableTaggerModule as any).default || lovableTaggerModule;
-
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
   },
   plugins: [
     react(),
-    typeof lovableTagger === "function" ? lovableTagger() : [],
-  ],
+    mode === 'development' && componentTagger(),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-});
+}));
