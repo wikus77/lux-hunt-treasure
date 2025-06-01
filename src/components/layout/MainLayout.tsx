@@ -19,7 +19,6 @@ import M1ssionText from "@/components/logo/M1ssionText";
 import { AIAssistant } from '@/components/ai/AIAssistant';
 import { useIsMobile } from "@/hooks/use-mobile";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
-import SafeAreaOverlay from "@/components/system/SafeAreaOverlay";
 
 const MainLayout = () => {
   const location = useLocation();
@@ -79,12 +78,12 @@ const MainLayout = () => {
   return (
     <div className="min-h-screen w-full bg-projectx-dark transition-colors duration-300 text-white relative full-viewport retina-optimized">
       <CookiebotInit />
-      <SafeAreaOverlay />
 
+      {/* HEADER con safe-area padding + colore rosso trasparente per DEBUG */}
       <header
         style={{
           paddingTop: 'env(safe-area-inset-top)',
-          backgroundColor: 'rgba(255, 0, 0, 0.1)',
+          backgroundColor: 'rgba(255, 0, 0, 0.1)', // DEBUG: safe area visiva
         }}
         className="z-50 w-full backdrop-blur-xl bg-projectx-card/40 border-b border-white/10 transition-all duration-300 header-safe-area"
       >

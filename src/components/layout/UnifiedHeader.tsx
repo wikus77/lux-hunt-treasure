@@ -22,22 +22,32 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
 
+  // Check for Capacitor environment and device type
   useEffect(() => {
     const checkAccess = () => {
+      // Detect Capacitor environment
       const isCapacitorApp = !!(window as any).Capacitor;
       setIsCapacitor(isCapacitorApp);
-
+      
+      // Enhanced mobile detection including Capacitor
       const userAgent = navigator.userAgent;
       const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-      const hasStoredAccess = localStorage.getItem("developer_access") === "granted";
-
+      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      
+      console.log('UnifiedHeader access check:', { isMobile, hasStoredAccess, isCapacitorApp });
+      
+      // DEVELOPER ACCESS: Grant access if developer credentials are stored
       if (isMobile && hasStoredAccess) {
         setHasAccess(true);
+      } else if (!isMobile) {
+        // Web users can't access profile functionality
+        setHasAccess(false);
       } else {
+        // Mobile without access - should trigger developer login
         setHasAccess(false);
       }
     };
-
+    
     checkAccess();
   }, []);
 
@@ -45,55 +55,54 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     const isCapacitorApp = !!(window as any).Capacitor;
     const userAgent = navigator.userAgent;
     const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-    const hasStoredAccess = localStorage.getItem("developer_access") === "granted";
-
+    const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+    
+    console.log('Profile click - Capacitor:', { isMobile, hasStoredAccess, isCapacitorApp });
+    
     if (isMobile && !hasStoredAccess) {
-      localStorage.removeItem("developer_access");
-      localStorage.removeItem("developer_user");
-      localStorage.removeItem("full_access_granted");
+      // Clear any existing access and reload to trigger login
+      localStorage.removeItem('developer_access');
+      localStorage.removeItem('developer_user');
+      localStorage.removeItem('full_access_granted');
+      console.log('Triggering developer login for Capacitor');
       window.location.reload();
     }
   };
 
   return (
     <motion.header
-      role="banner"
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 backdrop-blur-xl pt-[env(safe-area-inset-top)]"
-      style={{
-        paddingTop: 'env(safe-area-inset-top)',
-      }}
+      className="fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] min-h-[calc(44px+env(safe-area-inset-top))] glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 header-safe-area"
     >
-      <div className="container mx-auto w-full max-w-screen-xl">
+      <div className="container mx-auto h-full max-w-screen-xl">
         <div className="flex items-center justify-between h-[72px] px-3 sm:px-4">
-          {/* Left */}
+          {/* Left Section */}
           <div className="flex items-center">
             {leftComponent ? (
               leftComponent
             ) : (
-              <Link to="/home" className="text-xl sm:text-2xl font-orbitron font-bold">
-                <span
-                  className="text-[#00D1FF]"
-                  style={{
-                    textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)",
-                  }}
-                >
-                  M1
-                </span>
-                <span className="text-white">
-                  SSION<span className="text-xs align-top">™</span>
-                </span>
+              <Link
+                to="/home"
+                className="text-xl sm:text-2xl font-orbitron font-bold"
+              >
+                <span className="text-[#00D1FF]" style={{ 
+                  textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+                }}>M1</span>
+                <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
               </Link>
             )}
           </div>
 
-          {/* Center */}
-          <div className="flex items-center justify-center" />
+          {/* Center section - removed M1-AGENT badge */}
+          <div className="flex items-center justify-center">
+            {/* Empty center area */}
+          </div>
 
-          {/* Right */}
+          {/* Right Section */}
           <div className="flex items-center space-x-1 sm:space-x-3">
+            {/* Notifications - Enable for developer or web users */}
             <Button
               variant="ghost"
               size="icon"
@@ -103,27 +112,37 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span
-                  className="absolute -top-1 -right-1 bg-[#F059FF] rounded-full w-2 h-2"
+                <span className="absolute -top-1 -right-1 bg-[#F059FF] rounded-full w-2 h-2"
                   style={{
-                    boxShadow: "0 0 8px rgba(240, 89, 255, 0.5)",
+                    boxShadow: "0 0 8px rgba(240, 89, 255, 0.5)"
                   }}
                 ></span>
               )}
             </Button>
 
+            {/* Settings - Enable for developer */}
             {hasAccess ? (
               <Link to="/settings">
-                <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full hover:bg-white/10"
+                >
                   <Settings className="w-5 h-5" />
                 </Button>
               </Link>
             ) : (
-              <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10" disabled>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full hover:bg-white/10"
+                disabled
+              >
                 <Settings className="w-5 h-5" />
               </Button>
             )}
 
+            {/* Profile Avatar - ALWAYS CLICKABLE for developer access */}
             {hasAccess ? (
               <Link to="/profile">
                 <ProfileAvatar
