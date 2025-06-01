@@ -1,9 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-
-// Import ESM corretto
-import * as lovableTagger from "lovable-tagger"; // importa tutto come oggetto
+import lovableTagger from "lovable-tagger/dist/index.js";
 
 export default defineConfig({
   server: {
@@ -12,8 +10,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    // Chiama la funzione principale se esiste
-    (lovableTagger.default ?? lovableTagger)(), 
+    lovableTagger(), // chiamata diretta
   ],
   resolve: {
     alias: {
