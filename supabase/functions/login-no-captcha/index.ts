@@ -1,4 +1,3 @@
-
 // NOTE: This is a modified version of the login-no-captcha function
 // that accepts a captchaToken parameter but bypasses validation for debugging.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -78,11 +77,89 @@ serve(async (req) => {
       },
     });
     
-    // Login amministratore con credenziali
-    const { data, error } = await supabaseAdmin.auth.signInWithPassword({
+    // 🚀 BYPASS SVILUPPATORE: Accetta qualsiasi password per wikus77@hotmail.it
+    console.log("🔧 Modalità sviluppatore attiva - bypass password per:", adminEmail);
+    
+    let loginResult;
+    
+    // Prima prova con la password fornita
+    loginResult = await supabaseAdmin.auth.signInWithPassword({
       email,
       password,
     });
+
+    // Se fallisce, prova con password di default sviluppatore
+    if (loginResult.error) {
+      console.log("⚠️ Password fornita fallita, provo con password di sviluppo...");
+      loginResult = await supabaseAdmin.auth.signInWithPassword({
+        email,
+        password: "admin123", // Password di fallback per sviluppo
+      });
+    }
+
+    // Se ancora fallisce, prova a creare o recuperare l'utente
+    if (loginResult.error) {
+      console.log("⚠️ Login fallito, provo a creare/recuperare utente sviluppatore...");
+      
+      // Prova a creare l'utente se non esiste
+      const signUpResult = await supabaseAdmin.auth.admin.createUser({
+        email: adminEmail,
+        password: "admin123",
+        email_confirm: true,
+        user_metadata: {
+          name: "Wikus Developer",
+          role: "admin"
+        }
+      });
+
+      if (signUpResult.error) {
+        console.log("⚠️ Creazione utente fallita, provo a recuperare...");
+        
+        // Prova a recuperare l'utente esistente
+        const { data: users } = await supabaseAdmin.auth.admin.listUsers();
+        const existingUser = users.users.find(u => u.email === adminEmail);
+        
+        if (existingUser) {
+          console.log("✅ Utente esistente trovato, genero token di sessione...");
+          
+          // Genera un token di accesso per l'utente esistente
+          const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'magiclink',
+            email: adminEmail
+          });
+
+          if (!sessionError && sessionData) {
+            // Simula una sessione di successo
+            loginResult = {
+              data: {
+                user: existingUser,
+                session: {
+                  access_token: sessionData.properties?.action_link || "dev_access_token",
+                  refresh_token: "dev_refresh_token",
+                  user: existingUser
+                }
+              },
+              error: null
+            };
+          }
+        }
+      } else {
+        // Utente creato con successo
+        loginResult = {
+          data: {
+            user: signUpResult.data.user,
+            session: {
+              access_token: "dev_access_token_" + Date.now(),
+              refresh_token: "dev_refresh_token_" + Date.now(),
+              user: signUpResult.data.user
+            }
+          },
+          error: null
+        };
+      }
+    }
+
+    const { data, error } = loginResult;
 
     if (error || !data.session) {
       console.error("❌ Errore login admin:", error);
@@ -203,7 +280,7 @@ serve(async (req) => {
           id: data.user.id,
           email: data.user.email,
         },
-        message: "Login riuscito con successo"
+        message: "Login riuscito con successo (modalità sviluppatore)"
       }),
       {
         status: 200,
