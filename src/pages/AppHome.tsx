@@ -117,7 +117,7 @@ const AppHome = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#070818] w-full overflow-hidden">
+    <div className="min-h-screen bg-[#070818] w-full" style={{ overflow: 'hidden' }}>
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
@@ -127,19 +127,16 @@ const AppHome = () => {
         <UnifiedHeader profileImage={profileImage} />
       </div>
       
-      {/* CRITICAL FIX: Content container with proper safe zone constraints */}
-      <div 
-        className="w-full"
-        style={{ 
-          // Fixed values with env() fallback to ensure visibility
-          paddingTop: 'calc(119px + 47px)', // 72px header + 47px top safe zone
-          paddingBottom: 'calc(64px + 34px)', // 64px bottom nav + 34px bottom safe zone
-          height: '100vh',
+      {/* CRITICAL FIX: Main content with proper scroll containment */}
+      <main
+        style={{
+          paddingTop: 'calc(72px + 47px)', // Header height + safe zone top
+          paddingBottom: 'calc(64px + 34px)', // Bottom nav + safe zone bottom
           maxHeight: '100dvh',
           overflowY: 'auto',
           overflowX: 'hidden',
           position: 'relative',
-          zIndex: 1
+          zIndex: 0
         }}
       >
         <AnimatePresence>
@@ -195,7 +192,7 @@ const AppHome = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </main>
       
       <BottomNavigation />
     </div>

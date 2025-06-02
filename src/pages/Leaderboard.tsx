@@ -107,28 +107,27 @@ const Leaderboard = () => {
 
   return (
     <motion.div 
-      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black overflow-hidden"
+      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
+      style={{ overflow: 'hidden' }}
     >
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 right-0 z-50">
         <UnifiedHeader />
       </div>
       
-      {/* CRITICAL FIX: Content container with proper safe zone constraints */}
-      <div 
-        className="w-full"
-        style={{ 
-          paddingTop: 'calc(119px + 47px)', // 72px header + 47px top safe zone
-          paddingBottom: 'calc(64px + 34px)', // 64px bottom nav + 34px bottom safe zone
-          height: '100vh',
+      {/* CRITICAL FIX: Main content with proper scroll containment */}
+      <main
+        style={{
+          paddingTop: 'calc(72px + 47px)', // Header height + safe zone top
+          paddingBottom: 'calc(64px + 34px)', // Bottom nav + safe zone bottom
           maxHeight: '100dvh',
           overflowY: 'auto',
           overflowX: 'hidden',
           position: 'relative',
-          zIndex: 1
+          zIndex: 0
         }}
       >
         <div className="container mx-auto">
@@ -171,7 +170,7 @@ const Leaderboard = () => {
             </motion.div>
           </div>
         </div>
-      </div>
+      </main>
       
       <CreateTeamDialog
         open={showCreateTeamDialog}

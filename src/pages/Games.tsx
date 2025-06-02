@@ -66,24 +66,22 @@ const Games = () => {
 
   if (selectedGame) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black" style={{ overflow: 'hidden' }}>
         {/* Fixed Header */}
         <div className="fixed top-0 left-0 right-0 z-50">
           <UnifiedHeader />
         </div>
         
-        {/* CRITICAL FIX: Content container with proper safe zone constraints */}
-        <div 
-          className="w-full"
-          style={{ 
-            paddingTop: 'calc(119px + 47px)', // 72px header + 47px top safe zone
-            paddingBottom: 'calc(64px + 34px)', // 64px bottom nav + 34px bottom safe zone
-            height: '100vh',
+        {/* CRITICAL FIX: Main content with proper scroll containment */}
+        <main
+          style={{
+            paddingTop: 'calc(72px + 47px)', // Header height + safe zone top
+            paddingBottom: 'calc(64px + 34px)', // Bottom nav + safe zone bottom
             maxHeight: '100dvh',
             overflowY: 'auto',
             overflowX: 'hidden',
             position: 'relative',
-            zIndex: 1
+            zIndex: 0
           }}
         >
           <div className="container mx-auto px-3">
@@ -95,7 +93,7 @@ const Games = () => {
             </button>
             {renderGame()}
           </div>
-        </div>
+        </main>
         <BottomNavigation />
       </div>
     );
@@ -103,28 +101,27 @@ const Games = () => {
 
   return (
     <motion.div 
-      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black w-full overflow-hidden"
+      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black w-full"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
+      style={{ overflow: 'hidden' }}
     >
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 right-0 z-50">
         <UnifiedHeader />
       </div>
       
-      {/* CRITICAL FIX: Content container with proper safe zone constraints */}
-      <div 
-        className="w-full"
-        style={{ 
-          paddingTop: 'calc(119px + 47px)', // 72px header + 47px top safe zone
-          paddingBottom: 'calc(64px + 34px)', // 64px bottom nav + 34px bottom safe zone
-          height: '100vh',
+      {/* CRITICAL FIX: Main content with proper scroll containment */}
+      <main
+        style={{
+          paddingTop: 'calc(72px + 47px)', // Header height + safe zone top
+          paddingBottom: 'calc(64px + 34px)', // Bottom nav + safe zone bottom
           maxHeight: '100dvh',
           overflowY: 'auto',
           overflowX: 'hidden',
           position: 'relative',
-          zIndex: 1
+          zIndex: 0
         }}
       >
         <div className="container mx-auto">
@@ -182,7 +179,7 @@ const Games = () => {
             </motion.div>
           </div>
         </div>
-      </div>
+      </main>
       
       <BottomNavigation />
     </motion.div>
