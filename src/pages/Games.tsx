@@ -75,21 +75,23 @@ const Games = () => {
       >
         <UnifiedHeader />
         <div 
-          className="w-full overflow-y-auto"
+          className="w-full h-full overflow-y-auto"
           style={{ 
-            paddingTop: '119px',
-            marginTop: 0,
-            maxHeight: 'calc(100vh - 119px - 64px - env(safe-area-inset-bottom, 34px))'
+            paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
+            maxHeight: 'calc(100vh - 72px - env(safe-area-inset-top, 47px) - 64px - env(safe-area-inset-bottom, 34px))',
+            position: 'relative',
+            zIndex: 1
           }}
-        />
-        <div className="container mx-auto px-3">
-          <button
-            onClick={() => setSelectedGame(null)}
-            className="mb-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-          >
-            ← Torna ai giochi
-          </button>
-          {renderGame()}
+        >
+          <div className="container mx-auto px-3">
+            <button
+              onClick={() => setSelectedGame(null)}
+              className="mb-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+            >
+              ← Torna ai giochi
+            </button>
+            {renderGame()}
+          </div>
         </div>
         <BottomNavigation />
       </div>
@@ -109,70 +111,70 @@ const Games = () => {
     >
       <UnifiedHeader />
       
-      {/* Content positioned below header - CRITICAL FIX: Explicit spacing */}
+      {/* Content container with fixed scroll behavior */}
       <div 
-        className="w-full overflow-y-auto"
+        className="w-full h-full overflow-y-auto"
         style={{ 
-          // FIXED: Safe zone (47px) + header height (72px) = 119px total
-          paddingTop: '119px',
-          marginTop: 0,
-          maxHeight: 'calc(100vh - 119px - 64px - env(safe-area-inset-bottom, 34px))'
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
+          maxHeight: 'calc(100vh - 72px - env(safe-area-inset-top, 47px) - 64px - env(safe-area-inset-bottom, 34px))',
+          position: 'relative',
+          zIndex: 1
         }}
-      />
-      
-      <div className="container mx-auto">
-        <motion.h1
-          className="text-4xl font-orbitron font-bold text-[#00D1FF] text-center mt-6 mb-8"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}
-        >
-          M1SSION GAMES
-        </motion.h1>
-        
-        {/* Game Stats */}
-        <motion.div
-          className="max-w-4xl mx-auto mb-8 px-3"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <div className="glass-card p-4 text-center">
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <div className="text-2xl font-bold text-[#00D1FF]">{score}</div>
-                <div className="text-gray-400 text-sm">Punti Totali</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-[#F059FF]">{level}</div>
-                <div className="text-gray-400 text-sm">Livello Agente</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-[#00FF88]">{gameStats.gamesPlayed}</div>
-                <div className="text-gray-400 text-sm">Missioni</div>
+      >
+        <div className="container mx-auto">
+          <motion.h1
+            className="text-4xl font-orbitron font-bold text-[#00D1FF] text-center mt-6 mb-8"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}
+          >
+            M1SSION GAMES
+          </motion.h1>
+          
+          {/* Game Stats */}
+          <motion.div
+            className="max-w-4xl mx-auto mb-8 px-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <div className="glass-card p-4 text-center">
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <div className="text-2xl font-bold text-[#00D1FF]">{score}</div>
+                  <div className="text-gray-400 text-sm">Punti Totali</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-[#F059FF]">{level}</div>
+                  <div className="text-gray-400 text-sm">Livello Agente</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-[#00FF88]">{gameStats.gamesPlayed}</div>
+                  <div className="text-gray-400 text-sm">Missioni</div>
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
-
-        {/* Games Grid */}
-        <div className="max-w-4xl mx-auto px-3">
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-          >
-            {Object.entries(gameData).map(([gameType, game]) => (
-              <GameCard
-                key={gameType}
-                game={game}
-                isCompleted={gameCompleted[gameType as GameType]}
-                onPlay={() => setSelectedGame(gameType as GameType)}
-              />
-            ))}
           </motion.div>
+
+          {/* Games Grid */}
+          <div className="max-w-4xl mx-auto px-3">
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+            >
+              {Object.entries(gameData).map(([gameType, game]) => (
+                <GameCard
+                  key={gameType}
+                  game={game}
+                  isCompleted={gameCompleted[gameType as GameType]}
+                  onPlay={() => setSelectedGame(gameType as GameType)}
+                />
+              ))}
+            </motion.div>
+          </div>
         </div>
       </div>
       

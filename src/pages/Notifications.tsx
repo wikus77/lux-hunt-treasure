@@ -52,135 +52,135 @@ const Notifications = () => {
     >
       <UnifiedHeader />
       
-      {/* Content positioned below header - CRITICAL FIX: Explicit spacing */}
+      {/* Content container with fixed scroll behavior */}
       <div 
-        className="w-full overflow-y-auto"
+        className="w-full h-full overflow-y-auto"
         style={{ 
-          // FIXED: Safe zone (47px) + header height (72px) = 119px total
-          paddingTop: '119px',
-          marginTop: 0,
-          maxHeight: 'calc(100vh - 119px - 64px - env(safe-area-inset-bottom, 34px))'
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
+          maxHeight: 'calc(100vh - 72px - env(safe-area-inset-top, 47px) - 64px - env(safe-area-inset-bottom, 34px))',
+          position: 'relative',
+          zIndex: 1
         }}
-      />
-      
-      <div className="container mx-auto">
-        <motion.h1
-          className="text-4xl font-orbitron font-bold text-[#00D1FF] text-center mt-6 mb-8"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}
-        >
-          NOTIFICHE
-        </motion.h1>
-        
-        <motion.div
-          className="max-w-3xl mx-auto px-3 sm:px-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="glass-card p-4 sm:p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-white">Le tue notifiche</h2>
-              <Button variant="ghost" size="sm" onClick={handleMarkAllAsRead}>
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                Segna tutto come letto
-              </Button>
-            </div>
-            
-            <div className="flex items-center space-x-3 overflow-x-auto mb-4">
-              <Button
-                variant={filter === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('all')}
-                className="flex-shrink-0"
-              >
-                <Bell className="w-4 h-4 mr-2" />
-                Tutte
-              </Button>
-              <Button
-                variant={filter === 'unread' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('unread')}
-                className="flex-shrink-0"
-              >
-                <Bell className="w-4 h-4 mr-2" />
-                Non lette
-              </Button>
-              <Button
-                variant={filter === 'important' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('important')}
-                className="flex-shrink-0"
-              >
-                <AlertCircle className="w-4 h-4 mr-2" />
-                Importanti
-              </Button>
-            </div>
-            
-            <AnimatePresence>
-              {filteredNotifications().length > 0 ? (
-                <ul className="space-y-3">
-                  {filteredNotifications().map(notification => (
-                    <motion.li
-                      key={notification.id}
-                      className="glass-card p-3 sm:p-4 rounded-md border border-white/10"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start">
-                          {notification.type === 'success' && <CheckCircle2 className="w-5 h-5 mr-3 text-green-500" />}
-                          {notification.type === 'info' && <Info className="w-5 h-5 mr-3 text-blue-500" />}
-                          {notification.type === 'alert' && <AlertCircle className="w-5 h-5 mr-3 text-yellow-500" />}
-                          {notification.type === 'critical' && <Star className="w-5 h-5 mr-3 text-red-500" />}
-                          
-                          <div>
-                            <h3 className="text-sm font-semibold text-white">{notification.title}</h3>
-                            <p className="text-xs text-gray-400">{notification.description}</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {new Date(notification.date).toLocaleDateString()} - {new Date(notification.date).toLocaleTimeString()}
-                            </p>
+      >
+        <div className="container mx-auto">
+          <motion.h1
+            className="text-4xl font-orbitron font-bold text-[#00D1FF] text-center mt-6 mb-8"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}
+          >
+            NOTIFICHE
+          </motion.h1>
+          
+          <motion.div
+            className="max-w-3xl mx-auto px-3 sm:px-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="glass-card p-4 sm:p-6 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-white">Le tue notifiche</h2>
+                <Button variant="ghost" size="sm" onClick={handleMarkAllAsRead}>
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Segna tutto come letto
+                </Button>
+              </div>
+              
+              <div className="flex items-center space-x-3 overflow-x-auto mb-4">
+                <Button
+                  variant={filter === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilter('all')}
+                  className="flex-shrink-0"
+                >
+                  <Bell className="w-4 h-4 mr-2" />
+                  Tutte
+                </Button>
+                <Button
+                  variant={filter === 'unread' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilter('unread')}
+                  className="flex-shrink-0"
+                >
+                  <Bell className="w-4 h-4 mr-2" />
+                  Non lette
+                </Button>
+                <Button
+                  variant={filter === 'important' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilter('important')}
+                  className="flex-shrink-0"
+                >
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  Importanti
+                </Button>
+              </div>
+              
+              <AnimatePresence>
+                {filteredNotifications().length > 0 ? (
+                  <ul className="space-y-3">
+                    {filteredNotifications().map(notification => (
+                      <motion.li
+                        key={notification.id}
+                        className="glass-card p-3 sm:p-4 rounded-md border border-white/10"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start">
+                            {notification.type === 'success' && <CheckCircle2 className="w-5 h-5 mr-3 text-green-500" />}
+                            {notification.type === 'info' && <Info className="w-5 h-5 mr-3 text-blue-500" />}
+                            {notification.type === 'alert' && <AlertCircle className="w-5 h-5 mr-3 text-yellow-500" />}
+                            {notification.type === 'critical' && <Star className="w-5 h-5 mr-3 text-red-500" />}
+                            
+                            <div>
+                              <h3 className="text-sm font-semibold text-white">{notification.title}</h3>
+                              <p className="text-xs text-gray-400">{notification.description}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {new Date(notification.date).toLocaleDateString()} - {new Date(notification.date).toLocaleTimeString()}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          {!notification.read && (
+                          
+                          <div className="flex items-center space-x-2">
+                            {!notification.read && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleMarkAsRead(notification.id)}
+                                className="hover:bg-white/5"
+                              >
+                                <Bell className="w-4 h-4" />
+                                <span className="sr-only">Segna come letto</span>
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleMarkAsRead(notification.id)}
+                              onClick={() => handleDeleteNotification(notification.id)}
                               className="hover:bg-white/5"
                             >
-                              <Bell className="w-4 h-4" />
-                              <span className="sr-only">Segna come letto</span>
+                              <Trash2 className="w-4 h-4" />
+                              <span className="sr-only">Elimina</span>
                             </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteNotification(notification.id)}
-                            className="hover:bg-white/5"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            <span className="sr-only">Elimina</span>
-                          </Button>
+                          </div>
                         </div>
-                      </div>
-                    </motion.li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="text-center text-gray-500">
-                  Nessuna notifica da visualizzare.
-                </div>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
+                      </motion.li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="text-center text-gray-500">
+                    Nessuna notifica da visualizzare.
+                  </div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </div>
       </div>
       
       <BottomNavigation />

@@ -130,71 +130,70 @@ const AppHome = () => {
       
       <UnifiedHeader profileImage={profileImage} />
       
-      {/* Content positioned below header - CRITICAL FIX: Explicit spacing */}
+      {/* Content container with fixed scroll behavior */}
       <div 
-        className="w-full overflow-y-auto"
+        className="w-full h-full overflow-y-auto"
         style={{ 
-          // FIXED: Safe zone (47px) + header height (72px) = 119px total
-          paddingTop: '119px',
-          marginTop: 0,
-          maxHeight: 'calc(100vh - 119px - 64px - env(safe-area-inset-bottom, 34px))'
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
+          maxHeight: 'calc(100vh - 72px - env(safe-area-inset-top, 47px) - 64px - env(safe-area-inset-bottom, 34px))',
+          position: 'relative',
+          zIndex: 1
         }}
-      />
+      >
+        <AnimatePresence>
+          {isLoaded && (
+            <motion.div
+              className="relative z-10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              {notificationsBannerOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="fixed inset-x-0 z-[60] px-2 md:px-4"
+                  style={{ 
+                    top: 'calc(env(safe-area-inset-top, 47px) + 72px)'
+                  }}
+                >
+                  <NotificationsBanner
+                    notifications={notifications}
+                    open={notificationsBannerOpen}
+                    unreadCount={unreadCount}
+                    onClose={closeNotificationsBanner}
+                    onMarkAllAsRead={markAllAsRead}
+                    onDeleteNotification={deleteNotification}
+                  />
+                </motion.div>
+              )}
 
-      <AnimatePresence>
-        {isLoaded && (
-          <motion.div
-            className="relative z-10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            {notificationsBannerOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="fixed inset-x-0 z-[60] px-2 md:px-4"
-                style={{ 
-                  // Banner positioned below safe area + header
-                  top: 'calc(env(safe-area-inset-top, 47px) + 72px)'
-                }}
-              >
-                <NotificationsBanner
-                  notifications={notifications}
-                  open={notificationsBannerOpen}
-                  unreadCount={unreadCount}
-                  onClose={closeNotificationsBanner}
-                  onMarkAllAsRead={markAllAsRead}
-                  onDeleteNotification={deleteNotification}
-                />
-              </motion.div>
-            )}
+              <div className="container mx-auto px-3">
+                <motion.div
+                  className="text-center my-6"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                >
+                  <h1 className="text-4xl font-orbitron font-bold">
+                    <span className="text-[#00D1FF]" style={{ 
+                      textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+                    }}>M1</span>
+                    <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+                  </h1>
+                  <p className="text-gray-400 mt-2">Centro di Comando Agente</p>
+                </motion.div>
 
-            <div className="container mx-auto px-3">
-              <motion.div
-                className="text-center my-6"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-              >
-                <h1 className="text-4xl font-orbitron font-bold">
-                  <span className="text-[#00D1FF]" style={{ 
-                    textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-                  }}>M1</span>
-                  <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
-                </h1>
-                <p className="text-gray-400 mt-2">Centro di Comando Agente</p>
-              </motion.div>
-
-              <main className="max-w-screen-xl mx-auto pb-20">
-                <CommandCenterHome />
-              </main>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <main className="max-w-screen-xl mx-auto pb-20">
+                  <CommandCenterHome />
+                </main>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
       
       <BottomNavigation />
     </div>

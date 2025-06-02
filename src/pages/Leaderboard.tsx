@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
@@ -117,55 +118,55 @@ const Leaderboard = () => {
     >
       <UnifiedHeader />
       
-      {/* Content positioned below header - CRITICAL FIX: Explicit spacing */}
+      {/* Content container with fixed scroll behavior */}
       <div 
-        className="w-full overflow-y-auto"
+        className="w-full h-full overflow-y-auto"
         style={{ 
-          // FIXED: Safe zone (47px) + header height (72px) = 119px total
-          paddingTop: '119px',
-          marginTop: 0,
-          maxHeight: 'calc(100vh - 119px - 64px - env(safe-area-inset-bottom, 34px))'
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
+          maxHeight: 'calc(100vh - 72px - env(safe-area-inset-top, 47px) - 64px - env(safe-area-inset-bottom, 34px))',
+          position: 'relative',
+          zIndex: 1
         }}
-      />
-      
-      <div className="container mx-auto">
-        <motion.h1
-          className="text-4xl font-bold text-[#00D1FF] text-center mt-6 mb-8"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}
-        >
-          CLASSIFICA
-        </motion.h1>
-        
-        <div className="max-w-4xl mx-auto px-3 sm:px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
+      >
+        <div className="container mx-auto">
+          <motion.h1
+            className="text-4xl font-bold text-[#00D1FF] text-center mt-6 mb-8"
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-4 sm:space-y-6 glass-card"
+            transition={{ delay: 0.2, duration: 0.5 }}
+            style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}
           >
-            <LeaderboardHeader 
-              onSimulateRankChange={simulateRankChange}
-              onFilterChange={setFilter}
-            />
-            <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
-            <LeaderboardTopUsers players={samplePlayers.slice(0, 3)} />
-            
-            <LeaderboardTabs 
-              filteredPlayers={filteredPlayers}
-              isLoading={isLoading}
-              hasMorePlayers={hasMorePlayers}
-              sampleTeams={sampleTeams}
-              onLoadMore={handleLoadMore}
-              onInvite={handleInvite}
-              onCreateTeam={handleCreateTeamAndInvite}
-              onTabChange={setActiveTab}
-            />
-            
-            <LeaderboardProgress currentPosition={42} totalPlayers={100} />
-          </motion.div>
+            CLASSIFICA
+          </motion.h1>
+          
+          <div className="max-w-4xl mx-auto px-3 sm:px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="space-y-4 sm:space-y-6 glass-card"
+            >
+              <LeaderboardHeader 
+                onSimulateRankChange={simulateRankChange}
+                onFilterChange={setFilter}
+              />
+              <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
+              <LeaderboardTopUsers players={samplePlayers.slice(0, 3)} />
+              
+              <LeaderboardTabs 
+                filteredPlayers={filteredPlayers}
+                isLoading={isLoading}
+                hasMorePlayers={hasMorePlayers}
+                sampleTeams={sampleTeams}
+                onLoadMore={handleLoadMore}
+                onInvite={handleInvite}
+                onCreateTeam={handleCreateTeamAndInvite}
+                onTabChange={setActiveTab}
+              />
+              
+              <LeaderboardProgress currentPosition={42} totalPlayers={100} />
+            </motion.div>
+          </div>
         </div>
       </div>
       
