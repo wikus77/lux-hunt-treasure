@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { GameCard } from '@/components/games/GameCard';
@@ -67,7 +66,7 @@ const Games = () => {
   if (selectedGame) {
     return (
       <div 
-        className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black"
+        className="bg-gradient-to-b from-[#131524]/70 to-black"
         style={{ 
           height: '100dvh',
           overflow: 'hidden',
@@ -90,13 +89,13 @@ const Games = () => {
         {/* Main scrollable content */}
         <main
           style={{
-            paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
-            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
             height: '100dvh',
             overflowY: 'auto',
             overflowX: 'hidden',
+            paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
             position: 'relative',
-            zIndex: 1
+            zIndex: 0
           }}
         >
           <div className="container mx-auto px-3">
@@ -116,7 +115,7 @@ const Games = () => {
 
   return (
     <motion.div 
-      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black w-full"
+      className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -142,13 +141,13 @@ const Games = () => {
       {/* Main scrollable content */}
       <main
         style={{
-          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
           height: '100dvh',
           overflowY: 'auto',
           overflowX: 'hidden',
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
           position: 'relative',
-          zIndex: 1
+          zIndex: 0
         }}
       >
         <div className="container mx-auto">

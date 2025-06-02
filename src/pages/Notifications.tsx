@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Trash2, Filter, CheckCircle2, AlertCircle, Info, Star } from 'lucide-react';
@@ -41,7 +40,7 @@ const Notifications = () => {
 
   return (
     <motion.div 
-      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black w-full"
+      className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -67,13 +66,13 @@ const Notifications = () => {
       {/* Main scrollable content */}
       <main
         style={{
-          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
           height: '100dvh',
           overflowY: 'auto',
           overflowX: 'hidden',
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
           position: 'relative',
-          zIndex: 1
+          zIndex: 0
         }}
       >
         <div className="container mx-auto">

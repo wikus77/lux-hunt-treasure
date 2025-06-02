@@ -117,7 +117,7 @@ const AppHome = () => {
 
   return (
     <div 
-      className="min-h-screen bg-[#070818] w-full"
+      className="bg-[#070818] w-full"
       style={{ 
         height: '100dvh',
         overflow: 'hidden',
@@ -144,13 +144,13 @@ const AppHome = () => {
       {/* Main scrollable content */}
       <main
         style={{
-          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
           height: '100dvh',
           overflowY: 'auto',
           overflowX: 'hidden',
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
           position: 'relative',
-          zIndex: 1
+          zIndex: 0
         }}
       >
         <AnimatePresence>
