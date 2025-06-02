@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Trash2, Filter, CheckCircle2, AlertCircle, Info, Star } from 'lucide-react';
@@ -66,11 +67,10 @@ const Notifications = () => {
       {/* Main scrollable content */}
       <main
         style={{
-          height: '100dvh',
-          overflowY: 'auto',
-          overflowX: 'hidden',
           paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+          maxHeight: '100dvh',
+          overflowY: 'auto',
           position: 'relative',
           zIndex: 0
         }}

@@ -144,11 +144,10 @@ const AppHome = () => {
       {/* Main scrollable content */}
       <main
         style={{
-          height: '100dvh',
-          overflowY: 'auto',
-          overflowX: 'hidden',
           paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+          maxHeight: '100dvh',
+          overflowY: 'auto',
           position: 'relative',
           zIndex: 0
         }}
