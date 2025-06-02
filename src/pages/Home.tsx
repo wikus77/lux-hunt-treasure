@@ -6,6 +6,7 @@ import { useProfileImage } from "@/hooks/useProfileImage";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import { useDynamicIsland } from "@/hooks/useDynamicIsland";
+import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
 import { useMissionManager } from "@/hooks/useMissionManager";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 import { Helmet } from "react-helmet";
@@ -35,6 +36,9 @@ const Home = () => {
 
   const { isConnected } = useRealTimeNotifications();
 
+  // Attiva il sistema di sicurezza Dynamic Island
+  useDynamicIslandSafety();
+
   // Check for developer access and Capacitor environment
   useEffect(() => {
     const checkAccess = () => {
@@ -59,12 +63,13 @@ const Home = () => {
     checkAccess();
   }, []);
 
-  // Dynamic Island integration for HOME - Active mission
+  // Dynamic Island integration for HOME - Active mission con logging avanzato
   useEffect(() => {
     if (hasAccess && isLoaded && currentMission && currentMission.status === 'active') {
+      console.log('🏠 HOME: Starting Dynamic Island for active mission:', currentMission.name);
       startActivity({
         missionId: currentMission.id,
-        title: currentMission.name, // Use currentMission.name for title
+        title: currentMission.name,
         status: "Missione attiva",
         progress: currentMission.progress,
         timeLeft: currentMission.timeLeft,
@@ -72,11 +77,11 @@ const Home = () => {
     }
   }, [hasAccess, isLoaded, currentMission, startActivity]);
 
-  // Cleanup Live Activity when leaving page - Only if mission is not active
+  // Cleanup migliorato con logging
   useEffect(() => {
     return () => {
       if (currentMission && currentMission.status !== 'active') {
-        console.log('🧹 Cleaning up inactive mission Live Activity');
+        console.log('🏠 HOME: Cleaning up inactive mission Live Activity');
         endActivity();
       }
     };

@@ -100,6 +100,15 @@ export function useAuth() {
 
   const logout = async () => {
     try {
+      console.log('🔒 Logging out user - ensuring Live Activity cleanup');
+      
+      // Importazione dinamica per evitare circular dependency
+      const { useDynamicIsland } = await import('./useDynamicIsland');
+      const { forceEndActivity } = useDynamicIsland();
+      
+      // Chiusura forzata di sicurezza prima del logout
+      await forceEndActivity();
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
