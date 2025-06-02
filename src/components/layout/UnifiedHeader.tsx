@@ -82,9 +82,10 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="fixed left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70"
       style={{ 
-        top: 'env(safe-area-inset-top, 47px)', // POSIZIONATA SOTTO LA SAFE ZONE
-        paddingTop: '0px', // Nessun padding interno
-        marginTop: 0
+        // CRITICAL FIX: Force explicit positioning below safe zone
+        top: '47px', // Fixed value for Lovable preview
+        paddingTop: '0px',
+        marginTop: '0px'
       }}
     >
       <div className="container mx-auto h-full max-w-screen-xl">

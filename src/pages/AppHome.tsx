@@ -124,12 +124,12 @@ const AppHome = () => {
       
       <UnifiedHeader profileImage={profileImage} />
       
-      {/* Content positioned below header that respects safe area + header height */}
+      {/* Content positioned below header - CRITICAL FIX: Explicit spacing */}
       <div 
         className="w-full"
         style={{ 
-          // CORRETTO: safe area (47px) + header (72px) = 119px total
-          paddingTop: `calc(env(safe-area-inset-top, 47px) + 72px)`,
+          // FIXED: Safe zone (47px) + header height (72px) = 119px total
+          paddingTop: '119px',
           marginTop: 0
         }}
       />
@@ -151,7 +151,7 @@ const AppHome = () => {
                 className="fixed inset-x-0 z-[60] px-2 md:px-4"
                 style={{ 
                   // Banner positioned below safe area + header
-                  top: `calc(env(safe-area-inset-top, 47px) + 72px)`
+                  top: '119px'
                 }}
               >
                 <NotificationsBanner

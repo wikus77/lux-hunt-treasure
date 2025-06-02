@@ -19,7 +19,15 @@ const MapHeader = ({
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-black/40 border-b border-white/10 header-safe-area">
+      <header 
+        className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-black/40 border-b border-white/10"
+        style={{ 
+          // CRITICAL FIX: Position below safe zone
+          top: '47px',
+          paddingTop: '0px',
+          marginTop: '0px'
+        }}
+      >
         <div className="max-w-7xl mx-auto px-2 sm:px-4">
           <div className="flex items-center justify-between h-14 sm:h-16">
             <div className="flex items-center">
