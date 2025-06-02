@@ -17,7 +17,16 @@ const Buzz = () => {
       transition={{ duration: 0.5 }}
     >
       <UnifiedHeader />
-      <div className="h-[72px] w-full" />
+      
+      {/* Content positioned below header - CRITICAL FIX: Explicit spacing */}
+      <div 
+        className="w-full"
+        style={{ 
+          // FIXED: Safe zone (47px) + header height (72px) = 119px total
+          paddingTop: '119px',
+          marginTop: 0
+        }}
+      />
       
       <div className="container mx-auto">
         <motion.h1

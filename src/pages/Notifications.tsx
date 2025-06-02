@@ -1,340 +1,184 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Bell, MapPin, Circle, Trophy, Calendar, Trash2, Sparkles } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Bell, Trash2, Filter, CheckCircle2, AlertCircle, Info, Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useBuzzSound } from '@/hooks/useBuzzSound';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
-import GradientBox from "@/components/ui/gradient-box";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import NotificationDialog from "@/components/notifications/NotificationDialog";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-
-const categoryConfig = [
-  { 
-    id: NOTIFICATION_CATEGORIES.LEADERBOARD, 
-    name: "Aggiornamenti Classifica",
-    icon: <Trophy className="w-5 h-5 text-[#00D1FF]" />
-  },
-  { 
-    id: NOTIFICATION_CATEGORIES.BUZZ, 
-    name: "Notifiche BUZZ",
-    icon: <Circle className="w-5 h-5 text-[#00D1FF]" />
-  },
-  { 
-    id: NOTIFICATION_CATEGORIES.MAP_BUZZ, 
-    name: "Notifiche MAPPA",
-    icon: <MapPin className="w-5 h-5 text-[#00D1FF]" />
-  },
-  { 
-    id: NOTIFICATION_CATEGORIES.WEEKLY, 
-    name: "Notifiche Settimanali",
-    icon: <Calendar className="w-5 h-5 text-[#00D1FF]" />
-  },
-  { 
-    id: NOTIFICATION_CATEGORIES.GENERIC, 
-    name: "Altre notifiche",
-    icon: <Bell className="w-5 h-5 text-[#00D1FF]" />
-  }
-];
 
 const Notifications = () => {
-  const { notifications, markAllAsRead, markAsRead, deleteNotification, reloadNotifications, isLoading } = useNotifications();
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [selectedNotification, setSelectedNotification] = useState(null);
-  const isMobile = useIsMobile();
-  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'unread' | 'important'>('all');
+  const { notifications, markAsRead, deleteNotification, markAllAsRead } = useNotifications();
+  const { playSound } = useBuzzSound();
 
-  // Group notifications by category
-  const notificationsByCategory = useMemo(() => {
-    const result = categoryConfig.reduce((acc, category) => {
-      const categoryNotifications = notifications.filter(n => n.type === category.id);
-      if (categoryNotifications.length > 0) {
-        acc[category.id] = categoryNotifications;
-      }
-      return acc;
-    }, {} as Record<string, typeof notifications>);
-
-    // Add uncategorized notifications to "generic"
-    const uncategorized = notifications.filter(n => !n.type || !Object.values(NOTIFICATION_CATEGORIES).includes(n.type));
-    if (uncategorized.length > 0) {
-      if (result[NOTIFICATION_CATEGORIES.GENERIC]) {
-        result[NOTIFICATION_CATEGORIES.GENERIC] = [
-          ...result[NOTIFICATION_CATEGORIES.GENERIC],
-          ...uncategorized
-        ];
-      } else {
-        result[NOTIFICATION_CATEGORIES.GENERIC] = uncategorized;
-      }
-    }
-
-    return result;
-  }, [notifications]);
-
-  // Load notifications when component mounts
-  useEffect(() => {
-    console.log("📱 Caricamento pagina notifiche...");
-    setIsLoaded(true);
-    
-    const loadData = async () => {
-      if (!initialLoadComplete) {
-        console.log("🔄 Ricaricamento notifiche...");
-        await reloadNotifications(true);
-        await markAllAsRead();
-        setInitialLoadComplete(true);
-        console.log("✅ Caricamento iniziale completato");
-      }
-    };
-    
-    loadData();
-    
-    // Polling ridotto per aggiornamenti in tempo reale
-    const refreshInterval = setInterval(() => {
-      console.log("🔄 Aggiornamento periodico notifiche...");
-      reloadNotifications();
-    }, 30000); // Poll ogni 30 secondi
-    
-    return () => clearInterval(refreshInterval);
-  }, [markAllAsRead, reloadNotifications, initialLoadComplete]);
-
-  const toggleCategory = (categoryId: string) => {
-    setExpandedCategories(prev => 
-      prev.includes(categoryId) 
-        ? prev.filter(id => id !== categoryId) 
-        : [...prev, categoryId]
-    );
-  };
-
-  const handleDeleteNotification = async (id: string) => {
-    console.log("🗑️ Eliminazione notifica:", id);
-    const success = await deleteNotification(id);
-    if (success) {
-      toast.success("Notifica eliminata");
+  const filteredNotifications = () => {
+    switch (filter) {
+      case 'unread':
+        return notifications.filter(notification => !notification.read);
+      case 'important':
+        return notifications.filter(notification => notification.type === 'alert' || notification.type === 'critical');
+      default:
+        return notifications;
     }
   };
 
-  const handleOpen = async (notification: any) => {
-    console.log("👆 Apertura notifica:", notification.id, "Read status:", notification.read);
-    if (!notification.read) {
-      console.log("📖 Marcando notifica come letta...");
-      await markAsRead(notification.id);
-    }
-    setSelectedNotification(notification);
+  const handleMarkAsRead = (id: string) => {
+    markAsRead(id);
+    playSound();
   };
 
-  const handleManualRefresh = async () => {
-    console.log("🔄 Aggiornamento manuale richiesto");
-    await reloadNotifications(true);
-    toast.success("Notifiche aggiornate");
+  const handleDeleteNotification = (id: string) => {
+    deleteNotification(id);
+    playSound();
   };
 
-  const NotificationSkeleton = () => (
-    <div className="space-y-4">
-      {[1, 2, 3].map(i => (
-        <div key={i} className="p-4 rounded-[24px] border border-[#00D1FF]/10 bg-black/90">
-          <div className="flex items-start gap-3">
-            <Skeleton className="h-5 w-5 bg-gray-700 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-5 w-40 bg-gray-700" />
-              <Skeleton className="h-3 w-full bg-gray-800" />
-              <Skeleton className="h-3 w-20 bg-gray-900" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  const handleMarkAllAsRead = () => {
+    markAllAsRead();
+    playSound();
+  };
 
   return (
-    <div className="min-h-screen bg-[#070818] pb-20 w-full">
+    <motion.div 
+      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black pb-20 w-full"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <UnifiedHeader />
-      <div className="h-[72px] w-full" />
       
-      <div className="container mx-auto px-3">
+      {/* Content positioned below header - CRITICAL FIX: Explicit spacing */}
+      <div 
+        className="w-full"
+        style={{ 
+          // FIXED: Safe zone (47px) + header height (72px) = 119px total
+          paddingTop: '119px',
+          marginTop: 0
+        }}
+      />
+      
+      <div className="container mx-auto">
         <motion.h1
-          className="text-4xl font-orbitron font-bold text-center mt-6 mb-8"
+          className="text-4xl font-orbitron font-bold text-[#00D1FF] text-center mt-6 mb-8"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
+          style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}
         >
-          <span className="text-[#00D1FF]" style={{ 
-            textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-          }}>LE MIE</span>
-          <span className="text-white"> NOTIFICHE</span>
+          NOTIFICHE
         </motion.h1>
-
-        <div className="max-w-3xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="flex justify-end mb-3">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleManualRefresh}
-                disabled={isLoading}
-                className="text-xs bg-[#131524]/30 hover:bg-[#131524]/50 border-[#00D1FF]/30"
-              >
-                Aggiorna notifiche
+        
+        <motion.div
+          className="max-w-3xl mx-auto px-3 sm:px-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="glass-card p-4 sm:p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-white">Le tue notifiche</h2>
+              <Button variant="ghost" size="sm" onClick={handleMarkAllAsRead}>
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Segna tutto come letto
               </Button>
             </div>
             
-            <GradientBox className="p-5">
-              {isLoading && !initialLoadComplete ? (
-                <NotificationSkeleton />
-              ) : notifications && notifications.length > 0 ? (
-                <Accordion 
-                  type="multiple" 
-                  value={expandedCategories}
-                  className="space-y-4"
-                >
-                  {categoryConfig.map(category => {
-                    const categoryNotifs = notificationsByCategory[category.id];
-                    if (!categoryNotifs || categoryNotifs.length === 0) return null;
-                    
-                    const unreadInCategory = categoryNotifs.filter(n => !n.read).length;
-                    
-                    return (
-                      <AccordionItem 
-                        key={category.id} 
-                        value={category.id}
-                        className="border border-[#00D1FF]/20 rounded-[24px] bg-black/80 overflow-hidden shadow-lg hover:shadow-[0_0_15px_rgba(0,209,255,0.2)]"
-                      >
-                        <AccordionTrigger 
-                          onClick={() => toggleCategory(category.id)}
-                          className="px-4 py-4 hover:no-underline hover:bg-white/5 data-[state=open]:bg-[#00D1FF]/5"
-                        >
-                          <div className="flex items-center gap-3">
-                            {category.icon}
-                            <span className="text-white font-medium">{category.name}</span>
-                            <Badge 
-                              className="bg-[#00D1FF]/20 text-[#00D1FF] hover:bg-[#00D1FF]/30 ml-2"
+            <div className="flex items-center space-x-3 overflow-x-auto mb-4">
+              <Button
+                variant={filter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('all')}
+                className="flex-shrink-0"
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                Tutte
+              </Button>
+              <Button
+                variant={filter === 'unread' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('unread')}
+                className="flex-shrink-0"
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                Non lette
+              </Button>
+              <Button
+                variant={filter === 'important' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('important')}
+                className="flex-shrink-0"
+              >
+                <AlertCircle className="w-4 h-4 mr-2" />
+                Importanti
+              </Button>
+            </div>
+            
+            <AnimatePresence>
+              {filteredNotifications().length > 0 ? (
+                <ul className="space-y-3">
+                  {filteredNotifications().map(notification => (
+                    <motion.li
+                      key={notification.id}
+                      className="glass-card p-3 sm:p-4 rounded-md border border-white/10"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start">
+                          {notification.type === 'success' && <CheckCircle2 className="w-5 h-5 mr-3 text-green-500" />}
+                          {notification.type === 'info' && <Info className="w-5 h-5 mr-3 text-blue-500" />}
+                          {notification.type === 'alert' && <AlertCircle className="w-5 h-5 mr-3 text-yellow-500" />}
+                          {notification.type === 'critical' && <Star className="w-5 h-5 mr-3 text-red-500" />}
+                          
+                          <div>
+                            <h3 className="text-sm font-semibold text-white">{notification.title}</h3>
+                            <p className="text-xs text-gray-400">{notification.message}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {new Date(notification.timestamp).toLocaleDateString()} - {new Date(notification.timestamp).toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          {!notification.read && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleMarkAsRead(notification.id)}
+                              className="hover:bg-white/5"
                             >
-                              {categoryNotifs.length}
-                            </Badge>
-                            {unreadInCategory > 0 && (
-                              <div className="h-2 w-2 rounded-full bg-[#FF59F8] animate-pulse ml-1"></div>
-                            )}
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="bg-black/30 px-4 py-3">
-                          <div className="space-y-3">
-                            {categoryNotifs
-                              .sort((a, b) => (new Date(b.date).getTime() - new Date(a.date).getTime()))
-                              .map(notification => (
-                                <div 
-                                  key={notification.id} 
-                                  className={`p-4 rounded-[24px] border transition-all duration-300 shadow-md relative cursor-pointer ${
-                                    !notification.read 
-                                      ? "border-l-8 border-[#FF59F8] bg-gradient-to-br from-[#FF59F8]/35 via-[#00D1FF]/25 to-black/95 hover:from-[#FF59F8]/45 hover:via-[#00D1FF]/35 hover:to-black shadow-[0_0_40px_rgba(255,89,248,0.6),0_0_20px_rgba(0,209,255,0.4)] animate-pulse" 
-                                      : "border-[#00D1FF]/10 hover:border-[#00D1FF]/30 bg-gradient-to-br from-black/90 to-[#131524]/80 hover:from-black hover:to-[#131524]/90"
-                                  }`}
-                                  onClick={() => handleOpen(notification)}
-                                  style={!notification.read ? {
-                                    boxShadow: "0 0 30px rgba(255, 89, 248, 0.4), 0 0 15px rgba(0, 209, 255, 0.3), inset 0 0 20px rgba(255, 89, 248, 0.1)"
-                                  } : {}}
-                                >
-                                  {/* EVIDENZA VISIVA MASSIMA per notifiche non lette */}
-                                  {!notification.read && (
-                                    <>
-                                      {/* Scia laterale NEON pulsante */}
-                                      <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-b from-[#FF59F8] via-[#00D1FF] to-[#FF59F8] rounded-l-[24px] animate-pulse shadow-[0_0_15px_rgba(255,89,248,0.8)]"></div>
-                                      
-                                      {/* Icona NUOVA pulsante */}
-                                      <div className="absolute top-2 right-2 flex items-center gap-1">
-                                        <Sparkles className="w-4 h-4 text-[#FF59F8] animate-pulse" />
-                                        <div className="h-3 w-3 rounded-full bg-[#FF59F8] animate-ping shadow-[0_0_10px_rgba(255,89,248,0.8)]"></div>
-                                      </div>
-                                    </>
-                                  )}
-                                  
-                                  <div className="flex items-start gap-3">
-                                    <div className="flex-shrink-0">
-                                      {category.icon}
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <h3 className={`font-medium ${
-                                          !notification.read 
-                                            ? 'text-[#00D1FF] font-extrabold text-lg glow-text-strong' 
-                                            : 'text-white'
-                                        }`} style={!notification.read ? {
-                                          textShadow: "0 0 20px rgba(0, 209, 255, 0.9), 0 0 40px rgba(255, 89, 248, 0.7)"
-                                        } : {}}>
-                                          {notification.title}
-                                        </h3>
-                                        {!notification.read && (
-                                          <Badge className="bg-gradient-to-r from-[#FF59F8] to-[#00D1FF] text-white font-extrabold px-3 py-1 animate-pulse shadow-[0_0_15px_rgba(255,89,248,0.6)]">
-                                            🆕 NUOVA
-                                          </Badge>
-                                        )}
-                                      </div>
-                                      <p className={`text-sm mt-1 ${
-                                        !notification.read ? 'text-white font-semibold' : 'text-white/70'
-                                      }`}>{notification.description}</p>
-                                      <div className="mt-1 text-xs text-white/40">
-                                        {notification.date ? new Date(notification.date).toLocaleString() : "Ora"}
-                                      </div>
-                                    </div>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteNotification(notification.id);
-                                      }}
-                                      className="p-1 h-auto rounded-full text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                      <span className="sr-only">Elimina notifica</span>
-                                    </Button>
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    );
-                  })}
-                </Accordion>
+                              <Bell className="w-4 h-4" />
+                              <span className="sr-only">Segna come letto</span>
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteNotification(notification.id)}
+                            className="hover:bg-white/5"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span className="sr-only">Elimina</span>
+                          </Button>
+                        </div>
+                      </div>
+                    </motion.li>
+                  ))}
+                </ul>
               ) : (
-                <div className="py-20 flex flex-col items-center justify-center">
-                  <div className="w-16 h-16 bg-[#131524] rounded-full flex items-center justify-center mb-4">
-                    <Bell className="w-8 h-8 text-white/30" />
-                  </div>
-                  <p className="text-white/70 text-center">Nessuna notifica recente</p>
-                  <p className="text-white/50 text-xs mt-2 text-center">
-                    Le nuove notifiche appariranno qui
-                  </p>
+                <div className="text-center text-gray-500">
+                  Nessuna notifica da visualizzare.
                 </div>
               )}
-            </GradientBox>
-          </motion.div>
-        </div>
+            </AnimatePresence>
+          </div>
+        </motion.div>
       </div>
       
-      <NotificationDialog
-        notification={selectedNotification}
-        open={!!selectedNotification}
-        onClose={() => setSelectedNotification(null)}
-      />
-      
       <BottomNavigation />
-
-      <style>
-        {`
-        .glow-text-strong {
-          text-shadow: 0 0 20px rgba(0, 209, 255, 0.9), 0 0 40px rgba(255, 89, 248, 0.7) !important;
-        }
-        `}
-      </style>
-    </div>
+    </motion.div>
   );
 };
 
