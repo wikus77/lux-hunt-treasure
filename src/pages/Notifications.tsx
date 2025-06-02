@@ -134,9 +134,9 @@ const Notifications = () => {
                           
                           <div>
                             <h3 className="text-sm font-semibold text-white">{notification.title}</h3>
-                            <p className="text-xs text-gray-400">{notification.message}</p>
+                            <p className="text-xs text-gray-400">{notification.description}</p>
                             <p className="text-xs text-gray-500 mt-1">
-                              {new Date(notification.timestamp).toLocaleDateString()} - {new Date(notification.timestamp).toLocaleTimeString()}
+                              {new Date(notification.createdAt).toLocaleDateString()} - {new Date(notification.createdAt).toLocaleTimeString()}
                             </p>
                           </div>
                         </div>

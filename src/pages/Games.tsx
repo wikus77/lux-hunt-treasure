@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { GameCard } from '@/components/games/memory-hack/GameCard';
+import { GameCard } from '@/components/games/GameCard';
 import { gameData, GameType } from '@/components/games/memory-hack/gameData';
-import { useGameLogic } from '@/components/games/memory-hack/useGameLogic';
+import { useGameLogic } from '@/hooks/useGameLogic';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
 import MemoryHackGame from '@/components/games/MemoryHackGame';
@@ -44,24 +44,23 @@ const Games = () => {
   const renderGame = () => {
     if (!selectedGame) return null;
 
-    const gameProps = {
-      onComplete: (points: number) => handleGameComplete(selectedGame, points),
+    const commonProps = {
       onBack: () => setSelectedGame(null)
     };
 
     switch (selectedGame) {
       case 'memory-hack':
-        return <MemoryHackGame {...gameProps} />;
+        return <MemoryHackGame {...commonProps} />;
       case 'disarm-bomb':
-        return <DisarmTheBombGame {...gameProps} />;
+        return <DisarmTheBombGame {...commonProps} />;
       case 'flash-interrogation':
-        return <FlashInterrogationGame {...gameProps} />;
+        return <FlashInterrogationGame {...commonProps} />;
       case 'crack-combination':
-        return <CrackTheCombinationGame {...gameProps} />;
+        return <CrackTheCombinationGame {...commonProps} />;
       case 'satellite-tracking':
-        return <SatelliteTrackingGame {...gameProps} />;
+        return <SatelliteTrackingGame {...commonProps} />;
       case 'find-map-point':
-        return <FindMapPointGame {...gameProps} />;
+        return <FindMapPointGame {...commonProps} />;
       default:
         return null;
     }
