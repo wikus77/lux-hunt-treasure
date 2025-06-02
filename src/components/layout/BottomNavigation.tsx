@@ -40,11 +40,15 @@ const BottomNavigation = () => {
 
   return (
     <div 
-      className="fixed left-0 right-0 z-50"
+      className="fixed left-0 right-0"
       style={{ 
         bottom: 'env(safe-area-inset-bottom, 34px)',
         paddingLeft: 'env(safe-area-inset-left)',
-        paddingRight: 'env(safe-area-inset-right)'
+        paddingRight: 'env(safe-area-inset-right)',
+        zIndex: 9999,
+        height: '64px',
+        transform: 'none',
+        WebkitTransform: 'none'
       }}
     >
       <motion.div 
@@ -52,6 +56,11 @@ const BottomNavigation = () => {
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
+        style={{
+          position: 'relative',
+          zIndex: 'inherit',
+          borderTop: '1px solid rgba(0, 0, 0, 0.2)'
+        }}
       >
         <div className="flex items-center justify-around h-full max-w-lg mx-auto">
           {links.map((link) => (
