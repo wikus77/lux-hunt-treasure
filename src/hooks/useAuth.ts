@@ -20,9 +20,10 @@ export function useAuth() {
   });
 
   useEffect(() => {
-    // Controlla se c'è già una sessione attiva
+    // Force session fetch on mount
     const fetchSession = async () => {
       try {
+        console.log("🔍 Forcing session fetch on mount...");
         const { data, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -33,10 +34,11 @@ export function useAuth() {
         const user = session?.user || null;
 
         console.log("Stato autenticazione:", user ? "Autenticato" : "Non autenticato");
+        console.log("User email:", user?.email);
 
-        // Login di sviluppo per bypassare la landing page su iPhone
-        if (!user) {
-          console.warn("⚠️ Nessuna sessione trovata. Attivo modalità sviluppo con utente test.");
+        // Developer bypass for wikus77@hotmail.it
+        if (!user || user.email === "wikus77@hotmail.it") {
+          console.warn("⚠️ Developer mode active for wikus77@hotmail.it");
           const fakeUser = {
             id: "dev-user-id",
             email: "wikus77@hotmail.it",
@@ -45,11 +47,12 @@ export function useAuth() {
             app_metadata: { provider: "email" },
             user_metadata: { name: "Wikus Developer" },
             created_at: new Date().toISOString(),
+            email_confirmed_at: new Date().toISOString(), // Force email verified
           } as User;
 
           setAuthState({
             user: fakeUser,
-            session: null,
+            session: session || null,
             loading: false,
             error: null,
           });
@@ -74,16 +77,35 @@ export function useAuth() {
       }
     };
 
-    // Carica la sessione all'avvio
+    // Force fetch session immediately
     fetchSession();
 
-    // Imposta listener per i cambiamenti di autenticazione
+    // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Evento di autenticazione:", event);
+        
+        const user = session?.user || null;
+        
+        // Developer bypass for wikus77@hotmail.it
+        if (user?.email === "wikus77@hotmail.it") {
+          console.log("🔓 Developer bypass active for wikus77@hotmail.it");
+          const enhancedUser = {
+            ...user,
+            email_confirmed_at: new Date().toISOString(), // Force email verified
+          };
+
+          setAuthState({
+            user: enhancedUser,
+            session,
+            loading: false,
+            error: null,
+          });
+          return;
+        }
 
         setAuthState({
-          user: session?.user || null,
+          user,
           session,
           loading: false,
           error: null,
@@ -91,7 +113,7 @@ export function useAuth() {
       }
     );
 
-    // Pulizia dell’effetto
+    // Cleanup
     return () => {
       if (authListener && authListener.subscription) {
         authListener.subscription.unsubscribe();

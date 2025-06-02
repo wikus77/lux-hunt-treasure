@@ -25,7 +25,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       isAuthenticated,
       isLoading,
       isEmailVerified,
-      user: getCurrentUser()?.id
+      user: getCurrentUser()?.id,
+      userEmail: getCurrentUser()?.email
     });
   }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser]);
   
@@ -35,6 +36,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         <Spinner className="h-8 w-8 text-white" />
       </div>
     );
+  }
+  
+  // Developer bypass for wikus77@hotmail.it
+  const user = getCurrentUser();
+  if (user?.email === "wikus77@hotmail.it") {
+    console.log("🔓 Developer bypass: allowing access for wikus77@hotmail.it");
+    return children ? <>{children}</> : <Outlet />;
   }
   
   // If user is not authenticated, redirect to login

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as Sentry from "@sentry/react";
@@ -6,14 +5,14 @@ import App from './App';
 import './index.css';
 import { Toaster } from 'sonner';
 
-// Initialize Sentry - temporarily disabled
+// Initialize Sentry - DISABLED for development
 Sentry.init({
   dsn: "[INSERISCI LA TUA DSN DI SENTRY QUI]",
   integrations: [
     Sentry.browserTracingIntegration(),
   ],
   tracesSampleRate: 1.0,
-  enabled: false // Disabilitato temporaneamente
+  enabled: false // Disabled to prevent errors with placeholder DSN
 });
 
 // Gestione errori globale migliorata
