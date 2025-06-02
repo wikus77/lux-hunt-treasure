@@ -8,8 +8,11 @@ import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import GlobalLayout from "./components/layout/GlobalLayout";
 import AppRoutes from "./routes/AppRoutes";
 import SafeAreaToggle from "./components/debug/SafeAreaToggle";
+import { useCapacitorMagicLinkListener } from "./components/auth/useCapacitorMagicLinkListener";
 
 function App() {
+  useCapacitorMagicLinkListener(); // Attiva login automatico
+
   return (
     <Router>
       <SoundProvider>
