@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { GameCard } from '@/components/games/GameCard';
 import { gameData, GameType } from '@/components/games/memory-hack/gameData';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
+import { useDynamicIsland } from '@/hooks/useDynamicIsland';
 import GameErrorBoundary from '@/components/games/GameErrorBoundary';
 import MemoryHackGame from '@/components/games/MemoryHackGame';
 import DisarmTheBombGame from '@/components/games/DisarmTheBombGame';
@@ -29,6 +31,30 @@ const Games = () => {
   const { addNotification } = useNotifications();
   const { playSound } = useBuzzSound();
   const { score, level, gameStats, updateStats } = useGameLogic();
+  const { startActivity, updateActivity, endActivity } = useDynamicIsland();
+
+  // Dynamic Island integration for GAMES - New minigame unlocked
+  useEffect(() => {
+    // Simulate new minigame unlock check
+    const checkNewMinigames = () => {
+      const unlockedGames = Object.entries(gameCompleted).filter(([_, completed]) => !completed);
+      
+      if (unlockedGames.length > 0 && score >= 100) { // Example condition
+        const [gameType, _] = unlockedGames[0];
+        const gameName = gameData[gameType as GameType].title;
+        
+        startActivity({
+          missionId: `game-unlock-${Date.now()}`,
+          title: "🧩 Minigioco sbloccato",
+          status: `${gameName} disponibile`,
+          progress: 0,
+          timeLeft: 1800, // 30 minutes to play
+        });
+      }
+    };
+
+    checkNewMinigames();
+  }, [score, gameCompleted, startActivity]);
 
   const handleGameComplete = (gameType: GameType, points: number) => {
     setGameCompleted(prev => ({ ...prev, [gameType]: true }));
@@ -37,6 +63,12 @@ const Games = () => {
     addNotification({
       title: "🏆 Missione Completata!",
       description: `Hai ottenuto ${points} punti nel gioco ${gameData[gameType].title}!`
+    });
+
+    // Update Dynamic Island with completion
+    updateActivity({
+      status: `${gameData[gameType].title} completato`,
+      progress: 100,
     });
   };
 

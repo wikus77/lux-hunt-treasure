@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Trash2, Filter, CheckCircle2, AlertCircle, Info, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
+import { useDynamicIsland } from '@/hooks/useDynamicIsland';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 
@@ -11,6 +13,7 @@ const Notifications = () => {
   const [filter, setFilter] = useState<'all' | 'unread' | 'important'>('all');
   const { notifications, markAsRead, deleteNotification, markAllAsRead } = useNotifications();
   const { playSound } = useBuzzSound();
+  const { startActivity, updateActivity, endActivity } = useDynamicIsland();
 
   const filteredNotifications = () => {
     switch (filter) {
@@ -23,9 +26,37 @@ const Notifications = () => {
     }
   };
 
+  // Dynamic Island integration for NOTIFICATIONS - New unread messages
+  useEffect(() => {
+    const unreadNotifications = notifications.filter(n => !n.read);
+    
+    if (unreadNotifications.length > 0) {
+      startActivity({
+        missionId: `notifications-${Date.now()}`,
+        title: "📨 Nuove notifiche",
+        status: `${unreadNotifications.length} messaggi da HQ`,
+        progress: 0,
+        timeLeft: 0,
+      });
+    } else {
+      // Close Dynamic Island when all notifications are read
+      endActivity();
+    }
+  }, [notifications, startActivity, endActivity]);
+
   const handleMarkAsRead = (id: string) => {
     markAsRead(id);
     playSound();
+    
+    // Update Dynamic Island when notification is read
+    const remainingUnread = notifications.filter(n => !n.read && n.id !== id).length;
+    if (remainingUnread > 0) {
+      updateActivity({
+        status: `${remainingUnread} messaggi da HQ`,
+      });
+    } else {
+      endActivity();
+    }
   };
 
   const handleDeleteNotification = (id: string) => {
@@ -36,6 +67,7 @@ const Notifications = () => {
   const handleMarkAllAsRead = () => {
     markAllAsRead();
     playSound();
+    endActivity(); // Close Dynamic Island when all are read
   };
 
   return (

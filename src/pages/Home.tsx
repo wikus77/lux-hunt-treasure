@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
@@ -5,6 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
+import { useDynamicIsland } from "@/hooks/useDynamicIsland";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
@@ -19,6 +21,7 @@ const Home = () => {
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
+  const { startActivity, updateActivity, endActivity } = useDynamicIsland();
   const {
     notifications,
     unreadCount,
@@ -54,6 +57,30 @@ const Home = () => {
     
     checkAccess();
   }, []);
+
+  // Dynamic Island integration for HOME - Active mission
+  useEffect(() => {
+    if (hasAccess && isLoaded) {
+      // Simulate active mission data - in real app this would come from Supabase
+      const activeMission = {
+        name: "Operazione Milano",
+        progress: 45,
+        timeLeft: 7200, // 2 hours in seconds
+        totalClues: 10,
+        foundClues: 4
+      };
+
+      if (activeMission) {
+        startActivity({
+          missionId: `mission-${Date.now()}`,
+          title: activeMission.name,
+          status: "Missione attiva",
+          progress: activeMission.progress,
+          timeLeft: activeMission.timeLeft,
+        });
+      }
+    }
+  }, [hasAccess, isLoaded, startActivity]);
 
   const handleAccessGranted = () => {
     setHasAccess(true);

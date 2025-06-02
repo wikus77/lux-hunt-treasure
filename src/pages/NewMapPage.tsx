@@ -1,5 +1,5 @@
 
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, lazy, Suspense, useEffect } from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import MapPageHeader from './map/components/MapPageHeader';
 import NotesSection from './map/NotesSection';
@@ -7,6 +7,8 @@ import SidebarLayout from './map/components/SidebarLayout';
 import RightSidebarContent from './map/components/RightSidebarContent';
 import { Spinner } from '@/components/ui/spinner';
 import { useNewMapPage } from './map/hooks/useNewMapPage';
+import { useDynamicIsland } from '@/hooks/useDynamicIsland';
+import { useMissionManager } from '@/hooks/useMissionManager';
 
 // Lazy load heavy map components
 const MapContainer = lazy(() => import('./map/components/MapContainer'));
@@ -22,6 +24,9 @@ const MapLoadingFallback = () => (
 
 const NewMapPage = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const { updateActivity } = useDynamicIsland();
+  const { currentMission, updateMissionProgress } = useMissionManager();
+  
   const {
     isAddingPoint,
     setIsAddingPoint,
@@ -46,6 +51,26 @@ const NewMapPage = () => {
     handleBuzz,
     requestLocationPermission,
   } = useNewMapPage();
+
+  // Dynamic Island integration for MAP - Update when new clues found or areas explored
+  useEffect(() => {
+    if (currentMission && mapPoints.length > 0) {
+      const cluesFound = mapPoints.filter(point => point.title.toLowerCase().includes('indizio')).length;
+      
+      if (cluesFound !== currentMission.foundClues) {
+        updateMissionProgress(cluesFound);
+      }
+    }
+  }, [mapPoints, currentMission, updateMissionProgress]);
+
+  // Update Dynamic Island when search areas change
+  useEffect(() => {
+    if (searchAreas.length > 0) {
+      updateActivity({
+        status: `${searchAreas.length} zone esplorate`,
+      });
+    }
+  }, [searchAreas, updateActivity]);
 
   return (
     <div 
