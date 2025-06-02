@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Trash2, Filter, CheckCircle2, AlertCircle, Info, Star } from 'lucide-react';
@@ -49,7 +50,7 @@ const Notifications = () => {
   useEffect(() => {
     return () => {
       // Only close if it's notification-related
-      if (currentMission?.title?.includes('Nuove notifiche')) {
+      if (currentMission?.name?.includes('Nuove notifiche')) {
         endActivity();
       }
     };

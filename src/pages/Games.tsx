@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { GameCard } from '@/components/games/GameCard';
@@ -60,7 +61,7 @@ const Games = () => {
   useEffect(() => {
     return () => {
       // Only end activity if it's game-related
-      if (currentMission?.title?.includes('Minigioco')) {
+      if (currentMission?.name?.includes('Minigioco')) {
         endActivity();
       }
     };
