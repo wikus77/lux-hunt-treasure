@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Mail, Map, Home, Award, User, Circle, Gamepad2 } from "lucide-react";
+import { Mail, Map, Home, Award, Circle, Gamepad2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
 
@@ -50,8 +50,7 @@ const BottomNavigation = () => {
         WebkitTransform: 'translateZ(0)',
         paddingLeft: 'env(safe-area-inset-left)',
         paddingRight: 'env(safe-area-inset-right)',
-        backgroundColor: 'rgba(0, 0, 0, 0.95)',
-        isolation: 'isolate'
+        backgroundColor: 'rgba(0, 0, 0, 0.95)'
       }}
     >
       <motion.div 
@@ -62,7 +61,6 @@ const BottomNavigation = () => {
         style={{
           position: 'relative',
           zIndex: 'inherit',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
           height: '100%',
           display: 'flex',
           alignItems: 'center'
@@ -97,7 +95,7 @@ const BottomNavigation = () => {
                 ) : (
                   link.icon
                 )}
-
+                
                 {link.badge && (
                   <div className="absolute -top-1 -right-1 flex items-center justify-center h-4 w-4 bg-[#FF59F8] rounded-full animate-pulse shadow-[0_0_8px_rgba(240,89,255,0.5)]">
                     <span className="text-[8px] font-bold text-white">
@@ -121,6 +119,7 @@ const BottomNavigation = () => {
             </Link>
           ))}
         </div>
+
         <div className="line-glow absolute top-0 left-0 w-full"></div>
       </motion.div>
     </div>
