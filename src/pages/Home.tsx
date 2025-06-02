@@ -11,12 +11,8 @@ import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
-import { useAuthContext } from "@/contexts/auth/useAuthContext";
 
 const Home = () => {
-  const { user } = useAuthContext();
-  const isDeveloper = user?.email === "wikus77@hotmail.it";
-
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const { profileImage } = useProfileImage();
@@ -35,19 +31,29 @@ const Home = () => {
 
   const { isConnected } = useRealTimeNotifications();
 
-  // Check for developer access and environment
+  // Check for developer access and Capacitor environment
   useEffect(() => {
-    const isCapacitorApp = !!(window as any).Capacitor;
-    setIsCapacitor(isCapacitorApp);
-
-    const userAgent = navigator.userAgent;
-    const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-    const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
-
-    if ((isMobileDevice && hasStoredAccess) || isDeveloper) {
-      setHasAccess(true);
-    }
-  }, [isDeveloper]);
+    const checkAccess = () => {
+      const isCapacitorApp = !!(window as any).Capacitor;
+      setIsCapacitor(isCapacitorApp);
+      
+      const userAgent = navigator.userAgent;
+      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
+      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      
+      console.log('Home access check (Capacitor):', { isMobileDevice, hasStoredAccess, isCapacitorApp });
+      
+      if (isMobileDevice && hasStoredAccess) {
+        setHasAccess(true);
+      } else if (!isMobileDevice) {
+        // Web users get redirected to landing page
+        window.location.href = '/';
+        return;
+      }
+    };
+    
+    checkAccess();
+  }, []);
 
   const handleAccessGranted = () => {
     setHasAccess(true);
@@ -61,6 +67,10 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
+    console.log("Real-time notification connection status:", isConnected);
+  }, [isConnected]);
+
+  useEffect(() => {
     if (error) {
       toast.error("Si è verificato un errore", {
         description: error,
@@ -69,8 +79,21 @@ const Home = () => {
     }
   }, [error]);
 
-  // Show DeveloperAccess screen solo su mobile se non sei developer
-  if (isMobile && !hasAccess && !isDeveloper) {
+  const getContentPaddingClass = () => {
+    return isCapacitor ? "capacitor-safe-content" : "";
+  };
+
+  const getContentPaddingStyle = () => {
+    if (!isCapacitor) {
+      return { 
+        paddingTop: 'calc(72px + env(safe-area-inset-top) + 50px)' 
+      };
+    }
+    return {};
+  };
+
+  // Show developer access screen for mobile users without access
+  if (isMobile && !hasAccess) {
     return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
   }
 
@@ -98,11 +121,11 @@ const Home = () => {
       <Helmet>
         <title>M1SSION™ - Home</title>
       </Helmet>
-
+      
       <UnifiedHeader profileImage={profileImage} />
-      <div
-        className={isCapacitor ? "capacitor-safe-content" : ""}
-        style={!isCapacitor ? { paddingTop: 'calc(72px + env(safe-area-inset-top) + 50px)' } : {}}
+      <div 
+        className={getContentPaddingClass()}
+        style={getContentPaddingStyle()}
       />
 
       <AnimatePresence>
@@ -120,7 +143,7 @@ const Home = () => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
                 className={`fixed inset-x-0 z-[60] px-2 md:px-4 ${isCapacitor ? 'capacitor-safe-content' : ''}`}
-                style={!isCapacitor ? {
+                style={!isCapacitor ? { 
                   top: 'calc(72px + env(safe-area-inset-top) + 50px)'
                 } : {}}
               >
@@ -143,7 +166,7 @@ const Home = () => {
                 transition={{ delay: 0.2, duration: 0.5 }}
               >
                 <h1 className="text-4xl font-orbitron font-bold">
-                  <span className="text-[#00D1FF]" style={{
+                  <span className="text-[#00D1FF]" style={{ 
                     textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
                   }}>M1</span>
                   <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
@@ -157,7 +180,7 @@ const Home = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
+      
       <BottomNavigation />
     </div>
   );
