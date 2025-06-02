@@ -8,10 +8,10 @@ import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import GlobalLayout from "./components/layout/GlobalLayout";
 import AppRoutes from "./routes/AppRoutes";
 import SafeAreaToggle from "./components/debug/SafeAreaToggle";
-import { useCapacitorMagicLinkListener } from "./components/auth/useCapacitorMagicLinkListener";
+import { useCapacitorMagicLinkListener } from "./hooks/useCapacitorMagicLinkListener";
 
 function App() {
-  useCapacitorMagicLinkListener(); // Attiva login automatico
+  useCapacitorMagicLinkListener(); // login automatico magic link attivo
 
   return (
     <Router>
