@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
@@ -11,10 +10,13 @@ import BottomNavigation from "@/components/layout/BottomNavigation";
 const Buzz = () => {
   return (
     <motion.div 
-      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black pb-20 w-full"
+      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black w-full"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
+      style={{ 
+        paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 34px))' 
+      }}
     >
       <UnifiedHeader />
       

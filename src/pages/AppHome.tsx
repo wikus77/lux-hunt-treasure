@@ -117,7 +117,9 @@ const AppHome = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#070818] pb-20 w-full">
+    <div className="min-h-screen bg-[#070818] w-full" style={{ 
+      paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 34px))' 
+    }}>
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>

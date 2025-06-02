@@ -107,10 +107,13 @@ const Leaderboard = () => {
 
   return (
     <motion.div 
-      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black pb-24"
+      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
+      style={{ 
+        paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 34px))' 
+      }}
     >
       <UnifiedHeader />
       
