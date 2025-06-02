@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { GameCard } from '@/components/games/GameCard';
@@ -91,7 +89,7 @@ const Games = () => {
         {/* Main scrollable content */}
         <main
           style={{
-            paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
+            paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
             paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
             height: '100dvh',
             overflowY: 'auto',
@@ -142,7 +140,7 @@ const Games = () => {
       {/* Main scrollable content */}
       <main
         style={{
-          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
           height: '100dvh',
           overflowY: 'auto',
