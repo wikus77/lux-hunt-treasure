@@ -42,8 +42,7 @@ const BottomNavigation = () => {
     <div 
       className="fixed left-0 right-0 z-50"
       style={{ 
-        // CRITICAL FIX: Position bottom nav ABOVE the safe zone
-        bottom: 'calc(34px + env(safe-area-inset-bottom, 0px))', // 34px fixed + env fallback
+        bottom: 'calc(env(safe-area-inset-bottom, 34px))',
         paddingLeft: 'env(safe-area-inset-left)',
         paddingRight: 'env(safe-area-inset-right)'
       }}
