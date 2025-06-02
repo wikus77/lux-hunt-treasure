@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Route } from 'react-router-dom';
 import { ProtectedRoute } from "../../components/auth/ProtectedRoute";
@@ -11,7 +10,6 @@ import Buzz from "../../pages/Buzz";
 import Map from "../../pages/Map";
 import TestAgent from "../../pages/TestAgent";
 import AdminPrizeForm from "../../pages/AdminPrizeForm";
-import Games from "../../pages/Games";
 
 const UserRoutes = () => {
   return (
@@ -54,14 +52,6 @@ const UserRoutes = () => {
         element={
           <ProtectedRoute>
             <Map />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/games"
-        element={
-          <ProtectedRoute>
-            <Games />
           </ProtectedRoute>
         }
       />
