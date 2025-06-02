@@ -117,21 +117,35 @@ const AppHome = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#070818] w-full" style={{ overflow: 'hidden' }}>
+    <div 
+      className="min-h-screen bg-[#070818] w-full" 
+      style={{ 
+        overflow: 'hidden',
+        position: 'relative'
+      }}
+    >
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
       
       {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 z-50">
+      <header 
+        className="fixed top-0 left-0 right-0 z-50"
+        style={{
+          height: '72px',
+          paddingTop: 'env(safe-area-inset-top, 47px)',
+          backgroundColor: 'rgba(7, 8, 24, 0.95)',
+          backdropFilter: 'blur(12px)'
+        }}
+      >
         <UnifiedHeader profileImage={profileImage} />
-      </div>
+      </header>
       
-      {/* CRITICAL FIX: Main content with proper scroll containment */}
+      {/* Main scrollable content */}
       <main
         style={{
-          paddingTop: 'calc(72px + 47px)', // Header height + safe zone top
-          paddingBottom: 'calc(64px + 34px)', // Bottom nav + safe zone bottom
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
+          paddingBottom: 'env(safe-area-inset-bottom, 34px)',
           maxHeight: '100dvh',
           overflowY: 'auto',
           overflowX: 'hidden',
@@ -142,7 +156,7 @@ const AppHome = () => {
         <AnimatePresence>
           {isLoaded && (
             <motion.div
-              className="relative z-10"
+              className="relative"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
@@ -153,9 +167,9 @@ const AppHome = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
-                  className="fixed inset-x-0 z-[60] px-2 md:px-4"
+                  className="fixed inset-x-0 z-40 px-2 md:px-4"
                   style={{ 
-                    top: 'calc(47px + 72px + env(safe-area-inset-top, 0px))'
+                    top: 'calc(72px + env(safe-area-inset-top, 47px))'
                   }}
                 >
                   <NotificationsBanner

@@ -111,18 +111,29 @@ const Leaderboard = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      style={{ overflow: 'hidden' }}
+      style={{ 
+        overflow: 'hidden',
+        position: 'relative'
+      }}
     >
       {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 z-50">
+      <header 
+        className="fixed top-0 left-0 right-0 z-50"
+        style={{
+          height: '72px',
+          paddingTop: 'env(safe-area-inset-top, 47px)',
+          backgroundColor: 'rgba(19, 21, 36, 0.7)',
+          backdropFilter: 'blur(12px)'
+        }}
+      >
         <UnifiedHeader />
-      </div>
+      </header>
       
-      {/* CRITICAL FIX: Main content with proper scroll containment */}
+      {/* Main scrollable content */}
       <main
         style={{
-          paddingTop: 'calc(72px + 47px)', // Header height + safe zone top
-          paddingBottom: 'calc(64px + 34px)', // Bottom nav + safe zone bottom
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
+          paddingBottom: 'env(safe-area-inset-bottom, 34px)',
           maxHeight: '100dvh',
           overflowY: 'auto',
           overflowX: 'hidden',
