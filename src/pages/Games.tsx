@@ -5,6 +5,7 @@ import { gameData, GameType } from '@/components/games/memory-hack/gameData';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
+import GameErrorBoundary from '@/components/games/GameErrorBoundary';
 import MemoryHackGame from '@/components/games/MemoryHackGame';
 import DisarmTheBombGame from '@/components/games/DisarmTheBombGame';
 import FlashInterrogationGame from '@/components/games/FlashInterrogationGame';
@@ -27,7 +28,6 @@ const Games = () => {
 
   const { addNotification } = useNotifications();
   const { playSound } = useBuzzSound();
-
   const { score, level, gameStats, updateStats } = useGameLogic();
 
   const handleGameComplete = (gameType: GameType, points: number) => {
@@ -43,24 +43,31 @@ const Games = () => {
   const renderGame = () => {
     if (!selectedGame) return null;
 
-    // Since the game components don't accept onBack prop, we'll render them without it
-    // and handle navigation through other means
-    switch (selectedGame) {
-      case 'memory-hack':
-        return <MemoryHackGame />;
-      case 'disarm-bomb':
-        return <DisarmTheBombGame />;
-      case 'flash-interrogation':
-        return <FlashInterrogationGame />;
-      case 'crack-combination':
-        return <CrackTheCombinationGame />;
-      case 'satellite-tracking':
-        return <SatelliteTrackingGame />;
-      case 'find-map-point':
-        return <FindMapPointGame />;
-      default:
-        return null;
-    }
+    // Wrap each game component in GameErrorBoundary
+    const gameComponent = (() => {
+      switch (selectedGame) {
+        case 'memory-hack':
+          return <MemoryHackGame />;
+        case 'disarm-bomb':
+          return <DisarmTheBombGame />;
+        case 'flash-interrogation':
+          return <FlashInterrogationGame />;
+        case 'crack-combination':
+          return <CrackTheCombinationGame />;
+        case 'satellite-tracking':
+          return <SatelliteTrackingGame />;
+        case 'find-map-point':
+          return <FindMapPointGame />;
+        default:
+          return null;
+      }
+    })();
+
+    return (
+      <GameErrorBoundary>
+        {gameComponent}
+      </GameErrorBoundary>
+    );
   };
 
   if (selectedGame) {

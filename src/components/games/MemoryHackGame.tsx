@@ -4,18 +4,44 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
+import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useGameLogic } from "./memory-hack/useGameLogic";
+import GameErrorBoundary from "./GameErrorBoundary";
 
-// Lazy load game components
+// Lazy load game components con fallback migliorati
 const GameStats = lazy(() => import("./memory-hack/GameStats"));
 const GameControls = lazy(() => import("./memory-hack/GameControls"));
 const GameCard = lazy(() => import("./memory-hack/GameCard"));
 
 const GameLoadingFallback = () => (
   <div className="flex items-center justify-center p-8">
-    <Spinner size="md" className="text-[#00D1FF]" />
+    <div className="flex flex-col items-center gap-2">
+      <Spinner size="md" className="text-[#00D1FF]" />
+      <p className="text-gray-400 text-sm">Caricamento componenti...</p>
+    </div>
   </div>
+);
+
+const GameErrorFallback = () => (
+  <Card className="p-6 border-red-500/30 bg-red-900/20">
+    <div className="text-center">
+      <AlertTriangle className="mx-auto h-8 w-8 text-red-400 mb-2" />
+      <h3 className="text-red-400 font-semibold mb-2">
+        Errore di caricamento
+      </h3>
+      <p className="text-gray-400 text-sm mb-4">
+        Impossibile caricare alcuni componenti del gioco. Riprova più tardi.
+      </p>
+      <Button
+        onClick={() => window.location.reload()}
+        variant="outline"
+        className="border-red-500 text-red-400"
+      >
+        Ricarica pagina
+      </Button>
+    </div>
+  </Card>
 );
 
 const MemoryHackGame: React.FC = () => {
@@ -71,35 +97,39 @@ const MemoryHackGame: React.FC = () => {
         <p className="text-gray-300">Trova tutte le coppie per hackerare il sistema</p>
       </div>
 
-      <Suspense fallback={<GameLoadingFallback />}>
-        <GameStats 
-          moves={moves}
-          timeElapsed={timeElapsed}
-          score={score}
-        />
+      <GameErrorBoundary fallback={<GameErrorFallback />}>
+        <Suspense fallback={<GameLoadingFallback />}>
+          <GameStats 
+            moves={moves}
+            timeElapsed={timeElapsed}
+            score={score}
+          />
 
-        <GameControls 
-          gameStatus={gameStatus}
-          onResetGame={handleResetGame}
-          onStartGame={startGame}
-        />
-      </Suspense>
+          <GameControls 
+            gameStatus={gameStatus}
+            onResetGame={handleResetGame}
+            onStartGame={startGame}
+          />
+        </Suspense>
+      </GameErrorBoundary>
 
       {gameStarted && (
-        <Suspense fallback={<GameLoadingFallback />}>
-          <div className="grid gap-4 mx-auto max-w-2xl grid-cols-4">
-            {cards.map((card) => (
-              <GameCard
-                key={card.id}
-                card={card}
-                isFlipped={flippedCards.includes(card.id)}
-                isMatched={card.isMatched}
-                onClick={handleCardClick}
-                disabled={!gameStarted || isGameComplete}
-              />
-            ))}
-          </div>
-        </Suspense>
+        <GameErrorBoundary fallback={<GameErrorFallback />}>
+          <Suspense fallback={<GameLoadingFallback />}>
+            <div className="grid gap-4 mx-auto max-w-2xl grid-cols-4">
+              {cards.map((card) => (
+                <GameCard
+                  key={card.id}
+                  card={card}
+                  isFlipped={flippedCards.includes(card.id)}
+                  isMatched={card.isMatched}
+                  onClick={handleCardClick}
+                  disabled={!gameStarted || isGameComplete}
+                />
+              ))}
+            </div>
+          </Suspense>
+        </GameErrorBoundary>
       )}
 
       {isGameComplete && (

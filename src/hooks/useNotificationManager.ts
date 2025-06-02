@@ -18,22 +18,27 @@ export function useNotificationManager() {
   
   const [notificationsBannerOpen, setNotificationsBannerOpen] = useState(false);
   
-  // Add a polling mechanism for notifications with debounce logic
+  // Add a polling mechanism for notifications with extended interval and visibility check
   const pollingIntervalRef = useRef<number | null>(null);
   const isInitialLoadDone = useRef<boolean>(false);
   
-  // Setup notification polling - check every 60 seconds for new notifications (reduced frequency)
+  // Setup notification polling - check every 180 seconds (3 minutes) per ottimizzazione
   useEffect(() => {
     const startPolling = () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
       
-      // Poll every 60 seconds instead of 30 seconds to reduce flickering
+      // Poll ogni 180 secondi (3 minuti) invece di 60 per ridurre carico
       pollingIntervalRef.current = window.setInterval(() => {
-        console.log('Polling for new notifications...');
-        reloadNotifications();
-      }, 60000) as unknown as number;
+        // Controllo visibility prima del polling
+        if (document.visibilityState === 'visible') {
+          console.log('Polling for new notifications...');
+          reloadNotifications();
+        } else {
+          console.log('⏸️ Skipping polling - page not visible');
+        }
+      }, 180000) as unknown as number; // 3 minuti
     };
     
     // Initial load - only if not done yet
@@ -67,8 +72,8 @@ export function useNotificationManager() {
   const openNotificationsDrawer = useCallback(() => {
     setShowNotifications(true);
     // Only reload if we haven't loaded recently
-    const lastLoadTime = isInitialLoadDone.current === true ? 0 : Date.now() - 60000;
-    if (!isInitialLoadDone.current || lastLoadTime > 60000) {
+    const lastLoadTime = isInitialLoadDone.current === true ? 0 : Date.now() - 180000; // 3 minuti
+    if (!isInitialLoadDone.current || lastLoadTime > 180000) {
       reloadNotifications().then(() => {
         console.log('Notifications reloaded on drawer open');
         isInitialLoadDone.current = true;
@@ -105,9 +110,6 @@ export function useNotificationManager() {
       if (!result) {
         console.error("Failed to create notification");
       }
-      
-      // Don't force reload notifications after creating a new one - this helps reduce flickering
-      // Instead, the polling system will pick up the new notification on its next run
       
       return result;
     } catch (error) {

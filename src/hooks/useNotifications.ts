@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -9,6 +10,18 @@ export interface Notification {
   date: string;
   read: boolean;
   type?: string;
+}
+
+// Interfacce tipizzate per Supabase
+interface UserNotificationRow {
+  id: string;
+  title: string;
+  message: string;
+  created_at: string;
+  is_read: boolean;
+  type: string;
+  user_id: string;
+  is_deleted: boolean;
 }
 
 // Listener globale per sincronizzazione istantanea tra component
@@ -47,8 +60,14 @@ export function useNotifications() {
     }
   }, []);
 
-  // Carica le notifiche da Supabase con rate limiting migliorato
+  // Carica le notifiche da Supabase con rate limiting migliorato e visibility check
   const reloadNotifications = useCallback(async (force = false) => {
+    // Controlla se la pagina è visibile - ottimizzazione polling
+    if (!force && document.visibilityState !== 'visible') {
+      console.log("⏸️ Skipping reload - page not visible");
+      return true;
+    }
+
     const now = Date.now();
     if (!force && now - lastReloadTimeRef.current < 3000 && !isInitialLoadRef.current) {
       console.log("⏱️ Skipping reload due to rate limiting");
@@ -76,7 +95,7 @@ export function useNotifications() {
         console.log("👤 Utente autenticato, caricamento da Supabase...");
         const { data: supabaseNotifs, error } = await supabase
           .from('user_notifications')
-          .select('*')
+          .select<'*', UserNotificationRow>('*')
           .eq('is_deleted', false)
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
@@ -88,7 +107,7 @@ export function useNotifications() {
           
           // Converti notifiche Supabase al nostro formato, ordinando per timestamp
           notifs = supabaseNotifs
-            .map(n => ({
+            .map((n: UserNotificationRow) => ({
               id: n.id,
               title: n.title,
               description: n.message,
@@ -105,12 +124,6 @@ export function useNotifications() {
       
       const unreadCount = notifs.filter(n => !n.read).length;
       console.log("📊 Loaded notifications:", notifs.length, "Unread:", unreadCount);
-      console.log("🔍 Checking for unique content...");
-      
-      // Log dei contenuti per verificare unicità
-      notifs.slice(0, 3).forEach((n, i) => {
-        console.log(`📝 Notifica ${i + 1}:`, n.description.substring(0, 50) + "...");
-      });
       
       setNotifications(notifs);
       setUnreadCount(unreadCount);
@@ -171,26 +184,37 @@ export function useNotifications() {
     }
   }, [notifications, saveNotifications]);
 
-  // Aggiorna in realtime se qualcuno chiama reload da altrove (es: altro tab o altra sezione)
-  // But limit how often we update to prevent flickering
+  // Aggiorna in realtime se qualcuno chiama reload da altrove con visibility check
   useEffect(() => {
     const listener = () => {
-      const now = Date.now();
-      if (now - lastReloadTimeRef.current > 3000 || isInitialLoadRef.current) {
-        reloadNotifications();
-      }
-    };
-    listeners.push(listener);
-
-    const storageEvent = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY) {
+      if (document.visibilityState === 'visible') {
         const now = Date.now();
         if (now - lastReloadTimeRef.current > 3000 || isInitialLoadRef.current) {
           reloadNotifications();
         }
       }
     };
+    listeners.push(listener);
+
+    const storageEvent = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY && document.visibilityState === 'visible') {
+        const now = Date.now();
+        if (now - lastReloadTimeRef.current > 3000 || isInitialLoadRef.current) {
+          reloadNotifications();
+        }
+      }
+    };
+    
+    // Listener per visibility change
+    const visibilityChangeHandler = () => {
+      if (document.visibilityState === 'visible' && !isInitialLoadRef.current) {
+        console.log("👁️ Page became visible, checking for updates...");
+        reloadNotifications();
+      }
+    };
+    
     window.addEventListener('storage', storageEvent);
+    document.addEventListener('visibilitychange', visibilityChangeHandler);
 
     if (isInitialLoadRef.current) {
       reloadNotifications();
@@ -199,13 +223,14 @@ export function useNotifications() {
     return () => {
       listeners = listeners.filter(fn => fn !== listener);
       window.removeEventListener('storage', storageEvent);
+      document.removeEventListener('visibilitychange', visibilityChangeHandler);
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
     };
   }, [reloadNotifications]);
 
-  // Setup Supabase realtime subscription
+  // Setup Supabase realtime subscription con visibility check
   useEffect(() => {
     const setupRealtimeSubscription = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -222,13 +247,17 @@ export function useNotifications() {
             }, 
             (payload) => {
               console.log('Realtime notification update:', payload);
-              const now = Date.now();
-              if (now - lastReloadTimeRef.current > 3000) {
-                reloadNotifications(true);
-              } else {
-                setTimeout(() => {
+              if (document.visibilityState === 'visible') {
+                const now = Date.now();
+                if (now - lastReloadTimeRef.current > 3000) {
                   reloadNotifications(true);
-                }, 3000 - (now - lastReloadTimeRef.current));
+                } else {
+                  setTimeout(() => {
+                    if (document.visibilityState === 'visible') {
+                      reloadNotifications(true);
+                    }
+                  }, 3000 - (now - lastReloadTimeRef.current));
+                }
               }
             }
         )
@@ -336,7 +365,7 @@ export function useNotifications() {
             message: notification.description,
             is_read: false
           })
-          .select()
+          .select<'*', UserNotificationRow>()
           .single();
           
         if (error) {

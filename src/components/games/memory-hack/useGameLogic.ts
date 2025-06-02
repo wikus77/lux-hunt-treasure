@@ -4,6 +4,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { GameCard, gameSymbols } from './gameData';
 
+// Interfacce tipizzate per Supabase
+interface UserMinigameProgress {
+  id?: string;
+  user_id: string;
+  game_key: string;
+  score: number;
+  completed: boolean;
+  last_played: string;
+  created_at?: string;
+}
+
+interface UserBuzzBonus {
+  id?: string;
+  user_id: string;
+  bonus_type: string;
+  game_reference: string;
+  used: boolean;
+  awarded_at?: string;
+  created_at?: string;
+}
+
 export const useGameLogic = () => {
   const [cards, setCards] = useState<GameCard[]>([]);
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
@@ -124,7 +145,7 @@ export const useGameLogic = () => {
       setIsGameComplete(true);
       setIsTimerRunning(false);
       
-      // Save progress to database
+      // Save progress to database con interfacce tipizzate
       const saveProgress = async () => {
         try {
           const { data: { user } } = await supabase.auth.getUser();
@@ -132,28 +153,41 @@ export const useGameLogic = () => {
 
           const score = Math.max(1000 - (moves * 10) - timeElapsed, 100);
           
-          // Use type assertion for now until types are updated
-          await (supabase as any)
+          // Dati tipizzati per user_minigames_progress
+          const progressData: UserMinigameProgress = {
+            user_id: user.id,
+            game_key: 'memory_hack',
+            score: score,
+            completed: true,
+            last_played: new Date().toISOString()
+          };
+
+          const { error: progressError } = await supabase
             .from('user_minigames_progress')
-            .upsert({
-              user_id: user.id,
-              game_key: 'memory_hack',
-              score: score,
-              completed: true,
-              last_played: new Date().toISOString()
-            }, {
+            .upsert(progressData, {
               onConflict: 'user_id,game_key'
             });
 
-          // Award bonus
-          await (supabase as any)
+          if (progressError) {
+            console.error('Error saving game progress:', progressError);
+            return;
+          }
+
+          // Dati tipizzati per user_buzz_bonuses
+          const bonusData: UserBuzzBonus = {
+            user_id: user.id,
+            bonus_type: 'memory_hack_completion',
+            game_reference: 'memory_hack',
+            used: false
+          };
+
+          const { error: bonusError } = await supabase
             .from('user_buzz_bonuses')
-            .insert({
-              user_id: user.id,
-              bonus_type: 'memory_hack_completion',
-              game_reference: 'memory_hack',
-              used: false
-            });
+            .insert(bonusData);
+
+          if (bonusError) {
+            console.error('Error saving bonus:', bonusError);
+          }
 
           toast.success(`Gioco completato! Punteggio: ${score}`);
         } catch (error) {
