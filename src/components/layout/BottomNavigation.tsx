@@ -1,16 +1,21 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Mail, Map, Home, Award, User, Circle, Gamepad2 } from "lucide-react";
+import { Mail, Map, Home, Award, User, Circle, Gamepad2, CreditCard } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useAuthContext } from "@/contexts/auth";
 
 const BottomNavigation = () => {
   const location = useLocation();
   const currentPath = location.pathname;
   const { unreadCount } = useNotifications();
+  const { getCurrentUser } = useAuthContext();
 
-  const links = [
+  const currentUser = getCurrentUser();
+  const isSpecialUser = currentUser?.email === 'wikus77@hotmail.it';
+
+  const baseLinks = [
     { icon: <Home className="h-6 w-6" />, label: "Home", path: "/home" },
     { icon: <Map className="h-6 w-6" />, label: "Mappa", path: "/map" },
     {
@@ -28,6 +33,11 @@ const BottomNavigation = () => {
     },
     { icon: <Award className="h-6 w-6" />, label: "Classifica", path: "/leaderboard" },
   ];
+
+  // Add subscriptions link only for special user
+  const links = isSpecialUser 
+    ? [...baseLinks, { icon: <CreditCard className="h-6 w-6" />, label: "Abbonamenti", path: "/subscriptions" }]
+    : baseLinks;
 
   const handleLinkClick = (path: string, e: React.MouseEvent) => {
     if (path === "/home") {
