@@ -40,17 +40,18 @@ const BottomNavigation = () => {
 
   return (
     <div 
-      className="fixed left-0 right-0"
       style={{ 
-        bottom: `calc(env(safe-area-inset-bottom, 34px) + 0px)`,
-        paddingLeft: 'env(safe-area-inset-left)',
-        paddingRight: 'env(safe-area-inset-right)',
-        zIndex: 9999,
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        bottom: 'env(safe-area-inset-bottom, 34px)',
         height: '64px',
+        zIndex: 9999,
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
-        willChange: 'transform',
-        isolation: 'isolate'
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+        backgroundColor: 'rgba(0, 0, 0, 0.95)'
       }}
     >
       <motion.div 
