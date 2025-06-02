@@ -32,68 +32,28 @@ serve(async (req) => {
 
     console.log("🔧 Modalità sviluppatore - login per:", adminEmail);
 
-    // Tenta login con password fittizia (dev)
-    let login = await supabase.auth.signInWithPassword({
+    // Generate magic link with Capacitor redirect
+    const { data, error } = await supabase.auth.admin.generateLink({
+      type: "magiclink",
       email,
-      password: "admin123"
+      options: {
+        redirectTo: "capacitor://localhost/home"
+      }
     });
 
-    if (login.error) {
-      console.log("⚠️ Login fallito, creazione utente sviluppatore...");
-      // Crea utente se non esiste
-      const result = await supabase.auth.admin.createUser({
-        email,
-        password: "admin123",
-        email_confirm: true,
-        user_metadata: { role: "admin", name: "Dev Admin" }
+    if (error) {
+      console.error("❌ Errore generazione magic link:", error);
+      return new Response(JSON.stringify({ error: "Errore generazione magic link" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
-
-      if (!result.error) {
-        login = {
-          data: {
-            user: result.data.user,
-            session: {
-              access_token: "dev_access_token_" + Date.now(),
-              refresh_token: "dev_refresh_token_" + Date.now(),
-              user: result.data.user
-            }
-          },
-          error: null
-        };
-        console.log("✅ Utente sviluppatore creato con successo");
-      } else {
-        console.error("❌ Creazione utente fallita:", result.error);
-        return new Response(JSON.stringify({ error: "Creazione utente fallita" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
-      }
-    } else {
-      console.log("✅ Login esistente riuscito");
     }
 
-    const { data } = login;
-
-    // Aggiorna o crea profilo admin
-    console.log("⚙️ Aggiornamento profilo admin...");
-    await supabase.from("profiles").upsert({
-      id: data.user.id,
-      email,
-      role: "admin",
-      full_name: "Amministratore",
-      subscription_tier: "admin"
-    }, { onConflict: "id" });
-
-    console.log("✅ Login completato in modalità sviluppatore");
+    console.log("✅ Magic link generato con successo:", data.properties?.action_link);
 
     return new Response(JSON.stringify({
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-      user: {
-        id: data.user.id,
-        email: data.user.email
-      },
-      message: "Login riuscito in modalità sviluppatore"
+      token: data.properties?.action_link,
+      message: "Magic link generato per sviluppatore"
     }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
