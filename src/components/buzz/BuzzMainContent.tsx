@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import BuzzButton from "./BuzzButton";
 import { useBuzzClues } from "@/hooks/buzz/useBuzzClues";
 import { useAuth } from "@/hooks/useAuth";
+import { useDynamicIsland } from "@/hooks/useDynamicIsland";
 import ErrorFallback from "../error/ErrorFallback";
 import GradientBox from "@/components/ui/gradient-box";
 
@@ -12,6 +13,31 @@ const BuzzMainContent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { incrementUnlockedCluesAndAddClue } = useBuzzClues();
+  const { startActivity, updateActivity, endActivity } = useDynamicIsland();
+
+  const handleBuzzSuccess = async (data: any) => {
+    // Start Dynamic Island activity when buzz area is generated
+    if (data?.area) {
+      await startActivity({
+        missionId: `buzz-${Date.now()}`,
+        title: "Operazione Firenze",
+        status: "Area Buzz generata",
+        progress: 25, // 25% progress for area generation
+        timeLeft: 3600, // 1 hour countdown
+      });
+
+      // Update progress after a short delay (simulation)
+      setTimeout(async () => {
+        await updateActivity({
+          status: "Analisi in corso",
+          progress: 50,
+        });
+      }, 3000);
+    }
+
+    // Call original success handler
+    incrementUnlockedCluesAndAddClue();
+  };
 
   if (error) {
     return <ErrorFallback message={error} onRetry={() => setError(null)} />;
@@ -53,7 +79,7 @@ const BuzzMainContent = () => {
           setIsLoading={setIsLoading}
           setError={setError}
           userId={user?.id || ""}
-          onSuccess={incrementUnlockedCluesAndAddClue}
+          onSuccess={handleBuzzSuccess}
         />
       </motion.div>
 

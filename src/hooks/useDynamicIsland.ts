@@ -1,57 +1,162 @@
 
-import { useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { DynamicIsland } from '@/plugins/dynamic-island';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-interface MissionData {
+export interface MissionActivity {
   missionId: string;
-  timeLeft: number;
+  title: string;
+  status: string;
   progress: number;
-  status?: string;
+  timeLeft?: number;
 }
 
 export const useDynamicIsland = () => {
+  const [isActive, setIsActive] = useState(false);
+  const [currentActivity, setCurrentActivity] = useState<MissionActivity | null>(null);
   const { user } = useAuth();
-  
-  const startMissionActivity = useCallback(async (data: MissionData) => {
+
+  const startActivity = useCallback(async (activity: MissionActivity) => {
     try {
+      console.log('Starting Dynamic Island activity:', activity);
+      
+      // Save activity state to Supabase
+      if (user?.id) {
+        const { error } = await supabase
+          .from('live_activity_state')
+          .upsert({
+            user_id: user.id,
+            mission: activity.title,
+            status: activity.status,
+            progress: activity.progress,
+          }, {
+            onConflict: 'user_id'
+          });
+
+        if (error) {
+          console.error('Error saving live activity state:', error);
+        }
+      }
+
+      // Start native Dynamic Island activity
       const result = await DynamicIsland.startActivity({
         type: 'mission',
-        data
+        data: {
+          missionId: activity.missionId,
+          timeLeft: activity.timeLeft || 0,
+          progress: activity.progress,
+          status: activity.status,
+        },
       });
-      console.log('Dynamic Island activity started:', result);
+
+      if (result.success) {
+        setIsActive(true);
+        setCurrentActivity(activity);
+        console.log('Dynamic Island activity started successfully');
+      } else {
+        console.error('Failed to start Dynamic Island activity');
+      }
+
       return result.success;
     } catch (error) {
-      console.error('Failed to start Dynamic Island activity:', error);
+      console.error('Error starting Dynamic Island activity:', error);
       return false;
     }
-  }, []);
-  
-  const updateMissionActivity = useCallback(async (data: Omit<MissionData, 'missionId'> & { missionId: string }) => {
+  }, [user?.id]);
+
+  const updateActivity = useCallback(async (updates: Partial<MissionActivity>) => {
+    if (!currentActivity) {
+      console.warn('No active Dynamic Island activity to update');
+      return false;
+    }
+
     try {
-      const result = await DynamicIsland.updateActivity(data);
-      console.log('Dynamic Island activity updated:', result);
+      const updatedActivity = { ...currentActivity, ...updates };
+      
+      // Update activity state in Supabase
+      if (user?.id) {
+        const { error } = await supabase
+          .from('live_activity_state')
+          .update({
+            mission: updatedActivity.title,
+            status: updatedActivity.status,
+            progress: updatedActivity.progress,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Error updating live activity state:', error);
+        }
+      }
+
+      // Update native Dynamic Island activity
+      const result = await DynamicIsland.updateActivity({
+        missionId: updatedActivity.missionId,
+        timeLeft: updatedActivity.timeLeft || 0,
+        progress: updatedActivity.progress,
+        status: updatedActivity.status,
+      });
+
+      if (result.success) {
+        setCurrentActivity(updatedActivity);
+        console.log('Dynamic Island activity updated successfully');
+      } else {
+        console.error('Failed to update Dynamic Island activity');
+      }
+
       return result.success;
     } catch (error) {
-      console.error('Failed to update Dynamic Island activity:', error);
+      console.error('Error updating Dynamic Island activity:', error);
       return false;
     }
-  }, []);
-  
-  const endMissionActivity = useCallback(async (missionId: string) => {
+  }, [currentActivity, user?.id]);
+
+  const endActivity = useCallback(async () => {
+    if (!currentActivity) {
+      console.warn('No active Dynamic Island activity to end');
+      return false;
+    }
+
     try {
-      const result = await DynamicIsland.endActivity({ missionId });
-      console.log('Dynamic Island activity ended:', result);
+      // Remove activity state from Supabase
+      if (user?.id) {
+        const { error } = await supabase
+          .from('live_activity_state')
+          .delete()
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Error removing live activity state:', error);
+        }
+      }
+
+      // End native Dynamic Island activity
+      const result = await DynamicIsland.endActivity({
+        missionId: currentActivity.missionId,
+      });
+
+      if (result.success) {
+        setIsActive(false);
+        setCurrentActivity(null);
+        console.log('Dynamic Island activity ended successfully');
+      } else {
+        console.error('Failed to end Dynamic Island activity');
+      }
+
       return result.success;
     } catch (error) {
-      console.error('Failed to end Dynamic Island activity:', error);
+      console.error('Error ending Dynamic Island activity:', error);
       return false;
     }
-  }, []);
-  
+  }, [currentActivity, user?.id]);
+
   return {
-    startMissionActivity,
-    updateMissionActivity,
-    endMissionActivity
+    isActive,
+    currentActivity,
+    startActivity,
+    updateActivity,
+    endActivity,
   };
 };
