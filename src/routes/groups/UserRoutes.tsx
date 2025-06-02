@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Route } from 'react-router-dom';
 import { ProtectedRoute } from "../../components/auth/ProtectedRoute";
@@ -8,6 +9,7 @@ import Profile from "../../pages/Profile";
 import Events from "../../pages/Events";
 import Buzz from "../../pages/Buzz";
 import Map from "../../pages/Map";
+import Games from "../../pages/Games";
 import TestAgent from "../../pages/TestAgent";
 import AdminPrizeForm from "../../pages/AdminPrizeForm";
 
@@ -52,6 +54,14 @@ const UserRoutes = () => {
         element={
           <ProtectedRoute>
             <Map />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/games"
+        element={
+          <ProtectedRoute>
+            <Games />
           </ProtectedRoute>
         }
       />

@@ -21,16 +21,23 @@ interface UserMenuProps {
 
 const UserMenu = ({ onClickMail, enableAvatarUpload }: UserMenuProps) => {
   const navigate = useNavigate();
-  const { logout } = useAuthContext();
+  const { logout, getCurrentUser } = useAuthContext();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   useEffect(() => {
-    // Check if current date is before July 19, 2025
-    const launchDate = new Date('2025-07-19T00:00:00');
-    const currentDate = new Date();
+    const currentUser = getCurrentUser();
+    const isSpecialUser = currentUser?.email === 'wikus77@hotmail.it';
     
-    setIsButtonDisabled(currentDate < launchDate);
-  }, []);
+    if (isSpecialUser) {
+      // Enable all functionality for special user
+      setIsButtonDisabled(false);
+    } else {
+      // Check if current date is before July 19, 2025 for other users
+      const launchDate = new Date('2025-07-19T00:00:00');
+      const currentDate = new Date();
+      setIsButtonDisabled(currentDate < launchDate);
+    }
+  }, [getCurrentUser]);
 
   const handleSignOut = () => {
     if (logout) {
