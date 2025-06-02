@@ -1,9 +1,7 @@
-
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import DynamicIsland from "@/components/DynamicIsland";
 import { Spinner } from "@/components/ui/spinner";
 import IOSSafeAreaOverlay from "@/components/debug/IOSSafeAreaOverlay";
 
@@ -48,7 +46,6 @@ const AppRoutes: React.FC = () => {
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Suspense fallback={<LoadingFallback />}>
-          <DynamicIsland />
           <Routes>
             {/* Landing page - SEMPRE PUBBLICA, NESSUN REDIRECT */}
             <Route path="/" element={<Index />} />

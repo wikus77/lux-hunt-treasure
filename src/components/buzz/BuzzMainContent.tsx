@@ -15,25 +15,23 @@ const BuzzMainContent = () => {
   const { incrementUnlockedCluesAndAddClue } = useBuzzClues();
   const { startActivity, updateActivity, endActivity } = useDynamicIsland();
 
-  const handleBuzzSuccess = async (data: any) => {
-    // Start Dynamic Island activity when buzz area is generated
-    if (data?.area) {
-      await startActivity({
-        missionId: `buzz-${Date.now()}`,
-        title: "Operazione Firenze",
-        status: "Area Buzz generata",
-        progress: 25, // 25% progress for area generation
-        timeLeft: 3600, // 1 hour countdown
-      });
+  const handleBuzzSuccess = async () => {
+    // Start Dynamic Island activity when buzz is successful
+    await startActivity({
+      missionId: `buzz-${Date.now()}`,
+      title: "Operazione Firenze",
+      status: "Area Buzz generata",
+      progress: 25, // 25% progress for area generation
+      timeLeft: 3600, // 1 hour countdown
+    });
 
-      // Update progress after a short delay (simulation)
-      setTimeout(async () => {
-        await updateActivity({
-          status: "Analisi in corso",
-          progress: 50,
-        });
-      }, 3000);
-    }
+    // Update progress after a short delay (simulation)
+    setTimeout(async () => {
+      await updateActivity({
+        status: "Analisi in corso",
+        progress: 50,
+      });
+    }, 3000);
 
     // Call original success handler
     incrementUnlockedCluesAndAddClue();
