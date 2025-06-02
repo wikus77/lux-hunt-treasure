@@ -127,14 +127,17 @@ const AppHome = () => {
         <UnifiedHeader profileImage={profileImage} />
       </div>
       
-      {/* Content container with proper constraints */}
+      {/* CRITICAL FIX: Content container with proper safe zone constraints */}
       <div 
-        className="w-full overflow-y-auto"
+        className="w-full"
         style={{ 
-          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
-          paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 34px))',
+          // Fixed values with env() fallback to ensure visibility
+          paddingTop: 'calc(119px + 47px)', // 72px header + 47px top safe zone
+          paddingBottom: 'calc(64px + 34px)', // 64px bottom nav + 34px bottom safe zone
           height: '100vh',
           maxHeight: '100dvh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
           position: 'relative',
           zIndex: 1
         }}
@@ -155,7 +158,7 @@ const AppHome = () => {
                   transition={{ duration: 0.3 }}
                   className="fixed inset-x-0 z-[60] px-2 md:px-4"
                   style={{ 
-                    top: 'calc(env(safe-area-inset-top, 47px) + 72px)'
+                    top: 'calc(47px + 72px + env(safe-area-inset-top, 0px))'
                   }}
                 >
                   <NotificationsBanner

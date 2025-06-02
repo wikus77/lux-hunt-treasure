@@ -82,8 +82,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="fixed left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70"
       style={{ 
-        // CRITICAL FIX: Force explicit positioning below safe zone
-        top: '47px', // Fixed value for Lovable preview
+        // CRITICAL FIX: Position header below the safe zone
+        top: 'calc(47px + env(safe-area-inset-top, 0px))', // 47px fixed + env fallback
         paddingTop: '0px',
         marginTop: '0px'
       }}
