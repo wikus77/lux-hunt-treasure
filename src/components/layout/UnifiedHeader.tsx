@@ -33,11 +33,16 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       const userAgent = navigator.userAgent;
       const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      const isDeveloperUser = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
       
-      console.log('UnifiedHeader access check:', { isMobile, hasStoredAccess, isCapacitorApp });
+      console.log('UnifiedHeader access check:', { isMobile, hasStoredAccess, isCapacitorApp, isDeveloperUser });
       
-      // DEVELOPER ACCESS: Grant access if developer credentials are stored
-      if (isMobile && hasStoredAccess) {
+      // DEVELOPER ACCESS: Grant unlimited access if developer credentials are stored
+      if (isDeveloperUser) {
+        setHasAccess(true);
+        localStorage.setItem('unlimited_access', 'true');
+        localStorage.setItem('bypass_all_restrictions', 'true');
+      } else if (isMobile && hasStoredAccess) {
         setHasAccess(true);
       } else if (!isMobile) {
         // Web users can't access profile functionality
@@ -56,10 +61,11 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     const userAgent = navigator.userAgent;
     const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
     const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+    const isDeveloperUser = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
     
-    console.log('Profile click - Capacitor:', { isMobile, hasStoredAccess, isCapacitorApp });
+    console.log('Profile click - Capacitor:', { isMobile, hasStoredAccess, isCapacitorApp, isDeveloperUser });
     
-    if (isMobile && !hasStoredAccess) {
+    if (!isDeveloperUser && isMobile && !hasStoredAccess) {
       // Clear any existing access and reload to trigger login
       localStorage.removeItem('developer_access');
       localStorage.removeItem('developer_user');
@@ -75,6 +81,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="fixed top-0 left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 header-safe-area"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       <div className="container mx-auto h-full max-w-screen-xl">
         <div className="flex items-center justify-between h-[72px] px-3 sm:px-4">

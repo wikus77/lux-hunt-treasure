@@ -42,11 +42,14 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
     
     // DEVELOPER ACCESS: Check for exact developer credentials
     if (email === 'wikus77@hotmail.it' && password === '000000') {
-      // Grant complete access for developer
+      // Grant complete unlimited access for developer
       localStorage.setItem('developer_access', 'granted');
       localStorage.setItem('developer_user', 'true');
+      localStorage.setItem('developer_user_email', 'wikus77@hotmail.it');
       localStorage.setItem('full_access_granted', 'true');
-      console.log('Developer access granted - Full access enabled (Capacitor)');
+      localStorage.setItem('unlimited_access', 'true');
+      localStorage.setItem('bypass_all_restrictions', 'true');
+      console.log('Developer access granted - UNLIMITED ACCESS enabled (Capacitor)');
       onAccessGranted();
     } else {
       setError('Credenziali non valide');
@@ -68,7 +71,7 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             icon={<Mail size={16} />}
-            placeholder="Email"
+            placeholder="Email sviluppatore"
             className="mobile-optimized"
           />
           
@@ -92,8 +95,12 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
             type="submit"
             className="w-full mobile-touch-target bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF]"
           >
-            Accedi
+            Accedi - Accesso Completo
           </Button>
+          
+          <div className="text-xs text-gray-500 text-center">
+            Accesso sviluppatore: bypass completo di tutte le restrizioni
+          </div>
         </form>
       </div>
     </div>

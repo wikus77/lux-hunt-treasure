@@ -11,7 +11,7 @@ const BottomNavigation = () => {
   const { unreadCount } = useNotifications();
 
   const links = [
-    { icon: <Home className="h-6 w-6" />, label: "Home", path: "/home" },
+    { icon: <Home className="h-6 w-6" />, label: "Home", path: "/home" }, // PUNTA ALL'APP HOME, NON ALLA LANDING
     { icon: <Map className="h-6 w-6" />, label: "Mappa", path: "/map" },
     { 
       icon: <Circle strokeWidth={2} className="h-6 w-6" />, 
@@ -35,6 +35,7 @@ const BottomNavigation = () => {
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex items-center justify-around h-full max-w-lg mx-auto">
         {links.map((link) => (
