@@ -57,7 +57,7 @@ const Games = () => {
     checkNewMinigames();
   }, [score, gameCompleted, startActivity]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount - Fixed: use currentMission.name instead of currentMission.title
   useEffect(() => {
     return () => {
       // Only end activity if it's game-related

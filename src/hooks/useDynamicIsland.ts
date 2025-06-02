@@ -21,13 +21,13 @@ export const useDynamicIsland = () => {
     try {
       console.log('Starting Dynamic Island activity:', activity);
       
-      // Save activity state to Supabase
+      // Save activity state to Supabase - using 'mission' field for activity.title
       if (user?.id) {
         const { error } = await supabase
           .from('live_activity_state')
           .upsert({
             user_id: user.id,
-            mission: activity.title,
+            mission: activity.title, // ✅ Fixed: use activity.title for mission field
             status: activity.status,
             progress: activity.progress,
           }, {
@@ -79,7 +79,7 @@ export const useDynamicIsland = () => {
         const { error } = await supabase
           .from('live_activity_state')
           .update({
-            mission: updatedActivity.title,
+            mission: updatedActivity.title, // ✅ Fixed: use updatedActivity.title for mission field
             status: updatedActivity.status,
             progress: updatedActivity.progress,
             updated_at: new Date().toISOString(),

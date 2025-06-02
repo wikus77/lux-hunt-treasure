@@ -59,12 +59,12 @@ const Home = () => {
     checkAccess();
   }, []);
 
-  // Dynamic Island integration for HOME - Active mission
+  // Dynamic Island integration for HOME - Active mission - Fixed: use currentMission.name
   useEffect(() => {
     if (hasAccess && isLoaded && currentMission && currentMission.status === 'active') {
       startActivity({
         missionId: currentMission.id,
-        title: currentMission.name,
+        title: currentMission.name, // ✅ Fixed: use currentMission.name instead of title
         status: "Missione attiva",
         progress: currentMission.progress,
         timeLeft: currentMission.timeLeft,

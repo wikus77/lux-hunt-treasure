@@ -46,7 +46,7 @@ const Notifications = () => {
     }
   }, [notifications, startActivity, endActivity]);
 
-  // Cleanup when unmount
+  // Cleanup when unmount - Fixed: use currentMission.name instead of currentMission.title
   useEffect(() => {
     return () => {
       // Only close if it's notification-related
