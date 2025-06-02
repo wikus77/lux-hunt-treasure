@@ -44,30 +44,49 @@ const Games = () => {
   const renderGame = () => {
     if (!selectedGame) return null;
 
-    const commonProps = {
-      onBack: () => setSelectedGame(null)
-    };
-
+    // Since the game components don't accept onBack prop, we'll render them without it
+    // and handle navigation through other means
     switch (selectedGame) {
       case 'memory-hack':
-        return <MemoryHackGame {...commonProps} />;
+        return <MemoryHackGame />;
       case 'disarm-bomb':
-        return <DisarmTheBombGame {...commonProps} />;
+        return <DisarmTheBombGame />;
       case 'flash-interrogation':
-        return <FlashInterrogationGame {...commonProps} />;
+        return <FlashInterrogationGame />;
       case 'crack-combination':
-        return <CrackTheCombinationGame {...commonProps} />;
+        return <CrackTheCombinationGame />;
       case 'satellite-tracking':
-        return <SatelliteTrackingGame {...commonProps} />;
+        return <SatelliteTrackingGame />;
       case 'find-map-point':
-        return <FindMapPointGame {...commonProps} />;
+        return <FindMapPointGame />;
       default:
         return null;
     }
   };
 
   if (selectedGame) {
-    return renderGame();
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black">
+        <UnifiedHeader />
+        <div 
+          className="w-full"
+          style={{ 
+            paddingTop: '119px',
+            marginTop: 0
+          }}
+        />
+        <div className="container mx-auto px-3">
+          <button
+            onClick={() => setSelectedGame(null)}
+            className="mb-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+          >
+            ← Torna ai giochi
+          </button>
+          {renderGame()}
+        </div>
+        <BottomNavigation />
+      </div>
+    );
   }
 
   return (

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Trash2, Filter, CheckCircle2, AlertCircle, Info, Star } from 'lucide-react';
@@ -136,7 +137,7 @@ const Notifications = () => {
                             <h3 className="text-sm font-semibold text-white">{notification.title}</h3>
                             <p className="text-xs text-gray-400">{notification.description}</p>
                             <p className="text-xs text-gray-500 mt-1">
-                              {new Date(notification.createdAt).toLocaleDateString()} - {new Date(notification.createdAt).toLocaleTimeString()}
+                              {new Date(notification.date).toLocaleDateString()} - {new Date(notification.date).toLocaleTimeString()}
                             </p>
                           </div>
                         </div>
