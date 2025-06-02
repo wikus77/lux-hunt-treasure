@@ -24,16 +24,39 @@ export function useAuth() {
     const fetchSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           throw error;
         }
-        
+
         const session = data?.session;
         const user = session?.user || null;
-        
+
         console.log("Stato autenticazione:", user ? "Autenticato" : "Non autenticato");
-        
+
+        // Login di sviluppo per bypassare la landing page su iPhone
+        if (!user) {
+          console.warn("⚠️ Nessuna sessione trovata. Attivo modalità sviluppo con utente test.");
+          const fakeUser = {
+            id: "dev-user-id",
+            email: "wikus77@hotmail.it",
+            role: "developer",
+            aud: "authenticated",
+            app_metadata: { provider: "email" },
+            user_metadata: { name: "Wikus Developer" },
+            created_at: new Date().toISOString(),
+          } as User;
+
+          setAuthState({
+            user: fakeUser,
+            session: null,
+            loading: false,
+            error: null,
+          });
+
+          return;
+        }
+
         setAuthState({
           user,
           session,
@@ -58,7 +81,7 @@ export function useAuth() {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Evento di autenticazione:", event);
-        
+
         setAuthState({
           user: session?.user || null,
           session,
@@ -68,7 +91,7 @@ export function useAuth() {
       }
     );
 
-    // Pulizia dell'effetto
+    // Pulizia dell’effetto
     return () => {
       if (authListener && authListener.subscription) {
         authListener.subscription.unsubscribe();
@@ -101,20 +124,20 @@ export function useAuth() {
   const logout = async () => {
     try {
       console.log('🔒 Logging out user - ensuring Live Activity cleanup');
-      
+
       // Importazione dinamica per evitare circular dependency
       const { useDynamicIsland } = await import('./useDynamicIsland');
       const { forceEndActivity } = useDynamicIsland();
-      
+
       // Chiusura forzata di sicurezza prima del logout
       await forceEndActivity();
-      
+
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
         throw error;
       }
-      
+
       toast.success("Logout effettuato con successo");
     } catch (error: any) {
       console.error("Errore durante il logout:", error);
