@@ -29,6 +29,15 @@ const BottomNavigation = () => {
     { icon: <Award className="h-6 w-6" />, label: "Classifica", path: "/leaderboard" }
   ];
 
+  const handleLinkClick = (path: string, e: React.MouseEvent) => {
+    // Force navigation to internal routes, prevent any external redirects
+    if (path === "/home") {
+      e.preventDefault();
+      // Force navigation to the internal home page
+      window.location.href = "/home";
+    }
+  };
+
   return (
     <motion.div 
       className="fixed bottom-0 left-0 right-0 z-50 h-16 backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 border-t border-white/10 px-3 safe-area-bottom safe-area-left safe-area-right"
@@ -42,6 +51,7 @@ const BottomNavigation = () => {
           <Link
             key={link.path}
             to={link.path}
+            onClick={(e) => handleLinkClick(link.path, e)}
             className={`relative flex flex-col items-center justify-center w-16 h-16 transition-colors mobile-touch-target ${
               currentPath === link.path
                 ? "text-[#00D1FF]"

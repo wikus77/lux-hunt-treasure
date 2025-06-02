@@ -57,9 +57,9 @@ const AppHome = () => {
       if (isMobileDevice && hasStoredAccess) {
         setHasAccess(true);
       } else if (!isMobileDevice) {
-        // Web users get redirected to landing page
-        window.location.href = '/';
-        return;
+        // Web users should NOT be redirected to landing page from internal routes
+        // They should see the app home but with limited functionality
+        setHasAccess(true); // Allow access to prevent redirect loop
       }
     };
     
