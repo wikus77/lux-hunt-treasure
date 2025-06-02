@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Mail, Map, Home, Award, Circle, Gamepad2 } from "lucide-react";
+import { Mail, Map, Home, Award, User, Circle, Gamepad2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
 
@@ -13,20 +13,20 @@ const BottomNavigation = () => {
   const links = [
     { icon: <Home className="h-6 w-6" />, label: "Home", path: "/home" },
     { icon: <Map className="h-6 w-6" />, label: "Mappa", path: "/map" },
-    { 
-      icon: <Circle strokeWidth={2} className="h-6 w-6" />, 
-      label: "Buzz", 
+    {
+      icon: <Circle strokeWidth={2} className="h-6 w-6" />,
+      label: "Buzz",
       path: "/buzz",
-      isSpecial: true
+      isSpecial: true,
     },
     { icon: <Gamepad2 className="h-6 w-6" />, label: "Games", path: "/games" },
-    { 
-      icon: <Mail className="h-6 w-6" />, 
-      label: "Notifiche", 
-      path: "/notifications", 
-      badge: unreadCount > 0 
+    {
+      icon: <Mail className="h-6 w-6" />,
+      label: "Notifiche",
+      path: "/notifications",
+      badge: unreadCount > 0,
     },
-    { icon: <Award className="h-6 w-6" />, label: "Classifica", path: "/leaderboard" }
+    { icon: <Award className="h-6 w-6" />, label: "Classifica", path: "/leaderboard" },
   ];
 
   const handleLinkClick = (path: string, e: React.MouseEvent) => {
@@ -37,33 +37,34 @@ const BottomNavigation = () => {
   };
 
   return (
-    <div 
-      style={{ 
-        position: 'fixed',
+    <div
+      style={{
+        position: "fixed",
         left: 0,
         right: 0,
-        bottom: 0,
-        height: 'calc(64px + env(safe-area-inset-bottom))',
-        paddingBottom: 'env(safe-area-inset-bottom)',
+        bottom: "0px",
         zIndex: 9999,
-        transform: 'translateZ(0)',
-        WebkitTransform: 'translateZ(0)',
-        paddingLeft: 'env(safe-area-inset-left)',
-        paddingRight: 'env(safe-area-inset-right)',
-        backgroundColor: 'rgba(0, 0, 0, 0.95)'
+        paddingBottom: "calc(env(safe-area-inset-bottom, 34px) + 12px)",
+        paddingLeft: "env(safe-area-inset-left)",
+        paddingRight: "env(safe-area-inset-right)",
+        backgroundColor: "rgba(0,0,0,0.95)",
+        transform: "translateZ(0)",
+        WebkitTransform: "translateZ(0)",
+        isolation: "isolate",
       }}
     >
-      <motion.div 
+      <motion.div
         className="h-16 backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 border-t border-white/10 px-3"
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
         style={{
-          position: 'relative',
-          zIndex: 'inherit',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center'
+          position: "relative",
+          zIndex: "inherit",
+          height: "64px",
+          display: "flex",
+          alignItems: "center",
+          borderTop: "1px solid rgba(255, 255, 255, 0.1)",
         }}
       >
         <div className="flex items-center justify-around h-full max-w-lg mx-auto w-full">
@@ -82,20 +83,26 @@ const BottomNavigation = () => {
                 {link.isSpecial ? (
                   <div className="relative">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] opacity-30 blur-sm animate-pulse" />
-                    <div className="absolute inset-0 rounded-full border-2 border-[#00D1FF]/60 animate-spin-slow" style={{
-                      animation: 'spin 8s linear infinite'
-                    }} />
-                    <div className="relative z-10 text-[#00D1FF]" style={{
-                      filter: 'drop-shadow(0 0 8px rgba(0, 209, 255, 0.8))',
-                      textShadow: '0 0 10px rgba(0, 209, 255, 0.6)'
-                    }}>
+                    <div
+                      className="absolute inset-0 rounded-full border-2 border-[#00D1FF]/60 animate-spin-slow"
+                      style={{
+                        animation: "spin 8s linear infinite",
+                      }}
+                    />
+                    <div
+                      className="relative z-10 text-[#00D1FF]"
+                      style={{
+                        filter: "drop-shadow(0 0 8px rgba(0, 209, 255, 0.8))",
+                        textShadow: "0 0 10px rgba(0, 209, 255, 0.6)",
+                      }}
+                    >
                       {link.icon}
                     </div>
                   </div>
                 ) : (
                   link.icon
                 )}
-                
+
                 {link.badge && (
                   <div className="absolute -top-1 -right-1 flex items-center justify-center h-4 w-4 bg-[#FF59F8] rounded-full animate-pulse shadow-[0_0_8px_rgba(240,89,255,0.5)]">
                     <span className="text-[8px] font-bold text-white">
@@ -111,15 +118,14 @@ const BottomNavigation = () => {
                   layoutId="navigation-underline"
                   initial={false}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  style={{ 
-                    boxShadow: "0 0 8px rgba(0, 209, 255, 0.5)" 
+                  style={{
+                    boxShadow: "0 0 8px rgba(0, 209, 255, 0.5)",
                   }}
                 />
               )}
             </Link>
           ))}
         </div>
-
         <div className="line-glow absolute top-0 left-0 w-full"></div>
       </motion.div>
     </div>
