@@ -42,13 +42,15 @@ const BottomNavigation = () => {
     <div 
       className="fixed left-0 right-0"
       style={{ 
-        bottom: 'env(safe-area-inset-bottom, 34px)',
+        bottom: `calc(env(safe-area-inset-bottom, 34px) + 0px)`,
         paddingLeft: 'env(safe-area-inset-left)',
         paddingRight: 'env(safe-area-inset-right)',
         zIndex: 9999,
         height: '64px',
-        transform: 'none',
-        WebkitTransform: 'none'
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
+        willChange: 'transform',
+        isolation: 'isolate'
       }}
     >
       <motion.div 
@@ -59,10 +61,13 @@ const BottomNavigation = () => {
         style={{
           position: 'relative',
           zIndex: 'inherit',
-          borderTop: '1px solid rgba(0, 0, 0, 0.2)'
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center'
         }}
       >
-        <div className="flex items-center justify-around h-full max-w-lg mx-auto">
+        <div className="flex items-center justify-around h-full max-w-lg mx-auto w-full">
           {links.map((link) => (
             <Link
               key={link.path}
