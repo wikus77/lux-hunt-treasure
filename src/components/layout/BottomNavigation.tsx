@@ -40,9 +40,9 @@ const BottomNavigation = () => {
 
   return (
     <div 
-      className="fixed left-0 right-0 z-50 pb-[env(safe-area-inset-bottom,34px)]"
+      className="fixed left-0 right-0 z-50"
       style={{ 
-        bottom: 0,
+        bottom: 'env(safe-area-inset-bottom, 34px)',
         paddingLeft: 'env(safe-area-inset-left)',
         paddingRight: 'env(safe-area-inset-right)'
       }}

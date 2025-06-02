@@ -117,25 +117,24 @@ const AppHome = () => {
   }
 
   return (
-    <div 
-      className="min-h-screen bg-[#070818] w-full overflow-x-hidden"
-      style={{ 
-        paddingTop: 'env(safe-area-inset-top, 47px)',
-        paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 34px))'
-      }}
-    >
+    <div className="min-h-screen bg-[#070818] w-full overflow-hidden">
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
       
-      <UnifiedHeader profileImage={profileImage} />
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <UnifiedHeader profileImage={profileImage} />
+      </div>
       
-      {/* Content container with fixed scroll behavior */}
+      {/* Content container with proper constraints */}
       <div 
-        className="w-full h-full overflow-y-auto"
+        className="w-full overflow-y-auto"
         style={{ 
           paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
-          maxHeight: 'calc(100vh - 72px - env(safe-area-inset-top, 47px) - 64px - env(safe-area-inset-bottom, 34px))',
+          paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 34px))',
+          height: '100vh',
+          maxHeight: '100dvh',
           position: 'relative',
           zIndex: 1
         }}

@@ -66,19 +66,20 @@ const Games = () => {
 
   if (selectedGame) {
     return (
-      <div 
-        className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black overflow-x-hidden"
-        style={{ 
-          paddingTop: 'env(safe-area-inset-top, 47px)',
-          paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 34px))'
-        }}
-      >
-        <UnifiedHeader />
+      <div className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black overflow-hidden">
+        {/* Fixed Header */}
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <UnifiedHeader />
+        </div>
+        
+        {/* Content container with proper constraints */}
         <div 
-          className="w-full h-full overflow-y-auto"
+          className="w-full overflow-y-auto"
           style={{ 
             paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
-            maxHeight: 'calc(100vh - 72px - env(safe-area-inset-top, 47px) - 64px - env(safe-area-inset-bottom, 34px))',
+            paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 34px))',
+            height: '100vh',
+            maxHeight: '100dvh',
             position: 'relative',
             zIndex: 1
           }}
@@ -100,23 +101,24 @@ const Games = () => {
 
   return (
     <motion.div 
-      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black w-full overflow-x-hidden"
+      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black w-full overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      style={{ 
-        paddingTop: 'env(safe-area-inset-top, 47px)',
-        paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 34px))'
-      }}
     >
-      <UnifiedHeader />
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <UnifiedHeader />
+      </div>
       
-      {/* Content container with fixed scroll behavior */}
+      {/* Content container with proper constraints */}
       <div 
-        className="w-full h-full overflow-y-auto"
+        className="w-full overflow-y-auto"
         style={{ 
           paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
-          maxHeight: 'calc(100vh - 72px - env(safe-area-inset-top, 47px) - 64px - env(safe-area-inset-bottom, 34px))',
+          paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 34px))',
+          height: '100vh',
+          maxHeight: '100dvh',
           position: 'relative',
           zIndex: 1
         }}
