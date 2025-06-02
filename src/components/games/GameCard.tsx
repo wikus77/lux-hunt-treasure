@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
+import { useAuthContext } from '@/contexts/auth';
 
 interface Game {
   title: string;
@@ -21,6 +22,12 @@ interface GameCardProps {
 }
 
 export const GameCard: React.FC<GameCardProps> = ({ game, isCompleted, onPlay }) => {
+  const { getCurrentUser } = useAuthContext();
+  
+  // Check if current user is admin (wikus77@hotmail.it)
+  const currentUser = getCurrentUser();
+  const isAdminUser = currentUser?.email === 'wikus77@hotmail.it';
+  
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'easy': return 'bg-green-500/20 text-green-400 border-green-500/30';
@@ -40,7 +47,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, isCompleted, onPlay })
         <CardContent className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div className="text-3xl">{game.icon}</div>
-            {isCompleted && (
+            {(isCompleted || isAdminUser) && (
               <CheckCircle className="w-5 h-5 text-green-400" />
             )}
           </div>
@@ -58,9 +65,9 @@ export const GameCard: React.FC<GameCardProps> = ({ game, isCompleted, onPlay })
           <Button 
             onClick={onPlay}
             className="w-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] hover:opacity-90"
-            disabled={isCompleted}
+            disabled={!isAdminUser && isCompleted}
           >
-            {isCompleted ? 'Completato' : 'Gioca'}
+            {isCompleted && !isAdminUser ? 'Completato' : 'Gioca'}
           </Button>
         </CardContent>
       </Card>
