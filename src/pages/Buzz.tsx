@@ -16,6 +16,7 @@ const Buzz = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       style={{ 
+        height: '100dvh',
         overflow: 'hidden',
         position: 'relative'
       }}
@@ -37,12 +38,12 @@ const Buzz = () => {
       <main
         style={{
           paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
-          paddingBottom: 'env(safe-area-inset-bottom, 34px)',
-          maxHeight: '100dvh',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+          height: '100dvh',
           overflowY: 'auto',
           overflowX: 'hidden',
           position: 'relative',
-          zIndex: 0
+          zIndex: 1
         }}
       >
         <div className="container mx-auto">

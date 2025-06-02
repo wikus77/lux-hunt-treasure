@@ -67,8 +67,9 @@ const Games = () => {
   if (selectedGame) {
     return (
       <div 
-        className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black" 
+        className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black"
         style={{ 
+          height: '100dvh',
           overflow: 'hidden',
           position: 'relative'
         }}
@@ -90,12 +91,12 @@ const Games = () => {
         <main
           style={{
             paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
-            paddingBottom: 'env(safe-area-inset-bottom, 34px)',
-            maxHeight: '100dvh',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+            height: '100dvh',
             overflowY: 'auto',
             overflowX: 'hidden',
             position: 'relative',
-            zIndex: 0
+            zIndex: 1
           }}
         >
           <div className="container mx-auto px-3">
@@ -120,6 +121,7 @@ const Games = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       style={{ 
+        height: '100dvh',
         overflow: 'hidden',
         position: 'relative'
       }}
@@ -141,12 +143,12 @@ const Games = () => {
       <main
         style={{
           paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
-          paddingBottom: 'env(safe-area-inset-bottom, 34px)',
-          maxHeight: '100dvh',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+          height: '100dvh',
           overflowY: 'auto',
           overflowX: 'hidden',
           position: 'relative',
-          zIndex: 0
+          zIndex: 1
         }}
       >
         <div className="container mx-auto">

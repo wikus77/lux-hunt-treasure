@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
@@ -118,8 +117,9 @@ const AppHome = () => {
 
   return (
     <div 
-      className="min-h-screen bg-[#070818] w-full" 
+      className="min-h-screen bg-[#070818] w-full"
       style={{ 
+        height: '100dvh',
         overflow: 'hidden',
         position: 'relative'
       }}
@@ -145,12 +145,12 @@ const AppHome = () => {
       <main
         style={{
           paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
-          paddingBottom: 'env(safe-area-inset-bottom, 34px)',
-          maxHeight: '100dvh',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+          height: '100dvh',
           overflowY: 'auto',
           overflowX: 'hidden',
           position: 'relative',
-          zIndex: 0
+          zIndex: 1
         }}
       >
         <AnimatePresence>
