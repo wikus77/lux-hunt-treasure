@@ -30,28 +30,27 @@ const BottomNavigation = () => {
   ];
 
   const handleLinkClick = (path: string, e: React.MouseEvent) => {
-    // Force navigation to internal routes, prevent any external redirects
     if (path === "/home") {
       e.preventDefault();
-      // Force navigation to the internal home page
       window.location.href = "/home";
     }
   };
 
   return (
-    <div 
-      style={{ 
+    <div
+      style={{
         position: 'fixed',
+        bottom: 'env(safe-area-inset-bottom)',
         left: 0,
         right: 0,
-        bottom: 'env(safe-area-inset-bottom, 34px)',
-        height: '64px',
         zIndex: 9999,
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
         paddingLeft: 'env(safe-area-inset-left)',
         paddingRight: 'env(safe-area-inset-right)',
-        backgroundColor: 'rgba(0, 0, 0, 0.95)'
+        height: '64px',
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        isolation: 'isolate'
       }}
     >
       <motion.div 
@@ -62,10 +61,10 @@ const BottomNavigation = () => {
         style={{
           position: 'relative',
           zIndex: 'inherit',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
           height: '100%',
           display: 'flex',
-          alignItems: 'center'
+          alignItems: 'center',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)'
         }}
       >
         <div className="flex items-center justify-around h-full max-w-lg mx-auto w-full">
@@ -81,7 +80,6 @@ const BottomNavigation = () => {
               }`}
             >
               <div className="relative">
-                {/* Special BUZZ icon with permanent neon glow effect */}
                 {link.isSpecial ? (
                   <div className="relative">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] opacity-30 blur-sm animate-pulse" />
@@ -98,7 +96,7 @@ const BottomNavigation = () => {
                 ) : (
                   link.icon
                 )}
-                
+
                 {link.badge && (
                   <div className="absolute -top-1 -right-1 flex items-center justify-center h-4 w-4 bg-[#FF59F8] rounded-full animate-pulse shadow-[0_0_8px_rgba(240,89,255,0.5)]">
                     <span className="text-[8px] font-bold text-white">
@@ -122,8 +120,6 @@ const BottomNavigation = () => {
             </Link>
           ))}
         </div>
-        
-        {/* Add the horizontal line glow effect matching the header */}
         <div className="line-glow absolute top-0 left-0 w-full"></div>
       </motion.div>
     </div>
