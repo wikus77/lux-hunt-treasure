@@ -37,18 +37,19 @@ const BottomNavigation = () => {
   };
 
   return (
-    <div
-      style={{
+    <div 
+      style={{ 
         position: 'fixed',
-        bottom: 'env(safe-area-inset-bottom)',
         left: 0,
         right: 0,
+        bottom: 0,
+        height: 'calc(64px + env(safe-area-inset-bottom))',
+        paddingBottom: 'env(safe-area-inset-bottom)',
         zIndex: 9999,
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
         paddingLeft: 'env(safe-area-inset-left)',
         paddingRight: 'env(safe-area-inset-right)',
-        height: '64px',
         backgroundColor: 'rgba(0, 0, 0, 0.95)',
         isolation: 'isolate'
       }}
@@ -61,10 +62,10 @@ const BottomNavigation = () => {
         style={{
           position: 'relative',
           zIndex: 'inherit',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
           height: '100%',
           display: 'flex',
-          alignItems: 'center',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+          alignItems: 'center'
         }}
       >
         <div className="flex items-center justify-around h-full max-w-lg mx-auto w-full">
