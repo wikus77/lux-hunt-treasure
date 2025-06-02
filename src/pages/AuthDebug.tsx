@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useTurnstile } from "@/hooks/useTurnstile";
 import StyledInput from "@/components/ui/styled-input";
 import { Key, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,18 +15,11 @@ const AuthDebug = () => {
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const navigate = useNavigate();
-  const [token, setToken] = useState("BYPASS_FOR_DEVELOPMENT");
-
-  const { setTurnstileToken } = useTurnstile({
-    action: 'login',
-    autoVerify: true
-  });
 
   useEffect(() => {
-    setTurnstileToken("BYPASS_FOR_DEVELOPMENT");
     console.log("🚀 Debug Login inizializzato");
     checkCurrentSession();
-  }, [setTurnstileToken]);
+  }, []);
 
   const checkCurrentSession = async () => {
     try {
@@ -46,30 +38,11 @@ const AuthDebug = () => {
           .eq("id", data.session.user.id)
           .maybeSingle();
 
-        if (profileData) {
-          setDebugInfo(prev => ({ ...prev, role: profileData.role }));
-          if (profileData.role === 'admin') {
-            toast.info("Sessione admin già attiva", {
-              description: "Reindirizzamento alla dashboard admin"
-            });
-            setTimeout(() => navigate("/test-admin-ui"), 1500);
-          }
-        } else {
-          const { data: profileByEmail } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("email", data.session.user.email)
-            .maybeSingle();
-
-          if (profileByEmail) {
-            setDebugInfo(prev => ({ ...prev, role: profileByEmail.role }));
-            if (profileByEmail.role === 'admin') {
-              toast.info("Sessione admin già attiva", {
-                description: "Reindirizzamento alla dashboard admin"
-              });
-              setTimeout(() => navigate("/test-admin-ui"), 1500);
-            }
-          }
+        if (profileData?.role === 'admin') {
+          toast.info("Sessione admin già attiva", {
+            description: "Reindirizzamento alla dashboard admin"
+          });
+          setTimeout(() => navigate("/test-admin-ui"), 1500);
         }
       } else {
         setStatusMessage("Nessuna sessione attiva");
@@ -88,14 +61,12 @@ const AuthDebug = () => {
     setStatusMessage("Tentativo di login in corso...");
 
     try {
-      // 🔧 BYPASS SVILUPPATORE: Disabilita validazioni CAPTCHA per wikus77@hotmail.it
-      console.log("🔧 Modalità sviluppatore attiva - bypass CAPTCHA");
-      
+      console.log("🔧 Login DEV con bypass CAPTCHA e password");
+
       const res = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "cf-turnstile-response": token, // Token bypass
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({ email, password: password || "qualsiasi_password" })
       });
