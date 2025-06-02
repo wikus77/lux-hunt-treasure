@@ -92,19 +92,6 @@ const AppHome = () => {
     }
   }, [error]);
 
-  const getContentPaddingClass = () => {
-    return isCapacitor ? "capacitor-safe-content" : "";
-  };
-
-  const getContentPaddingStyle = () => {
-    if (!isCapacitor) {
-      return { 
-        paddingTop: 'calc(72px + env(safe-area-inset-top) + 50px)' 
-      };
-    }
-    return {};
-  };
-
   // Show developer access screen for mobile users without access
   if (isMobile && !hasAccess) {
     return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
@@ -136,9 +123,14 @@ const AppHome = () => {
       </Helmet>
       
       <UnifiedHeader profileImage={profileImage} />
+      
+      {/* Content positioned below header that respects safe area */}
       <div 
-        className={getContentPaddingClass()}
-        style={getContentPaddingStyle()}
+        className="w-full"
+        style={{ 
+          paddingTop: `calc(72px + env(safe-area-inset-top, 47px))`,
+          marginTop: 0
+        }}
       />
 
       <AnimatePresence>
@@ -155,10 +147,10 @@ const AppHome = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className={`fixed inset-x-0 z-[60] px-2 md:px-4 ${isCapacitor ? 'capacitor-safe-content' : ''}`}
-                style={!isCapacitor ? { 
-                  top: 'calc(72px + env(safe-area-inset-top) + 50px)'
-                } : {}}
+                className="fixed inset-x-0 z-[60] px-2 md:px-4"
+                style={{ 
+                  top: `calc(72px + env(safe-area-inset-top, 47px))`
+                }}
               >
                 <NotificationsBanner
                   notifications={notifications}
