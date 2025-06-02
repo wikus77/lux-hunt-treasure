@@ -37,8 +37,8 @@ export function useAuth() {
         console.log("User email:", user?.email);
 
         // Developer bypass for wikus77@hotmail.it
-        if (!user || user.email === "wikus77@hotmail.it") {
-          console.warn("⚠️ Developer mode active for wikus77@hotmail.it");
+        if (user?.email === "wikus77@hotmail.it") {
+          console.log("🔓 Developer bypass: allowing access for wikus77@hotmail.it");
           const fakeUser = {
             id: "dev-user-id",
             email: "wikus77@hotmail.it",

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as Sentry from "@sentry/react";
@@ -6,14 +7,19 @@ import './index.css';
 import { Toaster } from 'sonner';
 
 // Initialize Sentry - DISABLED for development
-Sentry.init({
-  dsn: "[INSERISCI LA TUA DSN DI SENTRY QUI]",
-  integrations: [
-    Sentry.browserTracingIntegration(),
-  ],
-  tracesSampleRate: 1.0,
-  enabled: false // Disabled to prevent errors with placeholder DSN
-});
+// Disattivato temporaneamente Sentry per evitare errori in modalità sviluppatore
+if (import.meta.env.MODE !== 'development' && import.meta.env.VITE_SENTRY_DSN) {
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+    ],
+    tracesSampleRate: 1.0,
+    enabled: true
+  });
+} else {
+  console.log("Sentry disabled in development mode");
+}
 
 // Gestione errori globale migliorata
 const renderApp = () => {
