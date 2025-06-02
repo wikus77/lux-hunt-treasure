@@ -1,4 +1,3 @@
-
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import MapPageHeader from './map/components/MapPageHeader';
@@ -24,7 +23,7 @@ const MapLoadingFallback = () => (
 
 const NewMapPage = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
-  const { updateActivity } = useDynamicIsland();
+  const { updateActivity, endActivity } = useDynamicIsland();
   const { currentMission, updateMissionProgress } = useMissionManager();
   
   const {
@@ -54,8 +53,11 @@ const NewMapPage = () => {
 
   // Dynamic Island integration for MAP - Update when new clues found or areas explored
   useEffect(() => {
-    if (currentMission && mapPoints.length > 0) {
-      const cluesFound = mapPoints.filter(point => point.title.toLowerCase().includes('indizio')).length;
+    if (currentMission && currentMission.status === 'active') {
+      const cluesFound = mapPoints.filter(point => 
+        point.title.toLowerCase().includes('indizio') || 
+        point.title.toLowerCase().includes('clue')
+      ).length;
       
       if (cluesFound !== currentMission.foundClues) {
         updateMissionProgress(cluesFound);
@@ -65,12 +67,20 @@ const NewMapPage = () => {
 
   // Update Dynamic Island when search areas change
   useEffect(() => {
-    if (searchAreas.length > 0) {
+    if (searchAreas.length > 0 && currentMission?.status === 'active') {
       updateActivity({
         status: `${searchAreas.length} zone esplorate`,
       });
     }
-  }, [searchAreas, updateActivity]);
+  }, [searchAreas, updateActivity, currentMission]);
+
+  // Cleanup when leaving map page
+  useEffect(() => {
+    return () => {
+      // Keep Live Activity running, don't close on page change
+      console.log('🗺️ Leaving map page, keeping Live Activity active');
+    };
+  }, []);
 
   return (
     <div 
@@ -81,7 +91,6 @@ const NewMapPage = () => {
         position: 'relative'
       }}
     >
-      {/* Fixed Header */}
       <header 
         className="fixed top-0 left-0 right-0 z-50"
         style={{
@@ -94,7 +103,6 @@ const NewMapPage = () => {
         <MapPageHeader />
       </header>
       
-      {/* Main scrollable content */}
       <main
         style={{
           paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
@@ -107,7 +115,6 @@ const NewMapPage = () => {
       >
         <div className="container mx-auto px-4 pt-4 pb-2 max-w-6xl">
           <div className="m1ssion-glass-card p-4 sm:p-6 mb-6">
-            {/* Map container with lazy loading */}
             <Suspense fallback={<MapLoadingFallback />}>
               <MapContainer
                 isAddingPoint={isAddingPoint}
@@ -132,7 +139,6 @@ const NewMapPage = () => {
                 }}
                 handleBuzz={handleBuzz}
                 requestLocationPermission={requestLocationPermission}
-                // Search area props
                 isAddingSearchArea={isAddingSearchArea}
                 handleMapClickArea={handleMapClickArea}
                 searchAreas={searchAreas}
@@ -146,7 +152,6 @@ const NewMapPage = () => {
             </Suspense>
           </div>
           
-          {/* Split into two columns using the SidebarLayout component */}
           <SidebarLayout
             leftContent={<NotesSection />}
             rightContent={

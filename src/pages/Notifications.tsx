@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Trash2, Filter, CheckCircle2, AlertCircle, Info, Star } from 'lucide-react';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
 import { useDynamicIsland } from '@/hooks/useDynamicIsland';
+import { useMissionManager } from '@/hooks/useMissionManager';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 
@@ -14,6 +14,7 @@ const Notifications = () => {
   const { notifications, markAsRead, deleteNotification, markAllAsRead } = useNotifications();
   const { playSound } = useBuzzSound();
   const { startActivity, updateActivity, endActivity } = useDynamicIsland();
+  const { currentMission } = useMissionManager();
 
   const filteredNotifications = () => {
     switch (filter) {
@@ -43,6 +44,16 @@ const Notifications = () => {
       endActivity();
     }
   }, [notifications, startActivity, endActivity]);
+
+  // Cleanup when unmount
+  useEffect(() => {
+    return () => {
+      // Only close if it's notification-related
+      if (currentMission?.title?.includes('Nuove notifiche')) {
+        endActivity();
+      }
+    };
+  }, [endActivity, currentMission]);
 
   const handleMarkAsRead = (id: string) => {
     markAsRead(id);

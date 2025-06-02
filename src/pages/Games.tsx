@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { GameCard } from '@/components/games/GameCard';
@@ -7,6 +6,7 @@ import { useGameLogic } from '@/hooks/useGameLogic';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
 import { useDynamicIsland } from '@/hooks/useDynamicIsland';
+import { useMissionManager } from '@/hooks/useMissionManager';
 import GameErrorBoundary from '@/components/games/GameErrorBoundary';
 import MemoryHackGame from '@/components/games/MemoryHackGame';
 import DisarmTheBombGame from '@/components/games/DisarmTheBombGame';
@@ -32,14 +32,14 @@ const Games = () => {
   const { playSound } = useBuzzSound();
   const { score, level, gameStats, updateStats } = useGameLogic();
   const { startActivity, updateActivity, endActivity } = useDynamicIsland();
+  const { currentMission } = useMissionManager();
 
   // Dynamic Island integration for GAMES - New minigame unlocked
   useEffect(() => {
-    // Simulate new minigame unlock check
     const checkNewMinigames = () => {
       const unlockedGames = Object.entries(gameCompleted).filter(([_, completed]) => !completed);
       
-      if (unlockedGames.length > 0 && score >= 100) { // Example condition
+      if (unlockedGames.length > 0 && score >= 100) {
         const [gameType, _] = unlockedGames[0];
         const gameName = gameData[gameType as GameType].title;
         
@@ -48,13 +48,23 @@ const Games = () => {
           title: "🧩 Minigioco sbloccato",
           status: `${gameName} disponibile`,
           progress: 0,
-          timeLeft: 1800, // 30 minutes to play
+          timeLeft: 1800,
         });
       }
     };
 
     checkNewMinigames();
   }, [score, gameCompleted, startActivity]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Only end activity if it's game-related
+      if (currentMission?.title?.includes('Minigioco')) {
+        endActivity();
+      }
+    };
+  }, [endActivity, currentMission]);
 
   const handleGameComplete = (gameType: GameType, points: number) => {
     setGameCompleted(prev => ({ ...prev, [gameType]: true }));
