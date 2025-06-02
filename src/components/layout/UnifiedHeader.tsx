@@ -80,9 +80,10 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="fixed top-0 left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70"
+      className="fixed left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70"
       style={{ 
-        paddingTop: 'env(safe-area-inset-top, 47px)',
+        top: 'env(safe-area-inset-top, 47px)', // POSIZIONATA SOTTO LA SAFE ZONE
+        paddingTop: '0px', // Nessun padding interno
         marginTop: 0
       }}
     >

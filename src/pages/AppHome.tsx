@@ -124,11 +124,12 @@ const AppHome = () => {
       
       <UnifiedHeader profileImage={profileImage} />
       
-      {/* Content positioned below header that respects safe area */}
+      {/* Content positioned below header that respects safe area + header height */}
       <div 
         className="w-full"
         style={{ 
-          paddingTop: `calc(72px + env(safe-area-inset-top, 47px))`,
+          // CORRETTO: safe area (47px) + header (72px) = 119px total
+          paddingTop: `calc(env(safe-area-inset-top, 47px) + 72px)`,
           marginTop: 0
         }}
       />
@@ -149,7 +150,8 @@ const AppHome = () => {
                 transition={{ duration: 0.3 }}
                 className="fixed inset-x-0 z-[60] px-2 md:px-4"
                 style={{ 
-                  top: `calc(72px + env(safe-area-inset-top, 47px))`
+                  // Banner positioned below safe area + header
+                  top: `calc(env(safe-area-inset-top, 47px) + 72px)`
                 }}
               >
                 <NotificationsBanner
