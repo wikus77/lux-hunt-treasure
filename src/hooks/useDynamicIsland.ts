@@ -19,15 +19,15 @@ export const useDynamicIsland = () => {
 
   const startActivity = useCallback(async (activity: MissionActivity) => {
     try {
-      console.log('Starting Dynamic Island activity:', activity);
+      console.log('🟢 Starting Dynamic Island activity:', activity);
       
-      // Save activity state to Supabase - using 'mission' field for activity.title
+      // Save activity state to Supabase
       if (user?.id) {
         const { error } = await supabase
           .from('live_activity_state')
           .upsert({
             user_id: user.id,
-            mission: activity.title, // ✅ Fixed: use activity.title for mission field
+            mission: activity.title, // Use activity.title for mission field
             status: activity.status,
             progress: activity.progress,
           }, {
@@ -35,7 +35,9 @@ export const useDynamicIsland = () => {
           });
 
         if (error) {
-          console.error('Error saving live activity state:', error);
+          console.error('❌ Error saving live activity state:', error);
+        } else {
+          console.log('✅ Live activity state saved to Supabase');
         }
       }
 
@@ -53,21 +55,21 @@ export const useDynamicIsland = () => {
       if (result.success) {
         setIsActive(true);
         setCurrentActivity(activity);
-        console.log('Dynamic Island activity started successfully');
+        console.log('✅ Dynamic Island activity started successfully');
       } else {
-        console.error('Failed to start Dynamic Island activity');
+        console.error('❌ Failed to start Dynamic Island activity');
       }
 
       return result.success;
     } catch (error) {
-      console.error('Error starting Dynamic Island activity:', error);
+      console.error('❌ Error starting Dynamic Island activity:', error);
       return false;
     }
   }, [user?.id]);
 
   const updateActivity = useCallback(async (updates: Partial<MissionActivity>) => {
     if (!currentActivity) {
-      console.warn('No active Dynamic Island activity to update');
+      console.warn('⚠️ No active Dynamic Island activity to update');
       return false;
     }
 
@@ -79,7 +81,7 @@ export const useDynamicIsland = () => {
         const { error } = await supabase
           .from('live_activity_state')
           .update({
-            mission: updatedActivity.title, // ✅ Fixed: use updatedActivity.title for mission field
+            mission: updatedActivity.title, // Use updatedActivity.title for mission field
             status: updatedActivity.status,
             progress: updatedActivity.progress,
             updated_at: new Date().toISOString(),
@@ -87,7 +89,9 @@ export const useDynamicIsland = () => {
           .eq('user_id', user.id);
 
         if (error) {
-          console.error('Error updating live activity state:', error);
+          console.error('❌ Error updating live activity state:', error);
+        } else {
+          console.log('🔄 Live activity state updated in Supabase');
         }
       }
 
@@ -101,21 +105,21 @@ export const useDynamicIsland = () => {
 
       if (result.success) {
         setCurrentActivity(updatedActivity);
-        console.log('Dynamic Island activity updated successfully');
+        console.log('🔄 Dynamic Island activity updated successfully');
       } else {
-        console.error('Failed to update Dynamic Island activity');
+        console.error('❌ Failed to update Dynamic Island activity');
       }
 
       return result.success;
     } catch (error) {
-      console.error('Error updating Dynamic Island activity:', error);
+      console.error('❌ Error updating Dynamic Island activity:', error);
       return false;
     }
   }, [currentActivity, user?.id]);
 
   const endActivity = useCallback(async () => {
     if (!currentActivity) {
-      console.warn('No active Dynamic Island activity to end');
+      console.warn('⚠️ No active Dynamic Island activity to end');
       return false;
     }
 
@@ -128,7 +132,9 @@ export const useDynamicIsland = () => {
           .eq('user_id', user.id);
 
         if (error) {
-          console.error('Error removing live activity state:', error);
+          console.error('❌ Error removing live activity state:', error);
+        } else {
+          console.log('🛑 Live activity state removed from Supabase');
         }
       }
 
@@ -140,14 +146,14 @@ export const useDynamicIsland = () => {
       if (result.success) {
         setIsActive(false);
         setCurrentActivity(null);
-        console.log('Dynamic Island activity ended successfully');
+        console.log('🛑 Dynamic Island activity ended successfully');
       } else {
-        console.error('Failed to end Dynamic Island activity');
+        console.error('❌ Failed to end Dynamic Island activity');
       }
 
       return result.success;
     } catch (error) {
-      console.error('Error ending Dynamic Island activity:', error);
+      console.error('❌ Error ending Dynamic Island activity:', error);
       return false;
     }
   }, [currentActivity, user?.id]);

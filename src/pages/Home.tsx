@@ -59,12 +59,12 @@ const Home = () => {
     checkAccess();
   }, []);
 
-  // Dynamic Island integration for HOME - Active mission - Fixed: use currentMission.name
+  // Dynamic Island integration for HOME - Active mission
   useEffect(() => {
     if (hasAccess && isLoaded && currentMission && currentMission.status === 'active') {
       startActivity({
         missionId: currentMission.id,
-        title: currentMission.name, // ✅ Fixed: use currentMission.name instead of title
+        title: currentMission.name, // Use currentMission.name for title
         status: "Missione attiva",
         progress: currentMission.progress,
         timeLeft: currentMission.timeLeft,
@@ -72,10 +72,11 @@ const Home = () => {
     }
   }, [hasAccess, isLoaded, currentMission, startActivity]);
 
-  // Cleanup Live Activity when leaving page
+  // Cleanup Live Activity when leaving page - Only if mission is not active
   useEffect(() => {
     return () => {
       if (currentMission && currentMission.status !== 'active') {
+        console.log('🧹 Cleaning up inactive mission Live Activity');
         endActivity();
       }
     };

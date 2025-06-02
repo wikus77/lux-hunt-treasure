@@ -46,11 +46,12 @@ const Notifications = () => {
     }
   }, [notifications, startActivity, endActivity]);
 
-  // Cleanup when unmount - Fixed: use currentMission.name instead of currentMission.title
+  // Cleanup when unmount - Prevent zombie Live Activities
   useEffect(() => {
     return () => {
       // Only close if it's notification-related
-      if (currentMission?.name?.includes('Nuove notifiche')) {
+      if (currentMission?.name?.includes('Nuove notifiche') || currentMission?.name?.includes('📨')) {
+        console.log('🧹 Cleaning up notification-related Live Activity');
         endActivity();
       }
     };

@@ -57,11 +57,12 @@ const Games = () => {
     checkNewMinigames();
   }, [score, gameCompleted, startActivity]);
 
-  // Cleanup on unmount - Fixed: use currentMission.name instead of currentMission.title
+  // Cleanup on unmount - Prevent zombie Live Activities
   useEffect(() => {
     return () => {
       // Only end activity if it's game-related
-      if (currentMission?.name?.includes('Minigioco')) {
+      if (currentMission?.name?.includes('Minigioco') || currentMission?.name?.includes('🧩')) {
+        console.log('🧹 Cleaning up game-related Live Activity');
         endActivity();
       }
     };
