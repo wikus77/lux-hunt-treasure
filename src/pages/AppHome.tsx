@@ -117,9 +117,13 @@ const AppHome = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#070818] w-full" style={{ 
-      paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 34px))' 
-    }}>
+    <div 
+      className="min-h-screen bg-[#070818] w-full overflow-x-hidden"
+      style={{ 
+        paddingTop: 'env(safe-area-inset-top, 47px)',
+        paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 34px))'
+      }}
+    >
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
@@ -128,11 +132,12 @@ const AppHome = () => {
       
       {/* Content positioned below header - CRITICAL FIX: Explicit spacing */}
       <div 
-        className="w-full"
+        className="w-full overflow-y-auto"
         style={{ 
           // FIXED: Safe zone (47px) + header height (72px) = 119px total
           paddingTop: '119px',
-          marginTop: 0
+          marginTop: 0,
+          maxHeight: 'calc(100vh - 119px - 64px - env(safe-area-inset-bottom, 34px))'
         }}
       />
 
@@ -153,7 +158,7 @@ const AppHome = () => {
                 className="fixed inset-x-0 z-[60] px-2 md:px-4"
                 style={{ 
                   // Banner positioned below safe area + header
-                  top: '119px'
+                  top: 'calc(env(safe-area-inset-top, 47px) + 72px)'
                 }}
               >
                 <NotificationsBanner

@@ -40,12 +40,12 @@ const BottomNavigation = () => {
 
   return (
     <motion.div 
-      className="fixed bottom-0 left-0 right-0 z-50 h-16 backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 border-t border-white/10 px-3"
+      className="fixed left-0 right-0 z-50 h-16 backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 border-t border-white/10 px-3"
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
       style={{ 
-        paddingBottom: 'env(safe-area-inset-bottom, 34px)',
+        bottom: 'env(safe-area-inset-bottom, 34px)',
         paddingLeft: 'env(safe-area-inset-left)',
         paddingRight: 'env(safe-area-inset-right)'
       }}

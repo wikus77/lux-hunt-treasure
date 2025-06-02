@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
@@ -107,23 +106,25 @@ const Leaderboard = () => {
 
   return (
     <motion.div 
-      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black"
+      className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black overflow-x-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       style={{ 
-        paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 34px))' 
+        paddingTop: 'env(safe-area-inset-top, 47px)',
+        paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 34px))'
       }}
     >
       <UnifiedHeader />
       
       {/* Content positioned below header - CRITICAL FIX: Explicit spacing */}
       <div 
-        className="w-full"
+        className="w-full overflow-y-auto"
         style={{ 
           // FIXED: Safe zone (47px) + header height (72px) = 119px total
           paddingTop: '119px',
-          marginTop: 0
+          marginTop: 0,
+          maxHeight: 'calc(100vh - 119px - 64px - env(safe-area-inset-bottom, 34px))'
         }}
       />
       
