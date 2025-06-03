@@ -16,13 +16,11 @@ serve(async (req) => {
     const { data, error } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email,
-      options: {
-        redirectTo
-      }
+      options: { redirectTo }
     })
 
-    if (error) {
-      return new Response(JSON.stringify({ error: error.message }), {
+    if (error || !data?.action_link) {
+      return new Response(JSON.stringify({ error: error?.message || 'Nessun link generato' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       })
@@ -30,13 +28,14 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       message: "Magic link generato per sviluppatore",
-      token: data?.action_link,
+      token: data.action_link,
     }), {
       headers: { 'Content-Type': 'application/json' },
     })
+
   } catch (err) {
     return new Response(JSON.stringify({
-      error: 'Errore parsing JSON o generazione magic link',
+      error: 'Errore interno',
       detail: err.message
     }), {
       status: 500,
