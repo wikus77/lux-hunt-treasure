@@ -30,19 +30,19 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     });
   }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser]);
   
+  // Developer bypass for wikus77@hotmail.it - ALWAYS allow access
+  const user = getCurrentUser();
+  if (user?.email === "wikus77@hotmail.it") {
+    console.log("🔓 Developer bypass: allowing complete access for wikus77@hotmail.it");
+    return children ? <>{children}</> : <Outlet />;
+  }
+  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-black">
         <Spinner className="h-8 w-8 text-white" />
       </div>
     );
-  }
-  
-  // Developer bypass for wikus77@hotmail.it
-  const user = getCurrentUser();
-  if (user?.email === "wikus77@hotmail.it") {
-    console.log("🔓 Developer bypass: allowing access for wikus77@hotmail.it");
-    return children ? <>{children}</> : <Outlet />;
   }
   
   // Check authentication state first

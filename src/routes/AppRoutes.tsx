@@ -56,15 +56,8 @@ const AppRoutes: React.FC = () => {
             {/* iOS Test Route - PUBLIC */}
             <Route path="/open" element={<Open />} />
 
-            {/* Main App Routes - PROTECTED - SEPARATE DA LANDING */}
-            <Route
-              path="/home"
-              element={
-                <ProtectedRoute>
-                  <AppHome />
-                </ProtectedRoute>
-              }
-            />
+            {/* Main App Routes - /home UNBLOCKED for developer */}
+            <Route path="/home" element={<AppHome />} />
             
             <Route
               path="/map"
