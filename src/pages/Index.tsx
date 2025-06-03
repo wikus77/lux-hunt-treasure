@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
@@ -33,6 +32,19 @@ const Index = () => {
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
+  
+  // 🔥 BYPASS LANDING PAGE + INTRO for Capacitor or developer email
+  useEffect(() => {
+    const isCapacitorApp = !!(window as any).Capacitor;
+    const developerEmail = sessionStorage.getItem('email') === 'wikus77@hotmail.it';
+    
+    if (isCapacitorApp || developerEmail) {
+      console.log("🚀 BYPASS: Forcing intro and content to load immediately");
+      setIntroCompleted(true);
+      setPageLoaded(true);
+      setRenderContent(true);
+    }
+  }, []);
   
   // 🔥 DEVELOPER BYPASS: Immediate check for Capacitor + developer magic link verification
   useEffect(() => {
