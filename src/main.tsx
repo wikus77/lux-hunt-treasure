@@ -27,10 +27,6 @@ if (import.meta.env.MODE !== 'development' && import.meta.env.VITE_SENTRY_DSN) {
 const verifyDeveloperMagicLink = async () => {
   const isCapacitorApp = !!(window as any).Capacitor;
   
-  if (!isCapacitorApp) {
-    return false;
-  }
-  
   console.log("🔍 CAPACITOR DEVELOPER: Checking for magic link in startup URL");
   
   try {
@@ -51,7 +47,12 @@ const verifyDeveloperMagicLink = async () => {
       if (!error && data.session) {
         console.log('✅ DEVELOPER SESSION: Magic link verified, session created');
         
+        // Set the session in Supabase
+        await supabase.auth.setSession(data.session);
+        
         // Set developer session and bypass flags
+        sessionStorage.setItem('dev-bypass', 'true');
+        sessionStorage.setItem('email', email);
         sessionStorage.setItem('developer_bypass_user', JSON.stringify({
           id: data.user?.id || "dev-user-id",
           email: "wikus77@hotmail.it",
@@ -68,7 +69,7 @@ const verifyDeveloperMagicLink = async () => {
         
         // Force immediate redirect to /home
         console.log('🏠 DEVELOPER AUTO-REDIRECT: Going to /home immediately');
-        window.location.href = '/home';
+        window.location.replace('/home');
         return true;
       } else {
         console.error('❌ DEVELOPER ERROR: Magic link verification failed:', error);
@@ -98,6 +99,9 @@ CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
         if (!error && data.session) {
           console.log('✅ Sessione salvata da magic link Capacitor');
           
+          // Set the session in Supabase
+          await supabase.auth.setSession(data.session);
+          
           // If developer email, activate bypass and redirect to home
           if (email === 'wikus77@hotmail.it') {
             const fakeUser = {
@@ -111,6 +115,8 @@ CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
               email_confirmed_at: new Date().toISOString(),
             };
             
+            sessionStorage.setItem('dev-bypass', 'true');
+            sessionStorage.setItem('email', email);
             sessionStorage.setItem('developer_bypass_user', JSON.stringify(fakeUser));
             sessionStorage.setItem('developer_bypass_active', 'true');
             sessionStorage.setItem('developer_magic_link_verified', 'true');

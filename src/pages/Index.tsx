@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
@@ -12,6 +11,18 @@ const Index = () => {
   console.log("Index component rendering - PUBLIC LANDING PAGE");
   
   const navigate = useNavigate();
+  
+  // 🔥 BLOCK LANDING PAGE IF DEVELOPER BYPASS ACTIVE
+  useEffect(() => {
+    if (
+      sessionStorage.getItem("dev-bypass") === "true" &&
+      window.location.pathname === "/"
+    ) {
+      console.log("🚫 DEVELOPER BYPASS: Blocking landing page, redirecting to /home");
+      window.location.replace("/home");
+      return;
+    }
+  }, []);
   
   // State management
   const [pageLoaded, setPageLoaded] = useState(false);
@@ -35,8 +46,9 @@ const Index = () => {
         const developerBypassActive = sessionStorage.getItem('developer_bypass_active') === 'true';
         const developerUser = sessionStorage.getItem('developer_bypass_user');
         const developerAccess = sessionStorage.getItem('developer-access') === 'true';
+        const devBypass = sessionStorage.getItem('dev-bypass') === 'true';
         
-        if (magicLinkVerified || developerBypassActive || (developerUser && developerAccess)) {
+        if (magicLinkVerified || developerBypassActive || (developerUser && developerAccess) || devBypass) {
           console.log("🏠 DEVELOPER VERIFIED: Redirecting to /home immediately - BYPASS LANDING PAGE");
           navigate('/home', { replace: true });
           return;
@@ -59,6 +71,7 @@ const Index = () => {
         sessionStorage.setItem('developer_bypass_user', JSON.stringify(fakeUser));
         sessionStorage.setItem('developer_bypass_active', 'true');
         sessionStorage.setItem('developer-access', 'true');
+        sessionStorage.setItem('dev-bypass', 'true');
         
         // Immediate redirect to /home - NO LANDING PAGE ON CAPACITOR FOR DEVELOPER
         console.log("🏠 CAPACITOR DEVELOPER: Auto-redirecting to /home - SKIP LANDING");
