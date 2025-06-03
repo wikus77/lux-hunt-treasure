@@ -30,12 +30,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     });
   }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser]);
   
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-black">
-        <Spinner className="h-8 w-8 text-white" />
-      </div>
-    );
+  // 🔥 IMMEDIATE CAPACITOR BYPASS - NO AUTHENTICATION REQUIRED
+  const isCapacitorApp = !!(window as any).Capacitor;
+  if (isCapacitorApp) {
+    console.log("🔓 CAPACITOR BYPASS: Allowing access without authentication");
+    return children ? <>{children}</> : <Outlet />;
   }
   
   // Developer bypass for wikus77@hotmail.it
@@ -45,9 +44,25 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return children ? <>{children}</> : <Outlet />;
   }
   
-  // ✅ BYPASS PER TEST SU IPHONE
-  const isTestBypass = user?.email === "wikus77@hotmail.it" || !!(window as any).Capacitor;
-  if (!isAuthenticated && !isTestBypass) {
+  // Check for developer bypass flags
+  const developerBypass = sessionStorage.getItem('developer_bypass_active') === 'true' ||
+                         sessionStorage.getItem('developer-access') === 'true' ||
+                         sessionStorage.getItem('dev-bypass') === 'true';
+  
+  if (developerBypass) {
+    console.log("🔓 Developer bypass active, allowing access");
+    return children ? <>{children}</> : <Outlet />;
+  }
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-black">
+        <Spinner className="h-8 w-8 text-white" />
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
     console.log("User not authenticated, redirecting to:", redirectTo);
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }

@@ -5,25 +5,56 @@ import LoadingManager from "./index/LoadingManager";
 import CountdownManager from "./index/CountdownManager";
 import MainContent from "./index/MainContent";
 import { useEventHandlers } from "./index/EventHandlers";
-// DeveloperAccess import removed for testing bypass
 
 const Index = () => {
   console.log("Index component rendering - PUBLIC LANDING PAGE");
   
   const navigate = useNavigate();
   
-  // 🔥 BLOCK LANDING PAGE IF DEVELOPER BYPASS ACTIVE
+  // 🔥 IMMEDIATE CAPACITOR BYPASS - NO LANDING PAGE ON CAPACITOR
   useEffect(() => {
-    if (
-      sessionStorage.getItem("dev-bypass") === "true" &&
-      window.location.pathname === "/"
-    ) {
-      console.log("🚫 DEVELOPER BYPASS: Blocking landing page, redirecting to /home");
-      window.location.replace("/home");
+    const isCapacitorApp = !!(window as any).Capacitor;
+    
+    if (isCapacitorApp) {
+      console.log("🚀 CAPACITOR DETECTED: Immediate redirect to /home - NO LANDING PAGE");
+      
+      // Setup developer session with VALID UUID
+      const fakeUser = {
+        id: "6c789e77-a58a-4135-b9ed-2d96ec4f7849", // Valid UUID for wikus77@hotmail.it
+        email: "wikus77@hotmail.it",
+        role: "developer",
+        aud: "authenticated",
+        app_metadata: { provider: "email" },
+        user_metadata: { name: "Developer" },
+        created_at: new Date().toISOString(),
+        email_confirmed_at: new Date().toISOString(),
+      };
+      
+      // Store all necessary bypass flags
+      sessionStorage.setItem('developer_bypass_user', JSON.stringify(fakeUser));
+      sessionStorage.setItem('developer_bypass_active', 'true');
+      sessionStorage.setItem('developer-access', 'true');
+      sessionStorage.setItem('dev-bypass', 'true');
+      sessionStorage.setItem('developer_magic_link_verified', 'true');
+      localStorage.setItem('developer_access', 'granted');
+      localStorage.setItem('developer_user_email', 'wikus77@hotmail.it');
+      
+      // IMMEDIATE redirect - no delays
+      navigate('/home', { replace: true });
       return;
     }
-  }, []);
+  }, [navigate]);
   
+  // 🔥 DEVELOPER EMAIL BYPASS
+  useEffect(() => {
+    const currentUserEmail = sessionStorage.getItem('email');
+    if (currentUserEmail === 'wikus77@hotmail.it') {
+      console.log("🔓 DEVELOPER EMAIL BYPASS: Redirecting to /home");
+      navigate('/home', { replace: true });
+      return;
+    }
+  }, [navigate]);
+
   // State management
   const [pageLoaded, setPageLoaded] = useState(false);
   const [renderContent, setRenderContent] = useState(false);
@@ -31,7 +62,6 @@ const Index = () => {
   const [countdownCompleted, setCountdownCompleted] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
   
   // 🔥 BYPASS LANDING PAGE + INTRO for Capacitor or developer email
   useEffect(() => {
@@ -253,17 +283,6 @@ const Index = () => {
     console.log("Retry richiesto dall'utente");
     window.location.reload();
   }, []);
-
-  const handleAccessGranted = useCallback(() => {
-    setShowDeveloperAccess(false);
-    // Redirect to home after access granted
-    window.location.href = '/home';
-  }, []);
-
-  // DEVELOPER ACCESS COMPLETELY DISABLED FOR TESTING
-  // if (showDeveloperAccess) {
-  //   return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
-  // }
 
   console.log("Index render state:", { introCompleted, pageLoaded, renderContent });
 

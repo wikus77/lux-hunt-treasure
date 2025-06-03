@@ -11,7 +11,6 @@ import { Helmet } from "react-helmet";
 import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import DeveloperAccess from "@/components/auth/DeveloperAccess";
 
 const AppHome = () => {
   const [error, setError] = useState<string | null>(null);
@@ -32,45 +31,37 @@ const AppHome = () => {
 
   const { isConnected } = useRealTimeNotifications();
 
-  // Check for developer access and Capacitor environment
+  // 🔥 IMMEDIATE CAPACITOR ACCESS - NO RESTRICTIONS
   useEffect(() => {
-    const checkAccess = () => {
-      const isCapacitorApp = !!(window as any).Capacitor;
-      setIsCapacitor(isCapacitorApp);
-      
-      const userAgent = navigator.userAgent;
-      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
-      
-      console.log('AppHome access check (Capacitor):', { isMobileDevice, hasStoredAccess, isCapacitorApp });
-      
-      // DEVELOPER ACCESS: Always grant access to wikus77@hotmail.it
-      const currentUserEmail = localStorage.getItem('developer_user_email');
-      if (currentUserEmail === 'wikus77@hotmail.it') {
-        setHasAccess(true);
-        localStorage.setItem('developer_access', 'granted');
-        localStorage.setItem('full_access_granted', 'true');
-        console.log('Developer access auto-granted for wikus77@hotmail.it');
-        return;
-      }
-      
-      if (isMobileDevice && hasStoredAccess) {
-        setHasAccess(true);
-      } else if (!isMobileDevice) {
-        // Web users should NOT be redirected to landing page from internal routes
-        // They should see the app home but with limited functionality
-        setHasAccess(true); // Allow access to prevent redirect loop
-      }
-    };
+    const isCapacitorApp = !!(window as any).Capacitor;
+    setIsCapacitor(isCapacitorApp);
     
-    checkAccess();
-  }, []);
-
-  const handleAccessGranted = () => {
-    setHasAccess(true);
-    // Store developer email for auto-access
-    localStorage.setItem('developer_user_email', 'wikus77@hotmail.it');
-  };
+    if (isCapacitorApp) {
+      console.log("🔓 CAPACITOR: Immediate access granted - no developer screen");
+      setHasAccess(true);
+      return;
+    }
+    
+    // Check for developer email
+    const userEmail = localStorage.getItem('developer_user_email') || 
+                     sessionStorage.getItem('email');
+    
+    if (userEmail === 'wikus77@hotmail.it') {
+      console.log("🔓 DEVELOPER EMAIL: Access granted for wikus77@hotmail.it");
+      setHasAccess(true);
+      localStorage.setItem('developer_access', 'granted');
+      return;
+    }
+    
+    // Check stored access for web users
+    const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+    if (hasStoredAccess) {
+      setHasAccess(true);
+    } else if (!isMobile) {
+      // Web users without access get redirected to landing
+      window.location.href = '/landing';
+    }
+  }, [isMobile]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -92,9 +83,28 @@ const AppHome = () => {
     }
   }, [error]);
 
-  // Show developer access screen for mobile users without access
-  if (isMobile && !hasAccess) {
-    return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
+  // NO DEVELOPER ACCESS SCREEN ON CAPACITOR OR DEVELOPER EMAIL
+  if (!hasAccess && !isCapacitor) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#070818] px-4">
+        <div className="p-8 bg-blue-800/30 rounded-xl text-center w-full max-w-sm glass-card">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-blue-300">Accesso Richiesto</h2>
+          <p className="text-white/80 mb-6">Inserisci il codice di accesso per continuare</p>
+          <button 
+            onClick={() => {
+              const code = prompt("Inserisci il codice:");
+              if (code === "M1SSION2025") {
+                localStorage.setItem('developer_access', 'granted');
+                setHasAccess(true);
+              }
+            }}
+            className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full text-white"
+          >
+            Inserisci Codice
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
