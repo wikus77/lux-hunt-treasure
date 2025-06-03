@@ -1,20 +1,13 @@
 
 import React from "react";
 
-export default function Index() {
-  const isCapacitor = typeof window !== "undefined" && !!(window as any).Capacitor;
-
-  if (isCapacitor) {
-    console.log("🛑 HARD BYPASS: Index.tsx neutralizzato su Capacitor");
-    window.location.replace("/home");
-    return null;
-  }
-
-  // 👇 Render normale solo se NON Capacitor
+const Index = () => {
   return (
-    <div style={{ color: "white", padding: 20 }}>
-      <h1>Fallback Landing Page</h1>
-      <p>Questa pagina dovrebbe essere visibile solo su browser.</p>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
+      <h1 className="text-3xl font-bold">Welcome to M1SSION</h1>
+      <p className="mt-4 text-gray-400">Landing page attiva.</p>
     </div>
   );
-}
+};
+
+export default Index;

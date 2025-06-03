@@ -5,6 +5,9 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Spinner } from "@/components/ui/spinner";
 import IOSSafeAreaOverlay from "@/components/debug/IOSSafeAreaOverlay";
 
+// Public routes
+import Index from "@/pages/Index";
+
 // Main app routes with lazy loading - SEPARATE FROM LANDING
 const AppHome = lazy(() => import("@/pages/AppHome"));
 const Map = lazy(() => import("@/pages/Map"));
