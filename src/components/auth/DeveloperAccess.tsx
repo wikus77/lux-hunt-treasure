@@ -3,8 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import StyledInput from '@/components/ui/styled-input';
 import { Mail, Key } from 'lucide-react';
-import { useAuthContext } from '@/contexts/auth';
-import { useNavigate } from 'react-router-dom';
 
 interface DeveloperAccessProps {
   onAccessGranted: () => void;
@@ -15,19 +13,8 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
   const [password, setPassword] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const [error, setError] = useState('');
-  
-  const { getCurrentUser, isAuthenticated } = useAuthContext();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    // PRIORITY FIX: If user is already authenticated, redirect immediately
-    const user = getCurrentUser();
-    if (isAuthenticated || user?.email === "wikus77@hotmail.it") {
-      console.log("🔓 User already authenticated in DeveloperAccess - FORCE REDIRECT to /home");
-      navigate('/home', { replace: true });
-      return;
-    }
-    
     // Enhanced mobile detection including Capacitor
     const checkMobile = () => {
       const isCapacitorApp = !!(window as any).Capacitor;
@@ -39,7 +26,7 @@ const DeveloperAccess: React.FC<DeveloperAccessProps> = ({ onAccessGranted }) =>
     };
     
     checkMobile();
-  }, [getCurrentUser, isAuthenticated, navigate]);
+  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
