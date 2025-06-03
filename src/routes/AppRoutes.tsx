@@ -1,5 +1,3 @@
-
-
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -52,20 +50,17 @@ const AppRoutes: React.FC = () => {
       <IOSSafeAreaOverlay>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            {/* URGENT FIX: Direct redirect to /home bypassing landing page */}
+            {/* DIRECT REDIRECT TO /home - NO INDEX COMPONENT */}
             <Route path="/" element={<Navigate to="/home" replace />} />
             
             {/* FIX: Capacitor iOS routes that might start from /index or /index.html */}
             <Route path="/index" element={<Navigate to="/home" replace />} />
             <Route path="/index.html" element={<Navigate to="/home" replace />} />
 
-            {/* Landing page accessible only via manual navigation */}
-            <Route path="/landing" element={<Index />} />
-
             {/* iOS Test Route - PUBLIC */}
             <Route path="/open" element={<Open />} />
 
-            {/* Main App Routes - PROTECTED - SEPARATE DA LANDING */}
+            {/* Main App Routes - PROTECTED */}
             <Route
               path="/home"
               element={
@@ -144,8 +139,8 @@ const AppRoutes: React.FC = () => {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />
             
-            {/* 404 route */}
-            <Route path="*" element={<NotFound />} />
+            {/* CATCH-ALL REDIRECT TO /home - NO 404 FALLBACK */}
+            <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>
         </Suspense>
       </IOSSafeAreaOverlay>
@@ -154,4 +149,3 @@ const AppRoutes: React.FC = () => {
 };
 
 export default AppRoutes;
-
