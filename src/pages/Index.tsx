@@ -22,18 +22,29 @@ const Index = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
   
-  // DEVELOPER BYPASS: Auto-redirect to /home if in Capacitor
+  // 🔥 DEVELOPER BYPASS: Check for Capacitor + developer status immediately
   useEffect(() => {
     const checkForDeveloperBypass = async () => {
       const isCapacitorApp = !!(window as any).Capacitor;
       
       if (isCapacitorApp) {
-        console.log("🔓 CAPACITOR DEVELOPER BYPASS: Redirecting to /home immediately");
+        console.log("🔓 CAPACITOR DEVELOPER BYPASS: Checking developer status");
         
-        // Create fake session for developer
+        // Check if magic link was verified or developer bypass is active
+        const magicLinkVerified = sessionStorage.getItem('developer_magic_link_verified') === 'true';
+        const developerBypassActive = sessionStorage.getItem('developer_bypass_active') === 'true';
+        const developerUser = sessionStorage.getItem('developer_bypass_user');
+        
+        if (magicLinkVerified || (developerBypassActive && developerUser)) {
+          console.log("🏠 DEVELOPER BYPASS: Redirecting to /home immediately - NO LANDING PAGE");
+          navigate('/home', { replace: true });
+          return;
+        }
+        
+        // If no developer session but on Capacitor, create fake session for dev email
         const fakeUser = {
           id: "dev-user-id",
-          email: "dev.wikus77@hotmail.it",
+          email: "wikus77@hotmail.it",
           role: "developer",
           aud: "authenticated",
           app_metadata: { provider: "email" },
@@ -47,6 +58,7 @@ const Index = () => {
         sessionStorage.setItem('developer_bypass_active', 'true');
         
         // Immediate redirect to /home - NO LANDING PAGE ON CAPACITOR
+        console.log("🏠 CAPACITOR AUTO-BYPASS: Redirecting to /home - SKIP LANDING");
         navigate('/home', { replace: true });
         return;
       }
