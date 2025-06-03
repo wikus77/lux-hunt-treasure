@@ -34,6 +34,8 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   return {
     session: developerSession,
     isLoading: false,
+    loading: false, // Add missing loading property
+    error: null, // Add missing error property
     isEmailVerified: true,
     isAuthenticated: true,
     login: async (email: string, password: string, captchaToken?: string) => {
