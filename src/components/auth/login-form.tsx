@@ -15,13 +15,14 @@ export default function LoginForm({ verificationStatus, onResendVerification }: 
   useEffect(() => {
     const isCapacitor = Capacitor.isNativePlatform();
     const devEmails = ["wikus77@hotmail.it", "dev.wikus77@hotmail.it"];
+    const isDevMode = import.meta.env.MODE !== "production";
 
     const bypassLogin = async () => {
       if (isCapacitor) {
         const { data } = await supabase.auth.getUser();
         const email = data?.user?.email;
 
-        if (email && devEmails.includes(email)) {
+        if (isCapacitor && isDevMode && email && devEmails.includes(email)) {
           navigate("/home");
         }
       }
