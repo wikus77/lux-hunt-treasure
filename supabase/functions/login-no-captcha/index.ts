@@ -4,13 +4,19 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 serve(async (req) => {
   try {
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    console.log("SUPABASE_URL:", SUPABASE_URL);
+    console.log("SUPABASE_SERVICE_ROLE_KEY:", SUPABASE_SERVICE_ROLE_KEY ? "PRESENTE" : "MANCANTE");
+
     const body = await req.json()
     const email = body.email
     const redirectTo = body.redirect_to || 'capacitor://localhost/home'
 
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      SUPABASE_URL!,
+      SUPABASE_SERVICE_ROLE_KEY!
     )
 
     const { data, error } = await supabase.auth.admin.generateLink({
