@@ -47,7 +47,7 @@ CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
         console.error('❌ Errore imprevisto magic link:', err);
       }
     } else {
-      console.warn('⚠️ Token o email non trovati nell'URL');
+      console.warn('⚠️ Token o email non trovati nell\'URL');
     }
   }
 });
