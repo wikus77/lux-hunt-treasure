@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
@@ -38,31 +37,8 @@ const AppHome = () => {
   useEffect(() => {
     const user = getCurrentUser();
     if (user?.email === "wikus77@hotmail.it") {
-      console.log("🔓 Developer bypass: auto-granting access for wikus77@hotmail.it");
       setHasAccess(true);
-      return;
     }
-
-    const checkAccess = () => {
-      const isCapacitorApp = !!(window as any).Capacitor;
-      setIsCapacitor(isCapacitorApp);
-      
-      const userAgent = navigator.userAgent;
-      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
-      
-      console.log('AppHome access check (Capacitor):', { isMobileDevice, hasStoredAccess, isCapacitorApp });
-      
-      if (isMobileDevice && hasStoredAccess) {
-        setHasAccess(true);
-      } else if (!isMobileDevice) {
-        // Web users should NOT be redirected to landing page from internal routes
-        // They should see the app home but with limited functionality
-        setHasAccess(true); // Allow access to prevent redirect loop
-      }
-    };
-    
-    checkAccess();
   }, [getCurrentUser]);
 
   const handleAccessGranted = () => {

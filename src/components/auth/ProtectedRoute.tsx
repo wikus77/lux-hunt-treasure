@@ -33,8 +33,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Developer bypass for wikus77@hotmail.it - ALWAYS allow access
   const user = getCurrentUser();
   if (user?.email === "wikus77@hotmail.it") {
-    console.log("🔓 Developer bypass: allowing complete access for wikus77@hotmail.it");
-    return children ? <>{children}</> : <Outlet />;
+    return <>{children}</>;
   }
   
   if (isLoading) {
