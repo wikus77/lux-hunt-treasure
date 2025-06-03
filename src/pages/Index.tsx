@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
@@ -5,7 +6,7 @@ import LoadingManager from "./index/LoadingManager";
 import CountdownManager from "./index/CountdownManager";
 import MainContent from "./index/MainContent";
 import { useEventHandlers } from "./index/EventHandlers";
-import DeveloperAccess from "@/components/auth/DeveloperAccess";
+// DeveloperAccess import removed for testing bypass
 
 const Index = () => {
   console.log("Index component rendering - PUBLIC LANDING PAGE");
@@ -247,11 +248,10 @@ const Index = () => {
     window.location.href = '/home';
   }, []);
 
-  // Show developer access screen for mobile users without access (unless they're the developer)
-  // TEMPORARILY DISABLED FOR TESTING
-  if (showDeveloperAccess) {
-    return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
-  }
+  // DEVELOPER ACCESS COMPLETELY DISABLED FOR TESTING
+  // if (showDeveloperAccess) {
+  //   return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
+  // }
 
   console.log("Index render state:", { introCompleted, pageLoaded, renderContent });
 
