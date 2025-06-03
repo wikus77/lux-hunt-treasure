@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
 import { supabase } from "@/integrations/supabase/client";
-import { LoginForm } from "@/components/auth/login-form";
+import LoginForm from "@/components/auth/login-form";
 import BackgroundParticles from "@/components/ui/background-particles";
 import { useAuthContext } from "@/contexts/auth";
 
