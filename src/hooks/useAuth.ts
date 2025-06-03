@@ -1,11 +1,18 @@
 
 export function useAuth() {
+  const user = { email: "wikus77@hotmail.it" };
+  const session = { access_token: "dev-token" };
+
   return {
+    user,
+    session,
+    isAuthenticated: true,
+    isLoading: false,
     authState: {
-      user: { email: "wikus77@hotmail.it" },
-      session: { access_token: "dev-token" },
-      isLoading: false,
+      user,
+      session,
       isAuthenticated: true,
+      isLoading: false,
     },
   };
 }
