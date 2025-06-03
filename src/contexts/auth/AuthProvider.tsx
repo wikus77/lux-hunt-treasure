@@ -16,6 +16,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
 
+  // PRIORITY FIX: Force session check for WebView iOS
+  useEffect(() => {
+    const forceSessionCheck = async () => {
+      const isCapacitor = !!(window as any).Capacitor;
+      
+      if (isCapacitor) {
+        console.log("🔧 Capacitor detected - forcing session refresh");
+        
+        try {
+          // Force refresh session in WebView
+          const { data, error } = await supabase.auth.refreshSession();
+          if (data?.session) {
+            console.log("✅ Session refreshed successfully in WebView");
+          }
+        } catch (error) {
+          console.error("❌ Failed to refresh session in WebView:", error);
+        }
+      }
+    };
+    
+    forceSessionCheck();
+  }, []);
+
   // Funzione per creare automaticamente il profilo admin
   const createAdminProfile = async (userId: string, userEmail: string) => {
     console.log("⚠️ Tentativo di creazione profilo admin per:", userEmail);
@@ -74,10 +97,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fetch user role when auth state changes - NON FORZARE REDIRECT
+  // Fetch user role when auth state changes - SIMPLIFIED FOR DEVELOPER
   useEffect(() => {
     const fetchUserRole = async () => {
-      // Se non c'è utente autenticato, NON fare nulla - lascia che vedano la landing
+      // Se non c'è utente autenticato, pulisci il ruolo
       if (!auth.isAuthenticated || !auth.user) {
         setUserRole(null);
         setIsRoleLoading(false);
@@ -87,6 +110,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         setIsRoleLoading(true);
         console.log("🔍 Cerco profilo per user:", auth.user.id, auth.user.email);
+        
+        // PRIORITY FIX: Developer bypass - set role immediately
+        if (auth.user.email === 'wikus77@hotmail.it') {
+          console.log("🔓 Developer user detected - setting admin role immediately");
+          setUserRole('admin');
+          setIsRoleLoading(false);
+          setRetryCount(0);
+          return;
+        }
         
         // Prima prova con l'ID dell'utente
         const { data: dataById, error: errorById } = await supabase

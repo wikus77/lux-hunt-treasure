@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 import LoadingManager from "./index/LoadingManager";
@@ -5,6 +6,8 @@ import CountdownManager from "./index/CountdownManager";
 import MainContent from "./index/MainContent";
 import { useEventHandlers } from "./index/EventHandlers";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
+import { useAuthContext } from "@/contexts/auth";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   console.log("Index component rendering - PUBLIC LANDING PAGE");
@@ -18,8 +21,39 @@ const Index = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
   
+  const { getCurrentUser, isAuthenticated, isLoading } = useAuthContext();
+  const navigate = useNavigate();
+  
+  // PRIORITY FIX: Check for developer user and redirect to /home immediately
+  useEffect(() => {
+    const user = getCurrentUser();
+    
+    // If developer user is authenticated, force redirect to /home
+    if (user?.email === "wikus77@hotmail.it" && isAuthenticated && !isLoading) {
+      console.log("🔓 Developer user detected and authenticated - FORCE REDIRECT to /home");
+      navigate('/home', { replace: true });
+      return;
+    }
+    
+    // If any authenticated user, redirect to /home
+    if (isAuthenticated && !isLoading) {
+      console.log("✅ User authenticated - redirecting to /home");
+      navigate('/home', { replace: true });
+      return;
+    }
+  }, [getCurrentUser, isAuthenticated, isLoading, navigate]);
+  
   // Check for developer access on mount
   useEffect(() => {
+    const user = getCurrentUser();
+    
+    // Skip developer access check if user is already authenticated
+    if (isAuthenticated || user?.email === "wikus77@hotmail.it") {
+      console.log("User already authenticated or is developer, skipping access check");
+      setShowDeveloperAccess(false);
+      return;
+    }
+    
     const checkAccess = () => {
       // Check for URL parameter to reset access
       const urlParams = new URLSearchParams(window.location.search);
@@ -49,7 +83,7 @@ const Index = () => {
     };
     
     checkAccess();
-  }, []);
+  }, [getCurrentUser, isAuthenticated]);
   
   // Get event handlers
   const {
@@ -168,13 +202,14 @@ const Index = () => {
   }, []);
 
   const handleAccessGranted = useCallback(() => {
+    console.log("🔓 Developer access granted - redirecting to /home");
     setShowDeveloperAccess(false);
-    // Redirect to home after access granted
-    window.location.href = '/home';
-  }, []);
+    // Force redirect to home after access granted
+    navigate('/home', { replace: true });
+  }, [navigate]);
 
   // Show developer access screen for mobile users without access
-  if (showDeveloperAccess) {
+  if (showDeveloperAccess && !isAuthenticated) {
     return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
   }
 

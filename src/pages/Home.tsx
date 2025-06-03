@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
@@ -13,8 +14,6 @@ import { Helmet } from "react-helmet";
 import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import DeveloperAccess from "@/components/auth/DeveloperAccess";
-import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/auth";
 
 const Home = () => {
@@ -22,11 +21,9 @@ const Home = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const { profileImage } = useProfileImage();
   const isMobile = useIsMobile();
-  const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
   const { startActivity, updateActivity, endActivity } = useDynamicIsland();
   const { currentMission } = useMissionManager();
-  const navigate = useNavigate();
   const { getCurrentUser, isAuthenticated } = useAuthContext();
   const {
     notifications,
@@ -43,70 +40,37 @@ const Home = () => {
   // Activate Dynamic Island safety system
   useDynamicIslandSafety();
 
-  // Force redirect for developer email
+  // PRIORITY FIX: Simplified access logic - allow all authenticated users and developer
   useEffect(() => {
     const user = getCurrentUser();
-    if (user?.email === "wikus77@hotmail.it") {
-      console.log("🔓 Developer access: force allowing wikus77@hotmail.it to access /home");
-      setHasAccess(true);
-      return;
-    }
-
-    if (isAuthenticated) {
-      console.log("✅ User authenticated, allowing access to /home");
-      setHasAccess(true);
-      return;
-    }
-
-    // Redirect to auth if not authenticated and not developer
-    if (!isAuthenticated && user?.email !== "wikus77@hotmail.it") {
-      console.log("❌ User not authenticated, redirecting to auth");
-      navigate('/login');
-      return;
-    }
-  }, [getCurrentUser, isAuthenticated, navigate]);
-
-  // Check for developer access and Capacitor environment
-  useEffect(() => {
-    const checkAccess = () => {
-      const isCapacitorApp = !!(window as any).Capacitor;
-      setIsCapacitor(isCapacitorApp);
-      
-      const user = getCurrentUser();
-      const userAgent = navigator.userAgent;
-      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
-      
-      console.log('Home access check (Capacitor):', { 
-        isMobileDevice, 
-        hasStoredAccess, 
-        isCapacitorApp, 
-        userEmail: user?.email,
-        isAuthenticated 
-      });
-      
-      // Developer bypass
-      if (user?.email === "wikus77@hotmail.it") {
-        console.log("🔓 Developer bypass: granting access for wikus77@hotmail.it");
-        setHasAccess(true);
-        return;
-      }
-      
-      if (isMobileDevice && hasStoredAccess) {
-        setHasAccess(true);
-      } else if (!isMobileDevice) {
-        // Web users get redirected to landing page
-        window.location.href = '/';
-        return;
-      }
-    };
     
-    checkAccess();
+    // Developer bypass - always allow access
+    if (user?.email === "wikus77@hotmail.it") {
+      console.log("🔓 Developer user in /home - access granted");
+      return;
+    }
+    
+    // Allow any authenticated user
+    if (isAuthenticated) {
+      console.log("✅ Authenticated user in /home - access granted");
+      return;
+    }
+    
+    // Only redirect to login if completely unauthenticated
+    // Remove the immediate redirect to allow for session loading
+    console.log("ℹ️ User access check in /home - session may still be loading");
   }, [getCurrentUser, isAuthenticated]);
+
+  // Check for Capacitor environment
+  useEffect(() => {
+    const isCapacitorApp = !!(window as any).Capacitor;
+    setIsCapacitor(isCapacitorApp);
+    console.log('Home Capacitor check:', { isCapacitorApp });
+  }, []);
 
   // Dynamic Island integration for HOME - Active mission con logging avanzato
   useEffect(() => {
-    if (hasAccess && isLoaded && currentMission && currentMission.status === 'active') {
+    if (isLoaded && currentMission && currentMission.status === 'active') {
       console.log('🏠 HOME: Starting Dynamic Island for active mission:', currentMission.name);
       startActivity({
         missionId: currentMission.id,
@@ -116,7 +80,7 @@ const Home = () => {
         timeLeft: currentMission.timeLeft,
       });
     }
-  }, [hasAccess, isLoaded, currentMission, startActivity]);
+  }, [isLoaded, currentMission, startActivity]);
 
   // Cleanup migliorato con logging
   useEffect(() => {
@@ -127,10 +91,6 @@ const Home = () => {
       }
     };
   }, [endActivity, currentMission]);
-
-  const handleAccessGranted = () => {
-    setHasAccess(true);
-  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -164,12 +124,6 @@ const Home = () => {
     }
     return {};
   };
-
-  // Show developer access screen for mobile users without access (unless they're the developer)
-  const user = getCurrentUser();
-  if (isMobile && !hasAccess && user?.email !== "wikus77@hotmail.it") {
-    return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
-  }
 
   if (error) {
     return (
