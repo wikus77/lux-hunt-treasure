@@ -12,7 +12,8 @@ serve(async (req) => {
 
     const body = await req.json()
     const email = body.email
-    const redirectTo = body.redirect_to || 'capacitor://localhost/home'
+    const redirectTo = body.redirect_to
+    const finalRedirect = redirectTo || 'capacitor://localhost/home'
 
     const supabase = createClient(
       SUPABASE_URL!,
@@ -22,7 +23,7 @@ serve(async (req) => {
     const { data, error } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email,
-      options: { redirectTo }
+      options: { redirectTo: finalRedirect }
     });
 
     console.log("🧠 Risultato generateLink:", { data, error });
