@@ -31,6 +31,9 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const Terms = lazy(() => import("@/pages/Terms"));
 
+// iOS Test route
+const Open = lazy(() => import("@/pages/Open"));
+
 // Loading fallback component
 const LoadingFallback = () => (
   <div className="min-h-screen bg-black flex items-center justify-center">
@@ -49,6 +52,9 @@ const AppRoutes: React.FC = () => {
           <Routes>
             {/* Landing page - SEMPRE PUBBLICA, NESSUN REDIRECT */}
             <Route path="/" element={<Index />} />
+
+            {/* iOS Test Route - PUBLIC */}
+            <Route path="/open" element={<Open />} />
 
             {/* Main App Routes - PROTECTED - SEPARATE DA LANDING */}
             <Route
