@@ -30,7 +30,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       message: "Magic link generato per sviluppatore",
-      token: data.action_link,
+      token: data?.action_link,
     }), {
       headers: { 'Content-Type': 'application/json' },
     })
