@@ -2,6 +2,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as Sentry from "@sentry/react";
+import { App as CapacitorApp } from '@capacitor/app';
+import { supabase } from '@/integrations/supabase/client';
 import App from './App';
 import './index.css';
 import { Toaster } from 'sonner';
@@ -20,6 +22,30 @@ if (import.meta.env.MODE !== 'development' && import.meta.env.VITE_SENTRY_DSN) {
 } else {
   console.log("Sentry disabled in development mode");
 }
+
+// Magic link handler for Capacitor
+CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+  if (url?.includes('type=magiclink')) {
+    const cleanedUrl = new URL(url);
+    const token = cleanedUrl.searchParams.get('token');
+    if (token) {
+      try {
+        const { data, error } = await supabase.auth.verifyOtp({
+          type: 'magiclink',
+          token,
+        });
+        if (!error && data.session) {
+          console.log('✅ Sessione salvata da magic link Capacitor');
+          window.location.href = '/home';
+        } else {
+          console.error('❌ Errore nel verificare magic link:', error);
+        }
+      } catch (err) {
+        console.error('❌ Errore imprevisto magic link:', err);
+      }
+    }
+  }
+});
 
 // Gestione errori globale migliorata
 const renderApp = () => {
