@@ -4,7 +4,12 @@ import { Capacitor } from "@capacitor/core";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-export default function LoginForm() {
+interface LoginFormProps {
+  verificationStatus?: string | null;
+  onResendVerification?: (email: string) => Promise<void>;
+}
+
+export default function LoginForm({ verificationStatus, onResendVerification }: LoginFormProps) {
   const navigate = useNavigate();
 
   useEffect(() => {
