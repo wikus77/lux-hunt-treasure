@@ -2,6 +2,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      // Fix Capacitor: redirect immediato su /home se si parte da / o /index
+      if (window.location.pathname === '/' || window.location.pathname.startsWith('/index')) {
+        window.location.replace('/home');
+      }
+    </script>
+    
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>M1SSION - La sfida inizia presto</title>
