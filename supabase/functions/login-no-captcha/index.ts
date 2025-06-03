@@ -23,30 +23,28 @@ serve(async (req) => {
       type: 'magiclink',
       email,
       options: { redirectTo }
-    })
+    });
+
+    console.log("🧠 Risultato generateLink:", { data, error });
 
     if (error || !data?.action_link) {
-      return new Response(JSON.stringify({ 
-        error: error?.message || 'Errore generazione link' 
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      console.log("❌ Errore generazione link:", error?.message || "Link assente");
+      return new Response(JSON.stringify({
+        error: error?.message || "Errore generazione link"
+      }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
     return new Response(JSON.stringify({
       message: "Magic link generato per sviluppatore",
       token: data.action_link
     }), {
-      headers: { "Content-Type": "application/json" }
-    })
+      headers: { "Content-Type": "application/json" },
+    });
+
   } catch (err) {
+    console.error("🧨 Errore imprevisto:", err);
     return new Response(JSON.stringify({
-      error: 'Errore interno',
-      detail: err.message
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+      error: "Errore interno"
+    }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 })
