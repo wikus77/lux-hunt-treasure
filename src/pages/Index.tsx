@@ -62,6 +62,7 @@ const Index = () => {
   const [countdownCompleted, setCountdownCompleted] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
   
   // 🔥 BYPASS LANDING PAGE + INTRO for Capacitor or developer email
   useEffect(() => {
@@ -100,7 +101,7 @@ const Index = () => {
         // For Capacitor without verification, still auto-setup developer session for wikus77@hotmail.it
         console.log("🔧 CAPACITOR FALLBACK: Setting up developer session for this device");
         const fakeUser = {
-          id: "dev-user-id",
+          id: "6c789e77-a58a-4135-b9ed-2d96ec4f7849", // Valid UUID
           email: "wikus77@hotmail.it",
           role: "developer",
           aud: "authenticated",
