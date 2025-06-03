@@ -1,6 +1,9 @@
 
-import React from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useAuthContext } from '@/contexts/auth';
+import { Spinner } from '@/components/ui/spinner';
+import EmailVerificationAlert from './EmailVerificationAlert';
 
 interface ProtectedRouteProps {
   redirectTo?: string;
@@ -9,18 +12,63 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  redirectTo = '/login',
+  requireEmailVerification = true,
   children
 }) => {
+  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser } = useAuthContext();
+  const location = useLocation();
   
-  // BYPASS ALL AUTHENTICATION - ALWAYS ALLOW ACCESS
-  console.log("🔓 BYPASSING ALL AUTHENTICATION CHECKS");
+  useEffect(() => {
+    console.log("Protected route check:", {
+      path: location.pathname,
+      isAuthenticated,
+      isLoading,
+      isEmailVerified,
+      user: getCurrentUser()?.id,
+      userEmail: getCurrentUser()?.email
+    });
+  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser]);
   
-  // Always render the protected content without any checks
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-black">
+        <Spinner className="h-8 w-8 text-white" />
+      </div>
+    );
+  }
+  
+  // Developer bypass for wikus77@hotmail.it
+  const user = getCurrentUser();
+  if (user?.email === "wikus77@hotmail.it") {
+    console.log("🔓 Developer bypass: allowing access for wikus77@hotmail.it");
+    return children ? <>{children}</> : <Outlet />;
+  }
+  
+  // Check authentication state first
+  if (!isAuthenticated) {
+    console.log("User not authenticated, redirecting to:", redirectTo);
+    return <Navigate to={redirectTo} replace state={{ from: location }} />;
+  }
+  
+  // Check for email verification if required
+  if (requireEmailVerification && !isEmailVerified) {
+    console.log("Email not verified, redirecting to verification page");
+    return <Navigate to="/login?verification=pending" replace />;
+  }
+  
+  // User is authenticated and email is verified, render the protected route
   return children ? <>{children}</> : <Outlet />;
 };
 
+// Export a component that can be used directly in pages to show a verification alert
 export const EmailVerificationGuard: React.FC<{children: React.ReactNode}> = ({ children }) => {
-  // BYPASS EMAIL VERIFICATION
+  const { isEmailVerified } = useAuthContext();
+  
+  if (!isEmailVerified) {
+    return <EmailVerificationAlert />;
+  }
+  
   return <>{children}</>;
 };
 

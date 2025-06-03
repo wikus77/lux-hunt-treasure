@@ -18,28 +18,6 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   useEffect(() => {
     console.log("useAuth: Initializing auth state");
     
-    // Check for developer bypass first
-    const checkDeveloperBypass = () => {
-      const isCapacitorApp = !!(window as any).Capacitor;
-      const developerBypassActive = sessionStorage.getItem('developer_bypass_active') === 'true';
-      const developerUser = sessionStorage.getItem('developer_bypass_user');
-      
-      if (isCapacitorApp && developerBypassActive && developerUser) {
-        console.log("🔓 DEVELOPER BYPASS: Using session storage user");
-        const fakeUser = JSON.parse(developerUser) as User;
-        setUser(fakeUser);
-        setIsEmailVerified(true);
-        setIsLoading(false);
-        return true;
-      }
-      return false;
-    };
-    
-    // If developer bypass is active, skip normal auth
-    if (checkDeveloperBypass()) {
-      return;
-    }
-    
     // First set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
@@ -48,22 +26,8 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         
         const currentUser = currentSession?.user ?? null;
         
-        // Developer bypass for wikus77@hotmail.it on Capacitor
-        const isCapacitorApp = !!(window as any).Capacitor;
-        if (isCapacitorApp && currentUser?.email === "wikus77@hotmail.it") {
-          console.log("🔓 CAPACITOR DEVELOPER BYPASS: Auto-authenticating wikus77@hotmail.it");
-          const enhancedUser = {
-            ...currentUser,
-            email_confirmed_at: new Date().toISOString(),
-          };
-          setUser(enhancedUser);
-          setIsEmailVerified(true);
-          
-          // Auto-redirect to /home for developer on Capacitor
-          setTimeout(() => {
-            window.location.href = '/home';
-          }, 100);
-        } else if (currentUser?.email === "wikus77@hotmail.it") {
+        // Developer bypass for wikus77@hotmail.it
+        if (currentUser?.email === "wikus77@hotmail.it") {
           console.log("🔓 Developer bypass: forcing email verification for wikus77@hotmail.it");
           const enhancedUser = {
             ...currentUser,
@@ -97,22 +61,8 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         setSession(initialSession);
         const initialUser = initialSession?.user ?? null;
         
-        // Developer bypass for wikus77@hotmail.it on Capacitor
-        const isCapacitorApp = !!(window as any).Capacitor;
-        if (isCapacitorApp && initialUser?.email === "wikus77@hotmail.it") {
-          console.log("🔓 CAPACITOR DEVELOPER BYPASS: Auto-authenticating wikus77@hotmail.it");
-          const enhancedUser = {
-            ...initialUser,
-            email_confirmed_at: new Date().toISOString(),
-          };
-          setUser(enhancedUser);
-          setIsEmailVerified(true);
-          
-          // Auto-redirect to /home for developer on Capacitor
-          setTimeout(() => {
-            window.location.href = '/home';
-          }, 100);
-        } else if (initialUser?.email === "wikus77@hotmail.it") {
+        // Developer bypass for wikus77@hotmail.it
+        if (initialUser?.email === "wikus77@hotmail.it") {
           console.log("🔓 Developer bypass: forcing email verification for wikus77@hotmail.it");
           const enhancedUser = {
             ...initialUser,
@@ -189,10 +139,6 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   const logout = async () => {
     console.log("Logging out user");
     try {
-      // Clear developer bypass if active
-      sessionStorage.removeItem('developer_bypass_user');
-      sessionStorage.removeItem('developer_bypass_active');
-      
       await supabase.auth.signOut();
       toast.success("Logout effettuato");
     } catch (error) {
@@ -205,15 +151,6 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
    * Check if user is authenticated
    */
   const isAuthenticated = useCallback(() => {
-    // Check for developer bypass first
-    const isCapacitorApp = !!(window as any).Capacitor;
-    const developerBypassActive = sessionStorage.getItem('developer_bypass_active') === 'true';
-    
-    if (isCapacitorApp && developerBypassActive) {
-      console.log("🔓 Developer bypass: always authenticated in Capacitor");
-      return true;
-    }
-    
     // Developer bypass for wikus77@hotmail.it
     if (user?.email === "wikus77@hotmail.it") {
       console.log("🔓 Developer bypass: wikus77@hotmail.it always authenticated");
@@ -288,8 +225,41 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     logout,
     getCurrentUser,
     getAccessToken,
-    resendVerificationEmail,
-    resetPassword,
+    resendVerificationEmail: async (email: string) => {
+      try {
+        const { error } = await supabase.auth.resend({
+          type: 'signup',
+          email: email,
+        });
+
+        if (error) {
+          console.error("Error sending verification email:", error);
+          return { success: false, error: error.message };
+        }
+
+        return { success: true };
+      } catch (error: any) {
+        console.error("Exception sending verification email:", error);
+        return { success: false, error: error.message };
+      }
+    },
+    resetPassword: async (email: string) => {
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/reset-password',
+        });
+
+        if (error) {
+          console.error("Error sending password reset email:", error);
+          return { success: false, error: error.message };
+        }
+
+        return { success: true };
+      } catch (error: any) {
+        console.error("Exception sending password reset email:", error);
+        return { success: false, error: error.message };
+      }
+    },
     user,
   };
 }
