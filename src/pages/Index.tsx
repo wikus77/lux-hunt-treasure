@@ -28,7 +28,7 @@ const Index = () => {
       const isCapacitorApp = !!(window as any).Capacitor;
       
       if (isCapacitorApp) {
-        console.log("🔓 DEVELOPER BYPASS: Capacitor detected, redirecting to /home");
+        console.log("🔓 CAPACITOR DEVELOPER BYPASS: Redirecting to /home immediately");
         
         // Create fake session for developer
         const fakeUser = {
@@ -46,7 +46,7 @@ const Index = () => {
         sessionStorage.setItem('developer_bypass_user', JSON.stringify(fakeUser));
         sessionStorage.setItem('developer_bypass_active', 'true');
         
-        // Immediate redirect to /home
+        // Immediate redirect to /home - NO LANDING PAGE ON CAPACITOR
         navigate('/home', { replace: true });
         return;
       }
@@ -213,7 +213,7 @@ const Index = () => {
     window.location.href = '/home';
   }, []);
 
-  // Show developer access screen for mobile users without access
+  // Show developer access screen for mobile users without access (unless they're the developer)
   if (showDeveloperAccess) {
     return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
   }

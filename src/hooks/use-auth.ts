@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -49,8 +48,22 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         
         const currentUser = currentSession?.user ?? null;
         
-        // Developer bypass for wikus77@hotmail.it
-        if (currentUser?.email === "wikus77@hotmail.it") {
+        // Developer bypass for wikus77@hotmail.it on Capacitor
+        const isCapacitorApp = !!(window as any).Capacitor;
+        if (isCapacitorApp && currentUser?.email === "wikus77@hotmail.it") {
+          console.log("🔓 CAPACITOR DEVELOPER BYPASS: Auto-authenticating wikus77@hotmail.it");
+          const enhancedUser = {
+            ...currentUser,
+            email_confirmed_at: new Date().toISOString(),
+          };
+          setUser(enhancedUser);
+          setIsEmailVerified(true);
+          
+          // Auto-redirect to /home for developer on Capacitor
+          setTimeout(() => {
+            window.location.href = '/home';
+          }, 100);
+        } else if (currentUser?.email === "wikus77@hotmail.it") {
           console.log("🔓 Developer bypass: forcing email verification for wikus77@hotmail.it");
           const enhancedUser = {
             ...currentUser,
@@ -84,8 +97,22 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         setSession(initialSession);
         const initialUser = initialSession?.user ?? null;
         
-        // Developer bypass for wikus77@hotmail.it
-        if (initialUser?.email === "wikus77@hotmail.it") {
+        // Developer bypass for wikus77@hotmail.it on Capacitor
+        const isCapacitorApp = !!(window as any).Capacitor;
+        if (isCapacitorApp && initialUser?.email === "wikus77@hotmail.it") {
+          console.log("🔓 CAPACITOR DEVELOPER BYPASS: Auto-authenticating wikus77@hotmail.it");
+          const enhancedUser = {
+            ...initialUser,
+            email_confirmed_at: new Date().toISOString(),
+          };
+          setUser(enhancedUser);
+          setIsEmailVerified(true);
+          
+          // Auto-redirect to /home for developer on Capacitor
+          setTimeout(() => {
+            window.location.href = '/home';
+          }, 100);
+        } else if (initialUser?.email === "wikus77@hotmail.it") {
           console.log("🔓 Developer bypass: forcing email verification for wikus77@hotmail.it");
           const enhancedUser = {
             ...initialUser,
@@ -261,41 +288,8 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     logout,
     getCurrentUser,
     getAccessToken,
-    resendVerificationEmail: async (email: string) => {
-      try {
-        const { error } = await supabase.auth.resend({
-          type: 'signup',
-          email: email,
-        });
-
-        if (error) {
-          console.error("Error sending verification email:", error);
-          return { success: false, error: error.message };
-        }
-
-        return { success: true };
-      } catch (error: any) {
-        console.error("Exception sending verification email:", error);
-        return { success: false, error: error.message };
-      }
-    },
-    resetPassword: async (email: string) => {
-      try {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + '/reset-password',
-        });
-
-        if (error) {
-          console.error("Error sending password reset email:", error);
-          return { success: false, error: error.message };
-        }
-
-        return { success: true };
-      } catch (error: any) {
-        console.error("Exception sending password reset email:", error);
-        return { success: false, error: error.message };
-      }
-    },
+    resendVerificationEmail,
+    resetPassword,
     user,
   };
 }

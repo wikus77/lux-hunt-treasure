@@ -19,7 +19,8 @@ export default function Login() {
       const email = data?.session?.user?.email;
 
       if (email && devEmails.includes(email)) {
-        console.log("🔓 Developer bypass attivo, reindirizzo a /home");
+        console.log("🔓 CAPACITOR DEVELOPER BYPASS: Auto-redirect to /home");
+        // Skip Developer Access screen entirely
         navigate("/home", { replace: true });
       } else {
         console.log("👤 Nessun bypass attivo, email non autorizzata:", email);

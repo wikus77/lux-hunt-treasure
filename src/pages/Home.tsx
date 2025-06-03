@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
@@ -13,7 +14,6 @@ import { Helmet } from "react-helmet";
 import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import DeveloperAccess from "@/components/auth/DeveloperAccess";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/auth";
 
@@ -43,9 +43,19 @@ const Home = () => {
   // Activate Dynamic Island safety system
   useDynamicIslandSafety();
 
-  // Force redirect for developer email
+  // Force redirect for developer email and Capacitor bypass
   useEffect(() => {
+    const isCapacitorApp = !!(window as any).Capacitor;
     const user = getCurrentUser();
+    
+    // CAPACITOR DEVELOPER BYPASS: Always allow access if on Capacitor
+    if (isCapacitorApp) {
+      console.log("🔓 CAPACITOR DEVELOPER BYPASS: Auto-granting access on Capacitor platform");
+      setHasAccess(true);
+      setIsCapacitor(true);
+      return;
+    }
+    
     if (user?.email === "wikus77@hotmail.it") {
       console.log("🔓 Developer access: force allowing wikus77@hotmail.it to access /home");
       setHasAccess(true);
@@ -58,26 +68,29 @@ const Home = () => {
       return;
     }
 
-    // Redirect to auth if not authenticated and not developer
-    if (!isAuthenticated && user?.email !== "wikus77@hotmail.it") {
+    // Redirect to auth if not authenticated and not developer and not on Capacitor
+    if (!isAuthenticated && user?.email !== "wikus77@hotmail.it" && !isCapacitorApp) {
       console.log("❌ User not authenticated, redirecting to auth");
       navigate('/login');
       return;
     }
   }, [getCurrentUser, isAuthenticated, navigate]);
 
-  // Check for developer access and Capacitor environment
+  // Check for developer access and Capacitor environment (for non-Capacitor apps)
   useEffect(() => {
     const checkAccess = () => {
       const isCapacitorApp = !!(window as any).Capacitor;
       setIsCapacitor(isCapacitorApp);
       
+      // If Capacitor, access is already granted above
+      if (isCapacitorApp) return;
+      
       const user = getCurrentUser();
       const userAgent = navigator.userAgent;
-      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
+      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
       const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
       
-      console.log('Home access check (Capacitor):', { 
+      console.log('Home access check (non-Capacitor):', { 
         isMobileDevice, 
         hasStoredAccess, 
         isCapacitorApp, 
@@ -85,7 +98,7 @@ const Home = () => {
         isAuthenticated 
       });
       
-      // Developer bypass
+      // Developer bypass for web
       if (user?.email === "wikus77@hotmail.it") {
         console.log("🔓 Developer bypass: granting access for wikus77@hotmail.it");
         setHasAccess(true);
@@ -118,7 +131,6 @@ const Home = () => {
     }
   }, [hasAccess, isLoaded, currentMission, startActivity]);
 
-  // Cleanup migliorato con logging
   useEffect(() => {
     return () => {
       if (currentMission && currentMission.status !== 'active') {
@@ -127,10 +139,6 @@ const Home = () => {
       }
     };
   }, [endActivity, currentMission]);
-
-  const handleAccessGranted = () => {
-    setHasAccess(true);
-  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -165,10 +173,16 @@ const Home = () => {
     return {};
   };
 
-  // Show developer access screen for mobile users without access (unless they're the developer)
+  // NO MORE DEVELOPER ACCESS SCREEN - CAPACITOR BYPASS IS AUTOMATIC
   const user = getCurrentUser();
-  if (isMobile && !hasAccess && user?.email !== "wikus77@hotmail.it") {
-    return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
+  const isCapacitorApp = !!(window as any).Capacitor;
+  
+  // If on Capacitor, always show the home page (no DeveloperAccess screen)
+  if (isCapacitorApp || (user?.email === "wikus77@hotmail.it")) {
+    // Force hasAccess = true for Capacitor or developer email
+    if (!hasAccess) {
+      setHasAccess(true);
+    }
   }
 
   if (error) {
