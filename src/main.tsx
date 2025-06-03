@@ -28,11 +28,14 @@ CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
   if (url?.includes('type=magiclink')) {
     const cleanedUrl = new URL(url);
     const token = cleanedUrl.searchParams.get('token');
-    if (token) {
+    const email = cleanedUrl.searchParams.get('email'); // 🆕 importante
+
+    if (token && email) {
       try {
         const { data, error } = await supabase.auth.verifyOtp({
           type: 'magiclink',
           token,
+          email, // ✅ necessario nel nuovo Supabase SDK
         });
         if (!error && data.session) {
           console.log('✅ Sessione salvata da magic link Capacitor');
@@ -43,6 +46,8 @@ CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
       } catch (err) {
         console.error('❌ Errore imprevisto magic link:', err);
       }
+    } else {
+      console.warn('⚠️ Token o email non trovati nell'URL');
     }
   }
 });
