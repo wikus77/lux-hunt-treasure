@@ -20,7 +20,9 @@ serve(async (req) => {
   });
 
   try {
-    const { email, redirect_to } = await req.json();
+    const requestJson = await req.json();
+    const email = requestJson.email;
+    const redirectTo = requestJson.redirect_to || 'capacitor://localhost/home';
     const adminEmail = "wikus77@hotmail.it";
 
     if (email !== adminEmail) {
@@ -31,24 +33,21 @@ serve(async (req) => {
     }
 
     console.log("🔧 Modalità sviluppatore - login per:", adminEmail);
-
-    // Use provided redirect_to or default to Capacitor URL
-    const redirectUrl = redirect_to || "capacitor://localhost/home";
-    console.log("🔗 Usando redirect URL:", redirectUrl);
+    console.log("🔗 Usando redirect URL:", redirectTo);
 
     // Generate magic link with dynamic redirect
     const { data, error } = await supabase.auth.admin.generateLink({
       type: "magiclink",
       email,
       options: {
-        redirectTo: redirectUrl
+        redirectTo
       }
     });
 
     if (error) {
       console.error("❌ Errore generazione magic link:", error);
-      return new Response(JSON.stringify({ error: "Errore generazione magic link" }), {
-        status: 500,
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
@@ -56,8 +55,8 @@ serve(async (req) => {
     console.log("✅ Magic link generato con successo:", data.properties?.action_link);
 
     return new Response(JSON.stringify({
-      token: data.properties?.action_link,
-      message: "Magic link generato per sviluppatore"
+      message: "Magic link generato per sviluppatore",
+      token: data.properties?.action_link
     }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
