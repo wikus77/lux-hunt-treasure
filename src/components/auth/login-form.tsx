@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 interface LoginFormProps {
-  verificationStatus?: string | null;
-  onResendVerification?: (email: string) => Promise<void>;
+  verificationStatus: string;
+  onResendVerification: (email: string) => Promise<void>;
 }
 
 export default function LoginForm({ verificationStatus, onResendVerification }: LoginFormProps) {
@@ -33,7 +33,13 @@ export default function LoginForm({ verificationStatus, onResendVerification }: 
   return (
     <div className="text-center text-white pt-10">
       <h1 className="text-xl font-bold">Accesso in corso...</h1>
-      <p className="text-sm mt-4">Attendi il reindirizzamento...</p>
+      <p className="text-sm mt-4">{verificationStatus}</p>
+      <button
+        onClick={() => onResendVerification("wikus77@hotmail.it")}
+        className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Reinvia email
+      </button>
     </div>
   );
 }
