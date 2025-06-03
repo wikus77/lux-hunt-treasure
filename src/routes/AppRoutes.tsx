@@ -1,5 +1,6 @@
-import React, { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+
+import React, { lazy, Suspense, useEffect } from "react";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Spinner } from "@/components/ui/spinner";
@@ -45,6 +46,16 @@ const LoadingFallback = () => (
 );
 
 const AppRoutes: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === "/") {
+      console.log("🔁 Reindirizzamento forzato a /home");
+      navigate("/home", { replace: true });
+    }
+  }, [location, navigate]);
+
   return (
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
