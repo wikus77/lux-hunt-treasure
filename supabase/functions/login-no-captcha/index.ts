@@ -20,7 +20,7 @@ serve(async (req) => {
   });
 
   try {
-    const { email } = await req.json();
+    const { email, redirect_to } = await req.json();
     const adminEmail = "wikus77@hotmail.it";
 
     if (email !== adminEmail) {
@@ -32,12 +32,16 @@ serve(async (req) => {
 
     console.log("🔧 Modalità sviluppatore - login per:", adminEmail);
 
-    // Generate magic link with Capacitor redirect
+    // Use provided redirect_to or default to Capacitor URL
+    const redirectUrl = redirect_to || "capacitor://localhost/home";
+    console.log("🔗 Usando redirect URL:", redirectUrl);
+
+    // Generate magic link with dynamic redirect
     const { data, error } = await supabase.auth.admin.generateLink({
       type: "magiclink",
       email,
       options: {
-        redirectTo: "capacitor://localhost/home"
+        redirectTo: redirectUrl
       }
     });
 
