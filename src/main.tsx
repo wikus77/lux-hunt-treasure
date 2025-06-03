@@ -23,65 +23,65 @@ if (import.meta.env.MODE !== 'development' && import.meta.env.VITE_SENTRY_DSN) {
   console.log("Sentry disabled in development mode");
 }
 
-// 🔥 DEVELOPER BYPASS: Check for magic link on startup for Capacitor iOS
-const checkMagicLinkOnStartup = async () => {
+// 🔥 DEVELOPER MAGIC LINK VERIFICATION - DEFINITIVE IMPLEMENTATION
+const verifyDeveloperMagicLink = async () => {
   const isCapacitorApp = !!(window as any).Capacitor;
   
-  if (isCapacitorApp) {
-    console.log("🔍 CAPACITOR DEVELOPER BYPASS: Checking for magic link in URL");
+  if (!isCapacitorApp) {
+    return false;
+  }
+  
+  console.log("🔍 CAPACITOR DEVELOPER: Checking for magic link in startup URL");
+  
+  try {
+    const url = new URL(window.location.href);
+    const token = url.searchParams.get("token");
+    const email = url.searchParams.get("email");
+    const type = url.searchParams.get("type");
     
-    try {
-      const url = new URL(window.location.href);
-      const token = url.searchParams.get("token");
-      const email = url.searchParams.get("email");
-      const type = url.searchParams.get("type");
+    if (type === 'magiclink' && token && email === 'wikus77@hotmail.it') {
+      console.log("🔓 DEVELOPER MAGIC LINK: Verifying token for", email);
       
-      if (type === 'magiclink' && token && email === 'wikus77@hotmail.it') {
-        console.log("🔓 DEVELOPER MAGIC LINK: Verifying token for", email);
+      const { data, error } = await supabase.auth.verifyOtp({
+        type: 'magiclink',
+        token,
+        email,
+      });
+      
+      if (!error && data.session) {
+        console.log('✅ DEVELOPER SESSION: Magic link verified, session created');
         
-        const { data, error } = await supabase.auth.verifyOtp({
-          type: 'magiclink',
-          token,
-          email,
-        });
+        // Set developer session and bypass flags
+        sessionStorage.setItem('developer_bypass_user', JSON.stringify({
+          id: data.user?.id || "dev-user-id",
+          email: "wikus77@hotmail.it",
+          role: "developer",
+          aud: "authenticated",
+          app_metadata: { provider: "email" },
+          user_metadata: { name: "Developer Wikus" },
+          created_at: new Date().toISOString(),
+          email_confirmed_at: new Date().toISOString(),
+        }));
+        sessionStorage.setItem('developer_bypass_active', 'true');
+        sessionStorage.setItem('developer_magic_link_verified', 'true');
+        sessionStorage.setItem('developer-access', 'true');
         
-        if (!error && data.session) {
-          console.log('✅ DEVELOPER SESSION: Magic link verified, session created');
-          
-          // Create fake enhanced user for developer bypass
-          const fakeUser = {
-            id: data.user?.id || "dev-user-id",
-            email: "wikus77@hotmail.it",
-            role: "developer",
-            aud: "authenticated",
-            app_metadata: { provider: "email" },
-            user_metadata: { name: "Developer Wikus" },
-            created_at: new Date().toISOString(),
-            email_confirmed_at: new Date().toISOString(),
-          };
-          
-          // Store developer bypass info
-          sessionStorage.setItem('developer_bypass_user', JSON.stringify(fakeUser));
-          sessionStorage.setItem('developer_bypass_active', 'true');
-          sessionStorage.setItem('developer_magic_link_verified', 'true');
-          
-          // Force redirect to /home immediately
-          console.log('🏠 DEVELOPER REDIRECT: Forcing redirect to /home');
-          window.location.href = '/home';
-          return true;
-        } else {
-          console.error('❌ DEVELOPER ERROR: Magic link verification failed:', error);
-        }
+        // Force immediate redirect to /home
+        console.log('🏠 DEVELOPER AUTO-REDIRECT: Going to /home immediately');
+        window.location.href = '/home';
+        return true;
+      } else {
+        console.error('❌ DEVELOPER ERROR: Magic link verification failed:', error);
       }
-    } catch (err) {
-      console.error('❌ DEVELOPER ERROR: Exception during magic link check:', err);
     }
+  } catch (err) {
+    console.error('❌ DEVELOPER ERROR: Exception during magic link verification:', err);
   }
   
   return false;
 };
 
-// Magic link handler for Capacitor
+// Magic link handler for Capacitor deep links
 CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
   if (url?.includes('type=magiclink')) {
     const cleanedUrl = new URL(url);
@@ -114,6 +114,7 @@ CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
             sessionStorage.setItem('developer_bypass_user', JSON.stringify(fakeUser));
             sessionStorage.setItem('developer_bypass_active', 'true');
             sessionStorage.setItem('developer_magic_link_verified', 'true');
+            sessionStorage.setItem('developer-access', 'true');
           }
           
           window.location.href = '/home';
@@ -129,15 +130,15 @@ CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
   }
 });
 
-// Gestione errori globale migliorata
+// Main app rendering function
 const renderApp = async () => {
   console.log("Attempting to render app");
   
-  // 🔥 Check for magic link on startup BEFORE rendering
-  const magicLinkHandled = await checkMagicLinkOnStartup();
+  // 🔥 FIRST: Verify developer magic link before anything else
+  const magicLinkHandled = await verifyDeveloperMagicLink();
   if (magicLinkHandled) {
-    console.log("🔄 Magic link handled, stopping render process");
-    return; // Stop rendering if magic link was handled
+    console.log("🔄 Developer magic link handled, stopping render process");
+    return; // Stop rendering if magic link was handled and redirect initiated
   }
   
   const rootElement = document.getElementById('root');

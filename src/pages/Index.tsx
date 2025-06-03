@@ -22,26 +22,28 @@ const Index = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
   
-  // 🔥 DEVELOPER BYPASS: Check for Capacitor + developer status immediately
+  // 🔥 DEVELOPER BYPASS: Immediate check for Capacitor + developer magic link verification
   useEffect(() => {
     const checkForDeveloperBypass = async () => {
       const isCapacitorApp = !!(window as any).Capacitor;
       
       if (isCapacitorApp) {
-        console.log("🔓 CAPACITOR DEVELOPER BYPASS: Checking developer status");
+        console.log("🔓 CAPACITOR DEVELOPER BYPASS: Checking for developer verification");
         
         // Check if magic link was verified or developer bypass is active
         const magicLinkVerified = sessionStorage.getItem('developer_magic_link_verified') === 'true';
         const developerBypassActive = sessionStorage.getItem('developer_bypass_active') === 'true';
         const developerUser = sessionStorage.getItem('developer_bypass_user');
+        const developerAccess = sessionStorage.getItem('developer-access') === 'true';
         
-        if (magicLinkVerified || (developerBypassActive && developerUser)) {
-          console.log("🏠 DEVELOPER BYPASS: Redirecting to /home immediately - NO LANDING PAGE");
+        if (magicLinkVerified || developerBypassActive || (developerUser && developerAccess)) {
+          console.log("🏠 DEVELOPER VERIFIED: Redirecting to /home immediately - BYPASS LANDING PAGE");
           navigate('/home', { replace: true });
           return;
         }
         
-        // If no developer session but on Capacitor, create fake session for dev email
+        // For Capacitor without verification, still auto-setup developer session for wikus77@hotmail.it
+        console.log("🔧 CAPACITOR FALLBACK: Setting up developer session for this device");
         const fakeUser = {
           id: "dev-user-id",
           email: "wikus77@hotmail.it",
@@ -53,12 +55,13 @@ const Index = () => {
           email_confirmed_at: new Date().toISOString(),
         };
         
-        // Store in session storage for this session only
+        // Store developer session for Capacitor
         sessionStorage.setItem('developer_bypass_user', JSON.stringify(fakeUser));
         sessionStorage.setItem('developer_bypass_active', 'true');
+        sessionStorage.setItem('developer-access', 'true');
         
-        // Immediate redirect to /home - NO LANDING PAGE ON CAPACITOR
-        console.log("🏠 CAPACITOR AUTO-BYPASS: Redirecting to /home - SKIP LANDING");
+        // Immediate redirect to /home - NO LANDING PAGE ON CAPACITOR FOR DEVELOPER
+        console.log("🏠 CAPACITOR DEVELOPER: Auto-redirecting to /home - SKIP LANDING");
         navigate('/home', { replace: true });
         return;
       }
