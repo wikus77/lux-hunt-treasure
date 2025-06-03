@@ -1,3 +1,4 @@
+
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -52,6 +53,10 @@ const AppRoutes: React.FC = () => {
           <Routes>
             {/* URGENT FIX: Direct redirect to /home bypassing landing page */}
             <Route path="/" element={<Navigate to="/home" replace />} />
+            
+            {/* FIX: Capacitor iOS routes that might start from /index or /index.html */}
+            <Route path="/index" element={<Navigate to="/home" replace />} />
+            <Route path="/index.html" element={<Navigate to="/home" replace />} />
 
             {/* iOS Test Route - PUBLIC */}
             <Route path="/open" element={<Open />} />
