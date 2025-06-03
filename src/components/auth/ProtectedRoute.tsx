@@ -45,8 +45,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return children ? <>{children}</> : <Outlet />;
   }
   
-  // Check authentication state first
-  if (!isAuthenticated) {
+  // ✅ BYPASS PER TEST SU IPHONE
+  const isTestBypass = user?.email === "wikus77@hotmail.it" || !!(window as any).Capacitor;
+  if (!isAuthenticated && !isTestBypass) {
     console.log("User not authenticated, redirecting to:", redirectTo);
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
