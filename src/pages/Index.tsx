@@ -104,16 +104,22 @@ const Index = () => {
       
       console.log('Index access check:', { isMobile, hasStoredAccess, isCapacitorApp });
       
-      if (isMobile && !hasStoredAccess) {
-        // Mobile users without access need to login
-        setShowDeveloperAccess(true);
-      } else if (!isMobile) {
-        // Web users always see landing page
-        setShowDeveloperAccess(false);
-      } else {
-        // Mobile users with access see landing page
-        setShowDeveloperAccess(false);
-      }
+      // TEMPORARY BYPASS: Disable Developer Access screen for all cases
+      // This allows direct access to /home without authentication
+      console.log('🔓 TEMPORARY BYPASS: Developer Access screen disabled for testing');
+      setShowDeveloperAccess(false);
+      
+      // Original logic commented out for testing:
+      // if (isMobile && !hasStoredAccess) {
+      //   // Mobile users without access need to login
+      //   setShowDeveloperAccess(true);
+      // } else if (!isMobile) {
+      //   // Web users always see landing page
+      //   setShowDeveloperAccess(false);
+      // } else {
+      //   // Mobile users with access see landing page
+      //   setShowDeveloperAccess(false);
+      // }
     };
     
     checkAccess();
@@ -242,6 +248,7 @@ const Index = () => {
   }, []);
 
   // Show developer access screen for mobile users without access (unless they're the developer)
+  // TEMPORARILY DISABLED FOR TESTING
   if (showDeveloperAccess) {
     return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
   }
