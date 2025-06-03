@@ -1,4 +1,5 @@
 
+
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -57,6 +58,9 @@ const AppRoutes: React.FC = () => {
             {/* FIX: Capacitor iOS routes that might start from /index or /index.html */}
             <Route path="/index" element={<Navigate to="/home" replace />} />
             <Route path="/index.html" element={<Navigate to="/home" replace />} />
+
+            {/* Landing page accessible only via manual navigation */}
+            <Route path="/landing" element={<Index />} />
 
             {/* iOS Test Route - PUBLIC */}
             <Route path="/open" element={<Open />} />
@@ -150,3 +154,4 @@ const AppRoutes: React.FC = () => {
 };
 
 export default AppRoutes;
+
