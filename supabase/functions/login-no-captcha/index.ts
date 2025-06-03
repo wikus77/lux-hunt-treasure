@@ -27,16 +27,18 @@ serve(async (req) => {
 
     console.log("🧠 Risultato generateLink:", { data, error });
 
-    if (error || !data?.action_link) {
-      console.log("❌ Errore generazione link:", error?.message || "Link assente");
+    const actionLink = data?.properties?.action_link;
+
+    if (!actionLink) {
+      console.log("❌ Errore generazione link: Link assente");
       return new Response(JSON.stringify({
-        error: error?.message || "Errore generazione link"
+        error: "Errore generazione link"
       }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
     return new Response(JSON.stringify({
       message: "Magic link generato per sviluppatore",
-      token: data.action_link
+      token: actionLink
     }), {
       headers: { "Content-Type": "application/json" },
     });
