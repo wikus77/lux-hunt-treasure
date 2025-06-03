@@ -50,8 +50,8 @@ const AppRoutes: React.FC = () => {
       <IOSSafeAreaOverlay>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            {/* Landing page - SEMPRE PUBBLICA, NESSUN REDIRECT */}
-            <Route path="/" element={<Index />} />
+            {/* URGENT FIX: Direct redirect to /home bypassing landing page */}
+            <Route path="/" element={<Navigate to="/home" replace />} />
 
             {/* iOS Test Route - PUBLIC */}
             <Route path="/open" element={<Open />} />
