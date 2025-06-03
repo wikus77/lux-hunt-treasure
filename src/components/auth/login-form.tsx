@@ -4,25 +4,20 @@ import { Capacitor } from "@capacitor/core";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-interface LoginFormProps {
-  verificationStatus: string;
-  onResendVerification: (email: string) => Promise<void>;
-}
-
-export default function LoginForm({ verificationStatus, onResendVerification }: LoginFormProps) {
+export default function LoginForm() {
   const navigate = useNavigate();
 
   useEffect(() => {
     const isCapacitor = Capacitor.isNativePlatform();
     const devEmails = ["wikus77@hotmail.it", "dev.wikus77@hotmail.it"];
-    const isDevMode = import.meta.env.MODE !== "production";
 
     const bypassLogin = async () => {
       if (isCapacitor) {
         const { data } = await supabase.auth.getUser();
         const email = data?.user?.email;
 
-        if (isCapacitor && isDevMode && email && devEmails.includes(email)) {
+        if (email && devEmails.includes(email)) {
+          console.log("✅ BYPASS LOGIN PER SVILUPPATORE:", email);
           navigate("/home");
         }
       }
@@ -34,13 +29,7 @@ export default function LoginForm({ verificationStatus, onResendVerification }: 
   return (
     <div className="text-center text-white pt-10">
       <h1 className="text-xl font-bold">Accesso in corso...</h1>
-      <p className="text-sm mt-4">{verificationStatus}</p>
-      <button
-        onClick={() => onResendVerification("wikus77@hotmail.it")}
-        className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-      >
-        Reinvia email
-      </button>
+      <p className="text-sm mt-4">Attendi il reindirizzamento...</p>
     </div>
   );
 }
