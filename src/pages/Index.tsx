@@ -1,4 +1,6 @@
+
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 import LoadingManager from "./index/LoadingManager";
 import CountdownManager from "./index/CountdownManager";
@@ -9,6 +11,8 @@ import DeveloperAccess from "@/components/auth/DeveloperAccess";
 const Index = () => {
   console.log("Index component rendering - PUBLIC LANDING PAGE");
   
+  const navigate = useNavigate();
+  
   // State management
   const [pageLoaded, setPageLoaded] = useState(false);
   const [renderContent, setRenderContent] = useState(false);
@@ -18,9 +22,46 @@ const Index = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
   
-  // Check for developer access on mount
+  // DEVELOPER BYPASS: Auto-redirect to /home if in Capacitor
+  useEffect(() => {
+    const checkForDeveloperBypass = async () => {
+      const isCapacitorApp = !!(window as any).Capacitor;
+      
+      if (isCapacitorApp) {
+        console.log("🔓 DEVELOPER BYPASS: Capacitor detected, redirecting to /home");
+        
+        // Create fake session for developer
+        const fakeUser = {
+          id: "dev-user-id",
+          email: "dev.wikus77@hotmail.it",
+          role: "developer",
+          aud: "authenticated",
+          app_metadata: { provider: "email" },
+          user_metadata: { name: "Developer" },
+          created_at: new Date().toISOString(),
+          email_confirmed_at: new Date().toISOString(),
+        };
+        
+        // Store in session storage for this session only
+        sessionStorage.setItem('developer_bypass_user', JSON.stringify(fakeUser));
+        sessionStorage.setItem('developer_bypass_active', 'true');
+        
+        // Immediate redirect to /home
+        navigate('/home', { replace: true });
+        return;
+      }
+    };
+    
+    checkForDeveloperBypass();
+  }, [navigate]);
+  
+  // Check for developer access on mount (only for non-Capacitor)
   useEffect(() => {
     const checkAccess = () => {
+      // Skip if Capacitor (already handled above)
+      const isCapacitorApp = !!(window as any).Capacitor;
+      if (isCapacitorApp) return;
+      
       // Check for URL parameter to reset access
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('resetDevAccess') === 'true') {
@@ -28,10 +69,9 @@ const Index = () => {
         console.log('Developer access reset via URL parameter');
       }
       
-      // Enhanced mobile detection including Capacitor
-      const isCapacitorApp = !!(window as any).Capacitor;
+      // Enhanced mobile detection
       const userAgent = navigator.userAgent;
-      const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
+      const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
       const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
       
       console.log('Index access check:', { isMobile, hasStoredAccess, isCapacitorApp });
