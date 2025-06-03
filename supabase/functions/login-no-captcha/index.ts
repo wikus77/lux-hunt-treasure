@@ -26,7 +26,9 @@ serve(async (req) => {
     })
 
     if (error || !data?.action_link) {
-      return new Response(JSON.stringify({ error: error?.message || 'Errore generazione link' }), {
+      return new Response(JSON.stringify({ 
+        error: error?.message || 'Errore generazione link' 
+      }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       })
@@ -36,7 +38,7 @@ serve(async (req) => {
       message: "Magic link generato per sviluppatore",
       token: data.action_link
     }), {
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" }
     })
   } catch (err) {
     return new Response(JSON.stringify({
