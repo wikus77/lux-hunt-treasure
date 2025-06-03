@@ -37,9 +37,13 @@ serve(async (req) => {
       }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
+    // Extract token from action_link and rebuild the magic link with explicit type parameter
+    const token = actionLink.split("token=")[1]?.split("&")[0];
+    const magicLink = `${SUPABASE_URL}/auth/v1/verify?type=magiclink&token=${token}&redirect_to=${finalRedirect}`;
+
     return new Response(JSON.stringify({
       message: "Magic link generato per sviluppatore",
-      token: actionLink
+      token: magicLink
     }), {
       headers: { "Content-Type": "application/json" },
     });
