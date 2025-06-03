@@ -6,14 +6,7 @@ import './index.css';
 
 const Home = () => (
   <div className="flex justify-center items-center h-screen bg-black text-white">
-    <div className="text-center">
-      <h1 className="text-6xl font-bold mb-4">
-        <span className="text-[#00D1FF]">M1</span>
-        <span className="text-white">SSION</span>
-        <span className="text-xs align-top">™</span>
-      </h1>
-      <p className="text-xl text-gray-400">La sfida inizia qui</p>
-    </div>
+    <h1 className="text-4xl font-bold">M1SSION APP - HOME</h1>
   </div>
 );
 
