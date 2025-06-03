@@ -14,7 +14,7 @@ import { Helmet } from "react-helmet";
 import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import { useAuthContext } from "@/contexts/auth";
+import { Link } from "react-router-dom";
 
 const Home = () => {
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +24,7 @@ const Home = () => {
   const [isCapacitor, setIsCapacitor] = useState(false);
   const { startActivity, updateActivity, endActivity } = useDynamicIsland();
   const { currentMission } = useMissionManager();
-  const { getCurrentUser, isAuthenticated } = useAuthContext();
+  
   const {
     notifications,
     unreadCount,
@@ -39,27 +39,6 @@ const Home = () => {
 
   // Activate Dynamic Island safety system
   useDynamicIslandSafety();
-
-  // PRIORITY FIX: Simplified access logic - allow all authenticated users and developer
-  useEffect(() => {
-    const user = getCurrentUser();
-    
-    // Developer bypass - always allow access
-    if (user?.email === "wikus77@hotmail.it") {
-      console.log("🔓 Developer user in /home - access granted");
-      return;
-    }
-    
-    // Allow any authenticated user
-    if (isAuthenticated) {
-      console.log("✅ Authenticated user in /home - access granted");
-      return;
-    }
-    
-    // Only redirect to login if completely unauthenticated
-    // Remove the immediate redirect to allow for session loading
-    console.log("ℹ️ User access check in /home - session may still be loading");
-  }, [getCurrentUser, isAuthenticated]);
 
   // Check for Capacitor environment
   useEffect(() => {
@@ -200,6 +179,26 @@ const Home = () => {
                   <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
                 </h1>
               </motion.div>
+
+              {/* Quick Access Links */}
+              <div className="grid grid-cols-2 gap-4 mb-6 px-4">
+                <Link to="/map" className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-xl text-white text-center hover:scale-105 transition-transform">
+                  <div className="text-2xl mb-2">🗺️</div>
+                  <div className="font-bold">Mappa</div>
+                </Link>
+                <Link to="/buzz" className="bg-gradient-to-r from-purple-600 to-purple-700 p-4 rounded-xl text-white text-center hover:scale-105 transition-transform">
+                  <div className="text-2xl mb-2">🎯</div>
+                  <div className="font-bold">Buzz</div>
+                </Link>
+                <Link to="/games" className="bg-gradient-to-r from-green-600 to-green-700 p-4 rounded-xl text-white text-center hover:scale-105 transition-transform">
+                  <div className="text-2xl mb-2">🎮</div>
+                  <div className="font-bold">Games</div>
+                </Link>
+                <Link to="/leaderboard" className="bg-gradient-to-r from-yellow-600 to-yellow-700 p-4 rounded-xl text-white text-center hover:scale-105 transition-transform">
+                  <div className="text-2xl mb-2">🏆</div>
+                  <div className="font-bold">Classifica</div>
+                </Link>
+              </div>
 
               <main className="max-w-screen-xl mx-auto pb-20">
                 <CommandCenterHome />
