@@ -9,6 +9,13 @@ import { useEventHandlers } from "./index/EventHandlers";
 const Index = () => {
   console.log("Index component rendering - PUBLIC LANDING PAGE");
   
+  // 🔥 EMERGENCY BYPASS FOR CAPACITOR
+  if ((window as any).Capacitor) {
+    console.log("🛑 FORCING REDIRECT FROM Index.tsx to /home");
+    window.location.replace("/home");
+    return null;
+  }
+  
   const navigate = useNavigate();
   
   // 🔥 IMMEDIATE CAPACITOR BYPASS - NO LANDING PAGE ON CAPACITOR
