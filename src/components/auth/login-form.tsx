@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import FormField from './form-field';
 import TurnstileWidget from '@/components/security/TurnstileWidget';
 import { useTurnstile } from '@/hooks/useTurnstile';
 import { shouldBypassCaptchaForUser } from '@/utils/turnstile';
+import { Mail, Lock } from 'lucide-react';
 
 interface LoginFormProps {
   verificationStatus?: string | null;
@@ -116,8 +118,10 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
         id="email"
         label="Email"
         type="email"
+        placeholder="Inserisci la tua email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        icon={<Mail className="h-4 w-4" />}
         required
         disabled={isLoading}
       />
@@ -126,8 +130,10 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
         id="password"
         label="Password"
         type="password"
+        placeholder="Inserisci la tua password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        icon={<Lock className="h-4 w-4" />}
         required
         disabled={isLoading}
       />

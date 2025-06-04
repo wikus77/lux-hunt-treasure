@@ -7,22 +7,26 @@ interface FormFieldProps {
   id: string;
   type: string;
   label: string;
-  placeholder: string;
+  placeholder?: string;
   value: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   error?: string;
+  required?: boolean;
+  disabled?: boolean;
 }
 
 const FormField = ({
   id,
   type,
   label,
-  placeholder,
+  placeholder = "",
   value,
   onChange,
   icon,
-  error
+  error,
+  required = false,
+  disabled = false
 }: FormFieldProps) => {
   return (
     <div className="space-y-2">
@@ -35,6 +39,8 @@ const FormField = ({
         onChange={onChange}
         className="bg-black/50 border-white/10"
         icon={icon}
+        required={required}
+        disabled={disabled}
       />
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
