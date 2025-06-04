@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { GameCard } from '@/components/games/GameCard';
@@ -56,11 +57,12 @@ const Games = () => {
     checkNewMinigames();
   }, [score, gameCompleted, startActivity]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount - Prevent zombie Live Activities
   useEffect(() => {
     return () => {
       // Only end activity if it's game-related
-      if (currentMission?.title?.includes('Minigioco')) {
+      if (currentMission?.name?.includes('Minigioco') || currentMission?.name?.includes('🧩')) {
+        console.log('🧹 Cleaning up game-related Live Activity');
         endActivity();
       }
     };
