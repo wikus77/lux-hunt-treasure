@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { FormField } from './FormField';
+import FormField from './FormField';
 import { FormData } from './types';
 
 interface RegistrationFormProps {

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { usePreRegistration } from './pre-registration/usePreRegistration';
 import { RegistrationForm } from './pre-registration/RegistrationForm';
-import { SuccessView } from './pre-registration/SuccessView';
+import SuccessView from './pre-registration/SuccessView';
 
 interface PreRegistrationFormProps {
   countdownCompleted?: boolean;
