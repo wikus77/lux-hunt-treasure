@@ -41,16 +41,16 @@ const AppHome = () => {
       const userAgent = navigator.userAgent;
       const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
       
-      console.log('AppHome access check (Capacitor):', { isMobileDevice, hasStoredAccess, isCapacitorApp });
+      console.log('AppHome access check (Capacitor):', { isMobileDevice, hasStoredAccess, isCapacitorApp, isDeveloperEmail });
       
-      // DEVELOPER ACCESS: Always grant access to wikus77@hotmail.it
-      const currentUserEmail = localStorage.getItem('developer_user_email');
-      if (currentUserEmail === 'wikus77@hotmail.it') {
+      // ✅ CONTROLLO PRIORITARIO: Developer access
+      if (hasStoredAccess || isDeveloperEmail) {
+        console.log('🔑 Developer access auto-granted for AppHome');
         setHasAccess(true);
         localStorage.setItem('developer_access', 'granted');
         localStorage.setItem('full_access_granted', 'true');
-        console.log('Developer access auto-granted for wikus77@hotmail.it');
         return;
       }
       
@@ -70,6 +70,8 @@ const AppHome = () => {
     setHasAccess(true);
     // Store developer email for auto-access
     localStorage.setItem('developer_user_email', 'wikus77@hotmail.it');
+    localStorage.setItem('developer_access', 'granted');
+    localStorage.setItem('captcha_bypassed', 'true');
   };
 
   useEffect(() => {
@@ -92,8 +94,20 @@ const AppHome = () => {
     }
   }, [error]);
 
+  // ✅ CONTROLLO PRIORITARIO: Developer access check
+  const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
+  const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
+  
+  if (hasDeveloperAccess || isDeveloperEmail) {
+    console.log('🔑 Developer access detected - granting immediate access to AppHome');
+    // Force access for developer
+    if (!hasAccess) {
+      setHasAccess(true);
+    }
+  }
+
   // Show developer access screen for mobile users without access
-  if (isMobile && !hasAccess) {
+  if (isMobile && !hasAccess && !hasDeveloperAccess && !isDeveloperEmail) {
     return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
   }
 

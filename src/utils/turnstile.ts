@@ -1,3 +1,4 @@
+
 /**
  * Cloudflare Turnstile utility functions
  */
@@ -32,15 +33,19 @@ export const shouldBypassCaptcha = (path: string): boolean => {
 };
 
 /**
- * ✅ CONTROLLO EMAIL SVILUPPATORE per bypass Turnstile
+ * ✅ CONTROLLO EMAIL SVILUPPATORE per bypass Turnstile - PRIORITÀ MASSIMA
  */
 export const shouldBypassCaptchaForUser = (email: string): boolean => {
   const isDeveloper = email === 'wikus77@hotmail.it';
-  if (isDeveloper) {
-    console.log('🔑 DEVELOPER BYPASS: Turnstile completamente disattivato per:', email);
+  const hasDevAccess = localStorage.getItem("developer_access") === "granted";
+  
+  if (isDeveloper || hasDevAccess) {
+    console.log('🔑 DEVELOPER BYPASS: Turnstile completamente disattivato per:', email || 'developer_access');
     console.warn('⚠️ CAPTCHA/Turnstile neutralizzato per sviluppatore');
+    return true;
   }
-  return isDeveloper;
+  
+  return false;
 };
 
 /**
@@ -49,8 +54,8 @@ export const shouldBypassCaptchaForUser = (email: string): boolean => {
  */
 export const initializeTurnstile = (userEmail?: string): Promise<void> => {
   return new Promise((resolve) => {
-    // ✅ CONTROLLO EMAIL SVILUPPATORE
-    if (userEmail === 'wikus77@hotmail.it') {
+    // ✅ CONTROLLO EMAIL SVILUPPATORE - PRIORITÀ ASSOLUTA
+    if (userEmail === 'wikus77@hotmail.it' || localStorage.getItem("developer_access") === "granted") {
       console.log('🔑 DEVELOPER BYPASS: Turnstile script loading skipped for developer');
       console.warn('⚠️ initializeTurnstile() chiamato con account sviluppatore - BLOCCATO');
       resolve();
@@ -110,11 +115,11 @@ export const initializeTurnstile = (userEmail?: string): Promise<void> => {
  * @returns Token or bypass token if on bypass path or developer email
  */
 export const getTurnstileToken = async (action: string = 'submit', userEmail?: string): Promise<string> => {
-  // ✅ CONTROLLO EMAIL SVILUPPATORE
-  if (userEmail === 'wikus77@hotmail.it') {
+  // ✅ CONTROLLO EMAIL SVILUPPATORE - PRIORITÀ ASSOLUTA
+  if (userEmail === 'wikus77@hotmail.it' || localStorage.getItem("developer_access") === "granted") {
     console.log('🔑 DEVELOPER BYPASS: Turnstile token generation skipped for developer');
     console.warn('⚠️ getTurnstileToken() chiamato con account sviluppatore - BLOCCATO');
-    return 'BYPASS_FOR_DEVELOPMENT';
+    return 'BYPASS_FOR_DEVELOPER';
   }
 
   // If we're on a bypass path, return a bypass token

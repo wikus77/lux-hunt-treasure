@@ -37,10 +37,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
   
-  // ✅ Check for developer access from localStorage
+  // ✅ CONTROLLO PRIORITARIO: Developer access from localStorage
   const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-  if (hasDeveloperAccess) {
-    console.log("🔑 Developer access granted via localStorage - bypassing auth check");
+  const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
+  
+  if (hasDeveloperAccess || isDeveloperEmail) {
+    console.log("🔑 Developer access granted via localStorage - bypassing all auth checks");
     return children ? <>{children}</> : <Outlet />;
   }
   
@@ -63,6 +65,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 // Export a component that can be used directly in pages to show a verification alert
 export const EmailVerificationGuard: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const { isEmailVerified } = useAuthContext();
+  
+  // ✅ CONTROLLO PRIORITARIO: Developer access
+  const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
+  const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
+  
+  if (hasDeveloperAccess || isDeveloperEmail) {
+    return <>{children}</>;
+  }
   
   if (!isEmailVerified) {
     return <EmailVerificationAlert />;

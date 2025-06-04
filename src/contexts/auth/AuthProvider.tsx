@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +15,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authInitialized, setAuthInitialized] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
+
+  // ✅ CONTROLLO PRIORITARIO: Developer access setup immediato
+  useEffect(() => {
+    const setupDeveloperAccess = async () => {
+      const developerEmail = 'wikus77@hotmail.it';
+      
+      // Controlla se siamo in modalità sviluppatore
+      const isDeveloperMode = window.location.hostname === 'localhost' || 
+                               window.location.hostname === '127.0.0.1' ||
+                               window.location.hostname.includes('lovableproject.com');
+      
+      if (isDeveloperMode) {
+        // Imposta automaticamente l'accesso sviluppatore
+        localStorage.setItem('developer_access', 'granted');
+        localStorage.setItem('developer_user_email', developerEmail);
+        localStorage.setItem('captcha_bypassed', 'true');
+        console.log('🔑 Developer mode detected - auto-granting access');
+      }
+    };
+
+    setupDeveloperAccess();
+  }, []);
 
   // ✅ Auto-login per sviluppatore con localStorage check
   useEffect(() => {
@@ -157,9 +180,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fetch user role when auth state changes
   useEffect(() => {
     const fetchUserRole = async () => {
-      // Verifica accesso sviluppatore da localStorage prima di tutto
+      // ✅ CONTROLLO PRIORITARIO: Developer access da localStorage prima di tutto
       const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-      if (hasDeveloperAccess) {
+      const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
+      
+      if (hasDeveloperAccess || isDeveloperEmail) {
         console.log("🔑 Developer access rilevato da localStorage");
         setUserRole('admin');
         setIsRoleLoading(false);
@@ -285,9 +310,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check if user has a specific role
   const hasRole = (role: string): boolean => {
-    // Special check for developer access
+    // ✅ CONTROLLO PRIORITARIO: Developer access
     const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-    if (hasDeveloperAccess && role === 'admin') {
+    const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
+    
+    if ((hasDeveloperAccess || isDeveloperEmail) && role === 'admin') {
       return true;
     }
 

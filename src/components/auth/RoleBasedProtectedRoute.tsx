@@ -28,6 +28,10 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
   const isAdminEmail = currentUser?.email === 'wikus77@hotmail.it';
   const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname === '/test-admin-ui' || location.pathname === '/auth-debug';
   
+  // ✅ CONTROLLO PRIORITARIO: Developer access
+  const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
+  const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
+  
   useEffect(() => {
     console.log("🛡️ Role-based protected route check:", {
       path: location.pathname,
@@ -40,9 +44,17 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
       email: currentUser?.email,
       allowedRoles,
       bypassCheck,
-      isAdminEmail
+      isAdminEmail,
+      hasDeveloperAccess,
+      isDeveloperEmail
     });
-  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, currentUser, userRole, allowedRoles, isRoleLoading, bypassCheck, isAdminEmail]);
+  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, currentUser, userRole, allowedRoles, isRoleLoading, bypassCheck, isAdminEmail, hasDeveloperAccess, isDeveloperEmail]);
+  
+  // ✅ BYPASS PRIORITARIO per developer access
+  if (hasDeveloperAccess || isDeveloperEmail) {
+    console.log("🔑 Developer access granted - bypassing all role checks");
+    return children ? <>{children}</> : <Outlet />;
+  }
   
   // Special case for admin routes - only allow wikus77@hotmail.it
   if (isAdminRoute && !isAdminEmail && !isLoading) {
