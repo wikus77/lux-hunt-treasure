@@ -235,7 +235,7 @@
   }
 }
 
-/* Fix per overflow orizzontale */
+/* ✅ Fix container overflow su mobile */
 .container, .max-w-4xl, .max-w-6xl, .max-w-7xl {
   width: 100%;
   max-width: 100vw;
@@ -251,17 +251,9 @@
 }
 
 @media (min-width: 1024px) {
-  .max-w-4xl {
-    max-width: 56rem;
-  }
-
-  .max-w-6xl {
-    max-width: 72rem;
-  }
-
-  .max-w-7xl {
-    max-width: 80rem;
-  }
+  .max-w-4xl { max-width: 56rem; }
+  .max-w-6xl { max-width: 72rem; }
+  .max-w-7xl { max-width: 80rem; }
 }
 
 @media (max-width: 640px) {
