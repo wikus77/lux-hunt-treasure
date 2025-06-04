@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
@@ -10,6 +10,18 @@ import AppRoutes from "./routes/AppRoutes";
 import SafeAreaToggle from "./components/debug/SafeAreaToggle";
 import { useCapacitorMagicLinkListener } from "./hooks/useCapacitorMagicLinkListener";
 import { useAuthContext } from "./contexts/auth";
+import { useAuth } from "@/hooks/useAuth";
+
+function RootRedirect() {
+  const { authState } = useAuth();
+  const location = useLocation();
+
+  if (location.pathname === "/" && !authState.session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return null;
+}
 
 // Component to handle initial redirects
 const AuthRedirectHandler: React.FC = () => {
@@ -45,6 +57,7 @@ function AppContent() {
   return (
     <SoundProvider>
       <AuthProvider>
+        <RootRedirect />
         <AuthRedirectHandler />
         <ErrorBoundary fallback={
           <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
