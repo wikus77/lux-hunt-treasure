@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 
 interface SoundContextType {
   isSoundEnabled: boolean;
-  toggleSound: () => void;
   playSound: (soundName: string, volume?: number) => void;
   isEnabled: boolean;
   volume: number;

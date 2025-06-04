@@ -42,9 +42,9 @@ const AppSection = ({
         </div>
 
         <SoundSettings
-          volume={volume}
+          volume={[volume]}
           buzzSound={soundPreference}
-          onVolumeChange={updateVolume}
+          onVolumeChange={(value) => updateVolume(value[0])}
           onSoundChange={updateSound}
         />
 
