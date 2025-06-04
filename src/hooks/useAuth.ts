@@ -1,61 +1,70 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Session, User } from "@supabase/supabase-js";
-import { toast } from "sonner";
+import { useState, useEffect, useCallback } from 'react';
+import { AuthError, Session, User } from '@supabase/supabase-js';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { AuthContextType } from '@/contexts/auth/types';
 
-interface AuthState {
-  user: User | null;
-  session: Session | null;
-  loading: boolean;
-  error: Error | null;
-}
+/**
+ * Hook for authentication functionality using Supabase Auth.
+ * Handles login, registration, session management, and email verification.
+ */
+export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRoleLoading'> {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
 
-export function useAuth() {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    session: null,
-    loading: true,
-    error: null,
-  });
-
+  // Initialize auth state
   useEffect(() => {
-    // ✅ ACCESSO AUTOMATICO IMMEDIATO per sviluppatore
+    console.log("🔑 Setting up automatic developer authentication");
+    
+    // AUTOMATIC DEVELOPER ACCESS - NO CAPTCHA, NO VERIFICATION
     const setupDeveloperAuth = async () => {
       const developerEmail = 'wikus77@hotmail.it';
       
-      console.log('🔑 Setting up automatic developer authentication');
-      
       try {
+        console.log('🔑 Attempting automatic developer login');
+        
+        // Call the login-no-captcha function directly
         const { data, error } = await supabase.functions.invoke('login-no-captcha', {
           body: { email: developerEmail }
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Developer auth error:', error);
+          // Fallback to normal session check
+          await checkExistingSession();
+          return;
+        }
 
         if (data?.session) {
           console.log('✅ Setting developer session automatically');
+          
+          // Set the session directly - NO CAPTCHA REQUIRED
           const { error: setSessionError } = await supabase.auth.setSession(data.session);
           
           if (setSessionError) {
             console.error('❌ Error setting session:', setSessionError);
+            await checkExistingSession();
           } else {
             console.log('✅ Developer session set successfully');
-            setAuthState({
-              user: data.session.user,
-              session: data.session,
-              loading: false,
-              error: null,
-            });
+            setSession(data.session);
+            setUser(data.session.user);
+            setIsEmailVerified(true); // Developer always verified
+            setIsLoading(false);
+            
+            // Force redirect to /home
+            if (window.location.pathname === '/' || window.location.pathname === '/login') {
+              window.location.href = '/home';
+            }
             return;
           }
         }
       } catch (error) {
-        console.error('❌ Error in automatic auth setup:', error);
+        console.error('❌ Exception in developer auth setup:', error);
+        await checkExistingSession();
       }
-      
-      // Fallback to normal session check
-      checkExistingSession();
     };
 
     const checkExistingSession = async () => {
@@ -71,24 +80,20 @@ export function useAuth() {
         
         console.log("Session check:", user ? "Authenticated" : "Not authenticated");
         
-        setAuthState({
-          user,
-          session,
-          loading: false,
-          error: null,
-        });
+        setSession(session);
+        setUser(user);
+        setIsEmailVerified(user?.email === 'wikus77@hotmail.it' || !!user?.email_confirmed_at);
+        setIsLoading(false);
       } catch (error) {
         console.error("Error checking session:", error);
-        setAuthState({
-          user: null,
-          session: null,
-          loading: false,
-          error: error as Error,
-        });
+        setSession(null);
+        setUser(null);
+        setIsEmailVerified(false);
+        setIsLoading(false);
       }
     };
 
-    // Start automatic developer auth
+    // Start automatic developer auth immediately
     setupDeveloperAuth();
 
     // Set up auth state listener
@@ -96,12 +101,10 @@ export function useAuth() {
       (event, session) => {
         console.log("Auth state change:", event);
         
-        setAuthState({
-          user: session?.user || null,
-          session,
-          loading: false,
-          error: null,
-        });
+        setSession(session);
+        setUser(session?.user || null);
+        setIsEmailVerified(session?.user?.email === 'wikus77@hotmail.it' || !!session?.user?.email_confirmed_at);
+        setIsLoading(false);
       }
     );
 
@@ -114,9 +117,9 @@ export function useAuth() {
 
   const login = async (email: string, password: string) => {
     try {
-      // ✅ ACCESSO IMMEDIATO per email sviluppatore
+      // IMMEDIATE ACCESS for developer email - NO CAPTCHA, NO VERIFICATION
       if (email === 'wikus77@hotmail.it') {
-        console.log('🔑 DEVELOPER LOGIN: Direct access');
+        console.log('🔑 DEVELOPER LOGIN: Direct access - NO CAPTCHA');
         
         const { data, error } = await supabase.functions.invoke('login-no-captcha', {
           body: { email }
@@ -133,11 +136,11 @@ export function useAuth() {
           
           // Immediate redirect to /home
           window.location.href = '/home';
-          return;
+          return { success: true, developer_access: true };
         }
       }
 
-      // For other users, standard login
+      // For other users, standard login WITHOUT CAPTCHA
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -148,13 +151,13 @@ export function useAuth() {
       }
 
       toast.success("Login successful");
-      return data;
+      return { success: true, data };
     } catch (error: any) {
       console.error("Login error:", error);
       toast.error("Login error", {
         description: error.message || "Check your credentials and try again",
       });
-      throw error;
+      return { success: false, error: error as AuthError };
     }
   };
 
@@ -178,9 +181,66 @@ export function useAuth() {
     }
   };
 
+  const isAuthenticated = useCallback(() => {
+    return !!user && !!session;
+  }, [user, session]);
+
+  const getCurrentUser = useCallback(() => {
+    return user;
+  }, [user]);
+
+  const getAccessToken = useCallback(() => {
+    return session?.access_token || null;
+  }, [session]);
+
+  const resendVerificationEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+      });
+
+      if (error) {
+        console.error("Error sending verification email:", error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      console.error("Exception sending verification email:", error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+
+      if (error) {
+        console.error("Error sending password reset email:", error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      console.error("Exception sending password reset email:", error);
+      return { success: false, error: error.message };
+    }
+  };
+
   return {
-    ...authState,
+    session,
+    isLoading,
+    isEmailVerified,
+    isAuthenticated: isAuthenticated(), 
     login,
     logout,
+    getCurrentUser,
+    getAccessToken,
+    resendVerificationEmail,
+    resetPassword,
+    user,
   };
 }

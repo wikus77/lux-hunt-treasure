@@ -43,7 +43,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
   
-  // Check for email verification if required (but always allow developer email)
+  // DEVELOPER EMAIL ALWAYS HAS ACCESS - NO VERIFICATION REQUIRED
   const currentUser = getCurrentUser();
   const isDeveloperEmail = currentUser?.email === 'wikus77@hotmail.it';
   
@@ -52,7 +52,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login?verification=pending" replace />;
   }
   
-  // User is authenticated and email is verified, render the protected route
+  // User is authenticated and email is verified (or is developer), render the protected route
   return children ? <>{children}</> : <Outlet />;
 };
 

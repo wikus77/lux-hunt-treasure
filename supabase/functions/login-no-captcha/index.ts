@@ -46,7 +46,7 @@ serve(async (req) => {
       );
     }
 
-    // Create session immediately
+    // Create session immediately - NO CAPTCHA, NO MAGIC LINK
     const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
       user_id: user.user.id,
     });

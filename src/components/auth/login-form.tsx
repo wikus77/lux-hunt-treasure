@@ -33,11 +33,15 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
 
     setIsLoading(true);
     try {
+      // NO CAPTCHA - Direct login processing
       const result = await login(email, password);
       
       if (result?.success || isDeveloperEmail) {
         toast.success('Login successful');
-        navigate('/home');
+        // Redirect handled by login function for developer
+        if (!isDeveloperEmail) {
+          navigate('/home');
+        }
       } else {
         toast.error('Login error', {
           description: result?.error?.message || 'Check your credentials'
@@ -81,7 +85,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
       {isDeveloperEmail && (
         <div className="mt-4 p-3 bg-green-900/20 border border-green-500/30 rounded-md">
           <p className="text-sm text-green-400">
-            🔑 Developer Access: No CAPTCHA required
+            🔑 Developer Access: Immediate login - NO CAPTCHA required
           </p>
         </div>
       )}
