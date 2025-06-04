@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
-import { FormField } from './form-field';
+import FormField from './form-field';
 import TurnstileWidget from '@/components/security/TurnstileWidget';
 import { useTurnstile } from '@/hooks/useTurnstile';
 import { shouldBypassCaptchaForUser } from '@/utils/turnstile';
