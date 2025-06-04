@@ -7,22 +7,22 @@ import MainContent from "./index/MainContent";
 import { useEventHandlers } from "./index/EventHandlers";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
 
+// ✅ BLOCCO FORZATO LANDING PAGE SU iOS / Capacitor / accesso già concesso
+if (typeof window !== "undefined") {
+  const isCapacitor = !!(window as any).Capacitor;
+  const hasAccess = localStorage.getItem("developer_access") === "granted";
+  const url = new URL(window.location.href);
+  const force = url.searchParams.get("force") === "true";
+
+  if (isCapacitor || hasAccess || force) {
+    console.warn("🚫 Landing bloccata – Redirect forzato a /home");
+    localStorage.setItem("developer_access", "granted");
+    window.location.href = "/home";
+  }
+}
+
 const Index = () => {
-  // ✅ Blocco pagina su WebView Capacitor
-  const isCapacitor = typeof window !== "undefined" && !!(window as any).Capacitor;
-  if (isCapacitor) {
-    window.location.href = "/home";
-    return null;
-  }
-
-  // ✅ Redirect se developer access già concesso
-  const hasAccess = typeof window !== "undefined" && localStorage.getItem("developer_access") === "granted";
-  if (hasAccess) {
-    window.location.href = "/home";
-    return null;
-  }
-
-  // ✅ Redirect automatico se sessione attiva o forzatura temporanea per test
+  // ✅ Redirect automatico se sessione attiva
   useEffect(() => {
     const forceRedirectOrGrantAccess = async () => {
       const { data } = await supabase.auth.getSession();
@@ -41,7 +41,6 @@ const Index = () => {
     forceRedirectOrGrantAccess();
   }, []);
 
-  // State management
   const [pageLoaded, setPageLoaded] = useState(false);
   const [renderContent, setRenderContent] = useState(false);
   const [introCompleted, setIntroCompleted] = useState(false);
@@ -50,7 +49,6 @@ const Index = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
 
-  // Check for developer access on mount
   useEffect(() => {
     const checkAccess = () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -129,9 +127,7 @@ const Index = () => {
         subtree: true,
       });
 
-      return () => {
-        observer.disconnect();
-      };
+      return () => observer.disconnect();
     } catch (err) {
       console.error("Errore nel setup MutationObserver:", err);
     }
