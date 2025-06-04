@@ -14,6 +14,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
 
   // Initialize auth state
   useEffect(() => {
@@ -25,6 +26,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         console.log("Auth state changed:", event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
+        setError(null);
         
         // Update email verification status
         if (currentSession?.user) {
@@ -40,8 +42,13 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     );
     
     // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+    supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
       console.log("Initial session check:", initialSession ? "Found session" : "No session");
+      
+      if (error) {
+        setError(error);
+      }
+      
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
       
@@ -84,6 +91,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
 
       if (error) {
         console.error("Login error:", error.message);
+        setError(error);
         return { success: false, error };
       }
 
@@ -92,9 +100,11 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       return { success: true, data };
     } catch (error) {
       console.error("Unexpected login error:", error);
+      const authError = { message: "Si è verificato un errore imprevisto durante l'accesso." } as AuthError;
+      setError(authError);
       return {
         success: false,
-        error: { message: "Si è verificato un errore imprevisto durante l'accesso." } as AuthError
+        error: authError
       };
     }
   };
@@ -109,6 +119,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       toast.success("Logout effettuato");
     } catch (error) {
       console.error("Logout error:", error);
+      setError(error as Error);
       toast.error("Errore durante il logout");
     }
   };
@@ -146,12 +157,14 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
 
       if (error) {
         console.error("Error sending verification email:", error);
+        setError(error);
         return { success: false, error: error.message };
       }
 
       return { success: true };
     } catch (error: any) {
       console.error("Exception sending verification email:", error);
+      setError(error);
       return { success: false, error: error.message };
     }
   };
@@ -167,12 +180,14 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
 
       if (error) {
         console.error("Error sending password reset email:", error);
+        setError(error);
         return { success: false, error: error.message };
       }
 
       return { success: true };
     } catch (error: any) {
       console.error("Exception sending password reset email:", error);
+      setError(error);
       return { success: false, error: error.message };
     }
   };
@@ -180,6 +195,8 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   return {
     session,
     isLoading,
+    loading: isLoading,
+    error,
     isEmailVerified,
     isAuthenticated: isAuthenticated(), 
     login,
