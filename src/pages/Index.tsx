@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 import LoadingManager from "./index/LoadingManager";
 import CountdownManager from "./index/CountdownManager";
@@ -7,7 +8,31 @@ import { useEventHandlers } from "./index/EventHandlers";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
 
 const Index = () => {
-  console.log("Index component rendering - PUBLIC LANDING PAGE");
+  // Controllo sessione e redirect automatico
+  useEffect(() => {
+    const redirectIfAuthenticated = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        window.location.href = "/home";
+        return;
+      }
+    };
+    redirectIfAuthenticated();
+  }, []);
+
+  // Gestione developer_access
+  const hasAccess = localStorage.getItem("developer_access") === "granted";
+  if (hasAccess) {
+    window.location.href = "/home";
+    return null;
+  }
+
+  // Disabilitare Index.tsx su WebView Capacitor
+  const isCapacitor = !!(window as any).Capacitor;
+  if (isCapacitor) {
+    window.location.href = "/home";
+    return null;
+  }
   
   // State management
   const [pageLoaded, setPageLoaded] = useState(false);
@@ -25,7 +50,6 @@ const Index = () => {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('resetDevAccess') === 'true') {
         localStorage.removeItem('developer_access');
-        console.log('Developer access reset via URL parameter');
       }
       
       // Enhanced mobile detection including Capacitor
@@ -33,8 +57,6 @@ const Index = () => {
       const userAgent = navigator.userAgent;
       const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
-      
-      console.log('Index access check:', { isMobile, hasStoredAccess, isCapacitorApp });
       
       if (isMobile && !hasStoredAccess) {
         // Mobile users without access need to login
@@ -66,7 +88,6 @@ const Index = () => {
   useEffect(() => {
     if (error && retryCount < 2) {
       const recoveryTimeout = setTimeout(() => {
-        console.log(`⚠️ Tentativo di recovery automatico #${retryCount + 1}`);
         setError(null);
         setRetryCount(prev => prev + 1);
       }, 2000);
@@ -81,10 +102,8 @@ const Index = () => {
       if (typeof window !== 'undefined') {
         const skipIntro = localStorage.getItem("skipIntro");
         if (skipIntro === "true") {
-          console.log("Intro already shown, skipping...");
           setIntroCompleted(true);
         } else {
-          console.log("No skipIntro flag found, will show intro");
           setIntroCompleted(false);
         }
       }
@@ -108,7 +127,6 @@ const Index = () => {
             text.includes("auto di lusso")
           ) {
             section.style.display = "none";
-            console.log("✅ Sezione 'Cosa puoi vincere' rimossa con MutationObserver.");
           }
         });
       });
@@ -120,7 +138,6 @@ const Index = () => {
 
       return () => {
         observer.disconnect();
-        console.log("🛑 MutationObserver disattivato.");
       };
     } catch (err) {
       console.error("Errore nel setup MutationObserver:", err);
@@ -131,7 +148,6 @@ const Index = () => {
   useEffect(() => {
     const healthCheckTimeout = setTimeout(() => {
       if (!renderContent && pageLoaded) {
-        console.warn("❌ Health check fallito: contenuto non renderizzato dopo 8 secondi");
         setError(new Error("Timeout di rendering del contenuto"));
       }
     }, 8000);
@@ -141,13 +157,11 @@ const Index = () => {
   
   // Handlers for child components
   const handleLoaded = useCallback((isLoaded: boolean, canRender: boolean) => {
-    console.log("handleLoaded chiamato con:", { isLoaded, canRender });
     setPageLoaded(isLoaded);
     setRenderContent(canRender);
   }, []);
 
   const handleIntroComplete = useCallback(() => {
-    console.log("Intro completed callback, setting introCompleted to true");
     setIntroCompleted(true);
     try {
       if (typeof window !== 'undefined') {
@@ -163,7 +177,6 @@ const Index = () => {
   }, []);
 
   const handleRetry = useCallback(() => {
-    console.log("Retry richiesto dall'utente");
     window.location.reload();
   }, []);
 
@@ -177,8 +190,6 @@ const Index = () => {
   if (showDeveloperAccess) {
     return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
   }
-
-  console.log("Index render state:", { introCompleted, pageLoaded, renderContent });
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden full-viewport smooth-scroll">
