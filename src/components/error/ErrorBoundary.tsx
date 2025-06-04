@@ -1,53 +1,92 @@
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React from 'react';
 
-interface Props {
-  children?: ReactNode;
-  fallback?: ReactNode;
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean;
-  error?: Error;
+  errorMessage: string;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { 
+      hasError: false,
+      errorMessage: ''
+    };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // Aggiorna lo stato in modo che il prossimo render mostri l'UI di fallback
+    return { 
+      hasError: true,
+      errorMessage: error.message || 'Si è verificato un errore inaspettato'
+    };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Puoi anche salvare l'errore in un servizio di reporting
+    console.error("React error boundary caught an error:", error, errorInfo);
+  }
+
+  handleRefresh = () => {
+    // Ricarica la pagina
+    window.location.reload();
   };
 
-  public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
-  }
-
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
-  }
-
-  public render() {
+  render() {
     if (this.state.hasError) {
-      return this.props.fallback || (
-        <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
-          <div className="glass-card p-6 max-w-md mx-auto text-center">
-            <h2 className="text-xl font-bold mb-4">Oops! Qualcosa è andato storto</h2>
-            <p className="mb-6">Si è verificato un errore imprevisto. Riprova o ricarica la pagina.</p>
-            <button
-              onClick={() => this.setState({ hasError: false })}
-              className="px-4 py-2 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink rounded-md mr-2"
-            >
-              Riprova
-            </button>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md"
-            >
-              Ricarica
-            </button>
-          </div>
+      // Se è stato fornito un fallback personalizzato, usalo
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+      
+      // Altrimenti usa l'UI di fallback predefinita
+      return (
+        <div style={{ 
+          padding: '20px', 
+          color: 'white', 
+          backgroundColor: 'black', 
+          height: '100vh', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center' 
+        }}>
+          <h1>Oops! Qualcosa è andato storto</h1>
+          <p>L'applicazione ha riscontrato un problema. Prova a ricaricare la pagina.</p>
+          <p style={{ 
+            maxWidth: '600px', 
+            backgroundColor: 'rgba(255,255,255,0.1)', 
+            padding: '10px', 
+            borderRadius: '4px',
+            marginTop: '10px'
+          }}>
+            Dettaglio: {this.state.errorMessage}
+          </p>
+          <button 
+            onClick={this.handleRefresh}
+            style={{ 
+              marginTop: '20px', 
+              padding: '10px 20px', 
+              background: '#00E5FF', 
+              color: 'black', 
+              border: 'none', 
+              borderRadius: '4px', 
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Ricarica Pagina
+          </button>
         </div>
       );
     }
 
-    return this.props.children;
+    return this.props.children; 
   }
 }

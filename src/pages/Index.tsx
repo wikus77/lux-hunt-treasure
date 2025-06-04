@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 import LoadingManager from "./index/LoadingManager";
 import CountdownManager from "./index/CountdownManager";
@@ -8,39 +7,9 @@ import { useEventHandlers } from "./index/EventHandlers";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
 
 const Index = () => {
-  const [shouldRender, setShouldRender] = useState(false);
-
-  // ✅ Unico useEffect che controlla tutto e forza redirect in modo fluido
-  useEffect(() => {
-    const handleRedirect = async () => {
-      const isCapacitor = !!(window as any).Capacitor;
-      const hasAccess = localStorage.getItem("developer_access") === "granted";
-      const url = new URL(window.location.href);
-      const force = url.searchParams.get("force") === "true";
-
-      if (isCapacitor || hasAccess || force) {
-        localStorage.setItem("developer_access", "granted");
-        window.location.href = "/home";
-        return;
-      }
-
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        console.log("✅ Sessione trovata, redirect a /home");
-        window.location.href = "/home";
-        return;
-      }
-
-      console.warn("❌ Nessuna sessione trovata – landing pubblica attiva");
-      setShouldRender(true);
-    };
-
-    handleRedirect();
-  }, []);
-
-  // 🔒 Blocca tutto finché non sappiamo cosa fare
-  if (!shouldRender) return null;
-
+  console.log("Index component rendering - PUBLIC LANDING PAGE");
+  
+  // State management
   const [pageLoaded, setPageLoaded] = useState(false);
   const [renderContent, setRenderContent] = useState(false);
   const [introCompleted, setIntroCompleted] = useState(false);
@@ -48,29 +17,41 @@ const Index = () => {
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
-
+  
+  // Check for developer access on mount
   useEffect(() => {
     const checkAccess = () => {
+      // Check for URL parameter to reset access
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get("resetDevAccess") === "true") {
-        localStorage.removeItem("developer_access");
+      if (urlParams.get('resetDevAccess') === 'true') {
+        localStorage.removeItem('developer_access');
+        console.log('Developer access reset via URL parameter');
       }
-
+      
+      // Enhanced mobile detection including Capacitor
       const isCapacitorApp = !!(window as any).Capacitor;
       const userAgent = navigator.userAgent;
       const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-      const hasStoredAccess = localStorage.getItem("developer_access") === "granted";
-
+      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      
+      console.log('Index access check:', { isMobile, hasStoredAccess, isCapacitorApp });
+      
       if (isMobile && !hasStoredAccess) {
+        // Mobile users without access need to login
         setShowDeveloperAccess(true);
+      } else if (!isMobile) {
+        // Web users always see landing page
+        setShowDeveloperAccess(false);
       } else {
+        // Mobile users with access see landing page
         setShowDeveloperAccess(false);
       }
     };
-
+    
     checkAccess();
   }, []);
-
+  
+  // Get event handlers
   const {
     showAgeVerification,
     showInviteFriend,
@@ -78,26 +59,34 @@ const Index = () => {
     handleAgeVerified,
     openInviteFriend,
     closeAgeVerification,
-    closeInviteFriend,
+    closeInviteFriend
   } = useEventHandlers(countdownCompleted);
-
+  
+  // Recovery automatico in caso di problemi
   useEffect(() => {
     if (error && retryCount < 2) {
       const recoveryTimeout = setTimeout(() => {
+        console.log(`⚠️ Tentativo di recovery automatico #${retryCount + 1}`);
         setError(null);
-        setRetryCount((prev) => prev + 1);
+        setRetryCount(prev => prev + 1);
       }, 2000);
+      
       return () => clearTimeout(recoveryTimeout);
     }
   }, [error, retryCount]);
-
+  
+  // Verifica se l'intro è già stata mostrata in precedenza
   useEffect(() => {
     try {
-      const skipIntro = localStorage.getItem("skipIntro");
-      if (skipIntro === "true") {
-        setIntroCompleted(true);
-      } else {
-        setIntroCompleted(false);
+      if (typeof window !== 'undefined') {
+        const skipIntro = localStorage.getItem("skipIntro");
+        if (skipIntro === "true") {
+          console.log("Intro already shown, skipping...");
+          setIntroCompleted(true);
+        } else {
+          console.log("No skipIntro flag found, will show intro");
+          setIntroCompleted(false);
+        }
       }
     } catch (error) {
       console.error("localStorage error:", error);
@@ -105,6 +94,7 @@ const Index = () => {
     }
   }, []);
 
+  // Protezione contro errori di rendering
   useEffect(() => {
     try {
       const observer = new MutationObserver(() => {
@@ -118,6 +108,7 @@ const Index = () => {
             text.includes("auto di lusso")
           ) {
             section.style.display = "none";
+            console.log("✅ Sezione 'Cosa puoi vincere' rimossa con MutationObserver.");
           }
         });
       });
@@ -127,30 +118,41 @@ const Index = () => {
         subtree: true,
       });
 
-      return () => observer.disconnect();
+      return () => {
+        observer.disconnect();
+        console.log("🛑 MutationObserver disattivato.");
+      };
     } catch (err) {
       console.error("Errore nel setup MutationObserver:", err);
     }
   }, []);
-
+  
+  // Controllo periodico della salute del componente
   useEffect(() => {
     const healthCheckTimeout = setTimeout(() => {
       if (!renderContent && pageLoaded) {
+        console.warn("❌ Health check fallito: contenuto non renderizzato dopo 8 secondi");
         setError(new Error("Timeout di rendering del contenuto"));
       }
     }, 8000);
+    
     return () => clearTimeout(healthCheckTimeout);
   }, [renderContent, pageLoaded]);
-
+  
+  // Handlers for child components
   const handleLoaded = useCallback((isLoaded: boolean, canRender: boolean) => {
+    console.log("handleLoaded chiamato con:", { isLoaded, canRender });
     setPageLoaded(isLoaded);
     setRenderContent(canRender);
   }, []);
 
   const handleIntroComplete = useCallback(() => {
+    console.log("Intro completed callback, setting introCompleted to true");
     setIntroCompleted(true);
     try {
-      localStorage.setItem("skipIntro", "true");
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("skipIntro", "true");
+      }
     } catch (error) {
       console.error("Error setting localStorage:", error);
     }
@@ -161,24 +163,32 @@ const Index = () => {
   }, []);
 
   const handleRetry = useCallback(() => {
+    console.log("Retry richiesto dall'utente");
     window.location.reload();
   }, []);
 
   const handleAccessGranted = useCallback(() => {
     setShowDeveloperAccess(false);
-    window.location.href = "/home";
+    // Redirect to home after access granted
+    window.location.href = '/home';
   }, []);
 
+  // Show developer access screen for mobile users without access
   if (showDeveloperAccess) {
     return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
   }
 
+  console.log("Index render state:", { introCompleted, pageLoaded, renderContent });
+
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden full-viewport smooth-scroll">
       <CookiebotInit />
+      
       <LoadingManager onLoaded={handleLoaded} />
+      
       <CountdownManager onCountdownComplete={handleCountdownComplete} />
-      <MainContent
+      
+      <MainContent 
         pageLoaded={pageLoaded}
         introCompleted={introCompleted}
         renderContent={renderContent}

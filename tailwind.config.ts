@@ -1,5 +1,5 @@
-import type { Config } from 'tailwindcss'
-import animate from 'tailwindcss-animate'
+import type { Config } from 'tailwindcss';
+import animate from 'tailwindcss-animate';
 
 const config: Config = {
   darkMode: ['class'],
@@ -56,12 +56,12 @@ const config: Config = {
         magenta: {
           400: '#ff00ff',
         },
-        m1ssion: {
-          blue: '#00D1FF',
-          purple: '#7B2EFF',
-          pink: '#F059FF',
-          'deep-blue': '#131524',
-        },
+        'm1ssion': {
+          'blue': '#00D1FF',
+          'purple': '#7B2EFF',
+          'pink': '#F059FF',
+          'deep-blue': '#131524'
+        }
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -78,54 +78,63 @@ const config: Config = {
           to: { height: '0' },
         },
         'neon-pulse': {
-          '0%, 100%': {
-            textShadow: '0 0 5px rgba(0, 229, 255, 0.7), 0 0 10px rgba(0, 229, 255, 0.5)',
+          '0%, 100%': { 
+            textShadow: '0 0 5px rgba(0, 229, 255, 0.7), 0 0 10px rgba(0, 229, 255, 0.5)'
           },
           '50%': {
-            textShadow:
-              '0 0 15px rgba(0, 229, 255, 0.8), 0 0 25px rgba(0, 229, 255, 0.6), 0 0 35px rgba(0, 229, 255, 0.4)',
-          },
+            textShadow: '0 0 15px rgba(0, 229, 255, 0.8), 0 0 25px rgba(0, 229, 255, 0.6), 0 0 35px rgba(0, 229, 255, 0.4)'
+          }
         },
         'float-particle': {
           '0%': { transform: 'translate(0, 0)' },
           '50%': { transform: 'translate(20px, -10px)' },
-          '100%': { transform: 'translate(0, 0)' },
+          '100%': { transform: 'translate(0, 0)' }
         },
-        fadeInUp: {
-          from: { opacity: '0', transform: 'translateY(20px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
+        'fadeInUp': {
+          from: {
+            opacity: '0',
+            transform: 'translateY(20px)'
+          },
+          to: {
+            opacity: '1',
+            transform: 'translateY(0)'
+          }
         },
-        pulse: {
+        'pulse': {
           '0%, 100%': { opacity: '0.3' },
-          '50%': { opacity: '0.8' },
+          '50%': { opacity: '0.8' }
         },
-        lineMove: {
+        'lineMove': {
           '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(100%)' }
         },
-        ripple: {
+        'ripple': {
           '0%': { transform: 'scale(0)', opacity: '0.5' },
-          '100%': { transform: 'scale(4)', opacity: '0' },
+          '100%': { transform: 'scale(4)', opacity: '0' }
         },
-        float: {
+        'float': {
           '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-10px)' },
+          '50%': { transform: 'translateY(-10px)' }
         },
         'text-glow': {
           '0%, 100%': {
-            textShadow: '0 0 5px rgba(0, 229, 255, 0.7), 0 0 10px rgba(0, 229, 255, 0.5)',
+            textShadow: '0 0 5px rgba(0, 229, 255, 0.7), 0 0 10px rgba(0, 229, 255, 0.5)'
           },
           '50%': {
-            textShadow: '0 0 15px rgba(0, 229, 255, 0.9), 0 0 25px rgba(0, 229, 255, 0.7)',
-          },
+            textShadow: '0 0 15px rgba(0, 229, 255, 0.9), 0 0 25px rgba(0, 229, 255, 0.7)'
+          }
         },
         'reveal-text': {
-          '0%': { clipPath: 'polygon(0 0, 0 0, 0 100%, 0 100%)' },
-          '100%': { clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' },
+          '0%': {
+            clipPath: 'polygon(0 0, 0 0, 0 100%, 0 100%)'
+          },
+          '100%': {
+            clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)'
+          }
         },
         'reveal-block': {
           '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(101%)' },
+          '100%': { transform: 'translateX(101%)' }
         },
         'magnetic-effect': {
           '0%': { transform: 'translateX(0) translateY(0)' },
@@ -133,29 +142,35 @@ const config: Config = {
           '40%': { transform: 'translateX(-2px) translateY(2px)' },
           '60%': { transform: 'translateX(1px) translateY(1px)' },
           '80%': { transform: 'translateX(-1px) translateY(-1px)' },
-          '100%': { transform: 'translateX(0) translateY(0)' },
+          '100%': { transform: 'translateX(0) translateY(0)' }
         },
         'rotate-3d': {
           '0%': { transform: 'perspective(1000px) rotateX(0) rotateY(0)' },
           '25%': { transform: 'perspective(1000px) rotateX(2deg) rotateY(2deg)' },
           '50%': { transform: 'perspective(1000px) rotateX(0) rotateY(4deg)' },
           '75%': { transform: 'perspective(1000px) rotateX(-2deg) rotateY(2deg)' },
-          '100%': { transform: 'perspective(1000px) rotateX(0) rotateY(0)' },
+          '100%': { transform: 'perspective(1000px) rotateX(0) rotateY(0)' }
         },
-        marquee: {
+        'marquee': {
           '0%': { transform: 'translateX(0)' },
-          '100%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(-100%)' }
         },
         'wave-text-effect': {
           '0%': { transform: 'translateY(0)' },
           '25%': { transform: 'translateY(-8px)' },
           '50%': { transform: 'translateY(0)' },
           '75%': { transform: 'translateY(8px)' },
-          '100%': { transform: 'translateY(0)' },
+          '100%': { transform: 'translateY(0)' }
         },
-        glow: {
-          from: { opacity: '0', textShadow: 'none' },
-          to: { opacity: '1', textShadow: '0 0 6px rgba(0, 255, 255, 0.6)' },
+        'glow': {
+          from: {
+            opacity: '0',
+            textShadow: 'none',
+          },
+          to: {
+            opacity: '1',
+            textShadow: '0 0 6px rgba(0, 255, 255, 0.6)',
+          },
         },
       },
       animation: {
@@ -166,7 +181,7 @@ const config: Config = {
         'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
         'pulse-animation': 'pulse 3s infinite ease-in-out',
         'line-move': 'lineMove 2s infinite linear',
-        ripple: 'ripple 0.6s ease-in-out',
+        'ripple': 'ripple 0.6s ease-in-out',
         'float-animation': 'float 4s infinite ease-in-out',
         'text-glow': 'text-glow 3s infinite ease-in-out',
         'reveal-text': 'reveal-text 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards',
@@ -175,19 +190,18 @@ const config: Config = {
         'rotate-3d-animation': 'rotate-3d 12s ease-in-out infinite',
         'marquee-animation': 'marquee 20s linear infinite',
         'wave-text': 'wave-text-effect 2.5s ease-in-out infinite',
-        glow: 'glow 0.6s ease-in-out 2s forwards',
+        'glow': 'glow 0.6s ease-in-out 2s forwards',
       },
       fontFamily: {
-        inter: ['Inter', 'sans-serif'],
-        orbitron: ['Orbitron', 'sans-serif'],
+        'inter': ['Inter', 'sans-serif'],
+        'orbitron': ['Orbitron', 'sans-serif'],
       },
       backgroundImage: {
-        'gradient-landing':
-          'radial-gradient(circle at 50% 10%, rgba(19, 21, 36, 0.5) 0%, rgba(0, 0, 0, 0.8) 80%)',
+        'gradient-landing': 'radial-gradient(circle at 50% 10%, rgba(19, 21, 36, 0.5) 0%, rgba(0, 0, 0, 0.8) 80%)',
       },
     },
   },
   plugins: [animate],
-}
+};
 
-export default config
+export default config;

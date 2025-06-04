@@ -6,9 +6,7 @@ const config: CapacitorConfig = {
   appName: 'M1SSION',
   webDir: 'dist',
   server: {
-    androidScheme: 'https',
-    // Allow capacitor://localhost for iOS WebView
-    cleartext: true
+    androidScheme: 'https'
   },
   plugins: {
     DynamicIsland: {
@@ -16,9 +14,7 @@ const config: CapacitorConfig = {
     }
   },
   ios: {
-    scheme: 'M1SSION',
-    // Ensure proper loading of the React app
-    contentInset: 'automatic'
+    scheme: 'M1SSION'
   }
 };
 

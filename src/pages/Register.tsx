@@ -1,122 +1,84 @@
 
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import BackgroundParticles from "@/components/ui/background-particles";
+import RegistrationForm from "@/components/auth/registration-form";
+import RegisterHeader from "@/components/auth/register-header";
+import { Button } from "@/components/ui/button";
+import { useQueryParams } from "@/hooks/useQueryParams";
 
 const Register = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { preference } = useQueryParams<{ preference?: 'uomo' | 'donna' }>();
+  const [missionPreference, setMissionPreference] = useState<'uomo' | 'donna' | null>(null);
   const navigate = useNavigate();
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: name,
-          },
-          emailRedirectTo: `${window.location.origin}/home`,
-        },
-      });
-
-      if (error) {
-        toast.error('Errore di registrazione', { description: error.message });
-        return;
-      }
-
-      if (data.user) {
-        toast.success('Registrazione completata! Controlla la tua email per confermare l\'account.');
-        navigate('/login');
-      }
-    } catch (error) {
-      toast.error('Errore imprevisto durante la registrazione');
-    } finally {
-      setIsLoading(false);
+  
+  useEffect(() => {
+    // If preference is passed via query params, use it
+    if (preference === 'uomo' || preference === 'donna') {
+      setMissionPreference(preference);
+    } else {
+      // If no preference is set, redirect to mission selection
+      navigate("/select-mission");
     }
-  };
+  }, [preference, navigate]);
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-m1ssion-blue mb-2">M1SSION™</h1>
-          <p className="text-white/70">Crea il tuo account</p>
-        </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black px-4 py-12 relative overflow-hidden">
+      {/* Background particles */}
+      <BackgroundParticles count={15} />
 
-        <form onSubmit={handleRegister} className="space-y-6">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-2">
-              Nome
-            </label>
-            <Input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Inserisci il tuo nome"
-              required
-              className="bg-black/50 border-white/10"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-2">
-              Email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Inserisci la tua email"
-              required
-              className="bg-black/50 border-white/10"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-2">
-              Password
-            </label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Crea una password sicura"
-              required
-              className="bg-black/50 border-white/10"
-            />
-          </div>
-
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
+      <motion.div 
+        className="w-full max-w-md z-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* Header with logo */}
+        <RegisterHeader />
+        
+        {/* Mission preference indicator */}
+        {missionPreference && (
+          <motion.div 
+            className="mb-6 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
           >
-            {isLoading ? 'Registrazione in corso...' : 'Registrati'}
-          </Button>
-        </form>
+            <p className="text-sm text-white/70">
+              Hai scelto le missioni 
+              <span className="font-bold text-[#00D1FF] mx-1">
+                {missionPreference === "uomo" ? "UOMO" : "DONNA"}
+              </span>
+            </p>
+            <Button 
+              variant="link" 
+              className="text-xs text-white/50 hover:text-white/70 p-0 mt-1"
+              onClick={() => navigate('/select-mission')}
+            >
+              Cambia la tua preferenza
+            </Button>
+          </motion.div>
+        )}
 
-        <div className="mt-6 text-center">
-          <p className="text-white/70">
-            Hai già un account?{' '}
-            <Link to="/login" className="text-m1ssion-blue hover:underline">
+        {/* Registration form */}
+        <RegistrationForm missionPreference={missionPreference} />
+
+        {/* Terms and conditions & Login link */}
+        <div className="mt-6 text-center space-y-4">
+          <p className="text-sm text-white/50">
+            Registrandoti accetti i nostri Termini e Condizioni e la nostra Informativa sulla Privacy.
+          </p>
+          
+          <p className="text-sm text-white/70">
+            Hai già un account?{" "}
+            <Link to="/login" className="text-cyan-400 hover:text-cyan-300 transition-colors">
               Accedi
             </Link>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
