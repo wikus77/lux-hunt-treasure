@@ -1,108 +1,56 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import ProfileLayout from "@/components/layout/ProfileLayout";
-import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
-import ProfileHeader from "@/components/profile/ProfileHeader";
-import ProfileInfo from "@/components/profile/ProfileInfo";
-import ProfileTabs from "@/components/profile/ProfileTabs";
-import ReferralCodeSection from "@/components/profile/ReferralCodeSection";
-import { useProfileData } from "@/hooks/useProfileData";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useNotificationManager } from "@/hooks/useNotificationManager";
-import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
-import BottomNavigation from "@/components/layout/BottomNavigation";
+import React from 'react';
+import { useAuthContext } from '@/contexts/auth';
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
+  const { user } = useAuthContext();
   const navigate = useNavigate();
-  const { profileData, actions } = useProfileData();
-  const isMobile = useIsMobile();
-  const { notificationsDrawerOpen, closeNotificationsDrawer } = useNotificationManager();
-  
-  // Initialize real-time notifications (this sets up the listener)
-  useRealTimeNotifications();
-  
-  const navigateToPersonalInfo = () => {
-    navigate('/personal-info');
-  };
 
-  const navigateToPrivacySecurity = () => {
-    navigate('/privacy-security');
-  };
-
-  const navigateToPaymentMethods = () => {
-    navigate('/payment-methods');
-  };
-
-  const navigateToSubscriptions = () => {
-    navigate('/subscriptions');
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast.error('Errore durante il logout');
+        return;
+      }
+      toast.success('Logout effettuato con successo');
+      navigate('/');
+    } catch (error) {
+      toast.error('Errore imprevisto durante il logout');
+    }
   };
 
   return (
-    <div className="min-h-screen bg-black">
-      <ProfileLayout>
-        <div className="glass-card mx-2 sm:mx-4 mt-2 sm:mt-4 mb-20">
-          {/* Header with Agent Code and Edit Button */}
-          <ProfileHeader 
-            agentCode={profileData.agentCode}
-            agentTitle={profileData.agentTitle}
-            isEditing={profileData.isEditing}
-            onEditToggle={() => actions.setIsEditing(true)}
-            onSave={actions.handleSaveProfile}
-          />
+    <div className="min-h-screen bg-black text-white safe-padding-x pt-16">
+      <div className="max-w-md mx-auto">
+        <h1 className="text-3xl font-bold mb-8 text-center">Profilo</h1>
+        
+        <div className="glass-card p-6 space-y-4">
+          <div>
+            <label className="text-sm text-white/70">Email</label>
+            <p className="text-white">{user?.email}</p>
+          </div>
           
-          {/* Profile Information */}
-          <div className="p-3 sm:p-6">
-            <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
-              {/* Left Column - Avatar and Basic Info */}
-              <ProfileInfo 
-                profileImage={profileData.profileImage}
-                name={profileData.name}
-                bio={profileData.bio}
-                agentCode={profileData.agentCode}
-                agentTitle={profileData.agentTitle}
-                investigativeStyle={profileData.investigativeStyle}
-                stats={{
-                  missionsCompleted: profileData.stats.missionsCompleted,
-                  cluesFound: profileData.stats.cluesFound
-                }}
-                credits={profileData.credits}
-                isEditing={profileData.isEditing}
-                personalInfo={profileData.personalInfo}
-                setProfileImage={actions.setProfileImage}
-                setName={actions.setName}
-                setBio={actions.setBio}
-                setAgentCode={actions.setAgentCode}
-                setAgentTitle={actions.setAgentTitle}
-              />
-              
-              {/* Right Column - Tabs for different sections */}
-              <div className="flex-1 mt-4 md:mt-0">
-                <ProfileTabs 
-                  stats={profileData.stats}
-                  history={profileData.history}
-                  badges={profileData.badges}
-                  subscription={profileData.subscription}
-                  personalNotes={profileData.personalNotes}
-                  isEditing={profileData.isEditing}
-                  setPersonalNotes={actions.setPersonalNotes}
-                  togglePinBadge={actions.togglePinBadge}
-                  navigateToPersonalInfo={() => navigate('/personal-info')}
-                  navigateToPrivacySecurity={() => navigate('/privacy-security')}
-                  navigateToPaymentMethods={() => navigate('/payment-methods')}
-                  navigateToSubscriptions={() => navigate('/subscriptions')}
-                />
-              </div>
-            </div>
+          <div>
+            <label className="text-sm text-white/70">ID Utente</label>
+            <p className="text-white text-sm font-mono">{user?.id}</p>
+          </div>
+          
+          <div className="pt-4">
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="w-full border-red-500 text-red-500 hover:bg-red-500/20"
+            >
+              Logout
+            </Button>
           </div>
         </div>
-        
-        <NotificationsDrawer 
-          open={notificationsDrawerOpen}
-          onOpenChange={closeNotificationsDrawer}
-        />
-      </ProfileLayout>
-      <BottomNavigation />
+      </div>
     </div>
   );
 };

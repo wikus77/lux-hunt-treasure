@@ -1,45 +1,52 @@
 
-import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
-import SafeAreaVisualizer from './SafeAreaVisualizer';
+import React, { useState, useEffect } from 'react';
 
 interface SafeAreaToggleProps {
   children: React.ReactNode;
 }
 
 const SafeAreaToggle: React.FC<SafeAreaToggleProps> = ({ children }) => {
-  const [showVisualizer, setShowVisualizer] = useState(false);
+  const [showSafeArea, setShowSafeArea] = useState(false);
+
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.shiftKey && event.key === 'S') {
+        setShowSafeArea(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
 
   return (
-    <>
-      {/* Toggle Button - only show on development/internal preview */}
-      {process.env.NODE_ENV === 'development' && (
-        <button
-          onClick={() => setShowVisualizer(!showVisualizer)}
-          className="fixed bottom-4 right-4 z-[140] p-4 rounded-full bg-cyan-500 hover:bg-cyan-600 border-2 border-cyan-300 shadow-lg transition-all duration-300"
-          title="Toggle Safe Area Preview"
-          style={{ 
-            background: 'linear-gradient(45deg, #00D4FF, #0099CC)',
-            boxShadow: '0 0 20px rgba(0, 212, 255, 0.5)'
-          }}
-        >
-          {showVisualizer ? (
-            <EyeOff className="w-6 h-6 text-white" />
-          ) : (
-            <Eye className="w-6 h-6 text-white" />
-          )}
-        </button>
+    <div className="relative w-full h-full">
+      {children}
+      {showSafeArea && (
+        <div className="fixed inset-0 pointer-events-none z-[9999]">
+          {/* Top safe area */}
+          <div 
+            className="absolute top-0 left-0 right-0 bg-red-500/20 border-b-2 border-red-500"
+            style={{ height: 'env(safe-area-inset-top, 44px)' }}
+          />
+          {/* Bottom safe area */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 bg-red-500/20 border-t-2 border-red-500"
+            style={{ height: 'env(safe-area-inset-bottom, 34px)' }}
+          />
+          {/* Left safe area */}
+          <div 
+            className="absolute top-0 bottom-0 left-0 bg-red-500/20 border-r-2 border-red-500"
+            style={{ width: 'env(safe-area-inset-left, 0px)' }}
+          />
+          {/* Right safe area */}
+          <div 
+            className="absolute top-0 bottom-0 right-0 bg-red-500/20 border-l-2 border-red-500"
+            style={{ width: 'env(safe-area-inset-right, 0px)' }}
+          />
+        </div>
       )}
-
-      {/* Content */}
-      {showVisualizer ? (
-        <SafeAreaVisualizer onClose={() => setShowVisualizer(false)}>
-          {children}
-        </SafeAreaVisualizer>
-      ) : (
-        children
-      )}
-    </>
+    </div>
   );
 };
 

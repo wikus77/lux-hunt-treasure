@@ -1,21 +1,36 @@
 
-import React from "react";
+import React from 'react';
+import BottomNavigation from './BottomNavigation';
+import AgentBadge from '../AgentBadge';
+import { useLocation } from 'react-router-dom';
 
 interface GlobalLayoutProps {
   children: React.ReactNode;
 }
 
-/**
- * GlobalLayout wraps all pages and provides consistent UI elements
- * that should appear on every page
- */
 const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
+  const location = useLocation();
+  
+  // Define routes where bottom navigation should be hidden
+  const hideBottomNavRoutes = ['/', '/login', '/register'];
+  const showBottomNav = !hideBottomNavRoutes.includes(location.pathname);
+  
+  // Define routes where agent badge should be hidden
+  const hideAgentBadgeRoutes = ['/', '/login', '/register'];
+  const showAgentBadge = !hideAgentBadgeRoutes.includes(location.pathname);
+
   return (
-    <div className="relative min-h-screen">      
-      {/* Page content */}
-      <div className="relative z-10">
+    <div className="min-h-screen bg-black text-white relative">
+      {/* Agent Badge */}
+      {showAgentBadge && <AgentBadge />}
+      
+      {/* Main Content */}
+      <main className={`${showBottomNav ? 'pb-20' : ''}`}>
         {children}
-      </div>
+      </main>
+      
+      {/* Bottom Navigation */}
+      {showBottomNav && <BottomNavigation />}
     </div>
   );
 };
