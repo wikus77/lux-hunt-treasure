@@ -15,7 +15,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
 
-  // ✅ Auto-login per sviluppatore (CAPTCHA/TURNSTILE COMPLETAMENTE DISATTIVATO)
+  // ✅ Auto-login per sviluppatore (SESSIONE DIRETTA - NO MAGIC LINK)
   useEffect(() => {
     const attemptDeveloperAutoLogin = async () => {
       const developerEmail = 'wikus77@hotmail.it';
@@ -37,50 +37,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Tenta auto-login sviluppatore (ZERO CAPTCHA/TURNSTILE - FORZA EDGE FUNCTION)
+      // Tenta auto-login sviluppatore (SESSIONE DIRETTA - NO MAGIC LINK)
       try {
-        console.log('🚀 Tentativo auto-login sviluppatore - CAPTCHA/TURNSTILE COMPLETAMENTE DISATTIVATO...');
+        console.log('🚀 Tentativo auto-login sviluppatore - SESSIONE DIRETTA...');
         
-        // Chiamata diretta SOLO alla funzione edge per sviluppatore
+        // Chiamata diretta alla funzione edge per ottenere sessione diretta
         const response = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
           },
-          body: JSON.stringify({ 
-            email: developerEmail, 
-            password: "dev_bypass" // Password ignorata dalla edge function
-          }),
+          body: JSON.stringify({ email: developerEmail }),
         });
 
         if (response.ok) {
           const data = await response.json();
-          if (data.action_link) {
-            // ✅ FIX: Usa il magic link per autenticare l'utente
-            console.log("✅ Magic link ricevuto per auto-login sviluppatore");
+          if (data.session) {
+            console.log("🧠 Sessione diretta ricevuta per auto-login sviluppatore");
+            console.log("🧠 Sessione settata manualmente:", data.session);
             
-            // Estrai i parametri dal magic link
-            const url = new URL(data.action_link);
-            const accessToken = url.searchParams.get('access_token');
-            const refreshToken = url.searchParams.get('refresh_token');
+            // Imposta la sessione direttamente
+            const { error } = await supabase.auth.setSession({
+              access_token: data.session.access_token,
+              refresh_token: data.session.refresh_token,
+            });
             
-            if (accessToken && refreshToken) {
-              // Imposta la sessione sviluppatore
-              const { error } = await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken,
-              });
-              
-              if (!error) {
-                console.log('✅ Auto-login sviluppatore riuscito - CAPTCHA/TURNSTILE COMPLETAMENTE BYPASSATO');
-                localStorage.setItem('developer_access', 'granted');
-                localStorage.setItem('developer_user_email', developerEmail);
-                localStorage.setItem('captcha_bypassed', 'true');
-                // Redirect automatico a /home
-                if (window.location.pathname === '/') {
-                  window.location.href = '/home';
-                }
+            if (!error) {
+              console.log('✅ Auto-login sviluppatore riuscito - SESSIONE DIRETTA ATTIVA');
+              localStorage.setItem('developer_access', 'granted');
+              localStorage.setItem('developer_user_email', developerEmail);
+              localStorage.setItem('captcha_bypassed', 'true');
+              // Redirect automatico a /home
+              if (window.location.pathname === '/') {
+                window.location.href = '/home';
               }
             }
           }

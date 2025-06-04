@@ -70,52 +70,45 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   const login = async (email: string, password: string, captchaToken?: string) => {
     console.log("Login attempt for email:", email);
     
-    // ✅ BYPASS COMPLETO per email sviluppatore - FORZA EDGE FUNCTION
+    // ✅ BYPASS COMPLETO per email sviluppatore - LOGIN DIRETTO SENZA MAGIC LINK
     if (email === 'wikus77@hotmail.it') {
-      console.log("🔑 DEVELOPER BYPASS: Login diretto per sviluppatore - NESSUN CAPTCHA/TURNSTILE");
+      console.log("🔑 DEVELOPER BYPASS: Login diretto per sviluppatore - SESSIONE DIRETTA");
       
       try {
-        // Chiamata diretta SOLO alla funzione edge per sviluppatore
+        // Chiamata diretta alla funzione edge per ottenere sessione diretta
         const response = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
           },
-          body: JSON.stringify({ 
-            email, 
-            password: "developer_bypass" // Password ignorata dalla funzione
-          }),
+          body: JSON.stringify({ email }),
         });
 
         if (response.ok) {
           const data = await response.json();
           
-          if (data.action_link) {
-            // ✅ FIX: Usa il magic link per autenticare l'utente
-            console.log("✅ Magic link ricevuto per sviluppatore");
+          if (data.session) {
+            console.log("🧠 Sessione diretta ricevuta per sviluppatore");
+            console.log("🧠 Sessione settata manualmente:", data.session);
             
-            // Estrai i parametri dal magic link
-            const url = new URL(data.action_link);
-            const accessToken = url.searchParams.get('access_token');
-            const refreshToken = url.searchParams.get('refresh_token');
+            // Imposta la sessione direttamente in Supabase
+            const { error } = await supabase.auth.setSession({
+              access_token: data.session.access_token,
+              refresh_token: data.session.refresh_token,
+            });
             
-            if (accessToken && refreshToken) {
-              // Imposta la sessione sviluppatore
-              const { error } = await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken,
-              });
-              
-              if (!error) {
-                console.log("✅ Login sviluppatore completato - CAPTCHA/TURNSTILE COMPLETAMENTE BYPASSATO");
-                localStorage.setItem('developer_access', 'granted');
-                localStorage.setItem('developer_user_email', email);
-                localStorage.setItem('captcha_bypassed', 'true');
-                // Redirect automatico a /home
-                window.location.href = '/home';
-                return { success: true, data };
-              }
+            if (!error) {
+              console.log("✅ Login sviluppatore completato - SESSIONE DIRETTA ATTIVA");
+              localStorage.setItem('developer_access', 'granted');
+              localStorage.setItem('developer_user_email', email);
+              localStorage.setItem('captcha_bypassed', 'true');
+              // Redirect automatico a /home
+              window.location.href = '/home';
+              return { success: true, data };
+            } else {
+              console.error("❌ Errore impostazione sessione:", error);
+              return { success: false, error: { message: "Errore impostazione sessione" } };
             }
           }
         }
