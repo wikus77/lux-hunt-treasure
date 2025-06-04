@@ -18,6 +18,9 @@ function RootRedirect() {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useAuth();
   
+  // Attiva il listener per i magic link in ambiente Capacitor (ora dentro Router)
+  useCapacitorMagicLinkListener();
+  
   useEffect(() => {
     // Debug avvio app
     console.log("🚀 App initialization - Path:", location.pathname, "Auth state:", 
@@ -46,9 +49,6 @@ function RootRedirect() {
 }
 
 function App() {
-  // Attiva il listener per i magic link in ambiente Capacitor
-  useCapacitorMagicLinkListener();
-
   return (
     <Router>
       <SoundProvider>
