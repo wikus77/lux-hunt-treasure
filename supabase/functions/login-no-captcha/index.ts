@@ -1,6 +1,6 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.192.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,123 +8,77 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const handleOptions = () => {
-  return new Response(null, {
-    status: 204,
-    headers: corsHeaders,
-  });
-};
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return handleOptions();
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error("❌ Configurazione del server non valida: mancano URL o chiavi Supabase");
-      return new Response(
-        JSON.stringify({
-          error: "Configurazione del server non valida: mancano URL o chiavi Supabase",
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
     const { email } = await req.json();
     
-    if (!email) {
-      console.error("❌ Email obbligatoria");
+    if (email !== "wikus77@hotmail.it") {
       return new Response(
-        JSON.stringify({ error: "Email obbligatoria" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // BYPASS COMPLETO: Solo per l'email sviluppatore - CAPTCHA COMPLETAMENTE RIMOSSO
-    const adminEmail = "wikus77@hotmail.it";
-    if (email !== adminEmail) {
-      console.error("⛔ Accesso negato per email non admin:", email);
-      return new Response(
-        JSON.stringify({ error: "Access denied - Developer only" }),
-        {
+        JSON.stringify({ error: "Only developer access allowed here." }),
+        { 
           status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
 
-    console.log("🔑 DEVELOPER BYPASS: Accesso diretto per:", adminEmail, "- CAPTCHA COMPLETAMENTE DISATTIVATO");
-    
-    // Client con ruolo admin per verificare esistenza utente
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { 
-        persistSession: false
-      },
-    });
-    
-    console.log("🔍 Ricerca utente sviluppatore tramite listUsers...");
-    const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-    
-    if (listError) {
-      console.error("❌ Errore nel recupero utenti:", listError);
-      return new Response(
-        JSON.stringify({ error: "Failed to fetch users" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
-    // Trova l'utente per email
-    const userData = users?.users?.find(u => u.email === adminEmail);
-    
-    if (!userData) {
-      console.error("❌ Utente sviluppatore non trovato");
+    // Recupera l'utente
+    const { data: user, error: getUserError } = await supabase.auth.admin.getUserByEmail(email);
+    if (getUserError || !user) {
+      console.error("User not found:", getUserError);
       return new Response(
-        JSON.stringify({ error: "User not found" }),
-        {
+        JSON.stringify({ error: "User not found" }), 
+        { 
           status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
 
-    console.log("✅ Utente sviluppatore trovato, accesso immediato garantito - CAPTCHA RIMOSSO");
-    
-    // Simula accesso sviluppatore con token fittizi per supabase.auth.setSession
-    return new Response(JSON.stringify({
-      developer_access: true,
-      access_token: "developer-fake-access-token",
-      refresh_token: "developer-fake-refresh-token"
-    }), {
-      status: 200,
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json"
-      }
+    console.log("🔑 Creating session for developer user:", user.user.id);
+
+    // Crea sessione
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
+      user_id: user.user.id,
     });
 
-  } catch (err) {
-    console.error("❌ Errore server:", err);
+    if (sessionError) {
+      console.error("Session creation failed:", sessionError);
+      return new Response(
+        JSON.stringify({ error: "Session creation failed" }), 
+        { 
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
+
+    console.log("✅ Developer session created successfully");
+
+    return new Response(JSON.stringify({
+      message: "Developer session granted",
+      session: sessionData.session
+    }), { 
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+
+  } catch (error) {
+    console.error("❌ Error in login-no-captcha:", error);
     return new Response(
-      JSON.stringify({
-        error: "Errore interno del server",
-        details: err.toString(),
-      }),
-      {
+      JSON.stringify({ error: "Internal server error" }),
+      { 
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
     );
   }

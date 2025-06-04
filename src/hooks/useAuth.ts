@@ -20,6 +20,43 @@ export function useAuth() {
   });
 
   useEffect(() => {
+    // ✅ CONTROLLO PRIORITARIO: Developer access automatico
+    const setupDeveloperAuth = async () => {
+      const developerEmail = 'wikus77@hotmail.it';
+      const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
+      const isDeveloperEmail = localStorage.getItem("developer_user_email") === developerEmail;
+      
+      if (hasDeveloperAccess || isDeveloperEmail) {
+        console.log('🔑 Developer access detected - calling login-no-captcha function');
+        
+        try {
+          const { data, error } = await supabase.functions.invoke('login-no-captcha', {
+            body: { email: developerEmail }
+          });
+
+          if (error) throw error;
+
+          if (data?.session) {
+            console.log('✅ Setting developer session from edge function');
+            const { error: setSessionError } = await supabase.auth.setSession(data.session);
+            
+            if (setSessionError) {
+              console.error('❌ Error setting session:', setSessionError);
+            } else {
+              console.log('✅ Developer session set successfully');
+              localStorage.setItem('developer_access', 'granted');
+              localStorage.setItem('developer_user_email', developerEmail);
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error calling login-no-captcha:', error);
+        }
+      }
+    };
+
+    // Esegui setup developer prima di tutto
+    setupDeveloperAuth();
+
     // Controlla se c'è già una sessione attiva
     const fetchSession = async () => {
       try {
@@ -78,6 +115,33 @@ export function useAuth() {
 
   const login = async (email: string, password: string) => {
     try {
+      // ✅ ACCESSO IMMEDIATO per email sviluppatore usando edge function
+      if (email === 'wikus77@hotmail.it') {
+        console.log('🔑 DEVELOPER LOGIN: Using edge function for immediate session');
+        
+        const { data, error } = await supabase.functions.invoke('login-no-captcha', {
+          body: { email }
+        });
+
+        if (error) throw error;
+
+        if (data?.session) {
+          const { error: setSessionError } = await supabase.auth.setSession(data.session);
+          
+          if (setSessionError) throw setSessionError;
+          
+          localStorage.setItem('developer_access', 'granted');
+          localStorage.setItem('developer_user_email', email);
+          
+          toast.success("Login sviluppatore effettuato con successo");
+          
+          // Redirect immediato a /home
+          window.location.href = '/home';
+          return;
+        }
+      }
+
+      // ✅ Per altri utenti, procedi con login normale
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -100,20 +164,17 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      console.log('🔒 Logging out user - ensuring Live Activity cleanup');
-      
-      // Importazione dinamica per evitare circular dependency
-      const { useDynamicIsland } = await import('./useDynamicIsland');
-      const { forceEndActivity } = useDynamicIsland();
-      
-      // Chiusura forzata di sicurezza prima del logout
-      await forceEndActivity();
+      console.log('🔒 Logging out user - ensuring cleanup');
       
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         throw error;
       }
+      
+      // Cleanup developer access
+      localStorage.removeItem('developer_access');
+      localStorage.removeItem('developer_user_email');
       
       toast.success("Logout effettuato con successo");
     } catch (error: any) {
