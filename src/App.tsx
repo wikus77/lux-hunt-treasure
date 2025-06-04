@@ -24,9 +24,13 @@ const AuthRedirectHandler = () => {
           if (data.session) {
             console.log('✅ User authenticated, redirecting to /home');
             navigate('/home', { replace: true });
+          } else {
+            console.log('❌ User NOT authenticated - showing public page');
+            // Stay on landing page for non-authenticated users
           }
         } catch (error) {
           console.error('❌ Error checking session:', error);
+          // Stay on landing page in case of error
         }
       }
     };
