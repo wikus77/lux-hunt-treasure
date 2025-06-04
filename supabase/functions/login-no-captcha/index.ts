@@ -50,12 +50,12 @@ serve(async (req) => {
       );
     }
 
-    // BYPASS COMPLETO: Solo per l'email sviluppatore
+    // BYPASS COMPLETO: Solo per l'email sviluppatore - CAPTCHA COMPLETAMENTE RIMOSSO
     const adminEmail = "wikus77@hotmail.it";
     if (email !== adminEmail) {
       console.error("⛔ Accesso negato per email non admin:", email);
       return new Response(
-        JSON.stringify({ error: "CAPTCHA required" }),
+        JSON.stringify({ error: "Access denied - Developer only" }),
         {
           status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -63,7 +63,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("🔑 DEVELOPER BYPASS: Accesso diretto per:", adminEmail);
+    console.log("🔑 DEVELOPER BYPASS: Accesso diretto per:", adminEmail, "- CAPTCHA COMPLETAMENTE DISATTIVATO");
     
     // Client con ruolo admin per verificare esistenza utente
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -100,7 +100,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("✅ Utente sviluppatore trovato, accesso immediato garantito");
+    console.log("✅ Utente sviluppatore trovato, accesso immediato garantito - CAPTCHA RIMOSSO");
     
     // Simula accesso sviluppatore con token fittizi per supabase.auth.setSession
     return new Response(JSON.stringify({

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -65,14 +66,14 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   }, []);
 
   /**
-   * Login function using email and password
+   * Login function using email and password - CAPTCHA COMPLETAMENTE RIMOSSO
    */
-  const login = async (email: string, password: string, captchaToken?: string) => {
+  const login = async (email: string, password: string) => {
     console.log("Login attempt for email:", email);
     
     // ✅ BYPASS COMPLETO per email sviluppatore - FAKE SESSION TOKENS
     if (email === 'wikus77@hotmail.it') {
-      console.log("🔑 DEVELOPER BYPASS: Login diretto per sviluppatore - FAKE SESSION");
+      console.log("🔑 DEVELOPER BYPASS: Login diretto per sviluppatore - FAKE SESSION - CAPTCHA RIMOSSO");
       
       try {
         // Chiamata alla funzione edge per verificare accesso sviluppatore
@@ -89,7 +90,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
           const data = await response.json();
           
           if (data.developer_access === true) {
-            console.log("🧠 Accesso sviluppatore confermato, impostazione fake session");
+            console.log("🧠 Accesso sviluppatore confermato, impostazione fake session - CAPTCHA DISATTIVATO");
             
             // Imposta fake session tokens per bypassare l'autenticazione
             const fakeSession = {
@@ -101,7 +102,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
             const { error } = await supabase.auth.setSession(fakeSession);
             
             if (!error) {
-              console.log("✅ Login sviluppatore completato - FAKE SESSION ATTIVA");
+              console.log("✅ Login sviluppatore completato - FAKE SESSION ATTIVA - CAPTCHA RIMOSSO");
               localStorage.setItem('developer_access', 'granted');
               localStorage.setItem('developer_user_email', email);
               localStorage.setItem('captcha_bypassed', 'true');
@@ -128,9 +129,23 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       }
     }
 
-    // ⚠️ STOP: Per altri utenti, blocca il login se non c'è CAPTCHA
-    console.warn("⚠️ Altri utenti devono completare CAPTCHA - login bloccato");
-    return { success: false, error: { message: "CAPTCHA richiesto per questo utente" } as AuthError };
+    // ✅ Per altri utenti, procedi senza CAPTCHA
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log("✅ Login standard completato senza CAPTCHA");
+      return { success: true, data };
+    } catch (error: any) {
+      console.error("Errore durante il login:", error);
+      return { success: false, error: error as AuthError };
+    }
   };
 
   /**

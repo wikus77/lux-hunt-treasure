@@ -7,9 +7,6 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 import FormField from './form-field';
-import TurnstileWidget from '@/components/security/TurnstileWidget';
-import { useTurnstile } from '@/hooks/useTurnstile';
-import { shouldBypassCaptchaForUser } from '@/utils/turnstile';
 import { Mail, Lock } from 'lucide-react';
 
 interface LoginFormProps {
@@ -24,32 +21,8 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
   const { login } = useAuthContext();
   const navigate = useNavigate();
 
-  // ✅ CONTROLLO EMAIL SVILUPPATORE per Turnstile
+  // ✅ CONTROLLO EMAIL SVILUPPATORE - CAPTCHA COMPLETAMENTE DISATTIVATO
   const isDeveloperEmail = email === 'wikus77@hotmail.it';
-  const shouldBypassCaptcha = shouldBypassCaptchaForUser(email);
-
-  const { 
-    isVerifying, 
-    isVerified, 
-    error: turnstileError, 
-    token,
-    setTurnstileToken 
-  } = useTurnstile({
-    action: 'login',
-    userEmail: email, // ✅ Passa email per controllo sviluppatore
-    onSuccess: (result) => {
-      if (result.bypass || result.developer) {
-        console.log('🔑 CAPTCHA bypassed for login:', result);
-      }
-    },
-    onError: (error) => {
-      if (!isDeveloperEmail) {
-        toast.error('Verifica di sicurezza fallita', {
-          description: error
-        });
-      }
-    }
-  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,10 +32,10 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
       return;
     }
 
-    // ✅ BYPASS COMPLETO per sviluppatore
+    // ✅ BYPASS COMPLETO per sviluppatore - NESSUN CAPTCHA
     if (isDeveloperEmail) {
-      console.log('🔑 DEVELOPER BYPASS: Login form submission - NESSUN CAPTCHA richiesto');
-      console.warn('⚠️ Form login chiamato con account sviluppatore - CAPTCHA disattivato');
+      console.log('🔑 DEVELOPER BYPASS: Login form submission - CAPTCHA COMPLETAMENTE DISATTIVATO');
+      console.warn('⚠️ Form login chiamato con account sviluppatore - CAPTCHA RIMOSSO');
       
       setIsLoading(true);
       try {
@@ -85,15 +58,10 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
       return;
     }
 
-    // Per altri utenti, richiedi CAPTCHA
-    if (!isVerified && !shouldBypassCaptcha) {
-      toast.error('Completa la verifica di sicurezza');
-      return;
-    }
-
+    // Per altri utenti, procedi senza CAPTCHA
     setIsLoading(true);
     try {
-      const result = await login(email, password, token || undefined);
+      const result = await login(email, password);
       
       if (result?.success) {
         toast.success('Login effettuato con successo');
@@ -138,24 +106,11 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
         disabled={isLoading}
       />
 
-      {/* ✅ CONTROLLO: Mostra Turnstile solo se NON è sviluppatore */}
-      {!isDeveloperEmail && !shouldBypassCaptcha && (
-        <div className="mt-4">
-          <TurnstileWidget 
-            onVerify={setTurnstileToken}
-            action="login"
-          />
-          {turnstileError && (
-            <p className="text-sm text-red-500 mt-1">{turnstileError}</p>
-          )}
-        </div>
-      )}
-
-      {/* ✅ MESSAGGIO per sviluppatore */}
+      {/* ✅ MESSAGGIO per sviluppatore - NESSUN CAPTCHA */}
       {isDeveloperEmail && (
         <div className="mt-4 p-3 bg-green-900/20 border border-green-500/30 rounded-md">
           <p className="text-sm text-green-400">
-            🔑 Developer Access: CAPTCHA disattivato
+            🔑 Developer Access: CAPTCHA completamente disattivato
           </p>
         </div>
       )}
@@ -163,7 +118,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
       <Button
         type="submit"
         className="w-full"
-        disabled={isLoading || (isVerifying && !isDeveloperEmail) || (!isVerified && !shouldBypassCaptcha && !isDeveloperEmail)}
+        disabled={isLoading}
       >
         {isLoading ? 'Accesso in corso...' : 'Accedi'}
       </Button>
