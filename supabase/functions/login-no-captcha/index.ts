@@ -31,7 +31,9 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Recupera l'utente
+    console.log("🔑 Creating immediate session for developer user");
+
+    // Get user
     const { data: user, error: getUserError } = await supabase.auth.admin.getUserByEmail(email);
     if (getUserError || !user) {
       console.error("User not found:", getUserError);
@@ -44,9 +46,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("🔑 Creating session for developer user:", user.user.id);
-
-    // Crea sessione
+    // Create session immediately
     const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
       user_id: user.user.id,
     });

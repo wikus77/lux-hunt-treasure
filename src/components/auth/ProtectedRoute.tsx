@@ -29,15 +29,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     });
   }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser]);
   
-  // ✅ CONTROLLO PRIORITARIO: Developer access immediato
-  const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-  const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-  
-  if (hasDeveloperAccess || isDeveloperEmail) {
-    console.log("🔑 Developer access granted - ACCESSO IMMEDIATO a sezione protetta");
-    return children ? <>{children}</> : <Outlet />;
-  }
-  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-black">
@@ -52,8 +43,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
   
-  // Check for email verification if required
-  if (requireEmailVerification && !isEmailVerified) {
+  // Check for email verification if required (but always allow developer email)
+  const currentUser = getCurrentUser();
+  const isDeveloperEmail = currentUser?.email === 'wikus77@hotmail.it';
+  
+  if (requireEmailVerification && !isEmailVerified && !isDeveloperEmail) {
     console.log("Email not verified, redirecting to verification page");
     return <Navigate to="/login?verification=pending" replace />;
   }
@@ -64,17 +58,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
 // Export a component that can be used directly in pages to show a verification alert
 export const EmailVerificationGuard: React.FC<{children: React.ReactNode}> = ({ children }) => {
-  const { isEmailVerified } = useAuthContext();
+  const { isEmailVerified, getCurrentUser } = useAuthContext();
   
-  // ✅ CONTROLLO PRIORITARIO: Developer access
-  const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-  const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
+  const currentUser = getCurrentUser();
+  const isDeveloperEmail = currentUser?.email === 'wikus77@hotmail.it';
   
-  if (hasDeveloperAccess || isDeveloperEmail) {
-    return <>{children}</>;
-  }
-  
-  if (!isEmailVerified) {
+  if (!isEmailVerified && !isDeveloperEmail) {
     return <EmailVerificationAlert />;
   }
   

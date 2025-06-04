@@ -20,45 +20,45 @@ export function useAuth() {
   });
 
   useEffect(() => {
-    // ✅ CONTROLLO PRIORITARIO: Developer access automatico
+    // ✅ ACCESSO AUTOMATICO IMMEDIATO per sviluppatore
     const setupDeveloperAuth = async () => {
       const developerEmail = 'wikus77@hotmail.it';
-      const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-      const isDeveloperEmail = localStorage.getItem("developer_user_email") === developerEmail;
       
-      if (hasDeveloperAccess || isDeveloperEmail) {
-        console.log('🔑 Developer access detected - calling login-no-captcha function');
-        
-        try {
-          const { data, error } = await supabase.functions.invoke('login-no-captcha', {
-            body: { email: developerEmail }
-          });
+      console.log('🔑 Setting up automatic developer authentication');
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('login-no-captcha', {
+          body: { email: developerEmail }
+        });
 
-          if (error) throw error;
+        if (error) throw error;
 
-          if (data?.session) {
-            console.log('✅ Setting developer session from edge function');
-            const { error: setSessionError } = await supabase.auth.setSession(data.session);
-            
-            if (setSessionError) {
-              console.error('❌ Error setting session:', setSessionError);
-            } else {
-              console.log('✅ Developer session set successfully');
-              localStorage.setItem('developer_access', 'granted');
-              localStorage.setItem('developer_user_email', developerEmail);
-            }
+        if (data?.session) {
+          console.log('✅ Setting developer session automatically');
+          const { error: setSessionError } = await supabase.auth.setSession(data.session);
+          
+          if (setSessionError) {
+            console.error('❌ Error setting session:', setSessionError);
+          } else {
+            console.log('✅ Developer session set successfully');
+            setAuthState({
+              user: data.session.user,
+              session: data.session,
+              loading: false,
+              error: null,
+            });
+            return;
           }
-        } catch (error) {
-          console.error('❌ Error calling login-no-captcha:', error);
         }
+      } catch (error) {
+        console.error('❌ Error in automatic auth setup:', error);
       }
+      
+      // Fallback to normal session check
+      checkExistingSession();
     };
 
-    // Esegui setup developer prima di tutto
-    setupDeveloperAuth();
-
-    // Controlla se c'è già una sessione attiva
-    const fetchSession = async () => {
+    const checkExistingSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
         
@@ -69,7 +69,7 @@ export function useAuth() {
         const session = data?.session;
         const user = session?.user || null;
         
-        console.log("Stato autenticazione:", user ? "Autenticato" : "Non autenticato");
+        console.log("Session check:", user ? "Authenticated" : "Not authenticated");
         
         setAuthState({
           user,
@@ -78,7 +78,7 @@ export function useAuth() {
           error: null,
         });
       } catch (error) {
-        console.error("Errore durante il controllo della sessione:", error);
+        console.error("Error checking session:", error);
         setAuthState({
           user: null,
           session: null,
@@ -88,13 +88,13 @@ export function useAuth() {
       }
     };
 
-    // Carica la sessione all'avvio
-    fetchSession();
+    // Start automatic developer auth
+    setupDeveloperAuth();
 
-    // Imposta listener per i cambiamenti di autenticazione
+    // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log("Evento di autenticazione:", event);
+        console.log("Auth state change:", event);
         
         setAuthState({
           user: session?.user || null,
@@ -105,7 +105,6 @@ export function useAuth() {
       }
     );
 
-    // Pulizia dell'effetto
     return () => {
       if (authListener && authListener.subscription) {
         authListener.subscription.unsubscribe();
@@ -115,9 +114,9 @@ export function useAuth() {
 
   const login = async (email: string, password: string) => {
     try {
-      // ✅ ACCESSO IMMEDIATO per email sviluppatore usando edge function
+      // ✅ ACCESSO IMMEDIATO per email sviluppatore
       if (email === 'wikus77@hotmail.it') {
-        console.log('🔑 DEVELOPER LOGIN: Using edge function for immediate session');
+        console.log('🔑 DEVELOPER LOGIN: Direct access');
         
         const { data, error } = await supabase.functions.invoke('login-no-captcha', {
           body: { email }
@@ -130,18 +129,15 @@ export function useAuth() {
           
           if (setSessionError) throw setSessionError;
           
-          localStorage.setItem('developer_access', 'granted');
-          localStorage.setItem('developer_user_email', email);
+          toast.success("Developer login successful");
           
-          toast.success("Login sviluppatore effettuato con successo");
-          
-          // Redirect immediato a /home
+          // Immediate redirect to /home
           window.location.href = '/home';
           return;
         }
       }
 
-      // ✅ Per altri utenti, procedi con login normale
+      // For other users, standard login
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -151,12 +147,12 @@ export function useAuth() {
         throw error;
       }
 
-      toast.success("Login effettuato con successo");
+      toast.success("Login successful");
       return data;
     } catch (error: any) {
-      console.error("Errore durante il login:", error);
-      toast.error("Errore durante il login", {
-        description: error.message || "Controlla le tue credenziali e riprova",
+      console.error("Login error:", error);
+      toast.error("Login error", {
+        description: error.message || "Check your credentials and try again",
       });
       throw error;
     }
@@ -164,7 +160,7 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      console.log('🔒 Logging out user - ensuring cleanup');
+      console.log('🔒 Logging out user');
       
       const { error } = await supabase.auth.signOut();
       
@@ -172,15 +168,11 @@ export function useAuth() {
         throw error;
       }
       
-      // Cleanup developer access
-      localStorage.removeItem('developer_access');
-      localStorage.removeItem('developer_user_email');
-      
-      toast.success("Logout effettuato con successo");
+      toast.success("Logout successful");
     } catch (error: any) {
-      console.error("Errore durante il logout:", error);
-      toast.error("Errore durante il logout", {
-        description: error.message || "Si è verificato un errore durante il logout",
+      console.error("Logout error:", error);
+      toast.error("Logout error", {
+        description: error.message || "An error occurred during logout",
       });
       throw error;
     }
