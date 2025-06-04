@@ -1,4 +1,3 @@
-
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -9,7 +8,7 @@ import IOSSafeAreaOverlay from "@/components/debug/IOSSafeAreaOverlay";
 // Public routes
 import Index from "@/pages/Index";
 
-// Main app routes with lazy loading
+// Main app routes with lazy loading - SEPARATE FROM LANDING
 const AppHome = lazy(() => import("@/pages/AppHome"));
 const Map = lazy(() => import("@/pages/Map"));
 const Buzz = lazy(() => import("@/pages/Buzz"));
@@ -51,14 +50,21 @@ const AppRoutes: React.FC = () => {
       <IOSSafeAreaOverlay>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            {/* Landing page - PUBLIC */}
+            {/* Landing page - SEMPRE PUBBLICA, NESSUN REDIRECT */}
             <Route path="/" element={<Index />} />
 
             {/* iOS Test Route - PUBLIC */}
             <Route path="/open" element={<Open />} />
 
-            {/* Main App Routes - /home accessible for developer */}
-            <Route path="/home" element={<AppHome />} />
+            {/* Main App Routes - PROTECTED - SEPARATE DA LANDING */}
+            <Route
+              path="/home"
+              element={
+                <ProtectedRoute>
+                  <AppHome />
+                </ProtectedRoute>
+              }
+            />
             
             <Route
               path="/map"

@@ -28,10 +28,9 @@ const Login = () => {
       });
     }
 
-    // If already authenticated, redirect to /home immediately
+    // SOLO SE GIÀ AUTENTICATO, redirect to home - NON FORZARE LOGIN
     if (!authLoading && isAuthenticated) {
-      console.log('🏠 User already authenticated, redirecting to /home');
-      navigate('/home', { replace: true });
+      navigate('/home');
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);
 

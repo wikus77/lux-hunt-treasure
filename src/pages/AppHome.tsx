@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
-import { useAuthContext } from "@/contexts/auth";
 
 const AppHome = () => {
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +20,6 @@ const AppHome = () => {
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
-  const { getCurrentUser } = useAuthContext();
   const {
     notifications,
     unreadCount,
@@ -34,13 +32,39 @@ const AppHome = () => {
 
   const { isConnected } = useRealTimeNotifications();
 
-  // Developer bypass - immediately grant access for wikus77@hotmail.it
+  // Check for developer access and Capacitor environment
   useEffect(() => {
-    const user = getCurrentUser();
-    if (user?.email === "wikus77@hotmail.it") {
-      setHasAccess(true);
-    }
-  }, [getCurrentUser]);
+    const checkAccess = () => {
+      const isCapacitorApp = !!(window as any).Capacitor;
+      setIsCapacitor(isCapacitorApp);
+      
+      const userAgent = navigator.userAgent;
+      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
+      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      
+      console.log('AppHome access check (Capacitor):', { isMobileDevice, hasStoredAccess, isCapacitorApp });
+      
+      // DEVELOPER ACCESS: Always grant access to wikus77@hotmail.it
+      const currentUserEmail = localStorage.getItem('developer_user_email');
+      if (currentUserEmail === 'wikus77@hotmail.it') {
+        setHasAccess(true);
+        localStorage.setItem('developer_access', 'granted');
+        localStorage.setItem('full_access_granted', 'true');
+        console.log('Developer access auto-granted for wikus77@hotmail.it');
+        return;
+      }
+      
+      if (isMobileDevice && hasStoredAccess) {
+        setHasAccess(true);
+      } else if (!isMobileDevice) {
+        // Web users should NOT be redirected to landing page from internal routes
+        // They should see the app home but with limited functionality
+        setHasAccess(true); // Allow access to prevent redirect loop
+      }
+    };
+    
+    checkAccess();
+  }, []);
 
   const handleAccessGranted = () => {
     setHasAccess(true);
@@ -68,9 +92,8 @@ const AppHome = () => {
     }
   }, [error]);
 
-  // Developer bypass - skip DeveloperAccess screen completely
-  const user = getCurrentUser();
-  if (isMobile && !hasAccess && user?.email !== "wikus77@hotmail.it") {
+  // Show developer access screen for mobile users without access
+  if (isMobile && !hasAccess) {
     return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
   }
 

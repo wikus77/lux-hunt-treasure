@@ -12,14 +12,14 @@ export function useCapacitorMagicLinkListener() {
 
     const setupListener = async () => {
       listenerHandle = await CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
-        console.log('📲 Capacitor appUrlOpen triggered with URL:', url);
+        console.log('📲 appUrlOpen triggered with URL:', url);
         try {
           const parsed = new URL(url);
           const token = parsed.searchParams.get('token');
           const type = parsed.searchParams.get('type');
 
           if (token && type === 'magiclink') {
-            console.log('🔐 Processing magic link token...');
+            console.log('🔐 Verifying token...');
             const { error } = await supabase.auth.verifyOtp({
               type: 'magiclink',
               token,
@@ -27,17 +27,16 @@ export function useCapacitorMagicLinkListener() {
             });
 
             if (error) {
-              console.error('❌ Supabase magic link error:', error.message);
+              console.error('❌ Errore Supabase.verifyOtp:', error.message);
             } else {
-              console.log('✅ Magic link login successful, redirecting to /home');
-              // Force redirect to /home after successful authentication
+              console.log('✅ Login automatico completato');
               window.location.href = '/home';
             }
           } else {
-            console.warn('⚠️ URL without valid magic link token');
+            console.warn('⚠️ URL senza token valido');
           }
         } catch (err) {
-          console.error('❌ Error parsing Capacitor URL:', err);
+          console.error('❌ Errore parsing URL:', err);
         }
       });
     };
