@@ -3,19 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import AuthContext from './AuthContext';
-
-interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  isLoading: boolean;
-  loading: boolean;
-  error: Error | null;
-  isAuthenticated: boolean;
-  isEmailVerified: boolean;
-  userRole: string | null;
-  getCurrentUser: () => User | null;
-  resendVerificationEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
-}
+import { AuthContextType } from './types';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -73,7 +61,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
+  const login = async (email: string, password: string, captchaToken?: string) => {
+    try {
+      const options: any = {};
+      
+      if (captchaToken) {
+        options.options = {
+          captchaToken: captchaToken
+        };
+      }
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+        ...options
+      });
+
+      if (error) {
+        setError(error);
+        return { success: false, error };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      const authError = { message: "Si è verificato un errore imprevisto durante l'accesso." } as Error;
+      setError(authError);
+      return {
+        success: false,
+        error: authError
+      };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      setError(error as Error);
+    }
+  };
+
   const getCurrentUser = () => user;
+
+  const getAccessToken = () => {
+    return session?.access_token || null;
+  };
 
   const resendVerificationEmail = async (email: string) => {
     try {
@@ -92,6 +124,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const hasRole = (role: string) => {
+    return userRole === role;
+  };
+
   const value: AuthContextType = {
     user,
     session,
@@ -102,7 +154,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isEmailVerified,
     userRole,
     getCurrentUser,
+    getAccessToken,
+    login,
+    logout,
     resendVerificationEmail,
+    resetPassword,
+    hasRole,
+    isRoleLoading: isLoading,
   };
 
   return (
