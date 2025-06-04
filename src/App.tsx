@@ -10,27 +10,30 @@ import AppRoutes from "./routes/AppRoutes";
 import SafeAreaToggle from "./components/debug/SafeAreaToggle";
 import { supabase } from "./integrations/supabase/client";
 
-// Component for automatic redirect logic
+// ✅ Component for automatic redirect logic on Capacitor/iOS
 const AuthRedirectHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     const checkSessionAndRedirect = async () => {
-      // Only check on root path
       if (location.pathname === '/') {
         try {
-          const { data } = await supabase.auth.getSession();
-          if (data.session) {
-            console.log('✅ User authenticated, redirecting to /home');
+          const { data, error } = await supabase.auth.getSession();
+          if (error) {
+            console.error('❌ Errore nel recuperare la sessione:', error);
+            return;
+          }
+
+          const session = data?.session;
+          if (session) {
+            console.log('✅ Utente autenticato: redirect verso /home');
             navigate('/home', { replace: true });
           } else {
-            console.log('❌ User NOT authenticated - showing public page');
-            // Stay on landing page for non-authenticated users
+            console.log('ℹ️ Nessuna sessione trovata: rimani sulla landing');
           }
-        } catch (error) {
-          console.error('❌ Error checking session:', error);
-          // Stay on landing page in case of error
+        } catch (err) {
+          console.error('❌ Errore imprevisto durante il controllo sessione:', err);
         }
       }
     };
@@ -51,9 +54,9 @@ function App() {
               <div className="glass-card p-6 max-w-md mx-auto text-center">
                 <h2 className="text-xl font-bold mb-4">Si è verificato un errore</h2>
                 <p className="mb-6">Qualcosa è andato storto durante il caricamento dell'applicazione.</p>
-                <button 
+                <button
                   onClick={() => window.location.reload()}
-                  className="px-4 py-2 bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-md"
+                  className="px-4 py-2 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink rounded-md"
                 >
                   Riprova
                 </button>
