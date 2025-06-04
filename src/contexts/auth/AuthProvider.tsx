@@ -15,7 +15,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
 
-  // ✅ Auto-login per sviluppatore (SESSIONE DIRETTA - NO MAGIC LINK)
+  // ✅ Auto-login per sviluppatore (SESSIONE CON TOKENS - NO MAGIC LINK)
   useEffect(() => {
     const attemptDeveloperAutoLogin = async () => {
       const developerEmail = 'wikus77@hotmail.it';
@@ -37,11 +37,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Tenta auto-login sviluppatore (SESSIONE DIRETTA - NO MAGIC LINK)
+      // Tenta auto-login sviluppatore (SESSIONE CON TOKENS - NO MAGIC LINK)
       try {
-        console.log('🚀 Tentativo auto-login sviluppatore - SESSIONE DIRETTA...');
+        console.log('🚀 Tentativo auto-login sviluppatore - SESSIONE CON TOKENS...');
         
-        // Chiamata diretta alla funzione edge per ottenere sessione diretta
+        // Chiamata diretta alla funzione edge per ottenere sessione con tokens
         const response = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
           method: "POST",
           headers: {
@@ -53,8 +53,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (response.ok) {
           const data = await response.json();
-          if (data.session) {
-            console.log("🧠 Sessione diretta ricevuta per auto-login sviluppatore");
+          if (data.session && data.session.access_token && data.session.refresh_token) {
+            console.log("🧠 Sessione con tokens ricevuta per auto-login sviluppatore");
             console.log("🧠 Sessione settata manualmente:", data.session);
             
             // Imposta la sessione direttamente
@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
             
             if (!error) {
-              console.log('✅ Auto-login sviluppatore riuscito - SESSIONE DIRETTA ATTIVA');
+              console.log('✅ Auto-login sviluppatore riuscito - SESSIONE CON TOKENS ATTIVA');
               localStorage.setItem('developer_access', 'granted');
               localStorage.setItem('developer_user_email', developerEmail);
               localStorage.setItem('captcha_bypassed', 'true');

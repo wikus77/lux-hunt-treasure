@@ -105,17 +105,38 @@ serve(async (req) => {
       );
     }
 
-    console.log("✅ Utente sviluppatore trovato, creazione sessione diretta...");
+    console.log("✅ Utente sviluppatore trovato, generazione link di accesso diretto...");
     
-    // Crea sessione diretta per l'utente
-    const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.createSession({
-      user_id: userData.id,
+    // ✅ FIX: Usa generateLink() che è supportato nel runtime Edge Functions
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: "magiclink",
+      email: adminEmail,
+      options: {
+        redirectTo: `${supabaseUrl.replace('.supabase.co', '')}.vercel.app/home` // URL compatibile
+      }
     });
 
-    if (sessionError || !sessionData?.session) {
-      console.error("❌ Errore creazione sessione:", sessionError);
+    if (linkError || !linkData?.properties?.action_link) {
+      console.error("❌ Errore generazione link:", linkError);
       return new Response(
-        JSON.stringify({ error: "Failed to create session" }),
+        JSON.stringify({ error: "Failed to generate access link" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Estrai token dalla action_link per creare sessione manuale
+    const actionLink = linkData.properties.action_link;
+    const urlParams = new URL(actionLink).searchParams;
+    const accessToken = urlParams.get('access_token');
+    const refreshToken = urlParams.get('refresh_token');
+
+    if (!accessToken || !refreshToken) {
+      console.error("❌ Token non trovati nel link generato");
+      return new Response(
+        JSON.stringify({ error: "Failed to extract tokens" }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -154,11 +175,15 @@ serve(async (req) => {
       console.error("⚠️ Errore gestione profilo:", profileErr);
     }
 
-    console.log("✅ Sessione diretta creata per sviluppatore");
+    console.log("✅ Link di accesso diretto generato per sviluppatore");
     
     return new Response(
       JSON.stringify({
-        session: sessionData.session,
+        session: {
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          user: userData
+        },
         developer_bypass: true,
         direct_session: true
       }),

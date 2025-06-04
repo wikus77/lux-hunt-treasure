@@ -70,12 +70,12 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   const login = async (email: string, password: string, captchaToken?: string) => {
     console.log("Login attempt for email:", email);
     
-    // ✅ BYPASS COMPLETO per email sviluppatore - LOGIN DIRETTO SENZA MAGIC LINK
+    // ✅ BYPASS COMPLETO per email sviluppatore - LOGIN DIRETTO CON NUOVA IMPLEMENTAZIONE
     if (email === 'wikus77@hotmail.it') {
-      console.log("🔑 DEVELOPER BYPASS: Login diretto per sviluppatore - SESSIONE DIRETTA");
+      console.log("🔑 DEVELOPER BYPASS: Login diretto per sviluppatore - SESSIONE CON TOKENS");
       
       try {
-        // Chiamata diretta alla funzione edge per ottenere sessione diretta
+        // Chiamata diretta alla funzione edge per ottenere sessione con tokens
         const response = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
           method: "POST",
           headers: {
@@ -88,18 +88,19 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         if (response.ok) {
           const data = await response.json();
           
-          if (data.session) {
-            console.log("🧠 Sessione diretta ricevuta per sviluppatore");
-            console.log("🧠 Sessione settata manualmente:", data.session);
+          if (data.session && data.session.access_token && data.session.refresh_token) {
+            console.log("🧠 Sessione con tokens ricevuta per sviluppatore");
+            console.log("🧠 Access token presente:", !!data.session.access_token);
+            console.log("🧠 Refresh token presente:", !!data.session.refresh_token);
             
-            // Imposta la sessione direttamente in Supabase
+            // Imposta la sessione direttamente in Supabase con i tokens estratti
             const { error } = await supabase.auth.setSession({
               access_token: data.session.access_token,
               refresh_token: data.session.refresh_token,
             });
             
             if (!error) {
-              console.log("✅ Login sviluppatore completato - SESSIONE DIRETTA ATTIVA");
+              console.log("✅ Login sviluppatore completato - SESSIONE CON TOKENS ATTIVA");
               localStorage.setItem('developer_access', 'granted');
               localStorage.setItem('developer_user_email', email);
               localStorage.setItem('captcha_bypassed', 'true');
