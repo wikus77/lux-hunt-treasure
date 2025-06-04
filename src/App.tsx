@@ -44,7 +44,11 @@ function App() {
   useEffect(() => {
     const setupCapacitorListener = async () => {
       try {
-        if ((window as any).Capacitor) {
+        // Check if we're in a Capacitor environment
+        if (typeof window !== 'undefined' && (window as any).Capacitor) {
+          console.log('📱 Capacitor environment detected');
+          
+          // Dynamic import to avoid build issues on web
           const { App: CapacitorApp } = await import('@capacitor/app');
           
           CapacitorApp.addListener('appUrlOpen', (event) => {
@@ -62,6 +66,8 @@ function App() {
               }
             }
           });
+        } else {
+          console.log('🌐 Web environment - Capacitor listeners not needed');
         }
       } catch (error) {
         console.error('❌ Capacitor listener setup failed:', error);
