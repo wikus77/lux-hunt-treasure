@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
@@ -35,27 +34,45 @@ interface BuzzResponse {
   error?: string;
 }
 
-// In-memory rate limiting store (simple implementation)
-const rateLimitStore = new Map<string, number>();
+// Enhanced in-memory rate limiting store
+const rateLimitStore = new Map<string, { count: number; firstRequest: number }>();
+const abuseStore = new Map<string, number>();
 const RATE_LIMIT_WINDOW = 5000; // 5 seconds
+const RATE_LIMIT_COUNT = 5; // max 5 requests per window
+const ABUSE_THRESHOLD = 10; // trigger alert after 10 violations
+
+// Enhanced rate limiting with abuse detection
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const userRequests = rateLimitStore.get(userId);
+  
+  if (!userRequests || (now - userRequests.firstRequest) > RATE_LIMIT_WINDOW) {
+    // Reset window
+    rateLimitStore.set(userId, { count: 1, firstRequest: now });
+    return true;
+  }
+  
+  if (userRequests.count >= RATE_LIMIT_COUNT) {
+    // Track abuse
+    const abuseCount = (abuseStore.get(userId) || 0) + 1;
+    abuseStore.set(userId, abuseCount);
+    
+    if (abuseCount >= ABUSE_THRESHOLD) {
+      console.error(`🚨 ABUSE ALERT: User ${userId} exceeded rate limit ${abuseCount} times`);
+      // In production, this could trigger email alerts or other notifications
+    }
+    
+    return false;
+  }
+  
+  userRequests.count++;
+  return true;
+}
 
 // Validazione UUID v4
 function isValidUuid(uuid: string): boolean {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(uuid);
-}
-
-// Rate limiting check
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const lastRequest = rateLimitStore.get(userId);
-  
-  if (lastRequest && (now - lastRequest) < RATE_LIMIT_WINDOW) {
-    return false; // Rate limit exceeded
-  }
-  
-  rateLimitStore.set(userId, now);
-  return true;
 }
 
 // Validate coordinates
@@ -113,7 +130,16 @@ serve(async (req) => {
 
     const authenticatedUserId = user.id;
 
-    // 2. CONTROLLO ANTIFLOOD - Verifica abusi con il nuovo sistema
+    // 2. ENHANCED RATE LIMITING - Check abuse before other validations
+    if (!checkRateLimit(authenticatedUserId)) {
+      console.error(`Rate limit exceeded for user: ${authenticatedUserId}`);
+      return new Response(
+        JSON.stringify({ success: false, error: "Troppi tentativi. Attendi 5 secondi prima di fare un nuovo BUZZ" }),
+        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // 3. CONTROLLO ANTIFLOOD - Verifica abusi con il sistema esistente
     const { data: isAbuse, error: abuseError } = await supabase.rpc('log_potential_abuse', {
       p_event_type: 'buzz_click',
       p_user_id: authenticatedUserId
@@ -121,7 +147,6 @@ serve(async (req) => {
 
     if (abuseError) {
       console.error("Errore nel sistema antiflood:", abuseError);
-      // Non blocchiamo l'operazione per errori di logging, ma logghiamo
     }
 
     if (isAbuse) {
@@ -131,15 +156,6 @@ serve(async (req) => {
           success: false, 
           error: "Troppe richieste BUZZ ravvicinate. Attendi 30 secondi prima di riprovare." 
         }),
-        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    // 3. RATE LIMITING AGGIUNTIVO - Controllo spam (1 BUZZ ogni 5 secondi)
-    if (!checkRateLimit(authenticatedUserId)) {
-      console.error(`Rate limit exceeded for user: ${authenticatedUserId}`);
-      return new Response(
-        JSON.stringify({ success: false, error: "Troppi tentativi. Attendi 5 secondi prima di fare un nuovo BUZZ" }),
         { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }

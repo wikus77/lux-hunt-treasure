@@ -8,20 +8,38 @@ import { handleEmailRequest } from "./email-handler.ts";
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// In-memory rate limiting store (simple implementation)
-const rateLimitStore = new Map<string, number>();
+// Enhanced in-memory rate limiting store
+const rateLimitStore = new Map<string, { count: number; firstRequest: number }>();
+const abuseStore = new Map<string, number>();
 const RATE_LIMIT_WINDOW = 30000; // 30 seconds
+const RATE_LIMIT_COUNT = 3; // max 3 emails per window
+const ABUSE_THRESHOLD = 5; // trigger alert after 5 violations
 
-// Rate limiting check
-function checkRateLimit(identifier: string): boolean {
+// Enhanced rate limiting with abuse detection for emails
+function checkEmailRateLimit(identifier: string): boolean {
   const now = Date.now();
-  const lastRequest = rateLimitStore.get(identifier);
+  const userRequests = rateLimitStore.get(identifier);
   
-  if (lastRequest && (now - lastRequest) < RATE_LIMIT_WINDOW) {
-    return false; // Rate limit exceeded
+  if (!userRequests || (now - userRequests.firstRequest) > RATE_LIMIT_WINDOW) {
+    // Reset window
+    rateLimitStore.set(identifier, { count: 1, firstRequest: now });
+    return true;
   }
   
-  rateLimitStore.set(identifier, now);
+  if (userRequests.count >= RATE_LIMIT_COUNT) {
+    // Track abuse
+    const abuseCount = (abuseStore.get(identifier) || 0) + 1;
+    abuseStore.set(identifier, abuseCount);
+    
+    if (abuseCount >= ABUSE_THRESHOLD) {
+      console.error(`🚨 EMAIL ABUSE ALERT: User ${identifier} exceeded email rate limit ${abuseCount} times`);
+      // In production, this could trigger email alerts or other notifications
+    }
+    
+    return false;
+  }
+  
+  userRequests.count++;
   return true;
 }
 
@@ -149,7 +167,16 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // 3. CONTROLLO ANTIFLOOD - Log dell'evento email
+    // 3. ENHANCED RATE LIMITING - Check email specific rate limit
+    if (!checkEmailRateLimit(authenticatedUserId)) {
+      console.error(`Email rate limit exceeded for user: ${authenticatedUserId}`);
+      return new Response(
+        JSON.stringify({ success: false, error: "Troppi tentativi di invio email. Attendi 30 secondi prima di riprovare" }),
+        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // 4. CONTROLLO ANTIFLOOD - Log dell'evento email
     const { data: isAbuse, error: abuseError } = await supabase.rpc('log_potential_abuse', {
       p_event_type: 'email_send',
       p_user_id: authenticatedUserId
@@ -167,15 +194,6 @@ const handler = async (req: Request): Promise<Response> => {
           success: false, 
           error: "Troppe email inviate di recente. Attendi 30 secondi prima di riprovare." 
         }),
-        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    // 4. RATE LIMITING - Check rate limit (1 email every 30 seconds per user)
-    if (!checkRateLimit(authenticatedUserId)) {
-      console.error(`Rate limit exceeded for user: ${authenticatedUserId}`);
-      return new Response(
-        JSON.stringify({ success: false, error: "Troppi tentativi. Attendi 30 secondi prima di inviare un'altra email" }),
         { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -206,5 +224,5 @@ const handler = async (req: Request): Promise<Response> => {
 };
 
 // Start the server
-console.log("Starting send-mailjet-email edge function with security enhancements");
+console.log("Starting send-mailjet-email edge function with enhanced security");
 serve(handler);
