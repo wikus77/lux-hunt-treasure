@@ -27,11 +27,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Tenta auto-login sviluppatore (NESSUN CAPTCHA)
+      // Tenta auto-login sviluppatore (ZERO CAPTCHA - FORZA EDGE FUNCTION)
       try {
-        console.log('🚀 Tentativo auto-login sviluppatore - CAPTCHA DISATTIVATO...');
+        console.log('🚀 Tentativo auto-login sviluppatore - CAPTCHA COMPLETAMENTE DISATTIVATO...');
         
-        // Chiamata diretta alla funzione edge per sviluppatore (ZERO CAPTCHA)
+        // Chiamata diretta SOLO alla funzione edge per sviluppatore
         const response = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
           method: "POST",
           headers: {
@@ -40,8 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           },
           body: JSON.stringify({ 
             email: developerEmail, 
-            password: "dev_bypass", // Password placeholder, bypassata dalla funzione
-            // NON INVIARE NESSUN CAPTCHA O TOKEN per sviluppatore
+            password: "dev_bypass" // Password ignorata dalla edge function
           }),
         });
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -71,12 +70,12 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   const login = async (email: string, password: string, captchaToken?: string) => {
     console.log("Login attempt for email:", email);
     
-    // BYPASS COMPLETO CAPTCHA per email sviluppatore
+    // BYPASS COMPLETO CAPTCHA per email sviluppatore - FORZA EDGE FUNCTION
     if (email === 'wikus77@hotmail.it') {
-      console.log("🔑 DEVELOPER BYPASS: Login diretto per sviluppatore - CAPTCHA DISATTIVATO");
+      console.log("🔑 DEVELOPER BYPASS: Login diretto per sviluppatore - NESSUN CAPTCHA");
       
       try {
-        // Chiamata diretta alla funzione edge per sviluppatore (NESSUN CAPTCHA)
+        // Chiamata diretta SOLO alla funzione edge per sviluppatore
         const response = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
           method: "POST",
           headers: {
@@ -85,8 +84,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
           },
           body: JSON.stringify({ 
             email, 
-            password,
-            // NON INVIARE NESSUN CAPTCHA TOKEN per sviluppatore
+            password: "developer_bypass" // Password ignorata dalla funzione
           }),
         });
 
@@ -101,7 +99,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
             });
             
             if (!error) {
-              console.log("✅ Login sviluppatore completato - CAPTCHA BYPASSATO");
+              console.log("✅ Login sviluppatore completato - CAPTCHA COMPLETAMENTE BYPASSATO");
               return { success: true, data };
             }
           }

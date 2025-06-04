@@ -1,6 +1,6 @@
 
 // NOTE: This is a modified version of the login-no-captcha function
-// that accepts a captchaToken parameter but bypasses validation for debugging.
+// that completely bypasses all CAPTCHA validation for the developer email
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -56,11 +56,11 @@ serve(async (req) => {
       );
     }
 
-    // DEVELOPER BYPASS COMPLETO: Per l'email sviluppatore, bypass totale di CAPTCHA
+    // BYPASS COMPLETO: Per l'email sviluppatore, bypass totale di CAPTCHA e password
     const adminEmail = "wikus77@hotmail.it";
     if (email === adminEmail) {
       console.log("🔑 DEVELOPER BYPASS: Accesso automatico per:", adminEmail);
-      console.log("🚫 CAPTCHA COMPLETAMENTE DISATTIVATO per sviluppatore");
+      console.log("🚫 CAPTCHA E PASSWORD COMPLETAMENTE DISATTIVATI per sviluppatore");
       
       // Client con ruolo admin per le operazioni privilegiate
       const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -69,26 +69,23 @@ serve(async (req) => {
         },
       });
       
-      // BYPASS COMPLETO: Non controllare la password, accetta qualsiasi cosa
-      console.log("🔓 BYPASS: Password e CAPTCHA ignorati per sviluppatore");
-      
-      // Ottieni o crea l'utente sviluppatore
+      // Ottieni l'utente sviluppatore esistente
       let userData;
       try {
         const { data } = await supabaseAdmin.auth.admin.getUserByEmail(email);
         userData = data;
       } catch (userError) {
-        console.log("⚠️ Utente non trovato, tentativo di creazione automatica");
+        console.log("⚠️ Utente non trovato");
       }
       
-      // Se l'utente non esiste, prova a crearlo
+      // Se l'utente non esiste, crealo automaticamente
       if (!userData || !userData.user) {
         console.log("🔧 Creazione automatica utente sviluppatore");
         try {
           const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
             email: adminEmail,
-            password: "developer_auto_password", // Password automatica
-            email_confirm: true, // Conferma email automaticamente
+            password: "developer_auto_password",
+            email_confirm: true,
             user_metadata: {
               role: "admin",
               auto_created: true,
@@ -118,7 +115,7 @@ serve(async (req) => {
           }
           
           if (tokenData) {
-            console.log("✅ Token di accesso generato per sviluppatore (CAPTCHA BYPASSATO)");
+            console.log("✅ Token di accesso generato per sviluppatore (CAPTCHA COMPLETAMENTE BYPASSATO)");
             
             // Verifica e crea/aggiorna il profilo admin
             try {
@@ -165,9 +162,11 @@ serve(async (req) => {
                 user: {
                   id: userData.user.id,
                   email: userData.user.email,
+                  email_confirmed_at: new Date().toISOString(),
                 },
-                message: "Login sviluppatore automatico riuscito - CAPTCHA BYPASSATO",
-                captcha_bypassed: true
+                message: "Login sviluppatore automatico riuscito - CAPTCHA COMPLETAMENTE BYPASSATO",
+                captcha_bypassed: true,
+                developer_bypass: true
               }),
               {
                 status: 200,
@@ -189,7 +188,7 @@ serve(async (req) => {
           captcha_bypassed: true
         }),
         {
-          status: 401,
+          status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
