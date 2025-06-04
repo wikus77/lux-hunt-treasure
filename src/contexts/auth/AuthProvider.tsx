@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,20 +15,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authInitialized, setAuthInitialized] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
-
-  // Debug auth state changes
-  useEffect(() => {
-    console.log("🔍 AuthProvider state:", {
-      isAuthenticated: auth.isAuthenticated,
-      isLoading: auth.isLoading,
-      hasSession: !!auth.session,
-      hasUser: !!auth.user,
-      userEmail: auth.user?.email,
-      userRole,
-      isRoleLoading,
-      authInitialized
-    });
-  }, [auth.isAuthenticated, auth.isLoading, auth.session, auth.user, userRole, isRoleLoading, authInitialized]);
 
   // Funzione per creare automaticamente il profilo admin
   const createAdminProfile = async (userId: string, userEmail: string) => {
@@ -92,7 +79,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const fetchUserRole = async () => {
       // Se non c'è utente autenticato, NON fare nulla - lascia che vedano la landing
       if (!auth.isAuthenticated || !auth.user) {
-        console.log("👤 No authenticated user, clearing role state");
         setUserRole(null);
         setIsRoleLoading(false);
         return;
@@ -194,7 +180,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Mark auth as initialized after first load
     if (!authInitialized && !auth.isLoading) {
-      console.log("✅ Auth initialization completed");
       setAuthInitialized(true);
     }
     

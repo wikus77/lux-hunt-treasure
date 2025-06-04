@@ -4,11 +4,9 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Spinner } from "@/components/ui/spinner";
 import IOSSafeAreaOverlay from "@/components/debug/IOSSafeAreaOverlay";
-import WelcomeRedirect from "@/pages/WelcomeRedirect";
 
-// Public routes with lazy loading
-const Login = lazy(() => import("@/pages/Login"));
-const Register = lazy(() => import("@/pages/Register"));
+// Public routes
+import Index from "@/pages/Index";
 
 // Main app routes with lazy loading - SEPARATE FROM LANDING
 const AppHome = lazy(() => import("@/pages/AppHome"));
@@ -20,6 +18,10 @@ const Notifications = lazy(() => import("@/pages/Notifications"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const Subscriptions = lazy(() => import("@/pages/Subscriptions"));
+
+// Auth routes
+const Login = lazy(() => import("@/pages/Login"));
+const Register = lazy(() => import("@/pages/Register"));
 const MissionSelection = lazy(() => import("@/pages/MissionSelection"));
 
 // Additional routes
@@ -28,12 +30,6 @@ const Contacts = lazy(() => import("@/pages/Contacts"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const Terms = lazy(() => import("@/pages/Terms"));
-
-// iOS Test route
-const Open = lazy(() => import("@/pages/Open"));
-
-// ✅ FIX: Landing page SOLO per web, NON per Capacitor
-const Index = lazy(() => import("@/pages/Index"));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -51,20 +47,10 @@ const AppRoutes: React.FC = () => {
       <IOSSafeAreaOverlay>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            {/* ✅ FIX: Root gestita da RootRedirect in App.tsx - NO LANDING PAGE */}
-            <Route path="/" element={<WelcomeRedirect />} />
+            {/* Landing page - SEMPRE PUBBLICA, NESSUN REDIRECT */}
+            <Route path="/" element={<Index />} />
 
-            {/* iOS Test Route - PUBLIC */}
-            <Route path="/open" element={<Open />} />
-
-            {/* Auth routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-
-            {/* ✅ FIX: Landing page SOLO per web - NO Capacitor */}
-            <Route path="/landing" element={<Index />} />
-
-            {/* Main App Routes - PROTECTED */}
+            {/* Main App Routes - PROTECTED - SEPARATE DA LANDING */}
             <Route
               path="/home"
               element={
@@ -131,7 +117,10 @@ const AppRoutes: React.FC = () => {
                 </ProtectedRoute>
               }
             />
-            
+
+            {/* Auth routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/select-mission" element={<MissionSelection />} />
             
             {/* Other routes */}

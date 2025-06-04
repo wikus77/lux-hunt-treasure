@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -23,27 +24,14 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       (event, currentSession) => {
         console.log("Auth state changed:", event);
         setSession(currentSession);
+        setUser(currentSession?.user ?? null);
         
-        const currentUser = currentSession?.user ?? null;
-        
-        // Developer bypass for wikus77@hotmail.it
-        if (currentUser?.email === "wikus77@hotmail.it") {
-          console.log("🔓 Developer bypass: forcing email verification for wikus77@hotmail.it");
-          const enhancedUser = {
-            ...currentUser,
-            email_confirmed_at: new Date().toISOString(),
-          };
-          setUser(enhancedUser);
-          setIsEmailVerified(true);
+        // Update email verification status
+        if (currentSession?.user) {
+          setIsEmailVerified(!!currentSession.user.email_confirmed_at);
+          console.log("Email verification status:", !!currentSession.user.email_confirmed_at);
         } else {
-          setUser(currentUser);
-          // Update email verification status
-          if (currentUser) {
-            setIsEmailVerified(!!currentUser.email_confirmed_at);
-            console.log("Email verification status:", !!currentUser.email_confirmed_at);
-          } else {
-            setIsEmailVerified(false);
-          }
+          setIsEmailVerified(false);
         }
         
         // Mark loading as complete after auth state changes
@@ -51,43 +39,21 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       }
     );
     
-    // Then check for existing session with forced fetch
-    const checkSession = async () => {
-      try {
-        console.log("🔍 Force checking existing session...");
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        console.log("Initial session check:", initialSession ? "Found session" : "No session");
-        
-        setSession(initialSession);
-        const initialUser = initialSession?.user ?? null;
-        
-        // Developer bypass for wikus77@hotmail.it
-        if (initialUser?.email === "wikus77@hotmail.it") {
-          console.log("🔓 Developer bypass: forcing email verification for wikus77@hotmail.it");
-          const enhancedUser = {
-            ...initialUser,
-            email_confirmed_at: new Date().toISOString(),
-          };
-          setUser(enhancedUser);
-          setIsEmailVerified(true);
-        } else {
-          setUser(initialUser);
-          // Update email verification status
-          if (initialUser) {
-            setIsEmailVerified(!!initialUser.email_confirmed_at);
-            console.log("Initial email verification status:", !!initialUser.email_confirmed_at);
-          }
-        }
-        
-        // Mark loading as complete after initial check
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error checking session:", error);
-        setIsLoading(false);
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      console.log("Initial session check:", initialSession ? "Found session" : "No session");
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
+      
+      // Update email verification status
+      if (initialSession?.user) {
+        setIsEmailVerified(!!initialSession.user.email_confirmed_at);
+        console.log("Initial email verification status:", !!initialSession.user.email_confirmed_at);
       }
-    };
-    
-    checkSession();
+      
+      // Mark loading as complete after initial check
+      setIsLoading(false);
+    });
     
     // Clean up subscription on unmount
     return () => {
@@ -151,11 +117,6 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
    * Check if user is authenticated
    */
   const isAuthenticated = useCallback(() => {
-    // Developer bypass for wikus77@hotmail.it
-    if (user?.email === "wikus77@hotmail.it") {
-      console.log("🔓 Developer bypass: wikus77@hotmail.it always authenticated");
-      return true;
-    }
     return !!user && !!session;
   }, [user, session]);
 
@@ -225,41 +186,8 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     logout,
     getCurrentUser,
     getAccessToken,
-    resendVerificationEmail: async (email: string) => {
-      try {
-        const { error } = await supabase.auth.resend({
-          type: 'signup',
-          email: email,
-        });
-
-        if (error) {
-          console.error("Error sending verification email:", error);
-          return { success: false, error: error.message };
-        }
-
-        return { success: true };
-      } catch (error: any) {
-        console.error("Exception sending verification email:", error);
-        return { success: false, error: error.message };
-      }
-    },
-    resetPassword: async (email: string) => {
-      try {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + '/reset-password',
-        });
-
-        if (error) {
-          console.error("Error sending password reset email:", error);
-          return { success: false, error: error.message };
-        }
-
-        return { success: true };
-      } catch (error: any) {
-        console.error("Exception sending password reset email:", error);
-        return { success: false, error: error.message };
-      }
-    },
+    resendVerificationEmail,
+    resetPassword,
     user,
   };
 }

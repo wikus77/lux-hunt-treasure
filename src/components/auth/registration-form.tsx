@@ -25,9 +25,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
-    // Fix CAPTCHA: Passa stringa vuota se token undefined per compatibilità iOS WebView
-    const captchaToken = turnstileToken || "";
-    originalHandleSubmit(e, captchaToken, missionPreference);
+    // Add mission preference to submission
+    originalHandleSubmit(e, turnstileToken || undefined, missionPreference);
   };
 
   return (
@@ -96,7 +95,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
       >
         <Button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !turnstileToken}
           className="w-full bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-glow"
         >
           {isSubmitting ? (

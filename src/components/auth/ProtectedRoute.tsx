@@ -25,8 +25,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       isAuthenticated,
       isLoading,
       isEmailVerified,
-      user: getCurrentUser()?.id,
-      userEmail: getCurrentUser()?.email
+      user: getCurrentUser()?.id
     });
   }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser]);
   
@@ -38,14 +37,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
   
-  // Developer bypass for wikus77@hotmail.it
-  const user = getCurrentUser();
-  if (user?.email === "wikus77@hotmail.it") {
-    console.log("🔓 Developer bypass: allowing access for wikus77@hotmail.it");
-    return children ? <>{children}</> : <Outlet />;
-  }
-  
-  // Check authentication state first
+  // If user is not authenticated, redirect to login
   if (!isAuthenticated) {
     console.log("User not authenticated, redirecting to:", redirectTo);
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
