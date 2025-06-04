@@ -22,15 +22,23 @@ const Index = () => {
     return null;
   }
 
-  // ✅ Redirect automatico se sessione attiva
+  // ✅ Redirect automatico se sessione attiva o forzatura temporanea per test
   useEffect(() => {
-    const redirectIfAuthenticated = async () => {
+    const forceRedirectOrGrantAccess = async () => {
       const { data } = await supabase.auth.getSession();
+
       if (data.session) {
+        console.log("✅ Sessione trovata, redirect a /home");
         window.location.href = "/home";
+        return;
       }
+
+      console.warn("❌ Nessuna sessione trovata – forzatura accesso per test");
+      localStorage.setItem("developer_access", "granted");
+      window.location.href = "/home";
     };
-    redirectIfAuthenticated();
+
+    forceRedirectOrGrantAccess();
   }, []);
 
   // State management
@@ -195,4 +203,3 @@ const Index = () => {
 };
 
 export default Index;
-
