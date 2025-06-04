@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
@@ -8,6 +8,34 @@ import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import GlobalLayout from "./components/layout/GlobalLayout";
 import AppRoutes from "./routes/AppRoutes";
 import SafeAreaToggle from "./components/debug/SafeAreaToggle";
+import { supabase } from "./integrations/supabase/client";
+
+// Component for automatic redirect logic
+const AuthRedirectHandler = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const checkSessionAndRedirect = async () => {
+      // Only check on root path
+      if (location.pathname === '/') {
+        try {
+          const { data } = await supabase.auth.getSession();
+          if (data.session) {
+            console.log('✅ User authenticated, redirecting to /home');
+            navigate('/home', { replace: true });
+          }
+        } catch (error) {
+          console.error('❌ Error checking session:', error);
+        }
+      }
+    };
+
+    checkSessionAndRedirect();
+  }, [navigate, location.pathname]);
+
+  return null;
+};
 
 function App() {
   return (
@@ -30,6 +58,7 @@ function App() {
           }>
             <SafeAreaToggle>
               <GlobalLayout>
+                <AuthRedirectHandler />
                 <AppRoutes />
                 <Toaster position="top-right" />
               </GlobalLayout>
