@@ -113,7 +113,7 @@ const AgentRegistrationForm: React.FC<AgentRegistrationFormProps> = ({
         id="name"
         label="Nome"
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(value) => setName(value)}
         placeholder="Il tuo nome"
         disabled={isSubmitting}
         error={errors.name}
@@ -124,7 +124,7 @@ const AgentRegistrationForm: React.FC<AgentRegistrationFormProps> = ({
         label="Email"
         type="email"
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={(value) => setEmail(value)}
         placeholder="La tua email"
         disabled={isSubmitting}
         error={errors.email}
