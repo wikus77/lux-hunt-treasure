@@ -7,6 +7,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  loading: boolean;
+  error: Error | null;
   isAuthenticated: boolean;
   isEmailVerified: boolean;
   userRole: string | null;
@@ -28,6 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const isAuthenticated = !!user;
@@ -40,6 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
+        setError(null);
         
         if (session?.user) {
           // Fetch user role
@@ -55,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           } catch (error) {
             console.error('Error fetching user role:', error);
+            setError(error as Error);
           }
         } else {
           setUserRole(null);
@@ -65,7 +70,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        setError(error);
+      }
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
@@ -97,6 +105,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     isLoading,
+    loading: isLoading,
+    error,
     isAuthenticated,
     isEmailVerified,
     userRole,

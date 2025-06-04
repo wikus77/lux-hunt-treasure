@@ -4,6 +4,8 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
+  loading: boolean;
+  error: Error | null;
   isEmailVerified: boolean;
   getCurrentUser: () => User | null;
   getAccessToken: () => string | null;
