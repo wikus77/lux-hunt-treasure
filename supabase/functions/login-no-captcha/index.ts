@@ -79,12 +79,39 @@ serve(async (req) => {
           existingUser = usersList.users.find(user => user.email === adminEmail);
         }
         
-        let userId = null;
-        
         if (existingUser) {
-          // ✅ Utente già esiste → Usa ID esistente
-          console.log("✅ Utente sviluppatore esistente trovato");
-          userId = existingUser.id;
+          // ✅ Utente già esiste → Genera magic link per login automatico
+          console.log("✅ Utente sviluppatore già registrato - bypass CAPTCHA attivo");
+          
+          const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'magiclink',
+            email: adminEmail,
+          });
+          
+          if (linkError) {
+            console.error("❌ Errore generazione magic link:", linkError);
+            return new Response(
+              JSON.stringify({ error: "Errore generazione magic link", detail: linkError.message }),
+              {
+                status: 500,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              }
+            );
+          }
+          
+          console.log("✅ Login automatico sviluppatore eseguito correttamente");
+          return new Response(
+            JSON.stringify({
+              message: "Login sviluppatore effettuato",
+              action_link: linkData.action_link,
+              captcha_bypassed: true,
+              developer_bypass: true
+            }),
+            {
+              status: 200,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+          );
         } else {
           // 👇 Solo se non esiste, crearlo
           console.log("🔧 Creazione automatica utente sviluppatore");
@@ -110,33 +137,32 @@ serve(async (req) => {
             );
           }
           
+          // Genera magic link per il nuovo utente
+          const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'magiclink',
+            email: adminEmail,
+          });
+          
+          if (linkError) {
+            console.error("❌ Errore generazione magic link per nuovo utente:", linkError);
+            return new Response(
+              JSON.stringify({ error: "Errore generazione magic link", detail: linkError.message }),
+              {
+                status: 500,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              }
+            );
+          }
+          
           console.log("✅ Utente sviluppatore creato automaticamente");
-          userId = newUser.user.id;
-        }
-        
-        // ✅ Creazione sessione per l'utente (esistente o nuovo)
-        const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.createUserSession({
-          user_id: userId
-        });
-        
-        if (sessionError) {
-          console.error("❌ Errore creazione sessione:", sessionError);
-          return new Response(
-            JSON.stringify({ error: "Errore creazione sessione", detail: sessionError.message }),
-            {
-              status: 500,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        }
-        
-        if (sessionData) {
-          // Crea/aggiorna profilo admin se necessario
+          console.log("✅ Login automatico sviluppatore eseguito correttamente");
+          
+          // Crea profilo admin se necessario
           try {
             const { data: profileData, error: profileError } = await supabaseAdmin
               .from("profiles")
               .select("id, role")
-              .eq("id", userId)
+              .eq("id", newUser.user.id)
               .maybeSingle();
 
             if (!profileData) {
@@ -145,7 +171,7 @@ serve(async (req) => {
               const { error: insertError } = await supabaseAdmin
                 .from("profiles")
                 .insert({
-                  id: userId,
+                  id: newUser.user.id,
                   email: adminEmail,
                   role: "admin",
                   full_name: "Amministratore",
@@ -157,24 +183,18 @@ serve(async (req) => {
               } else {
                 console.log("✅ Profilo admin creato automaticamente");
               }
-            } else if (profileData.role !== "admin") {
-              console.log("⚙️ Aggiornamento ruolo a admin...");
-              await supabaseAdmin
-                .from("profiles")
-                .update({ role: "admin" })
-                .eq("id", userId);
             }
           } catch (profileErr) {
             console.error("⚠️ Errore gestione profilo:", profileErr);
           }
 
-          console.log("✅ Login sviluppatore completato - CAPTCHA COMPLETAMENTE BYPASSATO");
           return new Response(
             JSON.stringify({
               message: "Login sviluppatore effettuato",
-              session: sessionData,
+              action_link: linkData.action_link,
               captcha_bypassed: true,
-              developer_bypass: true
+              developer_bypass: true,
+              user_created: true
             }),
             {
               status: 200,
@@ -184,22 +204,18 @@ serve(async (req) => {
         }
         
       } catch (userError) {
-        console.error("❌ Errore durante gestione utente:", userError);
+        console.error("❌ Errore imprevisto:", userError);
+        return new Response(
+          JSON.stringify({ 
+            error: "Errore imprevisto durante gestione utente sviluppatore",
+            detail: userError.toString()
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
       }
-      
-      // Fallback: restituisci un errore ma informa che è stato tentato il bypass
-      console.error("❌ Impossibile completare il bypass sviluppatore");
-      return new Response(
-        JSON.stringify({ 
-          error: "Bypass sviluppatore fallito",
-          bypass_attempted: true,
-          captcha_bypassed: true
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
     }
 
     // Per tutte le altre email, accesso negato (CAPTCHA rimane attivo per altri utenti)

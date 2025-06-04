@@ -46,18 +46,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (response.ok) {
           const data = await response.json();
-          if (data.access_token && data.refresh_token) {
-            // Imposta la sessione sviluppatore
-            const { error } = await supabase.auth.setSession({
-              access_token: data.access_token,
-              refresh_token: data.refresh_token,
-            });
+          if (data.action_link) {
+            // ✅ FIX: Usa il magic link per autenticare l'utente
+            console.log("✅ Magic link ricevuto per auto-login sviluppatore");
             
-            if (!error) {
-              console.log('✅ Auto-login sviluppatore riuscito - CAPTCHA COMPLETAMENTE BYPASSATO');
-              localStorage.setItem('developer_access', 'granted');
-              localStorage.setItem('developer_user_email', developerEmail);
-              localStorage.setItem('captcha_bypassed', 'true');
+            // Estrai i parametri dal magic link
+            const url = new URL(data.action_link);
+            const accessToken = url.searchParams.get('access_token');
+            const refreshToken = url.searchParams.get('refresh_token');
+            
+            if (accessToken && refreshToken) {
+              // Imposta la sessione sviluppatore
+              const { error } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+              
+              if (!error) {
+                console.log('✅ Auto-login sviluppatore riuscito - CAPTCHA COMPLETAMENTE BYPASSATO');
+                localStorage.setItem('developer_access', 'granted');
+                localStorage.setItem('developer_user_email', developerEmail);
+                localStorage.setItem('captcha_bypassed', 'true');
+                // Redirect automatico a /home
+                if (window.location.pathname === '/') {
+                  window.location.href = '/home';
+                }
+              }
             }
           }
         }
