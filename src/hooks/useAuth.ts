@@ -24,6 +24,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log(`🔐 Auth state changed: ${event}`, isIOS ? "(iOS WebView)" : "");
+        console.log("🔍 Auth state session:", currentSession ? "Present" : "Null");
         
         if (currentSession) {
           console.log("✅ Session detected in auth state change");
@@ -64,6 +65,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         
         // Mark loading as complete after auth state changes
         setIsLoading(false);
+        console.log("🔄 Auth loading completed, isAuthenticated:", !!currentSession);
       }
     );
     
@@ -112,6 +114,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         console.log("Initial session check:", effectiveSession ? "Found session ✓" : "No session ✗");
         if (effectiveSession) {
           console.log("🆔 User ID:", effectiveSession.user?.id);
+          console.log("📧 User Email:", effectiveSession.user?.email);
         }
         
         setSession(effectiveSession);
@@ -137,6 +140,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         
         // Mark loading as complete after initial check
         setIsLoading(false);
+        console.log("🔄 Initial auth check completed, session:", effectiveSession ? "Found" : "Not found");
       } catch (error) {
         console.error("❌ Error checking session:", error);
         

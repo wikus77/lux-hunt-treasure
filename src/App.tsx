@@ -16,15 +16,22 @@ import { Capacitor } from '@capacitor/core';
 function RootRedirect() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, session } = useAuth();
+  const { isAuthenticated, isLoading, session, user } = useAuth();
   
   // Attiva il listener per i magic link in ambiente Capacitor (ora dentro Router)
   useCapacitorMagicLinkListener();
   
   useEffect(() => {
-    // Debug avvio app
-    console.log("🚀 App initialization - Path:", location.pathname, "Auth state:", 
-      isLoading ? "loading..." : (isAuthenticated ? "authenticated" : "not authenticated"));
+    // Debug avvio app con dettagli completi
+    console.log("🚀 App initialization - Path:", location.pathname);
+    console.log("🔍 Auth state details:", {
+      isLoading,
+      isAuthenticated,
+      hasSession: !!session,
+      hasUser: !!user,
+      userEmail: user?.email,
+      sessionExists: session ? "Yes" : "No"
+    });
     
     const isIOS = Capacitor.getPlatform() === 'ios';
     if (isIOS) {
@@ -33,17 +40,24 @@ function RootRedirect() {
     
     // ✅ FIX: Redirect automatico a /home se session presente
     if (!isLoading) {
+      console.log("✅ Auth loading completed, checking redirect logic...");
+      
       if (location.pathname === "/" || location.pathname === "") {
         if (session) {
           console.log("✅ Session detected at root route - redirecting to /home");
+          console.log("📧 User email:", session.user?.email);
           navigate("/home", { replace: true });
         } else {
           console.log("🔒 No session at root route - redirecting to /login");
           navigate("/login", { replace: true });
         }
+      } else {
+        console.log(`📍 Current path: ${location.pathname}, no redirect needed`);
       }
+    } else {
+      console.log("⏳ Auth still loading, waiting...");
     }
-  }, [location.pathname, isAuthenticated, isLoading, session, navigate]);
+  }, [location.pathname, isAuthenticated, isLoading, session, user, navigate]);
   
   return null;
 }
