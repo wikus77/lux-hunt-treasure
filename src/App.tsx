@@ -10,7 +10,7 @@ import AppRoutes from "./routes/AppRoutes";
 import SafeAreaToggle from "./components/debug/SafeAreaToggle";
 import { supabase } from "./integrations/supabase/client";
 
-// ✅ Component for automatic redirect logic on Capacitor/iOS
+// FIX APPLICATO MANUALMENTE - Component for automatic redirect logic on Capacitor/iOS
 const AuthRedirectHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -49,6 +49,7 @@ function App() {
     <Router>
       <SoundProvider>
         <AuthProvider>
+          {/* FIX APPLICATO MANUALMENTE - AuthProvider ora avvolge tutto */}
           <ErrorBoundary fallback={
             <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
               <div className="glass-card p-6 max-w-md mx-auto text-center">
