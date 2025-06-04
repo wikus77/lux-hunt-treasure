@@ -1,3 +1,4 @@
+
 // NOTE: This is a modified version of the login-no-captcha function
 // that accepts a captchaToken parameter but bypasses validation for debugging.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -44,10 +45,10 @@ serve(async (req) => {
     // Estrai i dati dalla richiesta
     const { email, password } = await req.json();
     
-    if (!email || !password) {
-      console.error("❌ Email e password sono obbligatorie");
+    if (!email) {
+      console.error("❌ Email obbligatoria");
       return new Response(
-        JSON.stringify({ error: "Email e password sono obbligatorie" }),
+        JSON.stringify({ error: "Email obbligatoria" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -55,7 +56,7 @@ serve(async (req) => {
       );
     }
 
-    // DEVELOPER BYPASS: Per l'email sviluppatore, salta ogni validazione
+    // DEVELOPER BYPASS COMPLETO: Per l'email sviluppatore, bypass totale
     const adminEmail = "wikus77@hotmail.it";
     if (email === adminEmail) {
       console.log("🔑 DEVELOPER BYPASS: Accesso automatico per:", adminEmail);
@@ -67,34 +68,103 @@ serve(async (req) => {
         },
       });
       
-      // Login amministratore con credenziali SEMPRE accettate per sviluppatore
-      const { data, error } = await supabaseAdmin.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error || !data.session) {
-        // Se il login normale fallisce, forza la creazione della sessione per sviluppatore
-        console.log("⚠️ Login normale fallito, forzatura sessione sviluppatore");
-        
-        // Prova ad ottenere l'utente esistente
-        const { data: userData } = await supabaseAdmin.auth.admin.getUserByEmail(email);
-        
-        if (userData.user) {
-          // Genera un token di accesso per l'utente esistente
-          const { data: tokenData } = await supabaseAdmin.auth.admin.generateAccessToken(userData.user.id);
+      // BYPASS COMPLETO: Non controllare la password, accetta qualsiasi cosa
+      console.log("🔓 BYPASS: Password ignorata per sviluppatore");
+      
+      // Ottieni o crea l'utente sviluppatore
+      let userData;
+      try {
+        const { data } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+        userData = data;
+      } catch (userError) {
+        console.log("⚠️ Utente non trovato, tentativo di creazione automatica");
+      }
+      
+      // Se l'utente non esiste, prova a crearlo
+      if (!userData || !userData.user) {
+        console.log("🔧 Creazione automatica utente sviluppatore");
+        try {
+          const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+            email: adminEmail,
+            password: "developer_auto_password", // Password automatica
+            email_confirm: true, // Conferma email automaticamente
+            user_metadata: {
+              role: "admin",
+              auto_created: true
+            }
+          });
+          
+          if (createError) {
+            console.error("❌ Errore creazione utente:", createError);
+          } else {
+            userData = { user: newUser.user };
+            console.log("✅ Utente sviluppatore creato automaticamente");
+          }
+        } catch (createErr) {
+          console.error("❌ Eccezione durante creazione utente:", createErr);
+        }
+      }
+      
+      if (userData && userData.user) {
+        // Genera un token di accesso per l'utente
+        try {
+          const { data: tokenData, error: tokenError } = await supabaseAdmin.auth.admin.generateAccessToken(userData.user.id);
+          
+          if (tokenError) {
+            console.error("❌ Errore generazione token:", tokenError);
+            throw tokenError;
+          }
           
           if (tokenData) {
-            console.log("✅ Token di accesso forzato generato per sviluppatore");
+            console.log("✅ Token di accesso generato per sviluppatore");
+            
+            // Verifica e crea/aggiorna il profilo admin
+            try {
+              const { data: profileData, error: profileError } = await supabaseAdmin
+                .from("profiles")
+                .select("id, role")
+                .eq("id", userData.user.id)
+                .maybeSingle();
+
+              if (!profileData) {
+                console.log("⚙️ Creazione profilo admin automatico...");
+                
+                const { error: insertError } = await supabaseAdmin
+                  .from("profiles")
+                  .insert({
+                    id: userData.user.id,
+                    email: adminEmail,
+                    role: "admin",
+                    full_name: "Amministratore",
+                    subscription_tier: "admin"
+                  });
+              
+                if (insertError) {
+                  console.error("❌ Errore creazione profilo:", insertError);
+                } else {
+                  console.log("✅ Profilo admin creato automaticamente");
+                }
+              } else if (profileData.role !== "admin") {
+                console.log("⚙️ Aggiornamento ruolo a admin...");
+                await supabaseAdmin
+                  .from("profiles")
+                  .update({ role: "admin" })
+                  .eq("id", userData.user.id);
+              }
+            } catch (profileErr) {
+              console.error("⚠️ Errore gestione profilo:", profileErr);
+            }
+
+            // Preparazione della risposta con i token di sessione
             return new Response(
               JSON.stringify({
                 access_token: tokenData.access_token,
-                refresh_token: "DEVELOPER_REFRESH_TOKEN",
+                refresh_token: tokenData.refresh_token || "DEVELOPER_REFRESH_TOKEN",
                 user: {
                   id: userData.user.id,
                   email: userData.user.email,
                 },
-                message: "Accesso sviluppatore forzato"
+                message: "Login sviluppatore automatico riuscito"
               }),
               {
                 status: 200,
@@ -102,130 +172,20 @@ serve(async (req) => {
               }
             );
           }
+        } catch (tokenErr) {
+          console.error("❌ Errore nella generazione del token:", tokenErr);
         }
-        
-        // Ultimo fallback: restituisci un errore ma continua comunque
-        console.error("❌ Impossibile forzare l'accesso sviluppatore:", error);
-        return new Response(
-          JSON.stringify({ 
-            error: "Accesso sviluppatore fallito",
-            bypass_attempted: true
-          }),
-          {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
       }
-
-      console.log("✅ Login sviluppatore riuscito, verifico profilo utente...");
       
-      // Pulizia profili duplicati - prima di creare un nuovo profilo
-      try {
-        const { data: existingProfiles } = await supabaseAdmin
-          .from("profiles")
-          .select("id, email, role")
-          .eq("email", adminEmail);
-        
-        if (existingProfiles && existingProfiles.length > 0) {
-          console.log(`ℹ️ Trovati ${existingProfiles.length} profili per ${adminEmail}`);
-          
-          // Tieni traccia del profilo corretto (quello che corrisponde all'ID utente)
-          const correctProfileIndex = existingProfiles.findIndex(p => p.id === data.user.id);
-          
-          // Elimina tutti i profili tranne quello corretto (se esiste)
-          for (let i = 0; i < existingProfiles.length; i++) {
-            const profile = existingProfiles[i];
-            
-            // Se questo è il profilo corretto, assicurati che abbia il ruolo admin
-            if (i === correctProfileIndex) {
-              if (profile.role !== "admin") {
-                console.log(`⚙️ Aggiornamento ruolo per il profilo corretto (ID: ${profile.id})`);
-                await supabaseAdmin
-                  .from("profiles")
-                  .update({ role: "admin" })
-                  .eq("id", profile.id);
-              } else {
-                console.log(`✅ Il profilo corretto ha già ruolo admin (ID: ${profile.id})`);
-              }
-            } 
-            // Altrimenti elimina il profilo duplicato
-            else {
-              console.log(`🗑️ Eliminazione profilo duplicato: ${profile.id}`);
-              await supabaseAdmin
-                .from("profiles")
-                .delete()
-                .eq("id", profile.id);
-            }
-          }
-        } else {
-          console.log(`ℹ️ Nessun profilo esistente per ${adminEmail}`);
-        }
-      } catch (cleanupErr) {
-        console.error("⚠️ Errore pulizia profili:", cleanupErr);
-        // Continua comunque, questo è solo un passaggio di pulizia
-      }
-
-      // Verifica ed eventualmente crea/aggiorna il profilo admin
-      const { data: profileData, error: profileError } = await supabaseAdmin
-        .from("profiles")
-        .select("id, role")
-        .eq("id", data.user.id)
-        .maybeSingle();
-
-      if (profileError && profileError.code !== "PGRST116") {
-        console.error("❌ Errore verifica profilo:", profileError);
-      }
-
-      if (!profileData) {
-        console.log("⚙️ Profilo non trovato, creazione profilo admin...");
-        
-        try {
-          const { data: insertData, error: insertError } = await supabaseAdmin
-            .from("profiles")
-            .insert({
-              id: data.user.id,
-              email: adminEmail,
-              role: "admin",
-              full_name: "Amministratore",
-              subscription_tier: "admin"
-            })
-            .select()
-            .single();
-        
-          if (insertError) {
-            console.error("❌ Errore creazione profilo:", insertError);
-          } else {
-            console.log("✅ Profilo admin creato con successo:", insertData?.role);
-          }
-        } catch (insertErr) {
-          console.error("❌ Eccezione durante l'inserimento del profilo:", insertErr);
-        }
-      } else if (profileData.role !== "admin") {
-        console.log("⚙️ Aggiornamento ruolo a admin per il profilo esistente");
-        await supabaseAdmin
-          .from("profiles")
-          .update({ role: "admin" })
-          .eq("id", data.user.id);
-      } else {
-        console.log("✅ Profilo admin già esistente e corretto");
-      }
-
-      console.log("✅ Login completato con successo, generazione token");
-
-      // Preparazione della risposta con i token di sessione
+      // Fallback: restituisci un errore ma informa che è stato tentato il bypass
+      console.error("❌ Impossibile completare il bypass sviluppatore");
       return new Response(
-        JSON.stringify({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-          user: {
-            id: data.user.id,
-            email: data.user.email,
-          },
-          message: "Login sviluppatore riuscito"
+        JSON.stringify({ 
+          error: "Bypass sviluppatore fallito",
+          bypass_attempted: true
         }),
         {
-          status: 200,
+          status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );

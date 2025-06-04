@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +14,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authInitialized, setAuthInitialized] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
+
+  // Auto-login per sviluppatore
+  useEffect(() => {
+    const attemptDeveloperAutoLogin = async () => {
+      const developerEmail = 'wikus77@hotmail.it';
+      
+      // Verifica se già autenticato
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (currentSession?.user?.email === developerEmail) {
+        console.log('🔑 Developer già autenticato');
+        return;
+      }
+
+      // Tenta auto-login sviluppatore
+      try {
+        console.log('🚀 Tentativo auto-login sviluppatore...');
+        
+        // Chiamata diretta alla funzione edge per sviluppatore
+        const response = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
+          },
+          body: JSON.stringify({ 
+            email: developerEmail, 
+            password: "dev_bypass" // Password placeholder, bypassata dalla funzione
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.access_token && data.refresh_token) {
+            // Imposta la sessione sviluppatore
+            const { error } = await supabase.auth.setSession({
+              access_token: data.access_token,
+              refresh_token: data.refresh_token,
+            });
+            
+            if (!error) {
+              console.log('✅ Auto-login sviluppatore riuscito');
+              localStorage.setItem('developer_access', 'granted');
+              localStorage.setItem('developer_user_email', developerEmail);
+            }
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ Auto-login sviluppatore fallito:', error);
+      }
+    };
+
+    // Esegui solo se non c'è sessione attiva
+    if (!auth.isAuthenticated && !auth.isLoading) {
+      attemptDeveloperAutoLogin();
+    }
+  }, [auth.isAuthenticated, auth.isLoading]);
 
   // Funzione per creare automaticamente il profilo admin
   const createAdminProfile = async (userId: string, userEmail: string) => {

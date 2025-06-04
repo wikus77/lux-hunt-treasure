@@ -28,8 +28,10 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         
         // Update email verification status
         if (currentSession?.user) {
-          setIsEmailVerified(!!currentSession.user.email_confirmed_at);
-          console.log("Email verification status:", !!currentSession.user.email_confirmed_at);
+          // Per l'email sviluppatore, considera sempre verificata
+          const isDeveloper = currentSession.user.email === 'wikus77@hotmail.it';
+          setIsEmailVerified(isDeveloper || !!currentSession.user.email_confirmed_at);
+          console.log("Email verification status:", isDeveloper || !!currentSession.user.email_confirmed_at);
         } else {
           setIsEmailVerified(false);
         }
@@ -47,8 +49,9 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       
       // Update email verification status
       if (initialSession?.user) {
-        setIsEmailVerified(!!initialSession.user.email_confirmed_at);
-        console.log("Initial email verification status:", !!initialSession.user.email_confirmed_at);
+        const isDeveloper = initialSession.user.email === 'wikus77@hotmail.it';
+        setIsEmailVerified(isDeveloper || !!initialSession.user.email_confirmed_at);
+        console.log("Initial email verification status:", isDeveloper || !!initialSession.user.email_confirmed_at);
       }
       
       // Mark loading as complete after initial check
@@ -67,6 +70,49 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
    */
   const login = async (email: string, password: string, captchaToken?: string) => {
     console.log("Login attempt for email:", email);
+    
+    // BYPASS COMPLETO per email sviluppatore
+    if (email === 'wikus77@hotmail.it') {
+      console.log("🔑 DEVELOPER BYPASS: Login diretto per sviluppatore");
+      
+      try {
+        // Chiamata diretta alla funzione edge per sviluppatore
+        const response = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.access_token && data.refresh_token) {
+            // Imposta la sessione sviluppatore
+            const { error } = await supabase.auth.setSession({
+              access_token: data.access_token,
+              refresh_token: data.refresh_token,
+            });
+            
+            if (!error) {
+              console.log("✅ Login sviluppatore completato");
+              return { success: true, data };
+            }
+          }
+        }
+        
+        const errorData = await response.json();
+        return { success: false, error: { message: errorData.error || "Login sviluppatore fallito" } };
+        
+      } catch (error) {
+        console.error("Errore login sviluppatore:", error);
+        return { success: false, error: { message: "Errore durante il login sviluppatore" } };
+      }
+    }
+
+    // Login standard per altri utenti
     try {
       const options: any = {};
       
