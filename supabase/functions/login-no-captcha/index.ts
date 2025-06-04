@@ -69,55 +69,31 @@ serve(async (req) => {
         },
       });
       
-      // Ottieni l'utente sviluppatore esistente
-      let userData;
+      // Verifica se l'utente esiste già
       try {
-        const { data } = await supabaseAdmin.auth.admin.getUserByEmail(email);
-        userData = data;
-      } catch (userError) {
-        console.log("⚠️ Utente non trovato");
-      }
-      
-      // Se l'utente non esiste, crealo automaticamente
-      if (!userData || !userData.user) {
-        console.log("🔧 Creazione automatica utente sviluppatore");
-        try {
-          const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-            email: adminEmail,
-            password: "developer_auto_password",
-            email_confirm: true,
-            user_metadata: {
-              role: "admin",
-              auto_created: true,
-              captcha_bypass: true
-            }
-          });
+        const { data: userData, error: getUserError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+        
+        if (userData?.user) {
+          // ✅ Utente già esiste → Esegui login diretto
+          console.log("✅ Utente sviluppatore esistente trovato, creazione sessione diretta");
           
-          if (createError) {
-            console.error("❌ Errore creazione utente:", createError);
-          } else {
-            userData = { user: newUser.user };
-            console.log("✅ Utente sviluppatore creato automaticamente");
-          }
-        } catch (createErr) {
-          console.error("❌ Eccezione durante creazione utente:", createErr);
-        }
-      }
-      
-      if (userData && userData.user) {
-        // Genera un token di accesso per l'utente
-        try {
           const { data: tokenData, error: tokenError } = await supabaseAdmin.auth.admin.generateAccessToken(userData.user.id);
           
           if (tokenError) {
-            console.error("❌ Errore generazione token:", tokenError);
-            throw tokenError;
+            console.error("❌ Errore generazione token per utente esistente:", tokenError);
+            return new Response(
+              JSON.stringify({ error: "Errore login automatico", detail: tokenError.message }),
+              {
+                status: 500,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              }
+            );
           }
           
           if (tokenData) {
-            console.log("✅ Token di accesso generato per sviluppatore (CAPTCHA COMPLETAMENTE BYPASSATO)");
+            console.log("✅ Token di accesso generato per sviluppatore esistente");
             
-            // Verifica e crea/aggiorna il profilo admin
+            // Verifica e crea/aggiorna il profilo admin se necessario
             try {
               const { data: profileData, error: profileError } = await supabaseAdmin
                 .from("profiles")
@@ -154,7 +130,6 @@ serve(async (req) => {
               console.error("⚠️ Errore gestione profilo:", profileErr);
             }
 
-            // Preparazione della risposta con i token di sessione
             return new Response(
               JSON.stringify({
                 access_token: tokenData.access_token,
@@ -164,7 +139,7 @@ serve(async (req) => {
                   email: userData.user.email,
                   email_confirmed_at: new Date().toISOString(),
                 },
-                message: "Login sviluppatore automatico riuscito - CAPTCHA COMPLETAMENTE BYPASSATO",
+                message: "Login sviluppatore esistente riuscito - CAPTCHA COMPLETAMENTE BYPASSATO",
                 captcha_bypassed: true,
                 developer_bypass: true
               }),
@@ -174,9 +149,95 @@ serve(async (req) => {
               }
             );
           }
-        } catch (tokenErr) {
-          console.error("❌ Errore nella generazione del token:", tokenErr);
+        } else {
+          // 👇 Solo se non esiste, crearlo
+          console.log("🔧 Creazione automatica utente sviluppatore");
+          try {
+            const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+              email: adminEmail,
+              password: "developer_auto_password",
+              email_confirm: true,
+              user_metadata: {
+                role: "admin",
+                auto_created: true,
+                captcha_bypass: true
+              }
+            });
+            
+            if (createError) {
+              console.error("❌ Errore creazione utente:", createError);
+              return new Response(
+                JSON.stringify({ error: "Errore creazione utente", detail: createError.message }),
+                {
+                  status: 500,
+                  headers: { ...corsHeaders, "Content-Type": "application/json" },
+                }
+              );
+            } else {
+              console.log("✅ Utente sviluppatore creato automaticamente");
+              
+              // Genera token per il nuovo utente
+              const { data: tokenData, error: tokenError } = await supabaseAdmin.auth.admin.generateAccessToken(newUser.user.id);
+              
+              if (tokenError) {
+                console.error("❌ Errore generazione token per nuovo utente:", tokenError);
+                return new Response(
+                  JSON.stringify({ error: "Errore login automatico dopo creazione", detail: tokenError.message }),
+                  {
+                    status: 500,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                  }
+                );
+              }
+              
+              if (tokenData) {
+                // Crea profilo admin per nuovo utente
+                try {
+                  const { error: insertError } = await supabaseAdmin
+                    .from("profiles")
+                    .insert({
+                      id: newUser.user.id,
+                      email: adminEmail,
+                      role: "admin",
+                      full_name: "Amministratore",
+                      subscription_tier: "admin"
+                    });
+                
+                  if (insertError) {
+                    console.error("❌ Errore creazione profilo:", insertError);
+                  } else {
+                    console.log("✅ Profilo admin creato per nuovo utente");
+                  }
+                } catch (profileErr) {
+                  console.error("⚠️ Errore gestione profilo nuovo utente:", profileErr);
+                }
+
+                return new Response(
+                  JSON.stringify({
+                    access_token: tokenData.access_token,
+                    refresh_token: tokenData.refresh_token || "DEVELOPER_REFRESH_TOKEN",
+                    user: {
+                      id: newUser.user.id,
+                      email: newUser.user.email,
+                      email_confirmed_at: new Date().toISOString(),
+                    },
+                    message: "Login sviluppatore nuovo utente riuscito - CAPTCHA COMPLETAMENTE BYPASSATO",
+                    captcha_bypassed: true,
+                    developer_bypass: true
+                  }),
+                  {
+                    status: 200,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                  }
+                );
+              }
+            }
+          } catch (createErr) {
+            console.error("❌ Eccezione durante creazione utente:", createErr);
+          }
         }
+      } catch (userError) {
+        console.error("❌ Errore durante verifica utente:", userError);
       }
       
       // Fallback: restituisci un errore ma informa che è stato tentato il bypass
