@@ -16,7 +16,7 @@ import { Capacitor } from '@capacitor/core';
 function RootRedirect() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, session } = useAuth();
   
   // Attiva il listener per i magic link in ambiente Capacitor (ora dentro Router)
   useCapacitorMagicLinkListener();
@@ -31,19 +31,19 @@ function RootRedirect() {
       console.log("📱 Running on iOS WebView - Special session handling enabled");
     }
     
-    // Fix redirect automatico a /home dopo login - Esegui il redirect solo quando il caricamento è completato
+    // ✅ FIX: Redirect automatico a /home se session presente
     if (!isLoading) {
       if (location.pathname === "/" || location.pathname === "") {
-        if (isAuthenticated) {
-          console.log("✅ User is authenticated at root route - redirecting to /home");
+        if (session) {
+          console.log("✅ Session detected at root route - redirecting to /home");
           navigate("/home", { replace: true });
         } else {
-          console.log("🔒 User is NOT authenticated at root route - redirecting to /login");
+          console.log("🔒 No session at root route - redirecting to /login");
           navigate("/login", { replace: true });
         }
       }
     }
-  }, [location.pathname, isAuthenticated, isLoading, navigate]);
+  }, [location.pathname, isAuthenticated, isLoading, session, navigate]);
   
   return null;
 }

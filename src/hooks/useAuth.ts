@@ -87,14 +87,27 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         }
         
         // Always fetch from Supabase to verify
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
         
         if (error) {
           throw error;
         }
         
+        // ✅ FIX: Forza il salvataggio della sessione in iOS WebView
+        if (data?.session && isIOS) {
+          try {
+            await supabase.auth.setSession({
+              access_token: data.session.access_token,
+              refresh_token: data.session.refresh_token,
+            });
+            console.log("🔄 Session explicitly restored for iOS WebView");
+          } catch (sessionError) {
+            console.warn("⚠️ Failed to restore session:", sessionError);
+          }
+        }
+        
         // Use either the fetched session or the cached one
-        const effectiveSession = initialSession || cachedSession;
+        const effectiveSession = data.session || cachedSession;
         
         console.log("Initial session check:", effectiveSession ? "Found session ✓" : "No session ✗");
         if (effectiveSession) {
