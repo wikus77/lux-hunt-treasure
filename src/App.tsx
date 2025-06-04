@@ -38,13 +38,13 @@ function RootRedirect() {
       console.log("📱 Running on iOS WebView - Special session handling enabled");
     }
     
-    // ✅ FIX: Redirect automatico a /home se session presente
+    // ✅ FIX: Redirect automatico a /home se session presente - IMMEDIATO
     if (!isLoading) {
       console.log("✅ Auth loading completed, checking redirect logic...");
       
       if (location.pathname === "/" || location.pathname === "") {
-        if (session) {
-          console.log("✅ Session detected at root route - redirecting to /home");
+        if (session && isAuthenticated) {
+          console.log("✅ Session + Auth detected at root route - redirecting to /home IMMEDIATELY");
           console.log("📧 User email:", session.user?.email);
           navigate("/home", { replace: true });
         } else {
@@ -58,6 +58,12 @@ function RootRedirect() {
       console.log("⏳ Auth still loading, waiting...");
     }
   }, [location.pathname, isAuthenticated, isLoading, session, user, navigate]);
+  
+  // ✅ FIX: Immediate redirect if we have session - NO PLACEHOLDER SCREEN
+  if (!isLoading && session && location.pathname === "/") {
+    console.log("🔥 IMMEDIATE REDIRECT: Session exists, redirecting to /home NOW");
+    return <Navigate to="/home" replace />;
+  }
   
   return null;
 }

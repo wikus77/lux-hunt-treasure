@@ -1,4 +1,3 @@
-
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -33,6 +32,9 @@ const Terms = lazy(() => import("@/pages/Terms"));
 // iOS Test route
 const Open = lazy(() => import("@/pages/Open"));
 
+// ✅ FIX: Landing page SOLO per web, NON per Capacitor
+const Index = lazy(() => import("@/pages/Index"));
+
 // Loading fallback component
 const LoadingFallback = () => (
   <div className="min-h-screen bg-black flex items-center justify-center">
@@ -49,7 +51,7 @@ const AppRoutes: React.FC = () => {
       <IOSSafeAreaOverlay>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            {/* Root - sempre rediretto a login o home */}
+            {/* ✅ FIX: Root gestita da RootRedirect in App.tsx - NO LANDING PAGE */}
             <Route path="/" element={<WelcomeRedirect />} />
 
             {/* iOS Test Route - PUBLIC */}
@@ -58,6 +60,9 @@ const AppRoutes: React.FC = () => {
             {/* Auth routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+
+            {/* ✅ FIX: Landing page SOLO per web - NO Capacitor */}
+            <Route path="/landing" element={<Index />} />
 
             {/* Main App Routes - PROTECTED */}
             <Route
