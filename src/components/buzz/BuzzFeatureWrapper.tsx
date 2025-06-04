@@ -1,6 +1,6 @@
 
 import React, { ReactNode } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthContext } from "@/contexts/auth";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ErrorFallback from "../error/ErrorFallback";
@@ -10,20 +10,15 @@ interface BuzzFeatureWrapperProps {
 }
 
 const BuzzFeatureWrapper: React.FC<BuzzFeatureWrapperProps> = ({ children }) => {
-  const { user, loading, error } = useAuth();
+  const { user, isLoading } = useAuthContext();
 
   // Se stiamo caricando, mostra un indicatore di caricamento
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <div className="w-12 h-12 border-4 border-t-transparent border-projectx-blue rounded-full animate-spin"></div>
       </div>
     );
-  }
-
-  // Se c'è un errore nell'autenticazione
-  if (error) {
-    return <ErrorFallback message="Errore nel caricamento dei dati utente. Riprova più tardi." />;
   }
 
   // Se l'utente non è autenticato, mostra un messaggio di login
