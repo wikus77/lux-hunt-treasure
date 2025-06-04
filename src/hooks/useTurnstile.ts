@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { shouldBypassCaptcha } from '@/utils/turnstile';
@@ -8,10 +7,11 @@ interface UseTurnstileOptions {
   onSuccess?: (result: any) => void;
   onError?: (error: any) => void;
   autoVerify?: boolean;
+  userEmail?: string; // ✅ AGGIUNTO per bypass sviluppatore
 }
 
 export const useTurnstile = (options: UseTurnstileOptions = {}) => {
-  const { action = 'submit', onSuccess, onError, autoVerify = false } = options;
+  const { action = 'submit', onSuccess, onError, autoVerify = false, userEmail } = options;
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,21 +20,29 @@ export const useTurnstile = (options: UseTurnstileOptions = {}) => {
   // Percorsi di debug o sviluppo per cui bypassa automaticamente Turnstile
   const debugPaths = ['/auth-debug', '/test-admin-ui'];
 
-  // Per pagine di debug, automaticamente bypassiamo Turnstile
+  // ✅ BYPASS SVILUPPATORE: Per email sviluppatore, automaticamente bypassiamo Turnstile
   useEffect(() => {
     // Verifichiamo se siamo su un percorso di debug o se dovremmo bypassare per qualche altro motivo
     const currentPath = window.location.pathname;
     const shouldBypass = debugPaths.includes(currentPath) || shouldBypassCaptcha(currentPath);
     
-    if (shouldBypass) {
-      console.log('🔑 Auto-bypassing Turnstile on path:', currentPath);
+    // ✅ CONTROLLO EMAIL SVILUPPATORE
+    const isDeveloper = userEmail === 'wikus77@hotmail.it';
+    
+    if (shouldBypass || isDeveloper) {
+      if (isDeveloper) {
+        console.log('🔑 DEVELOPER BYPASS: Auto-bypassing Turnstile for developer email:', userEmail);
+        console.warn('⚠️ CAPTCHA/Turnstile neutralizzato per sviluppatore');
+      } else {
+        console.log('🔑 Auto-bypassing Turnstile on path:', currentPath);
+      }
       setIsVerified(true);
       setToken('BYPASS_FOR_DEVELOPMENT');
       if (onSuccess) {
-        onSuccess({ success: true, bypass: true });
+        onSuccess({ success: true, bypass: true, developer: isDeveloper });
       }
     }
-  }, [onSuccess]);
+  }, [onSuccess, userEmail]);
 
   // Auto-verify if requested and token is available
   useEffect(() => {
@@ -48,6 +56,18 @@ export const useTurnstile = (options: UseTurnstileOptions = {}) => {
   }, [token, autoVerify, isVerified, isVerifying]);
 
   const verifyToken = async (turnstileToken: string) => {
+    // ✅ CONTROLLO EMAIL SVILUPPATORE
+    const isDeveloper = userEmail === 'wikus77@hotmail.it';
+    if (isDeveloper) {
+      console.log('🔑 DEVELOPER BYPASS: Skipping Turnstile verification for developer');
+      console.warn('⚠️ Un\'altra funzione ha tentato di usare CAPTCHA con account sviluppatore - BLOCCATO');
+      setIsVerified(true);
+      if (onSuccess) {
+        onSuccess({ success: true, bypass: true, developer: true });
+      }
+      return true;
+    }
+
     // Controlla se siamo su un percorso di debug
     const currentPath = window.location.pathname;
     const shouldBypass = debugPaths.includes(currentPath) || shouldBypassCaptcha(currentPath);
@@ -132,6 +152,14 @@ export const useTurnstile = (options: UseTurnstileOptions = {}) => {
   };
 
   const setTurnstileToken = (newToken: string) => {
+    // ✅ CONTROLLO EMAIL SVILUPPATORE
+    const isDeveloper = userEmail === 'wikus77@hotmail.it';
+    if (isDeveloper) {
+      console.log("🔑 DEVELOPER BYPASS: Turnstile token ignored for developer");
+      setToken('BYPASS_FOR_DEVELOPMENT');
+      return 'BYPASS_FOR_DEVELOPMENT';
+    }
+
     console.log("🔑 Turnstile token received:", newToken.substring(0, 10) + "...");
     setToken(newToken);
     return newToken;

@@ -15,7 +15,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
 
-  // Auto-login per sviluppatore (CAPTCHA COMPLETAMENTE DISATTIVATO)
+  // ✅ Auto-login per sviluppatore (CAPTCHA/TURNSTILE COMPLETAMENTE DISATTIVATO)
   useEffect(() => {
     const attemptDeveloperAutoLogin = async () => {
       const developerEmail = 'wikus77@hotmail.it';
@@ -24,12 +24,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       if (currentSession?.user?.email === developerEmail) {
         console.log('🔑 Developer già autenticato');
+        localStorage.setItem('developer_access', 'granted');
+        localStorage.setItem('captcha_bypassed', 'true');
         return;
       }
 
-      // Tenta auto-login sviluppatore (ZERO CAPTCHA - FORZA EDGE FUNCTION)
+      // ✅ Controlla se deve eseguire auto-login sviluppatore
+      const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
+      if (hasDeveloperAccess && window.location.pathname === '/') {
+        console.log('🔑 Developer access già garantito, redirect a /home');
+        window.location.href = '/home';
+        return;
+      }
+
+      // Tenta auto-login sviluppatore (ZERO CAPTCHA/TURNSTILE - FORZA EDGE FUNCTION)
       try {
-        console.log('🚀 Tentativo auto-login sviluppatore - CAPTCHA COMPLETAMENTE DISATTIVATO...');
+        console.log('🚀 Tentativo auto-login sviluppatore - CAPTCHA/TURNSTILE COMPLETAMENTE DISATTIVATO...');
         
         // Chiamata diretta SOLO alla funzione edge per sviluppatore
         const response = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
@@ -63,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               });
               
               if (!error) {
-                console.log('✅ Auto-login sviluppatore riuscito - CAPTCHA COMPLETAMENTE BYPASSATO');
+                console.log('✅ Auto-login sviluppatore riuscito - CAPTCHA/TURNSTILE COMPLETAMENTE BYPASSATO');
                 localStorage.setItem('developer_access', 'granted');
                 localStorage.setItem('developer_user_email', developerEmail);
                 localStorage.setItem('captcha_bypassed', 'true');

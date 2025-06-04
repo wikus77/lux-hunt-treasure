@@ -1,4 +1,3 @@
-
 /**
  * Cloudflare Turnstile utility functions
  */
@@ -33,11 +32,31 @@ export const shouldBypassCaptcha = (path: string): boolean => {
 };
 
 /**
+ * ✅ CONTROLLO EMAIL SVILUPPATORE per bypass Turnstile
+ */
+export const shouldBypassCaptchaForUser = (email: string): boolean => {
+  const isDeveloper = email === 'wikus77@hotmail.it';
+  if (isDeveloper) {
+    console.log('🔑 DEVELOPER BYPASS: Turnstile completamente disattivato per:', email);
+    console.warn('⚠️ CAPTCHA/Turnstile neutralizzato per sviluppatore');
+  }
+  return isDeveloper;
+};
+
+/**
  * Initialize Cloudflare Turnstile
  * This function loads the Turnstile script if it's not already loaded
  */
-export const initializeTurnstile = (): Promise<void> => {
+export const initializeTurnstile = (userEmail?: string): Promise<void> => {
   return new Promise((resolve) => {
+    // ✅ CONTROLLO EMAIL SVILUPPATORE
+    if (userEmail === 'wikus77@hotmail.it') {
+      console.log('🔑 DEVELOPER BYPASS: Turnstile script loading skipped for developer');
+      console.warn('⚠️ initializeTurnstile() chiamato con account sviluppatore - BLOCCATO');
+      resolve();
+      return;
+    }
+
     // If we're on a bypass path, resolve immediately
     if (shouldBypassCaptcha(window.location.pathname)) {
       console.log('Bypassing Turnstile on developer path:', window.location.pathname);
@@ -87,9 +106,17 @@ export const initializeTurnstile = (): Promise<void> => {
 /**
  * Get a Turnstile token for a specific action
  * @param action Action name for analytics
- * @returns Token or bypass token if on bypass path
+ * @param userEmail User email for developer bypass
+ * @returns Token or bypass token if on bypass path or developer email
  */
-export const getTurnstileToken = async (action: string = 'submit'): Promise<string> => {
+export const getTurnstileToken = async (action: string = 'submit', userEmail?: string): Promise<string> => {
+  // ✅ CONTROLLO EMAIL SVILUPPATORE
+  if (userEmail === 'wikus77@hotmail.it') {
+    console.log('🔑 DEVELOPER BYPASS: Turnstile token generation skipped for developer');
+    console.warn('⚠️ getTurnstileToken() chiamato con account sviluppatore - BLOCCATO');
+    return 'BYPASS_FOR_DEVELOPMENT';
+  }
+
   // If we're on a bypass path, return a bypass token
   if (shouldBypassCaptcha(window.location.pathname)) {
     console.log('Bypassing Turnstile token generation on developer path');
@@ -98,7 +125,7 @@ export const getTurnstileToken = async (action: string = 'submit'): Promise<stri
 
   try {
     // Make sure Turnstile is initialized
-    await initializeTurnstile();
+    await initializeTurnstile(userEmail);
     
     // Wait for turnstile to be ready
     return new Promise((resolve) => {

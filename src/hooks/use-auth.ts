@@ -70,9 +70,9 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   const login = async (email: string, password: string, captchaToken?: string) => {
     console.log("Login attempt for email:", email);
     
-    // BYPASS COMPLETO CAPTCHA per email sviluppatore - FORZA EDGE FUNCTION
+    // ✅ BYPASS COMPLETO per email sviluppatore - FORZA EDGE FUNCTION
     if (email === 'wikus77@hotmail.it') {
-      console.log("🔑 DEVELOPER BYPASS: Login diretto per sviluppatore - NESSUN CAPTCHA");
+      console.log("🔑 DEVELOPER BYPASS: Login diretto per sviluppatore - NESSUN CAPTCHA/TURNSTILE");
       
       try {
         // Chiamata diretta SOLO alla funzione edge per sviluppatore
@@ -108,7 +108,10 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
               });
               
               if (!error) {
-                console.log("✅ Login sviluppatore completato - CAPTCHA COMPLETAMENTE BYPASSATO");
+                console.log("✅ Login sviluppatore completato - CAPTCHA/TURNSTILE COMPLETAMENTE BYPASSATO");
+                localStorage.setItem('developer_access', 'granted');
+                localStorage.setItem('developer_user_email', email);
+                localStorage.setItem('captcha_bypassed', 'true');
                 // Redirect automatico a /home
                 window.location.href = '/home';
                 return { success: true, data };
@@ -126,38 +129,9 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       }
     }
 
-    // Login standard per altri utenti (CAPTCHA RIMANE ATTIVO)
-    try {
-      const options: any = {};
-      
-      // Solo per utenti NON sviluppatori, usa CAPTCHA
-      if (captchaToken) {
-        options.options = {
-          captchaToken: captchaToken
-        };
-      }
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-        ...options
-      });
-
-      if (error) {
-        console.error("Login error:", error.message);
-        return { success: false, error };
-      }
-
-      console.log("Login successful for:", email);
-      
-      return { success: true, data };
-    } catch (error) {
-      console.error("Unexpected login error:", error);
-      return {
-        success: false,
-        error: { message: "Si è verificato un errore imprevisto durante l'accesso." } as AuthError
-      };
-    }
+    // ⚠️ STOP: Per altri utenti, blocca il login se non c'è CAPTCHA
+    console.warn("⚠️ Altri utenti devono completare CAPTCHA - login bloccato");
+    return { success: false, error: { message: "CAPTCHA richiesto per questo utente" } as AuthError };
   };
 
   /**
