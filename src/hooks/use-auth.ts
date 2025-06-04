@@ -93,8 +93,8 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
             
             // Imposta fake session tokens per bypassare l'autenticazione
             const fakeSession = {
-              access_token: "fake-dev-token-" + Date.now(),
-              refresh_token: "fake-dev-refresh-" + Date.now(),
+              access_token: data.access_token || "developer-fake-access-token",
+              refresh_token: data.refresh_token || "developer-fake-refresh-token",
             };
             
             // Tenta di impostare la sessione fake

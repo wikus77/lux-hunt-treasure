@@ -102,16 +102,18 @@ serve(async (req) => {
 
     console.log("✅ Utente sviluppatore trovato, accesso immediato garantito");
     
-    // Restituisce solo il flag di accesso sviluppatore
-    return new Response(
-      JSON.stringify({
-        developer_access: true
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Simula accesso sviluppatore con token fittizi per supabase.auth.setSession
+    return new Response(JSON.stringify({
+      developer_access: true,
+      access_token: "developer-fake-access-token",
+      refresh_token: "developer-fake-refresh-token"
+    }), {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json"
       }
-    );
+    });
 
   } catch (err) {
     console.error("❌ Errore server:", err);

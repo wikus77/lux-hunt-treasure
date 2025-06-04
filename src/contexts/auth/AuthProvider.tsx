@@ -25,6 +25,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (hasDeveloperAccess) {
         console.log('🔑 Developer access già garantito da localStorage');
         
+        // Imposta fake session se non già autenticato
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (!currentSession) {
+          console.log('🔧 Impostazione fake session per sviluppatore');
+          await supabase.auth.setSession({
+            access_token: "developer-fake-access-token",
+            refresh_token: "developer-fake-refresh-token",
+          });
+        }
+        
         // Se siamo sulla landing page, redirect a /home
         if (window.location.pathname === '/') {
           window.location.href = '/home';
@@ -58,6 +68,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const data = await response.json();
           if (data.developer_access === true) {
             console.log("🧠 Auto-login sviluppatore confermato");
+            
+            // Imposta fake session
+            await supabase.auth.setSession({
+              access_token: data.access_token || "developer-fake-access-token",
+              refresh_token: data.refresh_token || "developer-fake-refresh-token",
+            });
+            
             localStorage.setItem('developer_access', 'granted');
             localStorage.setItem('developer_user_email', developerEmail);
             localStorage.setItem('captcha_bypassed', 'true');
