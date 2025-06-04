@@ -10,10 +10,10 @@ interface BuzzFeatureWrapperProps {
 }
 
 const BuzzFeatureWrapper: React.FC<BuzzFeatureWrapperProps> = ({ children }) => {
-  const { user, loading, error } = useAuth();
+  const auth = useAuth();
 
   // Se stiamo caricando, mostra un indicatore di caricamento
-  if (loading) {
+  if (auth.isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <div className="w-12 h-12 border-4 border-t-transparent border-projectx-blue rounded-full animate-spin"></div>
@@ -21,13 +21,8 @@ const BuzzFeatureWrapper: React.FC<BuzzFeatureWrapperProps> = ({ children }) => 
     );
   }
 
-  // Se c'è un errore nell'autenticazione
-  if (error) {
-    return <ErrorFallback message="Errore nel caricamento dei dati utente. Riprova più tardi." />;
-  }
-
   // Se l'utente non è autenticato, mostra un messaggio di login
-  if (!user) {
+  if (!auth.user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-4 text-center">
         <h2 className="text-xl font-bold">Accedi per Utilizzare BUZZ</h2>
