@@ -1,12 +1,15 @@
+
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Spinner } from "@/components/ui/spinner";
 import IOSSafeAreaOverlay from "@/components/debug/IOSSafeAreaOverlay";
+import WelcomeRedirect from "@/pages/WelcomeRedirect";
 
-// Public routes
-import Index from "@/pages/Index";
+// Public routes with lazy loading
+const Login = lazy(() => import("@/pages/Login"));
+const Register = lazy(() => import("@/pages/Register"));
 
 // Main app routes with lazy loading - SEPARATE FROM LANDING
 const AppHome = lazy(() => import("@/pages/AppHome"));
@@ -18,10 +21,6 @@ const Notifications = lazy(() => import("@/pages/Notifications"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const Subscriptions = lazy(() => import("@/pages/Subscriptions"));
-
-// Auth routes
-const Login = lazy(() => import("@/pages/Login"));
-const Register = lazy(() => import("@/pages/Register"));
 const MissionSelection = lazy(() => import("@/pages/MissionSelection"));
 
 // Additional routes
@@ -50,13 +49,17 @@ const AppRoutes: React.FC = () => {
       <IOSSafeAreaOverlay>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            {/* Landing page - SEMPRE PUBBLICA, NESSUN REDIRECT */}
-            <Route path="/" element={<Index />} />
+            {/* Root - sempre rediretto a login o home */}
+            <Route path="/" element={<WelcomeRedirect />} />
 
             {/* iOS Test Route - PUBLIC */}
             <Route path="/open" element={<Open />} />
 
-            {/* Main App Routes - PROTECTED - SEPARATE DA LANDING */}
+            {/* Auth routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            {/* Main App Routes - PROTECTED */}
             <Route
               path="/home"
               element={
@@ -123,10 +126,7 @@ const AppRoutes: React.FC = () => {
                 </ProtectedRoute>
               }
             />
-
-            {/* Auth routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            
             <Route path="/select-mission" element={<MissionSelection />} />
             
             {/* Other routes */}

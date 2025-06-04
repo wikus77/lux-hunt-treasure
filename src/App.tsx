@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
@@ -9,9 +9,45 @@ import GlobalLayout from "./components/layout/GlobalLayout";
 import AppRoutes from "./routes/AppRoutes";
 import SafeAreaToggle from "./components/debug/SafeAreaToggle";
 import { useCapacitorMagicLinkListener } from "./hooks/useCapacitorMagicLinkListener";
+import { useAuth } from "./hooks/useAuth";
+import { Capacitor } from '@capacitor/core';
+
+// Componente per gestire i redirect dalla root
+function RootRedirect() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  useEffect(() => {
+    // Debug avvio app
+    console.log("🚀 App initialization - Path:", location.pathname, "Auth state:", 
+      isLoading ? "loading..." : (isAuthenticated ? "authenticated" : "not authenticated"));
+    
+    const isIOS = Capacitor.getPlatform() === 'ios';
+    if (isIOS) {
+      console.log("📱 Running on iOS WebView - Special session handling enabled");
+    }
+    
+    // Esegui il redirect solo quando il caricamento è completato
+    if (!isLoading) {
+      if (location.pathname === "/" || location.pathname === "") {
+        if (isAuthenticated) {
+          console.log("✅ User is authenticated at root route - redirecting to /home");
+          navigate("/home", { replace: true });
+        } else {
+          console.log("🔒 User is NOT authenticated at root route - redirecting to /login");
+          navigate("/login", { replace: true });
+        }
+      }
+    }
+  }, [location.pathname, isAuthenticated, isLoading, navigate]);
+  
+  return null;
+}
 
 function App() {
-  useCapacitorMagicLinkListener(); // login automatico magic link attivo
+  // Attiva il listener per i magic link in ambiente Capacitor
+  useCapacitorMagicLinkListener();
 
   return (
     <Router>
@@ -33,6 +69,7 @@ function App() {
           }>
             <SafeAreaToggle>
               <GlobalLayout>
+                <RootRedirect />
                 <AppRoutes />
                 <Toaster position="top-right" />
               </GlobalLayout>

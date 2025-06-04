@@ -3,10 +3,18 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 export function useCapacitorMagicLinkListener() {
+  const navigate = useNavigate();
+
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
+    
+    const isIOS = Capacitor.getPlatform() === 'ios';
+    if (isIOS) {
+      console.log("🔗 Magic link listener attivo su iOS WebView");
+    }
 
     let listenerHandle: any = null;
 
@@ -17,20 +25,33 @@ export function useCapacitorMagicLinkListener() {
           const parsed = new URL(url);
           const token = parsed.searchParams.get('token');
           const type = parsed.searchParams.get('type');
+          const email = parsed.searchParams.get('email') || 'wikus77@hotmail.it';
 
           if (token && type === 'magiclink') {
             console.log('🔐 Verifying token...');
-            const { error } = await supabase.auth.verifyOtp({
+            const { data, error } = await supabase.auth.verifyOtp({
               type: 'magiclink',
               token,
-              email: 'wikus77@hotmail.it', // Required for magiclink verification
+              email: email,
             });
 
             if (error) {
               console.error('❌ Errore Supabase.verifyOtp:', error.message);
             } else {
               console.log('✅ Login automatico completato');
-              window.location.href = '/home';
+              
+              // Salva esplicitamente la sessione per iOS
+              if (isIOS && data.session) {
+                try {
+                  localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
+                  console.log("📦 Sessione salvata in localStorage dopo magic link per iOS");
+                } catch (err) {
+                  console.error("❌ Errore salvataggio sessione:", err);
+                }
+              }
+              
+              // Redirect forzato a /home invece di modificare window.location
+              navigate('/home', { replace: true });
             }
           } else {
             console.warn('⚠️ URL senza token valido');
@@ -48,5 +69,5 @@ export function useCapacitorMagicLinkListener() {
         listenerHandle.remove();
       }
     };
-  }, []);
+  }, [navigate]);
 }
