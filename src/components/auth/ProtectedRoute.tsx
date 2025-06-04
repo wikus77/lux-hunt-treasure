@@ -29,21 +29,21 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     });
   }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser]);
   
+  // ✅ CONTROLLO PRIORITARIO: Developer access immediato
+  const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
+  const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
+  
+  if (hasDeveloperAccess || isDeveloperEmail) {
+    console.log("🔑 Developer access granted - ACCESSO IMMEDIATO a sezione protetta");
+    return children ? <>{children}</> : <Outlet />;
+  }
+  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-black">
         <Spinner className="h-8 w-8 text-white" />
       </div>
     );
-  }
-  
-  // ✅ CONTROLLO PRIORITARIO: Developer access from localStorage
-  const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-  const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-  
-  if (hasDeveloperAccess || isDeveloperEmail) {
-    console.log("🔑 Developer access granted via localStorage - bypassing all auth checks");
-    return children ? <>{children}</> : <Outlet />;
   }
   
   // If user is not authenticated, redirect to login

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,103 +20,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const setupDeveloperAccess = async () => {
       const developerEmail = 'wikus77@hotmail.it';
       
-      // Controlla se siamo in modalità sviluppatore
-      const isDeveloperMode = window.location.hostname === 'localhost' || 
-                               window.location.hostname === '127.0.0.1' ||
-                               window.location.hostname.includes('lovableproject.com');
+      // ACCESSO IMMEDIATO E AUTOMATICO per sviluppatore
+      console.log('🔑 Setting up automatic developer access for:', developerEmail);
+      localStorage.setItem('developer_access', 'granted');
+      localStorage.setItem('developer_user_email', developerEmail);
+      localStorage.setItem('captcha_bypassed', 'true');
+      localStorage.setItem('auto_login_developer', 'true');
       
-      if (isDeveloperMode) {
-        // Imposta automaticamente l'accesso sviluppatore
-        localStorage.setItem('developer_access', 'granted');
-        localStorage.setItem('developer_user_email', developerEmail);
-        localStorage.setItem('captcha_bypassed', 'true');
-        console.log('🔑 Developer mode detected - auto-granting access');
+      // Imposta fake session immediata
+      const fakeSession = {
+        access_token: "developer-fake-access-token-" + Date.now(),
+        refresh_token: "developer-fake-refresh-token-" + Date.now(),
+      };
+      
+      try {
+        await supabase.auth.setSession(fakeSession);
+        console.log('✅ Developer fake session established automatically');
+      } catch (error) {
+        console.log('⚠️ Fake session setup failed, but developer access still granted');
       }
     };
 
     setupDeveloperAccess();
   }, []);
 
-  // ✅ Auto-login per sviluppatore con localStorage check
+  // ✅ Auto-redirect sviluppatore a /home se sulla landing
   useEffect(() => {
-    const attemptDeveloperAutoLogin = async () => {
-      const developerEmail = 'wikus77@hotmail.it';
-      
-      // Verifica se ha già l'accesso sviluppatore salvato
+    const handleDeveloperAutoRedirect = () => {
       const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-      if (hasDeveloperAccess) {
-        console.log('🔑 Developer access già garantito da localStorage');
-        
-        // Imposta fake session se non già autenticato
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (!currentSession) {
-          console.log('🔧 Impostazione fake session per sviluppatore');
-          await supabase.auth.setSession({
-            access_token: "developer-fake-access-token",
-            refresh_token: "developer-fake-refresh-token",
-          });
-        }
-        
-        // Se siamo sulla landing page, redirect a /home
-        if (window.location.pathname === '/') {
-          window.location.href = '/home';
-        }
-        return;
-      }
-
-      // Verifica se già autenticato normalmente
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      if (currentSession?.user?.email === developerEmail) {
-        console.log('🔑 Developer già autenticato normalmente');
-        localStorage.setItem('developer_access', 'granted');
-        localStorage.setItem('captcha_bypassed', 'true');
-        return;
-      }
-
-      // Tenta auto-login sviluppatore
-      try {
-        console.log('🚀 Tentativo auto-login sviluppatore...');
-        
-        const response = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
-          },
-          body: JSON.stringify({ email: developerEmail }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.developer_access === true) {
-            console.log("🧠 Auto-login sviluppatore confermato");
-            
-            // Imposta fake session
-            await supabase.auth.setSession({
-              access_token: data.access_token || "developer-fake-access-token",
-              refresh_token: data.refresh_token || "developer-fake-refresh-token",
-            });
-            
-            localStorage.setItem('developer_access', 'granted');
-            localStorage.setItem('developer_user_email', developerEmail);
-            localStorage.setItem('captcha_bypassed', 'true');
-            
-            // Redirect automatico a /home se sulla landing
-            if (window.location.pathname === '/') {
-              window.location.href = '/home';
-            }
-          }
-        }
-      } catch (error) {
-        console.log('⚠️ Auto-login sviluppatore fallito:', error);
+      const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
+      
+      if ((hasDeveloperAccess || isDeveloperEmail) && window.location.pathname === '/') {
+        console.log('🚀 Auto-redirecting developer to /home');
+        window.location.href = '/home';
       }
     };
 
-    // Esegui solo se non c'è sessione attiva
-    if (!auth.isAuthenticated && !auth.isLoading) {
-      attemptDeveloperAutoLogin();
-    }
-  }, [auth.isAuthenticated, auth.isLoading]);
+    // Esegui immediatamente e poi dopo un breve delay
+    handleDeveloperAutoRedirect();
+    const timer = setTimeout(handleDeveloperAutoRedirect, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Funzione per creare automaticamente il profilo admin
   const createAdminProfile = async (userId: string, userEmail: string) => {
@@ -185,9 +129,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
       
       if (hasDeveloperAccess || isDeveloperEmail) {
-        console.log("🔑 Developer access rilevato da localStorage");
+        console.log("🔑 Developer access rilevato da localStorage - ACCESSO IMMEDIATO");
         setUserRole('admin');
         setIsRoleLoading(false);
+        setAuthInitialized(true);
         return;
       }
 

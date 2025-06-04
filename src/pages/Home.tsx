@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
@@ -48,19 +47,19 @@ const Home = () => {
       
       const userAgent = navigator.userAgent;
       const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
       const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
       
-      console.log('Home access check (Capacitor):', { isMobileDevice, hasStoredAccess, isCapacitorApp, isDeveloperEmail });
+      console.log('Home access check:', { isMobileDevice, hasDeveloperAccess, isCapacitorApp, isDeveloperEmail });
       
-      // ✅ CONTROLLO PRIORITARIO: Developer access
-      if (hasStoredAccess || isDeveloperEmail) {
-        console.log('🔑 Developer access granted - immediate access to Home');
+      // ✅ CONTROLLO PRIORITARIO: ACCESSO IMMEDIATO per sviluppatore
+      if (hasDeveloperAccess || isDeveloperEmail) {
+        console.log('🔑 Developer access - ACCESSO IMMEDIATO a Home');
         setHasAccess(true);
         return;
       }
       
-      if (isMobileDevice && hasStoredAccess) {
+      if (isMobileDevice && hasDeveloperAccess) {
         setHasAccess(true);
       } else if (!isMobileDevice) {
         // Web users get redirected to landing page
@@ -137,12 +136,12 @@ const Home = () => {
     return {};
   };
 
-  // ✅ CONTROLLO PRIORITARIO: Developer access check
+  // ✅ CONTROLLO PRIORITARIO: ACCESSO IMMEDIATO per sviluppatore
   const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
   const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
   
   if (hasDeveloperAccess || isDeveloperEmail) {
-    console.log('🔑 Developer access detected - granting immediate access to Home');
+    console.log('🔑 Developer access detected - ACCESSO IMMEDIATO a Home');
     // Force access for developer
     if (!hasAccess) {
       setHasAccess(true);

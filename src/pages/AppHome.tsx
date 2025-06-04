@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
@@ -40,21 +39,21 @@ const AppHome = () => {
       
       const userAgent = navigator.userAgent;
       const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
       const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
       
-      console.log('AppHome access check (Capacitor):', { isMobileDevice, hasStoredAccess, isCapacitorApp, isDeveloperEmail });
+      console.log('AppHome access check:', { isMobileDevice, hasDeveloperAccess, isCapacitorApp, isDeveloperEmail });
       
-      // ✅ CONTROLLO PRIORITARIO: Developer access
-      if (hasStoredAccess || isDeveloperEmail) {
-        console.log('🔑 Developer access auto-granted for AppHome');
+      // ✅ CONTROLLO PRIORITARIO: ACCESSO IMMEDIATO per sviluppatore
+      if (hasDeveloperAccess || isDeveloperEmail) {
+        console.log('🔑 Developer access - ACCESSO IMMEDIATO a AppHome');
         setHasAccess(true);
         localStorage.setItem('developer_access', 'granted');
         localStorage.setItem('full_access_granted', 'true');
         return;
       }
       
-      if (isMobileDevice && hasStoredAccess) {
+      if (isMobileDevice && hasDeveloperAccess) {
         setHasAccess(true);
       } else if (!isMobileDevice) {
         // Web users should NOT be redirected to landing page from internal routes
@@ -94,12 +93,12 @@ const AppHome = () => {
     }
   }, [error]);
 
-  // ✅ CONTROLLO PRIORITARIO: Developer access check
+  // ✅ CONTROLLO PRIORITARIO: ACCESSO IMMEDIATO per sviluppatore
   const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
   const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
   
   if (hasDeveloperAccess || isDeveloperEmail) {
-    console.log('🔑 Developer access detected - granting immediate access to AppHome');
+    console.log('🔑 Developer access detected - ACCESSO IMMEDIATO a AppHome');
     // Force access for developer
     if (!hasAccess) {
       setHasAccess(true);
