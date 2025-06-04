@@ -12,7 +12,7 @@ import { useCapacitorMagicLinkListener } from "./hooks/useCapacitorMagicLinkList
 import { useAuth } from "./hooks/useAuth";
 import { Capacitor } from '@capacitor/core';
 
-// Componente per gestire i redirect dalla root
+// Componente per gestire i redirect dalla root con fix automatico redirect /home
 function RootRedirect() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ function RootRedirect() {
       console.log("📱 Running on iOS WebView - Special session handling enabled");
     }
     
-    // Esegui il redirect solo quando il caricamento è completato
+    // Fix redirect automatico a /home dopo login - Esegui il redirect solo quando il caricamento è completato
     if (!isLoading) {
       if (location.pathname === "/" || location.pathname === "") {
         if (isAuthenticated) {

@@ -177,9 +177,13 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
 
       console.log("✅ Login successful for:", email);
       
-      // Force store session in localStorage for iOS WebView
+      // Fix sessione iOS Capacitor WebView - Force setSession dopo login
       if (Capacitor.getPlatform() === 'ios' && data.session) {
         try {
+          await supabase.auth.setSession({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          });
           localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
           console.log("📦 Session explicitly stored in localStorage after login for iOS");
         } catch (err) {

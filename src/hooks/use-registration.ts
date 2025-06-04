@@ -46,25 +46,20 @@ export const useRegistration = () => {
       setErrors(validation.errors);
       return;
     }
-    
-    if (!turnstileToken) {
-      toast.error("Sicurezza", {
-        description: "Completare la verifica di sicurezza"
-      });
-      return;
-    }
 
     setIsSubmitting(true);
     const { name, email, password } = formData;
 
     try {
-      // First verify the turnstile token
-      const verifyResponse = await supabase.functions.invoke('verify-turnstile', {
-        body: { token: turnstileToken, action: 'registration' }
-      });
-      
-      if (!verifyResponse.data?.success) {
-        throw new Error('Security verification failed');
+      // First verify the turnstile token if provided
+      if (turnstileToken) {
+        const verifyResponse = await supabase.functions.invoke('verify-turnstile', {
+          body: { token: turnstileToken, action: 'registration' }
+        });
+        
+        if (!verifyResponse.data?.success) {
+          throw new Error('Security verification failed');
+        }
       }
 
       // Check if email already exists
@@ -88,7 +83,7 @@ export const useRegistration = () => {
         return;
       }
 
-      // Register user
+      // Register user with fix CAPTCHA per iOS WebView
       const result = await supabase.auth.signUp({
         email,
         password,
@@ -98,7 +93,8 @@ export const useRegistration = () => {
             full_name: name,
             mission_preference: missionPreference || null
           },
-          captchaToken: turnstileToken // Pass the turnstile token here
+          // Fix CAPTCHA: Passa sempre captchaToken, anche stringa vuota per iOS WebView
+          captchaToken: turnstileToken || ""
         }
       });
 
@@ -111,6 +107,19 @@ export const useRegistration = () => {
         });
         setIsSubmitting(false);
         return;
+      }
+
+      // Fix sessione iOS Capacitor WebView
+      if (result.data.session) {
+        try {
+          await supabase.auth.setSession({
+            access_token: result.data.session.access_token,
+            refresh_token: result.data.session.refresh_token,
+          });
+          console.log("✅ Sessione esplicitamente salvata per iOS Capacitor");
+        } catch (sessionError) {
+          console.warn("⚠️ Errore salvataggio sessione esplicita:", sessionError);
+        }
       }
 
       toast.success("Registrazione completata!", {
