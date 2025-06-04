@@ -15,33 +15,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
 
-  // ✅ Auto-login per sviluppatore (SESSIONE CON TOKENS - NO MAGIC LINK)
+  // ✅ Auto-login per sviluppatore con localStorage check
   useEffect(() => {
     const attemptDeveloperAutoLogin = async () => {
       const developerEmail = 'wikus77@hotmail.it';
       
-      // Verifica se già autenticato
+      // Verifica se ha già l'accesso sviluppatore salvato
+      const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
+      if (hasDeveloperAccess) {
+        console.log('🔑 Developer access già garantito da localStorage');
+        
+        // Se siamo sulla landing page, redirect a /home
+        if (window.location.pathname === '/') {
+          window.location.href = '/home';
+        }
+        return;
+      }
+
+      // Verifica se già autenticato normalmente
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       if (currentSession?.user?.email === developerEmail) {
-        console.log('🔑 Developer già autenticato');
+        console.log('🔑 Developer già autenticato normalmente');
         localStorage.setItem('developer_access', 'granted');
         localStorage.setItem('captcha_bypassed', 'true');
         return;
       }
 
-      // ✅ Controlla se deve eseguire auto-login sviluppatore
-      const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-      if (hasDeveloperAccess && window.location.pathname === '/') {
-        console.log('🔑 Developer access già garantito, redirect a /home');
-        window.location.href = '/home';
-        return;
-      }
-
-      // Tenta auto-login sviluppatore (SESSIONE CON TOKENS - NO MAGIC LINK)
+      // Tenta auto-login sviluppatore
       try {
-        console.log('🚀 Tentativo auto-login sviluppatore - SESSIONE CON TOKENS...');
+        console.log('🚀 Tentativo auto-login sviluppatore...');
         
-        // Chiamata diretta alla funzione edge per ottenere sessione con tokens
         const response = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
           method: "POST",
           headers: {
@@ -53,25 +56,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (response.ok) {
           const data = await response.json();
-          if (data.session && data.session.access_token && data.session.refresh_token) {
-            console.log("🧠 Sessione con tokens ricevuta per auto-login sviluppatore");
-            console.log("🧠 Sessione settata manualmente:", data.session);
+          if (data.developer_access === true) {
+            console.log("🧠 Auto-login sviluppatore confermato");
+            localStorage.setItem('developer_access', 'granted');
+            localStorage.setItem('developer_user_email', developerEmail);
+            localStorage.setItem('captcha_bypassed', 'true');
             
-            // Imposta la sessione direttamente
-            const { error } = await supabase.auth.setSession({
-              access_token: data.session.access_token,
-              refresh_token: data.session.refresh_token,
-            });
-            
-            if (!error) {
-              console.log('✅ Auto-login sviluppatore riuscito - SESSIONE CON TOKENS ATTIVA');
-              localStorage.setItem('developer_access', 'granted');
-              localStorage.setItem('developer_user_email', developerEmail);
-              localStorage.setItem('captcha_bypassed', 'true');
-              // Redirect automatico a /home
-              if (window.location.pathname === '/') {
-                window.location.href = '/home';
-              }
+            // Redirect automatico a /home se sulla landing
+            if (window.location.pathname === '/') {
+              window.location.href = '/home';
             }
           }
         }
@@ -144,9 +137,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fetch user role when auth state changes - NON FORZARE REDIRECT
+  // Fetch user role when auth state changes
   useEffect(() => {
     const fetchUserRole = async () => {
+      // Verifica accesso sviluppatore da localStorage prima di tutto
+      const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
+      if (hasDeveloperAccess) {
+        console.log("🔑 Developer access rilevato da localStorage");
+        setUserRole('admin');
+        setIsRoleLoading(false);
+        return;
+      }
+
       // Se non c'è utente autenticato, NON fare nulla - lascia che vedano la landing
       if (!auth.isAuthenticated || !auth.user) {
         setUserRole(null);
@@ -266,6 +268,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check if user has a specific role
   const hasRole = (role: string): boolean => {
+    // Special check for developer access
+    const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
+    if (hasDeveloperAccess && role === 'admin') {
+      return true;
+    }
+
     // Special case for wikus77@hotmail.it - always treated as admin
     if (auth.user?.email === 'wikus77@hotmail.it') {
       return role === 'admin';

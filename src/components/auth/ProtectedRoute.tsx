@@ -37,6 +37,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
   
+  // ✅ Check for developer access from localStorage
+  const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
+  if (hasDeveloperAccess) {
+    console.log("🔑 Developer access granted via localStorage - bypassing auth check");
+    return children ? <>{children}</> : <Outlet />;
+  }
+  
   // If user is not authenticated, redirect to login
   if (!isAuthenticated) {
     console.log("User not authenticated, redirecting to:", redirectTo);
