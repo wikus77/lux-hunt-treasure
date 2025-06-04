@@ -5,6 +5,12 @@ interface SoundContextType {
   isSoundEnabled: boolean;
   toggleSound: () => void;
   playSound: (soundName: string, volume?: number) => void;
+  isEnabled: boolean;
+  volume: number;
+  soundPreference: string;
+  updateSound: (preference: string) => void;
+  updateVolume: (volume: number) => void;
+  toggleSound: (enabled?: boolean) => void;
 }
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
@@ -17,11 +23,26 @@ export const useSoundContext = () => {
   return context;
 };
 
+// Export useSound alias for compatibility
+export const useSound = () => {
+  return useSoundContext();
+};
+
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [volume, setVolume] = useState(0.5);
+  const [soundPreference, setSoundPreference] = useState('buzz');
 
-  const toggleSound = useCallback(() => {
-    setIsSoundEnabled(prev => !prev);
+  const toggleSound = useCallback((enabled?: boolean) => {
+    setIsSoundEnabled(enabled !== undefined ? enabled : prev => !prev);
+  }, []);
+
+  const updateVolume = useCallback((newVolume: number) => {
+    setVolume(newVolume);
+  }, []);
+
+  const updateSound = useCallback((preference: string) => {
+    setSoundPreference(preference);
   }, []);
 
   const playSound = useCallback((soundName: string, volume: number = 0.5) => {
@@ -38,7 +59,12 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const value: SoundContextType = {
     isSoundEnabled,
+    isEnabled: isSoundEnabled,
+    volume,
+    soundPreference,
     toggleSound,
+    updateVolume,
+    updateSound,
     playSound,
   };
 

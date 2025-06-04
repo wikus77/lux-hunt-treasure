@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,6 +5,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import AgentInfoPopup from "@/components/agent/AgentInfoPopup";
 import useSoundEffects from "@/hooks/useSoundEffects";
 import { useLongPress } from "@/hooks/useLongPress";
+
+// Type for the RPC response
+interface AgentCodeResponse {
+  agent_code: string;
+}
 
 const AgentBadge = () => {
   const [agentCode, setAgentCode] = useState<string | null>(null);
@@ -71,8 +75,10 @@ const AgentBadge = () => {
             return;
           }
 
-          if (data?.agent_code) {
-            setAgentCode(data.agent_code.replace("AG-", ""));
+          // Type assertion with proper typing
+          const typedData = data as AgentCodeResponse;
+          if (typedData?.agent_code) {
+            setAgentCode(typedData.agent_code.replace("AG-", ""));
           }
         } catch (err) {
           console.error("Failed to fetch agent code:", err);

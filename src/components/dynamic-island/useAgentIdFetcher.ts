@@ -2,6 +2,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+// Type for the RPC response
+interface AgentCodeResponse {
+  agent_code: string;
+}
+
 export const useAgentIdFetcher = () => {
   const [agentId, setAgentId] = useState("");
   
@@ -24,10 +29,25 @@ export const useAgentIdFetcher = () => {
             .rpc('get_my_agent_code')
             .single();
 
-          if (!error && data?.agent_code) {
-            const code = data.agent_code.replace("AG-", "");
-            setAgentId(code);
-            localStorage.setItem("m1-agent-id", code);
+          if (!error && data) {
+            // Type assertion with proper typing
+            const typedData = data as AgentCodeResponse;
+            if (typedData?.agent_code) {
+              const code = typedData.agent_code.replace("AG-", "");
+              setAgentId(code);
+              localStorage.setItem("m1-agent-id", code);
+            } else {
+              // Fallback to stored code
+              const storedId = localStorage.getItem("m1-agent-id");
+              if (storedId) {
+                setAgentId(storedId);
+              } else {
+                // Generate a new code only if nothing is available
+                const randomId = `XX${Math.floor(100 + Math.random() * 900)}`;
+                localStorage.setItem("m1-agent-id", randomId);
+                setAgentId(randomId);
+              }
+            }
           } else {
             // Fallback to stored code
             const storedId = localStorage.getItem("m1-agent-id");

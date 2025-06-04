@@ -2,6 +2,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { generateUniqueAgentCode } from "@/utils/agentCodeGenerator";
 
+// Type for the RPC response
+interface AgentCodeResponse {
+  agent_code: string;
+}
+
 /**
  * Gets the agent code for a specific user
  * 
@@ -32,7 +37,9 @@ export const getAgentCodeForUser = async (userId: string): Promise<string | null
     return profile?.agent_code || null;
   }
   
-  return data?.agent_code || null;
+  // Type assertion with proper typing
+  const typedData = data as AgentCodeResponse;
+  return typedData?.agent_code || null;
 };
 
 /**
