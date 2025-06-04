@@ -71,19 +71,23 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   const login = async (email: string, password: string, captchaToken?: string) => {
     console.log("Login attempt for email:", email);
     
-    // BYPASS COMPLETO per email sviluppatore
+    // BYPASS COMPLETO CAPTCHA per email sviluppatore
     if (email === 'wikus77@hotmail.it') {
-      console.log("🔑 DEVELOPER BYPASS: Login diretto per sviluppatore");
+      console.log("🔑 DEVELOPER BYPASS: Login diretto per sviluppatore - CAPTCHA DISATTIVATO");
       
       try {
-        // Chiamata diretta alla funzione edge per sviluppatore
+        // Chiamata diretta alla funzione edge per sviluppatore (NESSUN CAPTCHA)
         const response = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
           },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ 
+            email, 
+            password,
+            // NON INVIARE NESSUN CAPTCHA TOKEN per sviluppatore
+          }),
         });
 
         if (response.ok) {
@@ -97,7 +101,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
             });
             
             if (!error) {
-              console.log("✅ Login sviluppatore completato");
+              console.log("✅ Login sviluppatore completato - CAPTCHA BYPASSATO");
               return { success: true, data };
             }
           }
@@ -112,10 +116,11 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       }
     }
 
-    // Login standard per altri utenti
+    // Login standard per altri utenti (CAPTCHA RIMANE ATTIVO)
     try {
       const options: any = {};
       
+      // Solo per utenti NON sviluppatori, usa CAPTCHA
       if (captchaToken) {
         options.options = {
           captchaToken: captchaToken

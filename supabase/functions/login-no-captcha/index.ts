@@ -56,10 +56,11 @@ serve(async (req) => {
       );
     }
 
-    // DEVELOPER BYPASS COMPLETO: Per l'email sviluppatore, bypass totale
+    // DEVELOPER BYPASS COMPLETO: Per l'email sviluppatore, bypass totale di CAPTCHA
     const adminEmail = "wikus77@hotmail.it";
     if (email === adminEmail) {
       console.log("🔑 DEVELOPER BYPASS: Accesso automatico per:", adminEmail);
+      console.log("🚫 CAPTCHA COMPLETAMENTE DISATTIVATO per sviluppatore");
       
       // Client con ruolo admin per le operazioni privilegiate
       const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -69,7 +70,7 @@ serve(async (req) => {
       });
       
       // BYPASS COMPLETO: Non controllare la password, accetta qualsiasi cosa
-      console.log("🔓 BYPASS: Password ignorata per sviluppatore");
+      console.log("🔓 BYPASS: Password e CAPTCHA ignorati per sviluppatore");
       
       // Ottieni o crea l'utente sviluppatore
       let userData;
@@ -90,7 +91,8 @@ serve(async (req) => {
             email_confirm: true, // Conferma email automaticamente
             user_metadata: {
               role: "admin",
-              auto_created: true
+              auto_created: true,
+              captcha_bypass: true
             }
           });
           
@@ -116,7 +118,7 @@ serve(async (req) => {
           }
           
           if (tokenData) {
-            console.log("✅ Token di accesso generato per sviluppatore");
+            console.log("✅ Token di accesso generato per sviluppatore (CAPTCHA BYPASSATO)");
             
             // Verifica e crea/aggiorna il profilo admin
             try {
@@ -164,7 +166,8 @@ serve(async (req) => {
                   id: userData.user.id,
                   email: userData.user.email,
                 },
-                message: "Login sviluppatore automatico riuscito"
+                message: "Login sviluppatore automatico riuscito - CAPTCHA BYPASSATO",
+                captcha_bypassed: true
               }),
               {
                 status: 200,
@@ -182,7 +185,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: "Bypass sviluppatore fallito",
-          bypass_attempted: true
+          bypass_attempted: true,
+          captcha_bypassed: true
         }),
         {
           status: 401,
@@ -191,7 +195,7 @@ serve(async (req) => {
       );
     }
 
-    // Per tutte le altre email, accesso negato
+    // Per tutte le altre email, accesso negato (CAPTCHA rimane attivo per altri utenti)
     console.error("⛔ Accesso negato per email non admin:", email);
     return new Response(
       JSON.stringify({ error: "Accesso non autorizzato" }),

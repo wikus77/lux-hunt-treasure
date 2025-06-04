@@ -15,7 +15,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
 
-  // Auto-login per sviluppatore
+  // Auto-login per sviluppatore (CAPTCHA COMPLETAMENTE DISATTIVATO)
   useEffect(() => {
     const attemptDeveloperAutoLogin = async () => {
       const developerEmail = 'wikus77@hotmail.it';
@@ -27,11 +27,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Tenta auto-login sviluppatore
+      // Tenta auto-login sviluppatore (NESSUN CAPTCHA)
       try {
-        console.log('🚀 Tentativo auto-login sviluppatore...');
+        console.log('🚀 Tentativo auto-login sviluppatore - CAPTCHA DISATTIVATO...');
         
-        // Chiamata diretta alla funzione edge per sviluppatore
+        // Chiamata diretta alla funzione edge per sviluppatore (ZERO CAPTCHA)
         const response = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha", {
           method: "POST",
           headers: {
@@ -40,7 +40,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           },
           body: JSON.stringify({ 
             email: developerEmail, 
-            password: "dev_bypass" // Password placeholder, bypassata dalla funzione
+            password: "dev_bypass", // Password placeholder, bypassata dalla funzione
+            // NON INVIARE NESSUN CAPTCHA O TOKEN per sviluppatore
           }),
         });
 
@@ -54,9 +55,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
             
             if (!error) {
-              console.log('✅ Auto-login sviluppatore riuscito');
+              console.log('✅ Auto-login sviluppatore riuscito - CAPTCHA COMPLETAMENTE BYPASSATO');
               localStorage.setItem('developer_access', 'granted');
               localStorage.setItem('developer_user_email', developerEmail);
+              localStorage.setItem('captcha_bypassed', 'true');
             }
           }
         }
