@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useTurnstile } from "@/hooks/useTurnstile";
 import StyledInput from "@/components/ui/styled-input"; 
 import { Key, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,22 +15,14 @@ const AuthDebug = () => {
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const navigate = useNavigate();
-  
-  // Utilizzo del hook useTurnstile per gestire la verifica captcha
-  const { setTurnstileToken } = useTurnstile({
-    action: 'login',
-    autoVerify: true
-  });
 
-  // Effetto per impostare un token di bypass quando la pagina si carica
+  // Effetto per inizializzare
   useEffect(() => {
-    // Impostiamo un token di bypass specifico per development
-    setTurnstileToken("BYPASS_FOR_DEVELOPMENT");
     console.log("🚀 Debug Login inizializzato");
     
     // Check sessione attuale
     checkCurrentSession();
-  }, [setTurnstileToken]);
+  }, []);
 
   const checkCurrentSession = async () => {
     try {
