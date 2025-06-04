@@ -19,7 +19,7 @@ const BuzzMainContent = () => {
     // Start Dynamic Island activity when buzz is successful
     await startActivity({
       missionId: `buzz-${Date.now()}`,
-      title: "🔍 Operazione Firenze",
+      title: "Operazione Firenze",
       status: "Area Buzz generata",
       progress: 25, // 25% progress for area generation
       timeLeft: 3600, // 1 hour countdown

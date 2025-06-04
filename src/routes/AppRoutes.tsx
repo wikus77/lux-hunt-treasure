@@ -1,4 +1,3 @@
-
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -43,17 +42,15 @@ const LoadingFallback = () => (
 );
 
 const AppRoutes: React.FC = () => {
-  console.log("🛣️ AppRoutes: Rendering routes");
-  
   return (
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            {/* Landing page - PUBLIC - Show for non-authenticated users */}
+            {/* Landing page - SEMPRE PUBBLICA, NESSUN REDIRECT */}
             <Route path="/" element={<Index />} />
 
-            {/* Main App Routes - PROTECTED */}
+            {/* Main App Routes - PROTECTED - SEPARATE DA LANDING */}
             <Route
               path="/home"
               element={

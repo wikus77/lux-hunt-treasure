@@ -6,7 +6,6 @@ import { useProfileImage } from "@/hooks/useProfileImage";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import { useDynamicIsland } from "@/hooks/useDynamicIsland";
-import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
 import { useMissionManager } from "@/hooks/useMissionManager";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 import { Helmet } from "react-helmet";
@@ -36,9 +35,6 @@ const Home = () => {
 
   const { isConnected } = useRealTimeNotifications();
 
-  // Attiva il sistema di sicurezza Dynamic Island
-  useDynamicIslandSafety();
-
   // Check for developer access and Capacitor environment
   useEffect(() => {
     const checkAccess = () => {
@@ -63,10 +59,9 @@ const Home = () => {
     checkAccess();
   }, []);
 
-  // Dynamic Island integration for HOME - Active mission con logging avanzato
+  // Dynamic Island integration for HOME - Active mission
   useEffect(() => {
     if (hasAccess && isLoaded && currentMission && currentMission.status === 'active') {
-      console.log('🏠 HOME: Starting Dynamic Island for active mission:', currentMission.name);
       startActivity({
         missionId: currentMission.id,
         title: currentMission.name,
@@ -77,11 +72,10 @@ const Home = () => {
     }
   }, [hasAccess, isLoaded, currentMission, startActivity]);
 
-  // Cleanup migliorato con logging
+  // Cleanup Live Activity when leaving page
   useEffect(() => {
     return () => {
       if (currentMission && currentMission.status !== 'active') {
-        console.log('🏠 HOME: Cleaning up inactive mission Live Activity');
         endActivity();
       }
     };

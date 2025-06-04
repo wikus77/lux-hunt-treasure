@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
 import { useDynamicIsland } from '@/hooks/useDynamicIsland';
-import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
 import { useMissionManager } from '@/hooks/useMissionManager';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
@@ -16,8 +15,6 @@ const Notifications = () => {
   const { playSound } = useBuzzSound();
   const { startActivity, updateActivity, endActivity } = useDynamicIsland();
   const { currentMission } = useMissionManager();
-
-  useDynamicIslandSafety();
 
   const filteredNotifications = () => {
     switch (filter) {
@@ -30,12 +27,11 @@ const Notifications = () => {
     }
   };
 
-  // Dynamic Island integration for NOTIFICATIONS - New unread messages con logging avanzato
+  // Dynamic Island integration for NOTIFICATIONS - New unread messages
   useEffect(() => {
     const unreadNotifications = notifications.filter(n => !n.read);
     
     if (unreadNotifications.length > 0) {
-      console.log('📨 NOTIFICATIONS: Starting Dynamic Island for unread messages:', unreadNotifications.length);
       startActivity({
         missionId: `notifications-${Date.now()}`,
         title: "📨 Nuove notifiche",
@@ -45,17 +41,15 @@ const Notifications = () => {
       });
     } else {
       // Close Dynamic Island when all notifications are read
-      console.log('📨 NOTIFICATIONS: All read, closing Dynamic Island');
       endActivity();
     }
   }, [notifications, startActivity, endActivity]);
 
-  // Cleanup migliorato con controllo specifico per notifiche
+  // Cleanup when unmount
   useEffect(() => {
     return () => {
-      // Solo chiudere se è relativo alle notifiche
-      if (currentMission?.name?.includes('Nuove notifiche') || currentMission?.name?.includes('📨')) {
-        console.log('📨 NOTIFICATIONS: Cleaning up notification-related Live Activity');
+      // Only close if it's notification-related
+      if (currentMission?.title?.includes('Nuove notifiche')) {
         endActivity();
       }
     };

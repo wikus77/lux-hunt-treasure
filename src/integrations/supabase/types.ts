@@ -233,7 +233,6 @@ export type Database = {
           id: string
           mission: string
           progress: number
-          route: string | null
           status: string
           updated_at: string
           user_id: string
@@ -243,7 +242,6 @@ export type Database = {
           id?: string
           mission: string
           progress?: number
-          route?: string | null
           status: string
           updated_at?: string
           user_id: string
@@ -253,7 +251,6 @@ export type Database = {
           id?: string
           mission?: string
           progress?: number
-          route?: string | null
           status?: string
           updated_at?: string
           user_id?: string

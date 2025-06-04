@@ -6,7 +6,6 @@ import { useGameLogic } from '@/hooks/useGameLogic';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
 import { useDynamicIsland } from '@/hooks/useDynamicIsland';
-import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
 import { useMissionManager } from '@/hooks/useMissionManager';
 import GameErrorBoundary from '@/components/games/GameErrorBoundary';
 import MemoryHackGame from '@/components/games/MemoryHackGame';
@@ -35,10 +34,7 @@ const Games = () => {
   const { startActivity, updateActivity, endActivity } = useDynamicIsland();
   const { currentMission } = useMissionManager();
 
-  // Attiva il sistema di sicurezza Dynamic Island
-  useDynamicIslandSafety();
-
-  // Dynamic Island integration for GAMES - New minigame unlocked con logging avanzato
+  // Dynamic Island integration for GAMES - New minigame unlocked
   useEffect(() => {
     const checkNewMinigames = () => {
       const unlockedGames = Object.entries(gameCompleted).filter(([_, completed]) => !completed);
@@ -47,7 +43,6 @@ const Games = () => {
         const [gameType, _] = unlockedGames[0];
         const gameName = gameData[gameType as GameType].title;
         
-        console.log('🎮 GAMES: Starting Dynamic Island for new minigame:', gameName);
         startActivity({
           missionId: `game-unlock-${Date.now()}`,
           title: "🧩 Minigioco sbloccato",
@@ -61,12 +56,11 @@ const Games = () => {
     checkNewMinigames();
   }, [score, gameCompleted, startActivity]);
 
-  // Cleanup migliorato con controllo specifico per giochi
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      // Solo chiudere se è relativo ai giochi
-      if (currentMission?.name?.includes('Minigioco') || currentMission?.name?.includes('🧩')) {
-        console.log('🎮 GAMES: Cleaning up game-related Live Activity');
+      // Only end activity if it's game-related
+      if (currentMission?.title?.includes('Minigioco')) {
         endActivity();
       }
     };
