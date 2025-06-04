@@ -76,11 +76,26 @@ serve(async (req) => {
       },
     });
     
-    // Ottieni l'utente per email
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserByEmail(adminEmail);
+    // ✅ FIX: Usa listUsers() invece di getUserByEmail()
+    console.log("🔍 Ricerca utente sviluppatore tramite listUsers...");
+    const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     
-    if (userError || !userData?.user) {
-      console.error("❌ Utente non trovato:", userError);
+    if (listError) {
+      console.error("❌ Errore nel recupero utenti:", listError);
+      return new Response(
+        JSON.stringify({ error: "Failed to fetch users" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Trova l'utente per email
+    const userData = users?.users?.find(u => u.email === adminEmail);
+    
+    if (!userData) {
+      console.error("❌ Utente sviluppatore non trovato");
       return new Response(
         JSON.stringify({ error: "User not found" }),
         {
@@ -94,7 +109,7 @@ serve(async (req) => {
     
     // Crea sessione diretta per l'utente
     const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.createSession({
-      user_id: userData.user.id,
+      user_id: userData.id,
     });
 
     if (sessionError || !sessionData?.session) {
@@ -113,7 +128,7 @@ serve(async (req) => {
       const { data: profileData, error: profileError } = await supabaseAdmin
         .from("profiles")
         .select("id, role")
-        .eq("id", userData.user.id)
+        .eq("id", userData.id)
         .maybeSingle();
 
       if (!profileData) {
@@ -122,7 +137,7 @@ serve(async (req) => {
         const { error: insertError } = await supabaseAdmin
           .from("profiles")
           .insert({
-            id: userData.user.id,
+            id: userData.id,
             email: adminEmail,
             role: "admin",
             full_name: "Amministratore",
