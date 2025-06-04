@@ -7,39 +7,39 @@ import MainContent from "./index/MainContent";
 import { useEventHandlers } from "./index/EventHandlers";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
 
-// ✅ BLOCCO FORZATO LANDING PAGE SU iOS / Capacitor / accesso già concesso
-if (typeof window !== "undefined") {
-  const isCapacitor = !!(window as any).Capacitor;
-  const hasAccess = localStorage.getItem("developer_access") === "granted";
-  const url = new URL(window.location.href);
-  const force = url.searchParams.get("force") === "true";
-
-  if (isCapacitor || hasAccess || force) {
-    console.warn("🚫 Landing bloccata – Redirect forzato a /home");
-    localStorage.setItem("developer_access", "granted");
-    window.location.href = "/home";
-  }
-}
-
 const Index = () => {
-  // ✅ Redirect automatico se sessione attiva
-  useEffect(() => {
-    const forceRedirectOrGrantAccess = async () => {
-      const { data } = await supabase.auth.getSession();
+  const [shouldRender, setShouldRender] = useState(false);
 
+  // ✅ Unico useEffect che controlla tutto e forza redirect in modo fluido
+  useEffect(() => {
+    const handleRedirect = async () => {
+      const isCapacitor = !!(window as any).Capacitor;
+      const hasAccess = localStorage.getItem("developer_access") === "granted";
+      const url = new URL(window.location.href);
+      const force = url.searchParams.get("force") === "true";
+
+      if (isCapacitor || hasAccess || force) {
+        localStorage.setItem("developer_access", "granted");
+        window.location.href = "/home";
+        return;
+      }
+
+      const { data } = await supabase.auth.getSession();
       if (data.session) {
         console.log("✅ Sessione trovata, redirect a /home");
         window.location.href = "/home";
         return;
       }
 
-      console.warn("❌ Nessuna sessione trovata – forzatura accesso per test");
-      localStorage.setItem("developer_access", "granted");
-      window.location.href = "/home";
+      console.warn("❌ Nessuna sessione trovata – landing pubblica attiva");
+      setShouldRender(true);
     };
 
-    forceRedirectOrGrantAccess();
+    handleRedirect();
   }, []);
+
+  // 🔒 Blocca tutto finché non sappiamo cosa fare
+  if (!shouldRender) return null;
 
   const [pageLoaded, setPageLoaded] = useState(false);
   const [renderContent, setRenderContent] = useState(false);
