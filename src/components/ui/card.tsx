@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
@@ -11,7 +10,7 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 const Card = React.forwardRef<
   HTMLDivElement,
   CardProps
->(({ className, gradient = false, interactive = false, ...props }, ref) => (
+>(({ className, gradient = false, interactive = false, children, ...props }, ref) => (
   <motion.div
     ref={ref}
     className={cn(
@@ -24,7 +23,7 @@ const Card = React.forwardRef<
     } : {}}
     whileTap={interactive ? { scale: 0.97 } : {}}
     transition={{ duration: 0.3, ease: "easeOut" }}
-    {...props}
+    {...(props as any)}
   >
     {gradient && (
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
@@ -34,7 +33,7 @@ const Card = React.forwardRef<
       whileHover={interactive ? { y: -2 } : {}}
       transition={{ duration: 0.2 }}
     >
-      {props.children}
+      {children}
     </motion.div>
   </motion.div>
 ))
