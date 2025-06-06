@@ -4,12 +4,12 @@ import { motion } from "framer-motion";
 import { PrizeVision } from "./home-sections/PrizeVision";
 import { BrokerConsole } from "./home-sections/BrokerConsole";
 import { AgentDiary } from "./home-sections/AgentDiary";
-import { ActiveMissionBox } from "./home-sections/ActiveMissionBox";
+import TreasureHuntPanel from "../home/TreasureHuntPanel";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { toast } from "sonner";
 import { getMissionDeadline } from "@/utils/countdownDate";
 
-export function CommandCenterHome() {
+export default function CommandCenterHome() {
   // Track the user's progress (from 0 to 100)
   const [progress, setProgress] = useLocalStorage<number>("mission-progress", 0);
   
@@ -34,29 +34,10 @@ export function CommandCenterHome() {
     return diffDays > 0 ? diffDays : 0;
   };
 
-  // Active mission data
-  const [activeMission, setActiveMission] = useState({
-    id: "M001",
-    title: "Caccia al Tesoro Urbano",
-    totalClues: 12,
-    foundClues: 3,
-    timeLimit: "48:00:00", // In HH:MM:SS format
-    startTime: new Date().toISOString(),
-    remainingDays: calculateRemainingDays(),
-    totalDays: 30
-  });
-
   // Update prize status based on progress and days remaining
   useEffect(() => {
-    // Update remaining days
-    setActiveMission(prev => ({
-      ...prev,
-      remainingDays: calculateRemainingDays()
-    }));
-    
-    // Calculate visibility based on the provided algorithm
-    const daysRemaining = activeMission.remainingDays;
-    const objectivesPercentage = (activeMission.foundClues / activeMission.totalClues) * 100;
+    const daysRemaining = calculateRemainingDays();
+    const objectivesPercentage = (3 / 12) * 100; // Default clues found
     const userScore = progress;
     
     if (daysRemaining <= 3) {
@@ -75,10 +56,10 @@ export function CommandCenterHome() {
         setPrizeUnlockStatus("near");
       }
     }
-  }, [progress, activeMission.foundClues, activeMission.totalClues]);
+  }, [progress]);
 
   // Handle clue purchase
-  const handlePurchaseClue = (clue) => {
+  const handlePurchaseClue = (clue: any) => {
     if (credits >= clue.cost) {
       // Deduct credits
       setCredits(prev => prev - clue.cost);
@@ -104,12 +85,12 @@ export function CommandCenterHome() {
   };
 
   // Add diary entry
-  const addDiaryEntry = (entry) => {
+  const addDiaryEntry = (entry: any) => {
     setDiaryEntries(prev => [entry, ...prev]);
   };
 
   // Add personal note
-  const addPersonalNote = (note) => {
+  const addPersonalNote = (note: string) => {
     addDiaryEntry({
       type: "note",
       content: note,
@@ -133,14 +114,14 @@ export function CommandCenterHome() {
         />
       </motion.div>
 
-      {/* Active Mission Box below the Prize Vision */}
+      {/* Treasure Hunt Panel with interactive flip boxes */}
       <motion.div 
         className="mb-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.1 }}
       >
-        <ActiveMissionBox mission={activeMission} />
+        <TreasureHuntPanel />
       </motion.div>
 
       {/* Two column layout for Console and Agent */}

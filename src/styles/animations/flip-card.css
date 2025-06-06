@@ -16,54 +16,43 @@
   transform: rotateY(180deg);
 }
 
-.card-container {
+.flip-box {
   perspective: 1000px;
-  width: 100%;
-  height: 100%;
-}
-
-.card {
+  transform-style: preserve-3d;
   position: relative;
   width: 100%;
   height: 100%;
-  transition: transform 0.8s ease-in-out;
-  transform-style: preserve-3d;
 }
 
-.card.is-flipped {
-  transform: rotateY(180deg);
-}
-
-.card-front, .card-back {
+.flip-box-front, .flip-box-back {
   position: absolute;
   width: 100%;
   height: 100%;
   backface-visibility: hidden;
-  border-radius: 16px;
+  border-radius: 12px;
+  transition: transform 0.8s ease-in-out;
 }
 
-.card-back {
+.flip-box-back {
   transform: rotateY(180deg);
-  background: #111;
-  color: white;
 }
 
 /* Hover effect on desktop only */
 @media (hover: hover) {
-  .transform-style-3d:hover {
+  .flip-box:hover {
     transform: scale(1.02);
   }
 }
 
 /* Disable double-click zoom */
-.card-container, .card, .card-front, .card-back {
+.flip-box, .flip-box-front, .flip-box-back {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
 
 /* Prevent image zoom behavior */
-.card-front img, .card-back img {
+.flip-box-front img, .flip-box-back img {
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
