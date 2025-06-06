@@ -5,31 +5,22 @@ import { ParallaxImage } from "@/components/ui/parallax-image";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 import { ArrowRight } from "lucide-react";
 
+const stagger = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.25,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const fadeSlideUp = {
+  hidden: { opacity: 0, y: 40 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
+
 const HeroSection = () => {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.3
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, x: -50, y: 20 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut"
-      }
-    }
-  };
-
   return (
     <section 
       className="min-h-screen w-full relative flex items-center justify-center overflow-hidden py-24 px-4"
@@ -60,19 +51,19 @@ const HeroSection = () => {
         className="relative z-20 max-w-4xl mx-auto text-center" 
         data-scroll 
         data-scroll-speed="0.1"
-        variants={containerVariants}
+        variants={stagger}
         initial="hidden"
-        animate="visible"
+        animate="show"
       >
         <motion.div
-          variants={itemVariants}
+          variants={fadeSlideUp}
           className="mb-6"
         >
           <h2 className="text-sm md:text-base uppercase tracking-[0.3em] text-cyan-300">Benvenuto in</h2>
         </motion.div>
         
         <motion.div
-          variants={itemVariants}
+          variants={fadeSlideUp}
           className="mb-4"
         >
           <h1 className="text-6xl md:text-8xl font-orbitron font-bold gradient-text-cyan mb-4">
@@ -81,7 +72,7 @@ const HeroSection = () => {
         </motion.div>
         
         <motion.div
-          variants={itemVariants}
+          variants={fadeSlideUp}
           className="mb-10"
         >
           <h3 className="text-xl md:text-3xl text-white/90 font-light">
@@ -93,7 +84,7 @@ const HeroSection = () => {
         </motion.div>
         
         <motion.div
-          variants={itemVariants}
+          variants={fadeSlideUp}
           className="flex flex-col md:flex-row items-center justify-center gap-6"
         >
           <motion.div
@@ -126,7 +117,7 @@ const HeroSection = () => {
           className="absolute bottom-12 left-1/2 transform -translate-x-1/2"
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          variants={itemVariants}
+          variants={fadeSlideUp}
         >
           <div className="w-8 h-12 rounded-full border-2 border-white/30 flex items-start justify-center p-2">
             <div className="w-1 h-3 bg-white/70 rounded-full"></div>

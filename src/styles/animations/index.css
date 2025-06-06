@@ -91,10 +91,10 @@
 }
 
 .bg-animated {
-  background: linear-gradient(120deg, #29005e, #06084b, #0a152d, #29005e);
+  background: linear-gradient(120deg, #1a003a, #0f043a, #10182f);
   background-size: 400% 400%;
-  animation: moveLight 30s ease-in-out infinite;
-  opacity: 0.6;
+  animation: moveLight 25s linear infinite;
+  opacity: 0.8;
 }
 
 /* Interactive card effects */
