@@ -69,3 +69,8 @@
 .glow-cyan {
   box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
 }
+
+/* Text glow effect for statistics */
+.text-glow {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(0, 209, 255, 0.6);
+}
