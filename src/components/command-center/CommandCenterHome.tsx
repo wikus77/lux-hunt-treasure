@@ -23,6 +23,36 @@ const fadeSlideUp = {
 };
 
 const CommandCenterHome = () => {
+  // Default mission data
+  const defaultMission = {
+    id: "default-mission-001",
+    title: "Caccia al Tesoro Urbano",
+    totalClues: 15,
+    foundClues: 3,
+    timeLimit: "30 giorni",
+    startTime: new Date().toISOString(),
+    remainingDays: 27,
+    totalDays: 30
+  };
+
+  // Default handlers
+  const handlePurchaseClue = (clue: any) => {
+    console.log('Clue purchased:', clue);
+  };
+
+  const handleAddNote = (note: string) => {
+    console.log('Note added:', note);
+  };
+
+  // Default data
+  const defaultEntries = [
+    {
+      type: "note" as const,
+      content: "Iniziata la missione di caccia al tesoro",
+      timestamp: new Date().toISOString()
+    }
+  ];
+
   return (
     <motion.div 
       className="space-y-8"
@@ -31,7 +61,7 @@ const CommandCenterHome = () => {
       animate="show"
     >
       <motion.section variants={fadeSlideUp}>
-        <ActiveMissionBox />
+        <ActiveMissionBox mission={defaultMission} />
       </motion.section>
 
       <motion.section variants={fadeSlideUp}>
@@ -39,15 +69,19 @@ const CommandCenterHome = () => {
       </motion.section>
 
       <motion.section variants={fadeSlideUp}>
-        <PrizeVision />
+        <PrizeVision progress={45} status="partial" />
       </motion.section>
 
       <motion.section variants={fadeSlideUp}>
-        <BrokerConsole />
+        <BrokerConsole credits={150} onPurchaseClue={handlePurchaseClue} />
       </motion.section>
 
       <motion.section variants={fadeSlideUp}>
-        <AgentDiary />
+        <AgentDiary 
+          entries={defaultEntries} 
+          onAddNote={handleAddNote}
+          purchasedClues={[]}
+        />
       </motion.section>
     </motion.div>
   );
