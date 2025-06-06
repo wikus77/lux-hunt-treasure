@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import CommandCenterHome from "@/components/command-center/CommandCenterHome";
+import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
