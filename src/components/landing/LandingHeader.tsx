@@ -1,8 +1,7 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import CountdownTimer from "@/components/ui/countdown-timer";
+import { AnimatedCountdown } from "@/components/ui/animated-countdown";
 import { getMissionDeadline } from "@/utils/countdownDate";
 
 interface LandingHeaderProps {
@@ -60,8 +59,6 @@ const LandingHeader = ({ countdownCompleted = false }: LandingHeaderProps) => {
 
       {/* Content */}
       <div className="z-10 max-w-5xl">
-        {/* Removed the duplicate AgentBadge from here */}
-        
         {/* Main Title with the styled M1SSION text */}
         <h1 className="text-4xl md:text-6xl xl:text-7xl font-orbitron font-light mb-6">
           WELCOME TO{" "}
@@ -71,9 +68,9 @@ const LandingHeader = ({ countdownCompleted = false }: LandingHeaderProps) => {
           </span>
         </h1>
         
-        {/* New Countdown Timer */}
+        {/* New Animated Countdown Timer */}
         <div className="mb-8">
-          <CountdownTimer targetDate={targetDate} />
+          <AnimatedCountdown targetDate={targetDate} />
         </div>
         
         <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">

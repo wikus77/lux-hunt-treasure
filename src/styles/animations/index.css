@@ -1,4 +1,3 @@
-
 /* Main animations index file */
 @import './basic-animations.css';
 @import './text-effects.css';
@@ -6,6 +5,7 @@
 @import './hover-effects.css';
 @import './parallax.css';
 @import './flip-card.css';
+@import './radar-effects.css';
 
 /* Additional Awwwards-style animations */
 .gradient-white-text {
