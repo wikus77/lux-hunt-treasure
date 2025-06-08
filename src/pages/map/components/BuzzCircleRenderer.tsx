@@ -13,15 +13,15 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   const map = useMap();
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
   const isCleanupRunning = useRef(false);
-  // Use JSON.stringify for deep comparison instead of just length
-  const lastAreasString = useRef<string>('');
+  // CRITICAL: Use JSON.stringify for deep comparison delle aree
+  const lastAreasStringified = useRef<string>('');
   
   const currentColor = getCurrentColor();
   
   console.debug('🗺️ CIRCLE RENDERER: Render triggered', {
     areasCount: areas.length,
-    areasJSON: JSON.stringify(areas.map(a => ({ id: a.id, radius_km: a.radius_km }))),
-    lastAreasString: lastAreasString.current,
+    areasStringified: JSON.stringify(areas.map(a => ({ id: a.id, radius_km: a.radius_km, lat: a.lat, lng: a.lng }))),
+    lastAreasStringified: lastAreasStringified.current,
     color: currentColor,
     cleanupRunning: isCleanupRunning.current
   });
@@ -33,9 +33,9 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       return;
     }
     
-    // Check if we need to update using JSON comparison
-    const currentAreasString = JSON.stringify(areas.map(a => ({ id: a.id, radius_km: a.radius_km, lat: a.lat, lng: a.lng })));
-    const needsUpdate = currentAreasString !== lastAreasString.current;
+    // CRITICAL: Check if we need to update using JSON comparison per contenuto effettivo
+    const currentAreasStringified = JSON.stringify(areas.map(a => ({ id: a.id, radius_km: a.radius_km, lat: a.lat, lng: a.lng })));
+    const needsUpdate = currentAreasStringified !== lastAreasStringified.current;
     
     if (!needsUpdate) {
       console.debug('🔄 CIRCLE RENDERER: No update needed, areas unchanged');
@@ -43,16 +43,16 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     }
     
     isCleanupRunning.current = true;
-    lastAreasString.current = currentAreasString;
+    lastAreasStringified.current = currentAreasStringified;
     
     console.debug('🔥 CIRCLE RENDERER: Effect triggered', {
       areasCount: areas.length,
       needsCleanup: true,
-      currentAreasString
+      currentAreasStringified
     });
     
-    // STEP 1: COMPLETE LEAFLET CLEANUP (ALWAYS)
-    console.debug('🧹 CIRCLE RENDERER: Starting complete Leaflet cleanup...');
+    // STEP 1: COMPLETE LEAFLET CLEANUP (SEMPRE)
+    console.debug('🧹 CIRCLE RENDERER: Starting COMPLETE Leaflet cleanup...');
     
     // Clear existing layer group
     if (layerGroupRef.current) {
@@ -61,25 +61,16 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       console.debug('🗑️ CIRCLE RENDERER: Removed existing layer group');
     }
     
-    // Nuclear cleanup of ALL Circle layers from map
+    // CRITICAL: Nuclear cleanup di TUTTI i Circle e LayerGroup dalla mappa
     let removedCount = 0;
     map.eachLayer((layer) => {
-      if (layer instanceof L.Circle) {
+      if (layer instanceof L.Circle || layer instanceof L.LayerGroup) {
         map.removeLayer(layer);
         removedCount++;
       }
-      // Also clean LayerGroups that might contain circles
-      if (layer instanceof L.LayerGroup) {
-        layer.eachLayer((subLayer) => {
-          if (subLayer instanceof L.Circle) {
-            layer.removeLayer(subLayer);
-            removedCount++;
-          }
-        });
-      }
     });
     
-    console.debug('🧹 CIRCLE RENDERER: Cleaned', removedCount, 'existing circles from map');
+    console.debug('🧹 CIRCLE RENDERER: Cleaned', removedCount, 'existing circles/groups from map');
     
     // Clear all references
     layerGroupRef.current = null;
@@ -188,7 +179,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       isCleanupRunning.current = false;
     }, 100);
     
-  }, [areas, map, currentColor]); // Use areas directly for deep comparison
+  }, [JSON.stringify(areas), map, currentColor]); // CRITICAL: Use JSON.stringify per verificare contenuto effettivo
 
   // Cleanup on unmount
   useEffect(() => {
@@ -199,7 +190,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         console.debug('🧹 CIRCLE RENDERER: Cleanup on unmount completed');
       }
       isCleanupRunning.current = false;
-      lastAreasString.current = '';
+      lastAreasStringified.current = '';
     };
   }, [map]);
 

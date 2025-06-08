@@ -23,9 +23,8 @@ export interface BuzzMapArea {
 export const useBuzzMapLogic = () => {
   const { user } = useAuth();
   
-  // LOCAL state for UI feedback only (NO Zustand dependencies)
+  // LOCAL state solo per UI feedback (NO Zustand dependencies)
   const [localBuzzCount, setLocalBuzzCount] = useState(0);
-  const [localAreaCreated, setLocalAreaCreated] = useState(false);
   
   // Use Zustand store ONLY for operation locks
   const { 
@@ -50,8 +49,7 @@ export const useBuzzMapLogic = () => {
     areasDetail: currentWeekAreas.map(a => ({ id: a.id, radius_km: a.radius_km })),
     isGenerating,
     isDeleting,
-    localBuzzCount,
-    localAreaCreated
+    localBuzzCount
   });
 
   // Use utility functions
@@ -141,7 +139,7 @@ export const useBuzzMapLogic = () => {
     return result;
   }, []);
 
-  // ENHANCED BUZZ generation with COMPLETE FORCED sync sequence
+  // ENHANCED BUZZ generation con COMPLETE FORCED sync sequence
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       console.debug('🚫 BUZZ GENERATION: No user ID');
@@ -174,12 +172,12 @@ export const useBuzzMapLogic = () => {
         existingAreas: currentWeekAreas.length
       });
       
-      // STEP 1: Complete cleanup with FORCED sync sequence
-      console.debug('🧹 STEP 1: Complete cleanup with FORCED sync...');
+      // STEP 1: Complete cleanup con FORCED sync sequence
+      console.debug('🧹 STEP 1: Complete cleanup con FORCED sync...');
       await forceCompleteSync();
       
-      // STEP 2: Clear all existing areas with FORCED sync
-      console.debug('🗑️ STEP 2: Clear all existing areas with FORCED sync...');
+      // STEP 2: Clear all existing areas con FORCED sync
+      console.debug('🗑️ STEP 2: Clear all existing areas con FORCED sync...');
       const cleanupSuccess = await deleteAllUserAreas();
       if (!cleanupSuccess) {
         console.error('❌ BUZZ GENERATION: Cleanup failed');
@@ -187,7 +185,7 @@ export const useBuzzMapLogic = () => {
         return null;
       }
       
-      console.debug('✅ STEP 2: Cleanup completed with FORCED sync');
+      console.debug('✅ STEP 2: Cleanup completed con FORCED sync');
       
       // STEP 3: Calculate radius and pricing
       console.debug('💰 STEP 3: Calculate radius and pricing...');
@@ -236,7 +234,6 @@ export const useBuzzMapLogic = () => {
       
       // STEP 8: Update local UI state
       console.debug('🎨 STEP 8: Update local UI state...');
-      setLocalAreaCreated(true);
       setLocalBuzzCount(prev => prev + 1);
       
       // STEP 9: Show success toast
@@ -261,7 +258,7 @@ export const useBuzzMapLogic = () => {
     setIsGenerating, forceCompleteSync, forceReload, currentWeekAreas
   ]);
 
-  // Enhanced manual area deletion with FORCED sync
+  // Enhanced manual area deletion con FORCED sync
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
     console.debug('🗑️ HANDLE DELETE AREA START:', areaId);
     
@@ -282,7 +279,7 @@ export const useBuzzMapLogic = () => {
     return success;
   }, [deleteSpecificArea, forceCompleteSync]);
 
-  // Enhanced clear all areas with FORCED sync
+  // Enhanced clear all areas con FORCED sync
   const handleClearAllAreas = useCallback(async (): Promise<void> => {
     console.debug('🧹 HANDLE CLEAR ALL START');
     
@@ -319,7 +316,6 @@ export const useBuzzMapLogic = () => {
       
       console.debug('🔍 DEBUG STATE: Complete report:', debugData);
       console.debug('🔍 DEBUG STATE: Local state:', { 
-        localAreaCreated, 
         localBuzzCount,
         currentWeekAreas: currentWeekAreas.length 
       });
@@ -327,7 +323,7 @@ export const useBuzzMapLogic = () => {
   }, [
     user, currentWeekAreas, userCluesCount, isGenerating, getActiveArea, 
     calculateProgressiveRadius, calculateBuzzMapPrice, dailyBuzzCounter, 
-    dailyBuzzMapCounter, createDebugReport, localAreaCreated, localBuzzCount
+    dailyBuzzMapCounter, createDebugReport, localBuzzCount
   ]);
 
   return {
@@ -342,8 +338,7 @@ export const useBuzzMapLogic = () => {
     dailyBuzzCounter,
     dailyBuzzMapCounter,
     precisionMode,
-    areaCreated: localAreaCreated,
-    buzzCount: localBuzzCount,
+    buzzCount: localBuzzCount, // SOLO LOCAL STATE
     
     // Functions
     calculateNextRadius: calculateProgressiveRadius,
