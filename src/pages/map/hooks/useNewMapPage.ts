@@ -226,12 +226,7 @@ export const useNewMapPage = () => {
   // FIXED: Update an existing point con validazione
   const updateMapPoint = async (id: string, title: string, note: string): Promise<boolean> => {
     const validUserId = getValidUserId();
-    if (!validUserId) {
-      toast.error("Accesso non valido per modificare punti");
-      return false;
-    }
     
-    // FIXED: Validazione con trim
     const trimmedTitle = title?.trim() || '';
     const trimmedNote = note?.trim() || '';
     
@@ -242,6 +237,25 @@ export const useNewMapPage = () => {
     
     try {
       console.log("📝 Updating map point:", id, trimmedTitle, trimmedNote);
+
+      // Handle developer mode
+      if (validUserId === DEVELOPER_UUID) {
+        const currentPoints = [...mapPoints];
+        const pointIndex = currentPoints.findIndex(p => p.id === id);
+        if (pointIndex >= 0) {
+          currentPoints[pointIndex] = { 
+            ...currentPoints[pointIndex], 
+            title: trimmedTitle, 
+            note: trimmedNote 
+          };
+          setMapPoints(currentPoints);
+          localStorage.setItem('dev-map-points', JSON.stringify(currentPoints));
+          toast.success("Punto aggiornato (modalità sviluppatore)");
+          setActiveMapPoint(null);
+          return true;
+        }
+        return false;
+      }
 
       const { error } = await supabase
         .from('map_points')
@@ -277,13 +291,19 @@ export const useNewMapPage = () => {
   // FIXED: Delete a map point con controllo RLS
   const deleteMapPoint = async (id: string): Promise<boolean> => {
     const validUserId = getValidUserId();
-    if (!validUserId) {
-      toast.error("Accesso non valido per eliminare punti");
-      return false;
-    }
     
     try {
       console.log("🗑️ Deleting map point:", id);
+
+      // Handle developer mode
+      if (validUserId === DEVELOPER_UUID) {
+        const currentPoints = mapPoints.filter(point => point.id !== id);
+        setMapPoints(currentPoints);
+        localStorage.setItem('dev-map-points', JSON.stringify(currentPoints));
+        setActiveMapPoint(null);
+        toast.success("Punto eliminato (modalità sviluppatore)");
+        return true;
+      }
 
       const { error } = await supabase
         .from('map_points')
@@ -349,112 +369,6 @@ export const useNewMapPage = () => {
       );
     } else {
       toast.error("Geolocalizzazione non supportata dal browser");
-    }
-  };
-
-  // FIXED: Add missing functions for compatibility
-  const updateMapPoint = async (id: string, title: string, note: string): Promise<boolean> => {
-    const validUserId = getValidUserId();
-    
-    const trimmedTitle = title?.trim() || '';
-    const trimmedNote = note?.trim() || '';
-    
-    if (!trimmedTitle) {
-      toast.error("Il titolo è obbligatorio");
-      return false;
-    }
-    
-    try {
-      console.log("📝 Updating map point:", id, trimmedTitle, trimmedNote);
-
-      // Handle developer mode
-      if (validUserId === DEVELOPER_UUID) {
-        const currentPoints = [...mapPoints];
-        const pointIndex = currentPoints.findIndex(p => p.id === id);
-        if (pointIndex >= 0) {
-          currentPoints[pointIndex] = { 
-            ...currentPoints[pointIndex], 
-            title: trimmedTitle, 
-            note: trimmedNote 
-          };
-          setMapPoints(currentPoints);
-          localStorage.setItem('dev-map-points', JSON.stringify(currentPoints));
-          toast.success("Punto aggiornato (modalità sviluppatore)");
-          setActiveMapPoint(null);
-          return true;
-        }
-        return false;
-      }
-
-      const { error } = await supabase
-        .from('map_points')
-        .update({
-          title: trimmedTitle,
-          note: trimmedNote
-        })
-        .eq('id', id)
-        .eq('user_id', validUserId);
-
-      if (error) {
-        console.error("❌ Error updating map point:", error);
-        toast.error(`Errore nell'aggiornare il punto: ${error.message}`);
-        return false;
-      }
-
-      // Update local state
-      setMapPoints(prev => prev.map(point => 
-        point.id === id ? { ...point, title: trimmedTitle, note: trimmedNote } : point
-      ));
-      
-      toast.success("Punto aggiornato con successo");
-      setActiveMapPoint(null);
-      return true;
-    } catch (err) {
-      console.error("❌ Exception updating map point:", err);
-      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
-      toast.error(`Errore nell'aggiornare il punto: ${errorMessage}`);
-      return false;
-    }
-  };
-
-  const deleteMapPoint = async (id: string): Promise<boolean> => {
-    const validUserId = getValidUserId();
-    
-    try {
-      console.log("🗑️ Deleting map point:", id);
-
-      // Handle developer mode
-      if (validUserId === DEVELOPER_UUID) {
-        const currentPoints = mapPoints.filter(point => point.id !== id);
-        setMapPoints(currentPoints);
-        localStorage.setItem('dev-map-points', JSON.stringify(currentPoints));
-        setActiveMapPoint(null);
-        toast.success("Punto eliminato (modalità sviluppatore)");
-        return true;
-      }
-
-      const { error } = await supabase
-        .from('map_points')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', validUserId);
-
-      if (error) {
-        console.error("❌ Error deleting map point:", error);
-        toast.error(`Errore nell'eliminare il punto: ${error.message}`);
-        return false;
-      }
-
-      // Update local state
-      setMapPoints(prev => prev.filter(point => point.id !== id));
-      setActiveMapPoint(null);
-      toast.success("Punto eliminato con successo");
-      return true;
-    } catch (err) {
-      console.error("❌ Exception deleting map point:", err);
-      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
-      toast.error(`Errore nell'eliminare il punto: ${errorMessage}`);
-      return false;
     }
   };
 
