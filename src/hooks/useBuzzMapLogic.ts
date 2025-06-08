@@ -152,7 +152,7 @@ export const useBuzzMapLogic = () => {
     return result;
   }, []);
 
-  // ENHANCED BUZZ generation with FORCED sync sequence
+  // ENHANCED BUZZ generation with STRICT validation and BLOCKING
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       console.debug('🚫 DIAGNOSTIC: BUZZ GENERATION - No user ID');
@@ -189,8 +189,8 @@ export const useBuzzMapLogic = () => {
       console.debug('🧹 DIAGNOSTIC: STEP 1 - Complete cleanup with FORCED sync...');
       await forceCompleteSync();
       
-      // STEP 2: Clear all existing areas with FORCED sync
-      console.debug('🗑️ DIAGNOSTIC: STEP 2 - Clear all existing areas with FORCED sync...');
+      // STEP 2: Clear all existing areas with STRICT VALIDATION
+      console.debug('🗑️ DIAGNOSTIC: STEP 2 - Clear all existing areas with STRICT validation...');
       const cleanupSuccess = await deleteAllUserAreas();
       if (!cleanupSuccess) {
         console.error('❌ DIAGNOSTIC: BUZZ GENERATION - Cleanup failed');
@@ -198,7 +198,7 @@ export const useBuzzMapLogic = () => {
         return null;
       }
       
-      console.debug('✅ DIAGNOSTIC: STEP 2 - Cleanup completed with FORCED sync');
+      console.debug('✅ DIAGNOSTIC: STEP 2 - Cleanup completed with STRICT validation');
       
       // STEP 3: Calculate radius and pricing
       console.debug('💰 DIAGNOSTIC: STEP 3 - Calculate radius and pricing...');
@@ -240,8 +240,8 @@ export const useBuzzMapLogic = () => {
       console.debug('🔢 DIAGNOSTIC: STEP 6 - Update counters...');
       await updateDailyBuzzMapCounter(basePrice, precision);
       
-      // STEP 7: CRITICAL - Force complete sync after creation
-      console.debug('🔄 DIAGNOSTIC: STEP 7 - Force complete sync after creation...');
+      // STEP 7: CRITICAL - Force complete sync after creation with STRICT validation
+      console.debug('🔄 DIAGNOSTIC: STEP 7 - Force complete sync after creation with STRICT validation...');
       await forceCompleteSync();
       await forceReload();
       
@@ -271,7 +271,7 @@ export const useBuzzMapLogic = () => {
     setIsGenerating, forceCompleteSync, forceReload, currentWeekAreas
   ]);
 
-  // Enhanced manual area deletion with FORCED sync
+  // Enhanced manual area deletion with STRICT validation
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
     console.debug('🗑️ DIAGNOSTIC: HANDLE DELETE AREA START:', areaId);
     
@@ -280,7 +280,7 @@ export const useBuzzMapLogic = () => {
     const success = await deleteSpecificArea(areaId);
     
     if (success) {
-      console.debug('✅ DIAGNOSTIC: HANDLE DELETE AREA - Success, forcing complete sync...');
+      console.debug('✅ DIAGNOSTIC: HANDLE DELETE AREA - Success, forcing complete sync with STRICT validation...');
       // Force complete sync after deletion
       await forceCompleteSync();
       toast.success('Area eliminata definitivamente');
@@ -292,7 +292,7 @@ export const useBuzzMapLogic = () => {
     return success;
   }, [deleteSpecificArea, forceCompleteSync]);
 
-  // Enhanced clear all areas with FORCED sync
+  // Enhanced clear all areas with STRICT validation
   const handleClearAllAreas = useCallback(async (): Promise<void> => {
     console.debug('🧹 DIAGNOSTIC: HANDLE CLEAR ALL START');
     
@@ -301,7 +301,7 @@ export const useBuzzMapLogic = () => {
     const success = await deleteAllUserAreas();
     
     if (success) {
-      console.debug('✅ DIAGNOSTIC: HANDLE CLEAR ALL - Success, forcing complete sync...');
+      console.debug('✅ DIAGNOSTIC: HANDLE CLEAR ALL - Success, forcing complete sync with STRICT validation...');
       // Force complete sync after deletion
       await forceCompleteSync();
       toast.success('Tutte le aree sono state eliminate definitivamente');

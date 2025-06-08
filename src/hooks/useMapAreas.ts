@@ -80,6 +80,166 @@ export const useMapAreas = (userId?: string) => {
     error: error?.message || 'No error'
   });
 
+  // ENHANCED DELETE ALL with STRICT VALIDATION
+  const deleteMutation = useMutation({
+    mutationFn: async (): Promise<boolean> => {
+      console.debug('🔥 DIAGNOSTIC: DELETE ALL START for user:', validUserId);
+      
+      // STEP 1: Verify current state before deletion
+      const { data: preDeleteAreas } = await supabase
+        .from('user_map_areas')
+        .select('*')
+        .eq('user_id', validUserId);
+      
+      const { data: preDeleteBuzzMap } = await supabase
+        .from('user_buzz_map')
+        .select('*')
+        .eq('user_id', validUserId);
+
+      console.debug('📊 DIAGNOSTIC: PRE-DELETE STATE:', {
+        user_map_areas_count: preDeleteAreas?.length || 0,
+        user_buzz_map_count: preDeleteBuzzMap?.length || 0,
+        user_id: validUserId
+      });
+      
+      // CRITICAL DELETE - STEP 2: Delete with explicit userId
+      console.debug('🗑️ DIAGNOSTIC: EXECUTING DELETE with validUserId:', validUserId);
+      
+      const { error: deleteError1, count: count1 } = await supabase
+        .from('user_map_areas')
+        .delete({ count: 'exact' })
+        .eq('user_id', validUserId);
+
+      const { error: deleteError2, count: count2 } = await supabase
+        .from('user_buzz_map')
+        .delete({ count: 'exact' })
+        .eq('user_id', validUserId);
+
+      console.debug('🗑️ DIAGNOSTIC: DELETE RESULTS:', {
+        user_map_areas: { error: deleteError1, rowsDeleted: count1 },
+        user_buzz_map: { error: deleteError2, rowsDeleted: count2 },
+        validUserId_used: validUserId
+      });
+
+      if (deleteError1 || deleteError2) {
+        console.error('❌ DIAGNOSTIC: DELETE ALL ERROR:', { deleteError1, deleteError2 });
+        throw new Error('Failed to delete areas from database');
+      }
+
+      // CRITICAL VALIDATION - STEP 3: Verify DELETE success
+      console.debug('🔍 DIAGNOSTIC: VERIFYING DELETE SUCCESS...');
+      
+      const { data: verifyMapAreas } = await supabase
+        .from('user_map_areas')
+        .select('id')
+        .eq('user_id', validUserId);
+      
+      const { data: verifyBuzzMap } = await supabase
+        .from('user_buzz_map')
+        .select('id')
+        .eq('user_id', validUserId);
+
+      console.debug('✅ DIAGNOSTIC: POST DELETE SELECT →', {
+        user_map_areas_remaining: verifyMapAreas,
+        user_buzz_map_remaining: verifyBuzzMap,
+        validUserId_verified: validUserId
+      });
+
+      // BLOCKING ERROR - If DELETE failed to remove all rows
+      if ((verifyMapAreas && verifyMapAreas.length > 0) || (verifyBuzzMap && verifyBuzzMap.length > 0)) {
+        const errorMsg = `❌ DELETE fallito: righe ancora presenti dopo operazione - user_map_areas: ${verifyMapAreas?.length || 0}, user_buzz_map: ${verifyBuzzMap?.length || 0}`;
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+
+      console.debug('✅ DIAGNOSTIC: DELETE SUCCESS VERIFICATION COMPLETE:', {
+        user_id: validUserId,
+        rowsDeletedFromDB_user_map_areas: count1,
+        rowsDeletedFromDB_user_buzz_map: count2,
+        post_delete_verification: 'PASSED - NO ROWS REMAINING'
+      });
+
+      return true;
+    },
+    onSuccess: async () => {
+      console.debug('🎉 DIAGNOSTIC: DELETE SUCCESS - Starting FORCED sync sequence...');
+      
+      // CRITICAL: Force complete sync with UNIFIED queryKey
+      console.debug('🔄 DIAGNOSTIC: DELETE - FORCE complete sync with UNIFIED queryKey:', queryKey);
+      await queryClient.invalidateQueries({ queryKey });
+      console.debug('✅ DIAGNOSTIC: DELETE - Invalidation completed');
+      
+      const refetchResult = await queryClient.refetchQueries({ queryKey });
+      console.debug('✅ DIAGNOSTIC: DELETE - Refetch completed with result:', refetchResult);
+      
+      // Verify final state
+      const finalAreas = queryClient.getQueryData(queryKey);
+      console.debug('🔍 DIAGNOSTIC: DELETE VERIFICATION - Final areas in cache:', finalAreas);
+      
+      // BLOCK ANY RENDER IF CACHE IS NOT EMPTY
+      if (Array.isArray(finalAreas) && finalAreas.length > 0) {
+        const blockMsg = '🚫 BLOCKING: Cache still contains areas after DELETE - stopping all render operations';
+        console.error(blockMsg);
+        throw new Error(blockMsg);
+      }
+      
+      console.debug('✅ DIAGNOSTIC: DELETE COMPLETE - query invalidated, refetched, cache verified empty');
+    },
+    onError: (error) => {
+      console.error('❌ DIAGNOSTIC: DELETE ALL MUTATION ERROR:', error);
+    }
+  });
+
+  // DELETE SPECIFIC AREA MUTATION with validation
+  const deleteSpecificMutation = useMutation({
+    mutationFn: async (areaId: string): Promise<boolean> => {
+      console.debug('🗑️ DIAGNOSTIC: DELETE SPECIFIC START for area:', areaId, 'user:', validUserId);
+      
+      // Delete from BOTH tables with explicit userId validation
+      const { error: deleteError1 } = await supabase
+        .from('user_map_areas')
+        .delete()
+        .eq('id', areaId)
+        .eq('user_id', validUserId);
+
+      const { error: deleteError2 } = await supabase
+        .from('user_buzz_map')
+        .delete()
+        .eq('id', areaId)
+        .eq('user_id', validUserId);
+
+      console.debug('🗑️ DIAGNOSTIC: DELETE SPECIFIC RESULTS:', {
+        user_map_areas_error: deleteError1,
+        user_buzz_map_error: deleteError2,
+        validUserId_used: validUserId
+      });
+
+      if (deleteError1 && deleteError2) {
+        console.error('❌ DIAGNOSTIC: DELETE SPECIFIC ERROR:', { deleteError1, deleteError2 });
+        throw new Error('Failed to delete specific area');
+      }
+
+      // Verify specific deletion
+      const { data: remainingAreas } = await supabase
+        .from('user_map_areas')
+        .select('id')
+        .eq('user_id', validUserId);
+      
+      console.debug('✅ DIAGNOSTIC: POST SPECIFIC DELETE - Remaining areas:', remainingAreas?.length || 0);
+      
+      return true;
+    },
+    onSuccess: async () => {
+      console.debug('🎉 DIAGNOSTIC: DELETE SPECIFIC SUCCESS - Starting FORCED sync...');
+      
+      // CRITICAL: Force complete sync with UNIFIED queryKey
+      await queryClient.invalidateQueries({ queryKey });
+      await queryClient.refetchQueries({ queryKey });
+      
+      console.debug('✅ DIAGNOSTIC: DELETE SPECIFIC - Sync COMPLETE');
+    }
+  });
+
   // FORCED INVALIDATE + REFETCH SEQUENCE
   const forceCompleteSync = useCallback(async () => {
     console.debug('🧹 DIAGNOSTIC: FORCE SYNC START with UNIFIED queryKey:', queryKey);
@@ -103,11 +263,6 @@ export const useMapAreas = (userId?: string) => {
       // Step 4: Verify final state
       const finalData = queryClient.getQueryData(queryKey);
       console.debug('✅ DIAGNOSTIC: FORCE SYNC COMPLETE. Final areas:', finalData);
-      console.debug('🔍 DIAGNOSTIC: Final state validation:', {
-        finalData_isArray: Array.isArray(finalData),
-        finalData_length: Array.isArray(finalData) ? finalData.length : 'Not array',
-        finalData_content: finalData
-      });
       
       return true;
     } catch (error) {
@@ -115,149 +270,6 @@ export const useMapAreas = (userId?: string) => {
       return false;
     }
   }, [queryClient, queryKey, resetMapState]);
-
-  // DELETE ALL MUTATION with FORCED sync sequence
-  const deleteMutation = useMutation({
-    mutationFn: async (): Promise<boolean> => {
-      console.debug('🔥 DIAGNOSTIC: DELETE ALL START for user:', validUserId);
-      
-      // STEP 1: Verify current state before deletion
-      const { data: preDeleteAreas } = await supabase
-        .from('user_map_areas')
-        .select('*')
-        .eq('user_id', validUserId);
-      
-      const { data: preDeleteBuzzMap } = await supabase
-        .from('user_buzz_map')
-        .select('*')
-        .eq('user_id', validUserId);
-
-      console.debug('📊 DIAGNOSTIC: PRE-DELETE STATE:', {
-        user_map_areas_count: preDeleteAreas?.length || 0,
-        user_buzz_map_count: preDeleteBuzzMap?.length || 0,
-        user_id: validUserId
-      });
-      
-      // Delete from BOTH tables (complete cleanup)
-      const { error: deleteError1, count: count1 } = await supabase
-        .from('user_map_areas')
-        .delete({ count: 'exact' })
-        .eq('user_id', validUserId);
-
-      const { error: deleteError2, count: count2 } = await supabase
-        .from('user_buzz_map')
-        .delete({ count: 'exact' })
-        .eq('user_id', validUserId);
-
-      console.debug('🗑️ DIAGNOSTIC: DELETE RESULTS:', {
-        user_map_areas: { error: deleteError1, rowsDeleted: count1 },
-        user_buzz_map: { error: deleteError2, rowsDeleted: count2 }
-      });
-
-      if (deleteError1 || deleteError2) {
-        console.error('❌ DIAGNOSTIC: DELETE ALL ERROR:', { deleteError1, deleteError2 });
-        throw new Error('Failed to delete areas from database');
-      }
-
-      // CRITICAL: Verify DELETE success by re-querying
-      const { data: verifyMapAreas } = await supabase
-        .from('user_map_areas')
-        .select('*')
-        .eq('user_id', validUserId);
-      
-      const { data: verifyBuzzMap } = await supabase
-        .from('user_buzz_map')
-        .select('*')
-        .eq('user_id', validUserId);
-
-      console.debug('✅ DIAGNOSTIC: DELETE SUCCESS VERIFICATION:', {
-        user_id: validUserId,
-        rowsDeletedFromDB_user_map_areas: count1,
-        rowsDeletedFromDB_user_buzz_map: count2,
-        post_delete_user_map_areas_count: (verifyMapAreas || []).length,
-        post_delete_user_buzz_map_count: (verifyBuzzMap || []).length,
-        verification_success: (verifyMapAreas || []).length === 0 && (verifyBuzzMap || []).length === 0
-      });
-
-      return true;
-    },
-    onSuccess: async () => {
-      console.debug('🎉 DIAGNOSTIC: DELETE SUCCESS - Starting FORCED sync sequence...');
-      
-      // CRITICAL: Force complete sync with UNIFIED queryKey
-      console.debug('🔄 DIAGNOSTIC: DELETE - FORCE complete sync with UNIFIED queryKey:', queryKey);
-      await queryClient.invalidateQueries({ queryKey });
-      console.debug('✅ DIAGNOSTIC: DELETE - Invalidation completed');
-      
-      const refetchResult = await queryClient.refetchQueries({ queryKey });
-      console.debug('✅ DIAGNOSTIC: DELETE - Refetch completed with result:', refetchResult);
-      
-      console.debug('✅ DIAGNOSTIC: DELETE - Sync sequence COMPLETE');
-      
-      // Verify final state
-      const finalAreas = queryClient.getQueryData(queryKey);
-      console.debug('🔍 DIAGNOSTIC: DELETE VERIFICATION - Final areas in cache:', finalAreas);
-      console.debug('🔍 DIAGNOSTIC: DELETE VERIFICATION - Final state check:', {
-        finalAreas_isArray: Array.isArray(finalAreas),
-        finalAreas_length: Array.isArray(finalAreas) ? finalAreas.length : 'Not array',
-        expected_length: 0,
-        sync_success: Array.isArray(finalAreas) && finalAreas.length === 0
-      });
-      
-      if (Array.isArray(finalAreas) && finalAreas.length === 0) {
-        console.debug('✅ DIAGNOSTIC: query invalidated');
-        console.debug('✅ DIAGNOSTIC: query refetched');
-        console.debug('✅ DIAGNOSTIC: SELECT post-delete returned 0');
-      } else {
-        console.warn('❗ DIAGNOSTIC: SYNC INCOMPLETE - Areas still in cache:', finalAreas);
-      }
-    },
-    onError: (error) => {
-      console.error('❌ DIAGNOSTIC: DELETE ALL MUTATION ERROR:', error);
-    }
-  });
-
-  // DELETE SPECIFIC AREA MUTATION
-  const deleteSpecificMutation = useMutation({
-    mutationFn: async (areaId: string): Promise<boolean> => {
-      console.debug('🗑️ DIAGNOSTIC: DELETE SPECIFIC START for area:', areaId);
-      
-      // Delete from BOTH tables
-      const { error: deleteError1 } = await supabase
-        .from('user_map_areas')
-        .delete()
-        .eq('id', areaId)
-        .eq('user_id', validUserId);
-
-      const { error: deleteError2 } = await supabase
-        .from('user_buzz_map')
-        .delete()
-        .eq('id', areaId)
-        .eq('user_id', validUserId);
-
-      console.debug('🗑️ DIAGNOSTIC: DELETE SPECIFIC RESULTS:', {
-        user_map_areas_error: deleteError1,
-        user_buzz_map_error: deleteError2
-      });
-
-      if (deleteError1 && deleteError2) {
-        console.error('❌ DIAGNOSTIC: DELETE SPECIFIC ERROR:', { deleteError1, deleteError2 });
-        throw new Error('Failed to delete specific area');
-      }
-
-      console.debug('✅ DIAGNOSTIC: DELETE SPECIFIC SUCCESS for area:', areaId);
-      return true;
-    },
-    onSuccess: async () => {
-      console.debug('🎉 DIAGNOSTIC: DELETE SPECIFIC SUCCESS - Starting FORCED sync...');
-      
-      // CRITICAL: Force complete sync with UNIFIED queryKey
-      await queryClient.invalidateQueries({ queryKey });
-      await queryClient.refetchQueries({ queryKey });
-      
-      console.debug('✅ DIAGNOSTIC: DELETE SPECIFIC - Sync COMPLETE');
-    }
-  });
 
   // DELETE ALL with complete protection and FORCED sync
   const deleteAllUserAreas = useCallback(async (): Promise<boolean> => {
@@ -270,7 +282,7 @@ export const useMapAreas = (userId?: string) => {
     toast.dismiss();
 
     try {
-      console.debug('🔥 DIAGNOSTIC: DELETE ALL - Starting with UNIFIED queryKey:', queryKey);
+      console.debug('🔥 DIAGNOSTIC: DELETE ALL - Starting with validUserId:', validUserId, 'queryKey:', queryKey);
       
       await deleteMutation.mutateAsync();
       
@@ -285,7 +297,7 @@ export const useMapAreas = (userId?: string) => {
     } finally {
       setIsDeleting(false);
     }
-  }, [isDeleting, isGenerating, setIsDeleting, deleteMutation, queryKey]);
+  }, [isDeleting, isGenerating, setIsDeleting, deleteMutation, queryKey, validUserId]);
 
   // DELETE specific area with protection and FORCED sync
   const deleteSpecificArea = useCallback(async (areaId: string): Promise<boolean> => {
@@ -298,7 +310,7 @@ export const useMapAreas = (userId?: string) => {
     toast.dismiss();
 
     try {
-      console.debug('🗑️ DIAGNOSTIC: DELETE SPECIFIC - Using UNIFIED queryKey:', queryKey);
+      console.debug('🗑️ DIAGNOSTIC: DELETE SPECIFIC - Using validUserId:', validUserId, 'queryKey:', queryKey);
       await deleteSpecificMutation.mutateAsync(areaId);
       toast.success('Area eliminata definitivamente');
       return true;
@@ -309,7 +321,7 @@ export const useMapAreas = (userId?: string) => {
     } finally {
       setIsDeleting(false);
     }
-  }, [isDeleting, isGenerating, setIsDeleting, deleteSpecificMutation, queryKey]);
+  }, [isDeleting, isGenerating, setIsDeleting, deleteSpecificMutation, queryKey, validUserId]);
 
   // Force reload with UNIFIED queryKey
   const forceReload = useCallback(async () => {
@@ -325,7 +337,8 @@ export const useMapAreas = (userId?: string) => {
     isLoading,
     isFetching,
     areas_source: 'react-query',
-    areas_content: currentWeekAreas
+    areas_content: currentWeekAreas,
+    validUserId_final: validUserId
   });
 
   return {

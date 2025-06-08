@@ -93,100 +93,97 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     // Clear all references
     layerGroupRef.current = null;
     
-    // STEP 2: CREATE NEW LAYER GROUP ONLY IF AREAS EXIST
-    if (areas && areas.length > 0) {
-      console.debug('🔵 DIAGNOSTIC: CIRCLE RENDERER - Creating', areas.length, 'new circles');
-      console.debug('🔍 DIAGNOSTIC: CIRCLE RENDERER - Areas validation before rendering:', {
-        areas_length: areas.length,
-        areas_sample: areas[0] || 'No first area',
-        all_areas_valid: areas.every(area => 
-          area.lat && area.lng && area.radius_km && 
-          !isNaN(area.lat) && !isNaN(area.lng) && !isNaN(area.radius_km)
-        )
+    // CRITICAL BLOCKING: Stop render if areas is not truly empty
+    if (areas.length === 0) {
+      console.debug('🚫 DIAGNOSTIC: BLOCKING RENDER - areas.length === 0, map cleared completely');
+      console.debug('✅ DIAGNOSTIC: map.render() executed with 0 areas - CORRECT STATE');
+      map.setView([41.9028, 12.4964], 6);
+      isCleanupRunning.current = false;
+      return;
+    }
+    
+    // STEP 2: CREATE NEW LAYER GROUP ONLY IF AREAS EXIST AND VALID
+    console.debug('🔵 DIAGNOSTIC: CIRCLE RENDERER - Creating', areas.length, 'new circles');
+    console.debug('🔍 DIAGNOSTIC: CIRCLE RENDERER - Areas validation before rendering:', {
+      areas_length: areas.length,
+      areas_sample: areas[0] || 'No first area',
+      all_areas_valid: areas.every(area => 
+        area.lat && area.lng && area.radius_km && 
+        !isNaN(area.lat) && !isNaN(area.lng) && !isNaN(area.radius_km)
+      )
+    });
+    
+    // Create new layer group
+    layerGroupRef.current = L.layerGroup().addTo(map);
+    console.debug('✅ DIAGNOSTIC: CIRCLE RENDERER - New layer group created');
+    
+    areas.forEach((area, index) => {
+      console.debug(`🔵 DIAGNOSTIC: CIRCLE RENDERER - Creating circle ${index + 1}/${areas.length}:`, {
+        id: area.id,
+        lat: area.lat,
+        lng: area.lng,
+        radius_km: area.radius_km,
+        radius_meters: area.radius_km * 1000
       });
       
-      // Create new layer group
-      layerGroupRef.current = L.layerGroup().addTo(map);
-      console.debug('✅ DIAGNOSTIC: CIRCLE RENDERER - New layer group created');
+      // Validate area data
+      if (!area.lat || !area.lng || !area.radius_km || 
+          isNaN(area.lat) || isNaN(area.lng) || isNaN(area.radius_km)) {
+        console.error('❌ DIAGNOSTIC: CIRCLE RENDERER - Invalid area data:', area);
+        return;
+      }
       
-      areas.forEach((area, index) => {
-        console.debug(`🔵 DIAGNOSTIC: CIRCLE RENDERER - Creating circle ${index + 1}/${areas.length}:`, {
-          id: area.id,
-          lat: area.lat,
-          lng: area.lng,
-          radius_km: area.radius_km,
-          radius_meters: area.radius_km * 1000
+      const radiusInMeters = area.radius_km * 1000;
+      
+      try {
+        const circle = L.circle([area.lat, area.lng], {
+          radius: radiusInMeters,
+          color: currentColor,
+          fillColor: currentColor,
+          fillOpacity: 0.25,
+          weight: 3,
+          opacity: 1,
+          className: `buzz-area-${area.id}`
         });
         
-        // Validate area data
-        if (!area.lat || !area.lng || !area.radius_km || 
-            isNaN(area.lat) || isNaN(area.lng) || isNaN(area.radius_km)) {
-          console.error('❌ DIAGNOSTIC: CIRCLE RENDERER - Invalid area data:', area);
-          return;
-        }
+        layerGroupRef.current?.addLayer(circle);
         
-        const radiusInMeters = area.radius_km * 1000;
+        console.debug(`✅ DIAGNOSTIC: CIRCLE RENDERER - Circle ${index + 1} created successfully:`, {
+          id: area.id,
+          radius_km: area.radius_km,
+          leaflet_radius_meters: radiusInMeters,
+          actual_radius: circle.getRadius(),
+          coordinates: circle.getLatLng()
+        });
         
+      } catch (error) {
+        console.error(`❌ DIAGNOSTIC: CIRCLE RENDERER - Error creating circle ${index + 1}:`, error);
+      }
+    });
+    
+    // Set map view to show all circles
+    if (layerGroupRef.current) {
+      const layers = layerGroupRef.current.getLayers();
+      if (layers.length > 0) {
         try {
-          const circle = L.circle([area.lat, area.lng], {
-            radius: radiusInMeters,
-            color: currentColor,
-            fillColor: currentColor,
-            fillOpacity: 0.25,
-            weight: 3,
-            opacity: 1,
-            className: `buzz-area-${area.id}`
-          });
-          
-          layerGroupRef.current?.addLayer(circle);
-          
-          console.debug(`✅ DIAGNOSTIC: CIRCLE RENDERER - Circle ${index + 1} created successfully:`, {
-            id: area.id,
-            radius_km: area.radius_km,
-            leaflet_radius_meters: radiusInMeters,
-            actual_radius: circle.getRadius(),
-            coordinates: circle.getLatLng()
-          });
-          
+          const featureGroup = L.featureGroup(layers);
+          const bounds = featureGroup.getBounds();
+          if (bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [50, 50] });
+            console.debug('🎯 DIAGNOSTIC: CIRCLE RENDERER - Map view updated to show all circles');
+          }
         } catch (error) {
-          console.error(`❌ DIAGNOSTIC: CIRCLE RENDERER - Error creating circle ${index + 1}:`, error);
-        }
-      });
-      
-      // Set map view to show all circles
-      if (layerGroupRef.current) {
-        const layers = layerGroupRef.current.getLayers();
-        if (layers.length > 0) {
-          try {
-            const featureGroup = L.featureGroup(layers);
-            const bounds = featureGroup.getBounds();
-            if (bounds.isValid()) {
-              map.fitBounds(bounds, { padding: [50, 50] });
-              console.debug('🎯 DIAGNOSTIC: CIRCLE RENDERER - Map view updated to show all circles');
-            }
-          } catch (error) {
-            console.warn('⚠️ DIAGNOSTIC: CIRCLE RENDERER - Could not fit bounds:', error);
-            // Fallback to first area
-            if (areas[0]) {
-              map.setView([areas[0].lat, areas[0].lng], 10);
-            }
+          console.warn('⚠️ DIAGNOSTIC: CIRCLE RENDERER - Could not fit bounds:', error);
+          // Fallback to first area
+          if (areas[0]) {
+            map.setView([areas[0].lat, areas[0].lng], 10);
           }
         }
       }
-      
-      console.debug('🎉 DIAGNOSTIC: CIRCLE RENDERER - All circles rendered successfully');
-      console.debug('✅ DIAGNOSTIC: map.render() executed with', areas.length, 'areas');
-      
-    } else {
-      console.debug('❌ DIAGNOSTIC: CIRCLE RENDERER - No areas to display, map cleared');
-      console.debug('✅ DIAGNOSTIC: map.render() executed with 0 areas');
-      console.debug('🔍 DIAGNOSTIC: CIRCLE RENDERER - Empty state validation:', {
-        areas_length: areas.length,
-        areas_isEmptyArray: Array.isArray(areas) && areas.length === 0,
-        map_should_be_clear: true
-      });
-      map.setView([41.9028, 12.4964], 6);
     }
+    
+    console.debug('🎉 DIAGNOSTIC: CIRCLE RENDERER - All circles rendered successfully');
+    console.debug('✅ DIAGNOSTIC: map.render() executed with', areas.length, 'areas');
     
     // STEP 3: VERIFY FINAL STATE and LOG SYNC STATUS
     const finalCircleCount = layerGroupRef.current?.getLayers().length || 0;
