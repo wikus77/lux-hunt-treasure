@@ -49,42 +49,42 @@ export const useBuzzAreaManagement = (userId?: string) => {
     return calculateNextRadiusFromArea(activeArea);
   }, [getActiveArea, calculateNextRadiusFromArea]);
 
-  // CRITICAL FIX: Load current week areas with atomic database fetch
+  // CRITICAL FIX: Load current week areas with atomic database fetch - NO CACHE
   const loadCurrentWeekAreas = useCallback(async () => {
     const validUserId = getValidUserId();
     
     try {
       const currentWeek = getCurrentWeek();
-      console.log('📍 ATOMIC FETCH - Loading BUZZ areas for user:', validUserId, 'week:', currentWeek);
+      console.log('📍 ATOMIC FETCH - Loading ALL user areas for user:', validUserId);
 
-      // CRITICAL: Clear local state first to prevent stale data
+      // CRITICAL: Clear local state IMMEDIATELY to prevent stale data
       setCurrentWeekAreas([]);
 
-      // CRITICAL FIX: Always fetch fresh data from Supabase with explicit filtering
+      // CRITICAL FIX: Fetch ALL areas for this user (manual + BUZZ) with FRESH data
       const { data, error } = await supabase
         .from('user_map_areas')
         .select('*')
         .eq('user_id', validUserId)
-        .eq('week', currentWeek)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error loading BUZZ areas:', error);
+        console.error('❌ Error loading user areas:', error);
         if (error.code === 'PGRST116') {
-          console.log('ℹ️ No BUZZ areas found - confirmed empty state');
+          console.log('ℹ️ No areas found - confirmed empty state');
           setCurrentWeekAreas([]);
         }
         return;
       }
 
       console.log('✅ ATOMIC FETCH COMPLETE - Fresh areas loaded:', data?.length || 0);
-      console.log('📊 Loaded areas with exact radius values:', data?.map(area => ({
+      console.log('📊 All user areas retrieved:', data?.map(area => ({
         id: area.id,
         radius_km: area.radius_km,
-        created_at: area.created_at
+        created_at: area.created_at,
+        week: area.week
       })));
       
-      // Set the exact data from Supabase, ensuring visual consistency
+      // Set the exact data from Supabase - ALL AREAS
       setCurrentWeekAreas(data || []);
     } catch (error) {
       console.error('❌ Exception in atomic fetch:', error);
@@ -92,40 +92,37 @@ export const useBuzzAreaManagement = (userId?: string) => {
     }
   }, [getValidUserId, getCurrentWeek]);
 
-  // CRITICAL FIX: Enhanced definitive area removal with complete database cleanup
+  // CRITICAL FIX: DEFINITIVE area removal with COMPLETE database cleanup - PERMANENT DELETE
   const removePreviousArea = useCallback(async (): Promise<boolean> => {
     const validUserId = getValidUserId();
     
     try {
-      const currentWeek = getCurrentWeek();
-      console.log('🗑️ DEFINITIVE CLEANUP - Starting complete removal for user:', validUserId, 'week:', currentWeek);
+      console.log('🗑️ DEFINITIVE CLEANUP - Starting PERMANENT removal for user:', validUserId);
 
-      // Step 1: Clear local state immediately to prevent visual inconsistency
+      // Step 1: Clear local state IMMEDIATELY to prevent visual inconsistency
       setCurrentWeekAreas([]);
-      console.log('✅ Local state cleared immediately');
+      console.log('✅ Local state cleared immediately for visual consistency');
 
-      // Step 2: Execute DEFINITIVE delete from Supabase - DELETE ALL AREAS FOR THIS USER/WEEK
-      console.log('🔥 Executing DEFINITIVE DELETE from user_map_areas...');
+      // Step 2: Execute DEFINITIVE PERMANENT DELETE from Supabase - DELETE ALL AREAS FOR THIS USER
+      console.log('🔥 Executing DEFINITIVE PERMANENT DELETE from user_map_areas...');
       const { error: deleteError, count } = await supabase
         .from('user_map_areas')
         .delete({ count: 'exact' })
-        .eq('user_id', validUserId)
-        .eq('week', currentWeek);
+        .eq('user_id', validUserId);
 
       if (deleteError) {
-        console.error('❌ Database delete error:', deleteError);
+        console.error('❌ Database PERMANENT delete error:', deleteError);
         return false;
       } else {
-        console.log('✅ DEFINITIVE DELETE SUCCESS - Removed count:', count);
+        console.log('✅ DEFINITIVE PERMANENT DELETE SUCCESS - Removed count:', count);
       }
 
-      // Step 3: CRITICAL - Force immediate verification that areas are truly deleted
-      console.log('🔍 VERIFICATION FETCH - Checking if areas truly deleted...');
+      // Step 3: CRITICAL - Force immediate verification that areas are PERMANENTLY deleted
+      console.log('🔍 VERIFICATION FETCH - Checking if areas truly PERMANENTLY deleted...');
       const { data: verifyData, error: verifyError } = await supabase
         .from('user_map_areas')
         .select('*')
-        .eq('user_id', validUserId)
-        .eq('week', currentWeek);
+        .eq('user_id', validUserId);
 
       if (!verifyError) {
         const remainingCount = verifyData?.length || 0;
@@ -137,17 +134,16 @@ export const useBuzzAreaManagement = (userId?: string) => {
           const { error: secondDeleteError } = await supabase
             .from('user_map_areas')
             .delete()
-            .eq('user_id', validUserId)
-            .eq('week', currentWeek);
+            .eq('user_id', validUserId);
           
           if (secondDeleteError) {
             console.error('❌ Second delete attempt failed:', secondDeleteError);
             return false;
           } else {
-            console.log('✅ FORCE DELETE successful');
+            console.log('✅ FORCE DELETE successful - ALL AREAS PERMANENTLY REMOVED');
           }
         } else {
-          console.log('✅ PERFECT CLEANUP - No areas remaining in database');
+          console.log('✅ PERFECT CLEANUP - No areas remaining in database - PERMANENT DELETION CONFIRMED');
         }
         
         // Ensure local state reflects actual database state (should be empty)
@@ -164,16 +160,16 @@ export const useBuzzAreaManagement = (userId?: string) => {
       setCurrentWeekAreas([]);
       return false;
     }
-  }, [getValidUserId, getCurrentWeek]);
+  }, [getValidUserId]);
 
-  // CRITICAL FIX: Delete specific area with immediate verification and NO REAPPEARANCE
+  // CRITICAL FIX: Delete specific area with immediate verification and PERMANENT REMOVAL
   const deleteSpecificArea = useCallback(async (areaId: string): Promise<boolean> => {
     const validUserId = getValidUserId();
     
     try {
-      console.log('🗑️ ATOMIC DELETE - Removing specific area:', areaId, 'for user:', validUserId);
+      console.log('🗑️ ATOMIC DELETE - PERMANENTLY removing specific area:', areaId, 'for user:', validUserId);
 
-      // Execute immediate database delete
+      // Execute immediate PERMANENT database delete
       const { error: deleteError, count } = await supabase
         .from('user_map_areas')
         .delete({ count: 'exact' })
@@ -181,11 +177,11 @@ export const useBuzzAreaManagement = (userId?: string) => {
         .eq('user_id', validUserId);
 
       if (deleteError) {
-        console.error('❌ Specific area delete error:', deleteError);
+        console.error('❌ Specific area PERMANENT delete error:', deleteError);
         return false;
       }
 
-      console.log('✅ SPECIFIC DELETE SUCCESS - Removed count:', count);
+      console.log('✅ SPECIFIC DELETE SUCCESS - PERMANENTLY removed count:', count);
 
       // CRITICAL: Force immediate reload from database to ensure consistency
       await loadCurrentWeekAreas();
@@ -199,49 +195,49 @@ export const useBuzzAreaManagement = (userId?: string) => {
     }
   }, [getValidUserId, loadCurrentWeekAreas]);
 
-  // CRITICAL FIX: Delete ALL user areas (manual + BUZZ) - DEFINITIVE ELIMINATION
+  // CRITICAL FIX: Delete ALL user areas (manual + BUZZ) - DEFINITIVE PERMANENT ELIMINATION
   const deleteAllUserAreas = useCallback(async (): Promise<boolean> => {
     const validUserId = getValidUserId();
     
     try {
-      console.log('🧹 TOTAL CLEANUP - Deleting ALL areas for user:', validUserId);
+      console.log('🧹 TOTAL CLEANUP - PERMANENTLY deleting ALL areas for user:', validUserId);
 
-      // Step 1: Clear local state immediately
+      // Step 1: Clear local state immediately for visual consistency
       setCurrentWeekAreas([]);
 
-      // Step 2: Delete ALL areas for this user (not just current week)
+      // Step 2: PERMANENTLY delete ALL areas for this user (manual AND BUZZ areas)
       const { error: deleteError, count } = await supabase
         .from('user_map_areas')
         .delete({ count: 'exact' })
         .eq('user_id', validUserId);
 
       if (deleteError) {
-        console.error('❌ Delete all areas error:', deleteError);
+        console.error('❌ Delete all areas PERMANENT error:', deleteError);
         return false;
       }
 
-      console.log('✅ ALL AREAS DELETED - Removed count:', count);
+      console.log('✅ ALL AREAS PERMANENTLY DELETED - Removed count:', count);
 
-      // Step 3: Verify complete deletion
+      // Step 3: Verify complete PERMANENT deletion
       const { data: verifyData, error: verifyError } = await supabase
         .from('user_map_areas')
         .select('*')
         .eq('user_id', validUserId);
 
       if (!verifyError && verifyData && verifyData.length > 0) {
-        console.warn('⚠️ Some areas still exist, forcing final cleanup:', verifyData);
-        // Force final cleanup
+        console.warn('⚠️ Some areas still exist, forcing final PERMANENT cleanup:', verifyData);
+        // Force final PERMANENT cleanup
         await supabase
           .from('user_map_areas')
           .delete()
           .eq('user_id', validUserId);
       }
 
-      // Step 4: Force state refresh
+      // Step 4: Force state refresh to reflect PERMANENT deletion
       setCurrentWeekAreas([]);
       setForceUpdateCounter(prev => prev + 1);
       
-      console.log('✅ TOTAL CLEANUP COMPLETE - All areas permanently deleted');
+      console.log('✅ TOTAL CLEANUP COMPLETE - All areas PERMANENTLY deleted FOREVER');
       return true;
     } catch (error) {
       console.error('❌ Exception in total cleanup:', error);
@@ -250,7 +246,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
     }
   }, [getValidUserId]);
 
-  // Force reload areas with fresh fetch
+  // Force reload areas with fresh fetch - NO CACHE
   const forceReload = useCallback(() => {
     console.log('🔄 FORCE RELOAD - Triggering fresh database fetch');
     setForceUpdateCounter(prev => prev + 1);
@@ -274,7 +270,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
     loadCurrentWeekAreas,
     removePreviousArea,
     deleteSpecificArea,
-    deleteAllUserAreas, // Export the new function
+    deleteAllUserAreas,
     setCurrentWeekAreas,
     forceReload
   };

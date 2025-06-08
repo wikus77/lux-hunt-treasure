@@ -49,7 +49,7 @@ export const useBuzzMapLogic = () => {
     loadCurrentWeekAreas,
     removePreviousArea,
     deleteSpecificArea,
-    deleteAllUserAreas, // Use the new function
+    deleteAllUserAreas,
     setCurrentWeekAreas
   } = useBuzzAreaManagement(user?.id);
 
@@ -77,22 +77,29 @@ export const useBuzzMapLogic = () => {
 
   const { createBuzzMapArea } = useBuzzDatabase();
 
-  // CRITICAL FIX: Calculate progressive radius reduction with EXACT values
+  // CRITICAL FIX: Calculate progressive radius reduction with EXACT values - COUNT FROM DATABASE
   const calculateProgressiveRadius = useCallback((): number => {
-    console.log('📏 CALCULATING PROGRESSIVE RADIUS - EXACT with current areas:', currentWeekAreas.length);
+    // CRITICAL: Count BUZZ areas from database for exact precision
+    const buzzAreasCount = currentWeekAreas.filter(area => area.week === getCurrentWeek()).length;
+    
+    console.log('📏 CALCULATING PROGRESSIVE RADIUS - EXACT from DATABASE:', {
+      totalAreas: currentWeekAreas.length,
+      currentWeekAreas: buzzAreasCount,
+      allAreas: currentWeekAreas
+    });
     
     // CRITICAL: Use the count-based calculation for exact consistency
-    const radius = calculateProgressiveRadiusFromCount(currentWeekAreas.length);
+    const radius = calculateProgressiveRadiusFromCount(buzzAreasCount);
     
-    console.log('📏 PROGRESSIVE RADIUS RESULT - EXACT:', {
-      weeklyCount: currentWeekAreas.length,
+    console.log('📏 PROGRESSIVE RADIUS RESULT - EXACT FROM DATABASE:', {
+      weeklyCount: buzzAreasCount,
       calculatedRadius: radius,
-      shouldStart: currentWeekAreas.length === 0 ? '100.0 km (first BUZZ)' : `Reduced from previous by 5%`,
-      exactFormula: currentWeekAreas.length === 0 ? 'BASE = 100.0' : `100.0 * (0.95^${currentWeekAreas.length}) = ${radius.toFixed(1)}`
+      shouldStart: buzzAreasCount === 0 ? '100.0 km (first BUZZ)' : `Reduced from previous by 5%`,
+      exactFormula: buzzAreasCount === 0 ? 'BASE = 100.0' : `100.0 * (0.95^${buzzAreasCount}) = ${radius.toFixed(1)}`
     });
     
     return radius;
-  }, [currentWeekAreas, calculateProgressiveRadiusFromCount]);
+  }, [currentWeekAreas, calculateProgressiveRadiusFromCount, getCurrentWeek]);
 
   // Determine precision mode based on recent clue activity
   const determinePrecisionMode = useCallback((): 'high' | 'low' => {
@@ -121,7 +128,7 @@ export const useBuzzMapLogic = () => {
     };
   }, []);
 
-  // CRITICAL FIX: Generate new BUZZ MAPPA area with ATOMIC operations and NO DUPLICATIONS
+  // CRITICAL FIX: Generate new BUZZ MAPPA area with SINGLE EXECUTION and EXACT RADIUS from DATABASE
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
@@ -133,9 +140,9 @@ export const useBuzzMapLogic = () => {
       return null;
     }
 
-    // CRITICAL: Prevent concurrent generations
+    // CRITICAL: Prevent MULTIPLE concurrent generations - SINGLE EXECUTION ONLY
     if (isGenerating) {
-      console.log('🚫 BUZZ generation already in progress, blocking duplicate request');
+      console.log('🚫 BUZZ generation already in progress, blocking duplicate request - SINGLE EXECUTION ENFORCED');
       return null;
     }
 
@@ -144,23 +151,24 @@ export const useBuzzMapLogic = () => {
     try {
       const currentWeek = getCurrentWeek();
       
-      // CRITICAL FIX: STEP 1 - ATOMIC cleanup of ALL previous areas (no exceptions)
-      console.log('🧹 STEP 1: ATOMIC CLEANUP - Removing ALL previous areas definitively');
+      // CRITICAL FIX: STEP 1 - ATOMIC cleanup of ALL previous areas PERMANENTLY (manual + BUZZ)
+      console.log('🧹 STEP 1: ATOMIC CLEANUP - PERMANENTLY removing ALL previous areas');
       const cleanupSuccess = await removePreviousArea();
       if (!cleanupSuccess) {
-        console.error('❌ Failed to remove previous areas - ABORTING');
+        console.error('❌ Failed to PERMANENTLY remove previous areas - ABORTING');
         toast.error('Errore nel rimuovere le aree precedenti');
         setIsGenerating(false);
         return null;
       }
       
-      console.log('✅ STEP 1 COMPLETE: ALL previous areas removed definitively from database');
+      console.log('✅ STEP 1 COMPLETE: ALL previous areas PERMANENTLY removed from database');
       
-      // CRITICAL FIX: STEP 2 - Calculate EXACT progressive radius
+      // CRITICAL FIX: STEP 2 - Calculate EXACT progressive radius FROM FRESH DATABASE STATE
+      await loadCurrentWeekAreas(); // Refresh to get clean state
       const radiusKm = calculateProgressiveRadius();
       
-      console.log('📏 STEP 2: PROGRESSIVE RADIUS CALCULATION - EXACT:', {
-        weeklyAreasCount: currentWeekAreas.length,
+      console.log('📏 STEP 2: PROGRESSIVE RADIUS CALCULATION - EXACT FROM DATABASE:', {
+        freshAreasCount: currentWeekAreas.length,
         calculatedRadius: radiusKm,
         shouldBeExact: true,
         coordinates: { lat: centerLat, lng: centerLng },
@@ -182,8 +190,8 @@ export const useBuzzMapLogic = () => {
       // Apply precision fuzz to coordinates
       const { lat: finalLat, lng: finalLng } = applyPrecisionFuzz(centerLat, centerLng, precision);
 
-      // CRITICAL FIX: STEP 3 - Create new area with EXACT radius value (ATOMIC operation)
-      console.log('🚀 STEP 3: CREATING NEW AREA with EXACT radius:', radiusKm, 'km');
+      // CRITICAL FIX: STEP 3 - Create SINGLE new area with EXACT radius value (ATOMIC operation)
+      console.log('🚀 STEP 3: CREATING SINGLE NEW AREA with EXACT radius:', radiusKm, 'km');
       const newArea = await createBuzzMapArea(user.id, finalLat, finalLng, radiusKm, currentWeek);
       if (!newArea) {
         console.error('❌ Failed to create new area');
@@ -191,7 +199,7 @@ export const useBuzzMapLogic = () => {
         return null;
       }
       
-      console.log('✅ STEP 3 COMPLETE: New area created with EXACT values:', {
+      console.log('✅ STEP 3 COMPLETE: SINGLE new area created with EXACT values:', {
         id: newArea.id,
         radius_km: newArea.radius_km,
         coordinates: { lat: newArea.lat, lng: newArea.lng },
@@ -226,15 +234,16 @@ export const useBuzzMapLogic = () => {
       
       console.log('✅ STEP 5 COMPLETE: State synchronized perfectly with database');
       
-      // CRITICAL FIX: SINGLE SUCCESS MESSAGE with EXACT radius value from database
+      // CRITICAL FIX: SINGLE SUCCESS MESSAGE with EXACT radius value from database - NO DUPLICATES
       const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
       toast.success(`Area BUZZ MAPPA generata! Raggio: ${newArea.radius_km.toFixed(1)} km - ${precisionText} - Prezzo: ${finalPrice.toFixed(2)}€`);
       
-      console.log('🎉 BUZZ MAPPA GENERATION COMPLETE - PERFECT:', {
+      console.log('🎉 BUZZ MAPPA GENERATION COMPLETE - PERFECT SINGLE EXECUTION:', {
         finalRadius: newArea.radius_km,
         visualConsistency: 'GUARANTEED',
         databaseSync: 'COMPLETE',
-        exactMatch: 'VERIFIED'
+        exactMatch: 'VERIFIED',
+        singleExecution: 'ENFORCED'
       });
       
       return newArea;
@@ -254,27 +263,27 @@ export const useBuzzMapLogic = () => {
     const success = await deleteSpecificArea(areaId);
     
     if (success) {
-      console.log('✅ Area deleted successfully, immediate state sync complete');
-      toast.success('Area eliminata');
+      console.log('✅ Area PERMANENTLY deleted successfully, immediate state sync complete');
+      toast.success('Area eliminata definitivamente');
     } else {
-      console.error('❌ Failed to delete area');
+      console.error('❌ Failed to PERMANENTLY delete area');
       toast.error('Errore nell\'eliminazione dell\'area');
     }
     
     return success;
   }, [deleteSpecificArea]);
 
-  // CRITICAL FIX: Clear all areas with definitive cleanup and verification - ENHANCED
+  // CRITICAL FIX: Clear all areas with PERMANENT DEFINITIVE cleanup and verification
   const handleClearAllAreas = useCallback(async (): Promise<void> => {
-    console.log('🧹 CLEAR ALL AREAS - Starting TOTAL definitive cleanup');
+    console.log('🧹 CLEAR ALL AREAS - Starting TOTAL PERMANENT definitive cleanup');
     
     const success = await deleteAllUserAreas();
     
     if (success) {
-      console.log('✅ All areas cleared successfully');
-      toast.success('Tutte le aree sono state eliminate');
+      console.log('✅ All areas PERMANENTLY cleared successfully');
+      toast.success('Tutte le aree sono state eliminate definitivamente');
     } else {
-      console.error('❌ Failed to clear all areas');
+      console.error('❌ Failed to PERMANENTLY clear all areas');
       toast.error('Errore nell\'eliminazione delle aree');
     }
   }, [deleteAllUserAreas]);

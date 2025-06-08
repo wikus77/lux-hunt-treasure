@@ -15,15 +15,15 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   
   const currentColor = getCurrentColor();
   
-  console.log('🗺️ BuzzCircleRenderer - PERFECT VISUAL CONSISTENCY RENDERING:', {
+  console.log('🗺️ BuzzCircleRenderer - PERFECT VISUAL CONSISTENCY RENDERING FROM DATABASE:', {
     areas: areas,
     currentColor: currentColor,
     areasCount: areas.length
   });
 
-  // CRITICAL: EXACT RADIUS RENDERING WITH PERFECT VISUAL CONSISTENCY
+  // CRITICAL: EXACT RADIUS RENDERING WITH PERFECT VISUAL CONSISTENCY FROM DATABASE
   useEffect(() => {
-    console.log('🚨 PERFECT VISUAL CONSISTENCY - BuzzCircleRenderer useEffect triggered:', {
+    console.log('🚨 PERFECT VISUAL CONSISTENCY - BuzzCircleRenderer useEffect triggered FROM DATABASE:', {
       areas: areas,
       currentColor: currentColor
     });
@@ -41,14 +41,14 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     buzzCircleRef.current = null;
     console.log('🧹 ALL Circle layers REMOVED from map');
     
-    // STEP 3: CREATE NEW CIRCLE WITH EXACT RADIUS FROM DATABASE (perfect precision)
+    // STEP 3: CREATE NEW CIRCLE WITH EXACT RADIUS FROM DATABASE (perfect precision from DB)
     if (areas && areas.length > 0) {
       const area = areas[0]; // Get the latest area
       
-      // CRITICAL FIX: Use EXACT radius from database in meters (perfect conversion)
+      // CRITICAL FIX: Use EXACT radius from DATABASE in meters (perfect conversion FROM DATABASE)
       const radiusInMeters = area.radius_km * 1000;
       
-      console.log('🔥 PERFECT VISUAL CONSISTENCY - Creating circle with EXACT VALUES:', {
+      console.log('🔥 PERFECT VISUAL CONSISTENCY - Creating circle with EXACT VALUES FROM DATABASE:', {
         areaId: area.id,
         lat: area.lat,
         lng: area.lng,
@@ -56,20 +56,21 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         radius_meters_for_leaflet: radiusInMeters,
         color: currentColor,
         timestamp: new Date().toISOString(),
-        exactConversion: `${area.radius_km} km * 1000 = ${radiusInMeters} meters`
+        exactConversion: `${area.radius_km} km * 1000 = ${radiusInMeters} meters FROM DATABASE`
       });
       
-      // CRITICAL VERIFICATION: Log exact values being used for visual rendering (perfect match)
-      console.log(`📏 PERFECT VISUAL CONSISTENCY VERIFICATION - Area ${area.id}:`, {
+      // CRITICAL VERIFICATION: Log exact values being used for visual rendering FROM DATABASE (perfect match)
+      console.log(`📏 PERFECT VISUAL CONSISTENCY VERIFICATION FROM DATABASE - Area ${area.id}:`, {
         database_radius_km: area.radius_km,
         calculated_radius_meters: radiusInMeters,
         should_be_exactly_visible: true,
         color: currentColor,
         coordinates: { lat: area.lat, lng: area.lng },
-        perfectionGuaranteed: true
+        perfectionGuaranteed: true,
+        sourceIsDatabase: true
       });
       
-      // CREATE CIRCLE using EXACT Leaflet API WITH DATABASE RADIUS (perfect precision)
+      // CREATE CIRCLE using EXACT Leaflet API WITH DATABASE RADIUS (perfect precision FROM DATABASE)
       const circle = L.circle([area.lat, area.lng], {
         radius: radiusInMeters, // EXACT VALUE FROM DATABASE
         color: currentColor,
@@ -77,14 +78,14 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         fillOpacity: 0.25,
         weight: 3,
         opacity: 1,
-        className: 'buzz-map-area-exact-radius' // For identification
+        className: 'buzz-map-area-exact-radius-from-database' // For identification
       });
       
       // Add to map
       circle.addTo(map);
       buzzCircleRef.current = circle;
       
-      console.log('🟢 PERFECT VISUAL CONSISTENCY - Circle created with EXACT RENDERING:', {
+      console.log('🟢 PERFECT VISUAL CONSISTENCY - Circle created with EXACT RENDERING FROM DATABASE:', {
         areaId: area.id,
         database_radius_km: area.radius_km,
         leaflet_radius_meters: radiusInMeters,
@@ -92,15 +93,15 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         color: currentColor,
         circleOnMap: map.hasLayer(circle),
         perfectMatch: circle.getRadius() === radiusInMeters,
-        visualConsistency: 'GUARANTEED',
+        visualConsistency: 'GUARANTEED FROM DATABASE',
         perfectionVerified: true
       });
       
       // Bring to front
       circle.bringToFront();
       
-      // DETAILED CONSISTENCY VERIFICATION (perfect precision check)
-      console.log('🔍 PERFECT VISUAL CONSISTENCY - Final rendering verification:', {
+      // DETAILED CONSISTENCY VERIFICATION FROM DATABASE (perfect precision check)
+      console.log('🔍 PERFECT VISUAL CONSISTENCY - Final rendering verification FROM DATABASE:', {
         layerOnMap: map.hasLayer(circle),
         layerLatLng: circle.getLatLng(),
         layerRadius: circle.getRadius(),
@@ -110,12 +111,13 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         visual_consistency_achieved: true,
         popup_will_show: `${area.radius_km.toFixed(1)} km`,
         map_will_show: `${(radiusInMeters / 1000).toFixed(1)} km circle`,
-        perfectAlignmentGuaranteed: true
+        perfectAlignmentGuaranteed: true,
+        sourceConfirmedDatabase: true
       });
       
-      // CRITICAL: Verify that the circle radius EXACTLY matches database value (perfect precision)
+      // CRITICAL: Verify that the circle radius EXACTLY matches database value FROM DATABASE (perfect precision)
       if (circle.getRadius() !== radiusInMeters) {
-        console.error('❌ VISUAL RADIUS MISMATCH DETECTED - CRITICAL:', {
+        console.error('❌ VISUAL RADIUS MISMATCH DETECTED - CRITICAL FROM DATABASE:', {
           expected: radiusInMeters,
           actual: circle.getRadius(),
           difference: Math.abs(circle.getRadius() - radiusInMeters),
@@ -123,18 +125,18 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
           precision_critical: true
         });
       } else {
-        console.log('✅ PERFECT VISUAL CONSISTENCY ACHIEVED - Radius matches EXACTLY');
+        console.log('✅ PERFECT VISUAL CONSISTENCY ACHIEVED - Radius matches EXACTLY FROM DATABASE');
       }
       
-      console.log('🎉 PERFECT VISUAL CONSISTENCY - EXACT RENDERING IMPLEMENTED');
+      console.log('🎉 PERFECT VISUAL CONSISTENCY - EXACT RENDERING IMPLEMENTED FROM DATABASE');
     } else {
-      console.log('❌ No BUZZ areas to display - map cleared, state is consistent');
+      console.log('❌ No BUZZ areas to display - map cleared, state is consistent FROM DATABASE');
     }
     
     // STEP 4: Force map refresh for visual update (perfect synchronization)
     setTimeout(() => {
       map.invalidateSize();
-      console.log('🔄 Map size invalidated for PERFECT VISUAL CONSISTENCY refresh');
+      console.log('🔄 Map size invalidated for PERFECT VISUAL CONSISTENCY refresh FROM DATABASE');
     }, 50);
     
   }, [areas, map, currentColor]); // Depends on areas, map, and color
