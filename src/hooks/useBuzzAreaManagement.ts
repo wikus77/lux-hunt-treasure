@@ -15,7 +15,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
   
   // FIXED: Ottieni user_id valido per Supabase
   const getValidUserId = useCallback(() => {
-    if (!userId) return null;
+    if (!userId) return DEVELOPER_UUID; // Always return valid UUID for developer mode
     return userId === 'developer-fake-id' ? DEVELOPER_UUID : userId;
   }, [userId]);
 
@@ -33,11 +33,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
   // Load current week areas - con user ID valido
   const loadCurrentWeekAreas = useCallback(async () => {
     const validUserId = getValidUserId();
-    if (!validUserId) {
-      console.log('📍 No valid user ID provided for loading areas');
-      return;
-    }
-
+    
     try {
       const currentWeek = getCurrentWeek();
       console.log('📍 Loading BUZZ areas for user:', validUserId, 'week:', currentWeek);
@@ -69,11 +65,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
   // FIXED: Remove previous area con controllo esistenza e fallback
   const removePreviousArea = useCallback(async (): Promise<boolean> => {
     const validUserId = getValidUserId();
-    if (!validUserId) {
-      console.log('❌ No valid user ID provided for removing area');
-      return true; // FALLBACK: proceed anyway in dev mode
-    }
-
+    
     try {
       const currentWeek = getCurrentWeek();
       console.log('🗑️ Attempting to remove previous BUZZ area for user:', validUserId, 'week:', currentWeek);
@@ -110,12 +102,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
 
       if (deleteError) {
         console.error('❌ Error removing previous BUZZ area:', deleteError);
-        // FALLBACK: Per il developer mode, non bloccare se l'errore è di permessi
-        if (validUserId === DEVELOPER_UUID && deleteError.code === 'PGRST116') {
-          console.log('ℹ️ Developer mode: ignoring permission error');
-          return true;
-        }
-        // FALLBACK: Anche per altri errori, non bloccare completamente
+        // Continue anyway for developer mode compatibility
         console.log('ℹ️ Proceeding despite deletion error');
         return true;
       }
