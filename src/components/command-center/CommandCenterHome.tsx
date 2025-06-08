@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { PrizeVision } from "./home-sections/PrizeVision";
 import { BrokerConsole } from "./home-sections/BrokerConsole";
 import { AgentDiary } from "./home-sections/AgentDiary";
 import { ActiveMissionBox } from "./home-sections/ActiveMissionBox";
+import { TreasureHuntExpandableBoxes } from "./home-sections/TreasureHuntExpandableBoxes";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { toast } from "sonner";
 import { getMissionDeadline } from "@/utils/countdownDate";
@@ -141,6 +142,20 @@ export function CommandCenterHome() {
         transition={{ duration: 0.5, delay: 0.1 }}
       >
         <ActiveMissionBox mission={activeMission} />
+      </motion.div>
+
+      {/* Treasure Hunt Expandable Boxes */}
+      <motion.div 
+        className="mb-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.15 }}
+      >
+        <TreasureHuntExpandableBoxes 
+          progress={progress}
+          activeMission={activeMission}
+          purchasedClues={purchasedClues}
+        />
       </motion.div>
 
       {/* Two column layout for Console and Agent */}
