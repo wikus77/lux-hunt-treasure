@@ -12,16 +12,26 @@ interface BuzzCircleRendererProps {
 const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   const map = useMap();
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
+  const isCleanupRunning = useRef(false);
   
   const currentColor = getCurrentColor();
   
   console.log('🗺️ CIRCLE RENDERER: Render triggered with areas:', {
     count: areas.length,
     areas: areas.map(a => ({ id: a.id, radius_km: a.radius_km })),
-    color: currentColor
+    color: currentColor,
+    cleanupRunning: isCleanupRunning.current
   });
 
   useEffect(() => {
+    // Prevent concurrent cleanup operations
+    if (isCleanupRunning.current) {
+      console.log('🚫 CIRCLE RENDERER: Cleanup already running, skipping');
+      return;
+    }
+    
+    isCleanupRunning.current = true;
+    
     console.log('🔥 CIRCLE RENDERER: Effect triggered for', areas.length, 'areas');
     
     // STEP 1: COMPLETE LEAFLET CLEANUP
@@ -57,13 +67,13 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     // Clear all references
     layerGroupRef.current = null;
     
-    // STEP 2: CREATE NEW LAYER GROUP
-    layerGroupRef.current = L.layerGroup().addTo(map);
-    console.log('✅ CIRCLE RENDERER: New layer group created');
-    
-    // STEP 3: CREATE NEW CIRCLES IF AREAS EXIST
+    // STEP 2: CREATE NEW LAYER GROUP ONLY IF AREAS EXIST
     if (areas && areas.length > 0) {
       console.log('🔵 CIRCLE RENDERER: Creating', areas.length, 'new circles');
+      
+      // Create new layer group
+      layerGroupRef.current = L.layerGroup().addTo(map);
+      console.log('✅ CIRCLE RENDERER: New layer group created');
       
       areas.forEach((area, index) => {
         console.log(`🔵 CIRCLE RENDERER: Creating circle ${index + 1}/${areas.length}:`, {
@@ -137,7 +147,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       map.setView([41.9028, 12.4964], 6);
     }
     
-    // STEP 4: VERIFY FINAL STATE
+    // STEP 3: VERIFY FINAL STATE
     const finalCircleCount = layerGroupRef.current?.getLayers().length || 0;
     console.log('🔍 CIRCLE RENDERER: Final verification:', {
       expected_areas: areas.length,
@@ -156,6 +166,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     setTimeout(() => {
       map.invalidateSize();
       console.log('🔄 CIRCLE RENDERER: Map size invalidated');
+      isCleanupRunning.current = false;
     }, 100);
     
   }, [areas, map, currentColor]);
@@ -168,6 +179,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         map.removeLayer(layerGroupRef.current);
         console.log('🧹 CIRCLE RENDERER: Cleanup on unmount completed');
       }
+      isCleanupRunning.current = false;
     };
   }, [map]);
 

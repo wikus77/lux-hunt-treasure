@@ -26,6 +26,9 @@ export const useMapAreas = (userId?: string) => {
 
   const validUserId = getValidUserId();
 
+  // FIXED: Correct queryKey with userId
+  const queryKey = ['user_map_areas', validUserId];
+
   // SINGLE SOURCE OF TRUTH: React Query for areas
   const {
     data: currentWeekAreas = [],
@@ -34,7 +37,7 @@ export const useMapAreas = (userId?: string) => {
     refetch,
     isFetching
   } = useQuery({
-    queryKey: ['user_map_areas', validUserId],
+    queryKey,
     queryFn: async (): Promise<BuzzMapArea[]> => {
       console.log('🔄 UNIFIED QUERY: Fetching areas from database for user:', validUserId);
       
@@ -58,17 +61,19 @@ export const useMapAreas = (userId?: string) => {
     enabled: !!validUserId
   });
 
-  // Force complete cache invalidation and cleanup
+  // FIXED: Complete cache invalidation with CORRECT queryKey
   const forceCompleteInvalidation = useCallback(async () => {
     console.log('🧹 FORCE INVALIDATION: Starting complete cleanup...');
     
-    // 1. Clear React Query cache
-    await queryClient.invalidateQueries({ queryKey: ['user_map_areas'] });
+    // 1. Clear React Query cache with CORRECT queryKey
+    await queryClient.invalidateQueries({ queryKey });
+    await queryClient.removeQueries({ queryKey });
+    
+    // 2. Clear related queries
     await queryClient.invalidateQueries({ queryKey: ['user_buzz_map'] });
-    await queryClient.removeQueries({ queryKey: ['user_map_areas'] });
     await queryClient.removeQueries({ queryKey: ['user_buzz_map'] });
     
-    // 2. Clear localStorage and sessionStorage
+    // 3. Clear localStorage and sessionStorage
     try {
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -90,13 +95,13 @@ export const useMapAreas = (userId?: string) => {
       console.log('⚠️ CACHE CLEANUP: Storage clear error:', error);
     }
     
-    // 3. Reset Zustand state
+    // 4. Reset Zustand state
     resetMapState();
     
     console.log('✅ FORCE INVALIDATION: Complete cleanup finished');
-  }, [queryClient, resetMapState]);
+  }, [queryClient, queryKey, resetMapState]);
 
-  // DELETE mutation
+  // DELETE mutation with FIXED invalidation
   const deleteMutation = useMutation({
     mutationFn: async (): Promise<boolean> => {
       console.log('🔥 DELETE MUTATION: Starting nuclear delete for user:', validUserId);
@@ -125,9 +130,9 @@ export const useMapAreas = (userId?: string) => {
       return true;
     },
     onSuccess: async () => {
-      console.log('🎉 DELETE MUTATION: Success, invalidating cache...');
+      console.log('🎉 DELETE MUTATION: Success, invalidating cache with CORRECT queryKey...');
       
-      // Force complete invalidation
+      // Force complete invalidation with CORRECT queryKey
       await forceCompleteInvalidation();
       
       // Force refetch with fresh data
