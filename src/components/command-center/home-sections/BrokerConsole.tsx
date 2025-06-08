@@ -103,6 +103,11 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
     }
   };
 
+  // Handle header click for expansion toggle
+  const handleHeaderClick = () => {
+    setIsExpanded(!isExpanded);
+  };
+
   // Fullscreen component
   const FullscreenView = () => (
     <motion.div
@@ -187,7 +192,7 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
       >
         <div 
           className="p-4 border-b border-white/10 flex justify-between items-center"
-          onClick={handleClick}
+          onClick={handleHeaderClick}
           {...(isMobile ? longPressProps : {})}
         >
           <h2 className="text-lg md:text-xl font-orbitron font-bold">
@@ -200,24 +205,22 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
           <div className="flex items-center space-x-2">
             <span className="text-xs text-white/70">Crediti disponibili</span>
             <span className="text-lg font-bold text-[#00D1FF]">{credits}</span>
-            {isMobile && (
-              <motion.div
-                animate={{ rotate: isExpanded ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <ChevronDown className="w-4 h-4 text-white/60" />
-              </motion.div>
-            )}
+            <motion.div
+              animate={{ rotate: isExpanded ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ChevronDown className="w-4 h-4 text-white/60" />
+            </motion.div>
           </div>
         </div>
         
         <AnimatePresence>
-          {!isMobile || isExpanded ? (
+          {isExpanded && (
             <motion.div
-              initial={isMobile ? { height: 0, opacity: 0 } : { height: "auto", opacity: 1 }}
+              initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: isMobile ? 0.5 : 0, ease: "easeInOut" }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
               className="overflow-hidden"
             >
               <div className="p-4">
@@ -268,7 +271,7 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
                 </div>
               </div>
             </motion.div>
-          ) : null}
+          )}
         </AnimatePresence>
       </motion.div>
 
