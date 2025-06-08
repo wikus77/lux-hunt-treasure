@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 
 interface MapState {
@@ -8,7 +9,7 @@ interface MapState {
   // Map status
   mapStatus: 'idle' | 'loading' | 'ready' | 'error';
   
-  // Operation locks
+  // Operation locks ONLY - NO AREA DATA
   isDeleting: boolean;
   isGenerating: boolean;
   
@@ -19,7 +20,7 @@ interface MapState {
   setIsDeleting: (value: boolean) => void;
   setIsGenerating: (value: boolean) => void;
   
-  // Reset all state - SIMPLIFIED
+  // Reset all state - NO AREA DATA
   resetMapState: () => void;
   
   // Sync actions to keep states consistent
@@ -42,11 +43,14 @@ export const useMapStore = create<MapState>((set, get) => ({
   setIsGenerating: (value: boolean) => set({ isGenerating: value }),
   
   // SIMPLIFIED: Reset only operation states, React Query is source of truth for data
-  resetMapState: () => set({
-    isDeleting: false,
-    isGenerating: false,
-    mapStatus: 'idle'
-  }),
+  resetMapState: () => {
+    console.debug('🗑️ ZUSTAND: Resetting operation states only');
+    set({
+      isDeleting: false,
+      isGenerating: false,
+      mapStatus: 'idle'
+    });
+  },
   
   // Sync both point states to maintain consistency
   syncPointStates: (value: boolean) => set({ 

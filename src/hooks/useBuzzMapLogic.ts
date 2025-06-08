@@ -26,7 +26,7 @@ export const useBuzzMapLogic = () => {
   // LOCAL state only for UI feedback (NO React Query duplicates)
   const [localBuzzCount, setLocalBuzzCount] = useState(0);
   
-  // Use Zustand store ONLY for operation locks
+  // Use Zustand store ONLY for operation locks - NO AREA DATA
   const { 
     isGenerating,
     isDeleting,

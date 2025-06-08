@@ -31,7 +31,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       return;
     }
     
-    // CRITICAL: Use deep comparison for areas data
+    // CRITICAL: Use JSON.stringify for deep comparison
     const currentAreasData = JSON.stringify(areas.map(a => ({ 
       id: a.id, 
       radius_km: a.radius_km, 
@@ -74,6 +74,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       }
     });
     
+    console.debug('✅ map.clearLayers called');
     console.debug('🧹 CIRCLE RENDERER: Cleaned', removedCount, 'existing circles/groups from map');
     
     // Clear all references
@@ -153,9 +154,11 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       }
       
       console.debug('🎉 CIRCLE RENDERER: All circles rendered successfully');
+      console.debug('✅ map.render() executed with', areas.length, 'areas');
       
     } else {
       console.debug('❌ CIRCLE RENDERER: No areas to display, map cleared');
+      console.debug('✅ map.render() executed with 0 areas');
       map.setView([41.9028, 12.4964], 6);
     }
     
