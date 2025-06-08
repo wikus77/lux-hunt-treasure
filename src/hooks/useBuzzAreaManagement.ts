@@ -13,8 +13,10 @@ export const useBuzzAreaManagement = (userId?: string) => {
   
   const { getCurrentWeek, getActiveAreaFromList, calculateNextRadiusFromArea } = useBuzzMapUtils();
   
-  // FIXED: Ottieni user_id valido per Supabase con UUID validation
+  // FIXED: Ottieni user_id valido per Supabase con UUID validation e debug completo
   const getValidUserId = useCallback(() => {
+    console.log('🔧 getValidUserId called with userId:', userId);
+    
     if (!userId) {
       console.log('🔧 No userId provided, using developer UUID');
       return DEVELOPER_UUID;
@@ -32,6 +34,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
       return DEVELOPER_UUID;
     }
     
+    console.log('🔧 Valid UUID provided:', userId);
     return userId;
   }, [userId]);
 
@@ -46,13 +49,21 @@ export const useBuzzAreaManagement = (userId?: string) => {
     return calculateNextRadiusFromArea(activeArea);
   }, [getActiveArea, calculateNextRadiusFromArea]);
 
-  // Load current week areas - con user ID valido
+  // Load current week areas - con user ID valido e debug completo
   const loadCurrentWeekAreas = useCallback(async () => {
     const validUserId = getValidUserId();
     
     try {
       const currentWeek = getCurrentWeek();
       console.log('📍 Loading BUZZ areas for user:', validUserId, 'week:', currentWeek);
+
+      // CRITICAL DEBUG: Check auth state before query
+      const { data: authData } = await supabase.auth.getUser();
+      console.log('🔐 Auth state during area load:', {
+        auth_user: authData?.user?.id || 'No auth user',
+        query_user_id: validUserId,
+        week: currentWeek
+      });
 
       // FIXED: Use correct table name user_map_areas
       const { data, error } = await supabase
@@ -64,6 +75,14 @@ export const useBuzzAreaManagement = (userId?: string) => {
 
       if (error) {
         console.error('❌ Error loading BUZZ areas:', error);
+        console.error('❌ Query details:', {
+          table: 'user_map_areas',
+          user_id: validUserId,
+          week: currentWeek,
+          error_code: error.code,
+          error_message: error.message
+        });
+        
         if (error.code === 'PGRST116') {
           console.log('ℹ️ No BUZZ areas found or access denied');
           setCurrentWeekAreas([]);
@@ -72,6 +91,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
       }
 
       console.log('✅ Loaded BUZZ areas:', data?.length || 0);
+      console.log('✅ Areas data:', data);
       setCurrentWeekAreas(data || []);
     } catch (error) {
       console.error('❌ Exception loading BUZZ areas:', error);
@@ -85,6 +105,14 @@ export const useBuzzAreaManagement = (userId?: string) => {
     try {
       const currentWeek = getCurrentWeek();
       console.log('🗑️ Attempting to remove previous BUZZ area for user:', validUserId, 'week:', currentWeek);
+
+      // CRITICAL DEBUG: Check auth state before delete
+      const { data: authData } = await supabase.auth.getUser();
+      console.log('🔐 Auth state during area removal:', {
+        auth_user: authData?.user?.id || 'No auth user',
+        delete_user_id: validUserId,
+        week: currentWeek
+      });
 
       // FIXED: Prima controlla se esistono aree nella tabella corretta
       const { data: existingAreas, error: checkError } = await supabase
@@ -109,6 +137,8 @@ export const useBuzzAreaManagement = (userId?: string) => {
         return true;
       }
 
+      console.log('🗑️ Found', existingAreas.length, 'areas to remove');
+
       // Rimuovi aree esistenti solo se ce ne sono
       const { error: deleteError } = await supabase
         .from('user_map_areas')
@@ -121,7 +151,9 @@ export const useBuzzAreaManagement = (userId?: string) => {
         console.error('❌ Delete error details:', {
           message: deleteError.message,
           code: deleteError.code,
-          details: deleteError.details
+          details: deleteError.details,
+          user_id: validUserId,
+          week: currentWeek
         });
         // Continue anyway for developer mode compatibility
         console.log('ℹ️ Proceeding despite deletion error');
