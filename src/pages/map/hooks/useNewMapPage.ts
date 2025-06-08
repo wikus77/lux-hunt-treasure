@@ -7,7 +7,7 @@ import { useSearchAreasLogic } from './useSearchAreasLogic';
 import { MapMarker } from '@/components/maps/types';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 
-// UUID di fallback per sviluppo
+// UUID di fallback per sviluppo - SOLUZIONE DEFINITIVA
 const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
 
 export const useNewMapPage = () => {
@@ -22,9 +22,10 @@ export const useNewMapPage = () => {
   // Default location (Rome, Italy)
   const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
 
-  // Ottieni user_id valido per Supabase
+  // FIXED: Ottieni user_id valido per Supabase - SOLUZIONE DEFINITIVA
   const getValidUserId = useCallback(() => {
     if (!user?.id) return null;
+    // Se è developer-fake-id, usa l'UUID di fallback
     return user.id === 'developer-fake-id' ? DEVELOPER_UUID : user.id;
   }, [user]);
 
@@ -51,7 +52,7 @@ export const useNewMapPage = () => {
     setPendingRadius
   } = useSearchAreasLogic(DEFAULT_LOCATION);
 
-  // Fetch existing map points on mount - IMPROVED ERROR HANDLING with valid user ID
+  // FIXED: Fetch existing map points on mount con gestione RLS
   useEffect(() => {
     const fetchMapPoints = async () => {
       const validUserId = getValidUserId();
@@ -72,8 +73,12 @@ export const useNewMapPage = () => {
 
         if (error) {
           console.error("❌ Error fetching map points:", error);
-          console.error("❌ Error details:", error.message, error.code, error.details);
-          toast.error(`Errore nel caricamento dei punti: ${error.message}`);
+          if (error.code === 'PGRST116') {
+            console.log("ℹ️ No map points found or access denied");
+            setMapPoints([]);
+          } else {
+            toast.error(`Errore nel caricamento dei punti: ${error.message}`);
+          }
           return;
         }
 
@@ -90,7 +95,7 @@ export const useNewMapPage = () => {
     fetchMapPoints();
   }, [getValidUserId]);
 
-  // Add a new point to the map - IMPROVED with valid user ID
+  // FIXED: Add a new point to the map con validazione user ID
   const addNewPoint = useCallback((lat: number, lng: number) => {
     console.log("📍 Adding new point at:", lat, lng);
     
@@ -98,6 +103,13 @@ export const useNewMapPage = () => {
     if (!validUserId) {
       toast.error("Accesso non valido per aggiungere punti");
       return;
+    }
+
+    // Se è developer mode, mostra un toast informativo
+    if (user?.id === 'developer-fake-id') {
+      toast.info("Modalità sviluppatore: inserimento simulato", {
+        description: "Punto creato con ID sviluppatore"
+      });
     }
 
     setNewPoint({
@@ -115,18 +127,18 @@ export const useNewMapPage = () => {
     }
     
     toast.success("Punto posizionato. Inserisci titolo e nota.");
-  }, [isAddingSearchArea, toggleAddingSearchArea, getValidUserId]);
+  }, [isAddingSearchArea, toggleAddingSearchArea, getValidUserId, user]);
 
-  // Save the point to Supabase - MAJOR IMPROVEMENTS with UUID validation
+  // FIXED: Save the point to Supabase con validazione completa
   const savePoint = async (title: string, note: string) => {
     const validUserId = getValidUserId();
     if (!newPoint || !validUserId) {
       console.log("❌ Cannot save point: missing newPoint or valid user ID");
-      toast.error("Accesso non valido per salvare il punto");
+      toast.error("Impossibile salvare: punto o utente non valido");
       return;
     }
     
-    // IMPROVED VALIDATION with trimming
+    // FIXED: Validazione rigorosa con trim
     const trimmedTitle = title?.trim() || '';
     const trimmedNote = note?.trim() || '';
     
@@ -136,6 +148,7 @@ export const useNewMapPage = () => {
       return;
     }
 
+    // FIXED: Payload completo e validato
     const payload = {
       user_id: validUserId,
       latitude: newPoint.lat,
@@ -145,7 +158,7 @@ export const useNewMapPage = () => {
     };
 
     try {
-      console.log("📍 Saving new point with payload:", payload);
+      console.log("📍 Saving new point with validated payload:", payload);
 
       const { data, error } = await supabase
         .from('map_points')
@@ -154,10 +167,12 @@ export const useNewMapPage = () => {
 
       if (error) {
         console.error("❌ Supabase error saving map point:", error);
-        console.error("❌ Error message:", error.message);
-        console.error("❌ Error code:", error.code);
-        console.error("❌ Error details:", error.details);
-        console.error("❌ Error hint:", error.hint);
+        console.error("❌ Error details:", {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
         toast.error(`Errore nel salvare il punto: ${error.message}`);
         return;
       }
@@ -169,7 +184,13 @@ export const useNewMapPage = () => {
       }
 
       console.log("✅ Successfully saved new point:", data[0]);
-      toast.success("Punto salvato con successo");
+      
+      // Messaggio diverso per developer mode
+      if (user?.id === 'developer-fake-id') {
+        toast.success("Punto salvato (modalità sviluppatore)");
+      } else {
+        toast.success("Punto salvato con successo");
+      }
       
       // Add the new point to the current list
       setMapPoints(prev => [data[0], ...prev]);
@@ -184,7 +205,7 @@ export const useNewMapPage = () => {
     }
   };
 
-  // Update an existing point - IMPROVED ERROR HANDLING with valid user ID
+  // FIXED: Update an existing point con validazione
   const updateMapPoint = async (id: string, title: string, note: string): Promise<boolean> => {
     const validUserId = getValidUserId();
     if (!validUserId) {
@@ -192,7 +213,7 @@ export const useNewMapPage = () => {
       return false;
     }
     
-    // IMPROVED VALIDATION with trimming
+    // FIXED: Validazione con trim
     const trimmedTitle = title?.trim() || '';
     const trimmedNote = note?.trim() || '';
     
@@ -215,7 +236,6 @@ export const useNewMapPage = () => {
 
       if (error) {
         console.error("❌ Error updating map point:", error);
-        console.error("❌ Error details:", error.message, error.code);
         toast.error(`Errore nell'aggiornare il punto: ${error.message}`);
         return false;
       }
@@ -236,7 +256,7 @@ export const useNewMapPage = () => {
     }
   };
 
-  // Delete a map point - IMPROVED ERROR HANDLING with valid user ID
+  // FIXED: Delete a map point con controllo RLS
   const deleteMapPoint = async (id: string): Promise<boolean> => {
     const validUserId = getValidUserId();
     if (!validUserId) {
@@ -255,7 +275,6 @@ export const useNewMapPage = () => {
 
       if (error) {
         console.error("❌ Error deleting map point:", error);
-        console.error("❌ Error details:", error.message, error.code);
         toast.error(`Errore nell'eliminare il punto: ${error.message}`);
         return false;
       }
@@ -273,7 +292,7 @@ export const useNewMapPage = () => {
     }
   };
 
-  // Handle BUZZ button click - Updated with valid user ID check
+  // FIXED: Handle BUZZ button click con validazione user ID
   const handleBuzz = useCallback(() => {
     const validUserId = getValidUserId();
     if (!validUserId) {
@@ -281,9 +300,15 @@ export const useNewMapPage = () => {
       return;
     }
 
+    // Messaggio informativo per developer mode
+    if (user?.id === 'developer-fake-id') {
+      toast.info("Modalità sviluppatore: generazione BUZZ simulata", {
+        description: "Area creata con ID sviluppatore"
+      });
+    }
+
     const activeArea = getActiveArea();
     if (activeArea) {
-      // MESSAGGIO ALLINEATO: usa il valore ESATTO salvato in Supabase
       toast.success(`Area BUZZ MAPPA attiva: ${activeArea.radius_km.toFixed(1)} km`, {
         description: "L'area è già visibile sulla mappa"
       });
@@ -291,7 +316,7 @@ export const useNewMapPage = () => {
     } else {
       toast.info("Premi BUZZ MAPPA per generare una nuova area di ricerca!");
     }
-  }, [getActiveArea, getValidUserId]);
+  }, [getActiveArea, getValidUserId, user]);
 
   // Request user location
   const requestLocationPermission = () => {

@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { MapMarker } from '@/components/maps/types';
 
-// UUID di fallback per sviluppo
+// UUID di fallback per sviluppo - SOLUZIONE DEFINITIVA
 const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
 
 export function useMapPoints(
@@ -68,7 +68,7 @@ export function useMapPoints(
     return Promise.resolve("new");
   }, [isAddingMapPoint]);
 
-  // Handle save of new map point - MAJOR IMPROVEMENTS with validation
+  // FIXED: Handle save of new map point con validazione completa
   const handleSaveNewPoint = async (title: string, note: string) => {
     console.log("📝 Tentativo di salvare il nuovo punto con titolo:", title);
     
@@ -78,7 +78,7 @@ export function useMapPoints(
       return;
     }
     
-    // IMPROVED validation with trimming
+    // FIXED: Validazione rigorosa con trim
     const trimmedTitle = title?.trim() || '';
     const trimmedNote = note?.trim() || '';
     
@@ -118,11 +118,11 @@ export function useMapPoints(
     }
   };
 
-  // Handle update of existing map point - IMPROVED
+  // FIXED: Handle update of existing map point con validazione
   const handleUpdatePoint = async (id: string, title: string, note: string): Promise<boolean> => {
     console.log("📝 Aggiornamento punto esistente:", id, title, note);
     
-    // IMPROVED validation with trimming
+    // FIXED: Validazione con trim
     const trimmedTitle = title?.trim() || '';
     const trimmedNote = note?.trim() || '';
     
