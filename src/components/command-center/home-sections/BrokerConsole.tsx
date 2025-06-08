@@ -1,8 +1,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Zap, Lock, Star, ChevronDown, ChevronUp } from "lucide-react";
-import GradientBox from "@/components/ui/gradient-box";
+import { ShoppingCart, ChevronDown } from "lucide-react";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -68,29 +67,16 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
     }
   ];
 
-  const getClueIcon = (type: string) => {
-    switch (type) {
-      case "basic":
-        return <Zap className="w-4 h-4 text-blue-400" />;
-      case "premium":
-        return <Star className="w-4 h-4 text-yellow-400" />;
-      case "exclusive":
-        return <Lock className="w-4 h-4 text-purple-400" />;
-      default:
-        return <Zap className="w-4 h-4 text-blue-400" />;
-    }
-  };
-
   const getClueStyle = (type: string) => {
     switch (type) {
       case "basic":
-        return "border-blue-500/30 bg-blue-500/10";
+        return "bg-[#1C1C1F]/80";
       case "premium":
-        return "border-yellow-500/30 bg-yellow-500/10";
+        return "bg-[#1C1C1F]/90";
       case "exclusive":
-        return "border-purple-500/30 bg-purple-500/10";
+        return "bg-[#1C1C1F]";
       default:
-        return "border-blue-500/30 bg-blue-500/10";
+        return "bg-[#1C1C1F]/80";
     }
   };
 
@@ -119,22 +105,31 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
       onClick={() => setIsFullscreen(false)}
     >
       <div className="h-full w-full p-6 overflow-y-auto">
-        <div className="rounded-2xl bg-[#121212] border border-[#2c2c2c] shadow-lg backdrop-blur-xl overflow-hidden">
-          <div className="p-4 border-b border-white/10 flex justify-between items-center">
-            <h2 className="text-xl md:text-2xl font-orbitron font-bold">
-              <span className="text-[#00D1FF]" style={{ 
-                textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-              }}>M1</span>
-              <span className="text-white">SSION CONSOLE</span>
+        <div className="rounded-[20px] bg-[#1C1C1F] backdrop-blur-xl overflow-hidden relative"
+          style={{
+            background: 'linear-gradient(135deg, #1C1C1F 0%, rgba(28, 28, 31, 0.95) 50%, rgba(54, 94, 255, 0.1) 100%)',
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+          }}
+        >
+          <div 
+            className="absolute top-0 left-0 w-full h-[1px]"
+            style={{
+              background: 'linear-gradient(90deg, #FC1EFF 0%, #365EFF 50%, #FACC15 100%)'
+            }}
+          />
+          
+          <div className="p-6 border-b border-white/10 flex justify-between items-center">
+            <h2 className="text-xl md:text-2xl font-orbitron font-bold text-white">
+              M1SSION CONSOLE
             </h2>
             
             <div className="flex items-center space-x-2">
               <span className="text-xs text-white/70">Crediti disponibili</span>
-              <span className="text-lg font-bold text-[#00D1FF]">{credits}</span>
+              <span className="text-lg font-bold text-white">{credits}</span>
             </div>
           </div>
           
-          <div className="p-4">
+          <div className="p-6">
             <p className="text-white/70 text-sm mb-4">
               Acquista indizi per avvicinarti all'obiettivo principale.
             </p>
@@ -143,34 +138,30 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
               {availableClues.map((clue, index) => (
                 <motion.div
                   key={clue.id}
-                  className={`p-4 rounded-2xl border ${getClueStyle(clue.type)} hover:scale-105 transition-all duration-200 bg-[#121212] shadow-md`}
+                  className={`p-4 rounded-[16px] ${getClueStyle(clue.type)} hover:scale-105 transition-all duration-200 shadow-md`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center space-x-2">
-                      {getClueIcon(clue.type)}
-                      <span className="text-white/80 text-xs font-mono">{clue.code}</span>
-                    </div>
-                    <span className="text-[#00D1FF] font-bold">{clue.cost} crediti</span>
+                    <span className="text-white/80 text-xs font-mono">{clue.code}</span>
+                    <span className="text-white font-bold">{clue.cost} crediti</span>
                   </div>
                   
-                  <h3 className="text-white font-bold text-sm mb-1">{clue.title}</h3>
+                  <h3 className="text-white font-bold text-sm mb-1 font-orbitron">{clue.title}</h3>
                   <p className="text-white/60 text-xs mb-3">{clue.description}</p>
                   
                   <div className="flex justify-between items-center">
                     <span className="text-green-400 text-xs">+{clue.progressValue}% progresso</span>
                     <button
-                      className={`px-3 py-1 rounded text-xs transition-all ${
+                      className={`px-3 py-1 rounded-full text-xs transition-all font-orbitron ${
                         credits >= clue.cost
-                          ? "bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white hover:scale-105"
+                          ? "bg-gradient-to-r from-[#365EFF] to-[#FC1EFF] text-white hover:scale-105 hover:shadow-lg"
                           : "bg-gray-600 text-gray-400 cursor-not-allowed"
                       }`}
                       disabled={credits < clue.cost}
                       onClick={() => onPurchaseClue(clue)}
                     >
-                      <ShoppingCart className="w-3 h-3 inline mr-1" />
                       Acquista
                     </button>
                   </div>
@@ -186,25 +177,33 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
   return (
     <>
       <motion.div 
-        className="rounded-2xl bg-[#121212] border border-[#2c2c2c] shadow-lg backdrop-blur-xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+        className="rounded-[20px] bg-[#1C1C1F] backdrop-blur-xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] mb-4 relative"
+        style={{
+          background: 'linear-gradient(135deg, #1C1C1F 0%, rgba(28, 28, 31, 0.95) 50%, rgba(54, 94, 255, 0.1) 100%)',
+          boxShadow: "0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+        }}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
         <div 
-          className="p-4 border-b border-white/10 flex justify-between items-center"
+          className="absolute top-0 left-0 w-full h-[1px]"
+          style={{
+            background: 'linear-gradient(90deg, #FC1EFF 0%, #365EFF 50%, #FACC15 100%)'
+          }}
+        />
+        
+        <div 
+          className="p-6 border-b border-white/10 flex justify-between items-center"
           onClick={handleHeaderClick}
           {...(isMobile ? longPressProps : {})}
         >
-          <h2 className="text-lg md:text-xl font-orbitron font-bold">
-            <span className="text-[#00D1FF]" style={{ 
-              textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-            }}>M1</span>
-            <span className="text-white">SSION CONSOLE</span>
+          <h2 className="text-lg md:text-xl font-orbitron font-bold text-white">
+            M1SSION CONSOLE
           </h2>
           
           <div className="flex items-center space-x-2">
             <span className="text-xs text-white/70">Crediti disponibili</span>
-            <span className="text-lg font-bold text-[#00D1FF]">{credits}</span>
+            <span className="text-lg font-bold text-white">{credits}</span>
             <motion.div
               animate={{ rotate: isExpanded ? 180 : 0 }}
               transition={{ duration: 0.3 }}
@@ -223,7 +222,7 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
               transition={{ duration: 0.5, ease: "easeInOut" }}
               className="overflow-hidden"
             >
-              <div className="p-4">
+              <div className="p-6">
                 <p className="text-white/70 text-sm mb-4">
                   Acquista indizi per avvicinarti all'obiettivo principale.
                 </p>
@@ -232,28 +231,25 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
                   {availableClues.map((clue, index) => (
                     <motion.div
                       key={clue.id}
-                      className={`p-4 rounded-2xl border ${getClueStyle(clue.type)} hover:scale-105 transition-all duration-200 bg-[#121212] shadow-md`}
+                      className={`p-4 rounded-[16px] ${getClueStyle(clue.type)} hover:scale-105 transition-all duration-200 shadow-md`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.1 }}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center space-x-2">
-                          {getClueIcon(clue.type)}
-                          <span className="text-white/80 text-xs font-mono">{clue.code}</span>
-                        </div>
-                        <span className="text-[#00D1FF] font-bold">{clue.cost} crediti</span>
+                        <span className="text-white/80 text-xs font-mono">{clue.code}</span>
+                        <span className="text-white font-bold">{clue.cost} crediti</span>
                       </div>
                       
-                      <h3 className="text-white font-bold text-sm mb-1">{clue.title}</h3>
+                      <h3 className="text-white font-bold text-sm mb-1 font-orbitron">{clue.title}</h3>
                       <p className="text-white/60 text-xs mb-3">{clue.description}</p>
                       
                       <div className="flex justify-between items-center">
                         <span className="text-green-400 text-xs">+{clue.progressValue}% progresso</span>
                         <button
-                          className={`px-3 py-1 rounded text-xs transition-all ${
+                          className={`px-3 py-1 rounded-full text-xs transition-all font-orbitron ${
                             credits >= clue.cost
-                              ? "bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white hover:scale-105"
+                              ? "bg-gradient-to-r from-[#365EFF] to-[#FC1EFF] text-white hover:scale-105 hover:shadow-lg"
                               : "bg-gray-600 text-gray-400 cursor-not-allowed"
                           }`}
                           disabled={credits < clue.cost}
@@ -262,7 +258,6 @@ export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
                             onPurchaseClue(clue);
                           }}
                         >
-                          <ShoppingCart className="w-3 h-3 inline mr-1" />
                           Acquista
                         </button>
                       </div>

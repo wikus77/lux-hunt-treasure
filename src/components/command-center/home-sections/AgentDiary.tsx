@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Edit3, Calendar, MessageSquare, ChevronDown, User, Clock, Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 
 interface DiaryEntry {
   type: "purchase" | "note" | "achievement" | "clue";
@@ -32,21 +32,6 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
     }
   };
 
-  const getEntryIcon = (type: string) => {
-    switch (type) {
-      case "purchase":
-        return <MessageSquare className="w-4 h-4 text-blue-400" />;
-      case "note":
-        return <Edit3 className="w-4 h-4 text-green-400" />;
-      case "achievement":
-        return <Calendar className="w-4 h-4 text-yellow-400" />;
-      case "clue":
-        return <BookOpen className="w-4 h-4 text-purple-400" />;
-      default:
-        return <MessageSquare className="w-4 h-4 text-gray-400" />;
-    }
-  };
-
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleString('it-IT', {
@@ -71,25 +56,28 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
 
   return (
     <motion.div 
-      className="rounded-2xl bg-[#1a1a2e] border border-[#16213e] shadow-lg backdrop-blur-xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+      className="rounded-[20px] bg-[#1C1C1F] backdrop-blur-xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] mb-4 relative"
+      style={{
+        background: 'linear-gradient(135deg, #1C1C1F 0%, rgba(28, 28, 31, 0.95) 50%, rgba(252, 30, 255, 0.1) 100%)',
+        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+      }}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
       <div 
-        className="p-4 border-b border-white/10 flex justify-between items-center"
+        className="absolute top-0 left-0 w-full h-[1px]"
+        style={{
+          background: 'linear-gradient(90deg, #FC1EFF 0%, #365EFF 50%, #FACC15 100%)'
+        }}
+      />
+      
+      <div 
+        className="p-6 border-b border-white/10 flex justify-between items-center"
         onClick={handleHeaderClick}
       >
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-            <User className="w-4 h-4 text-white" />
-          </div>
-          <h2 className="text-lg md:text-xl font-orbitron font-bold">
-            <span className="text-[#00D1FF]" style={{ 
-              textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-            }}>M1</span>
-            <span className="text-white">SSION AGENT</span>
-          </h2>
-        </div>
+        <h2 className="text-lg md:text-xl font-orbitron font-bold text-white">
+          M1SSION AGENT
+        </h2>
         
         <div className="flex items-center space-x-2">
           <span className="text-xs text-white/70">Attività: {entries.length}</span>
@@ -111,22 +99,22 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
             transition={{ duration: 0.5, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="p-4">
+            <div className="p-6">
               {/* Agent Statistics */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                <div className="bg-[#0a0a0a] p-3 rounded-lg text-center">
+                <div className="bg-[#0a0a0a]/50 p-3 rounded-[16px] text-center">
                   <p className="text-lg font-bold text-blue-400">{stats.totalEntries}</p>
                   <p className="text-xs text-white/60">Attività Totali</p>
                 </div>
-                <div className="bg-[#0a0a0a] p-3 rounded-lg text-center">
+                <div className="bg-[#0a0a0a]/50 p-3 rounded-[16px] text-center">
                   <p className="text-lg font-bold text-green-400">{stats.notesCount}</p>
                   <p className="text-xs text-white/60">Note Personali</p>
                 </div>
-                <div className="bg-[#0a0a0a] p-3 rounded-lg text-center">
+                <div className="bg-[#0a0a0a]/50 p-3 rounded-[16px] text-center">
                   <p className="text-lg font-bold text-yellow-400">{stats.purchasesCount}</p>
                   <p className="text-xs text-white/60">Acquisti</p>
                 </div>
-                <div className="bg-[#0a0a0a] p-3 rounded-lg text-center">
+                <div className="bg-[#0a0a0a]/50 p-3 rounded-[16px] text-center">
                   <p className="text-lg font-bold text-purple-400">{stats.cluesCount}</p>
                   <p className="text-xs text-white/60">Indizi</p>
                 </div>
@@ -139,10 +127,10 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
                     e.stopPropagation();
                     setShowAddNote(!showAddNote);
                   }}
-                  className="w-full p-3 bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-lg text-white hover:from-blue-600/30 hover:to-purple-600/30 transition-all flex items-center justify-center space-x-2"
+                  className="w-full p-3 bg-gradient-to-r from-[#365EFF]/20 to-[#FC1EFF]/20 border border-[#365EFF]/30 rounded-[16px] text-white hover:from-[#365EFF]/30 hover:to-[#FC1EFF]/30 transition-all flex items-center justify-center space-x-2"
                 >
                   <Plus className="w-4 h-4" />
-                  <span className="text-sm">Aggiungi Nota Personale</span>
+                  <span className="text-sm font-orbitron">Aggiungi Nota Personale</span>
                 </button>
 
                 <AnimatePresence>
@@ -159,7 +147,7 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
                           value={newNote}
                           onChange={(e) => setNewNote(e.target.value)}
                           placeholder="Scrivi la tua nota personale..."
-                          className="w-full p-3 bg-[#0a0a0a] border border-white/20 rounded-lg text-white placeholder-white/50 resize-none focus:outline-none focus:border-blue-500/50"
+                          className="w-full p-3 bg-[#0a0a0a]/50 border border-white/20 rounded-[16px] text-white placeholder-white/50 resize-none focus:outline-none focus:border-[#365EFF]/50"
                           rows={3}
                           onClick={(e) => e.stopPropagation()}
                         />
@@ -169,7 +157,7 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
                               e.stopPropagation();
                               handleAddNote();
                             }}
-                            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm hover:from-blue-700 hover:to-purple-700 transition-all"
+                            className="px-4 py-2 bg-gradient-to-r from-[#365EFF] to-[#FC1EFF] text-white rounded-full text-sm hover:shadow-lg transition-all font-orbitron"
                           >
                             Salva Nota
                           </button>
@@ -179,7 +167,7 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
                               setShowAddNote(false);
                               setNewNote("");
                             }}
-                            className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm hover:bg-gray-700 transition-all"
+                            className="px-4 py-2 bg-gray-600 text-white rounded-full text-sm hover:bg-gray-700 transition-all font-orbitron"
                           >
                             Annulla
                           </button>
@@ -192,41 +180,33 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
 
               {/* Diary Entries */}
               <div className="space-y-3 max-h-[calc(100vh-30rem)] overflow-y-auto pr-1 custom-scrollbar">
-                <h4 className="text-white font-medium mb-3 flex items-center space-x-2">
-                  <BookOpen className="w-4 h-4 text-blue-400" />
-                  <span>Diario delle Attività</span>
+                <h4 className="text-white font-medium mb-3 font-orbitron">
+                  Diario delle Attività
                 </h4>
                 
                 {entries.length > 0 ? (
                   entries.map((entry, index) => (
                     <motion.div
                       key={index}
-                      className="p-3 bg-[#0a0a0a] rounded-lg border border-white/10 hover:border-white/20 transition-colors"
+                      className="p-3 bg-[#0a0a0a]/50 rounded-[16px] border border-white/10 hover:border-white/20 transition-colors"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                     >
                       <div className="flex items-start space-x-3">
-                        <div className="flex-shrink-0 mt-0.5">
-                          {getEntryIcon(entry.type)}
-                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-white text-sm leading-relaxed break-words">
                             {entry.content}
                           </p>
-                          <div className="flex items-center space-x-2 mt-2">
-                            <Clock className="w-3 h-3 text-white/40" />
-                            <span className="text-xs text-white/60">
-                              {formatTimestamp(entry.timestamp)}
-                            </span>
-                          </div>
+                          <span className="text-xs text-white/60 mt-2 block">
+                            {formatTimestamp(entry.timestamp)}
+                          </span>
                         </div>
                       </div>
                     </motion.div>
                   ))
                 ) : (
                   <div className="text-center py-8 text-white/50">
-                    <BookOpen className="w-8 h-8 mx-auto mb-2 text-white/30" />
                     <p className="text-sm">Nessuna attività registrata</p>
                     <p className="text-xs text-white/40 mt-1">Le tue azioni verranno registrate qui</p>
                   </div>

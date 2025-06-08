@@ -29,29 +29,37 @@ const NotificationCategory: React.FC<NotificationCategoryProps> = ({
 
   return (
     <motion.div
-      className={`rounded-2xl bg-[#131524]/40 border backdrop-blur-md transition-all duration-300 hover:bg-[#131524]/50 ${categoryInfo.borderColor}`}
+      className="rounded-[20px] bg-[#1C1C1F] backdrop-blur-md transition-all duration-300 hover:shadow-lg mb-4 relative overflow-hidden"
       style={{
-        boxShadow: "0 6px 16px rgba(0, 0, 0, 0.15), 0 0 8px rgba(0, 209, 255, 0.1)"
+        background: 'linear-gradient(135deg, #1C1C1F 0%, rgba(28, 28, 31, 0.95) 50%, rgba(54, 94, 255, 0.1) 100%)',
+        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
       }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
+      {/* Top gradient border */}
+      <div 
+        className="absolute top-0 left-0 w-full h-[1px]"
+        style={{
+          background: 'linear-gradient(90deg, #FC1EFF 0%, #365EFF 50%, #FACC15 100%)'
+        }}
+      />
+      
       {/* Category Header */}
       <div
         onClick={handleToggle}
-        className="p-4 cursor-pointer flex items-center justify-between hover:bg-white/5 rounded-2xl transition-colors"
+        className="p-6 cursor-pointer flex items-center justify-between hover:bg-white/5 rounded-[20px] transition-colors"
       >
         <div className="flex items-center space-x-3">
-          <span className="text-2xl">{categoryInfo.icon}</span>
           <div>
-            <h3 className={`text-lg font-semibold ${categoryInfo.color}`}>
+            <h3 className="text-lg font-semibold text-white font-orbitron">
               {categoryInfo.title}
             </h3>
             <p className="text-sm text-white/60">
               {notifications.length} {notifications.length === 1 ? 'notifica' : 'notifiche'}
               {unreadCount > 0 && (
-                <span className="ml-2 px-2 py-1 bg-[#00D1FF] text-black text-xs rounded-full">
+                <span className="ml-2 px-2 py-1 bg-gradient-to-r from-[#365EFF] to-[#FC1EFF] text-white text-xs rounded-full">
                   {unreadCount} nuove
                 </span>
               )}
@@ -77,7 +85,7 @@ const NotificationCategory: React.FC<NotificationCategoryProps> = ({
             transition={{ duration: 0.4, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 space-y-3">
+            <div className="px-6 pb-6 space-y-3">
               {notifications.map((notification, index) => (
                 <motion.div
                   key={notification.id}

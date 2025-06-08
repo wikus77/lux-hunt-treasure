@@ -14,51 +14,37 @@ export const getCategoryInfo = (type: string) => {
     case NOTIFICATION_CATEGORIES.LEADERBOARD:
       return {
         title: 'Aggiornamento Classifica',
-        icon: '📊',
-        color: 'text-green-400',
-        borderColor: 'border-green-400/30'
+        color: 'text-green-400'
       };
     case NOTIFICATION_CATEGORIES.REWARDS:
       return {
         title: 'Ricompense Sbloccate',
-        icon: '🎁',
-        color: 'text-yellow-400',
-        borderColor: 'border-yellow-400/30'
+        color: 'text-yellow-400'
       };
     case NOTIFICATION_CATEGORIES.MISSION:
       return {
         title: 'Avvisi Missione',
-        icon: '⚠️',
-        color: 'text-red-400',
-        borderColor: 'border-red-400/30'
+        color: 'text-red-400'
       };
     case NOTIFICATION_CATEGORIES.BUZZ:
       return {
         title: 'Buzz Notifications',
-        icon: '⚡',
-        color: 'text-blue-400',
-        borderColor: 'border-blue-400/30'
+        color: 'text-blue-400'
       };
     case NOTIFICATION_CATEGORIES.MAP_BUZZ:
       return {
         title: 'Aggiornamenti Mappa',
-        icon: '🗺️',
-        color: 'text-purple-400',
-        borderColor: 'border-purple-400/30'
+        color: 'text-purple-400'
       };
     case NOTIFICATION_CATEGORIES.WEEKLY:
       return {
         title: 'Riassunto Settimanale',
-        icon: '📈',
-        color: 'text-cyan-400',
-        borderColor: 'border-cyan-400/30'
+        color: 'text-cyan-400'
       };
     default:
       return {
         title: 'Generali',
-        icon: '📋',
-        color: 'text-gray-400',
-        borderColor: 'border-gray-400/30'
+        color: 'text-gray-400'
       };
   }
 };
