@@ -5,12 +5,11 @@ import { PrizeVision } from "./home-sections/PrizeVision";
 import { BrokerConsole } from "./home-sections/BrokerConsole";
 import { AgentDiary } from "./home-sections/AgentDiary";
 import { ActiveMissionBox } from "./home-sections/ActiveMissionBox";
-import { TreasureHuntExpandableBoxes } from "./home-sections/TreasureHuntExpandableBoxes";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { toast } from "sonner";
 import { getMissionDeadline } from "@/utils/countdownDate";
 
-export function CommandCenterHome() {
+export default function CommandCenterHome() {
   // Track the user's progress (from 0 to 100)
   const [progress, setProgress] = useLocalStorage<number>("mission-progress", 0);
   
@@ -141,20 +140,10 @@ export function CommandCenterHome() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.1 }}
       >
-        <ActiveMissionBox mission={activeMission} />
-      </motion.div>
-
-      {/* Treasure Hunt Expandable Boxes */}
-      <motion.div 
-        className="mb-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.15 }}
-      >
-        <TreasureHuntExpandableBoxes 
-          progress={progress}
-          activeMission={activeMission}
+        <ActiveMissionBox 
+          mission={activeMission} 
           purchasedClues={purchasedClues}
+          progress={progress}
         />
       </motion.div>
 
