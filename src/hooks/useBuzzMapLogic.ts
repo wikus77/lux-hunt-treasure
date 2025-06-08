@@ -23,18 +23,18 @@ export interface BuzzMapArea {
 export const useBuzzMapLogic = () => {
   const { user } = useAuth();
   
-  // CLEANED: Local state for UI feedback only (no more Zustand dependencies)
+  // LOCAL state for UI feedback only (NO Zustand dependencies)
   const [localBuzzCount, setLocalBuzzCount] = useState(0);
   const [localAreaCreated, setLocalAreaCreated] = useState(false);
   
-  // Use Zustand store for operation locks ONLY
+  // Use Zustand store ONLY for operation locks
   const { 
     isGenerating,
     isDeleting,
     setIsGenerating
   } = useMapStore();
 
-  // SINGLE SOURCE OF TRUTH: Use unified map areas hook
+  // SINGLE SOURCE OF TRUTH: Use unified map areas hook with React Query
   const {
     currentWeekAreas,
     isLoading,
@@ -47,6 +47,7 @@ export const useBuzzMapLogic = () => {
   console.debug('🧠 BUZZ LOGIC STATE:', {
     userId: user?.id,
     areasCount: currentWeekAreas.length,
+    areasDetail: currentWeekAreas.map(a => ({ id: a.id, radius_km: a.radius_km })),
     isGenerating,
     isDeleting,
     localBuzzCount,
@@ -140,7 +141,7 @@ export const useBuzzMapLogic = () => {
     return result;
   }, []);
 
-  // ENHANCED BUZZ generation with COMPLETE sync sequence
+  // ENHANCED BUZZ generation with COMPLETE FORCED sync sequence
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       console.debug('🚫 BUZZ GENERATION: No user ID');
@@ -173,12 +174,12 @@ export const useBuzzMapLogic = () => {
         existingAreas: currentWeekAreas.length
       });
       
-      // STEP 1: Complete cleanup with proper sync sequence
-      console.debug('🧹 STEP 1: Complete cleanup...');
+      // STEP 1: Complete cleanup with FORCED sync sequence
+      console.debug('🧹 STEP 1: Complete cleanup with FORCED sync...');
       await forceCompleteSync();
       
-      // STEP 2: Clear all existing areas
-      console.debug('🗑️ STEP 2: Clear all existing areas...');
+      // STEP 2: Clear all existing areas with FORCED sync
+      console.debug('🗑️ STEP 2: Clear all existing areas with FORCED sync...');
       const cleanupSuccess = await deleteAllUserAreas();
       if (!cleanupSuccess) {
         console.error('❌ BUZZ GENERATION: Cleanup failed');
@@ -186,7 +187,7 @@ export const useBuzzMapLogic = () => {
         return null;
       }
       
-      console.debug('✅ STEP 2: Cleanup completed');
+      console.debug('✅ STEP 2: Cleanup completed with FORCED sync');
       
       // STEP 3: Calculate radius and pricing
       console.debug('💰 STEP 3: Calculate radius and pricing...');
@@ -260,7 +261,7 @@ export const useBuzzMapLogic = () => {
     setIsGenerating, forceCompleteSync, forceReload, currentWeekAreas
   ]);
 
-  // Enhanced manual area deletion
+  // Enhanced manual area deletion with FORCED sync
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
     console.debug('🗑️ HANDLE DELETE AREA START:', areaId);
     
@@ -269,7 +270,9 @@ export const useBuzzMapLogic = () => {
     const success = await deleteSpecificArea(areaId);
     
     if (success) {
-      console.debug('✅ HANDLE DELETE AREA: Success');
+      console.debug('✅ HANDLE DELETE AREA: Success, forcing complete sync...');
+      // Force complete sync after deletion
+      await forceCompleteSync();
       toast.success('Area eliminata definitivamente');
     } else {
       console.error('❌ HANDLE DELETE AREA: Failed');
@@ -277,9 +280,9 @@ export const useBuzzMapLogic = () => {
     }
     
     return success;
-  }, [deleteSpecificArea]);
+  }, [deleteSpecificArea, forceCompleteSync]);
 
-  // Enhanced clear all areas
+  // Enhanced clear all areas with FORCED sync
   const handleClearAllAreas = useCallback(async (): Promise<void> => {
     console.debug('🧹 HANDLE CLEAR ALL START');
     
@@ -288,13 +291,15 @@ export const useBuzzMapLogic = () => {
     const success = await deleteAllUserAreas();
     
     if (success) {
-      console.debug('✅ HANDLE CLEAR ALL: Success');
+      console.debug('✅ HANDLE CLEAR ALL: Success, forcing complete sync...');
+      // Force complete sync after deletion
+      await forceCompleteSync();
       toast.success('Tutte le aree sono state eliminate definitivamente');
     } else {
       console.error('❌ HANDLE CLEAR ALL: Failed');
       toast.error('Errore nell\'eliminazione delle aree');
     }
-  }, [deleteAllUserAreas]);
+  }, [deleteAllUserAreas, forceCompleteSync]);
 
   // Debug function
   const debugCurrentState = useCallback(() => {
