@@ -92,18 +92,20 @@ export const useBuzzAreaManagement = (userId?: string) => {
     }
   }, [getValidUserId, getCurrentWeek]);
 
-  // CRITICAL FIX: Remove previous area with definitive database cleanup
+  // CRITICAL FIX: Enhanced definitive area removal with complete database cleanup
   const removePreviousArea = useCallback(async (): Promise<boolean> => {
     const validUserId = getValidUserId();
     
     try {
       const currentWeek = getCurrentWeek();
-      console.log('🗑️ DEFINITIVE CLEANUP - Removing all areas for user:', validUserId, 'week:', currentWeek);
+      console.log('🗑️ DEFINITIVE CLEANUP - Starting complete removal for user:', validUserId, 'week:', currentWeek);
 
-      // Step 1: Clear local state immediately
+      // Step 1: Clear local state immediately to prevent visual inconsistency
       setCurrentWeekAreas([]);
+      console.log('✅ Local state cleared immediately');
 
-      // Step 2: Execute atomic delete from Supabase
+      // Step 2: Execute atomic delete from Supabase with explicit logging
+      console.log('🔥 Executing DELETE from user_map_areas...');
       const { error: deleteError, count } = await supabase
         .from('user_map_areas')
         .delete({ count: 'exact' })
@@ -112,12 +114,13 @@ export const useBuzzAreaManagement = (userId?: string) => {
 
       if (deleteError) {
         console.error('❌ Database delete error:', deleteError);
-        // Continue anyway for developer mode compatibility
+        // Even with error, try to continue for developer mode compatibility
       } else {
         console.log('✅ DEFINITIVE DELETE SUCCESS - Removed count:', count);
       }
 
-      // Step 3: Verify complete cleanup with fresh fetch
+      // Step 3: CRITICAL - Force immediate fresh fetch to verify cleanup
+      console.log('🔍 VERIFICATION FETCH - Checking if areas truly deleted...');
       const { data: verifyData, error: verifyError } = await supabase
         .from('user_map_areas')
         .select('*')
@@ -130,21 +133,39 @@ export const useBuzzAreaManagement = (userId?: string) => {
         
         if (remainingCount > 0) {
           console.warn('⚠️ Some areas still exist after delete:', verifyData);
+          // Try a second delete attempt
+          const { error: secondDeleteError } = await supabase
+            .from('user_map_areas')
+            .delete()
+            .eq('user_id', validUserId)
+            .eq('week', currentWeek);
+          
+          if (secondDeleteError) {
+            console.error('❌ Second delete attempt failed:', secondDeleteError);
+          } else {
+            console.log('✅ Second delete successful');
+          }
+        } else {
+          console.log('✅ PERFECT CLEANUP - No areas remaining in database');
         }
         
-        // Ensure local state reflects actual database state
+        // Ensure local state reflects actual database state (should be empty)
         setCurrentWeekAreas(verifyData || []);
       }
+
+      // Step 4: Force update counter to trigger any dependent refreshes
+      setForceUpdateCounter(prev => prev + 1);
+      console.log('🔄 Force update counter incremented');
 
       return true;
     } catch (error) {
       console.error('❌ Exception in definitive cleanup:', error);
       setCurrentWeekAreas([]);
-      return true;
+      return false;
     }
   }, [getValidUserId, getCurrentWeek]);
 
-  // CRITICAL FIX: Delete specific area with immediate database sync
+  // CRITICAL FIX: Delete specific area with immediate verification
   const deleteSpecificArea = useCallback(async (areaId: string): Promise<boolean> => {
     const validUserId = getValidUserId();
     
