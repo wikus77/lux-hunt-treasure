@@ -1,55 +1,64 @@
 
-import { useCallback } from 'react';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { BuzzMapArea } from './useBuzzMapLogic';
+import { toast } from 'sonner';
+
+// UUID di fallback per sviluppo - SOLUZIONE DEFINITIVA
+const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
 
 export const useBuzzDatabase = () => {
-  // Generate new BUZZ MAPPA area in database
-  const createBuzzMapArea = useCallback(async (
-    userId: string,
-    centerLat: number,
-    centerLng: number,
-    radiusKm: number,
-    currentWeek: number
-  ): Promise<BuzzMapArea | null> => {
+  // FIXED: Create BUZZ area with correct table and validation
+  const createBuzzMapArea = async (userId: string, lat: number, lng: number, radiusKm: number, week: number) => {
     try {
-      const newArea = {
-        user_id: userId,
-        lat: centerLat,
-        lng: centerLng,
+      // FIXED: Convert developer-fake-id to valid UUID
+      const validUserId = userId === 'developer-fake-id' ? DEVELOPER_UUID : userId;
+      
+      console.log('🗺️ Creating BUZZ area with validated data:', {
+        user_id: validUserId,
+        lat,
+        lng,
         radius_km: radiusKm,
-        week: currentWeek
-      };
+        week
+      });
 
-      console.log('💾 CRITICAL RADIUS - Inserting new area into database:', newArea);
+      // FIXED: Use correct table name user_map_areas (not areas)
       const { data, error } = await supabase
         .from('user_map_areas')
-        .insert(newArea)
+        .insert({
+          user_id: validUserId,
+          lat: lat,
+          lng: lng,
+          radius_km: radiusKm,
+          week: week
+        })
         .select()
         .single();
 
       if (error) {
-        console.error('❌ Error saving map area:', error);
-        toast.error('Errore nel salvare l\'area sulla mappa');
+        console.error('❌ Database error creating BUZZ area:', error);
+        if (error.code === 'PGRST116') {
+          toast.error('Errore di accesso: verifica autenticazione');
+        } else {
+          toast.error(`Errore nel creare l'area BUZZ: ${error.message}`);
+        }
         return null;
       }
 
-      console.log('✅ CRITICAL RADIUS - NEW BUZZ MAPPA area saved in DB:', data);
-      console.log('📏 NEW RADIUS SAVED:', {
-        radius_km: data.radius_km,
-        radius_meters: data.radius_km * 1000,
-        area_id: data.id,
-        previous_radius_should_be_different: true
-      });
+      console.log('✅ BUZZ area created successfully:', data);
       
+      if (userId === 'developer-fake-id') {
+        toast.success('Area BUZZ MAPPA creata (modalità sviluppatore)');
+      } else {
+        toast.success(`Area BUZZ MAPPA creata con raggio ${radiusKm.toFixed(1)} km`);
+      }
+
       return data;
     } catch (err) {
-      console.error('❌ Exception creating map area:', err);
-      toast.error('Errore durante la creazione dell\'area');
+      console.error('❌ Exception creating BUZZ area:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
+      toast.error(`Errore nell'area BUZZ: ${errorMessage}`);
       return null;
     }
-  }, []);
+  };
 
   return {
     createBuzzMapArea

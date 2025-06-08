@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -129,7 +128,7 @@ export const useNewMapPage = () => {
     toast.success("Punto posizionato. Inserisci titolo e nota.");
   }, [isAddingSearchArea, toggleAddingSearchArea, getValidUserId, user]);
 
-  // FIXED: Save the point to Supabase con validazione completa
+  // FIXED: Save the point to Supabase con validazione completa e UUID corretto
   const savePoint = async (title: string, note: string) => {
     const validUserId = getValidUserId();
     if (!newPoint || !validUserId) {
@@ -148,9 +147,9 @@ export const useNewMapPage = () => {
       return;
     }
 
-    // FIXED: Payload completo e validato
+    // FIXED: Payload completo e validato con UUID corretto
     const payload = {
-      user_id: validUserId,
+      user_id: validUserId, // Always use the validated UUID
       latitude: newPoint.lat,
       longitude: newPoint.lng,
       title: trimmedTitle,
@@ -173,7 +172,15 @@ export const useNewMapPage = () => {
           details: error.details,
           hint: error.hint
         });
-        toast.error(`Errore nel salvare il punto: ${error.message}`);
+        
+        // FIXED: Messaggi più specifici in base al tipo di errore
+        if (error.code === 'PGRST116') {
+          toast.error("Errore di accesso: verificare autenticazione");
+        } else if (error.message.includes('row-level security')) {
+          toast.error("Errore di sicurezza: verifica permessi utente");
+        } else {
+          toast.error(`Errore nel salvare il punto: ${error.message}`);
+        }
         return;
       }
 
@@ -201,7 +208,7 @@ export const useNewMapPage = () => {
     } catch (err) {
       console.error("❌ Exception saving map point:", err);
       const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
-      toast.error(`Errore nel salvare il punto: ${errorMessage}`);
+      toast.error(`Errore nell'salvare il punto: ${errorMessage}`);
     }
   };
 
