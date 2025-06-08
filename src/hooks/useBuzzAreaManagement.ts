@@ -13,10 +13,26 @@ export const useBuzzAreaManagement = (userId?: string) => {
   
   const { getCurrentWeek, getActiveAreaFromList, calculateNextRadiusFromArea } = useBuzzMapUtils();
   
-  // FIXED: Ottieni user_id valido per Supabase
+  // FIXED: Ottieni user_id valido per Supabase con UUID validation
   const getValidUserId = useCallback(() => {
-    if (!userId) return DEVELOPER_UUID; // Always return valid UUID for developer mode
-    return userId === 'developer-fake-id' ? DEVELOPER_UUID : userId;
+    if (!userId) {
+      console.log('🔧 No userId provided, using developer UUID');
+      return DEVELOPER_UUID;
+    }
+    
+    if (userId === 'developer-fake-id') {
+      console.log('🔧 Developer fake id detected, using developer UUID');
+      return DEVELOPER_UUID;
+    }
+    
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      console.log('🔧 Invalid UUID format detected, using developer UUID for:', userId);
+      return DEVELOPER_UUID;
+    }
+    
+    return userId;
   }, [userId]);
 
   // Get active area from current week areas
@@ -102,6 +118,11 @@ export const useBuzzAreaManagement = (userId?: string) => {
 
       if (deleteError) {
         console.error('❌ Error removing previous BUZZ area:', deleteError);
+        console.error('❌ Delete error details:', {
+          message: deleteError.message,
+          code: deleteError.code,
+          details: deleteError.details
+        });
         // Continue anyway for developer mode compatibility
         console.log('ℹ️ Proceeding despite deletion error');
         return true;
