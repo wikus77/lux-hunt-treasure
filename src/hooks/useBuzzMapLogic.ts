@@ -23,7 +23,7 @@ export interface BuzzMapArea {
 export const useBuzzMapLogic = () => {
   const { user } = useAuth();
   
-  // LOCAL state solo per UI feedback (NO Zustand dependencies)
+  // LOCAL state only for UI feedback (NO React Query duplicates)
   const [localBuzzCount, setLocalBuzzCount] = useState(0);
   
   // Use Zustand store ONLY for operation locks
@@ -33,7 +33,7 @@ export const useBuzzMapLogic = () => {
     setIsGenerating
   } = useMapStore();
 
-  // SINGLE SOURCE OF TRUTH: Use unified map areas hook with React Query
+  // SINGLE SOURCE OF TRUTH: React Query via useMapAreas
   const {
     currentWeekAreas,
     isLoading,
@@ -49,7 +49,8 @@ export const useBuzzMapLogic = () => {
     areasDetail: currentWeekAreas.map(a => ({ id: a.id, radius_km: a.radius_km })),
     isGenerating,
     isDeleting,
-    localBuzzCount
+    localBuzzCount,
+    reactQueryLoading: isLoading
   });
 
   // Use utility functions
@@ -84,10 +85,10 @@ export const useBuzzMapLogic = () => {
 
   const { createBuzzMapArea } = useBuzzDatabase();
 
-  // Get active area from current week areas
+  // Get active area from current week areas (React Query only)
   const getActiveArea = useCallback((): BuzzMapArea | null => {
     const active = getActiveAreaFromList(currentWeekAreas);
-    console.debug('🎯 GET ACTIVE AREA:', active);
+    console.debug('🎯 GET ACTIVE AREA from React Query:', active);
     return active;
   }, [currentWeekAreas, getActiveAreaFromList]);
 
@@ -139,7 +140,7 @@ export const useBuzzMapLogic = () => {
     return result;
   }, []);
 
-  // ENHANCED BUZZ generation con COMPLETE FORCED sync sequence
+  // ENHANCED BUZZ generation with FORCED sync sequence
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       console.debug('🚫 BUZZ GENERATION: No user ID');
@@ -172,12 +173,12 @@ export const useBuzzMapLogic = () => {
         existingAreas: currentWeekAreas.length
       });
       
-      // STEP 1: Complete cleanup con FORCED sync sequence
-      console.debug('🧹 STEP 1: Complete cleanup con FORCED sync...');
+      // STEP 1: Complete cleanup with FORCED sync sequence
+      console.debug('🧹 STEP 1: Complete cleanup with FORCED sync...');
       await forceCompleteSync();
       
-      // STEP 2: Clear all existing areas con FORCED sync
-      console.debug('🗑️ STEP 2: Clear all existing areas con FORCED sync...');
+      // STEP 2: Clear all existing areas with FORCED sync
+      console.debug('🗑️ STEP 2: Clear all existing areas with FORCED sync...');
       const cleanupSuccess = await deleteAllUserAreas();
       if (!cleanupSuccess) {
         console.error('❌ BUZZ GENERATION: Cleanup failed');
@@ -185,7 +186,7 @@ export const useBuzzMapLogic = () => {
         return null;
       }
       
-      console.debug('✅ STEP 2: Cleanup completed con FORCED sync');
+      console.debug('✅ STEP 2: Cleanup completed with FORCED sync');
       
       // STEP 3: Calculate radius and pricing
       console.debug('💰 STEP 3: Calculate radius and pricing...');
@@ -258,7 +259,7 @@ export const useBuzzMapLogic = () => {
     setIsGenerating, forceCompleteSync, forceReload, currentWeekAreas
   ]);
 
-  // Enhanced manual area deletion con FORCED sync
+  // Enhanced manual area deletion with FORCED sync
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
     console.debug('🗑️ HANDLE DELETE AREA START:', areaId);
     
@@ -279,7 +280,7 @@ export const useBuzzMapLogic = () => {
     return success;
   }, [deleteSpecificArea, forceCompleteSync]);
 
-  // Enhanced clear all areas con FORCED sync
+  // Enhanced clear all areas with FORCED sync
   const handleClearAllAreas = useCallback(async (): Promise<void> => {
     console.debug('🧹 HANDLE CLEAR ALL START');
     
@@ -317,7 +318,8 @@ export const useBuzzMapLogic = () => {
       console.debug('🔍 DEBUG STATE: Complete report:', debugData);
       console.debug('🔍 DEBUG STATE: Local state:', { 
         localBuzzCount,
-        currentWeekAreas: currentWeekAreas.length 
+        currentWeekAreas: currentWeekAreas.length,
+        reactQueryData: currentWeekAreas
       });
     }
   }, [
@@ -327,7 +329,7 @@ export const useBuzzMapLogic = () => {
   ]);
 
   return {
-    // Data from unified hook (single source of truth)
+    // Data from React Query (SINGLE SOURCE OF TRUTH)
     currentWeekAreas,
     isLoading,
     
@@ -338,7 +340,7 @@ export const useBuzzMapLogic = () => {
     dailyBuzzCounter,
     dailyBuzzMapCounter,
     precisionMode,
-    buzzCount: localBuzzCount, // SOLO LOCAL STATE
+    buzzCount: localBuzzCount, // ONLY LOCAL UI STATE
     
     // Functions
     calculateNextRadius: calculateProgressiveRadius,

@@ -26,11 +26,11 @@ export const useMapAreas = (userId?: string) => {
 
   const validUserId = getValidUserId();
 
-  // FIXED QUERYKEY - SINGLE SOURCE OF TRUTH
+  // EXACT QUERYKEY - SINGLE SOURCE OF TRUTH
   const queryKey = ['user_map_areas', validUserId];
-  console.debug('🔑 EXACT QUERYKEY:', queryKey);
+  console.debug('🔑 EXACT QUERYKEY USED:', queryKey);
 
-  // SINGLE SOURCE OF TRUTH: React Query for areas
+  // React Query for areas - SINGLE SOURCE OF TRUTH
   const {
     data: currentWeekAreas = [],
     isLoading,
@@ -63,28 +63,27 @@ export const useMapAreas = (userId?: string) => {
     enabled: !!validUserId
   });
 
-  // FORCE COMPLETE SYNC SEQUENCE - DEFINITIVO
+  // FORCED INVALIDATE + REFETCH SEQUENCE
   const forceCompleteSync = useCallback(async () => {
     console.debug('🧹 FORCE SYNC START with EXACT queryKey:', queryKey);
     
     try {
-      // Step 1: Invalidate con EXACT queryKey
+      // Step 1: Invalidate with EXACT queryKey
       console.debug('🗑️ STEP 1: Invalidating with EXACT queryKey:', queryKey);
       await queryClient.invalidateQueries({ queryKey });
       
-      // Step 2: Remove from cache con EXACT queryKey
-      console.debug('🗑️ STEP 2: Removing from cache with EXACT queryKey:', queryKey);
-      queryClient.removeQueries({ queryKey });
+      // Step 2: FORCE immediate refetch with EXACT queryKey
+      console.debug('🔄 STEP 2: FORCE refetch with EXACT queryKey:', queryKey);
+      await queryClient.refetchQueries({ queryKey });
       
       // Step 3: Reset Zustand state
       console.debug('🗑️ STEP 3: Resetting Zustand state...');
       resetMapState();
       
-      // Step 4: FORCE immediate refetch con EXACT queryKey
-      console.debug('🔄 STEP 4: FORCE refetch with EXACT queryKey:', queryKey);
-      const result = await queryClient.refetchQueries({ queryKey });
+      // Step 4: Verify final state
+      const finalData = queryClient.getQueryData(queryKey);
+      console.debug('✅ FORCE SYNC COMPLETE. Final areas:', finalData);
       
-      console.debug('✅ FORCE SYNC COMPLETE:', result);
       return true;
     } catch (error) {
       console.error('❌ FORCE SYNC ERROR:', error);
@@ -92,7 +91,7 @@ export const useMapAreas = (userId?: string) => {
     }
   }, [queryClient, queryKey, resetMapState]);
 
-  // DELETE ALL MUTATION con SEQUENZA FORZATA
+  // DELETE ALL MUTATION with FORCED sync sequence
   const deleteMutation = useMutation({
     mutationFn: async (): Promise<boolean> => {
       console.debug('🔥 DELETE ALL START for user:', validUserId);
@@ -124,18 +123,21 @@ export const useMapAreas = (userId?: string) => {
     onSuccess: async () => {
       console.debug('🎉 DELETE SUCCESS: Starting FORCED sync sequence...');
       
-      // SEQUENZA FORZATA: invalidate con EXACT queryKey, poi refetch
-      console.debug('🔄 DELETE: Invalidating with EXACT queryKey:', queryKey);
-      await queryClient.invalidateQueries({ queryKey });
-      
-      console.debug('🔄 DELETE: FORCE refetch with EXACT queryKey:', queryKey);
-      await queryClient.refetchQueries({ queryKey });
-      
-      // Additional safety: force complete sync
-      console.debug('🔄 DELETE: FORCE complete sync...');
+      // CRITICAL: Force complete sync with EXACT queryKey
+      console.debug('🔄 DELETE: FORCE complete sync with EXACT queryKey:', queryKey);
       await forceCompleteSync();
       
       console.debug('✅ DELETE: Sync sequence COMPLETE');
+      
+      // Verify final state
+      const finalAreas = queryClient.getQueryData(queryKey);
+      console.debug('🔍 DELETE VERIFICATION: Final areas in cache:', finalAreas);
+      
+      if (Array.isArray(finalAreas) && finalAreas.length === 0) {
+        console.debug('✅ SYNC COMPLETE: user_map_areas.length === 0');
+      } else {
+        console.warn('❗ SYNC INCOMPLETE: Areas still in cache:', finalAreas);
+      }
     },
     onError: (error) => {
       console.error('❌ DELETE ALL MUTATION ERROR:', error);
@@ -176,18 +178,14 @@ export const useMapAreas = (userId?: string) => {
     onSuccess: async () => {
       console.debug('🎉 DELETE SPECIFIC SUCCESS: Starting FORCED sync...');
       
-      // SEQUENZA FORZATA con EXACT queryKey
-      console.debug('🔄 DELETE SPECIFIC: Invalidating with EXACT queryKey:', queryKey);
-      await queryClient.invalidateQueries({ queryKey });
-      
-      console.debug('🔄 DELETE SPECIFIC: FORCE refetch with EXACT queryKey:', queryKey);
-      await queryClient.refetchQueries({ queryKey });
+      // CRITICAL: Force complete sync with EXACT queryKey
+      await forceCompleteSync();
       
       console.debug('✅ DELETE SPECIFIC: Sync COMPLETE');
     }
   });
 
-  // DELETE ALL con protezione completa e FORCED sync
+  // DELETE ALL with complete protection and FORCED sync
   const deleteAllUserAreas = useCallback(async (): Promise<boolean> => {
     if (isDeleting || isGenerating) {
       console.debug('🚫 DELETE ALL: Operation blocked - already in progress');
@@ -215,7 +213,7 @@ export const useMapAreas = (userId?: string) => {
     }
   }, [isDeleting, isGenerating, setIsDeleting, deleteMutation, queryKey]);
 
-  // DELETE specific area con protezione e FORCED sync
+  // DELETE specific area with protection and FORCED sync
   const deleteSpecificArea = useCallback(async (areaId: string): Promise<boolean> => {
     if (isDeleting || isGenerating) {
       console.debug('🚫 DELETE SPECIFIC: Operation blocked - already in progress');
@@ -239,7 +237,7 @@ export const useMapAreas = (userId?: string) => {
     }
   }, [isDeleting, isGenerating, setIsDeleting, deleteSpecificMutation, queryKey]);
 
-  // Force reload con EXACT queryKey
+  // Force reload with EXACT queryKey
   const forceReload = useCallback(async () => {
     console.debug('🔄 FORCE RELOAD: Triggered with EXACT queryKey:', queryKey);
     await queryClient.invalidateQueries({ queryKey });

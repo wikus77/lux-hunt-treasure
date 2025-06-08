@@ -13,18 +13,16 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   const map = useMap();
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
   const isCleanupRunning = useRef(false);
-  // CRITICAL: Use JSON.stringify for deep comparison delle aree
-  const lastAreasStringified = useRef<string>('');
+  const lastAreasData = useRef<string>('');
   
   const currentColor = getCurrentColor();
   
-  console.debug('🗺️ CIRCLE RENDERER: Render triggered', {
-    areasCount: areas.length,
-    areasStringified: JSON.stringify(areas.map(a => ({ id: a.id, radius_km: a.radius_km, lat: a.lat, lng: a.lng }))),
-    lastAreasStringified: lastAreasStringified.current,
-    color: currentColor,
-    cleanupRunning: isCleanupRunning.current
-  });
+  // CRITICAL: Log areas updates
+  useEffect(() => {
+    console.debug("🔄 AREAS UPDATED:", areas);
+    console.debug("📊 Areas count:", areas.length);
+    console.debug("📋 Areas detail:", areas.map(a => ({ id: a.id, radius_km: a.radius_km })));
+  }, [areas]);
 
   useEffect(() => {
     // PREVENT CONCURRENT CLEANUP
@@ -33,9 +31,15 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       return;
     }
     
-    // CRITICAL: Check if we need to update using JSON comparison per contenuto effettivo
-    const currentAreasStringified = JSON.stringify(areas.map(a => ({ id: a.id, radius_km: a.radius_km, lat: a.lat, lng: a.lng })));
-    const needsUpdate = currentAreasStringified !== lastAreasStringified.current;
+    // CRITICAL: Use deep comparison for areas data
+    const currentAreasData = JSON.stringify(areas.map(a => ({ 
+      id: a.id, 
+      radius_km: a.radius_km, 
+      lat: a.lat, 
+      lng: a.lng 
+    })));
+    
+    const needsUpdate = currentAreasData !== lastAreasData.current;
     
     if (!needsUpdate) {
       console.debug('🔄 CIRCLE RENDERER: No update needed, areas unchanged');
@@ -43,15 +47,15 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     }
     
     isCleanupRunning.current = true;
-    lastAreasStringified.current = currentAreasStringified;
+    lastAreasData.current = currentAreasData;
     
     console.debug('🔥 CIRCLE RENDERER: Effect triggered', {
       areasCount: areas.length,
       needsCleanup: true,
-      currentAreasStringified
+      currentAreasData
     });
     
-    // STEP 1: COMPLETE LEAFLET CLEANUP (SEMPRE)
+    // STEP 1: COMPLETE LEAFLET CLEANUP (ALWAYS)
     console.debug('🧹 CIRCLE RENDERER: Starting COMPLETE Leaflet cleanup...');
     
     // Clear existing layer group
@@ -61,7 +65,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       console.debug('🗑️ CIRCLE RENDERER: Removed existing layer group');
     }
     
-    // CRITICAL: Nuclear cleanup di TUTTI i Circle e LayerGroup dalla mappa
+    // CRITICAL: Nuclear cleanup of ALL Circles and LayerGroups from map
     let removedCount = 0;
     map.eachLayer((layer) => {
       if (layer instanceof L.Circle || layer instanceof L.LayerGroup) {
@@ -151,11 +155,11 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       console.debug('🎉 CIRCLE RENDERER: All circles rendered successfully');
       
     } else {
-      console.debug('❌ CIRCLE RENDERER: No areas to display, using Italy fallback');
+      console.debug('❌ CIRCLE RENDERER: No areas to display, map cleared');
       map.setView([41.9028, 12.4964], 6);
     }
     
-    // STEP 3: VERIFY FINAL STATE
+    // STEP 3: VERIFY FINAL STATE and LOG SYNC STATUS
     const finalCircleCount = layerGroupRef.current?.getLayers().length || 0;
     console.debug('🔍 CIRCLE RENDERER: Final verification:', {
       expected_areas: areas.length,
@@ -165,8 +169,13 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       circles_cleared: finalCircleCount === 0
     });
     
-    if (areas.length !== finalCircleCount) {
-      console.warn('❗ CIRCLE RENDERER: Inconsistency detected:', {
+    // CRITICAL: Log sync completion status
+    if (areas.length === 0 && finalCircleCount === 0) {
+      console.debug('✅ SYNC COMPLETE: user_map_areas.length === 0 AND leafletLayerGroup.getLayers().length === 0');
+    } else if (areas.length === finalCircleCount) {
+      console.debug('✅ SYNC COMPLETE: Areas and circles match perfectly');
+    } else {
+      console.warn('❗ SYNC INCOMPLETE: Inconsistency detected:', {
         expected: areas.length,
         actual: finalCircleCount
       });
@@ -179,7 +188,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       isCleanupRunning.current = false;
     }, 100);
     
-  }, [JSON.stringify(areas), map, currentColor]); // CRITICAL: Use JSON.stringify per verificare contenuto effettivo
+  }, [JSON.stringify(areas), map, currentColor]); // CRITICAL: Use JSON.stringify for deep comparison
 
   // Cleanup on unmount
   useEffect(() => {
@@ -190,7 +199,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         console.debug('🧹 CIRCLE RENDERER: Cleanup on unmount completed');
       }
       isCleanupRunning.current = false;
-      lastAreasStringified.current = '';
+      lastAreasData.current = '';
     };
   }, [map]);
 
