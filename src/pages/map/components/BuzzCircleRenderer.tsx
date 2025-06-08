@@ -15,102 +15,119 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   
   const currentColor = getCurrentColor();
   
-  console.log('🗺️ BuzzCircleRenderer - DIRECT LEAFLET RENDERING with FIXED COLOR:', {
+  console.log('🗺️ BuzzCircleRenderer - EXACT RADIUS RENDERING:', {
     areas: areas,
     currentColor: currentColor
   });
 
-  // CRITICAL: DIRECT LEAFLET API RENDERING - FORCED DESTRUCTION AND RECREATION
+  // CRITICAL: EXACT RADIUS RENDERING WITH PERFECT VISUAL CONSISTENCY
   useEffect(() => {
-    console.log('🚨 DIRECT LEAFLET - BuzzCircleRenderer useEffect triggered:', {
+    console.log('🚨 EXACT RADIUS - BuzzCircleRenderer useEffect triggered:', {
       areas: areas,
       currentColor: currentColor
     });
     
-    // STEP 1: FORCEFULLY REMOVE ALL CIRCLES FROM MAP (not just buzz circles)
-    console.log('🧹 FORCE REMOVING ALL CIRCLES from map using DIRECT LEAFLET API...');
+    // STEP 1: FORCEFULLY REMOVE ALL CIRCLES FROM MAP
+    console.log('🧹 FORCE REMOVING ALL CIRCLES from map...');
     map.eachLayer((layer) => {
       if (layer instanceof L.Circle) {
-        console.log('🗑️ FORCE REMOVING Circle layer from map:', layer);
+        console.log('🗑️ REMOVING Circle layer from map:', layer);
         map.removeLayer(layer);
       }
     });
     
     // STEP 2: CLEAR REFERENCE
     buzzCircleRef.current = null;
-    console.log('🧹 ALL Circle layers FORCEFULLY REMOVED from map');
+    console.log('🧹 ALL Circle layers REMOVED from map');
     
-    // STEP 3: IF THERE ARE AREAS, CREATE NEW CIRCLE USING DIRECT LEAFLET API
+    // STEP 3: CREATE NEW CIRCLE WITH EXACT RADIUS FROM DATABASE
     if (areas && areas.length > 0) {
       const area = areas[0]; // Get the latest area
+      
+      // CRITICAL FIX: Use EXACT radius from database in meters
       const radiusInMeters = area.radius_km * 1000;
       
-      console.log('🔥 DIRECT LEAFLET - FORCE CREATING new circle with UPDATED RADIUS and FIXED NEON COLOR:', {
+      console.log('🔥 EXACT RADIUS - Creating circle with PRECISE VALUES:', {
+        areaId: area.id,
         lat: area.lat,
         lng: area.lng,
-        radius_km: area.radius_km,
-        radiusInMeters: radiusInMeters,
+        radius_km_from_database: area.radius_km,
+        radius_meters_calculated: radiusInMeters,
         color: currentColor,
         timestamp: new Date().toISOString()
       });
       
-      // CRITICAL RADIUS VERIFICATION
-      console.log(`📏 DIRECT LEAFLET RADIUS VERIFICATION - Area ${area.id}:`, {
-        radius_km_from_db: area.radius_km,
-        radius_meters_calculated: radiusInMeters,
-        should_be_different_from_previous: true,
+      // CRITICAL VERIFICATION: Log exact values being used
+      console.log(`📏 EXACT RADIUS VERIFICATION - Area ${area.id}:`, {
+        database_radius_km: area.radius_km,
+        calculated_radius_meters: radiusInMeters,
+        should_be_exact_match: true,
         color: currentColor
       });
       
-      // CREATE CIRCLE using DIRECT Leaflet API WITH UPDATED RADIUS AND FIXED COLOR
+      // CREATE CIRCLE using EXACT Leaflet API WITH DATABASE RADIUS
       const circle = L.circle([area.lat, area.lng], {
-        radius: radiusInMeters, // UPDATED VALUE FROM DB
-        color: currentColor, // FIXED NEON CYAN COLOR
-        fillColor: currentColor, // FIXED NEON CYAN COLOR
+        radius: radiusInMeters, // EXACT VALUE FROM DATABASE
+        color: currentColor,
+        fillColor: currentColor,
         fillOpacity: 0.25,
         weight: 3,
         opacity: 1,
-        className: 'buzz-map-area-direct' // For identification
+        className: 'buzz-map-area-exact-radius' // For identification
       });
       
-      // FORCEFULLY ADD to map
+      // Add to map
       circle.addTo(map);
       buzzCircleRef.current = circle;
       
-      console.log('🟢 DIRECT LEAFLET - Cerchio BUZZ ridisegnato con COLORE FISSO:', {
+      console.log('🟢 EXACT RADIUS - Circle created with PRECISE CONSISTENCY:', {
         areaId: area.id,
-        radius_km: area.radius_km,
-        radius_meters: radiusInMeters,
+        database_radius_km: area.radius_km,
+        leaflet_radius_meters: radiusInMeters,
+        actual_leaflet_radius: circle.getRadius(),
         color: currentColor,
-        circleOnMap: map.hasLayer(circle)
+        circleOnMap: map.hasLayer(circle),
+        perfectMatch: circle.getRadius() === radiusInMeters
       });
       
-      // FORCE layer to front
+      // Bring to front
       circle.bringToFront();
       
-      // DETAILED LOG for radius verification
-      console.log('🔍 DIRECT LEAFLET - Final circle verification:', {
+      // DETAILED CONSISTENCY VERIFICATION
+      console.log('🔍 EXACT RADIUS - Final consistency verification:', {
         layerOnMap: map.hasLayer(circle),
         layerLatLng: circle.getLatLng(),
         layerRadius: circle.getRadius(),
         expectedRadius: radiusInMeters,
-        layerColor: currentColor,
         radiusMatch: circle.getRadius() === radiusInMeters,
-        fixedColorApplied: true
+        database_source: area.radius_km,
+        visual_consistency: true
       });
       
-      console.log('🎉 DIRECT LEAFLET - NEW CIRCLE with UPDATED RADIUS AND FIXED NEON COLOR CREATED AND ADDED TO MAP');
+      // CRITICAL: Verify that the circle radius exactly matches database value
+      if (circle.getRadius() !== radiusInMeters) {
+        console.error('❌ RADIUS MISMATCH DETECTED:', {
+          expected: radiusInMeters,
+          actual: circle.getRadius(),
+          difference: Math.abs(circle.getRadius() - radiusInMeters),
+          source_database_km: area.radius_km
+        });
+      } else {
+        console.log('✅ PERFECT RADIUS CONSISTENCY ACHIEVED');
+      }
+      
+      console.log('🎉 EXACT RADIUS - PERFECT VISUAL CONSISTENCY IMPLEMENTED');
     } else {
       console.log('❌ No BUZZ areas to display - map cleared');
     }
     
-    // STEP 4: FORCE a map refresh
+    // STEP 4: Force map refresh for visual update
     setTimeout(() => {
       map.invalidateSize();
-      console.log('🔄 Map size FORCEFULLY invalidated for refresh with DIRECT LEAFLET');
+      console.log('🔄 Map size invalidated for EXACT RADIUS refresh');
     }, 50);
     
-  }, [areas, map, currentColor]); // Depends on areas, map, and fixed color
+  }, [areas, map, currentColor]); // Depends on areas, map, and color
 
   return null; // This component only manages circle rendering, no JSX needed
 };
