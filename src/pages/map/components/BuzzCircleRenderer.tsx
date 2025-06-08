@@ -150,12 +150,25 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         }
       });
       
-      // Set appropriate view to show all circles
-      if (buzzCircleRef.current) {
-        const bounds = layerGroupRef.current?.getBounds();
-        if (bounds) {
-          map.fitBounds(bounds, { padding: [50, 50] });
-          console.log('🎉 DIAGNOSTIC - Map view updated to show all circles');
+      // Set appropriate view to show all circles - FIXED: Check if layer group has layers before getting bounds
+      if (buzzCircleRef.current && layerGroupRef.current) {
+        const layers = layerGroupRef.current.getLayers();
+        if (layers.length > 0) {
+          try {
+            // Create a feature group to get bounds from the circles
+            const featureGroup = L.featureGroup(layers);
+            const bounds = featureGroup.getBounds();
+            if (bounds.isValid()) {
+              map.fitBounds(bounds, { padding: [50, 50] });
+              console.log('🎉 DIAGNOSTIC - Map view updated to show all circles');
+            }
+          } catch (error) {
+            console.warn('⚠️ DIAGNOSTIC - Could not fit bounds, using fallback:', error);
+            // Fallback to center on first circle
+            if (buzzCircleRef.current) {
+              map.setView(buzzCircleRef.current.getLatLng(), 10);
+            }
+          }
         }
       }
       
