@@ -48,6 +48,7 @@ export const useBuzzMapLogic = () => {
     calculateNextRadius,
     loadCurrentWeekAreas,
     removePreviousArea,
+    deleteSpecificArea,
     setCurrentWeekAreas
   } = useBuzzAreaManagement(user?.id);
 
@@ -102,7 +103,7 @@ export const useBuzzMapLogic = () => {
     };
   }, []);
 
-  // CRITICAL FIX: Generate new BUZZ MAPPA area with atomic operations
+  // CRITICAL FIX: Generate new BUZZ MAPPA area with atomic operations and fresh state
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
@@ -145,7 +146,7 @@ export const useBuzzMapLogic = () => {
         currentBuzzMapCounter: dailyBuzzMapCounter
       });
 
-      // CRITICAL FIX: Step 1 - Atomic removal of previous areas
+      // CRITICAL FIX: Step 1 - Atomic removal of ALL previous areas with verification
       console.log('🧹 Step 1: Atomic removal of previous areas...');
       const removed = await removePreviousArea();
       if (!removed) {
@@ -155,6 +156,10 @@ export const useBuzzMapLogic = () => {
       }
       
       console.log('✅ Step 1 completed: Previous areas removed atomically');
+      
+      // CRITICAL: Verify state is actually clean before proceeding
+      console.log('🔍 Verifying clean state before creating new area...');
+      console.log('📊 Current areas in state:', currentWeekAreas.length);
 
       // CRITICAL FIX: Step 2 - Create new area with validated data
       console.log('🚀 Step 2: Creating new area with validation...');
@@ -175,19 +180,11 @@ export const useBuzzMapLogic = () => {
       setAreaCreated(true);
       incrementBuzzCount();
       
-      // CRITICAL FIX: Step 4 - Set only the new area in local state (no merging, no cache)
-      console.log('🔄 Step 4: Setting fresh state with new area only...');
-      setCurrentWeekAreas([newArea]);
+      // CRITICAL FIX: Step 4 - Force immediate reload from Supabase to ensure consistency
+      console.log('🔄 Step 4: Force reloading from database for consistency...');
+      await loadCurrentWeekAreas();
       
-      console.log('✅ Step 4 completed: Fresh state set');
-      
-      // CRITICAL FIX: Step 5 - Force reload to ensure consistency with database
-      console.log('🔄 Step 5: Force reloading from database for consistency...');
-      setTimeout(async () => {
-        await loadCurrentWeekAreas();
-        await loadDailyBuzzCounter();
-        console.log('✅ Step 5 completed: Data consistency verified');
-      }, 200);
+      console.log('✅ Step 4 completed: Fresh state loaded from database');
       
       // Success message with pricing info
       const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
@@ -202,7 +199,27 @@ export const useBuzzMapLogic = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, getCurrentWeek, calculateNextRadius, calculateBuzzMapPrice, dailyBuzzMapCounter, removePreviousArea, createBuzzMapArea, updateDailyBuzzMapCounter, setCurrentWeekAreas, loadCurrentWeekAreas, loadDailyBuzzCounter, setAreaCreated, incrementBuzzCount, determinePrecisionMode, applyPrecisionFuzz, calculateProgressivePrice, calculateEscalatedPrice, showUnder5kmWarning]);
+  }, [user, getCurrentWeek, calculateNextRadius, calculateBuzzMapPrice, dailyBuzzMapCounter, removePreviousArea, createBuzzMapArea, updateDailyBuzzMapCounter, loadCurrentWeekAreas, setAreaCreated, incrementBuzzCount, determinePrecisionMode, applyPrecisionFuzz, calculateProgressivePrice, calculateEscalatedPrice, showUnder5kmWarning, currentWeekAreas]);
+
+  // CRITICAL FIX: Manual area deletion with immediate database sync
+  const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
+    console.log('🗑️ Manual deletion requested for area:', areaId);
+    
+    const success = await deleteSpecificArea(areaId);
+    
+    if (success) {
+      console.log('✅ Area deleted successfully, state should be updated');
+      // Force another reload to be absolutely sure
+      setTimeout(() => {
+        loadCurrentWeekAreas();
+      }, 200);
+    } else {
+      console.error('❌ Failed to delete area');
+      toast.error('Errore nell\'eliminazione dell\'area');
+    }
+    
+    return success;
+  }, [deleteSpecificArea, loadCurrentWeekAreas]);
 
   // Debug function
   const debugCurrentState = useCallback(() => {
@@ -259,6 +276,7 @@ export const useBuzzMapLogic = () => {
       return calculateProgressivePrice(basePrice);
     }, [calculateBuzzMapPrice, getActiveArea, calculateEscalatedPrice, calculateProgressivePrice]),
     generateBuzzMapArea,
+    handleDeleteArea,
     getActiveArea,
     reloadAreas: () => loadCurrentWeekAreas(),
     testCalculationLogic,

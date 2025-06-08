@@ -75,6 +75,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
       }
 
       console.log('✅ Fresh BUZZ areas loaded from database:', data?.length || 0);
+      console.log('📊 Areas data after load:', data);
       
       // CRITICAL FIX: Always set the exact data from Supabase, no merging
       setCurrentWeekAreas(data || []);
@@ -84,7 +85,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
     }
   }, [getValidUserId, getCurrentWeek]);
 
-  // CRITICAL FIX: Enhanced remove previous area with complete cleanup
+  // CRITICAL FIX: Enhanced remove previous area with complete cleanup and verification
   const removePreviousArea = useCallback(async (): Promise<boolean> => {
     const validUserId = getValidUserId();
     
@@ -96,10 +97,10 @@ export const useBuzzAreaManagement = (userId?: string) => {
       console.log('🧹 Clearing local state before delete operation');
       setCurrentWeekAreas([]);
 
-      // Delete from Supabase
-      const { error: deleteError } = await supabase
+      // Delete from Supabase with specific user and week targeting
+      const { error: deleteError, count } = await supabase
         .from('user_map_areas')
-        .delete()
+        .delete({ count: 'exact' })
         .eq('user_id', validUserId)
         .eq('week', currentWeek);
 
@@ -108,7 +109,21 @@ export const useBuzzAreaManagement = (userId?: string) => {
         // For developer mode compatibility, continue anyway since state is cleared
         console.log('ℹ️ Proceeding despite deletion error - local state cleared');
       } else {
-        console.log('✅ Successfully removed previous BUZZ areas from database');
+        console.log('✅ Successfully removed previous BUZZ areas from database. Count:', count);
+      }
+
+      // CRITICAL: Force verification that deletion worked by fetching remaining data
+      const { data: remainingAreas, error: verifyError } = await supabase
+        .from('user_map_areas')
+        .select('*')
+        .eq('user_id', validUserId)
+        .eq('week', currentWeek);
+
+      if (!verifyError) {
+        console.log('🔍 Verification after deletion - remaining areas:', remainingAreas?.length || 0);
+        console.log('📊 Remaining areas data:', remainingAreas);
+        // Ensure local state matches database state
+        setCurrentWeekAreas(remainingAreas || []);
       }
 
       return true;
@@ -119,6 +134,39 @@ export const useBuzzAreaManagement = (userId?: string) => {
       return true;
     }
   }, [getValidUserId, getCurrentWeek]);
+
+  // CRITICAL FIX: Manual area deletion with immediate verification
+  const deleteSpecificArea = useCallback(async (areaId: string): Promise<boolean> => {
+    const validUserId = getValidUserId();
+    
+    try {
+      console.log('🗑️ Deleting specific area:', areaId, 'for user:', validUserId);
+
+      // Delete specific area from Supabase
+      const { error: deleteError, count } = await supabase
+        .from('user_map_areas')
+        .delete({ count: 'exact' })
+        .eq('id', areaId)
+        .eq('user_id', validUserId);
+
+      if (deleteError) {
+        console.error('❌ Error deleting specific area:', deleteError);
+        return false;
+      }
+
+      console.log('✅ Successfully deleted area from database. Count:', count);
+
+      // CRITICAL: Immediately reload fresh data from Supabase to ensure consistency
+      await loadCurrentWeekAreas();
+      
+      console.log('📊 Areas after deletion reload:', currentWeekAreas.length);
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Exception deleting specific area:', error);
+      return false;
+    }
+  }, [getValidUserId, loadCurrentWeekAreas]);
 
   // Force reload areas with fresh fetch
   const forceReload = useCallback(() => {
@@ -143,6 +191,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
     calculateNextRadius,
     loadCurrentWeekAreas,
     removePreviousArea,
+    deleteSpecificArea,
     setCurrentWeekAreas,
     forceReload
   };
