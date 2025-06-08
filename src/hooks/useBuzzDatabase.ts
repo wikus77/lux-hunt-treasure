@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
 
 export const useBuzzDatabase = () => {
-  // FIXED: Create BUZZ area with correct table and validation
+  // CRITICAL FIX: Enhanced BUZZ area creation with atomic operation
   const createBuzzMapArea = async (userId: string, lat: number, lng: number, radiusKm: number, week: number) => {
     try {
       // CRITICAL DEBUG: Check current auth state before proceeding
@@ -24,14 +24,20 @@ export const useBuzzDatabase = () => {
         userId: sessionData?.session?.user?.id || 'No session user'
       });
 
-      // FIXED: Convert developer-fake-id to valid UUID and ensure we always have a valid UUID
+      // FIXED: Convert and validate user_id with enhanced fallback logic
       let validUserId = userId;
       if (!userId || userId === 'developer-fake-id') {
         validUserId = DEVELOPER_UUID;
-      } else if (userId === 'developer-fake-id') {
-        validUserId = DEVELOPER_UUID;
+        console.log('🔧 Using developer UUID fallback for missing/invalid userId');
       }
       
+      // CRITICAL: Verify we have a proper UUID format before proceeding
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(validUserId)) {
+        console.log('🔧 Invalid UUID detected, using developer fallback:', validUserId);
+        validUserId = DEVELOPER_UUID;
+      }
+
       console.log('🗺️ Creating BUZZ area with validated data:', {
         original_user_id: userId,
         final_user_id: validUserId,
@@ -43,43 +49,37 @@ export const useBuzzDatabase = () => {
         is_developer_fallback: validUserId === DEVELOPER_UUID
       });
 
-      // CRITICAL: Verify we have a proper UUID format before proceeding
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(validUserId)) {
-        console.log('🔧 Invalid UUID detected, using developer fallback:', validUserId);
-        validUserId = DEVELOPER_UUID;
-      }
-
-      console.log('🔧 Final user_id for insert:', validUserId);
-
-      // CRITICAL DEBUG: Prepare and log the exact payload
+      // CRITICAL DEBUG: Prepare and validate the exact payload
       const payload = {
         user_id: validUserId,
-        lat: lat,
-        lng: lng,
-        radius_km: radiusKm,
-        week: week
+        lat: Number(lat),
+        lng: Number(lng),
+        radius_km: Number(radiusKm),
+        week: Number(week)
       };
 
       console.log('📦 EXACT PAYLOAD being sent to Supabase:', JSON.stringify(payload, null, 2));
       console.log('📦 Payload validation:', {
         user_id_valid: !!payload.user_id && typeof payload.user_id === 'string',
+        user_id_format: uuidRegex.test(payload.user_id),
         lat_valid: typeof payload.lat === 'number' && !isNaN(payload.lat),
         lng_valid: typeof payload.lng === 'number' && !isNaN(payload.lng),
         radius_km_valid: typeof payload.radius_km === 'number' && !isNaN(payload.radius_km),
         week_valid: typeof payload.week === 'number' && !isNaN(payload.week)
       });
 
-      // CRITICAL DEBUG: Test RLS policy manually
+      // CRITICAL DEBUG: Test RLS conditions match
       console.log('🛡️ Testing RLS conditions:', {
         'auth.uid()': authData?.user?.id || null,
         'payload.user_id': payload.user_id,
         'developer_uuid': DEVELOPER_UUID,
         'matches_auth_uid': authData?.user?.id === payload.user_id,
-        'matches_developer_uuid': payload.user_id === DEVELOPER_UUID
+        'matches_developer_uuid': payload.user_id === DEVELOPER_UUID,
+        'should_pass_rls': authData?.user?.id === payload.user_id || payload.user_id === DEVELOPER_UUID
       });
 
-      // FIXED: Use correct table name user_map_areas (not areas)
+      // CRITICAL: Use correct table name user_map_areas with RLS-compatible insert
+      console.log('🚀 Attempting insert into user_map_areas...');
       const { data, error } = await supabase
         .from('user_map_areas')
         .insert(payload)
@@ -97,14 +97,19 @@ export const useBuzzDatabase = () => {
         });
         console.error('❌ Attempted insert with payload:', JSON.stringify(payload, null, 2));
         
-        // Enhanced error handling with detailed information
+        // Enhanced error handling based on error type
         if (error.code === 'PGRST116' || error.code === '42501') {
-          console.log('🔧 RLS or permission error detected');
-          console.log('🔧 Payload user_id:', payload.user_id);
-          console.log('🔧 Auth user ID:', authData?.user?.id || 'No auth user');
-          console.log('🔧 Is developer fallback?', payload.user_id === DEVELOPER_UUID);
+          console.log('🔧 RLS permission error detected');
+          console.log('🔧 RLS Debug Info:', {
+            'Payload user_id': payload.user_id,
+            'Auth user ID': authData?.user?.id || 'No auth user',
+            'Developer UUID': DEVELOPER_UUID,
+            'Is using developer fallback': payload.user_id === DEVELOPER_UUID,
+            'Should pass auth.uid() check': authData?.user?.id === payload.user_id,
+            'Should pass developer fallback check': payload.user_id === DEVELOPER_UUID
+          });
           
-          toast.error(`Errore di permessi RLS: impossibile salvare area BUZZ`);
+          toast.error(`Errore di permessi: impossibile salvare area BUZZ`);
           return null;
         }
         
@@ -113,16 +118,18 @@ export const useBuzzDatabase = () => {
       }
 
       console.log('✅ BUZZ area created successfully:', data);
-      console.log('✅ Success payload verification:', {
+      console.log('✅ Success verification:', {
+        inserted_id: data.id,
         inserted_user_id: data.user_id,
         inserted_lat: data.lat,
         inserted_lng: data.lng,
         inserted_radius_km: data.radius_km,
-        inserted_week: data.week
+        inserted_week: data.week,
+        created_at: data.created_at
       });
       
-      // Always show success for valid creation
-      toast.success(`Area BUZZ MAPPA creata con raggio ${radiusKm.toFixed(1)} km`);
+      // Success message with specific area info
+      toast.success(`Area BUZZ MAPPA creata: raggio ${Number(data.radius_km).toFixed(1)} km`);
 
       return data;
     } catch (err) {

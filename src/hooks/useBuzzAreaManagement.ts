@@ -49,7 +49,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
     return calculateNextRadiusFromArea(activeArea);
   }, [getActiveArea, calculateNextRadiusFromArea]);
 
-  // Load current week areas - con user ID valido e debug completo
+  // CRITICAL FIX: Load current week areas with proper state reset
   const loadCurrentWeekAreas = useCallback(async () => {
     const validUserId = getValidUserId();
     
@@ -84,7 +84,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
         });
         
         if (error.code === 'PGRST116') {
-          console.log('ℹ️ No BUZZ areas found or access denied');
+          console.log('ℹ️ No BUZZ areas found or access denied - setting empty array');
           setCurrentWeekAreas([]);
         }
         return;
@@ -92,13 +92,17 @@ export const useBuzzAreaManagement = (userId?: string) => {
 
       console.log('✅ Loaded BUZZ areas:', data?.length || 0);
       console.log('✅ Areas data:', data);
+      
+      // CRITICAL FIX: Always set the exact data from Supabase, no merging with old state
       setCurrentWeekAreas(data || []);
     } catch (error) {
       console.error('❌ Exception loading BUZZ areas:', error);
+      // CRITICAL: Set empty array on exception to prevent stale data
+      setCurrentWeekAreas([]);
     }
   }, [getValidUserId, getCurrentWeek]);
 
-  // FIXED: Remove previous area con controllo esistenza e fallback
+  // CRITICAL FIX: Enhanced remove previous area with complete state cleanup
   const removePreviousArea = useCallback(async (): Promise<boolean> => {
     const validUserId = getValidUserId();
     
@@ -114,7 +118,11 @@ export const useBuzzAreaManagement = (userId?: string) => {
         week: currentWeek
       });
 
-      // FIXED: Prima controlla se esistono aree nella tabella corretta
+      // CRITICAL FIX: First clear local state immediately to prevent stale data
+      console.log('🧹 Clearing local state before delete operation');
+      setCurrentWeekAreas([]);
+
+      // Then check if there are areas to delete in Supabase
       const { data: existingAreas, error: checkError } = await supabase
         .from('user_map_areas')
         .select('id')
@@ -123,7 +131,6 @@ export const useBuzzAreaManagement = (userId?: string) => {
 
       if (checkError) {
         console.error('❌ Error checking existing areas:', checkError);
-        // FALLBACK: Se l'errore è di accesso, non è bloccante per il dev mode
         if (checkError.code === 'PGRST116') {
           console.log('ℹ️ No areas to check or access denied - proceeding anyway');
           return true;
@@ -131,15 +138,15 @@ export const useBuzzAreaManagement = (userId?: string) => {
         return false;
       }
 
-      // FIXED: Se non esistono aree, non è un errore - procedi
+      // If no areas exist, we're already done
       if (!existingAreas || existingAreas.length === 0) {
-        console.log('✅ No previous areas to remove - proceeding');
+        console.log('✅ No previous areas to remove - local state already cleared');
         return true;
       }
 
-      console.log('🗑️ Found', existingAreas.length, 'areas to remove');
+      console.log('🗑️ Found', existingAreas.length, 'areas to remove from Supabase');
 
-      // Rimuovi aree esistenti solo se ce ne sono
+      // Remove areas from Supabase
       const { error: deleteError } = await supabase
         .from('user_map_areas')
         .delete()
@@ -147,7 +154,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
         .eq('week', currentWeek);
 
       if (deleteError) {
-        console.error('❌ Error removing previous BUZZ area:', deleteError);
+        console.error('❌ Error removing previous BUZZ area from Supabase:', deleteError);
         console.error('❌ Delete error details:', {
           message: deleteError.message,
           code: deleteError.code,
@@ -155,30 +162,36 @@ export const useBuzzAreaManagement = (userId?: string) => {
           user_id: validUserId,
           week: currentWeek
         });
-        // Continue anyway for developer mode compatibility
-        console.log('ℹ️ Proceeding despite deletion error');
+        // Continue anyway for developer mode compatibility, state already cleared
+        console.log('ℹ️ Proceeding despite deletion error - local state cleared');
         return true;
       }
 
-      console.log('✅ Successfully removed', existingAreas.length, 'previous BUZZ areas');
+      console.log('✅ Successfully removed', existingAreas.length, 'previous BUZZ areas from Supabase');
+      console.log('✅ Local state was already cleared');
       return true;
     } catch (error) {
       console.error('❌ Exception removing previous BUZZ area:', error);
-      // FALLBACK: In caso di eccezione, continua comunque
-      console.log('ℹ️ Continuing despite exception in removal');
+      // CRITICAL: Ensure local state is cleared even on exception
+      console.log('🧹 Clearing local state due to exception');
+      setCurrentWeekAreas([]);
+      console.log('ℹ️ Continuing despite exception - local state cleared');
       return true;
     }
   }, [getValidUserId, getCurrentWeek]);
 
   // Force reload areas
   const forceReload = useCallback(() => {
+    console.log('🔄 Force reload triggered');
     setForceUpdateCounter(prev => prev + 1);
+    // Reload fresh data from Supabase
     loadCurrentWeekAreas();
   }, [loadCurrentWeekAreas]);
 
   // Load areas on mount and when userId changes
   useEffect(() => {
     const validUserId = getValidUserId();
+    console.log('🔄 Effect triggered - loading areas for userId:', validUserId);
     if (validUserId) {
       loadCurrentWeekAreas();
     }

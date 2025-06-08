@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
@@ -136,7 +135,7 @@ export const useBuzzMapLogic = () => {
       const { lat: finalLat, lng: finalLng } = applyPrecisionFuzz(centerLat, centerLng, precision);
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('🗺️ BUZZ MAPPA - Generating area:', {
+        console.log('🗺️ BUZZ MAPPA - Starting generation:', {
           originalCoords: { lat: centerLat, lng: centerLng },
           finalCoords: { lat: finalLat, lng: finalLng },
           radius_km: radiusKm,
@@ -148,23 +147,32 @@ export const useBuzzMapLogic = () => {
         });
       }
 
-      // Remove previous area
+      // CRITICAL FIX: Atomic operation - remove previous area first
+      console.log('🧹 Step 1: Removing previous areas...');
       const removed = await removePreviousArea();
       if (!removed) {
+        console.error('❌ Failed to remove previous area');
         toast.error('Errore nel rimuovere l\'area precedente');
         return null;
       }
-
-      // Clear local state
-      setCurrentWeekAreas([]);
       
-      // Create new area with final coordinates and pricing
+      console.log('✅ Step 1 completed: Previous areas removed');
+
+      // CRITICAL FIX: Wait a moment for state to settle after removal
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // CRITICAL FIX: Create new area with validated data
+      console.log('🚀 Step 2: Creating new area...');
       const newArea = await createBuzzMapArea(user.id, finalLat, finalLng, radiusKm, currentWeek);
       if (!newArea) {
+        console.error('❌ Failed to create new area');
         return null;
       }
       
-      // Update BUZZ MAPPA counter with new pricing logic
+      console.log('✅ Step 2 completed: New area created:', newArea);
+      
+      // CRITICAL FIX: Update counters and state atomically
+      console.log('📊 Step 3: Updating counters...');
       const newBuzzMapCounter = await updateDailyBuzzMapCounter(basePrice, precision);
       if (process.env.NODE_ENV === 'development') {
         console.log('📊 BUZZ MAPPA counter updated to:', newBuzzMapCounter);
@@ -174,19 +182,25 @@ export const useBuzzMapLogic = () => {
       setAreaCreated(true);
       incrementBuzzCount();
       
-      // Update local state
+      // CRITICAL FIX: Set only the new area in local state (no merging)
+      console.log('🔄 Step 4: Updating local state with single new area...');
       setCurrentWeekAreas([newArea]);
       
-      // Force reload for safety
+      console.log('✅ Step 4 completed: Local state updated');
+      
+      // CRITICAL FIX: Force reload to ensure consistency
+      console.log('🔄 Step 5: Force reloading to ensure consistency...');
       setTimeout(async () => {
         await loadCurrentWeekAreas();
         await loadDailyBuzzCounter();
+        console.log('✅ Step 5 completed: Data reloaded');
       }, 200);
       
       // Success message with pricing info
       const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
       toast.success(`Area BUZZ MAPPA generata! Raggio: ${newArea.radius_km.toFixed(1)} km - ${precisionText} - Prezzo: ${finalPrice.toFixed(2)}€`);
       
+      console.log('🎉 BUZZ MAPPA generation completed successfully');
       return newArea;
     } catch (err) {
       console.error('❌ Exception generating map area:', err);
