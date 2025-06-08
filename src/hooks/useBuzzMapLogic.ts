@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
@@ -40,7 +39,8 @@ export const useBuzzMapLogic = () => {
     deleteAllUserAreas,
     deleteSpecificArea,
     forceReload,
-    forceCompleteSync
+    forceCompleteSync,
+    validateBuzzDeletion
   } = useMapAreas(user?.id);
 
   console.debug('🧠 DIAGNOSTIC: BUZZ LOGIC STATE:', {
@@ -271,7 +271,7 @@ export const useBuzzMapLogic = () => {
     setIsGenerating, forceCompleteSync, forceReload, currentWeekAreas
   ]);
 
-  // Enhanced manual area deletion with STRICT validation
+  // Enhanced manual area deletion with DATABASE VALIDATION
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
     console.debug('🗑️ DIAGNOSTIC: HANDLE DELETE AREA START:', areaId);
     
@@ -280,19 +280,30 @@ export const useBuzzMapLogic = () => {
     const success = await deleteSpecificArea(areaId);
     
     if (success) {
-      console.debug('✅ DIAGNOSTIC: HANDLE DELETE AREA - Success, forcing complete sync with STRICT validation...');
+      console.debug('✅ DIAGNOSTIC: HANDLE DELETE AREA - Success, performing database validation...');
+      
+      // CRITICAL: Validate deletion at database level
+      const isValidated = await validateBuzzDeletion();
+      
+      if (!isValidated) {
+        console.error('❌ DIAGNOSTIC: DATABASE VALIDATION WARNING after specific delete');
+        // Don't block for specific delete, just warn
+        toast.warning('Area eliminata, ma potrebbero rimanere tracce nel database');
+      } else {
+        toast.success('Area eliminata definitivamente');
+      }
+      
       // Force complete sync after deletion
       await forceCompleteSync();
-      toast.success('Area eliminata definitivamente');
     } else {
       console.error('❌ DIAGNOSTIC: HANDLE DELETE AREA - Failed');
       toast.error('Errore nell\'eliminazione dell\'area');
     }
     
     return success;
-  }, [deleteSpecificArea, forceCompleteSync]);
+  }, [deleteSpecificArea, forceCompleteSync, validateBuzzDeletion]);
 
-  // Enhanced clear all areas with STRICT validation
+  // Enhanced clear all areas with DATABASE VALIDATION
   const handleClearAllAreas = useCallback(async (): Promise<void> => {
     console.debug('🧹 DIAGNOSTIC: HANDLE CLEAR ALL START');
     
@@ -301,15 +312,25 @@ export const useBuzzMapLogic = () => {
     const success = await deleteAllUserAreas();
     
     if (success) {
-      console.debug('✅ DIAGNOSTIC: HANDLE CLEAR ALL - Success, forcing complete sync with STRICT validation...');
-      // Force complete sync after deletion
+      console.debug('✅ DIAGNOSTIC: HANDLE CLEAR ALL - Success, performing database validation...');
+      
+      // CRITICAL: Validate deletion at database level
+      const isValidated = await validateBuzzDeletion();
+      
+      if (!isValidated) {
+        console.error('❌ DIAGNOSTIC: DATABASE VALIDATION FAILED after delete');
+        toast.error('Errore: le aree non sono state eliminate completamente dal database');
+        return;
+      }
+      
+      // Force complete sync after validation
       await forceCompleteSync();
       toast.success('Tutte le aree sono state eliminate definitivamente');
     } else {
       console.error('❌ DIAGNOSTIC: HANDLE CLEAR ALL - Failed');
       toast.error('Errore nell\'eliminazione delle aree');
     }
-  }, [deleteAllUserAreas, forceCompleteSync]);
+  }, [deleteAllUserAreas, forceCompleteSync, validateBuzzDeletion]);
 
   // Debug function
   const debugCurrentState = useCallback(() => {
@@ -373,6 +394,7 @@ export const useBuzzMapLogic = () => {
     reloadAreas: forceReload,
     testCalculationLogic,
     debugCurrentState,
-    forceCompleteInvalidation: forceCompleteSync
+    forceCompleteInvalidation: forceCompleteSync,
+    validateBuzzDeletion
   };
 };

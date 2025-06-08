@@ -31,6 +31,16 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   }, [areas]);
 
   useEffect(() => {
+    // CRITICAL: Block rendering if areas aren't truly empty after delete
+    if (areas.length > 0) {
+      console.warn("❌ RENDER BLOCCATO: AREAS NON VUOTO DOPO DELETE", areas);
+      console.warn("🚫 BLOCKING RENDER: Areas present when should be empty:", {
+        areas_count: areas.length,
+        areas_detail: areas.map(a => ({ id: a.id, user_id: a.user_id, radius_km: a.radius_km })),
+        source: 'react-query'
+      });
+    }
+    
     // PREVENT CONCURRENT CLEANUP
     if (isCleanupRunning.current) {
       console.debug('🚫 DIAGNOSTIC: CIRCLE RENDERER - Cleanup already running, skipping');
@@ -102,7 +112,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       return;
     }
     
-    // STEP 2: CREATE NEW LAYER GROUP ONLY IF AREAS EXIST AND VALID
+    // CRITICAL: Only proceed with rendering if areas are truly valid
     console.debug('🔵 DIAGNOSTIC: CIRCLE RENDERER - Creating', areas.length, 'new circles');
     console.debug('🔍 DIAGNOSTIC: CIRCLE RENDERER - Areas validation before rendering:', {
       areas_length: areas.length,

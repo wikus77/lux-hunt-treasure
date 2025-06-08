@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +7,46 @@ import { toast } from 'sonner';
 
 // UUID di fallback per sviluppo
 const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
+
+// CRITICAL: Database validation function after DELETE
+const validateBuzzDeletion = async (validUserId: string): Promise<boolean> => {
+  console.debug('🧪 VALIDATING BUZZ DELETION for user:', validUserId);
+  
+  // Check user_map_areas
+  const { data: mapAreasData, error: mapAreasError } = await supabase
+    .from("user_map_areas")
+    .select("*")
+    .eq("user_id", validUserId);
+  
+  console.debug("🧪 QUERY POST DELETE (user_map_areas):", mapAreasData?.length || 0);
+  
+  // Check user_buzz_map
+  const { data: buzzMapData, error: buzzMapError } = await supabase
+    .from("user_buzz_map")
+    .select("*")
+    .eq("user_id", validUserId);
+  
+  console.debug("🧪 QUERY POST DELETE (user_buzz_map):", buzzMapData?.length || 0);
+  
+  if (mapAreasError || buzzMapError) {
+    console.error('❌ VALIDATION ERROR:', { mapAreasError, buzzMapError });
+    return false;
+  }
+  
+  const isClean = (mapAreasData?.length || 0) === 0 && (buzzMapData?.length || 0) === 0;
+  
+  if (!isClean) {
+    console.error('❌ DELETION VALIDATION FAILED:', {
+      user_map_areas_remaining: mapAreasData?.length || 0,
+      user_buzz_map_remaining: buzzMapData?.length || 0,
+      validUserId
+    });
+  } else {
+    console.debug('✅ DELETION VALIDATION PASSED - Both tables empty');
+  }
+  
+  return isClean;
+};
 
 export const useMapAreas = (userId?: string) => {
   const queryClient = useQueryClient();
@@ -80,7 +119,7 @@ export const useMapAreas = (userId?: string) => {
     error: error?.message || 'No error'
   });
 
-  // ENHANCED DELETE ALL with STRICT VALIDATION
+  // ENHANCED DELETE ALL with STRICT VALIDATION and DATABASE VERIFICATION
   const deleteMutation = useMutation({
     mutationFn: async (): Promise<boolean> => {
       console.debug('🔥 DIAGNOSTIC: DELETE ALL START for user:', validUserId);
@@ -126,28 +165,12 @@ export const useMapAreas = (userId?: string) => {
         throw new Error('Failed to delete areas from database');
       }
 
-      // CRITICAL VALIDATION - STEP 3: Verify DELETE success
-      console.debug('🔍 DIAGNOSTIC: VERIFYING DELETE SUCCESS...');
+      // CRITICAL VALIDATION - STEP 3: Direct database verification
+      console.debug('🔍 DIAGNOSTIC: PERFORMING DIRECT DATABASE VALIDATION...');
+      const isValidated = await validateBuzzDeletion(validUserId);
       
-      const { data: verifyMapAreas } = await supabase
-        .from('user_map_areas')
-        .select('id')
-        .eq('user_id', validUserId);
-      
-      const { data: verifyBuzzMap } = await supabase
-        .from('user_buzz_map')
-        .select('id')
-        .eq('user_id', validUserId);
-
-      console.debug('✅ DIAGNOSTIC: POST DELETE SELECT →', {
-        user_map_areas_remaining: verifyMapAreas,
-        user_buzz_map_remaining: verifyBuzzMap,
-        validUserId_verified: validUserId
-      });
-
-      // BLOCKING ERROR - If DELETE failed to remove all rows
-      if ((verifyMapAreas && verifyMapAreas.length > 0) || (verifyBuzzMap && verifyBuzzMap.length > 0)) {
-        const errorMsg = `❌ DELETE fallito: righe ancora presenti dopo operazione - user_map_areas: ${verifyMapAreas?.length || 0}, user_buzz_map: ${verifyBuzzMap?.length || 0}`;
+      if (!isValidated) {
+        const errorMsg = `❌ DELETE VALIDATION FAILED: Database still contains rows after DELETE operation`;
         console.error(errorMsg);
         throw new Error(errorMsg);
       }
@@ -156,7 +179,7 @@ export const useMapAreas = (userId?: string) => {
         user_id: validUserId,
         rowsDeletedFromDB_user_map_areas: count1,
         rowsDeletedFromDB_user_buzz_map: count2,
-        post_delete_verification: 'PASSED - NO ROWS REMAINING'
+        database_validation: 'PASSED - NO ROWS REMAINING'
       });
 
       return true;
@@ -219,13 +242,14 @@ export const useMapAreas = (userId?: string) => {
         throw new Error('Failed to delete specific area');
       }
 
-      // Verify specific deletion
+      // CRITICAL: Direct database verification after specific delete
+      console.debug('🔍 DIAGNOSTIC: VERIFYING SPECIFIC DELETION...');
       const { data: remainingAreas } = await supabase
         .from('user_map_areas')
-        .select('id')
+        .select('*')
         .eq('user_id', validUserId);
       
-      console.debug('✅ DIAGNOSTIC: POST SPECIFIC DELETE - Remaining areas:', remainingAreas?.length || 0);
+      console.debug('🧪 QUERY POST DELETE (user_map_areas) - specific:', remainingAreas?.length || 0);
       
       return true;
     },
@@ -356,6 +380,9 @@ export const useMapAreas = (userId?: string) => {
     
     // Status
     isDeleting,
-    isGenerating
+    isGenerating,
+    
+    // New validation function
+    validateBuzzDeletion: () => validateBuzzDeletion(validUserId)
   };
 };
