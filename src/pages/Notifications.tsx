@@ -9,6 +9,7 @@ import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
 import { useMissionManager } from '@/hooks/useMissionManager';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import NotificationItem from "@/components/notifications/NotificationItem";
 
 const Notifications = () => {
   const [filter, setFilter] = useState<'all' | 'unread' | 'important'>('all');
@@ -181,58 +182,16 @@ const Notifications = () => {
               
               <AnimatePresence>
                 {filteredNotifications().length > 0 ? (
-                  <ul className="space-y-3">
+                  <div className="space-y-3">
                     {filteredNotifications().map(notification => (
-                      <motion.li
+                      <NotificationItem
                         key={notification.id}
-                        className="glass-card p-3 sm:p-4 rounded-md border border-white/10"
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start">
-                            {notification.type === 'success' && <CheckCircle2 className="w-5 h-5 mr-3 text-green-500" />}
-                            {notification.type === 'info' && <Info className="w-5 h-5 mr-3 text-blue-500" />}
-                            {notification.type === 'alert' && <AlertCircle className="w-5 h-5 mr-3 text-yellow-500" />}
-                            {notification.type === 'critical' && <Star className="w-5 h-5 mr-3 text-red-500" />}
-                            
-                            <div>
-                              <h3 className="text-sm font-semibold text-white">{notification.title}</h3>
-                              <p className="text-xs text-gray-400">{notification.description}</p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {new Date(notification.date).toLocaleDateString()} - {new Date(notification.date).toLocaleTimeString()}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            {!notification.read && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleMarkAsRead(notification.id)}
-                                className="hover:bg-white/5"
-                              >
-                                <Bell className="w-4 h-4" />
-                                <span className="sr-only">Segna come letto</span>
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteNotification(notification.id)}
-                              className="hover:bg-white/5"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              <span className="sr-only">Elimina</span>
-                            </Button>
-                          </div>
-                        </div>
-                      </motion.li>
+                        notification={notification}
+                        onSelect={() => handleMarkAsRead(notification.id)}
+                        onDelete={() => handleDeleteNotification(notification.id)}
+                      />
                     ))}
-                  </ul>
+                  </div>
                 ) : (
                   <div className="text-center text-gray-500">
                     Nessuna notifica da visualizzare.
