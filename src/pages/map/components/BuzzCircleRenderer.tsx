@@ -15,53 +15,63 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   
   const currentColor = getCurrentColor();
   
-  console.log('🗺️ BuzzCircleRenderer - COMPLETE LAYER MANAGEMENT:', {
+  console.log('🗺️ DIAGNOSTIC - BuzzCircleRenderer render:', {
     areas: areas,
+    areasCount: areas.length,
     currentColor: currentColor,
-    areasCount: areas.length
+    timestamp: new Date().toISOString()
   });
 
-  // CRITICAL: COMPLETE LAYER MANAGEMENT WITH NUCLEAR CLEANUP
+  // NUCLEAR LAYER CLEANUP AND REDRAW
   useEffect(() => {
-    console.log('🚨 COMPLETE LAYER MANAGEMENT - BuzzCircleRenderer useEffect triggered:', {
+    console.log('🚨 DIAGNOSTIC - BuzzCircleRenderer useEffect triggered:', {
       areas: areas,
-      currentColor: currentColor
+      areasCount: areas.length,
+      currentColor: currentColor,
+      mapInstance: !!map
     });
     
-    // STEP 1: NUCLEAR CLEANUP - Remove ALL layers from map
-    console.log('🔥 NUCLEAR CLEANUP - Removing ALL layers from map...');
+    // STEP 1: NUCLEAR CLEANUP - Remove ALL Circle layers
+    console.log('🔥 DIAGNOSTIC - Starting NUCLEAR CLEANUP of all Circle layers...');
+    let removedLayersCount = 0;
+    
     map.eachLayer((layer) => {
       if (layer instanceof L.Circle) {
-        console.log('🗑️ REMOVING Circle layer from map:', layer);
+        console.log('🗑️ DIAGNOSTIC - Removing Circle layer:', layer.getLatLng(), 'radius:', layer.getRadius());
         map.removeLayer(layer);
+        removedLayersCount++;
       }
     });
     
-    // STEP 2: CLEAR ALL REFERENCES
-    buzzCircleRef.current = null;
-    console.log('🧹 ALL Circle layers REMOVED from map - NUCLEAR CLEANUP COMPLETE');
+    console.log('🧹 DIAGNOSTIC - NUCLEAR CLEANUP complete, removed layers:', removedLayersCount);
     
-    // STEP 3: CREATE NEW CIRCLE WITH DATABASE RADIUS OR APPLY FALLBACK
+    // STEP 2: Clear all references
+    buzzCircleRef.current = null;
+    
+    // STEP 3: Create new circle if areas exist
     if (areas && areas.length > 0) {
       const area = areas[0]; // Get the latest area
       
-      // CRITICAL FIX: Use EXACT radius from DATABASE in meters
-      const radiusInMeters = area.radius_km * 1000;
-      
-      console.log('🔥 COMPLETE LAYER MANAGEMENT - Creating circle with DATABASE VALUES:', {
+      console.log('🔥 DIAGNOSTIC - Creating new circle with area data:', {
         areaId: area.id,
         lat: area.lat,
         lng: area.lng,
         radius_km_from_database: area.radius_km,
-        radius_meters_for_leaflet: radiusInMeters,
-        color: currentColor,
-        timestamp: new Date().toISOString()
+        radius_meters_for_leaflet: area.radius_km * 1000,
+        color: currentColor
       });
       
-      // CREATE CIRCLE using EXACT Leaflet API WITH DATABASE RADIUS
+      // Validate coordinates and radius
+      if (!area.lat || !area.lng || !area.radius_km || isNaN(area.lat) || isNaN(area.lng) || isNaN(area.radius_km)) {
+        console.error('❌ DIAGNOSTIC - Invalid area data, skipping circle creation:', area);
+        return;
+      }
+      
+      const radiusInMeters = area.radius_km * 1000;
+      
       try {
         const circle = L.circle([area.lat, area.lng], {
-          radius: radiusInMeters, // EXACT VALUE FROM DATABASE
+          radius: radiusInMeters,
           color: currentColor,
           fillColor: currentColor,
           fillOpacity: 0.25,
@@ -74,7 +84,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         circle.addTo(map);
         buzzCircleRef.current = circle;
         
-        console.log('🟢 COMPLETE LAYER MANAGEMENT - Circle created with DATABASE RENDERING:', {
+        console.log('🟢 DIAGNOSTIC - Circle created successfully:', {
           areaId: area.id,
           database_radius_km: area.radius_km,
           leaflet_radius_meters: radiusInMeters,
@@ -82,46 +92,33 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
           color: currentColor,
           circleOnMap: map.hasLayer(circle),
           perfectMatch: circle.getRadius() === radiusInMeters,
-          layerManagement: 'COMPLETE'
+          coordinates: circle.getLatLng()
         });
         
         // Bring to front
         circle.bringToFront();
         
-        // VERIFICATION - Ensure radius matches database exactly
-        if (circle.getRadius() !== radiusInMeters) {
-          console.error('❌ LAYER RADIUS MISMATCH DETECTED:', {
-            expected: radiusInMeters,
-            actual: circle.getRadius(),
-            difference: Math.abs(circle.getRadius() - radiusInMeters),
-            source_database_km: area.radius_km
-          });
-        } else {
-          console.log('✅ COMPLETE LAYER MANAGEMENT VERIFIED - Radius matches DATABASE exactly');
-        }
-        
         // Set appropriate view to show the circle
         const bounds = circle.getBounds();
         map.fitBounds(bounds, { padding: [50, 50] });
         
-        console.log('🎉 COMPLETE LAYER MANAGEMENT - DATABASE RENDERING IMPLEMENTED');
+        console.log('🎉 DIAGNOSTIC - Circle rendering complete and view updated');
       } catch (error) {
-        console.error('❌ Error creating circle:', error);
+        console.error('❌ DIAGNOSTIC - Error creating circle:', error);
         // FALLBACK: Default to Italy center if circle creation fails
-        console.log('🔄 FALLBACK: Setting map to Italy default center due to circle error');
+        console.log('🔄 DIAGNOSTIC - FALLBACK: Setting map to Italy default center due to circle error');
         map.setView([41.9028, 12.4964], 6);
       }
     } else {
-      console.log('❌ No BUZZ areas to display - APPLYING ITALY FALLBACK');
-      // CRITICAL FALLBACK: Set default view to prevent grey map
-      console.log('🔄 FALLBACK: Setting map to Italy default center (no areas available)');
+      console.log('❌ DIAGNOSTIC - No areas to display, applying Italy fallback');
+      console.log('🔄 DIAGNOSTIC - FALLBACK: Setting map to Italy default center (no areas available)');
       map.setView([41.9028, 12.4964], 6);
     }
     
-    // STEP 4: Force map refresh for complete synchronization
+    // STEP 4: Force map refresh
     setTimeout(() => {
       map.invalidateSize();
-      console.log('🔄 Map size invalidated for COMPLETE LAYER MANAGEMENT refresh');
+      console.log('🔄 DIAGNOSTIC - Map size invalidated for complete refresh');
     }, 100);
     
   }, [areas, map, currentColor]);

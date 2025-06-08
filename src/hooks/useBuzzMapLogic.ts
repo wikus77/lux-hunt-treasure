@@ -66,7 +66,6 @@ export const useBuzzMapLogic = () => {
     updateDailyBuzzCounter
   } = useBuzzCounter(user?.id);
 
-  // Use the dedicated BUZZ MAPPA counter with progressive pricing
   const {
     dailyBuzzMapCounter,
     updateDailyBuzzMapCounter,
@@ -78,21 +77,25 @@ export const useBuzzMapLogic = () => {
 
   const { createBuzzMapArea } = useBuzzDatabase();
 
-  // CRITICAL FIX: Calculate progressive radius with SINGLE SOURCE OF TRUTH
+  // DIAGNOSTIC: Calculate progressive radius with extensive logging
   const calculateProgressiveRadius = useCallback((): number => {
-    // CRITICAL: Count BUZZ areas from database for exact precision - SINGLE SOURCE
     const buzzAreasCount = currentWeekAreas.filter(area => area.week === getCurrentWeek()).length;
     
-    console.log('📏 CALCULATING PROGRESSIVE RADIUS - SINGLE SOURCE OF TRUTH:', {
+    console.log('📏 DIAGNOSTIC - calculateProgressiveRadius called:', {
       totalAreas: currentWeekAreas.length,
       currentWeekAreas: buzzAreasCount,
-      allAreas: currentWeekAreas
+      currentWeek: getCurrentWeek(),
+      allAreas: currentWeekAreas.map(area => ({
+        id: area.id,
+        radius_km: area.radius_km,
+        week: area.week,
+        created_at: area.created_at
+      }))
     });
     
-    // CRITICAL: Use the count-based calculation for exact consistency
     const radius = calculateProgressiveRadiusFromCount(buzzAreasCount);
     
-    console.log('📏 PROGRESSIVE RADIUS RESULT - SINGLE SOURCE:', {
+    console.log('📏 DIAGNOSTIC - Progressive radius result:', {
       weeklyCount: buzzAreasCount,
       calculatedRadius: radius,
       exactFormula: buzzAreasCount === 0 ? 'BASE = 100.0' : `100.0 * (0.95^${buzzAreasCount}) = ${radius.toFixed(2)}`
@@ -125,49 +128,49 @@ export const useBuzzMapLogic = () => {
     };
   }, []);
 
-  // CRITICAL FIX: Generate BUZZ MAPPA with COMPLETE SYNCHRONIZATION
+  // DIAGNOSTIC: Generate BUZZ MAPPA with extensive logging
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
+      console.log('❌ DIAGNOSTIC - No user ID for BUZZ generation');
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
       return null;
     }
 
     if (!centerLat || !centerLng || isNaN(centerLat) || isNaN(centerLng)) {
+      console.log('❌ DIAGNOSTIC - Invalid coordinates:', { centerLat, centerLng });
       toast.error('Coordinate della mappa non valide');
       return null;
     }
 
-    // CRITICAL: Prevent concurrent operations - SINGLE EXECUTION ONLY
+    // Prevent concurrent operations
     if (isGenerating || isDeleting) {
-      console.log('🚫 BUZZ generation blocked - operation in progress');
+      console.log('🚫 DIAGNOSTIC - BUZZ generation blocked - operation in progress:', { isGenerating, isDeleting });
       return null;
     }
 
-    // CRITICAL: Dismiss ALL existing toasts to prevent duplicates
+    // Dismiss all existing toasts
     toast.dismiss();
+    console.log('🔄 DIAGNOSTIC - All toasts dismissed, starting BUZZ generation');
 
     setIsGenerating(true);
     
     try {
       const currentWeek = getCurrentWeek();
       
-      // CRITICAL FIX: STEP 1 - NUCLEAR cleanup of ALL areas from ALL tables
-      console.log('🔥 STEP 1: NUCLEAR CLEANUP - Removing ALL areas from ALL tables');
+      console.log('🔥 DIAGNOSTIC - STEP 1: Starting NUCLEAR cleanup');
       const cleanupSuccess = await removePreviousArea();
       if (!cleanupSuccess) {
-        console.error('❌ Failed to execute nuclear cleanup - ABORTING');
+        console.error('❌ DIAGNOSTIC - Nuclear cleanup failed, aborting BUZZ generation');
         toast.error('Errore nel rimuovere le aree precedenti');
         return null;
       }
+      console.log('✅ DIAGNOSTIC - STEP 1 complete: Nuclear cleanup successful');
       
-      console.log('✅ STEP 1 COMPLETE: NUCLEAR cleanup executed successfully');
-      
-      // CRITICAL FIX: STEP 2 - Force COMPLETE database sync
-      console.log('🔄 STEP 2: FORCE COMPLETE DATABASE SYNC');
+      console.log('🔄 DIAGNOSTIC - STEP 2: Force database sync');
       await loadCurrentWeekAreas();
       const radiusKm = calculateProgressiveRadius();
       
-      console.log('📏 STEP 2 COMPLETE: SINGLE SOURCE RADIUS CALCULATION:', {
+      console.log('📏 DIAGNOSTIC - STEP 2 complete: Radius calculated:', {
         areasCount: currentWeekAreas.length,
         calculatedRadius: radiusKm,
         coordinates: { lat: centerLat, lng: centerLng },
@@ -186,47 +189,53 @@ export const useBuzzMapLogic = () => {
         finalPrice = calculateProgressivePrice(basePrice);
       }
 
+      console.log('💰 DIAGNOSTIC - Price calculation:', {
+        basePrice,
+        finalPrice,
+        precision,
+        radiusKm,
+        escalated: radiusKm < 5
+      });
+
       // Apply precision fuzz to coordinates
       const { lat: finalLat, lng: finalLng } = applyPrecisionFuzz(centerLat, centerLng, precision);
 
-      // CRITICAL FIX: STEP 3 - Create SINGLE area with DATABASE RADIUS VALUE
-      console.log('🚀 STEP 3: CREATING SINGLE AREA - DATABASE RADIUS VALUE');
+      console.log('🚀 DIAGNOSTIC - STEP 3: Creating new area in database');
       const newArea = await createBuzzMapArea(user.id, finalLat, finalLng, radiusKm, currentWeek);
       if (!newArea) {
-        console.error('❌ Failed to create new area in database');
+        console.error('❌ DIAGNOSTIC - Failed to create new area in database');
         return null;
       }
       
-      console.log('✅ STEP 3 COMPLETE: SINGLE area created with DATABASE VALUES:', {
+      console.log('✅ DIAGNOSTIC - STEP 3 complete: New area created:', {
         id: newArea.id,
         radius_km: newArea.radius_km,
         coordinates: { lat: newArea.lat, lng: newArea.lng },
         radiusMatch: Math.abs(newArea.radius_km - radiusKm) < 0.01
       });
       
-      // CRITICAL FIX: STEP 4 - Update counters and sync state
-      console.log('📊 STEP 4: UPDATE COUNTERS AND SYNC STATE');
+      console.log('📊 DIAGNOSTIC - STEP 4: Updating counters');
       await updateDailyBuzzMapCounter(basePrice, precision);
       
       // Update centralized state
       setAreaCreated(true);
       incrementBuzzCount();
       
-      // CRITICAL FIX: STEP 5 - Force COMPLETE state synchronization
-      console.log('🔄 STEP 5: FORCE COMPLETE STATE SYNCHRONIZATION');
+      console.log('🔄 DIAGNOSTIC - STEP 5: Force state synchronization');
       await loadCurrentWeekAreas();
       
-      console.log('✅ STEP 5 COMPLETE: State synchronized with database');
+      console.log('✅ DIAGNOSTIC - STEP 5 complete: State synchronized');
       
-      // CRITICAL FIX: SINGLE SUCCESS MESSAGE - NO DUPLICATES
+      // Show success toast with database value
       const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
       
-      // Show SINGLE toast with DATABASE VALUE
       setTimeout(() => {
-        toast.success(`Area BUZZ MAPPA generata! Raggio: ${newArea.radius_km.toFixed(2)} km - ${precisionText} - Prezzo: ${finalPrice.toFixed(2)}€`);
+        const toastMessage = `Area BUZZ MAPPA generata! Raggio: ${newArea.radius_km.toFixed(2)} km - ${precisionText} - Prezzo: ${finalPrice.toFixed(2)}€`;
+        console.log('📢 DIAGNOSTIC - Showing success toast:', toastMessage);
+        toast.success(toastMessage);
       }, 200);
       
-      console.log('🎉 BUZZ MAPPA GENERATION COMPLETE - SINGLE EXECUTION VERIFIED:', {
+      console.log('🎉 DIAGNOSTIC - BUZZ MAPPA generation complete:', {
         finalRadius: newArea.radius_km,
         databaseSync: 'COMPLETE',
         exactMatch: 'VERIFIED',
@@ -235,67 +244,66 @@ export const useBuzzMapLogic = () => {
       
       return newArea;
     } catch (err) {
-      console.error('❌ Exception generating map area:', err);
+      console.error('❌ DIAGNOSTIC - Exception generating map area:', err);
       toast.error('Errore durante la generazione dell\'area');
       return null;
     } finally {
       setIsGenerating(false);
+      console.log('🔄 DIAGNOSTIC - isGenerating reset to false');
     }
   }, [user, getCurrentWeek, calculateProgressiveRadius, calculateBuzzMapPrice, removePreviousArea, createBuzzMapArea, updateDailyBuzzMapCounter, loadCurrentWeekAreas, setAreaCreated, incrementBuzzCount, determinePrecisionMode, applyPrecisionFuzz, calculateProgressivePrice, calculateEscalatedPrice, showUnder5kmWarning, currentWeekAreas, isGenerating, isDeleting]);
 
-  // CRITICAL FIX: Manual area deletion with COMPLETE database sync
+  // Manual area deletion with diagnostics
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
-    console.log('🗑️ MANUAL AREA DELETION requested for area:', areaId);
+    console.log('🗑️ DIAGNOSTIC - Manual area deletion requested for area:', areaId);
     
     if (isDeleting) {
-      console.log('🚫 Delete already in progress, preventing duplicate');
+      console.log('🚫 DIAGNOSTIC - Delete already in progress, preventing duplicate');
       return false;
     }
     
-    // Dismiss any existing toasts
     toast.dismiss();
     
     const success = await deleteSpecificArea(areaId);
     
     if (success) {
-      console.log('✅ Area deleted successfully with complete database sync');
+      console.log('✅ DIAGNOSTIC - Area deleted successfully');
       setTimeout(() => {
         toast.success('Area eliminata definitivamente');
       }, 200);
     } else {
-      console.error('❌ Failed to delete area from database');
+      console.error('❌ DIAGNOSTIC - Failed to delete area');
       toast.error('Errore nell\'eliminazione dell\'area');
     }
     
     return success;
   }, [deleteSpecificArea, isDeleting]);
 
-  // CRITICAL FIX: Clear all areas with NUCLEAR cleanup
+  // Clear all areas with diagnostics
   const handleClearAllAreas = useCallback(async (): Promise<void> => {
-    console.log('🧹 CLEAR ALL AREAS - Starting NUCLEAR cleanup');
+    console.log('🧹 DIAGNOSTIC - Clear all areas requested');
     
     if (isDeleting) {
-      console.log('🚫 Delete already in progress, preventing duplicate');
+      console.log('🚫 DIAGNOSTIC - Delete already in progress, preventing duplicate');
       return;
     }
     
-    // Dismiss any existing toasts
     toast.dismiss();
     
     const success = await deleteAllUserAreas();
     
     if (success) {
-      console.log('✅ All areas eliminated with nuclear cleanup');
+      console.log('✅ DIAGNOSTIC - All areas cleared successfully');
       setTimeout(() => {
         toast.success('Tutte le aree sono state eliminate definitivamente');
       }, 200);
     } else {
-      console.error('❌ Failed to execute nuclear cleanup');
+      console.error('❌ DIAGNOSTIC - Failed to clear all areas');
       toast.error('Errore nell\'eliminazione delle aree');
     }
   }, [deleteAllUserAreas, isDeleting]);
 
-  // Debug function
+  // Debug function with enhanced logging
   const debugCurrentState = useCallback(() => {
     if (process.env.NODE_ENV === 'development') {
       const debugData = createDebugReport(
@@ -311,9 +319,9 @@ export const useBuzzMapLogic = () => {
         calculateBuzzMapPrice
       );
       
-      console.log('🔍 DEBUG STATE REPORT:', debugData);
-      console.log('🔍 ZUSTAND STATE:', { areaCreated, buzzCount });
-      console.log('🔍 PROGRESSIVE RADIUS INFO - SINGLE SOURCE:', {
+      console.log('🔍 DIAGNOSTIC - Complete state report:', debugData);
+      console.log('🔍 DIAGNOSTIC - Zustand state:', { areaCreated, buzzCount });
+      console.log('🔍 DIAGNOSTIC - Progressive radius calculation:', {
         weeklyAreasCount: currentWeekAreas.length,
         nextRadius: calculateProgressiveRadius(),
         basePrice: calculateBuzzMapPrice(),
@@ -322,14 +330,15 @@ export const useBuzzMapLogic = () => {
     }
   }, [user, currentWeekAreas, userCluesCount, isGenerating, getActiveArea, calculateProgressiveRadius, calculateBuzzMapPrice, forceUpdateCounter, dailyBuzzCounter, dailyBuzzMapCounter, createDebugReport, areaCreated, buzzCount]);
 
-  // Load initial data with complete sync
+  // Load initial data
   useEffect(() => {
     if (user?.id) {
+      console.log('🔄 DIAGNOSTIC - Loading initial data for user:', user.id);
       loadCurrentWeekAreas();
     }
   }, [user, loadCurrentWeekAreas]);
 
-  // Sync buzz count with daily counter
+  // Sync buzz count
   useEffect(() => {
     setBuzzCount(dailyBuzzCounter);
   }, [dailyBuzzCounter, setBuzzCount]);
@@ -358,7 +367,6 @@ export const useBuzzMapLogic = () => {
     testCalculationLogic,
     debugCurrentState,
     forceUpdateCounter,
-    // Expose centralized state
     areaCreated,
     buzzCount,
     isDeleting
