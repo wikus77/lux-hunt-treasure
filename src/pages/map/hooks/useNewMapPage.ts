@@ -42,7 +42,7 @@ export const useNewMapPage = () => {
     setPendingRadius
   } = useSearchAreasLogic(DEFAULT_LOCATION);
 
-  // Fetch existing map points on mount - FIXED
+  // Fetch existing map points on mount - IMPROVED ERROR HANDLING
   useEffect(() => {
     const fetchMapPoints = async () => {
       if (!user?.id) {
@@ -62,11 +62,12 @@ export const useNewMapPage = () => {
 
         if (error) {
           console.error("❌ Error fetching map points:", error);
-          toast.error("Errore nel caricamento dei punti");
+          console.error("❌ Error details:", error.message, error.code, error.details);
+          toast.error(`Errore nel caricamento dei punti: ${error.message}`);
           return;
         }
 
-        console.log("✅ Successfully fetched map points:", data);
+        console.log("✅ Successfully fetched map points:", data?.length || 0, "points");
         setMapPoints(data || []);
       } catch (err) {
         console.error("❌ Exception fetching map points:", err);
@@ -79,7 +80,7 @@ export const useNewMapPage = () => {
     fetchMapPoints();
   }, [user]);
 
-  // Add a new point to the map - FIXED
+  // Add a new point to the map - IMPROVED
   const addNewPoint = useCallback((lat: number, lng: number) => {
     console.log("📍 Adding new point at:", lat, lng);
     
@@ -105,7 +106,7 @@ export const useNewMapPage = () => {
     toast.success("Punto posizionato. Inserisci titolo e nota.");
   }, [isAddingSearchArea, toggleAddingSearchArea, user]);
 
-  // Save the point to Supabase - FIXED
+  // Save the point to Supabase - MAJOR IMPROVEMENTS
   const savePoint = async (title: string, note: string) => {
     if (!newPoint || !user?.id) {
       console.log("❌ Cannot save point: missing newPoint or user");
@@ -113,89 +114,102 @@ export const useNewMapPage = () => {
       return;
     }
     
-    // Validation
-    if (!title.trim()) {
+    // IMPROVED VALIDATION with trimming
+    const trimmedTitle = title?.trim() || '';
+    const trimmedNote = note?.trim() || '';
+    
+    if (!trimmedTitle) {
+      console.log("❌ Validation failed: empty title after trim");
       toast.error("Il titolo è obbligatorio");
       return;
     }
 
+    const payload = {
+      user_id: user.id,
+      latitude: newPoint.lat,
+      longitude: newPoint.lng,
+      title: trimmedTitle,
+      note: trimmedNote
+    };
+
     try {
-      console.log("📍 Saving new point:", {
-        user_id: user.id,
-        latitude: newPoint.lat,
-        longitude: newPoint.lng,
-        title: title.trim(),
-        note: note.trim()
-      });
+      console.log("📍 Saving new point with payload:", payload);
 
       const { data, error } = await supabase
         .from('map_points')
-        .insert([{
-          user_id: user.id,
-          latitude: newPoint.lat,
-          longitude: newPoint.lng,
-          title: title.trim(),
-          note: note.trim()
-        }])
+        .insert([payload])
         .select();
 
       if (error) {
-        console.error("❌ Error saving map point:", error);
-        toast.error("Errore nel salvare il punto");
+        console.error("❌ Supabase error saving map point:", error);
+        console.error("❌ Error message:", error.message);
+        console.error("❌ Error code:", error.code);
+        console.error("❌ Error details:", error.details);
+        console.error("❌ Error hint:", error.hint);
+        toast.error(`Errore nel salvare il punto: ${error.message}`);
         return;
       }
 
-      console.log("✅ Successfully saved new point:", data);
+      if (!data || data.length === 0) {
+        console.error("❌ No data returned from insert");
+        toast.error("Errore nel salvare il punto: nessun dato restituito");
+        return;
+      }
+
+      console.log("✅ Successfully saved new point:", data[0]);
       toast.success("Punto salvato con successo");
       
       // Add the new point to the current list
-      if (data && data.length > 0) {
-        setMapPoints(prev => [data[0], ...prev]);
-      }
+      setMapPoints(prev => [data[0], ...prev]);
       
       // Reset new point state
       setNewPoint(null);
       setIsAddingPoint(false);
     } catch (err) {
       console.error("❌ Exception saving map point:", err);
-      toast.error("Errore nel salvare il punto");
+      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
+      toast.error(`Errore nel salvare il punto: ${errorMessage}`);
     }
   };
 
-  // Update an existing point - FIXED to return boolean
+  // Update an existing point - IMPROVED ERROR HANDLING
   const updateMapPoint = async (id: string, title: string, note: string): Promise<boolean> => {
     if (!user?.id) {
       toast.error("Devi essere autenticato per modificare punti");
       return false;
     }
     
-    // Validation
-    if (!title.trim()) {
+    // IMPROVED VALIDATION with trimming
+    const trimmedTitle = title?.trim() || '';
+    const trimmedNote = note?.trim() || '';
+    
+    if (!trimmedTitle) {
       toast.error("Il titolo è obbligatorio");
       return false;
     }
     
     try {
-      console.log("📝 Updating map point:", id, title, note);
+      console.log("📝 Updating map point:", id, trimmedTitle, trimmedNote);
 
       const { error } = await supabase
         .from('map_points')
         .update({
-          title: title.trim(),
-          note: note.trim()
+          title: trimmedTitle,
+          note: trimmedNote
         })
         .eq('id', id)
         .eq('user_id', user.id);
 
       if (error) {
         console.error("❌ Error updating map point:", error);
-        toast.error("Errore nell'aggiornare il punto");
+        console.error("❌ Error details:", error.message, error.code);
+        toast.error(`Errore nell'aggiornare il punto: ${error.message}`);
         return false;
       }
 
       // Update local state
       setMapPoints(prev => prev.map(point => 
-        point.id === id ? { ...point, title: title.trim(), note: note.trim() } : point
+        point.id === id ? { ...point, title: trimmedTitle, note: trimmedNote } : point
       ));
       
       toast.success("Punto aggiornato con successo");
@@ -203,12 +217,13 @@ export const useNewMapPage = () => {
       return true;
     } catch (err) {
       console.error("❌ Exception updating map point:", err);
-      toast.error("Errore nell'aggiornare il punto");
+      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
+      toast.error(`Errore nell'aggiornare il punto: ${errorMessage}`);
       return false;
     }
   };
 
-  // Delete a map point - FIXED
+  // Delete a map point - IMPROVED ERROR HANDLING
   const deleteMapPoint = async (id: string): Promise<boolean> => {
     if (!user?.id) {
       toast.error("Devi essere autenticato per eliminare punti");
@@ -226,7 +241,8 @@ export const useNewMapPage = () => {
 
       if (error) {
         console.error("❌ Error deleting map point:", error);
-        toast.error("Errore nell'eliminare il punto");
+        console.error("❌ Error details:", error.message, error.code);
+        toast.error(`Errore nell'eliminare il punto: ${error.message}`);
         return false;
       }
 
@@ -237,7 +253,8 @@ export const useNewMapPage = () => {
       return true;
     } catch (err) {
       console.error("❌ Exception deleting map point:", err);
-      toast.error("Errore nell'eliminare il punto");
+      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
+      toast.error(`Errore nell'eliminare il punto: ${errorMessage}`);
       return false;
     }
   };

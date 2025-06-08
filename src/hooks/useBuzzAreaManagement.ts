@@ -1,138 +1,118 @@
 
-import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
 import { BuzzMapArea } from './useBuzzMapLogic';
+import { useBuzzMapUtils } from './buzz/useBuzzMapUtils';
 
-export const useBuzzAreaManagement = (userId: string | undefined) => {
-  const { user } = useAuth();
+export const useBuzzAreaManagement = (userId?: string) => {
   const [currentWeekAreas, setCurrentWeekAreas] = useState<BuzzMapArea[]>([]);
   const [forceUpdateCounter, setForceUpdateCounter] = useState(0);
+  
+  const { getCurrentWeek, getActiveAreaFromList, calculateNextRadiusFromArea } = useBuzzMapUtils();
 
-  // Calculate current week
-  const getCurrentWeek = (): number => {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 1);
-    const diff = now.getTime() - start.getTime();
-    const oneWeek = 1000 * 60 * 60 * 24 * 7;
-    return Math.ceil(diff / oneWeek);
-  };
-
-  // Get active area
+  // Get active area from current week areas
   const getActiveArea = useCallback((): BuzzMapArea | null => {
-    if (currentWeekAreas.length === 0) return null;
-    return currentWeekAreas[0];
-  }, [currentWeekAreas]);
+    return getActiveAreaFromList(currentWeekAreas);
+  }, [currentWeekAreas, getActiveAreaFromList]);
 
-  // Calculate next radius with -5% reduction
+  // Calculate next radius based on active area
   const calculateNextRadius = useCallback((): number => {
-    const BASE_RADIUS = 100; // 100 km initial
-    const MIN_RADIUS = 5; // 5 km minimum
-    const REDUCTION_FACTOR = 0.95; // -5% each time
-
     const activeArea = getActiveArea();
-    
-    if (!activeArea) {
-      console.log('📏 No active area, using base radius:', BASE_RADIUS, 'km');
-      return BASE_RADIUS;
-    }
-
-    const nextRadius = activeArea.radius_km * REDUCTION_FACTOR;
-    const finalRadius = Math.max(MIN_RADIUS, nextRadius);
-    
-    console.log('📏 Previous radius:', activeArea.radius_km, 'km');
-    console.log('📏 Calculated next radius:', nextRadius, 'km');
-    console.log('📏 Final radius (with minimum):', finalRadius, 'km');
-    
-    return finalRadius;
-  }, [getActiveArea]);
+    return calculateNextRadiusFromArea(activeArea);
+  }, [getActiveArea, calculateNextRadiusFromArea]);
 
   // Load current week areas
   const loadCurrentWeekAreas = useCallback(async () => {
-    const currentUserId = user?.id || userId;
-    if (!currentUserId) {
-      console.log('❌ No user ID for loading areas');
+    if (!userId) {
+      console.log('📍 No user ID provided for loading areas');
       return;
     }
 
-    const currentWeek = getCurrentWeek();
-    
     try {
-      console.log('🔄 CRITICAL RADIUS - Loading BUZZ areas for user:', currentUserId, 'week:', currentWeek);
-      
+      const currentWeek = getCurrentWeek();
+      console.log('📍 Loading BUZZ areas for user:', userId, 'week:', currentWeek);
+
       const { data, error } = await supabase
         .from('user_map_areas')
         .select('*')
-        .eq('user_id', currentUserId)
+        .eq('user_id', userId)
         .eq('week', currentWeek)
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error loading map areas:', error);
+        console.error('❌ Error loading BUZZ areas:', error);
         return;
       }
 
-      console.log('✅ CRITICAL RADIUS - BUZZ areas loaded for week', currentWeek, ':', data);
-      
-      if (data && data.length > 0) {
-        const area = data[0];
-        console.log('🔍 RADIUS DB VERIFICATION - Area data:', {
-          id: area.id,
-          user_id: area.user_id,
-          lat: area.lat,
-          lng: area.lng,
-          radius_km: area.radius_km,
-          week: area.week,
-          created_at: area.created_at,
-          dataValid: !!(area.lat && area.lng && area.radius_km)
-        });
-        
-        if (!area.lat || !area.lng || !area.radius_km) {
-          console.error('❌ CRITICAL: Invalid area data from DB');
-        } else {
-          console.log('✅ CRITICAL RADIUS: Area data is valid from DB - radius:', area.radius_km, 'km');
-        }
-      }
-      
-      console.log('📝 CRITICAL RADIUS - FORCE updating currentWeekAreas state from:', currentWeekAreas, 'to:', data || []);
+      console.log('✅ Loaded BUZZ areas:', data?.length || 0);
       setCurrentWeekAreas(data || []);
-      setForceUpdateCounter(prev => prev + 1);
-      
-    } catch (err) {
-      console.error('❌ Exception loading map areas:', err);
+    } catch (error) {
+      console.error('❌ Exception loading BUZZ areas:', error);
     }
-  }, [user, userId, currentWeekAreas]);
+  }, [userId, getCurrentWeek]);
 
-  // Remove previous area
+  // Remove previous area - IMPROVED WITH FALLBACK
   const removePreviousArea = useCallback(async (): Promise<boolean> => {
-    const currentUserId = user?.id || userId;
-    if (!currentUserId) return false;
+    if (!userId) {
+      console.log('❌ No user ID provided for removing area');
+      return false;
+    }
 
-    const currentWeek = getCurrentWeek();
-    
     try {
-      console.log('🗑️ ELIMINAZIONE area precedente per user:', currentUserId, 'settimana:', currentWeek);
-      
-      const { error } = await supabase
+      const currentWeek = getCurrentWeek();
+      console.log('🗑️ Attempting to remove previous BUZZ area for user:', userId, 'week:', currentWeek);
+
+      // First check if there are any existing areas
+      const { data: existingAreas, error: checkError } = await supabase
         .from('user_map_areas')
-        .delete()
-        .eq('user_id', currentUserId)
+        .select('id')
+        .eq('user_id', userId)
         .eq('week', currentWeek);
 
-      if (error) {
-        console.error('❌ Error removing previous area:', error);
+      if (checkError) {
+        console.error('❌ Error checking existing areas:', checkError);
         return false;
       }
 
-      console.log('✅ Area precedente ELIMINATA per settimana:', currentWeek);
+      // If no areas exist, that's OK - return success
+      if (!existingAreas || existingAreas.length === 0) {
+        console.log('✅ No previous areas to remove - proceeding');
+        return true;
+      }
+
+      // Remove existing areas
+      const { error: deleteError } = await supabase
+        .from('user_map_areas')
+        .delete()
+        .eq('user_id', userId)
+        .eq('week', currentWeek);
+
+      if (deleteError) {
+        console.error('❌ Error removing previous BUZZ area:', deleteError);
+        console.error('❌ Error details:', deleteError.message, deleteError.code);
+        return false;
+      }
+
+      console.log('✅ Successfully removed', existingAreas.length, 'previous BUZZ areas');
       return true;
-    } catch (err) {
-      console.error('❌ Exception removing previous area:', err);
+    } catch (error) {
+      console.error('❌ Exception removing previous BUZZ area:', error);
       return false;
     }
-  }, [user, userId]);
+  }, [userId, getCurrentWeek]);
+
+  // Force reload areas
+  const forceReload = useCallback(() => {
+    setForceUpdateCounter(prev => prev + 1);
+    loadCurrentWeekAreas();
+  }, [loadCurrentWeekAreas]);
+
+  // Load areas on mount and when userId changes
+  useEffect(() => {
+    if (userId) {
+      loadCurrentWeekAreas();
+    }
+  }, [userId, loadCurrentWeekAreas, forceUpdateCounter]);
 
   return {
     currentWeekAreas,
@@ -141,7 +121,7 @@ export const useBuzzAreaManagement = (userId: string | undefined) => {
     calculateNextRadius,
     loadCurrentWeekAreas,
     removePreviousArea,
-    getCurrentWeek,
-    setCurrentWeekAreas
+    setCurrentWeekAreas,
+    forceReload
   };
 };
