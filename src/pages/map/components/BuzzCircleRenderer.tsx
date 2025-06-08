@@ -13,12 +13,12 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   const map = useMap();
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
   const isCleanupRunning = useRef(false);
-  const lastAreasCount = useRef<number>(0);
+  const lastAreasCount = useRef<number>(-1); // Start with -1 to force initial render
   
   const currentColor = getCurrentColor();
   
-  console.log('🗺️ CIRCLE RENDERER: Render triggered with areas:', {
-    count: areas.length,
+  console.debug('🗺️ CIRCLE RENDERER: Render triggered', {
+    areasCount: areas.length,
     lastCount: lastAreasCount.current,
     areas: areas.map(a => ({ id: a.id, radius_km: a.radius_km })),
     color: currentColor,
@@ -26,31 +26,35 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   });
 
   useEffect(() => {
-    // PREVENT CONCURRENT CLEANUP AND GUARD AGAINST UNNECESSARY RENDERS
+    // PREVENT CONCURRENT CLEANUP
     if (isCleanupRunning.current) {
-      console.log('🚫 CIRCLE RENDERER: Cleanup already running, skipping');
+      console.debug('🚫 CIRCLE RENDERER: Cleanup already running, skipping');
       return;
     }
     
-    // Prevent unnecessary cleanup if areas count hasn't changed
-    if (areas.length === lastAreasCount.current && areas.length > 0) {
-      console.log('🔄 CIRCLE RENDERER: Areas count unchanged, skipping render');
+    // Check if we need to update
+    const needsUpdate = areas.length !== lastAreasCount.current;
+    if (!needsUpdate) {
+      console.debug('🔄 CIRCLE RENDERER: No update needed, count unchanged');
       return;
     }
     
     isCleanupRunning.current = true;
     lastAreasCount.current = areas.length;
     
-    console.log('🔥 CIRCLE RENDERER: Effect triggered for', areas.length, 'areas');
+    console.debug('🔥 CIRCLE RENDERER: Effect triggered', {
+      areasCount: areas.length,
+      needsCleanup: true
+    });
     
     // STEP 1: COMPLETE LEAFLET CLEANUP (ALWAYS)
-    console.log('🧹 CIRCLE RENDERER: Starting complete Leaflet cleanup...');
+    console.debug('🧹 CIRCLE RENDERER: Starting complete Leaflet cleanup...');
     
     // Clear existing layer group
     if (layerGroupRef.current) {
       layerGroupRef.current.clearLayers();
       map.removeLayer(layerGroupRef.current);
-      console.log('🗑️ CIRCLE RENDERER: Removed existing layer group');
+      console.debug('🗑️ CIRCLE RENDERER: Removed existing layer group');
     }
     
     // Nuclear cleanup of ALL Circle layers from map
@@ -71,21 +75,21 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       }
     });
     
-    console.log('🧹 CIRCLE RENDERER: Cleaned', removedCount, 'existing circles from map');
+    console.debug('🧹 CIRCLE RENDERER: Cleaned', removedCount, 'existing circles from map');
     
     // Clear all references
     layerGroupRef.current = null;
     
-    // STEP 2: CREATE NEW LAYER GROUP ONLY IF AREAS EXIST AND CLEANUP IS DONE
+    // STEP 2: CREATE NEW LAYER GROUP ONLY IF AREAS EXIST
     if (areas && areas.length > 0) {
-      console.log('🔵 CIRCLE RENDERER: Creating', areas.length, 'new circles');
+      console.debug('🔵 CIRCLE RENDERER: Creating', areas.length, 'new circles');
       
       // Create new layer group
       layerGroupRef.current = L.layerGroup().addTo(map);
-      console.log('✅ CIRCLE RENDERER: New layer group created');
+      console.debug('✅ CIRCLE RENDERER: New layer group created');
       
       areas.forEach((area, index) => {
-        console.log(`🔵 CIRCLE RENDERER: Creating circle ${index + 1}/${areas.length}:`, {
+        console.debug(`🔵 CIRCLE RENDERER: Creating circle ${index + 1}/${areas.length}:`, {
           id: area.id,
           lat: area.lat,
           lng: area.lng,
@@ -115,7 +119,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
           
           layerGroupRef.current?.addLayer(circle);
           
-          console.log(`✅ CIRCLE RENDERER: Circle ${index + 1} created successfully:`, {
+          console.debug(`✅ CIRCLE RENDERER: Circle ${index + 1} created successfully:`, {
             id: area.id,
             radius_km: area.radius_km,
             leaflet_radius_meters: radiusInMeters,
@@ -137,7 +141,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
             const bounds = featureGroup.getBounds();
             if (bounds.isValid()) {
               map.fitBounds(bounds, { padding: [50, 50] });
-              console.log('🎯 CIRCLE RENDERER: Map view updated to show all circles');
+              console.debug('🎯 CIRCLE RENDERER: Map view updated to show all circles');
             }
           } catch (error) {
             console.warn('⚠️ CIRCLE RENDERER: Could not fit bounds:', error);
@@ -149,16 +153,16 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         }
       }
       
-      console.log('🎉 CIRCLE RENDERER: All circles rendered successfully');
+      console.debug('🎉 CIRCLE RENDERER: All circles rendered successfully');
       
     } else {
-      console.log('❌ CIRCLE RENDERER: No areas to display, using Italy fallback');
+      console.debug('❌ CIRCLE RENDERER: No areas to display, using Italy fallback');
       map.setView([41.9028, 12.4964], 6);
     }
     
     // STEP 3: VERIFY FINAL STATE
     const finalCircleCount = layerGroupRef.current?.getLayers().length || 0;
-    console.log('🔍 CIRCLE RENDERER: Final verification:', {
+    console.debug('🔍 CIRCLE RENDERER: Final verification:', {
       expected_areas: areas.length,
       rendered_circles: finalCircleCount,
       is_consistent: areas.length === finalCircleCount,
@@ -176,11 +180,11 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     // Force map refresh and mark cleanup as done
     setTimeout(() => {
       map.invalidateSize();
-      console.log('🔄 CIRCLE RENDERER: Map size invalidated, cleanup complete');
+      console.debug('🔄 CIRCLE RENDERER: Map size invalidated, cleanup complete');
       isCleanupRunning.current = false;
     }, 100);
     
-  }, [areas, map, currentColor]);
+  }, [areas, map, currentColor]); // Remove areas.length dependency, use areas directly
 
   // Cleanup on unmount
   useEffect(() => {
@@ -188,10 +192,10 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       if (layerGroupRef.current) {
         layerGroupRef.current.clearLayers();
         map.removeLayer(layerGroupRef.current);
-        console.log('🧹 CIRCLE RENDERER: Cleanup on unmount completed');
+        console.debug('🧹 CIRCLE RENDERER: Cleanup on unmount completed');
       }
       isCleanupRunning.current = false;
-      lastAreasCount.current = 0;
+      lastAreasCount.current = -1;
     };
   }, [map]);
 
