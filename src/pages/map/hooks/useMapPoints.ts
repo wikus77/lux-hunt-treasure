@@ -21,7 +21,7 @@ export function useMapPoints(
     console.log("🔄 useMapPoints - isAddingMapPoint state changed:", isAddingMapPoint);
   }, [isAddingMapPoint]);
 
-  // Handler for map point click - CRITICAL FIX
+  // Handler for map point click - FIXED
   const handleMapPointClick = useCallback(async (lat: number, lng: number): Promise<string> => {
     console.log("⭐ Map point click HANDLER executed at coordinates:", lat, lng);
     
@@ -34,7 +34,7 @@ export function useMapPoints(
       return Promise.resolve(""); // Return empty string as we didn't add a point
     }
     
-    // Create a new point and set it in state - CRITICAL FIX
+    // Create a new point and set it in state - FIXED
     console.log("✅ Creating new point at", lat, lng);
     
     // IMPORTANT: Create the point object IMMEDIATELY after the click
@@ -65,7 +65,7 @@ export function useMapPoints(
     return Promise.resolve("new");
   }, [isAddingMapPoint]);
 
-  // Handle save of new map point
+  // Handle save of new map point - FIXED
   const handleSaveNewPoint = async (title: string, note: string) => {
     console.log("📝 Tentativo di salvare il nuovo punto con titolo:", title);
     
@@ -75,11 +75,17 @@ export function useMapPoints(
       return;
     }
     
+    // Validation
+    if (!title.trim()) {
+      toast.error("Il titolo è obbligatorio");
+      return;
+    }
+    
     console.log("📝 Salvando nuovo punto:", {
       lat: newPoint.lat, 
       lng: newPoint.lng,
-      title,
-      note
+      title: title.trim(),
+      note: note.trim()
     });
     
     try {
@@ -87,8 +93,8 @@ export function useMapPoints(
       const pointId = await addMapPoint({
         lat: newPoint.lat,
         lng: newPoint.lng,
-        title,
-        note
+        title: title.trim(),
+        note: note.trim()
       });
       
       console.log("✅ Punto salvato con successo, ID:", pointId);
@@ -108,8 +114,14 @@ export function useMapPoints(
   const handleUpdatePoint = async (id: string, title: string, note: string): Promise<boolean> => {
     console.log("📝 Aggiornamento punto esistente:", id, title, note);
     
+    // Validation
+    if (!title.trim()) {
+      toast.error("Il titolo è obbligatorio");
+      return false;
+    }
+    
     try {
-      const result = await updateMapPoint(id, { title, note });
+      const result = await updateMapPoint(id, { title: title.trim(), note: note.trim() });
       console.log("✅ Punto aggiornato con successo");
       setActiveMapPoint(null);
       toast.success("Punto di interesse aggiornato");
