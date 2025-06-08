@@ -21,7 +21,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     areasCount: areas.length
   });
 
-  // CRITICAL: EXACT RADIUS RENDERING WITH GUARANTEED VISUAL CONSISTENCY FROM FRESH DATABASE
+  // CRITICAL: EXACT RADIUS RENDERING WITH GUARANTEED VISUAL CONSISTENCY FROM FRESH DATABASE + MAPPA GRIGIA FALLBACK
   useEffect(() => {
     console.log('🚨 GUARANTEED VISUAL CONSISTENCY - BuzzCircleRenderer useEffect triggered FROM FRESH DATABASE:', {
       areas: areas,
@@ -41,7 +41,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     buzzCircleRef.current = null;
     console.log('🧹 ALL Circle layers REMOVED from map');
     
-    // STEP 3: CREATE NEW CIRCLE WITH GUARANTEED EXACT RADIUS FROM FRESH DATABASE
+    // STEP 3: CREATE NEW CIRCLE WITH GUARANTEED EXACT RADIUS FROM FRESH DATABASE OR FALLBACK
     if (areas && areas.length > 0) {
       const area = areas[0]; // Get the latest area
       
@@ -110,8 +110,8 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
           radiusMatch: circle.getRadius() === radiusInMeters,
           fresh_database_source_km: area.radius_km,
           visual_consistency_achieved: true,
-          popup_will_show: `${area.radius_km.toFixed(1)} km`,
-          map_will_show: `${(radiusInMeters / 1000).toFixed(1)} km circle`,
+          popup_will_show: `${area.radius_km.toFixed(2)} km`,
+          map_will_show: `${(radiusInMeters / 1000).toFixed(2)} km circle`,
           guaranteedAlignmentAchieved: true,
           sourceConfirmedFreshDatabase: true
         });
@@ -136,13 +136,15 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         console.log('🎉 GUARANTEED VISUAL CONSISTENCY - EXACT RENDERING IMPLEMENTED FROM FRESH DATABASE');
       } catch (error) {
         console.error('❌ Error creating circle:', error);
-        // Fallback to default center if circle creation fails
+        // CRITICAL FALLBACK: Default to Italy center if circle creation fails
+        console.log('🔄 FALLBACK: Setting map to Italy default center due to circle error');
         map.setView([41.9028, 12.4964], 6); // Default to Italy center
       }
     } else {
-      console.log('❌ No BUZZ areas to display - map set to default center, state is consistent FROM FRESH DATABASE');
-      // Set default view when no areas
-      map.setView([41.9028, 12.4964], 6); // Default to Italy center
+      console.log('❌ No BUZZ areas to display - APPLYING FALLBACK TO PREVENT MAPPA GRIGIA');
+      // CRITICAL FALLBACK: Set default view when no areas to prevent grey map
+      console.log('🔄 FALLBACK: Setting map to Italy default center (no areas available)');
+      map.setView([41.9028, 12.4964], 6); // Default to Italy center - PREVENTS GREY MAP
     }
     
     // STEP 4: Force map refresh for visual update (guaranteed synchronization)

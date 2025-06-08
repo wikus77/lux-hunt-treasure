@@ -18,11 +18,11 @@ export const useBuzzMapUtils = () => {
     return areas[0];
   }, []);
 
-  // CRITICAL FIX: ABSOLUTE Progressive radius calculation with GUARANTEED 5% reduction and EXACT base handling
+  // CRITICAL FIX: ABSOLUTE Progressive radius calculation with GUARANTEED EXACT 5% reduction and PRECISE formula
   const calculateProgressiveRadiusFromCount = useCallback((weeklyBuzzCount: number): number => {
     const BASE_RADIUS = 100.0; // EXACTLY 100.0 km initial - GUARANTEED
     const MIN_RADIUS = 0.5; // EXACTLY 0.5 km minimum - GUARANTEED
-    const REDUCTION_FACTOR = 0.95; // EXACTLY -5% each time - GUARANTEED
+    const REDUCTION_FACTOR = 0.95; // EXACTLY -5% each time - GUARANTEED (multiply by 0.95)
     
     console.log('📏 ABSOLUTE PROGRESSIVE RADIUS CALCULATION - GUARANTEED EXACT PRECISION:', {
       weeklyBuzzCount,
@@ -37,12 +37,9 @@ export const useBuzzMapUtils = () => {
       return BASE_RADIUS;
     }
     
-    // CRITICAL: Apply GUARANTEED EXACT reduction for each BUZZ used this week
-    let radius = BASE_RADIUS;
-    for (let i = 0; i < weeklyBuzzCount; i++) {
-      radius = radius * REDUCTION_FACTOR;
-      console.log(`📏 Iteration ${i + 1}: ${radius.toFixed(3)} km GUARANTEED EXACT`);
-    }
+    // CRITICAL: Apply GUARANTEED EXACT formula: radius = BASE * (REDUCTION_FACTOR ^ count)
+    const radius = BASE_RADIUS * Math.pow(REDUCTION_FACTOR, weeklyBuzzCount);
+    console.log(`📏 EXACT FORMULA CALCULATION: ${BASE_RADIUS} * (${REDUCTION_FACTOR}^${weeklyBuzzCount}) = ${radius.toFixed(2)} km`);
     
     const finalRadius = Math.max(MIN_RADIUS, radius);
     
@@ -51,12 +48,13 @@ export const useBuzzMapUtils = () => {
       calculatedRadius: radius,
       finalRadiusWithMinimum: finalRadius,
       reductionApplied: weeklyBuzzCount > 0 ? `${((1 - Math.pow(REDUCTION_FACTOR, weeklyBuzzCount)) * 100).toFixed(1)}%` : '0%',
-      shouldBe: weeklyBuzzCount === 0 ? '100.0 km' : `${(100 * Math.pow(0.95, weeklyBuzzCount)).toFixed(1)} km`,
-      guaranteedPrecision: true
+      shouldBe: weeklyBuzzCount === 0 ? '100.0 km' : `${(100 * Math.pow(0.95, weeklyBuzzCount)).toFixed(2)} km`,
+      guaranteedPrecision: true,
+      exactFormula: `100.0 * (0.95^${weeklyBuzzCount})`
     });
     
-    // CRITICAL: Round to exactly 1 decimal place for consistency - GUARANTEED PRECISION
-    return Math.round(finalRadius * 10) / 10;
+    // CRITICAL: Round to exactly 2 decimal places for consistency - GUARANTEED PRECISION
+    return Math.round(finalRadius * 100) / 100;
   }, []);
 
   // Enhanced progressive radius calculation with area-based approach - GUARANTEED PRECISION
@@ -78,12 +76,12 @@ export const useBuzzMapUtils = () => {
       calculatedNextRadius: nextRadius,
       finalRadiusWithMinimum: finalRadius,
       reductionPercentage: '5%',
-      exactCalculation: `${activeArea.radius_km} * 0.95 = ${nextRadius.toFixed(3)}`,
+      exactCalculation: `${activeArea.radius_km} * 0.95 = ${nextRadius.toFixed(2)}`,
       guaranteedPrecision: true
     });
     
-    // CRITICAL: Round to exactly 1 decimal place for consistency - GUARANTEED PRECISION
-    return Math.round(finalRadius * 10) / 10;
+    // CRITICAL: Round to exactly 2 decimal places for consistency - GUARANTEED PRECISION
+    return Math.round(finalRadius * 100) / 100;
   }, []);
 
   // Debug function helper - GUARANTEED ACCURACY
@@ -119,7 +117,8 @@ export const useBuzzMapUtils = () => {
         weeklyCount: currentWeekAreas.length,
         shouldBeConsistent: true,
         exactExpectedRadius: calculateProgressiveRadiusFromCount(currentWeekAreas.length),
-        guaranteedPrecision: true
+        guaranteedPrecision: true,
+        exactFormula: `100.0 * (0.95^${currentWeekAreas.length})`
       }
     };
   }, [calculateProgressiveRadiusFromCount]);

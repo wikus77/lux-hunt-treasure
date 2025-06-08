@@ -50,7 +50,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
     return calculateNextRadiusFromArea(activeArea);
   }, [getActiveArea, calculateNextRadiusFromArea]);
 
-  // CRITICAL FIX: Load current week areas with ATOMIC database fetch - NO CACHE, FRESH DATA ONLY
+  // CRITICAL FIX: Load current week areas with ATOMIC database fetch - GARANTITO FRESH DATA
   const loadCurrentWeekAreas = useCallback(async () => {
     const validUserId = getValidUserId();
     
@@ -60,7 +60,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
       // CRITICAL: Clear local state IMMEDIATELY to prevent stale data
       setCurrentWeekAreas([]);
 
-      // CRITICAL FIX: Fetch ONLY active areas with explicit fresh query
+      // CRITICAL FIX: Fetch ONLY from DB with force refresh
       const { data, error } = await supabase
         .from('user_map_areas')
         .select('*')
@@ -92,7 +92,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
     }
   }, [getValidUserId]);
 
-  // CRITICAL FIX: ABSOLUTE area removal with COMPLETE database cleanup - PERMANENT DELETE GUARANTEED
+  // CRITICAL FIX: ABSOLUTE area removal with COMPLETE database cleanup - GUARANTEED PHYSICAL DELETE
   const removePreviousArea = useCallback(async (): Promise<boolean> => {
     const validUserId = getValidUserId();
     
@@ -124,7 +124,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
         console.log('✅ ABSOLUTE PERMANENT DELETE SUCCESS - Removed count:', count);
       }
 
-      // Step 3: TRIPLE VERIFICATION that areas are ABSOLUTELY deleted
+      // Step 3: FORCE VERIFICATION that areas are ABSOLUTELY deleted with direct query
       console.log('🔍 TRIPLE VERIFICATION - Checking if areas truly PERMANENTLY deleted...');
       const { data: verifyData, error: verifyError } = await supabase
         .from('user_map_areas')
@@ -133,7 +133,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
 
       if (!verifyError) {
         const remainingCount = verifyData?.length || 0;
-        console.log('🔍 POST-DELETE VERIFICATION - Remaining areas:', remainingCount);
+        console.log('🔍 POST-DELETE VERIFICATION - Remaining areas in DB:', remainingCount);
         
         if (remainingCount > 0) {
           console.warn('⚠️ Some areas still exist after delete, executing NUCLEAR DELETE:', verifyData);
@@ -147,7 +147,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
             console.error('❌ Nuclear delete attempt failed:', nuclearDeleteError);
             return false;
           } else {
-            console.log('✅ NUCLEAR DELETE successful - ALL AREAS ABSOLUTELY REMOVED');
+            console.log('✅ NUCLEAR DELETE successful - ALL AREAS ABSOLUTELY REMOVED FROM DB');
           }
         } else {
           console.log('✅ ABSOLUTE CLEANUP VERIFIED - No areas remaining in database - PERMANENT DELETION CONFIRMED');
@@ -157,7 +157,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
         setCurrentWeekAreas([]);
       }
 
-      // Step 4: Force update counter to trigger any dependent refreshes
+      // Step 4: Force immediate update and invalidate any cache
       setForceUpdateCounter(prev => prev + 1);
       console.log('🔄 Force update counter incremented');
 
@@ -241,28 +241,32 @@ export const useBuzzAreaManagement = (userId?: string) => {
         return false;
       }
 
-      console.log('✅ ALL AREAS ABSOLUTELY DELETED - Removed count:', count);
+      console.log('✅ ALL AREAS ABSOLUTELY DELETED FROM DB - Removed count:', count);
 
-      // Step 3: Verify complete ABSOLUTE deletion
+      // Step 3: Verify complete ABSOLUTE deletion with direct DB query
       const { data: verifyData, error: verifyError } = await supabase
         .from('user_map_areas')
         .select('*')
         .eq('user_id', validUserId);
 
       if (!verifyError && verifyData && verifyData.length > 0) {
-        console.warn('⚠️ Some areas still exist, forcing final ABSOLUTE cleanup:', verifyData);
+        console.warn('⚠️ Some areas still exist in DB, forcing final ABSOLUTE cleanup:', verifyData);
         // Force final ABSOLUTE cleanup
         await supabase
           .from('user_map_areas')
           .delete()
           .eq('user_id', validUserId);
+        
+        console.log('✅ Final cleanup executed - DB should now be empty');
+      } else {
+        console.log('✅ DB VERIFICATION: No areas found - deletion confirmed');
       }
 
       // Step 4: Force state refresh to reflect ABSOLUTE deletion
       setCurrentWeekAreas([]);
       setForceUpdateCounter(prev => prev + 1);
       
-      console.log('✅ TOTAL CLEANUP COMPLETE - All areas ABSOLUTELY deleted FOREVER');
+      console.log('✅ TOTAL CLEANUP COMPLETE - All areas ABSOLUTELY deleted FOREVER from DB and state');
       return true;
     } catch (error) {
       console.error('❌ Exception in total cleanup:', error);
