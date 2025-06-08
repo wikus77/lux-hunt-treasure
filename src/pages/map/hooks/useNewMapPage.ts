@@ -7,6 +7,9 @@ import { useSearchAreasLogic } from './useSearchAreasLogic';
 import { MapMarker } from '@/components/maps/types';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 
+// UUID di fallback per sviluppo
+const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
+
 export const useNewMapPage = () => {
   const { user } = useAuth();
   const [isAddingPoint, setIsAddingPoint] = useState(false);
@@ -18,6 +21,12 @@ export const useNewMapPage = () => {
 
   // Default location (Rome, Italy)
   const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
+
+  // Ottieni user_id valido per Supabase
+  const getValidUserId = useCallback(() => {
+    if (!user?.id) return null;
+    return user.id === 'developer-fake-id' ? DEVELOPER_UUID : user.id;
+  }, [user]);
 
   // Integra la logica BUZZ MAPPA
   const { 
@@ -42,22 +51,23 @@ export const useNewMapPage = () => {
     setPendingRadius
   } = useSearchAreasLogic(DEFAULT_LOCATION);
 
-  // Fetch existing map points on mount - IMPROVED ERROR HANDLING
+  // Fetch existing map points on mount - IMPROVED ERROR HANDLING with valid user ID
   useEffect(() => {
     const fetchMapPoints = async () => {
-      if (!user?.id) {
-        console.log("❌ No user ID available for fetching map points");
+      const validUserId = getValidUserId();
+      if (!validUserId) {
+        console.log("❌ No valid user ID available for fetching map points");
         setIsLoading(false);
         return;
       }
       
       try {
-        console.log("📍 Fetching map points for user:", user.id);
+        console.log("📍 Fetching map points for user:", validUserId);
         
         const { data, error } = await supabase
           .from('map_points')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', validUserId)
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -78,14 +88,15 @@ export const useNewMapPage = () => {
     };
 
     fetchMapPoints();
-  }, [user]);
+  }, [getValidUserId]);
 
-  // Add a new point to the map - IMPROVED
+  // Add a new point to the map - IMPROVED with valid user ID
   const addNewPoint = useCallback((lat: number, lng: number) => {
     console.log("📍 Adding new point at:", lat, lng);
     
-    if (!user?.id) {
-      toast.error("Devi essere autenticato per aggiungere punti");
+    const validUserId = getValidUserId();
+    if (!validUserId) {
+      toast.error("Accesso non valido per aggiungere punti");
       return;
     }
 
@@ -104,13 +115,14 @@ export const useNewMapPage = () => {
     }
     
     toast.success("Punto posizionato. Inserisci titolo e nota.");
-  }, [isAddingSearchArea, toggleAddingSearchArea, user]);
+  }, [isAddingSearchArea, toggleAddingSearchArea, getValidUserId]);
 
-  // Save the point to Supabase - MAJOR IMPROVEMENTS
+  // Save the point to Supabase - MAJOR IMPROVEMENTS with UUID validation
   const savePoint = async (title: string, note: string) => {
-    if (!newPoint || !user?.id) {
-      console.log("❌ Cannot save point: missing newPoint or user");
-      toast.error("Errore: dati mancanti per salvare il punto");
+    const validUserId = getValidUserId();
+    if (!newPoint || !validUserId) {
+      console.log("❌ Cannot save point: missing newPoint or valid user ID");
+      toast.error("Accesso non valido per salvare il punto");
       return;
     }
     
@@ -125,7 +137,7 @@ export const useNewMapPage = () => {
     }
 
     const payload = {
-      user_id: user.id,
+      user_id: validUserId,
       latitude: newPoint.lat,
       longitude: newPoint.lng,
       title: trimmedTitle,
@@ -172,10 +184,11 @@ export const useNewMapPage = () => {
     }
   };
 
-  // Update an existing point - IMPROVED ERROR HANDLING
+  // Update an existing point - IMPROVED ERROR HANDLING with valid user ID
   const updateMapPoint = async (id: string, title: string, note: string): Promise<boolean> => {
-    if (!user?.id) {
-      toast.error("Devi essere autenticato per modificare punti");
+    const validUserId = getValidUserId();
+    if (!validUserId) {
+      toast.error("Accesso non valido per modificare punti");
       return false;
     }
     
@@ -198,7 +211,7 @@ export const useNewMapPage = () => {
           note: trimmedNote
         })
         .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('user_id', validUserId);
 
       if (error) {
         console.error("❌ Error updating map point:", error);
@@ -223,10 +236,11 @@ export const useNewMapPage = () => {
     }
   };
 
-  // Delete a map point - IMPROVED ERROR HANDLING
+  // Delete a map point - IMPROVED ERROR HANDLING with valid user ID
   const deleteMapPoint = async (id: string): Promise<boolean> => {
-    if (!user?.id) {
-      toast.error("Devi essere autenticato per eliminare punti");
+    const validUserId = getValidUserId();
+    if (!validUserId) {
+      toast.error("Accesso non valido per eliminare punti");
       return false;
     }
     
@@ -237,7 +251,7 @@ export const useNewMapPage = () => {
         .from('map_points')
         .delete()
         .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('user_id', validUserId);
 
       if (error) {
         console.error("❌ Error deleting map point:", error);
@@ -259,8 +273,14 @@ export const useNewMapPage = () => {
     }
   };
 
-  // Handle BUZZ button click - Updated for BUZZ MAPPA con messaggi allineati
+  // Handle BUZZ button click - Updated with valid user ID check
   const handleBuzz = useCallback(() => {
+    const validUserId = getValidUserId();
+    if (!validUserId) {
+      toast.error("Accesso non valido per generare area BUZZ");
+      return;
+    }
+
     const activeArea = getActiveArea();
     if (activeArea) {
       // MESSAGGIO ALLINEATO: usa il valore ESATTO salvato in Supabase
@@ -271,7 +291,7 @@ export const useNewMapPage = () => {
     } else {
       toast.info("Premi BUZZ MAPPA per generare una nuova area di ricerca!");
     }
-  }, [getActiveArea]);
+  }, [getActiveArea, getValidUserId]);
 
   // Request user location
   const requestLocationPermission = () => {

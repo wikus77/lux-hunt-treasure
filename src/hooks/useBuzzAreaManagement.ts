@@ -4,11 +4,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { BuzzMapArea } from './useBuzzMapLogic';
 import { useBuzzMapUtils } from './buzz/useBuzzMapUtils';
 
+// UUID di fallback per sviluppo
+const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
+
 export const useBuzzAreaManagement = (userId?: string) => {
   const [currentWeekAreas, setCurrentWeekAreas] = useState<BuzzMapArea[]>([]);
   const [forceUpdateCounter, setForceUpdateCounter] = useState(0);
   
   const { getCurrentWeek, getActiveAreaFromList, calculateNextRadiusFromArea } = useBuzzMapUtils();
+  
+  // Ottieni user_id valido per Supabase
+  const getValidUserId = useCallback(() => {
+    if (!userId) return null;
+    return userId === 'developer-fake-id' ? DEVELOPER_UUID : userId;
+  }, [userId]);
 
   // Get active area from current week areas
   const getActiveArea = useCallback((): BuzzMapArea | null => {
@@ -21,21 +30,22 @@ export const useBuzzAreaManagement = (userId?: string) => {
     return calculateNextRadiusFromArea(activeArea);
   }, [getActiveArea, calculateNextRadiusFromArea]);
 
-  // Load current week areas
+  // Load current week areas - con user ID valido
   const loadCurrentWeekAreas = useCallback(async () => {
-    if (!userId) {
-      console.log('📍 No user ID provided for loading areas');
+    const validUserId = getValidUserId();
+    if (!validUserId) {
+      console.log('📍 No valid user ID provided for loading areas');
       return;
     }
 
     try {
       const currentWeek = getCurrentWeek();
-      console.log('📍 Loading BUZZ areas for user:', userId, 'week:', currentWeek);
+      console.log('📍 Loading BUZZ areas for user:', validUserId, 'week:', currentWeek);
 
       const { data, error } = await supabase
         .from('user_map_areas')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', validUserId)
         .eq('week', currentWeek)
         .order('created_at', { ascending: false });
 
@@ -49,28 +59,30 @@ export const useBuzzAreaManagement = (userId?: string) => {
     } catch (error) {
       console.error('❌ Exception loading BUZZ areas:', error);
     }
-  }, [userId, getCurrentWeek]);
+  }, [getValidUserId, getCurrentWeek]);
 
-  // Remove previous area - IMPROVED WITH FALLBACK
+  // Remove previous area - IMPROVED WITH FALLBACK and valid user ID
   const removePreviousArea = useCallback(async (): Promise<boolean> => {
-    if (!userId) {
-      console.log('❌ No user ID provided for removing area');
+    const validUserId = getValidUserId();
+    if (!validUserId) {
+      console.log('❌ No valid user ID provided for removing area');
       return false;
     }
 
     try {
       const currentWeek = getCurrentWeek();
-      console.log('🗑️ Attempting to remove previous BUZZ area for user:', userId, 'week:', currentWeek);
+      console.log('🗑️ Attempting to remove previous BUZZ area for user:', validUserId, 'week:', currentWeek);
 
       // First check if there are any existing areas
       const { data: existingAreas, error: checkError } = await supabase
         .from('user_map_areas')
         .select('id')
-        .eq('user_id', userId)
+        .eq('user_id', validUserId)
         .eq('week', currentWeek);
 
       if (checkError) {
         console.error('❌ Error checking existing areas:', checkError);
+        console.error('❌ Error details:', checkError.message, checkError.code);
         return false;
       }
 
@@ -84,7 +96,7 @@ export const useBuzzAreaManagement = (userId?: string) => {
       const { error: deleteError } = await supabase
         .from('user_map_areas')
         .delete()
-        .eq('user_id', userId)
+        .eq('user_id', validUserId)
         .eq('week', currentWeek);
 
       if (deleteError) {
@@ -97,9 +109,12 @@ export const useBuzzAreaManagement = (userId?: string) => {
       return true;
     } catch (error) {
       console.error('❌ Exception removing previous BUZZ area:', error);
+      if (error instanceof Error) {
+        console.error('❌ Error message:', error.message);
+      }
       return false;
     }
-  }, [userId, getCurrentWeek]);
+  }, [getValidUserId, getCurrentWeek]);
 
   // Force reload areas
   const forceReload = useCallback(() => {
@@ -109,10 +124,11 @@ export const useBuzzAreaManagement = (userId?: string) => {
 
   // Load areas on mount and when userId changes
   useEffect(() => {
-    if (userId) {
+    const validUserId = getValidUserId();
+    if (validUserId) {
       loadCurrentWeekAreas();
     }
-  }, [userId, loadCurrentWeekAreas, forceUpdateCounter]);
+  }, [getValidUserId, loadCurrentWeekAreas, forceUpdateCounter]);
 
   return {
     currentWeekAreas,

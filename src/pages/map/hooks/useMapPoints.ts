@@ -3,6 +3,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { MapMarker } from '@/components/maps/types';
 
+// UUID di fallback per sviluppo
+const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
+
 export function useMapPoints(
   mapPoints: MapMarker[], 
   setActiveMapPoint: (id: string | null) => void,
@@ -65,7 +68,7 @@ export function useMapPoints(
     return Promise.resolve("new");
   }, [isAddingMapPoint]);
 
-  // Handle save of new map point - MAJOR IMPROVEMENTS
+  // Handle save of new map point - MAJOR IMPROVEMENTS with validation
   const handleSaveNewPoint = async (title: string, note: string) => {
     console.log("📝 Tentativo di salvare il nuovo punto con titolo:", title);
     
