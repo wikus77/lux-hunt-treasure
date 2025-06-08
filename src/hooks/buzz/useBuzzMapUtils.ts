@@ -18,36 +18,21 @@ export const useBuzzMapUtils = () => {
     return areas[0];
   }, []);
 
-  // CRITICAL FIX: Enhanced progressive radius calculation with exact 5% reduction
-  const calculateNextRadiusFromArea = useCallback((activeArea: BuzzMapArea | null): number => {
-    const BASE_RADIUS = 100; // 100 km initial
-    const MIN_RADIUS = 0.5; // 0.5 km (500m) minimum - FIXED FROM 5km
-    const REDUCTION_FACTOR = 0.95; // -5% each time
-
-    if (!activeArea) {
-      console.log('📏 No active area, using base radius:', BASE_RADIUS, 'km');
-      return BASE_RADIUS;
-    }
-
-    const nextRadius = activeArea.radius_km * REDUCTION_FACTOR;
-    const finalRadius = Math.max(MIN_RADIUS, nextRadius);
-    
-    console.log('📏 PROGRESSIVE RADIUS CALCULATION:');
-    console.log('📏 Previous radius:', activeArea.radius_km, 'km');
-    console.log('📏 Calculated next radius (5% reduction):', nextRadius, 'km');
-    console.log('📏 Final radius (with 0.5km minimum):', finalRadius, 'km');
-    
-    // CRITICAL: Ensure exact precision for consistency
-    return Math.round(finalRadius * 100) / 100; // Round to 2 decimal places
-  }, []);
-
-  // Calculate progressive radius based on weekly count
+  // CRITICAL FIX: Progressive radius calculation with exact 5% reduction
   const calculateProgressiveRadiusFromCount = useCallback((weeklyBuzzCount: number): number => {
     const BASE_RADIUS = 100; // 100 km initial
     const MIN_RADIUS = 0.5; // 0.5 km minimum
     const REDUCTION_FACTOR = 0.95; // -5% each time
     
+    console.log('📏 PROGRESSIVE RADIUS CALCULATION:', {
+      weeklyBuzzCount,
+      BASE_RADIUS,
+      MIN_RADIUS,
+      REDUCTION_FACTOR
+    });
+    
     if (weeklyBuzzCount === 0) {
+      console.log('📏 First BUZZ of the week, using base radius:', BASE_RADIUS, 'km');
       return BASE_RADIUS;
     }
     
@@ -59,13 +44,40 @@ export const useBuzzMapUtils = () => {
     
     const finalRadius = Math.max(MIN_RADIUS, radius);
     
-    console.log('📏 PROGRESSIVE RADIUS FROM COUNT:');
-    console.log('📏 Weekly BUZZ count:', weeklyBuzzCount);
-    console.log('📏 Base radius:', BASE_RADIUS, 'km');
-    console.log('📏 Calculated radius after', weeklyBuzzCount, 'reductions:', radius, 'km');
-    console.log('📏 Final radius (with minimum):', finalRadius, 'km');
+    console.log('📏 CALCULATION RESULT:', {
+      iterations: weeklyBuzzCount,
+      calculatedRadius: radius,
+      finalRadiusWithMinimum: finalRadius,
+      reductionApplied: weeklyBuzzCount > 0 ? `${((1 - Math.pow(REDUCTION_FACTOR, weeklyBuzzCount)) * 100).toFixed(1)}%` : '0%'
+    });
     
-    return Math.round(finalRadius * 100) / 100; // Round to 2 decimal places
+    // Round to 1 decimal place for consistency
+    return Math.round(finalRadius * 10) / 10;
+  }, []);
+
+  // Enhanced progressive radius calculation with area-based approach
+  const calculateNextRadiusFromArea = useCallback((activeArea: BuzzMapArea | null): number => {
+    const BASE_RADIUS = 100; // 100 km initial
+    const MIN_RADIUS = 0.5; // 0.5 km minimum
+    const REDUCTION_FACTOR = 0.95; // -5% each time
+
+    if (!activeArea) {
+      console.log('📏 No active area, using base radius:', BASE_RADIUS, 'km');
+      return BASE_RADIUS;
+    }
+
+    const nextRadius = activeArea.radius_km * REDUCTION_FACTOR;
+    const finalRadius = Math.max(MIN_RADIUS, nextRadius);
+    
+    console.log('📏 AREA-BASED RADIUS CALCULATION:', {
+      previousRadius: activeArea.radius_km,
+      calculatedNextRadius: nextRadius,
+      finalRadiusWithMinimum: finalRadius,
+      reductionPercentage: '5%'
+    });
+    
+    // Round to 1 decimal place for consistency
+    return Math.round(finalRadius * 10) / 10;
   }, []);
 
   // Debug function helper
@@ -98,7 +110,8 @@ export const useBuzzMapUtils = () => {
       radiusConsistencyCheck: {
         activeAreaRadius: getActiveArea()?.radius_km,
         calculatedNextRadius: calculateNextRadius(),
-        weeklyCount: currentWeekAreas.length
+        weeklyCount: currentWeekAreas.length,
+        shouldBeConsistent: true
       }
     };
   }, [calculateProgressiveRadiusFromCount]);
