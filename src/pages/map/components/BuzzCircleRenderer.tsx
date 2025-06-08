@@ -17,33 +17,24 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   
   const currentColor = getCurrentColor();
   
-  // DIAGNOSTIC: Log areas updates with source identification
+  // CRITICAL: Block rendering if areas are present when they shouldn't be
   useEffect(() => {
-    console.debug("🔄 DIAGNOSTIC: AREAS UPDATED in BuzzCircleRenderer:", areas);
-    console.debug("📊 DIAGNOSTIC: Areas count received:", areas.length);
-    console.debug("📋 DIAGNOSTIC: Areas detail received:", areas.map(a => ({ id: a.id, radius_km: a.radius_km })));
-    console.debug("🔍 DIAGNOSTIC: Areas source validation:", {
-      areas_isArray: Array.isArray(areas),
-      areas_actualLength: areas.length,
-      areas_isEmpty: areas.length === 0,
-      areas_hasValidStructure: areas.every(a => a.id && a.lat && a.lng && a.radius_km)
-    });
-  }, [areas]);
-
-  useEffect(() => {
-    // CRITICAL: Block rendering if areas aren't truly empty after delete
     if (areas.length > 0) {
-      console.warn("❌ RENDER BLOCCATO: AREAS NON VUOTO DOPO DELETE", areas);
+      console.warn("🚨 RENDER BLOCCATO: DB NON VUOTO DOPO DELETE", areas);
       console.warn("🚫 BLOCKING RENDER: Areas present when should be empty:", {
         areas_count: areas.length,
         areas_detail: areas.map(a => ({ id: a.id, user_id: a.user_id, radius_km: a.radius_km })),
         source: 'react-query'
       });
+      // CRITICAL: Return early to block render if areas exist after delete
+      return;
     }
-    
+  }, [areas]);
+
+  useEffect(() => {
     // PREVENT CONCURRENT CLEANUP
     if (isCleanupRunning.current) {
-      console.debug('🚫 DIAGNOSTIC: CIRCLE RENDERER - Cleanup already running, skipping');
+      console.debug('🚫 Cleanup already running, skipping');
       return;
     }
     
@@ -57,35 +48,33 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     
     const needsUpdate = currentAreasData !== lastAreasData.current;
     
-    console.debug('🔄 DIAGNOSTIC: CIRCLE RENDERER - Update check:', {
+    console.debug('🔄 Update check:', {
       needsUpdate,
       areasCount: areas.length,
-      currentAreasData_preview: currentAreasData.substring(0, 100) + '...',
-      lastAreasData_preview: lastAreasData.current.substring(0, 100) + '...'
+      source: 'react-query-only'
     });
     
     if (!needsUpdate) {
-      console.debug('🔄 DIAGNOSTIC: CIRCLE RENDERER - No update needed, areas unchanged');
+      console.debug('🔄 No update needed, areas unchanged');
       return;
     }
     
     isCleanupRunning.current = true;
     lastAreasData.current = currentAreasData;
     
-    console.debug('🔥 DIAGNOSTIC: CIRCLE RENDERER - Effect triggered:', {
+    console.debug('🔥 Effect triggered:', {
       areasCount: areas.length,
-      needsCleanup: true,
-      currentAreasData_length: currentAreasData.length
+      data_source: 'react-query-only'
     });
     
     // STEP 1: COMPLETE LEAFLET CLEANUP (ALWAYS)
-    console.debug('🧹 DIAGNOSTIC: CIRCLE RENDERER - Starting COMPLETE Leaflet cleanup...');
+    console.debug('🧹 Starting COMPLETE Leaflet cleanup...');
     
     // Clear existing layer group
     if (layerGroupRef.current) {
       layerGroupRef.current.clearLayers();
       map.removeLayer(layerGroupRef.current);
-      console.debug('🗑️ DIAGNOSTIC: CIRCLE RENDERER - Removed existing layer group');
+      console.debug('🗑️ Removed existing layer group');
     }
     
     // CRITICAL: Nuclear cleanup of ALL Circles and LayerGroups from map
@@ -97,49 +86,38 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       }
     });
     
-    console.debug('✅ DIAGNOSTIC: map.clearLayers called');
-    console.debug('🧹 DIAGNOSTIC: CIRCLE RENDERER - Cleaned', removedCount, 'existing circles/groups from map');
+    console.debug('🧹 Cleaned', removedCount, 'existing circles/groups from map');
     
     // Clear all references
     layerGroupRef.current = null;
     
-    // CRITICAL BLOCKING: Stop render if areas is not truly empty
+    // CRITICAL BLOCKING: Stop render if areas is empty
     if (areas.length === 0) {
-      console.debug('🚫 DIAGNOSTIC: BLOCKING RENDER - areas.length === 0, map cleared completely');
-      console.debug('✅ DIAGNOSTIC: map.render() executed with 0 areas - CORRECT STATE');
+      console.debug('✅ RENDER BLOCKED - areas.length === 0, map cleared completely');
       map.setView([41.9028, 12.4964], 6);
       isCleanupRunning.current = false;
       return;
     }
     
     // CRITICAL: Only proceed with rendering if areas are truly valid
-    console.debug('🔵 DIAGNOSTIC: CIRCLE RENDERER - Creating', areas.length, 'new circles');
-    console.debug('🔍 DIAGNOSTIC: CIRCLE RENDERER - Areas validation before rendering:', {
-      areas_length: areas.length,
-      areas_sample: areas[0] || 'No first area',
-      all_areas_valid: areas.every(area => 
-        area.lat && area.lng && area.radius_km && 
-        !isNaN(area.lat) && !isNaN(area.lng) && !isNaN(area.radius_km)
-      )
-    });
+    console.debug('🔵 Creating', areas.length, 'new circles');
     
     // Create new layer group
     layerGroupRef.current = L.layerGroup().addTo(map);
-    console.debug('✅ DIAGNOSTIC: CIRCLE RENDERER - New layer group created');
+    console.debug('✅ New layer group created');
     
     areas.forEach((area, index) => {
-      console.debug(`🔵 DIAGNOSTIC: CIRCLE RENDERER - Creating circle ${index + 1}/${areas.length}:`, {
+      console.debug(`🔵 Creating circle ${index + 1}/${areas.length}:`, {
         id: area.id,
         lat: area.lat,
         lng: area.lng,
-        radius_km: area.radius_km,
-        radius_meters: area.radius_km * 1000
+        radius_km: area.radius_km
       });
       
       // Validate area data
       if (!area.lat || !area.lng || !area.radius_km || 
           isNaN(area.lat) || isNaN(area.lng) || isNaN(area.radius_km)) {
-        console.error('❌ DIAGNOSTIC: CIRCLE RENDERER - Invalid area data:', area);
+        console.error('❌ Invalid area data:', area);
         return;
       }
       
@@ -158,16 +136,10 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         
         layerGroupRef.current?.addLayer(circle);
         
-        console.debug(`✅ DIAGNOSTIC: CIRCLE RENDERER - Circle ${index + 1} created successfully:`, {
-          id: area.id,
-          radius_km: area.radius_km,
-          leaflet_radius_meters: radiusInMeters,
-          actual_radius: circle.getRadius(),
-          coordinates: circle.getLatLng()
-        });
+        console.debug(`✅ Circle ${index + 1} created successfully`);
         
       } catch (error) {
-        console.error(`❌ DIAGNOSTIC: CIRCLE RENDERER - Error creating circle ${index + 1}:`, error);
+        console.error(`❌ Error creating circle ${index + 1}:`, error);
       }
     });
     
@@ -180,10 +152,10 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
           const bounds = featureGroup.getBounds();
           if (bounds.isValid()) {
             map.fitBounds(bounds, { padding: [50, 50] });
-            console.debug('🎯 DIAGNOSTIC: CIRCLE RENDERER - Map view updated to show all circles');
+            console.debug('🎯 Map view updated to show all circles');
           }
         } catch (error) {
-          console.warn('⚠️ DIAGNOSTIC: CIRCLE RENDERER - Could not fit bounds:', error);
+          console.warn('⚠️ Could not fit bounds:', error);
           // Fallback to first area
           if (areas[0]) {
             map.setView([areas[0].lat, areas[0].lng], 10);
@@ -192,42 +164,26 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       }
     }
     
-    console.debug('🎉 DIAGNOSTIC: CIRCLE RENDERER - All circles rendered successfully');
-    console.debug('✅ DIAGNOSTIC: map.render() executed with', areas.length, 'areas');
+    console.debug('🎉 All circles rendered successfully');
     
-    // STEP 3: VERIFY FINAL STATE and LOG SYNC STATUS
+    // STEP 3: VERIFY FINAL STATE
     const finalCircleCount = layerGroupRef.current?.getLayers().length || 0;
-    console.debug('🔍 DIAGNOSTIC: CIRCLE RENDERER - Final verification:', {
+    console.debug('🔍 Final verification:', {
       expected_areas: areas.length,
       rendered_circles: finalCircleCount,
       is_consistent: areas.length === finalCircleCount,
       areas_empty: areas.length === 0,
-      circles_cleared: finalCircleCount === 0,
-      leaflet_map_cleared: finalCircleCount === 0 && areas.length === 0
+      circles_cleared: finalCircleCount === 0
     });
-    
-    // CRITICAL: Log sync completion status
-    if (areas.length === 0 && finalCircleCount === 0) {
-      console.debug('✅ DIAGNOSTIC: SYNC COMPLETE - user_map_areas.length === 0 AND leafletLayerGroup.getLayers().length === 0');
-    } else if (areas.length === finalCircleCount && areas.length > 0) {
-      console.debug('✅ DIAGNOSTIC: SYNC COMPLETE - Areas and circles match perfectly');
-    } else {
-      console.warn('❗ DIAGNOSTIC: SYNC INCOMPLETE - Inconsistency detected:', {
-        expected: areas.length,
-        actual: finalCircleCount,
-        data_source: 'react-query',
-        leaflet_state: 'out-of-sync'
-      });
-    }
     
     // Force map refresh and mark cleanup as done
     setTimeout(() => {
       map.invalidateSize();
-      console.debug('🔄 DIAGNOSTIC: CIRCLE RENDERER - Map size invalidated, cleanup complete');
+      console.debug('🔄 Map size invalidated, cleanup complete');
       isCleanupRunning.current = false;
     }, 100);
     
-  }, [JSON.stringify(areas), map, currentColor]); // CRITICAL: Use JSON.stringify for deep comparison
+  }, [JSON.stringify(areas), map, currentColor]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -235,7 +191,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       if (layerGroupRef.current) {
         layerGroupRef.current.clearLayers();
         map.removeLayer(layerGroupRef.current);
-        console.debug('🧹 DIAGNOSTIC: CIRCLE RENDERER - Cleanup on unmount completed');
+        console.debug('🧹 Cleanup on unmount completed');
       }
       isCleanupRunning.current = false;
       lastAreasData.current = '';

@@ -42,9 +42,9 @@ export const useMapStore = create<MapState>((set, get) => ({
   setIsDeleting: (value: boolean) => set({ isDeleting: value }),
   setIsGenerating: (value: boolean) => set({ isGenerating: value }),
   
-  // SIMPLIFIED: Reset only operation states, React Query is source of truth for data
+  // CRITICAL: Reset only operation states - React Query is SINGLE source of truth
   resetMapState: () => {
-    console.debug('🗑️ ZUSTAND: Resetting operation states only - NO AREA DATA removed from localStorage/sessionStorage');
+    console.debug('🗑️ ZUSTAND: Resetting operation states only - NO AREA DATA');
     set({
       isDeleting: false,
       isGenerating: false,
