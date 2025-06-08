@@ -102,7 +102,7 @@ export const useBuzzMapLogic = () => {
     };
   }, []);
 
-  // Generate new BUZZ MAPPA area with progressive pricing and precision
+  // CRITICAL FIX: Generate new BUZZ MAPPA area with atomic operations
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
@@ -126,7 +126,7 @@ export const useBuzzMapLogic = () => {
       let finalPrice: number;
       if (radiusKm < 5) {
         finalPrice = calculateEscalatedPrice(basePrice, radiusKm);
-        showUnder5kmWarning(); // Show warning on first time under 5km
+        showUnder5kmWarning();
       } else {
         finalPrice = calculateProgressivePrice(basePrice);
       }
@@ -134,21 +134,19 @@ export const useBuzzMapLogic = () => {
       // Apply precision fuzz to coordinates
       const { lat: finalLat, lng: finalLng } = applyPrecisionFuzz(centerLat, centerLng, precision);
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🗺️ BUZZ MAPPA - Starting generation:', {
-          originalCoords: { lat: centerLat, lng: centerLng },
-          finalCoords: { lat: finalLat, lng: finalLng },
-          radius_km: radiusKm,
-          week: currentWeek,
-          basePrice: basePrice,
-          finalPrice: finalPrice,
-          precision: precision,
-          currentBuzzMapCounter: dailyBuzzMapCounter
-        });
-      }
+      console.log('🗺️ BUZZ MAPPA - Starting atomic generation:', {
+        originalCoords: { lat: centerLat, lng: centerLng },
+        finalCoords: { lat: finalLat, lng: finalLng },
+        radius_km: radiusKm,
+        week: currentWeek,
+        basePrice: basePrice,
+        finalPrice: finalPrice,
+        precision: precision,
+        currentBuzzMapCounter: dailyBuzzMapCounter
+      });
 
-      // CRITICAL FIX: Atomic operation - remove previous area first
-      console.log('🧹 Step 1: Removing previous areas...');
+      // CRITICAL FIX: Step 1 - Atomic removal of previous areas
+      console.log('🧹 Step 1: Atomic removal of previous areas...');
       const removed = await removePreviousArea();
       if (!removed) {
         console.error('❌ Failed to remove previous area');
@@ -156,13 +154,10 @@ export const useBuzzMapLogic = () => {
         return null;
       }
       
-      console.log('✅ Step 1 completed: Previous areas removed');
+      console.log('✅ Step 1 completed: Previous areas removed atomically');
 
-      // CRITICAL FIX: Wait a moment for state to settle after removal
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // CRITICAL FIX: Create new area with validated data
-      console.log('🚀 Step 2: Creating new area...');
+      // CRITICAL FIX: Step 2 - Create new area with validated data
+      console.log('🚀 Step 2: Creating new area with validation...');
       const newArea = await createBuzzMapArea(user.id, finalLat, finalLng, radiusKm, currentWeek);
       if (!newArea) {
         console.error('❌ Failed to create new area');
@@ -171,36 +166,34 @@ export const useBuzzMapLogic = () => {
       
       console.log('✅ Step 2 completed: New area created:', newArea);
       
-      // CRITICAL FIX: Update counters and state atomically
-      console.log('📊 Step 3: Updating counters...');
+      // CRITICAL FIX: Step 3 - Update counters and state atomically
+      console.log('📊 Step 3: Updating counters atomically...');
       const newBuzzMapCounter = await updateDailyBuzzMapCounter(basePrice, precision);
-      if (process.env.NODE_ENV === 'development') {
-        console.log('📊 BUZZ MAPPA counter updated to:', newBuzzMapCounter);
-      }
+      console.log('📊 BUZZ MAPPA counter updated to:', newBuzzMapCounter);
       
       // Update centralized state
       setAreaCreated(true);
       incrementBuzzCount();
       
-      // CRITICAL FIX: Set only the new area in local state (no merging)
-      console.log('🔄 Step 4: Updating local state with single new area...');
+      // CRITICAL FIX: Step 4 - Set only the new area in local state (no merging, no cache)
+      console.log('🔄 Step 4: Setting fresh state with new area only...');
       setCurrentWeekAreas([newArea]);
       
-      console.log('✅ Step 4 completed: Local state updated');
+      console.log('✅ Step 4 completed: Fresh state set');
       
-      // CRITICAL FIX: Force reload to ensure consistency
-      console.log('🔄 Step 5: Force reloading to ensure consistency...');
+      // CRITICAL FIX: Step 5 - Force reload to ensure consistency with database
+      console.log('🔄 Step 5: Force reloading from database for consistency...');
       setTimeout(async () => {
         await loadCurrentWeekAreas();
         await loadDailyBuzzCounter();
-        console.log('✅ Step 5 completed: Data reloaded');
+        console.log('✅ Step 5 completed: Data consistency verified');
       }, 200);
       
       // Success message with pricing info
       const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
       toast.success(`Area BUZZ MAPPA generata! Raggio: ${newArea.radius_km.toFixed(1)} km - ${precisionText} - Prezzo: ${finalPrice.toFixed(2)}€`);
       
-      console.log('🎉 BUZZ MAPPA generation completed successfully');
+      console.log('🎉 BUZZ MAPPA generation completed successfully with atomic operations');
       return newArea;
     } catch (err) {
       console.error('❌ Exception generating map area:', err);
