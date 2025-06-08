@@ -11,104 +11,73 @@ interface BuzzCircleRendererProps {
 
 const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   const map = useMap();
-  const buzzCircleRef = useRef<L.Circle | null>(null);
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
   
   const currentColor = getCurrentColor();
   
-  console.log('🗺️ DIAGNOSTIC - BuzzCircleRenderer render:', {
-    areas: areas,
-    areasCount: areas.length,
-    currentColor: currentColor,
-    timestamp: new Date().toISOString()
+  console.log('🗺️ CIRCLE RENDERER: Render triggered with areas:', {
+    count: areas.length,
+    areas: areas.map(a => ({ id: a.id, radius_km: a.radius_km })),
+    color: currentColor
   });
 
-  // CRITICAL FIX: Complete Leaflet layer cleanup and redraw
   useEffect(() => {
-    console.log('🚨 DIAGNOSTIC - BuzzCircleRenderer useEffect triggered:', {
-      areas: areas,
-      areasCount: areas.length,
-      currentColor: currentColor,
-      mapInstance: !!map
-    });
+    console.log('🔥 CIRCLE RENDERER: Effect triggered for', areas.length, 'areas');
     
-    // STEP 1: NUCLEAR CLEANUP - Remove ALL Circle layers and layer groups
-    console.log('🔥 DIAGNOSTIC - Starting COMPLETE LEAFLET CLEANUP...');
-    let removedLayersCount = 0;
-    let removedCirclesCount = 0;
+    // STEP 1: COMPLETE LEAFLET CLEANUP
+    console.log('🧹 CIRCLE RENDERER: Starting complete Leaflet cleanup...');
     
     // Clear existing layer group
     if (layerGroupRef.current) {
       layerGroupRef.current.clearLayers();
       map.removeLayer(layerGroupRef.current);
-      console.log('🗑️ DIAGNOSTIC - Removed existing layer group');
+      console.log('🗑️ CIRCLE RENDERER: Removed existing layer group');
     }
     
-    // Nuclear cleanup of all Circle layers
+    // Nuclear cleanup of ALL Circle layers from map
+    let removedCount = 0;
     map.eachLayer((layer) => {
       if (layer instanceof L.Circle) {
-        console.log('🗑️ DIAGNOSTIC - Removing Circle layer:', layer.getLatLng(), 'radius:', layer.getRadius());
         map.removeLayer(layer);
-        removedCirclesCount++;
+        removedCount++;
       }
+      // Also clean LayerGroups that might contain circles
       if (layer instanceof L.LayerGroup) {
         layer.eachLayer((subLayer) => {
           if (subLayer instanceof L.Circle) {
-            console.log('🗑️ DIAGNOSTIC - Removing Circle from LayerGroup:', subLayer.getLatLng());
             layer.removeLayer(subLayer);
-            removedCirclesCount++;
+            removedCount++;
           }
         });
       }
-      removedLayersCount++;
     });
     
-    console.log('🧹 DIAGNOSTIC - COMPLETE LEAFLET CLEANUP finished:', {
-      totalLayersRemoved: removedLayersCount,
-      circlesRemoved: removedCirclesCount
-    });
+    console.log('🧹 CIRCLE RENDERER: Cleaned', removedCount, 'existing circles from map');
     
-    // STEP 2: Clear all references
-    buzzCircleRef.current = null;
+    // Clear all references
     layerGroupRef.current = null;
     
-    // STEP 3: Consistency check - verify areas vs expected circles
-    const expectedCircles = areas.length;
-    console.log('🔍 CONSISTENCY CHECK - Before redraw:', {
-      areasFromDB: expectedCircles,
-      circlesOnMapBefore: removedCirclesCount,
-      shouldMatch: expectedCircles === removedCirclesCount || removedCirclesCount === 0,
-      mismatch: expectedCircles !== removedCirclesCount && removedCirclesCount > 0
-    });
-    
-    if (expectedCircles !== removedCirclesCount && removedCirclesCount > 0) {
-      console.warn('❗ CONSISTENCY WARNING - Mismatch between DB areas and map circles:', {
-        dbAreas: expectedCircles,
-        mapCircles: removedCirclesCount,
-        difference: Math.abs(expectedCircles - removedCirclesCount)
-      });
-    }
-    
-    // STEP 4: Create new layer group for better management
+    // STEP 2: CREATE NEW LAYER GROUP
     layerGroupRef.current = L.layerGroup().addTo(map);
-    console.log('✅ DIAGNOSTIC - New layer group created');
+    console.log('✅ CIRCLE RENDERER: New layer group created');
     
-    // STEP 5: Create new circles if areas exist
+    // STEP 3: CREATE NEW CIRCLES IF AREAS EXIST
     if (areas && areas.length > 0) {
+      console.log('🔵 CIRCLE RENDERER: Creating', areas.length, 'new circles');
+      
       areas.forEach((area, index) => {
-        console.log(`🔥 DIAGNOSTIC - Creating circle ${index + 1}/${areas.length} with area data:`, {
-          areaId: area.id,
+        console.log(`🔵 CIRCLE RENDERER: Creating circle ${index + 1}/${areas.length}:`, {
+          id: area.id,
           lat: area.lat,
           lng: area.lng,
-          radius_km_from_database: area.radius_km,
-          radius_meters_for_leaflet: area.radius_km * 1000,
-          color: currentColor,
-          index: index
+          radius_km: area.radius_km,
+          radius_meters: area.radius_km * 1000
         });
         
-        // Validate coordinates and radius
-        if (!area.lat || !area.lng || !area.radius_km || isNaN(area.lat) || isNaN(area.lng) || isNaN(area.radius_km)) {
-          console.error(`❌ DIAGNOSTIC - Invalid area data for circle ${index + 1}:`, area);
+        // Validate area data
+        if (!area.lat || !area.lng || !area.radius_km || 
+            isNaN(area.lat) || isNaN(area.lng) || isNaN(area.radius_km)) {
+          console.error('❌ CIRCLE RENDERER: Invalid area data:', area);
           return;
         }
         
@@ -122,89 +91,71 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
             fillOpacity: 0.25,
             weight: 3,
             opacity: 1,
-            className: `buzz-map-area-database-radius-${area.id}`
+            className: `buzz-area-${area.id}`
           });
           
-          // Add to layer group instead of directly to map
           layerGroupRef.current?.addLayer(circle);
           
-          // Set reference for first circle
-          if (index === 0) {
-            buzzCircleRef.current = circle;
-          }
-          
-          console.log(`🟢 DIAGNOSTIC - Circle ${index + 1} created successfully:`, {
-            areaId: area.id,
-            database_radius_km: area.radius_km,
+          console.log(`✅ CIRCLE RENDERER: Circle ${index + 1} created successfully:`, {
+            id: area.id,
+            radius_km: area.radius_km,
             leaflet_radius_meters: radiusInMeters,
-            actual_leaflet_radius: circle.getRadius(),
-            color: currentColor,
-            circleInLayerGroup: layerGroupRef.current?.hasLayer(circle),
-            perfectMatch: circle.getRadius() === radiusInMeters,
-            coordinates: circle.getLatLng(),
-            className: circle.options.className
+            actual_radius: circle.getRadius(),
+            coordinates: circle.getLatLng()
           });
           
         } catch (error) {
-          console.error(`❌ DIAGNOSTIC - Error creating circle ${index + 1}:`, error);
+          console.error(`❌ CIRCLE RENDERER: Error creating circle ${index + 1}:`, error);
         }
       });
       
-      // Set appropriate view to show all circles - FIXED: Check if layer group has layers before getting bounds
-      if (buzzCircleRef.current && layerGroupRef.current) {
+      // Set map view to show all circles
+      if (layerGroupRef.current) {
         const layers = layerGroupRef.current.getLayers();
         if (layers.length > 0) {
           try {
-            // Create a feature group to get bounds from the circles
             const featureGroup = L.featureGroup(layers);
             const bounds = featureGroup.getBounds();
             if (bounds.isValid()) {
               map.fitBounds(bounds, { padding: [50, 50] });
-              console.log('🎉 DIAGNOSTIC - Map view updated to show all circles');
+              console.log('🎯 CIRCLE RENDERER: Map view updated to show all circles');
             }
           } catch (error) {
-            console.warn('⚠️ DIAGNOSTIC - Could not fit bounds, using fallback:', error);
-            // Fallback to center on first circle
-            if (buzzCircleRef.current) {
-              map.setView(buzzCircleRef.current.getLatLng(), 10);
+            console.warn('⚠️ CIRCLE RENDERER: Could not fit bounds:', error);
+            // Fallback to first area
+            if (areas[0]) {
+              map.setView([areas[0].lat, areas[0].lng], 10);
             }
           }
         }
       }
       
-      console.log('🎉 DIAGNOSTIC - All circles rendering complete:', {
-        totalCirclesCreated: areas.length,
-        layerGroupHasLayers: layerGroupRef.current?.getLayers().length || 0,
-        allCirclesVisible: true
-      });
+      console.log('🎉 CIRCLE RENDERER: All circles rendered successfully');
       
     } else {
-      console.log('❌ DIAGNOSTIC - No areas to display, applying Italy fallback');
-      console.log('🔄 DIAGNOSTIC - FALLBACK: Setting map to Italy default center (no areas available)');
+      console.log('❌ CIRCLE RENDERER: No areas to display, using Italy fallback');
       map.setView([41.9028, 12.4964], 6);
     }
     
-    // STEP 6: Final consistency verification
+    // STEP 4: VERIFY FINAL STATE
     const finalCircleCount = layerGroupRef.current?.getLayers().length || 0;
-    console.log('🔍 FINAL CONSISTENCY CHECK:', {
-      areasFromDB: areas.length,
-      circlesCreated: finalCircleCount,
-      isConsistent: areas.length === finalCircleCount,
-      shouldBeZeroIfDeleted: areas.length === 0 && finalCircleCount === 0
+    console.log('🔍 CIRCLE RENDERER: Final verification:', {
+      expected_areas: areas.length,
+      rendered_circles: finalCircleCount,
+      is_consistent: areas.length === finalCircleCount
     });
     
     if (areas.length !== finalCircleCount) {
-      console.warn('❗ FINAL CONSISTENCY WARNING - DB and map still not in sync:', {
+      console.warn('❗ CIRCLE RENDERER: Inconsistency detected:', {
         expected: areas.length,
-        actual: finalCircleCount,
-        difference: Math.abs(areas.length - finalCircleCount)
+        actual: finalCircleCount
       });
     }
     
-    // STEP 7: Force map refresh
+    // Force map refresh
     setTimeout(() => {
       map.invalidateSize();
-      console.log('🔄 DIAGNOSTIC - Map size invalidated for complete refresh');
+      console.log('🔄 CIRCLE RENDERER: Map size invalidated');
     }, 100);
     
   }, [areas, map, currentColor]);
@@ -215,7 +166,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       if (layerGroupRef.current) {
         layerGroupRef.current.clearLayers();
         map.removeLayer(layerGroupRef.current);
-        console.log('🧹 DIAGNOSTIC - Cleanup on unmount completed');
+        console.log('🧹 CIRCLE RENDERER: Cleanup on unmount completed');
       }
     };
   }, [map]);
