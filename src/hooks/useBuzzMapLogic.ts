@@ -23,15 +23,14 @@ export interface BuzzMapArea {
 export const useBuzzMapLogic = () => {
   const { user } = useAuth();
   
-  // Use Zustand store for UI state only
+  // Local state for UI feedback (replacing removed Zustand properties)
+  const [areaCreated, setAreaCreated] = useState(false);
+  const [buzzCount, setBuzzCount] = useState(0);
+  
+  // Use Zustand store for operation locks only
   const { 
-    areaCreated, 
-    buzzCount, 
     isGenerating,
     isDeleting,
-    setAreaCreated, 
-    setBuzzCount, 
-    incrementBuzzCount,
     setIsGenerating
   } = useMapStore();
 
@@ -203,9 +202,9 @@ export const useBuzzMapLogic = () => {
       await forceCompleteInvalidation();
       await forceReload();
       
-      // Update UI state
+      // Update local UI state
       setAreaCreated(true);
-      incrementBuzzCount();
+      setBuzzCount(prev => prev + 1);
       
       // Show success toast
       const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
@@ -224,10 +223,9 @@ export const useBuzzMapLogic = () => {
   }, [
     user, getCurrentWeek, calculateProgressiveRadius, calculateBuzzMapPrice, 
     deleteAllUserAreas, createBuzzMapArea, updateDailyBuzzMapCounter, 
-    setAreaCreated, incrementBuzzCount, determinePrecisionMode, 
-    applyPrecisionFuzz, calculateProgressivePrice, calculateEscalatedPrice, 
-    showUnder5kmWarning, isGenerating, isDeleting, setIsGenerating,
-    forceCompleteInvalidation, forceReload
+    determinePrecisionMode, applyPrecisionFuzz, calculateProgressivePrice, 
+    calculateEscalatedPrice, showUnder5kmWarning, isGenerating, isDeleting, 
+    setIsGenerating, forceCompleteInvalidation, forceReload
   ]);
 
   // Enhanced manual area deletion
@@ -283,7 +281,7 @@ export const useBuzzMapLogic = () => {
       );
       
       console.log('🔍 DEBUG STATE: Complete report:', debugData);
-      console.log('🔍 DEBUG STATE: Zustand state:', { areaCreated, buzzCount });
+      console.log('🔍 DEBUG STATE: Local state:', { areaCreated, buzzCount });
     }
   }, [
     user, currentWeekAreas, userCluesCount, isGenerating, getActiveArea, 
