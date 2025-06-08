@@ -11,7 +11,7 @@ const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
 
 export const useMapAreas = (userId?: string) => {
   const queryClient = useQueryClient();
-  const { isDeleting, isGenerating, setIsDeleting, setIsGenerating, resetMapState } = useMapStore();
+  const { isDeleting, isGenerating, setIsDeleting, resetMapState } = useMapStore();
 
   // Get valid user ID
   const getValidUserId = useCallback(() => {
@@ -26,7 +26,7 @@ export const useMapAreas = (userId?: string) => {
 
   const validUserId = getValidUserId();
 
-  // FIXED: Correct queryKey with userId
+  // FIXED: Correct queryKey with userId - QUESTO È IL QUERYKEY DEFINITIVO
   const queryKey = ['user_map_areas', validUserId];
 
   // SINGLE SOURCE OF TRUTH: React Query for areas
@@ -61,11 +61,11 @@ export const useMapAreas = (userId?: string) => {
     enabled: !!validUserId
   });
 
-  // FIXED: Complete cache invalidation with CORRECT queryKey
+  // FIXED: Complete cache invalidation with EXACT SAME queryKey + refetch
   const forceCompleteInvalidation = useCallback(async () => {
-    console.log('🧹 FORCE INVALIDATION: Starting complete cleanup...');
+    console.log('🧹 FORCE INVALIDATION: Starting complete cleanup with queryKey:', queryKey);
     
-    // 1. Clear React Query cache with CORRECT queryKey
+    // 1. Clear React Query cache with EXACT SAME queryKey
     await queryClient.invalidateQueries({ queryKey });
     await queryClient.removeQueries({ queryKey });
     
@@ -98,10 +98,13 @@ export const useMapAreas = (userId?: string) => {
     // 4. Reset Zustand state
     resetMapState();
     
-    console.log('✅ FORCE INVALIDATION: Complete cleanup finished');
+    // 5. CRITICAL: Force refetch after invalidation
+    await queryClient.refetchQueries({ queryKey });
+    
+    console.log('✅ FORCE INVALIDATION: Complete cleanup + refetch finished');
   }, [queryClient, queryKey, resetMapState]);
 
-  // DELETE mutation with FIXED invalidation
+  // DELETE mutation with FIXED invalidation + refetch
   const deleteMutation = useMutation({
     mutationFn: async (): Promise<boolean> => {
       console.log('🔥 DELETE MUTATION: Starting nuclear delete for user:', validUserId);
@@ -130,15 +133,13 @@ export const useMapAreas = (userId?: string) => {
       return true;
     },
     onSuccess: async () => {
-      console.log('🎉 DELETE MUTATION: Success, invalidating cache with CORRECT queryKey...');
+      console.log('🎉 DELETE MUTATION: Success, starting complete invalidation...');
       
-      // Force complete invalidation with CORRECT queryKey
-      await forceCompleteInvalidation();
+      // SEQUENTIAL: invalidate, then refetch with EXACT SAME queryKey
+      await queryClient.invalidateQueries({ queryKey });
+      await queryClient.refetchQueries({ queryKey });
       
-      // Force refetch with fresh data
-      await refetch();
-      
-      console.log('✅ DELETE MUTATION: Cache invalidated and refetched');
+      console.log('✅ DELETE MUTATION: Cache invalidated and refetched with queryKey:', queryKey);
     },
     onError: (error) => {
       console.error('❌ DELETE MUTATION: Error:', error);
@@ -169,12 +170,13 @@ export const useMapAreas = (userId?: string) => {
       return true;
     },
     onSuccess: async () => {
-      await forceCompleteInvalidation();
-      await refetch();
+      // SEQUENTIAL: invalidate, then refetch with EXACT SAME queryKey
+      await queryClient.invalidateQueries({ queryKey });
+      await queryClient.refetchQueries({ queryKey });
     }
   });
 
-  // DELETE ALL with complete protection
+  // DELETE ALL with complete protection and FIXED queryKey usage
   const deleteAllUserAreas = useCallback(async (): Promise<boolean> => {
     if (isDeleting || isGenerating) {
       console.log('🚫 DELETE ALL: Operation blocked - already in progress');
@@ -185,7 +187,7 @@ export const useMapAreas = (userId?: string) => {
     toast.dismiss(); // Clear all existing toasts
 
     try {
-      console.log('🔥 DELETE ALL: Starting with areas count:', currentWeekAreas.length);
+      console.log('🔥 DELETE ALL: Starting with queryKey:', queryKey);
       
       await deleteMutation.mutateAsync();
       
@@ -200,9 +202,9 @@ export const useMapAreas = (userId?: string) => {
     } finally {
       setIsDeleting(false);
     }
-  }, [isDeleting, isGenerating, setIsDeleting, currentWeekAreas.length, deleteMutation]);
+  }, [isDeleting, isGenerating, setIsDeleting, deleteMutation, queryKey]);
 
-  // DELETE specific area with protection
+  // DELETE specific area with protection and FIXED queryKey usage
   const deleteSpecificArea = useCallback(async (areaId: string): Promise<boolean> => {
     if (isDeleting || isGenerating) {
       console.log('🚫 DELETE SPECIFIC: Operation blocked - already in progress');
@@ -213,6 +215,7 @@ export const useMapAreas = (userId?: string) => {
     toast.dismiss();
 
     try {
+      console.log('🗑️ DELETE SPECIFIC: Using queryKey:', queryKey);
       await deleteSpecificMutation.mutateAsync(areaId);
       toast.success('Area eliminata definitivamente');
       return true;
@@ -223,14 +226,14 @@ export const useMapAreas = (userId?: string) => {
     } finally {
       setIsDeleting(false);
     }
-  }, [isDeleting, isGenerating, setIsDeleting, deleteSpecificMutation]);
+  }, [isDeleting, isGenerating, setIsDeleting, deleteSpecificMutation, queryKey]);
 
-  // Force reload
+  // Force reload with FIXED queryKey
   const forceReload = useCallback(async () => {
-    console.log('🔄 FORCE RELOAD: Triggered');
-    await forceCompleteInvalidation();
-    await refetch();
-  }, [forceCompleteInvalidation, refetch]);
+    console.log('🔄 FORCE RELOAD: Triggered with queryKey:', queryKey);
+    await queryClient.invalidateQueries({ queryKey });
+    await queryClient.refetchQueries({ queryKey });
+  }, [queryClient, queryKey]);
 
   return {
     // Data from React Query (single source of truth)

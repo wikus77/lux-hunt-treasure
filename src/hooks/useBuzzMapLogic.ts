@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
@@ -123,7 +122,7 @@ export const useBuzzMapLogic = () => {
     };
   }, []);
 
-  // Enhanced BUZZ generation with unified state management
+  // Enhanced BUZZ generation with FIXED invalidation + refetch sequence
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
@@ -147,12 +146,12 @@ export const useBuzzMapLogic = () => {
     try {
       const currentWeek = getCurrentWeek();
       
-      console.log('🔥 BUZZ GENERATION: Starting with cleanup');
+      console.log('🔥 BUZZ GENERATION: Starting with complete cleanup');
       
-      // Force complete cleanup before generation
+      // CRITICAL: Complete cleanup with proper sequence
       await forceCompleteInvalidation();
       
-      // Clear all existing areas
+      // Clear all existing areas with proper invalidation sequence
       const cleanupSuccess = await deleteAllUserAreas();
       if (!cleanupSuccess) {
         console.error('❌ BUZZ GENERATION: Cleanup failed');
@@ -198,7 +197,8 @@ export const useBuzzMapLogic = () => {
       // Update counters
       await updateDailyBuzzMapCounter(basePrice, precision);
       
-      // Force cache invalidation and reload
+      // CRITICAL: Force complete invalidation + refetch after creation
+      console.log('🔄 BUZZ GENERATION: Forcing cache refresh...');
       await forceCompleteInvalidation();
       await forceReload();
       

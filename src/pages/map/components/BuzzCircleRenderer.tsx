@@ -13,28 +13,37 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   const map = useMap();
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
   const isCleanupRunning = useRef(false);
+  const lastAreasCount = useRef<number>(0);
   
   const currentColor = getCurrentColor();
   
   console.log('🗺️ CIRCLE RENDERER: Render triggered with areas:', {
     count: areas.length,
+    lastCount: lastAreasCount.current,
     areas: areas.map(a => ({ id: a.id, radius_km: a.radius_km })),
     color: currentColor,
     cleanupRunning: isCleanupRunning.current
   });
 
   useEffect(() => {
-    // Prevent concurrent cleanup operations
+    // PREVENT CONCURRENT CLEANUP AND GUARD AGAINST UNNECESSARY RENDERS
     if (isCleanupRunning.current) {
       console.log('🚫 CIRCLE RENDERER: Cleanup already running, skipping');
       return;
     }
     
+    // Prevent unnecessary cleanup if areas count hasn't changed
+    if (areas.length === lastAreasCount.current && areas.length > 0) {
+      console.log('🔄 CIRCLE RENDERER: Areas count unchanged, skipping render');
+      return;
+    }
+    
     isCleanupRunning.current = true;
+    lastAreasCount.current = areas.length;
     
     console.log('🔥 CIRCLE RENDERER: Effect triggered for', areas.length, 'areas');
     
-    // STEP 1: COMPLETE LEAFLET CLEANUP
+    // STEP 1: COMPLETE LEAFLET CLEANUP (ALWAYS)
     console.log('🧹 CIRCLE RENDERER: Starting complete Leaflet cleanup...');
     
     // Clear existing layer group
@@ -67,7 +76,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     // Clear all references
     layerGroupRef.current = null;
     
-    // STEP 2: CREATE NEW LAYER GROUP ONLY IF AREAS EXIST
+    // STEP 2: CREATE NEW LAYER GROUP ONLY IF AREAS EXIST AND CLEANUP IS DONE
     if (areas && areas.length > 0) {
       console.log('🔵 CIRCLE RENDERER: Creating', areas.length, 'new circles');
       
@@ -152,7 +161,9 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     console.log('🔍 CIRCLE RENDERER: Final verification:', {
       expected_areas: areas.length,
       rendered_circles: finalCircleCount,
-      is_consistent: areas.length === finalCircleCount
+      is_consistent: areas.length === finalCircleCount,
+      areas_empty: areas.length === 0,
+      circles_cleared: finalCircleCount === 0
     });
     
     if (areas.length !== finalCircleCount) {
@@ -162,10 +173,10 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       });
     }
     
-    // Force map refresh
+    // Force map refresh and mark cleanup as done
     setTimeout(() => {
       map.invalidateSize();
-      console.log('🔄 CIRCLE RENDERER: Map size invalidated');
+      console.log('🔄 CIRCLE RENDERER: Map size invalidated, cleanup complete');
       isCleanupRunning.current = false;
     }, 100);
     
@@ -180,6 +191,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         console.log('🧹 CIRCLE RENDERER: Cleanup on unmount completed');
       }
       isCleanupRunning.current = false;
+      lastAreasCount.current = 0;
     };
   }, [map]);
 
