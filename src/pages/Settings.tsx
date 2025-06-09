@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Lock, ChevronRight, LogOut, Bell, Globe } from "lucide-react";
+import { ArrowLeft, User, Lock, ChevronRight, LogOut, Bell, Globe, CreditCard } from "lucide-react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import BottomNavigation from "@/components/layout/BottomNavigation";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/auth";
 import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import AccountSection from "@/components/settings/AccountSection";
 import RegulationSection from "@/components/settings/RegulationSection";
 import AppSection from "@/components/settings/AppSection";
@@ -30,6 +31,9 @@ const Settings = () => {
   // Add state for notification settings
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
+  
+  // Add state for payment methods section
+  const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false);
   
   const handleLogout = async () => {
     try {
@@ -79,8 +83,20 @@ const Settings = () => {
         
         {/* Payment Methods Section */}
         <div className="glass-card mb-6">
-          <h2 className="text-lg font-semibold mb-4 text-white">Pagamenti</h2>
-          <PaymentMethodsSection />
+          <Collapsible open={isPaymentMethodsOpen} onOpenChange={setIsPaymentMethodsOpen}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
+              <h2 className="text-lg font-semibold text-white flex items-center">
+                <CreditCard className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+                Metodi di Pagamento
+              </h2>
+              <ChevronRight 
+                className={`h-4 w-4 transition-transform ${isPaymentMethodsOpen ? 'rotate-90' : ''}`} 
+              />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+              <PaymentMethodsSection />
+            </CollapsibleContent>
+          </Collapsible>
         </div>
         
         {/* App Settings */}
