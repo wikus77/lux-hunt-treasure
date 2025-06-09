@@ -23,17 +23,6 @@ const AccountSection = () => {
         
         <div 
           className="glass-card flex justify-between items-center p-4 cursor-pointer"
-          onClick={() => navigate('/privacy-security')}
-        >
-          <div className="flex items-center">
-            <Shield className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-            <span>Privacy e Sicurezza</span>
-          </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
-        </div>
-        
-        <div 
-          className="glass-card flex justify-between items-center p-4 cursor-pointer"
           onClick={() => navigate('/subscriptions')}
         >
           <div className="flex items-center">

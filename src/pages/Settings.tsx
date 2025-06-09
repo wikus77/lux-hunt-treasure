@@ -16,6 +16,7 @@ import AppSection from "@/components/settings/AppSection";
 import NotificationSection from "@/components/settings/NotificationSection";
 import SupportSection from "@/components/settings/SupportSection";
 import PaymentMethodsSection from "@/components/settings/PaymentMethodsSection";
+import PrivacySecuritySection from "@/components/settings/PrivacySecuritySection";
 import RoleSwitcher from "@/components/auth/RoleSwitcher";
 
 const Settings = () => {
@@ -77,6 +78,9 @@ const Settings = () => {
         
         {/* Account Settings */}
         <AccountSection />
+        
+        {/* Privacy & Security Section */}
+        <PrivacySecuritySection />
         
         {/* Regulation Section */}
         <RegulationSection />
