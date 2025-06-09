@@ -172,7 +172,7 @@ const NewMapPage = () => {
                 deleteMapPoint={deleteMapPoint}
                 searchAreas={searchAreas}
                 setActiveSearchArea={setActiveSearchArea}
-                handleAddArea={(area) => handleAddArea({ radius: area.radius })}
+                handleAddArea={(area) => handleAddArea(area.radius)}
                 isAddingSearchArea={isAddingSearchArea}
                 deleteSearchArea={deleteSearchArea}
                 clearAllSearchAreas={clearAllSearchAreas}
