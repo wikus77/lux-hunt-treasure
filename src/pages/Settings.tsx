@@ -76,6 +76,23 @@ const Settings = () => {
         {/* Regulation Section */}
         <RegulationSection />
         
+        {/* Payment Methods Section */}
+        <div className="glass-card mb-6">
+          <h2 className="text-lg font-semibold mb-4 text-white">Pagamenti</h2>
+          <div className="space-y-3">
+            <Link 
+              to="/payment-methods" 
+              className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors"
+            >
+              <div className="flex items-center">
+                <CreditCard className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+                <span className="text-white">Metodi di Pagamento</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-white/50" />
+            </Link>
+          </div>
+        </div>
+        
         {/* App Settings */}
         <AppSection 
           soundEffects={soundEffects}

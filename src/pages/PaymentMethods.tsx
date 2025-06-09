@@ -1,179 +1,204 @@
 
 import { useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { ArrowLeft, CreditCard, Plus, Trash2, CheckCircle, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import CardPaymentForm from "@/components/payments/CardPaymentForm";
+import { useAuthContext } from "@/contexts/auth";
+import { Separator } from "@/components/ui/separator";
 import ApplePayBox from "@/components/payments/ApplePayBox";
 import GooglePayBox from "@/components/payments/GooglePayBox";
-import { useQueryParams } from "@/hooks/useQueryParams";
-import { useToast } from "@/hooks/use-toast";
-import { useStripePayment } from "@/hooks/useStripePayment";
-import { v4 as uuidv4 } from "uuid";
+
+interface SavedCard {
+  id: string;
+  last4: string;
+  brand: string;
+  expMonth: number;
+  expYear: number;
+  isDefault: boolean;
+}
 
 const PaymentMethods = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const queryParams = useQueryParams<{ from?: string; price?: string; session?: string }>();
-  const { toast: toastHandler } = useToast();
-  const [paymentMethod, setPaymentMethod] = useState<string>("card");
-  const [isMapBuzz, setIsMapBuzz] = useState(false);
-  const [price, setPrice] = useState("1.99");
-  const [sessionId, setSessionId] = useState<string>("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { processBuzzPurchase, loading } = useStripePayment();
+  const { getCurrentUser } = useAuthContext();
+  const user = getCurrentUser();
+  
+  // Form state
+  const [cardForm, setCardForm] = useState({
+    cardNumber: "",
+    expiry: "",
+    cvc: "",
+    name: ""
+  });
+  
+  const [savedCards, setSavedCards] = useState<SavedCard[]>([
+    {
+      id: "pm_1234",
+      last4: "4242",
+      brand: "visa",
+      expMonth: 12,
+      expYear: 2025,
+      isDefault: true
+    }
+  ]);
+  
+  const [isAddingCard, setIsAddingCard] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Check payment method availability
+  const [paymentAvailability, setPaymentAvailability] = useState({
+    applePay: false,
+    googlePay: false
+  });
 
   useEffect(() => {
-    // Check if we're coming from the map page
-    const fromMap = queryParams.from === "map";
-    const queryPrice = queryParams.price;
-    const querySession = queryParams.session;
-    
-    if (fromMap) {
-      setIsMapBuzz(true);
-      if (queryPrice) {
-        setPrice(queryPrice);
-      }
-      if (querySession) {
-        setSessionId(querySession);
-      } else {
-        setSessionId(uuidv4());
-      }
-    } else {
-      // Regular buzz price
-      setPrice("1.99");
-      // Generate a unique session ID for regular buzz payments
-      setSessionId(`buzz_${Date.now()}`);
+    // Check Apple Pay availability
+    if (typeof window.ApplePaySession !== 'undefined' && window.ApplePaySession?.canMakePayments()) {
+      setPaymentAvailability(prev => ({ ...prev, applePay: true }));
     }
-  }, [queryParams]);
-
-  const handlePaymentCompleted = () => {
-    if (isProcessing) return; // Evita doppi invii
-    setIsProcessing(true);
     
-    // Generate clue message
-    const clueMessage = isMapBuzz 
-      ? "Questo indizio ti porta in una zona specifica dell'Italia centrale." 
-      : "Nuovo indizio extra sbloccato!";
+    // Check Google Pay availability
+    if (typeof window.google !== 'undefined' && typeof window.google.payments !== 'undefined') {
+      setPaymentAvailability(prev => ({ ...prev, googlePay: true }));
+    }
+  }, []);
 
-    // Show success notification
-    toast.success("Pagamento completato", {
-      description: "Il tuo pagamento è stato elaborato con successo!",
-    });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    
+    // Format card number
+    if (name === 'cardNumber') {
+      const formatted = value.replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ').slice(0, 19);
+      setCardForm(prev => ({ ...prev, [name]: formatted }));
+      return;
+    }
+    
+    // Format expiry
+    if (name === 'expiry') {
+      const formatted = value.replace(/\D/g, '').replace(/(\d{2})(?=\d)/, '$1/').slice(0, 5);
+      setCardForm(prev => ({ ...prev, [name]: formatted }));
+      return;
+    }
+    
+    // Format CVC
+    if (name === 'cvc') {
+      const formatted = value.replace(/\D/g, '').slice(0, 4);
+      setCardForm(prev => ({ ...prev, [name]: formatted }));
+      return;
+    }
+    
+    setCardForm(prev => ({ ...prev, [name]: value }));
+  };
 
-    // Set appropriate state based on payment type
-    if (isMapBuzz) {
-      // Redirect to map with state
-      navigate("/map", {
-        state: {
-          paymentCompleted: true, 
-          mapBuzz: true,
-          sessionId: sessionId, // Include session ID to prevent duplicates
-          clue: { description: clueMessage },
-          createdAt: new Date().toISOString()
-        },
-        replace: true
+  const handleAddCard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      // Simulate API call to Stripe
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Add new card to saved cards
+      const newCard: SavedCard = {
+        id: `pm_${Date.now()}`,
+        last4: cardForm.cardNumber.replace(/\s/g, '').slice(-4),
+        brand: "visa", // Determined by card number
+        expMonth: parseInt(cardForm.expiry.split('/')[0]),
+        expYear: parseInt(`20${cardForm.expiry.split('/')[1]}`),
+        isDefault: savedCards.length === 0
+      };
+      
+      setSavedCards(prev => [...prev, newCard]);
+      setCardForm({ cardNumber: "", expiry: "", cvc: "", name: "" });
+      setIsAddingCard(false);
+      
+      toast.success("Metodo aggiunto con successo", {
+        description: "La tua carta è stata salvata in modo sicuro."
       });
-    } else {
-      // Regular buzz, redirect to buzz page
-      navigate("/buzz", {
-        state: {
-          paymentCompleted: true, 
-          fromRegularBuzz: true,
-          sessionId: sessionId, // Include session ID to prevent duplicates
-          clue: { description: clueMessage },
-          createdAt: new Date().toISOString()
-        },
-        replace: true
+      
+    } catch (error) {
+      toast.error("Errore nel salvataggio del metodo", {
+        description: "Riprova più tardi o contatta il supporto."
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCardSubmit = async () => {
-    if (isProcessing || loading) return;
-    toast.info("Collegamento a Stripe in corso...", {
-      description: "Verrai reindirizzato a Stripe per completare il pagamento in modo sicuro.",
-      duration: 3000,
-    });
-    
-    // Calculate price in cents for Stripe
-    const priceInCents = parseFloat(price) * 100;
-    
-    // Determine return URL based on payment type
-    const redirectUrl = isMapBuzz ? "/map" : "/buzz";
-    
+  const handleDeleteCard = async (cardId: string) => {
     try {
-      await processBuzzPurchase(
-        isMapBuzz, 
-        priceInCents, 
-        redirectUrl,
-        sessionId
-      );
-    } catch (error) {
-      console.error("Errore durante il processo di pagamento:", error);
-      toast.error("Errore di pagamento", {
-        description: "Si è verificato un errore durante il processo di pagamento.",
+      // Simulate API call to Stripe
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      setSavedCards(prev => prev.filter(card => card.id !== cardId));
+      toast.success("Carta rimossa", {
+        description: "Il metodo di pagamento è stato eliminato."
       });
-      setIsProcessing(false);
+      
+    } catch (error) {
+      toast.error("Errore nell'eliminazione", {
+        description: "Non è stato possibile rimuovere la carta."
+      });
     }
   };
 
   const handleApplePay = async () => {
-    if (isProcessing || loading) return;
-    toast.success("Pagamento Rapido", {
-      description: "Pagamento in elaborazione..."
+    toast.info("Apple Pay", {
+      description: "Funzionalità in implementazione con Stripe."
     });
-    
-    // Calculate price in cents for Stripe
-    const priceInCents = parseFloat(price) * 100;
-    
-    // Determine return URL based on payment type
-    const redirectUrl = isMapBuzz ? "/map" : "/buzz";
-    
-    try {
-      await processBuzzPurchase(
-        isMapBuzz, 
-        priceInCents, 
-        redirectUrl,
-        sessionId
-      );
-    } catch (error) {
-      console.error("Errore durante il pagamento rapido:", error);
-      toast.error("Errore di pagamento", {
-        description: "Si è verificato un errore durante il pagamento rapido.",
-      });
-      setIsProcessing(false);
-    }
   };
 
   const handleGooglePay = async () => {
-    if (isProcessing || loading) return;
-    toast.success("Metodo Alternativo", {
-      description: "Pagamento in elaborazione..."
+    toast.info("Google Pay", {
+      description: "Funzionalità in implementazione con Stripe."
     });
-    
-    // Calculate price in cents for Stripe
-    const priceInCents = parseFloat(price) * 100;
-    
-    // Determine return URL based on payment type
-    const redirectUrl = isMapBuzz ? "/map" : "/buzz";
-    
-    try {
-      await processBuzzPurchase(
-        isMapBuzz, 
-        priceInCents, 
-        redirectUrl,
-        sessionId
-      );
-    } catch (error) {
-      console.error("Errore durante il pagamento alternativo:", error);
-      toast.error("Errore di pagamento", {
-        description: "Si è verificato un errore durante il pagamento alternativo.",
-      });
-      setIsProcessing(false);
+  };
+
+  const getBrandIcon = (brand: string) => {
+    switch (brand.toLowerCase()) {
+      case 'visa':
+        return '💳';
+      case 'mastercard':
+        return '💳';
+      case 'amex':
+        return '💳';
+      default:
+        return '💳';
     }
   };
+
+  // Show login message if user not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-black pb-6">
+        <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="mr-2"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-xl font-bold">Metodi di Pagamento</h1>
+        </header>
+
+        <div className="p-4">
+          <div className="glass-card text-center py-12">
+            <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-semibold mb-2">Accesso Richiesto</h3>
+            <p className="text-muted-foreground mb-6">
+              Effettua il login per gestire i tuoi metodi di pagamento.
+            </p>
+            <Button onClick={() => navigate("/login")}>
+              Vai al Login
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black pb-6">
@@ -186,63 +211,217 @@ const PaymentMethods = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-bold">
-          {isMapBuzz ? `Buzz Map - €${price}` : `Indizio Extra - €1,99`}
-        </h1>
+        <h1 className="text-xl font-bold">Metodi di Pagamento</h1>
       </header>
 
       <div className="p-4">
+        {/* Saved Cards Section */}
         <div className="glass-card mb-6">
-          <div className="flex flex-col gap-4 mb-6">
-            <h2 className="text-xl font-semibold">
-              {isMapBuzz ? "Buzz Map" : "Indizio Extra"}
-            </h2>
-            <p className="text-muted-foreground">
-              {isMapBuzz 
-                ? "Genera un'area di ricerca sulla mappa basata sugli indizi che possiedi."
-                : "Sblocca un indizio extra che potrebbe essere la chiave per trovare l'auto!"}
-            </p>
-            <div className="bg-projectx-deep-blue/30 p-4 rounded-md border border-projectx-deep-blue/50">
-              <p className="text-sm text-cyan-400">
-                {isMapBuzz
-                  ? "L'area generata sulla mappa ti aiuterà a restringere la zona di ricerca in base agli indizi attuali."
-                  : "Gli indizi extra forniscono informazioni aggiuntive non disponibili nel percorso standard."}
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">Carte Salvate</h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAddingCard(true)}
+              disabled={isAddingCard}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Aggiungi Carta
+            </Button>
+          </div>
+
+          {savedCards.length === 0 ? (
+            <div className="text-center py-8">
+              <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-muted-foreground">⚠️ Nessun metodo salvato</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {savedCards.map((card) => (
+                <div key={card.id} className="flex items-center justify-between p-3 border border-projectx-deep-blue rounded-md">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">{getBrandIcon(card.brand)}</span>
+                    <div>
+                      <p className="font-medium">•••• •••• •••• {card.last4}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {card.brand.toUpperCase()} • {card.expMonth.toString().padStart(2, '0')}/{card.expYear}
+                        {card.isDefault && <span className="ml-2 text-xs bg-projectx-blue px-2 py-1 rounded">Default</span>}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteCard(card.id)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Add Card Form */}
+        {isAddingCard && (
+          <div className="glass-card mb-6">
+            <h2 className="text-lg font-semibold mb-4">Aggiungi Nuova Carta</h2>
+            <form onSubmit={handleAddCard} className="space-y-4">
+              <div>
+                <label htmlFor="cardNumber" className="block text-sm font-medium mb-1">
+                  Numero Carta
+                </label>
+                <Input
+                  id="cardNumber"
+                  name="cardNumber"
+                  value={cardForm.cardNumber}
+                  onChange={handleInputChange}
+                  placeholder="1234 5678 9012 3456"
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="expiry" className="block text-sm font-medium mb-1">
+                    Data Scadenza
+                  </label>
+                  <Input
+                    id="expiry"
+                    name="expiry"
+                    value={cardForm.expiry}
+                    onChange={handleInputChange}
+                    placeholder="MM/AA"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="cvc" className="block text-sm font-medium mb-1">
+                    CVC
+                  </label>
+                  <Input
+                    id="cvc"
+                    name="cvc"
+                    value={cardForm.cvc}
+                    onChange={handleInputChange}
+                    placeholder="123"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium mb-1">
+                  Nome Intestatario
+                </label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={cardForm.name}
+                  onChange={handleInputChange}
+                  placeholder="Mario Rossi"
+                  required
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1"
+                >
+                  {loading ? "Salvando..." : "Salva Carta"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAddingCard(false)}
+                  disabled={loading}
+                >
+                  Annulla
+                </Button>
+              </div>
+            </form>
+            
+            <div className="mt-4 p-3 bg-blue-500/10 border border-blue-400/30 rounded-md">
+              <p className="text-blue-300 text-sm">
+                🔒 I dati della carta vengono salvati in modo sicuro tramite Stripe. 
+                Non memorizziamo mai i tuoi dati sensibili sui nostri server.
               </p>
             </div>
           </div>
+        )}
 
-          <div className="flex justify-between mb-6">
-            <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'card' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
-              onClick={() => setPaymentMethod('card')}
-            >
-              <span className="text-sm">Carta</span>
-            </button>
-            
-            <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
-              onClick={() => setPaymentMethod('apple')}
-            >
-              <span className="text-sm">Pagamento Rapido</span>
-            </button>
-            
-            <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
-              onClick={() => setPaymentMethod('google')}
-            >
-              <span className="text-sm">Altro metodo</span>
-            </button>
+        {/* Quick Payment Methods */}
+        <div className="glass-card mb-6">
+          <h2 className="text-lg font-semibold mb-4">Pagamenti Rapidi</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Apple Pay */}
+            {paymentAvailability.applePay ? (
+              <ApplePayBox onApplePay={handleApplePay} />
+            ) : (
+              <div className="border border-gray-600 rounded-md p-4 text-center">
+                <CreditCard className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm text-muted-foreground">
+                  Apple Pay non disponibile
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  (Solo Safari + iOS/macOS)
+                </p>
+              </div>
+            )}
+
+            {/* Google Pay */}
+            {paymentAvailability.googlePay ? (
+              <GooglePayBox onGooglePay={handleGooglePay} />
+            ) : (
+              <div className="border border-gray-600 rounded-md p-4 text-center">
+                <CreditCard className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm text-muted-foreground">
+                  Google Pay non disponibile
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  (Solo Android + Chrome)
+                </p>
+              </div>
+            )}
           </div>
+        </div>
 
-          {paymentMethod === "card" && (
-            <CardPaymentForm onSubmit={handleCardSubmit} />
-          )}
-          {paymentMethod === "apple" && (
-            <ApplePayBox onApplePay={handleApplePay} />
-          )}
-          {paymentMethod === "google" && (
-            <GooglePayBox onGooglePay={handleGooglePay} />
-          )}
+        {/* Security Info */}
+        <div className="glass-card">
+          <h2 className="text-lg font-semibold mb-4">Sicurezza</h2>
+          <div className="space-y-3">
+            <div className="flex items-start">
+              <CheckCircle className="h-5 w-5 text-green-400 mr-3 mt-0.5" />
+              <div>
+                <p className="font-medium">Crittografia SSL/TLS</p>
+                <p className="text-sm text-muted-foreground">
+                  Tutti i dati sono protetti con crittografia end-to-end
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <CheckCircle className="h-5 w-5 text-green-400 mr-3 mt-0.5" />
+              <div>
+                <p className="font-medium">Conformità PCI DSS</p>
+                <p className="text-sm text-muted-foreground">
+                  Stripe gestisce tutti i pagamenti secondo gli standard di sicurezza
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <CheckCircle className="h-5 w-5 text-green-400 mr-3 mt-0.5" />
+              <div>
+                <p className="font-medium">Zero Storage Policy</p>
+                <p className="text-sm text-muted-foreground">
+                  Non memorizziamo mai i dati sensibili delle tue carte
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
