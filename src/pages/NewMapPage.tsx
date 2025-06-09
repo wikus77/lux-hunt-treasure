@@ -1,3 +1,4 @@
+
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import MapPageHeader from './map/components/MapPageHeader';
@@ -170,7 +171,7 @@ const NewMapPage = () => {
                 deleteMapPoint={deleteMapPoint}
                 searchAreas={searchAreas}
                 setActiveSearchArea={setActiveSearchArea}
-                handleAddArea={handleAddArea}
+                handleAddArea={(radius) => handleAddArea({ radius })}
                 isAddingSearchArea={isAddingSearchArea}
                 deleteSearchArea={deleteSearchArea}
               />
