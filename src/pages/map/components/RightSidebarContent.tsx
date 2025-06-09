@@ -54,7 +54,7 @@ const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
         />
       </div>
 
-      {/* Interest areas section - now horizontal grid */}
+      {/* Interest areas section - ONLY the horizontal grid with TWO containers */}
       <InterestAreasGrid />
     </>
   );
