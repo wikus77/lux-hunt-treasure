@@ -81,22 +81,24 @@ const Settings = () => {
         {/* Regulation Section */}
         <RegulationSection />
         
-        {/* Payment Methods Section */}
-        <div className="glass-card mb-6">
-          <Collapsible open={isPaymentMethodsOpen} onOpenChange={setIsPaymentMethodsOpen}>
-            <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-              <h2 className="text-lg font-semibold text-white flex items-center">
-                <CreditCard className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-                Metodi di Pagamento
-              </h2>
-              <ChevronRight 
-                className={`h-4 w-4 transition-transform ${isPaymentMethodsOpen ? 'rotate-90' : ''}`} 
-              />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4">
-              <PaymentMethodsSection />
-            </CollapsibleContent>
-          </Collapsible>
+        {/* Payment Methods Section - Integrated with Collapsible */}
+        <div className="mb-6">
+          <div className="glass-card p-4">
+            <Collapsible open={isPaymentMethodsOpen} onOpenChange={setIsPaymentMethodsOpen}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
+                <h2 className="text-lg font-semibold text-white flex items-center">
+                  <CreditCard className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+                  Metodi di Pagamento
+                </h2>
+                <ChevronRight 
+                  className={`h-4 w-4 transition-transform ${isPaymentMethodsOpen ? 'rotate-90' : ''}`} 
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-4">
+                <PaymentMethodsSection />
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
         </div>
         
         {/* App Settings */}
