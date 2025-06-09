@@ -65,7 +65,7 @@ export const useBuzzMapLogic = () => {
     return currentWeekAreas.length > 0 ? currentWeekAreas[0] : null;
   }, [currentWeekAreas]);
 
-  // SIMPLIFIED BACKEND-ONLY BUZZ generation
+  // BACKEND-ONLY BUZZ generation - completely stateless frontend
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     // CRITICAL: Validate user ID first
     if (!user?.id) {
@@ -148,7 +148,7 @@ export const useBuzzMapLogic = () => {
       
       // Show success toast with BACKEND VERIFIED data
       toast.dismiss();
-      toast.success(`Area BUZZ generata! Raggio: ${response.radius_km.toFixed(1)} km - Gen: ${response.generation_number || 1} - BACKEND VERIFIED`);
+      toast.success(`✅ Area BUZZ MAPPA attiva: ${response.radius_km.toFixed(1)} km – Gen: ${response.generation_number || 1} – Precisione: BACKEND VERIFIED`);
       
       console.log('🎉 BUZZ GENERATION COMPLETE:', {
         userId: user.id,

@@ -65,7 +65,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       mode: 'backend-only'
     });
     
-    // BACKEND-ONLY GENERATION
+    // BACKEND-ONLY GENERATION - completely stateless
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
@@ -74,11 +74,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         window.plausible('clue_unlocked');
       }
       
-      console.log('✅ BUZZ SUCCESS with backend area:', {
-        userId: user.id,
-        area: newArea,
-        source: 'backend-verified'
-      });
+      console.log('✅ [BUZZ SUCCESS]', newArea);
       
       // Force reload areas to sync with database
       await reloadAreas();
@@ -96,7 +92,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       }
     } else {
       console.error('❌ BUZZ FAILED - No area generated');
-      toast.error('Errore generazione area BUZZ');
+      toast.error('❌ Errore generazione area BUZZ');
     }
   };
   

@@ -14,6 +14,13 @@ interface BuzzApiResponse {
   success: boolean;
   clue_text?: string;
   buzz_cost?: number;
+  // New fields for map area response
+  radius_km?: number;
+  lat?: number;
+  lng?: number;
+  generation_number?: number;
+  errorMessage?: string;
+  error?: boolean;
   map_area?: {
     lat: number;
     lng: number;
@@ -23,7 +30,6 @@ interface BuzzApiResponse {
   precision?: 'high' | 'low';
   canGenerateMap?: boolean;
   remainingMapGenerations?: number;
-  error?: string;
 }
 
 export function useBuzzApi() {
@@ -31,14 +37,14 @@ export function useBuzzApi() {
     try {
       if (!userId) {
         console.error("UserId mancante nella chiamata API");
-        return { success: false, error: "Devi effettuare l'accesso per utilizzare questa funzione" };
+        return { success: false, error: true, errorMessage: "Devi effettuare l'accesso per utilizzare questa funzione" };
       }
 
       // Validazione UUID formato
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(userId)) {
         console.error(`UserID non valido: ${userId}`);
-        return { success: false, error: "ID utente non valido" };
+        return { success: false, error: true, errorMessage: "ID utente non valido" };
       }
 
       // CRITICAL: Build correct payload for unified backend logic
@@ -65,22 +71,28 @@ export function useBuzzApi() {
       
       if (error) {
         console.error("Errore chiamata funzione buzz:", error);
-        return { success: false, error: `Errore durante l'elaborazione dell'indizio: ${error.message}` };
+        return { success: false, error: true, errorMessage: `Errore durante l'elaborazione dell'indizio: ${error.message}` };
       }
       
       if (!data || !data.success) {
         console.error("Risposta negativa dalla funzione:", data?.error || "Errore sconosciuto");
         return { 
           success: false, 
-          error: data?.error || "Errore durante l'elaborazione dell'indizio" 
+          error: true,
+          errorMessage: data?.errorMessage || data?.error || "Errore durante l'elaborazione dell'indizio" 
         };
       }
       
       console.log("✅ Backend response (unified):", data);
+      
       return { 
         success: true, 
         clue_text: data.clue_text,
         buzz_cost: data.buzz_cost,
+        radius_km: data.radius_km,
+        lat: data.lat,
+        lng: data.lng,
+        generation_number: data.generation_number,
         map_area: data.map_area,
         precision: data.precision,
         canGenerateMap: data.canGenerateMap,
@@ -88,7 +100,7 @@ export function useBuzzApi() {
       };
     } catch (error) {
       console.error("Errore generale nella chiamata API buzz:", error);
-      return { success: false, error: "Si è verificato un errore nella comunicazione con il server" };
+      return { success: false, error: true, errorMessage: "Si è verificato un errore nella comunicazione con il server" };
     }
   };
 
