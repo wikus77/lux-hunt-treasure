@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Circle as CircleIcon, Loader } from "lucide-react";
@@ -6,6 +5,7 @@ import { motion } from "framer-motion";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useBuzzMapLogic } from "@/hooks/useBuzzMapLogic";
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'react-toastify';
 
 export interface BuzzButtonProps {
   handleBuzz?: () => void;
@@ -38,11 +38,12 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     // CRITICAL: Validate user ID first
     if (!user?.id) {
       console.error('❌ BUZZ ERROR: No valid user ID available');
+      toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
       return;
     }
 
     // Log user ID for debugging
-    console.log('🔥 DEBUG: userId being sent:', user.id);
+    console.log('🔥 DEBUG: FORCED BUZZ with userId:', user.id);
     
     // Trigger ripple effect
     setIsRippling(true);
@@ -57,14 +58,14 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     const centerLat = mapCenter ? mapCenter[0] : 41.9028;
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
-    console.log('📍 BUZZ CALL with VALID USER ID:', { 
+    console.log('📍 FORCED BUZZ CALL with GUARANTEED MAP_AREA:', { 
       userId: user.id,
       centerLat, 
       centerLng,
-      mode: 'pure-backend-only'
+      mode: 'forced-backend-guaranteed-map-area'
     });
     
-    // Generate the area using PURE BACKEND with VALID USER ID
+    // FORCED GENERATION with GUARANTEED MAP_AREA return
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
@@ -73,10 +74,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         window.plausible('clue_unlocked');
       }
       
-      console.log('✅ BUZZ SUCCESS with valid user ID:', {
+      console.log('✅ FORCED BUZZ SUCCESS with GUARANTEED map_area:', {
         userId: user.id,
         area: newArea,
-        source: 'pure-backend-with-valid-user-id'
+        source: 'forced-backend-guaranteed-map-area'
       });
       
       // Force reload areas to sync with database
@@ -132,7 +133,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             {getPrecisionIndicator()}
           </span>
           <div className="text-xs opacity-70 mt-1">
-            {!user?.id ? 'Login Required' : `User: ${user.id.slice(0, 8)}... • ${dailyBuzzMapCounter} BUZZ settimana`}
+            {!user?.id ? 'Login Required' : `FORCED MODE • ${dailyBuzzMapCounter} BUZZ settimana`}
           </div>
         </Button>
         

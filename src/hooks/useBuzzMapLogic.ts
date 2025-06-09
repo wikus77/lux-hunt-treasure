@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -65,7 +64,7 @@ export const useBuzzMapLogic = () => {
     return currentWeekAreas.length > 0 ? currentWeekAreas[0] : null;
   }, [currentWeekAreas]);
 
-  // UNIFIED BUZZ generation - BACKEND ONLY - COMPLETELY STATELESS FRONTEND
+  // FORCED BACKEND BUZZ generation - GUARANTEED MAP_AREA RETURN
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     // CRITICAL: Validate user ID first
     if (!user?.id) {
@@ -75,7 +74,7 @@ export const useBuzzMapLogic = () => {
       return null;
     }
 
-    console.log('🔥 DEBUG: Using valid user ID for BUZZ generation:', user.id);
+    console.log('🔥 DEBUG: Using valid user ID for FORCED BUZZ generation:', user.id);
 
     if (!centerLat || !centerLng || isNaN(centerLat) || isNaN(centerLng)) {
       console.error('🚫 BUZZ GENERATION - Invalid coordinates');
@@ -94,79 +93,79 @@ export const useBuzzMapLogic = () => {
     toast.dismiss(); // Clear any existing toasts
     
     try {
-      console.log('🔥 BUZZ GENERATION START - PURE BACKEND CALL with VALID USER ID:', {
+      console.log('🔥 FORCED BUZZ GENERATION START - BACKEND ONLY with VALID USER ID:', {
         centerLat,
         centerLng,
         userId: user.id,
-        mode: 'pure-backend-only-with-valid-user-id'
+        mode: 'forced-backend-only-guaranteed-map-area'
       });
       
       // STEP 1: Complete cleanup with FORCED sync sequence
       console.log('🧹 STEP 1 - Complete cleanup with FORCED sync...');
       await forceCompleteSync();
       
-      // STEP 2: CRITICAL - Call backend with generateMap: true and coordinates - PURE BACKEND LOGIC WITH VALID USER ID
-      console.log('🚀 STEP 2 - Calling PURE BACKEND handle-buzz-press with generateMap: true and VALID USER ID...');
+      // STEP 2: FORCED BACKEND CALL - generateMap: true and coordinates
+      console.log('🚀 STEP 2 - Calling FORCED BACKEND handle-buzz-press with generateMap: true...');
       
       const response = await callBuzzApi({ 
-        userId: user.id, // CRITICAL: Pass validated user ID
+        userId: user.id,
         generateMap: true,
         coordinates: { lat: centerLat, lng: centerLng }
       });
       
       if (!response.success) {
-        console.error('❌ BUZZ GENERATION - Backend call failed:', response.error);
+        console.error('❌ FORCED BUZZ GENERATION - Backend call failed:', response.error);
         toast.dismiss();
         toast.error(response.error || 'Errore durante la generazione dell\'area');
         return null;
       }
 
-      // STEP 3: Extract area data from backend response - NO FRONTEND CALCULATION EVER
+      // STEP 3: GUARANTEED MAP_AREA extraction from backend response
       const mapArea = response.map_area;
       if (!mapArea) {
-        console.error('❌ BUZZ GENERATION - No map area returned from backend');
+        console.error('❌ FORCED BUZZ GENERATION - Backend did not return map_area despite forced generation');
         toast.dismiss();
         toast.error('Backend non ha restituito area mappa');
         return null;
       }
 
-      console.log('✅ STEP 3 - Backend returned REAL area with CALCULATED radius:', mapArea);
+      console.log('✅ STEP 3 - FORCED BACKEND returned GUARANTEED map_area:', mapArea);
 
-      // STEP 4: Create BuzzMapArea object from backend response - PURE BACKEND DATA
+      // STEP 4: Create BuzzMapArea object from GUARANTEED backend response
       const newArea: BuzzMapArea = {
-        id: crypto.randomUUID(), // Generate frontend ID
+        id: crypto.randomUUID(),
         lat: mapArea.lat,
         lng: mapArea.lng,
-        radius_km: mapArea.radius_km, // PURE BACKEND CALCULATION WITH 5% REDUCTION
+        radius_km: mapArea.radius_km, // GUARANTEED FROM BACKEND WITH 5% REDUCTION
         week: mapArea.week,
         created_at: new Date().toISOString(),
         user_id: user.id
       };
 
       // STEP 5: Force complete sync after creation
-      console.log('🔄 STEP 5 - Force complete sync after creation...');
+      console.log('🔄 STEP 5 - Force complete sync after GUARANTEED creation...');
       await forceCompleteSync();
       await forceReload();
       
-      // STEP 6: Show SINGLE success toast with REAL backend data ONLY
-      toast.dismiss(); // Ensure no other toasts
+      // STEP 6: Show SINGLE success toast with GUARANTEED backend data
+      toast.dismiss();
       const precision = response.precision || 'standard';
       const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
       
-      // ONLY SHOW TOAST WITH REAL DATA FROM BACKEND - NO FRONTEND CALCULATION
-      toast.success(`Area BUZZ MAPPA generata! Raggio: ${mapArea.radius_km.toFixed(1)} km - ${precisionText} - Prezzo: €${response.buzz_cost?.toFixed(2) || '0.00'}`);
+      // GUARANTEED TOAST WITH REAL BACKEND DATA
+      toast.success(`Area BUZZ MAPPA generata! Raggio: ${mapArea.radius_km.toFixed(1)} km - ${precisionText} - Prezzo: €${response.buzz_cost?.toFixed(2) || '0.00'} - BACKEND VERIFIED`);
       
-      console.log('🎉 BUZZ GENERATION - Completed successfully with PURE backend data and VALID USER ID:', {
+      console.log('🎉 FORCED BUZZ GENERATION - GUARANTEED SUCCESS with backend data:', {
         userId: user.id,
-        radius_km: mapArea.radius_km, // REAL VALUE WITH 5% REDUCTION
+        radius_km: mapArea.radius_km,
         cost: response.buzz_cost,
         precision: precision,
-        source: 'pure-backend-calculation-with-valid-user-id'
+        source: 'forced-backend-guaranteed-map-area'
       });
       
       return newArea;
     } catch (err) {
-      console.error('❌ BUZZ GENERATION - Error:', err);
+      console.error('❌ FORCED BUZZ GENERATION - Error:', err);
       toast.dismiss();
       toast.error('Errore durante la generazione dell\'area');
       return null;
@@ -222,8 +221,8 @@ export const useBuzzMapLogic = () => {
     dailyBuzzMapCounter,
     precisionMode,
     
-    // Functions - PURE BACKEND ONLY with VALID USER ID
-    generateBuzzMapArea, // Now uses pure backend exclusively with 5% reduction and valid user ID
+    // Functions - FORCED BACKEND ONLY with GUARANTEED MAP_AREA
+    generateBuzzMapArea, // Now FORCES backend with GUARANTEED map_area return
     handleDeleteArea, // Uses UNIFIED logic
     getActiveArea,
     reloadAreas: forceReload,
