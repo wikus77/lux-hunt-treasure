@@ -72,6 +72,19 @@ const Settings = () => {
         
         {/* Account Settings */}
         <AccountSection />
+
+        {/* Payment Methods Section */}
+        <section className="p-4">
+          <Link to="/payment-methods-settings">
+            <div className="glass-card flex justify-between items-center p-4 cursor-pointer">
+              <div className="flex items-center">
+                <CreditCard className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+                <span>Metodi di Pagamento</span>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </Link>
+        </section>
         
         {/* Regulation Section */}
         <RegulationSection />
