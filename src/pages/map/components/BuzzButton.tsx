@@ -47,14 +47,14 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('📍 Using map center coordinates for BACKEND UNIFIED CALL:', { 
+      console.log('📍 Using map center coordinates for BACKEND ONLY CALL:', { 
         centerLat, 
         centerLng,
-        mode: 'backend-unified-only'
+        mode: 'backend-only'
       });
     }
     
-    // Generate the area using BACKEND UNIFIED LOGIC ONLY
+    // Generate the area using BACKEND ONLY - NO FRONTEND LOGIC
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
@@ -64,32 +64,32 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       }
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('✅ BACKEND UNIFIED AREA CREATED:', {
+        console.log('✅ BACKEND AREA CREATED WITH REAL DATA:', {
           id: newArea.id,
           lat: newArea.lat,
           lng: newArea.lng,
-          radius_km: newArea.radius_km,
+          radius_km: newArea.radius_km, // REAL VALUE FROM BACKEND
           created_at: newArea.created_at,
-          source: 'backend-unified'
+          source: 'backend-only'
         });
       }
       
-      // Force reload areas
+      // Force reload areas to sync with database
       await reloadAreas();
       
-      // Center map on new area
+      // Center map on new area - ONLY IF REAL DATA EXISTS
       setTimeout(() => {
-        if (onAreaGenerated) {
+        if (onAreaGenerated && newArea.radius_km > 0) {
           onAreaGenerated(newArea.lat, newArea.lng, newArea.radius_km);
         }
       }, 200);
       
-      // Create notification
+      // Create notification with REAL backend data
       try {
         const precisionText = precisionMode === 'high' ? 'Alta Precisione' : 'Precisione Ridotta';
         await createMapBuzzNotification(
           "Area BUZZ MAPPA Generata", 
-          `Nuova area di ricerca creata con raggio ${newArea.radius_km.toFixed(1)}km - ${precisionText} (Backend Unified)`
+          `Nuova area di ricerca creata con raggio ${newArea.radius_km.toFixed(1)}km - ${precisionText} (Backend)`
         );
       } catch (error) {
         console.error("❌ Failed to create BUZZ Map notification:", error);
@@ -135,7 +135,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             {getPrecisionIndicator()}
           </span>
           <div className="text-xs opacity-70 mt-1">
-            Backend Unified • {dailyBuzzMapCounter} BUZZ settimana
+            Backend Only • {dailyBuzzMapCounter} BUZZ settimana
           </div>
         </Button>
         

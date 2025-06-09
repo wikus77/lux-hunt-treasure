@@ -21,29 +21,20 @@ const validateBuzzDeletion = async (validUserId: string): Promise<boolean> => {
   
   console.debug("✅ POST DELETE QUERY user_map_areas:", areaCount);
   
-  // Check user_buzz_map with exact count
-  const { count: buzzCount, error: buzzError } = await supabase
-    .from("user_buzz_map")
-    .select("*", { count: 'exact', head: true })
-    .eq("user_id", validUserId);
-  
-  console.debug("✅ POST DELETE QUERY user_buzz_map:", buzzCount);
-  
-  if (areaError || buzzError) {
-    console.error('❌ VALIDATION ERROR:', { areaError, buzzError });
+  if (areaError) {
+    console.error('❌ VALIDATION ERROR:', { areaError });
     return false;
   }
   
-  const isClean = (areaCount || 0) === 0 && (buzzCount || 0) === 0;
+  const isClean = (areaCount || 0) === 0;
   
   if (!isClean) {
-    console.error('🚨 RENDER BLOCCATO: DB NON VUOTO DOPO DELETE:', {
+    console.error('🚨 DATABASE NOT CLEAN AFTER DELETE:', {
       user_map_areas_remaining: areaCount || 0,
-      user_buzz_map_remaining: buzzCount || 0,
       validUserId
     });
   } else {
-    console.debug('✅ DATABASE VALIDATION PASSED - Both tables empty');
+    console.debug('✅ DATABASE VALIDATION PASSED - All tables empty');
   }
   
   return isClean;
@@ -61,18 +52,12 @@ const executeUnifiedDelete = async (validUserId: string, areaId?: string): Promi
       .eq('id', areaId)
       .eq('user_id', validUserId);
 
-    const { error: deleteError2 } = await supabase
-      .from('user_buzz_map')
-      .delete()
-      .eq('id', areaId)
-      .eq('user_id', validUserId);
-
-    if (deleteError1 || deleteError2) {
-      console.error('❌ UNIFIED DELETE SPECIFIC ERROR:', { deleteError1, deleteError2 });
+    if (deleteError1) {
+      console.error('❌ UNIFIED DELETE SPECIFIC ERROR:', { deleteError1 });
       throw new Error('Failed to delete specific area');
     }
   } else {
-    // DELETE ALL AREAS - CRITICAL: Make sure both tables are completely emptied
+    // DELETE ALL AREAS - COMPLETE CLEANUP
     console.debug('🗑️ UNIFIED DELETE ALL - Starting complete cleanup...');
     
     const { error: deleteError1, count: count1 } = await supabase
@@ -80,18 +65,12 @@ const executeUnifiedDelete = async (validUserId: string, areaId?: string): Promi
       .delete({ count: 'exact' })
       .eq('user_id', validUserId);
 
-    const { error: deleteError2, count: count2 } = await supabase
-      .from('user_buzz_map')
-      .delete({ count: 'exact' })
-      .eq('user_id', validUserId);
-
     console.debug('🗑️ UNIFIED DELETE ALL RESULTS:', {
-      user_map_areas: { error: deleteError1, rowsDeleted: count1 },
-      user_buzz_map: { error: deleteError2, rowsDeleted: count2 }
+      user_map_areas: { error: deleteError1, rowsDeleted: count1 }
     });
 
-    if (deleteError1 || deleteError2) {
-      console.error('❌ UNIFIED DELETE ALL ERROR:', { deleteError1, deleteError2 });
+    if (deleteError1) {
+      console.error('❌ UNIFIED DELETE ALL ERROR:', { deleteError1 });
       throw new Error('Failed to delete all areas');
     }
   }
@@ -131,7 +110,7 @@ export const useMapAreas = (userId?: string) => {
   const queryKey = ['user_map_areas', validUserId];
   console.debug('🔑 QUERYKEY:', queryKey);
 
-  // React Query for areas - SINGLE SOURCE OF TRUTH
+  // React Query for areas - SINGLE SOURCE OF TRUTH - BACKEND DATA ONLY
   const {
     data: currentWeekAreas = [],
     isLoading,
@@ -141,9 +120,9 @@ export const useMapAreas = (userId?: string) => {
   } = useQuery({
     queryKey,
     queryFn: async (): Promise<BuzzMapArea[]> => {
-      console.debug('🔄 QUERY START - Fetching from DB for user:', validUserId);
+      console.debug('🔄 QUERY START - Fetching REAL DATA from DB for user:', validUserId);
       
-      // CRITICAL: NO FALLBACKS - Only database data
+      // CRITICAL: ONLY DATABASE DATA - NO FRONTEND FALLBACKS
       const { data: mapAreas, error: mapError } = await supabase
         .from('user_map_areas')
         .select('*')
@@ -155,7 +134,15 @@ export const useMapAreas = (userId?: string) => {
         throw mapError;
       }
 
-      console.debug('✅ QUERY SUCCESS - DB returned areas count:', mapAreas?.length || 0);
+      console.debug('✅ QUERY SUCCESS - DB returned REAL areas:', {
+        count: mapAreas?.length || 0,
+        areas: mapAreas?.map(area => ({
+          id: area.id,
+          radius_km: area.radius_km,
+          lat: area.lat,
+          lng: area.lng
+        })) || []
+      });
       
       return mapAreas || [];
     },
@@ -323,7 +310,7 @@ export const useMapAreas = (userId?: string) => {
   }, [queryClient, queryKey]);
 
   return {
-    // Data from React Query (single source of truth)
+    // Data from React Query (single source of truth) - REAL DATABASE ONLY
     currentWeekAreas,
     isLoading: isLoading || isFetching,
     error,

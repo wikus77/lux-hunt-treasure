@@ -6,7 +6,6 @@ import { useMapAreas } from './useMapAreas';
 import { useBuzzApi } from './buzz/useBuzzApi';
 import { useBuzzCounter } from './useBuzzCounter';
 import { useBuzzMapCounter } from './useBuzzMapCounter';
-import { useBuzzMapUtils } from './buzz/useBuzzMapUtils';
 import { useMapStore } from '@/stores/mapStore';
 
 export interface BuzzMapArea {
@@ -22,9 +21,6 @@ export interface BuzzMapArea {
 export const useBuzzMapLogic = () => {
   const { user } = useAuth();
   const { callBuzzApi } = useBuzzApi();
-  
-  // LOCAL state only for UI feedback
-  const [localBuzzCount, setLocalBuzzCount] = useState(0);
   
   // Use Zustand store ONLY for operation locks
   const { 
@@ -44,27 +40,17 @@ export const useBuzzMapLogic = () => {
     validateBuzzDeletion
   } = useMapAreas(user?.id);
 
-  console.debug('🧠 BUZZ LOGIC STATE:', {
+  console.debug('🧠 BUZZ LOGIC STATE (BACKEND ONLY):', {
     userId: user?.id,
     areasCount: currentWeekAreas.length,
     isGenerating,
     isDeleting,
-    localBuzzCount,
-    reactQueryLoading: isLoading,
-    data_source: 'backend-only-unified'
+    data_source: 'backend-only'
   });
 
-  // Use utility functions
-  const { 
-    getCurrentWeek, 
-    getActiveAreaFromList, 
-    createDebugReport 
-  } = useBuzzMapUtils();
-
-  // Use specialized hooks (only for UI display, not calculation)
+  // Use specialized hooks (only for UI display)
   const {
     dailyBuzzCounter,
-    loadDailyBuzzCounter,
     updateDailyBuzzCounter
   } = useBuzzCounter(user?.id);
 
@@ -76,10 +62,8 @@ export const useBuzzMapLogic = () => {
 
   // Get active area from current week areas (React Query only)
   const getActiveArea = useCallback((): BuzzMapArea | null => {
-    const active = getActiveAreaFromList(currentWeekAreas);
-    console.debug('🎯 GET ACTIVE AREA from React Query:', active);
-    return active;
-  }, [currentWeekAreas, getActiveAreaFromList]);
+    return currentWeekAreas.length > 0 ? currentWeekAreas[0] : null;
+  }, [currentWeekAreas]);
 
   // UNIFIED BUZZ generation - BACKEND ONLY
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
@@ -108,7 +92,7 @@ export const useBuzzMapLogic = () => {
     if (existingArea) {
       console.debug('🔄 BUZZ GENERATION - Area already exists');
       toast.dismiss();
-      toast.success('Area BUZZ MAPPA già attiva');
+      toast.success(`Area BUZZ MAPPA attiva: ${existingArea.radius_km.toFixed(1)} km`);
       return existingArea;
     }
 
@@ -116,7 +100,7 @@ export const useBuzzMapLogic = () => {
     toast.dismiss(); // Clear any existing toasts
     
     try {
-      console.debug('🔥 BUZZ GENERATION START - BACKEND UNIFIED:', {
+      console.debug('🔥 BUZZ GENERATION START - BACKEND ONLY:', {
         centerLat,
         centerLng,
         userId: user.id,
@@ -168,12 +152,12 @@ export const useBuzzMapLogic = () => {
 
       console.debug('✅ STEP 4 - Backend returned area:', mapArea);
 
-      // STEP 5: Create BuzzMapArea object from backend response
+      // STEP 5: Create BuzzMapArea object from backend response - NO FRONTEND CALCULATION
       const newArea: BuzzMapArea = {
         id: crypto.randomUUID(), // Generate frontend ID
         lat: mapArea.lat,
         lng: mapArea.lng,
-        radius_km: mapArea.radius_km,
+        radius_km: mapArea.radius_km, // ONLY FROM BACKEND
         week: mapArea.week,
         created_at: new Date().toISOString(),
         user_id: user.id
@@ -184,17 +168,19 @@ export const useBuzzMapLogic = () => {
       await forceCompleteSync();
       await forceReload();
       
-      // STEP 7: Update local UI state
-      console.debug('🎨 STEP 7 - Update local UI state...');
-      setLocalBuzzCount(prev => prev + 1);
-      
-      // STEP 8: Show SINGLE success toast with backend data
+      // STEP 7: Show SINGLE success toast with REAL backend data
       toast.dismiss(); // Ensure no other toasts
       const precision = response.precision || 'standard';
       const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
-      toast.success(`Area BUZZ MAPPA generata! Raggio: ${mapArea.radius_km.toFixed(2)} km - ${precisionText} - Prezzo: ${response.buzz_cost?.toFixed(2) || '0.00'}€`);
       
-      console.debug('🎉 BUZZ GENERATION - Completed successfully with backend unified logic');
+      // ONLY SHOW TOAST WITH REAL DATA FROM BACKEND
+      toast.success(`Area BUZZ MAPPA generata! Raggio: ${mapArea.radius_km.toFixed(1)} km - ${precisionText} - Prezzo: €${response.buzz_cost?.toFixed(2) || '0.00'}`);
+      
+      console.debug('🎉 BUZZ GENERATION - Completed successfully with backend data:', {
+        radius_km: mapArea.radius_km,
+        cost: response.buzz_cost,
+        precision: precision
+      });
       
       return newArea;
     } catch (err) {
@@ -241,34 +227,6 @@ export const useBuzzMapLogic = () => {
     return success;
   }, [deleteSpecificArea, forceCompleteSync, validateBuzzDeletion]);
 
-  // Debug function
-  const debugCurrentState = useCallback(() => {
-    if (process.env.NODE_ENV === 'development') {
-      const debugData = createDebugReport(
-        user,
-        currentWeekAreas,
-        0, // userCluesCount not calculated locally anymore
-        isGenerating,
-        0, // No more forceUpdateCounter
-        dailyBuzzCounter,
-        dailyBuzzMapCounter,
-        getActiveArea,
-        () => 0, // calculateNextRadius removed - backend only
-        () => 0  // calculateBuzzMapPrice removed - backend only
-      );
-      
-      console.debug('🔍 DEBUG STATE - Complete report (backend unified):', debugData);
-      console.debug('🔍 DEBUG STATE - Local state:', { 
-        localBuzzCount,
-        currentWeekAreas: currentWeekAreas.length,
-        data_source: 'backend-only-unified'
-      });
-    }
-  }, [
-    user, currentWeekAreas, isGenerating, getActiveArea, 
-    dailyBuzzCounter, dailyBuzzMapCounter, createDebugReport, localBuzzCount
-  ]);
-
   return {
     // Data from React Query (SINGLE SOURCE OF TRUTH)
     currentWeekAreas,
@@ -281,17 +239,12 @@ export const useBuzzMapLogic = () => {
     dailyBuzzCounter,
     dailyBuzzMapCounter,
     precisionMode,
-    buzzCount: localBuzzCount, // ONLY LOCAL UI STATE
     
-    // Functions - BACKEND UNIFIED ONLY
-    calculateNextRadius: () => 0, // Backend only - not calculated locally
-    calculateBuzzMapPrice: () => 0, // Backend only - not calculated locally
-    
+    // Functions - BACKEND ONLY
     generateBuzzMapArea, // Now uses backend exclusively
     handleDeleteArea, // Uses UNIFIED logic
     getActiveArea,
     reloadAreas: forceReload,
-    debugCurrentState,
     forceCompleteInvalidation: forceCompleteSync,
     validateBuzzDeletion
   };
