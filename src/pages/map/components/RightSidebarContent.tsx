@@ -2,6 +2,7 @@
 import React from 'react';
 import MapPointsSection from '../MapPointsSection';
 import SearchAreasSection from '../SearchAreasSection';
+import InterestAreasSection from '../InterestAreasSection';
 import { MapMarker } from '@/components/maps/types';
 
 interface RightSidebarContentProps {
@@ -42,7 +43,7 @@ const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
         />
       </div>
       
-      {/* Search areas section - removed clearAllSearchAreas prop */}
+      {/* Search areas section */}
       <div className="m1ssion-glass-card p-4 sm:p-6 rounded-[24px]">
         <SearchAreasSection
           searchAreas={searchAreas}
@@ -51,6 +52,11 @@ const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
           isAddingSearchArea={isAddingSearchArea}
           deleteSearchArea={deleteSearchArea}
         />
+      </div>
+
+      {/* NEW: Interest areas section */}
+      <div className="m1ssion-glass-card p-4 sm:p-6 rounded-[24px]">
+        <InterestAreasSection />
       </div>
     </>
   );

@@ -32,6 +32,15 @@ interface BuzzResponse {
   errorMessage?: string;
 }
 
+// NEW: Apply secure offset to coordinates for security
+const applySecureOffset = (lat: number, lng: number) => {
+  const offset = () => (Math.random() - 0.5) * 0.1; // ±~5km
+  return {
+    lat: lat + offset(),
+    lng: lng + offset()
+  };
+};
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -189,7 +198,7 @@ serve(async (req) => {
       console.log(`🗺️ FORCED MAP GENERATION START for user ${userId}`);
       
       // STEP 1: Get or set fixed center coordinates for this user
-      let fixedCenter = { lat: 41.9028, lng: 12.4964 }; // Default Rome
+      let baseCenter = { lat: 41.9028, lng: 12.4964 }; // Default Rome
       
       // Check if user has existing fixed center
       const { data: existingCenter, error: centerError } = await supabase
@@ -201,14 +210,18 @@ serve(async (req) => {
         .single();
         
       if (!centerError && existingCenter) {
-        // Use existing fixed center
-        fixedCenter = { lat: existingCenter.lat, lng: existingCenter.lng };
-        console.log(`📍 Using existing fixed center: ${fixedCenter.lat}, ${fixedCenter.lng}`);
+        // Use existing fixed center (without offset)
+        baseCenter = { lat: existingCenter.lat, lng: existingCenter.lng };
+        console.log(`📍 Using existing base center: ${baseCenter.lat}, ${baseCenter.lng}`);
       } else if (coordinates) {
-        // Use provided coordinates as new fixed center
-        fixedCenter = { lat: coordinates.lat, lng: coordinates.lng };
-        console.log(`📍 Setting new fixed center: ${fixedCenter.lat}, ${fixedCenter.lng}`);
+        // Use provided coordinates as new base center
+        baseCenter = { lat: coordinates.lat, lng: coordinates.lng };
+        console.log(`📍 Setting new base center: ${baseCenter.lat}, ${baseCenter.lng}`);
       }
+      
+      // STEP 1.5: Apply secure offset to base center
+      const secureCenter = applySecureOffset(baseCenter.lat, baseCenter.lng);
+      console.log(`🔒 Applied secure offset: ${secureCenter.lat}, ${secureCenter.lng}`);
       
       // STEP 2: Clear existing BUZZ areas
       console.log(`🧹 Clearing existing BUZZ areas...`);
@@ -235,16 +248,16 @@ serve(async (req) => {
       // STEP 4: Calculate radius with FIXED progressive reduction formula
       let radius_km = Math.max(5, 100 * Math.pow(0.95, currentGeneration - 1));
       
-      console.log(`📏 FIXED CENTER - Calculated radius: ${radius_km.toFixed(2)}km (generation: ${currentGeneration})`);
-      console.log(`📍 FIXED CENTER - Using coordinates: lat=${fixedCenter.lat}, lng=${fixedCenter.lng}`);
+      console.log(`📏 SECURE CENTER - Calculated radius: ${radius_km.toFixed(2)}km (generation: ${currentGeneration})`);
+      console.log(`📍 SECURE CENTER - Using coordinates: lat=${secureCenter.lat}, lng=${secureCenter.lng}`);
       
-      // STEP 5: Save area to database with FIXED CENTER
+      // STEP 5: Save area to database with SECURE CENTER
       const { error: mapError, data: savedArea } = await supabase
         .from('user_map_areas')
         .insert({
           user_id: userId,
-          lat: fixedCenter.lat,
-          lng: fixedCenter.lng,
+          lat: secureCenter.lat,
+          lng: secureCenter.lng,
           radius_km: radius_km,
           week: currentWeek,
           clue_id: clueData.clue_id
@@ -257,15 +270,15 @@ serve(async (req) => {
         response.error = true;
         response.errorMessage = "Errore salvataggio area mappa";
       } else {
-        console.log("✅ Map area saved successfully with FIXED CENTER:", savedArea.id);
+        console.log("✅ Map area saved successfully with SECURE CENTER:", savedArea.id);
         
-        // Add map data to response with FIXED CENTER
+        // Add map data to response with SECURE CENTER
         response.radius_km = radius_km;
-        response.lat = fixedCenter.lat;
-        response.lng = fixedCenter.lng;
+        response.lat = secureCenter.lat;
+        response.lng = secureCenter.lng;
         response.generation_number = currentGeneration;
         
-        console.log(`🎉 MAP GENERATION COMPLETE (FIXED CENTER): radius=${radius_km.toFixed(2)}km, generation=${currentGeneration}, center=${fixedCenter.lat},${fixedCenter.lng}`);
+        console.log(`🎉 MAP GENERATION COMPLETE (SECURE CENTER): radius=${radius_km.toFixed(2)}km, generation=${currentGeneration}, center=${secureCenter.lat},${secureCenter.lng}`);
       }
     }
 
