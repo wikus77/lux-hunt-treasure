@@ -105,22 +105,8 @@ export const useBuzzMapLogic = () => {
       console.log('🧹 STEP 1 - Complete cleanup with FORCED sync...');
       await forceCompleteSync();
       
-      // STEP 2: Clear all existing areas SILENTLY
-      console.log('🗑️ STEP 2 - Clear all existing areas SILENTLY...');
-      if (currentWeekAreas.length > 0) {
-        const cleanupSuccess = await deleteAllUserAreas();
-        if (!cleanupSuccess) {
-          console.error('❌ BUZZ GENERATION - Cleanup failed');
-          toast.dismiss();
-          toast.error('Errore nel rimuovere le aree precedenti');
-          return null;
-        }
-      }
-      
-      console.log('✅ STEP 2 - Cleanup completed');
-      
-      // STEP 3: CRITICAL - Call backend with generateMap: true and coordinates - PURE BACKEND LOGIC WITH VALID USER ID
-      console.log('🚀 STEP 3 - Calling PURE BACKEND handle-buzz-press with generateMap: true and VALID USER ID...');
+      // STEP 2: CRITICAL - Call backend with generateMap: true and coordinates - PURE BACKEND LOGIC WITH VALID USER ID
+      console.log('🚀 STEP 2 - Calling PURE BACKEND handle-buzz-press with generateMap: true and VALID USER ID...');
       
       const response = await callBuzzApi({ 
         userId: user.id, // CRITICAL: Pass validated user ID
@@ -135,7 +121,7 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      // STEP 4: Extract area data from backend response - NO FRONTEND CALCULATION EVER
+      // STEP 3: Extract area data from backend response - NO FRONTEND CALCULATION EVER
       const mapArea = response.map_area;
       if (!mapArea) {
         console.error('❌ BUZZ GENERATION - No map area returned from backend');
@@ -144,9 +130,9 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      console.log('✅ STEP 4 - Backend returned REAL area with CALCULATED radius:', mapArea);
+      console.log('✅ STEP 3 - Backend returned REAL area with CALCULATED radius:', mapArea);
 
-      // STEP 5: Create BuzzMapArea object from backend response - PURE BACKEND DATA
+      // STEP 4: Create BuzzMapArea object from backend response - PURE BACKEND DATA
       const newArea: BuzzMapArea = {
         id: crypto.randomUUID(), // Generate frontend ID
         lat: mapArea.lat,
@@ -157,12 +143,12 @@ export const useBuzzMapLogic = () => {
         user_id: user.id
       };
 
-      // STEP 6: Force complete sync after creation
-      console.log('🔄 STEP 6 - Force complete sync after creation...');
+      // STEP 5: Force complete sync after creation
+      console.log('🔄 STEP 5 - Force complete sync after creation...');
       await forceCompleteSync();
       await forceReload();
       
-      // STEP 7: Show SINGLE success toast with REAL backend data ONLY
+      // STEP 6: Show SINGLE success toast with REAL backend data ONLY
       toast.dismiss(); // Ensure no other toasts
       const precision = response.precision || 'standard';
       const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
@@ -188,8 +174,8 @@ export const useBuzzMapLogic = () => {
       setIsGenerating(false);
     }
   }, [
-    user, deleteAllUserAreas, callBuzzApi, isGenerating, isDeleting, 
-    setIsGenerating, forceCompleteSync, forceReload, currentWeekAreas
+    user, callBuzzApi, isGenerating, isDeleting, 
+    setIsGenerating, forceCompleteSync, forceReload
   ]);
 
   // UNIFIED DELETE AREA - Same logic as trash icon

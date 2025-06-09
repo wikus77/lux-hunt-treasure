@@ -240,7 +240,7 @@ serve(async (req) => {
     }
     
     const currentWeek = weekData || 1;
-    console.log(`Current mission week: ${currentWeek}`);
+    console.log(`📍 Current mission week: ${currentWeek}`);
 
     // Update buzz counter for the user
     const { data: buzzCount, error: buzzCountError } = await supabase.rpc('increment_buzz_counter', {
@@ -255,16 +255,27 @@ serve(async (req) => {
       );
     }
 
+    console.log(`📍 Updated buzz count: ${buzzCount}`);
+
     // Calculate the buzz cost based on daily usage and clue count
-    const { data: userClueCount } = await supabase
+    const { data: userClueCount, error: clueCountError } = await supabase
       .from('user_clues')
       .select('clue_id', { count: 'exact' })
       .eq('user_id', userId);
       
-    const clueCount = userClueCount || 0;
+    if (clueCountError) {
+      console.error("Errore nel conteggio degli indizi:", clueCountError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Errore nel conteggio degli indizi" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const clueCount = userClueCount?.length || 0;
+    console.log(`📍 Current clue count: ${clueCount}`);
     
     const { data: costData, error: costError } = await supabase.rpc('calculate_buzz_price', {
-      daily_count: clueCount
+      daily_count: clueCount + 1
     });
 
     if (costError || costData === null) {
@@ -276,6 +287,7 @@ serve(async (req) => {
     }
 
     const buzzCost = costData;
+    console.log(`📍 Calculated buzz cost: €${buzzCost}`);
     
     // Check if user is blocked from making more buzz requests today
     if (buzzCost <= 0) {
@@ -287,6 +299,7 @@ serve(async (req) => {
 
     // Generate appropriate clue based on current week
     const clueText = generateClueBasedOnWeek(currentWeek);
+    console.log(`📍 Generated clue: ${clueText}`);
     
     // Insert clue into user_clues table with updated schema
     const { data: clueData, error: clueError } = await supabase
@@ -326,6 +339,8 @@ serve(async (req) => {
       );
     }
 
+    console.log(`✅ Clue saved with ID: ${clueData.clue_id}`);
+
     // Prepare response
     const response: BuzzResponse = {
       success: true,
@@ -360,11 +375,14 @@ serve(async (req) => {
       if (genError) {
         console.error("Errore nell'incremento del contatore di generazione mappe:", genError);
       } else {
+        console.log(`📍 Current generation count: ${generationData}`);
+        
         // STEP 3: Get max allowed generations for this week
         const { data: maxGenData } = await supabase.rpc('get_max_map_generations', {
           p_week: currentWeek
         });
         const maxGenerations = maxGenData || 4;
+        console.log(`📍 Max generations for week ${currentWeek}: ${maxGenerations}`);
         
         // STEP 4: Check if user still has map generations available
         if (generationData <= maxGenerations) {
