@@ -23,7 +23,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 }) => {
   const [isRippling, setIsRippling] = useState(false);
   const { createMapBuzzNotification } = useNotificationManager();
-  const { user } = useAuth(); // Get authenticated user
+  const { user } = useAuth();
   const { 
     isGenerating, 
     generateBuzzMapArea,
@@ -43,8 +43,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       return;
     }
 
-    // Log user ID for debugging
-    console.log('🔥 DEBUG: FORCED BUZZ with userId:', user.id);
+    console.log('🔥 BUZZ CLICK - User ID validated:', user.id);
     
     // Trigger ripple effect
     setIsRippling(true);
@@ -59,14 +58,14 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     const centerLat = mapCenter ? mapCenter[0] : 41.9028;
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
-    console.log('📍 FORCED BUZZ CALL with GUARANTEED MAP_AREA:', { 
+    console.log('📍 BUZZ CALL with coordinates:', { 
       userId: user.id,
       centerLat, 
       centerLng,
-      mode: 'forced-backend-guaranteed-map-area'
+      mode: 'backend-only'
     });
     
-    // FORCED GENERATION with GUARANTEED MAP_AREA return
+    // BACKEND-ONLY GENERATION
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
@@ -75,10 +74,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         window.plausible('clue_unlocked');
       }
       
-      console.log('✅ FORCED BUZZ SUCCESS with GUARANTEED map_area:', {
+      console.log('✅ BUZZ SUCCESS with backend area:', {
         userId: user.id,
         area: newArea,
-        source: 'forced-backend-guaranteed-map-area'
+        source: 'backend-verified'
       });
       
       // Force reload areas to sync with database
@@ -95,14 +94,17 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       if (handleBuzz) {
         handleBuzz();
       }
+    } else {
+      console.error('❌ BUZZ FAILED - No area generated');
+      toast.error('Errore generazione area BUZZ');
     }
   };
   
   const getPrecisionIndicator = () => {
     if (precisionMode === 'high') {
-      return '🎯'; // High precision
+      return '🎯';
     }
-    return '📍'; // Lower precision
+    return '📍';
   };
 
   // Disable button if no valid user

@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,7 +22,7 @@ export const useBuzzMapLogic = () => {
   const { user } = useAuth();
   const { callBuzzApi } = useBuzzApi();
   
-  // Use Zustand store ONLY for operation locks
+  // Use Zustand store for operation locks
   const { 
     isGenerating,
     isDeleting,
@@ -59,25 +60,29 @@ export const useBuzzMapLogic = () => {
     precisionMode
   } = useBuzzMapCounter(user?.id);
 
-  // Get active area from current week areas (React Query only)
+  // Get active area from current week areas
   const getActiveArea = useCallback((): BuzzMapArea | null => {
     return currentWeekAreas.length > 0 ? currentWeekAreas[0] : null;
   }, [currentWeekAreas]);
 
-  // FORCED BACKEND BUZZ generation - GUARANTEED MAP_AREA RETURN
+  // SIMPLIFIED BACKEND-ONLY BUZZ generation
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     // CRITICAL: Validate user ID first
     if (!user?.id) {
-      console.error('🚫 BUZZ GENERATION - No valid user ID available');
+      console.error('❌ BUZZ GENERATION - No valid user ID available');
       toast.dismiss();
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
       return null;
     }
 
-    console.log('🔥 DEBUG: Using valid user ID for FORCED BUZZ generation:', user.id);
+    console.log('🔥 STARTING BACKEND-ONLY BUZZ GENERATION:', {
+      userId: user.id,
+      centerLat,
+      centerLng
+    });
 
     if (!centerLat || !centerLng || isNaN(centerLat) || isNaN(centerLng)) {
-      console.error('🚫 BUZZ GENERATION - Invalid coordinates');
+      console.error('❌ Invalid coordinates');
       toast.dismiss();
       toast.error('Coordinate della mappa non valide');
       return null;
@@ -85,87 +90,76 @@ export const useBuzzMapLogic = () => {
 
     // Prevent concurrent operations
     if (isGenerating || isDeleting) {
-      console.error('🚫 BUZZ GENERATION - Blocked - operation in progress', { isGenerating, isDeleting });
+      console.error('❌ Operation blocked - another operation in progress', { isGenerating, isDeleting });
       return null;
     }
 
     setIsGenerating(true);
-    toast.dismiss(); // Clear any existing toasts
+    toast.dismiss();
     
     try {
-      console.log('🔥 FORCED BUZZ GENERATION START - BACKEND ONLY with VALID USER ID:', {
-        centerLat,
-        centerLng,
-        userId: user.id,
-        mode: 'forced-backend-only-guaranteed-map-area'
-      });
+      console.log('🚀 CALLING BACKEND with generateMap: true...');
       
-      // STEP 1: Complete cleanup with FORCED sync sequence
-      console.log('🧹 STEP 1 - Complete cleanup with FORCED sync...');
-      await forceCompleteSync();
-      
-      // STEP 2: FORCED BACKEND CALL - generateMap: true and coordinates
-      console.log('🚀 STEP 2 - Calling FORCED BACKEND handle-buzz-press with generateMap: true...');
-      
+      // Call backend API with FORCED map generation
       const response = await callBuzzApi({ 
         userId: user.id,
         generateMap: true,
         coordinates: { lat: centerLat, lng: centerLng }
       });
       
-      if (!response.success) {
-        console.error('❌ FORCED BUZZ GENERATION - Backend call failed:', response.error);
+      console.log('📡 BACKEND RESPONSE:', response);
+      
+      if (!response.success || response.error) {
+        console.error('❌ Backend error:', response.errorMessage || response.error);
         toast.dismiss();
-        toast.error(response.error || 'Errore durante la generazione dell\'area');
+        toast.error(response.errorMessage || 'Errore durante la generazione dell\'area');
         return null;
       }
 
-      // STEP 3: GUARANTEED MAP_AREA extraction from backend response
-      const mapArea = response.map_area;
-      if (!mapArea) {
-        console.error('❌ FORCED BUZZ GENERATION - Backend did not return map_area despite forced generation');
+      // Check if we got area data from backend
+      if (!response.radius_km || !response.lat || !response.lng) {
+        console.error('❌ Backend did not return complete area data');
         toast.dismiss();
-        toast.error('Backend non ha restituito area mappa');
+        toast.error('Backend non ha restituito dati area completi');
         return null;
       }
 
-      console.log('✅ STEP 3 - FORCED BACKEND returned GUARANTEED map_area:', mapArea);
+      console.log('✅ BACKEND SUCCESS - Area data received:', {
+        radius_km: response.radius_km,
+        lat: response.lat,
+        lng: response.lng,
+        generation: response.generation_number
+      });
 
-      // STEP 4: Create BuzzMapArea object from GUARANTEED backend response
+      // Create area object from backend response
       const newArea: BuzzMapArea = {
         id: crypto.randomUUID(),
-        lat: mapArea.lat,
-        lng: mapArea.lng,
-        radius_km: mapArea.radius_km, // GUARANTEED FROM BACKEND WITH 5% REDUCTION
-        week: mapArea.week,
+        lat: response.lat,
+        lng: response.lng,
+        radius_km: response.radius_km,
+        week: 1, // Will be set by backend
         created_at: new Date().toISOString(),
         user_id: user.id
       };
 
-      // STEP 5: Force complete sync after creation
-      console.log('🔄 STEP 5 - Force complete sync after GUARANTEED creation...');
+      // Force reload areas from database
       await forceCompleteSync();
       await forceReload();
       
-      // STEP 6: Show SINGLE success toast with GUARANTEED backend data
+      // Show success toast with BACKEND VERIFIED data
       toast.dismiss();
-      const precision = response.precision || 'standard';
-      const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
+      toast.success(`Area BUZZ generata! Raggio: ${response.radius_km.toFixed(1)} km - Gen: ${response.generation_number || 1} - BACKEND VERIFIED`);
       
-      // GUARANTEED TOAST WITH REAL BACKEND DATA
-      toast.success(`Area BUZZ MAPPA generata! Raggio: ${mapArea.radius_km.toFixed(1)} km - ${precisionText} - Prezzo: €${response.buzz_cost?.toFixed(2) || '0.00'} - BACKEND VERIFIED`);
-      
-      console.log('🎉 FORCED BUZZ GENERATION - GUARANTEED SUCCESS with backend data:', {
+      console.log('🎉 BUZZ GENERATION COMPLETE:', {
         userId: user.id,
-        radius_km: mapArea.radius_km,
-        cost: response.buzz_cost,
-        precision: precision,
-        source: 'forced-backend-guaranteed-map-area'
+        radius_km: response.radius_km,
+        generation: response.generation_number,
+        source: 'backend-verified'
       });
       
       return newArea;
     } catch (err) {
-      console.error('❌ FORCED BUZZ GENERATION - Error:', err);
+      console.error('❌ BUZZ GENERATION ERROR:', err);
       toast.dismiss();
       toast.error('Errore durante la generazione dell\'area');
       return null;
@@ -177,18 +171,17 @@ export const useBuzzMapLogic = () => {
     setIsGenerating, forceCompleteSync, forceReload
   ]);
 
-  // UNIFIED DELETE AREA - Same logic as trash icon
+  // Delete area functionality
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
-    console.log('🗑️ HANDLE DELETE AREA START (UNIFIED LOGIC):', areaId);
+    console.log('🗑️ HANDLE DELETE AREA START:', areaId);
     
-    toast.dismiss(); // Clear existing toasts
+    toast.dismiss();
     
     const success = await deleteSpecificArea(areaId);
     
     if (success) {
-      console.log('✅ HANDLE DELETE AREA - Success with UNIFIED LOGIC, performing database validation...');
+      console.log('✅ HANDLE DELETE AREA - Success, performing database validation...');
       
-      // CRITICAL: Validate deletion at database level
       const isValidated = await validateBuzzDeletion();
       
       if (!isValidated) {
@@ -198,7 +191,6 @@ export const useBuzzMapLogic = () => {
         toast.success('Area eliminata definitivamente');
       }
       
-      // Force complete sync after deletion
       await forceCompleteSync();
     } else {
       console.error('❌ HANDLE DELETE AREA - Failed');
@@ -221,9 +213,9 @@ export const useBuzzMapLogic = () => {
     dailyBuzzMapCounter,
     precisionMode,
     
-    // Functions - FORCED BACKEND ONLY with GUARANTEED MAP_AREA
-    generateBuzzMapArea, // Now FORCES backend with GUARANTEED map_area return
-    handleDeleteArea, // Uses UNIFIED logic
+    // Functions - BACKEND ONLY
+    generateBuzzMapArea, // Simplified backend-only generation
+    handleDeleteArea,
     getActiveArea,
     reloadAreas: forceReload,
     forceCompleteInvalidation: forceCompleteSync,
