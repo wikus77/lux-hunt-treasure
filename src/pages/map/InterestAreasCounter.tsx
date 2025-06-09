@@ -10,34 +10,44 @@ const InterestAreasCounter: React.FC = () => {
 
   if (!user?.id) {
     return (
-      <div>
-        <h3 className="text-xl font-bold text-[#00D1FF] mb-4 flex items-center gap-2">
-          <CircleIcon className="w-5 h-5" />
-          Aree di interesse (0)
-        </h3>
-        <div className="text-white/60 text-sm">
-          Accedi per visualizzare le tue aree BUZZ
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
+            <CircleIcon className="w-4 h-4" />
+            Aree di interesse
+          </h3>
+          <div className="text-white/60 text-sm">
+            Accedi per visualizzare le tue aree BUZZ
+          </div>
+        </div>
+        <div className="text-white/40 text-right">
+          <span className="text-2xl font-bold">0</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <h3 className="text-xl font-bold text-[#00D1FF] mb-4 flex items-center gap-2">
-        <CircleIcon className="w-5 h-5" />
-        Aree di interesse ({currentWeekAreas.length})
-      </h3>
-      <div className="text-white/60 text-sm">
-        {currentWeekAreas.length === 0 ? (
-          <>
-            Nessuna area BUZZ MAPPA attiva.
-            <br />
-            Clicca su "BUZZ MAPPA" per generarne una.
-          </>
-        ) : (
-          `Hai ${currentWeekAreas.length} area${currentWeekAreas.length > 1 ? 'e' : ''} attiv${currentWeekAreas.length > 1 ? 'e' : 'a'} questa settimana.`
-        )}
+    <div className="flex justify-between items-start">
+      <div>
+        <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
+          <CircleIcon className="w-4 h-4" />
+          Aree di interesse
+        </h3>
+        <div className="text-white/60 text-sm">
+          {currentWeekAreas.length === 0 ? (
+            <>
+              Nessuna area BUZZ MAPPA attiva.
+              <br />
+              Clicca su "BUZZ MAPPA" per generarne una.
+            </>
+          ) : (
+            `Hai ${currentWeekAreas.length} area${currentWeekAreas.length > 1 ? 'e' : ''} attiv${currentWeekAreas.length > 1 ? 'e' : 'a'} questa settimana.`
+          )}
+        </div>
+      </div>
+      <div className="text-white/90 text-right">
+        <span className="text-2xl font-bold">{currentWeekAreas.length}</span>
       </div>
     </div>
   );
