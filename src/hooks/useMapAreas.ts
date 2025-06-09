@@ -109,7 +109,7 @@ export const useMapAreas = (userId?: string) => {
     mutationFn: async (): Promise<boolean> => {
       console.debug('🔥 DELETE ALL START for user:', validUserId);
       
-      // STEP 1: DELETE with explicit userId
+      // STEP 1: DELETE from both tables with explicit userId - NO FALLBACKS
       console.debug('✅ DELETE eseguita');
       
       const { error: deleteError1, count: count1 } = await supabase
