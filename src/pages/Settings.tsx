@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/auth";
 import { Separator } from "@/components/ui/separator";
 import AccountSection from "@/components/settings/AccountSection";
+import RegulationSection from "@/components/settings/RegulationSection";
 import AppSection from "@/components/settings/AppSection";
 import NotificationSection from "@/components/settings/NotificationSection";
 import SupportSection from "@/components/settings/SupportSection";
@@ -71,6 +72,9 @@ const Settings = () => {
         
         {/* Account Settings */}
         <AccountSection />
+        
+        {/* Regulation Section */}
+        <RegulationSection />
         
         {/* App Settings */}
         <AppSection 
