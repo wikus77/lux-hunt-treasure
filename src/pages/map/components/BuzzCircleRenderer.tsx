@@ -20,14 +20,13 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   // CRITICAL: Block rendering if areas are present when they shouldn't be
   useEffect(() => {
     if (areas.length > 0) {
-      console.warn("🚨 RENDER BLOCCATO: DB NON VUOTO DOPO DELETE", areas);
-      console.warn("🚫 BLOCKING RENDER: Areas present when should be empty:", {
+      console.debug("🔍 RENDER CHECK: Areas present in component:", {
         areas_count: areas.length,
         areas_detail: areas.map(a => ({ id: a.id, user_id: a.user_id, radius_km: a.radius_km })),
         source: 'react-query'
       });
-      // CRITICAL: Return early to block render if areas exist after delete
-      return;
+    } else {
+      console.debug("✅ RENDER CHECK: No areas to render - clean state");
     }
   }, [areas]);
 
@@ -67,7 +66,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       data_source: 'react-query-only'
     });
     
-    // STEP 1: COMPLETE LEAFLET CLEANUP (ALWAYS)
+    // STEP 1: COMPLETE LEAFLET CLEANUP (ALWAYS) - ENHANCED
     console.debug('🧹 Starting COMPLETE Leaflet cleanup...');
     
     // Clear existing layer group
@@ -91,11 +90,32 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     // Clear all references
     layerGroupRef.current = null;
     
-    // CRITICAL BLOCKING: Stop render if areas is empty
+    // CRITICAL BLOCKING: Stop render if areas is empty - ENHANCED
     if (areas.length === 0) {
-      console.debug('✅ RENDER BLOCKED - areas.length === 0, map cleared completely');
+      console.debug('✅ RENDER COMPLETE - areas.length === 0, map cleared completely');
       map.setView([41.9028, 12.4964], 6);
       isCleanupRunning.current = false;
+      
+      // CRITICAL: Additional check for any remaining circles after cleanup
+      let remainingCircles = 0;
+      map.eachLayer((layer) => {
+        if (layer instanceof L.Circle) {
+          remainingCircles++;
+        }
+      });
+      
+      if (remainingCircles > 0) {
+        console.warn('⚠️ CLEANUP WARNING: Found', remainingCircles, 'remaining circles after cleanup');
+        // Force additional cleanup
+        map.eachLayer((layer) => {
+          if (layer instanceof L.Circle) {
+            map.removeLayer(layer);
+          }
+        });
+      } else {
+        console.debug('✅ CLEANUP VERIFIED: No remaining circles on map');
+      }
+      
       return;
     }
     
@@ -166,7 +186,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     
     console.debug('🎉 All circles rendered successfully');
     
-    // STEP 3: VERIFY FINAL STATE
+    // STEP 3: VERIFY FINAL STATE - ENHANCED
     const finalCircleCount = layerGroupRef.current?.getLayers().length || 0;
     console.debug('🔍 Final verification:', {
       expected_areas: areas.length,
@@ -175,6 +195,15 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       areas_empty: areas.length === 0,
       circles_cleared: finalCircleCount === 0
     });
+    
+    // CRITICAL: Log any inconsistencies
+    if (areas.length !== finalCircleCount) {
+      console.warn('⚠️ INCONSISTENCY DETECTED:', {
+        expected: areas.length,
+        actual: finalCircleCount,
+        difference: areas.length - finalCircleCount
+      });
+    }
     
     // Force map refresh and mark cleanup as done
     setTimeout(() => {
@@ -185,9 +214,10 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     
   }, [JSON.stringify(areas), map, currentColor]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount - ENHANCED
   useEffect(() => {
     return () => {
+      console.debug('🧹 Component unmounting - starting cleanup...');
       if (layerGroupRef.current) {
         layerGroupRef.current.clearLayers();
         map.removeLayer(layerGroupRef.current);

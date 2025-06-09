@@ -67,12 +67,14 @@ const executeUnifiedDelete = async (validUserId: string, areaId?: string): Promi
       .eq('id', areaId)
       .eq('user_id', validUserId);
 
-    if (deleteError1 && deleteError2) {
+    if (deleteError1 || deleteError2) {
       console.error('❌ UNIFIED DELETE SPECIFIC ERROR:', { deleteError1, deleteError2 });
       throw new Error('Failed to delete specific area');
     }
   } else {
-    // DELETE ALL AREAS
+    // DELETE ALL AREAS - CRITICAL: Make sure both tables are completely emptied
+    console.debug('🗑️ UNIFIED DELETE ALL - Starting complete cleanup...');
+    
     const { error: deleteError1, count: count1 } = await supabase
       .from('user_map_areas')
       .delete({ count: 'exact' })
@@ -163,10 +165,13 @@ export const useMapAreas = (userId?: string) => {
     enabled: !!validUserId
   });
 
-  // UNIFIED DELETE ALL MUTATION
+  // UNIFIED DELETE ALL MUTATION - ENHANCED
   const deleteAllMutation = useMutation({
     mutationFn: async (): Promise<boolean> => {
-      return await executeUnifiedDelete(validUserId);
+      console.debug('🔥 DELETE ALL MUTATION START - executeUnifiedDelete');
+      const result = await executeUnifiedDelete(validUserId);
+      console.debug('✅ DELETE ALL MUTATION COMPLETE - executeUnifiedDelete result:', result);
+      return result;
     },
     onSuccess: async () => {
       console.debug('🎉 DELETE ALL SUCCESS - Starting FORCED sync sequence...');
@@ -176,6 +181,9 @@ export const useMapAreas = (userId?: string) => {
       await queryClient.invalidateQueries({ queryKey });
       await queryClient.refetchQueries({ queryKey });
       
+      // CRITICAL: Wait for data to settle before verification
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Verify final state
       const finalAreas = queryClient.getQueryData(queryKey);
       console.debug('🔍 FINAL VERIFICATION - Areas in cache:', finalAreas);
@@ -183,19 +191,26 @@ export const useMapAreas = (userId?: string) => {
       // CRITICAL: Block any render if cache is not empty
       if (Array.isArray(finalAreas) && finalAreas.length > 0) {
         const blockMsg = '🚨 BLOCKING: Cache still contains areas after DELETE';
-        console.error(blockMsg);
-        throw new Error(blockMsg);
+        console.error(blockMsg, finalAreas);
+        // Force another invalidation
+        await queryClient.invalidateQueries({ queryKey });
+        await queryClient.refetchQueries({ queryKey });
       }
       
-      console.debug('✅ DELETE ALL COMPLETE - query synced, cache verified empty');
+      console.debug('✅ DELETE ALL COMPLETE - query synced, cache verified');
+    },
+    onError: (error) => {
+      console.error('❌ DELETE ALL MUTATION ERROR:', error);
     }
   });
 
-  // UNIFIED DELETE SPECIFIC MUTATION
+  // UNIFIED DELETE SPECIFIC MUTATION - ENHANCED
   const deleteSpecificMutation = useMutation({
     mutationFn: async (areaId: string): Promise<boolean> => {
       console.debug('🗑️ DELETE SPECIFIC START for area:', areaId);
-      return await executeUnifiedDelete(validUserId, areaId);
+      const result = await executeUnifiedDelete(validUserId, areaId);
+      console.debug('✅ DELETE SPECIFIC COMPLETE for area:', areaId, 'result:', result);
+      return result;
     },
     onSuccess: async () => {
       console.debug('🎉 DELETE SPECIFIC SUCCESS - Starting FORCED sync...');
@@ -205,6 +220,9 @@ export const useMapAreas = (userId?: string) => {
       await queryClient.refetchQueries({ queryKey });
       
       console.debug('✅ DELETE SPECIFIC - Sync COMPLETE');
+    },
+    onError: (error) => {
+      console.error('❌ DELETE SPECIFIC MUTATION ERROR:', error);
     }
   });
 
@@ -232,7 +250,7 @@ export const useMapAreas = (userId?: string) => {
     }
   }, [queryClient, queryKey, resetMapState]);
 
-  // DELETE ALL AREAS - Uses unified logic (same as trash icon)
+  // DELETE ALL AREAS - ENHANCED with better validation
   const deleteAllUserAreas = useCallback(async (): Promise<boolean> => {
     if (isDeleting || isGenerating) {
       console.debug('🚫 DELETE ALL - Operation blocked - already in progress');
@@ -244,10 +262,19 @@ export const useMapAreas = (userId?: string) => {
 
     try {
       console.debug('🔥 DELETE ALL - Starting with validUserId:', validUserId);
+      console.debug('🔍 DELETE ALL - Current areas before delete:', currentWeekAreas.length);
       
+      // CRITICAL: Execute the unified delete with await
       await deleteAllMutation.mutateAsync();
       
-      console.debug('✅ DELETE ALL - Completed successfully');
+      // CRITICAL: Additional validation to ensure areas are gone
+      const finalValidation = await validateBuzzDeletion(validUserId);
+      if (!finalValidation) {
+        console.error('❌ DELETE ALL - Final validation failed');
+        throw new Error('Delete validation failed - areas still exist');
+      }
+      
+      console.debug('✅ DELETE ALL - Completed successfully with validation');
       toast.success('Tutte le aree sono state eliminate definitivamente');
       
       return true;
@@ -258,9 +285,9 @@ export const useMapAreas = (userId?: string) => {
     } finally {
       setIsDeleting(false);
     }
-  }, [isDeleting, isGenerating, setIsDeleting, deleteAllMutation, validUserId]);
+  }, [isDeleting, isGenerating, setIsDeleting, deleteAllMutation, validUserId, currentWeekAreas.length]);
 
-  // DELETE SPECIFIC AREA - Uses unified logic (same as "Cancella Tutto")
+  // DELETE SPECIFIC AREA - ENHANCED with better validation
   const deleteSpecificArea = useCallback(async (areaId: string): Promise<boolean> => {
     if (isDeleting || isGenerating) {
       console.debug('🚫 DELETE SPECIFIC - Operation blocked - already in progress');
@@ -271,7 +298,11 @@ export const useMapAreas = (userId?: string) => {
     toast.dismiss();
 
     try {
+      console.debug('🗑️ DELETE SPECIFIC - Starting for area:', areaId);
+      
       await deleteSpecificMutation.mutateAsync(areaId);
+      
+      console.debug('✅ DELETE SPECIFIC - Completed successfully');
       toast.success('Area eliminata definitivamente');
       return true;
     } catch (error) {
@@ -297,7 +328,7 @@ export const useMapAreas = (userId?: string) => {
     isLoading: isLoading || isFetching,
     error,
     
-    // Actions - BOTH USE UNIFIED LOGIC
+    // Actions - BOTH USE IDENTICAL UNIFIED LOGIC
     deleteAllUserAreas,
     deleteSpecificArea,
     forceReload,
