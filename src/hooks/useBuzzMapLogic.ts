@@ -185,8 +185,8 @@ export const useBuzzMapLogic = () => {
       console.debug('🧹 STEP 1 - Complete cleanup with FORCED sync...');
       await forceCompleteSync();
       
-      // STEP 2: Clear all existing areas with STRICT VALIDATION
-      console.debug('🗑️ STEP 2 - Clear all existing areas with STRICT validation...');
+      // STEP 2: Clear all existing areas with UNIFIED DELETE LOGIC
+      console.debug('🗑️ STEP 2 - Clear all existing areas with UNIFIED DELETE LOGIC...');
       const cleanupSuccess = await deleteAllUserAreas();
       if (!cleanupSuccess) {
         console.error('❌ BUZZ GENERATION - Cleanup failed');
@@ -194,7 +194,7 @@ export const useBuzzMapLogic = () => {
         return null;
       }
       
-      console.debug('✅ STEP 2 - Cleanup completed with STRICT validation');
+      console.debug('✅ STEP 2 - Cleanup completed with UNIFIED DELETE LOGIC');
       
       // STEP 3: Calculate radius and pricing
       console.debug('💰 STEP 3 - Calculate radius and pricing...');
@@ -267,16 +267,16 @@ export const useBuzzMapLogic = () => {
     setIsGenerating, forceCompleteSync, forceReload, currentWeekAreas
   ]);
 
-  // Enhanced manual area deletion with DATABASE VALIDATION
+  // UNIFIED DELETE AREA - Same logic as "Cancella Tutto"
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
-    console.debug('🗑️ HANDLE DELETE AREA START:', areaId);
+    console.debug('🗑️ HANDLE DELETE AREA START (UNIFIED LOGIC):', areaId);
     
     toast.dismiss();
     
     const success = await deleteSpecificArea(areaId);
     
     if (success) {
-      console.debug('✅ HANDLE DELETE AREA - Success, performing database validation...');
+      console.debug('✅ HANDLE DELETE AREA - Success with UNIFIED LOGIC, performing database validation...');
       
       // CRITICAL: Validate deletion at database level
       const isValidated = await validateBuzzDeletion();
@@ -299,16 +299,16 @@ export const useBuzzMapLogic = () => {
     return success;
   }, [deleteSpecificArea, forceCompleteSync, validateBuzzDeletion]);
 
-  // Enhanced clear all areas with DATABASE VALIDATION
+  // UNIFIED CLEAR ALL AREAS - Same logic as trash icon
   const handleClearAllAreas = useCallback(async (): Promise<void> => {
-    console.debug('🧹 HANDLE CLEAR ALL START');
+    console.debug('🧹 HANDLE CLEAR ALL START (UNIFIED LOGIC)');
     
     toast.dismiss();
     
     const success = await deleteAllUserAreas();
     
     if (success) {
-      console.debug('✅ HANDLE CLEAR ALL - Success, performing database validation...');
+      console.debug('✅ HANDLE CLEAR ALL - Success with UNIFIED LOGIC, performing database validation...');
       
       // CRITICAL: Validate deletion at database level
       const isValidated = await validateBuzzDeletion();
@@ -383,8 +383,8 @@ export const useBuzzMapLogic = () => {
     }, [calculateBuzzMapPrice, calculateProgressiveRadius, calculateEscalatedPrice, calculateProgressivePrice]),
     
     generateBuzzMapArea,
-    handleDeleteArea,
-    handleClearAllAreas,
+    handleDeleteArea, // Uses UNIFIED logic
+    handleClearAllAreas, // Uses UNIFIED logic
     getActiveArea,
     reloadAreas: forceReload,
     testCalculationLogic,
