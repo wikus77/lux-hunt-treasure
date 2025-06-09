@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +16,7 @@ export const useNewMapPage = () => {
   const [newPoint, setNewPoint] = useState<MapMarker | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeMapPoint, setActiveMapPoint] = useState<string | null>(null);
-  const buzzMapPrice = 1.99;
+  const buzzMapPrice = 1.99; // Default price, will be updated by backend
 
   // Default location (Rome, Italy)
   const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
@@ -34,8 +33,7 @@ export const useNewMapPage = () => {
     currentWeekAreas, 
     isGenerating: isBuzzGenerating,
     generateBuzzMapArea,
-    getActiveArea,
-    calculateBuzzMapPrice
+    getActiveArea
   } = useBuzzMapLogic();
 
   // Initialize search areas logic
@@ -380,7 +378,7 @@ export const useNewMapPage = () => {
     isLoading,
     activeMapPoint,
     setActiveMapPoint,
-    buzzMapPrice: calculateBuzzMapPrice(),
+    buzzMapPrice,
     searchAreas,
     isAddingSearchArea,
     activeSearchArea,

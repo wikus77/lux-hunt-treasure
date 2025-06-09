@@ -52,7 +52,7 @@ const MapContent: React.FC<MapContentProps> = ({
   hookHandleMapPointClick
 }) => {
   // Get current BUZZ areas from unified hook (SINGLE SOURCE OF TRUTH)
-  const { currentWeekAreas, debugCurrentState, reloadAreas } = useBuzzMapLogic();
+  const { currentWeekAreas, reloadAreas } = useBuzzMapLogic();
   
   // Force reload areas when component mounts
   useEffect(() => {
@@ -67,9 +67,6 @@ const MapContent: React.FC<MapContentProps> = ({
       count: currentWeekAreas.length,
       timestamp: new Date().toISOString()
     });
-    
-    // Debug complete hook state
-    debugCurrentState();
     
     if (currentWeekAreas.length > 0) {
       const area = currentWeekAreas[0];
@@ -93,7 +90,7 @@ const MapContent: React.FC<MapContentProps> = ({
     } else {
       console.log('❌ MAP CONTENT: No areas available for rendering');
     }
-  }, [currentWeekAreas, debugCurrentState]);
+  }, [currentWeekAreas]);
 
   // Debug search areas
   useEffect(() => {
