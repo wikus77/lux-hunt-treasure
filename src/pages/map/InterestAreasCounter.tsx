@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { CircleIcon } from 'lucide-react';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -12,7 +11,7 @@ const InterestAreasCounter: React.FC = () => {
     return (
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-xl font-bold text-white uppercase tracking-wider mb-2">
+          <h3 className="text-lg font-bold text-white uppercase tracking-wider mb-2">
             AREE DI INTERESSE
           </h3>
           <div className="text-gray-400 text-sm">
@@ -29,7 +28,7 @@ const InterestAreasCounter: React.FC = () => {
   return (
     <div className="flex justify-between items-center">
       <div>
-        <h3 className="text-xl font-bold text-white uppercase tracking-wider mb-2">
+        <h3 className="text-lg font-bold text-white uppercase tracking-wider mb-2">
           AREE DI INTERESSE
         </h3>
         <div className="text-gray-400 text-sm">

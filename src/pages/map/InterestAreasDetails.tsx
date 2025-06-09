@@ -19,7 +19,7 @@ const InterestAreasDetails: React.FC = () => {
     return (
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-xl font-bold text-white uppercase tracking-wider mb-2">
+          <h3 className="text-lg font-bold text-white uppercase tracking-wider mb-2">
             AREE DI INTERESSE
           </h3>
           <div className="text-gray-400 text-sm">
@@ -34,7 +34,7 @@ const InterestAreasDetails: React.FC = () => {
     return (
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-xl font-bold text-white uppercase tracking-wider mb-2">
+          <h3 className="text-lg font-bold text-white uppercase tracking-wider mb-2">
             AREE DI INTERESSE
           </h3>
           <div className="text-gray-400 text-sm">
@@ -50,7 +50,7 @@ const InterestAreasDetails: React.FC = () => {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xl font-bold text-white uppercase tracking-wider">
+        <h3 className="text-lg font-bold text-white uppercase tracking-wider">
           AREE DI INTERESSE
         </h3>
         <button 
