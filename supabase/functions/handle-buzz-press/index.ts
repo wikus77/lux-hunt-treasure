@@ -93,7 +93,42 @@ serve(async (req) => {
   }
 
   try {
-    // 1. AUTENTICAZIONE - Verifica Authorization Header
+    // Parse request body first to get userId for logging
+    const requestData = await req.json();
+    const { userId, generateMap, prizeId, coordinates, sessionId } = requestData as BuzzRequest;
+    
+    console.log(`🔥 DEBUG: Received userId in request:`, userId);
+    console.log(`📡 Full request payload:`, requestData);
+    
+    // 1. CRITICAL USER ID VALIDATION - FIRST CHECK
+    if (!userId) {
+      console.error("❌ CRITICAL ERROR: Missing userId parameter in request body");
+      return new Response(
+        JSON.stringify({ success: false, error: "ID utente non valido - parametro mancante" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (typeof userId !== 'string') {
+      console.error("❌ CRITICAL ERROR: UserId is not a string:", typeof userId, userId);
+      return new Response(
+        JSON.stringify({ success: false, error: "ID utente non valido - formato non corretto" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Verifica che userId sia un UUID valido
+    if (!isValidUuid(userId)) {
+      console.error(`❌ CRITICAL ERROR: Invalid userId format: ${userId}`);
+      return new Response(
+        JSON.stringify({ success: false, error: "ID utente non valido - formato UUID richiesto" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`✅ USER ID VALIDATION PASSED: ${userId}`);
+
+    // 2. AUTENTICAZIONE - Verifica Authorization Header
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
       console.error("Missing authorization header");
@@ -130,8 +165,20 @@ serve(async (req) => {
     }
 
     const authenticatedUserId = user.id;
+    console.log(`✅ AUTH TOKEN VALIDATION PASSED: ${authenticatedUserId}`);
 
-    // 2. ENHANCED RATE LIMITING - Check abuse before other validations
+    // Verifica che l'userId nel payload corrisponda all'utente autenticato
+    if (userId !== authenticatedUserId) {
+      console.error(`❌ UserId mismatch: payload=${userId}, authenticated=${authenticatedUserId}`);
+      return new Response(
+        JSON.stringify({ success: false, error: "ID utente non corrispondente all'utente autenticato" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`✅ USER ID MATCH CONFIRMED: ${userId}`);
+
+    // 3. ENHANCED RATE LIMITING - Check abuse before other validations
     if (!checkRateLimit(authenticatedUserId)) {
       console.error(`Rate limit exceeded for user: ${authenticatedUserId}`);
       return new Response(
@@ -140,7 +187,7 @@ serve(async (req) => {
       );
     }
 
-    // 3. CONTROLLO ANTIFLOOD - Verifica abusi con il sistema esistente
+    // 4. CONTROLLO ANTIFLOOD - Verifica abusi con il sistema esistente
     const { data: isAbuse, error: abuseError } = await supabase.rpc('log_potential_abuse', {
       p_event_type: 'buzz_click',
       p_user_id: authenticatedUserId
@@ -161,44 +208,12 @@ serve(async (req) => {
       );
     }
 
-    // Parse request body
-    const requestData = await req.json();
-    const { userId, generateMap, prizeId, coordinates, sessionId } = requestData as BuzzRequest;
-    
-    console.log(`🎯 PURE BACKEND UNIFIED CALL - generateMap: ${generateMap}, coordinates:`, coordinates);
-    
-    // 4. VALIDAZIONE INPUT COMPLETA
-    if (!userId) {
-      console.error("Missing userId parameter");
-      return new Response(
-        JSON.stringify({ success: false, error: "Parametro userId mancante" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
+    // 5. VALIDAZIONE INPUT COMPLETA
     if (typeof generateMap !== 'boolean') {
       console.error("Invalid generateMap parameter");
       return new Response(
         JSON.stringify({ success: false, error: "Parametro generateMap deve essere un boolean" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    // Verifica che userId sia un UUID valido
-    if (!isValidUuid(userId)) {
-      console.error(`Invalid userId format: ${userId}`);
-      return new Response(
-        JSON.stringify({ success: false, error: "Formato userId non valido" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    // Verifica che l'userId nel payload corrisponda all'utente autenticato
-    if (userId !== authenticatedUserId) {
-      console.error(`UserId mismatch: payload=${userId}, authenticated=${authenticatedUserId}`);
-      return new Response(
-        JSON.stringify({ success: false, error: "UserId non corrispondente all'utente autenticato" }),
-        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -240,9 +255,16 @@ serve(async (req) => {
       );
     }
 
-    // Calculate the buzz cost based on daily usage
+    // Calculate the buzz cost based on daily usage and clue count
+    const { data: userClueCount } = await supabase
+      .from('user_clues')
+      .select('clue_id', { count: 'exact' })
+      .eq('user_id', userId);
+      
+    const clueCount = userClueCount || 0;
+    
     const { data: costData, error: costError } = await supabase.rpc('calculate_buzz_price', {
-      daily_count: buzzCount
+      daily_count: clueCount
     });
 
     if (costError || costData === null) {
@@ -391,15 +413,10 @@ serve(async (req) => {
             response.map_area = mapArea;
             
             // Determine precision based on user clue count vs generation count
-            const { data: userClueCount } = await supabase
-              .from('user_clues')
-              .select('clue_id', { count: 'exact' })
-              .eq('user_id', userId);
-              
-            const clueCount = userClueCount || 0;
-            response.precision = clueCount > generationData ? 'high' : 'low';
+            const totalClueCount = clueCount + 1; // Include the new clue
+            response.precision = totalClueCount > generationData ? 'high' : 'low';
             
-            console.log(`🎯 PURE BACKEND UNIFIED PRECISION: ${response.precision} (clues: ${clueCount}, generations: ${generationData})`);
+            console.log(`🎯 PURE BACKEND UNIFIED PRECISION: ${response.precision} (clues: ${totalClueCount}, generations: ${generationData})`);
           }
           
           response.remainingMapGenerations = maxGenerations - generationData;

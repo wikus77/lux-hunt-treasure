@@ -5,6 +5,7 @@ import { Circle as CircleIcon, Loader } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useBuzzMapLogic } from "@/hooks/useBuzzMapLogic";
+import { useAuth } from '@/hooks/useAuth';
 
 export interface BuzzButtonProps {
   handleBuzz?: () => void;
@@ -21,6 +22,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 }) => {
   const [isRippling, setIsRippling] = useState(false);
   const { createMapBuzzNotification } = useNotificationManager();
+  const { user } = useAuth(); // Get authenticated user
   const { 
     isGenerating, 
     generateBuzzMapArea,
@@ -33,6 +35,15 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const activeArea = getActiveArea();
   
   const handleBuzzMapClick = async () => {
+    // CRITICAL: Validate user ID first
+    if (!user?.id) {
+      console.error('❌ BUZZ ERROR: No valid user ID available');
+      return;
+    }
+
+    // Log user ID for debugging
+    console.log('🔥 DEBUG: userId being sent:', user.id);
+    
     // Trigger ripple effect
     setIsRippling(true);
     setTimeout(() => setIsRippling(false), 1000);
@@ -46,15 +57,14 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     const centerLat = mapCenter ? mapCenter[0] : 41.9028;
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('📍 Using map center coordinates for PURE BACKEND CALL:', { 
-        centerLat, 
-        centerLng,
-        mode: 'pure-backend-only-with-5%-reduction'
-      });
-    }
+    console.log('📍 BUZZ CALL with VALID USER ID:', { 
+      userId: user.id,
+      centerLat, 
+      centerLng,
+      mode: 'pure-backend-only'
+    });
     
-    // Generate the area using PURE BACKEND - NO FRONTEND LOGIC EVER
+    // Generate the area using PURE BACKEND with VALID USER ID
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
@@ -63,21 +73,16 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         window.plausible('clue_unlocked');
       }
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log('✅ PURE BACKEND AREA CREATED WITH REAL 5% REDUCTION:', {
-          id: newArea.id,
-          lat: newArea.lat,
-          lng: newArea.lng,
-          radius_km: newArea.radius_km, // REAL VALUE WITH 5% REDUCTION FROM BACKEND
-          created_at: newArea.created_at,
-          source: 'pure-backend-calculation-with-reduction'
-        });
-      }
+      console.log('✅ BUZZ SUCCESS with valid user ID:', {
+        userId: user.id,
+        area: newArea,
+        source: 'pure-backend-with-valid-user-id'
+      });
       
       // Force reload areas to sync with database
       await reloadAreas();
       
-      // Center map on new area - ONLY IF REAL DATA EXISTS FROM BACKEND
+      // Center map on new area
       setTimeout(() => {
         if (onAreaGenerated && newArea.radius_km > 0) {
           onAreaGenerated(newArea.lat, newArea.lng, newArea.radius_km);
@@ -97,6 +102,9 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     }
     return '📍'; // Lower precision
   };
+
+  // Disable button if no valid user
+  const isDisabled = isGenerating || !user?.id;
   
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
@@ -107,7 +115,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       >
         <Button
           onClick={handleBuzzMapClick}
-          disabled={isGenerating}
+          disabled={isDisabled}
           className={`buzz-button bg-gradient-to-r from-[#00cfff] via-[#ff00cc] to-[#7f00ff] text-white shadow-[0_0_20px_6px_rgba(255,0,128,0.45)] hover:shadow-[0_0_25px_10px_rgba(255,0,128,0.65)] transition-all duration-300 px-6 py-2 rounded-full font-bold tracking-wide text-base relative overflow-hidden ${isRippling ? 'ripple-effect' : ''}`}
           style={{
             animation: isGenerating ? "none" : "buzzGlow 2s infinite ease-in-out"
@@ -120,11 +128,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           )}
           {isGenerating ? 'Generando...' : 'BUZZ MAPPA'}
           <span className="ml-2 text-xs opacity-80">
-            {activeArea ? `(Attivo: ${activeArea.radius_km.toFixed(1)}km)` : '(Pure Backend)'}
+            {activeArea ? `(Attivo: ${activeArea.radius_km.toFixed(1)}km)` : '(Backend Ready)'}
             {getPrecisionIndicator()}
           </span>
           <div className="text-xs opacity-70 mt-1">
-            Pure Backend • {dailyBuzzMapCounter} BUZZ settimana
+            {!user?.id ? 'Login Required' : `User: ${user.id.slice(0, 8)}... • ${dailyBuzzMapCounter} BUZZ settimana`}
           </div>
         </Button>
         

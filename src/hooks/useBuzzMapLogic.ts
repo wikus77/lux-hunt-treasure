@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/useAuth';
 import { useMapAreas } from './useMapAreas';
 import { useBuzzApi } from './buzz/useBuzzApi';
 import { useBuzzCounter } from './useBuzzCounter';
@@ -67,15 +67,18 @@ export const useBuzzMapLogic = () => {
 
   // UNIFIED BUZZ generation - BACKEND ONLY - COMPLETELY STATELESS FRONTEND
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
+    // CRITICAL: Validate user ID first
     if (!user?.id) {
-      console.debug('🚫 BUZZ GENERATION - No user ID');
+      console.error('🚫 BUZZ GENERATION - No valid user ID available');
       toast.dismiss();
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
       return null;
     }
 
+    console.log('🔥 DEBUG: Using valid user ID for BUZZ generation:', user.id);
+
     if (!centerLat || !centerLng || isNaN(centerLat) || isNaN(centerLng)) {
-      console.debug('🚫 BUZZ GENERATION - Invalid coordinates');
+      console.error('🚫 BUZZ GENERATION - Invalid coordinates');
       toast.dismiss();
       toast.error('Coordinate della mappa non valide');
       return null;
@@ -83,7 +86,7 @@ export const useBuzzMapLogic = () => {
 
     // Prevent concurrent operations
     if (isGenerating || isDeleting) {
-      console.debug('🚫 BUZZ GENERATION - Blocked - operation in progress', { isGenerating, isDeleting });
+      console.error('🚫 BUZZ GENERATION - Blocked - operation in progress', { isGenerating, isDeleting });
       return null;
     }
 
@@ -91,19 +94,19 @@ export const useBuzzMapLogic = () => {
     toast.dismiss(); // Clear any existing toasts
     
     try {
-      console.debug('🔥 BUZZ GENERATION START - PURE BACKEND CALL:', {
+      console.log('🔥 BUZZ GENERATION START - PURE BACKEND CALL with VALID USER ID:', {
         centerLat,
         centerLng,
         userId: user.id,
-        mode: 'pure-backend-only'
+        mode: 'pure-backend-only-with-valid-user-id'
       });
       
       // STEP 1: Complete cleanup with FORCED sync sequence
-      console.debug('🧹 STEP 1 - Complete cleanup with FORCED sync...');
+      console.log('🧹 STEP 1 - Complete cleanup with FORCED sync...');
       await forceCompleteSync();
       
       // STEP 2: Clear all existing areas SILENTLY
-      console.debug('🗑️ STEP 2 - Clear all existing areas SILENTLY...');
+      console.log('🗑️ STEP 2 - Clear all existing areas SILENTLY...');
       if (currentWeekAreas.length > 0) {
         const cleanupSuccess = await deleteAllUserAreas();
         if (!cleanupSuccess) {
@@ -114,13 +117,13 @@ export const useBuzzMapLogic = () => {
         }
       }
       
-      console.debug('✅ STEP 2 - Cleanup completed');
+      console.log('✅ STEP 2 - Cleanup completed');
       
-      // STEP 3: CRITICAL - Call backend with generateMap: true and coordinates - PURE BACKEND LOGIC
-      console.debug('🚀 STEP 3 - Calling PURE BACKEND handle-buzz-press with generateMap: true...');
+      // STEP 3: CRITICAL - Call backend with generateMap: true and coordinates - PURE BACKEND LOGIC WITH VALID USER ID
+      console.log('🚀 STEP 3 - Calling PURE BACKEND handle-buzz-press with generateMap: true and VALID USER ID...');
       
       const response = await callBuzzApi({ 
-        userId: user.id, 
+        userId: user.id, // CRITICAL: Pass validated user ID
         generateMap: true,
         coordinates: { lat: centerLat, lng: centerLng }
       });
@@ -141,7 +144,7 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      console.debug('✅ STEP 4 - Backend returned REAL area with CALCULATED radius:', mapArea);
+      console.log('✅ STEP 4 - Backend returned REAL area with CALCULATED radius:', mapArea);
 
       // STEP 5: Create BuzzMapArea object from backend response - PURE BACKEND DATA
       const newArea: BuzzMapArea = {
@@ -155,7 +158,7 @@ export const useBuzzMapLogic = () => {
       };
 
       // STEP 6: Force complete sync after creation
-      console.debug('🔄 STEP 6 - Force complete sync after creation...');
+      console.log('🔄 STEP 6 - Force complete sync after creation...');
       await forceCompleteSync();
       await forceReload();
       
@@ -167,11 +170,12 @@ export const useBuzzMapLogic = () => {
       // ONLY SHOW TOAST WITH REAL DATA FROM BACKEND - NO FRONTEND CALCULATION
       toast.success(`Area BUZZ MAPPA generata! Raggio: ${mapArea.radius_km.toFixed(1)} km - ${precisionText} - Prezzo: €${response.buzz_cost?.toFixed(2) || '0.00'}`);
       
-      console.debug('🎉 BUZZ GENERATION - Completed successfully with PURE backend data:', {
+      console.log('🎉 BUZZ GENERATION - Completed successfully with PURE backend data and VALID USER ID:', {
+        userId: user.id,
         radius_km: mapArea.radius_km, // REAL VALUE WITH 5% REDUCTION
         cost: response.buzz_cost,
         precision: precision,
-        source: 'pure-backend-calculation'
+        source: 'pure-backend-calculation-with-valid-user-id'
       });
       
       return newArea;
@@ -190,14 +194,14 @@ export const useBuzzMapLogic = () => {
 
   // UNIFIED DELETE AREA - Same logic as trash icon
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
-    console.debug('🗑️ HANDLE DELETE AREA START (UNIFIED LOGIC):', areaId);
+    console.log('🗑️ HANDLE DELETE AREA START (UNIFIED LOGIC):', areaId);
     
     toast.dismiss(); // Clear existing toasts
     
     const success = await deleteSpecificArea(areaId);
     
     if (success) {
-      console.debug('✅ HANDLE DELETE AREA - Success with UNIFIED LOGIC, performing database validation...');
+      console.log('✅ HANDLE DELETE AREA - Success with UNIFIED LOGIC, performing database validation...');
       
       // CRITICAL: Validate deletion at database level
       const isValidated = await validateBuzzDeletion();
@@ -232,8 +236,8 @@ export const useBuzzMapLogic = () => {
     dailyBuzzMapCounter,
     precisionMode,
     
-    // Functions - PURE BACKEND ONLY
-    generateBuzzMapArea, // Now uses pure backend exclusively with 5% reduction
+    // Functions - PURE BACKEND ONLY with VALID USER ID
+    generateBuzzMapArea, // Now uses pure backend exclusively with 5% reduction and valid user ID
     handleDeleteArea, // Uses UNIFIED logic
     getActiveArea,
     reloadAreas: forceReload,
