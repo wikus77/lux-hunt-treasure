@@ -12,7 +12,6 @@ interface RightSidebarContentProps {
   deleteMapPoint: (id: string) => Promise<boolean>;
   searchAreas: any[];
   setActiveSearchArea: (id: string | null) => void;
-  clearAllSearchAreas: () => void;
   handleAddArea: (area: any) => void;
   isAddingSearchArea: boolean;
   deleteSearchArea: (id: string) => Promise<boolean>;
@@ -26,7 +25,6 @@ const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
   deleteMapPoint,
   searchAreas,
   setActiveSearchArea,
-  clearAllSearchAreas,
   handleAddArea,
   isAddingSearchArea,
   deleteSearchArea
@@ -44,12 +42,11 @@ const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
         />
       </div>
       
-      {/* Search areas section */}
+      {/* Search areas section - removed clearAllSearchAreas prop */}
       <div className="m1ssion-glass-card p-4 sm:p-6 rounded-[24px]">
         <SearchAreasSection
           searchAreas={searchAreas}
           setActiveSearchArea={setActiveSearchArea}
-          clearAllSearchAreas={clearAllSearchAreas}
           handleAddArea={handleAddArea}
           isAddingSearchArea={isAddingSearchArea}
           deleteSearchArea={deleteSearchArea}
