@@ -14,7 +14,7 @@ const InterestAreasCounter: React.FC = () => {
         <div>
           <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
             <CircleIcon className="w-4 h-4" />
-            Aree di interesse
+            M1SSION AREA
           </h3>
           <div className="text-white/60 text-sm">
             Accedi per visualizzare le tue aree BUZZ
@@ -32,7 +32,7 @@ const InterestAreasCounter: React.FC = () => {
       <div>
         <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
           <CircleIcon className="w-4 h-4" />
-          Aree di interesse
+          M1SSION AREA
         </h3>
         <div className="text-white/60 text-sm">
           {currentWeekAreas.length === 0 ? (
