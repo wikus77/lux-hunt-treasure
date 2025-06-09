@@ -21,7 +21,7 @@ const InterestAreasDetails: React.FC = () => {
         <div>
           <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
             <CircleIcon className="w-4 h-4" />
-            M1SSION MAP
+            Aree di interesse
           </h3>
           <div className="text-white/60 text-sm">
             Accedi per visualizzare le tue aree BUZZ
@@ -37,7 +37,7 @@ const InterestAreasDetails: React.FC = () => {
         <div>
           <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
             <CircleIcon className="w-4 h-4" />
-            M1SSION MAP
+            Aree di interesse
           </h3>
           <div className="text-white/60 text-sm">
             Nessuna area BUZZ MAPPA attiva.
@@ -54,7 +54,7 @@ const InterestAreasDetails: React.FC = () => {
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
           <CircleIcon className="w-4 h-4" />
-          M1SSION MAP
+          Aree di interesse
         </h3>
         <button 
           onClick={() => setShowAreaInfo(!showAreaInfo)}
