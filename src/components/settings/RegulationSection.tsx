@@ -237,19 +237,17 @@ L'utilizzo di **M1SSION™** implica l'accettazione integrale del presente regol
 `;
 
   return (
-    <>
-      <section className="p-4">
-        <div 
-          className="glass-card flex justify-between items-center p-4 cursor-pointer"
-          onClick={() => setIsDialogOpen(true)}
-        >
-          <div className="flex items-center">
-            <FileText className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-            <span>Regolamento Ufficiale M1SSION™</span>
-          </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+    <div className="space-y-4 text-white">
+      <div 
+        className="border border-white/10 rounded-lg flex justify-between items-center p-3 cursor-pointer hover:bg-white/5"
+        onClick={() => setIsDialogOpen(true)}
+      >
+        <div className="flex items-center">
+          <FileText className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+          <span>Regolamento Ufficiale M1SSION™</span>
         </div>
-      </section>
+        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl h-[70vh] bg-black/95 backdrop-blur-md border border-white/10">
@@ -269,7 +267,7 @@ L'utilizzo di **M1SSION™** implica l'accettazione integrale del presente regol
           </ScrollArea>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 };
 

@@ -35,7 +35,6 @@ const Settings = () => {
   
   // Add state for collapsible sections
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
-  const [isRegulationOpen, setIsRegulationOpen] = useState(false);
   const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false);
   
   const handleLogout = async () => {
@@ -83,7 +82,7 @@ const Settings = () => {
         
         {/* Subscription Section - Now collapsible */}
         <div className="mb-6">
-          <div className="border border-white/10 rounded-lg p-4 bg-black/50">
+          <div className="glass-card p-4">
             <Collapsible open={isSubscriptionOpen} onOpenChange={setIsSubscriptionOpen}>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
                 <h2 className="text-lg font-semibold text-white flex items-center">
@@ -119,16 +118,14 @@ const Settings = () => {
         
         {/* Regulation Section - Now collapsible */}
         <div className="mb-6">
-          <div className="border border-white/10 rounded-lg p-4 bg-black/50">
-            <Collapsible open={isRegulationOpen} onOpenChange={setIsRegulationOpen}>
+          <div className="glass-card p-4">
+            <Collapsible>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
                 <h2 className="text-lg font-semibold text-white flex items-center">
                   <Lock className="h-5 w-5 mr-3 text-projectx-neon-blue" />
                   Regolamento Ufficiale M1SSION™
                 </h2>
-                <ChevronRight 
-                  className={`h-4 w-4 transition-transform ${isRegulationOpen ? 'rotate-90' : ''}`} 
-                />
+                <ChevronRight className="h-4 w-4" />
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-4">
                 <RegulationSection />
@@ -139,7 +136,7 @@ const Settings = () => {
         
         {/* Payment Methods Section - Now properly collapsible */}
         <div className="mb-6">
-          <div className="border border-white/10 rounded-lg p-4 bg-black/50">
+          <div className="glass-card p-4">
             <Collapsible open={isPaymentMethodsOpen} onOpenChange={setIsPaymentMethodsOpen}>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
                 <h2 className="text-lg font-semibold text-white flex items-center">
