@@ -96,7 +96,7 @@ const AccountSection = () => {
                 
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-muted-foreground">Stile investigativo</span>
-                  <span className="text-sm">{profileData.investigativeStyle || "Non definito"}</span>
+                  <span className="text-sm">{profileData.investigativeStyle?.style || "Non definito"}</span>
                 </div>
               </div>
               
