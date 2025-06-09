@@ -239,7 +239,7 @@ L'utilizzo di **M1SSION™** implica l'accettazione integrale del presente regol
   return (
     <div className="space-y-4 text-white">
       <div 
-        className="border border-white/10 rounded-lg flex justify-between items-center p-3 cursor-pointer hover:bg-white/5"
+        className="border border-white/10 rounded-lg flex justify-between items-center p-3 cursor-pointer hover:bg-white/5 bg-black/20"
         onClick={() => setIsDialogOpen(true)}
       >
         <div className="flex items-center">
@@ -250,7 +250,7 @@ L'utilizzo di **M1SSION™** implica l'accettazione integrale del presente regol
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl h-[70vh] bg-black/95 backdrop-blur-md border border-white/10">
+        <DialogContent className="max-w-4xl h-[70vh] bg-black/95 backdrop-blur-md border border-white/10 rounded-lg">
           <DialogHeader className="text-center pb-4">
             <DialogTitle className="text-xl font-bold text-white flex items-center justify-center gap-2">
               <FileText className="h-6 w-6 text-projectx-neon-blue" />
@@ -258,7 +258,7 @@ L'utilizzo di **M1SSION™** implica l'accettazione integrale del presente regol
             </DialogTitle>
           </DialogHeader>
           
-          <ScrollArea className="h-full px-6">
+          <ScrollArea className="h-full px-6 rounded-lg">
             <div className="prose prose-invert max-w-none text-sm md:text-base text-white">
               <div className="whitespace-pre-line leading-relaxed">
                 {regulationContent}

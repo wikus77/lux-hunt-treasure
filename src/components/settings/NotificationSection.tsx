@@ -48,7 +48,7 @@ const NotificationSection = ({
           
           <CollapsibleContent className="mt-4">
             <div className="space-y-4 text-white">
-              <div className="flex justify-between items-center border-b border-white/10 pb-2">
+              <div className="flex justify-between items-center border-b border-white/10 pb-2 p-3 rounded-lg border border-white/10 bg-black/20">
                 <div className="flex items-center">
                   <Bell className="h-5 w-5 mr-3 text-white" />
                   <span className="text-white">Notifiche Push</span>
@@ -71,12 +71,12 @@ const NotificationSection = ({
               </div>
               
               {permission === 'denied' && (
-                <div className="px-4 py-2 text-xs text-gray-400 italic">
+                <div className="px-4 py-2 text-xs text-gray-400 italic rounded-lg border border-white/10 bg-black/20">
                   Le notifiche sono state bloccate. Modifica le impostazioni del browser per attivarle.
                 </div>
               )}
               
-              <div className="flex justify-between items-center border-b border-white/10 pb-2">
+              <div className="flex justify-between items-center border-b border-white/10 pb-2 p-3 rounded-lg border border-white/10 bg-black/20">
                 <div className="flex items-center">
                   <Bell className="h-5 w-5 mr-3 text-white" />
                   <span className="text-white">Notifiche Email</span>

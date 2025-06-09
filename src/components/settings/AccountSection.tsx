@@ -54,7 +54,7 @@ const AccountSection = () => {
                 
                 <div className="flex justify-between items-center border-b border-white/10 pb-2">
                   <span className="text-sm font-medium text-muted-foreground">Codice Agente</span>
-                  <span className="text-sm font-mono bg-projectx-neon-blue/20 px-2 py-1 rounded">
+                  <span className="text-sm font-mono bg-projectx-neon-blue/20 px-2 py-1 rounded-lg">
                     {profileData.agentCode || "AG-GUEST"}
                   </span>
                 </div>
@@ -68,7 +68,7 @@ const AccountSection = () => {
                 
                 <div className="flex justify-between items-center border-b border-white/10 pb-2">
                   <span className="text-sm font-medium text-muted-foreground">Piano attivo</span>
-                  <span className={`text-sm px-2 py-1 rounded ${
+                  <span className={`text-sm px-2 py-1 rounded-lg ${
                     getSubscriptionTier() === 'Free' ? 'bg-gray-600' :
                     getSubscriptionTier() === 'Silver' ? 'bg-gray-400 text-black' :
                     getSubscriptionTier() === 'Gold' ? 'bg-yellow-500 text-black' :

@@ -56,15 +56,17 @@ const AppSection = ({
                 />
               </div>
 
-              <SoundSettings
-                volume={volume}
-                buzzSound={soundPreference}
-                onVolumeChange={updateVolume}
-                onSoundChange={updateSound}
-              />
+              <div className="border border-white/10 rounded-lg p-3 bg-black/20">
+                <SoundSettings
+                  volume={volume}
+                  buzzSound={soundPreference}
+                  onVolumeChange={updateVolume}
+                  onSoundChange={updateSound}
+                />
+              </div>
 
               <div 
-                className="flex justify-between items-center border-b border-white/10 pb-2 cursor-pointer hover:bg-white/5 p-2 rounded"
+                className="flex justify-between items-center border-b border-white/10 pb-2 cursor-pointer hover:bg-white/5 p-2 rounded-lg"
                 onClick={() => navigate('/language-settings')}
               >
                 <div className="flex items-center">

@@ -56,24 +56,26 @@ const PrivacySecuritySection = () => {
 
   return (
     <div className="mb-6">
-      <div className="border border-white/10 rounded-lg p-4 bg-black/50">
+      <div className="glass-card p-4">
         <Collapsible open={isPrivacySectionOpen} onOpenChange={setIsPrivacySectionOpen}>
           <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
             <h2 className="text-lg font-semibold text-white flex items-center">
               <Shield className="h-5 w-5 mr-3 text-projectx-neon-blue" />
               Privacy e Sicurezza
             </h2>
-            <ChevronRight className={`h-4 w-4 transition-transform ${isPrivacySectionOpen ? 'rotate-90' : ''}`} />
+            <ChevronRight 
+              className={`h-4 w-4 transition-transform ${isPrivacySectionOpen ? 'rotate-90' : ''}`} 
+            />
           </CollapsibleTrigger>
           
           <CollapsibleContent className="mt-4">
-            <ScrollArea className="h-[400px] w-full rounded-md border border-white/10 p-4">
+            <ScrollArea className="h-[400px] w-full rounded-lg border border-white/10 p-4 bg-black/20">
               <div className="space-y-6 text-white">
                 <div>
                   <h3 className="text-lg font-bold text-projectx-neon-blue mb-2">Privacy e Sicurezza — M1SSION™</h3>
                 </div>
 
-                <div>
+                <div className="p-3 border border-white/10 rounded-lg bg-black/30">
                   <h4 className="text-md font-semibold mb-2">Titolare del trattamento</h4>
                   <p className="text-sm text-muted-foreground">M1SSION™ KFT</p>
                   <p className="text-sm text-muted-foreground">Sede legale: 1077 Budapest, Izabella utca 2 alagsor 1</p>
@@ -82,7 +84,7 @@ const PrivacySecuritySection = () => {
 
                 <Separator className="border-white/10" />
 
-                <div>
+                <div className="p-3 border border-white/10 rounded-lg bg-black/30">
                   <h4 className="text-md font-semibold mb-2">Finalità del trattamento</h4>
                   <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                     <li>Gestione dell'account e autenticazione</li>
@@ -97,7 +99,7 @@ const PrivacySecuritySection = () => {
 
                 <Separator className="border-white/10" />
 
-                <div>
+                <div className="p-3 border border-white/10 rounded-lg bg-black/30">
                   <h4 className="text-md font-semibold mb-2">Dati trattati</h4>
                   <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                     <li>Dati identificativi: nome, email, indirizzo IP</li>
@@ -110,7 +112,7 @@ const PrivacySecuritySection = () => {
 
                 <Separator className="border-white/10" />
 
-                <div>
+                <div className="p-3 border border-white/10 rounded-lg bg-black/30">
                   <h4 className="text-md font-semibold mb-2">Base giuridica del trattamento</h4>
                   <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                     <li>Esecuzione del contratto (Art. 6.1.b GDPR)</li>
@@ -122,7 +124,7 @@ const PrivacySecuritySection = () => {
 
                 <Separator className="border-white/10" />
 
-                <div>
+                <div className="p-3 border border-white/10 rounded-lg bg-black/30">
                   <h4 className="text-md font-semibold mb-2">Conservazione dei dati</h4>
                   <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                     <li>I dati sono conservati per il tempo strettamente necessario all'erogazione del servizio</li>
@@ -133,7 +135,7 @@ const PrivacySecuritySection = () => {
 
                 <Separator className="border-white/10" />
 
-                <div>
+                <div className="p-3 border border-white/10 rounded-lg bg-black/30">
                   <h4 className="text-md font-semibold mb-2">Diritti dell'utente (Art. 12–22 GDPR)</h4>
                   <p className="text-sm text-muted-foreground mb-2">Ogni utente ha il diritto di:</p>
                   <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
@@ -149,7 +151,7 @@ const PrivacySecuritySection = () => {
 
                 <Separator className="border-white/10" />
 
-                <div>
+                <div className="p-3 border border-white/10 rounded-lg bg-black/30">
                   <h4 className="text-md font-semibold mb-2">Cookie e tracciamenti</h4>
                   <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                     <li>L'app utilizza solo cookie tecnici essenziali.</li>
@@ -160,7 +162,7 @@ const PrivacySecuritySection = () => {
 
                 <Separator className="border-white/10" />
 
-                <div>
+                <div className="p-3 border border-white/10 rounded-lg bg-black/30">
                   <h4 className="text-md font-semibold mb-2">Sicurezza tecnica</h4>
                   <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                     <li>I dati sono cifrati in transito (TLS/SSL) e a riposo (AES-256)</li>
@@ -176,7 +178,7 @@ const PrivacySecuritySection = () => {
               <div className="flex gap-4">
                 <Button 
                   onClick={handleDownloadPrivacyPolicy}
-                  className="flex-1 bg-gradient-to-r from-projectx-blue to-projectx-pink"
+                  className="flex-1 bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-lg"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   📄 Scarica Privacy Policy (PDF)
@@ -185,7 +187,7 @@ const PrivacySecuritySection = () => {
                 <Button 
                   variant="destructive"
                   onClick={() => setShowDeleteForm(!showDeleteForm)}
-                  className="flex-1"
+                  className="flex-1 rounded-lg"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   🗑️ Richiedi cancellazione account
@@ -207,6 +209,7 @@ const PrivacySecuritySection = () => {
                         value={deleteFormData.email}
                         onChange={handleDeleteFormChange}
                         placeholder="Inserisci la tua email"
+                        className="rounded-lg"
                         required
                       />
                     </div>
@@ -222,6 +225,7 @@ const PrivacySecuritySection = () => {
                         onChange={handleDeleteFormChange}
                         placeholder="Spiega il motivo per cui vuoi cancellare il tuo account..."
                         rows={3}
+                        className="rounded-lg"
                         required
                       />
                     </div>
@@ -230,7 +234,7 @@ const PrivacySecuritySection = () => {
                       <Button 
                         type="submit"
                         variant="destructive"
-                        className="flex-1"
+                        className="flex-1 rounded-lg"
                       >
                         Invia Richiesta
                       </Button>
@@ -238,6 +242,7 @@ const PrivacySecuritySection = () => {
                         type="button"
                         variant="outline"
                         onClick={() => setShowDeleteForm(false)}
+                        className="rounded-lg"
                       >
                         Annulla
                       </Button>
