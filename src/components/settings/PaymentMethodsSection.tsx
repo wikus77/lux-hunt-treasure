@@ -168,7 +168,7 @@ const PaymentMethodsSection = () => {
   // Show login message if user not authenticated
   if (!user) {
     return (
-      <div className="glass-card text-center py-12">
+      <div className="text-center py-12">
         <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
         <h3 className="text-lg font-semibold mb-2">Accesso Richiesto</h3>
         <p className="text-muted-foreground mb-6">
@@ -181,7 +181,7 @@ const PaymentMethodsSection = () => {
   return (
     <div className="space-y-6">
       {/* Saved Cards Section */}
-      <div className="glass-card">
+      <div className="border border-white/10 rounded-lg p-4">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">Carte Salvate</h3>
           <Button
@@ -230,7 +230,7 @@ const PaymentMethodsSection = () => {
 
       {/* Add Card Form */}
       {isAddingCard && (
-        <div className="glass-card">
+        <div className="border border-white/10 rounded-lg p-4">
           <h3 className="text-lg font-semibold mb-4">Aggiungi Nuova Carta</h3>
           <form onSubmit={handleAddCard} className="space-y-4">
             <div>
@@ -319,7 +319,7 @@ const PaymentMethodsSection = () => {
       )}
 
       {/* Quick Payment Methods */}
-      <div className="glass-card">
+      <div className="border border-white/10 rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-4">Pagamenti Rapidi</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -356,7 +356,7 @@ const PaymentMethodsSection = () => {
       </div>
 
       {/* Security Info */}
-      <div className="glass-card">
+      <div className="border border-white/10 rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-4">Sicurezza</h3>
         <div className="space-y-3">
           <div className="flex items-start">
