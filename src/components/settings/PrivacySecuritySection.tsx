@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Shield, FileText, Download, Trash2 } from "lucide-react";
+import { Shield, FileText, Download, Trash2, ChevronRight } from "lucide-react";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -56,14 +56,14 @@ const PrivacySecuritySection = () => {
 
   return (
     <div className="mb-6">
-      <div className="glass-card p-4">
+      <div className="border border-white/10 rounded-lg p-4 bg-black/50">
         <Collapsible open={isPrivacySectionOpen} onOpenChange={setIsPrivacySectionOpen}>
           <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
             <h2 className="text-lg font-semibold text-white flex items-center">
               <Shield className="h-5 w-5 mr-3 text-projectx-neon-blue" />
               Privacy e Sicurezza
             </h2>
-            <FileText className={`h-4 w-4 transition-transform ${isPrivacySectionOpen ? 'rotate-90' : ''}`} />
+            <ChevronRight className={`h-4 w-4 transition-transform ${isPrivacySectionOpen ? 'rotate-90' : ''}`} />
           </CollapsibleTrigger>
           
           <CollapsibleContent className="mt-4">

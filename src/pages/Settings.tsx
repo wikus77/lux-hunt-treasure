@@ -33,7 +33,9 @@ const Settings = () => {
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   
-  // Add state for payment methods section
+  // Add state for collapsible sections
+  const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
+  const [isRegulationOpen, setIsRegulationOpen] = useState(false);
   const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false);
   
   const handleLogout = async () => {
@@ -76,18 +78,68 @@ const Settings = () => {
         {/* Admin Role Switcher (only visible to admins) */}
         <RoleSwitcher />
         
-        {/* Account Settings */}
+        {/* Account Settings - Now collapsible */}
         <AccountSection />
+        
+        {/* Subscription Section - Now collapsible */}
+        <div className="mb-6">
+          <div className="border border-white/10 rounded-lg p-4 bg-black/50">
+            <Collapsible open={isSubscriptionOpen} onOpenChange={setIsSubscriptionOpen}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
+                <h2 className="text-lg font-semibold text-white flex items-center">
+                  <User className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+                  Abbonamento
+                </h2>
+                <ChevronRight 
+                  className={`h-4 w-4 transition-transform ${isSubscriptionOpen ? 'rotate-90' : ''}`} 
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-4">
+                <div className="space-y-4 text-white">
+                  <div className="p-4 border border-white/10 rounded-lg bg-gradient-to-r from-projectx-blue/20 to-projectx-pink/20">
+                    <h3 className="font-semibold mb-2">Piano attuale: Free</h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Aggiorna il tuo abbonamento per sbloccare funzionalità premium
+                    </p>
+                    <Button 
+                      onClick={() => navigate('/subscriptions')}
+                      className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
+                    >
+                      Visualizza tutti i piani
+                    </Button>
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        </div>
         
         {/* Privacy & Security Section */}
         <PrivacySecuritySection />
         
-        {/* Regulation Section */}
-        <RegulationSection />
-        
-        {/* Payment Methods Section - Integrated with Collapsible */}
+        {/* Regulation Section - Now collapsible */}
         <div className="mb-6">
-          <div className="glass-card p-4">
+          <div className="border border-white/10 rounded-lg p-4 bg-black/50">
+            <Collapsible open={isRegulationOpen} onOpenChange={setIsRegulationOpen}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
+                <h2 className="text-lg font-semibold text-white flex items-center">
+                  <Lock className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+                  Regolamento Ufficiale M1SSION™
+                </h2>
+                <ChevronRight 
+                  className={`h-4 w-4 transition-transform ${isRegulationOpen ? 'rotate-90' : ''}`} 
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-4">
+                <RegulationSection />
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        </div>
+        
+        {/* Payment Methods Section - Now properly collapsible */}
+        <div className="mb-6">
+          <div className="border border-white/10 rounded-lg p-4 bg-black/50">
             <Collapsible open={isPaymentMethodsOpen} onOpenChange={setIsPaymentMethodsOpen}>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
                 <h2 className="text-lg font-semibold text-white flex items-center">
