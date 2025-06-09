@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Loader } from "lucide-react";
@@ -148,10 +149,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         
         onSuccess();
       } else {
-        console.error("❌ Errore risposta BUZZ API:", response.error);
-        setError(response.error || "Errore sconosciuto");
+        console.error("❌ Errore risposta BUZZ API:", response.errorMessage);
+        const errorMessage = response.errorMessage || "Errore sconosciuto";
+        setError(errorMessage);
         toast.error("Errore", {
-          description: response.error || "Si è verificato un errore durante l'elaborazione dell'indizio",
+          description: errorMessage,
         });
       }
     } catch (error) {
