@@ -5,17 +5,29 @@ import { supabase } from "@/integrations/supabase/client";
 interface BuzzApiParams {
   userId: string;
   generateMap: boolean;
+  coordinates?: { lat: number; lng: number };
+  prizeId?: string;
+  sessionId?: string;
 }
 
 interface BuzzApiResponse {
   success: boolean;
   clue_text?: string;
   buzz_cost?: number;
+  map_area?: {
+    lat: number;
+    lng: number;
+    radius_km: number;
+    week: number;
+  };
+  precision?: 'high' | 'low';
+  canGenerateMap?: boolean;
+  remainingMapGenerations?: number;
   error?: string;
 }
 
 export function useBuzzApi() {
-  const callBuzzApi = async ({ userId, generateMap }: BuzzApiParams): Promise<BuzzApiResponse> => {
+  const callBuzzApi = async ({ userId, generateMap, coordinates, prizeId, sessionId }: BuzzApiParams): Promise<BuzzApiResponse> => {
     try {
       if (!userId) {
         console.error("UserId mancante nella chiamata API");
@@ -28,10 +40,27 @@ export function useBuzzApi() {
         console.error(`UserID non valido: ${userId}`);
         return { success: false, error: "ID utente non valido" };
       }
+
+      // CRITICAL: Build correct payload for unified backend logic
+      const payload: any = { 
+        userId, 
+        generateMap 
+      };
+
+      // Add coordinates if generateMap is true
+      if (generateMap && coordinates) {
+        payload.coordinates = coordinates;
+        console.log(`🗺️ BUZZ API Call with generateMap=true and coordinates:`, coordinates);
+      }
+
+      // Add optional parameters
+      if (prizeId) payload.prizeId = prizeId;
+      if (sessionId) payload.sessionId = sessionId;
       
-      console.log(`Chiamata a handle-buzz-press con userId: ${userId}, generateMap: ${generateMap}`);
+      console.log(`📡 Calling handle-buzz-press with unified payload:`, payload);
+      
       const { data, error } = await supabase.functions.invoke("handle-buzz-press", {
-        body: { userId, generateMap },
+        body: payload,
       });
       
       if (error) {
@@ -47,11 +76,15 @@ export function useBuzzApi() {
         };
       }
       
-      console.log("Risposta positiva dalla funzione:", data);
+      console.log("✅ Backend response (unified):", data);
       return { 
         success: true, 
         clue_text: data.clue_text,
-        buzz_cost: data.buzz_cost
+        buzz_cost: data.buzz_cost,
+        map_area: data.map_area,
+        precision: data.precision,
+        canGenerateMap: data.canGenerateMap,
+        remainingMapGenerations: data.remainingMapGenerations
       };
     } catch (error) {
       console.error("Errore generale nella chiamata API buzz:", error);

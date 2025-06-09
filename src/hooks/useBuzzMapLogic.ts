@@ -3,9 +3,8 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { useMapAreas } from './useMapAreas';
-import { useBuzzPricing } from './useBuzzPricing';
+import { useBuzzApi } from './buzz/useBuzzApi';
 import { useBuzzCounter } from './useBuzzCounter';
-import { useBuzzDatabase } from './useBuzzDatabase';
 import { useBuzzMapCounter } from './useBuzzMapCounter';
 import { useBuzzMapUtils } from './buzz/useBuzzMapUtils';
 import { useMapStore } from '@/stores/mapStore';
@@ -22,11 +21,12 @@ export interface BuzzMapArea {
 
 export const useBuzzMapLogic = () => {
   const { user } = useAuth();
+  const { callBuzzApi } = useBuzzApi();
   
-  // LOCAL state only for UI feedback (NO React Query duplicates)
+  // LOCAL state only for UI feedback
   const [localBuzzCount, setLocalBuzzCount] = useState(0);
   
-  // Use Zustand store ONLY for operation locks - NO AREA DATA
+  // Use Zustand store ONLY for operation locks
   const { 
     isGenerating,
     isDeleting,
@@ -51,31 +51,17 @@ export const useBuzzMapLogic = () => {
     isDeleting,
     localBuzzCount,
     reactQueryLoading: isLoading,
-    data_source: 'react-query-only'
-  });
-
-  // DIAGNOSTIC: Log when areas data changes from React Query
-  console.debug('🔍 AREAS FROM REACT QUERY:', {
-    source: 'react-query',
-    areas_length: currentWeekAreas.length,
-    is_empty_after_delete: currentWeekAreas.length === 0
+    data_source: 'backend-only-unified'
   });
 
   // Use utility functions
   const { 
     getCurrentWeek, 
     getActiveAreaFromList, 
-    calculateProgressiveRadiusFromCount,
     createDebugReport 
   } = useBuzzMapUtils();
 
-  // Use specialized hooks
-  const {
-    userCluesCount,
-    calculateBuzzMapPrice,
-    testCalculationLogic
-  } = useBuzzPricing(user?.id);
-
+  // Use specialized hooks (only for UI display, not calculation)
   const {
     dailyBuzzCounter,
     loadDailyBuzzCounter,
@@ -85,13 +71,8 @@ export const useBuzzMapLogic = () => {
   const {
     dailyBuzzMapCounter,
     updateDailyBuzzMapCounter,
-    calculateProgressivePrice,
-    calculateEscalatedPrice,
-    showUnder5kmWarning,
     precisionMode
   } = useBuzzMapCounter(user?.id);
-
-  const { createBuzzMapArea } = useBuzzDatabase();
 
   // Get active area from current week areas (React Query only)
   const getActiveArea = useCallback((): BuzzMapArea | null => {
@@ -100,91 +81,7 @@ export const useBuzzMapLogic = () => {
     return active;
   }, [currentWeekAreas, getActiveAreaFromList]);
 
-  // CORRECTED: Dynamic radius calculation based on user clues and BUZZ count
-  const calculateDynamicRadius = useCallback((): number => {
-    const currentWeek = getCurrentWeek();
-    const buzzAreasCount = currentWeekAreas.filter(area => area.week === currentWeek).length;
-    
-    console.debug('📏 DYNAMIC RADIUS CALCULATION:', {
-      userCluesCount,
-      buzzAreasCount,
-      currentWeek
-    });
-
-    // CORRECTED SCHEMA: Based on user clues count with progressive reduction
-    let baseRadius: number;
-    
-    if (userCluesCount >= 1 && userCluesCount <= 10) {
-      baseRadius = 100.0; // 100km for 1-10 clues
-    } else if (userCluesCount >= 11 && userCluesCount <= 20) {
-      baseRadius = 90.0; // 90km for 11-20 clues  
-    } else if (userCluesCount >= 21 && userCluesCount <= 30) {
-      baseRadius = 80.0; // 80km for 21-30 clues
-    } else if (userCluesCount >= 31) {
-      baseRadius = 70.0; // 70km for 31+ clues
-    } else {
-      baseRadius = 100.0; // Default for 0 clues
-    }
-
-    // Apply progressive reduction: -5% for each previous BUZZ area
-    const reductionFactor = Math.pow(0.95, buzzAreasCount);
-    const finalRadius = Math.max(5.0, baseRadius * reductionFactor); // Minimum 5km
-    
-    console.debug('📏 DYNAMIC RADIUS RESULT:', {
-      baseRadius,
-      reductionFactor,
-      finalRadius: finalRadius.toFixed(2),
-      minimumEnforced: finalRadius === 5.0
-    });
-    
-    return Math.round(finalRadius * 100) / 100; // Round to 2 decimals
-  }, [userCluesCount, currentWeekAreas, getCurrentWeek]);
-
-  // CORRECTED: Dynamic pricing based on user clues
-  const calculateDynamicPrice = useCallback((): number => {
-    console.debug('💰 DYNAMIC PRICE CALCULATION:', { userCluesCount });
-
-    if (userCluesCount >= 1 && userCluesCount <= 10) {
-      return 7.99;
-    } else if (userCluesCount >= 11 && userCluesCount <= 20) {
-      return 9.99;
-    } else if (userCluesCount >= 21 && userCluesCount <= 30) {
-      return 13.99;
-    } else if (userCluesCount >= 31) {
-      return 15.99;
-    } else {
-      return 7.99; // Default for 0 clues
-    }
-  }, [userCluesCount]);
-
-  // Determine precision mode
-  const determinePrecisionMode = useCallback((): 'high' | 'low' => {
-    const mode = userCluesCount > dailyBuzzMapCounter ? 'high' : 'low';
-    console.debug('🔍 PRECISION MODE:', mode, { userCluesCount, dailyBuzzMapCounter });
-    return mode;
-  }, [userCluesCount, dailyBuzzMapCounter]);
-
-  // Apply precision fuzz
-  const applyPrecisionFuzz = useCallback((lat: number, lng: number, precision: 'high' | 'low') => {
-    if (precision === 'high') {
-      console.debug('🎯 HIGH PRECISION - No fuzz applied');
-      return { lat, lng };
-    }
-    
-    const fuzzFactor = 0.01;
-    const fuzzLat = (Math.random() - 0.5) * fuzzFactor;
-    const fuzzLng = (Math.random() - 0.5) * fuzzFactor;
-    
-    const result = {
-      lat: lat + fuzzLat,
-      lng: lng + fuzzLng
-    };
-    
-    console.debug('🌀 LOW PRECISION - Fuzz applied:', { original: { lat, lng }, fuzzed: result });
-    return result;
-  }, []);
-
-  // ENHANCED BUZZ generation with CORRECTED logic and single toast management
+  // UNIFIED BUZZ generation - BACKEND ONLY
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       console.debug('🚫 BUZZ GENERATION - No user ID');
@@ -219,13 +116,11 @@ export const useBuzzMapLogic = () => {
     toast.dismiss(); // Clear any existing toasts
     
     try {
-      const currentWeek = getCurrentWeek();
-      
-      console.debug('🔥 BUZZ GENERATION START:', {
+      console.debug('🔥 BUZZ GENERATION START - BACKEND UNIFIED:', {
         centerLat,
         centerLng,
-        currentWeek,
-        existingAreas: currentWeekAreas.length
+        userId: user.id,
+        mode: 'backend-only'
       });
       
       // STEP 1: Complete cleanup with FORCED sync sequence
@@ -246,54 +141,60 @@ export const useBuzzMapLogic = () => {
       
       console.debug('✅ STEP 2 - Cleanup completed');
       
-      // STEP 3: Calculate CORRECTED radius and pricing
-      console.debug('💰 STEP 3 - Calculate CORRECTED radius and pricing...');
-      const radiusKm = calculateDynamicRadius();
-      const finalPrice = calculateDynamicPrice();
-      const precision = determinePrecisionMode();
+      // STEP 3: CRITICAL - Call backend with generateMap: true and coordinates
+      console.debug('🚀 STEP 3 - Calling BACKEND handle-buzz-press with generateMap: true...');
       
-      console.debug('💰 STEP 3 - CORRECTED calculation complete:', {
-        radiusKm,
-        finalPrice,
-        precision,
-        userCluesCount
+      const response = await callBuzzApi({ 
+        userId: user.id, 
+        generateMap: true,
+        coordinates: { lat: centerLat, lng: centerLng }
       });
-
-      // STEP 4: Apply precision fuzz to coordinates
-      console.debug('🎯 STEP 4 - Apply precision fuzz...');
-      const { lat: finalLat, lng: finalLng } = applyPrecisionFuzz(centerLat, centerLng, precision);
-
-      // STEP 5: Create new area
-      console.debug('🚀 STEP 5 - Creating new area...');
-      const newArea = await createBuzzMapArea(user.id, finalLat, finalLng, radiusKm, currentWeek);
-      if (!newArea) {
-        console.error('❌ BUZZ GENERATION - Failed to create area');
+      
+      if (!response.success) {
+        console.error('❌ BUZZ GENERATION - Backend call failed:', response.error);
         toast.dismiss();
-        toast.error('Errore durante la creazione dell\'area');
+        toast.error(response.error || 'Errore durante la generazione dell\'area');
         return null;
       }
-      
-      console.debug('✅ STEP 5 - New area created:', newArea);
-      
-      // STEP 6: Update counters
-      console.debug('🔢 STEP 6 - Update counters...');
-      await updateDailyBuzzMapCounter(finalPrice, precision);
-      
-      // STEP 7: Force complete sync after creation
-      console.debug('🔄 STEP 7 - Force complete sync after creation...');
+
+      // STEP 4: Extract area data from backend response
+      const mapArea = response.map_area;
+      if (!mapArea) {
+        console.error('❌ BUZZ GENERATION - No map area returned from backend');
+        toast.dismiss();
+        toast.error('Backend non ha restituito area mappa');
+        return null;
+      }
+
+      console.debug('✅ STEP 4 - Backend returned area:', mapArea);
+
+      // STEP 5: Create BuzzMapArea object from backend response
+      const newArea: BuzzMapArea = {
+        id: crypto.randomUUID(), // Generate frontend ID
+        lat: mapArea.lat,
+        lng: mapArea.lng,
+        radius_km: mapArea.radius_km,
+        week: mapArea.week,
+        created_at: new Date().toISOString(),
+        user_id: user.id
+      };
+
+      // STEP 6: Force complete sync after creation
+      console.debug('🔄 STEP 6 - Force complete sync after creation...');
       await forceCompleteSync();
       await forceReload();
       
-      // STEP 8: Update local UI state
-      console.debug('🎨 STEP 8 - Update local UI state...');
+      // STEP 7: Update local UI state
+      console.debug('🎨 STEP 7 - Update local UI state...');
       setLocalBuzzCount(prev => prev + 1);
       
-      // STEP 9: Show SINGLE success toast
+      // STEP 8: Show SINGLE success toast with backend data
       toast.dismiss(); // Ensure no other toasts
+      const precision = response.precision || 'standard';
       const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
-      toast.success(`Area BUZZ MAPPA generata! Raggio: ${radiusKm.toFixed(2)} km - ${precisionText} - Prezzo: ${finalPrice.toFixed(2)}€`);
+      toast.success(`Area BUZZ MAPPA generata! Raggio: ${mapArea.radius_km.toFixed(2)} km - ${precisionText} - Prezzo: ${response.buzz_cost?.toFixed(2) || '0.00'}€`);
       
-      console.debug('🎉 BUZZ GENERATION - Completed successfully');
+      console.debug('🎉 BUZZ GENERATION - Completed successfully with backend unified logic');
       
       return newArea;
     } catch (err) {
@@ -305,9 +206,7 @@ export const useBuzzMapLogic = () => {
       setIsGenerating(false);
     }
   }, [
-    user, getCurrentWeek, calculateDynamicRadius, calculateDynamicPrice, 
-    deleteAllUserAreas, createBuzzMapArea, updateDailyBuzzMapCounter, 
-    determinePrecisionMode, applyPrecisionFuzz, isGenerating, isDeleting, 
+    user, deleteAllUserAreas, callBuzzApi, isGenerating, isDeleting, 
     setIsGenerating, forceCompleteSync, forceReload, currentWeekAreas, getActiveArea
   ]);
 
@@ -348,27 +247,26 @@ export const useBuzzMapLogic = () => {
       const debugData = createDebugReport(
         user,
         currentWeekAreas,
-        userCluesCount,
+        0, // userCluesCount not calculated locally anymore
         isGenerating,
         0, // No more forceUpdateCounter
         dailyBuzzCounter,
         dailyBuzzMapCounter,
         getActiveArea,
-        calculateDynamicRadius,
-        calculateDynamicPrice
+        () => 0, // calculateNextRadius removed - backend only
+        () => 0  // calculateBuzzMapPrice removed - backend only
       );
       
-      console.debug('🔍 DEBUG STATE - Complete report:', debugData);
+      console.debug('🔍 DEBUG STATE - Complete report (backend unified):', debugData);
       console.debug('🔍 DEBUG STATE - Local state:', { 
         localBuzzCount,
         currentWeekAreas: currentWeekAreas.length,
-        data_source: 'react-query-only'
+        data_source: 'backend-only-unified'
       });
     }
   }, [
-    user, currentWeekAreas, userCluesCount, isGenerating, getActiveArea, 
-    calculateDynamicRadius, calculateDynamicPrice, dailyBuzzCounter, 
-    dailyBuzzMapCounter, createDebugReport, localBuzzCount
+    user, currentWeekAreas, isGenerating, getActiveArea, 
+    dailyBuzzCounter, dailyBuzzMapCounter, createDebugReport, localBuzzCount
   ]);
 
   return {
@@ -379,21 +277,20 @@ export const useBuzzMapLogic = () => {
     // UI state
     isGenerating,
     isDeleting,
-    userCluesCount,
+    userCluesCount: 0, // Not calculated locally - backend only
     dailyBuzzCounter,
     dailyBuzzMapCounter,
     precisionMode,
     buzzCount: localBuzzCount, // ONLY LOCAL UI STATE
     
-    // Functions
-    calculateNextRadius: calculateDynamicRadius,
-    calculateBuzzMapPrice: calculateDynamicPrice,
+    // Functions - BACKEND UNIFIED ONLY
+    calculateNextRadius: () => 0, // Backend only - not calculated locally
+    calculateBuzzMapPrice: () => 0, // Backend only - not calculated locally
     
-    generateBuzzMapArea,
+    generateBuzzMapArea, // Now uses backend exclusively
     handleDeleteArea, // Uses UNIFIED logic
     getActiveArea,
     reloadAreas: forceReload,
-    testCalculationLogic,
     debugCurrentState,
     forceCompleteInvalidation: forceCompleteSync,
     validateBuzzDeletion

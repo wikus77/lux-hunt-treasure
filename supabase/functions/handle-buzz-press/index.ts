@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
@@ -29,6 +30,7 @@ interface BuzzResponse {
     radius_km: number;
     week: number;
   };
+  precision?: 'high' | 'low';
   canGenerateMap: boolean;
   remainingMapGenerations: number;
   error?: string;
@@ -59,7 +61,6 @@ function checkRateLimit(userId: string): boolean {
     
     if (abuseCount >= ABUSE_THRESHOLD) {
       console.error(`🚨 ABUSE ALERT: User ${userId} exceeded rate limit ${abuseCount} times`);
-      // In production, this could trigger email alerts or other notifications
     }
     
     return false;
@@ -164,6 +165,8 @@ serve(async (req) => {
     const requestData = await req.json();
     const { userId, generateMap, prizeId, coordinates, sessionId } = requestData as BuzzRequest;
     
+    console.log(`🎯 UNIFIED BACKEND CALL - generateMap: ${generateMap}, coordinates:`, coordinates);
+    
     // 4. VALIDAZIONE INPUT COMPLETA
     if (!userId) {
       console.error("Missing userId parameter");
@@ -199,7 +202,7 @@ serve(async (req) => {
       );
     }
 
-    // Se generateMap è true, le coordinate devono essere presenti e valide
+    // CRITICAL: Se generateMap è true, le coordinate devono essere presenti e valide
     if (generateMap && !isValidCoordinates(coordinates)) {
       console.error("Invalid or missing coordinates for map generation");
       return new Response(
@@ -208,16 +211,7 @@ serve(async (req) => {
       );
     }
 
-    // Validazione opzionale sessionId se presente
-    if (sessionId && typeof sessionId !== 'string') {
-      console.error("Invalid sessionId parameter");
-      return new Response(
-        JSON.stringify({ success: false, error: "Parametro sessionId deve essere una stringa" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    console.log(`✅ Security checks passed for user: ${authenticatedUserId}`);
+    console.log(`✅ Security checks passed for user: ${authenticatedUserId}, proceeding with UNIFIED LOGIC`);
 
     // Get current week since mission start
     const { data: weekData, error: weekError } = await supabase.rpc('get_current_mission_week');
@@ -319,9 +313,23 @@ serve(async (req) => {
       remainingMapGenerations: 0
     };
 
-    // Handle map generation if requested
-    if (generateMap && prizeId) {
-      // Get the current generation count for this week
+    // CRITICAL: Handle UNIFIED map generation if requested
+    if (generateMap && coordinates) {
+      console.log(`🗺️ UNIFIED MAP GENERATION START for user ${userId} with coordinates:`, coordinates);
+      
+      // STEP 1: Clear any existing BUZZ areas for this user (UNIFIED CLEANUP)
+      const { error: deleteError } = await supabase
+        .from('user_map_areas')
+        .delete()
+        .eq('user_id', userId);
+        
+      if (deleteError) {
+        console.error("Warning: Could not clear existing areas:", deleteError);
+      } else {
+        console.log("✅ Cleared existing BUZZ areas for unified generation");
+      }
+      
+      // STEP 2: Get the current generation count for this week (PROGRESSIVE LOGIC)
       const { data: generationData, error: genError } = await supabase.rpc('increment_map_generation_counter', {
         p_user_id: userId,
         p_week: currentWeek
@@ -330,69 +338,81 @@ serve(async (req) => {
       if (genError) {
         console.error("Errore nell'incremento del contatore di generazione mappe:", genError);
       } else {
-        // Get max allowed generations for this week
+        // STEP 3: Get max allowed generations for this week
         const { data: maxGenData } = await supabase.rpc('get_max_map_generations', {
           p_week: currentWeek
         });
         const maxGenerations = maxGenData || 4;
         
-        // Check if user still has map generations available
+        // STEP 4: Check if user still has map generations available
         if (generationData <= maxGenerations) {
-          // Get radius for this generation
+          // STEP 5: Get radius for this generation (PROGRESSIVE DECREASE)
           const { data: radiusData } = await supabase.rpc('get_map_radius_km', {
             p_week: currentWeek,
             p_generation_count: generationData
           });
-          const radius_km = radiusData || 100;
+          let radius_km = radiusData || 100;
           
-          // Get prize coordinates
-          const { data: prizeData } = await supabase
-            .from('prizes')
-            .select('lat, lng')
-            .eq('id', prizeId)
-            .single();
+          console.log(`📏 UNIFIED RADIUS CALCULATION: week=${currentWeek}, generation=${generationData}, radius=${radius_km}km`);
+          
+          // STEP 6: Apply 5% reduction for each previous generation (UNIFIED PROGRESSIVE LOGIC)
+          if (generationData > 1) {
+            const reductionFactor = Math.pow(0.95, generationData - 1);
+            radius_km = Math.max(5, radius_km * reductionFactor); // Minimum 5km
+            console.log(`📉 Applied 5% progressive reduction: ${radius_km.toFixed(2)}km (factor: ${reductionFactor.toFixed(3)})`);
+          }
+          
+          // STEP 7: Use provided coordinates directly (UNIFIED COORDINATE LOGIC)
+          const mapArea = {
+            lat: coordinates.lat,
+            lng: coordinates.lng,
+            radius_km: radius_km,
+            week: currentWeek
+          };
+          
+          console.log(`🎯 UNIFIED AREA DATA:`, mapArea);
+          
+          // STEP 8: Save map area to database (UNIFIED STORAGE)
+          const { error: mapError } = await supabase
+            .from('user_map_areas')
+            .insert({
+              user_id: userId,
+              lat: mapArea.lat,
+              lng: mapArea.lng,
+              radius_km: mapArea.radius_km,
+              week: currentWeek,
+              clue_id: clueData.clue_id
+            });
             
-          if (prizeData && prizeData.lat && prizeData.lng) {
-            // Create map area with some randomization within the allowed radius
-            const jitter = radius_km * 0.3; // 30% jitter
-            const jitterLat = (Math.random() * 2 - 1) * jitter / 111; // ~111km per degree of latitude
-            const jitterLng = (Math.random() * 2 - 1) * jitter / (111 * Math.cos(prizeData.lat * Math.PI / 180));
-            
-            const mapArea = {
-              lat: prizeData.lat + jitterLat,
-              lng: prizeData.lng + jitterLng,
-              radius_km: radius_km,
-              week: currentWeek
-            };
-            
-            // Save map area to database
-            const { error: mapError } = await supabase
-              .from('user_map_areas')
-              .insert({
-                user_id: userId,
-                lat: mapArea.lat,
-                lng: mapArea.lng,
-                radius_km: mapArea.radius_km,
-                week: currentWeek,
-                clue_id: clueData.clue_id
-              });
-              
-            if (mapError) {
-              console.error("Errore nel salvare l'area della mappa:", mapError);
-            } else {
-              response.map_area = mapArea;
-            }
+          if (mapError) {
+            console.error("❌ UNIFIED ERROR saving map area:", mapError);
           } else {
-            console.error("Impossibile trovare le coordinate del premio:", prizeId);
+            console.log("✅ UNIFIED MAP AREA SAVED successfully");
+            response.map_area = mapArea;
+            
+            // Determine precision based on user clue count vs generation count
+            const { data: userClueCount } = await supabase
+              .from('user_clues')
+              .select('clue_id', { count: 'exact' })
+              .eq('user_id', userId);
+              
+            const clueCount = userClueCount || 0;
+            response.precision = clueCount > generationData ? 'high' : 'low';
+            
+            console.log(`🎯 UNIFIED PRECISION: ${response.precision} (clues: ${clueCount}, generations: ${generationData})`);
           }
           
           response.remainingMapGenerations = maxGenerations - generationData;
           response.canGenerateMap = generationData < maxGenerations;
+          
+          console.log(`🗺️ UNIFIED MAP GENERATION COMPLETE: remaining=${response.remainingMapGenerations}`);
         } else {
-          console.log(`Utente ${userId} ha raggiunto il limite di generazioni mappa per la settimana ${currentWeek}`);
+          console.log(`❌ User ${userId} has reached map generation limit for week ${currentWeek}`);
         }
       }
     }
+
+    console.log(`🎉 UNIFIED BACKEND RESPONSE:`, response);
 
     return new Response(
       JSON.stringify(response),
