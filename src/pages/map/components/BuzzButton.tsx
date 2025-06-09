@@ -92,13 +92,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       toast.error('❌ Errore generazione area BUZZ');
     }
   };
-  
-  const getPrecisionIndicator = () => {
-    if (precisionMode === 'high') {
-      return '🎯';
-    }
-    return '📍';
-  };
 
   // Disable button if no valid user
   const isDisabled = isGenerating || !user?.id;
@@ -123,13 +116,14 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           ) : (
             <CircleIcon className="mr-2 h-4 w-4" />
           )}
-          {isGenerating ? 'Generando...' : 'BUZZ MAPPA'}
-          <span className="ml-2 text-xs opacity-80">
-            {activeArea ? `(Centro fisso: ${activeArea.radius_km.toFixed(1)}km)` : '(Centro fisso Ready)'}
-            {getPrecisionIndicator()}
-          </span>
-          <div className="text-xs opacity-70 mt-1">
-            {!user?.id ? 'Login Required' : `CENTRO FISSO • ${dailyBuzzMapCounter} BUZZ settimana`}
+          <div className="flex flex-col items-center">
+            <span>{isGenerating ? 'Generando...' : 'BUZZ MAPPA'}</span>
+            <span className="text-xs opacity-80">
+              ({activeArea ? `${activeArea.radius_km.toFixed(1)}km` : '21.5km'})
+            </span>
+            <span className="text-xs opacity-70">
+              {dailyBuzzMapCounter} BUZZ settimana
+            </span>
           </div>
         </Button>
         

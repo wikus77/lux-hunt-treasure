@@ -104,7 +104,7 @@ const BuzzAreasExpansible: React.FC<BuzzAreasExpansibleProps> = ({
 
   return (
     <>
-      <div className="w-full">
+      <div className="w-full col-span-full">
         {/* Container principale identico a M1SSION CONSOLE */}
         <div className="bg-[#0e0e11] rounded-2xl border border-[#1a1a1f] overflow-hidden shadow-md">
           {/* Linea gradient superiore */}
@@ -231,8 +231,8 @@ const BuzzAreasExpansible: React.FC<BuzzAreasExpansibleProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="text-sm text-neutral-500 py-2">
-                  Nessuna area attiva
+                <div className="text-center py-4 text-neutral-500">
+                  <p className="text-sm">Nessuna area attiva</p>
                 </div>
               )}
             </div>

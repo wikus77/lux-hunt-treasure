@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, FileText, Edit2, Trash2 } from "lucide-react";
 import MapNoteList from '@/components/maps/MapNoteList';
@@ -75,60 +74,72 @@ const NotesSection = () => {
   };
 
   return (
-    <Card gradient className="h-full overflow-hidden">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2">
+    <div className="bg-[#0e0e11] rounded-2xl border border-[#1a1a1f] overflow-hidden shadow-md">
+      {/* Linea gradient superiore */}
+      <div className="h-[1px] bg-gradient-to-r from-[#00cfff] via-[#ff00cc] to-[#7f00ff]" />
+      
+      {/* Header */}
+      <div className="px-6 py-4">
+        <h3 className="uppercase font-bold tracking-wider text-base text-white flex items-center gap-2 mb-4">
           <FileText className="h-5 w-5 text-cyan-400" />
           Le tue note
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {showNoteInput ? (
-          <div className="space-y-3">
-            <textarea
-              className="w-full h-24 p-3 bg-black/50 border border-cyan-500/30 rounded-[24px] text-white resize-none focus:outline-none focus:border-cyan-500/60"
-              placeholder="Scrivi una nota..."
-              value={newNote}
-              onChange={(e) => setNewNote(e.target.value)}
-            />
-            <div className="flex justify-end gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={toggleNoteInput}
-                className="rounded-full"
-              >
-                Annulla
-              </Button>
-              <Button 
-                variant="default"
-                size="sm" 
-                onClick={addNote}
-                className="rounded-full"
-              >
-                {editingNote ? 'Aggiorna' : 'Aggiungi'}
-              </Button>
+        </h3>
+        
+        <div className="space-y-4">
+          {showNoteInput ? (
+            <div className="space-y-3">
+              <textarea
+                className="w-full h-24 p-3 bg-black/50 border border-cyan-500/30 rounded-[24px] text-white resize-none focus:outline-none focus:border-cyan-500/60"
+                placeholder="Scrivi una nota..."
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={toggleNoteInput}
+                  className="rounded-full border-[#1a1a1f]"
+                >
+                  Annulla
+                </Button>
+                <Button 
+                  variant="default"
+                  size="sm" 
+                  onClick={addNote}
+                  className="rounded-full"
+                >
+                  {editingNote ? 'Aggiorna' : 'Aggiungi'}
+                </Button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <Button 
-            variant="outline" 
-            className="w-full flex items-center justify-center gap-2 rounded-full border border-cyan-500/30 hover:border-cyan-500/60"
-            onClick={toggleNoteInput}
-          >
-            <PlusCircle className="h-5 w-5 text-cyan-400" />
-            Aggiungi nota
-          </Button>
-        )}
+          ) : (
+            <Button 
+              variant="outline" 
+              className="w-full flex items-center justify-center gap-2 rounded-full border border-cyan-500/30 hover:border-cyan-500/60 bg-black/40 hover:bg-black/60"
+              onClick={toggleNoteInput}
+            >
+              <PlusCircle className="h-5 w-5 text-cyan-400" />
+              Aggiungi nota
+            </Button>
+          )}
 
-        <MapNoteList 
-          notes={notes}
-          onImportanceClick={handleImportanceClick}
-          onEditNote={handleEditNote}
-          onDeleteNote={handleDeleteNote}
-        />
-      </CardContent>
-    </Card>
+          {notes.length > 0 ? (
+            <MapNoteList 
+              notes={notes}
+              onImportanceClick={handleImportanceClick}
+              onEditNote={handleEditNote}
+              onDeleteNote={handleDeleteNote}
+            />
+          ) : (
+            <div className="text-center py-4 text-neutral-500">
+              <p className="text-sm">Nessuna nota</p>
+              <p className="text-xs mt-1">Clicca sul pulsante '+' per aggiungere una nota</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
