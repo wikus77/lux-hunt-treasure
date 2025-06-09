@@ -148,7 +148,7 @@ export const useBuzzMapLogic = () => {
     return result;
   }, []);
 
-  // ENHANCED BUZZ generation with STRICT validation and BLOCKING + Single popup management
+  // ENHANCED BUZZ generation with STRICT validation and BLOCKING
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       console.debug('🚫 BUZZ GENERATION - No user ID');
@@ -168,24 +168,7 @@ export const useBuzzMapLogic = () => {
       return null;
     }
 
-    // CRITICAL: Check if a BUZZ area already exists and prevent creation of duplicates
-    if (currentWeekAreas.length > 0) {
-      console.debug('🚫 BUZZ GENERATION - Already have active BUZZ area, clearing first...');
-      
-      // Dismiss any existing toasts before showing the clearing message
-      toast.dismiss();
-      
-      const clearSuccess = await deleteAllUserAreas();
-      if (!clearSuccess) {
-        console.error('❌ BUZZ GENERATION - Failed to clear existing areas');
-        toast.error('Errore nel rimuovere l\'area BUZZ esistente');
-        return null;
-      }
-    }
-
     setIsGenerating(true);
-    
-    // CRITICAL: Dismiss ALL existing toasts to prevent popup spam
     toast.dismiss();
     
     try {
@@ -202,8 +185,19 @@ export const useBuzzMapLogic = () => {
       console.debug('🧹 STEP 1 - Complete cleanup with FORCED sync...');
       await forceCompleteSync();
       
-      // STEP 2: Calculate radius and pricing
-      console.debug('💰 STEP 2 - Calculate radius and pricing...');
+      // STEP 2: Clear all existing areas with UNIFIED DELETE LOGIC
+      console.debug('🗑️ STEP 2 - Clear all existing areas with UNIFIED DELETE LOGIC...');
+      const cleanupSuccess = await deleteAllUserAreas();
+      if (!cleanupSuccess) {
+        console.error('❌ BUZZ GENERATION - Cleanup failed');
+        toast.error('Errore nel rimuovere le aree precedenti');
+        return null;
+      }
+      
+      console.debug('✅ STEP 2 - Cleanup completed with UNIFIED DELETE LOGIC');
+      
+      // STEP 3: Calculate radius and pricing
+      console.debug('💰 STEP 3 - Calculate radius and pricing...');
       const radiusKm = calculateProgressiveRadius();
       const basePrice = calculateBuzzMapPrice();
       const precision = determinePrecisionMode();
@@ -217,42 +211,41 @@ export const useBuzzMapLogic = () => {
         finalPrice = calculateProgressivePrice(basePrice);
       }
 
-      console.debug('💰 STEP 2 - Price calculation complete:', {
+      console.debug('💰 STEP 3 - Price calculation complete:', {
         basePrice,
         finalPrice,
         precision,
         radiusKm
       });
 
-      // STEP 3: Apply precision fuzz to coordinates
-      console.debug('🎯 STEP 3 - Apply precision fuzz...');
+      // STEP 4: Apply precision fuzz to coordinates
+      console.debug('🎯 STEP 4 - Apply precision fuzz...');
       const { lat: finalLat, lng: finalLng } = applyPrecisionFuzz(centerLat, centerLng, precision);
 
-      // STEP 4: Create new area
-      console.debug('🚀 STEP 4 - Creating new area...');
+      // STEP 5: Create new area
+      console.debug('🚀 STEP 5 - Creating new area...');
       const newArea = await createBuzzMapArea(user.id, finalLat, finalLng, radiusKm, currentWeek);
       if (!newArea) {
         console.error('❌ BUZZ GENERATION - Failed to create area');
         return null;
       }
       
-      console.debug('✅ STEP 4 - New area created:', newArea);
+      console.debug('✅ STEP 5 - New area created:', newArea);
       
-      // STEP 5: Update counters
-      console.debug('🔢 STEP 5 - Update counters...');
+      // STEP 6: Update counters
+      console.debug('🔢 STEP 6 - Update counters...');
       await updateDailyBuzzMapCounter(basePrice, precision);
       
-      // STEP 6: CRITICAL - Force complete sync after creation with STRICT validation
-      console.debug('🔄 STEP 6 - Force complete sync after creation with STRICT validation...');
+      // STEP 7: CRITICAL - Force complete sync after creation with STRICT validation
+      console.debug('🔄 STEP 7 - Force complete sync after creation with STRICT validation...');
       await forceCompleteSync();
       await forceReload();
       
-      // STEP 7: Update local UI state
-      console.debug('🎨 STEP 7 - Update local UI state...');
+      // STEP 8: Update local UI state
+      console.debug('🎨 STEP 8 - Update local UI state...');
       setLocalBuzzCount(prev => prev + 1);
       
-      // STEP 8: Show SINGLE success toast (dismiss any previous ones first)
-      toast.dismiss();
+      // STEP 9: Show success toast
       const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
       toast.success(`Area BUZZ MAPPA generata! Raggio: ${newArea.radius_km.toFixed(2)} km - ${precisionText} - Prezzo: ${finalPrice.toFixed(2)}€`);
       
@@ -261,7 +254,6 @@ export const useBuzzMapLogic = () => {
       return newArea;
     } catch (err) {
       console.error('❌ BUZZ GENERATION - Error:', err);
-      toast.dismiss();
       toast.error('Errore durante la generazione dell\'area');
       return null;
     } finally {
@@ -275,11 +267,10 @@ export const useBuzzMapLogic = () => {
     setIsGenerating, forceCompleteSync, forceReload, currentWeekAreas
   ]);
 
-  // UNIFIED DELETE AREA - Same logic as before but with single toast management
+  // UNIFIED DELETE AREA - Same logic as "Cancella Tutto"
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
     console.debug('🗑️ HANDLE DELETE AREA START (UNIFIED LOGIC):', areaId);
     
-    // Dismiss existing toasts to prevent spam
     toast.dismiss();
     
     const success = await deleteSpecificArea(areaId);
@@ -292,6 +283,7 @@ export const useBuzzMapLogic = () => {
       
       if (!isValidated) {
         console.error('❌ DATABASE VALIDATION WARNING after specific delete');
+        // Don't block for specific delete, just warn
         toast.warning('Area eliminata, ma potrebbero rimanere tracce nel database');
       } else {
         toast.success('Area eliminata definitivamente');
@@ -306,6 +298,35 @@ export const useBuzzMapLogic = () => {
     
     return success;
   }, [deleteSpecificArea, forceCompleteSync, validateBuzzDeletion]);
+
+  // UNIFIED CLEAR ALL AREAS - Same logic as trash icon
+  const handleClearAllAreas = useCallback(async (): Promise<void> => {
+    console.debug('🧹 HANDLE CLEAR ALL START (UNIFIED LOGIC)');
+    
+    toast.dismiss();
+    
+    const success = await deleteAllUserAreas();
+    
+    if (success) {
+      console.debug('✅ HANDLE CLEAR ALL - Success with UNIFIED LOGIC, performing database validation...');
+      
+      // CRITICAL: Validate deletion at database level
+      const isValidated = await validateBuzzDeletion();
+      
+      if (!isValidated) {
+        console.error('❌ DATABASE VALIDATION FAILED after delete');
+        toast.error('Errore: le aree non sono state eliminate completamente dal database');
+        return;
+      }
+      
+      // Force complete sync after validation
+      await forceCompleteSync();
+      toast.success('Tutte le aree sono state eliminate definitivamente');
+    } else {
+      console.error('❌ HANDLE CLEAR ALL - Failed');
+      toast.error('Errore nell\'eliminazione delle aree');
+    }
+  }, [deleteAllUserAreas, forceCompleteSync, validateBuzzDeletion]);
 
   // Debug function
   const debugCurrentState = useCallback(() => {
@@ -363,6 +384,7 @@ export const useBuzzMapLogic = () => {
     
     generateBuzzMapArea,
     handleDeleteArea, // Uses UNIFIED logic
+    handleClearAllAreas, // Uses UNIFIED logic
     getActiveArea,
     reloadAreas: forceReload,
     testCalculationLogic,

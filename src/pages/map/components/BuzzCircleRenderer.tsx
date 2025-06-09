@@ -196,7 +196,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       circles_cleared: finalCircleCount === 0
     });
     
-    // CRITICAL: Log any inconsistencies but don't block operation
+    // CRITICAL: Log any inconsistencies
     if (areas.length !== finalCircleCount) {
       console.warn('⚠️ INCONSISTENCY DETECTED:', {
         expected: areas.length,

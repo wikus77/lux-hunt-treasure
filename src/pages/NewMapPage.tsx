@@ -1,5 +1,3 @@
-
-
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import MapPageHeader from './map/components/MapPageHeader';
@@ -172,10 +170,10 @@ const NewMapPage = () => {
                 deleteMapPoint={deleteMapPoint}
                 searchAreas={searchAreas}
                 setActiveSearchArea={setActiveSearchArea}
-                handleAddArea={(area) => handleAddArea(area.radius)}
+                clearAllSearchAreas={clearAllSearchAreas}
+                handleAddArea={handleAddArea}
                 isAddingSearchArea={isAddingSearchArea}
                 deleteSearchArea={deleteSearchArea}
-                clearAllSearchAreas={clearAllSearchAreas}
               />
             }
           />
@@ -188,4 +186,3 @@ const NewMapPage = () => {
 };
 
 export default NewMapPage;
-
