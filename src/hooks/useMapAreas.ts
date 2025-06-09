@@ -13,33 +13,33 @@ const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
 const validateBuzzDeletion = async (validUserId: string): Promise<boolean> => {
   console.debug('🧪 VALIDATING BUZZ DELETION for user:', validUserId);
   
-  // Check user_map_areas
-  const { data: mapAreasData, error: mapAreasError } = await supabase
+  // Check user_map_areas with exact count
+  const { count: areaCount, error: areaError } = await supabase
     .from("user_map_areas")
-    .select("id")
+    .select("*", { count: 'exact', head: true })
     .eq("user_id", validUserId);
   
-  console.debug("✅ POST DELETE QUERY user_map_areas:", mapAreasData?.length || 0);
+  console.debug("✅ POST DELETE QUERY user_map_areas:", areaCount);
   
-  // Check user_buzz_map
-  const { data: buzzMapData, error: buzzMapError } = await supabase
+  // Check user_buzz_map with exact count
+  const { count: buzzCount, error: buzzError } = await supabase
     .from("user_buzz_map")
-    .select("id")
+    .select("*", { count: 'exact', head: true })
     .eq("user_id", validUserId);
   
-  console.debug("✅ POST DELETE QUERY user_buzz_map:", buzzMapData?.length || 0);
+  console.debug("✅ POST DELETE QUERY user_buzz_map:", buzzCount);
   
-  if (mapAreasError || buzzMapError) {
-    console.error('❌ VALIDATION ERROR:', { mapAreasError, buzzMapError });
+  if (areaError || buzzError) {
+    console.error('❌ VALIDATION ERROR:', { areaError, buzzError });
     return false;
   }
   
-  const isClean = (mapAreasData?.length || 0) === 0 && (buzzMapData?.length || 0) === 0;
+  const isClean = (areaCount || 0) === 0 && (buzzCount || 0) === 0;
   
   if (!isClean) {
-    console.error('🚨 DATABASE NOT CLEAN AFTER DELETE:', {
-      user_map_areas_remaining: mapAreasData?.length || 0,
-      user_buzz_map_remaining: buzzMapData?.length || 0,
+    console.error('🚨 RENDER BLOCCATO: DB NON VUOTO DOPO DELETE:', {
+      user_map_areas_remaining: areaCount || 0,
+      user_buzz_map_remaining: buzzCount || 0,
       validUserId
     });
   } else {
