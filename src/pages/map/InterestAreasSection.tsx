@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { CircleIcon, MapPin, Zap, CreditCard, Target, Shield } from 'lucide-react';
+import React, { useState } from 'react';
+import { CircleIcon, MapPin, Zap, CreditCard, Target, Shield, ChevronDown, ChevronUp } from 'lucide-react';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -12,6 +12,7 @@ const InterestAreasSection: React.FC = () => {
     precisionMode 
   } = useBuzzMapLogic();
 
+  const [showAreaInfo, setShowAreaInfo] = useState(false);
   const activeArea = getActiveArea();
 
   if (!user?.id) {
@@ -28,20 +29,48 @@ const InterestAreasSection: React.FC = () => {
     );
   }
 
-  return (
-    <div>
-      <h3 className="text-xl font-bold text-[#00D1FF] mb-4 flex items-center gap-2">
-        <CircleIcon className="w-5 h-5" />
-        Aree di interesse
-      </h3>
-      
-      {!activeArea ? (
+  if (!activeArea) {
+    return (
+      <div>
+        <h3 className="text-xl font-bold text-[#00D1FF] mb-4 flex items-center gap-2">
+          <CircleIcon className="w-5 h-5" />
+          Aree di interesse
+        </h3>
         <div className="text-white/60 text-sm">
           Nessuna area BUZZ MAPPA attiva.
           <br />
           Clicca su "BUZZ MAPPA" per generarne una.
         </div>
-      ) : (
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-[#00D1FF] flex items-center gap-2">
+          <CircleIcon className="w-5 h-5" />
+          Aree di interesse
+        </h3>
+        <button 
+          onClick={() => setShowAreaInfo(!showAreaInfo)}
+          className="text-sm text-[#00D1FF] hover:text-white transition-colors flex items-center gap-1"
+        >
+          {showAreaInfo ? (
+            <>
+              <ChevronUp className="w-4 h-4" />
+              Chiudi dettagli
+            </>
+          ) : (
+            <>
+              <ChevronDown className="w-4 h-4" />
+              Apri dettagli
+            </>
+          )}
+        </button>
+      </div>
+      
+      {showAreaInfo && (
         <div className="space-y-3">
           {/* Raggio */}
           <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-[#00D1FF]/20">
