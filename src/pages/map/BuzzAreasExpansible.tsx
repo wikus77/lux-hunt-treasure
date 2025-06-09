@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Circle, Plus, Trash2, ChevronDown } from "lucide-react";
@@ -118,7 +117,7 @@ const BuzzAreasExpansible: React.FC<BuzzAreasExpansibleProps> = ({
                 className="flex items-center gap-2 text-left hover:bg-white/5 transition-colors rounded p-1 -m-1"
               >
                 <h3 className="uppercase font-bold tracking-wider text-base text-white">
-                  AREE DI INTERESSE ({searchAreas.length})
+                  AREE DI INTERESSE
                 </h3>
                 <ChevronDown 
                   className={cn(
