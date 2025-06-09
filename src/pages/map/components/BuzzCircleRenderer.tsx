@@ -14,19 +14,29 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
   const isCleanupRunning = useRef(false);
   const lastAreasData = useRef<string>('');
+  const currentMapView = useRef<{ center: L.LatLng; zoom: number } | null>(null);
   
   const currentColor = getCurrentColor();
+  
+  // Store current map view before any changes
+  useEffect(() => {
+    currentMapView.current = {
+      center: map.getCenter(),
+      zoom: map.getZoom()
+    };
+  }, [map]);
   
   // CRITICAL: Block rendering if areas are present when they shouldn't be
   useEffect(() => {
     if (areas.length > 0) {
-      console.debug("🔍 RENDER CHECK: Areas present in component:", {
+      console.debug("🔍 RENDER CHECK (FIXED CENTER): Areas present in component:", {
         areas_count: areas.length,
-        areas_detail: areas.map(a => ({ id: a.id, user_id: a.user_id, radius_km: a.radius_km })),
-        source: 'react-query'
+        areas_detail: areas.map(a => ({ id: a.id, user_id: a.user_id, radius_km: a.radius_km, lat: a.lat, lng: a.lng })),
+        source: 'react-query',
+        fixed_center_mode: true
       });
     } else {
-      console.debug("✅ RENDER CHECK: No areas to render - clean state");
+      console.debug("✅ RENDER CHECK (FIXED CENTER): No areas to render - clean state");
     }
   }, [areas]);
 
@@ -47,10 +57,11 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     
     const needsUpdate = currentAreasData !== lastAreasData.current;
     
-    console.debug('🔄 Update check:', {
+    console.debug('🔄 Update check (FIXED CENTER):', {
       needsUpdate,
       areasCount: areas.length,
-      source: 'react-query-only'
+      source: 'react-query-only',
+      fixed_center_mode: true
     });
     
     if (!needsUpdate) {
@@ -61,9 +72,10 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     isCleanupRunning.current = true;
     lastAreasData.current = currentAreasData;
     
-    console.debug('🔥 Effect triggered:', {
+    console.debug('🔥 Effect triggered (FIXED CENTER):', {
       areasCount: areas.length,
-      data_source: 'react-query-only'
+      data_source: 'react-query-only',
+      fixed_center_mode: true
     });
     
     // STEP 1: COMPLETE LEAFLET CLEANUP (ALWAYS) - ENHANCED
@@ -92,8 +104,8 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     
     // CRITICAL BLOCKING: Stop render if areas is empty - ENHANCED
     if (areas.length === 0) {
-      console.debug('✅ RENDER COMPLETE - areas.length === 0, map cleared completely');
-      map.setView([41.9028, 12.4964], 6);
+      console.debug('✅ RENDER COMPLETE (FIXED CENTER) - areas.length === 0, map cleared completely');
+      // DO NOT CHANGE MAP VIEW - maintain current position and zoom
       isCleanupRunning.current = false;
       
       // CRITICAL: Additional check for any remaining circles after cleanup
@@ -120,14 +132,14 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     }
     
     // CRITICAL: Only proceed with rendering if areas are truly valid
-    console.debug('🔵 Creating', areas.length, 'new circles');
+    console.debug('🔵 Creating', areas.length, 'new circles with FIXED CENTER');
     
     // Create new layer group
     layerGroupRef.current = L.layerGroup().addTo(map);
     console.debug('✅ New layer group created');
     
     areas.forEach((area, index) => {
-      console.debug(`🔵 Creating circle ${index + 1}/${areas.length}:`, {
+      console.debug(`🔵 Creating circle ${index + 1}/${areas.length} (FIXED CENTER):`, {
         id: area.id,
         lat: area.lat,
         lng: area.lng,
@@ -156,44 +168,25 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         
         layerGroupRef.current?.addLayer(circle);
         
-        console.debug(`✅ Circle ${index + 1} created successfully`);
+        console.debug(`✅ Circle ${index + 1} created successfully (FIXED CENTER)`);
         
       } catch (error) {
         console.error(`❌ Error creating circle ${index + 1}:`, error);
       }
     });
     
-    // Set map view to show all circles
-    if (layerGroupRef.current) {
-      const layers = layerGroupRef.current.getLayers();
-      if (layers.length > 0) {
-        try {
-          const featureGroup = L.featureGroup(layers);
-          const bounds = featureGroup.getBounds();
-          if (bounds.isValid()) {
-            map.fitBounds(bounds, { padding: [50, 50] });
-            console.debug('🎯 Map view updated to show all circles');
-          }
-        } catch (error) {
-          console.warn('⚠️ Could not fit bounds:', error);
-          // Fallback to first area
-          if (areas[0]) {
-            map.setView([areas[0].lat, areas[0].lng], 10);
-          }
-        }
-      }
-    }
-    
-    console.debug('🎉 All circles rendered successfully');
+    // CRITICAL: DO NOT CHANGE MAP VIEW - maintain current view
+    console.debug('🔒 MAINTAINING CURRENT MAP VIEW - No fitBounds or setView called');
     
     // STEP 3: VERIFY FINAL STATE - ENHANCED
     const finalCircleCount = layerGroupRef.current?.getLayers().length || 0;
-    console.debug('🔍 Final verification:', {
+    console.debug('🔍 Final verification (FIXED CENTER):', {
       expected_areas: areas.length,
       rendered_circles: finalCircleCount,
       is_consistent: areas.length === finalCircleCount,
       areas_empty: areas.length === 0,
-      circles_cleared: finalCircleCount === 0
+      circles_cleared: finalCircleCount === 0,
+      view_preserved: true
     });
     
     // CRITICAL: Log any inconsistencies
@@ -205,10 +198,10 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       });
     }
     
-    // Force map refresh and mark cleanup as done
+    // Force map refresh and mark cleanup as done (without changing view)
     setTimeout(() => {
       map.invalidateSize();
-      console.debug('🔄 Map size invalidated, cleanup complete');
+      console.debug('🔄 Map size invalidated, cleanup complete (FIXED CENTER)');
       isCleanupRunning.current = false;
     }, 100);
     

@@ -65,7 +65,7 @@ export const useBuzzMapLogic = () => {
     return currentWeekAreas.length > 0 ? currentWeekAreas[0] : null;
   }, [currentWeekAreas]);
 
-  // BACKEND-ONLY BUZZ generation - completely stateless frontend
+  // BACKEND-ONLY BUZZ generation with FIXED CENTER - completely stateless frontend
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     // CRITICAL: Validate user ID first
     if (!user?.id) {
@@ -75,7 +75,7 @@ export const useBuzzMapLogic = () => {
       return null;
     }
 
-    console.log('🔥 STARTING BACKEND-ONLY BUZZ GENERATION:', {
+    console.log('🔥 STARTING BACKEND-ONLY BUZZ GENERATION (FIXED CENTER):', {
       userId: user.id,
       centerLat,
       centerLng
@@ -98,16 +98,16 @@ export const useBuzzMapLogic = () => {
     toast.dismiss();
     
     try {
-      console.log('🚀 CALLING BACKEND with generateMap: true...');
+      console.log('🚀 CALLING BACKEND with generateMap: true and FIXED CENTER...');
       
-      // Call backend API with FORCED map generation
+      // Call backend API with FORCED map generation and coordinates
       const response = await callBuzzApi({ 
         userId: user.id,
         generateMap: true,
         coordinates: { lat: centerLat, lng: centerLng }
       });
       
-      console.log('📡 BACKEND RESPONSE:', response);
+      console.log('📡 BACKEND RESPONSE (FIXED CENTER):', response);
       
       if (!response.success || response.error) {
         console.error('❌ Backend error:', response.errorMessage || response.error);
@@ -124,14 +124,15 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      console.log('✅ BACKEND SUCCESS - Area data received:', {
+      console.log('✅ BACKEND SUCCESS (FIXED CENTER) - Area data received:', {
         radius_km: response.radius_km,
         lat: response.lat,
         lng: response.lng,
-        generation: response.generation_number
+        generation: response.generation_number,
+        fixed_center: true
       });
 
-      // Create area object from backend response
+      // Create area object from backend response with FIXED CENTER
       const newArea: BuzzMapArea = {
         id: crypto.randomUUID(),
         lat: response.lat,
@@ -146,14 +147,17 @@ export const useBuzzMapLogic = () => {
       await forceCompleteSync();
       await forceReload();
       
-      // Show success toast with BACKEND VERIFIED data
+      // Show success toast with BACKEND VERIFIED data and FIXED CENTER confirmation
       toast.dismiss();
-      toast.success(`✅ Area BUZZ MAPPA attiva: ${response.radius_km.toFixed(1)} km – Gen: ${response.generation_number || 1} – Precisione: BACKEND VERIFIED`);
+      toast.success(`✅ Area BUZZ MAPPA attiva: ${response.radius_km.toFixed(1)} km – Gen: ${response.generation_number || 1} – Centro fisso: BACKEND VERIFIED`);
       
-      console.log('🎉 BUZZ GENERATION COMPLETE:', {
+      console.log('🎉 BUZZ GENERATION COMPLETE (FIXED CENTER):', {
         userId: user.id,
         radius_km: response.radius_km,
         generation: response.generation_number,
+        center_fixed: true,
+        lat: response.lat,
+        lng: response.lng,
         source: 'backend-verified'
       });
       
@@ -213,8 +217,8 @@ export const useBuzzMapLogic = () => {
     dailyBuzzMapCounter,
     precisionMode,
     
-    // Functions - BACKEND ONLY
-    generateBuzzMapArea, // Simplified backend-only generation
+    // Functions - BACKEND ONLY with FIXED CENTER
+    generateBuzzMapArea, // Simplified backend-only generation with fixed center
     handleDeleteArea,
     getActiveArea,
     reloadAreas: forceReload,

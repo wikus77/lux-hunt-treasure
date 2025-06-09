@@ -43,7 +43,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       return;
     }
 
-    console.log('🔥 BUZZ CLICK - User ID validated:', user.id);
+    console.log('🔥 BUZZ CLICK (FIXED CENTER) - User ID validated:', user.id);
     
     // Trigger ripple effect
     setIsRippling(true);
@@ -54,18 +54,18 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       window.plausible('buzz_click');
     }
     
-    // Use map center coordinates or default to Rome
+    // Use map center coordinates or default to Rome (will become fixed center)
     const centerLat = mapCenter ? mapCenter[0] : 41.9028;
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
-    console.log('📍 BUZZ CALL with coordinates:', { 
+    console.log('📍 BUZZ CALL with FIXED CENTER coordinates:', { 
       userId: user.id,
       centerLat, 
       centerLng,
-      mode: 'backend-only'
+      mode: 'backend-only-fixed-center'
     });
     
-    // BACKEND-ONLY GENERATION - completely stateless
+    // BACKEND-ONLY GENERATION with FIXED CENTER - completely stateless
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
@@ -74,19 +74,16 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         window.plausible('clue_unlocked');
       }
       
-      console.log('✅ [BUZZ SUCCESS]', newArea);
+      console.log('✅ [BUZZ SUCCESS - FIXED CENTER]', newArea);
       
       // Force reload areas to sync with database
       await reloadAreas();
       
-      // Center map on new area
-      setTimeout(() => {
-        if (onAreaGenerated && newArea.radius_km > 0) {
-          onAreaGenerated(newArea.lat, newArea.lng, newArea.radius_km);
-        }
-      }, 200);
+      // DO NOT CENTER MAP - maintain current view
+      // onAreaGenerated is NOT called to prevent zoom/pan changes
+      console.log('🔒 MAINTAINING CURRENT MAP VIEW - No zoom/pan changes');
       
-      // Execute optional callback
+      // Execute optional callback without affecting map view
       if (handleBuzz) {
         handleBuzz();
       }
@@ -128,11 +125,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           )}
           {isGenerating ? 'Generando...' : 'BUZZ MAPPA'}
           <span className="ml-2 text-xs opacity-80">
-            {activeArea ? `(Attivo: ${activeArea.radius_km.toFixed(1)}km)` : '(Backend Ready)'}
+            {activeArea ? `(Centro fisso: ${activeArea.radius_km.toFixed(1)}km)` : '(Centro fisso Ready)'}
             {getPrecisionIndicator()}
           </span>
           <div className="text-xs opacity-70 mt-1">
-            {!user?.id ? 'Login Required' : `FORCED MODE • ${dailyBuzzMapCounter} BUZZ settimana`}
+            {!user?.id ? 'Login Required' : `CENTRO FISSO • ${dailyBuzzMapCounter} BUZZ settimana`}
           </div>
         </Button>
         

@@ -185,10 +185,32 @@ serve(async (req) => {
       buzz_cost: buzzCost
     };
 
-    if (generateMap && coordinates) {
+    if (generateMap) {
       console.log(`🗺️ FORCED MAP GENERATION START for user ${userId}`);
       
-      // STEP 1: Clear existing BUZZ areas
+      // STEP 1: Get or set fixed center coordinates for this user
+      let fixedCenter = { lat: 41.9028, lng: 12.4964 }; // Default Rome
+      
+      // Check if user has existing fixed center
+      const { data: existingCenter, error: centerError } = await supabase
+        .from('user_map_areas')
+        .select('lat, lng')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+        
+      if (!centerError && existingCenter) {
+        // Use existing fixed center
+        fixedCenter = { lat: existingCenter.lat, lng: existingCenter.lng };
+        console.log(`📍 Using existing fixed center: ${fixedCenter.lat}, ${fixedCenter.lng}`);
+      } else if (coordinates) {
+        // Use provided coordinates as new fixed center
+        fixedCenter = { lat: coordinates.lat, lng: coordinates.lng };
+        console.log(`📍 Setting new fixed center: ${fixedCenter.lat}, ${fixedCenter.lng}`);
+      }
+      
+      // STEP 2: Clear existing BUZZ areas
       console.log(`🧹 Clearing existing BUZZ areas...`);
       const { error: deleteError } = await supabase
         .from('user_map_areas')
@@ -201,7 +223,7 @@ serve(async (req) => {
         console.log("✅ Cleared existing BUZZ areas successfully");
       }
       
-      // STEP 2: Get generation count
+      // STEP 3: Get generation count
       const { data: generationData, error: genError } = await supabase.rpc('increment_map_generation_counter', {
         p_user_id: userId,
         p_week: currentWeek
@@ -210,21 +232,19 @@ serve(async (req) => {
       const currentGeneration = generationData || 1;
       console.log(`📍 Current generation count: ${currentGeneration}`);
       
-      // STEP 3: Calculate radius with 5% progressive reduction
-      let radius_km = 100; // Base radius
-      if (currentGeneration > 1) {
-        radius_km = Math.max(5, 100 * Math.pow(0.95, currentGeneration - 1));
-      }
+      // STEP 4: Calculate radius with FIXED progressive reduction formula
+      let radius_km = Math.max(5, 100 * Math.pow(0.95, currentGeneration - 1));
       
-      console.log(`📏 Calculated radius: ${radius_km.toFixed(2)}km (generation: ${currentGeneration})`);
+      console.log(`📏 FIXED CENTER - Calculated radius: ${radius_km.toFixed(2)}km (generation: ${currentGeneration})`);
+      console.log(`📍 FIXED CENTER - Using coordinates: lat=${fixedCenter.lat}, lng=${fixedCenter.lng}`);
       
-      // STEP 4: Save area to database
+      // STEP 5: Save area to database with FIXED CENTER
       const { error: mapError, data: savedArea } = await supabase
         .from('user_map_areas')
         .insert({
           user_id: userId,
-          lat: coordinates.lat,
-          lng: coordinates.lng,
+          lat: fixedCenter.lat,
+          lng: fixedCenter.lng,
           radius_km: radius_km,
           week: currentWeek,
           clue_id: clueData.clue_id
@@ -237,15 +257,15 @@ serve(async (req) => {
         response.error = true;
         response.errorMessage = "Errore salvataggio area mappa";
       } else {
-        console.log("✅ Map area saved successfully with ID:", savedArea.id);
+        console.log("✅ Map area saved successfully with FIXED CENTER:", savedArea.id);
         
-        // Add map data to response
+        // Add map data to response with FIXED CENTER
         response.radius_km = radius_km;
-        response.lat = coordinates.lat;
-        response.lng = coordinates.lng;
+        response.lat = fixedCenter.lat;
+        response.lng = fixedCenter.lng;
         response.generation_number = currentGeneration;
         
-        console.log(`🎉 MAP GENERATION COMPLETE: radius=${radius_km.toFixed(2)}km, generation=${currentGeneration}`);
+        console.log(`🎉 MAP GENERATION COMPLETE (FIXED CENTER): radius=${radius_km.toFixed(2)}km, generation=${currentGeneration}, center=${fixedCenter.lat},${fixedCenter.lng}`);
       }
     }
 
@@ -313,7 +333,6 @@ function generateClueBasedOnWeek(weekNumber: number): string {
   }
 }
 
-// Helper function to translate clues to English
 function translateToEnglish(italianClue: string): string {
   const translations: Record<string, string> = {
     "Cerca dove splende il sole sul metallo lucente": "Look where the sun shines on gleaming metal",
