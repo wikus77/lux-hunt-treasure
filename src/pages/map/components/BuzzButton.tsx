@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Circle as CircleIcon, Loader } from "lucide-react";
@@ -5,7 +6,7 @@ import { motion } from "framer-motion";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useBuzzMapLogic } from "@/hooks/useBuzzMapLogic";
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 export interface BuzzButtonProps {
   handleBuzz?: () => void;
