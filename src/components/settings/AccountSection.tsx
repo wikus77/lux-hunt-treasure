@@ -20,7 +20,7 @@ const AccountSection = () => {
   };
 
   const getSubscriptionTier = () => {
-    return profileData.subscription?.tier || "Free";
+    return profileData.subscription?.plan || "Free";
   };
 
   return (
@@ -86,7 +86,7 @@ const AccountSection = () => {
                 
                 <div className="flex justify-between items-center border-b border-white/10 pb-2">
                   <span className="text-sm font-medium text-muted-foreground">XP totali</span>
-                  <span className="text-sm">{profileData.stats?.totalXP || 0}</span>
+                  <span className="text-sm">{profileData.stats?.pointsEarned || 0}</span>
                 </div>
                 
                 <div className="flex justify-between items-center border-b border-white/10 pb-2">
