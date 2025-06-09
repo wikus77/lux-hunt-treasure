@@ -2,6 +2,7 @@
 import React from 'react';
 import MapPointsSection from '../MapPointsSection';
 import SearchAreasSection from '../SearchAreasSection';
+import BuzzAreasExpansible from '../BuzzAreasExpansible';
 import { MapMarker } from '@/components/maps/types';
 
 interface RightSidebarContentProps {
@@ -52,6 +53,9 @@ const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
           deleteSearchArea={deleteSearchArea}
         />
       </div>
+
+      {/* Buzz Areas Expansible - Full width container */}
+      <BuzzAreasExpansible searchAreas={searchAreas} />
     </>
   );
 };
