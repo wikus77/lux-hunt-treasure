@@ -2,7 +2,6 @@
 import React from 'react';
 import MapPointsSection from '../MapPointsSection';
 import SearchAreasSection from '../SearchAreasSection';
-import InterestAreasGrid from './InterestAreasGrid';
 import { MapMarker } from '@/components/maps/types';
 
 interface RightSidebarContentProps {
@@ -53,9 +52,6 @@ const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
           deleteSearchArea={deleteSearchArea}
         />
       </div>
-
-      {/* Interest areas section - ONLY the horizontal grid with TWO containers */}
-      <InterestAreasGrid />
     </>
   );
 };
