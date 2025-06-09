@@ -17,13 +17,12 @@ const InterestAreasDetails: React.FC = () => {
 
   if (!user?.id) {
     return (
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
-            <CircleIcon className="w-4 h-4" />
+          <h3 className="text-xl font-bold text-white uppercase tracking-wider mb-2">
             AREE DI INTERESSE
           </h3>
-          <div className="text-white/60 text-sm">
+          <div className="text-gray-400 text-sm">
             Accedi per visualizzare le tue aree BUZZ
           </div>
         </div>
@@ -33,13 +32,12 @@ const InterestAreasDetails: React.FC = () => {
 
   if (!activeArea) {
     return (
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
-            <CircleIcon className="w-4 h-4" />
+          <h3 className="text-xl font-bold text-white uppercase tracking-wider mb-2">
             AREE DI INTERESSE
           </h3>
-          <div className="text-white/60 text-sm">
+          <div className="text-gray-400 text-sm">
             Nessuna area BUZZ MAPPA attiva.
             <br />
             Clicca su "BUZZ MAPPA" per generarne una.
@@ -52,13 +50,12 @@ const InterestAreasDetails: React.FC = () => {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-          <CircleIcon className="w-4 h-4" />
+        <h3 className="text-xl font-bold text-white uppercase tracking-wider">
           AREE DI INTERESSE
         </h3>
         <button 
           onClick={() => setShowAreaInfo(!showAreaInfo)}
-          className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1"
+          className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1"
         >
           {showAreaInfo ? (
             <>

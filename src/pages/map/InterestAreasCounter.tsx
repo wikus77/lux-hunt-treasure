@@ -10,31 +10,29 @@ const InterestAreasCounter: React.FC = () => {
 
   if (!user?.id) {
     return (
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
-            <CircleIcon className="w-4 h-4" />
+          <h3 className="text-xl font-bold text-white uppercase tracking-wider mb-2">
             AREE DI INTERESSE
           </h3>
-          <div className="text-white/60 text-sm">
+          <div className="text-gray-400 text-sm">
             Accedi per visualizzare le tue aree BUZZ
           </div>
         </div>
-        <div className="text-white/40 text-right">
-          <span className="text-2xl font-bold">0</span>
+        <div className="text-right">
+          <span className="text-4xl font-bold text-gray-500">0</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex justify-between items-start">
+    <div className="flex justify-between items-center">
       <div>
-        <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
-          <CircleIcon className="w-4 h-4" />
+        <h3 className="text-xl font-bold text-white uppercase tracking-wider mb-2">
           AREE DI INTERESSE
         </h3>
-        <div className="text-white/60 text-sm">
+        <div className="text-gray-400 text-sm">
           {currentWeekAreas.length === 0 ? (
             <>
               Nessuna area BUZZ MAPPA attiva.
@@ -46,8 +44,8 @@ const InterestAreasCounter: React.FC = () => {
           )}
         </div>
       </div>
-      <div className="text-white/90 text-right">
-        <span className="text-2xl font-bold">{currentWeekAreas.length}</span>
+      <div className="text-right">
+        <span className="text-4xl font-bold text-white">{currentWeekAreas.length}</span>
       </div>
     </div>
   );
