@@ -168,8 +168,15 @@ export const useBuzzMapLogic = () => {
       return null;
     }
 
+    // CRITICAL: Check if area already exists and prevent redundant toasts
+    const existingArea = getActiveArea();
+    if (existingArea) {
+      console.debug('🔄 BUZZ GENERATION - Area already exists, skipping redundant generation');
+      return existingArea; // Return existing area without showing toast
+    }
+
     setIsGenerating(true);
-    toast.dismiss();
+    toast.dismiss(); // Clear any existing toasts
     
     try {
       const currentWeek = getCurrentWeek();
@@ -185,7 +192,7 @@ export const useBuzzMapLogic = () => {
       console.debug('🧹 STEP 1 - Complete cleanup with FORCED sync...');
       await forceCompleteSync();
       
-      // STEP 2: Clear all existing areas with UNIFIED DELETE LOGIC
+      // STEP 2: Clear all existing areas with UNIFIED DELETE LOGIC (SILENT)
       console.debug('🗑️ STEP 2 - Clear all existing areas with UNIFIED DELETE LOGIC...');
       const cleanupSuccess = await deleteAllUserAreas();
       if (!cleanupSuccess) {
@@ -245,7 +252,8 @@ export const useBuzzMapLogic = () => {
       console.debug('🎨 STEP 8 - Update local UI state...');
       setLocalBuzzCount(prev => prev + 1);
       
-      // STEP 9: Show success toast
+      // STEP 9: Show success toast (ONLY ONE)
+      toast.dismiss(); // Clear any remaining toasts
       const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
       toast.success(`Area BUZZ MAPPA generata! Raggio: ${newArea.radius_km.toFixed(2)} km - ${precisionText} - Prezzo: ${finalPrice.toFixed(2)}€`);
       
@@ -254,6 +262,7 @@ export const useBuzzMapLogic = () => {
       return newArea;
     } catch (err) {
       console.error('❌ BUZZ GENERATION - Error:', err);
+      toast.dismiss();
       toast.error('Errore durante la generazione dell\'area');
       return null;
     } finally {
@@ -264,14 +273,14 @@ export const useBuzzMapLogic = () => {
     deleteAllUserAreas, createBuzzMapArea, updateDailyBuzzMapCounter, 
     determinePrecisionMode, applyPrecisionFuzz, calculateProgressivePrice, 
     calculateEscalatedPrice, showUnder5kmWarning, isGenerating, isDeleting, 
-    setIsGenerating, forceCompleteSync, forceReload, currentWeekAreas
+    setIsGenerating, forceCompleteSync, forceReload, currentWeekAreas, getActiveArea
   ]);
 
   // UNIFIED DELETE AREA - Same logic as "Cancella Tutto"
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
     console.debug('🗑️ HANDLE DELETE AREA START (UNIFIED LOGIC):', areaId);
     
-    toast.dismiss();
+    toast.dismiss(); // Clear existing toasts
     
     const success = await deleteSpecificArea(areaId);
     
@@ -303,7 +312,7 @@ export const useBuzzMapLogic = () => {
   const handleClearAllAreas = useCallback(async (): Promise<void> => {
     console.debug('🧹 HANDLE CLEAR ALL START (UNIFIED LOGIC)');
     
-    toast.dismiss();
+    toast.dismiss(); // Clear existing toasts
     
     const success = await deleteAllUserAreas();
     
