@@ -65,7 +65,7 @@ export const useBuzzMapLogic = () => {
     return currentWeekAreas.length > 0 ? currentWeekAreas[0] : null;
   }, [currentWeekAreas]);
 
-  // UNIFIED BUZZ generation - BACKEND ONLY
+  // UNIFIED BUZZ generation - BACKEND ONLY - COMPLETELY STATELESS FRONTEND
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       console.debug('🚫 BUZZ GENERATION - No user ID');
@@ -87,24 +87,15 @@ export const useBuzzMapLogic = () => {
       return null;
     }
 
-    // Check if area already exists
-    const existingArea = getActiveArea();
-    if (existingArea) {
-      console.debug('🔄 BUZZ GENERATION - Area already exists');
-      toast.dismiss();
-      toast.success(`Area BUZZ MAPPA attiva: ${existingArea.radius_km.toFixed(1)} km`);
-      return existingArea;
-    }
-
     setIsGenerating(true);
     toast.dismiss(); // Clear any existing toasts
     
     try {
-      console.debug('🔥 BUZZ GENERATION START - BACKEND ONLY:', {
+      console.debug('🔥 BUZZ GENERATION START - PURE BACKEND CALL:', {
         centerLat,
         centerLng,
         userId: user.id,
-        mode: 'backend-only'
+        mode: 'pure-backend-only'
       });
       
       // STEP 1: Complete cleanup with FORCED sync sequence
@@ -125,8 +116,8 @@ export const useBuzzMapLogic = () => {
       
       console.debug('✅ STEP 2 - Cleanup completed');
       
-      // STEP 3: CRITICAL - Call backend with generateMap: true and coordinates
-      console.debug('🚀 STEP 3 - Calling BACKEND handle-buzz-press with generateMap: true...');
+      // STEP 3: CRITICAL - Call backend with generateMap: true and coordinates - PURE BACKEND LOGIC
+      console.debug('🚀 STEP 3 - Calling PURE BACKEND handle-buzz-press with generateMap: true...');
       
       const response = await callBuzzApi({ 
         userId: user.id, 
@@ -141,7 +132,7 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      // STEP 4: Extract area data from backend response
+      // STEP 4: Extract area data from backend response - NO FRONTEND CALCULATION EVER
       const mapArea = response.map_area;
       if (!mapArea) {
         console.error('❌ BUZZ GENERATION - No map area returned from backend');
@@ -150,14 +141,14 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      console.debug('✅ STEP 4 - Backend returned area:', mapArea);
+      console.debug('✅ STEP 4 - Backend returned REAL area with CALCULATED radius:', mapArea);
 
-      // STEP 5: Create BuzzMapArea object from backend response - NO FRONTEND CALCULATION
+      // STEP 5: Create BuzzMapArea object from backend response - PURE BACKEND DATA
       const newArea: BuzzMapArea = {
         id: crypto.randomUUID(), // Generate frontend ID
         lat: mapArea.lat,
         lng: mapArea.lng,
-        radius_km: mapArea.radius_km, // ONLY FROM BACKEND
+        radius_km: mapArea.radius_km, // PURE BACKEND CALCULATION WITH 5% REDUCTION
         week: mapArea.week,
         created_at: new Date().toISOString(),
         user_id: user.id
@@ -168,18 +159,19 @@ export const useBuzzMapLogic = () => {
       await forceCompleteSync();
       await forceReload();
       
-      // STEP 7: Show SINGLE success toast with REAL backend data
+      // STEP 7: Show SINGLE success toast with REAL backend data ONLY
       toast.dismiss(); // Ensure no other toasts
       const precision = response.precision || 'standard';
       const precisionText = precision === 'high' ? 'ALTA PRECISIONE' : 'PRECISIONE RIDOTTA';
       
-      // ONLY SHOW TOAST WITH REAL DATA FROM BACKEND
+      // ONLY SHOW TOAST WITH REAL DATA FROM BACKEND - NO FRONTEND CALCULATION
       toast.success(`Area BUZZ MAPPA generata! Raggio: ${mapArea.radius_km.toFixed(1)} km - ${precisionText} - Prezzo: €${response.buzz_cost?.toFixed(2) || '0.00'}`);
       
-      console.debug('🎉 BUZZ GENERATION - Completed successfully with backend data:', {
-        radius_km: mapArea.radius_km,
+      console.debug('🎉 BUZZ GENERATION - Completed successfully with PURE backend data:', {
+        radius_km: mapArea.radius_km, // REAL VALUE WITH 5% REDUCTION
         cost: response.buzz_cost,
-        precision: precision
+        precision: precision,
+        source: 'pure-backend-calculation'
       });
       
       return newArea;
@@ -193,7 +185,7 @@ export const useBuzzMapLogic = () => {
     }
   }, [
     user, deleteAllUserAreas, callBuzzApi, isGenerating, isDeleting, 
-    setIsGenerating, forceCompleteSync, forceReload, currentWeekAreas, getActiveArea
+    setIsGenerating, forceCompleteSync, forceReload, currentWeekAreas
   ]);
 
   // UNIFIED DELETE AREA - Same logic as trash icon
@@ -240,8 +232,8 @@ export const useBuzzMapLogic = () => {
     dailyBuzzMapCounter,
     precisionMode,
     
-    // Functions - BACKEND ONLY
-    generateBuzzMapArea, // Now uses backend exclusively
+    // Functions - PURE BACKEND ONLY
+    generateBuzzMapArea, // Now uses pure backend exclusively with 5% reduction
     handleDeleteArea, // Uses UNIFIED logic
     getActiveArea,
     reloadAreas: forceReload,

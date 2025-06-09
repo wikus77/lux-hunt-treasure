@@ -165,7 +165,7 @@ serve(async (req) => {
     const requestData = await req.json();
     const { userId, generateMap, prizeId, coordinates, sessionId } = requestData as BuzzRequest;
     
-    console.log(`🎯 UNIFIED BACKEND CALL - generateMap: ${generateMap}, coordinates:`, coordinates);
+    console.log(`🎯 PURE BACKEND UNIFIED CALL - generateMap: ${generateMap}, coordinates:`, coordinates);
     
     // 4. VALIDAZIONE INPUT COMPLETA
     if (!userId) {
@@ -211,7 +211,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`✅ Security checks passed for user: ${authenticatedUserId}, proceeding with UNIFIED LOGIC`);
+    console.log(`✅ Security checks passed for user: ${authenticatedUserId}, proceeding with PURE BACKEND UNIFIED LOGIC`);
 
     // Get current week since mission start
     const { data: weekData, error: weekError } = await supabase.rpc('get_current_mission_week');
@@ -313,11 +313,11 @@ serve(async (req) => {
       remainingMapGenerations: 0
     };
 
-    // CRITICAL: Handle UNIFIED map generation if requested
+    // CRITICAL: Handle PURE BACKEND UNIFIED map generation if requested
     if (generateMap && coordinates) {
-      console.log(`🗺️ UNIFIED MAP GENERATION START for user ${userId} with coordinates:`, coordinates);
+      console.log(`🗺️ PURE BACKEND UNIFIED MAP GENERATION START for user ${userId} with coordinates:`, coordinates);
       
-      // STEP 1: Clear any existing BUZZ areas for this user (UNIFIED CLEANUP)
+      // STEP 1: Clear any existing BUZZ areas for this user (UNIFIED CLEANUP - MAX 1 AREA)
       const { error: deleteError } = await supabase
         .from('user_map_areas')
         .delete()
@@ -326,10 +326,10 @@ serve(async (req) => {
       if (deleteError) {
         console.error("Warning: Could not clear existing areas:", deleteError);
       } else {
-        console.log("✅ Cleared existing BUZZ areas for unified generation");
+        console.log("✅ Cleared existing BUZZ areas for pure backend unified generation");
       }
       
-      // STEP 2: Get the current generation count for this week (PROGRESSIVE LOGIC)
+      // STEP 2: Get the current generation count for this week (PROGRESSIVE LOGIC WITH 5% REDUCTION)
       const { data: generationData, error: genError } = await supabase.rpc('increment_map_generation_counter', {
         p_user_id: userId,
         p_week: currentWeek
@@ -346,48 +346,48 @@ serve(async (req) => {
         
         // STEP 4: Check if user still has map generations available
         if (generationData <= maxGenerations) {
-          // STEP 5: Get radius for this generation (PROGRESSIVE DECREASE)
-          const { data: radiusData } = await supabase.rpc('get_map_radius_km', {
+          // STEP 5: Get INITIAL radius for this generation from backend function
+          const { data: baseRadiusData } = await supabase.rpc('get_map_radius_km', {
             p_week: currentWeek,
             p_generation_count: generationData
           });
-          let radius_km = radiusData || 100;
+          let radius_km = baseRadiusData || 100;
           
-          console.log(`📏 UNIFIED RADIUS CALCULATION: week=${currentWeek}, generation=${generationData}, radius=${radius_km}km`);
+          console.log(`📏 PURE BACKEND INITIAL RADIUS: week=${currentWeek}, generation=${generationData}, base_radius=${radius_km}km`);
           
-          // STEP 6: Apply 5% reduction for each previous generation (UNIFIED PROGRESSIVE LOGIC)
+          // STEP 6: Apply PROGRESSIVE 5% REDUCTION for each previous generation (PURE BACKEND CALCULATION)
           if (generationData > 1) {
-            const reductionFactor = Math.pow(0.95, generationData - 1);
-            radius_km = Math.max(5, radius_km * reductionFactor); // Minimum 5km
-            console.log(`📉 Applied 5% progressive reduction: ${radius_km.toFixed(2)}km (factor: ${reductionFactor.toFixed(3)})`);
+            const reductionFactor = Math.pow(0.95, generationData - 1); // 5% reduction per generation
+            radius_km = Math.max(5, radius_km * reductionFactor); // Minimum 5km as specified
+            console.log(`📉 APPLIED PURE BACKEND 5% PROGRESSIVE REDUCTION: ${radius_km.toFixed(2)}km (factor: ${reductionFactor.toFixed(3)}, min: 5km)`);
           }
           
-          // STEP 7: Use provided coordinates directly (UNIFIED COORDINATE LOGIC)
+          // STEP 7: Use provided coordinates directly (PURE BACKEND COORDINATE LOGIC)
           const mapArea = {
             lat: coordinates.lat,
             lng: coordinates.lng,
-            radius_km: radius_km,
+            radius_km: radius_km, // PURE BACKEND CALCULATION WITH 5% REDUCTION
             week: currentWeek
           };
           
-          console.log(`🎯 UNIFIED AREA DATA:`, mapArea);
+          console.log(`🎯 PURE BACKEND UNIFIED AREA DATA WITH 5% REDUCTION:`, mapArea);
           
-          // STEP 8: Save map area to database (UNIFIED STORAGE)
+          // STEP 8: Save map area to database (PURE BACKEND STORAGE)
           const { error: mapError } = await supabase
             .from('user_map_areas')
             .insert({
               user_id: userId,
               lat: mapArea.lat,
               lng: mapArea.lng,
-              radius_km: mapArea.radius_km,
+              radius_km: mapArea.radius_km, // REAL CALCULATED VALUE WITH 5% REDUCTION
               week: currentWeek,
               clue_id: clueData.clue_id
             });
             
           if (mapError) {
-            console.error("❌ UNIFIED ERROR saving map area:", mapError);
+            console.error("❌ PURE BACKEND UNIFIED ERROR saving map area:", mapError);
           } else {
-            console.log("✅ UNIFIED MAP AREA SAVED successfully");
+            console.log("✅ PURE BACKEND UNIFIED MAP AREA SAVED successfully with 5% reduction applied");
             response.map_area = mapArea;
             
             // Determine precision based on user clue count vs generation count
@@ -399,20 +399,20 @@ serve(async (req) => {
             const clueCount = userClueCount || 0;
             response.precision = clueCount > generationData ? 'high' : 'low';
             
-            console.log(`🎯 UNIFIED PRECISION: ${response.precision} (clues: ${clueCount}, generations: ${generationData})`);
+            console.log(`🎯 PURE BACKEND UNIFIED PRECISION: ${response.precision} (clues: ${clueCount}, generations: ${generationData})`);
           }
           
           response.remainingMapGenerations = maxGenerations - generationData;
           response.canGenerateMap = generationData < maxGenerations;
           
-          console.log(`🗺️ UNIFIED MAP GENERATION COMPLETE: remaining=${response.remainingMapGenerations}`);
+          console.log(`🗺️ PURE BACKEND UNIFIED MAP GENERATION COMPLETE WITH 5% REDUCTION: remaining=${response.remainingMapGenerations}, current_radius=${radius_km.toFixed(2)}km`);
         } else {
           console.log(`❌ User ${userId} has reached map generation limit for week ${currentWeek}`);
         }
       }
     }
 
-    console.log(`🎉 UNIFIED BACKEND RESPONSE:`, response);
+    console.log(`🎉 PURE BACKEND UNIFIED RESPONSE WITH 5% REDUCTION:`, response);
 
     return new Response(
       JSON.stringify(response),
