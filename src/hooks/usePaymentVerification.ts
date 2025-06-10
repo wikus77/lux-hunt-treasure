@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { useTestMode } from './useTestMode';
+import { useGameRules } from './useGameRules';
 
 interface PaymentVerification {
   hasValidPayment: boolean;
@@ -16,7 +17,8 @@ interface PaymentVerification {
 
 export const usePaymentVerification = () => {
   const { user } = useAuthContext();
-  const { isDeveloperUser } = useTestMode();
+  const { isDeveloperUser, fakePaymentEnabled } = useTestMode();
+  const { getBuzzLimit } = useGameRules();
   
   const [verification, setVerification] = useState<PaymentVerification>({
     hasValidPayment: false,
@@ -34,18 +36,24 @@ export const usePaymentVerification = () => {
     }
 
     try {
-      // DEVELOPER BLACK: Accesso completo senza limitazioni
       if (isDeveloperUser) {
+        // APPLICA REGOLE BLACK STRICTE
+        const blackBuzzLimit = getBuzzLimit('Black');
+        
         setVerification({
           hasValidPayment: true,
           subscriptionTier: 'Black',
           canAccessPremium: true,
-          remainingBuzz: 999,
-          weeklyBuzzLimit: 999,
+          remainingBuzz: blackBuzzLimit,
+          weeklyBuzzLimit: blackBuzzLimit,
           loading: false
         });
         
-        console.log('🔧 DEVELOPER BLACK: Accesso illimitato confermato');
+        console.log('🔧 DEVELOPER BLACK: Accesso con REGOLE STRICTE confermato', {
+          buzzLimit: blackBuzzLimit,
+          tier: 'Black',
+          rulesApplied: true
+        });
         return;
       }
 
@@ -61,7 +69,6 @@ export const usePaymentVerification = () => {
         throw profileError;
       }
 
-      // Verifica abbonamento attivo
       const { data: subscription, error: subError } = await supabase
         .from('subscriptions')
         .select('status, tier, end_date')
@@ -82,7 +89,6 @@ export const usePaymentVerification = () => {
         hasActiveSubscription = true;
       }
 
-      // Verifica pagamenti completati
       const { data: payments, error: paymentsError } = await supabase
         .from('payment_transactions')
         .select('status, created_at')
@@ -98,20 +104,9 @@ export const usePaymentVerification = () => {
       const hasValidPayment = (payments && payments.length > 0) || hasActiveSubscription;
       const canAccessPremium = hasValidPayment && subscriptionTier !== 'Free';
 
-      // Ottieni limiti BUZZ settimanali
-      let weeklyBuzzLimit = 0;
-      if (subscriptionTier === 'Black') {
-        weeklyBuzzLimit = 999;
-      } else {
-        const { data: tierData } = await supabase
-          .from('subscription_tiers')
-          .select('max_weekly_buzz')
-          .eq('name', subscriptionTier)
-          .single();
-        weeklyBuzzLimit = tierData?.max_weekly_buzz || 0;
-      }
+      // USA REGOLE DI GIOCO PER LIMITI
+      const weeklyBuzzLimit = getBuzzLimit(subscriptionTier);
 
-      // Calcola BUZZ rimanenti
       const { data: allowance } = await supabase
         .from('weekly_buzz_allowances')
         .select('max_buzz_count, used_buzz_count')
@@ -122,7 +117,7 @@ export const usePaymentVerification = () => {
 
       let remainingBuzz = 0;
       if (subscriptionTier === 'Black') {
-        remainingBuzz = 999;
+        remainingBuzz = weeklyBuzzLimit; // Usa regole
       } else if (allowance) {
         remainingBuzz = Math.max(0, allowance.max_buzz_count - allowance.used_buzz_count);
       }
@@ -136,11 +131,13 @@ export const usePaymentVerification = () => {
         loading: false
       });
 
-      console.log('✅ Payment verification completed:', {
+      console.log('✅ Payment verification completed CON REGOLE:', {
         hasValidPayment,
         subscriptionTier,
         canAccessPremium,
-        remainingBuzz
+        remainingBuzz,
+        weeklyBuzzLimit,
+        rulesApplied: true
       });
 
     } catch (error) {
@@ -182,15 +179,15 @@ export const usePaymentVerification = () => {
   const requirePayment = (feature: string): boolean => {
     const { hasValidPayment, canAccessPremium } = verification;
     
-    // DEVELOPER BLACK: Sempre autorizzato
-    if (isDeveloperUser) {
+    if (isDeveloperUser && fakePaymentEnabled) {
+      console.log('🔧 DEVELOPER: Pagamento fittizio autorizzato per', feature);
       return true;
     }
     
     if (!hasValidPayment || !canAccessPremium) {
       logUnauthorizedAccess(`blocked_${feature}`);
-      toast.error('Accesso Negato', {
-        description: 'Questa funzione richiede un abbonamento attivo o pagamento valido.',
+      toast.error('Pagamento Richiesto', {
+        description: 'Questa funzione richiede un pagamento verificato.',
         duration: 4000
       });
       return false;
@@ -202,8 +199,8 @@ export const usePaymentVerification = () => {
   const requireBuzzPayment = async (): Promise<boolean> => {
     const { hasValidPayment, remainingBuzz, subscriptionTier } = verification;
     
-    // DEVELOPER BLACK: Sempre autorizzato
-    if (isDeveloperUser) {
+    if (isDeveloperUser && fakePaymentEnabled) {
+      console.log('🔧 DEVELOPER: BUZZ fittizio autorizzato');
       return true;
     }
     
@@ -214,7 +211,7 @@ export const usePaymentVerification = () => {
     if (!hasValidPayment) {
       await logUnauthorizedAccess('blocked_buzz_no_payment');
       toast.error('Pagamento Richiesto', {
-        description: 'Devi effettuare un pagamento per utilizzare questa funzione.',
+        description: 'Devi effettuare un pagamento per utilizzare BUZZ.',
         duration: 4000
       });
       return false;

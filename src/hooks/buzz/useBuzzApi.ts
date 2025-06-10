@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTestMode } from '@/hooks/useTestMode';
+import { useGameRules } from '@/hooks/useGameRules';
 
 interface BuzzApiParams {
   userId: string;
@@ -22,52 +23,74 @@ interface BuzzApiResponse {
 
 export const useBuzzApi = () => {
   const [loading, setLoading] = useState(false);
-  const { isDeveloperUser, testLocation, generateVentimigliaClue } = useTestMode();
+  const { isDeveloperUser, testLocation, generateSecureClue } = useTestMode();
+  const { getCurrentWeek, getMapRadius, validateClueContent } = useGameRules();
 
   const callBuzzApi = async (params: BuzzApiParams): Promise<BuzzApiResponse> => {
     setLoading(true);
     
     try {
-      // DEVELOPER BLACK: Contenuto dinamico Ventimiglia
       if (isDeveloperUser) {
-        console.log('🔧 DEVELOPER BLACK MODE: Generazione contenuto Ventimiglia');
+        console.log('🔧 DEVELOPER BLACK MODE: Generazione con REGOLE STRICTE');
         
-        // Simula processing time realistico
         await new Promise(resolve => setTimeout(resolve, 1500));
         
+        const currentWeek = getCurrentWeek();
         const buzzCount = Math.floor(Math.random() * 100) + 1;
-        const clueText = generateVentimigliaClue(buzzCount);
+        const generation = 1; // Simulato per prima generazione
+        
+        // GENERA INDIZIO SICURO (senza nomi città)
+        const clueText = generateSecureClue(buzzCount);
+        
+        // VALIDA INDIZIO
+        if (!validateClueContent(clueText)) {
+          console.error('🚫 CLUE VALIDATION FAILED!');
+          return {
+            success: false,
+            error: 'clue_validation_failed',
+            errorMessage: 'Indizio non conforme alle regole di gioco'
+          };
+        }
         
         if (params.generateMap) {
-          // Generazione mappa per Ventimiglia
+          // USA REGOLE CORRETTE PER RAGGIO
+          const correctRadius = getMapRadius(currentWeek, generation);
+          
           const response: BuzzApiResponse = {
             success: true,
             clue_text: clueText,
-            radius_km: 1.5 + (Math.random() * 2), // Raggio variabile 1.5-3.5km
-            lat: testLocation.lat + (Math.random() - 0.5) * 0.01, // Piccola variazione
+            radius_km: correctRadius, // REGOLE APPLICATE
+            lat: testLocation.lat + (Math.random() - 0.5) * 0.01,
             lng: testLocation.lng + (Math.random() - 0.5) * 0.01,
             generation_number: buzzCount
           };
           
-          console.log('✅ DEVELOPER BLACK: Mappa generata per Ventimiglia', response);
+          console.log('✅ DEVELOPER BLACK: Mappa generata CON REGOLE STRICTE', {
+            radius: correctRadius,
+            week: currentWeek,
+            generation,
+            rules_applied: true
+          });
+          
           return response;
         } else {
-          // Generazione indizio normale
           const response: BuzzApiResponse = {
             success: true,
             clue_text: clueText,
             generation_number: buzzCount
           };
           
-          console.log('✅ DEVELOPER BLACK: Indizio generato per Ventimiglia', response);
+          console.log('✅ DEVELOPER BLACK: Indizio sicuro generato', {
+            clue_validated: true,
+            no_city_names: true
+          });
+          
           return response;
         }
       }
       
-      // PRODUZIONE: API reale per altri utenti
       console.log('📡 BUZZ API: Chiamata API reale in produzione...');
       
-      // Simula chiamata API reale
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       return {

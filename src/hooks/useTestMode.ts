@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/auth';
+import { useGameRules } from './useGameRules';
 
 interface TestModeConfig {
   isTestMode: boolean;
@@ -11,19 +12,23 @@ interface TestModeConfig {
     address: string;
   };
   fakePaymentEnabled: boolean;
+  strictGameRules: boolean;
 }
 
 export const useTestMode = () => {
   const { user } = useAuthContext();
+  const { validateClueContent } = useGameRules();
+  
   const [testConfig, setTestConfig] = useState<TestModeConfig>({
     isTestMode: false,
     isDeveloperUser: false,
     testLocation: {
       lat: 43.7915,
       lng: 7.6089,
-      address: 'Corso Limone Piemonte 232, Ventimiglia (IM), Italia'
+      address: 'Area di ricerca - Riviera Ligure' // NESSUN NOME CITTÀ
     },
-    fakePaymentEnabled: false
+    fakePaymentEnabled: false,
+    strictGameRules: true // REGOLE FERREE ATTIVE
   });
 
   useEffect(() => {
@@ -32,40 +37,51 @@ export const useTestMode = () => {
       
       if (isDev) {
         setTestConfig({
-          isTestMode: false, // Modalità produzione per developer
+          isTestMode: false, // Modalità produzione STRICTA
           isDeveloperUser: true,
           testLocation: {
             lat: 43.7915,
             lng: 7.6089,
-            address: 'Corso Limone Piemonte 232, Ventimiglia (IM), Italia'
+            address: 'Area di ricerca - Riviera Ligure' // GENERICO
           },
-          fakePaymentEnabled: false // Pagamenti reali per developer BLACK
+          fakePaymentEnabled: true, // Pagamenti fittizi per test
+          strictGameRules: true // REGOLE FERREE
         });
         
-        console.log('🔧 DEVELOPER BLACK MODE: Accesso completo attivato per', user.email);
+        console.log('🔧 DEVELOPER BLACK MODE: Regole di gioco STRICTE attivate per', user.email);
+        console.log('📍 Area test: NESSUN NOME CITTÀ negli indizi');
       }
     };
 
     checkDeveloperMode();
   }, [user]);
 
-  const generateVentimigliaClue = (buzzCount: number): string => {
-    const ventimigliaClues = [
-      `La risposta si nasconde dove il Roya incontra il mare, tra i colori dei fiori di Ventimiglia (Indizio #${buzzCount})`,
-      `Cerca dove l'Italia abbraccia la Francia, nei giardini della città di confine - ${new Date().toLocaleTimeString()}`,
-      `Il segreto è custodito tra le palme di Corso Limone Piemonte, dove la Riviera dei Fiori profuma di mistero`,
-      `Ventimiglia custodisce il tuo destino: segui la via dei limoni verso la soluzione finale`,
-      `Tra il Forte dell'Annunziata e il centro storico, la verità ti attende sul confine - Gen ${buzzCount}`,
-      `La città dei mercati e dei fiori nasconde l'ultimo indizio della tua missione M1SSION™`,
-      `Dal teatro Romano alle vie del centro: Ventimiglia rivela i suoi segreti solo ai più coraggiosi`
+  const generateSecureClue = (buzzCount: number): string => {
+    // Indizi che NON menzionano MAI nomi di città
+    const secureClues = [
+      `La risposta si nasconde dove il mare incontra la terraferma, tra i colori dei fiori (Indizio #${buzzCount})`,
+      `Cerca dove due nazioni si incontrano, nei giardini della frontiera - ${new Date().toLocaleTimeString()}`,
+      `Il segreto è custodito tra le palme di un corso principale, dove la costa profuma di mistero`,
+      `La città di confine custodisce il tuo destino: segui la via principale verso la soluzione`,
+      `Tra fortificazioni antiche e centro storico, la verità ti attende al confine - Gen ${buzzCount}`,
+      `La località dei mercati e dei fiori nasconde l'ultimo indizio della tua missione M1SSION™`,
+      `Dal teatro antico alle vie del centro: la città costiera rivela i suoi segreti ai coraggiosi`
     ];
     
-    const index = (buzzCount + new Date().getHours()) % ventimigliaClues.length;
-    return ventimigliaClues[index];
+    const index = (buzzCount + new Date().getHours()) % secureClues.length;
+    const selectedClue = secureClues[index];
+    
+    // VALIDAZIONE STRICTA: Nessun nome città
+    if (!validateClueContent(selectedClue)) {
+      console.error('🚫 CLUE VALIDATION FAILED: Contiene nomi di città!');
+      return `Indizio sicuro generato alle ${new Date().toLocaleTimeString()} - Cerca nella zona di confine`;
+    }
+    
+    return selectedClue;
   };
 
   return {
     ...testConfig,
-    generateVentimigliaClue
+    generateSecureClue
   };
 };
