@@ -1,10 +1,11 @@
 
 import { Route } from 'react-router-dom';
-import Admin from '@/pages/Admin'; // Ensure correct import path
+import Admin from '@/pages/Admin';
 import RoleBasedProtectedRoute from '@/components/auth/RoleBasedProtectedRoute';
 import { useState, useEffect } from 'react';
 import AdminPrizeClues from '@/pages/AdminPrizeClues';
 import AdminPrizes from '@/pages/AdminPrizes';
+import AdminPrizesManager from '@/pages/AdminPrizesManager';
 import AbuseLogsPage from '@/pages/AbuseLogsPage';
 
 export default function AdminRoutes() {
@@ -34,6 +35,20 @@ export default function AdminRoutes() {
             // After May 21, 2025, return to role-based protection
             <RoleBasedProtectedRoute allowedRoles={['admin']}>
               <Admin />
+            </RoleBasedProtectedRoute>
+          )
+        } 
+      />
+      
+      {/* New Admin Prizes Manager */}
+      <Route 
+        path="/admin/prizes-manager" 
+        element={
+          bypassProtection ? (
+            <AdminPrizesManager />
+          ) : (
+            <RoleBasedProtectedRoute allowedRoles={['admin']}>
+              <AdminPrizesManager />
             </RoleBasedProtectedRoute>
           )
         } 

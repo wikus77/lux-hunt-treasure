@@ -57,6 +57,42 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_prizes: {
+        Row: {
+          address: string
+          city: string
+          created_at: string | null
+          created_by: string
+          description: string
+          id: string
+          is_active: boolean | null
+          type: string
+          week: number
+        }
+        Insert: {
+          address: string
+          city: string
+          created_at?: string | null
+          created_by: string
+          description: string
+          id?: string
+          is_active?: boolean | null
+          type: string
+          week: number
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string
+          id?: string
+          is_active?: boolean | null
+          type?: string
+          week?: number
+        }
+        Relationships: []
+      }
       app_messages: {
         Row: {
           content: string
