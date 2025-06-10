@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Lock, ChevronRight, LogOut, Bell, Globe, CreditCard } from "lucide-react";
+import { ArrowLeft, User, Lock, ChevronRight, LogOut, Bell, Globe, CreditCard, Key } from "lucide-react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import BottomNavigation from "@/components/layout/BottomNavigation";
@@ -85,9 +85,30 @@ const Settings = () => {
         {/* Account Settings - Now collapsible */}
         <AccountSection />
         
+        {/* Password e Sicurezza Section - NEW */}
+        <div className="mb-6">
+          <div className="glass-card p-4 rounded-xl">
+            <div 
+              className="flex items-center justify-between p-2 bg-black/30 rounded-xl cursor-pointer hover:bg-black/40 transition-colors shadow-lg"
+              onClick={() => navigate('/password-security')}
+            >
+              <div className="flex items-center gap-2">
+                <Key className="h-4 w-4 text-cyan-400" />
+                <span className="text-sm text-white">Password e Sicurezza</span>
+              </div>
+              <Button variant="ghost" size="sm" className="h-8 rounded-xl">
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Privacy & Security Section */}
+        <PrivacySecuritySection />
+        
         {/* Subscription Section - Now collapsible */}
         <div className="mb-6">
-          <div className="glass-card p-4">
+          <div className="glass-card p-4 rounded-xl">
             <Collapsible open={isSubscriptionOpen} onOpenChange={setIsSubscriptionOpen}>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
                 <h2 className="text-lg font-semibold text-white flex items-center">
@@ -107,7 +128,7 @@ const Settings = () => {
                     </p>
                     <Button 
                       onClick={() => navigate('/subscriptions')}
-                      className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
+                      className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-xl"
                     >
                       Visualizza tutti i piani
                     </Button>
@@ -118,12 +139,9 @@ const Settings = () => {
           </div>
         </div>
         
-        {/* Privacy & Security Section */}
-        <PrivacySecuritySection />
-        
         {/* Regulation Section - Now collapsible */}
         <div className="mb-6">
-          <div className="glass-card p-4">
+          <div className="glass-card p-4 rounded-xl">
             <Collapsible>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
                 <h2 className="text-lg font-semibold text-white flex items-center">
@@ -141,7 +159,7 @@ const Settings = () => {
         
         {/* Payment Methods Section - Now properly collapsible */}
         <div className="mb-6">
-          <div className="glass-card p-4">
+          <div className="glass-card p-4 rounded-xl">
             <Collapsible open={isPaymentMethodsOpen} onOpenChange={setIsPaymentMethodsOpen}>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
                 <h2 className="text-lg font-semibold text-white flex items-center">
@@ -182,7 +200,7 @@ const Settings = () => {
           {!showLogoutConfirm ? (
             <Button 
               variant="destructive" 
-              className="w-full" 
+              className="w-full rounded-xl" 
               onClick={() => setShowLogoutConfirm(true)}
             >
               <LogOut className="h-4 w-4 mr-2" />
@@ -194,14 +212,14 @@ const Settings = () => {
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
-                  className="flex-1" 
+                  className="flex-1 rounded-xl" 
                   onClick={() => setShowLogoutConfirm(false)}
                 >
                   Annulla
                 </Button>
                 <Button 
                   variant="destructive" 
-                  className="flex-1" 
+                  className="flex-1 rounded-xl" 
                   onClick={handleLogout}
                 >
                   Conferma

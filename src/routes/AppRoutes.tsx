@@ -1,3 +1,4 @@
+
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -18,6 +19,7 @@ const Notifications = lazy(() => import("@/pages/Notifications"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const PersonalInfo = lazy(() => import("@/pages/PersonalInfo"));
+const PasswordSecurity = lazy(() => import("@/pages/PasswordSecurity"));
 const Subscriptions = lazy(() => import("@/pages/Subscriptions"));
 const HelpFaq = lazy(() => import("@/pages/HelpFaq"));
 const PrivacySecurity = lazy(() => import("@/pages/PrivacySecurity"));
@@ -117,6 +119,15 @@ const AppRoutes: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <PersonalInfo />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/password-security"
+              element={
+                <ProtectedRoute>
+                  <PasswordSecurity />
                 </ProtectedRoute>
               }
             />
