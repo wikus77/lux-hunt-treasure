@@ -8,6 +8,8 @@ import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { usePaymentVerification } from "@/hooks/usePaymentVerification";
 import { useStripePayment } from "@/hooks/useStripePayment";
+import { useFakePayment } from "@/hooks/useFakePayment";
+import { useTestMode } from "@/hooks/useTestMode";
 import { supabase } from "@/integrations/supabase/client";
 
 interface BuzzButtonSecureProps {
@@ -22,6 +24,9 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const { callBuzzApi } = useBuzzApi();
   const { createBuzzNotification } = useNotificationManager();
   const { processBuzzPurchase, loading: stripeLoading } = useStripePayment();
+  const { simulateSuccessfulPayment, fakePaymentEnabled } = useFakePayment();
+  const { isDeveloperUser, isTestMode } = useTestMode();
+  
   const {
     hasValidPayment,
     canAccessPremium,
@@ -39,7 +44,80 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const handleSecureBuzzPress = async () => {
     if (isProcessing || verificationLoading || !userId) return;
 
-    // CRITICAL: Verify payment before any action
+    // TEST MODE: Gestione pagamento fittizio per developer
+    if (isDeveloperUser && isTestMode && fakePaymentEnabled) {
+      console.log('🔧 BUZZ TEST MODE: Processo completo con pagamento fittizio');
+      
+      setShowRipple(true);
+      setTimeout(() => setShowRipple(false), 1000);
+      setIsProcessing(true);
+
+      try {
+        // Simula pagamento se necessario
+        if (subscriptionTier === 'Free') {
+          const paymentSuccess = await simulateSuccessfulPayment(buzzCost);
+          if (!paymentSuccess) {
+            toast.error('Pagamento TEST fallito');
+            return;
+          }
+        }
+
+        // Genera contenuto BUZZ con API
+        const response = await callBuzzApi({ 
+          userId, 
+          generateMap: false 
+        });
+        
+        if (response.success) {
+          const dynamicClueContent = response.clue_text || 
+            `Indizio TEST Ventimiglia generato alle ${new Date().toLocaleTimeString()}`;
+          
+          // Inserisci notifica
+          const { error: notificationError } = await supabase
+            .from('user_notifications')
+            .insert({
+              user_id: userId,
+              type: 'buzz',
+              title: 'Nuovo Indizio TEST Ventimiglia',
+              message: dynamicClueContent,
+              is_read: false,
+              created_at: new Date().toISOString()
+            });
+
+          if (notificationError) {
+            console.error('❌ Error inserting TEST notification:', notificationError);
+          } else {
+            console.log('✅ TEST notification inserted successfully');
+          }
+
+          toast.success("🔧 Indizio TEST Sbloccato!", {
+            description: dynamicClueContent,
+          });
+          
+          await createBuzzNotification(
+            "Nuovo Indizio TEST Ventimiglia", 
+            dynamicClueContent
+          );
+          
+          onSuccess();
+        } else {
+          toast.error("Errore TEST", {
+            description: response.errorMessage || "Errore sconosciuto",
+          });
+        }
+      } catch (error) {
+        console.error('❌ TEST BUZZ Error:', error);
+        toast.error("Errore TEST", {
+          description: "Errore durante il test",
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+      
+      return;
+    }
+
+    // PRODUZIONE: Verifica pagamento normale
     const canProceed = await requireBuzzPayment();
     if (!canProceed) {
       await logUnauthorizedAccess('buzz_blocked_no_payment', {
@@ -50,11 +128,9 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       return;
     }
 
-    // Trigger ripple effect
     setShowRipple(true);
     setTimeout(() => setShowRipple(false), 1000);
     
-    // Track Plausible event
     if (typeof window !== 'undefined' && window.plausible) {
       window.plausible('buzz_click');
     }
@@ -63,14 +139,12 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     setIsProcessing(true);
     
     try {
-      // If user doesn't have subscription, require payment
       if (subscriptionTier === 'Free') {
         console.log('💳 No subscription detected, redirecting to payment...');
         await processBuzzPurchase(false, buzzCost);
         return;
       }
 
-      // Proceed with buzz generation for premium users
       const response = await callBuzzApi({ 
         userId, 
         generateMap: false 
@@ -79,20 +153,14 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       if (response.success) {
         console.log('✅ SECURE BUZZ: Response received with payment verification');
         
-        // Track clue unlocked event
         if (typeof window !== 'undefined' && window.plausible) {
           window.plausible('clue_unlocked');
         }
 
-        // Get dynamic clue content
         const dynamicClueContent = response.clue_text || 
           `Indizio premium generato alle ${new Date().toLocaleTimeString()}`;
         
-        console.log('📝 SECURE: Dynamic clue content:', dynamicClueContent);
-
-        // Register notification on Supabase with verification
         try {
-          console.log('💾 SECURE: Inserting verified notification in Supabase...');
           const { error: notificationError } = await supabase
             .from('user_notifications')
             .insert({
@@ -113,12 +181,10 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           console.error('❌ Error creating verified notification:', notifError);
         }
 
-        // Create toast notification
         toast.success("Indizio Premium Sbloccato!", {
           description: dynamicClueContent,
         });
         
-        // Create app notification
         try {
           await createBuzzNotification(
             "Nuovo Indizio Premium Verificato", 
@@ -155,8 +221,8 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     }
   };
 
-  // Security check: block if no valid payment
-  const isBlocked = !hasValidPayment || remainingBuzz <= 0 || subscriptionTier === 'Free';
+  // Security check modificata per test mode
+  const isBlocked = !isDeveloperUser && (!hasValidPayment || remainingBuzz <= 0 || subscriptionTier === 'Free');
   const isLoading = isProcessing || stripeLoading || verificationLoading;
 
   if (verificationLoading) {
@@ -185,23 +251,21 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         scale: { type: "spring", stiffness: 300, damping: 20 }
       }}
     >
-      {/* Security overlay for blocked access */}
-      {isBlocked && (
+      {isBlocked && !isDeveloperUser && (
         <div className="absolute inset-0 bg-red-900 bg-opacity-80 rounded-full flex items-center justify-center z-20">
           <Lock className="w-16 h-16 text-red-300" />
         </div>
       )}
 
-      {/* Radial gradient overlay */}
       <div className={`absolute inset-0 rounded-full opacity-90 ${
-        isBlocked ? 'bg-gradient-to-r from-red-600 to-red-800' : 
+        isBlocked && !isDeveloperUser ? 'bg-gradient-to-r from-red-600 to-red-800' : 
         'bg-gradient-to-r from-[#7B2EFF] via-[#00D1FF] to-[#FF59F8]'
       }`} />
       
       <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full z-10">
         {isLoading ? (
           <Loader className="w-12 h-12 animate-spin text-white" />
-        ) : isBlocked ? (
+        ) : isBlocked && !isDeveloperUser ? (
           <>
             <Lock className="w-8 h-8 text-red-300 mb-2" />
             <span className="text-lg font-bold text-red-300 tracking-wider text-center px-4">
@@ -220,6 +284,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
             </span>
             <span className="text-sm text-white/90 mt-1 font-medium">
               Piano: {subscriptionTier}
+              {isDeveloperUser && isTestMode && <span className="text-green-300"> (TEST)</span>}
             </span>
             <span className="text-xs text-white/70">
               {remainingBuzz} BUZZ rimanenti
@@ -228,7 +293,6 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         )}
       </div>
 
-      {/* Ripple effect - only show if not blocked */}
       {showRipple && !isBlocked && (
         <div className="ripple-effect" />
       )}
