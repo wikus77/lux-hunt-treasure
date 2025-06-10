@@ -25,10 +25,10 @@ export const useTestMode = () => {
     testLocation: {
       lat: 43.7915,
       lng: 7.6089,
-      address: 'Area di ricerca - Riviera Ligure' // NESSUN NOME CITTÀ
+      address: 'Area di ricerca - Costa del confine' // NESSUN NOME CITTÀ
     },
     fakePaymentEnabled: false,
-    strictGameRules: true // REGOLE FERREE ATTIVE
+    strictGameRules: true // REGOLE FERREE ATTIVE PER LANCIO
   });
 
   useEffect(() => {
@@ -37,19 +37,19 @@ export const useTestMode = () => {
       
       if (isDev) {
         setTestConfig({
-          isTestMode: false, // Modalità produzione STRICTA
+          isTestMode: false, // Modalità produzione STRICTA per LANCIO
           isDeveloperUser: true,
           testLocation: {
             lat: 43.7915,
             lng: 7.6089,
-            address: 'Area di ricerca - Riviera Ligure' // GENERICO
+            address: 'Area di ricerca - Costa mediterranea' // GENERICO PER LANCIO
           },
-          fakePaymentEnabled: true, // Pagamenti fittizi per test
-          strictGameRules: true // REGOLE FERREE
+          fakePaymentEnabled: true, // Pagamenti fittizi per test LANCIO
+          strictGameRules: true // REGOLE FERREE LANCIO 19 LUGLIO
         });
         
-        console.log('🔧 DEVELOPER BLACK MODE: Regole di gioco STRICTE attivate per', user.email);
-        console.log('📍 Area test: NESSUN NOME CITTÀ negli indizi');
+        console.log('🔧 DEVELOPER BLACK MODE - LANCIO 19 LUGLIO: Regole di gioco UFFICIALI attivate per', user.email);
+        console.log('📍 Area test LANCIO: NESSUN NOME CITTÀ negli indizi');
       }
     };
 
@@ -57,24 +57,27 @@ export const useTestMode = () => {
   }, [user]);
 
   const generateSecureClue = (buzzCount: number): string => {
-    // Indizi che NON menzionano MAI nomi di città
-    const secureClues = [
-      `La risposta si nasconde dove il mare incontra la terraferma, tra i colori dei fiori (Indizio #${buzzCount})`,
-      `Cerca dove due nazioni si incontrano, nei giardini della frontiera - ${new Date().toLocaleTimeString()}`,
-      `Il segreto è custodito tra le palme di un corso principale, dove la costa profuma di mistero`,
-      `La città di confine custodisce il tuo destino: segui la via principale verso la soluzione`,
-      `Tra fortificazioni antiche e centro storico, la verità ti attende al confine - Gen ${buzzCount}`,
-      `La località dei mercati e dei fiori nasconde l'ultimo indizio della tua missione M1SSION™`,
-      `Dal teatro antico alle vie del centro: la città costiera rivela i suoi segreti ai coraggiosi`
+    // INDIZI SEVERI: MAI nomi di città per LANCIO
+    const launchSecureClues = [
+      `La soluzione si nasconde dove due nazioni si incontrano, tra i giardini della frontiera (Missione #${buzzCount})`,
+      `Cerca dove il mare bacia la terraferma, nei colori del ponente - ${new Date().toLocaleTimeString()}`,
+      `Il segreto è custodito tra le palme di un viale principale, dove la costa profuma di libertà`,
+      `La città di confine custodisce il tuo destino: segui la via dei mercati verso la verità`,
+      `Tra fortificazioni antiche e centro storico, l'enigma ti attende al limite - Gen ${buzzCount}`,
+      `La località dei fiori e dei mercati nasconde l'ultimo indizio della tua missione M1SSION™`,
+      `Dal teatro storico alle vie del centro: la città costiera rivela i suoi segreti ai coraggiosi`,
+      `Dove i treni attraversano i confini, la missione trova il suo compimento finale`,
+      `Tra le mura di una città antica, il premio ti aspetta dove tramonta il sole`,
+      `La costa del ponente nasconde tesori: cerca dove i giardini incontrano il mare`
     ];
     
-    const index = (buzzCount + new Date().getHours()) % secureClues.length;
-    const selectedClue = secureClues[index];
+    const index = (buzzCount + new Date().getHours()) % launchSecureClues.length;
+    const selectedClue = launchSecureClues[index];
     
-    // VALIDAZIONE STRICTA: Nessun nome città
+    // VALIDAZIONE SEVERISSIMA: Nessun nome città per LANCIO
     if (!validateClueContent(selectedClue)) {
-      console.error('🚫 CLUE VALIDATION FAILED: Contiene nomi di città!');
-      return `Indizio sicuro generato alle ${new Date().toLocaleTimeString()} - Cerca nella zona di confine`;
+      console.error('🚫 CLUE VALIDATION FAILED - LANCIO: Contiene nomi di città!');
+      return `Indizio sicuro per il lancio generato alle ${new Date().toLocaleTimeString()} - Cerca nella zona di confine mediterranea`;
     }
     
     return selectedClue;

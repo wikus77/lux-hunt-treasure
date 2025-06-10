@@ -26,39 +26,39 @@ export interface GameRules {
 
 export const MISSION_GAME_RULES: GameRules = {
   weeklyBuzzLimits: {
-    Free: 1,
-    Silver: 7,
-    Gold: 14,
-    Black: 999, // Illimitato per Black
+    Free: 1,        // CORRETTO: 1 BUZZ settimanale per Free
+    Silver: 3,      // CORRETTO: 3 BUZZ settimanali per Silver
+    Gold: 7,        // CORRETTO: 7 BUZZ settimanali per Gold  
+    Black: 999,     // Illimitato per Black (solo developer)
   },
   mapRadiusProgression: {
     week1: { 
-      generation1: 500, // km - REGOLA CORRETTA
-      generation2: 400, 
+      generation1: 500, // CORRETTO: 500km iniziale - SETTIMANA 1
+      generation2: 475, // -5% riduzione
       maxGenerations: 2 
     },
     week2: { 
       generation1: 350, 
-      generation2: 300, 
-      generation3: 250, 
+      generation2: 332.5, 
+      generation3: 315.875, 
       maxGenerations: 3 
     },
     week3: { 
       generation1: 250, 
-      generation2: 200, 
-      generation3: 150, 
+      generation2: 237.5, 
+      generation3: 225.625, 
       maxGenerations: 3 
     },
     week4: { 
       generation1: 100, 
-      generation2: 50, 
-      generation3: 15, 
-      generation4: 5, 
+      generation2: 95, 
+      generation3: 90.25, 
+      generation4: 85.7375, 
       maxGenerations: 4 
     },
   },
   clueRules: {
-    noCityNames: true, // IMPERATIVO: Mai nomi di città
+    noCityNames: true, // SEVERO: Mai nomi di città negli indizi
     useGenericLocations: true,
     maxCluesPerBuzz: 1,
   },
@@ -71,7 +71,7 @@ export const MISSION_GAME_RULES: GameRules = {
 
 export const useGameRules = () => {
   const getCurrentWeek = (): number => {
-    // Simula che oggi sia 19 luglio - settimana 1
+    // LANCIO UFFICIALE: 19 luglio = settimana 1
     return 1;
   };
 
@@ -84,7 +84,7 @@ export const useGameRules = () => {
     if (generation === 3 && 'generation3' in weekRules) return weekRules.generation3;
     if (generation === 4 && 'generation4' in weekRules) return weekRules.generation4;
     
-    return weekRules.generation1; // Default
+    return weekRules.generation1; // Default alla prima generazione
   };
 
   const getBuzzLimit = (tier: string): number => {
@@ -94,8 +94,14 @@ export const useGameRules = () => {
   const validateClueContent = (clueText: string): boolean => {
     if (!MISSION_GAME_RULES.clueRules.noCityNames) return true;
     
-    // Lista città da bannare negli indizi
-    const forbiddenCities = ['ventimiglia', 'sanremo', 'imperia', 'genova', 'milano', 'torino', 'roma'];
+    // LISTA SEVERA: tutte le città da bannare negli indizi
+    const forbiddenCities = [
+      'ventimiglia', 'sanremo', 'imperia', 'genova', 'milano', 
+      'torino', 'roma', 'napoli', 'palermo', 'catania', 'bari',
+      'firenze', 'bologna', 'venezia', 'verona', 'padova',
+      'nice', 'cannes', 'monaco', 'montecarlo', 'nizza'
+    ];
+    
     const lowerClue = clueText.toLowerCase();
     
     return !forbiddenCities.some(city => lowerClue.includes(city));

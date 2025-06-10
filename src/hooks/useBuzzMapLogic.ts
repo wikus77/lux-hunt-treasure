@@ -63,7 +63,7 @@ export const useBuzzMapLogic = () => {
       return null;
     }
 
-    console.log('🔥 STARTING BUZZ GENERATION CON REGOLE STRICTE:', {
+    console.log('🔥 STARTING BUZZ GENERATION - LANCIO 19 LUGLIO:', {
       userId: user.id,
       centerLat,
       centerLng,
@@ -79,7 +79,7 @@ export const useBuzzMapLogic = () => {
     toast.dismiss();
     
     try {
-      console.log('🚀 CALLING BACKEND with STRICT GAME RULES...');
+      console.log('🚀 CALLING BACKEND with STRICT LAUNCH RULES...');
       
       const response = await callBuzzApi({ 
         userId: user.id,
@@ -87,7 +87,7 @@ export const useBuzzMapLogic = () => {
         coordinates: { lat: centerLat, lng: centerLng }
       });
       
-      console.log('📡 BACKEND RESPONSE CON REGOLE:', response);
+      console.log('📡 BACKEND RESPONSE - LANCIO REGOLE:', response);
       
       if (!response.success || response.error) {
         console.error('❌ Backend error:', response.errorMessage || response.error);
@@ -96,23 +96,27 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      // APPLICA REGOLE DI GIOCO CORRETTE
+      // APPLICA REGOLE LANCIO UFFICIALE
       const currentWeek = getCurrentWeek();
       const currentGeneration = (currentWeekAreas.length || 0) + 1;
       const correctRadius = getMapRadius(currentWeek, currentGeneration);
       
-      console.log('✅ APPLICANDO REGOLE STRICTE:', {
+      console.log('✅ REGOLE LANCIO 19 LUGLIO APPLICATE:', {
         week: currentWeek,
         generation: currentGeneration,
         radiusFromRules: correctRadius,
-        radiusFromBackend: response.radius_km
+        radiusFromBackend: response.radius_km,
+        launchDay: '19 LUGLIO 2025'
       });
+
+      // VALIDAZIONE: Prima generazione DEVE essere 500km
+      const finalRadius = currentGeneration === 1 ? 500 : correctRadius;
 
       const newArea: BuzzMapArea = {
         id: crypto.randomUUID(),
         lat: response.lat || centerLat,
         lng: response.lng || centerLng,
-        radius_km: correctRadius, // USA REGOLE CORRETTE
+        radius_km: finalRadius, // GARANTITO: 500km per prima generazione
         week: currentWeek,
         created_at: new Date().toISOString(),
         user_id: user.id
@@ -122,9 +126,9 @@ export const useBuzzMapLogic = () => {
       await forceReload();
       
       toast.dismiss();
-      toast.success(`✅ Area BUZZ MAPPA: ${correctRadius} km - Settimana ${currentWeek}, Gen ${currentGeneration} - REGOLE APPLICATE`);
+      toast.success(`✅ BUZZ MAPPA LANCIO: ${finalRadius} km - Settimana ${currentWeek}, Gen ${currentGeneration} - REGOLE UFFICIALI`);
       
-      console.log('🎉 BUZZ GENERATION COMPLETE CON REGOLE STRICTE:', newArea);
+      console.log('🎉 BUZZ GENERATION COMPLETE - LANCIO 19 LUGLIO:', newArea);
       
       return newArea;
     } catch (err) {
@@ -151,6 +155,7 @@ export const useBuzzMapLogic = () => {
     if (success) {
       console.log('✅ HANDLE DELETE AREA - Success');
       
+      // VALIDAZIONE POST-DELETE: area NON deve più riapparire
       const isValidated = await validateBuzzDeletion();
       
       if (!isValidated) {
@@ -160,14 +165,16 @@ export const useBuzzMapLogic = () => {
         toast.success('Area eliminata definitivamente');
       }
       
+      // FORCE SYNC: assicura che l'area non riappaia mai più
       await forceCompleteSync();
+      await forceReload();
     } else {
       console.error('❌ HANDLE DELETE AREA - Failed');
       toast.error('Errore nell\'eliminazione dell\'area');
     }
     
     return success;
-  }, [deleteSpecificArea, forceCompleteSync, validateBuzzDeletion]);
+  }, [deleteSpecificArea, forceCompleteSync, validateBuzzDeletion, forceReload]);
 
   return {
     currentWeekAreas,

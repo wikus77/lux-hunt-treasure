@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -37,8 +36,8 @@ export const usePaymentVerification = () => {
 
     try {
       if (isDeveloperUser) {
-        // APPLICA REGOLE BLACK STRICTE
-        const blackBuzzLimit = getBuzzLimit('Black');
+        // APPLICA REGOLE BLACK CORRETTE PER LANCIO
+        const blackBuzzLimit = getBuzzLimit('Black'); // 999 solo per developer
         
         setVerification({
           hasValidPayment: true,
@@ -49,15 +48,15 @@ export const usePaymentVerification = () => {
           loading: false
         });
         
-        console.log('🔧 DEVELOPER BLACK: Accesso con REGOLE STRICTE confermato', {
+        console.log('🔧 DEVELOPER BLACK - LANCIO 19 LUGLIO: Accesso con REGOLE UFFICIALI confermato', {
           buzzLimit: blackBuzzLimit,
           tier: 'Black',
-          rulesApplied: true
+          launchRules: true
         });
         return;
       }
 
-      // PRODUZIONE: Verifica pagamento reale per altri utenti
+      // PRODUZIONE: Verifica pagamento reale per altri utenti con REGOLE CORRETTE
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('subscription_tier, subscription_end, stripe_customer_id, email')
@@ -104,7 +103,7 @@ export const usePaymentVerification = () => {
       const hasValidPayment = (payments && payments.length > 0) || hasActiveSubscription;
       const canAccessPremium = hasValidPayment && subscriptionTier !== 'Free';
 
-      // USA REGOLE DI GIOCO PER LIMITI
+      // USA REGOLE CORRETTE DI GIOCO PER LIMITI LANCIO
       const weeklyBuzzLimit = getBuzzLimit(subscriptionTier);
 
       const { data: allowance } = await supabase
@@ -117,9 +116,12 @@ export const usePaymentVerification = () => {
 
       let remainingBuzz = 0;
       if (subscriptionTier === 'Black') {
-        remainingBuzz = weeklyBuzzLimit; // Usa regole
+        remainingBuzz = weeklyBuzzLimit; // Usa regole corrette
       } else if (allowance) {
         remainingBuzz = Math.max(0, allowance.max_buzz_count - allowance.used_buzz_count);
+      } else {
+        // CORRETTO: per utenti nuovi, usa i limiti corretti per piano
+        remainingBuzz = weeklyBuzzLimit;
       }
 
       setVerification({
@@ -131,13 +133,13 @@ export const usePaymentVerification = () => {
         loading: false
       });
 
-      console.log('✅ Payment verification completed CON REGOLE:', {
+      console.log('✅ Payment verification LANCIO 19 LUGLIO completed:', {
         hasValidPayment,
         subscriptionTier,
         canAccessPremium,
         remainingBuzz,
         weeklyBuzzLimit,
-        rulesApplied: true
+        launchRules: true
       });
 
     } catch (error) {
@@ -150,7 +152,7 @@ export const usePaymentVerification = () => {
         subscriptionTier: 'Free',
         canAccessPremium: false,
         remainingBuzz: 0,
-        weeklyBuzzLimit: 0,
+        weeklyBuzzLimit: 1, // CORRETTO: Free = 1 BUZZ settimanale
         loading: false
       });
     }

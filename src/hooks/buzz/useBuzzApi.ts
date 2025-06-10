@@ -31,7 +31,7 @@ export const useBuzzApi = () => {
     
     try {
       if (isDeveloperUser) {
-        console.log('🔧 DEVELOPER BLACK MODE: Generazione con REGOLE STRICTE');
+        console.log('🔧 DEVELOPER BLACK MODE - LANCIO 19 LUGLIO: Generazione con REGOLE UFFICIALI');
         
         await new Promise(resolve => setTimeout(resolve, 1500));
         
@@ -39,37 +39,41 @@ export const useBuzzApi = () => {
         const buzzCount = Math.floor(Math.random() * 100) + 1;
         const generation = 1; // Simulato per prima generazione
         
-        // GENERA INDIZIO SICURO (senza nomi città)
+        // GENERA INDIZIO SICURO (SEVERO: senza nomi città)
         const clueText = generateSecureClue(buzzCount);
         
-        // VALIDA INDIZIO
+        // VALIDAZIONE SEVERA INDIZIO
         if (!validateClueContent(clueText)) {
-          console.error('🚫 CLUE VALIDATION FAILED!');
+          console.error('🚫 CLUE VALIDATION FAILED - LANCIO!');
           return {
             success: false,
             error: 'clue_validation_failed',
-            errorMessage: 'Indizio non conforme alle regole di gioco'
+            errorMessage: 'Indizio non conforme alle regole ufficiali di lancio'
           };
         }
         
         if (params.generateMap) {
-          // USA REGOLE CORRETTE PER RAGGIO
+          // USA REGOLE UFFICIALI LANCIO PER RAGGIO
           const correctRadius = getMapRadius(currentWeek, generation);
+          
+          // GARANTITO: Prima generazione = 500km esatti
+          const launchRadius = generation === 1 ? 500 : correctRadius;
           
           const response: BuzzApiResponse = {
             success: true,
             clue_text: clueText,
-            radius_km: correctRadius, // REGOLE APPLICATE
+            radius_km: launchRadius, // REGOLE LANCIO 19 LUGLIO APPLICATE
             lat: testLocation.lat + (Math.random() - 0.5) * 0.01,
             lng: testLocation.lng + (Math.random() - 0.5) * 0.01,
             generation_number: buzzCount
           };
           
-          console.log('✅ DEVELOPER BLACK: Mappa generata CON REGOLE STRICTE', {
-            radius: correctRadius,
+          console.log('✅ DEVELOPER BLACK - MAPPA LANCIO 19 LUGLIO:', {
+            radius: launchRadius,
             week: currentWeek,
             generation,
-            rules_applied: true
+            launchRules: true,
+            guaranteed500km: generation === 1
           });
           
           return response;
@@ -80,22 +84,23 @@ export const useBuzzApi = () => {
             generation_number: buzzCount
           };
           
-          console.log('✅ DEVELOPER BLACK: Indizio sicuro generato', {
+          console.log('✅ DEVELOPER BLACK - INDIZIO SICURO LANCIO:', {
             clue_validated: true,
-            no_city_names: true
+            no_city_names: true,
+            launch_ready: true
           });
           
           return response;
         }
       }
       
-      console.log('📡 BUZZ API: Chiamata API reale in produzione...');
+      console.log('📡 BUZZ API: Chiamata API reale - LANCIO 19 LUGLIO...');
       
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       return {
         success: true,
-        clue_text: 'Indizio generato da API reale',
+        clue_text: 'Indizio generato da API reale - Lancio M1SSION',
         generation_number: 1
       };
       

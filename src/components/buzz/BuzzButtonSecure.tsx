@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Loader, Lock } from "lucide-react";
@@ -43,7 +44,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
 
     // DEVELOPER BLACK: Processo completo senza limitazioni
     if (isDeveloperUser) {
-      console.log('🔧 DEVELOPER BLACK MODE: Processo BUZZ completo');
+      console.log('🔧 DEVELOPER BLACK MODE - LANCIO 19 LUGLIO: Processo BUZZ completo');
       
       setShowRipple(true);
       setTimeout(() => setShowRipple(false), 1000);
@@ -58,7 +59,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         
         if (response.success) {
           const dynamicClueContent = response.clue_text || 
-            `Indizio BLACK Ventimiglia generato alle ${new Date().toLocaleTimeString()}`;
+            `Indizio BLACK LANCIO generato alle ${new Date().toLocaleTimeString()}`;
           
           // Inserisci notifica
           const { error: notificationError } = await supabase
@@ -66,7 +67,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
             .insert({
               user_id: userId,
               type: 'buzz',
-              title: 'Nuovo Indizio BLACK Ventimiglia',
+              title: 'Nuovo Indizio BLACK - Lancio M1SSION',
               message: dynamicClueContent,
               is_read: false,
               created_at: new Date().toISOString()
@@ -75,15 +76,15 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           if (notificationError) {
             console.error('❌ Error inserting BLACK notification:', notificationError);
           } else {
-            console.log('✅ BLACK notification inserted successfully');
+            console.log('✅ BLACK notification inserted successfully - LANCIO');
           }
 
-          toast.success("🔧 Indizio BLACK Sbloccato!", {
+          toast.success("🔧 Indizio BLACK Sbloccato - LANCIO!", {
             description: dynamicClueContent,
           });
           
           await createBuzzNotification(
-            "Nuovo Indizio BLACK Ventimiglia", 
+            "Nuovo Indizio BLACK - Lancio M1SSION", 
             dynamicClueContent
           );
           
@@ -123,7 +124,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       window.plausible('buzz_click');
     }
     
-    console.log('🔒 SECURE BUZZ: Starting verified buzz process for user:', userId);
+    console.log('🔒 SECURE BUZZ - LANCIO 19 LUGLIO: Starting verified buzz process for user:', userId);
     setIsProcessing(true);
     
     try {
@@ -139,14 +140,14 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       });
       
       if (response.success) {
-        console.log('✅ SECURE BUZZ: Response received with payment verification');
+        console.log('✅ SECURE BUZZ - LANCIO: Response received with payment verification');
         
         if (typeof window !== 'undefined' && window.plausible) {
           window.plausible('clue_unlocked');
         }
 
         const dynamicClueContent = response.clue_text || 
-          `Indizio premium generato alle ${new Date().toLocaleTimeString()}`;
+          `Indizio premium LANCIO generato alle ${new Date().toLocaleTimeString()}`;
         
         try {
           const { error: notificationError } = await supabase
@@ -154,7 +155,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
             .insert({
               user_id: userId,
               type: 'buzz',
-              title: 'Nuovo Indizio Premium Verificato',
+              title: 'Nuovo Indizio Premium - Lancio M1SSION',
               message: dynamicClueContent,
               is_read: false,
               created_at: new Date().toISOString()
@@ -163,22 +164,22 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           if (notificationError) {
             console.error('❌ Error inserting verified notification:', notificationError);
           } else {
-            console.log('✅ Verified notification inserted successfully');
+            console.log('✅ Verified notification inserted successfully - LANCIO');
           }
         } catch (notifError) {
           console.error('❌ Error creating verified notification:', notifError);
         }
 
-        toast.success("Indizio Premium Sbloccato!", {
+        toast.success("Indizio Premium Sbloccato - LANCIO!", {
           description: dynamicClueContent,
         });
         
         try {
           await createBuzzNotification(
-            "Nuovo Indizio Premium Verificato", 
+            "Nuovo Indizio Premium - Lancio M1SSION", 
             dynamicClueContent
           );
-          console.log('✅ Verified Buzz notification created successfully');
+          console.log('✅ Verified Buzz notification created successfully - LANCIO');
         } catch (notifError) {
           console.error('❌ Failed to create verified Buzz notification:', notifError);
         }
@@ -221,6 +222,23 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     );
   }
 
+  // MOSTRA I VALORI CORRETTI PER OGNI PIANO
+  const displayRemainingBuzz = () => {
+    if (isDeveloperUser) return 999;
+    if (subscriptionTier === 'Free') return 1;
+    if (subscriptionTier === 'Silver') return 3;
+    if (subscriptionTier === 'Gold') return 7;
+    return remainingBuzz;
+  };
+
+  const displayWeeklyLimit = () => {
+    if (isDeveloperUser) return 999;
+    if (subscriptionTier === 'Free') return 1;
+    if (subscriptionTier === 'Silver') return 3;
+    if (subscriptionTier === 'Gold') return 7;
+    return remainingBuzz;
+  };
+
   return (
     <motion.button
       className="w-60 h-60 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl hover:shadow-[0_0_35px_rgba(123,46,255,0.7)] focus:outline-none disabled:opacity-50"
@@ -262,7 +280,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
             </span>
             <span className="text-xs text-red-200 mt-1 text-center px-2">
               {subscriptionTier === 'Free' ? 'Abbonamento richiesto' : 
-               `${remainingBuzz} BUZZ rimanenti`}
+               `${displayRemainingBuzz()} BUZZ rimanenti`}
             </span>
           </>
         ) : (
@@ -275,7 +293,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
               {isDeveloperUser && <span className="text-green-300"> (BLACK)</span>}
             </span>
             <span className="text-xs text-white/70">
-              {remainingBuzz} BUZZ rimanenti
+              {displayRemainingBuzz()}/{displayWeeklyLimit()} BUZZ settimanali
             </span>
           </>
         )}
