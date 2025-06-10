@@ -1,0 +1,71 @@
+
+/* M1SSION™ DESIGN SYSTEM UFFICIALE - GLASSMORPHISM BOXES */
+
+@layer components {
+  /* Box Style M1SSION™ Ufficiale - DA USARE SEMPRE */
+  .m1ssion-box {
+    @apply rounded-xl bg-white/5 backdrop-blur-lg border border-white/10;
+    @apply shadow-inner shadow-black/20 px-4 py-3 mb-4;
+    @apply transition-all duration-300 ease-in-out;
+    @apply font-inter text-white;
+  }
+
+  /* Varianti approvate per contenuti specifici */
+  .m1ssion-box-large {
+    @apply rounded-xl bg-white/5 backdrop-blur-lg border border-white/10;
+    @apply shadow-inner shadow-black/20 p-6 mb-6;
+    @apply transition-all duration-300 ease-in-out;
+    @apply font-inter text-white;
+  }
+
+  .m1ssion-box-small {
+    @apply rounded-lg bg-white/5 backdrop-blur-lg border border-white/10;
+    @apply shadow-inner shadow-black/20 px-3 py-2 mb-3;
+    @apply transition-all duration-300 ease-in-out;
+    @apply font-inter text-white;
+  }
+
+  /* Alert Box M1SSION™ con stati */
+  .m1ssion-alert-success {
+    @apply m1ssion-box border-green-500/30 bg-green-500/10;
+  }
+
+  .m1ssion-alert-warning {
+    @apply m1ssion-box border-yellow-500/30 bg-yellow-500/10;
+  }
+
+  .m1ssion-alert-error {
+    @apply m1ssion-box border-red-500/30 bg-red-500/10;
+  }
+
+  .m1ssion-alert-info {
+    @apply m1ssion-box border-blue-500/30 bg-blue-500/10;
+  }
+
+  /* Hover states per interattività */
+  .m1ssion-box-interactive {
+    @apply m1ssion-box hover:bg-white/10 hover:border-white/20;
+    @apply cursor-pointer transform hover:-translate-y-1;
+  }
+
+  /* Container principale per sezioni */
+  .m1ssion-section {
+    @apply m1ssion-box-large space-y-4;
+  }
+
+  /* Form inputs M1SSION™ style */
+  .m1ssion-input {
+    @apply rounded-lg bg-white/5 backdrop-blur-md border border-white/20;
+    @apply px-4 py-3 text-white placeholder-white/60;
+    @apply focus:border-white/40 focus:bg-white/10;
+    @apply transition-all duration-300 ease-in-out;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .m1ssion-box,
+  .m1ssion-box-large {
+    @apply px-3 py-3 mx-2;
+  }
+}

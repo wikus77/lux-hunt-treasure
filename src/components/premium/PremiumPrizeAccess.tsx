@@ -58,7 +58,7 @@ const PremiumPrizeAccess: React.FC<PremiumPrizeAccessProps> = ({
 
   if (loading) {
     return (
-      <div className="glass-card p-6 text-center">
+      <div className="m1ssion-box text-center">
         <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
         <p>Verificando accesso ai premi...</p>
       </div>
@@ -68,7 +68,7 @@ const PremiumPrizeAccess: React.FC<PremiumPrizeAccessProps> = ({
   if (!canAccess) {
     return (
       <motion.div 
-        className="glass-card p-6 text-center border-2 border-red-500/30 bg-red-900/20"
+        className="m1ssion-alert-error"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
@@ -94,7 +94,7 @@ const PremiumPrizeAccess: React.FC<PremiumPrizeAccessProps> = ({
               }
             </p>
             
-            <div className="bg-red-800/30 p-3 rounded-md mb-4">
+            <div className="m1ssion-box-small bg-red-800/30">
               <div className="flex items-center justify-between text-sm">
                 <span>Piano Attuale:</span>
                 <span className="font-bold">{subscriptionTier}</span>
@@ -135,9 +135,9 @@ const PremiumPrizeAccess: React.FC<PremiumPrizeAccessProps> = ({
       transition={{ duration: 0.4 }}
     >
       {/* Premium access indicator */}
-      <div className="absolute top-2 right-2 z-10 bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-        <Gift className="w-3 h-3" />
-        Accesso Verificato
+      <div className="absolute top-2 right-2 z-10 m1ssion-box-small bg-gradient-to-r from-green-500/20 to-green-600/20 border-green-400/30 px-3 py-1 flex items-center gap-1">
+        <Gift className="w-3 h-3 text-green-400" />
+        <span className="text-xs font-bold text-green-300">Accesso Verificato</span>
       </div>
       
       {children}
