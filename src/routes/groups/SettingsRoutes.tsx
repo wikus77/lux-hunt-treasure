@@ -1,52 +1,39 @@
 
 import React from 'react';
-import { Route } from 'react-router-dom';
-import { RoleBasedProtectedRoute } from "../../components/auth/RoleBasedProtectedRoute";
-
-// Pages
-import Settings from "../../pages/Settings";
-import PersonalInfo from "../../pages/PersonalInfo";
-import LanguageSettings from "../../pages/LanguageSettings";
-import Notifications from "../../pages/Notifications";
+import { Routes, Route } from 'react-router-dom';
+import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
+import Settings from '../../pages/Settings';
+import PersonalInfo from '../../pages/PersonalInfo';
+import LanguageSettings from '../../pages/LanguageSettings';
 
 const SettingsRoutes = () => {
-  const baseUserRoles = ['user', 'moderator', 'admin'];
-  
   return (
-    <>
-      <Route
-        path="/settings"
+    <Routes>
+      <Route 
+        path="/settings" 
         element={
-          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+          <ProtectedRoute>
             <Settings />
-          </RoleBasedProtectedRoute>
-        }
+          </ProtectedRoute>
+        } 
       />
-      <Route
-        path="/personal-info"
+      <Route 
+        path="/personal-info" 
         element={
-          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+          <ProtectedRoute>
             <PersonalInfo />
-          </RoleBasedProtectedRoute>
-        }
+          </ProtectedRoute>
+        } 
       />
-      <Route
-        path="/language-settings"
+      <Route 
+        path="/language-settings" 
         element={
-          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+          <ProtectedRoute>
             <LanguageSettings />
-          </RoleBasedProtectedRoute>
-        }
+          </ProtectedRoute>
+        } 
       />
-      <Route
-        path="/notifications"
-        element={
-          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <Notifications />
-          </RoleBasedProtectedRoute>
-        }
-      />
-    </>
+    </Routes>
   );
 };
 

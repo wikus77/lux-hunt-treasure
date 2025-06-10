@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 
 // Import route groups
 import PublicRoutes from './groups/PublicRoutes';
@@ -18,22 +17,22 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Public routes */}
-      {PublicRoutes()}
+      <Route path="/*" element={<PublicRoutes />} />
       
       {/* User routes */}
-      {UserRoutes()}
+      <Route path="/*" element={<UserRoutes />} />
       
       {/* Settings routes */}
-      {SettingsRoutes()}
+      <Route path="/*" element={<SettingsRoutes />} />
       
       {/* Admin routes */}
-      {AdminRoutes()}
+      <Route path="/*" element={<AdminRoutes />} />
       
       {/* Payment routes */}
-      {PaymentRoutes()}
+      <Route path="/*" element={<PaymentRoutes />} />
       
       {/* Premium routes */}
-      {PremiumRoutes()}
+      <Route path="/*" element={<PremiumRoutes />} />
       
       {/* Fallback route */}
       <Route path="*" element={<NotFound />} />
