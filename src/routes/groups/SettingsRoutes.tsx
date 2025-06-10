@@ -5,6 +5,7 @@ import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import Settings from '../../pages/Settings';
 import PersonalInfo from '../../pages/PersonalInfo';
 import LanguageSettings from '../../pages/LanguageSettings';
+import Notifications from '../../pages/Notifications';
 
 const SettingsRoutes = () => {
   return (
@@ -30,6 +31,14 @@ const SettingsRoutes = () => {
         element={
           <ProtectedRoute>
             <LanguageSettings />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/notifications" 
+        element={
+          <ProtectedRoute>
+            <Notifications />
           </ProtectedRoute>
         } 
       />
