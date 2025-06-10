@@ -1,22 +1,9 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useLaunchReset } from '@/hooks/useLaunchReset';
 import FullScreenLoader from '@/components/layout/FullScreenLoader';
-import { useAuth } from '@/hooks/useAuth';
-import { useClueList } from '@/hooks/useClueList';
-import { useGameRules } from '@/hooks/useGameRules';
-import { useBuzzSound } from '@/hooks/useBuzzSound';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useConfettiStore } from '@/stores/confettiStore';
-import { useMapStore } from '@/stores/mapStore';
-import { useUserLocation } from '@/hooks/useUserLocation';
-import { usePaymentVerification } from '@/hooks/usePaymentVerification';
-import { useMissions } from '@/hooks/useMissions';
-import { usePrizes } from '@/hooks/usePrizes';
 import { CluesSection } from '@/components/home/CluesSection';
-import { MapSection } from '@/components/home/MapSection';
-import { MissionsSection } from '@/components/home/MissionsSection';
-import { PrizesSection } from '@/components/home/PrizesSection';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 
@@ -63,9 +50,6 @@ const AppHome = () => {
         <div className="container mx-auto">
           <div className="max-w-4xl mx-auto px-3 sm:px-4 space-y-6">
             <CluesSection />
-            <MapSection />
-            <MissionsSection />
-            <PrizesSection />
           </div>
         </div>
       </main>
