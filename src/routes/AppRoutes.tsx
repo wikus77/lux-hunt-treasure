@@ -1,4 +1,3 @@
-
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -32,6 +31,7 @@ const MissionSelection = lazy(() => import("@/pages/MissionSelection"));
 // Additional routes
 const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
 const Contacts = lazy(() => import("@/pages/Contacts"));
+const Ownership = lazy(() => import("@/pages/Ownership"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const Terms = lazy(() => import("@/pages/Terms"));
@@ -160,6 +160,7 @@ const AppRoutes: React.FC = () => {
             {/* Other routes */}
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/contacts" element={<Contacts />} />
+            <Route path="/ownership" element={<Ownership />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />
             
