@@ -23,7 +23,7 @@ export const useLeaderboardData = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
 
-  // LANCIO: Connect to real Supabase tables - ENHANCED WITH AUTO-REFRESH
+  // LANCIO: Connect to real Supabase tables
   const fetchRealLeaderboard = async () => {
     setIsLoading(true);
     try {
@@ -75,17 +75,9 @@ export const useLeaderboardData = () => {
     }
   };
 
-  // Load real data on mount AND auto-refresh every 30s
+  // Load real data on mount
   useEffect(() => {
     fetchRealLeaderboard();
-    
-    // CRITICAL: Auto-refresh every 30 seconds for real-time updates
-    const interval = setInterval(() => {
-      console.log('🔄 LANCIO: Auto-refreshing leaderboard...');
-      fetchRealLeaderboard();
-    }, 30000);
-
-    return () => clearInterval(interval);
   }, []);
 
   const filteredPlayers = players.filter(player => {

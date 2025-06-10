@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -109,7 +110,7 @@ export const useMapAreas = (userId?: string) => {
   const queryKey = ['user_map_areas', validUserId];
   console.debug('🔑 QUERYKEY:', queryKey);
 
-  // React Query for areas - ENHANCED FOR REAL-TIME SYNC
+  // React Query for areas - SINGLE SOURCE OF TRUTH - BACKEND DATA ONLY
   const {
     data: currentWeekAreas = [],
     isLoading,
@@ -146,9 +147,8 @@ export const useMapAreas = (userId?: string) => {
       return mapAreas || [];
     },
     staleTime: 0, // ALWAYS FRESH DATA
-    refetchOnWindowFocus: true, // CRITICAL: Refetch on focus
-    refetchOnMount: true, // CRITICAL: Always refetch on mount
-    refetchInterval: 5000, // CRITICAL: Auto-refresh every 5 seconds during reset
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
     enabled: !!validUserId
   });
 
@@ -213,27 +213,21 @@ export const useMapAreas = (userId?: string) => {
     }
   });
 
-  // FORCED INVALIDATE + REFETCH SEQUENCE - ENHANCED
+  // FORCED INVALIDATE + REFETCH SEQUENCE
   const forceCompleteSync = useCallback(async () => {
     console.debug('🧹 FORCE SYNC START with queryKey:', queryKey);
     
     try {
-      // Step 1: Wait for any pending operations
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Step 2: Invalidate with EXACT queryKey
+      // Step 1: Invalidate with EXACT queryKey
       console.debug('🗑️ Invalidating with queryKey:', queryKey);
       await queryClient.invalidateQueries({ queryKey });
       
-      // Step 3: FORCE immediate refetch with EXACT queryKey
+      // Step 2: FORCE immediate refetch with EXACT queryKey
       console.debug('🔄 FORCE refetch with queryKey:', queryKey);
       await queryClient.refetchQueries({ queryKey });
       
-      // Step 4: Reset Zustand state
+      // Step 3: Reset Zustand state
       resetMapState();
-      
-      // Step 5: Additional wait for propagation
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
       console.debug('✅ FORCE SYNC COMPLETE');
       return true;
@@ -307,17 +301,12 @@ export const useMapAreas = (userId?: string) => {
     }
   }, [isDeleting, isGenerating, setIsDeleting, deleteSpecificMutation]);
 
-  // Force reload with EXACT queryKey - ENHANCED
+  // Force reload with EXACT queryKey
   const forceReload = useCallback(async () => {
     console.debug('🔄 FORCE RELOAD - Triggered with queryKey:', queryKey);
-    
-    // Multiple invalidation strategy for race condition fix
     await queryClient.invalidateQueries({ queryKey });
-    await new Promise(resolve => setTimeout(resolve, 200));
     await queryClient.refetchQueries({ queryKey });
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    console.debug('✅ FORCE RELOAD - Complete with enhanced timing');
+    console.debug('✅ FORCE RELOAD - Complete');
   }, [queryClient, queryKey]);
 
   return {
