@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Player {
-  id: string;
+  id: number;
   name: string;
   avatar: string;
   points: number;
@@ -51,7 +51,7 @@ export const useLeaderboardData = () => {
 
       // Transform real data to Player format
       const realPlayers: Player[] = (profiles || []).map((profile, index) => ({
-        id: profile.id,
+        id: index + 1, // Use numeric ID for compatibility
         name: profile.full_name || `Agente ${profile.id.slice(0, 8)}`,
         avatar: profile.avatar_url || `https://avatar.vercel.sh/${profile.id}`,
         points: profile.credits || 0,
