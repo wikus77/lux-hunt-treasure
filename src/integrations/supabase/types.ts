@@ -545,6 +545,7 @@ export type Database = {
           agent_title: string | null
           avatar_url: string | null
           bio: string | null
+          birth_date: string | null
           city: string | null
           country: string | null
           created_at: string
@@ -569,6 +570,7 @@ export type Database = {
           agent_title?: string | null
           avatar_url?: string | null
           bio?: string | null
+          birth_date?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -593,6 +595,7 @@ export type Database = {
           agent_title?: string | null
           avatar_url?: string | null
           bio?: string | null
+          birth_date?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
