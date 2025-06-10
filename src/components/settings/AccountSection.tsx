@@ -23,9 +23,24 @@ const AccountSection = () => {
     return profileData.subscription?.plan || "Free";
   };
 
+  const getInvestigativeStyleDisplay = () => {
+    if (!profileData.personalInfo?.investigativeStyle) return "Non definito";
+    
+    const styleMap: { [key: string]: string } = {
+      'strategico': 'Strategico',
+      'impulsivo': 'Impulsivo', 
+      'logico': 'Logico',
+      'misterioso': 'Misterioso',
+      'analitico': 'Analitico',
+      'intuitivo': 'Intuitivo'
+    };
+    
+    return styleMap[profileData.personalInfo.investigativeStyle] || profileData.personalInfo.investigativeStyle;
+  };
+
   return (
     <div className="mb-6">
-      <div className="glass-card p-4">
+      <div className="glass-card p-4 rounded-lg">
         <Collapsible open={isAccountSectionOpen} onOpenChange={setIsAccountSectionOpen}>
           <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
             <h2 className="text-lg font-semibold text-white flex items-center">
@@ -96,7 +111,7 @@ const AccountSection = () => {
                 
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-muted-foreground">Stile investigativo</span>
-                  <span className="text-sm">{profileData.investigativeStyle?.style || "Non definito"}</span>
+                  <span className="text-sm">{getInvestigativeStyleDisplay()}</span>
                 </div>
               </div>
               
