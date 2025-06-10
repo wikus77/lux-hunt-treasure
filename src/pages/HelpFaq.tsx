@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
@@ -10,6 +9,7 @@ import { useProfileImage } from '@/hooks/useProfileImage';
 
 const HelpFaq = () => {
   const { profileImage } = useProfileImage();
+  const navigate = useNavigate();
 
   const handleEmailClick = () => {
     // Navigate to notifications or handle email click
@@ -25,21 +25,14 @@ const HelpFaq = () => {
       <div className="h-[72px] w-full" />
       
       <div className="pb-24 px-4 pt-2 max-w-screen-xl mx-auto">
-        <div className="flex items-center gap-2 mb-6">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 rounded-full" 
-            asChild
-          >
-            <Link to="/settings">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
+        <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+72px)] mb-6">
+          <button onClick={() => navigate(-1)} className="w-6 h-6 text-white" aria-label="Torna alla pagina precedente">
+            <ArrowLeft />
+          </button>
+          <h1 className="text-xl font-semibold text-white">Aiuto & FAQ</h1>
         </div>
 
         <div className="glass-card p-6">
-          <h1 className="text-2xl font-bold mb-4 text-white">❓ Aiuto & FAQ</h1>
           <p className="text-white/80 mb-6">
             Benvenuto nella sezione di supporto ufficiale di <strong>M1SSION™</strong>. Qui trovi risposte rapide alle domande più frequenti, guide essenziali e contatti utili per ricevere assistenza immediata. Se non trovi quello che cerchi, puoi sempre <a href="#segnala" className="text-projectx-neon-blue underline font-semibold">segnalare un problema</a>.
           </p>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { GameCard } from '@/components/games/GameCard';
 import { gameData, GameType } from '@/components/games/memory-hack/gameData';
 import { useGameLogic } from '@/hooks/useGameLogic';
@@ -19,6 +21,7 @@ import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 
 const Games = () => {
+  const navigate = useNavigate();
   const [selectedGame, setSelectedGame] = useState<GameType | null>(null);
   const [gameCompleted, setGameCompleted] = useState<Record<GameType, boolean>>({
     'memory-hack': false,
