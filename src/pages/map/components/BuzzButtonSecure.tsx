@@ -18,7 +18,7 @@ export interface BuzzButtonSecureProps {
 
 const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({ 
   handleBuzz, 
-  radiusKm = 500, // LANCIO: Default a 500km
+  radiusKm = 500, // LANCIO: FISSO a 500km per prima generazione
   mapCenter,
   onAreaGenerated
 }) => {
@@ -90,7 +90,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       }
     }
     
-    // LANCIO: Generate area with guaranteed 500km radius
+    // LANCIO: Generate area with FORCED 500km radius
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
@@ -98,7 +98,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         window.plausible('clue_unlocked');
       }
       
-      console.log('🎉 LANCIO SUCCESS: Area generated with launch rules', newArea);
+      console.log('🎉 LANCIO SUCCESS: Area generated with FORCED 500km', newArea);
       
       await reloadAreas();
       
@@ -111,6 +111,10 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         `Nuova area di ricerca generata: ${newArea.radius_km}km - Settimana 1`
       );
       
+      if (onAreaGenerated) {
+        onAreaGenerated(newArea.lat, newArea.lng, newArea.radius_km);
+      }
+      
     } else {
       console.error('❌ LANCIO: Area generation failed');
       await logUnauthorizedAccess('buzz_map_generation_failed');
@@ -121,12 +125,17 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const isBlocked = !hasValidPayment || remainingBuzz <= 0;
   const isLoading = isGenerating || stripeLoading || verificationLoading;
   
-  // LANCIO: Calcola il raggio corretto da mostrare
+  // LANCIO: Mostra sempre 500km per prima generazione
   const displayRadius = () => {
     if (activeArea) {
       return activeArea.radius_km.toFixed(1);
     }
-    return '500.0'; // LANCIO: Mostra sempre 500km come default
+    return '500.0'; // LANCIO: Default FISSO 500km
+  };
+  
+  // LANCIO: Mostra numero generazioni corrette (azzerate per reset)
+  const displayGeneration = () => {
+    return dailyBuzzMapCounter || 0; // Sempre 0 dopo reset
   };
   
   return (
@@ -160,7 +169,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           <span>
             {isLoading ? 'Generando...' : 
              isBlocked ? 'ACCESSO NEGATO' :
-             `BUZZ MAPPA LANCIO (${displayRadius()}km) - Gen ${dailyBuzzMapCounter || 0}`}
+             `BUZZ MAPPA LANCIO (${displayRadius()}km) - Gen ${displayGeneration()}`}
           </span>
           
           {!isBlocked && hasValidPayment && (

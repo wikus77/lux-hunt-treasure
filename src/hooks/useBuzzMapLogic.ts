@@ -96,33 +96,32 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      // APPLICA REGOLE LANCIO 19 LUGLIO: GARANTIRE 500KM PRIMA GENERAZIONE
+      // CRITICO: FORZARE 500KM per prima generazione LANCIO 19 LUGLIO
       const currentWeek = getCurrentWeek();
       const currentGeneration = (currentWeekAreas.length || 0) + 1;
-      const correctRadius = getMapRadius(currentWeek, currentGeneration);
       
-      console.log('🎯 LANCIO RADIUS CALCULATION:', {
+      // OVERRIDE: Sempre 500km per prima generazione, indipendentemente da backend
+      const finalRadius = currentGeneration === 1 ? 500 : getMapRadius(currentWeek, currentGeneration);
+      
+      console.log('🎯 LANCIO RADIUS OVERRIDE:', {
         week: currentWeek,
         generation: currentGeneration,
-        radiusFromRules: correctRadius,
-        radiusFromBackend: response.radius_km,
-        GUARANTEED_500KM: currentGeneration === 1
+        originalRadius: response.radius_km,
+        finalRadius: finalRadius,
+        FORCED_500KM: currentGeneration === 1
       });
-
-      // CRITICO: Prima generazione DEVE essere esattamente 500km
-      const finalRadius = currentGeneration === 1 ? 500 : correctRadius;
 
       const newArea: BuzzMapArea = {
         id: crypto.randomUUID(),
         lat: response.lat || centerLat,
         lng: response.lng || centerLng,
-        radius_km: finalRadius, // GARANTITO: 500km per lancio
+        radius_km: finalRadius, // FORZATO: 500km per lancio
         week: currentWeek,
         created_at: new Date().toISOString(),
         user_id: user.id
       };
 
-      console.log('🎉 LANCIO SUCCESS: Area created with official rules', newArea);
+      console.log('🎉 LANCIO SUCCESS: Area created with FORCED 500km radius', newArea);
 
       await forceCompleteSync();
       await forceReload();
@@ -181,9 +180,9 @@ export const useBuzzMapLogic = () => {
     isLoading,
     isGenerating,
     isDeleting,
-    userCluesCount: 0, // RESET: Sempre 0 al lancio
-    dailyBuzzCounter: 0, // RESET: Sempre 0 al lancio  
-    dailyBuzzMapCounter: 0, // RESET: Sempre 0 al lancio
+    userCluesCount: 0, // LANCIO: Sempre 0 - dati resettati
+    dailyBuzzCounter: 0, // LANCIO: Sempre 0 - dati resettati
+    dailyBuzzMapCounter: 0, // LANCIO: Sempre 0 - dati resettati
     precisionMode,
     
     generateBuzzMapArea,
