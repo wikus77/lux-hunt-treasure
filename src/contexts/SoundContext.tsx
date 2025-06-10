@@ -1,64 +1,18 @@
 
-import React, { useState, useEffect, createContext, useContext } from "react";
-import type { ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 
-interface SoundContextType {
-  soundPreference: string;
-  volume: number[];
-  isEnabled: boolean;
-  updateSound: (sound: string) => void;
-  updateVolume: (volume: number[]) => void;
-  toggleSound: (enabled: boolean) => void;
-}
+type SoundContextType = {
+  soundEnabled: boolean;
+  setSoundEnabled: (value: boolean) => void;
+};
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
 
 export const SoundProvider = ({ children }: { children: ReactNode }) => {
-  const [soundPreference, setSoundPreference] = useState('default');
-  const [volume, setVolume] = useState([75]);
-  const [isEnabled, setIsEnabled] = useState(true);
-
-  useEffect(() => {
-    const savedSound = localStorage.getItem('buzzSound');
-    if (savedSound) {
-      setSoundPreference(savedSound);
-    }
-
-    const savedVolume = localStorage.getItem('buzzVolume');
-    if (savedVolume) {
-      setVolume([Number(savedVolume)]);
-    }
-    
-    const savedEnabled = localStorage.getItem('soundEnabled');
-    if (savedEnabled !== null) {
-      setIsEnabled(savedEnabled === 'true');
-    }
-  }, []);
-
-  const updateSound = (sound: string) => {
-    setSoundPreference(sound);
-    localStorage.setItem('buzzSound', sound);
-  };
-
-  const updateVolume = (newVolume: number[]) => {
-    setVolume(newVolume);
-    localStorage.setItem('buzzVolume', newVolume[0].toString());
-  };
-  
-  const toggleSound = (enabled: boolean) => {
-    setIsEnabled(enabled);
-    localStorage.setItem('soundEnabled', enabled.toString());
-  };
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   return (
-    <SoundContext.Provider value={{ 
-      soundPreference, 
-      volume, 
-      isEnabled, 
-      updateSound, 
-      updateVolume,
-      toggleSound
-    }}>
+    <SoundContext.Provider value={{ soundEnabled, setSoundEnabled }}>
       {children}
     </SoundContext.Provider>
   );
@@ -66,8 +20,8 @@ export const SoundProvider = ({ children }: { children: ReactNode }) => {
 
 export const useSound = () => {
   const context = useContext(SoundContext);
-  if (context === undefined) {
-    throw new Error('useSound must be used within a SoundProvider');
+  if (!context) {
+    throw new Error("useSound must be used within a SoundProvider");
   }
   return context;
 };
