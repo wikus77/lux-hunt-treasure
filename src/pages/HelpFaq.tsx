@@ -26,19 +26,16 @@ const HelpFaq = () => {
       <div className="h-[72px] w-full" />
       
       <div className="pb-24 px-4 pt-2 max-w-screen-xl mx-auto">
-        <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+64px)] mb-6">
+        <div className="px-4 pt-[calc(env(safe-area-inset-top)+64px)]">
+          <h1 className="text-xl font-semibold text-white mb-4">Aiuto & FAQ</h1>
+          
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigate(-1);
-            }}
-            className="w-6 h-6 text-white"
+            onClick={() => navigate(-1)}
+            className="w-6 h-6 text-white relative z-50 mb-6"
             aria-label="Torna alla pagina precedente"
           >
             <ArrowLeft />
           </button>
-          <h1 className="text-xl font-semibold text-white">Aiuto & FAQ</h1>
         </div>
 
         <div className="glass-card p-6">
