@@ -62,8 +62,12 @@ const Settings = () => {
       <div className="h-[72px] w-full" />
       
       {/* Title section with back button aligned horizontally - positioned below header */}
-      <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+72px)] mb-6">
-        <button onClick={() => navigate(-1)} className="w-6 h-6 text-white" aria-label="Torna indietro">
+      <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+64px)] mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-6 h-6 text-white"
+          aria-label="Torna alla pagina precedente"
+        >
           <ArrowLeft />
         </button>
         <h1 className="text-xl font-semibold text-white">Impostazioni</h1>

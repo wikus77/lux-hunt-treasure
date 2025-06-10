@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -25,8 +26,12 @@ const HelpFaq = () => {
       <div className="h-[72px] w-full" />
       
       <div className="pb-24 px-4 pt-2 max-w-screen-xl mx-auto">
-        <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+72px)] mb-6">
-          <button onClick={() => navigate(-1)} className="w-6 h-6 text-white" aria-label="Torna alla pagina precedente">
+        <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+64px)] mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-6 h-6 text-white"
+            aria-label="Torna alla pagina precedente"
+          >
             <ArrowLeft />
           </button>
           <h1 className="text-xl font-semibold text-white">Aiuto & FAQ</h1>
