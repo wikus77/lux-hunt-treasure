@@ -42,16 +42,15 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const handleSecureBuzzPress = async () => {
     if (isProcessing || verificationLoading || !userId) return;
 
-    // DEVELOPER BLACK: Processo completo senza limitazioni
+    // LANCIO 19 LUGLIO: Developer BLACK processo completo
     if (isDeveloperUser) {
-      console.log('🔧 DEVELOPER BLACK MODE - LANCIO 19 LUGLIO: Processo BUZZ completo');
+      console.log('🔧 LANCIO DEVELOPER: Starting BLACK BUZZ process');
       
       setShowRipple(true);
       setTimeout(() => setShowRipple(false), 1000);
       setIsProcessing(true);
 
       try {
-        // Genera contenuto BUZZ direttamente
         const response = await callBuzzApi({ 
           userId, 
           generateMap: false 
@@ -59,9 +58,9 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         
         if (response.success) {
           const dynamicClueContent = response.clue_text || 
-            `Indizio BLACK LANCIO generato alle ${new Date().toLocaleTimeString()}`;
+            `Indizio BLACK LANCIO - Generato alle ${new Date().toLocaleTimeString()}`;
           
-          // Inserisci notifica
+          // Inserisci notifica nel database
           const { error: notificationError } = await supabase
             .from('user_notifications')
             .insert({
@@ -74,9 +73,9 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
             });
 
           if (notificationError) {
-            console.error('❌ Error inserting BLACK notification:', notificationError);
+            console.error('❌ LANCIO: Error inserting BLACK notification:', notificationError);
           } else {
-            console.log('✅ BLACK notification inserted successfully - LANCIO');
+            console.log('✅ LANCIO: BLACK notification inserted successfully');
           }
 
           toast.success("🔧 Indizio BLACK Sbloccato - LANCIO!", {
@@ -90,12 +89,13 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           
           onSuccess();
         } else {
+          console.error('❌ LANCIO: BLACK API failed', response.errorMessage);
           toast.error("Errore BLACK", {
             description: response.errorMessage || "Errore sconosciuto",
           });
         }
       } catch (error) {
-        console.error('❌ DEVELOPER BLACK Error:', error);
+        console.error('❌ LANCIO: Developer BLACK Error:', error);
         toast.error("Errore BLACK", {
           description: "Errore durante il processo",
         });
@@ -106,7 +106,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       return;
     }
 
-    // PRODUZIONE: Verifica pagamento normale per altri utenti
+    // PRODUZIONE: Verifica pagamento per altri utenti
     const canProceed = await requireBuzzPayment();
     if (!canProceed) {
       await logUnauthorizedAccess('buzz_blocked_no_payment', {
@@ -124,12 +124,12 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       window.plausible('buzz_click');
     }
     
-    console.log('🔒 SECURE BUZZ - LANCIO 19 LUGLIO: Starting verified buzz process for user:', userId);
+    console.log('🔒 LANCIO SECURE BUZZ: Starting verified process for user:', userId);
     setIsProcessing(true);
     
     try {
       if (subscriptionTier === 'Free') {
-        console.log('💳 No subscription detected, redirecting to payment...');
+        console.log('💳 Free plan detected, redirecting to payment...');
         await processBuzzPurchase(false, buzzCost);
         return;
       }
@@ -140,7 +140,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       });
       
       if (response.success) {
-        console.log('✅ SECURE BUZZ - LANCIO: Response received with payment verification');
+        console.log('✅ LANCIO SECURE BUZZ: Response received with payment verification');
         
         if (typeof window !== 'undefined' && window.plausible) {
           window.plausible('clue_unlocked');
@@ -162,12 +162,12 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
             });
 
           if (notificationError) {
-            console.error('❌ Error inserting verified notification:', notificationError);
+            console.error('❌ LANCIO: Error inserting verified notification:', notificationError);
           } else {
-            console.log('✅ Verified notification inserted successfully - LANCIO');
+            console.log('✅ LANCIO: Verified notification inserted successfully');
           }
         } catch (notifError) {
-          console.error('❌ Error creating verified notification:', notifError);
+          console.error('❌ LANCIO: Error creating verified notification:', notifError);
         }
 
         toast.success("Indizio Premium Sbloccato - LANCIO!", {
@@ -179,14 +179,14 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
             "Nuovo Indizio Premium - Lancio M1SSION", 
             dynamicClueContent
           );
-          console.log('✅ Verified Buzz notification created successfully - LANCIO');
+          console.log('✅ LANCIO: Verified Buzz notification created successfully');
         } catch (notifError) {
-          console.error('❌ Failed to create verified Buzz notification:', notifError);
+          console.error('❌ LANCIO: Failed to create verified Buzz notification:', notifError);
         }
         
         onSuccess();
       } else {
-        console.error('❌ SECURE BUZZ: API response failed:', response.errorMessage);
+        console.error('❌ LANCIO SECURE BUZZ: API response failed:', response.errorMessage);
         const errorMessage = response.errorMessage || "Errore sconosciuto";
         
         await logUnauthorizedAccess('buzz_api_failed', { errorMessage });
@@ -196,7 +196,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         });
       }
     } catch (error) {
-      console.error('❌ SECURE BUZZ: Error during verified call:', error);
+      console.error('❌ LANCIO SECURE BUZZ: Error during verified call:', error);
       
       await logUnauthorizedAccess('buzz_exception', { 
         error: error instanceof Error ? error.message : String(error) 
@@ -210,7 +210,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     }
   };
 
-  // Security check: Solo developer BLACK ha accesso completo
+  // LANCIO: Security check corretto
   const isBlocked = !isDeveloperUser && (!hasValidPayment || remainingBuzz <= 0 || subscriptionTier === 'Free');
   const isLoading = isProcessing || stripeLoading || verificationLoading;
 
@@ -222,12 +222,12 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     );
   }
 
-  // MOSTRA I VALORI CORRETTI PER OGNI PIANO
+  // LANCIO: Mostra i valori CORRETTI per ogni piano
   const displayRemainingBuzz = () => {
     if (isDeveloperUser) return 999;
-    if (subscriptionTier === 'Free') return 1;
-    if (subscriptionTier === 'Silver') return 3;
-    if (subscriptionTier === 'Gold') return 7;
+    if (subscriptionTier === 'Free') return remainingBuzz || 1;
+    if (subscriptionTier === 'Silver') return remainingBuzz || 3;
+    if (subscriptionTier === 'Gold') return remainingBuzz || 7;
     return remainingBuzz;
   };
 

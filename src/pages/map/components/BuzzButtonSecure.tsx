@@ -18,7 +18,7 @@ export interface BuzzButtonSecureProps {
 
 const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({ 
   handleBuzz, 
-  radiusKm = 1,
+  radiusKm = 500, // LANCIO: Default a 500km
   mapCenter,
   onAreaGenerated
 }) => {
@@ -46,7 +46,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const activeArea = getActiveArea();
   
   const handleSecureBuzzMapClick = async () => {
-    // CRITICAL: Verify payment before any map action
+    // LANCIO: Verifica pagamento critica
     const canProceed = await requireBuzzPayment();
     if (!canProceed) {
       await logUnauthorizedAccess('buzz_map_blocked_no_payment', {
@@ -58,78 +58,76 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       return;
     }
 
-    console.log('🔒 SECURE BUZZ MAP: Payment verified, proceeding...');
+    console.log('🚀 LANCIO BUZZ MAP: Payment verified, proceeding with 500km generation...');
     
-    // Trigger ripple effect
     setIsRippling(true);
     setTimeout(() => setIsRippling(false), 1000);
     
-    // Track Plausible event
     if (typeof window !== 'undefined' && window.plausible) {
       window.plausible('buzz_click');
     }
     
-    // Use map center coordinates or default to Rome
+    // LANCIO: Use map center or default coordinates
     const centerLat = mapCenter ? mapCenter[0] : 41.9028;
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
-    console.log('📍 SECURE BUZZ MAP: Using verified coordinates:', { 
+    console.log('📍 LANCIO COORDINATES:', { 
       centerLat, 
       centerLng,
-      mode: 'secure-payment-verified'
+      mode: 'launch-19-july',
+      expectedRadius: '500km'
     });
     
-    // If user is on Free plan, require payment first
     if (subscriptionTier === 'Free') {
       console.log('💳 Free plan detected, redirecting to payment...');
       try {
-        await processBuzzPurchase(true); // true for map buzz
+        await processBuzzPurchase(true);
         return;
       } catch (error) {
-        console.error('❌ Payment failed:', error);
+        console.error('❌ LANCIO: Payment failed:', error);
         await logUnauthorizedAccess('buzz_map_payment_failed', { error });
         return;
       }
     }
     
-    // Generate area with payment verification
+    // LANCIO: Generate area with guaranteed 500km radius
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
-      // Track clue unlocked event for map buzz
       if (typeof window !== 'undefined' && window.plausible) {
         window.plausible('clue_unlocked');
       }
       
-      console.log('✅ SECURE BUZZ MAP: Area generated with payment verification', newArea);
+      console.log('🎉 LANCIO SUCCESS: Area generated with launch rules', newArea);
       
-      // Force reload areas to sync with database
       await reloadAreas();
       
-      // Maintain current map view - no zoom/pan changes
-      console.log('🔒 SECURE: Maintaining current map view');
-      
-      // Execute optional callback without affecting map view
       if (handleBuzz) {
         handleBuzz();
       }
       
-      // Create secure notification
       await createMapBuzzNotification(
-        "Area BUZZ Mappa Verificata",
-        `Nuova area di ricerca generata con pagamento confermato: ${newArea.radius_km.toFixed(1)}km`
+        "Area BUZZ Mappa - Lancio M1SSION",
+        `Nuova area di ricerca generata: ${newArea.radius_km}km - Settimana 1`
       );
       
     } else {
-      console.error('❌ SECURE BUZZ MAP: Area generation failed');
+      console.error('❌ LANCIO: Area generation failed');
       await logUnauthorizedAccess('buzz_map_generation_failed');
       toast.error('❌ Errore generazione area BUZZ');
     }
   };
 
-  // Security checks
   const isBlocked = !hasValidPayment || remainingBuzz <= 0;
   const isLoading = isGenerating || stripeLoading || verificationLoading;
+  
+  // LANCIO: Calcola il raggio corretto da mostrare
+  const displayRadius = () => {
+    if (activeArea) {
+      return activeArea.radius_km.toFixed(1);
+    }
+    return '500.0'; // LANCIO: Mostra sempre 500km come default
+  };
   
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
@@ -160,18 +158,16 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
             <CircleIcon className="mr-2 h-4 w-4" />
           )}
           <span>
-            {isLoading ? 'Verificando...' : 
+            {isLoading ? 'Generando...' : 
              isBlocked ? 'ACCESSO NEGATO' :
-             `BUZZ MAPPA SICURA (${activeArea ? `${activeArea.radius_km.toFixed(1)}km` : '21.5km'}) - ${dailyBuzzMapCounter} BUZZ`}
+             `BUZZ MAPPA LANCIO (${displayRadius()}km) - Gen ${dailyBuzzMapCounter || 0}`}
           </span>
           
-          {/* Security indicator */}
           {!isBlocked && hasValidPayment && (
             <div className="absolute top-1 right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
           )}
         </Button>
         
-        {/* Ripple effect overlay - only if not blocked */}
         {isRippling && !isBlocked && (
           <motion.div
             className="absolute inset-0 border-2 border-cyan-400 rounded-full"
