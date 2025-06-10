@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -190,20 +189,22 @@ const PersonalInfo = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black pb-6">
-      <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue">
+    <div className="min-h-screen bg-black">
+      {/* Title section with back button aligned horizontally - positioned below header */}
+      <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+88px)] mb-6">
         <Button 
           variant="ghost" 
           size="icon" 
-          className="mr-2 rounded-lg"
+          className="h-8 w-8 rounded-full" 
           onClick={() => navigate(-1)}
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-4 w-4" />
         </Button>
         <h1 className="text-xl font-bold text-white">Modifica Informazioni Personali</h1>
-      </header>
+      </div>
 
-      <div className="p-4">
+      {/* Main content with proper spacing */}
+      <div className="p-4 pt-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="glass-card mb-4 rounded-lg">
             <h2 className="text-lg font-semibold mb-4 text-white">Dati Personali</h2>
