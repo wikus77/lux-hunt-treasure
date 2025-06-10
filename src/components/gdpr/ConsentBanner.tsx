@@ -4,13 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { useConsentManagement } from '@/hooks/useConsentManagement';
+import { loadGA4, removeGA4 } from '@/utils/loadGA4';
 
 const ConsentBanner = () => {
   const [isVisible, setIsVisible] = useState(false);
   const { updateConsent, hasConsent } = useConsentManagement();
 
   useEffect(() => {
-    // Mostra il banner solo se non c'è ancora consenso per i cookie essenziali
+    // Show banner only if no consent has been given yet
     const hasConsentStored = localStorage.getItem('gdpr_consent_given');
     if (!hasConsentStored) {
       setIsVisible(true);
@@ -25,6 +26,10 @@ const ConsentBanner = () => {
     
     localStorage.setItem('gdpr_consent_given', 'true');
     localStorage.setItem('gdpr_consent_date', new Date().toISOString());
+    
+    // Load GA4 when analytics consent is given
+    loadGA4();
+    
     setIsVisible(false);
   };
 
@@ -36,6 +41,10 @@ const ConsentBanner = () => {
     
     localStorage.setItem('gdpr_consent_given', 'essential_only');
     localStorage.setItem('gdpr_consent_date', new Date().toISOString());
+    
+    // Remove GA4 if it was loaded
+    removeGA4();
+    
     setIsVisible(false);
   };
 

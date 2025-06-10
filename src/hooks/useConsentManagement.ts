@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/auth";
+import { loadGA4, removeGA4 } from "@/utils/loadGA4";
 
 interface ConsentTypes {
   marketing: boolean;
@@ -53,6 +54,15 @@ export function useConsentManagement() {
     };
     
     setConsents(newConsents);
+
+    // Handle GA4 loading based on analytics consent
+    if (consentType === 'analytics') {
+      if (value) {
+        loadGA4();
+      } else {
+        removeGA4();
+      }
+    }
 
     // Save to localStorage
     try {

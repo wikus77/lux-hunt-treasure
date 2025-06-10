@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -53,9 +52,13 @@ const PrivacyPolicy = () => {
                 <p><strong>Invio indizi e gestione missioni</strong></p>
                 <p className="text-sm">Base giuridica: esecuzione contratto/servizio (art. 6, par. 1, lett. b GDPR)</p>
               </div>
-              <div className="bg-white/5 p-3 rounded border border-white/10">
-                <p><strong>Analisi e miglioramento servizi</strong></p>
-                <p className="text-sm">Base giuridica: consenso (art. 6, par. 1, lett. a GDPR) - solo con Google Analytics 4</p>
+              <div className="bg-blue-900/20 p-3 rounded border border-blue-500/30">
+                <p><strong>Analisi e miglioramento servizi (Google Analytics 4)</strong></p>
+                <p className="text-sm">Base giuridica: consenso esplicito (art. 6, par. 1, lett. a GDPR)</p>
+                <p className="text-xs mt-2 text-blue-300">
+                  ⚠️ <strong>IMPORTANTE:</strong> Utilizziamo Google Analytics 4 solo previo consenso esplicito dell'utente tramite banner cookie. 
+                  Nessun tracciamento viene attivato prima della tua accettazione.
+                </p>
               </div>
               <div className="bg-white/5 p-3 rounded border border-white/10">
                 <p><strong>Comunicazioni di marketing</strong></p>
@@ -81,6 +84,7 @@ const PrivacyPolicy = () => {
               <li>Dati di navigazione: massimo 25 mesi</li>
               <li>Log di sicurezza: massimo 12 mesi</li>
               <li>Dati di marketing: fino alla revoca del consenso</li>
+              <li><strong>Google Analytics 4</strong>: massimo 14 mesi (solo con consenso)</li>
             </ul>
           </section>
           
@@ -104,7 +108,7 @@ const PrivacyPolicy = () => {
           <section>
             <h2 className="text-xl font-semibold mb-3 text-white">8. Cookie e strumenti di tracciamento</h2>
             <p>
-              Per informazioni dettagliate sui cookie utilizzati, consulta la nostra <Link to="/cookie-policy" className="text-[#00E5FF] hover:underline">Cookie Policy</Link>.
+              Per informazioni dettagliati sui cookie utilizzati, consulta la nostra <Link to="/cookie-policy" className="text-[#00E5FF] hover:underline">Cookie Policy</Link>.
             </p>
           </section>
           
@@ -118,7 +122,7 @@ const PrivacyPolicy = () => {
           <div className="bg-gradient-to-r from-[#00E5FF]/20 to-blue-600/20 p-4 rounded-lg border border-[#00E5FF]/30 mt-8">
             <p className="text-sm italic">
               <strong>Ultimo aggiornamento:</strong> Giugno 2025<br/>
-              <strong>Versione:</strong> 1.0 - Conforme GDPR
+              <strong>Versione:</strong> 1.1 - Conforme GDPR con Google Analytics 4
             </p>
           </div>
         </div>
