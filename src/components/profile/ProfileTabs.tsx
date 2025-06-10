@@ -291,7 +291,7 @@ const AccountSecuritySettings = ({
           <Shield className="h-4 w-4 text-cyan-400" />
           <span className="text-sm">Informazioni personali</span>
         </div>
-        <Button variant="ghost" size="sm" className="h-8">
+        <Button variant="ghost" size="sm" className="h-8 rounded-xl">
           <Shield className="h-3.5 w-3.5" />
         </Button>
       </div>
@@ -304,7 +304,7 @@ const AccountSecuritySettings = ({
           <Shield className="h-4 w-4 text-cyan-400" />
           <span className="text-sm">Password e sicurezza</span>
         </div>
-        <Button variant="ghost" size="sm" className="h-8">
+        <Button variant="ghost" size="sm" className="h-8 rounded-xl">
           <Shield className="h-3.5 w-3.5" />
         </Button>
       </div>
@@ -317,7 +317,7 @@ const AccountSecuritySettings = ({
           <Shield className="h-4 w-4 text-cyan-400" />
           <span className="text-sm">Metodi di pagamento</span>
         </div>
-        <Button variant="ghost" size="sm" className="h-8">
+        <Button variant="ghost" size="sm" className="h-8 rounded-xl">
           <Shield className="h-3.5 w-3.5" />
         </Button>
       </div>

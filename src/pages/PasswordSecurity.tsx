@@ -17,19 +17,19 @@ const PasswordSecurity = () => {
   
   return (
     <div className="min-h-screen bg-black">
-      <div className="px-4 pt-[calc(env(safe-area-inset-top)+64px)]">
-        <h1 className="text-xl font-semibold text-white mb-4">Password e Sicurezza</h1>
-        
-        <button
-          onClick={() => navigate(-1)}
-          className="w-6 h-6 text-white relative z-50 mb-6"
-          aria-label="Torna alla pagina precedente"
-        >
-          <ArrowLeft />
-        </button>
-      </div>
+      <div className="pt-[calc(env(safe-area-inset-top)+64px)] px-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
+        <header className="flex items-center border-b border-projectx-deep-blue pb-6 mb-6">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="mr-2"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-xl font-bold">Password e Sicurezza</h1>
+        </header>
 
-      <div className="p-4">
         <div className="glass-card rounded-xl mb-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
             <ShieldIcon className="mr-2 h-5 w-5 text-projectx-neon-blue" />
