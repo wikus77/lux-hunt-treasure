@@ -21,21 +21,44 @@ export const usePaymentMethods = () => {
   const { user } = useAuthContext();
 
   const fetchPaymentMethods = async () => {
-    if (!user) return;
+    if (!user || !user.id) {
+      console.log('User not available for payment methods fetch');
+      setPaymentMethods([]);
+      return;
+    }
+
+    // Validate user ID format (must be a valid UUID)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(user.id)) {
+      console.log('Invalid user ID format:', user.id);
+      setPaymentMethods([]);
+      return;
+    }
 
     try {
       setLoading(true);
+      console.log('Fetching payment methods for user:', user.id);
+      
       const { data, error } = await supabase
         .from('user_payment_methods')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error fetching payment methods:', error);
+        throw error;
+      }
+      
+      console.log('Payment methods fetched successfully:', data);
       setPaymentMethods(data || []);
     } catch (error) {
       console.error('Error fetching payment methods:', error);
-      toast.error('Errore nel caricamento dei metodi di pagamento');
+      // Don't show toast error for empty results or developer accounts
+      if (error.message && !error.message.includes('developer-fake-id')) {
+        toast.error('Errore nel caricamento dei metodi di pagamento');
+      }
+      setPaymentMethods([]);
     } finally {
       setLoading(false);
     }
