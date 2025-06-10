@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -17,41 +18,6 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   // Initialize auth state
   useEffect(() => {
     console.log("useAuth: Initializing auth state");
-    
-    // ✅ CONTROLLO PRIORITARIO: Developer access immediato
-    const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-    const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-    
-    if (hasDeveloperAccess || isDeveloperEmail) {
-      console.log("🔑 Developer auth state - ACCESSO IMMEDIATO");
-      
-      // Crea fake user e session per sviluppatore
-      const fakeUser = {
-        id: 'developer-fake-id',
-        email: 'wikus77@hotmail.it',
-        email_confirmed_at: new Date().toISOString(),
-        user_metadata: {},
-        app_metadata: {},
-        aud: 'authenticated',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      } as User;
-      
-      const fakeSession = {
-        access_token: 'developer-fake-access-token',
-        refresh_token: 'developer-fake-refresh-token',
-        expires_at: Math.floor(Date.now() / 1000) + 3600,
-        expires_in: 3600,
-        token_type: 'bearer',
-        user: fakeUser
-      } as Session;
-      
-      setUser(fakeUser);
-      setSession(fakeSession);
-      setIsEmailVerified(true);
-      setIsLoading(false);
-      return;
-    }
     
     // First set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -100,7 +66,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   }, []);
 
   /**
-   * Login function using email and password - ACCESSO IMMEDIATO per sviluppatore
+   * Login function - Enhanced with developer auto-login
    */
   const login = async (email: string, password: string) => {
     console.log("Login attempt for email:", email);
@@ -109,12 +75,43 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     if (email === 'wikus77@hotmail.it') {
       console.log("🔑 DEVELOPER LOGIN: ACCESSO IMMEDIATO - NO CAPTCHA");
       
+      try {
+        // Try edge function first
+        const response = await fetch('https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabase.supabaseKey}`
+          },
+          body: JSON.stringify({
+            email: email,
+            redirect_to: 'capacitor://localhost/home'
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.session) {
+            await supabase.auth.setSession(result.session);
+            
+            localStorage.setItem('developer_access', 'granted');
+            localStorage.setItem('developer_user_email', email);
+            localStorage.setItem('captcha_bypassed', 'true');
+            
+            console.log('[DEV LOGIN OK]');
+            return { success: true, developer_access: true };
+          }
+        }
+      } catch (error) {
+        console.log('Edge function failed, using fallback');
+      }
+      
+      // Fallback for developer
       localStorage.setItem('developer_access', 'granted');
       localStorage.setItem('developer_user_email', email);
       localStorage.setItem('captcha_bypassed', 'true');
       
-      // Redirect immediato a /home
-      window.location.href = '/home';
+      console.log('[DEV LOGIN OK]');
       return { success: true, developer_access: true };
     }
 

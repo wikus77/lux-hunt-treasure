@@ -20,24 +20,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const setupDeveloperAccess = async () => {
       const developerEmail = 'wikus77@hotmail.it';
       
-      // ACCESSO IMMEDIATO E AUTOMATICO per sviluppatore
-      console.log('🔑 Setting up automatic developer access for:', developerEmail);
-      localStorage.setItem('developer_access', 'granted');
-      localStorage.setItem('developer_user_email', developerEmail);
-      localStorage.setItem('captcha_bypassed', 'true');
-      localStorage.setItem('auto_login_developer', 'true');
+      // Check for Capacitor environment or localhost
+      const isCapacitor = window.location.protocol === 'capacitor:';
+      const isLocalhost = window.location.hostname === 'localhost';
       
-      // Imposta fake session immediata
-      const fakeSession = {
-        access_token: "developer-fake-access-token-" + Date.now(),
-        refresh_token: "developer-fake-refresh-token-" + Date.now(),
-      };
-      
-      try {
-        await supabase.auth.setSession(fakeSession);
-        console.log('✅ Developer fake session established automatically');
-      } catch (error) {
-        console.log('⚠️ Fake session setup failed, but developer access still granted');
+      if (isCapacitor || isLocalhost) {
+        console.log('🔑 Setting up automatic developer access for:', developerEmail);
+        localStorage.setItem('developer_access', 'granted');
+        localStorage.setItem('developer_user_email', developerEmail);
+        localStorage.setItem('captcha_bypassed', 'true');
+        localStorage.setItem('auto_login_developer', 'true');
+        
+        // Try to establish session
+        try {
+          const response = await fetch('https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
+            },
+            body: JSON.stringify({
+              email: developerEmail,
+              redirect_to: 'capacitor://localhost/home'
+            })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.session) {
+              await supabase.auth.setSession(result.session);
+              console.log('✅ Developer session established automatically');
+            }
+          }
+        } catch (error) {
+          console.log('⚠️ Auto session setup failed, but developer access still granted');
+        }
       }
     };
 
@@ -253,28 +270,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [auth.isLoading, authInitialized]);
 
-  // Check if user has a specific role
-  const hasRole = (role: string): boolean => {
-    // ✅ CONTROLLO PRIORITARIO: Developer access
-    const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-    const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-    
-    if ((hasDeveloperAccess || isDeveloperEmail) && role === 'admin') {
-      return true;
-    }
-
-    // Special case for wikus77@hotmail.it - always treated as admin
-    if (auth.user?.email === 'wikus77@hotmail.it') {
-      return role === 'admin';
-    }
-    return userRole === role;
-  };
-
   // Create the complete context value by combining auth hook values with role information
   const authContextValue: AuthContextType = {
     ...auth,
     userRole,
-    hasRole,
+    hasRole: (role: string) => {
+      // ✅ CONTROLLO PRIORITARIO: Developer access
+      const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
+      const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
+      
+      if ((hasDeveloperAccess || isDeveloperEmail) && role === 'admin') {
+        return true;
+      }
+
+      // Special case for wikus77@hotmail.it - always treated as admin
+      if (auth.user?.email === 'wikus77@hotmail.it') {
+        return role === 'admin';
+      }
+      return userRole === role;
+    },
     isRoleLoading
   };
 
@@ -286,3 +300,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export default AuthProvider;
+
+</edits_to_apply>
