@@ -20,9 +20,6 @@ interface UserConsent {
   updated_at?: string;
 }
 
-// Define a custom type to extend Database tables for TypeScript
-type CustomTables = 'user_consents' | 'consent_history';
-
 export function useConsentManagement() {
   const { isAuthenticated, user } = useAuthContext();
   const [consents, setConsents] = useState<ConsentTypes>({
@@ -39,9 +36,8 @@ export function useConsentManagement() {
       if (isAuthenticated && user?.id) {
         setIsLoading(true);
         try {
-          // Using any to avoid TypeScript errors with custom tables
-          // This is a workaround until Supabase types are properly extended
-          const { data, error } = await (supabase as any)
+          // Check if user_consents table exists, if not use localStorage fallback
+          const { data, error } = await supabase
             .from('user_consents')
             .select('*')
             .eq('user_id', user.id)
@@ -89,7 +85,7 @@ export function useConsentManagement() {
       [consentType]: value
     }));
 
-    // For authenticated users, save to database
+    // For authenticated users, try to save to database, fallback to localStorage
     if (isAuthenticated && user?.id) {
       try {
         const consentField = `${consentType}_consent`;
@@ -101,30 +97,26 @@ export function useConsentManagement() {
         };
         updateData[consentField] = value;
         
-        // Using any to avoid TypeScript errors with custom tables
-        const { error } = await (supabase as any)
-          .from('user_consents')
-          .upsert(updateData, {
-            onConflict: 'user_id'
-          });
+        // Try to save to database, but don't fail if table doesn't exist
+        try {
+          const { error } = await supabase
+            .from('user_consents')
+            .upsert(updateData, {
+              onConflict: 'user_id'
+            });
 
-        if (error) {
-          console.error("Error updating consent:", error);
-          throw error;
+          if (error) {
+            console.warn("Database consent save failed, using localStorage:", error);
+            throw error;
+          }
+        } catch (dbError) {
+          // Fallback to localStorage if database fails
+          console.warn("Using localStorage fallback for consent management");
+          localStorage.setItem('user_consents', JSON.stringify({
+            ...consents,
+            [consentType]: value
+          }));
         }
-
-        // Record consent history for compliance - using our full type definition
-        const historyData = {
-          user_id: user.id,
-          consent_type: consentType,
-          consent_given: value,
-          ip_address: 'client_ip', // In a real app, you'd capture the client IP
-          consent_timestamp: new Date().toISOString()
-        };
-        
-        await (supabase as any)
-          .from('consent_history')
-          .insert(historyData);
 
       } catch (err) {
         console.error("Failed to save consent:", err);
@@ -138,7 +130,8 @@ export function useConsentManagement() {
     } else {
       // For anonymous users, save to localStorage
       try {
-        localStorage.setItem('user_consents', JSON.stringify(consents));
+        const newConsents = { ...consents, [consentType]: value };
+        localStorage.setItem('user_consents', JSON.stringify(newConsents));
       } catch (e) {
         console.error("Error saving consents to localStorage:", e);
       }

@@ -34,6 +34,7 @@ const Contacts = lazy(() => import("@/pages/Contacts"));
 const Ownership = lazy(() => import("@/pages/Ownership"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
+const CookiePolicy = lazy(() => import("@/pages/CookiePolicy"));
 const Terms = lazy(() => import("@/pages/Terms"));
 
 // Loading fallback component
@@ -162,6 +163,7 @@ const AppRoutes: React.FC = () => {
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/ownership" element={<Ownership />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/cookie-policy" element={<CookiePolicy />} />
             <Route path="/terms" element={<Terms />} />
             
             {/* 404 route */}

@@ -1,10 +1,10 @@
+
 import { Instagram, Facebook, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "react-router-dom";
 
 export const Footer = () => {
   const isMobile = useIsMobile();
-  const isDarkMode = document.documentElement.classList.contains('dark');
   
   return (
     <footer className="border-t py-6 px-4 mt-auto transition-colors duration-200 bg-black">
@@ -46,7 +46,7 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link to="/privacy-policy" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Privacy Policy
                 </Link>
               </li>
