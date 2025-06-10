@@ -1,48 +1,52 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
-import Settings from '../../pages/Settings';
-import PersonalInfo from '../../pages/PersonalInfo';
-import LanguageSettings from '../../pages/LanguageSettings';
-import Notifications from '../../pages/Notifications';
+import { Route } from 'react-router-dom';
+import { RoleBasedProtectedRoute } from "../../components/auth/RoleBasedProtectedRoute";
+
+// Pages
+import Settings from "../../pages/Settings";
+import PersonalInfo from "../../pages/PersonalInfo";
+import LanguageSettings from "../../pages/LanguageSettings";
+import Notifications from "../../pages/Notifications";
 
 const SettingsRoutes = () => {
+  const baseUserRoles = ['user', 'moderator', 'admin'];
+  
   return (
-    <Routes>
-      <Route 
-        path="/settings" 
+    <>
+      <Route
+        path="/settings"
         element={
-          <ProtectedRoute>
+          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <Settings />
-          </ProtectedRoute>
-        } 
+          </RoleBasedProtectedRoute>
+        }
       />
-      <Route 
-        path="/personal-info" 
+      <Route
+        path="/personal-info"
         element={
-          <ProtectedRoute>
+          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <PersonalInfo />
-          </ProtectedRoute>
-        } 
+          </RoleBasedProtectedRoute>
+        }
       />
-      <Route 
-        path="/language-settings" 
+      <Route
+        path="/language-settings"
         element={
-          <ProtectedRoute>
+          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <LanguageSettings />
-          </ProtectedRoute>
-        } 
+          </RoleBasedProtectedRoute>
+        }
       />
-      <Route 
-        path="/notifications" 
+      <Route
+        path="/notifications"
         element={
-          <ProtectedRoute>
+          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <Notifications />
-          </ProtectedRoute>
-        } 
+          </RoleBasedProtectedRoute>
+        }
       />
-    </Routes>
+    </>
   );
 };
 

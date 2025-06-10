@@ -72,7 +72,7 @@ const PersonalInfo = () => {
         
         const { data, error } = await supabase
           .from('profiles')
-          .select('first_name, last_name, email, phone, address, city, postal_code, country, investigative_style, preferred_language')
+          .select('*')
           .eq('id', session.user.id)
           .single();
           
