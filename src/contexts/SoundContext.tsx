@@ -1,5 +1,6 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { useState, useEffect, createContext, useContext } from "react";
+import type { ReactNode } from "react";
 
 interface SoundContextType {
   soundPreference: string;
@@ -12,7 +13,7 @@ interface SoundContextType {
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
 
-export const SoundProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const SoundProvider = ({ children }: { children: ReactNode }) => {
   const [soundPreference, setSoundPreference] = useState('default');
   const [volume, setVolume] = useState([75]);
   const [isEnabled, setIsEnabled] = useState(true);
