@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.192.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
+import { RateLimiter } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,6 +16,36 @@ serve(async (req) => {
 
   try {
     const { email } = await req.json();
+    
+    // RATE LIMITING CHECK
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const rateLimiter = new RateLimiter(supabaseUrl, supabaseServiceKey);
+    const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    
+    const rateLimitResult = await rateLimiter.checkRateLimit(email, ipAddress, {
+      maxRequests: 5,
+      windowSeconds: 30,
+      functionName: 'login-no-captcha'
+    });
+
+    if (!rateLimitResult.allowed) {
+      console.log(`🚫 Rate limit exceeded for login: ${email}`);
+      return new Response(
+        JSON.stringify({ 
+          error: "Troppe richieste di login. Riprova tra qualche secondo." 
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            "Content-Type": "application/json", 
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toISOString(),
+            ...corsHeaders 
+          } 
+        }
+      );
+    }
     
     if (email !== "wikus77@hotmail.it") {
       return new Response(

@@ -2,6 +2,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { RateLimiter } from "../_shared/rateLimiter.ts";
 
 // Import utility functions
 import { validateRegistrationEmail } from "./utils/validateRegistrationEmail.ts";
@@ -73,12 +74,32 @@ serve(async (req) => {
       );
     }
 
-    // 3. RATE LIMITING - Check rate limit (1 email every 60 seconds per user)
-    const rateLimitResult = checkRateLimit(authenticatedUserId);
-    if (!rateLimitResult.isAllowed) {
+    // 3. RATE LIMITING - Enhanced with new rate limiter
+    const rateLimiter = new RateLimiter(supabaseUrl, supabaseServiceKey);
+    const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    
+    const rateLimitResult = await rateLimiter.checkRateLimit(authenticatedUserId, ipAddress, {
+      maxRequests: 5,
+      windowSeconds: 30,
+      functionName: 'send-registration-email'
+    });
+
+    if (!rateLimitResult.allowed) {
+      console.log(`🚫 Rate limit exceeded for user: ${authenticatedUserId}`);
       return new Response(
-        JSON.stringify({ success: false, error: rateLimitResult.error }),
-        { status: rateLimitResult.statusCode!, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({ 
+          success: false, 
+          error: "Troppe richieste email. Riprova tra qualche secondo." 
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            "Content-Type": "application/json", 
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toISOString(),
+            ...corsHeaders 
+          } 
+        }
       );
     }
 

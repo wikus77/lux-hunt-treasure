@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { RateLimiter } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,6 +16,40 @@ serve(async (req) => {
     const { name, email, phone, subject, message, type } = await req.json();
     
     console.log("📧 Email request received:", { name, email, type });
+    
+    // RATE LIMITING CHECK
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const rateLimiter = new RateLimiter(supabaseUrl, supabaseServiceKey);
+    const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    
+    // Use email as user identifier for anonymous users
+    const userIdentifier = email || ipAddress;
+    
+    const rateLimitResult = await rateLimiter.checkRateLimit(userIdentifier, ipAddress, {
+      maxRequests: 5,
+      windowSeconds: 30,
+      functionName: 'send-mailjet-email'
+    });
+
+    if (!rateLimitResult.allowed) {
+      console.log(`🚫 Rate limit exceeded for email: ${email}`);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Troppe richieste email. Riprova tra qualche secondo." 
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            "Content-Type": "application/json", 
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toISOString(),
+            ...corsHeaders 
+          } 
+        }
+      );
+    }
     
     const MJ_APIKEY_PUBLIC = Deno.env.get('MJ_APIKEY_PUBLIC');
     const MJ_APIKEY_PRIVATE = Deno.env.get('MJ_APIKEY_PRIVATE');

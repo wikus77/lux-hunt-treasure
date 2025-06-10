@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { RateLimiter } from "../_shared/rateLimiter.ts";
 
 // Get environment variables
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -89,6 +90,36 @@ serve(async (req) => {
     }
 
     console.log(`✅ Auth validation passed for user: ${userId}`);
+
+    // RATE LIMITING CHECK
+    const rateLimiter = new RateLimiter(supabaseUrl, supabaseServiceKey);
+    const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    
+    const rateLimitResult = await rateLimiter.checkRateLimit(userId, ipAddress, {
+      maxRequests: 5,
+      windowSeconds: 30,
+      functionName: 'handle-buzz-press'
+    });
+
+    if (!rateLimitResult.allowed) {
+      console.log(`🚫 Rate limit exceeded for user: ${userId}`);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: true, 
+          errorMessage: "Troppe richieste. Riprova tra qualche secondo." 
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            "Content-Type": "application/json", 
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toISOString(),
+            ...corsHeaders 
+          } 
+        }
+      );
+    }
 
     // Get current week since mission start
     const { data: weekData, error: weekError } = await supabase.rpc('get_current_mission_week');
