@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -56,24 +55,15 @@ export const useBuzzMapLogic = () => {
   }, [currentWeekAreas]);
 
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
-    if (!user?.id) {
-      console.error('❌ LANCIO BUZZ: No valid user ID available');
-      toast.dismiss();
-      toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
-      return null;
-    }
+    if (!user?.id || isGenerating || isDeleting) return null;
 
     console.log('🚀 LANCIO 19 LUGLIO: BUZZ GENERATION START', {
       userId: user.id,
       centerLat,
       centerLng,
-      currentWeek: getCurrentWeek()
+      currentWeek: getCurrentWeek(),
+      currentAreas: currentWeekAreas.length
     });
-
-    if (isGenerating || isDeleting) {
-      console.error('❌ Operation blocked - another operation in progress');
-      return null;
-    }
 
     setIsGenerating(true);
     toast.dismiss();
@@ -96,41 +86,61 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      // CRITICO: FORZARE GENERAZIONE = 1 per LANCIO 19 LUGLIO
+      // CRITICAL FIX: FORCE GENERATION = 1 if first launch after reset
+      const isFirstLaunchAfterReset = sessionStorage.getItem('isFirstLaunchAfterReset') === 'true';
       const currentWeek = getCurrentWeek();
       
-      // FORCE: SEMPRE generazione 1 per prima generazione LANCIO
-      const currentGeneration = 1;
+      let currentGeneration;
+      let finalRadius;
       
-      // OVERRIDE: Sempre 500km per prima generazione LANCIO 19 LUGLIO
-      const finalRadius = 500;
-      
-      console.log('🎯 LANCIO RADIUS FORCE 500KM:', {
-        week: currentWeek,
-        generation: currentGeneration,
-        originalRadius: response.radius_km,
-        finalRadius: finalRadius,
-        FORCED_GENERATION_1: true,
-        FORCED_500KM: true
-      });
+      if (isFirstLaunchAfterReset) {
+        // FORCE: ALWAYS generation 1 for first launch after reset
+        currentGeneration = 1;
+        finalRadius = 500; // FORCED: 500km for launch
+        
+        console.log('🎯 LANCIO FIRST LAUNCH DETECTED - FORCING:', {
+          generation: currentGeneration,
+          radius: finalRadius,
+          FORCED_GENERATION_1: true,
+          FORCED_500KM: true
+        });
+        
+        // Clear the flag after use
+        sessionStorage.removeItem('isFirstLaunchAfterReset');
+      } else {
+        // Normal logic for subsequent generations
+        currentGeneration = (currentWeekAreas.length || 0) + 1;
+        finalRadius = getMapRadius(currentWeek, currentGeneration);
+        
+        console.log('🎯 LANCIO NORMAL GENERATION:', {
+          week: currentWeek,
+          areasLength: currentWeekAreas.length,
+          generation: currentGeneration,
+          calculatedRadius: finalRadius
+        });
+      }
 
       const newArea: BuzzMapArea = {
         id: crypto.randomUUID(),
         lat: response.lat || centerLat,
         lng: response.lng || centerLng,
-        radius_km: finalRadius, // FORZATO: 500km per lancio
+        radius_km: finalRadius,
         week: currentWeek,
         created_at: new Date().toISOString(),
         user_id: user.id
       };
 
-      console.log('🎉 LANCIO SUCCESS: Area created with FORCED 500km radius and generation=1', newArea);
+      console.log('🎉 LANCIO SUCCESS: Area created', {
+        ...newArea,
+        FINAL_RADIUS: finalRadius,
+        GENERATION: currentGeneration
+      });
 
       await forceCompleteSync();
       await forceReload();
       
       toast.dismiss();
-      toast.success(`✅ LANCIO M1SSION: Area ${finalRadius}km generata - Prima Generazione Settimana ${currentWeek}`);
+      toast.success(`✅ LANCIO M1SSION: Area ${finalRadius}km generata - Generazione ${currentGeneration} Settimana ${currentWeek}`);
       
       return newArea;
     } catch (err) {
@@ -144,7 +154,7 @@ export const useBuzzMapLogic = () => {
   }, [
     user, callBuzzApi, isGenerating, isDeleting, 
     setIsGenerating, forceCompleteSync, forceReload,
-    getCurrentWeek
+    getCurrentWeek, currentWeekAreas, getMapRadius
   ]);
 
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {

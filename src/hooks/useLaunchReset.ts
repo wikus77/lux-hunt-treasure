@@ -18,8 +18,8 @@ export const useLaunchReset = () => {
     setIsResetting(true);
 
     try {
-      // 1. BACKEND RESET via Edge Function
-      console.log('📡 LANCIO RESET: Calling backend reset...');
+      // 1. BACKEND RESET via Edge Function - CRITICAL: AWAIT COMPLETION
+      console.log('📡 LANCIO RESET: Calling backend reset with AWAIT...');
       const { data, error } = await supabase.functions.invoke('reset-launch-data');
       
       if (error) {
@@ -32,8 +32,12 @@ export const useLaunchReset = () => {
 
       console.log('✅ LANCIO RESET: Backend reset completed successfully');
 
-      // 2. FRONTEND RESET - COMPLETE CACHE AND STORAGE CLEAR
-      console.log('💾 LANCIO RESET: Clearing ALL frontend data...');
+      // 2. WAIT FOR BACKEND PROPAGATION - CRITICAL TIMING FIX
+      console.log('⏳ LANCIO RESET: Waiting for backend propagation...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 3. FRONTEND RESET - COMPLETE CACHE AND STORAGE CLEAR - ONLY AFTER BACKEND
+      console.log('💾 LANCIO RESET: Clearing ALL frontend data AFTER backend completion...');
       
       // Clear ALL localStorage
       localStorage.clear();
@@ -45,11 +49,13 @@ export const useLaunchReset = () => {
       queryClient.clear();
       queryClient.removeQueries();
       
-      // Force reload all queries from backend
-      await queryClient.invalidateQueries();
-      await queryClient.refetchQueries();
+      // CRITICAL: Set first launch flag for generation override
+      sessionStorage.setItem('isFirstLaunchAfterReset', 'true');
       
-      // Additional specific cache invalidations
+      // Force reload all queries from backend - AFTER backend completion
+      await queryClient.invalidateQueries();
+      
+      // Additional specific cache invalidations with EXACT queryKeys
       await queryClient.invalidateQueries({ queryKey: ['user_clues'] });
       await queryClient.invalidateQueries({ queryKey: ['user_notifications'] });
       await queryClient.invalidateQueries({ queryKey: ['user_map_areas'] });
@@ -59,17 +65,20 @@ export const useLaunchReset = () => {
       await queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
       await queryClient.invalidateQueries({ queryKey: ['profiles'] });
       
-      console.log('✅ LANCIO RESET: Complete frontend cache cleared');
+      // CRITICAL: Force refetch with fresh data
+      await queryClient.refetchQueries();
+      
+      console.log('✅ LANCIO RESET: Complete frontend cache cleared AFTER backend');
       setIsReset(true);
       
       toast.success('🚀 LANCIO RESET: Dati azzerati per test 19 luglio!', {
-        description: 'Sistema completamente resetato e pronto per il lancio'
+        description: 'Sistema completamente resetato e pronto per il lancio - BUZZ MAPPA a 500km'
       });
       
-      // Force page reload to ensure clean state
+      // Force page reload to ensure clean state - DELAYED for cache clear
       setTimeout(() => {
         window.location.reload();
-      }, 2000);
+      }, 3000);
       
     } catch (error) {
       console.error('❌ LANCIO RESET ERROR:', error);
@@ -99,12 +108,12 @@ export const useLaunchReset = () => {
     };
   };
 
-  // CRITICAL: Auto-reset for developer ALWAYS on first access
+  // CRITICAL: Auto-reset for developer ALWAYS on first access - WITH PROPER AWAIT
   useEffect(() => {
     if (user?.email === 'wikus77@hotmail.it' && !isReset && !isResetting) {
-      console.log('🔧 LANCIO AUTO-RESET: Developer detected, starting immediate reset...');
+      console.log('🔧 LANCIO AUTO-RESET: Developer detected, starting immediate reset with AWAIT...');
       
-      // Immediate reset with no delay for testing
+      // Immediate reset with proper timing
       const timer = setTimeout(() => {
         performCompleteLaunchReset();
       }, 1000);

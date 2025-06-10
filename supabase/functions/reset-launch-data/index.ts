@@ -34,7 +34,7 @@ serve(async (req) => {
     const userId = userData.user.id;
     console.log(`🚀 LANCIO RESET: Starting COMPLETE data reset for user ${userId}`);
 
-    // 1. DELETE ALL USER GAME DATA
+    // 1. DELETE ALL USER GAME DATA - ENHANCED ORDER
     const deleteOperations = [
       supabaseClient.from('user_clues').delete().eq('user_id', userId),
       supabaseClient.from('user_notifications').delete().eq('user_id', userId),
@@ -65,22 +65,31 @@ serve(async (req) => {
       })
       .eq('id', userId);
 
-    // 3. CREATE FRESH WEEKLY ALLOWANCE FOR BLACK TIER
+    // 3. CRITICAL: CREATE FRESH WEEKLY ALLOWANCE FOR CURRENT WEEK
     console.log('📊 LANCIO RESET: Creating fresh weekly allowance...');
+    const currentDate = new Date();
     const launchDate = new Date('2025-07-19');
-    const currentWeek = Math.ceil((Date.now() - launchDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
-    const currentYear = new Date().getFullYear();
     
-    await supabaseClient
+    // Calculate current week from launch date
+    const weeksDiff = Math.ceil((currentDate.getTime() - launchDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    const currentWeek = Math.max(1, weeksDiff);
+    const currentYear = currentDate.getFullYear();
+    
+    // CRITICAL: Ensure fresh weekly allowance
+    const { error: allowanceError } = await supabaseClient
       .from('weekly_buzz_allowances')
       .insert({
         user_id: userId,
-        week_number: Math.max(1, currentWeek),
+        week_number: currentWeek,
         year: currentYear,
         max_buzz_count: 999, // BLACK tier unlimited
         used_buzz_count: 0,
         created_at: new Date().toISOString()
       });
+
+    if (allowanceError) {
+      console.error('❌ LANCIO: Error creating weekly allowance:', allowanceError);
+    }
 
     // 4. ENSURE BLACK SUBSCRIPTION IS ACTIVE FOR DEVELOPER
     console.log('🔧 LANCIO RESET: Ensuring BLACK subscription...');
@@ -94,27 +103,48 @@ serve(async (req) => {
       })
       .eq('id', userId);
 
-    // 5. RESET ALL COUNTERS TO 0
+    // 5. CRITICAL: INITIALIZE FRESH COUNTERS TO 0
     console.log('🔄 LANCIO RESET: Initializing fresh counters...');
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Create fresh buzz counter
     await supabaseClient
       .from('user_buzz_counter')
       .insert({
         user_id: userId,
-        date: new Date().toISOString().split('T')[0],
+        date: today,
         buzz_count: 0,
         week_map_generations: [0, 0, 0, 0]
       });
 
+    // Create fresh buzz map counter
     await supabaseClient
       .from('user_buzz_map_counter')
       .insert({
         user_id: userId,
-        date: new Date().toISOString().split('T')[0],
+        date: today,
         buzz_map_count: 0,
         week_map_counts: [0, 0, 0, 0, 0, 0, 0]
       });
 
-    console.log('✅ LANCIO RESET: Complete data reset successful');
+    // 6. FINAL VERIFICATION - Check that tables are empty
+    console.log('🧪 LANCIO RESET: Final verification...');
+    const { count: remainingAreas } = await supabaseClient
+      .from('user_map_areas')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    const { count: remainingClues } = await supabaseClient
+      .from('user_clues')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    console.log('✅ LANCIO RESET: Complete data reset successful', {
+      remainingAreas: remainingAreas || 0,
+      remainingClues: remainingClues || 0,
+      currentWeek,
+      userId
+    });
 
     return new Response(
       JSON.stringify({ 
@@ -131,7 +161,10 @@ serve(async (req) => {
           subscriptionTier: 'Black',
           weeklyBuzzAllowance: 999,
           usedBuzzCount: 0,
-          mapGenerationCount: 0
+          mapGenerationCount: 0,
+          currentWeek: currentWeek,
+          remainingAreas: remainingAreas || 0,
+          remainingClues: remainingClues || 0
         }
       }),
       { 
