@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Lock, ChevronRight, LogOut, Bell, Globe, CreditCard, Key } from "lucide-react";
@@ -85,7 +84,7 @@ const Settings = () => {
         {/* Account Settings - Now collapsible */}
         <AccountSection />
         
-        {/* Password e Sicurezza Section - NEW */}
+        {/* Password e Sicurezza Section - Fixed text consistency */}
         <div className="mb-6">
           <div className="glass-card p-4 rounded-xl">
             <div 

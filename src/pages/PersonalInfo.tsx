@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +21,8 @@ const PersonalInfo = () => {
     postalCode: "",
     country: "",
     investigativeStyle: "",
-    preferredLanguage: ""
+    preferredLanguage: "",
+    agentCode: ""
   });
   
   const [personalInfo, setPersonalInfo] = useState({
@@ -35,7 +35,8 @@ const PersonalInfo = () => {
     postalCode: "",
     country: "",
     investigativeStyle: "",
-    preferredLanguage: ""
+    preferredLanguage: "",
+    agentCode: ""
   });
 
   const investigativeStyles = [
@@ -93,7 +94,8 @@ const PersonalInfo = () => {
             postalCode: data.postal_code || "",
             country: data.country || "",
             investigativeStyle: data.investigative_style || "",
-            preferredLanguage: data.preferred_language || "italiano"
+            preferredLanguage: data.preferred_language || "italiano",
+            agentCode: data.agent_code || ""
           };
           
           setPersonalInfo(userData);
@@ -268,6 +270,22 @@ const PersonalInfo = () => {
                   onChange={handleInputChange}
                   className="rounded-xl bg-black/50 border-white/10"
                 />
+              </div>
+
+              {/* Agent Code - Read Only and Disabled */}
+              <div>
+                <label htmlFor="agentCode" className="block text-sm font-medium mb-1 text-white">
+                  Codice Agente
+                </label>
+                <Input
+                  id="agentCode"
+                  name="agentCode"
+                  value={personalInfo.agentCode}
+                  readOnly={true}
+                  disabled={true}
+                  className="rounded-xl bg-gray-800/50 border-white/10 opacity-60 cursor-not-allowed font-mono"
+                />
+                <p className="text-xs text-gray-400 mt-1">Il codice agente è univoco e non può essere modificato</p>
               </div>
 
               <div>
