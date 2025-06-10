@@ -61,8 +61,8 @@ const Settings = () => {
       
       <div className="h-[72px] w-full" />
       
-      {/* Title section with back button aligned horizontally */}
-      <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+16px)] mb-6">
+      {/* Title section with back button aligned horizontally - positioned below header */}
+      <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+16px)] mb-6" style={{ marginTop: 'calc(72px + env(safe-area-inset-top))' }}>
         <Button 
           variant="ghost" 
           size="icon" 
@@ -75,7 +75,7 @@ const Settings = () => {
       </div>
       
       {/* Main content with proper spacing */}
-      <div className="pb-24 px-4 max-w-screen-xl mx-auto">
+      <div className="pb-24 px-4 max-w-screen-xl mx-auto pt-4">
         {/* Admin Role Switcher (only visible to admins) */}
         <RoleSwitcher />
         
