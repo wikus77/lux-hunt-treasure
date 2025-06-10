@@ -1,213 +1,179 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Lock, ChevronRight, LogOut, Bell, Globe, CreditCard } from "lucide-react";
-import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import { useProfileImage } from "@/hooks/useProfileImage";
-import BottomNavigation from "@/components/layout/BottomNavigation";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { User, Settings as SettingsIcon, Bell, CreditCard, Shield, HelpCircle, LogOut, ChevronRight, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { useAuthContext } from "@/contexts/auth";
-import { Separator } from "@/components/ui/separator";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import AccountSection from "@/components/settings/AccountSection";
-import RegulationSection from "@/components/settings/RegulationSection";
-import AppSection from "@/components/settings/AppSection";
-import NotificationSection from "@/components/settings/NotificationSection";
-import SupportSection from "@/components/settings/SupportSection";
-import PaymentMethodsSection from "@/components/settings/PaymentMethodsSection";
-import PrivacySecuritySection from "@/components/settings/PrivacySecuritySection";
-import RoleSwitcher from "@/components/auth/RoleSwitcher";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
-  const { profileImage } = useProfileImage();
   const navigate = useNavigate();
-  const { logout } = useAuthContext();
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  
-  // Add state for app settings
-  const [soundEffects, setSoundEffects] = useState(true);
-  const [language, setLanguage] = useState("Italiano");
-  
-  // Add state for notification settings
+  const { toast } = useToast();
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
-  
-  // Add state for collapsible sections
-  const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
-  const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false);
-  
+  const [soundEffects, setSoundEffects] = useState(true);
+
   const handleLogout = async () => {
     try {
-      await logout();
-      // Redirect to login page
-      navigate("/login");
+      await supabase.auth.signOut();
+      toast({
+        title: "Logout effettuato",
+        description: "Sei stato disconnesso con successo.",
+      });
+      navigate("/");
     } catch (error) {
-      console.error("Error during logout:", error);
-      toast.error("Errore durante il logout");
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante il logout.",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleEmailClick = () => {
-    navigate('/notifications');
-  };
+  const settingsSections = [
+    {
+      title: "Informazioni Personali",
+      icon: User,
+      items: [
+        {
+          label: "Modifica informazioni personali",
+          action: () => navigate("/personal-info"),
+          hasArrow: true
+        }
+      ]
+    },
+    {
+      title: "Notifiche",
+      icon: Bell,
+      items: [
+        {
+          label: "Notifiche Push",
+          toggle: true,
+          value: pushNotifications,
+          onChange: setPushNotifications
+        },
+        {
+          label: "Notifiche Email",
+          toggle: true,
+          value: emailNotifications,
+          onChange: setEmailNotifications
+        }
+      ]
+    },
+    {
+      title: "Audio",
+      icon: SettingsIcon,
+      items: [
+        {
+          label: "Effetti Sonori",
+          toggle: true,
+          value: soundEffects,
+          onChange: setSoundEffects
+        }
+      ]
+    },
+    {
+      title: "Abbonamento",
+      icon: CreditCard,
+      items: [
+        {
+          label: "Gestisci abbonamento",
+          action: () => navigate("/subscriptions"),
+          hasArrow: true
+        }
+      ]
+    },
+    {
+      title: "Privacy e Sicurezza",
+      icon: Shield,
+      items: [
+        {
+          label: "Privacy Policy",
+          action: () => navigate("/privacy-policy"),
+          hasArrow: true
+        },
+        {
+          label: "Termini di Servizio",
+          action: () => navigate("/terms"),
+          hasArrow: true
+        }
+      ]
+    },
+    {
+      title: "Supporto",
+      icon: HelpCircle,
+      items: [
+        {
+          label: "Come funziona",
+          action: () => navigate("/how-it-works"),
+          hasArrow: true
+        },
+        {
+          label: "Contatti",
+          action: () => navigate("/contacts"),
+          hasArrow: true
+        }
+      ]
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-black">
-      <UnifiedHeader 
-        profileImage={profileImage} 
-        onClickMail={handleEmailClick}
-      />
-      
-      <div className="h-[72px] w-full" />
-      
-      <div className="pb-24 px-4 pt-2 max-w-screen-xl mx-auto">
-        <div className="flex items-center gap-2 mb-6">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 rounded-full" 
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-bold text-white">Impostazioni</h1>
-        </div>
-        
-        {/* Admin Role Switcher (only visible to admins) */}
-        <RoleSwitcher />
-        
-        {/* Account Settings - Now collapsible */}
-        <AccountSection />
-        
-        {/* Subscription Section - Now collapsible */}
-        <div className="mb-6">
-          <div className="glass-card p-4">
-            <Collapsible open={isSubscriptionOpen} onOpenChange={setIsSubscriptionOpen}>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-                <h2 className="text-lg font-semibold text-white flex items-center">
-                  <User className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-                  Abbonamento
-                </h2>
-                <ChevronRight 
-                  className={`h-4 w-4 transition-transform ${isSubscriptionOpen ? 'rotate-90' : ''}`} 
-                />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-4">
-                <div className="space-y-4 text-white">
-                  <div className="p-4 border border-white/10 rounded-lg bg-gradient-to-r from-projectx-blue/20 to-projectx-pink/20">
-                    <h3 className="font-semibold mb-2">Piano attuale: Free</h3>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Aggiorna il tuo abbonamento per sbloccare funzionalità premium
-                    </p>
-                    <Button 
-                      onClick={() => navigate('/subscriptions')}
-                      className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
-                    >
-                      Visualizza tutti i piani
-                    </Button>
+    <div className="min-h-screen bg-black pb-6">
+      <header className="px-4 py-6 border-b border-projectx-deep-blue">
+        <h1 className="text-2xl font-bold text-white">Impostazioni</h1>
+      </header>
+
+      <div className="p-4 space-y-4">
+        {settingsSections.map((section, sectionIndex) => {
+          const IconComponent = section.icon;
+          return (
+            <div key={sectionIndex} className="glass-card rounded-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <IconComponent className="h-5 w-5 text-projectx-neon-blue" />
+                <h2 className="text-lg font-semibold text-white">{section.title}</h2>
+              </div>
+              
+              <div className="space-y-3">
+                {section.items.map((item, itemIndex) => (
+                  <div key={itemIndex} className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors">
+                    <span className="text-white">{item.label}</span>
+                    
+                    {item.toggle ? (
+                      <Switch
+                        checked={item.value}
+                        onCheckedChange={item.onChange}
+                        className="data-[state=checked]:bg-projectx-neon-blue"
+                      />
+                    ) : item.hasArrow ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={item.action}
+                        className="text-white hover:bg-white/10"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    ) : null}
                   </div>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        </div>
-        
-        {/* Privacy & Security Section */}
-        <PrivacySecuritySection />
-        
-        {/* Regulation Section - Now collapsible */}
-        <div className="mb-6">
-          <div className="glass-card p-4">
-            <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-                <h2 className="text-lg font-semibold text-white flex items-center">
-                  <Lock className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-                  Regolamento Ufficiale M1SSION™
-                </h2>
-                <ChevronRight className="h-4 w-4" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-4">
-                <RegulationSection />
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        </div>
-        
-        {/* Payment Methods Section - Now properly collapsible */}
-        <div className="mb-6">
-          <div className="glass-card p-4">
-            <Collapsible open={isPaymentMethodsOpen} onOpenChange={setIsPaymentMethodsOpen}>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-                <h2 className="text-lg font-semibold text-white flex items-center">
-                  <CreditCard className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-                  Metodi di Pagamento
-                </h2>
-                <ChevronRight 
-                  className={`h-4 w-4 transition-transform ${isPaymentMethodsOpen ? 'rotate-90' : ''}`} 
-                />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-4">
-                <PaymentMethodsSection />
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        </div>
-        
-        {/* App Settings */}
-        <AppSection 
-          soundEffects={soundEffects}
-          language={language}
-          setSoundEffects={setSoundEffects}
-        />
-        
-        {/* Notification Settings */}
-        <NotificationSection 
-          pushNotifications={pushNotifications}
-          emailNotifications={emailNotifications}
-          setPushNotifications={setPushNotifications}
-          setEmailNotifications={setEmailNotifications}
-        />
-        
-        {/* Support & Help */}
-        <SupportSection />
-                
-        {/* Logout Button */}
-        <div className="mt-8">
-          {!showLogoutConfirm ? (
-            <Button 
-              variant="destructive" 
-              className="w-full" 
-              onClick={() => setShowLogoutConfirm(true)}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Esci dall'account
-            </Button>
-          ) : (
-            <div className="flex flex-col gap-3 p-4 border border-red-500/30 rounded-lg bg-red-950/20">
-              <p className="text-white text-center">Sei sicuro di voler uscire?</p>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  className="flex-1" 
-                  onClick={() => setShowLogoutConfirm(false)}
-                >
-                  Annulla
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  className="flex-1" 
-                  onClick={handleLogout}
-                >
-                  Conferma
-                </Button>
+                ))}
               </div>
             </div>
-          )}
+          );
+        })}
+
+        {/* Logout Button */}
+        <div className="glass-card rounded-lg">
+          <Button
+            onClick={handleLogout}
+            variant="ghost"
+            className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10"
+          >
+            <LogOut className="mr-3 h-5 w-5" />
+            Disconnetti
+          </Button>
         </div>
       </div>
-      
-      <BottomNavigation />
     </div>
   );
 };
