@@ -28,22 +28,21 @@ export const useTestMode = () => {
 
   useEffect(() => {
     const checkDeveloperMode = () => {
-      const isDev = user?.email === 'wikus77@hotmail.it' || 
-                   localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
+      const isDev = user?.email === 'wikus77@hotmail.it';
       
       if (isDev) {
         setTestConfig({
-          isTestMode: true,
+          isTestMode: false, // Modalità produzione per developer
           isDeveloperUser: true,
           testLocation: {
             lat: 43.7915,
             lng: 7.6089,
             address: 'Corso Limone Piemonte 232, Ventimiglia (IM), Italia'
           },
-          fakePaymentEnabled: true
+          fakePaymentEnabled: false // Pagamenti reali per developer BLACK
         });
         
-        console.log('🔧 TEST MODE ATTIVO: Localizzazione Ventimiglia e pagamento fittizio abilitati');
+        console.log('🔧 DEVELOPER BLACK MODE: Accesso completo attivato per', user.email);
       }
     };
 

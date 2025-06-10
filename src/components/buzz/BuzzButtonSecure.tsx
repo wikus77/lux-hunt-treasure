@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Loader, Lock } from "lucide-react";
@@ -8,7 +7,6 @@ import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { usePaymentVerification } from "@/hooks/usePaymentVerification";
 import { useStripePayment } from "@/hooks/useStripePayment";
-import { useFakePayment } from "@/hooks/useFakePayment";
 import { useTestMode } from "@/hooks/useTestMode";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -24,8 +22,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const { callBuzzApi } = useBuzzApi();
   const { createBuzzNotification } = useNotificationManager();
   const { processBuzzPurchase, loading: stripeLoading } = useStripePayment();
-  const { simulateSuccessfulPayment, fakePaymentEnabled } = useFakePayment();
-  const { isDeveloperUser, isTestMode } = useTestMode();
+  const { isDeveloperUser } = useTestMode();
   
   const {
     hasValidPayment,
@@ -44,25 +41,16 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const handleSecureBuzzPress = async () => {
     if (isProcessing || verificationLoading || !userId) return;
 
-    // TEST MODE: Gestione pagamento fittizio per developer
-    if (isDeveloperUser && isTestMode && fakePaymentEnabled) {
-      console.log('🔧 BUZZ TEST MODE: Processo completo con pagamento fittizio');
+    // DEVELOPER BLACK: Processo completo senza limitazioni
+    if (isDeveloperUser) {
+      console.log('🔧 DEVELOPER BLACK MODE: Processo BUZZ completo');
       
       setShowRipple(true);
       setTimeout(() => setShowRipple(false), 1000);
       setIsProcessing(true);
 
       try {
-        // Simula pagamento se necessario
-        if (subscriptionTier === 'Free') {
-          const paymentSuccess = await simulateSuccessfulPayment(buzzCost);
-          if (!paymentSuccess) {
-            toast.error('Pagamento TEST fallito');
-            return;
-          }
-        }
-
-        // Genera contenuto BUZZ con API
+        // Genera contenuto BUZZ direttamente
         const response = await callBuzzApi({ 
           userId, 
           generateMap: false 
@@ -70,7 +58,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         
         if (response.success) {
           const dynamicClueContent = response.clue_text || 
-            `Indizio TEST Ventimiglia generato alle ${new Date().toLocaleTimeString()}`;
+            `Indizio BLACK Ventimiglia generato alle ${new Date().toLocaleTimeString()}`;
           
           // Inserisci notifica
           const { error: notificationError } = await supabase
@@ -78,37 +66,37 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
             .insert({
               user_id: userId,
               type: 'buzz',
-              title: 'Nuovo Indizio TEST Ventimiglia',
+              title: 'Nuovo Indizio BLACK Ventimiglia',
               message: dynamicClueContent,
               is_read: false,
               created_at: new Date().toISOString()
             });
 
           if (notificationError) {
-            console.error('❌ Error inserting TEST notification:', notificationError);
+            console.error('❌ Error inserting BLACK notification:', notificationError);
           } else {
-            console.log('✅ TEST notification inserted successfully');
+            console.log('✅ BLACK notification inserted successfully');
           }
 
-          toast.success("🔧 Indizio TEST Sbloccato!", {
+          toast.success("🔧 Indizio BLACK Sbloccato!", {
             description: dynamicClueContent,
           });
           
           await createBuzzNotification(
-            "Nuovo Indizio TEST Ventimiglia", 
+            "Nuovo Indizio BLACK Ventimiglia", 
             dynamicClueContent
           );
           
           onSuccess();
         } else {
-          toast.error("Errore TEST", {
+          toast.error("Errore BLACK", {
             description: response.errorMessage || "Errore sconosciuto",
           });
         }
       } catch (error) {
-        console.error('❌ TEST BUZZ Error:', error);
-        toast.error("Errore TEST", {
-          description: "Errore durante il test",
+        console.error('❌ DEVELOPER BLACK Error:', error);
+        toast.error("Errore BLACK", {
+          description: "Errore durante il processo",
         });
       } finally {
         setIsProcessing(false);
@@ -117,7 +105,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       return;
     }
 
-    // PRODUZIONE: Verifica pagamento normale
+    // PRODUZIONE: Verifica pagamento normale per altri utenti
     const canProceed = await requireBuzzPayment();
     if (!canProceed) {
       await logUnauthorizedAccess('buzz_blocked_no_payment', {
@@ -221,7 +209,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     }
   };
 
-  // Security check modificata per test mode
+  // Security check: Solo developer BLACK ha accesso completo
   const isBlocked = !isDeveloperUser && (!hasValidPayment || remainingBuzz <= 0 || subscriptionTier === 'Free');
   const isLoading = isProcessing || stripeLoading || verificationLoading;
 
@@ -284,7 +272,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
             </span>
             <span className="text-sm text-white/90 mt-1 font-medium">
               Piano: {subscriptionTier}
-              {isDeveloperUser && isTestMode && <span className="text-green-300"> (TEST)</span>}
+              {isDeveloperUser && <span className="text-green-300"> (BLACK)</span>}
             </span>
             <span className="text-xs text-white/70">
               {remainingBuzz} BUZZ rimanenti

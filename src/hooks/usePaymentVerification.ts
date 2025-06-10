@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { useTestMode } from './useTestMode';
-import { useFakePayment } from './useFakePayment';
 
 interface PaymentVerification {
   hasValidPayment: boolean;
@@ -17,8 +16,7 @@ interface PaymentVerification {
 
 export const usePaymentVerification = () => {
   const { user } = useAuthContext();
-  const { isDeveloperUser, isTestMode } = useTestMode();
-  const { hasFakePaymentCompleted } = useFakePayment();
+  const { isDeveloperUser } = useTestMode();
   
   const [verification, setVerification] = useState<PaymentVerification>({
     hasValidPayment: false,
@@ -36,12 +34,10 @@ export const usePaymentVerification = () => {
     }
 
     try {
-      // TEST MODE: Verifica pagamento fittizio per developer
-      if (isDeveloperUser && isTestMode) {
-        const hasFakePayment = hasFakePaymentCompleted();
-        
+      // DEVELOPER BLACK: Accesso completo senza limitazioni
+      if (isDeveloperUser) {
         setVerification({
-          hasValidPayment: true, // Developer sempre autorizzato
+          hasValidPayment: true,
           subscriptionTier: 'Black',
           canAccessPremium: true,
           remainingBuzz: 999,
@@ -49,16 +45,11 @@ export const usePaymentVerification = () => {
           loading: false
         });
         
-        console.log('🔧 PAYMENT VERIFICATION TEST:', {
-          isDeveloper: true,
-          hasFakePayment,
-          tier: 'Black',
-          access: 'unlimited'
-        });
+        console.log('🔧 DEVELOPER BLACK: Accesso illimitato confermato');
         return;
       }
 
-      // PRODUZIONE: Verifica pagamento reale
+      // PRODUZIONE: Verifica pagamento reale per altri utenti
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('subscription_tier, subscription_end, stripe_customer_id, email')
@@ -191,8 +182,8 @@ export const usePaymentVerification = () => {
   const requirePayment = (feature: string): boolean => {
     const { hasValidPayment, canAccessPremium } = verification;
     
-    // TEST MODE: Developer sempre autorizzato
-    if (isDeveloperUser && isTestMode) {
+    // DEVELOPER BLACK: Sempre autorizzato
+    if (isDeveloperUser) {
       return true;
     }
     
@@ -211,8 +202,8 @@ export const usePaymentVerification = () => {
   const requireBuzzPayment = async (): Promise<boolean> => {
     const { hasValidPayment, remainingBuzz, subscriptionTier } = verification;
     
-    // TEST MODE: Developer sempre autorizzato
-    if (isDeveloperUser && isTestMode) {
+    // DEVELOPER BLACK: Sempre autorizzato
+    if (isDeveloperUser) {
       return true;
     }
     

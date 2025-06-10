@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTestMode } from '@/hooks/useTestMode';
-import { useFakePayment } from '@/hooks/useFakePayment';
 
 interface BuzzApiParams {
   userId: string;
@@ -23,25 +22,24 @@ interface BuzzApiResponse {
 
 export const useBuzzApi = () => {
   const [loading, setLoading] = useState(false);
-  const { isTestMode, isDeveloperUser, testLocation, generateVentimigliaClue } = useTestMode();
-  const { hasFakePaymentCompleted } = useFakePayment();
+  const { isDeveloperUser, testLocation, generateVentimigliaClue } = useTestMode();
 
   const callBuzzApi = async (params: BuzzApiParams): Promise<BuzzApiResponse> => {
     setLoading(true);
     
     try {
-      // TEST MODE: Simula risposta API per developer
-      if (isTestMode && isDeveloperUser) {
-        console.log('🔧 BUZZ API TEST MODE: Generazione contenuto Ventimiglia');
+      // DEVELOPER BLACK: Contenuto dinamico Ventimiglia
+      if (isDeveloperUser) {
+        console.log('🔧 DEVELOPER BLACK MODE: Generazione contenuto Ventimiglia');
         
-        // Simula processing time
+        // Simula processing time realistico
         await new Promise(resolve => setTimeout(resolve, 1500));
         
         const buzzCount = Math.floor(Math.random() * 100) + 1;
         const clueText = generateVentimigliaClue(buzzCount);
         
         if (params.generateMap) {
-          // Simula generazione mappa per Ventimiglia
+          // Generazione mappa per Ventimiglia
           const response: BuzzApiResponse = {
             success: true,
             clue_text: clueText,
@@ -51,34 +49,25 @@ export const useBuzzApi = () => {
             generation_number: buzzCount
           };
           
-          console.log('✅ BUZZ API TEST: Mappa generata per Ventimiglia', response);
+          console.log('✅ DEVELOPER BLACK: Mappa generata per Ventimiglia', response);
           return response;
         } else {
-          // Simula generazione indizio normale
+          // Generazione indizio normale
           const response: BuzzApiResponse = {
             success: true,
             clue_text: clueText,
             generation_number: buzzCount
           };
           
-          console.log('✅ BUZZ API TEST: Indizio generato per Ventimiglia', response);
+          console.log('✅ DEVELOPER BLACK: Indizio generato per Ventimiglia', response);
           return response;
         }
       }
       
-      // PRODUZIONE: Chiama API reale (quando non in test mode)
-      console.log('📡 BUZZ API: Chiamata API reale...');
+      // PRODUZIONE: API reale per altri utenti
+      console.log('📡 BUZZ API: Chiamata API reale in produzione...');
       
-      // Verifica pagamento (fake o reale)
-      if (!hasFakePaymentCompleted()) {
-        return {
-          success: false,
-          error: 'payment_required',
-          errorMessage: 'Pagamento richiesto per utilizzare BUZZ'
-        };
-      }
-      
-      // Simula chiamata API reale per ora
+      // Simula chiamata API reale
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       return {
