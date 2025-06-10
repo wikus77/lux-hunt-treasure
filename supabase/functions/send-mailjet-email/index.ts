@@ -7,6 +7,39 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Sentry-like error logging for Edge Functions
+const logError = async (error: any, context: any) => {
+  console.error("❌ EDGE FUNCTION ERROR:", error);
+  
+  // Skip logging for developer email
+  if (context?.email === "wikus77@hotmail.it") {
+    return;
+  }
+  
+  // Log to abuse_logs as fallback monitoring
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.38.4");
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    await supabase.from('abuse_logs').insert({
+      user_id: context?.userId || 'unknown',
+      event_type: 'edge_function_error',
+      timestamp: new Date().toISOString(),
+      ip_address: context?.ipAddress || 'unknown',
+      meta: { 
+        function: 'send-mailjet-email',
+        error: error.message || String(error),
+        stack: error.stack,
+        context
+      }
+    });
+  } catch (logError) {
+    console.error("Failed to log error:", logError);
+  }
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -120,6 +153,13 @@ ${phone ? `<p><strong>Telefono:</strong> ${phone}</p>` : ''}
     
   } catch (error: any) {
     console.error("❌ Error in send-mailjet-email:", error);
+    
+    // Log error with context
+    await logError(error, {
+      userId: 'anonymous',
+      ipAddress: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip"),
+      email: null
+    });
     
     return new Response(JSON.stringify({ 
       success: false, 

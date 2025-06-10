@@ -7,14 +7,41 @@ import App from './App';
 import './index.css';
 import { Toaster } from 'sonner';
 
-// Initialize Sentry - temporarily disabled
+// Initialize Sentry - now enabled with production DSN
 Sentry.init({
-  dsn: "[INSERISCI LA TUA DSN DI SENTRY QUI]",
+  dsn: "https://2db074620da1ba3a3cc6c19025d1d99d@o4508522827235328.ingest.us.sentry.io/4508522829529088",
   integrations: [
     Sentry.browserTracingIntegration(),
   ],
-  tracesSampleRate: 1.0,
-  enabled: false // Disabilitato temporaneamente
+  tracesSampleRate: 0.2, // 20% sampling
+  environment: "production",
+  release: "m1ssion@1.0.0",
+  enabled: true,
+  beforeSend(event, hint) {
+    // Whitelist developer - don't track errors from developer email
+    const user = event.user;
+    if (user?.email === 'wikus77@hotmail.it') {
+      return null; // Skip tracking for developer
+    }
+    
+    // Filter out sensitive data
+    if (event.exception) {
+      event.exception.values?.forEach(exception => {
+        if (exception.stacktrace?.frames) {
+          exception.stacktrace.frames.forEach(frame => {
+            // Remove sensitive query parameters or data
+            if (frame.vars) {
+              delete frame.vars.password;
+              delete frame.vars.token;
+              delete frame.vars.apiKey;
+            }
+          });
+        }
+      });
+    }
+    
+    return event;
+  }
 });
 
 // Create QueryClient instance for React Query
@@ -49,16 +76,19 @@ const renderApp = () => {
     // Wrapping dell'app in un errore boundary globale e Toaster per notifiche
     root.render(
       <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <App />
-          <Toaster position="top-right" richColors closeButton />
-        </QueryClientProvider>
+        <Sentry.ErrorBoundary fallback={<div style={{ padding: '20px', color: 'white', background: 'black' }}>Qualcosa è andato storto.</div>}>
+          <QueryClientProvider client={queryClient}>
+            <App />
+            <Toaster position="top-right" richColors closeButton />
+          </QueryClientProvider>
+        </Sentry.ErrorBoundary>
       </React.StrictMode>
     );
     
     console.log("React app mounted successfully");
   } catch (error) {
     console.error("Error rendering app:", error);
+    Sentry.captureException(error);
     
     // Fallback error display migliorato
     if (rootElement) {
@@ -83,11 +113,13 @@ if (document.readyState === 'loading') {
   renderApp();
 }
 
-// Gestione errori non catturati
+// Gestione errori non catturati con Sentry
 window.addEventListener('error', (event) => {
   console.error('Global error caught:', event.error);
+  Sentry.captureException(event.error);
 });
 
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled Promise Rejection:', event.reason);
+  Sentry.captureException(event.reason);
 });

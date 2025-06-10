@@ -42,6 +42,35 @@ const applySecureOffset = (lat: number, lng: number) => {
   };
 };
 
+// Sentry-like error logging for Edge Functions
+const logError = async (error: any, context: any) => {
+  console.error("❌ EDGE FUNCTION ERROR:", error);
+  
+  // Skip logging for developer email
+  if (context?.email === "wikus77@hotmail.it") {
+    return;
+  }
+  
+  // Log to abuse_logs as fallback monitoring
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    await supabase.from('abuse_logs').insert({
+      user_id: context?.userId || 'unknown',
+      event_type: 'edge_function_error',
+      timestamp: new Date().toISOString(),
+      ip_address: context?.ipAddress || 'unknown',
+      meta: { 
+        function: 'handle-buzz-press',
+        error: error.message || String(error),
+        stack: error.stack,
+        context
+      }
+    });
+  } catch (logError) {
+    console.error("Failed to log error:", logError);
+  }
+};
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -322,6 +351,14 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("❌ General error in BUZZ handling:", error);
+    
+    // Log error with context
+    await logError(error, {
+      userId: requestData?.userId,
+      ipAddress: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip"),
+      email: null // We don't have email at this point
+    });
+    
     return new Response(
       JSON.stringify({ success: false, error: true, errorMessage: error.message || "Errore del server" }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
