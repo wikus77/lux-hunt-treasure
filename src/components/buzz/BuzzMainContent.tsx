@@ -1,98 +1,100 @@
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import BuzzButton from "./BuzzButton";
-import { useBuzzClues } from "@/hooks/buzz/useBuzzClues";
-import { useAuth } from "@/hooks/useAuth";
-import { useDynamicIsland } from "@/hooks/useDynamicIsland";
+import { useAuthContext } from "@/contexts/auth";
+import BuzzButtonSecure from "./BuzzButtonSecure";
 import ErrorFallback from "../error/ErrorFallback";
-import GradientBox from "@/components/ui/gradient-box";
+import { usePaymentVerification } from "@/hooks/usePaymentVerification";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Shield, AlertTriangle } from "lucide-react";
 
 const BuzzMainContent = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { incrementUnlockedCluesAndAddClue } = useBuzzClues();
-  const { startActivity, updateActivity, endActivity } = useDynamicIsland();
+  
+  const {
+    hasValidPayment,
+    canAccessPremium,
+    subscriptionTier,
+    remainingBuzz,
+    weeklyBuzzLimit,
+    loading: verificationLoading
+  } = usePaymentVerification();
 
-  const handleBuzzSuccess = async () => {
-    // Start Dynamic Island activity when buzz is successful
-    await startActivity({
-      missionId: `buzz-${Date.now()}`,
-      title: "🔍 Operazione Firenze",
-      status: "Area Buzz generata",
-      progress: 25, // 25% progress for area generation
-      timeLeft: 3600, // 1 hour countdown
-    });
-
-    // Update progress after a short delay (simulation)
-    setTimeout(async () => {
-      await updateActivity({
-        status: "Analisi in corso",
-        progress: 50,
-      });
-    }, 3000);
-
-    // Call original success handler
-    incrementUnlockedCluesAndAddClue();
+  const handleSuccess = () => {
+    console.log('✅ SECURE BUZZ: Success callback triggered');
+    setError(null);
   };
 
-  if (error) {
-    return <ErrorFallback message={error} onRetry={() => setError(null)} />;
+  if (!user?.id) {
+    return <ErrorFallback message="Utente non autenticato" />;
+  }
+
+  if (verificationLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div className="animate-spin w-12 h-12 border-4 border-t-transparent border-blue-500 rounded-full"></div>
+        <p className="text-lg">Verificando stato pagamenti...</p>
+      </div>
+    );
   }
 
   return (
-    <motion.div 
-      className="min-h-[80vh] flex flex-col items-center justify-center p-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="mb-12 text-center"
-      >
-        <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-[#00D1FF] font-orbitron" style={{ 
-          textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-        }}>BUZZ</h1>
-        <p className="text-white/70 max-w-md mx-auto">
-          Premi il pulsante per ricevere indizi sulla posizione del premio
-        </p>
-      </motion.div>
+    <div className="flex flex-col items-center justify-center min-h-[400px] gap-8 px-4">
+      {/* Security Status Alert */}
+      <Alert className={`w-full max-w-md ${hasValidPayment ? 'border-green-500 bg-green-900/20' : 'border-red-500 bg-red-900/20'}`}>
+        <div className="flex items-center gap-2">
+          {hasValidPayment ? (
+            <Shield className="h-4 w-4 text-green-500" />
+          ) : (
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+          )}
+          <span className="font-bold">
+            {hasValidPayment ? 'Accesso Verificato' : 'Verifica Richiesta'}
+          </span>
+        </div>
+        <AlertDescription className="mt-2">
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span>Piano:</span>
+              <span className="font-bold">{subscriptionTier}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>BUZZ Rimanenti:</span>
+              <span className="font-bold">{remainingBuzz}/{weeklyBuzzLimit}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Accesso Premium:</span>
+              <span className={`font-bold ${canAccessPremium ? 'text-green-400' : 'text-red-400'}`}>
+                {canAccessPremium ? '✅ Attivo' : '❌ Bloccato'}
+              </span>
+            </div>
+          </div>
+        </AlertDescription>
+      </Alert>
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ 
-          type: "spring",
-          stiffness: 260,
-          damping: 20,
-          delay: 0.2
-        }}
-      >
-        <BuzzButton 
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-          setError={setError}
-          userId={user?.id || ""}
-          onSuccess={handleBuzzSuccess}
+      {/* Error Display */}
+      {error && (
+        <Alert className="w-full max-w-md border-red-500 bg-red-900/20">
+          <AlertTriangle className="h-4 w-4 text-red-500" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Secure Buzz Button */}
+      <div className="flex flex-col items-center gap-4">
+        <BuzzButtonSecure
+          userId={user.id}
+          onSuccess={handleSuccess}
         />
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-      >
-        <GradientBox className="mt-12 text-center max-w-md p-6">
-          <p className="text-white/80">
-            Effettua il pagamento e premiati puoi ottenere degli indizi esclusivi
-          </p>
-        </GradientBox>
-      </motion.div>
-    </motion.div>
+        
+        {/* Security Notice */}
+        <div className="text-center text-sm text-muted-foreground max-w-md">
+          <p className="mb-2">🔒 Sistema di pagamento sicuro attivo</p>
+          <p>Ogni indizio viene verificato prima della generazione. Nessun contenuto premium viene mostrato senza pagamento confermato.</p>
+        </div>
+      </div>
+    </div>
   );
 };
 

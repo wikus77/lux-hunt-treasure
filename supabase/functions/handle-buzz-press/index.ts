@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { RateLimiter } from "../_shared/rateLimiter.ts";
@@ -81,7 +80,7 @@ serve(async (req) => {
     const requestData = await req.json();
     const { userId, generateMap, prizeId, coordinates, sessionId } = requestData as BuzzRequest;
     
-    console.log(`🔥 BUZZ REQUEST START - userId: ${userId}, generateMap: ${generateMap}`);
+    console.log(`🔒 SECURE BUZZ REQUEST START - userId: ${userId}, generateMap: ${generateMap}`);
     console.log(`📡 Coordinates received:`, coordinates);
     
     // CRITICAL USER ID VALIDATION
@@ -119,6 +118,115 @@ serve(async (req) => {
     }
 
     console.log(`✅ Auth validation passed for user: ${userId}`);
+
+    // CRITICAL: PAYMENT VERIFICATION
+    console.log(`🔒 VERIFYING PAYMENT STATUS for user: ${userId}`);
+    
+    // Check user profile and subscription status
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('subscription_tier, subscription_end, stripe_customer_id')
+      .eq('id', userId)
+      .single();
+
+    if (profileError) {
+      console.error("❌ Error fetching user profile:", profileError);
+      return new Response(
+        JSON.stringify({ success: false, error: true, errorMessage: "Profilo utente non trovato" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Check for valid payment transactions
+    const { data: payments, error: paymentsError } = await supabase
+      .from('payment_transactions')
+      .select('status, created_at, amount')
+      .eq('user_id', userId)
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    // Check active subscription
+    const { data: subscription, error: subError } = await supabase
+      .from('subscriptions')
+      .select('status, tier, end_date')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .single();
+
+    const hasActiveSubscription = subscription && 
+      new Date(subscription.end_date || '') > new Date();
+    
+    const hasValidPayment = (payments && payments.length > 0) || hasActiveSubscription;
+    const subscriptionTier = profile?.subscription_tier || 'Free';
+
+    console.log(`🔒 PAYMENT VERIFICATION RESULT:`, {
+      hasValidPayment,
+      subscriptionTier,
+      hasActiveSubscription,
+      paymentsCount: payments?.length || 0
+    });
+
+    // BLOCK ACCESS FOR FREE USERS WITHOUT PAYMENT
+    if (!hasValidPayment || subscriptionTier === 'Free') {
+      console.error(`❌ PAYMENT VERIFICATION FAILED - No valid payment or free tier`);
+      
+      // Log unauthorized access
+      await supabase.from('abuse_logs').insert({
+        user_id: userId,
+        event_type: 'unauthorized_access',
+        meta: {
+          access_type: 'buzz_no_payment',
+          subscription_tier: subscriptionTier,
+          has_valid_payment: hasValidPayment,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: true, 
+          errorMessage: "Pagamento richiesto. Questa funzione è disponibile solo per utenti con abbonamento attivo o pagamento confermato." 
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // BUZZ LIMIT VERIFICATION
+    const { data: allowance, error: allowanceError } = await supabase
+      .from('weekly_buzz_allowances')
+      .select('max_buzz_count, used_buzz_count')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (allowance && allowance.used_buzz_count >= allowance.max_buzz_count) {
+      console.error(`❌ BUZZ LIMIT EXCEEDED for user: ${userId}`);
+      
+      await supabase.from('abuse_logs').insert({
+        user_id: userId,
+        event_type: 'unauthorized_access',
+        meta: {
+          access_type: 'buzz_limit_exceeded',
+          used_buzz: allowance.used_buzz_count,
+          max_buzz: allowance.max_buzz_count,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: true, 
+          errorMessage: "Limite settimanale BUZZ raggiunto. Upgrade del piano necessario." 
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`✅ PAYMENT AND LIMITS VERIFIED - Proceeding with secure buzz generation`);
 
     // RATE LIMITING CHECK
     const rateLimiter = new RateLimiter(supabaseUrl, supabaseServiceKey);
@@ -163,7 +271,7 @@ serve(async (req) => {
     const currentWeek = weekData || 1;
     console.log(`📍 Current mission week: ${currentWeek}`);
 
-    // Update buzz counter
+    // Update buzz counter ONLY AFTER payment verification
     const { data: buzzCount, error: buzzCountError } = await supabase.rpc('increment_buzz_counter', {
       p_user_id: userId
     });
@@ -218,40 +326,40 @@ serve(async (req) => {
       );
     }
 
-    // Generate clue based on current week
-    const clueText = generateClueBasedOnWeek(currentWeek);
-    console.log(`📍 Generated clue: ${clueText}`);
+    // Generate clue based on current week WITH SECURITY TAG
+    const clueText = `🔒 ${generateClueBasedOnWeek(currentWeek)} [VERIFIED-${new Date().toISOString()}]`;
+    console.log(`📍 Generated SECURE clue: ${clueText}`);
     
-    // Insert clue into user_clues table
+    // Insert clue into user_clues table WITH PAYMENT VERIFICATION
     const { data: clueData, error: clueError } = await supabase
       .from('user_clues')
       .insert({
         user_id: userId,
-        title_it: `Indizio Buzz #${buzzCount}`,
+        title_it: `Indizio Premium Verificato #${buzzCount}`,
         description_it: clueText,
-        title_en: `Buzz Clue #${buzzCount}`,
+        title_en: `Verified Premium Clue #${buzzCount}`,
         description_en: translateToEnglish(clueText),
-        clue_type: 'buzz',
-        buzz_cost: buzzCost
+        clue_type: 'premium_verified',
+        buzz_cost: 0 // No additional cost for verified premium users
       })
       .select('clue_id')
       .single();
 
     if (clueError) {
-      console.error("❌ Error saving clue:", clueError);
+      console.error("❌ Error saving verified clue:", clueError);
       return new Response(
-        JSON.stringify({ success: false, error: true, errorMessage: "Errore salvataggio indizio" }),
+        JSON.stringify({ success: false, error: true, errorMessage: "Errore salvataggio indizio verificato" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    console.log(`✅ Clue saved with ID: ${clueData.clue_id}`);
+    console.log(`✅ SECURE clue saved with ID: ${clueData.clue_id}`);
 
     // FORCE GENERATE MAP ALWAYS WHEN generateMap = true
     let response: BuzzResponse = {
       success: true,
       clue_text: clueText,
-      buzz_cost: buzzCost
+      buzz_cost: 0 // Free for verified premium users
     };
 
     if (generateMap) {
@@ -342,7 +450,7 @@ serve(async (req) => {
       }
     }
 
-    console.log(`✅ BUZZ RESPONSE:`, response);
+    console.log(`✅ SECURE BUZZ RESPONSE:`, response);
 
     return new Response(
       JSON.stringify(response),
@@ -350,13 +458,13 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("❌ General error in BUZZ handling:", error);
+    console.error("❌ General error in SECURE BUZZ handling:", error);
     
     // Log error with context
     await logError(error, {
       userId: requestData?.userId,
       ipAddress: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip"),
-      email: null // We don't have email at this point
+      email: null
     });
     
     return new Response(
