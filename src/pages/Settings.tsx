@@ -61,8 +61,8 @@ const Settings = () => {
       
       <div className="h-[72px] w-full" />
       
-      {/* Back button positioned below header */}
-      <div className="absolute top-[calc(72px+env(safe-area-inset-top))] left-4 z-50">
+      {/* Title section with back button aligned horizontally */}
+      <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+16px)] mb-6">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -71,14 +71,11 @@ const Settings = () => {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
+        <h1 className="text-2xl font-bold text-white">Impostazioni</h1>
       </div>
       
       {/* Main content with proper spacing */}
-      <div className="pb-24 px-4 pt-[calc(72px+env(safe-area-inset-top)+48px)] max-w-screen-xl mx-auto">
-        <div className="flex items-center gap-2 mb-6">
-          <h1 className="text-2xl font-bold text-white ml-10">Impostazioni</h1>
-        </div>
-        
+      <div className="pb-24 px-4 max-w-screen-xl mx-auto">
         {/* Admin Role Switcher (only visible to admins) */}
         <RoleSwitcher />
         
