@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import SubscriptionCard from "./SubscriptionCard";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useStripePayment } from "@/hooks/useStripePayment";
+import { useCustomerPortal } from "@/hooks/useCustomerPortal";
 
 interface SubscriptionPlansProps {
   selected: string;
@@ -17,6 +17,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
   const navigate = useNavigate();
   const { availableTiers, currentTier, refetch } = useSubscription();
   const { processSubscription, loading } = useStripePayment();
+  const { openCustomerPortal, loading: portalLoading } = useCustomerPortal();
 
   const getSubscriptionFeatures = (tierName: string) => {
     const tier = availableTiers.find(t => t.name === tierName);
@@ -124,18 +125,27 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
             type={tier.name}
             onClick={() => handleUpdatePlan(tier.name)}
             isActive={currentTier === tier.name}
-            disabled={loading}
+            disabled={loading || portalLoading}
           />
         ))}
       </div>
       
       {currentTier !== "Free" && (
-        <div className="flex justify-center mb-10">
+        <div className="flex justify-center gap-4 mb-10">
+          <Button 
+            variant="outline"
+            onClick={openCustomerPortal}
+            className="border-blue-500 text-blue-500 hover:bg-blue-500/10"
+            disabled={loading || portalLoading}
+          >
+            {portalLoading ? "Caricamento..." : "Gestisci Abbonamento"}
+          </Button>
+          
           <Button 
             variant="outline"
             onClick={handleCancelSubscription}
             className="border-red-500 text-red-500 hover:bg-red-500/10"
-            disabled={loading}
+            disabled={loading || portalLoading}
           >
             Cancella abbonamento
           </Button>
