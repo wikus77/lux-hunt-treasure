@@ -2,9 +2,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trophy, Gift, Settings, Users, FileText } from 'lucide-react';
+import { Trophy, Gift, Settings, Users, FileText, TestTube } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import TestSuite from '@/components/admin/TestSuite';
 
 export default function Admin() {
+  const { user } = useAuth();
+  const isDeveloper = user?.email === 'wikus77@hotmail.it';
+
   return (
     <div className="min-h-screen bg-black p-8">
       <div className="max-w-4xl mx-auto">
@@ -63,6 +68,24 @@ export default function Admin() {
             </Card>
           </Link>
 
+          {/* Test Suite - Only for developer */}
+          {isDeveloper && (
+            <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <TestTube className="w-5 h-5 text-purple-500" />
+                  🔬 Test Suite
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-400 text-sm mb-4">
+                  Esegui test automatici completi per verificare tutte le funzionalità critiche
+                </p>
+                <TestSuite />
+              </CardContent>
+            </Card>
+          )}
+
         </div>
 
         <div className="mt-8 p-4 bg-green-900/20 rounded-lg border border-green-500/30">
@@ -70,6 +93,11 @@ export default function Admin() {
           <p className="text-green-300 text-sm mt-1">
             Tutti i moduli admin sono operativi e collegati al database Supabase
           </p>
+          {isDeveloper && (
+            <p className="text-purple-300 text-sm mt-1">
+              🔬 Test suite disponibile per verifica pre-lancio
+            </p>
+          )}
         </div>
       </div>
     </div>
