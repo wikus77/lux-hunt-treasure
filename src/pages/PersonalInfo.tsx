@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -191,16 +192,11 @@ const PersonalInfo = () => {
   return (
     <div className="min-h-screen bg-black h-[100dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+80px)]">
       {/* Title section with back button aligned horizontally - positioned below header */}
-      <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+88px)] mb-6">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-8 w-8 rounded-full" 
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-xl font-bold text-white">Modifica Informazioni Personali</h1>
+      <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+72px)] mb-6">
+        <button onClick={() => navigate(-1)} className="w-6 h-6 text-white">
+          <ArrowLeft />
+        </button>
+        <h1 className="text-xl font-semibold text-white">Modifica Informazioni Personali</h1>
       </div>
 
       {/* Main content with proper spacing */}
@@ -401,5 +397,3 @@ const PersonalInfo = () => {
 };
 
 export default PersonalInfo;
-
-}
