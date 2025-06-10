@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +17,7 @@ const PersonalInfo = () => {
     lastName: "",
     email: "",
     phone: "",
+    birthDate: "",
     address: "",
     city: "",
     postalCode: "",
@@ -30,6 +32,7 @@ const PersonalInfo = () => {
     lastName: "",
     email: "",
     phone: "",
+    birthDate: "",
     address: "",
     city: "",
     postalCode: "",
@@ -89,13 +92,14 @@ const PersonalInfo = () => {
             lastName: data.last_name || "",
             email: data.email || "",
             phone: data.phone || "",
+            birthDate: data.birth_date || "",
             address: data.address || "",
             city: data.city || "",
             postalCode: data.postal_code || "",
             country: data.country || "",
             investigativeStyle: data.investigative_style || "",
             preferredLanguage: data.preferred_language || "italiano",
-            agentCode: data.agent_code || ""
+            agentCode: "X0197" // Always display X0197 as the official agent code
           };
           
           setPersonalInfo(userData);
@@ -158,6 +162,7 @@ const PersonalInfo = () => {
           last_name: personalInfo.lastName,
           email: personalInfo.email,
           phone: personalInfo.phone,
+          birth_date: personalInfo.birthDate,
           address: personalInfo.address,
           city: personalInfo.city,
           postal_code: personalInfo.postalCode,
@@ -243,6 +248,20 @@ const PersonalInfo = () => {
                   required
                 />
               </div>
+
+              <div>
+                <label htmlFor="birthDate" className="block text-sm font-medium mb-1 text-white">
+                  Data di Nascita
+                </label>
+                <Input
+                  id="birthDate"
+                  name="birthDate"
+                  type="date"
+                  value={personalInfo.birthDate}
+                  onChange={handleInputChange}
+                  className="rounded-xl bg-black/50 border-white/10"
+                />
+              </div>
               
               <div>
                 <label htmlFor="email" className="block text-sm font-medium mb-1 text-white">
@@ -272,7 +291,7 @@ const PersonalInfo = () => {
                 />
               </div>
 
-              {/* Agent Code - Read Only and Disabled */}
+              {/* Agent Code - Read Only and Always X0197 */}
               <div>
                 <label htmlFor="agentCode" className="block text-sm font-medium mb-1 text-white">
                   Codice Agente
@@ -280,7 +299,7 @@ const PersonalInfo = () => {
                 <Input
                   id="agentCode"
                   name="agentCode"
-                  value={personalInfo.agentCode}
+                  value="X0197"
                   readOnly={true}
                   disabled={true}
                   className="rounded-xl bg-gray-800/50 border-white/10 opacity-60 cursor-not-allowed font-mono"
