@@ -2,9 +2,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useLaunchReset = () => {
   const { user } = useAuthContext();
+  const queryClient = useQueryClient();
   const [isReset, setIsReset] = useState(false);
 
   const performLaunchReset = async () => {
@@ -20,10 +22,8 @@ export const useLaunchReset = () => {
       localStorage.removeItem('user-notifications');
       localStorage.removeItem('leaderboard-data');
       
-      // Force clear React Query cache
-      if (typeof window !== 'undefined' && window.queryClient) {
-        window.queryClient.clear();
-      }
+      // Force clear React Query cache using proper hook
+      queryClient.clear();
       
       console.log('✅ LANCIO RESET: LocalStorage and cache cleared');
       setIsReset(true);
