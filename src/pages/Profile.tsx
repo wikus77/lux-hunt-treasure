@@ -27,11 +27,11 @@ const Profile = () => {
   };
 
   const navigateToPrivacySecurity = () => {
-    navigate('/privacy-security');
+    navigate('/settings');
   };
 
   const navigateToPaymentMethods = () => {
-    navigate('/payment-methods');
+    navigate('/settings');
   };
 
   const navigateToSubscriptions = () => {
@@ -42,7 +42,7 @@ const Profile = () => {
     <div className="min-h-screen bg-black">
       <ProfileLayout>
         <div className="mt-[calc(env(safe-area-inset-top)+64px)] mb-[calc(env(safe-area-inset-bottom)+80px)] px-4">
-          <div className="glass-card rounded-xl mx-2 sm:mx-4 mt-8">
+          <div className="glass-card rounded-xl mx-2 sm:mx-4 mt-8 shadow-lg">
             {/* Header with Agent Code and Edit Button */}
             <ProfileHeader 
               agentCode={profileData.agentCode}
@@ -88,10 +88,10 @@ const Profile = () => {
                     isEditing={profileData.isEditing}
                     setPersonalNotes={actions.setPersonalNotes}
                     togglePinBadge={actions.togglePinBadge}
-                    navigateToPersonalInfo={() => navigate('/personal-info')}
-                    navigateToPrivacySecurity={() => navigate('/privacy-security')}
-                    navigateToPaymentMethods={() => navigate('/payment-methods')}
-                    navigateToSubscriptions={() => navigate('/subscriptions')}
+                    navigateToPersonalInfo={navigateToPersonalInfo}
+                    navigateToPrivacySecurity={navigateToPrivacySecurity}
+                    navigateToPaymentMethods={navigateToPaymentMethods}
+                    navigateToSubscriptions={navigateToSubscriptions}
                   />
                 </div>
               </div>

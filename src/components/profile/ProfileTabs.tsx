@@ -234,7 +234,7 @@ const AccountTabContent = ({
   return (
     <>
       {/* Subscription */}
-      <div className="mb-4 p-3 rounded-xl bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border border-cyan-900/40">
+      <div className="mb-4 p-3 rounded-xl bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border border-cyan-900/40 shadow-lg">
         <div className="flex justify-between items-center">
           <h4 className="text-sm font-bold">Piano attivo: {subscription.plan}</h4>
           <span className="bg-amber-600 text-white text-xs px-2 py-0.5 rounded-full">{subscription.plan}</span>
@@ -284,7 +284,7 @@ const AccountSecuritySettings = ({
   return (
     <div className="space-y-3">
       <div 
-        className="flex items-center justify-between p-2 bg-black/30 rounded-xl cursor-pointer hover:bg-black/40 transition-colors"
+        className="flex items-center justify-between p-2 bg-black/30 rounded-xl cursor-pointer hover:bg-black/40 transition-colors shadow-lg"
         onClick={navigateToPersonalInfo}
       >
         <div className="flex items-center gap-2">
@@ -297,7 +297,7 @@ const AccountSecuritySettings = ({
       </div>
       
       <div 
-        className="flex items-center justify-between p-2 bg-black/30 rounded-xl cursor-pointer hover:bg-black/40 transition-colors"
+        className="flex items-center justify-between p-2 bg-black/30 rounded-xl cursor-pointer hover:bg-black/40 transition-colors shadow-lg"
         onClick={navigateToPrivacySecurity}
       >
         <div className="flex items-center gap-2">
@@ -310,7 +310,7 @@ const AccountSecuritySettings = ({
       </div>
       
       <div 
-        className="flex items-center justify-between p-2 bg-black/30 rounded-xl cursor-pointer hover:bg-black/40 transition-colors"
+        className="flex items-center justify-between p-2 bg-black/30 rounded-xl cursor-pointer hover:bg-black/40 transition-colors shadow-lg"
         onClick={navigateToPaymentMethods}
       >
         <div className="flex items-center gap-2">

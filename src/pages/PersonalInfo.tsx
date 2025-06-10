@@ -210,7 +210,7 @@ const PersonalInfo = () => {
       {/* Main content with proper spacing */}
       <div className="p-4 pt-4">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="glass-card mb-4 rounded-lg">
+          <div className="glass-card mb-4 rounded-xl shadow-lg">
             <h2 className="text-lg font-semibold mb-4 text-white">Dati Personali</h2>
             
             <div className="space-y-4">
@@ -223,7 +223,7 @@ const PersonalInfo = () => {
                   name="firstName"
                   value={personalInfo.firstName}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                   required
                 />
               </div>
@@ -237,7 +237,7 @@ const PersonalInfo = () => {
                   name="lastName"
                   value={personalInfo.lastName}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                   required
                 />
               </div>
@@ -252,7 +252,7 @@ const PersonalInfo = () => {
                   type="email"
                   value={personalInfo.email}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                   required
                 />
               </div>
@@ -266,7 +266,7 @@ const PersonalInfo = () => {
                   name="phone"
                   value={personalInfo.phone}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
 
@@ -278,10 +278,10 @@ const PersonalInfo = () => {
                   value={personalInfo.investigativeStyle} 
                   onValueChange={(value) => handleSelectChange('investigativeStyle', value)}
                 >
-                  <SelectTrigger className="rounded-lg bg-black/50 border-white/10">
+                  <SelectTrigger className="rounded-xl bg-black/50 border-white/10">
                     <SelectValue placeholder="Seleziona il tuo stile" />
                   </SelectTrigger>
-                  <SelectContent className="bg-black border-white/10 rounded-lg">
+                  <SelectContent className="bg-black border-white/10 rounded-xl">
                     {investigativeStyles.map((style) => (
                       <SelectItem 
                         key={style.value} 
@@ -303,10 +303,10 @@ const PersonalInfo = () => {
                   value={personalInfo.preferredLanguage} 
                   onValueChange={(value) => handleSelectChange('preferredLanguage', value)}
                 >
-                  <SelectTrigger className="rounded-lg bg-black/50 border-white/10">
+                  <SelectTrigger className="rounded-xl bg-black/50 border-white/10">
                     <SelectValue placeholder="Seleziona la lingua" />
                   </SelectTrigger>
-                  <SelectContent className="bg-black border-white/10 rounded-lg">
+                  <SelectContent className="bg-black border-white/10 rounded-xl">
                     {languages.map((language) => (
                       <SelectItem 
                         key={language.value} 
@@ -322,7 +322,7 @@ const PersonalInfo = () => {
             </div>
           </div>
           
-          <div className="glass-card mb-4 rounded-lg">
+          <div className="glass-card mb-4 rounded-xl shadow-lg">
             <h2 className="text-lg font-semibold mb-4 text-white">Indirizzo</h2>
             
             <div className="space-y-4">
@@ -335,7 +335,7 @@ const PersonalInfo = () => {
                   name="address"
                   value={personalInfo.address}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
               
@@ -348,7 +348,7 @@ const PersonalInfo = () => {
                   name="city"
                   value={personalInfo.city}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
               
@@ -361,7 +361,7 @@ const PersonalInfo = () => {
                   name="postalCode"
                   value={personalInfo.postalCode}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
               
@@ -374,7 +374,7 @@ const PersonalInfo = () => {
                   name="country"
                   value={personalInfo.country}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
             </div>
@@ -385,14 +385,14 @@ const PersonalInfo = () => {
               type="button"
               variant="outline"
               onClick={() => navigate(-1)}
-              className="flex-1 rounded-lg"
+              className="flex-1 rounded-xl"
             >
               ↩️ Annulla
             </Button>
             <Button 
               type="submit"
               disabled={!isDirty || loading}
-              className="flex-1 bg-white text-black hover:bg-gray-100 rounded-lg"
+              className="flex-1 bg-white text-black hover:bg-gray-100 rounded-xl"
             >
               <Save className="mr-2 h-4 w-4" /> 
               {loading ? "Salvataggio..." : "💾 Salva modifiche"}
