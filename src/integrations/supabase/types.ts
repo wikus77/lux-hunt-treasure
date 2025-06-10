@@ -543,6 +543,7 @@ export type Database = {
           address: string | null
           agent_code: string | null
           agent_title: string | null
+          avatar_url: string | null
           bio: string | null
           city: string | null
           country: string | null
@@ -566,6 +567,7 @@ export type Database = {
           address?: string | null
           agent_code?: string | null
           agent_title?: string | null
+          avatar_url?: string | null
           bio?: string | null
           city?: string | null
           country?: string | null
@@ -589,6 +591,7 @@ export type Database = {
           address?: string | null
           agent_code?: string | null
           agent_title?: string | null
+          avatar_url?: string | null
           bio?: string | null
           city?: string | null
           country?: string | null

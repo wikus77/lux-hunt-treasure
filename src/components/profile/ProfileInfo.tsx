@@ -95,7 +95,7 @@ const ProfileInfo = ({
 
       const publicUrl = urlData.publicUrl;
 
-      // Update profile in database
+      // Update profile in database using the correct column name
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
