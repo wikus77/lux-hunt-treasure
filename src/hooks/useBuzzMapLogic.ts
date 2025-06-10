@@ -96,19 +96,22 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      // CRITICO: FORZARE 500KM per prima generazione LANCIO 19 LUGLIO
+      // CRITICO: FORZARE GENERAZIONE = 1 per LANCIO 19 LUGLIO
       const currentWeek = getCurrentWeek();
-      const currentGeneration = (currentWeekAreas.length || 0) + 1;
       
-      // OVERRIDE: Sempre 500km per prima generazione, indipendentemente da backend
-      const finalRadius = currentGeneration === 1 ? 500 : getMapRadius(currentWeek, currentGeneration);
+      // FORCE: SEMPRE generazione 1 per prima generazione LANCIO
+      const currentGeneration = 1;
       
-      console.log('🎯 LANCIO RADIUS OVERRIDE:', {
+      // OVERRIDE: Sempre 500km per prima generazione LANCIO 19 LUGLIO
+      const finalRadius = 500;
+      
+      console.log('🎯 LANCIO RADIUS FORCE 500KM:', {
         week: currentWeek,
         generation: currentGeneration,
         originalRadius: response.radius_km,
         finalRadius: finalRadius,
-        FORCED_500KM: currentGeneration === 1
+        FORCED_GENERATION_1: true,
+        FORCED_500KM: true
       });
 
       const newArea: BuzzMapArea = {
@@ -121,13 +124,13 @@ export const useBuzzMapLogic = () => {
         user_id: user.id
       };
 
-      console.log('🎉 LANCIO SUCCESS: Area created with FORCED 500km radius', newArea);
+      console.log('🎉 LANCIO SUCCESS: Area created with FORCED 500km radius and generation=1', newArea);
 
       await forceCompleteSync();
       await forceReload();
       
       toast.dismiss();
-      toast.success(`✅ LANCIO M1SSION: Area ${finalRadius}km generata - Settimana ${currentWeek}`);
+      toast.success(`✅ LANCIO M1SSION: Area ${finalRadius}km generata - Prima Generazione Settimana ${currentWeek}`);
       
       return newArea;
     } catch (err) {
@@ -141,7 +144,7 @@ export const useBuzzMapLogic = () => {
   }, [
     user, callBuzzApi, isGenerating, isDeleting, 
     setIsGenerating, forceCompleteSync, forceReload,
-    currentWeekAreas.length, getCurrentWeek, getMapRadius
+    getCurrentWeek
   ]);
 
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {

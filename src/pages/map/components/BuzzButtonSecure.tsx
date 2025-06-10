@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Circle as CircleIcon, Loader, Lock } from "lucide-react";
 import { motion } from "framer-motion";
@@ -8,6 +8,8 @@ import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useBuzzMapLogic } from "@/hooks/useBuzzMapLogic";
 import { usePaymentVerification } from "@/hooks/usePaymentVerification";
 import { useStripePayment } from "@/hooks/useStripePayment";
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface BuzzButtonSecureProps {
   handleBuzz?: () => void;
@@ -23,6 +25,9 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   onAreaGenerated
 }) => {
   const [isRippling, setIsRippling] = useState(false);
+  const [realBuzzMapCounter, setRealBuzzMapCounter] = useState(0);
+  const [realWeeklyUsed, setRealWeeklyUsed] = useState(0);
+  const { user } = useAuth();
   const { createMapBuzzNotification } = useNotificationManager();
   const { processBuzzPurchase, loading: stripeLoading } = useStripePayment();
   const {
@@ -39,11 +44,52 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     isGenerating, 
     generateBuzzMapArea,
     getActiveArea,
-    dailyBuzzMapCounter,
     reloadAreas
   } = useBuzzMapLogic();
   
   const activeArea = getActiveArea();
+
+  // SYNC: Read real counters from Supabase
+  useEffect(() => {
+    const fetchRealCounters = async () => {
+      if (!user?.id) return;
+
+      try {
+        // Get real buzz map counter from database
+        const { data: mapCounter } = await supabase
+          .from('user_buzz_map_counter')
+          .select('buzz_map_count')
+          .eq('user_id', user.id)
+          .eq('date', new Date().toISOString().split('T')[0])
+          .single();
+
+        // Get real weekly allowance used
+        const currentWeek = Math.ceil((Date.now() - new Date('2025-07-19').getTime()) / (7 * 24 * 60 * 60 * 1000));
+        const { data: weeklyAllowance } = await supabase
+          .from('weekly_buzz_allowances')
+          .select('used_buzz_count')
+          .eq('user_id', user.id)
+          .eq('week_number', Math.max(1, currentWeek))
+          .eq('year', new Date().getFullYear())
+          .single();
+
+        setRealBuzzMapCounter(mapCounter?.buzz_map_count || 0);
+        setRealWeeklyUsed(weeklyAllowance?.used_buzz_count || 0);
+
+        console.log('📊 LANCIO REAL COUNTERS:', {
+          mapCounter: mapCounter?.buzz_map_count || 0,
+          weeklyUsed: weeklyAllowance?.used_buzz_count || 0
+        });
+      } catch (error) {
+        console.error('❌ LANCIO: Error fetching real counters:', error);
+        // Default to 0 for launch reset state
+        setRealBuzzMapCounter(0);
+        setRealWeeklyUsed(0);
+      }
+    };
+
+    fetchRealCounters();
+  }, [user?.id]);
   
   const handleSecureBuzzMapClick = async () => {
     // LANCIO: Verifica pagamento critica
@@ -99,6 +145,16 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       }
       
       console.log('🎉 LANCIO SUCCESS: Area generated with FORCED 500km', newArea);
+
+      // Update real counters in Supabase
+      try {
+        await supabase.rpc('increment_buzz_map_counter', { p_user_id: user?.id });
+        
+        // Refresh real counters
+        setRealBuzzMapCounter(prev => prev + 1);
+      } catch (error) {
+        console.error('❌ LANCIO: Error updating counters:', error);
+      }
       
       await reloadAreas();
       
@@ -108,7 +164,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       
       await createMapBuzzNotification(
         "Area BUZZ Mappa - Lancio M1SSION",
-        `Nuova area di ricerca generata: ${newArea.radius_km}km - Settimana 1`
+        `Nuova area di ricerca generata: ${newArea.radius_km}km - Prima Generazione Settimana 1`
       );
       
       if (onAreaGenerated) {
@@ -133,9 +189,9 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     return '500.0'; // LANCIO: Default FISSO 500km
   };
   
-  // LANCIO: Mostra numero generazioni corrette (azzerate per reset)
+  // LANCIO: Mostra numero generazioni corrette (da database reale)
   const displayGeneration = () => {
-    return dailyBuzzMapCounter || 0; // Sempre 0 dopo reset
+    return realBuzzMapCounter || 0; // Real counter from Supabase
   };
   
   return (

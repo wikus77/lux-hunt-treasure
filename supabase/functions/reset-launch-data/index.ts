@@ -32,7 +32,7 @@ serve(async (req) => {
     }
 
     const userId = userData.user.id;
-    console.log(`🚀 LANCIO RESET: Starting complete data reset for user ${userId}`);
+    console.log(`🚀 LANCIO RESET: Starting COMPLETE data reset for user ${userId}`);
 
     // 1. DELETE ALL USER GAME DATA
     const deleteOperations = [
@@ -46,7 +46,10 @@ serve(async (req) => {
       supabaseClient.from('search_areas').delete().eq('user_id', userId),
       supabaseClient.from('map_points').delete().eq('user_id', userId),
       supabaseClient.from('live_activity_state').delete().eq('user_id', userId),
-      supabaseClient.from('weekly_buzz_allowances').delete().eq('user_id', userId)
+      supabaseClient.from('weekly_buzz_allowances').delete().eq('user_id', userId),
+      supabaseClient.from('user_buzz_map').delete().eq('user_id', userId),
+      supabaseClient.from('user_minigames_progress').delete().eq('user_id', userId),
+      supabaseClient.from('user_buzz_bonuses').delete().eq('user_id', userId)
     ];
 
     console.log('🗑️ LANCIO RESET: Deleting all user game data...');
@@ -56,12 +59,16 @@ serve(async (req) => {
     console.log('💰 LANCIO RESET: Resetting profile credits...');
     await supabaseClient
       .from('profiles')
-      .update({ credits: 0 })
+      .update({ 
+        credits: 0,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', userId);
 
     // 3. CREATE FRESH WEEKLY ALLOWANCE FOR BLACK TIER
     console.log('📊 LANCIO RESET: Creating fresh weekly allowance...');
-    const currentWeek = Math.ceil((Date.now() - new Date('2025-07-19').getTime()) / (7 * 24 * 60 * 60 * 1000));
+    const launchDate = new Date('2025-07-19');
+    const currentWeek = Math.ceil((Date.now() - launchDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
     const currentYear = new Date().getFullYear();
     
     await supabaseClient
@@ -71,30 +78,61 @@ serve(async (req) => {
         week_number: Math.max(1, currentWeek),
         year: currentYear,
         max_buzz_count: 999, // BLACK tier unlimited
-        used_buzz_count: 0
+        used_buzz_count: 0,
+        created_at: new Date().toISOString()
       });
 
-    // 4. ENSURE BLACK SUBSCRIPTION IS ACTIVE
+    // 4. ENSURE BLACK SUBSCRIPTION IS ACTIVE FOR DEVELOPER
     console.log('🔧 LANCIO RESET: Ensuring BLACK subscription...');
     await supabaseClient
       .from('profiles')
       .update({
         subscription_tier: 'Black',
         subscription_start: new Date().toISOString(),
-        subscription_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year
+        subscription_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
+        updated_at: new Date().toISOString()
       })
       .eq('id', userId);
+
+    // 5. RESET ALL COUNTERS TO 0
+    console.log('🔄 LANCIO RESET: Initializing fresh counters...');
+    await supabaseClient
+      .from('user_buzz_counter')
+      .insert({
+        user_id: userId,
+        date: new Date().toISOString().split('T')[0],
+        buzz_count: 0,
+        week_map_generations: [0, 0, 0, 0]
+      });
+
+    await supabaseClient
+      .from('user_buzz_map_counter')
+      .insert({
+        user_id: userId,
+        date: new Date().toISOString().split('T')[0],
+        buzz_map_count: 0,
+        week_map_counts: [0, 0, 0, 0, 0, 0, 0]
+      });
 
     console.log('✅ LANCIO RESET: Complete data reset successful');
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Complete launch reset successful',
+        message: 'Complete launch reset successful - Ready for July 19th launch!',
         resetItems: [
           'user_clues', 'user_notifications', 'user_map_areas', 
-          'user_buzz_counter', 'weekly_buzz_allowances', 'profile_credits'
-        ]
+          'user_buzz_counter', 'user_buzz_map_counter', 'weekly_buzz_allowances', 
+          'profile_credits', 'buzz_generation_logs', 'buzz_map_actions',
+          'search_areas', 'map_points', 'live_activity_state'
+        ],
+        newState: {
+          credits: 0,
+          subscriptionTier: 'Black',
+          weeklyBuzzAllowance: 999,
+          usedBuzzCount: 0,
+          mapGenerationCount: 0
+        }
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },

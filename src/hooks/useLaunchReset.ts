@@ -30,28 +30,46 @@ export const useLaunchReset = () => {
         throw new Error(data?.error || 'Backend reset failed');
       }
 
-      // 2. FRONTEND RESET
-      console.log('💾 LANCIO RESET: Clearing frontend data...');
+      console.log('✅ LANCIO RESET: Backend reset completed successfully');
+
+      // 2. FRONTEND RESET - COMPLETE CACHE AND STORAGE CLEAR
+      console.log('💾 LANCIO RESET: Clearing ALL frontend data...');
       
-      // Clear localStorage
-      localStorage.removeItem('buzz-clues-unlocked');
-      localStorage.removeItem('buzz-clues-used');
-      localStorage.removeItem('map-search-areas');
-      localStorage.removeItem('user-notifications');
-      localStorage.removeItem('leaderboard-data');
+      // Clear ALL localStorage
+      localStorage.clear();
       
-      // Force clear React Query cache
+      // Clear ALL sessionStorage
+      sessionStorage.clear();
+      
+      // Force clear React Query cache COMPLETELY
       queryClient.clear();
+      queryClient.removeQueries();
       
-      // Force reload all queries
+      // Force reload all queries from backend
       await queryClient.invalidateQueries();
+      await queryClient.refetchQueries();
       
-      console.log('✅ LANCIO RESET: Complete reset successful');
+      // Additional specific cache invalidations
+      await queryClient.invalidateQueries({ queryKey: ['user_clues'] });
+      await queryClient.invalidateQueries({ queryKey: ['user_notifications'] });
+      await queryClient.invalidateQueries({ queryKey: ['user_map_areas'] });
+      await queryClient.invalidateQueries({ queryKey: ['user_buzz_counter'] });
+      await queryClient.invalidateQueries({ queryKey: ['user_buzz_map_counter'] });
+      await queryClient.invalidateQueries({ queryKey: ['weekly_buzz_allowances'] });
+      await queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
+      await queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      
+      console.log('✅ LANCIO RESET: Complete frontend cache cleared');
       setIsReset(true);
       
       toast.success('🚀 LANCIO RESET: Dati azzerati per test 19 luglio!', {
         description: 'Sistema completamente resetato e pronto per il lancio'
       });
+      
+      // Force page reload to ensure clean state
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
       
     } catch (error) {
       console.error('❌ LANCIO RESET ERROR:', error);
@@ -81,13 +99,15 @@ export const useLaunchReset = () => {
     };
   };
 
-  // Auto-reset for developer in development
+  // CRITICAL: Auto-reset for developer ALWAYS on first access
   useEffect(() => {
     if (user?.email === 'wikus77@hotmail.it' && !isReset && !isResetting) {
-      // Delay to avoid multiple calls
+      console.log('🔧 LANCIO AUTO-RESET: Developer detected, starting immediate reset...');
+      
+      // Immediate reset with no delay for testing
       const timer = setTimeout(() => {
         performCompleteLaunchReset();
-      }, 2000);
+      }, 1000);
       
       return () => clearTimeout(timer);
     }
