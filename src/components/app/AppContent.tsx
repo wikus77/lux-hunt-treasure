@@ -1,6 +1,7 @@
+
 import React from 'react';
-import AppRoutes from './AppRoutes';
-import { ErrorBoundary } from 'react-error-boundary';
+import AppRoutes from '@/routes/AppRoutes';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import TestDebugButton from '@/components/admin/TestDebugButton';
 
 const AppContent = () => {
