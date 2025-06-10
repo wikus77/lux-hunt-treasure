@@ -42,7 +42,7 @@ const Profile = () => {
     <div className="min-h-screen bg-black">
       <ProfileLayout>
         <div className="mt-[calc(env(safe-area-inset-top)+64px)] mb-[calc(env(safe-area-inset-bottom)+80px)] px-4">
-          <div className="glass-card mx-2 sm:mx-4 mt-8">
+          <div className="glass-card rounded-xl mx-2 sm:mx-4 mt-8">
             {/* Header with Agent Code and Edit Button */}
             <ProfileHeader 
               agentCode={profileData.agentCode}

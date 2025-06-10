@@ -21,6 +21,9 @@ const Settings = lazy(() => import("@/pages/Settings"));
 const PersonalInfo = lazy(() => import("@/pages/PersonalInfo"));
 const Subscriptions = lazy(() => import("@/pages/Subscriptions"));
 const HelpFaq = lazy(() => import("@/pages/HelpFaq"));
+const PrivacySecurity = lazy(() => import("@/pages/PrivacySecurity"));
+const PasswordSecurity = lazy(() => import("@/pages/PasswordSecurity"));
+const PaymentMethods = lazy(() => import("@/pages/PaymentMethods"));
 
 // Auth routes
 const Login = lazy(() => import("@/pages/Login"));
@@ -126,6 +129,33 @@ const AppRoutes: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <Subscriptions />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/privacy-security"
+              element={
+                <ProtectedRoute>
+                  <PrivacySecurity />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/password-security"
+              element={
+                <ProtectedRoute>
+                  <PasswordSecurity />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/payment-methods"
+              element={
+                <ProtectedRoute>
+                  <PaymentMethods />
                 </ProtectedRoute>
               }
             />
