@@ -189,7 +189,7 @@ const PersonalInfo = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black h-[100dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+80px)]">
       {/* Title section with back button aligned horizontally - positioned below header */}
       <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+88px)] mb-6">
         <Button 
@@ -401,3 +401,5 @@ const PersonalInfo = () => {
 };
 
 export default PersonalInfo;
+
+}
