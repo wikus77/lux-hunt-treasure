@@ -28,7 +28,11 @@ const HelpFaq = () => {
       <div className="pb-24 px-4 pt-2 max-w-screen-xl mx-auto">
         <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+64px)] mb-6">
           <button
-            onClick={() => navigate(-1)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate(-1);
+            }}
             className="w-6 h-6 text-white"
             aria-label="Torna alla pagina precedente"
           >

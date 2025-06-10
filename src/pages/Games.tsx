@@ -159,7 +159,11 @@ const Games = () => {
           <div className="container mx-auto px-3">
             <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+64px)] mb-4">
               <button
-                onClick={() => navigate(-1)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(-1);
+                }}
                 className="w-6 h-6 text-white"
                 aria-label="Torna alla pagina precedente"
               >
