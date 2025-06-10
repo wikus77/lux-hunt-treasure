@@ -19,7 +19,7 @@ export const CluesSection = () => {
       const isAfterReset = sessionStorage.getItem('isFirstLaunch') === 'true';
       if (isAfterReset) {
         console.log('🔄 CLUES RESET: Invalidating cache after launch reset');
-        queryClient.invalidateQueries(["user_clues", user?.id]);
+        queryClient.invalidateQueries({ queryKey: ["user_clues", user?.id] });
         localStorage.removeItem("cluesFound");
         localStorage.removeItem("unlockedClues");
       }
