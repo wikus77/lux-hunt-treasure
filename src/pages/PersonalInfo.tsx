@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -72,7 +71,7 @@ const PersonalInfo = () => {
         
         const { data, error } = await supabase
           .from('profiles')
-          .select('*')
+          .select('first_name, last_name, email, phone, address, city, postal_code, country, investigative_style, preferred_language')
           .eq('id', session.user.id)
           .single();
           
