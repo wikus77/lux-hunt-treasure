@@ -66,8 +66,13 @@ const Settings = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-8 w-8 rounded-full" 
+            className="relative z-50 h-8 w-8 rounded-full mt-[env(safe-area-inset-top,0px)] safe-area-top" 
             onClick={() => navigate(-1)}
+            style={{
+              marginTop: 'max(0px, env(safe-area-inset-top))',
+              position: 'relative',
+              zIndex: 50
+            }}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
