@@ -20,6 +20,7 @@ const Profile = lazy(() => import("@/pages/Profile"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const PersonalInfo = lazy(() => import("@/pages/PersonalInfo"));
 const Subscriptions = lazy(() => import("@/pages/Subscriptions"));
+const HelpFaq = lazy(() => import("@/pages/HelpFaq"));
 
 // Auth routes
 const Login = lazy(() => import("@/pages/Login"));
@@ -128,6 +129,8 @@ const AppRoutes: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+
+            <Route path="/help-faq" element={<HelpFaq />} />
 
             {/* Auth routes */}
             <Route path="/login" element={<Login />} />
