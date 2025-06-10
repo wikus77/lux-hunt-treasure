@@ -35,12 +35,20 @@ export const useSubscription = () => {
       // Get user's current subscription tier
       const { data: profile } = await supabase
         .from('profiles')
-        .select('subscription_tier')
+        .select('subscription_tier, email')
         .eq('id', user.id)
         .single();
 
+      // Special handling for developer user
+      const isDeveloperUser = profile?.email === 'wikus77@hotmail.it';
+      
       if (profile) {
-        setCurrentTier(profile.subscription_tier || 'Free');
+        if (isDeveloperUser) {
+          setCurrentTier('Black');
+          console.log('🔧 Developer user detected - setting Black tier');
+        } else {
+          setCurrentTier(profile.subscription_tier || 'Free');
+        }
       }
 
       // Get available subscription tiers
@@ -64,6 +72,26 @@ export const useSubscription = () => {
 
       if (allowance) {
         setWeeklyAllowance(allowance);
+      } else if (isDeveloperUser) {
+        // Create unlimited allowance for developer if not exists
+        const currentWeek = new Date().getWeek();
+        const currentYear = new Date().getFullYear();
+        
+        const { data: newAllowance } = await supabase
+          .from('weekly_buzz_allowances')
+          .insert({
+            user_id: user.id,
+            week_number: currentWeek,
+            year: currentYear,
+            max_buzz_count: 999,
+            used_buzz_count: 0
+          })
+          .select()
+          .single();
+          
+        if (newAllowance) {
+          setWeeklyAllowance(newAllowance);
+        }
       }
 
     } catch (error) {
@@ -75,6 +103,17 @@ export const useSubscription = () => {
 
   const canUseBuzz = async (): Promise<boolean> => {
     if (!user) return false;
+
+    // Check if user is developer
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', user.id)
+      .single();
+      
+    if (profile?.email === 'wikus77@hotmail.it') {
+      return true; // Developer has unlimited access
+    }
 
     try {
       const { data, error } = await supabase.rpc('can_user_use_buzz', {
@@ -95,6 +134,17 @@ export const useSubscription = () => {
 
   const consumeBuzz = async (): Promise<boolean> => {
     if (!user) return false;
+
+    // Check if user is developer
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', user.id)
+      .single();
+      
+    if (profile?.email === 'wikus77@hotmail.it') {
+      return true; // Developer doesn't consume buzz
+    }
 
     try {
       const { data, error } = await supabase.rpc('consume_buzz_usage', {
@@ -123,6 +173,9 @@ export const useSubscription = () => {
   };
 
   const getRemainingBuzz = (): number => {
+    // Developer has unlimited buzz
+    if (currentTier === 'Black') return 999;
+    
     if (!weeklyAllowance) return 0;
     return Math.max(0, weeklyAllowance.max_buzz_count - weeklyAllowance.used_buzz_count);
   };
@@ -147,3 +200,20 @@ export const useSubscription = () => {
     refetch: fetchSubscriptionData
   };
 };
+
+// Add week number calculation to Date prototype if not exists
+declare global {
+  interface Date {
+    getWeek(): number;
+  }
+}
+
+if (!Date.prototype.getWeek) {
+  Date.prototype.getWeek = function() {
+    const date = new Date(this.getTime());
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+    const week1 = new Date(date.getFullYear(), 0, 4);
+    return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+  };
+}

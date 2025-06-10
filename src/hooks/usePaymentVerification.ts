@@ -34,13 +34,42 @@ export const usePaymentVerification = () => {
       // Verifica stato abbonamento attivo
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('subscription_tier, subscription_end, stripe_customer_id')
+        .select('subscription_tier, subscription_end, stripe_customer_id, email')
         .eq('id', user.id)
         .single();
 
       if (profileError) {
         console.error('❌ Error fetching profile:', profileError);
         throw profileError;
+      }
+
+      // Special handling for developer user
+      const isDeveloperUser = profile?.email === 'wikus77@hotmail.it';
+      
+      // Verifica abbonamento attivo nella tabella subscriptions
+      const { data: subscription, error: subError } = await supabase
+        .from('subscriptions')
+        .select('status, tier, end_date')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      // Per lo sviluppatore, forza sempre il tier Black
+      let subscriptionTier = 'Free';
+      let hasActiveSubscription = false;
+
+      if (isDeveloperUser) {
+        subscriptionTier = 'Black';
+        hasActiveSubscription = true;
+        console.log('🔧 Developer user detected - forcing Black tier');
+      } else if (subscription && new Date(subscription.end_date || '') > new Date()) {
+        subscriptionTier = subscription.tier;
+        hasActiveSubscription = true;
+      } else if (profile?.subscription_tier && profile.subscription_tier !== 'Free') {
+        subscriptionTier = profile.subscription_tier;
+        hasActiveSubscription = true;
       }
 
       // Verifica pagamenti completati
@@ -56,29 +85,21 @@ export const usePaymentVerification = () => {
         console.error('❌ Error fetching payments:', paymentsError);
       }
 
-      // Verifica abbonamento attivo
-      const { data: subscription, error: subError } = await supabase
-        .from('subscriptions')
-        .select('status, tier, end_date')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .single();
-
-      const hasActiveSubscription = subscription && 
-        new Date(subscription.end_date || '') > new Date();
-
-      const hasValidPayment = (payments && payments.length > 0) || hasActiveSubscription;
-      const subscriptionTier = profile?.subscription_tier || 'Free';
+      const hasValidPayment = (payments && payments.length > 0) || hasActiveSubscription || isDeveloperUser;
       const canAccessPremium = hasValidPayment && subscriptionTier !== 'Free';
 
       // Ottieni limiti BUZZ settimanali
-      const { data: tierData } = await supabase
-        .from('subscription_tiers')
-        .select('max_weekly_buzz')
-        .eq('name', subscriptionTier)
-        .single();
-
-      const weeklyBuzzLimit = tierData?.max_weekly_buzz || 0;
+      let weeklyBuzzLimit = 0;
+      if (subscriptionTier === 'Black') {
+        weeklyBuzzLimit = 999; // Unlimited for Black tier
+      } else {
+        const { data: tierData } = await supabase
+          .from('subscription_tiers')
+          .select('max_weekly_buzz')
+          .eq('name', subscriptionTier)
+          .single();
+        weeklyBuzzLimit = tierData?.max_weekly_buzz || 0;
+      }
 
       // Calcola BUZZ rimanenti questa settimana
       const { data: allowance } = await supabase
@@ -89,8 +110,12 @@ export const usePaymentVerification = () => {
         .limit(1)
         .single();
 
-      const remainingBuzz = allowance ? 
-        Math.max(0, allowance.max_buzz_count - allowance.used_buzz_count) : 0;
+      let remainingBuzz = 0;
+      if (subscriptionTier === 'Black') {
+        remainingBuzz = 999; // Unlimited for Black tier
+      } else if (allowance) {
+        remainingBuzz = Math.max(0, allowance.max_buzz_count - allowance.used_buzz_count);
+      }
 
       setVerification({
         hasValidPayment,
@@ -105,7 +130,8 @@ export const usePaymentVerification = () => {
         hasValidPayment,
         subscriptionTier,
         canAccessPremium,
-        remainingBuzz
+        remainingBuzz,
+        isDeveloperUser
       });
 
     } catch (error) {
@@ -161,7 +187,12 @@ export const usePaymentVerification = () => {
   };
 
   const requireBuzzPayment = async (): Promise<boolean> => {
-    const { hasValidPayment, remainingBuzz } = verification;
+    const { hasValidPayment, remainingBuzz, subscriptionTier } = verification;
+    
+    // Black tier has unlimited access
+    if (subscriptionTier === 'Black') {
+      return true;
+    }
     
     if (!hasValidPayment) {
       await logUnauthorizedAccess('blocked_buzz_no_payment');
