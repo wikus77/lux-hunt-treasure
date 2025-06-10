@@ -7,7 +7,7 @@ import { Spinner } from "@/components/ui/spinner";
 import IOSSafeAreaOverlay from "@/components/debug/IOSSafeAreaOverlay";
 
 // Public routes
-import Index from "@/pages/Index";
+import Index from "@/pages/index";
 
 // Main app routes with lazy loading - SEPARATE FROM LANDING
 const AppHome = lazy(() => import("@/pages/AppHome"));
