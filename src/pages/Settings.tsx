@@ -62,16 +62,11 @@ const Settings = () => {
       <div className="h-[72px] w-full" />
       
       {/* Title section with back button aligned horizontally - positioned below header */}
-      <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+16px)] mb-6" style={{ marginTop: 'calc(72px + env(safe-area-inset-top))' }}>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-8 w-8 rounded-full" 
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-2xl font-bold text-white">Impostazioni</h1>
+      <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+72px)] mb-6">
+        <button onClick={() => navigate(-1)} className="w-6 h-6 text-white" aria-label="Torna indietro">
+          <ArrowLeft />
+        </button>
+        <h1 className="text-xl font-semibold text-white">Impostazioni</h1>
       </div>
       
       {/* Main content with proper spacing */}
