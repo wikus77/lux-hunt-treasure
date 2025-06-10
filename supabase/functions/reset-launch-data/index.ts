@@ -71,7 +71,8 @@ serve(async (req) => {
     const currentWeek = Math.ceil((Date.now() - launchDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
     const currentYear = new Date().getFullYear();
     
-    await supabaseClient
+    // CRITICAL: Ensure weekly allowances are properly created
+    const { error: allowanceError } = await supabaseClient
       .from('weekly_buzz_allowances')
       .insert({
         user_id: userId,
@@ -81,6 +82,20 @@ serve(async (req) => {
         used_buzz_count: 0,
         created_at: new Date().toISOString()
       });
+
+    if (allowanceError) {
+      console.error('❌ LANCIO: Error creating weekly allowance:', allowanceError);
+      // Try to update existing record instead
+      await supabaseClient
+        .from('weekly_buzz_allowances')
+        .update({
+          max_buzz_count: 999,
+          used_buzz_count: 0
+        })
+        .eq('user_id', userId)
+        .eq('week_number', Math.max(1, currentWeek))
+        .eq('year', currentYear);
+    }
 
     // 4. ENSURE BLACK SUBSCRIPTION IS ACTIVE FOR DEVELOPER
     console.log('🔧 LANCIO RESET: Ensuring BLACK subscription...');
@@ -114,7 +129,24 @@ serve(async (req) => {
         week_map_counts: [0, 0, 0, 0, 0, 0, 0]
       });
 
-    console.log('✅ LANCIO RESET: Complete data reset successful');
+    // 6. FINAL VERIFICATION
+    console.log('🧪 LANCIO RESET: Final verification...');
+    const { count: remainingAreas } = await supabaseClient
+      .from('user_map_areas')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    const { count: remainingClues } = await supabaseClient
+      .from('user_clues')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    console.log('✅ LANCIO RESET: Complete data reset successful', {
+      remainingAreas: remainingAreas || 0,
+      remainingClues: remainingClues || 0,
+      currentWeek: Math.max(1, currentWeek),
+      userId
+    });
 
     return new Response(
       JSON.stringify({ 
@@ -131,7 +163,9 @@ serve(async (req) => {
           subscriptionTier: 'Black',
           weeklyBuzzAllowance: 999,
           usedBuzzCount: 0,
-          mapGenerationCount: 0
+          mapGenerationCount: 0,
+          remainingAreas: remainingAreas || 0,
+          remainingClues: remainingClues || 0
         }
       }),
       { 

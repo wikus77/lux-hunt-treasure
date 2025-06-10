@@ -96,41 +96,50 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      // CRITICO: FORZARE GENERAZIONE = 1 per LANCIO 19 LUGLIO
+      // CRITICAL: FIX SEQUENZA INIZIO GIOCO
       const currentWeek = getCurrentWeek();
       
-      // FORCE: SEMPRE generazione 1 per prima generazione LANCIO
-      const currentGeneration = 1;
+      // Check if this is first launch
+      const isFirstLaunch = sessionStorage.getItem('isFirstLaunch') === 'true';
       
-      // OVERRIDE: Sempre 500km per prima generazione LANCIO 19 LUGLIO
-      const finalRadius = 500;
+      // FORCE: generation = 1 if first launch, otherwise calculate normally
+      const generation = isFirstLaunch ? 1 : (currentWeekAreas.length || 0) + 1;
       
-      console.log('🎯 LANCIO RADIUS FORCE 500KM:', {
+      // OVERRIDE: Always 500km for first launch (generation 1)
+      const finalRadius = isFirstLaunch ? 500 : getMapRadius(currentWeek, generation);
+      
+      console.log('🎯 LANCIO RADIUS CALCULATION:', {
         week: currentWeek,
-        generation: currentGeneration,
+        generation: generation,
+        isFirstLaunch,
         originalRadius: response.radius_km,
         finalRadius: finalRadius,
-        FORCED_GENERATION_1: true,
-        FORCED_500KM: true
+        currentAreas: currentWeekAreas.length
       });
 
       const newArea: BuzzMapArea = {
         id: crypto.randomUUID(),
         lat: response.lat || centerLat,
         lng: response.lng || centerLng,
-        radius_km: finalRadius, // FORZATO: 500km per lancio
+        radius_km: finalRadius, // Use calculated radius with first launch override
         week: currentWeek,
         created_at: new Date().toISOString(),
         user_id: user.id
       };
 
-      console.log('🎉 LANCIO SUCCESS: Area created with FORCED 500km radius and generation=1', newArea);
+      // Clear first launch flag after first generation
+      if (isFirstLaunch) {
+        sessionStorage.removeItem('isFirstLaunch');
+        console.log('🔄 First launch flag cleared - next generation will use normal rules');
+      }
+
+      console.log('🎉 LANCIO SUCCESS: Area created', newArea);
 
       await forceCompleteSync();
       await forceReload();
       
       toast.dismiss();
-      toast.success(`✅ LANCIO M1SSION: Area ${finalRadius}km generata - Prima Generazione Settimana ${currentWeek}`);
+      toast.success(`✅ LANCIO M1SSION: Area ${finalRadius}km generata - Generazione ${generation} Settimana ${currentWeek}`);
       
       return newArea;
     } catch (err) {
@@ -144,7 +153,7 @@ export const useBuzzMapLogic = () => {
   }, [
     user, callBuzzApi, isGenerating, isDeleting, 
     setIsGenerating, forceCompleteSync, forceReload,
-    getCurrentWeek
+    getCurrentWeek, getMapRadius, currentWeekAreas.length
   ]);
 
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {

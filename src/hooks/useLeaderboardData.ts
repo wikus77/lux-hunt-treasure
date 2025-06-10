@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface Player {
   id: number;
@@ -20,14 +21,12 @@ export const useLeaderboardData = () => {
   const [filter, setFilter] = useState<'all' | 'team' | 'country' | '7days'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [visiblePlayers, setVisiblePlayers] = useState(50);
-  const [isLoading, setIsLoading] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
 
-  // LANCIO: Connect to real Supabase tables
-  const fetchRealLeaderboard = async () => {
-    setIsLoading(true);
-    try {
-      // Get real user data from profiles
+  // LANCIO: Connect to real Supabase tables with auto-refresh
+  const { data: profiles, isLoading, refetch } = useQuery({
+    queryKey: ['leaderboard_data'],
+    queryFn: async () => {
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select(`
@@ -44,13 +43,21 @@ export const useLeaderboardData = () => {
 
       if (error) {
         console.error('❌ LANCIO: Error fetching leaderboard:', error);
-        // Fallback to empty array for reset state
-        setPlayers([]);
-        return;
+        return [];
       }
 
-      // Transform real data to Player format
-      const realPlayers: Player[] = (profiles || []).map((profile, index) => ({
+      return profiles || [];
+    },
+    refetchInterval: 30000, // CRITICAL: Auto-refresh every 30 seconds
+    staleTime: 0, // Always consider data stale
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
+  });
+
+  // Transform real data to Player format
+  useEffect(() => {
+    if (profiles) {
+      const realPlayers: Player[] = profiles.map((profile, index) => ({
         id: index + 1, // Use numeric ID for compatibility
         name: profile.full_name || `Agente ${profile.id.slice(0, 8)}`,
         avatar: profile.avatar_url || `https://avatar.vercel.sh/${profile.id}`,
@@ -64,21 +71,10 @@ export const useLeaderboardData = () => {
         dailyChange: 0 // LANCIO: Reset to 0
       }));
 
-      console.log('📊 LANCIO: Real leaderboard loaded:', realPlayers.length, 'players');
+      console.log('📊 LANCIO: Real leaderboard updated:', realPlayers.length, 'players');
       setPlayers(realPlayers);
-
-    } catch (error) {
-      console.error('❌ LANCIO: Error in fetchRealLeaderboard:', error);
-      setPlayers([]); // Reset state for launch
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  // Load real data on mount
-  useEffect(() => {
-    fetchRealLeaderboard();
-  }, []);
+  }, [profiles]);
 
   const filteredPlayers = players.filter(player => {
     if (searchQuery && !player.name.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -95,11 +91,7 @@ export const useLeaderboardData = () => {
   }).slice(0, visiblePlayers);
 
   const handleLoadMore = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setVisiblePlayers(prev => Math.min(prev + 15, players.length));
-      setIsLoading(false);
-    }, 800);
+    setVisiblePlayers(prev => Math.min(prev + 15, players.length));
   };
 
   const hasMorePlayers = visiblePlayers < players.length;
@@ -113,6 +105,6 @@ export const useLeaderboardData = () => {
     isLoading,
     handleLoadMore,
     hasMorePlayers,
-    refreshLeaderboard: fetchRealLeaderboard
+    refreshLeaderboard: refetch
   };
 };

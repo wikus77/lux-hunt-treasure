@@ -18,7 +18,7 @@ export const useLaunchReset = () => {
     setIsResetting(true);
 
     try {
-      // 1. BACKEND RESET via Edge Function
+      // 1. BACKEND RESET via Edge Function - CRITICAL: AWAIT COMPLETION
       console.log('📡 LANCIO RESET: Calling backend reset...');
       const { data, error } = await supabase.functions.invoke('reset-launch-data');
       
@@ -32,7 +32,7 @@ export const useLaunchReset = () => {
 
       console.log('✅ LANCIO RESET: Backend reset completed successfully');
 
-      // 2. FRONTEND RESET - COMPLETE CACHE AND STORAGE CLEAR
+      // 2. FRONTEND RESET - COMPLETE CACHE AND STORAGE CLEAR (ONLY AFTER BACKEND COMPLETION)
       console.log('💾 LANCIO RESET: Clearing ALL frontend data...');
       
       // Clear ALL localStorage
@@ -58,6 +58,9 @@ export const useLaunchReset = () => {
       await queryClient.invalidateQueries({ queryKey: ['weekly_buzz_allowances'] });
       await queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
       await queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      
+      // Set first launch flag for proper generation sequence
+      sessionStorage.setItem('isFirstLaunch', 'true');
       
       console.log('✅ LANCIO RESET: Complete frontend cache cleared');
       setIsReset(true);

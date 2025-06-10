@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CommandCenterHome from "@/components/command-center/CommandCenterHome";
@@ -11,6 +12,8 @@ import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
+import { useLaunchReset } from "@/hooks/useLaunchReset";
+import FullScreenLoader from "@/components/layout/FullScreenLoader";
 
 const AppHome = () => {
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +22,8 @@ const AppHome = () => {
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
+  const { isResetting } = useLaunchReset();
+  
   const {
     notifications,
     unreadCount,
@@ -30,6 +35,11 @@ const AppHome = () => {
   } = useNotificationManager();
 
   const { isConnected } = useRealTimeNotifications();
+
+  // CRITICAL: Block UI during reset to prevent race conditions
+  if (isResetting) {
+    return <FullScreenLoader text="Reset sistema in corso..." />;
+  }
 
   // Check for developer access and Capacitor environment
   useEffect(() => {

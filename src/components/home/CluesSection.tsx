@@ -3,10 +3,30 @@ import { Button } from "@/components/ui/button";
 import ClueCard from "@/components/clues/ClueCard";
 import { clues } from "@/data/cluesData";
 import { useBuzzClues } from "@/hooks/buzz/useBuzzClues";
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
+import { useEffect } from 'react';
 import GradientBox from "@/components/ui/gradient-box";
 
 export const CluesSection = () => {
   const { unlockedClues, incrementUnlockedCluesAndAddClue, MAX_CLUES } = useBuzzClues();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  // CRITICAL: Clear clues cache after reset
+  useEffect(() => {
+    const checkForReset = () => {
+      const isAfterReset = sessionStorage.getItem('isFirstLaunch') === 'true';
+      if (isAfterReset) {
+        console.log('🔄 CLUES RESET: Invalidating cache after launch reset');
+        queryClient.invalidateQueries(["user_clues", user?.id]);
+        localStorage.removeItem("cluesFound");
+        localStorage.removeItem("unlockedClues");
+      }
+    };
+    
+    checkForReset();
+  }, [queryClient, user?.id]);
   
   return (
     <GradientBox className="p-4 w-full">
