@@ -18,7 +18,7 @@ export const useBuzzMapLogic = () => {
   const { getCurrentUser } = useAuthContext();
   const [isGenerating, setIsGenerating] = useState(false);
   const [areas, setAreas] = useState<BuzzMapArea[]>([]);
-  const [currentWeekAreas, setCurrentWeekAreas] = useState<BuzzMapArea[]>([]); // CRITICAL FIX: Added missing export
+  const [currentWeekAreas, setCurrentWeekAreas] = useState<BuzzMapArea[]>([]);
   const [dailyBuzzMapCounter, setDailyBuzzMapCounter] = useState(0);
   
   const currentUser = getCurrentUser();
@@ -134,7 +134,7 @@ export const useBuzzMapLogic = () => {
 
         if (isMounted) {
           setAreas(mappedAreas);
-          setCurrentWeekAreas(mappedAreas); // CRITICAL FIX: Update both states
+          setCurrentWeekAreas(mappedAreas);
           console.log('✅ Aree caricate:', mappedAreas.length, 'cache bust:', timestamp);
         }
       } catch (error) {
@@ -216,7 +216,7 @@ export const useBuzzMapLogic = () => {
 
       // STEP 5: Aggiorna stato con SOLO la nuova area
       setAreas([newArea]);
-      setCurrentWeekAreas([newArea]); // CRITICAL FIX: Update both states
+      setCurrentWeekAreas([newArea]);
       setDailyBuzzMapCounter(generationCount);
 
       console.log('✅ NUOVA AREA con RIDUZIONE 5% CORRETTA:', newArea);
@@ -263,7 +263,7 @@ export const useBuzzMapLogic = () => {
         }));
         
         setAreas(mappedAreas);
-        setCurrentWeekAreas(mappedAreas); // CRITICAL FIX: Update both states
+        setCurrentWeekAreas(mappedAreas);
         console.log('✅ Aree ricaricate:', mappedAreas.length, 'timestamp:', timestamp);
       }
     } catch (error) {
@@ -274,7 +274,7 @@ export const useBuzzMapLogic = () => {
   return {
     isGenerating,
     areas,
-    currentWeekAreas, // CRITICAL FIX: Export missing property
+    currentWeekAreas,
     dailyBuzzMapCounter,
     generateBuzzMapArea,
     getActiveArea,

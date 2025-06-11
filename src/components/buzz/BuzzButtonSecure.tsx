@@ -26,11 +26,11 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({ userId, onSuccess }
 
   // CRITICAL FIX: Calcolo prezzo dinamico BUZZ INDIZIO
   const calculateBuzzPrice = (count: number): number => {
-    if (count <= 10) return 7.99;
-    if (count <= 20) return 9.99;
-    if (count <= 30) return 13.99;
-    if (count <= 40) return 19.99;
-    return 29.99;
+    if (count <= 10) return 1.99;
+    if (count <= 20) return 2.99;
+    if (count <= 30) return 3.99;
+    if (count <= 40) return 4.99;
+    return 4.99;
   };
 
   // CRITICAL FIX: Enhanced BUZZ con FORZATURA Stripe OBBLIGATORIA
@@ -155,7 +155,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({ userId, onSuccess }
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
-      {/* CRITICAL FIX: Pulsante ROTONDO originale */}
+      {/* CRITICAL FIX: Pulsante ROTONDO originale RIPRISTINATO */}
       <motion.button
         onClick={handleBuzzClick}
         disabled={loading}
@@ -206,8 +206,8 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({ userId, onSuccess }
           )}
           <span className="text-sm text-center leading-tight">
             {loading ? 'Generando...' : 
-             isBlocked ? `BUZZ\n(${currentPrice}€)` :
-             `BUZZ\n${isDeveloper ? '[DEV]' : `(${currentPrice}€)`}`}
+             isBlocked ? `BUZZ\n€${currentPrice}` :
+             `BUZZ\n${isDeveloper ? '[DEV]' : `€${currentPrice}`}`}
           </span>
         </div>
         

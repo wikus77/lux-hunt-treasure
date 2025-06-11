@@ -80,15 +80,15 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     const currentPrice = calculateDynamicPrice(realBuzzMapCounter + 1);
     
     try {
-      console.log(`💳 FORZATURA STRIPE: Apertura checkout OBBLIGATORIO per ${currentPrice}€`);
-      toast.info(`💳 Pagamento obbligatorio: ${currentPrice}€ per BUZZ MAPPA`);
+      console.log(`💳 FORZATURA STRIPE: Apertura checkout OBBLIGATORIO per €${currentPrice}`);
+      toast.info(`💳 Pagamento obbligatorio: €${currentPrice} per BUZZ MAPPA`);
       
       // BLOCCO TOTALE: Stripe deve essere completato
       const stripeSuccess = await processBuzzPurchase(true, currentPrice);
       
       if (stripeSuccess) {
         console.log('✅ STRIPE COMPLETATO: Procedo con generazione');
-        toast.success(`✅ Pagamento completato (${currentPrice}€)! Generando area...`);
+        toast.success(`✅ Pagamento completato (€${currentPrice})! Generando area...`);
         setTimeout(() => generateBuzzMapAreaInternal(), 500);
       } else {
         console.log('❌ STRIPE FALLITO: BLOCCO TOTALE esecuzione');
@@ -209,8 +209,8 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           <span>
             {isLoading ? 'Generando...' : 
              !canGenerate ? `LIMITE RAGGIUNTO (${maxGenerations})` :
-             isBlocked ? `BUZZ MAPPA (${currentPrice}€)` :
-             `BUZZ MAPPA (${displayRadius()}km) (${currentPrice}€) - ${realBuzzMapCounter}/${maxGenerations} ${isDeveloper ? '[DEV]' : ''}`}
+             isBlocked ? `BUZZ MAPPA (€${currentPrice})` :
+             `BUZZ MAPPA (${displayRadius()}km) (€${currentPrice}) - ${realBuzzMapCounter}/${maxGenerations} ${isDeveloper ? '[DEV]' : ''}`}
           </span>
         </Button>
         

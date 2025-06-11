@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -62,7 +61,7 @@ export const useStripePayment = () => {
             data: {
               object: {
                 id: `cs_test_dev_${Date.now()}`,
-                amount_total: (customPrice || (isMapBuzz ? 7.99 : 7.99)) * 100,
+                amount_total: (customPrice || (isMapBuzz ? 7.99 : 1.99)) * 100,
                 currency: 'eur',
                 customer_email: currentUser?.email,
                 payment_status: 'paid',
@@ -103,7 +102,7 @@ export const useStripePayment = () => {
       const { data: response, error: stripeError } = await supabase.functions.invoke('create-stripe-session', {
         body: {
           planType: isMapBuzz ? 'BuzzMap' : 'Buzz',
-          customPrice: customPrice || (isMapBuzz ? 7.99 : 7.99),
+          customPrice: customPrice || (isMapBuzz ? 7.99 : 1.99),
           redirectUrl: `${window.location.origin}/payment-success`,
           userId: currentUser.id,
           userEmail: currentUser.email,
@@ -244,7 +243,7 @@ export const useStripePayment = () => {
   return {
     loading,
     error,
-    detectPaymentMethodAvailability, // CRITICAL FIX: Export missing function
+    detectPaymentMethodAvailability,
     processBuzzPurchase,
     processSubscription,
     clearError
