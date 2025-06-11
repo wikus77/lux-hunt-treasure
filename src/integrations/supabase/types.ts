@@ -57,42 +57,6 @@ export type Database = {
         }
         Relationships: []
       }
-      admin_prizes: {
-        Row: {
-          address: string
-          city: string
-          created_at: string | null
-          created_by: string
-          description: string
-          id: string
-          is_active: boolean | null
-          type: string
-          week: number
-        }
-        Insert: {
-          address: string
-          city: string
-          created_at?: string | null
-          created_by: string
-          description: string
-          id?: string
-          is_active?: boolean | null
-          type: string
-          week: number
-        }
-        Update: {
-          address?: string
-          city?: string
-          created_at?: string | null
-          created_by?: string
-          description?: string
-          id?: string
-          is_active?: boolean | null
-          type?: string
-          week?: number
-        }
-        Relationships: []
-      }
       app_messages: {
         Row: {
           content: string
@@ -129,63 +93,6 @@ export type Database = {
           target_users?: string[] | null
           title?: string
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      buzz_generation_logs: {
-        Row: {
-          buzz_count_generated: number
-          clues_generated: number
-          created_at: string
-          id: string
-          subscription_tier: string
-          user_id: string
-          week_number: number
-          year: number
-        }
-        Insert: {
-          buzz_count_generated: number
-          clues_generated: number
-          created_at?: string
-          id?: string
-          subscription_tier: string
-          user_id: string
-          week_number: number
-          year: number
-        }
-        Update: {
-          buzz_count_generated?: number
-          clues_generated?: number
-          created_at?: string
-          id?: string
-          subscription_tier?: string
-          user_id?: string
-          week_number?: number
-          year?: number
-        }
-        Relationships: []
-      }
-      buzz_logs: {
-        Row: {
-          created_at: string | null
-          details: Json | null
-          id: string
-          step: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          details?: Json | null
-          id?: string
-          step: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          details?: Json | null
-          id?: string
-          step?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -636,9 +543,7 @@ export type Database = {
           address: string | null
           agent_code: string | null
           agent_title: string | null
-          avatar_url: string | null
           bio: string | null
-          birth_date: string | null
           city: string | null
           country: string | null
           created_at: string
@@ -653,9 +558,6 @@ export type Database = {
           postal_code: string | null
           preferred_language: string | null
           role: string
-          stripe_customer_id: string | null
-          subscription_end: string | null
-          subscription_start: string | null
           subscription_tier: string
           updated_at: string
           username: string | null
@@ -664,9 +566,7 @@ export type Database = {
           address?: string | null
           agent_code?: string | null
           agent_title?: string | null
-          avatar_url?: string | null
           bio?: string | null
-          birth_date?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -681,9 +581,6 @@ export type Database = {
           postal_code?: string | null
           preferred_language?: string | null
           role?: string
-          stripe_customer_id?: string | null
-          subscription_end?: string | null
-          subscription_start?: string | null
           subscription_tier?: string
           updated_at?: string
           username?: string | null
@@ -692,9 +589,7 @@ export type Database = {
           address?: string | null
           agent_code?: string | null
           agent_title?: string | null
-          avatar_url?: string | null
           bio?: string | null
-          birth_date?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -709,9 +604,6 @@ export type Database = {
           postal_code?: string | null
           preferred_language?: string | null
           role?: string
-          stripe_customer_id?: string | null
-          subscription_end?: string | null
-          subscription_start?: string | null
           subscription_tier?: string
           updated_at?: string
           username?: string | null
@@ -745,36 +637,6 @@ export type Database = {
           lng?: number
           radius?: number
           user_id?: string
-        }
-        Relationships: []
-      }
-      subscription_tiers: {
-        Row: {
-          buzz_days: string[]
-          created_at: string
-          id: string
-          max_weekly_buzz: number
-          name: string
-          price_monthly: number
-          stripe_price_id: string | null
-        }
-        Insert: {
-          buzz_days?: string[]
-          created_at?: string
-          id?: string
-          max_weekly_buzz?: number
-          name: string
-          price_monthly: number
-          stripe_price_id?: string | null
-        }
-        Update: {
-          buzz_days?: string[]
-          created_at?: string
-          id?: string
-          max_weekly_buzz?: number
-          name?: string
-          price_monthly?: number
-          stripe_price_id?: string | null
         }
         Relationships: []
       }
@@ -1126,36 +988,6 @@ export type Database = {
         }
         Relationships: []
       }
-      weekly_buzz_allowances: {
-        Row: {
-          created_at: string
-          id: string
-          max_buzz_count: number
-          used_buzz_count: number
-          user_id: string
-          week_number: number
-          year: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          max_buzz_count: number
-          used_buzz_count?: number
-          user_id: string
-          week_number: number
-          year: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          max_buzz_count?: number
-          used_buzz_count?: number
-          user_id?: string
-          week_number?: number
-          year?: number
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -1169,10 +1001,6 @@ export type Database = {
         Args: { daily_count: number }
         Returns: number
       }
-      can_user_use_buzz: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
       check_abuse_limit: {
         Args: { p_event_type: string; p_user_id: string }
         Returns: boolean
@@ -1181,10 +1009,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
-      consume_buzz_usage: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
       execute_sql: {
         Args: { sql: string }
         Returns: undefined
@@ -1192,13 +1016,6 @@ export type Database = {
       get_current_mission_week: {
         Args: Record<PropertyKey, never>
         Returns: number
-      }
-      get_current_week_and_year: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          week_num: number
-          year_num: number
-        }[]
       }
       get_map_radius_km: {
         Args: { p_week: number; p_generation_count: number }

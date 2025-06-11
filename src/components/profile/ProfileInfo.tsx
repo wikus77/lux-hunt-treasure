@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -72,20 +73,18 @@ const ProfileInfo = ({
         return;
       }
 
-      // Generate unique filename with user ID path
+      // Generate unique filename
       const fileExt = file.name.split('.').pop();
-      const fileName = `${session.user.id}/${Date.now()}.${fileExt}`;
+      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
 
       // Upload to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, {
-          upsert: true
-        });
+        .upload(fileName, file);
 
       if (uploadError) {
         console.error("Upload error:", uploadError);
-        toast.error("Errore nel caricamento dell'immagine. Riprova.");
+        toast.error("Errore nel caricamento dell'immagine");
         return;
       }
 
@@ -96,7 +95,7 @@ const ProfileInfo = ({
 
       const publicUrl = urlData.publicUrl;
 
-      // Update profile in database using the correct column name
+      // Update profile in database
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
@@ -104,7 +103,7 @@ const ProfileInfo = ({
 
       if (updateError) {
         console.error("Profile update error:", updateError);
-        toast.error("Errore nell'aggiornamento del profilo. Riprova.");
+        toast.error("Errore nell'aggiornamento del profilo");
         return;
       }
 
@@ -112,16 +111,13 @@ const ProfileInfo = ({
       toast.success("Immagine profilo aggiornata con successo!");
     } catch (error) {
       console.error("Error uploading image:", error);
-      toast.error("Errore nel caricamento dell'immagine. Riprova.");
+      toast.error("Errore nel caricamento dell'immagine");
     }
   };
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
-
-  // Always display X0197 as the official agent code
-  const displayAgentCode = "X0197";
   
   return (
     <div className="flex-shrink-0 flex flex-col items-center md:w-1/3">
@@ -164,7 +160,7 @@ const ProfileInfo = ({
             />
             {/* Agent Code - Read Only and Disabled */}
             <Input
-              value={displayAgentCode}
+              value={agentCode}
               readOnly={true}
               disabled={true}
               className="mb-2 bg-gray-800/50 h-10 rounded-xl opacity-60 cursor-not-allowed font-mono"
@@ -192,7 +188,7 @@ const ProfileInfo = ({
             {/* Agent Code Display - Read Only */}
             <div className="mb-3 p-2 bg-gray-800/30 rounded-xl border border-gray-700">
               <span className="text-xs text-gray-400">Codice Agente:</span>
-              <div className="mt-1 font-mono text-sm text-cyan-400">{displayAgentCode}</div>
+              <div className="mt-1 font-mono text-sm text-cyan-400">{agentCode}</div>
             </div>
             
             {/* Investigative Style */}

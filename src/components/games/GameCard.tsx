@@ -1,116 +1,75 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, Lock, Trophy } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { CheckCircle } from 'lucide-react';
+import { useAuthContext } from '@/contexts/auth';
 
-interface GameCardProps {
+interface Game {
   title: string;
   description: string;
-  difficulty: 'Facile' | 'Medio' | 'Difficile' | 'Molto Difficile' | 'Estremo';
-  rewards: string;
-  isLocked: boolean;
-  progress: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  points: number;
+  icon: string;
+}
+
+interface GameCardProps {
+  game: Game;
+  isCompleted: boolean;
   onPlay: () => void;
 }
 
-const GameCard: React.FC<GameCardProps> = ({
-  title,
-  description,
-  difficulty,
-  rewards,
-  isLocked,
-  progress,
-  onPlay
-}) => {
-  const getDifficultyColor = (diff: string) => {
-    switch (diff) {
-      case 'Facile': return 'text-green-400';
-      case 'Medio': return 'text-yellow-400';
-      case 'Difficile': return 'text-orange-400';
-      case 'Molto Difficile': return 'text-red-400';
-      case 'Estremo': return 'text-purple-400';
-      default: return 'text-gray-400';
+export const GameCard: React.FC<GameCardProps> = ({ game, isCompleted, onPlay }) => {
+  const { getCurrentUser } = useAuthContext();
+  
+  const currentUser = getCurrentUser();
+  const isSpecialUser = currentUser?.email === 'wikus77@hotmail.it';
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy': return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'medium': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      case 'hard': return 'bg-red-500/20 text-red-400 border-red-500/30';
+      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     }
   };
 
   return (
     <motion.div
-      className={`m1ssion-glass-card p-6 rounded-xl border ${
-        isLocked ? 'border-gray-600 opacity-60' : 'border-blue-500/30'
-      } bg-black/40 backdrop-blur-sm hover:border-blue-400/50 transition-all duration-300`}
-      whileHover={!isLocked ? { scale: 1.02, y: -2 } : {}}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2 }}
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h3 className="text-xl font-orbitron font-bold text-[#00D1FF] mb-2">
-            {title}
-          </h3>
-          <p className="text-white/70 text-sm mb-3">
-            {description}
-          </p>
-        </div>
-        {isLocked && <Lock className="text-gray-500 ml-2" size={20} />}
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex justify-between items-center">
-          <span className="text-white/60 text-sm">Difficoltà:</span>
-          <span className={`font-semibold ${getDifficultyColor(difficulty)}`}>
-            {difficulty}
-          </span>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <span className="text-white/60 text-sm">Ricompense:</span>
-          <span className="text-yellow-400 font-semibold text-sm">
-            {rewards}
-          </span>
-        </div>
-
-        {!isLocked && progress > 0 && (
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-white/60 text-sm">Progresso:</span>
-              <span className="text-blue-400 font-semibold text-sm">
-                {progress}%
-              </span>
-            </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-blue-500 to-cyan-400 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+      <Card className="glass-card border-white/10 hover:border-[#00D1FF]/30 transition-all duration-300">
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="text-3xl">{game.icon}</div>
+            {isCompleted && (
+              <CheckCircle className="w-5 h-5 text-green-400" />
+            )}
           </div>
-        )}
-
-        <button
-          onClick={onPlay}
-          disabled={isLocked}
-          className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
-            isLocked
-              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white shadow-lg hover:shadow-xl'
-          }`}
-        >
-          {isLocked ? (
-            <>
-              <Lock size={16} />
-              Bloccato
-            </>
-          ) : (
-            <>
-              <Play size={16} />
-              Gioca Ora
-            </>
-          )}
-        </button>
-      </div>
+          
+          <h3 className="text-lg font-semibold text-white mb-2">{game.title}</h3>
+          <p className="text-gray-400 text-sm mb-4">{game.description}</p>
+          
+          <div className="flex items-center justify-between mb-4">
+            <Badge className={getDifficultyColor(game.difficulty)}>
+              {game.difficulty.toUpperCase()}
+            </Badge>
+            <span className="text-[#00D1FF] font-semibold">{game.points} pts</span>
+          </div>
+          
+          <Button 
+            onClick={onPlay}
+            className="w-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] hover:opacity-90"
+            disabled={!isSpecialUser && isCompleted}
+          >
+            {isCompleted ? 'Completato' : 'Gioca'}
+          </Button>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 };
-
-export default GameCard;

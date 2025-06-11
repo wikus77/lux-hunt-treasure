@@ -1,8 +1,12 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthContext } from '@/contexts/auth';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { useMapAreas } from './useMapAreas';
+import { useBuzzApi } from './buzz/useBuzzApi';
+import { useBuzzCounter } from './useBuzzCounter';
+import { useBuzzMapCounter } from './useBuzzMapCounter';
+import { useMapStore } from '@/stores/mapStore';
 
 export interface BuzzMapArea {
   id: string;
@@ -11,274 +15,214 @@ export interface BuzzMapArea {
   radius_km: number;
   week: number;
   created_at: string;
-  user_id: string;
+  user_id?: string;
 }
 
 export const useBuzzMapLogic = () => {
-  const { getCurrentUser } = useAuthContext();
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [areas, setAreas] = useState<BuzzMapArea[]>([]);
-  const [currentWeekAreas, setCurrentWeekAreas] = useState<BuzzMapArea[]>([]);
-  const [dailyBuzzMapCounter, setDailyBuzzMapCounter] = useState(0);
+  const { user } = useAuth();
+  const { callBuzzApi } = useBuzzApi();
   
-  const currentUser = getCurrentUser();
-  const userId = currentUser?.id;
+  // Use Zustand store for operation locks
+  const { 
+    isGenerating,
+    isDeleting,
+    setIsGenerating
+  } = useMapStore();
 
-  // CRITICAL FIX: Calcolo raggio corretto con riduzione 5% EFFETTIVA
-  const calculateRadiusWithReduction = (generation: number): number => {
-    if (generation === 1) return 500;
-    const reduction = Math.pow(0.95, generation - 1);
-    const newRadius = 500 * reduction;
-    console.log(`📊 CALCOLO RAGGIO Gen ${generation}: 500 * 0.95^${generation-1} = ${newRadius.toFixed(1)}km`);
-    return Math.max(5, newRadius);
-  };
+  // SINGLE SOURCE OF TRUTH: React Query via useMapAreas
+  const {
+    currentWeekAreas,
+    isLoading,
+    deleteAllUserAreas,
+    deleteSpecificArea,
+    forceReload,
+    forceCompleteSync,
+    validateBuzzDeletion
+  } = useMapAreas(user?.id);
 
-  // CRITICAL FIX: Cancellazione FORZATA con validazione aggressiva
-  const deletePreviousBuzzMapAreas = useCallback(async () => {
-    if (!userId) {
-      const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-      if (!hasDeveloperAccess) return false;
-    }
+  console.debug('🧠 BUZZ LOGIC STATE (BACKEND ONLY):', {
+    userId: user?.id,
+    areasCount: currentWeekAreas.length,
+    isGenerating,
+    isDeleting,
+    data_source: 'backend-only'
+  });
 
-    try {
-      console.log('🔥 CANCELLAZIONE FORZATA: Eliminando TUTTE le aree per user:', userId);
-      
-      // STEP 1: Reset stato locale immediato
-      setAreas([]);
-      setCurrentWeekAreas([]);
-      
-      // STEP 2: Cancellazione database con retry aggressivo
-      let deleteSuccess = false;
-      let attempts = 0;
-      
-      while (!deleteSuccess && attempts < 10) {
-        attempts++;
-        console.log(`🗑️ DELETE attempt ${attempts}/10`);
-        
-        const { error: deleteError, count } = await supabase
-          .from('user_map_areas')
-          .delete({ count: 'exact' })
-          .eq('user_id', userId || '00000000-0000-4000-a000-000000000000');
+  // Use specialized hooks (only for UI display)
+  const {
+    dailyBuzzCounter,
+    updateDailyBuzzCounter
+  } = useBuzzCounter(user?.id);
 
-        if (deleteError) {
-          console.error(`❌ DELETE attempt ${attempts} fallito:`, deleteError);
-          if (attempts < 10) {
-            await new Promise(resolve => setTimeout(resolve, 200));
-            continue;
-          }
-          return false;
-        } else {
-          console.log(`✅ DELETE riuscito al tentativo ${attempts}, cancellate ${count} aree`);
-          deleteSuccess = true;
-        }
-      }
+  const {
+    dailyBuzzMapCounter,
+    updateDailyBuzzMapCounter,
+    precisionMode
+  } = useBuzzMapCounter(user?.id);
 
-      // STEP 3: Verifica cancellazione
-      let verificationSuccess = false;
-      let verifyAttempts = 0;
-      
-      while (!verificationSuccess && verifyAttempts < 5) {
-        verifyAttempts++;
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        const { data: remainingAreas } = await supabase
-          .from('user_map_areas')
-          .select('id')
-          .eq('user_id', userId || '00000000-0000-4000-a000-000000000000');
+  // Get active area from current week areas
+  const getActiveArea = useCallback((): BuzzMapArea | null => {
+    return currentWeekAreas.length > 0 ? currentWeekAreas[0] : null;
+  }, [currentWeekAreas]);
 
-        if (!remainingAreas || remainingAreas.length === 0) {
-          verificationSuccess = true;
-          console.log(`✅ VERIFICA cancellazione OK al tentativo ${verifyAttempts}`);
-        } else {
-          console.error(`❌ Aree ancora presenti tentativo ${verifyAttempts}:`, remainingAreas);
-        }
-      }
-
-      return verificationSuccess;
-    } catch (error) {
-      console.error('❌ Eccezione durante cancellazione:', error);
-      return false;
-    }
-  }, [userId]);
-
-  // CRITICAL FIX: Caricamento con cache busting aggressivo
-  useEffect(() => {
-    let isMounted = true;
-    
-    const loadAreas = async () => {
-      if (!userId && !localStorage.getItem('developer_access')) return;
-
-      try {
-        const timestamp = Date.now();
-        const { data, error } = await supabase
-          .from('user_map_areas')
-          .select('*')
-          .eq('user_id', userId || '00000000-0000-4000-a000-000000000000')
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (error) {
-          console.error('❌ Errore caricamento aree:', error);
-          return;
-        }
-
-        const mappedAreas = (data || []).map(area => ({
-          id: area.id,
-          lat: area.lat,
-          lng: area.lng,
-          radius_km: area.radius_km,
-          week: area.week,
-          created_at: area.created_at,
-          user_id: area.user_id
-        }));
-
-        if (isMounted) {
-          setAreas(mappedAreas);
-          setCurrentWeekAreas(mappedAreas);
-          console.log('✅ Aree caricate:', mappedAreas.length, 'cache bust:', timestamp);
-        }
-      } catch (error) {
-        console.error('❌ Eccezione caricamento aree:', error);
-      }
-    };
-
-    loadAreas();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [userId]);
-
-  // CRITICAL FIX: Generazione con calcolo raggio CORRETTO e cancellazione
-  const generateBuzzMapArea = useCallback(async (lat: number, lng: number): Promise<BuzzMapArea | null> => {
-    const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
-    const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-    
-    if (!userId && !isDeveloper && !hasDeveloperAccess) {
-      console.error('❌ No valid user ID');
+  // BACKEND-ONLY BUZZ generation with FIXED CENTER - completely stateless frontend
+  const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
+    // CRITICAL: Validate user ID first
+    if (!user?.id) {
+      console.error('❌ BUZZ GENERATION - No valid user ID available');
+      toast.dismiss();
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
       return null;
     }
 
+    console.log('🔥 STARTING BACKEND-ONLY BUZZ GENERATION (FIXED CENTER):', {
+      userId: user.id,
+      centerLat,
+      centerLng
+    });
+
+    if (!centerLat || !centerLng || isNaN(centerLat) || isNaN(centerLng)) {
+      console.error('❌ Invalid coordinates');
+      toast.dismiss();
+      toast.error('Coordinate della mappa non valide');
+      return null;
+    }
+
+    // Prevent concurrent operations
+    if (isGenerating || isDeleting) {
+      console.error('❌ Operation blocked - another operation in progress', { isGenerating, isDeleting });
+      return null;
+    }
+
     setIsGenerating(true);
+    toast.dismiss();
     
     try {
-      console.log('🚀 GENERAZIONE POTENZIATA: Con cancellazione e riduzione 5%');
-
-      // STEP 1: CANCELLAZIONE FORZATA
-      const deletionSuccess = await deletePreviousBuzzMapAreas();
-      if (!deletionSuccess) {
-        console.error('❌ Fallimento cancellazione');
-        toast.error('Errore nella cancellazione aree precedenti');
-        setIsGenerating(false);
+      console.log('🚀 CALLING BACKEND with generateMap: true and FIXED CENTER...');
+      
+      // Call backend API with FORCED map generation and coordinates
+      const response = await callBuzzApi({ 
+        userId: user.id,
+        generateMap: true,
+        coordinates: { lat: centerLat, lng: centerLng }
+      });
+      
+      console.log('📡 BACKEND RESPONSE (FIXED CENTER):', response);
+      
+      if (!response.success || response.error) {
+        console.error('❌ Backend error:', response.errorMessage || response.error);
+        toast.dismiss();
+        toast.error(response.errorMessage || 'Errore durante la generazione dell\'area');
         return null;
       }
 
-      // STEP 2: Calcola generazione e raggio con riduzione 5% CORRETTA
-      const generationCount = dailyBuzzMapCounter + 1;
-      const newRadius = calculateRadiusWithReduction(generationCount);
+      // Check if we got area data from backend
+      if (!response.radius_km || !response.lat || !response.lng) {
+        console.error('❌ Backend did not return complete area data');
+        toast.dismiss();
+        toast.error('Backend non ha restituito dati area completi');
+        return null;
+      }
 
-      // STEP 3: Chiama edge function con raggio CORRETTO
-      const { data: response, error: edgeError } = await supabase.functions.invoke('handle-buzz-press', {
-        body: {
-          userId: userId || '00000000-0000-4000-a000-000000000000',
-          generateMap: true,
-          coordinates: { lat, lng },
-          radius: newRadius,
-          generationCount: generationCount
-        }
+      console.log('✅ BACKEND SUCCESS (FIXED CENTER) - Area data received:', {
+        radius_km: response.radius_km,
+        lat: response.lat,
+        lng: response.lng,
+        generation: response.generation_number,
+        fixed_center: true
       });
 
-      if (edgeError) {
-        console.error('❌ Edge function error:', edgeError);
-        toast.error('Errore nella chiamata al server');
-        setIsGenerating(false);
-        return null;
-      }
-
-      if (!response?.success) {
-        console.error('❌ Edge function fallita:', response?.errorMessage);
-        toast.error(response?.errorMessage || 'Errore nella generazione area');
-        setIsGenerating(false);
-        return null;
-      }
-
-      // STEP 4: Crea nuova area con raggio CORRETTO
+      // Create area object from backend response with FIXED CENTER
       const newArea: BuzzMapArea = {
-        id: response.areaId || `area-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        lat: response.lat || lat,
-        lng: response.lng || lng,
-        radius_km: newRadius, // CRITICAL: Usa raggio calcolato correttamente
-        week: Math.ceil((Date.now() - new Date('2025-01-01').getTime()) / (7 * 24 * 60 * 60 * 1000)),
+        id: crypto.randomUUID(),
+        lat: response.lat,
+        lng: response.lng,
+        radius_km: response.radius_km,
+        week: 1, // Will be set by backend
         created_at: new Date().toISOString(),
-        user_id: userId || '00000000-0000-4000-a000-000000000000'
+        user_id: user.id
       };
 
-      // STEP 5: Aggiorna stato con SOLO la nuova area
-      setAreas([newArea]);
-      setCurrentWeekAreas([newArea]);
-      setDailyBuzzMapCounter(generationCount);
-
-      console.log('✅ NUOVA AREA con RIDUZIONE 5% CORRETTA:', newArea);
+      // Force reload areas from database
+      await forceCompleteSync();
+      await forceReload();
       
-      const maxGenerations = (isDeveloper || hasDeveloperAccess) ? 50 : 25;
-      toast.success(`✅ Area BUZZ MAPPA: ${newArea.radius_km.toFixed(1)}km - Gen ${generationCount}/${maxGenerations}`);
-
+      // Show success toast with BACKEND VERIFIED data and FIXED CENTER confirmation
+      toast.dismiss();
+      toast.success(`✅ Area BUZZ MAPPA attiva: ${response.radius_km.toFixed(1)} km – Gen: ${response.generation_number || 1} – Centro fisso: BACKEND VERIFIED`);
+      
+      console.log('🎉 BUZZ GENERATION COMPLETE (FIXED CENTER):', {
+        userId: user.id,
+        radius_km: response.radius_km,
+        generation: response.generation_number,
+        center_fixed: true,
+        lat: response.lat,
+        lng: response.lng,
+        source: 'backend-verified'
+      });
+      
       return newArea;
-
-    } catch (error) {
-      console.error('❌ Eccezione generazione area:', error);
-      toast.error('Errore imprevisto nella generazione');
+    } catch (err) {
+      console.error('❌ BUZZ GENERATION ERROR:', err);
+      toast.dismiss();
+      toast.error('Errore durante la generazione dell\'area');
       return null;
     } finally {
       setIsGenerating(false);
     }
-  }, [userId, dailyBuzzMapCounter, deletePreviousBuzzMapAreas, currentUser?.email]);
+  }, [
+    user, callBuzzApi, isGenerating, isDeleting, 
+    setIsGenerating, forceCompleteSync, forceReload
+  ]);
 
-  const getActiveArea = useCallback(() => {
-    return areas.length > 0 ? areas[0] : null;
-  }, [areas]);
-
-  const reloadAreas = useCallback(async () => {
-    if (!userId) return;
-
-    try {
-      const timestamp = Date.now();
-      const { data, error } = await supabase
-        .from('user_map_areas')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (!error && data) {
-        const mappedAreas = data.map(area => ({
-          id: area.id,
-          lat: area.lat,
-          lng: area.lng,
-          radius_km: area.radius_km,
-          week: area.week,
-          created_at: area.created_at,
-          user_id: area.user_id
-        }));
-        
-        setAreas(mappedAreas);
-        setCurrentWeekAreas(mappedAreas);
-        console.log('✅ Aree ricaricate:', mappedAreas.length, 'timestamp:', timestamp);
+  // Delete area functionality
+  const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
+    console.log('🗑️ HANDLE DELETE AREA START:', areaId);
+    
+    toast.dismiss();
+    
+    const success = await deleteSpecificArea(areaId);
+    
+    if (success) {
+      console.log('✅ HANDLE DELETE AREA - Success, performing database validation...');
+      
+      const isValidated = await validateBuzzDeletion();
+      
+      if (!isValidated) {
+        console.error('❌ DATABASE VALIDATION WARNING after specific delete');
+        toast.warning('Area eliminata, ma potrebbero rimanere tracce nel database');
+      } else {
+        toast.success('Area eliminata definitivamente');
       }
-    } catch (error) {
-      console.error('❌ Errore ricaricamento aree:', error);
+      
+      await forceCompleteSync();
+    } else {
+      console.error('❌ HANDLE DELETE AREA - Failed');
+      toast.error('Errore nell\'eliminazione dell\'area');
     }
-  }, [userId]);
+    
+    return success;
+  }, [deleteSpecificArea, forceCompleteSync, validateBuzzDeletion]);
 
   return {
-    isGenerating,
-    areas,
+    // Data from React Query (SINGLE SOURCE OF TRUTH)
     currentWeekAreas,
+    isLoading,
+    
+    // UI state
+    isGenerating,
+    isDeleting,
+    userCluesCount: 0, // Not calculated locally - backend only
+    dailyBuzzCounter,
     dailyBuzzMapCounter,
-    generateBuzzMapArea,
+    precisionMode,
+    
+    // Functions - BACKEND ONLY with FIXED CENTER
+    generateBuzzMapArea, // Simplified backend-only generation with fixed center
+    handleDeleteArea,
     getActiveArea,
-    reloadAreas,
-    deletePreviousBuzzMapAreas
+    reloadAreas: forceReload,
+    forceCompleteInvalidation: forceCompleteSync,
+    validateBuzzDeletion
   };
 };

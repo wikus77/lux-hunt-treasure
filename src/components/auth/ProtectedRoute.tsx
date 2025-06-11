@@ -37,29 +37,22 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
   
-  // PRIORITY: Check developer access first
-  const currentUser = getCurrentUser();
-  const isDeveloperEmail = currentUser?.email === 'wikus77@hotmail.it';
-  const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-  
-  if (isDeveloperEmail || hasDeveloperAccess) {
-    console.log("🔧 Developer access granted - bypassing all protection");
-    return children ? <>{children}</> : <Outlet />;
-  }
-  
   // If user is not authenticated, redirect to login
   if (!isAuthenticated) {
     console.log("User not authenticated, redirecting to:", redirectTo);
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
   
-  // Check email verification for non-developer users
+  // DEVELOPER EMAIL ALWAYS HAS ACCESS - NO VERIFICATION REQUIRED
+  const currentUser = getCurrentUser();
+  const isDeveloperEmail = currentUser?.email === 'wikus77@hotmail.it';
+  
   if (requireEmailVerification && !isEmailVerified && !isDeveloperEmail) {
     console.log("Email not verified, redirecting to verification page");
     return <Navigate to="/login?verification=pending" replace />;
   }
   
-  // User is authenticated and verified (or is developer), render the protected route
+  // User is authenticated and email is verified (or is developer), render the protected route
   return children ? <>{children}</> : <Outlet />;
 };
 

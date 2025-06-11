@@ -122,9 +122,6 @@ export const useMapAreas = (userId?: string) => {
     queryFn: async (): Promise<BuzzMapArea[]> => {
       console.debug('🔄 QUERY START - Fetching REAL DATA from DB for user:', validUserId);
       
-      // Add delay for synchronization after reset
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
       // CRITICAL: ONLY DATABASE DATA - NO FRONTEND FALLBACKS
       const { data: mapAreas, error: mapError } = await supabase
         .from('user_map_areas')
@@ -150,8 +147,8 @@ export const useMapAreas = (userId?: string) => {
       return mapAreas || [];
     },
     staleTime: 0, // ALWAYS FRESH DATA
-    refetchOnWindowFocus: true, // CRITICAL: Always refetch on focus
-    refetchOnMount: true, // CRITICAL: Always refetch on mount
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
     enabled: !!validUserId
   });
 

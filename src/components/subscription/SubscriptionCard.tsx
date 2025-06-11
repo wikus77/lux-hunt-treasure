@@ -18,7 +18,6 @@ interface SubscriptionCardProps {
   ctaText: string;
   type: string;
   isActive?: boolean;
-  disabled?: boolean;
   onClick?: () => void;
 }
 
@@ -31,7 +30,6 @@ const SubscriptionCard = ({
   ctaText,
   type,
   isActive = false,
-  disabled = false,
   onClick
 }: SubscriptionCardProps) => {
   const getGradient = () => {
@@ -91,7 +89,7 @@ const SubscriptionCard = ({
 
       <Button
         onClick={onClick}
-        disabled={disabled || (isActive && type !== "Base")}
+        disabled={isActive && type !== "Base"}
         className={cn(
           "w-full",
           isActive 

@@ -1,63 +1,14 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BuzzFeatureWrapper from "@/components/buzz/BuzzFeatureWrapper";
 import BuzzMainContent from "@/components/buzz/BuzzMainContent";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ErrorFallback from "@/components/error/ErrorFallback";
 import BottomNavigation from "@/components/layout/BottomNavigation";
-import { useAuthContext } from "@/contexts/auth";
 
 const Buzz = () => {
-  const { user } = useAuthContext();
-  const navigate = useNavigate();
-
-  // FIX 4 - Enhanced authentication check with logging
-  React.useEffect(() => {
-    console.log("🔥 FIX 4 – BUZZ PAGE AUTH CHECK:", {
-      user: user ? user.id : "null",
-      email: user?.email || "no email"
-    });
-    
-    if (!user) {
-      console.log("❌ FIX 4 ERROR - User not authenticated, redirecting to login");
-    } else {
-      console.log("✅ FIX 4 SUCCESS - User authenticated, showing BUZZ interface");
-    }
-  }, [user]);
-
-  // Proper authentication check
-  if (!user) {
-    return (
-      <motion.div 
-        className="bg-gradient-to-b from-[#131524]/70 to-black w-full min-h-screen flex items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="text-center p-8">
-          <h1 className="text-4xl font-orbitron font-bold text-[#00D1FF] mb-4">
-            BUZZ
-          </h1>
-          <p className="text-white mb-6">Devi essere autenticato per accedere a questa sezione.</p>
-          <Button 
-            onClick={() => {
-              console.log("🔥 FIX 4 – REDIRECT TO LOGIN");
-              navigate("/login");
-            }}
-            className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white px-6 py-2"
-          >
-            Accedi
-          </Button>
-        </div>
-      </motion.div>
-    );
-  }
-
   return (
     <motion.div 
       className="bg-gradient-to-b from-[#131524]/70 to-black w-full"

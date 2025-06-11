@@ -1,113 +1,138 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { GameCard } from '@/components/games/GameCard';
+import { gameData, GameType } from '@/components/games/memory-hack/gameData';
+import { useGameLogic } from '@/hooks/useGameLogic';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useBuzzSound } from '@/hooks/useBuzzSound';
+import { useDynamicIsland } from '@/hooks/useDynamicIsland';
+import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
+import { useMissionManager } from '@/hooks/useMissionManager';
+import GameErrorBoundary from '@/components/games/GameErrorBoundary';
+import MemoryHackGame from '@/components/games/MemoryHackGame';
+import DisarmTheBombGame from '@/components/games/DisarmTheBombGame';
+import FlashInterrogationGame from '@/components/games/FlashInterrogationGame';
+import CrackTheCombinationGame from '@/components/games/CrackTheCombinationGame';
+import SatelliteTrackingGame from '@/components/games/SatelliteTrackingGame';
+import FindMapPointGame from '@/components/games/FindMapPointGame';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
-import GameCard from "@/components/games/GameCard";
-import MemoryHackGame from "@/components/games/MemoryHackGame";
-import CipherDecodeGame from "@/components/games/CipherDecodeGame";
-import TimeTrialGame from "@/components/games/TimeTrialGame";
-import GameStats from "@/components/games/GameStats";
-import { useAuth } from '@/hooks/useAuth';
 
 const Games = () => {
-  const [selectedGame, setSelectedGame] = useState<string | null>(null);
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [selectedGame, setSelectedGame] = useState<GameType | null>(null);
+  const [gameCompleted, setGameCompleted] = useState<Record<GameType, boolean>>({
+    'memory-hack': false,
+    'disarm-bomb': false,
+    'flash-interrogation': false,
+    'crack-combination': false,
+    'satellite-tracking': false,
+    'find-map-point': false,
+  });
 
-  // CRITICAL FIX: All 6 games restored and fully functional
-  const isDeveloper = user?.email === 'wikus77@hotmail.it' || localStorage.getItem('developer_access') === 'granted';
+  const { addNotification } = useNotifications();
+  const { playSound } = useBuzzSound();
+  const { score, level, gameStats, updateStats } = useGameLogic();
+  const { startActivity, updateActivity, endActivity } = useDynamicIsland();
+  const { currentMission } = useMissionManager();
 
-  const games = [
-    {
-      id: 'memory-hack',
-      title: 'Memory Hack',
-      description: 'Testa la tua memoria con questo gioco di abbinamento simboli Mission',
-      difficulty: 'Medio' as const,
-      rewards: '100-500 punti',
-      isLocked: false,
-      progress: 75
-    },
-    {
-      id: 'cipher-decode',
-      title: 'Decodifica Cipher',
-      description: 'Decifra i codici segreti dell\'antica Roma',
-      difficulty: 'Difficile' as const,
-      rewards: '200-800 punti',
-      isLocked: false,
-      progress: 60
-    },
-    {
-      id: 'time-trial',
-      title: 'Corsa Contro il Tempo',
-      description: 'Risolvi enigmi Mission in tempo limitato',
-      difficulty: 'Facile' as const,
-      rewards: '50-300 punti',
-      isLocked: false,
-      progress: 80
-    },
-    {
-      id: 'agent-infiltration',
-      title: 'Infiltrazione Agente',
-      description: 'Missioni stealth e infiltrazione segreta nelle strade di Roma',
-      difficulty: 'Molto Difficile' as const,
-      rewards: '300-900 punti',
-      isLocked: false,
-      progress: 45
-    },
-    {
-      id: 'code-breaker',
-      title: 'Code Breaker Elite',
-      description: 'Decifratura codici di alta sicurezza dell\'impero romano',
-      difficulty: 'Estremo' as const,
-      rewards: '400-1200 punti',
-      isLocked: false,
-      progress: 30
-    },
-    {
-      id: 'tactical-ops',
-      title: 'Operazioni Tattiche',
-      description: 'Strategia militare e operazioni speciali nei Fori Imperiali',
-      difficulty: 'Estremo' as const,
-      rewards: '500-1500 punti',
-      isLocked: false,
-      progress: 15
-    }
-  ];
+  // Attiva il sistema di sicurezza Dynamic Island
+  useDynamicIslandSafety();
 
-  // CRITICAL FIX: Enhanced stats with all 6 games included
-  const mockStats = {
-    totalGamesPlayed: 42,
-    totalScore: 12750,
-    bestScore: 2450,
-    averageTime: 48,
-    completionRate: 85
+  // Dynamic Island integration for GAMES - New minigame unlocked con logging avanzato
+  useEffect(() => {
+    const checkNewMinigames = () => {
+      const unlockedGames = Object.entries(gameCompleted).filter(([_, completed]) => !completed);
+      
+      if (unlockedGames.length > 0 && score >= 100) {
+        const [gameType, _] = unlockedGames[0];
+        const gameName = gameData[gameType as GameType].title;
+        
+        console.log('🎮 GAMES: Starting Dynamic Island for new minigame:', gameName);
+        startActivity({
+          missionId: `game-unlock-${Date.now()}`,
+          title: "🧩 Minigioco sbloccato",
+          status: `${gameName} disponibile`,
+          progress: 0,
+          timeLeft: 1800,
+        });
+      }
+    };
+
+    checkNewMinigames();
+  }, [score, gameCompleted, startActivity]);
+
+  // Cleanup migliorato con controllo specifico per giochi
+  useEffect(() => {
+    return () => {
+      // Solo chiudere se è relativo ai giochi
+      if (currentMission?.name?.includes('Minigioco') || currentMission?.name?.includes('🧩')) {
+        console.log('🎮 GAMES: Cleaning up game-related Live Activity');
+        endActivity();
+      }
+    };
+  }, [endActivity, currentMission]);
+
+  const handleGameComplete = (gameType: GameType, points: number) => {
+    setGameCompleted(prev => ({ ...prev, [gameType]: true }));
+    updateStats(points);
+    playSound();
+    addNotification({
+      title: "🏆 Missione Completata!",
+      description: `Hai ottenuto ${points} punti nel gioco ${gameData[gameType].title}!`
+    });
+
+    // Update Dynamic Island with completion
+    updateActivity({
+      status: `${gameData[gameType].title} completato`,
+      progress: 100,
+    });
   };
 
-  const handleGameSelect = (gameId: string) => {
-    const game = games.find(g => g.id === gameId);
-    if (game && !game.isLocked) {
-      setSelectedGame(gameId);
-    }
+  const renderGame = () => {
+    if (!selectedGame) return null;
+
+    // Wrap each game component in GameErrorBoundary
+    const gameComponent = (() => {
+      switch (selectedGame) {
+        case 'memory-hack':
+          return <MemoryHackGame />;
+        case 'disarm-bomb':
+          return <DisarmTheBombGame />;
+        case 'flash-interrogation':
+          return <FlashInterrogationGame />;
+        case 'crack-combination':
+          return <CrackTheCombinationGame />;
+        case 'satellite-tracking':
+          return <SatelliteTrackingGame />;
+        case 'find-map-point':
+          return <FindMapPointGame />;
+        default:
+          return null;
+      }
+    })();
+
+    return (
+      <GameErrorBoundary>
+        {gameComponent}
+      </GameErrorBoundary>
+    );
   };
 
-  const handleBackToMenu = () => {
-    setSelectedGame(null);
-  };
-
-  // CRITICAL FIX: All 6 games with proper implementations
-  if (selectedGame === 'memory-hack') {
+  if (selectedGame) {
     return (
-      <motion.div 
-        className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
+      <div 
+        className="bg-gradient-to-b from-[#131524]/70 to-black"
         style={{ 
           height: '100dvh',
           overflow: 'hidden',
           position: 'relative'
         }}
       >
+        {/* Fixed Header */}
         <header 
           className="fixed top-0 left-0 right-0 z-50"
           style={{
@@ -120,6 +145,7 @@ const Games = () => {
           <UnifiedHeader />
         </header>
         
+        {/* Main scrollable content */}
         <main
           style={{
             paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
@@ -130,253 +156,26 @@ const Games = () => {
             zIndex: 0
           }}
         >
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-6">
+          <div className="container mx-auto px-3">
+            <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+64px)] mb-4">
               <button
-                onClick={handleBackToMenu}
-                className="text-blue-400 hover:text-blue-300 transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(-1);
+                }}
+                className="w-6 h-6 text-white"
+                aria-label="Torna alla pagina precedente"
               >
-                ← Torna ai Giochi
+                <ArrowLeft />
               </button>
+              <h1 className="text-xl font-semibold text-white">Torna ai giochi</h1>
             </div>
-            
-            <MemoryHackGame />
+            {renderGame()}
           </div>
         </main>
-        
         <BottomNavigation />
-      </motion.div>
-    );
-  }
-
-  if (selectedGame === 'cipher-decode') {
-    return (
-      <motion.div 
-        className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        style={{ 
-          height: '100dvh',
-          overflow: 'hidden',
-          position: 'relative'
-        }}
-      >
-        <header 
-          className="fixed top-0 left-0 right-0 z-50"
-          style={{
-            height: '72px',
-            paddingTop: 'env(safe-area-inset-top, 47px)',
-            backgroundColor: 'rgba(19, 21, 36, 0.7)',
-            backdropFilter: 'blur(12px)'
-          }}
-        >
-          <UnifiedHeader />
-        </header>
-        
-        <main
-          style={{
-            paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
-            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
-            height: '100dvh',
-            overflowY: 'auto',
-            position: 'relative',
-            zIndex: 0
-          }}
-        >
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-6">
-              <button
-                onClick={handleBackToMenu}
-                className="text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                ← Torna ai Giochi
-              </button>
-            </div>
-            
-            <CipherDecodeGame />
-          </div>
-        </main>
-        
-        <BottomNavigation />
-      </motion.div>
-    );
-  }
-
-  if (selectedGame === 'time-trial') {
-    return (
-      <motion.div 
-        className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        style={{ 
-          height: '100dvh',
-          overflow: 'hidden',
-          position: 'relative'
-        }}
-      >
-        <header 
-          className="fixed top-0 left-0 right-0 z-50"
-          style={{
-            height: '72px',
-            paddingTop: 'env(safe-area-inset-top, 47px)',
-            backgroundColor: 'rgba(19, 21, 36, 0.7)',
-            backdropFilter: 'blur(12px)'
-          }}
-        >
-          <UnifiedHeader />
-        </header>
-        
-        <main
-          style={{
-            paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
-            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
-            height: '100dvh',
-            overflowY: 'auto',
-            position: 'relative',
-            zIndex: 0
-          }}
-        >
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-6">
-              <button
-                onClick={handleBackToMenu}
-                className="text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                ← Torna ai Giochi
-              </button>
-            </div>
-            
-            <TimeTrialGame />
-          </div>
-        </main>
-        
-        <BottomNavigation />
-      </motion.div>
-    );
-  }
-
-  // CRITICAL FIX: Enhanced implementations for the additional 3 games
-  if (['agent-infiltration', 'code-breaker', 'tactical-ops'].includes(selectedGame || '')) {
-    const currentGame = games.find(g => g.id === selectedGame);
-    
-    return (
-      <motion.div 
-        className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        style={{ 
-          height: '100dvh',
-          overflow: 'hidden',
-          position: 'relative'
-        }}
-      >
-        <header 
-          className="fixed top-0 left-0 right-0 z-50"
-          style={{
-            height: '72px',
-            paddingTop: 'env(safe-area-inset-top, 47px)',
-            backgroundColor: 'rgba(19, 21, 36, 0.7)',
-            backdropFilter: 'blur(12px)'
-          }}
-        >
-          <UnifiedHeader />
-        </header>
-        
-        <main
-          style={{
-            paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
-            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
-            height: '100dvh',
-            overflowY: 'auto',
-            position: 'relative',
-            zIndex: 0
-          }}
-        >
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-6">
-              <button
-                onClick={handleBackToMenu}
-                className="text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                ← Torna ai Giochi
-              </button>
-            </div>
-            
-            <div className="m1ssion-glass-card p-8 text-center">
-              <motion.h2 
-                className="text-3xl font-orbitron font-bold text-[#00D1FF] mb-6"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                {currentGame?.title}
-              </motion.h2>
-              
-              <motion.p 
-                className="text-white/70 mb-8 text-lg"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-              >
-                {currentGame?.description}
-              </motion.p>
-              
-              <motion.div 
-                className="mb-8"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.4, duration: 0.6 }}
-              >
-                <div className="text-6xl mb-4">🎮</div>
-                <div className="text-yellow-400 font-bold text-xl mb-4">
-                  GIOCO COMPLETO E FUNZIONANTE
-                </div>
-                <div className={`inline-block px-4 py-2 rounded-full text-sm font-bold ${
-                  currentGame?.difficulty === 'Estremo' ? 'bg-purple-600' : 'bg-red-600'
-                }`}>
-                  Difficoltà: {currentGame?.difficulty}
-                </div>
-              </motion.div>
-              
-              <motion.div 
-                className="space-y-4"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.5 }}
-              >
-                <p className="text-white/60 mb-6">
-                  Questo gioco è ora completamente implementato e funzionante.
-                  {isDeveloper && <span className="block mt-2 text-green-400">👨‍💻 DEVELOPER: Tutti i giochi sono sbloccati e testabili</span>}
-                </p>
-                
-                <div className="flex justify-center space-x-4">
-                  <button
-                    onClick={handleBackToMenu}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg transition-colors font-semibold"
-                  >
-                    Torna al Menu
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      // Simulate game start
-                      alert(`Avvio ${currentGame?.title}! Gioco completamente implementato.`);
-                    }}
-                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white px-8 py-3 rounded-lg transition-all font-semibold"
-                  >
-                    Inizia Partita
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </main>
-        
-        <BottomNavigation />
-      </motion.div>
+      </div>
     );
   }
 
@@ -392,6 +191,7 @@ const Games = () => {
         position: 'relative'
       }}
     >
+      {/* Fixed Header */}
       <header 
         className="fixed top-0 left-0 right-0 z-50"
         style={{
@@ -404,6 +204,7 @@ const Games = () => {
         <UnifiedHeader />
       </header>
       
+      {/* Main scrollable content */}
       <main
         style={{
           paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
@@ -414,51 +215,60 @@ const Games = () => {
           zIndex: 0
         }}
       >
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto">
           <motion.h1
-            className="text-4xl font-orbitron font-bold text-[#00D1FF] text-center mb-8"
+            className="text-4xl font-orbitron font-bold text-[#00D1FF] text-center mt-6 mb-8"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
             style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}
           >
-            GIOCHI MISSION
-            {isDeveloper && <span className="text-green-400 text-lg block mt-2">👨‍💻 DEVELOPER MODE - TUTTI I 6 GIOCHI SBLOCCATI</span>}
+            M1SSION GAMES
           </motion.h1>
           
+          {/* Game Stats */}
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
+            className="max-w-4xl mx-auto mb-8 px-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
           >
-            {games.map((game, index) => (
-              <motion.div
-                key={game.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-              >
-                <GameCard
-                  title={game.title}
-                  description={game.description}
-                  difficulty={game.difficulty}
-                  rewards={game.rewards}
-                  isLocked={game.isLocked}
-                  progress={game.progress}
-                  onPlay={() => handleGameSelect(game.id)}
-                />
-              </motion.div>
-            ))}
+            <div className="glass-card p-4 text-center">
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <div className="text-2xl font-bold text-[#00D1FF]">{score}</div>
+                  <div className="text-gray-400 text-sm">Punti Totali</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-[#F059FF]">{level}</div>
+                  <div className="text-gray-400 text-sm">Livello Agente</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-[#00FF88]">{gameStats.gamesPlayed}</div>
+                  <div className="text-gray-400 text-sm">Missioni</div>
+                </div>
+              </div>
+            </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
-          >
-            <GameStats {...mockStats} />
-          </motion.div>
+          {/* Games Grid */}
+          <div className="max-w-4xl mx-auto px-3">
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+            >
+              {Object.entries(gameData).map(([gameType, game]) => (
+                <GameCard
+                  key={gameType}
+                  game={game}
+                  isCompleted={gameCompleted[gameType as GameType]}
+                  onPlay={() => setSelectedGame(gameType as GameType)}
+                />
+              ))}
+            </motion.div>
+          </div>
         </div>
       </main>
       

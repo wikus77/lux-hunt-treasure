@@ -2,9 +2,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
+// Get environment variables
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+// CORS headers
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -13,341 +15,345 @@ const corsHeaders = {
 interface BuzzRequest {
   userId: string;
   generateMap: boolean;
+  prizeId?: string;
   coordinates?: { lat: number; lng: number };
-  radius?: number;
-  generationCount?: number;
+  sessionId?: string;
 }
 
-const translateToEnglish = (text: string): string => {
-  const translations: { [key: string]: string } = {
-    "settimana": "week",
-    "Indizio": "Clue",
-    "generato": "generated",
-    "per": "for"
+interface BuzzResponse {
+  success: boolean;
+  clue_text: string;
+  buzz_cost: number;
+  radius_km?: number;
+  lat?: number;
+  lng?: number;
+  generation_number?: number;
+  error?: boolean;
+  errorMessage?: string;
+}
+
+// NEW: Apply secure offset to coordinates for security
+const applySecureOffset = (lat: number, lng: number) => {
+  const offset = () => (Math.random() - 0.5) * 0.1; // ±~5km
+  return {
+    lat: lat + offset(),
+    lng: lng + offset()
   };
-  
-  let result = text;
-  Object.entries(translations).forEach(([it, en]) => {
-    result = result.replace(new RegExp(it, 'gi'), en);
-  });
-  return result;
 };
 
 serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
     const requestData = await req.json();
-    const { userId, generateMap, coordinates, radius, generationCount } = requestData as BuzzRequest;
+    const { userId, generateMap, prizeId, coordinates, sessionId } = requestData as BuzzRequest;
     
-    console.log(`🔥 SURGICAL FIX – BUZZ REQUEST START - userId: ${userId}, generateMap: ${generateMap}, generation: ${generationCount}`);
+    console.log(`🔥 BUZZ REQUEST START - userId: ${userId}, generateMap: ${generateMap}`);
+    console.log(`📡 Coordinates received:`, coordinates);
     
+    // CRITICAL USER ID VALIDATION
+    if (!userId || typeof userId !== 'string') {
+      console.error("❌ Invalid userId:", userId);
+      return new Response(
+        JSON.stringify({ success: false, error: true, errorMessage: "ID utente non valido" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // AUTH VALIDATION
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) {
+      console.error("❌ Missing authorization header");
+      return new Response(
+        JSON.stringify({ success: false, error: true, errorMessage: "Token di autorizzazione mancante" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
-    // SURGICAL FIX: Enhanced developer detection and logging
-    const isDeveloper = userId === '00000000-0000-4000-a000-000000000000';
-    
-    if (isDeveloper) {
-      console.log('🔧 SURGICAL FIX: Developer bypass detected - FULL ACCESS GRANTED');
+    if (authError || !user || user.id !== userId) {
+      console.error("❌ Auth validation failed");
+      return new Response(
+        JSON.stringify({ success: false, error: true, errorMessage: "Autorizzazione non valida" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
-    // STEP 1 - Enhanced logging with FORCED database write
-    try {
-      await supabase.from('buzz_logs').insert({
-        id: crypto.randomUUID(),
+    console.log(`✅ Auth validation passed for user: ${userId}`);
+
+    // Get current week since mission start
+    const { data: weekData, error: weekError } = await supabase.rpc('get_current_mission_week');
+    if (weekError) {
+      console.error("❌ Error getting current week:", weekError);
+      return new Response(
+        JSON.stringify({ success: false, error: true, errorMessage: "Errore nel recupero settimana" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    
+    const currentWeek = weekData || 1;
+    console.log(`📍 Current mission week: ${currentWeek}`);
+
+    // Update buzz counter
+    const { data: buzzCount, error: buzzCountError } = await supabase.rpc('increment_buzz_counter', {
+      p_user_id: userId
+    });
+
+    if (buzzCountError) {
+      console.error("❌ Error incrementing buzz counter:", buzzCountError);
+      return new Response(
+        JSON.stringify({ success: false, error: true, errorMessage: "Errore contatore buzz" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`📍 Updated buzz count: ${buzzCount}`);
+
+    // Get user clue count for pricing
+    const { data: userClueCount, error: clueCountError } = await supabase
+      .from('user_clues')
+      .select('clue_id', { count: 'exact' })
+      .eq('user_id', userId);
+      
+    if (clueCountError) {
+      console.error("❌ Error getting clue count:", clueCountError);
+      return new Response(
+        JSON.stringify({ success: false, error: true, errorMessage: "Errore conteggio indizi" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const clueCount = userClueCount?.length || 0;
+    console.log(`📍 Current clue count: ${clueCount}`);
+    
+    // Calculate buzz cost
+    const { data: costData, error: costError } = await supabase.rpc('calculate_buzz_price', {
+      daily_count: clueCount + 1
+    });
+
+    if (costError || costData === null) {
+      console.error("❌ Error calculating buzz cost:", costError);
+      return new Response(
+        JSON.stringify({ success: false, error: true, errorMessage: "Errore calcolo costo" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const buzzCost = costData;
+    console.log(`📍 Calculated buzz cost: €${buzzCost}`);
+    
+    if (buzzCost <= 0) {
+      return new Response(
+        JSON.stringify({ success: false, error: true, errorMessage: "Limite giornaliero superato (50 buzzes)" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Generate clue based on current week
+    const clueText = generateClueBasedOnWeek(currentWeek);
+    console.log(`📍 Generated clue: ${clueText}`);
+    
+    // Insert clue into user_clues table
+    const { data: clueData, error: clueError } = await supabase
+      .from('user_clues')
+      .insert({
         user_id: userId,
-        step: `start-gen-${generationCount || 1}`,
-        details: { generateMap, coordinates, timestamp: new Date().toISOString(), generationCount },
-        created_at: new Date().toISOString()
-      });
-      console.log('✅ SURGICAL FIX: Enhanced start log FORCED into database');
-    } catch (logError) {
-      console.error('❌ SURGICAL FIX: Start log failed (continuing):', logError);
+        title_it: `Indizio Buzz #${buzzCount}`,
+        description_it: clueText,
+        title_en: `Buzz Clue #${buzzCount}`,
+        description_en: translateToEnglish(clueText),
+        clue_type: 'buzz',
+        buzz_cost: buzzCost
+      })
+      .select('clue_id')
+      .single();
+
+    if (clueError) {
+      console.error("❌ Error saving clue:", clueError);
+      return new Response(
+        JSON.stringify({ success: false, error: true, errorMessage: "Errore salvataggio indizio" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
-    // SURGICAL FIX: Enhanced authentication for non-developers only
-    if (!isDeveloper) {
-      const authHeader = req.headers.get("authorization");
-      if (!authHeader) {
-        console.error("❌ SURGICAL FIX - Missing authorization header for non-developer");
-        return new Response(
-          JSON.stringify({ success: false, error: true, errorMessage: "Token di autorizzazione mancante" }),
-          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
+    console.log(`✅ Clue saved with ID: ${clueData.clue_id}`);
 
-      const token = authHeader.replace("Bearer ", "");
-      
-      // SURGICAL FIX: Enhanced JWT validation with better error handling
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (!payload.sub || !payload.email) {
-          console.error("❌ SURGICAL FIX - JWT missing required claims:", { sub: !!payload.sub, email: !!payload.email });
-          return new Response(
-            JSON.stringify({ success: false, error: true, errorMessage: "Token JWT non valido (missing claims)" }),
-            { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-          );
-        }
-        console.log('✅ SURGICAL FIX: JWT validation passed with all claims');
-      } catch (jwtError) {
-        console.error("❌ SURGICAL FIX - JWT parsing failed:", jwtError);
-        return new Response(
-          JSON.stringify({ success: false, error: true, errorMessage: "Token JWT malformato" }),
-          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
+    // FORCE GENERATE MAP ALWAYS WHEN generateMap = true
+    let response: BuzzResponse = {
+      success: true,
+      clue_text: clueText,
+      buzz_cost: buzzCost
+    };
 
-      // Validate user session
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      
-      if (authError || !user || user.id !== userId) {
-        console.error("❌ SURGICAL FIX - Auth validation failed:", authError?.message);
-        return new Response(
-          JSON.stringify({ success: false, error: true, errorMessage: "Autorizzazione non valida" }),
-          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
-    }
-
-    console.log(`✅ SURGICAL FIX - Enhanced auth validation passed`);
-
-    // STEP 2 - SURGICAL FIX: Enhanced MAP GENERATION with FORCED area deletion
     if (generateMap) {
-      console.log('🗺️ SURGICAL FIX: Starting ENHANCED map area generation with FORCED deletion');
+      console.log(`🗺️ FORCED MAP GENERATION START for user ${userId}`);
       
-      const lat = coordinates?.lat || 41.9028;
-      const lng = coordinates?.lng || 12.4964;
+      // STEP 1: Get or set fixed center coordinates for this user
+      let baseCenter = { lat: 41.9028, lng: 12.4964 }; // Default Rome
       
-      // SURGICAL FIX: FORCE DELETE ALL PREVIOUS AREAS WITH VERIFICATION
-      console.log('🗑️ SURGICAL FIX: FORCING complete deletion of ALL previous areas for user:', userId);
-      
-      // Step 1: Count existing areas
-      const { data: existingAreas, error: countError } = await supabase
+      // Check if user has existing fixed center
+      const { data: existingCenter, error: centerError } = await supabase
         .from('user_map_areas')
-        .select('id')
-        .eq('user_id', userId);
+        .select('lat, lng')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+        
+      if (!centerError && existingCenter) {
+        // Use existing fixed center (without offset)
+        baseCenter = { lat: existingCenter.lat, lng: existingCenter.lng };
+        console.log(`📍 Using existing base center: ${baseCenter.lat}, ${baseCenter.lng}`);
+      } else if (coordinates) {
+        // Use provided coordinates as new base center
+        baseCenter = { lat: coordinates.lat, lng: coordinates.lng };
+        console.log(`📍 Setting new base center: ${baseCenter.lat}, ${baseCenter.lng}`);
+      }
       
-      if (countError) {
-        console.error('❌ SURGICAL FIX: Error counting existing areas:', countError);
+      // STEP 1.5: Apply secure offset to base center
+      const secureCenter = applySecureOffset(baseCenter.lat, baseCenter.lng);
+      console.log(`🔒 Applied secure offset: ${secureCenter.lat}, ${secureCenter.lng}`);
+      
+      // STEP 2: Clear existing BUZZ areas
+      console.log(`🧹 Clearing existing BUZZ areas...`);
+      const { error: deleteError } = await supabase
+        .from('user_map_areas')
+        .delete()
+        .eq('user_id', userId);
+        
+      if (deleteError) {
+        console.error("⚠️ Warning: Could not clear existing areas:", deleteError);
       } else {
-        console.log(`📊 SURGICAL FIX: Found ${existingAreas?.length || 0} existing areas to delete`);
+        console.log("✅ Cleared existing BUZZ areas successfully");
       }
       
-      // Step 2: Force delete with multiple attempts
-      let deleteSuccess = false;
-      let deleteAttempts = 0;
-      
-      while (!deleteSuccess && deleteAttempts < 5) {
-        deleteAttempts++;
-        console.log(`🗑️ SURGICAL FIX: DELETE attempt ${deleteAttempts}/5`);
-        
-        const { error: deleteError, count } = await supabase
-          .from('user_map_areas')
-          .delete({ count: 'exact' })
-          .eq('user_id', userId);
-        
-        if (deleteError) {
-          console.error(`❌ SURGICAL FIX: Delete attempt ${deleteAttempts} failed:`, deleteError);
-          if (deleteAttempts < 5) {
-            await new Promise(resolve => setTimeout(resolve, 500 * deleteAttempts));
-            continue;
-          }
-        } else {
-          console.log(`✅ SURGICAL FIX: Delete successful on attempt ${deleteAttempts}, deleted ${count} areas`);
-          deleteSuccess = true;
-        }
-      }
-      
-      // Step 3: Verify deletion
-      const { data: remainingAreas } = await supabase
-        .from('user_map_areas')
-        .select('id')
-        .eq('user_id', userId);
-      
-      if (remainingAreas && remainingAreas.length > 0) {
-        console.error('❌ SURGICAL FIX: CRITICAL - Areas still exist after deletion!', remainingAreas);
-        return new Response(
-          JSON.stringify({ success: false, error: true, errorMessage: "Errore critico: eliminazione aree fallita" }),
-          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
-      
-      console.log('✅ SURGICAL FIX: ALL previous areas FORCEFULLY DELETED and verified');
-      
-      // STEP 3: Calculate generation count and enhanced radius logic
-      const currentCount = generationCount || 1;
-      
-      // SURGICAL FIX: Enhanced radius calculation with proper progression
-      let finalRadius = radius || 500;
-      if (currentCount > 1) {
-        finalRadius = Math.max(5, 500 * Math.pow(0.95, currentCount - 1));
-        console.log(`📊 SURGICAL FIX: Enhanced radius calculation for generation ${currentCount}: ${finalRadius.toFixed(1)}km`);
-      }
+      // STEP 3: Get generation count
+      const { data: generationData, error: genError } = await supabase.rpc('increment_map_generation_counter', {
+        p_user_id: userId,
+        p_week: currentWeek
+      });
 
-      // STEP 4: Insert new area with FORCED unique ID and verification
-      console.log('🆕 SURGICAL FIX: Creating new area with enhanced verification...');
+      const currentGeneration = generationData || 1;
+      console.log(`📍 Current generation count: ${currentGeneration}`);
       
-      const newAreaId = crypto.randomUUID();
-      const { data: newArea, error: areaError } = await supabase
+      // STEP 4: Calculate radius with FIXED progressive reduction formula
+      let radius_km = Math.max(5, 100 * Math.pow(0.95, currentGeneration - 1));
+      
+      console.log(`📏 SECURE CENTER - Calculated radius: ${radius_km.toFixed(2)}km (generation: ${currentGeneration})`);
+      console.log(`📍 SECURE CENTER - Using coordinates: lat=${secureCenter.lat}, lng=${secureCenter.lng}`);
+      
+      // STEP 5: Save area to database with SECURE CENTER
+      const { error: mapError, data: savedArea } = await supabase
         .from('user_map_areas')
         .insert({
-          id: newAreaId,
           user_id: userId,
-          lat: lat,
-          lng: lng,
-          radius_km: finalRadius,
-          week: Math.ceil((Date.now() - new Date('2025-01-01').getTime()) / (7 * 24 * 60 * 60 * 1000)),
-          created_at: new Date().toISOString()
+          lat: secureCenter.lat,
+          lng: secureCenter.lng,
+          radius_km: radius_km,
+          week: currentWeek,
+          clue_id: clueData.clue_id
         })
         .select()
         .single();
-
-      if (areaError) {
-        console.error('❌ SURGICAL FIX: Error creating new map area:', areaError);
-        return new Response(
-          JSON.stringify({ success: false, error: true, errorMessage: "Errore creazione nuova area mappa" }),
-          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
-
-      // STEP 5: Update counter with enhanced conflict handling
-      let counterResult = currentCount;
-      try {
-        const currentDate = new Date().toISOString().split('T')[0];
-        const { data: existingCounter } = await supabase
-          .from('user_buzz_map_counter')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('date', currentDate)
-          .single();
-
-        if (existingCounter) {
-          const { data: updatedCounter } = await supabase
-            .from('user_buzz_map_counter')
-            .update({ buzz_map_count: currentCount })
-            .eq('user_id', userId)
-            .eq('date', currentDate)
-            .select('buzz_map_count')
-            .single();
-          counterResult = updatedCounter?.buzz_map_count || currentCount;
-        } else {
-          const { data: newCounter } = await supabase
-            .from('user_buzz_map_counter')
-            .insert({
-              id: crypto.randomUUID(),
-              user_id: userId,
-              date: currentDate,
-              buzz_map_count: currentCount
-            })
-            .select('buzz_map_count')
-            .single();
-          counterResult = newCounter?.buzz_map_count || currentCount;
-        }
-      } catch (counterError) {
-        console.error('❌ SURGICAL FIX: Counter update failed (continuing):', counterError);
-      }
-
-      console.log(`✅ SURGICAL FIX: Enhanced map area creation completed successfully`);
-      
-      return new Response(JSON.stringify({
-        success: true,
-        areaId: newArea.id,
-        lat: newArea.lat,
-        lng: newArea.lng,
-        radius_km: newArea.radius_km,
-        generation_number: counterResult,
-        clue_text: `🗺️ Area BUZZ MAPPA generata: ${finalRadius.toFixed(1)}km di raggio - Generazione ${counterResult}`,
-        deletedAreas: existingAreas?.length || 0
-      }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders }
-      });
-    }
-
-    // STEP 3 - ENHANCED REGULAR BUZZ PROCESSING
-    console.log('🎯 SURGICAL FIX: Processing enhanced regular BUZZ with coherent mission messages');
-
-    const { data: weekData, error: weekError } = await supabase.rpc('get_current_mission_week');
-    const currentWeek = weekData || 1;
-
-    let buzzCount = 1;
-    try {
-      const { data: buzzCountData, error: buzzCountError } = await supabase.rpc('increment_buzz_counter', {
-        p_user_id: userId
-      });
-      buzzCount = buzzCountData || 1;
-    } catch (buzzCountError) {
-      console.error("❌ SURGICAL FIX - Error incrementing buzz counter (continuing):", buzzCountError);
-    }
-
-    // SURGICAL FIX: Enhanced mission clues with proper Rome/Mission context
-    const enhancedMissionClues = [
-      `🎯 Indizio Mission Roma S${currentWeek}: Il segreto è custodito dove l'antico incontra il moderno nell'eterna città`,
-      `🏛️ Indizio Premium Roma #${buzzCount}: Cerca il simbolo nascosto nei riflessi del tramonto al Colosseo`,
-      `⭐ Missione Speciale Roma: La chiave si trova dove il tempo si è fermato nei Fori Imperiali`,
-      `🔍 Indizio Esclusivo Roma: Segui le tracce che portano al cuore della storia nel Pantheon`,
-      `💎 Segreto Mission Roma: Il tesoro attende dove la luce danza sulle onde del Tevere eterno`,
-      `🏺 Indizio Antico Roma: Dove i gladiatori combattevano, ora riposa il codice della vittoria`,
-      `🗿 Mistero Romano: Tra le colonne del tempio si cela la verità dell'impero perduto`
-    ];
-    
-    const randomClue = enhancedMissionClues[Math.floor(Math.random() * enhancedMissionClues.length)];
-    const missionCode = `ROM-${Date.now().toString().slice(-6)}`;
-    const clueWithCode = `${randomClue} - Codice: ${missionCode}`;
-
-    // SURGICAL FIX: Enhanced clue saving with forced persistence
-    try {
-      const { data: clueData, error: clueError } = await supabase
-        .from('user_clues')
-        .insert({
-          clue_id: crypto.randomUUID(),
-          user_id: userId,
-          title_it: `Indizio Mission Roma #${buzzCount}`,
-          description_it: clueWithCode,
-          title_en: `Mission Rome Clue #${buzzCount}`,
-          description_en: translateToEnglish(clueWithCode),
-          clue_type: 'premium',
-          buzz_cost: 0,
-          created_at: new Date().toISOString()
-        })
-        .select('clue_id')
-        .single();
-
-      if (clueError) {
-        console.error("❌ SURGICAL FIX - Error saving clue (continuing):", clueError);
+        
+      if (mapError) {
+        console.error("❌ Error saving map area:", mapError);
+        response.error = true;
+        response.errorMessage = "Errore salvataggio area mappa";
       } else {
-        console.log("✅ SURGICAL FIX: Enhanced clue FORCED into database successfully");
+        console.log("✅ Map area saved successfully with SECURE CENTER:", savedArea.id);
+        
+        // Add map data to response with SECURE CENTER
+        response.radius_km = radius_km;
+        response.lat = secureCenter.lat;
+        response.lng = secureCenter.lng;
+        response.generation_number = currentGeneration;
+        
+        console.log(`🎉 MAP GENERATION COMPLETE (SECURE CENTER): radius=${radius_km.toFixed(2)}km, generation=${currentGeneration}, center=${secureCenter.lat},${secureCenter.lng}`);
       }
-    } catch (clueError) {
-      console.error("❌ SURGICAL FIX - Exception saving clue (continuing):", clueError);
     }
 
-    console.log(`✅ SURGICAL FIX: Enhanced regular BUZZ processed with coherent mission message`);
+    console.log(`✅ BUZZ RESPONSE:`, response);
 
-    return new Response(JSON.stringify({
-      success: true,
-      clue_text: clueWithCode,
-      buzz_cost: 0,
-      generation_number: buzzCount,
-      week: currentWeek
-    }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders }
-    });
+    return new Response(
+      JSON.stringify(response),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    );
 
   } catch (error) {
-    console.error('❌ SURGICAL FIX: Exception in enhanced handle-buzz-press:', error);
+    console.error("❌ General error in BUZZ handling:", error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: true, 
-        errorMessage: "Errore interno del server" 
-      }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      JSON.stringify({ success: false, error: true, errorMessage: error.message || "Errore del server" }),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 });
+
+// Helper function to generate appropriate clue based on week number
+function generateClueBasedOnWeek(weekNumber: number): string {
+  const vagueClues = [
+    "Cerca dove splende il sole sul metallo lucente",
+    "L'essenza del premio si nasconde tra storia e modernità",
+    "Il tuo obiettivo si muove in spazi aperti e veloci",
+    "Una creazione nata dalla passione e dall'innovazione",
+    "Dove il design incontra la potenza troverai ciò che cerchi"
+  ];
+  
+  const mediumClues = [
+    "La velocità incontra l'eleganza in questo gioiello di ingegneria",
+    "Prestigio e prestazioni si fondono in un'opera d'arte meccanica",
+    "Un simbolo di status che attende di essere scoperto",
+    "La perfezione tecnica nascosta alla vista ma non lontana",
+    "Un capolavoro di ingegneria con il cuore pulsante di potenza"
+  ];
+  
+  const geographicClues = [
+    "Nella terra della moda e del design, vicino alle Alpi",
+    "Cerca nella regione conosciuta per la sua tradizione motoristica",
+    "Lungo la costa mediterranea, dove il sole bacia le montagne",
+    "Nella pianura fertile, tra fiumi antichi e città moderne",
+    "Nella regione che ha dato i natali ai grandi innovatori"
+  ];
+  
+  const preciseClues = [
+    "Nella città della moda, dove creatività e industria si incontrano",
+    "Cerca nel capoluogo circondato dalle colline, famoso per la sua storia industriale",
+    "Nel cuore della città dalle torri medievali, dove tradizione e innovazione convivono",
+    "Nella zona industriale della città che ha fatto la storia dell'automobile italiana",
+    "Vicino al fiume che attraversa la città, in un'area di sviluppo tecnologico"
+  ];
+  
+  if (weekNumber <= 2) {
+    return vagueClues[Math.floor(Math.random() * vagueClues.length)];
+  } else if (weekNumber == 3) {
+    return mediumClues[Math.floor(Math.random() * mediumClues.length)];
+  } else {
+    const useMorePrecise = Math.random() > 0.5;
+    if (useMorePrecise) {
+      return preciseClues[Math.floor(Math.random() * preciseClues.length)];
+    } else {
+      return geographicClues[Math.floor(Math.random() * geographicClues.length)];
+    }
+  }
+}
+
+function translateToEnglish(italianClue: string): string {
+  const translations: Record<string, string> = {
+    "Cerca dove splende il sole sul metallo lucente": "Look where the sun shines on gleaming metal",
+    "L'essenza del premio si nasconde tra storia e modernità": "The essence of the prize hides between history and modernity",
+    "Il tuo obiettivo si muove in spazi aperti e veloci": "Your target moves in open and fast spaces",
+    "Una creazione nata dalla passione e dall'innovazione": "A creation born from passion and innovation",
+    "Dove il design incontra la potenza troverai ciò che cerchi": "Where design meets power, you'll find what you seek"
+  };
+  
+  return translations[italianClue] || italianClue;
+}

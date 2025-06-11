@@ -1,355 +1,417 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthContext } from '@/contexts/auth';
 
+import { useState, useCallback, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+// Tipizzazione
 export interface Notification {
   id: string;
   title: string;
-  message: string;
   description: string;
-  type: string;
-  is_read: boolean;
-  read: boolean;
-  created_at: string;
   date: string;
+  read: boolean;
+  type?: string;
 }
 
-// CRITICAL FIX: Export NOTIFICATION_CATEGORIES con GENERIC aggiunto
+// Interfacce tipizzate per Supabase
+interface UserNotificationRow {
+  id: string;
+  title: string;
+  message: string;
+  created_at: string;
+  is_read: boolean;
+  type: string;
+  user_id: string;
+  is_deleted: boolean;
+}
+
+// Listener globale per sincronizzazione istantanea tra component
+let listeners: (() => void)[] = [];
+
+// Costanti per la gestione dello storage
+const MAX_NOTIFICATIONS = 100;
+const STORAGE_KEY = 'notifications';
+
+// Notification categories
 export const NOTIFICATION_CATEGORIES = {
-  BUZZ: 'buzz',
-  MAP_BUZZ: 'buzz_map',
-  REWARD: 'reward',
-  SYSTEM: 'system',
-  MISSION: 'mission',
   LEADERBOARD: 'leaderboard_update',
+  BUZZ: 'buzz',
+  MAP_BUZZ: 'map_buzz',
   WEEKLY: 'weekly_summary',
-  GENERAL: 'general',
-  GENERIC: 'generic' // ✅ AGGIUNTO per risolvere TS2339
+  GENERIC: 'generic'
 };
 
-export const useNotifications = () => {
+export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { getCurrentUser } = useAuthContext();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastReloadTimeRef = useRef<number>(0);
+  const isInitialLoadRef = useRef<boolean>(true);
 
-  // CRITICAL FIX: Caricamento notifiche FORZATO con validazione sessione
-  const loadNotifications = useCallback(async () => {
-    const currentUser = getCurrentUser();
-    const userId = currentUser?.id;
-    const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
-
-    if (!userId && !isDeveloper && !localStorage.getItem('developer_access')) {
-      console.warn('Cannot load notifications - no user ID');
-      setNotifications([]);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    
+  // Funzione sicura per salvare le notifiche
+  const saveNotifications = useCallback((notifs: Notification[]) => {
     try {
-      console.log('📨 CARICAMENTO NOTIFICHE FORZATO per user:', userId);
-      
-      // CRITICAL FIX: Refresh sessione FORZATO
-      const { error: sessionError } = await supabase.auth.refreshSession();
-      if (sessionError) {
-        console.error('❌ Session refresh error:', sessionError);
-      }
-      
-      // CRITICAL FIX: Query con retry x10
-      const queryUserId = userId || '00000000-0000-4000-a000-000000000000';
-      let data = null;
-      let attempts = 0;
-      let success = false;
-      
-      while (!success && attempts < 10) {
-        attempts++;
-        console.log(`📨 Caricamento notifiche tentativo ${attempts}/10`);
-        
-        try {
-          const { data: notificationData, error } = await supabase
-            .from('user_notifications')
-            .select('*')
-            .eq('user_id', queryUserId)
-            .is('is_deleted', false)
-            .order('created_at', { ascending: false })
-            .limit(100);
-
-          if (error) {
-            console.error(`❌ Tentativo ${attempts} fallito:`, error);
-            if (attempts < 10) {
-              await new Promise(resolve => setTimeout(resolve, 200));
-              continue;
-            }
-            throw error;
-          }
-
-          data = notificationData;
-          success = true;
-          console.log(`✅ Notifiche caricate al tentativo ${attempts}, trovate: ${data?.length || 0}`);
-          
-        } catch (retryError) {
-          console.error(`❌ Retry tentativo ${attempts} fallito:`, retryError);
-          if (attempts >= 10) throw retryError;
-        }
-      }
-
-      const mappedNotifications = (data || []).map(notif => ({
-        id: notif.id,
-        title: notif.title,
-        message: notif.message,
-        description: notif.message,
-        type: notif.type,
-        is_read: notif.is_read,
-        read: notif.is_read,
-        created_at: notif.created_at,
-        date: notif.created_at
-      }));
-
-      setNotifications(mappedNotifications);
-      console.log('✅ NOTIFICHE CARICATE con successo:', mappedNotifications.length);
-      
+      const limitedNotifs = notifs.slice(-MAX_NOTIFICATIONS);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(limitedNotifs));
+      return true;
     } catch (error) {
-      console.error('❌ ERRORE CRITICO caricamento notifiche:', error);
-      setNotifications([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getCurrentUser]);
-
-  // CRITICAL FIX: Creazione notifica FORZATA con persistenza x20 retry
-  const addNotification = useCallback(async (title: string, message: string, type: string = 'generic') => {
-    const currentUser = getCurrentUser();
-    const userId = currentUser?.id;
-    const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
-
-    if (!userId && !isDeveloper && !localStorage.getItem('developer_access')) {
-      console.warn('Cannot add notification - no user ID');
-      return;
-    }
-
-    try {
-      console.log('📨 CREAZIONE NOTIFICA FORZATA:', { title, message, type });
-      
-      // CRITICAL FIX: Refresh sessione prima della scrittura
-      const { error: sessionError } = await supabase.auth.refreshSession();
-      if (sessionError) {
-        console.error('❌ Session refresh error per notifica:', sessionError);
-      }
-
-      // CRITICAL FIX: Scrittura con retry x20
-      const notificationId = crypto.randomUUID();
-      const queryUserId = userId || '00000000-0000-4000-a000-000000000000';
-      let writeSuccess = false;
-      let attempts = 0;
-      
-      while (!writeSuccess && attempts < 20) {
-        attempts++;
-        console.log(`📨 SCRITTURA NOTIFICA tentativo ${attempts}/20`);
-        
-        try {
-          const { data, error } = await supabase
-            .from('user_notifications')
-            .insert({
-              id: notificationId,
-              user_id: queryUserId,
-              title,
-              message,
-              type,
-              is_read: false,
-              is_deleted: false,
-              created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-
-          if (error) {
-            console.error(`❌ Scrittura tentativo ${attempts} fallito:`, error);
-            
-            if (attempts < 20) {
-              // Refresh sessione ogni 5 tentativi
-              if (attempts % 5 === 0) {
-                console.log('🔄 Refresh sessione retry...');
-                await supabase.auth.refreshSession();
-              }
-              await new Promise(resolve => setTimeout(resolve, 100));
-              continue;
-            }
-            throw error;
-          }
-
-          writeSuccess = true;
-          console.log(`✅ NOTIFICA SCRITTA CON SUCCESSO al tentativo ${attempts}`);
-
-          const newNotification = {
-            id: data.id,
-            title: data.title,
-            message: data.message,
-            description: data.message,
-            type: data.type,
-            is_read: data.is_read,
-            read: data.is_read,
-            created_at: data.created_at,
-            date: data.created_at
-          };
-
-          // Aggiornamento stato locale immediato
-          setNotifications(prev => [newNotification, ...prev]);
-          console.log('✅ Notifica aggiunta allo stato locale');
-          
-          // Reload forzato per verifica persistenza
-          setTimeout(() => {
-            console.log('🔄 Reload notifiche per verifica...');
-            loadNotifications();
-          }, 300);
-
-        } catch (retryError) {
-          console.error(`❌ Eccezione tentativo ${attempts}:`, retryError);
-          if (attempts >= 20) throw retryError;
-        }
-      }
-      
-      if (!writeSuccess) {
-        throw new Error('Fallimento scrittura dopo 20 tentativi');
-      }
-      
-    } catch (error) {
-      console.error('❌ ERRORE CRITICO creazione notifica:', error);
-      
-      // Fallback locale SEMPRE
-      const fallbackNotification = {
-        id: crypto.randomUUID(),
-        title,
-        message,
-        description: message,
-        type,
-        is_read: false,
-        read: false,
-        created_at: new Date().toISOString(),
-        date: new Date().toISOString()
-      };
-      
-      setNotifications(prev => [fallbackNotification, ...prev]);
-      console.log('⚠️ Notifica FALLBACK aggiunta allo stato locale');
-    }
-  }, [getCurrentUser, loadNotifications]);
-
-  const markAsRead = useCallback(async (notificationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('user_notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId);
-
-      if (error) {
-        console.error('❌ Error marking notification as read:', error);
-        return;
-      }
-
-      setNotifications(prev => 
-        prev.map(notif => 
-          notif.id === notificationId 
-            ? { ...notif, is_read: true, read: true }
-            : notif
-        )
-      );
-    } catch (error) {
-      console.error('❌ Exception marking notification as read:', error);
+      console.error("Errore nel salvataggio delle notifiche:", error);
+      return false;
     }
   }, []);
 
+  // Carica le notifiche da Supabase con rate limiting migliorato e visibility check
+  const reloadNotifications = useCallback(async (force = false) => {
+    // Controlla se la pagina è visibile - ottimizzazione polling
+    if (!force && document.visibilityState !== 'visible') {
+      console.log("⏸️ Skipping reload - page not visible");
+      return true;
+    }
+
+    const now = Date.now();
+    if (!force && now - lastReloadTimeRef.current < 3000 && !isInitialLoadRef.current) {
+      console.log("⏱️ Skipping reload due to rate limiting");
+      return true;
+    }
+    
+    try {
+      console.log("🔄 Reloading notifications UNIVOCHE...");
+      
+      if (isInitialLoadRef.current || now - lastReloadTimeRef.current > 3000) {
+        setIsLoading(true);
+      }
+      
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      
+      // Carica da localStorage come fallback
+      const stored = localStorage.getItem(STORAGE_KEY);
+      let notifs: Notification[] = stored ? JSON.parse(stored) : [];
+      
+      // Se l'utente è autenticato, carica da Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        console.log("👤 Utente autenticato, caricamento da Supabase...");
+        const { data: supabaseNotifs, error } = await supabase
+          .from('user_notifications')
+          .select<'*', UserNotificationRow>('*')
+          .eq('is_deleted', false)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          console.error("❌ Error fetching notifications from Supabase:", error);
+        } else if (supabaseNotifs && supabaseNotifs.length > 0) {
+          console.log("✅ Loaded UNIQUE notifications from Supabase:", supabaseNotifs.length);
+          
+          // Converti notifiche Supabase al nostro formato, ordinando per timestamp
+          notifs = supabaseNotifs
+            .map((n: UserNotificationRow) => ({
+              id: n.id,
+              title: n.title,
+              description: n.message,
+              date: n.created_at,
+              read: n.is_read === true,
+              type: n.type
+            }))
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          
+          // Aggiorna localStorage con dati server
+          saveNotifications(notifs);
+        }
+      }
+      
+      const unreadCount = notifs.filter(n => !n.read).length;
+      console.log("📊 Loaded notifications:", notifs.length, "Unread:", unreadCount);
+      
+      setNotifications(notifs);
+      setUnreadCount(unreadCount);
+      
+      loadingTimeoutRef.current = setTimeout(() => {
+        setIsLoading(false);
+        loadingTimeoutRef.current = null;
+      }, 200);
+      
+      lastReloadTimeRef.current = now;
+      isInitialLoadRef.current = false;
+      
+      return true;
+    } catch (e) {
+      console.error("❌ Errore nel caricamento delle notifiche:", e);
+      setNotifications([]);
+      setUnreadCount(0);
+      setIsLoading(false);
+      return false;
+    }
+  }, [saveNotifications]);
+
+  // Segna tutte come lette
   const markAllAsRead = useCallback(async () => {
-    const currentUser = getCurrentUser();
-    const userId = currentUser?.id;
-
-    if (!userId && !localStorage.getItem('developer_access')) {
-      console.warn('Cannot mark all as read - no user ID');
-      return;
-    }
-
+    if (notifications.length === 0) return;
+    
+    console.log("📖 Marcando tutte le notifiche come lette...");
     try {
-      const { error } = await supabase
-        .from('user_notifications')
-        .update({ is_read: true })
-        .eq('user_id', userId || '00000000-0000-4000-a000-000000000000')
-        .eq('is_read', false);
-
-      if (error) {
-        console.error('❌ Error marking all notifications as read:', error);
-        return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Aggiorna su Supabase
+        const { error } = await supabase
+          .from('user_notifications')
+          .update({ is_read: true })
+          .eq('user_id', user.id)
+          .eq('is_deleted', false);
+          
+        if (error) {
+          console.error("❌ Error marking notifications as read in Supabase:", error);
+          return;
+        } else {
+          console.log("✅ Tutte le notifiche marcate come lette su Supabase");
+        }
       }
-
-      setNotifications(prev => 
-        prev.map(notif => ({ ...notif, is_read: true, read: true }))
-      );
-    } catch (error) {
-      console.error('❌ Exception marking all notifications as read:', error);
-    }
-  }, [getCurrentUser]);
-
-  const deleteNotification = useCallback(async (notificationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('user_notifications')
-        .update({ is_deleted: true })
-        .eq('id', notificationId);
-
-      if (error) {
-        console.error('❌ Error deleting notification:', error);
-        return;
+      
+      // Aggiorna localmente
+      const updated = notifications.map(n => ({ ...n, read: true }));
+      const saved = saveNotifications(updated);
+      
+      if (saved) {
+        setNotifications(updated);
+        setUnreadCount(0);
+        listeners.forEach(fn => fn());
+        console.log("✅ Stato locale aggiornato");
       }
-
-      setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
     } catch (error) {
-      console.error('❌ Exception deleting notification:', error);
+      console.error("❌ Error in markAllAsRead:", error);
     }
-  }, []);
+  }, [notifications, saveNotifications]);
 
-  const reloadNotifications = useCallback(async (force: boolean = false) => {
-    await loadNotifications();
-  }, [loadNotifications]);
-
-  // CRITICAL FIX: Inizializzazione FORZATA con subscription
+  // Aggiorna in realtime se qualcuno chiama reload da altrove con visibility check
   useEffect(() => {
-    console.log('🔄 INIZIALIZZAZIONE NOTIFICHE FORZATA');
-    loadNotifications();
+    const listener = () => {
+      if (document.visibilityState === 'visible') {
+        const now = Date.now();
+        if (now - lastReloadTimeRef.current > 3000 || isInitialLoadRef.current) {
+          reloadNotifications();
+        }
+      }
+    };
+    listeners.push(listener);
+
+    const storageEvent = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY && document.visibilityState === 'visible') {
+        const now = Date.now();
+        if (now - lastReloadTimeRef.current > 3000 || isInitialLoadRef.current) {
+          reloadNotifications();
+        }
+      }
+    };
     
-    const currentUser = getCurrentUser();
-    const userId = currentUser?.id;
+    // Listener per visibility change
+    const visibilityChangeHandler = () => {
+      if (document.visibilityState === 'visible' && !isInitialLoadRef.current) {
+        console.log("👁️ Page became visible, checking for updates...");
+        reloadNotifications();
+      }
+    };
     
-    if (userId || localStorage.getItem('developer_access')) {
-      console.log('📡 Subscription real-time notifiche...');
+    window.addEventListener('storage', storageEvent);
+    document.addEventListener('visibilitychange', visibilityChangeHandler);
+
+    if (isInitialLoadRef.current) {
+      reloadNotifications();
+    }
+
+    return () => {
+      listeners = listeners.filter(fn => fn !== listener);
+      window.removeEventListener('storage', storageEvent);
+      document.removeEventListener('visibilitychange', visibilityChangeHandler);
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, [reloadNotifications]);
+
+  // Setup Supabase realtime subscription con visibility check
+  useEffect(() => {
+    const setupRealtimeSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
       const channel = supabase
-        .channel('notifications-realtime')
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'user_notifications',
-          filter: `user_id=eq.${userId || '00000000-0000-4000-a000-000000000000'}`
-        }, (payload) => {
-          console.log('📨 Notifica real-time ricevuta:', payload);
-          setTimeout(() => loadNotifications(), 100);
-        })
+        .channel('notification-changes')
+        .on('postgres_changes', 
+            {
+              event: '*', 
+              schema: 'public', 
+              table: 'user_notifications',
+              filter: `user_id=eq.${user.id}`
+            }, 
+            (payload) => {
+              console.log('Realtime notification update:', payload);
+              if (document.visibilityState === 'visible') {
+                const now = Date.now();
+                if (now - lastReloadTimeRef.current > 3000) {
+                  reloadNotifications(true);
+                } else {
+                  setTimeout(() => {
+                    if (document.visibilityState === 'visible') {
+                      reloadNotifications(true);
+                    }
+                  }, 3000 - (now - lastReloadTimeRef.current));
+                }
+              }
+            }
+        )
         .subscribe();
       
       return () => {
-        console.log('📡 Pulizia subscription notifiche');
         supabase.removeChannel(channel);
       };
-    }
-  }, [loadNotifications, getCurrentUser]);
+    };
+    
+    setupRealtimeSubscription();
+  }, [reloadNotifications]);
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  // Singola notifica come letta
+  const markAsRead = useCallback(async (id: string) => {
+    console.log("📖 Marcando notifica come letta:", id);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { error } = await supabase
+          .from('user_notifications')
+          .update({ is_read: true })
+          .eq('id', id);
+          
+        if (error) {
+          console.error("❌ Error marking notification as read in Supabase:", error);
+        } else {
+          console.log("✅ Notifica marcata come letta su Supabase");
+        }
+      }
+      
+      const updated = notifications.map(n => n.id === id ? { ...n, read: true } : n);
+      const saved = saveNotifications(updated);
+      
+      if (saved) {
+        setNotifications(updated);
+        setUnreadCount(updated.filter(n => !n.read).length);
+        listeners.forEach(fn => fn());
+        console.log("✅ Stato locale aggiornato per notifica:", id);
+      }
+      return saved;
+    } catch (error) {
+      console.error("❌ Error in markAsRead:", error);
+      return false;
+    }
+  }, [notifications, saveNotifications]);
+
+  // Delete a notification
+  const deleteNotification = useCallback(async (id: string) => {
+    try {
+      console.log("Deleting notification:", id);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { error } = await supabase
+          .from('user_notifications')
+          .update({ is_deleted: true })
+          .eq('id', id);
+          
+        if (error) {
+          console.error("Error deleting notification in Supabase:", error);
+        }
+      }
+      
+      const updated = notifications.filter(n => n.id !== id);
+      const saved = saveNotifications(updated);
+      
+      if (saved) {
+        setNotifications(updated);
+        setUnreadCount(updated.filter(n => !n.read).length);
+        listeners.forEach(fn => fn());
+      }
+      return saved;
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      return false;
+    }
+  }, [notifications, saveNotifications]);
+
+  // Aggiungi una nuova notifica UNIVOCA
+  const addNotification = useCallback(async (notification: {title: string, description: string, type?: string}) => {
+    const type = notification.type || NOTIFICATION_CATEGORIES.GENERIC;
+    
+    try {
+      console.log("Adding UNIQUE notification:", notification);
+      
+      // Genera ID temporaneo con timestamp per garantire unicità
+      let tempId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      let newNotification = {
+        id: tempId,
+        title: notification.title,
+        description: notification.description,
+        date: new Date().toISOString(),
+        read: false,
+        type
+      };
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { error, data } = await supabase
+          .from('user_notifications')
+          .insert({
+            user_id: user.id,
+            type,
+            title: notification.title,
+            message: notification.description,
+            is_read: false
+          })
+          .select<'*', UserNotificationRow>()
+          .single();
+          
+        if (error) {
+          console.error("Error saving notification to Supabase:", error);
+        } 
+        else if (data) {
+          newNotification.id = data.id;
+          console.log("✅ UNIQUE Notification saved to Supabase with ID:", data.id);
+        }
+      }
+      
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const currentNotifs: Notification[] = stored ? JSON.parse(stored) : [];
+      
+      // Aggiungi la nuova notifica in cima alla lista
+      const updated = [newNotification, ...currentNotifs];
+      const saved = saveNotifications(updated);
+      
+      if (saved) {
+        setNotifications(updated);
+        setUnreadCount(prev => prev + 1);
+        listeners.forEach(fn => fn());
+        console.log("✅ UNIQUE Notification added successfully:", newNotification);
+      }
+      
+      return saved;
+    } catch (error) {
+      console.error("Error adding notification:", error);
+      return false;
+    }
+  }, [saveNotifications]);
+
+  // Get notifications by category
+  const getNotificationsByCategory = useCallback((category: string) => {
+    return notifications.filter(n => n.type === category);
+  }, [notifications]);
 
   return {
     notifications,
-    isLoading,
     unreadCount,
-    addNotification,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
+    isLoading,
     reloadNotifications,
-    loadNotifications
+    markAllAsRead,
+    markAsRead,
+    addNotification,
+    deleteNotification,
+    getNotificationsByCategory
   };
-};
+}

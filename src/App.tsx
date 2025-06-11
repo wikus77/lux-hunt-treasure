@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
@@ -8,26 +8,8 @@ import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import GlobalLayout from "./components/layout/GlobalLayout";
 import AppRoutes from "./routes/AppRoutes";
 import SafeAreaToggle from "./components/debug/SafeAreaToggle";
-import { loadGA4 } from "./utils/loadGA4";
 
 function App() {
-  // Load GA4 if user has already given consent
-  useEffect(() => {
-    const consent = localStorage.getItem('gdpr_consent_given');
-    const analyticsConsent = localStorage.getItem('user_consents');
-    
-    if (consent === 'true' && analyticsConsent) {
-      try {
-        const consents = JSON.parse(analyticsConsent);
-        if (consents.analytics) {
-          loadGA4();
-        }
-      } catch (e) {
-        console.error("Error parsing stored consents:", e);
-      }
-    }
-  }, []);
-
   return (
     <Router>
       <SoundProvider>

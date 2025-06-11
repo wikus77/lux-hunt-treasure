@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Circle as CircleIcon, Loader } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useBuzzMapLogic } from "@/hooks/useBuzzMapLogic";
-import { useAuthContext } from '@/contexts/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 export interface BuzzButtonProps {
@@ -23,48 +22,27 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 }) => {
   const [isRippling, setIsRippling] = useState(false);
   const { createMapBuzzNotification } = useNotificationManager();
-  const { user, getCurrentUser } = useAuthContext();
+  const { user } = useAuth();
   const { 
     isGenerating, 
     generateBuzzMapArea,
     getActiveArea,
     dailyBuzzMapCounter,
+    precisionMode,
     reloadAreas
   } = useBuzzMapLogic();
-  
-  // FIXED: Get user with developer support
-  const currentUser = getCurrentUser();
-  const userId = currentUser?.id || user?.id;
-  
-  console.log("🔥 BuzzButton - User validation:", { 
-    user: user?.id,
-    currentUser: currentUser?.id,
-    userId,
-    email: currentUser?.email,
-    isDeveloper: currentUser?.email === 'wikus77@hotmail.it'
-  });
   
   const activeArea = getActiveArea();
   
   const handleBuzzMapClick = async () => {
-    // CRITICAL: Validate user ID with developer support
-    if (!userId) {
+    // CRITICAL: Validate user ID first
+    if (!user?.id) {
       console.error('❌ BUZZ ERROR: No valid user ID available');
-      
-      // Check if it's developer mode that should work
-      const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-      const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
-      
-      if (hasDeveloperAccess || isDeveloperEmail) {
-        console.log('🔧 Developer mode detected, using fallback UUID');
-        // Continue with developer UUID
-      } else {
-        toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
-        return;
-      }
+      toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
+      return;
     }
 
-    console.log('🔥 BUZZ CLICK (FIXED CENTER) - User ID validated:', userId);
+    console.log('🔥 BUZZ CLICK (FIXED CENTER) - User ID validated:', user.id);
     
     // Trigger ripple effect
     setIsRippling(true);
@@ -75,18 +53,18 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       window.plausible('buzz_click');
     }
     
-    // Use map center coordinates or default to Rome
+    // Use map center coordinates or default to Rome (will become fixed center)
     const centerLat = mapCenter ? mapCenter[0] : 41.9028;
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
-    console.log('📍 BUZZ CALL with coordinates:', { 
-      userId: userId || 'developer-fallback',
+    console.log('📍 BUZZ CALL with FIXED CENTER coordinates:', { 
+      userId: user.id,
       centerLat, 
       centerLng,
       mode: 'backend-only-fixed-center'
     });
     
-    // BACKEND-ONLY GENERATION with user validation
+    // BACKEND-ONLY GENERATION with FIXED CENTER - completely stateless
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
@@ -100,6 +78,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       // Force reload areas to sync with database
       await reloadAreas();
       
+      // DO NOT CENTER MAP - maintain current view
+      // onAreaGenerated is NOT called to prevent zoom/pan changes
+      console.log('🔒 MAINTAINING CURRENT MAP VIEW - No zoom/pan changes');
+      
       // Execute optional callback without affecting map view
       if (handleBuzz) {
         handleBuzz();
@@ -110,10 +92,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     }
   };
 
-  // Disable button only if completely no user and not developer mode
-  const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-  const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
-  const isDisabled = isGenerating || (!userId && !hasDeveloperAccess && !isDeveloperEmail);
+  // Disable button if no valid user
+  const isDisabled = isGenerating || !user?.id;
   
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">

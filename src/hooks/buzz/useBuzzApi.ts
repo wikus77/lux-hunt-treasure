@@ -1,90 +1,108 @@
 
-import { useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthContext } from '@/contexts/auth';
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BuzzApiParams {
   userId: string;
-  generateMap?: boolean;
+  generateMap: boolean;
+  coordinates?: { lat: number; lng: number };
+  prizeId?: string;
+  sessionId?: string;
 }
 
 interface BuzzApiResponse {
   success: boolean;
   clue_text?: string;
-  error?: string;
+  buzz_cost?: number;
+  // New fields for map area response
+  radius_km?: number;
+  lat?: number;
+  lng?: number;
+  generation_number?: number;
   errorMessage?: string;
+  error?: boolean;
+  map_area?: {
+    lat: number;
+    lng: number;
+    radius_km: number;
+    week: number;
+  };
+  precision?: 'high' | 'low';
+  canGenerateMap?: boolean;
+  remainingMapGenerations?: number;
 }
 
-export const useBuzzApi = () => {
-  const { getCurrentUser } = useAuthContext();
-
-  const callBuzzApi = useCallback(async (params: BuzzApiParams): Promise<BuzzApiResponse> => {
-    const currentUser = getCurrentUser();
-    const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
-    const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-
-    // CRITICAL: Developer bypass
-    if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 Developer mode: Generating mock BUZZ response');
-      
-      const mockClue = `Indizio DEVELOPER generato alle ${new Date().toLocaleTimeString()} - Cerca nella zona di testing per il lancio M1SSION`;
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      return {
-        success: true,
-        clue_text: mockClue
-      };
-    }
-
-    // CRITICAL: Validate user ID
-    if (!params.userId) {
-      console.error('❌ BUZZ API: No user ID provided');
-      return {
-        success: false,
-        errorMessage: 'User ID richiesto per BUZZ API'
-      };
-    }
-
+export function useBuzzApi() {
+  const callBuzzApi = async ({ userId, generateMap, coordinates, prizeId, sessionId }: BuzzApiParams): Promise<BuzzApiResponse> => {
     try {
-      console.log('🚀 Calling BUZZ API with params:', params);
-
-      // Call the appropriate edge function
-      const functionName = params.generateMap ? 'generate-weekly-buzz' : 'generate-weekly-buzz';
-      
-      const { data, error } = await supabase.functions.invoke(functionName, {
-        body: {
-          user_id: params.userId,
-          generate_map: params.generateMap || false
-        }
-      });
-
-      if (error) {
-        console.error('❌ BUZZ API Error:', error);
-        return {
-          success: false,
-          errorMessage: error.message || 'Errore chiamata BUZZ API'
-        };
+      if (!userId) {
+        console.error("UserId mancante nella chiamata API");
+        return { success: false, error: true, errorMessage: "Devi effettuare l'accesso per utilizzare questa funzione" };
       }
 
-      console.log('✅ BUZZ API Response:', data);
+      // Validazione UUID formato
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(userId)) {
+        console.error(`UserID non valido: ${userId}`);
+        return { success: false, error: true, errorMessage: "ID utente non valido" };
+      }
 
-      return {
-        success: true,
-        clue_text: data?.clue_text || data?.message || 'Indizio generato con successo'
+      // CRITICAL: Build correct payload for unified backend logic
+      const payload: any = { 
+        userId, 
+        generateMap 
       };
 
+      // Add coordinates if generateMap is true
+      if (generateMap && coordinates) {
+        payload.coordinates = coordinates;
+        console.log(`🗺️ BUZZ API Call with generateMap=true and coordinates:`, coordinates);
+      }
+
+      // Add optional parameters
+      if (prizeId) payload.prizeId = prizeId;
+      if (sessionId) payload.sessionId = sessionId;
+      
+      console.log(`📡 Calling handle-buzz-press with unified payload:`, payload);
+      
+      const { data, error } = await supabase.functions.invoke("handle-buzz-press", {
+        body: payload,
+      });
+      
+      if (error) {
+        console.error("Errore chiamata funzione buzz:", error);
+        return { success: false, error: true, errorMessage: `Errore durante l'elaborazione dell'indizio: ${error.message}` };
+      }
+      
+      if (!data || !data.success) {
+        console.error("Risposta negativa dalla funzione:", data?.error || "Errore sconosciuto");
+        return { 
+          success: false, 
+          error: true,
+          errorMessage: data?.errorMessage || data?.error || "Errore durante l'elaborazione dell'indizio" 
+        };
+      }
+      
+      console.log("✅ Backend response (unified):", data);
+      
+      return { 
+        success: true, 
+        clue_text: data.clue_text,
+        buzz_cost: data.buzz_cost,
+        radius_km: data.radius_km,
+        lat: data.lat,
+        lng: data.lng,
+        generation_number: data.generation_number,
+        map_area: data.map_area,
+        precision: data.precision,
+        canGenerateMap: data.canGenerateMap,
+        remainingMapGenerations: data.remainingMapGenerations
+      };
     } catch (error) {
-      console.error('❌ BUZZ API Exception:', error);
-      return {
-        success: false,
-        errorMessage: error instanceof Error ? error.message : 'Errore sconosciuto BUZZ API'
-      };
+      console.error("Errore generale nella chiamata API buzz:", error);
+      return { success: false, error: true, errorMessage: "Si è verificato un errore nella comunicazione con il server" };
     }
-  }, [getCurrentUser]);
-
-  return {
-    callBuzzApi
   };
-};
+
+  return { callBuzzApi };
+}

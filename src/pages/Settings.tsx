@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Lock, ChevronRight, LogOut, Bell, Globe, CreditCard, Key } from "lucide-react";
@@ -85,34 +84,21 @@ const Settings = () => {
         {/* Account Settings - Now collapsible */}
         <AccountSection />
         
-        {/* Password e Sicurezza Section - Now consistent with other sections */}
+        {/* Password e Sicurezza Section - Fixed text consistency */}
         <div className="mb-6">
           <div className="glass-card p-4 rounded-xl">
-            <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-                <h2 className="text-lg font-semibold text-white flex items-center">
-                  <Key className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-                  Password e Sicurezza
-                </h2>
-                <ChevronRight className="h-4 w-4" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-4">
-                <div className="space-y-4 text-white">
-                  <div 
-                    onClick={() => navigate('/password-security')}
-                    className="flex items-center justify-between p-2 bg-black/30 rounded-xl cursor-pointer hover:bg-black/40 transition-colors shadow-lg"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Key className="h-4 w-4 text-cyan-400" />
-                      <span className="text-sm text-white">Gestisci Password e Sicurezza</span>
-                    </div>
-                    <Button variant="ghost" size="sm" className="h-8 rounded-xl">
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+            <div 
+              className="flex items-center justify-between p-2 bg-black/30 rounded-xl cursor-pointer hover:bg-black/40 transition-colors shadow-lg"
+              onClick={() => navigate('/password-security')}
+            >
+              <div className="flex items-center gap-2">
+                <Key className="h-4 w-4 text-cyan-400" />
+                <span className="text-sm text-white">Password e Sicurezza</span>
+              </div>
+              <Button variant="ghost" size="sm" className="h-8 rounded-xl">
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
         </div>
         

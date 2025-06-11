@@ -1,119 +1,176 @@
 
-import { useCallback, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthContext } from '@/contexts/auth';
-import { useNotifications } from './useNotifications';
-import { toast } from 'sonner';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useProfileNotifications } from "@/hooks/profile/useProfileNotifications";
+import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
+import { toast } from "sonner";
 
-export const useNotificationManager = () => {
-  const { getCurrentUser } = useAuthContext();
-  const [notificationsBannerOpen, setNotificationsBannerOpen] = useState(false);
-  const [notificationsDrawerOpen, setNotificationsDrawerOpen] = useState(false);
-  
-  const {
-    notifications,
-    isLoading,
-    unreadCount,
-    addNotification,
-    markAsRead,
-    markAllAsRead,
+export function useNotificationManager() {
+  const { showNotifications, setShowNotifications } = useProfileNotifications();
+  const { 
+    notifications, 
+    unreadCount, 
+    markAllAsRead, 
+    markAsRead, 
+    addNotification, 
     deleteNotification,
-    reloadNotifications
+    reloadNotifications 
   } = useNotifications();
-
-  const createNotification = useCallback(async (title: string, message: string, type: string = 'generic') => {
-    const currentUser = getCurrentUser();
-    const userId = currentUser?.id;
-
-    // CRITICAL: Support developer mode
-    if (!userId) {
-      const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-      const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
-      
-      if (!hasDeveloperAccess && !isDeveloperEmail) {
-        console.warn('Cannot create notification - no user ID');
-        return false;
+  
+  const [notificationsBannerOpen, setNotificationsBannerOpen] = useState(false);
+  
+  // Add a polling mechanism for notifications with extended interval and visibility check
+  const pollingIntervalRef = useRef<number | null>(null);
+  const isInitialLoadDone = useRef<boolean>(false);
+  
+  // Setup notification polling - check every 180 seconds (3 minutes) per ottimizzazione
+  useEffect(() => {
+    const startPolling = () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
       }
       
-      console.log('🔧 Developer mode: Creating notification with fallback');
+      // Poll ogni 180 secondi (3 minuti) invece di 60 per ridurre carico
+      pollingIntervalRef.current = window.setInterval(() => {
+        // Controllo visibility prima del polling
+        if (document.visibilityState === 'visible') {
+          console.log('Polling for new notifications...');
+          reloadNotifications();
+        } else {
+          console.log('⏸️ Skipping polling - page not visible');
+        }
+      }, 180000) as unknown as number; // 3 minuti
+    };
+    
+    // Initial load - only if not done yet
+    if (!isInitialLoadDone.current) {
+      reloadNotifications().then(() => {
+        console.log('Initial notifications loaded');
+        isInitialLoadDone.current = true;
+        startPolling();
+      });
     }
-
-    try {
-      const { data, error } = await supabase
-        .from('user_notifications')
-        .insert({
-          user_id: userId || '00000000-0000-4000-a000-000000000000',
-          title,
-          message,
-          type,
-          is_read: false,
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('❌ Error creating notification:', error);
-        return false;
+    
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
       }
+    };
+  }, [reloadNotifications]);
 
-      console.log('✅ Notification created successfully:', data.id);
-      return true;
-    } catch (error) {
-      console.error('❌ Exception creating notification:', error);
-      return false;
-    }
-  }, [getCurrentUser]);
-
-  const createBuzzNotification = useCallback(async (title: string, message: string) => {
-    return await createNotification(title, message, 'buzz');
-  }, [createNotification]);
-
-  const createMapBuzzNotification = useCallback(async (title: string, message: string) => {
-    return await createNotification(title, message, 'buzz_map');
-  }, [createNotification]);
-
-  const createLeaderboardNotification = useCallback(async (title: string, message: string) => {
-    return await createNotification(title, message, 'leaderboard');
-  }, [createNotification]);
-
-  const createWeeklyNotification = useCallback(async (title: string, message: string) => {
-    return await createNotification(title, message, 'weekly');
-  }, [createNotification]);
-
+  // Handle opening notifications banner
   const openNotificationsBanner = useCallback(() => {
     setNotificationsBannerOpen(true);
+    // We don't need to reload on every open - helps reduce flickering
   }, []);
 
+  // Handle closing notifications banner
   const closeNotificationsBanner = useCallback(() => {
     setNotificationsBannerOpen(false);
   }, []);
 
+  // Handle opening notifications drawer
   const openNotificationsDrawer = useCallback(() => {
-    setNotificationsDrawerOpen(true);
-  }, []);
+    setShowNotifications(true);
+    // Only reload if we haven't loaded recently
+    const lastLoadTime = isInitialLoadDone.current === true ? 0 : Date.now() - 180000; // 3 minuti
+    if (!isInitialLoadDone.current || lastLoadTime > 180000) {
+      reloadNotifications().then(() => {
+        console.log('Notifications reloaded on drawer open');
+        isInitialLoadDone.current = true;
+      });
+    }
+  }, [setShowNotifications, reloadNotifications]);
 
+  // Handle closing notifications drawer
   const closeNotificationsDrawer = useCallback(() => {
-    setNotificationsDrawerOpen(false);
-  }, []);
+    setShowNotifications(false);
+    // Mark notifications as read when drawer is closed
+    markAllAsRead().then(() => {
+      console.log('All notifications marked as read on drawer close');
+    });
+  }, [setShowNotifications, markAllAsRead]);
+
+  // Create notification with proper type checking and categorization
+  const createNotification = useCallback(async (title: string, description: string, type = NOTIFICATION_CATEGORIES.GENERIC) => {
+    console.log(`Creating notification of type ${type}: ${title}`);
+    
+    // Use sonner toast to show notification
+    toast(title, {
+      description
+    });
+    
+    // Add to notification system
+    try {
+      const result = await addNotification({ 
+        title, 
+        description, 
+        type 
+      });
+      
+      if (!result) {
+        console.error("Failed to create notification");
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Error creating notification:", error);
+      return false;
+    }
+  }, [addNotification]);
+
+  // Create BUZZ notification
+  const createBuzzNotification = useCallback(async (title: string, description: string) => {
+    return await createNotification(title, description, NOTIFICATION_CATEGORIES.BUZZ);
+  }, [createNotification]);
+
+  // Create Map BUZZ notification
+  const createMapBuzzNotification = useCallback(async (title: string, description: string) => {
+    return await createNotification(title, description, NOTIFICATION_CATEGORIES.MAP_BUZZ);
+  }, [createNotification]);
+
+  // Create Leaderboard notification
+  const createLeaderboardNotification = useCallback(async (title: string, description: string) => {
+    return await createNotification(title, description, NOTIFICATION_CATEGORIES.LEADERBOARD);
+  }, [createNotification]);
+
+  // Create Weekly notification
+  const createWeeklyNotification = useCallback(async (title: string, description: string) => {
+    return await createNotification(title, description, NOTIFICATION_CATEGORIES.WEEKLY);
+  }, [createNotification]);
+
+  // Manual reload function that can be called by components
+  const manualReload = useCallback(async () => {
+    console.log("Manual notification reload requested");
+    return await reloadNotifications();
+  }, [reloadNotifications]);
 
   return {
+    // Notification data
     notifications,
-    isLoading,
     unreadCount,
+    
+    // Banner controls
     notificationsBannerOpen,
-    notificationsDrawerOpen,
-    createNotification,
+    openNotificationsBanner,
+    closeNotificationsBanner,
+    
+    // Drawer controls
+    notificationsDrawerOpen: showNotifications,
+    openNotificationsDrawer,
+    closeNotificationsDrawer,
+    
+    // Actions
+    markAllAsRead,
+    markAsRead,
+    deleteNotification,
+    
+    // Create notifications by category
+    createNotification, // Generic
     createBuzzNotification,
     createMapBuzzNotification,
     createLeaderboardNotification,
     createWeeklyNotification,
-    markAllAsRead,
-    deleteNotification,
-    openNotificationsBanner,
-    closeNotificationsBanner,
-    openNotificationsDrawer,
-    closeNotificationsDrawer,
-    reloadNotifications
+    
+    reloadNotifications: manualReload
   };
-};
+}

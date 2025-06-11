@@ -97,66 +97,6 @@ const HelpFaq = () => {
                 </AccordionContent>
               </AccordionItem>
 
-              {/* Nuova Sezione FAQ 1 - Come partecipare */}
-              <AccordionItem value="faq-partecipare" id="faq-partecipare" className="border border-white/10 rounded-lg">
-                <AccordionTrigger className="px-4 py-2 text-white font-semibold bg-white/5 hover:bg-white/10 transition-colors rounded-t-lg">
-                  🚀 Come posso partecipare alla caccia al tesoro M1SSION?
-                </AccordionTrigger>
-                <AccordionContent className="px-4 py-2 text-white/70 bg-black/20">
-                  <p>Ti basta scaricare l'app ufficiale, registrarti e iniziare la tua missione. Ogni settimana potrai ricevere nuovi indizi per localizzare premi esclusivi nella tua città.</p>
-                </AccordionContent>
-              </AccordionItem>
-
-              {/* Nuova Sezione FAQ 2 - BUZZ MAPPA */}
-              <AccordionItem value="faq-buzz" id="faq-buzz" className="border border-white/10 rounded-lg">
-                <AccordionTrigger className="px-4 py-2 text-white font-semibold bg-white/5 hover:bg-white/10 transition-colors rounded-t-lg">
-                  📍 Cosa significa "BUZZ MAPPA"?
-                </AccordionTrigger>
-                <AccordionContent className="px-4 py-2 text-white/70 bg-black/20">
-                  <p>Il pulsante BUZZ MAPPA ti permette di generare un'area di ricerca basata sugli indizi ricevuti. Più BUZZ usi, più si restringe la zona in cui cercare il premio.</p>
-                </AccordionContent>
-              </AccordionItem>
-
-              {/* Nuova Sezione FAQ 3 - Premi */}
-              <AccordionItem value="faq-premi" id="faq-premi" className="border border-white/10 rounded-lg">
-                <AccordionTrigger className="px-4 py-2 text-white font-semibold bg-white/5 hover:bg-white/10 transition-colors rounded-t-lg">
-                  🏆 Quali premi posso vincere?
-                </AccordionTrigger>
-                <AccordionContent className="px-4 py-2 text-white/70 bg-black/20">
-                  <p>I premi cambiano ogni mese e includono auto di lusso, orologi esclusivi, borse di design e molto altro. I vincitori vengono annunciati pubblicamente e contattati via email.</p>
-                </AccordionContent>
-              </AccordionItem>
-
-              {/* Nuova Sezione FAQ 4 - Pagamento */}
-              <AccordionItem value="faq-pagamento" id="faq-pagamento" className="border border-white/10 rounded-lg">
-                <AccordionTrigger className="px-4 py-2 text-white font-semibold bg-white/5 hover:bg-white/10 transition-colors rounded-t-lg">
-                  💰 È necessario pagare per partecipare?
-                </AccordionTrigger>
-                <AccordionContent className="px-4 py-2 text-white/70 bg-black/20">
-                  <p>No, puoi giocare gratuitamente con un BUZZ a settimana. I piani a pagamento offrono indizi aggiuntivi e più BUZZ per aumentare le tue possibilità di vincita.</p>
-                </AccordionContent>
-              </AccordionItem>
-
-              {/* Nuova Sezione FAQ 5 - Codice Agente */}
-              <AccordionItem value="faq-codice-agente" id="faq-codice-agente" className="border border-white/10 rounded-lg">
-                <AccordionTrigger className="px-4 py-2 text-white font-semibold bg-white/5 hover:bg-white/10 transition-colors rounded-t-lg">
-                  🔢 Come funziona il codice agente personale?
-                </AccordionTrigger>
-                <AccordionContent className="px-4 py-2 text-white/70 bg-black/20">
-                  <p>Il tuo codice agente è unico e ti identifica all'interno del gioco. Usalo per accedere a eventi speciali o ottenere vantaggi extra durante le missioni.</p>
-                </AccordionContent>
-              </AccordionItem>
-
-              {/* Nuova Sezione FAQ 6 - Privacy */}
-              <AccordionItem value="faq-privacy" id="faq-privacy" className="border border-white/10 rounded-lg">
-                <AccordionTrigger className="px-4 py-2 text-white font-semibold bg-white/5 hover:bg-white/10 transition-colors rounded-t-lg">
-                  🔐 I miei dati personali sono al sicuro?
-                </AccordionTrigger>
-                <AccordionContent className="px-4 py-2 text-white/70 bg-black/20">
-                  <p>Certamente. M1SSION™ è conforme al GDPR. I tuoi dati vengono conservati in modo sicuro e non saranno mai condivisi con terze parti senza il tuo consenso.</p>
-                </AccordionContent>
-              </AccordionItem>
-
               {/* Sezione 5 */}
               <AccordionItem value="item-5" className="border border-white/10 rounded-lg">
                 <AccordionTrigger className="px-4 py-2 text-white font-semibold bg-white/5 hover:bg-white/10 transition-colors rounded-t-lg">
