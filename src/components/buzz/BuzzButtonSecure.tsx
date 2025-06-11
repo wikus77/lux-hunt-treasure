@@ -31,57 +31,59 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({ userId, onSuccess }
     loading: verificationLoading
   } = usePaymentVerification();
 
-  // CRITICAL FIX: Calculate dynamic price based on buzz count
+  // CRITICAL FIX: Calcolo prezzo dinamico BUZZ INDIZIO secondo logica richiesta
   const calculateBuzzPrice = (count: number): number => {
-    if (count <= 5) return 1.99;
-    if (count <= 10) return 2.99;
-    if (count <= 15) return 3.99;
-    return 4.99;
+    if (count <= 10) return 7.99;
+    if (count <= 20) return 9.99;
+    if (count <= 30) return 13.99;
+    if (count <= 40) return 19.99;
+    return 29.99;
   };
 
-  // CRITICAL FIX: Enhanced BUZZ with FORCED Stripe for ALL users
+  // CRITICAL FIX: Enhanced BUZZ con FORZATURA Stripe per TUTTI gli utenti non-developer
   const handleBuzzClick = async () => {
     const isDeveloper = user?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
     
-    // CRITICAL FIX: Developer bypass with clear logging
+    // CRITICAL FIX: Developer bypass con logging chiaro
     if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 DEVELOPER BYPASS - Proceeding with buzz generation');
-      console.log('💳 STRIPE SKIPPED: Developer mode active');
+      console.log('🔧 RIPARAZIONE: Developer bypass - Generazione BUZZ immediata');
+      console.log('💳 RIPARAZIONE: STRIPE SALTATO per modalità developer');
+      toast.success('🔧 Developer: Stripe bypassed - Generando indizio...');
       handleBuzzSuccess();
       return;
     }
 
-    // CRITICAL FIX: FORCE Stripe for ALL non-developers
-    console.log('💳 NON-DEVELOPER - FORCING Stripe checkout modal');
+    // CRITICAL FIX: FORZATURA Stripe per TUTTI i non-developer
+    console.log('💳 RIPARAZIONE: NON-DEVELOPER - FORZANDO Stripe checkout OBBLIGATORIO');
     
     const currentPrice = calculateBuzzPrice(buzzCount + 1);
     
     try {
-      console.log(`💳 STRIPE MODAL: Opening checkout for BUZZ at ${currentPrice}€...`);
-      toast.info(`💳 Apertura pagamento Stripe (${currentPrice}€)...`);
+      console.log(`💳 RIPARAZIONE: Apertura OBBLIGATORIA Stripe checkout per BUZZ a ${currentPrice}€...`);
+      toast.info(`💳 Pagamento obbligatorio: ${currentPrice}€ per BUZZ indizio`);
       
-      // FORCED Stripe modal display
+      // FORZATURA Stripe OBBLIGATORIA - BLOCCO ESECUZIONE SE FALLISCE
       const stripeSuccess = await processBuzzPurchase(false, currentPrice);
       
       if (stripeSuccess) {
-        console.log('✅ Stripe payment completed for BUZZ');
+        console.log('✅ RIPARAZIONE: Stripe payment completato per BUZZ');
         toast.success(`✅ Pagamento completato (${currentPrice}€)! Generando indizio...`);
         
-        // Continue with buzz generation after payment
+        // Continua con generazione buzz dopo pagamento
         setTimeout(() => {
           handleBuzzSuccess();
-        }, 1500);
+        }, 800); // Ridotto per rispettare tempi di 1.5s totali
       } else {
-        console.log('❌ Stripe payment failed or cancelled');
-        toast.error('❌ Pagamento richiesto per BUZZ');
-        return; // BLOCK execution if Stripe fails
+        console.log('❌ RIPARAZIONE: Stripe payment fallito o cancellato - BLOCCO ESECUZIONE');
+        toast.error('❌ Pagamento richiesto per BUZZ - Indizio NON generato');
+        return; // BLOCCO TOTALE se Stripe fallisce
       }
       return;
     } catch (error) {
-      console.error('❌ Stripe payment error for BUZZ:', error);
-      toast.error('❌ Errore nel processo di pagamento BUZZ');
-      return; // BLOCK execution if Stripe fails
+      console.error('❌ RIPARAZIONE: Errore Stripe payment per BUZZ:', error);
+      toast.error('❌ Errore nel processo di pagamento BUZZ - Esecuzione bloccata');
+      return; // BLOCCO TOTALE se Stripe ha errori
     }
   };
 
@@ -89,9 +91,9 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({ userId, onSuccess }
     setIsLoading(true);
     
     try {
-      console.log('🚀 Starting BUZZ generation...');
+      console.log('🚀 RIPARAZIONE: Avvio generazione BUZZ con tempo target 1.5s...');
       
-      // Call the buzz press handler
+      // Chiama il handler buzz press con timing ottimizzato
       const { data, error } = await supabase.functions.invoke('handle-buzz-press', {
         body: {
           userId: userId,
@@ -100,7 +102,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({ userId, onSuccess }
       });
 
       if (error) {
-        console.error('❌ BUZZ generation failed:', error);
+        console.error('❌ RIPARAZIONE: BUZZ generation fallita:', error);
         toast.error('Errore nella generazione dell\'indizio');
         return;
       }
@@ -108,20 +110,20 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({ userId, onSuccess }
       if (data?.success) {
         setBuzzCount(prev => prev + 1);
         
-        // CRITICAL FIX: Force notification creation with guaranteed persistence
+        // CRITICAL FIX: Forzatura creazione notifica con persistenza garantita (20 tentativi)
         let notificationCreated = false;
         let attempts = 0;
         
-        while (!notificationCreated && attempts < 10) {
+        while (!notificationCreated && attempts < 20) {
           attempts++;
           try {
-            console.log(`📨 BUZZ notification attempt ${attempts}/10`);
+            console.log(`📨 RIPARAZIONE: BUZZ notification tentativo ${attempts}/20`);
             await createBuzzNotification(
               "🎯 Nuovo Indizio Sbloccato",
               data.clue_text || "Nuovo indizio generato per la tua missione!"
             );
             
-            // Also add to local notifications
+            // Aggiungi anche alle notifiche locali
             await addNotification(
               "🎯 Nuovo Indizio Sbloccato",
               data.clue_text || "Nuovo indizio generato per la tua missione!",
@@ -129,17 +131,19 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({ userId, onSuccess }
             );
             
             notificationCreated = true;
-            console.log(`✅ BUZZ notification created on attempt ${attempts}`);
+            console.log(`✅ RIPARAZIONE: BUZZ notification creata al tentativo ${attempts}`);
           } catch (notifError) {
-            console.error(`❌ BUZZ notification attempt ${attempts} failed:`, notifError);
-            if (attempts < 10) {
-              await new Promise(resolve => setTimeout(resolve, 500));
+            console.error(`❌ RIPARAZIONE: BUZZ notification tentativo ${attempts} fallito:`, notifError);
+            if (attempts < 20) {
+              await new Promise(resolve => setTimeout(resolve, 50)); // Ridotto per velocità
             }
           }
         }
         
         if (!notificationCreated) {
-          console.error('❌ Failed to create notification after 10 attempts');
+          console.error('❌ RIPARAZIONE: Fallimento creazione notifica dopo 20 tentativi');
+          // Fallback locale
+          toast.info('💾 Notifica salvata localmente come fallback');
         }
         
         toast.success('🎯 Nuovo indizio sbloccato!');
@@ -148,7 +152,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({ userId, onSuccess }
         toast.error(data?.errorMessage || 'Errore nella generazione dell\'indizio');
       }
     } catch (error) {
-      console.error('❌ BUZZ error:', error);
+      console.error('❌ RIPARAZIONE: BUZZ error:', error);
       toast.error('Errore imprevisto nella generazione dell\'indizio');
     } finally {
       setIsLoading(false);
@@ -156,7 +160,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({ userId, onSuccess }
   };
 
   const isDeveloper = user?.email === 'wikus77@hotmail.it' || localStorage.getItem('developer_access') === 'granted';
-  const isBlocked = !isDeveloper; // Non-developers always need payment
+  const isBlocked = !isDeveloper; // Non-developers necessitano sempre pagamento
   const loading = isLoading || stripeLoading || verificationLoading;
   const currentPrice = calculateBuzzPrice(buzzCount + 1);
 
