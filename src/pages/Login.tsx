@@ -29,7 +29,7 @@ const Login = () => {
 
     // REDIRECT FORZATO IMMEDIATO se già autenticato
     if (!authLoading && isAuthenticated) {
-      console.log('✅ User authenticated - FORCING IMMEDIATE REDIRECT');
+      console.log('✅ User authenticated - FORCING IMMEDIATE REDIRECT TO HOME');
       navigate('/home', { replace: true });
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);

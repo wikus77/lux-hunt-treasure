@@ -14,6 +14,7 @@ interface FormFieldProps {
   error?: string;
   required?: boolean;
   disabled?: boolean;
+  autoComplete?: string;
 }
 
 const FormField = ({
@@ -26,7 +27,8 @@ const FormField = ({
   icon,
   error,
   required = false,
-  disabled = false
+  disabled = false,
+  autoComplete = "off"
 }: FormFieldProps) => {
   return (
     <div className="space-y-2">
@@ -41,6 +43,7 @@ const FormField = ({
         icon={icon}
         required={required}
         disabled={disabled}
+        autoComplete={autoComplete}
       />
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>

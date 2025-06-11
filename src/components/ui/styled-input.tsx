@@ -12,6 +12,7 @@ interface StyledInputProps {
   readOnly?: boolean;
   required?: boolean;
   disabled?: boolean;
+  autoComplete?: string;
 }
 
 const StyledInput = ({
@@ -24,7 +25,8 @@ const StyledInput = ({
   icon,
   readOnly,
   required,
-  disabled
+  disabled,
+  autoComplete = "off"
 }: StyledInputProps) => {
   // Split the input value to style first two letters differently
   const firstTwoChars = type === 'password' ? '••'.slice(0, Math.min(2, value.length)) : value.slice(0, 2);
@@ -49,6 +51,10 @@ const StyledInput = ({
         readOnly={readOnly}
         required={required}
         disabled={disabled}
+        autoComplete={autoComplete}
+        autoCorrect="off"
+        spellCheck={false}
+        data-form-type="other"
       />
       {/* Overlay div showing styled text */}
       {value && (

@@ -33,21 +33,14 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
     try {
       console.log('🔐 Starting login process for:', email);
       
-      // BYPASS CAPTCHA COMPLETAMENTE per email sviluppatore
-      if (email === 'wikus77@hotmail.it') {
-        console.log('🔓 DEVELOPER EMAIL - BYPASSING ALL VALIDATIONS');
-      }
-      
       const result = await login(email, password);
       
       if (result?.success) {
-        console.log('✅ Login successful - IMMEDIATE REDIRECT');
+        console.log('✅ Login successful - IMMEDIATE REDIRECT TO HOME');
         toast.success('Login effettuato con successo');
         
-        // REDIRECT FORZATO IMMEDIATO
-        setTimeout(() => {
-          navigate('/home', { replace: true });
-        }, 100);
+        // REDIRECT FORZATO IMMEDIATO ALLA HOME
+        navigate('/home', { replace: true });
       } else {
         console.error('❌ Login failed:', result?.error);
         toast.error('Errore di login', {
@@ -76,6 +69,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
         icon={<Mail className="h-4 w-4" />}
         required
         disabled={isLoading}
+        autoComplete="off"
       />
 
       <FormField
@@ -88,6 +82,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
         icon={<Lock className="h-4 w-4" />}
         required
         disabled={isLoading}
+        autoComplete="off"
       />
 
       {isDeveloperEmail && (

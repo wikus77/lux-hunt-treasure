@@ -64,6 +64,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         console.log("🔓 DEVELOPER LOGIN - NO CAPTCHA VALIDATION");
       }
       
+      // Login diretto con Supabase - NO CAPTCHA per sviluppatore
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
