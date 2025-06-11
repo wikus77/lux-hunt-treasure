@@ -91,6 +91,72 @@ export const useStripePayment = () => {
     }
   };
 
+  const processSubscription = async (
+    planType: 'Silver' | 'Gold' | 'Black',
+    paymentMethod: 'card' | 'apple_pay' | 'google_pay' = 'card'
+  ): Promise<void> => {
+    const currentUser = getCurrentUser();
+    
+    if (!currentUser?.id) {
+      toast.error('Devi essere loggato per effettuare acquisti');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('💳 STRIPE: Creating subscription session...', { planType, paymentMethod });
+
+      const { data: response, error: stripeError } = await supabase.functions.invoke('create-stripe-session', {
+        body: {
+          planType,
+          redirectUrl: `${window.location.origin}/payment-success?plan=${planType}`,
+          userId: currentUser.id,
+          userEmail: currentUser.email,
+          isBuzz: false,
+          isMapBuzz: false,
+          paymentMethod
+        }
+      });
+
+      if (stripeError) {
+        throw new Error(stripeError.message || 'Errore nella creazione della sessione');
+      }
+
+      if (!response?.url) {
+        throw new Error('URL di checkout non ricevuto');
+      }
+
+      console.log('✅ STRIPE: Subscription session created');
+      window.open(response.url, '_blank');
+
+    } catch (error: any) {
+      console.error('❌ STRIPE: Subscription creation failed:', error);
+      const errorMessage = error.message || 'Errore nella creazione dell\'abbonamento';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const detectPaymentMethodAvailability = () => {
+    // Check if Apple Pay is available
+    const applePayAvailable = typeof window !== 'undefined' && 
+      window.ApplePaySession && 
+      ApplePaySession.canMakePayments();
+
+    // Check if Google Pay is available (basic check)
+    const googlePayAvailable = typeof window !== 'undefined' && 
+      /Android/.test(navigator.userAgent);
+
+    return {
+      applePayAvailable: applePayAvailable || false,
+      googlePayAvailable: googlePayAvailable || false
+    };
+  };
+
   const createCheckoutSession = async (options: StripePaymentOptions): Promise<string | null> => {
     const currentUser = getCurrentUser();
     
@@ -146,6 +212,8 @@ export const useStripePayment = () => {
     loading,
     error,
     processBuzzPurchase,
+    processSubscription,
+    detectPaymentMethodAvailability,
     createCheckoutSession,
     clearError
   };
