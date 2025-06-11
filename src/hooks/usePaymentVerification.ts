@@ -13,12 +13,13 @@ export const usePaymentVerification = () => {
   const [weeklyBuzzLimit, setWeeklyBuzzLimit] = useState(1);
   const [loading, setLoading] = useState(true);
 
+  // FIXED: Stabilized payment status loading
   const loadPaymentStatus = useCallback(async () => {
     const currentUser = getCurrentUser();
     const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
 
-    // CRITICAL FIX: Developer sempre ha accesso completo
+    // CRITICAL: Developer sempre ha accesso completo
     if (isDeveloper || hasDeveloperAccess) {
       console.log('🔧 Developer: Full payment access granted');
       setHasValidPayment(true);
@@ -83,7 +84,7 @@ export const usePaymentVerification = () => {
       const remaining = Math.max(0, buzzLimit - used);
       setRemainingBuzz(remaining);
 
-      // CRITICAL FIX: Determine access correctly
+      // Determine access correctly
       const hasPayment = tier !== 'Free';
       const canAccess = hasPayment && remaining > 0;
 
@@ -111,16 +112,30 @@ export const usePaymentVerification = () => {
     }
   }, [getCurrentUser]);
 
+  // FIXED: Stable effect
   useEffect(() => {
-    loadPaymentStatus();
+    let isMounted = true;
+    
+    const initializePaymentStatus = async () => {
+      if (isMounted) {
+        await loadPaymentStatus();
+      }
+    };
+    
+    initializePaymentStatus();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [loadPaymentStatus]);
 
+  // FIXED: Enhanced developer bypass
   const requireBuzzPayment = useCallback(async (): Promise<boolean> => {
     const currentUser = getCurrentUser();
     const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
 
-    // CRITICAL FIX: Developer bypass
+    // CRITICAL: Developer bypass - immediate return
     if (isDeveloper || hasDeveloperAccess) {
       console.log('🔧 Developer: Payment requirement bypassed');
       return true;

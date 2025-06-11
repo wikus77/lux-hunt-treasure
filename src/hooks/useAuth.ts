@@ -5,57 +5,81 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthContextType } from '@/contexts/auth/types';
 
-// DEVELOPER UUID for fallback - DEFINITIVE SOLUTION
 const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
 
-/**
- * Hook for authentication functionality using Supabase Auth.
- * FIXED: Single source of truth, no conflicts, developer mode active
- */
 export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRoleLoading'> {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
 
-  // Initialize auth state with developer fallback
+  // FIXED: Stabilized auth initialization without race conditions
   useEffect(() => {
-    console.log("🔧 useAuth: Initializing with developer support");
-    
     let isMounted = true;
     
-    // Check for developer access immediately
-    const isDeveloperMode = localStorage.getItem('developer_access') === 'granted' || 
-                           localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
-    
-    if (isDeveloperMode) {
-      console.log("🔑 Developer mode detected - creating fake session");
-      const developerUser = {
-        id: DEVELOPER_UUID,
-        email: 'wikus77@hotmail.it',
-        user_metadata: {},
-        app_metadata: {},
-        aud: 'authenticated',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        email_confirmed_at: new Date().toISOString()
-      } as User;
+    const initializeAuth = async () => {
+      console.log("🔧 useAuth: Initializing with developer support");
       
-      if (isMounted) {
-        setUser(developerUser);
-        setIsEmailVerified(true);
-        setIsLoading(false);
+      // Check for developer access
+      const isDeveloperMode = localStorage.getItem('developer_access') === 'granted' || 
+                             localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
+      
+      if (isDeveloperMode) {
+        console.log("🔑 Developer mode detected - creating authenticated session");
+        const developerUser = {
+          id: DEVELOPER_UUID,
+          email: 'wikus77@hotmail.it',
+          user_metadata: {},
+          app_metadata: {},
+          aud: 'authenticated',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          email_confirmed_at: new Date().toISOString()
+        } as User;
         
-        // Store developer access flags
-        localStorage.setItem('developer_access', 'granted');
-        localStorage.setItem('developer_user_email', 'wikus77@hotmail.it');
-        localStorage.setItem('captcha_bypassed', 'true');
+        if (isMounted) {
+          setUser(developerUser);
+          setIsEmailVerified(true);
+          setIsLoading(false);
+          
+          localStorage.setItem('developer_access', 'granted');
+          localStorage.setItem('developer_user_email', 'wikus77@hotmail.it');
+          localStorage.setItem('captcha_bypassed', 'true');
+        }
+        return;
       }
-      
-      return () => { isMounted = false; };
-    }
 
-    // Set up auth state listener for regular users
+      // Regular user session check
+      try {
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("❌ Session check error:", error);
+        }
+        
+        if (isMounted) {
+          console.log("Initial session check:", initialSession ? "Found session" : "No session");
+          setSession(initialSession);
+          setUser(initialSession?.user ?? null);
+          
+          if (initialSession?.user) {
+            const isDeveloper = initialSession.user.email === 'wikus77@hotmail.it';
+            setIsEmailVerified(isDeveloper || !!initialSession.user.email_confirmed_at);
+          }
+          
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("❌ Auth initialization error:", error);
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
+    
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         if (!isMounted) return;
@@ -75,31 +99,12 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       }
     );
     
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      if (!isMounted) return;
-      
-      console.log("Initial session check:", initialSession ? "Found session" : "No session");
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
-      
-      if (initialSession?.user) {
-        const isDeveloper = initialSession.user.email === 'wikus77@hotmail.it';
-        setIsEmailVerified(isDeveloper || !!initialSession.user.email_confirmed_at);
-      }
-      
-      setIsLoading(false);
-    });
-    
     return () => {
       isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
-  /**
-   * Login function with developer auto-access
-   */
   const login = async (email: string, password: string) => {
     console.log("Login attempt for email:", email);
     
@@ -152,14 +157,12 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     }
   };
 
-  /**
-   * Logout function
-   */
   const logout = async () => {
     console.log("Logging out user");
     try {
       await supabase.auth.signOut();
-      // Clear developer access if needed
+      
+      // Clear all developer access
       localStorage.removeItem('developer_access');
       localStorage.removeItem('developer_user_email');
       localStorage.removeItem('captcha_bypassed');
@@ -182,9 +185,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     }
   };
 
-  /**
-   * Check if user is authenticated - FIXED with developer support
-   */
+  // FIXED: Stable authentication check
   const isAuthenticated = useCallback(() => {
     const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
     const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
@@ -196,9 +197,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     return !!user && !!session;
   }, [user, session]);
 
-  /**
-   * Get current authenticated user - FIXED with developer support
-   */
+  // FIXED: Stable user getter
   const getCurrentUser = useCallback(() => {
     const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
     const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
@@ -219,9 +218,6 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     return user;
   }, [user]);
 
-  /**
-   * Get access token
-   */
   const getAccessToken = useCallback(() => {
     const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
     const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
@@ -233,9 +229,6 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     return session?.access_token || null;
   }, [session]);
 
-  /**
-   * Placeholder functions for compatibility
-   */
   const resendVerificationEmail = async () => ({ success: true });
   const resetPassword = async () => ({ success: true });
 
@@ -250,6 +243,6 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     getAccessToken,
     resendVerificationEmail,
     resetPassword,
-    user: getCurrentUser(), // Always return the current user (including developer)
+    user: getCurrentUser(),
   };
 }

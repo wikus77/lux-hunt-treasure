@@ -28,17 +28,19 @@ export const useNotifications = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { getCurrentUser } = useAuthContext();
 
+  // FIXED: Stabilized notification loading
   const loadNotifications = useCallback(async () => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
 
-    // CRITICAL: Support developer mode
+    // Support developer mode
     if (!userId) {
       const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
       const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
       
       if (!hasDeveloperAccess && !isDeveloperEmail) {
         console.warn('Cannot load notifications - no user ID');
+        setNotifications([]);
         return;
       }
       
@@ -52,12 +54,13 @@ export const useNotifications = () => {
         .from('user_notifications')
         .select('*')
         .eq('user_id', userId || '00000000-0000-4000-a000-000000000000')
-        .eq('is_deleted', false)
+        .is('is_deleted', false)
         .order('created_at', { ascending: false })
         .limit(100);
 
       if (error) {
         console.error('❌ Error loading notifications:', error);
+        setNotifications([]);
         return;
       }
 
@@ -77,11 +80,13 @@ export const useNotifications = () => {
       console.log('✅ Notifications loaded:', mappedNotifications.length);
     } catch (error) {
       console.error('❌ Exception loading notifications:', error);
+      setNotifications([]);
     } finally {
       setIsLoading(false);
     }
   }, [getCurrentUser]);
 
+  // FIXED: Stable notification addition
   const addNotification = useCallback(async (title: string, message: string, type: string = 'generic') => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
@@ -203,9 +208,21 @@ export const useNotifications = () => {
     await loadNotifications();
   }, [loadNotifications]);
 
-  // Load notifications on mount
+  // FIXED: Stable effect for loading notifications
   useEffect(() => {
-    loadNotifications();
+    let isMounted = true;
+    
+    const initializeNotifications = async () => {
+      if (isMounted) {
+        await loadNotifications();
+      }
+    };
+    
+    initializeNotifications();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [loadNotifications]);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
