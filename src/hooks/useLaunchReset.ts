@@ -58,6 +58,7 @@ export const useLaunchReset = () => {
       await queryClient.invalidateQueries({ queryKey: ['weekly_buzz_allowances'] });
       await queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
       await queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      await queryClient.invalidateQueries({ queryKey: ['buzz_radius'] });
       
       // Set first launch flag for proper generation sequence
       sessionStorage.setItem('isFirstLaunch', 'true');

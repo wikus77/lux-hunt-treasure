@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -95,17 +96,25 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      // CRITICAL: FIX SEQUENZA INIZIO GIOCO
+      // CRITICAL: FIX SEQUENZA INIZIO GIOCO - FORCED OVERRIDE FOR FIRST LAUNCH
       const currentWeek = getCurrentWeek();
       
       // Check if this is first launch
       const isFirstLaunch = sessionStorage.getItem('isFirstLaunch') === 'true';
       
-      // FORCE: generation = 1 if first launch, otherwise calculate normally
-      const generation = isFirstLaunch ? 1 : ((currentWeekAreas?.length || 0) + 1);
+      let generation;
+      let finalRadius;
       
-      // OVERRIDE: Always 500km for first launch (generation 1)
-      const finalRadius = isFirstLaunch ? 500 : getMapRadius(currentWeek, generation);
+      if (isFirstLaunch) {
+        // FORCE: generation = 1 and radius = 500km for first launch
+        generation = 1;
+        finalRadius = 500;
+        console.log('✅ BUZZ MAPPA PARTENZA DA 500km - FIRST LAUNCH DETECTED');
+      } else {
+        // Normal calculation for subsequent generations
+        generation = (currentWeekAreas?.length || 0) + 1;
+        finalRadius = getMapRadius(currentWeek, generation);
+      }
       
       console.log('🎯 LANCIO RADIUS CALCULATION:', {
         week: currentWeek,
@@ -113,7 +122,7 @@ export const useBuzzMapLogic = () => {
         isFirstLaunch,
         originalRadius: response.radius_km,
         finalRadius: finalRadius,
-        currentAreas: currentWeekAreas.length
+        currentAreas: currentWeekAreas?.length || 0
       });
 
       const newArea: BuzzMapArea = {

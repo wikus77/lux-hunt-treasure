@@ -23,6 +23,10 @@ export const CluesSection = () => {
         localStorage.removeItem("cluesFound");
         localStorage.removeItem("unlockedClues");
         localStorage.removeItem("buzz_clues");
+        
+        // FORCE: Clear React Query cache for clues
+        queryClient.removeQueries({ queryKey: ["user_clues"] });
+        queryClient.invalidateQueries({ queryKey: ["user_clues"] });
       }
     };
     

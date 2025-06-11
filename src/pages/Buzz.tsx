@@ -1,6 +1,9 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BuzzFeatureWrapper from "@/components/buzz/BuzzFeatureWrapper";
 import BuzzMainContent from "@/components/buzz/BuzzMainContent";
@@ -9,6 +12,34 @@ import ErrorFallback from "@/components/error/ErrorFallback";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 
 const Buzz = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // CRITICAL FIX: Check authentication and redirect to login if needed
+  if (!user) {
+    return (
+      <motion.div 
+        className="bg-gradient-to-b from-[#131524]/70 to-black w-full min-h-screen flex items-center justify-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="text-center p-8">
+          <h1 className="text-4xl font-orbitron font-bold text-[#00D1FF] mb-4">
+            BUZZ
+          </h1>
+          <p className="text-white mb-6">Devi essere autenticato per accedere a questa sezione.</p>
+          <Button 
+            onClick={() => navigate("/login")}
+            className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white px-6 py-2"
+          >
+            Accedi
+          </Button>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div 
       className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
