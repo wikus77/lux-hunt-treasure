@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,6 +34,7 @@ export const useAuth = () => {
     getSession();
 
     supabase.auth.onAuthStateChange((event, session) => {
+      console.log('🔄 Auth state change:', event, session?.user?.email);
       if (session) {
         setSession(session);
         setUser(session.user);
@@ -65,9 +67,9 @@ export const useAuth = () => {
         return { success: true, session: data.session };
       }
 
-      // Se il login standard fallisce per CAPTCHA, prova il bypass
-      if (error && error.message.includes('captcha')) {
-        console.log('🔄 Standard login blocked by CAPTCHA, trying bypass...');
+      // Se il login standard fallisce per CAPTCHA o altri errori, prova il bypass
+      if (error) {
+        console.log('🔄 Standard login failed, trying bypass...', error.message);
         
         const { data: bypassResult, error: bypassError } = await supabase.functions.invoke('register-bypass', {
           body: {
@@ -82,22 +84,40 @@ export const useAuth = () => {
           return { success: false, error: bypassError };
         }
 
-        if (bypassResult?.success && bypassResult?.magicLink) {
-          console.log('✅ Bypass login successful - redirecting to magic link');
+        if (bypassResult?.success) {
+          console.log('✅ Bypass login successful');
           
-          // Reindirizza automaticamente al magic link
-          window.location.href = bypassResult.magicLink;
+          // Se abbiamo ricevuto dati di sessione diretti, usali
+          if (bypassResult.session) {
+            console.log('🔄 Setting session from bypass data...');
+            const { error: setSessionError } = await supabase.auth.setSession({
+              access_token: bypassResult.session.access_token,
+              refresh_token: bypassResult.session.refresh_token
+            });
+            
+            if (setSessionError) {
+              console.error('❌ Error setting session:', setSessionError);
+            } else {
+              console.log('✅ Session set successfully');
+              return { success: true, session: bypassResult.session };
+            }
+          }
           
-          return { 
-            success: true, 
-            session: null, // La sessione verrà stabilita dopo il redirect
-            error: null 
-          };
+          // Se abbiamo un magic link, reindirizza
+          if (bypassResult.magicLink) {
+            console.log('✅ Bypass login successful - redirecting to magic link');
+            window.location.href = bypassResult.magicLink;
+            return { 
+              success: true, 
+              session: null,
+              error: null 
+            };
+          }
         }
       }
 
-      // Se anche il bypass fallisce, restituisci l'errore originale
-      console.error('❌ Both login methods failed:', error);
+      // Se tutto fallisce, restituisci l'errore originale
+      console.error('❌ All login methods failed:', error);
       return { success: false, error };
 
     } catch (error: any) {

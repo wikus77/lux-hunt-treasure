@@ -1,10 +1,15 @@
+
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/use-auth';
+import { useNavigate } from 'react-router-dom';
 
 const DebugAuth = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const addLog = (message: string) => {
     console.log(message);
@@ -38,7 +43,6 @@ const DebugAuth = () => {
         addLog(`🚨 ERROR CODE: ${result.error.message}`);
         addLog(`🚨 ERROR STATUS: ${result.error.status}`);
         
-        // Check if it's a CAPTCHA error
         if (result.error.message.includes('captcha')) {
           addLog('🛡️ CAPTCHA VERIFICATION REQUIRED - SUPABASE SERVER-SIDE ENABLED');
         }
@@ -88,41 +92,72 @@ const DebugAuth = () => {
     }
   };
 
-  const testLoginBypass = async () => {
+  const testImprovedLogin = async () => {
     setIsLoading(true);
-    addLog('🔐 TESTING LOGIN BYPASS');
+    addLog('🔐 TESTING IMPROVED LOGIN BYPASS');
     
     try {
+      const result = await login('wikus77@hotmail.it', 'mission-access-99');
+      
+      addLog('📤 IMPROVED LOGIN RESULT:');
+      addLog(`✅ Success: ${result.success}`);
+      addLog(`❌ Error: ${JSON.stringify(result.error, null, 2)}`);
+      addLog(`🔑 Session: ${result.session ? 'Present' : 'null'}`);
+      
+      if (result.success) {
+        addLog('🎉 LOGIN SUCCESS - REDIRECTING TO HOME');
+        setTimeout(() => {
+          navigate('/home');
+        }, 1000);
+      } else {
+        addLog(`🚨 LOGIN FAILED: ${result.error?.message || 'Unknown error'}`);
+      }
+      
+    } catch (error: any) {
+      addLog(`💥 LOGIN EXCEPTION: ${error.message || error}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const forceDirectAccess = async () => {
+    setIsLoading(true);
+    addLog('🚨 FORCE DIRECT ACCESS ATTEMPT');
+    
+    try {
+      // Tenta di impostare una sessione manualmente per accesso diretto
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionData.session) {
+        addLog('✅ EXISTING SESSION FOUND - REDIRECTING');
+        navigate('/home');
+        return;
+      }
+      
+      addLog('🔄 NO SESSION FOUND - TRYING BYPASS LOGIN');
+      
       const { data, error } = await supabase.functions.invoke('register-bypass', {
         body: {
           email: 'wikus77@hotmail.it',
-          password: 'mission-access-99', // o la password corretta
+          password: 'mission-access-99',
           action: 'login'
         }
       });
       
-      addLog('📤 LOGIN BYPASS RESULT:');
-      addLog(`✅ Data: ${JSON.stringify(data, null, 2)}`);
-      addLog(`❌ Error: ${JSON.stringify(error, null, 2)}`);
-      
       if (error) {
-        addLog(`🚨 LOGIN BYPASS FAILED: ${error.message}`);
-      } else if (data?.success) {
-        addLog('🎉 LOGIN BYPASS SUCCESS');
-        if (data.magicLink) {
-          addLog('🔗 Magic Link provided - redirecting...');
-          addLog(`Magic Link: ${data.magicLink}`);
-          
-          // Opzione per reindirizzare automaticamente
-          const shouldRedirect = confirm('Vuoi essere reindirizzato automaticamente al magic link?');
-          if (shouldRedirect) {
-            window.location.href = data.magicLink;
-          }
-        }
+        addLog(`❌ FORCE ACCESS FAILED: ${error.message}`);
+        return;
+      }
+      
+      if (data?.success && data?.magicLink) {
+        addLog('🔗 MAGIC LINK RECEIVED - AUTO REDIRECTING');
+        window.location.href = data.magicLink;
+      } else {
+        addLog('❌ NO MAGIC LINK RECEIVED');
       }
       
     } catch (error: any) {
-      addLog(`💥 LOGIN BYPASS EXCEPTION: ${error.message || error}`);
+      addLog(`💥 FORCE ACCESS EXCEPTION: ${error.message || error}`);
     } finally {
       setIsLoading(false);
     }
@@ -133,11 +168,9 @@ const DebugAuth = () => {
     addLog('🔧 CHECKING SUPABASE CONFIG');
     
     try {
-      // Test basic connection
       addLog('URL: https://vkjrqirvdvjbemsfzxof.supabase.co');
       addLog('Key: eyJhbGciOiJIUzI1NiIs... (truncated)');
       
-      // Test auth session
       const { data: session, error: sessionError } = await supabase.auth.getSession();
       addLog(`📋 Current Session: ${session.session ? 'Active' : 'None'}`);
       
@@ -145,7 +178,6 @@ const DebugAuth = () => {
         addLog(`❌ Session Error: ${sessionError.message}`);
       }
       
-      // Test a simple query to verify connection
       const { data, error } = await supabase.from('profiles').select('count').limit(1);
       
       if (error) {
@@ -168,8 +200,7 @@ const DebugAuth = () => {
     <div className="p-4 bg-red-900/20 border border-red-500 rounded-lg mb-6">
       <h3 className="text-red-400 font-bold mb-4">🔧 DEBUG AUTH CONSOLE + BYPASS LOGIN</h3>
       
-      {/* Action Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2 mb-4">
         <Button 
           onClick={checkSupabaseConfig} 
           variant="outline" 
@@ -201,13 +232,23 @@ const DebugAuth = () => {
         </Button>
 
         <Button 
-          onClick={testLoginBypass} 
+          onClick={testImprovedLogin} 
           variant="outline" 
           size="sm" 
           disabled={isLoading}
           className="text-cyan-400 border-cyan-400 hover:bg-cyan-400/10"
         >
-          {isLoading ? '⏳' : '🔐'} BYPASS LOGIN
+          {isLoading ? '⏳' : '🔐'} IMPROVED LOGIN
+        </Button>
+
+        <Button 
+          onClick={forceDirectAccess} 
+          variant="outline" 
+          size="sm" 
+          disabled={isLoading}
+          className="text-yellow-400 border-yellow-400 hover:bg-yellow-400/10"
+        >
+          {isLoading ? '⏳' : '🚨'} FORCE ACCESS
         </Button>
 
         <Button 
@@ -220,7 +261,6 @@ const DebugAuth = () => {
         </Button>
       </div>
 
-      {/* Live Logs Display */}
       {logs.length > 0 && (
         <div className="bg-black/50 p-3 rounded border max-h-64 overflow-y-auto">
           <div className="text-green-400 font-mono text-xs space-y-1">
@@ -233,18 +273,17 @@ const DebugAuth = () => {
         </div>
       )}
       
-      {/* Status Indicator */}
       <div className="mt-4 text-center">
         <span className={`inline-block w-3 h-3 rounded-full mr-2 ${isLoading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></span>
         <span className="text-white/70 text-sm">
-          {isLoading ? 'Running diagnostics...' : 'Ready for testing - USE BYPASS LOGIN!'}
+          {isLoading ? 'Running diagnostics...' : 'Ready for testing - TRY IMPROVED LOGIN OR FORCE ACCESS!'}
         </span>
       </div>
       
       <div className="mt-4 p-3 bg-cyan-900/20 border border-cyan-500/30 rounded">
         <h4 className="text-cyan-400 font-bold mb-2">🚀 ACCESSO IMMEDIATO</h4>
         <p className="text-cyan-300 text-sm">
-          Clicca "BYPASS LOGIN" per accedere direttamente tramite magic link senza CAPTCHA!
+          Clicca "IMPROVED LOGIN" per il nuovo sistema di autenticazione bypass oppure "FORCE ACCESS" per accesso immediato tramite magic link!
         </p>
       </div>
     </div>
