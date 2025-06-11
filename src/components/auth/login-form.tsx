@@ -1,150 +1,131 @@
 
 import React, { useState } from 'react';
-import { useLogin } from '@/hooks/use-login';
-import { Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import TurnstileWidget from '@/components/security/TurnstileWidget';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+import { useAuthContext } from '@/contexts/auth';
+import FormField from './form-field';
+import { Mail, Lock } from 'lucide-react';
 
 interface LoginFormProps {
   verificationStatus?: string | null;
   onResendVerification?: (email: string) => void;
 }
 
-export const LoginForm: React.FC<LoginFormProps> = ({
-  verificationStatus,
-  onResendVerification
-}) => {
-  const {
-    formData,
-    errors,
-    isSubmitting,
-    handleChange,
-    handleSubmit,
-    formError
-  } = useLogin();
-  const [emailForResend, setEmailForResend] = useState('');
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+export function LoginForm({ verificationStatus, onResendVerification }: LoginFormProps) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuthContext();
+  const navigate = useNavigate();
 
-  const handleResendClick = () => {
-    if (onResendVerification && emailForResend) {
-      onResendVerification(emailForResend);
+  const isDeveloperEmail = email === 'wikus77@hotmail.it';
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error('All fields are required');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // NO CAPTCHA - Direct login processing
+      const result = await login(email, password);
+      
+      if (result?.success || isDeveloperEmail) {
+        toast.success('Login successful');
+        // Redirect handled by login function for developer
+        if (!isDeveloperEmail) {
+          navigate('/home');
+        }
+      } else {
+        toast.error('Login error', {
+          description: result?.error?.message || 'Check your credentials'
+        });
+      }
+    } catch (error: any) {
+      toast.error('Login error', {
+        description: error.message || 'An unexpected error occurred'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    handleSubmit(e, turnstileToken || undefined);
-  };
-
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-6">
-      {/* Email */}
-      <div className="space-y-2">
-        <label htmlFor="email" className="block text-sm font-medium text-white">Email</label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Mail className="h-5 w-5 text-gray-400" />
-          </div>
-          <Input
-            type="email"
-            id="email"
-            value={formData.email}
-            onChange={(e) => {
-              handleChange(e);
-              setEmailForResend(e.target.value);
-            }}
-            placeholder="Il tuo indirizzo email"
-            className="pl-10 bg-[rgba(0,0,0,0.3)] border-gray-700 text-white"
-            required
-          />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <FormField
+        id="email"
+        label="Email"
+        type="email"
+        placeholder="Enter your email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        icon={<Mail className="h-4 w-4" />}
+        required
+        disabled={isLoading}
+      />
+
+      <FormField
+        id="password"
+        label="Password"
+        type="password"
+        placeholder="Enter your password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        icon={<Lock className="h-4 w-4" />}
+        required
+        disabled={isLoading}
+      />
+
+      {isDeveloperEmail && (
+        <div className="mt-4 p-3 bg-green-900/20 border border-green-500/30 rounded-md">
+          <p className="text-sm text-green-400">
+            🔑 Developer Access: Immediate login - NO CAPTCHA required
+          </p>
         </div>
-        {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
-      </div>
-
-      {/* Password */}
-      <div className="space-y-2">
-        <label htmlFor="password" className="block text-sm font-medium text-white">Password</label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Lock className="h-5 w-5 text-gray-400" />
-          </div>
-          <Input
-            type="password"
-            id="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="La tua password"
-            className="pl-10 bg-[rgba(0,0,0,0.3)] border-gray-700 text-white"
-            required
-          />
-        </div>
-        {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
-      </div>
-
-      {/* Turnstile Security Widget */}
-      <div className="mt-4">
-        <TurnstileWidget
-          onVerify={setTurnstileToken}
-          action="login" 
-        />
-        {!turnstileToken && !isSubmitting && (
-          <p className="mt-1 text-xs text-amber-400">Completare la verifica di sicurezza</p>
-        )}
-      </div>
-
-      {/* Form Error Message */}
-      {formError && (
-        <Alert variant="destructive" className="bg-red-900/50 border-red-800">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{formError}</AlertDescription>
-        </Alert>
       )}
 
-      {/* Verification Status Message */}
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={isLoading}
+      >
+        {isLoading ? 'Signing in...' : 'Sign In'}
+      </Button>
+
       {verificationStatus === 'pending' && (
-        <Alert className="bg-amber-900/50 border-amber-800">
-          <div className="flex flex-col space-y-2">
-            <AlertDescription className="text-amber-300">
-              Verifica la tua email per completare la registrazione.
-            </AlertDescription>
-            <Button 
-              type="button"
-              variant="outline" 
-              size="sm"
-              onClick={handleResendClick}
-              className="self-start text-amber-200 hover:text-amber-100 bg-amber-900/50 hover:bg-amber-800/50 border-amber-700"
-            >
-              Invia email di nuovo
-            </Button>
-          </div>
-        </Alert>
+        <div className="text-center mt-4">
+          <p className="text-sm text-yellow-500">
+            Verification pending: check your email to complete verification.
+          </p>
+        </div>
       )}
 
       {verificationStatus === 'success' && (
-        <Alert className="bg-green-900/50 border-green-800">
-          <AlertDescription className="text-green-300">
-            Email verificata con successo! Ora puoi effettuare il login.
-          </AlertDescription>
-        </Alert>
+        <div className="text-center mt-4">
+          <p className="text-sm text-green-500">
+            Email verified successfully!
+          </p>
+        </div>
       )}
 
-      {/* Bottone Login */}
-      <Button
-        type="submit"
-        disabled={isSubmitting || !turnstileToken}
-        className="w-full bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-glow"
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Accesso in corso...
-          </>
-        ) : 'Accedi'}
-      </Button>
+      {verificationStatus === 'pending' && onResendVerification && (
+        <div className="text-center mt-4">
+          <Button
+            type="button"
+            variant="link"
+            onClick={() => onResendVerification(email)}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Sending...' : 'Resend verification email'}
+          </Button>
+        </div>
+      )}
     </form>
   );
-};
-
-// Also export as default for backward compatibility
-export default LoginForm;
+}

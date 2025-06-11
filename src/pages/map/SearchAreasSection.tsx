@@ -17,7 +17,6 @@ import { toast } from 'sonner';
 type SearchAreasSectionProps = {
   searchAreas: SearchArea[];
   setActiveSearchArea: (id: string | null) => void;
-  clearAllSearchAreas: () => void;
   handleAddArea: (radius?: number) => void;
   isAddingSearchArea: boolean;
   deleteSearchArea: (id: string) => Promise<boolean>;
@@ -26,7 +25,6 @@ type SearchAreasSectionProps = {
 const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
   searchAreas,
   setActiveSearchArea,
-  clearAllSearchAreas,
   handleAddArea,
   isAddingSearchArea,
   deleteSearchArea
@@ -108,19 +106,6 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
           Aree di interesse ({searchAreas.length})
         </h2>
         <div className="flex gap-2">
-          {searchAreas.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                console.log("🧹 CLEAR ALL: Clear all areas button clicked");
-                clearAllSearchAreas();
-              }}
-              className="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20"
-            >
-              Cancella tutto
-            </Button>
-          )}
           <Button
             variant="outline"
             size="sm"

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { PrizeVision } from "./home-sections/PrizeVision";
 import { BrokerConsole } from "./home-sections/BrokerConsole";
 import { AgentDiary } from "./home-sections/AgentDiary";
@@ -9,7 +9,7 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { toast } from "sonner";
 import { getMissionDeadline } from "@/utils/countdownDate";
 
-export function CommandCenterHome() {
+export default function CommandCenterHome() {
   // Track the user's progress (from 0 to 100)
   const [progress, setProgress] = useLocalStorage<number>("mission-progress", 0);
   
@@ -140,7 +140,11 @@ export function CommandCenterHome() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.1 }}
       >
-        <ActiveMissionBox mission={activeMission} />
+        <ActiveMissionBox 
+          mission={activeMission} 
+          purchasedClues={purchasedClues}
+          progress={progress}
+        />
       </motion.div>
 
       {/* Two column layout for Console and Agent */}

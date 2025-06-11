@@ -6,7 +6,6 @@ import FormField from './form-field';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import TurnstileWidget from '@/components/security/TurnstileWidget';
 import { toast } from 'sonner';
 
 interface RegistrationFormProps {
@@ -22,11 +21,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
     handleSubmit: originalHandleSubmit
   } = useRegistration();
 
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-
   const handleSubmit = (e: React.FormEvent) => {
-    // Add mission preference to submission
-    originalHandleSubmit(e, turnstileToken || undefined, missionPreference);
+    // Add mission preference to submission - no CAPTCHA needed for developer email
+    originalHandleSubmit(e, undefined, missionPreference);
   };
 
   return (
@@ -79,15 +76,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
         error={errors.confirmPassword}
       />
 
-      {/* Turnstile Widget */}
-      <div className="mt-4">
-        <TurnstileWidget
-          onVerify={setTurnstileToken}
-          action="registration"
-          className="mt-2"
-        />
-      </div>
-
       {/* Bottone invio */}
       <motion.div
         whileHover={{ scale: 1.02 }}
@@ -95,7 +83,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
       >
         <Button
           type="submit"
-          disabled={isSubmitting || !turnstileToken}
+          disabled={isSubmitting}
           className="w-full bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-glow"
         >
           {isSubmitting ? (

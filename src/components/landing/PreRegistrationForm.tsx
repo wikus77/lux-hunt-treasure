@@ -1,74 +1,102 @@
 
-import FormContainer from "./pre-registration/FormContainer";
-import RegistrationForm from "./pre-registration/RegistrationForm";
-import SuccessView from "./pre-registration/SuccessView";
-import { usePreRegistration } from "./pre-registration/usePreRegistration";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { usePreRegistration } from './pre-registration/usePreRegistration';
+import { RegistrationForm } from './pre-registration/RegistrationForm';
+import SuccessView from './pre-registration/SuccessView';
 
 interface PreRegistrationFormProps {
-  className?: string;
+  countdownCompleted?: boolean;
 }
 
-const PreRegistrationForm = ({ className }: PreRegistrationFormProps) => {
+const PreRegistrationForm: React.FC<PreRegistrationFormProps> = ({ 
+  countdownCompleted = false 
+}) => {
   const {
-    name,
-    setName,
-    email,
-    setEmail,
-    inviteCode,
-    setInviteCode,
+    formData,
     isSubmitting,
-    isSubmitted,
-    userReferralCode,
-    showInviteOptions,
-    setShowInviteOptions,
-    showReferralInput,
-    setShowReferralInput,
-    formErrors,
+    isSuccess,
+    error,
+    referralCode,
+    handleInputChange,
     handleSubmit,
-    handleInviteCodeSubmit,
-    copyReferralCode,
-    shareViaEmail
+    resetForm
   } = usePreRegistration();
 
-  // Handler functions for UI interactions
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value);
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value);
-  const handleInviteCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => setInviteCode(e.target.value);
-  const handleInviteFriend = () => setShowInviteOptions(true);
-  const handleShowReferralInput = () => setShowReferralInput(true);
-  const handleInviteOptionsBack = () => setShowInviteOptions(false);
-  const handleReferralInputCancel = () => setShowReferralInput(false);
+  if (isSuccess) {
+    return (
+      <SuccessView 
+        referralCode={referralCode} 
+        onReset={resetForm}
+      />
+    );
+  }
 
   return (
-    <FormContainer className={className} id="pre-registration-form">
-      {!isSubmitted ? (
-        <RegistrationForm 
-          name={name}
-          email={email}
-          isSubmitting={isSubmitting}
-          formErrors={formErrors}
-          onNameChange={handleNameChange}
-          onEmailChange={handleEmailChange}
-          onSubmit={handleSubmit}
-        />
-      ) : (
-        <SuccessView 
-          userReferralCode={userReferralCode}
-          showInviteOptions={showInviteOptions}
-          showReferralInput={showReferralInput}
-          inviteCode={inviteCode}
-          isSubmitting={isSubmitting}
-          onInviteCodeChange={handleInviteCodeChange}
-          onCopyReferralCode={copyReferralCode}
-          onInviteOptionToggle={handleInviteFriend}
-          onShowReferralInput={handleShowReferralInput}
-          onShareViaEmail={shareViaEmail}
-          onInviteCodeSubmit={handleInviteCodeSubmit}
-          onInviteOptionsBack={handleInviteOptionsBack}
-          onReferralInputCancel={handleReferralInputCancel}
-        />
-      )}
-    </FormContainer>
+    <section 
+      id="pre-registration-form" 
+      className="relative py-16 px-4 overflow-hidden bg-gradient-to-b from-purple-900/20 to-black"
+    >
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full opacity-10"
+            style={{
+              width: `${Math.random() * 200 + 30}px`,
+              height: `${Math.random() * 200 + 30}px`,
+              background: i % 3 === 0 ? "#00E5FF" : i % 3 === 1 ? "#8A2BE2" : "#FF0080",
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              filter: "blur(30px)",
+              animation: `pulse ${Math.random() * 8 + 8}s infinite alternate`
+            }}
+          />
+        ))}
+      </div>
+      
+      <div className="max-w-2xl mx-auto relative z-10 text-center">
+        <motion.h2
+          className="text-3xl md:text-4xl font-bold mb-6 text-white"
+          initial={{ y: 20, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+        >
+          Registrati per <br />
+          <span className="bg-gradient-to-r from-[#00E5FF] to-[#FF00FF] text-transparent bg-clip-text">
+            M1SSION™
+          </span>
+        </motion.h2>
+        
+        <motion.p
+          className="text-lg text-white/80 mb-8"
+          initial={{ y: 20, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          viewport={{ once: true }}
+        >
+          Ottieni accesso esclusivo e un codice referral unico. 
+          Preparati per l'avventura che cambierà tutto.
+        </motion.p>
+        
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          viewport={{ once: true }}
+        >
+          <RegistrationForm
+            formData={formData}
+            isSubmitting={isSubmitting}
+            error={error}
+            onInputChange={handleInputChange}
+            onSubmit={handleSubmit}
+            countdownCompleted={countdownCompleted}
+          />
+        </motion.div>
+      </div>
+    </section>
   );
 };
 

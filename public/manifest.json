@@ -1,0 +1,21 @@
+
+{
+  "name": "M1SSION",
+  "short_name": "M1SSION",
+  "start_url": "/home",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/lovable-uploads/83efc483-d057-4f1b-ac21-93d56e796e1f.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/lovable-uploads/83efc483-d057-4f1b-ac21-93d56e796e1f.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

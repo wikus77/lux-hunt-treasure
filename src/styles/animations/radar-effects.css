@@ -1,0 +1,76 @@
+
+/* Radar and Dynamic Island Effects */
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.text-glitch {
+  position: relative;
+  animation: glitch 0.5s ease-out;
+}
+
+@keyframes glitch {
+  0% {
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+    transform: translateX(0);
+  }
+  20% {
+    text-shadow: 2px 0 0 rgba(255, 0, 0, 0.75), -2px 0 0 rgba(0, 255, 255, 0.75);
+    transform: translateX(-2px);
+  }
+  40% {
+    text-shadow: -2px 0 0 rgba(255, 0, 0, 0.75), 2px 0 0 rgba(0, 255, 255, 0.75);
+    transform: translateX(2px);
+  }
+  60% {
+    text-shadow: 1px 0 0 rgba(255, 0, 0, 0.75), -1px 0 0 rgba(0, 255, 255, 0.75);
+    transform: translateX(-1px);
+  }
+  80% {
+    text-shadow: -1px 0 0 rgba(255, 0, 0, 0.75), 1px 0 0 rgba(0, 255, 255, 0.75);
+    transform: translateX(1px);
+  }
+  100% {
+    text-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+    transform: translateX(0);
+  }
+}
+
+/* Radar pulse effect */
+@keyframes radar {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.radar-pulse {
+  animation: radar 2s ease-out infinite;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Enhanced glow effects */
+.glow-green {
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+}
+
+/* Text glow effect for statistics */
+.text-glow {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(0, 209, 255, 0.6);
+}

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Loader } from "lucide-react";
@@ -25,6 +26,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const { createBuzzNotification } = useNotificationManager();
   const [buzzCost, setBuzzCost] = useState<number>(1.99);
   const [dailyCount, setDailyCount] = useState<number>(0);
+  const [showRipple, setShowRipple] = useState(false);
 
   // Carica il costo attuale del buzz
   useEffect(() => {
@@ -64,6 +66,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 
   const handleBuzzPress = async () => {
     if (isLoading || !userId) return;
+    
+    // Trigger ripple effect
+    setShowRipple(true);
+    setTimeout(() => setShowRipple(false), 1000);
     
     // Track Plausible event
     if (typeof window !== 'undefined' && window.plausible) {
@@ -143,10 +149,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         
         onSuccess();
       } else {
-        console.error("❌ Errore risposta BUZZ API:", response.error);
-        setError(response.error || "Errore sconosciuto");
+        console.error("❌ Errore risposta BUZZ API:", response.errorMessage);
+        const errorMessage = response.errorMessage || "Errore sconosciuto";
+        setError(errorMessage);
         toast.error("Errore", {
-          description: response.error || "Si è verificato un errore durante l'elaborazione dell'indizio",
+          description: errorMessage,
         });
       }
     } catch (error) {
@@ -231,6 +238,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         )}
       </div>
 
+      {/* Ripple effect */}
+      {showRipple && (
+        <div className="ripple-effect" />
+      )}
+      
       <style>
         {`
         @keyframes buzzButtonGlow {
@@ -240,6 +252,19 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         }
         .glow-text {
           text-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(0, 209, 255, 0.6);
+        }
+        @keyframes ripple {
+          0% { transform: scale(0.9); opacity: 0.5; }
+          100% { transform: scale(3); opacity: 0; }
+        }
+        .ripple-effect {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 9999px;
+          background-color: rgba(255, 255, 255, 0.4);
+          animation: ripple 1s ease-out forwards;
+          pointer-events: none;
         }
         `}
       </style>

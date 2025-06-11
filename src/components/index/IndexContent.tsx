@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import LandingHeader from "@/components/landing/LandingHeader";
@@ -105,7 +104,7 @@ const IndexContent = ({
       <PresentationSection visible={true} />
       
       {/* NUOVA SEZIONE: Form di pre-registrazione */}
-      <PreRegistrationForm />
+      <PreRegistrationForm countdownCompleted={countdownCompleted} />
       
       {/* Game Explanation Section */}
       <div id="game-explanation">

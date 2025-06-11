@@ -884,15 +884,7 @@ export type Database = {
           user_id?: string
           week?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_map_areas_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_minigames_progress: {
         Row: {
@@ -1023,6 +1015,10 @@ export type Database = {
       update_user_subscription_tier: {
         Args: { target_user_id: string; new_tier: string }
         Returns: undefined
+      }
+      validate_buzz_user_id: {
+        Args: { p_user_id: string }
+        Returns: boolean
       }
     }
     Enums: {

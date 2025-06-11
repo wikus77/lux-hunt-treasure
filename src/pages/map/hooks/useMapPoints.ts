@@ -3,6 +3,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { MapMarker } from '@/components/maps/types';
 
+// UUID di fallback per sviluppo - SOLUZIONE DEFINITIVA
+const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
+
 export function useMapPoints(
   mapPoints: MapMarker[], 
   setActiveMapPoint: (id: string | null) => void,
@@ -21,7 +24,7 @@ export function useMapPoints(
     console.log("🔄 useMapPoints - isAddingMapPoint state changed:", isAddingMapPoint);
   }, [isAddingMapPoint]);
 
-  // Handler for map point click - CRITICAL FIX
+  // Handler for map point click - IMPROVED
   const handleMapPointClick = useCallback(async (lat: number, lng: number): Promise<string> => {
     console.log("⭐ Map point click HANDLER executed at coordinates:", lat, lng);
     
@@ -34,7 +37,7 @@ export function useMapPoints(
       return Promise.resolve(""); // Return empty string as we didn't add a point
     }
     
-    // Create a new point and set it in state - CRITICAL FIX
+    // Create a new point and set it in state - IMPROVED
     console.log("✅ Creating new point at", lat, lng);
     
     // IMPORTANT: Create the point object IMMEDIATELY after the click
@@ -65,7 +68,7 @@ export function useMapPoints(
     return Promise.resolve("new");
   }, [isAddingMapPoint]);
 
-  // Handle save of new map point
+  // FIXED: Handle save of new map point con validazione completa
   const handleSaveNewPoint = async (title: string, note: string) => {
     console.log("📝 Tentativo di salvare il nuovo punto con titolo:", title);
     
@@ -75,20 +78,30 @@ export function useMapPoints(
       return;
     }
     
+    // FIXED: Validazione rigorosa con trim
+    const trimmedTitle = title?.trim() || '';
+    const trimmedNote = note?.trim() || '';
+    
+    if (!trimmedTitle) {
+      console.log("❌ Validation failed: empty title after trim");
+      toast.error("Il titolo è obbligatorio");
+      return;
+    }
+    
     console.log("📝 Salvando nuovo punto:", {
       lat: newPoint.lat, 
       lng: newPoint.lng,
-      title,
-      note
+      title: trimmedTitle,
+      note: trimmedNote
     });
     
     try {
-      // Call the API to save the point
+      // Call the API to save the point with trimmed values
       const pointId = await addMapPoint({
         lat: newPoint.lat,
         lng: newPoint.lng,
-        title,
-        note
+        title: trimmedTitle,
+        note: trimmedNote
       });
       
       console.log("✅ Punto salvato con successo, ID:", pointId);
@@ -100,23 +113,37 @@ export function useMapPoints(
       toast.success("Punto di interesse salvato");
     } catch (error) {
       console.error("❌ Errore nel salvare il punto:", error);
-      toast.error("Errore nel salvare il punto. Riprova.");
+      const errorMessage = error instanceof Error ? error.message : 'Errore sconosciuto';
+      toast.error(`Errore nel salvare il punto: ${errorMessage}`);
     }
   };
 
-  // Handle update of existing map point
+  // FIXED: Handle update of existing map point con validazione
   const handleUpdatePoint = async (id: string, title: string, note: string): Promise<boolean> => {
     console.log("📝 Aggiornamento punto esistente:", id, title, note);
     
+    // FIXED: Validazione con trim
+    const trimmedTitle = title?.trim() || '';
+    const trimmedNote = note?.trim() || '';
+    
+    if (!trimmedTitle) {
+      console.log("❌ Validation failed: empty title after trim");
+      toast.error("Il titolo è obbligatorio");
+      return false;
+    }
+    
     try {
-      const result = await updateMapPoint(id, { title, note });
-      console.log("✅ Punto aggiornato con successo");
-      setActiveMapPoint(null);
-      toast.success("Punto di interesse aggiornato");
+      const result = await updateMapPoint(id, { title: trimmedTitle, note: trimmedNote });
+      if (result) {
+        console.log("✅ Punto aggiornato con successo");
+        setActiveMapPoint(null);
+        toast.success("Punto di interesse aggiornato");
+      }
       return result;
     } catch (error) {
       console.error("❌ Errore nell'aggiornamento del punto:", error);
-      toast.error("Errore nell'aggiornare il punto");
+      const errorMessage = error instanceof Error ? error.message : 'Errore sconosciuto';
+      toast.error(`Errore nell'aggiornare il punto: ${errorMessage}`);
       return false;
     }
   };
