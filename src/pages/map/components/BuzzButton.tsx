@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Circle as CircleIcon, Loader } from "lucide-react";
@@ -91,6 +92,13 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       toast.error('❌ Errore generazione area BUZZ');
     }
   };
+  
+  const getPrecisionIndicator = () => {
+    if (precisionMode === 'high') {
+      return '🎯';
+    }
+    return '📍';
+  };
 
   // Disable button if no valid user
   const isDisabled = isGenerating || !user?.id;
@@ -105,10 +113,9 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         <Button
           onClick={handleBuzzMapClick}
           disabled={isDisabled}
-          className={`buzz-button bg-gradient-to-r from-[#00cfff] via-[#ff00cc] to-[#7f00ff] text-white shadow-[0_0_20px_6px_rgba(255,0,128,0.45)] hover:shadow-[0_0_25px_10px_rgba(255,0,128,0.65)] transition-all duration-300 px-8 py-3 rounded-full font-bold tracking-wide text-base relative overflow-hidden whitespace-nowrap ${isRippling ? 'ripple-effect' : ''}`}
+          className={`buzz-button bg-gradient-to-r from-[#00cfff] via-[#ff00cc] to-[#7f00ff] text-white shadow-[0_0_20px_6px_rgba(255,0,128,0.45)] hover:shadow-[0_0_25px_10px_rgba(255,0,128,0.65)] transition-all duration-300 px-6 py-2 rounded-full font-bold tracking-wide text-base relative overflow-hidden ${isRippling ? 'ripple-effect' : ''}`}
           style={{
-            animation: isGenerating ? "none" : "buzzGlow 2s infinite ease-in-out",
-            minWidth: 'fit-content'
+            animation: isGenerating ? "none" : "buzzGlow 2s infinite ease-in-out"
           }}
         >
           {isGenerating ? (
@@ -116,9 +123,14 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           ) : (
             <CircleIcon className="mr-2 h-4 w-4" />
           )}
-          <span>
-            {isGenerating ? 'Generando...' : `BUZZ MAPPA (${activeArea ? `${activeArea.radius_km.toFixed(1)}km` : '21.5km'})  ${dailyBuzzMapCounter} BUZZ settimana`}
+          {isGenerating ? 'Generando...' : 'BUZZ MAPPA'}
+          <span className="ml-2 text-xs opacity-80">
+            {activeArea ? `(Centro fisso: ${activeArea.radius_km.toFixed(1)}km)` : '(Centro fisso Ready)'}
+            {getPrecisionIndicator()}
           </span>
+          <div className="text-xs opacity-70 mt-1">
+            {!user?.id ? 'Login Required' : `CENTRO FISSO • ${dailyBuzzMapCounter} BUZZ settimana`}
+          </div>
         </Button>
         
         {/* Ripple effect overlay */}

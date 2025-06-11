@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 import LoadingManager from "./index/LoadingManager";

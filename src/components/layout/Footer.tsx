@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 
 export const Footer = () => {
   const isMobile = useIsMobile();
+  const isDarkMode = document.documentElement.classList.contains('dark');
   
   return (
     <footer className="border-t py-6 px-4 mt-auto transition-colors duration-200 bg-black">
@@ -14,7 +15,7 @@ export const Footer = () => {
           <div>
             <h3 className="font-sans font-semibold mb-4 text-white">
               <span className="text-[#00E5FF]">M1</span>
-              <span className="text-white">MISSION<span className="text-xs align-top">™</span></span>
+              <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
             </h3>
             <p className="text-sm text-gray-400">
               La tua piattaforma per scoprire indizi ed eventi esclusivi.
@@ -41,12 +42,7 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/ownership" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Ownership
-                </Link>
-              </li>
-              <li>
-                <Link to="/privacy-policy" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link to="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Privacy Policy
                 </Link>
               </li>
@@ -77,7 +73,7 @@ export const Footer = () => {
         
         <div className="border-t mt-6 pt-6 text-center border-gray-800">
           <p className="text-sm text-gray-400">
-            © {new Date().getFullYear()} <span className="text-[#00E5FF]">M1</span><span className="text-white">MISSION<span className="text-xs align-top">™</span></span>. Tutti i diritti riservati.
+            © {new Date().getFullYear()} <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>. Tutti i diritti riservati.
           </p>
         </div>
       </div>

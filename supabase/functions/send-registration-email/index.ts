@@ -1,7 +1,7 @@
+
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
-import { RateLimiter } from "../_shared/rateLimiter.ts";
 
 // Import utility functions
 import { validateRegistrationEmail } from "./utils/validateRegistrationEmail.ts";
@@ -19,35 +19,6 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
-
-// Sentry-like error logging for Edge Functions
-const logError = async (error: any, context: any) => {
-  console.error("❌ EDGE FUNCTION ERROR:", error);
-  
-  // Skip logging for developer email
-  if (context?.email === "wikus77@hotmail.it") {
-    return;
-  }
-  
-  // Log to abuse_logs as fallback monitoring
-  try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    await supabase.from('abuse_logs').insert({
-      user_id: context?.userId || 'unknown',
-      event_type: 'edge_function_error',
-      timestamp: new Date().toISOString(),
-      ip_address: context?.ipAddress || 'unknown',
-      meta: { 
-        function: 'send-registration-email',
-        error: error.message || String(error),
-        stack: error.stack,
-        context
-      }
-    });
-  } catch (logError) {
-    console.error("Failed to log error:", logError);
-  }
-};
 
 serve(async (req) => {
   console.log(`Processing ${req.method} request to send-registration-email`);
@@ -102,32 +73,12 @@ serve(async (req) => {
       );
     }
 
-    // 3. RATE LIMITING - Enhanced with new rate limiter
-    const rateLimiter = new RateLimiter(supabaseUrl, supabaseServiceKey);
-    const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
-    
-    const rateLimitResult = await rateLimiter.checkRateLimit(authenticatedUserId, ipAddress, {
-      maxRequests: 5,
-      windowSeconds: 30,
-      functionName: 'send-registration-email'
-    });
-
-    if (!rateLimitResult.allowed) {
-      console.log(`🚫 Rate limit exceeded for user: ${authenticatedUserId}`);
+    // 3. RATE LIMITING - Check rate limit (1 email every 60 seconds per user)
+    const rateLimitResult = checkRateLimit(authenticatedUserId);
+    if (!rateLimitResult.isAllowed) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Troppe richieste email. Riprova tra qualche secondo." 
-        }),
-        { 
-          status: 429, 
-          headers: { 
-            "Content-Type": "application/json", 
-            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
-            "X-RateLimit-Reset": rateLimitResult.resetTime.toISOString(),
-            ...corsHeaders 
-          } 
-        }
+        JSON.stringify({ success: false, error: rateLimitResult.error }),
+        { status: rateLimitResult.statusCode!, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -230,13 +181,6 @@ serve(async (req) => {
     }
   } catch (error: any) {
     console.error("General error sending email:", error);
-    
-    // Log error with context
-    await logError(error, {
-      userId: 'unknown',
-      ipAddress: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip"),
-      email: null
-    });
     
     return new Response(
       JSON.stringify({ 

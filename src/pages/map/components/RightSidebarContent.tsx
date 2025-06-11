@@ -2,7 +2,6 @@
 import React from 'react';
 import MapPointsSection from '../MapPointsSection';
 import SearchAreasSection from '../SearchAreasSection';
-import BuzzAreasExpansible from '../BuzzAreasExpansible';
 import { MapMarker } from '@/components/maps/types';
 
 interface RightSidebarContentProps {
@@ -43,14 +42,16 @@ const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
         />
       </div>
       
-      {/* Unified Areas Section - Full width container styled like M1SSION CONSOLE */}
-      <BuzzAreasExpansible 
-        searchAreas={searchAreas}
-        setActiveSearchArea={setActiveSearchArea}
-        handleAddArea={handleAddArea}
-        isAddingSearchArea={isAddingSearchArea}
-        deleteSearchArea={deleteSearchArea}
-      />
+      {/* Search areas section - removed clearAllSearchAreas prop */}
+      <div className="m1ssion-glass-card p-4 sm:p-6 rounded-[24px]">
+        <SearchAreasSection
+          searchAreas={searchAreas}
+          setActiveSearchArea={setActiveSearchArea}
+          handleAddArea={handleAddArea}
+          isAddingSearchArea={isAddingSearchArea}
+          deleteSearchArea={deleteSearchArea}
+        />
+      </div>
     </>
   );
 };

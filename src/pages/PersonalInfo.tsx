@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PersonalInfo = () => {
   const navigate = useNavigate();
@@ -17,14 +16,10 @@ const PersonalInfo = () => {
     lastName: "",
     email: "",
     phone: "",
-    birthDate: "",
     address: "",
     city: "",
     postalCode: "",
-    country: "",
-    investigativeStyle: "",
-    preferredLanguage: "",
-    agentCode: ""
+    country: ""
   });
   
   const [personalInfo, setPersonalInfo] = useState({
@@ -32,32 +27,11 @@ const PersonalInfo = () => {
     lastName: "",
     email: "",
     phone: "",
-    birthDate: "",
     address: "",
     city: "",
     postalCode: "",
-    country: "",
-    investigativeStyle: "",
-    preferredLanguage: "",
-    agentCode: ""
+    country: ""
   });
-
-  const investigativeStyles = [
-    { value: "strategico", label: "Strategico" },
-    { value: "impulsivo", label: "Impulsivo" },
-    { value: "logico", label: "Logico" },
-    { value: "misterioso", label: "Misterioso" },
-    { value: "analitico", label: "Analitico" },
-    { value: "intuitivo", label: "Intuitivo" }
-  ];
-
-  const languages = [
-    { value: "italiano", label: "Italiano" },
-    { value: "english", label: "English" },
-    { value: "français", label: "Français" },
-    { value: "español", label: "Español" },
-    { value: "deutsch", label: "Deutsch" }
-  ];
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -92,14 +66,10 @@ const PersonalInfo = () => {
             lastName: data.last_name || "",
             email: data.email || "",
             phone: data.phone || "",
-            birthDate: data.birth_date || "",
             address: data.address || "",
             city: data.city || "",
             postalCode: data.postal_code || "",
-            country: data.country || "",
-            investigativeStyle: data.investigative_style || "",
-            preferredLanguage: data.preferred_language || "italiano",
-            agentCode: "X0197" // Always display X0197 as the official agent code
+            country: data.country || ""
           };
           
           setPersonalInfo(userData);
@@ -116,14 +86,6 @@ const PersonalInfo = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setPersonalInfo(prev => {
-      const newState = { ...prev, [name]: value };
-      setIsDirty(JSON.stringify(newState) !== JSON.stringify(originalInfo));
-      return newState;
-    });
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
     setPersonalInfo(prev => {
       const newState = { ...prev, [name]: value };
       setIsDirty(JSON.stringify(newState) !== JSON.stringify(originalInfo));
@@ -162,13 +124,10 @@ const PersonalInfo = () => {
           last_name: personalInfo.lastName,
           email: personalInfo.email,
           phone: personalInfo.phone,
-          birth_date: personalInfo.birthDate,
           address: personalInfo.address,
           city: personalInfo.city,
           postal_code: personalInfo.postalCode,
           country: personalInfo.country,
-          investigative_style: personalInfo.investigativeStyle,
-          preferred_language: personalInfo.preferredLanguage,
           full_name: `${personalInfo.firstName} ${personalInfo.lastName}`.trim(),
           updated_at: new Date().toISOString()
         })
@@ -180,8 +139,8 @@ const PersonalInfo = () => {
         return;
       }
       
-      toast.success("✅ Profilo aggiornato con successo", {
-        description: "Le tue informazioni personali sono state aggiornate correttamente."
+      toast.success("Informazioni Aggiornate", {
+        description: "Le tue informazioni personali sono state aggiornate con successo."
       });
       
       // Update original info to match current info
@@ -197,32 +156,27 @@ const PersonalInfo = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black h-[100dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+80px)]">
-      {/* Title section with back button aligned horizontally - positioned below header */}
-      <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+64px)] mb-6">
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            navigate(-1);
-          }}
-          className="w-6 h-6 text-white"
-          aria-label="Torna alla pagina precedente"
+    <div className="min-h-screen bg-black pb-6">
+      <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="mr-2"
+          onClick={() => navigate(-1)}
         >
-          <ArrowLeft />
-        </button>
-        <h1 className="text-xl font-semibold text-white">Modifica Informazioni Personali</h1>
-      </div>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-xl font-bold">Informazioni Personali</h1>
+      </header>
 
-      {/* Main content with proper spacing */}
-      <div className="p-4 pt-4">
+      <div className="p-4">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="glass-card mb-4 rounded-xl shadow-lg">
-            <h2 className="text-lg font-semibold mb-4 text-white">Dati Personali</h2>
+          <div className="glass-card mb-4">
+            <h2 className="text-lg font-semibold mb-4">Dati Personali</h2>
             
             <div className="space-y-4">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium mb-1 text-white">
+                <label htmlFor="firstName" className="block text-sm font-medium mb-1">
                   Nome
                 </label>
                 <Input
@@ -230,13 +184,12 @@ const PersonalInfo = () => {
                   name="firstName"
                   value={personalInfo.firstName}
                   onChange={handleInputChange}
-                  className="rounded-xl bg-black/50 border-white/10"
                   required
                 />
               </div>
               
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium mb-1 text-white">
+                <label htmlFor="lastName" className="block text-sm font-medium mb-1">
                   Cognome
                 </label>
                 <Input
@@ -244,27 +197,12 @@ const PersonalInfo = () => {
                   name="lastName"
                   value={personalInfo.lastName}
                   onChange={handleInputChange}
-                  className="rounded-xl bg-black/50 border-white/10"
                   required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="birthDate" className="block text-sm font-medium mb-1 text-white">
-                  Data di Nascita
-                </label>
-                <Input
-                  id="birthDate"
-                  name="birthDate"
-                  type="date"
-                  value={personalInfo.birthDate}
-                  onChange={handleInputChange}
-                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
               
               <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-1 text-white">
+                <label htmlFor="email" className="block text-sm font-medium mb-1">
                   Email
                 </label>
                 <Input
@@ -273,13 +211,12 @@ const PersonalInfo = () => {
                   type="email"
                   value={personalInfo.email}
                   onChange={handleInputChange}
-                  className="rounded-xl bg-black/50 border-white/10"
                   required
                 />
               </div>
               
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium mb-1 text-white">
+                <label htmlFor="phone" className="block text-sm font-medium mb-1">
                   Telefono
                 </label>
                 <Input
@@ -287,84 +224,17 @@ const PersonalInfo = () => {
                   name="phone"
                   value={personalInfo.phone}
                   onChange={handleInputChange}
-                  className="rounded-xl bg-black/50 border-white/10"
                 />
-              </div>
-
-              {/* Agent Code - Read Only and Always X0197 */}
-              <div>
-                <label htmlFor="agentCode" className="block text-sm font-medium mb-1 text-white">
-                  Codice Agente
-                </label>
-                <Input
-                  id="agentCode"
-                  name="agentCode"
-                  value="X0197"
-                  readOnly={true}
-                  disabled={true}
-                  className="rounded-xl bg-gray-800/50 border-white/10 opacity-60 cursor-not-allowed font-mono"
-                />
-                <p className="text-xs text-gray-400 mt-1">Il codice agente è univoco e non può essere modificato</p>
-              </div>
-
-              <div>
-                <label htmlFor="investigativeStyle" className="block text-sm font-medium mb-1 text-white">
-                  Stile Investigativo
-                </label>
-                <Select 
-                  value={personalInfo.investigativeStyle} 
-                  onValueChange={(value) => handleSelectChange('investigativeStyle', value)}
-                >
-                  <SelectTrigger className="rounded-xl bg-black/50 border-white/10">
-                    <SelectValue placeholder="Seleziona il tuo stile" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-black border-white/10 rounded-xl">
-                    {investigativeStyles.map((style) => (
-                      <SelectItem 
-                        key={style.value} 
-                        value={style.value}
-                        className="text-white hover:bg-white/10"
-                      >
-                        {style.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label htmlFor="preferredLanguage" className="block text-sm font-medium mb-1 text-white">
-                  Lingua Preferita
-                </label>
-                <Select 
-                  value={personalInfo.preferredLanguage} 
-                  onValueChange={(value) => handleSelectChange('preferredLanguage', value)}
-                >
-                  <SelectTrigger className="rounded-xl bg-black/50 border-white/10">
-                    <SelectValue placeholder="Seleziona la lingua" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-black border-white/10 rounded-xl">
-                    {languages.map((language) => (
-                      <SelectItem 
-                        key={language.value} 
-                        value={language.value}
-                        className="text-white hover:bg-white/10"
-                      >
-                        {language.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           </div>
           
-          <div className="glass-card mb-4 rounded-xl shadow-lg">
-            <h2 className="text-lg font-semibold mb-4 text-white">Indirizzo</h2>
+          <div className="glass-card mb-4">
+            <h2 className="text-lg font-semibold mb-4">Indirizzo</h2>
             
             <div className="space-y-4">
               <div>
-                <label htmlFor="address" className="block text-sm font-medium mb-1 text-white">
+                <label htmlFor="address" className="block text-sm font-medium mb-1">
                   Via e Numero
                 </label>
                 <Input
@@ -372,12 +242,11 @@ const PersonalInfo = () => {
                   name="address"
                   value={personalInfo.address}
                   onChange={handleInputChange}
-                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
               
               <div>
-                <label htmlFor="city" className="block text-sm font-medium mb-1 text-white">
+                <label htmlFor="city" className="block text-sm font-medium mb-1">
                   Città
                 </label>
                 <Input
@@ -385,12 +254,11 @@ const PersonalInfo = () => {
                   name="city"
                   value={personalInfo.city}
                   onChange={handleInputChange}
-                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
               
               <div>
-                <label htmlFor="postalCode" className="block text-sm font-medium mb-1 text-white">
+                <label htmlFor="postalCode" className="block text-sm font-medium mb-1">
                   CAP
                 </label>
                 <Input
@@ -398,12 +266,11 @@ const PersonalInfo = () => {
                   name="postalCode"
                   value={personalInfo.postalCode}
                   onChange={handleInputChange}
-                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
               
               <div>
-                <label htmlFor="country" className="block text-sm font-medium mb-1 text-white">
+                <label htmlFor="country" className="block text-sm font-medium mb-1">
                   Paese
                 </label>
                 <Input
@@ -411,30 +278,19 @@ const PersonalInfo = () => {
                   name="country"
                   value={personalInfo.country}
                   onChange={handleInputChange}
-                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
             </div>
           </div>
           
-          <div className="flex gap-3">
-            <Button 
-              type="button"
-              variant="outline"
-              onClick={() => navigate(-1)}
-              className="flex-1 rounded-xl"
-            >
-              ↩️ Annulla
-            </Button>
-            <Button 
-              type="submit"
-              disabled={!isDirty || loading}
-              className="flex-1 bg-white text-black hover:bg-gray-100 rounded-xl"
-            >
-              <Save className="mr-2 h-4 w-4" /> 
-              {loading ? "Salvataggio..." : "💾 Salva modifiche"}
-            </Button>
-          </div>
+          <Button 
+            type="submit"
+            disabled={!isDirty || loading}
+            className="w-full bg-white text-black hover:bg-gray-100"
+          >
+            <Save className="mr-2 h-4 w-4" /> 
+            {loading ? "Salvataggio in corso..." : "Salva Modifiche"}
+          </Button>
         </form>
       </div>
     </div>

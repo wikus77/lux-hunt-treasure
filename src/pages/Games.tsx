@@ -1,8 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { GameCard } from '@/components/games/GameCard';
 import { gameData, GameType } from '@/components/games/memory-hack/gameData';
 import { useGameLogic } from '@/hooks/useGameLogic';
@@ -22,7 +19,6 @@ import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 
 const Games = () => {
-  const navigate = useNavigate();
   const [selectedGame, setSelectedGame] = useState<GameType | null>(null);
   const [gameCompleted, setGameCompleted] = useState<Record<GameType, boolean>>({
     'memory-hack': false,
@@ -157,20 +153,12 @@ const Games = () => {
           }}
         >
           <div className="container mx-auto px-3">
-            <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+64px)] mb-4">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  navigate(-1);
-                }}
-                className="w-6 h-6 text-white"
-                aria-label="Torna alla pagina precedente"
-              >
-                <ArrowLeft />
-              </button>
-              <h1 className="text-xl font-semibold text-white">Torna ai giochi</h1>
-            </div>
+            <button
+              onClick={() => setSelectedGame(null)}
+              className="mb-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+            >
+              ← Torna ai giochi
+            </button>
             {renderGame()}
           </div>
         </main>

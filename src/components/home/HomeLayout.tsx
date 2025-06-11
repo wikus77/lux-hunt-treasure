@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 import HomeHeader from "@/components/home/HomeHeader";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
-import ConsentBanner from "@/components/gdpr/ConsentBanner";
+import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 
 type HomeLayoutProps = {
@@ -27,7 +27,7 @@ const HomeLayout: React.FC<HomeLayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-x-hidden pb-16">
-      <ConsentBanner />
+      <CookiebotInit />
       <div className="relative z-20">
         {notificationsBannerOpen && (
           <motion.div

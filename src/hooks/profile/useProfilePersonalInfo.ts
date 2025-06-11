@@ -12,9 +12,7 @@ export const useProfilePersonalInfo = () => {
     address: "",
     city: "",
     postalCode: "",
-    country: "",
-    investigativeStyle: "",
-    preferredLanguage: ""
+    country: ""
   });
 
   // Load personal information
@@ -26,7 +24,7 @@ export const useProfilePersonalInfo = () => {
         if (session?.user) {
           const { data, error } = await supabase
             .from('profiles')
-            .select('first_name, last_name, email, phone, address, city, postal_code, country, investigative_style, preferred_language')
+            .select('first_name, last_name, email, phone, address, city, postal_code, country')
             .eq('id', session.user.id)
             .single();
             
@@ -40,9 +38,7 @@ export const useProfilePersonalInfo = () => {
               address: data.address || "",
               city: data.city || "",
               postalCode: data.postal_code || "",
-              country: data.country || "",
-              investigativeStyle: data.investigative_style || "",
-              preferredLanguage: data.preferred_language || "italiano"
+              country: data.country || ""
             });
           }
         }

@@ -1,12 +1,9 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { User, Camera } from "lucide-react";
+import { User } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useRef } from "react";
 
 interface ProfileInfoProps {
   profileImage: string | null;
@@ -59,69 +56,6 @@ const ProfileInfo = ({
   setAgentTitle,
 }: ProfileInfoProps) => {
   const isMobile = useIsMobile();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Devi essere autenticato per caricare un'immagine");
-        return;
-      }
-
-      // Generate unique filename with user ID path
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${session.user.id}/${Date.now()}.${fileExt}`;
-
-      // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, {
-          upsert: true
-        });
-
-      if (uploadError) {
-        console.error("Upload error:", uploadError);
-        toast.error("Errore nel caricamento dell'immagine. Riprova.");
-        return;
-      }
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      const publicUrl = urlData.publicUrl;
-
-      // Update profile in database using the correct column name
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', session.user.id);
-
-      if (updateError) {
-        console.error("Profile update error:", updateError);
-        toast.error("Errore nell'aggiornamento del profilo. Riprova.");
-        return;
-      }
-
-      setProfileImage(publicUrl);
-      toast.success("Immagine profilo aggiornata con successo!");
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      toast.error("Errore nel caricamento dell'immagine. Riprova.");
-    }
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
-  // Always display X0197 as the official agent code
-  const displayAgentCode = "X0197";
   
   return (
     <div className="flex-shrink-0 flex flex-col items-center md:w-1/3">
@@ -133,24 +67,25 @@ const ProfileInfo = ({
           </AvatarFallback>
         </Avatar>
         
-        {/* Camera button for image upload */}
-        <Button
-          onClick={triggerFileInput}
-          size="sm"
-          className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-cyan-500 hover:bg-cyan-600 p-0"
-        >
-          <Camera className="w-4 h-4" />
-        </Button>
-        
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageUpload}
-          className="hidden"
-          capture={isMobile ? "user" : undefined}
-        />
+        {isEditing && (
+          <div className="mt-2">
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setProfileImage(reader.result as string);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              className="text-xs w-full max-w-[250px]"
+            />
+          </div>
+        )}
       </div>
       
       <div className="mt-4 text-center w-full max-w-[250px] mx-auto">
@@ -159,27 +94,25 @@ const ProfileInfo = ({
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mb-2 bg-black/30 h-10 rounded-xl"
+              className="mb-2 bg-black/30 h-10"
               placeholder="Nome Agente"
             />
-            {/* Agent Code - Read Only and Disabled */}
             <Input
-              value={displayAgentCode}
-              readOnly={true}
-              disabled={true}
-              className="mb-2 bg-gray-800/50 h-10 rounded-xl opacity-60 cursor-not-allowed font-mono"
+              value={agentCode}
+              onChange={(e) => setAgentCode(e.target.value)}
+              className="mb-2 bg-black/30 font-mono h-10"
               placeholder="Codice Agente"
             />
             <Input
               value={agentTitle}
               onChange={(e) => setAgentTitle(e.target.value)}
-              className="mb-2 bg-black/30 h-10 rounded-xl"
+              className="mb-2 bg-black/30 h-10"
               placeholder="Titolo Agente"
             />
             <Textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="bg-black/30 rounded-xl"
+              className="bg-black/30"
               placeholder="Bio"
               rows={isMobile ? 3 : 4}
             />
@@ -189,14 +122,8 @@ const ProfileInfo = ({
             <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-1`}>{name}</h2>
             <p className="text-sm text-gray-400 mb-3">{bio}</p>
             
-            {/* Agent Code Display - Read Only */}
-            <div className="mb-3 p-2 bg-gray-800/30 rounded-xl border border-gray-700">
-              <span className="text-xs text-gray-400">Codice Agente:</span>
-              <div className="mt-1 font-mono text-sm text-cyan-400">{displayAgentCode}</div>
-            </div>
-            
             {/* Investigative Style */}
-            <div className="mb-4 p-2 bg-black/30 rounded-xl border border-gray-800">
+            <div className="mb-4 p-2 bg-black/30 rounded-md border border-gray-800">
               <span className="text-xs text-gray-400">Stile investigativo:</span>
               <div className="flex items-center mt-1 justify-center">
                 <span className={`w-3 h-3 rounded-full ${investigativeStyle.color} mr-2`}></span>
