@@ -71,6 +71,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     console.log('💳 EMERGENCY FIX: NON-DEVELOPER - FORCING Stripe activation BEFORE generation');
     
     try {
+      console.log('💳 OPENING STRIPE CHECKOUT for BUZZ MAP...');
       const stripeSuccess = await processBuzzPurchase(true, 2.99); // isMapBuzz = true
       if (stripeSuccess) {
         console.log('✅ EMERGENCY FIX: Stripe payment completed successfully for BUZZ MAP');
@@ -117,22 +118,23 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         handleBuzz();
       }
       
-      // CRITICAL FIX: Create MEANINGFUL notification with FORCED database write and FORCED PERSISTENCE
+      // CRITICAL FIX: Create FORCED notification with GUARANTEED persistence
       let notificationCreated = false;
       let attempts = 0;
       
-      while (!notificationCreated && attempts < 3) {
+      while (!notificationCreated && attempts < 5) {
+        attempts++;
         try {
+          console.log(`📨 EMERGENCY FIX: BUZZ MAP notification creation attempt ${attempts}/5`);
           await createMapBuzzNotification(
             "🗺️ Area BUZZ Mappa Generata",
             `Nuova area di ricerca Mission generata: ${newArea.radius_km.toFixed(1)}km di raggio - Generazione #${realBuzzMapCounter}`
           );
           notificationCreated = true;
-          console.log('✅ EMERGENCY FIX: BUZZ MAP notification FORCED into database successfully');
+          console.log(`✅ EMERGENCY FIX: BUZZ MAP notification FORCED into database successfully on attempt ${attempts}`);
         } catch (notifError) {
-          attempts++;
           console.error(`❌ EMERGENCY FIX: BUZZ MAP notification attempt ${attempts} failed:`, notifError);
-          if (attempts < 3) {
+          if (attempts < 5) {
             await new Promise(resolve => setTimeout(resolve, 500));
           }
         }
@@ -156,7 +158,14 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     if (activeArea) {
       return activeArea.radius_km.toFixed(1);
     }
-    return '500.0';
+    
+    // Calculate expected radius based on generation count
+    const generationCount = realBuzzMapCounter || 1;
+    let expectedRadius = 500;
+    if (generationCount > 1) {
+      expectedRadius = Math.max(5, 500 * Math.pow(0.95, generationCount - 1));
+    }
+    return expectedRadius.toFixed(1);
   };
   
   const displayGeneration = () => {

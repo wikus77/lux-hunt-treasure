@@ -5,6 +5,8 @@ import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import GameCard from "@/components/games/GameCard";
 import MemoryHackGame from "@/components/games/MemoryHackGame";
+import CipherDecodeGame from "@/components/games/CipherDecodeGame";
+import TimeTrialGame from "@/components/games/TimeTrialGame";
 import GameStats from "@/components/games/GameStats";
 
 const Games = () => {
@@ -26,8 +28,8 @@ const Games = () => {
       description: 'Decifra i codici segreti dell\'antica Roma',
       difficulty: 'Difficile' as const,
       rewards: '200-800 punti',
-      isLocked: true,
-      progress: 0
+      isLocked: false, // Unlocked for developers
+      progress: 25
     },
     {
       id: 'time-trial',
@@ -35,8 +37,8 @@ const Games = () => {
       description: 'Risolvi enigmi Mission in tempo limitato',
       difficulty: 'Facile' as const,
       rewards: '50-300 punti',
-      isLocked: true,
-      progress: 0
+      isLocked: false, // Unlocked for developers
+      progress: 50
     }
   ];
 
@@ -105,6 +107,114 @@ const Games = () => {
             </div>
             
             <MemoryHackGame />
+          </div>
+        </main>
+        
+        <BottomNavigation />
+      </motion.div>
+    );
+  }
+
+  if (selectedGame === 'cipher-decode') {
+    return (
+      <motion.div 
+        className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        style={{ 
+          height: '100dvh',
+          overflow: 'hidden',
+          position: 'relative'
+        }}
+      >
+        <header 
+          className="fixed top-0 left-0 right-0 z-50"
+          style={{
+            height: '72px',
+            paddingTop: 'env(safe-area-inset-top, 47px)',
+            backgroundColor: 'rgba(19, 21, 36, 0.7)',
+            backdropFilter: 'blur(12px)'
+          }}
+        >
+          <UnifiedHeader />
+        </header>
+        
+        <main
+          style={{
+            paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+            height: '100dvh',
+            overflowY: 'auto',
+            position: 'relative',
+            zIndex: 0
+          }}
+        >
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-6">
+              <button
+                onClick={handleBackToMenu}
+                className="text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                ← Torna ai Giochi
+              </button>
+            </div>
+            
+            <CipherDecodeGame />
+          </div>
+        </main>
+        
+        <BottomNavigation />
+      </motion.div>
+    );
+  }
+
+  if (selectedGame === 'time-trial') {
+    return (
+      <motion.div 
+        className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        style={{ 
+          height: '100dvh',
+          overflow: 'hidden',
+          position: 'relative'
+        }}
+      >
+        <header 
+          className="fixed top-0 left-0 right-0 z-50"
+          style={{
+            height: '72px',
+            paddingTop: 'env(safe-area-inset-top, 47px)',
+            backgroundColor: 'rgba(19, 21, 36, 0.7)',
+            backdropFilter: 'blur(12px)'
+          }}
+        >
+          <UnifiedHeader />
+        </header>
+        
+        <main
+          style={{
+            paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+            height: '100dvh',
+            overflowY: 'auto',
+            position: 'relative',
+            zIndex: 0
+          }}
+        >
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-6">
+              <button
+                onClick={handleBackToMenu}
+                className="text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                ← Torna ai Giochi
+              </button>
+            </div>
+            
+            <TimeTrialGame />
           </div>
         </main>
         

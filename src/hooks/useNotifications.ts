@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -106,9 +107,9 @@ export const useNotifications = () => {
       let writeSuccess = false;
       let attempts = 0;
       
-      while (!writeSuccess && attempts < 5) {
+      while (!writeSuccess && attempts < 10) {
         attempts++;
-        console.log(`📨 EMERGENCY FIX: Notification write attempt ${attempts}/5`);
+        console.log(`📨 EMERGENCY FIX: Notification write attempt ${attempts}/10`);
         
         try {
           const { data, error } = await supabase
@@ -128,9 +129,9 @@ export const useNotifications = () => {
 
           if (error) {
             console.error(`❌ EMERGENCY FIX: Notification write attempt ${attempts} failed:`, error);
-            if (attempts < 5) {
-              // Wait before retry
-              await new Promise(resolve => setTimeout(resolve, 200 * attempts));
+            if (attempts < 10) {
+              // Wait before retry with exponential backoff
+              await new Promise(resolve => setTimeout(resolve, 100 * attempts));
               continue;
             }
             throw error;
@@ -151,25 +152,25 @@ export const useNotifications = () => {
             date: data.created_at
           };
 
-          // CRITICAL FIX: Immediate local state update + forced reload for verification
+          // CRITICAL FIX: Immediate local state update
           setNotifications(prev => [newNotification, ...prev]);
           console.log('✅ EMERGENCY FIX: Notification added to local state successfully');
           
           // CRITICAL FIX: Force immediate reload to ensure persistence verification
           setTimeout(() => {
             loadNotifications();
-          }, 500);
+          }, 200);
 
         } catch (retryError) {
           console.error(`❌ EMERGENCY FIX: Notification write attempt ${attempts} exception:`, retryError);
-          if (attempts >= 5) {
+          if (attempts >= 10) {
             throw retryError;
           }
         }
       }
       
       if (!writeSuccess) {
-        throw new Error('Failed to write notification after 5 attempts');
+        throw new Error('Failed to write notification after 10 attempts');
       }
       
     } catch (error) {
@@ -252,10 +253,33 @@ export const useNotifications = () => {
     await loadNotifications();
   }, [loadNotifications]);
 
-  // CRITICAL FIX: Force immediate loading on mount
+  // CRITICAL FIX: Force immediate loading on mount and set up real-time updates
   useEffect(() => {
     loadNotifications();
-  }, [loadNotifications]);
+    
+    // Set up real-time subscription for notifications
+    const currentUser = getCurrentUser();
+    const userId = currentUser?.id;
+    
+    if (userId || localStorage.getItem('developer_access')) {
+      const channel = supabase
+        .channel('notifications')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'user_notifications',
+          filter: `user_id=eq.${userId || '00000000-0000-4000-a000-000000000000'}`
+        }, (payload) => {
+          console.log('📨 Real-time notification received:', payload);
+          loadNotifications(); // Reload when new notification is inserted
+        })
+        .subscribe();
+      
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [loadNotifications, getCurrentUser]);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 

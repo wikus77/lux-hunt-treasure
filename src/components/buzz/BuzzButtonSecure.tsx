@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { usePaymentVerification } from "@/hooks/usePaymentVerification";
 import { useStripePayment } from "@/hooks/useStripePayment";
+import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from '@/hooks/useAuth';
 
@@ -20,6 +21,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   onSuccess
 }) => {
   const { createBuzzNotification } = useNotificationManager();
+  const { addNotification } = useNotifications();
   const { processBuzzPurchase, loading: stripeLoading } = useStripePayment();
   const { user } = useAuth();
   
@@ -65,30 +67,33 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
 
         console.log('✅ EMERGENCY FIX: Generated COHERENT mission clue:', clueWithCode);
 
-        // CRITICAL FIX: FORCE notification creation in database with GUARANTEED persistence and multiple retries
+        // CRITICAL FIX: FORCE notification creation with MULTIPLE methods for guaranteed success
         let notificationCreated = false;
         let attempts = 0;
         
-        while (!notificationCreated && attempts < 5) {
+        while (!notificationCreated && attempts < 10) {
           attempts++;
           try {
-            console.log(`📨 EMERGENCY FIX: BUZZ notification creation attempt ${attempts}/5`);
-            await createBuzzNotification(
-              "🎯 Nuovo Indizio Mission Sbloccato", 
-              clueWithCode
-            );
+            console.log(`📨 EMERGENCY FIX: BUZZ notification creation attempt ${attempts}/10`);
+            
+            // Try both notification methods for maximum reliability
+            await Promise.all([
+              createBuzzNotification("🎯 Nuovo Indizio Mission Sbloccato", clueWithCode),
+              addNotification("🎯 Nuovo Indizio Mission Sbloccato", clueWithCode, "buzz")
+            ]);
+            
             notificationCreated = true;
             console.log(`✅ EMERGENCY FIX: BUZZ notification FORCED into database successfully on attempt ${attempts}`);
           } catch (notifError) {
             console.error(`❌ EMERGENCY FIX: BUZZ notification attempt ${attempts} failed:`, notifError);
-            if (attempts < 5) {
-              await new Promise(resolve => setTimeout(resolve, 300 * attempts));
+            if (attempts < 10) {
+              await new Promise(resolve => setTimeout(resolve, 200 * attempts));
             }
           }
         }
 
         if (!notificationCreated) {
-          console.error('❌ EMERGENCY FIX: Failed to create notification after 5 attempts');
+          console.error('❌ EMERGENCY FIX: Failed to create notification after 10 attempts');
         }
 
         // CRITICAL FIX: Show COHERENT success toast
@@ -118,6 +123,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       setIsProcessing(true);
       
       try {
+        console.log('💳 OPENING STRIPE CHECKOUT for BUZZ...');
         const stripeSuccess = await processBuzzPurchase(false, 1.99);
         if (stripeSuccess) {
           console.log('✅ EMERGENCY FIX: Stripe payment flow initiated successfully');
@@ -131,16 +137,19 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
             let notificationCreated = false;
             let attempts = 0;
             
-            while (!notificationCreated && attempts < 5) {
+            while (!notificationCreated && attempts < 10) {
               attempts++;
               try {
-                await createBuzzNotification("Indizio Premium Mission Sbloccato", premiumClue);
+                await Promise.all([
+                  createBuzzNotification("Indizio Premium Mission Sbloccato", premiumClue),
+                  addNotification("Indizio Premium Mission Sbloccato", premiumClue, "buzz")
+                ]);
                 notificationCreated = true;
                 console.log(`✅ EMERGENCY FIX: Premium notification created on attempt ${attempts}`);
               } catch (notifError) {
                 console.error(`❌ EMERGENCY FIX: Premium notification attempt ${attempts} failed:`, notifError);
-                if (attempts < 5) {
-                  await new Promise(resolve => setTimeout(resolve, 300 * attempts));
+                if (attempts < 10) {
+                  await new Promise(resolve => setTimeout(resolve, 200 * attempts));
                 }
               }
             }
@@ -188,26 +197,26 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         let notificationCreated = false;
         let attempts = 0;
         
-        while (!notificationCreated && attempts < 5) {
+        while (!notificationCreated && attempts < 10) {
           attempts++;
           try {
-            console.log(`📨 EMERGENCY FIX: SECURE BUZZ notification creation attempt ${attempts}/5`);
-            await createBuzzNotification(
-              "🎯 Nuovo Indizio Mission", 
-              missionClue
-            );
+            console.log(`📨 EMERGENCY FIX: SECURE BUZZ notification creation attempt ${attempts}/10`);
+            await Promise.all([
+              createBuzzNotification("🎯 Nuovo Indizio Mission", missionClue),
+              addNotification("🎯 Nuovo Indizio Mission", missionClue, "buzz")
+            ]);
             notificationCreated = true;
             console.log(`✅ EMERGENCY FIX: SECURE BUZZ notification FORCED into database successfully on attempt ${attempts}`);
           } catch (notifError) {
             console.error(`❌ EMERGENCY FIX: SECURE BUZZ notification attempt ${attempts} failed:`, notifError);
-            if (attempts < 5) {
-              await new Promise(resolve => setTimeout(resolve, 300 * attempts));
+            if (attempts < 10) {
+              await new Promise(resolve => setTimeout(resolve, 200 * attempts));
             }
           }
         }
 
         if (!notificationCreated) {
-          console.error('❌ EMERGENCY FIX: Failed to create SECURE BUZZ notification after 5 attempts');
+          console.error('❌ EMERGENCY FIX: Failed to create SECURE BUZZ notification after 10 attempts');
         }
 
         toast.success("🎯 Indizio Mission Sbloccato!", {
