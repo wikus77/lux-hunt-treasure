@@ -14,6 +14,7 @@ export interface AuthContextType {
   hasRole: (role: string) => boolean;
   isRoleLoading: boolean;
   user: User | null;
+  getValidUser: () => Promise<User | null>;
 }
 
 export interface User {
