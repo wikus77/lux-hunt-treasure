@@ -27,15 +27,15 @@ const DebugAuth = () => {
         console.log('🚨 ERROR STATUS:', result.error.status);
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.log('💥 EXCEPTION:', error);
     }
   };
 
   const checkSupabaseConfig = () => {
     console.log('🔧 SUPABASE CONFIG:');
-    console.log('URL:', supabase.supabaseUrl);
-    console.log('Key:', supabase.supabaseKey.substring(0, 20) + '...');
+    console.log('URL:', 'https://vkjrqirvdvjbemsfzxof.supabase.co');
+    console.log('Key:', 'eyJhbGciOiJIUzI1NiIs...'.substring(0, 20) + '...');
   };
 
   return (
