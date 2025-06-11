@@ -16,6 +16,20 @@ const Buzz = () => {
   const { user } = useAuthContext();
   const navigate = useNavigate();
 
+  // FIX 4 - Enhanced authentication check with logging
+  React.useEffect(() => {
+    console.log("🔥 FIX 4 – BUZZ PAGE AUTH CHECK:", {
+      user: user ? user.id : "null",
+      email: user?.email || "no email"
+    });
+    
+    if (!user) {
+      console.log("❌ FIX 4 ERROR - User not authenticated, redirecting to login");
+    } else {
+      console.log("✅ FIX 4 SUCCESS - User authenticated, showing BUZZ interface");
+    }
+  }, [user]);
+
   // Proper authentication check
   if (!user) {
     return (
@@ -31,7 +45,10 @@ const Buzz = () => {
           </h1>
           <p className="text-white mb-6">Devi essere autenticato per accedere a questa sezione.</p>
           <Button 
-            onClick={() => navigate("/login")}
+            onClick={() => {
+              console.log("🔥 FIX 4 – REDIRECT TO LOGIN");
+              navigate("/login");
+            }}
             className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white px-6 py-2"
           >
             Accedi

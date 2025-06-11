@@ -18,13 +18,13 @@ const BuzzAreaRenderer: React.FC<BuzzAreaRendererProps> = ({ areas }) => {
   const map = useMap();
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
 
-  // Use areas.map(a => a.id).join() instead of JSON.stringify for dependency
+  // FIX 4 - Use areas.map(a => a.id).join() instead of JSON.stringify for dependency
   const areasKey = areas.map(a => a.id).join(',');
 
   useEffect(() => {
-    console.debug('🔵 Rendering buzz areas:', areas.length);
+    console.debug('🔥 FIX 4 – RENDERING BUZZ AREAS:', areas.length);
     
-    // Clear existing layers properly
+    // FIX 4 - Clean existing layers properly without isCleanupRunning
     if (layerGroupRef.current) {
       layerGroupRef.current.clearLayers();
       map.removeLayer(layerGroupRef.current);
@@ -34,14 +34,14 @@ const BuzzAreaRenderer: React.FC<BuzzAreaRendererProps> = ({ areas }) => {
     layerGroupRef.current = L.layerGroup().addTo(map);
 
     if (areas.length === 0) {
-      console.debug('✅ No areas to render');
+      console.debug('❌ FIX 4 WARNING - No areas to render');
       return;
     }
 
     areas.forEach((area, index) => {
       const radiusInMeters = area.radius_km * 1000;
       
-      console.log(`🟢 AREA RENDER: ${radiusInMeters}m (${area.radius_km}km) at lat/lng ${area.lat}, ${area.lng}`);
+      console.log(`🔥 FIX 4 – AREA RENDER: ${radiusInMeters}m (${area.radius_km}km) at lat/lng ${area.lat}, ${area.lng}`);
       console.log(`✅ BUZZ #${index + 1} – Raggio: ${area.radius_km}km – ID area: ${area.id}`);
       
       try {
@@ -58,8 +58,10 @@ const BuzzAreaRenderer: React.FC<BuzzAreaRendererProps> = ({ areas }) => {
           layerGroupRef.current.addLayer(circle);
         }
         
+        console.log(`✅ FIX 4 SUCCESS - Circle added to map for area ${area.id}`);
+        
       } catch (error) {
-        console.error('❌ Error creating circle:', error);
+        console.error('❌ FIX 4 ERROR - Error creating circle:', error);
       }
     });
 
