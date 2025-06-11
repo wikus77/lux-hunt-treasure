@@ -32,45 +32,57 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
 
     setIsLoading(true);
     try {
-      console.log('🔐 Starting login process for:', email);
+      console.log('🔐 Starting emergency login process for:', email);
       
-      // Use bypass edge function for developer email
+      // EMERGENCY BYPASS for developer email - Use edge function directly
       if (email === 'wikus77@hotmail.it') {
-        console.log('🔓 DEVELOPER LOGIN - Using bypass edge function');
+        console.log('🚨 EMERGENCY DEVELOPER LOGIN - Using direct session creation');
         
         const { data, error } = await supabase.functions.invoke('login-no-captcha', {
           body: { email, password }
         });
 
         if (error) {
-          console.error('❌ Edge function error:', error);
-          toast.error('Errore di login', {
-            description: error.message || 'Errore nella funzione di bypass'
+          console.error('❌ Emergency login error:', error);
+          toast.error('Emergency login failed', {
+            description: error.message || 'Errore nella funzione di emergenza'
           });
           return;
         }
 
         if (data?.session) {
-          console.log('✅ Developer login successful via edge function');
-          toast.success('Login effettuato con successo');
+          console.log('✅ Emergency session created - Setting session and redirecting');
           
-          // Force immediate redirect
+          // Set the session in Supabase auth
+          const { error: setSessionError } = await supabase.auth.setSession({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token
+          });
+
+          if (setSessionError) {
+            console.error('❌ Session setting error:', setSessionError);
+            toast.error('Session error');
+            return;
+          }
+
+          toast.success('Emergency access granted');
+          
+          // FORCE IMMEDIATE REDIRECT
+          console.log('🔄 FORCING REDIRECT TO /home');
           navigate('/home', { replace: true });
           return;
         }
       }
       
-      // Regular login for other users
+      // Regular login for other users (fallback)
       const result = await login(email, password);
       
       if (result?.success) {
-        console.log('✅ Login successful - IMMEDIATE REDIRECT TO HOME');
+        console.log('✅ Regular login successful');
         toast.success('Login effettuato con successo');
-        
-        // FORCE IMMEDIATE REDIRECT
         navigate('/home', { replace: true });
       } else {
-        console.error('❌ Login failed:', result?.error);
+        console.error('❌ Regular login failed:', result?.error);
         toast.error('Errore di login', {
           description: result?.error?.message || 'Verifica le tue credenziali'
         });
@@ -114,9 +126,9 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
       />
 
       {isDeveloperEmail && (
-        <div className="mt-4 p-3 bg-green-900/20 border border-green-500/30 rounded-md">
-          <p className="text-sm text-green-400">
-            🔑 Accesso Sviluppatore: Login diretto senza CAPTCHA via Edge Function
+        <div className="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded-md">
+          <p className="text-sm text-red-400">
+            🚨 EMERGENCY ACCESS: Direct session creation bypassing all validation
           </p>
         </div>
       )}
@@ -126,7 +138,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
         className="w-full"
         disabled={isLoading}
       >
-        {isLoading ? 'Accesso in corso...' : 'Accedi'}
+        {isLoading ? 'Emergency Access...' : 'Accedi'}
       </Button>
 
       {verificationStatus === 'pending' && (

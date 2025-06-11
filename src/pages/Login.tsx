@@ -27,9 +27,9 @@ const Login = () => {
       });
     }
 
-    // FORCE IMMEDIATE REDIRECT if already authenticated
+    // EMERGENCY CHECK - Force redirect if already authenticated
     if (!authLoading && isAuthenticated) {
-      console.log('✅ User already authenticated - FORCING IMMEDIATE REDIRECT TO HOME');
+      console.log('🚨 EMERGENCY: User already authenticated - FORCING IMMEDIATE REDIRECT');
       navigate('/home', { replace: true });
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);
@@ -77,9 +77,9 @@ const Login = () => {
           <div className="flex justify-center mb-4">
             <AnimatedLogo />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-1">Accedi</h2>
+          <h2 className="text-2xl font-bold text-white mb-1">Emergency Access</h2>
           <p className="text-gray-400">
-            Accedi al tuo account
+            Developer login portal
           </p>
         </div>
 

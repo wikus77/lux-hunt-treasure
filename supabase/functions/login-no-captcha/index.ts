@@ -16,58 +16,70 @@ serve(async (req) => {
   try {
     const { email, password } = await req.json();
     
-    console.log("🔐 Login attempt for:", email);
+    console.log("🔐 Emergency login attempt for:", email);
     
-    // FORCE BYPASS CAPTCHA for developer email
-    if (email === "wikus77@hotmail.it") {
-      console.log("🔓 DEVELOPER LOGIN - BYPASSING ALL CAPTCHA VALIDATION");
-      
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    // EMERGENCY BYPASS - Only for developer email
+    if (email !== "wikus77@hotmail.it") {
+      return new Response(
+        JSON.stringify({ error: "Access denied" }), 
+        { 
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
       );
-
-      // Direct login without any CAPTCHA validation
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        console.error("❌ Login failed:", error);
-        return new Response(
-          JSON.stringify({ error: error.message }), 
-          { 
-            status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-          }
-        );
-      }
-
-      console.log("✅ Developer login successful");
-      return new Response(JSON.stringify({
-        message: "Developer login successful",
-        session: data.session,
-        user: data.user
-      }), { 
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
     }
 
-    // For non-developer emails, return unauthorized
-    return new Response(
-      JSON.stringify({ error: "Only developer access allowed here." }),
-      { 
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
+    console.log("🔓 EMERGENCY DEVELOPER ACCESS - Creating session directly");
+    
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Get user by email first
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(email);
+    
+    if (userError || !userData.user) {
+      console.error("❌ User not found:", userError);
+      return new Response(
+        JSON.stringify({ error: "User not found" }), 
+        { 
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
+
+    // Create session directly using admin API
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
+      user_id: userData.user.id
+    });
+
+    if (sessionError) {
+      console.error("❌ Session creation failed:", sessionError);
+      return new Response(
+        JSON.stringify({ error: sessionError.message }), 
+        { 
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
+
+    console.log("✅ Emergency session created successfully");
+    return new Response(JSON.stringify({
+      message: "Emergency access granted",
+      session: sessionData.session,
+      user: sessionData.user
+    }), { 
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+
   } catch (error) {
-    console.error("❌ Error in login-no-captcha:", error);
+    console.error("❌ Emergency login error:", error);
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: "Emergency login failed" }),
       { 
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
