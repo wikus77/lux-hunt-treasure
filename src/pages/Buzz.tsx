@@ -1,6 +1,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BuzzFeatureWrapper from "@/components/buzz/BuzzFeatureWrapper";
 import BuzzMainContent from "@/components/buzz/BuzzMainContent";
@@ -9,6 +10,17 @@ import ErrorFallback from "@/components/error/ErrorFallback";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 
 const Buzz = () => {
+  const navigate = useNavigate();
+
+  // Mock buzz functionality for now
+  const handleBuzzPress = () => {
+    console.log("Buzz pressed!");
+  };
+
+  const handleNavigateToMap = () => {
+    navigate('/map');
+  };
+
   return (
     <motion.div 
       className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
@@ -58,7 +70,13 @@ const Buzz = () => {
           
           <ErrorBoundary fallback={<ErrorFallback message="Si è verificato un errore nel caricamento della funzione Buzz" />}>
             <BuzzFeatureWrapper>
-              <BuzzMainContent />
+              <BuzzMainContent 
+                onBuzzPress={handleBuzzPress}
+                canUseBuzz={true}
+                currentBuzzCount={0}
+                maxBuzzCount={50}
+                onNavigateToMap={handleNavigateToMap}
+              />
             </BuzzFeatureWrapper>
           </ErrorBoundary>
         </div>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, Lock } from 'lucide-react';
@@ -20,9 +21,9 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   maxCount
 }) => {
   const { isAuthenticated, user } = useAuthContext();
-  const { playBuzzSound } = useSoundEffects();
+  const { playSound } = useSoundEffects();
   const [isLocked, setIsLocked] = useState(false);
-  const { canPressBuzz } = useBuzzMapLogic();
+  const { currentWeekAreas } = useBuzzMapLogic();
 
   const handleBuzzPress = () => {
     if (!isAuthenticated) {
@@ -41,7 +42,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     }
 
     setIsLocked(true);
-    playBuzzSound();
+    playSound('buzz');
     onBuzzPress();
 
     setTimeout(() => {

@@ -10,6 +10,14 @@ interface IslandState {
   type: 'success' | 'error' | 'info' | 'warning';
 }
 
+interface ActivityData {
+  missionId?: string;
+  title: string;
+  status: string;
+  progress?: number;
+  timeLeft?: number;
+}
+
 export const useDynamicIsland = () => {
   const { user, isAuthenticated } = useAuthContext();
   const [islandState, setIslandState] = useState<IslandState>({
@@ -67,6 +75,24 @@ export const useDynamicIsland = () => {
     });
   };
 
+  // Added missing activity management methods
+  const startActivity = (data: ActivityData) => {
+    console.log('🚀 Starting Dynamic Island activity:', data.title);
+    showIsland(data.title, 'info');
+  };
+
+  const updateActivity = (data: Partial<ActivityData>) => {
+    console.log('🔄 Updating Dynamic Island activity:', data);
+    if (data.status) {
+      showIsland(data.status, 'info');
+    }
+  };
+
+  const endActivity = () => {
+    console.log('🏁 Ending Dynamic Island activity');
+    hideIsland();
+  };
+
   useEffect(() => {
     if (isAuthenticated && user) {
       performSafetyChecks();
@@ -78,6 +104,9 @@ export const useDynamicIsland = () => {
     showIsland,
     hideIsland,
     playNotificationSound,
-    performSafetyChecks
+    performSafetyChecks,
+    startActivity,
+    updateActivity,
+    endActivity
   };
 };
