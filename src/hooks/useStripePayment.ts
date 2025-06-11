@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 
 interface StripePaymentOptions {
@@ -16,8 +17,20 @@ interface StripePaymentOptions {
 export const useStripePayment = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { getCurrentUser } = useAuthContext();
 
   const createCheckoutSession = async (options: StripePaymentOptions) => {
+    const currentUser = getCurrentUser();
+    const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
+    const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
+
+    // CRITICAL: Developer bypass
+    if (isDeveloper || hasDeveloperAccess) {
+      console.log('🔧 Developer mode: Bypassing Stripe checkout');
+      toast.success('✅ Developer: Pagamento simulato con successo');
+      return { success: true, developer_mode: true };
+    }
+
     setLoading(true);
     setError(null);
 
@@ -27,11 +40,7 @@ export const useStripePayment = () => {
         window.plausible('checkout_start');
       }
 
-      // Log the payment method being used
-      const paymentMethodLog = options.paymentMethod 
-        ? `Usando ${options.paymentMethod === 'apple_pay' ? 'Apple Pay' : options.paymentMethod === 'google_pay' ? 'Google Pay' : 'carta di credito'}`
-        : 'Usando metodo di pagamento standard';
-      console.log(paymentMethodLog);
+      console.log('🚀 Creating Stripe checkout session:', options);
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
@@ -46,6 +55,7 @@ export const useStripePayment = () => {
       });
 
       if (error) {
+        console.error('❌ Stripe checkout error:', error);
         throw new Error(error.message);
       }
 
@@ -53,21 +63,14 @@ export const useStripePayment = () => {
         throw new Error('Errore nella creazione della sessione di pagamento');
       }
 
-      // If the payment method is Apple Pay or Google Pay, show appropriate message
-      if (options.paymentMethod) {
-        const methodName = options.paymentMethod === 'apple_pay' ? 'Apple Pay' : 
-                          options.paymentMethod === 'google_pay' ? 'Google Pay' : 'carta di credito';
-        toast.info(`Pagamento con ${methodName}`, {
-          description: `Stai per pagare con ${methodName}`,
-          duration: 3000,
-        });
-      }
+      console.log('✅ Stripe checkout session created:', data.url);
 
-      // Redirect to Stripe Checkout
-      window.location.href = data.url;
+      // Open Stripe checkout in new tab
+      window.open(data.url, '_blank');
+      
       return data;
     } catch (err: any) {
-      console.error('Error creating checkout session:', err);
+      console.error('❌ Stripe checkout exception:', err);
       setError(err.message || 'Si è verificato un errore durante il checkout');
       toast.error('Errore di pagamento', {
         description: err.message || 'Si è verificato un errore durante il checkout',
