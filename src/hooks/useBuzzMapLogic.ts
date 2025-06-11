@@ -71,7 +71,7 @@ export const useBuzzMapLogic = () => {
     };
   }, [userId]);
 
-  // CRITICAL FIX: Enhanced area generation with proper radius reduction
+  // CRITICAL FIX: Enhanced area generation with PROPER deletion of previous areas and radius reduction
   const generateBuzzMapArea = useCallback(async (lat: number, lng: number): Promise<BuzzMapArea | null> => {
     if (!userId) {
       const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
@@ -87,17 +87,31 @@ export const useBuzzMapLogic = () => {
     setIsGenerating(true);
     
     try {
-      console.log('🚀 EMERGENCY FIX: Starting dynamic area generation...');
+      console.log('🚀 EMERGENCY FIX: Starting area generation with PROPER deletion and radius reduction...');
 
-      // CRITICAL FIX: Calculate radius based on existing areas
-      const existingAreas = areas.filter(area => area.user_id === (userId || '00000000-0000-4000-a000-000000000000'));
+      // CRITICAL FIX: DELETE ALL PREVIOUS AREAS FOR THIS USER FIRST
+      console.log('🗑️ DELETING previous areas for user:', userId);
+      const { error: deleteError } = await supabase
+        .from('user_map_areas')
+        .delete()
+        .eq('user_id', userId || '00000000-0000-4000-a000-000000000000');
+
+      if (deleteError) {
+        console.error('❌ EMERGENCY FIX: Error deleting previous areas:', deleteError);
+      } else {
+        console.log('✅ EMERGENCY FIX: Previous areas DELETED successfully');
+        // Update local state immediately
+        setAreas([]);
+      }
+
+      // CRITICAL FIX: Calculate radius based on generation count (not existing areas since we deleted them)
+      const generationCount = dailyBuzzMapCounter + 1;
       let newRadius = 500; // Start at 500km
       
-      if (existingAreas.length > 0) {
+      if (generationCount > 1) {
         // Reduce by 5% for each subsequent generation
-        const lastRadius = existingAreas[0].radius_km;
-        newRadius = Math.max(5, lastRadius * 0.95); // Minimum 5km
-        console.log(`📊 EMERGENCY FIX: Reducing radius from ${lastRadius}km to ${newRadius}km`);
+        newRadius = Math.max(5, 500 * Math.pow(0.95, generationCount - 1));
+        console.log(`📊 EMERGENCY FIX: Calculated radius for generation ${generationCount}: ${newRadius}km`);
       }
 
       // Call edge function for area generation
@@ -133,11 +147,11 @@ export const useBuzzMapLogic = () => {
         user_id: userId || '00000000-0000-4000-a000-000000000000'
       };
 
-      // Update local state
-      setAreas(prev => [newArea, ...prev]);
-      setDailyBuzzMapCounter(response.generation_number || 1);
+      // Update local state with ONLY the new area
+      setAreas([newArea]);
+      setDailyBuzzMapCounter(response.generation_number || generationCount);
 
-      console.log('✅ EMERGENCY FIX: Area generated successfully:', newArea);
+      console.log('✅ EMERGENCY FIX: NEW SINGLE area generated successfully:', newArea);
       toast.success(`✅ Nuova area BUZZ MAPPA generata: ${newArea.radius_km.toFixed(1)}km`);
 
       return newArea;
@@ -149,7 +163,7 @@ export const useBuzzMapLogic = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [userId, areas]);
+  }, [userId, dailyBuzzMapCounter]);
 
   const getActiveArea = useCallback(() => {
     return areas.length > 0 ? areas[0] : null;

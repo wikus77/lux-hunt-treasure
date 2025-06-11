@@ -1,75 +1,88 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CheckCircle } from 'lucide-react';
-import { useAuthContext } from '@/contexts/auth';
-
-interface Game {
-  title: string;
-  description: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  points: number;
-  icon: string;
-}
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Play, Lock, Trophy } from "lucide-react";
 
 interface GameCardProps {
-  game: Game;
-  isCompleted: boolean;
+  title: string;
+  description: string;
+  isLocked: boolean;
+  progress?: number;
   onPlay: () => void;
+  difficulty: 'Facile' | 'Medio' | 'Difficile';
+  rewards: string;
 }
 
-export const GameCard: React.FC<GameCardProps> = ({ game, isCompleted, onPlay }) => {
-  const { getCurrentUser } = useAuthContext();
-  
-  const currentUser = getCurrentUser();
-  const isSpecialUser = currentUser?.email === 'wikus77@hotmail.it';
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'medium': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'hard': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+const GameCard: React.FC<GameCardProps> = ({
+  title,
+  description,
+  isLocked,
+  progress = 0,
+  onPlay,
+  difficulty,
+  rewards
+}) => {
+  const getDifficultyColor = (diff: string) => {
+    switch (diff) {
+      case 'Facile': return 'text-green-400';
+      case 'Medio': return 'text-yellow-400';
+      case 'Difficile': return 'text-red-400';
+      default: return 'text-gray-400';
     }
   };
 
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2 }}
-    >
-      <Card className="glass-card border-white/10 hover:border-[#00D1FF]/30 transition-all duration-300">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="text-3xl">{game.icon}</div>
-            {isCompleted && (
-              <CheckCircle className="w-5 h-5 text-green-400" />
-            )}
+    <Card className="bg-gray-900/50 border-gray-700 hover:border-blue-500 transition-all duration-300">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-white flex items-center gap-2">
+            {isLocked && <Lock className="w-4 h-4 text-gray-400" />}
+            {title}
+          </CardTitle>
+          <div className={`text-sm ${getDifficultyColor(difficulty)}`}>
+            {difficulty}
+          </div>
+        </div>
+        <CardDescription className="text-gray-300">
+          {description}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {progress > 0 && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Progresso</span>
+                <span className="text-white">{progress}%</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div 
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+          
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <Trophy className="w-4 h-4" />
+            <span>Ricompensa: {rewards}</span>
           </div>
           
-          <h3 className="text-lg font-semibold text-white mb-2">{game.title}</h3>
-          <p className="text-gray-400 text-sm mb-4">{game.description}</p>
-          
-          <div className="flex items-center justify-between mb-4">
-            <Badge className={getDifficultyColor(game.difficulty)}>
-              {game.difficulty.toUpperCase()}
-            </Badge>
-            <span className="text-[#00D1FF] font-semibold">{game.points} pts</span>
-          </div>
-          
-          <Button 
+          <Button
             onClick={onPlay}
-            className="w-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] hover:opacity-90"
-            disabled={!isSpecialUser && isCompleted}
+            disabled={isLocked}
+            className="w-full"
+            variant={isLocked ? "secondary" : "default"}
           >
-            {isCompleted ? 'Completato' : 'Gioca'}
+            <Play className="w-4 h-4 mr-2" />
+            {isLocked ? 'Bloccato' : 'Gioca'}
           </Button>
-        </CardContent>
-      </Card>
-    </motion.div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
+
+export default GameCard;

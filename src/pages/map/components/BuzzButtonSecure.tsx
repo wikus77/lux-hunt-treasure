@@ -56,7 +56,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     console.log('📊 EMERGENCY FIX: Map counter FORCE updated:', mapCounter);
   }, [areas, user?.id]);
   
-  // CRITICAL FIX: Enhanced secure BUZZ MAP with FORCED Stripe integration and proper area reduction
+  // CRITICAL FIX: Enhanced secure BUZZ MAP with FORCED Stripe integration for non-developers
   const handleSecureBuzzMapClick = async () => {
     const isDeveloper = user?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
@@ -67,36 +67,32 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       return;
     }
 
-    // CRITICAL FIX: For non-developers, FORCE payment check and Stripe activation FIRST
-    console.log('💳 EMERGENCY FIX: NON-DEVELOPER - FORCING payment check and Stripe activation BEFORE generation');
+    // CRITICAL FIX: For non-developers, ALWAYS FORCE Stripe activation FIRST
+    console.log('💳 EMERGENCY FIX: NON-DEVELOPER - FORCING Stripe activation BEFORE generation');
     
-    const canProceed = await requireBuzzPayment();
-    if (!canProceed) {
-      console.log('💳 EMERGENCY FIX: Payment required - IMMEDIATE FORCED Stripe for BUZZ MAP');
-      try {
-        const stripeSuccess = await processBuzzPurchase(true, 2.99); // isMapBuzz = true
-        if (stripeSuccess) {
-          console.log('✅ EMERGENCY FIX: Stripe payment completed successfully for BUZZ MAP');
-          toast.success('Pagamento completato! Generando area BUZZ MAPPA...');
-          // Continue with area generation after payment
-          setTimeout(() => {
-            generateBuzzMapAreaInternal();
-          }, 2000);
-        }
-        return;
-      } catch (error) {
-        console.error('❌ EMERGENCY FIX: Stripe payment failed for BUZZ MAP:', error);
-        toast.error('Errore nel pagamento BUZZ MAPPA');
-        return;
+    try {
+      const stripeSuccess = await processBuzzPurchase(true, 2.99); // isMapBuzz = true
+      if (stripeSuccess) {
+        console.log('✅ EMERGENCY FIX: Stripe payment completed successfully for BUZZ MAP');
+        toast.success('Pagamento completato! Generando area BUZZ MAPPA...');
+        // Continue with area generation after payment
+        setTimeout(() => {
+          generateBuzzMapAreaInternal();
+        }, 2000);
+      } else {
+        console.log('❌ EMERGENCY FIX: Stripe payment failed or cancelled');
+        toast.error('Pagamento richiesto per BUZZ MAPPA');
       }
+      return;
+    } catch (error) {
+      console.error('❌ EMERGENCY FIX: Stripe payment error for BUZZ MAP:', error);
+      toast.error('Errore nel processo di pagamento BUZZ MAPPA');
+      return;
     }
-
-    // If payment is valid, proceed directly
-    generateBuzzMapAreaInternal();
   };
 
   const generateBuzzMapAreaInternal = async () => {
-    console.log('🚀 EMERGENCY FIX: BUZZ MAP - Starting FORCED area generation with proper radius reduction...');
+    console.log('🚀 EMERGENCY FIX: BUZZ MAP - Starting FORCED area generation...');
     
     setIsRippling(true);
     setTimeout(() => setIsRippling(false), 1000);
@@ -106,14 +102,14 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     
     console.log('📍 EMERGENCY FIX: BUZZ COORDINATES:', { centerLat, centerLng });
     
-    // CRITICAL FIX: Enhanced generateBuzzMapArea call with FORCED area creation and radius reduction
+    // CRITICAL FIX: Enhanced generateBuzzMapArea call with FORCED area creation
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
-      console.log('🎉 EMERGENCY FIX: BUZZ MAP SUCCESS - Area generated with PROPER radius reduction', newArea);
+      console.log('🎉 EMERGENCY FIX: BUZZ MAP SUCCESS - Area generated', newArea);
 
       // CRITICAL FIX: Update counter and FORCE reload
-      setRealBuzzMapCounter(prev => prev + 1);
+      setRealBuzzMapCounter(1); // Always 1 since we delete previous areas
       
       await reloadAreas();
       
@@ -121,7 +117,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         handleBuzz();
       }
       
-      // CRITICAL FIX: Create MEANINGFUL notification with FORCED database write
+      // CRITICAL FIX: Create MEANINGFUL notification with FORCED database write and FORCED PERSISTENCE
       let notificationCreated = false;
       let attempts = 0;
       
@@ -129,7 +125,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         try {
           await createMapBuzzNotification(
             "🗺️ Area BUZZ Mappa Generata",
-            `Nuova area di ricerca Mission generata: ${newArea.radius_km.toFixed(1)}km di raggio - Generazione #${realBuzzMapCounter + 1}`
+            `Nuova area di ricerca Mission generata: ${newArea.radius_km.toFixed(1)}km di raggio - Generazione #${realBuzzMapCounter}`
           );
           notificationCreated = true;
           console.log('✅ EMERGENCY FIX: BUZZ MAP notification FORCED into database successfully');
@@ -153,7 +149,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   };
 
   const isDeveloper = user?.email === 'wikus77@hotmail.it' || localStorage.getItem('developer_access') === 'granted';
-  const isBlocked = !isDeveloper && (!canAccessPremium || remainingBuzz <= 0);
+  const isBlocked = !isDeveloper; // Non-developers are always blocked until they pay
   const isLoading = isGenerating || stripeLoading || verificationLoading;
   
   const displayRadius = () => {

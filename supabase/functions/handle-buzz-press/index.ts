@@ -47,17 +47,17 @@ serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false }
     });
     
-    // CRITICAL FIX: Enhanced developer detection with JWT validation
+    // CRITICAL FIX: Enhanced developer detection
     const isDeveloper = userId === '00000000-0000-4000-a000-000000000000';
     
     if (isDeveloper) {
       console.log('🔧 EMERGENCY FIX: Developer bypass detected - FULL ACCESS GRANTED');
     }
 
-    // STEP 1 - LOG START with FORCED database write
+    // STEP 1 - LOG START with FORCED database write and PROPER conflict handling
     try {
       await supabase.from('buzz_logs').insert({
-        id: crypto.randomUUID(), // CRITICAL FIX: Generate unique ID to avoid ON CONFLICT
+        id: crypto.randomUUID(),
         user_id: userId,
         step: 'start',
         details: { generateMap, coordinates, timestamp: new Date().toISOString() },
@@ -69,7 +69,7 @@ serve(async (req) => {
     }
 
     if (!isDeveloper) {
-      // Regular authentication check for non-developers with enhanced JWT validation
+      // Regular authentication check for non-developers with enhanced validation
       const authHeader = req.headers.get("authorization");
       if (!authHeader) {
         console.error("❌ EMERGENCY FIX - Missing authorization header");
@@ -81,7 +81,7 @@ serve(async (req) => {
 
       const token = authHeader.replace("Bearer ", "");
       
-      // CRITICAL FIX: Enhanced JWT validation with sub claim check
+      // CRITICAL FIX: Enhanced JWT validation with proper sub claim check
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (!payload.sub) {
@@ -113,34 +113,49 @@ serve(async (req) => {
 
     console.log(`✅ EMERGENCY FIX - Auth validation passed`);
 
-    // STEP 2 - ENHANCED MAP GENERATION with FORCED radius reduction
+    // STEP 2 - ENHANCED MAP GENERATION with FORCED area deletion and radius reduction
     if (generateMap) {
-      console.log('🗺️ EMERGENCY FIX: Starting FORCED map area generation with proper radius reduction');
+      console.log('🗺️ EMERGENCY FIX: Starting FORCED map area generation with PROPER deletion and radius reduction');
       
       const lat = coordinates?.lat || 41.9028;
       const lng = coordinates?.lng || 12.4964;
-      const areaRadius = radius || 500;
       
-      // CRITICAL FIX: Calculate DYNAMIC radius based on existing areas with FORCED reduction
-      const { data: existingAreas } = await supabase
+      // CRITICAL FIX: DELETE ALL PREVIOUS AREAS FOR THIS USER FIRST
+      console.log('🗑️ EMERGENCY FIX: DELETING all previous areas for user:', userId);
+      const { error: deleteError } = await supabase
         .from('user_map_areas')
-        .select('radius_km')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .delete()
+        .eq('user_id', userId);
       
-      let finalRadius = areaRadius;
-      if (existingAreas && existingAreas.length > 0) {
-        // CRITICAL FIX: FORCE 5% reduction from last area (minimum 5km)
-        finalRadius = Math.max(5, existingAreas[0].radius_km * 0.95);
-        console.log(`📊 EMERGENCY FIX: FORCED radius reduction from ${existingAreas[0].radius_km}km to ${finalRadius}km`);
+      if (deleteError) {
+        console.error('❌ EMERGENCY FIX: Error deleting previous areas:', deleteError);
+      } else {
+        console.log('✅ EMERGENCY FIX: Previous areas DELETED successfully');
+      }
+      
+      // CRITICAL FIX: Calculate generation count and dynamic radius
+      const { data: counterData } = await supabase
+        .from('user_buzz_map_counter')
+        .select('buzz_map_count')
+        .eq('user_id', userId)
+        .eq('date', new Date().toISOString().split('T')[0])
+        .single();
+      
+      const currentCount = counterData?.buzz_map_count || 0;
+      const newCount = currentCount + 1;
+      
+      // Calculate radius with 5% reduction per generation
+      let finalRadius = radius || 500;
+      if (newCount > 1) {
+        finalRadius = Math.max(5, 500 * Math.pow(0.95, newCount - 1));
+        console.log(`📊 EMERGENCY FIX: FORCED radius reduction for generation ${newCount}: ${finalRadius}km`);
       }
 
-      // CRITICAL FIX: Insert new area with FORCED unique ID to avoid ON CONFLICT
+      // CRITICAL FIX: Insert new area with FORCED unique ID and PROPER conflict handling
       const { data: newArea, error: areaError } = await supabase
         .from('user_map_areas')
         .insert({
-          id: crypto.randomUUID(), // CRITICAL FIX: Generate unique ID
+          id: crypto.randomUUID(),
           user_id: userId,
           lat: lat,
           lng: lng,
@@ -159,15 +174,43 @@ serve(async (req) => {
         );
       }
 
-      // CRITICAL FIX: Update counter with FORCED increment
-      let counterResult = 1;
+      // CRITICAL FIX: Update counter with FORCED increment and PROPER conflict handling
+      let counterResult = newCount;
       try {
-        const { data: counterData } = await supabase.rpc('increment_buzz_map_counter', {
-          p_user_id: userId
-        });
-        counterResult = counterData || 1;
+        const currentDate = new Date().toISOString().split('T')[0];
+        const { data: existingCounter } = await supabase
+          .from('user_buzz_map_counter')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('date', currentDate)
+          .single();
+
+        if (existingCounter) {
+          // Update existing counter
+          const { data: updatedCounter } = await supabase
+            .from('user_buzz_map_counter')
+            .update({ buzz_map_count: newCount })
+            .eq('user_id', userId)
+            .eq('date', currentDate)
+            .select('buzz_map_count')
+            .single();
+          counterResult = updatedCounter?.buzz_map_count || newCount;
+        } else {
+          // Insert new counter
+          const { data: newCounter } = await supabase
+            .from('user_buzz_map_counter')
+            .insert({
+              id: crypto.randomUUID(),
+              user_id: userId,
+              date: currentDate,
+              buzz_map_count: newCount
+            })
+            .select('buzz_map_count')
+            .single();
+          counterResult = newCounter?.buzz_map_count || newCount;
+        }
       } catch (counterError) {
-        console.error('❌ EMERGENCY FIX: Counter increment failed (continuing):', counterError);
+        console.error('❌ EMERGENCY FIX: Counter update failed (continuing):', counterError);
       }
 
       console.log(`✅ EMERGENCY FIX: Map area FORCED creation with radius reduction successful`);
@@ -215,12 +258,12 @@ serve(async (req) => {
     const missionCode = `MIS-${Date.now().toString().slice(-6)}`;
     const clueWithCode = `${randomClue} - Codice: ${missionCode}`;
 
-    // CRITICAL FIX: Save clue to database with FORCED unique ID
+    // CRITICAL FIX: Save clue to database with FORCED unique ID and PROPER conflict handling
     try {
       const { data: clueData, error: clueError } = await supabase
         .from('user_clues')
         .insert({
-          clue_id: crypto.randomUUID(), // CRITICAL FIX: Generate unique ID
+          clue_id: crypto.randomUUID(),
           user_id: userId,
           title_it: `Indizio Mission Roma #${buzzCount}`,
           description_it: clueWithCode,

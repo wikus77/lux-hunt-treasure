@@ -3,6 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import UserLeaderboard from "@/components/leaderboard/UserLeaderboard";
 
 const Leaderboard = () => {
   return (
@@ -39,29 +40,24 @@ const Leaderboard = () => {
           zIndex: 0
         }}
       >
-        <div className="container mx-auto">
+        <div className="container mx-auto px-4">
           <motion.h1
-            className="text-4xl font-orbitron font-bold text-[#00D1FF] text-center mt-6 mb-8"
+            className="text-4xl font-orbitron font-bold text-[#00D1FF] text-center mb-8"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
             style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}
           >
-            CLASSIFICA
+            CLASSIFICA MISSION
           </motion.h1>
           
           <motion.div
-            className="max-w-3xl mx-auto px-3 sm:px-4"
+            className="max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="glass-card p-4 sm:p-6 mb-6">
-              <div className="text-center text-white">
-                <h2 className="text-2xl font-semibold mb-4">Classifica Mission</h2>
-                <p className="text-lg">Classifica in arrivo...</p>
-              </div>
-            </div>
+            <UserLeaderboard />
           </motion.div>
         </div>
       </main>

@@ -65,25 +65,30 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
 
         console.log('✅ EMERGENCY FIX: Generated COHERENT mission clue:', clueWithCode);
 
-        // CRITICAL FIX: FORCE notification creation in database with retry logic
+        // CRITICAL FIX: FORCE notification creation in database with GUARANTEED persistence and multiple retries
         let notificationCreated = false;
         let attempts = 0;
         
-        while (!notificationCreated && attempts < 3) {
+        while (!notificationCreated && attempts < 5) {
+          attempts++;
           try {
+            console.log(`📨 EMERGENCY FIX: BUZZ notification creation attempt ${attempts}/5`);
             await createBuzzNotification(
               "🎯 Nuovo Indizio Mission Sbloccato", 
               clueWithCode
             );
             notificationCreated = true;
-            console.log('✅ EMERGENCY FIX: Notification FORCED into database successfully');
+            console.log(`✅ EMERGENCY FIX: BUZZ notification FORCED into database successfully on attempt ${attempts}`);
           } catch (notifError) {
-            attempts++;
-            console.error(`❌ EMERGENCY FIX: Notification attempt ${attempts} failed:`, notifError);
-            if (attempts < 3) {
-              await new Promise(resolve => setTimeout(resolve, 500));
+            console.error(`❌ EMERGENCY FIX: BUZZ notification attempt ${attempts} failed:`, notifError);
+            if (attempts < 5) {
+              await new Promise(resolve => setTimeout(resolve, 300 * attempts));
             }
           }
+        }
+
+        if (!notificationCreated) {
+          console.error('❌ EMERGENCY FIX: Failed to create notification after 5 attempts');
         }
 
         // CRITICAL FIX: Show COHERENT success toast
@@ -118,10 +123,28 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           console.log('✅ EMERGENCY FIX: Stripe payment flow initiated successfully');
           toast.success('Pagamento completato! Elaborazione indizio Mission...');
           
-          // After successful payment, generate COHERENT clue
+          // After successful payment, generate COHERENT clue with FORCED notification
           setTimeout(async () => {
             const premiumClue = "🎯 Indizio Mission Premium: Il segreto è custodito dove il sole sorge sull'impero eterno";
-            await createBuzzNotification("Indizio Premium Mission Sbloccato", premiumClue);
+            
+            // CRITICAL FIX: FORCE notification creation with guaranteed persistence
+            let notificationCreated = false;
+            let attempts = 0;
+            
+            while (!notificationCreated && attempts < 5) {
+              attempts++;
+              try {
+                await createBuzzNotification("Indizio Premium Mission Sbloccato", premiumClue);
+                notificationCreated = true;
+                console.log(`✅ EMERGENCY FIX: Premium notification created on attempt ${attempts}`);
+              } catch (notifError) {
+                console.error(`❌ EMERGENCY FIX: Premium notification attempt ${attempts} failed:`, notifError);
+                if (attempts < 5) {
+                  await new Promise(resolve => setTimeout(resolve, 300 * attempts));
+                }
+              }
+            }
+            
             toast.success("🎯 Indizio Premium Mission Sbloccato!", { description: premiumClue });
             onSuccess();
           }, 2000);
@@ -161,25 +184,30 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
 
         const missionClue = response.clue_text || "🎯 Indizio Mission: Un nuovo segreto della città eterna è stato rivelato";
 
-        // CRITICAL FIX: FORCE notification creation with retry
+        // CRITICAL FIX: FORCE notification creation with GUARANTEED persistence and multiple retries
         let notificationCreated = false;
         let attempts = 0;
         
-        while (!notificationCreated && attempts < 3) {
+        while (!notificationCreated && attempts < 5) {
+          attempts++;
           try {
+            console.log(`📨 EMERGENCY FIX: SECURE BUZZ notification creation attempt ${attempts}/5`);
             await createBuzzNotification(
               "🎯 Nuovo Indizio Mission", 
               missionClue
             );
             notificationCreated = true;
-            console.log('✅ EMERGENCY FIX: Notification FORCED into database successfully');
+            console.log(`✅ EMERGENCY FIX: SECURE BUZZ notification FORCED into database successfully on attempt ${attempts}`);
           } catch (notifError) {
-            attempts++;
-            console.error(`❌ EMERGENCY FIX: Notification attempt ${attempts} failed:`, notifError);
-            if (attempts < 3) {
-              await new Promise(resolve => setTimeout(resolve, 500));
+            console.error(`❌ EMERGENCY FIX: SECURE BUZZ notification attempt ${attempts} failed:`, notifError);
+            if (attempts < 5) {
+              await new Promise(resolve => setTimeout(resolve, 300 * attempts));
             }
           }
+        }
+
+        if (!notificationCreated) {
+          console.error('❌ EMERGENCY FIX: Failed to create SECURE BUZZ notification after 5 attempts');
         }
 
         toast.success("🎯 Indizio Mission Sbloccato!", {

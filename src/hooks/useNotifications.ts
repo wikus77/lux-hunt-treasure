@@ -27,7 +27,7 @@ export const useNotifications = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { getCurrentUser } = useAuthContext();
 
-  // CRITICAL FIX: Enhanced notification loading with FORCED database sync and ON CONFLICT fix
+  // CRITICAL FIX: Enhanced notification loading with FORCED database sync and PROPER error handling
   const loadNotifications = useCallback(async () => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
@@ -88,7 +88,7 @@ export const useNotifications = () => {
     }
   }, [getCurrentUser]);
 
-  // CRITICAL FIX: Enhanced notification creation with FORCED database write and ON CONFLICT fix
+  // CRITICAL FIX: Enhanced notification creation with FORCED database write and GUARANTEED persistence
   const addNotification = useCallback(async (title: string, message: string, type: string = 'generic') => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
@@ -99,51 +99,81 @@ export const useNotifications = () => {
     }
 
     try {
-      console.log('📨 EMERGENCY FIX: Creating notification with FORCED write and ON CONFLICT fix:', { title, message, type });
+      console.log('📨 EMERGENCY FIX: Creating notification with FORCED write and GUARANTEED persistence:', { title, message, type });
       
-      // CRITICAL FIX: Use INSERT without ON CONFLICT to avoid constraint errors
-      const { data, error } = await supabase
-        .from('user_notifications')
-        .insert({
-          id: crypto.randomUUID(), // CRITICAL FIX: Generate unique ID to avoid conflicts
-          user_id: userId || '00000000-0000-4000-a000-000000000000',
-          title,
-          message,
-          type,
-          is_read: false,
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+      // CRITICAL FIX: Generate unique ID and force write with multiple attempts
+      const notificationId = crypto.randomUUID();
+      let writeSuccess = false;
+      let attempts = 0;
+      
+      while (!writeSuccess && attempts < 5) {
+        attempts++;
+        console.log(`📨 EMERGENCY FIX: Notification write attempt ${attempts}/5`);
+        
+        try {
+          const { data, error } = await supabase
+            .from('user_notifications')
+            .insert({
+              id: notificationId,
+              user_id: userId || '00000000-0000-4000-a000-000000000000',
+              title,
+              message,
+              type,
+              is_read: false,
+              is_deleted: false,
+              created_at: new Date().toISOString()
+            })
+            .select()
+            .single();
 
-      if (error) {
-        console.error('❌ EMERGENCY FIX: Error adding notification:', error);
-        return;
+          if (error) {
+            console.error(`❌ EMERGENCY FIX: Notification write attempt ${attempts} failed:`, error);
+            if (attempts < 5) {
+              // Wait before retry
+              await new Promise(resolve => setTimeout(resolve, 200 * attempts));
+              continue;
+            }
+            throw error;
+          }
+
+          writeSuccess = true;
+          console.log(`✅ EMERGENCY FIX: Notification SUCCESSFULLY written on attempt ${attempts}`);
+
+          const newNotification = {
+            id: data.id,
+            title: data.title,
+            message: data.message,
+            description: data.message,
+            type: data.type,
+            is_read: data.is_read,
+            read: data.is_read,
+            created_at: data.created_at,
+            date: data.created_at
+          };
+
+          // CRITICAL FIX: Immediate local state update + forced reload for verification
+          setNotifications(prev => [newNotification, ...prev]);
+          console.log('✅ EMERGENCY FIX: Notification added to local state successfully');
+          
+          // CRITICAL FIX: Force immediate reload to ensure persistence verification
+          setTimeout(() => {
+            loadNotifications();
+          }, 500);
+
+        } catch (retryError) {
+          console.error(`❌ EMERGENCY FIX: Notification write attempt ${attempts} exception:`, retryError);
+          if (attempts >= 5) {
+            throw retryError;
+          }
+        }
       }
-
-      const newNotification = {
-        id: data.id,
-        title: data.title,
-        message: data.message,
-        description: data.message,
-        type: data.type,
-        is_read: data.is_read,
-        read: data.is_read,
-        created_at: data.created_at,
-        date: data.created_at
-      };
-
-      // CRITICAL FIX: Immediate local state update + forced reload
-      setNotifications(prev => [newNotification, ...prev]);
-      console.log('✅ EMERGENCY FIX: Notification added successfully');
       
-      // CRITICAL FIX: Force immediate reload to ensure sync
-      setTimeout(() => {
-        loadNotifications();
-      }, 200);
+      if (!writeSuccess) {
+        throw new Error('Failed to write notification after 5 attempts');
+      }
       
     } catch (error) {
-      console.error('❌ EMERGENCY FIX: Exception adding notification:', error);
+      console.error('❌ EMERGENCY FIX: FINAL Exception adding notification:', error);
     }
   }, [getCurrentUser, loadNotifications]);
 

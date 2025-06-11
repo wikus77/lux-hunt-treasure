@@ -1,153 +1,211 @@
 
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
-import { AlertTriangle } from "lucide-react";
-import { toast } from "sonner";
-import { useGameLogic } from "./memory-hack/useGameLogic";
-import GameErrorBoundary from "./GameErrorBoundary";
+import { Brain, RotateCcw, Trophy } from "lucide-react";
+import { toast } from 'sonner';
 
-// Lazy load game components con fallback migliorati
-const GameStats = lazy(() => import("./memory-hack/GameStats"));
-const GameControls = lazy(() => import("./memory-hack/GameControls"));
-const GameCard = lazy(() => import("./memory-hack/GameCard"));
+interface MemoryCard {
+  id: number;
+  symbol: string;
+  isFlipped: boolean;
+  isMatched: boolean;
+}
 
-const GameLoadingFallback = () => (
-  <div className="flex items-center justify-center p-8">
-    <div className="flex flex-col items-center gap-2">
-      <Spinner size="md" className="text-[#00D1FF]" />
-      <p className="text-gray-400 text-sm">Caricamento componenti...</p>
-    </div>
-  </div>
-);
-
-const GameErrorFallback = () => (
-  <Card className="p-6 border-red-500/30 bg-red-900/20">
-    <div className="text-center">
-      <AlertTriangle className="mx-auto h-8 w-8 text-red-400 mb-2" />
-      <h3 className="text-red-400 font-semibold mb-2">
-        Errore di caricamento
-      </h3>
-      <p className="text-gray-400 text-sm mb-4">
-        Impossibile caricare alcuni componenti del gioco. Riprova più tardi.
-      </p>
-      <Button
-        onClick={() => window.location.reload()}
-        variant="outline"
-        className="border-red-500 text-red-400"
-      >
-        Ricarica pagina
-      </Button>
-    </div>
-  </Card>
-);
+const SYMBOLS = ['🔍', '🗝️', '💎', '🏛️', '⚡', '🎯', '🌟', '🔐'];
 
 const MemoryHackGame: React.FC = () => {
-  const {
-    cards,
-    flippedCards,
-    matchedPairs,
-    moves,
-    isGameComplete,
-    gameStarted,
-    timeElapsed,
-    startGame,
-    flipCard,
-    resetGame
-  } = useGameLogic();
+  const [cards, setCards] = useState<MemoryCard[]>([]);
+  const [flippedCards, setFlippedCards] = useState<number[]>([]);
+  const [moves, setMoves] = useState(0);
+  const [score, setScore] = useState(0);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [gameCompleted, setGameCompleted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(60);
 
-  const [isCompleted, setIsCompleted] = useState(false);
+  const initializeGame = () => {
+    const shuffledSymbols = [...SYMBOLS, ...SYMBOLS].sort(() => Math.random() - 0.5);
+    const newCards = shuffledSymbols.map((symbol, index) => ({
+      id: index,
+      symbol,
+      isFlipped: false,
+      isMatched: false
+    }));
+    
+    setCards(newCards);
+    setFlippedCards([]);
+    setMoves(0);
+    setScore(0);
+    setGameCompleted(false);
+    setTimeLeft(60);
+  };
 
-  // Calculate score
-  const score = Math.max(1000 - (moves * 10) - timeElapsed, 100);
-  
-  // Calculate game status
-  const gameStatus = isGameComplete ? 'completed' : (gameStarted ? 'playing' : 'waiting');
+  const startGame = () => {
+    initializeGame();
+    setGameStarted(true);
+  };
+
+  const resetGame = () => {
+    setGameStarted(false);
+    initializeGame();
+  };
 
   useEffect(() => {
-    if (isGameComplete && !isCompleted) {
-      setIsCompleted(true);
-      
-      // Track mission completed event
-      if (typeof window !== 'undefined' && window.plausible) {
-        window.plausible('mission_completed');
-      }
-      
-      toast.success("Missione completata!", {
-        description: `Hai completato il Memory Hack in ${moves} mosse!`
-      });
+    if (gameStarted && !gameCompleted && timeLeft > 0) {
+      const timer = setInterval(() => {
+        setTimeLeft(prev => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
     }
-  }, [isGameComplete, isCompleted, moves]);
+    
+    if (timeLeft === 0 && !gameCompleted) {
+      toast.error('Tempo scaduto! Riprova.');
+      setGameStarted(false);
+    }
+  }, [gameStarted, gameCompleted, timeLeft]);
+
+  useEffect(() => {
+    if (flippedCards.length === 2) {
+      const [first, second] = flippedCards;
+      setMoves(moves + 1);
+      
+      if (cards[first].symbol === cards[second].symbol) {
+        // Match found
+        setTimeout(() => {
+          setCards(prevCards => 
+            prevCards.map(card => 
+              card.id === first || card.id === second 
+                ? { ...card, isMatched: true, isFlipped: true }
+                : card
+            )
+          );
+          setScore(score + 100);
+          setFlippedCards([]);
+          
+          // Check if game is completed
+          const updatedCards = cards.map(card => 
+            card.id === first || card.id === second 
+              ? { ...card, isMatched: true }
+              : card
+          );
+          
+          if (updatedCards.every(card => card.isMatched)) {
+            setGameCompleted(true);
+            const timeBonus = timeLeft * 10;
+            const finalScore = score + 100 + timeBonus;
+            setScore(finalScore);
+            toast.success(`Complimenti! Hai completato il Memory Hack! Punteggio: ${finalScore}`);
+          }
+        }, 1000);
+      } else {
+        // No match
+        setTimeout(() => {
+          setCards(prevCards => 
+            prevCards.map(card => 
+              card.id === first || card.id === second 
+                ? { ...card, isFlipped: false }
+                : card
+            )
+          );
+          setFlippedCards([]);
+        }, 1000);
+      }
+    }
+  }, [flippedCards, cards, moves, score, timeLeft]);
 
   const handleCardClick = (cardId: number) => {
-    flipCard(cardId);
+    if (flippedCards.length === 2 || cards[cardId].isFlipped || cards[cardId].isMatched) {
+      return;
+    }
+
+    setCards(prevCards => 
+      prevCards.map(card => 
+        card.id === cardId ? { ...card, isFlipped: true } : card
+      )
+    );
+    
+    setFlippedCards(prev => [...prev, cardId]);
   };
 
-  const handleResetGame = () => {
-    resetGame();
-    setIsCompleted(false);
-  };
+  if (!gameStarted) {
+    return (
+      <Card className="bg-gray-900/50 border-gray-700">
+        <CardHeader className="text-center">
+          <CardTitle className="text-white flex items-center justify-center gap-2">
+            <Brain className="w-6 h-6 text-blue-400" />
+            Memory Hack
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-center space-y-4">
+          <p className="text-gray-300">
+            Trova tutte le coppie di simboli Mission prima che il tempo scada!
+          </p>
+          <div className="space-y-2 text-sm text-gray-400">
+            <p>• Tempo limite: 60 secondi</p>
+            <p>• Punti per coppia: 100</p>
+            <p>• Bonus tempo: 10 punti per secondo rimanente</p>
+          </div>
+          <Button onClick={startGame} className="w-full">
+            <Brain className="w-4 h-4 mr-2" />
+            Inizia Hack Memory
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-cyan-400 mb-2">Memory Hack</h2>
-        <p className="text-gray-300">Trova tutte le coppie per hackerare il sistema</p>
-      </div>
-
-      <GameErrorBoundary fallback={<GameErrorFallback />}>
-        <Suspense fallback={<GameLoadingFallback />}>
-          <GameStats 
-            moves={moves}
-            timeElapsed={timeElapsed}
-            score={score}
-          />
-
-          <GameControls 
-            gameStatus={gameStatus}
-            onResetGame={handleResetGame}
-            onStartGame={startGame}
-          />
-        </Suspense>
-      </GameErrorBoundary>
-
-      {gameStarted && (
-        <GameErrorBoundary fallback={<GameErrorFallback />}>
-          <Suspense fallback={<GameLoadingFallback />}>
-            <div className="grid gap-4 mx-auto max-w-2xl grid-cols-4">
-              {cards.map((card) => (
-                <GameCard
-                  key={card.id}
-                  card={card}
-                  isFlipped={flippedCards.includes(card.id)}
-                  isMatched={card.isMatched}
-                  onClick={handleCardClick}
-                  disabled={!gameStarted || isGameComplete}
-                />
-              ))}
-            </div>
-          </Suspense>
-        </GameErrorBoundary>
-      )}
-
-      {isGameComplete && (
-        <Card className="p-6 bg-green-900/20 border-green-500/30">
-          <div className="text-center">
-            <h3 className="text-xl font-bold text-green-400 mb-2">
-              🎉 Sistema Hackerato!
-            </h3>
-            <p className="text-gray-300 mb-4">
-              Hai completato la missione in {moves} mosse e {Math.floor(timeElapsed / 60)}:{(timeElapsed % 60).toString().padStart(2, '0')} minuti!
-            </p>
-            <Badge variant="outline" className="text-cyan-400 border-cyan-400">
-              Punteggio: {score}
-            </Badge>
+    <Card className="bg-gray-900/50 border-gray-700">
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-white flex items-center gap-2">
+            <Brain className="w-6 h-6 text-blue-400" />
+            Memory Hack
+          </CardTitle>
+          <Button onClick={resetGame} variant="outline" size="sm">
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Reset
+          </Button>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-300">Mosse: {moves}</span>
+          <span className="text-blue-400">Tempo: {timeLeft}s</span>
+          <span className="text-yellow-400">Punteggio: {score}</span>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-4 gap-2 mb-4">
+          {cards.map(card => (
+            <button
+              key={card.id}
+              onClick={() => handleCardClick(card.id)}
+              className={`
+                aspect-square rounded-lg border-2 transition-all duration-300 text-2xl
+                ${card.isFlipped || card.isMatched 
+                  ? 'bg-blue-500 border-blue-400 text-white' 
+                  : 'bg-gray-800 border-gray-600 hover:border-gray-500'
+                }
+                ${card.isMatched ? 'ring-2 ring-green-400' : ''}
+              `}
+              disabled={card.isFlipped || card.isMatched || flippedCards.length === 2}
+            >
+              {card.isFlipped || card.isMatched ? card.symbol : '?'}
+            </button>
+          ))}
+        </div>
+        
+        {gameCompleted && (
+          <div className="text-center space-y-2 p-4 bg-green-900/30 rounded-lg border border-green-400">
+            <Trophy className="w-8 h-8 text-yellow-400 mx-auto" />
+            <h3 className="text-lg font-bold text-white">Mission Completata!</h3>
+            <p className="text-green-400">Punteggio finale: {score}</p>
+            <Button onClick={resetGame} className="mt-2">
+              Gioca di nuovo
+            </Button>
           </div>
-        </Card>
-      )}
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
