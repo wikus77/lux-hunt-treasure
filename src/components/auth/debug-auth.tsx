@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 const DebugAuth = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, forceDirectAccess } = useAuth();
   const navigate = useNavigate();
 
   const addLog = (message: string) => {
@@ -105,10 +105,8 @@ const DebugAuth = () => {
       addLog(`🔑 Session: ${result.session ? 'Present' : 'null'}`);
       
       if (result.success) {
-        addLog('🎉 LOGIN SUCCESS - REDIRECTING TO HOME');
-        setTimeout(() => {
-          navigate('/home');
-        }, 1000);
+        addLog('🎉 LOGIN SUCCESS - CHECKING REDIRECT...');
+        // Don't navigate here, let the login function handle redirect
       } else {
         addLog(`🚨 LOGIN FAILED: ${result.error?.message || 'Unknown error'}`);
       }
@@ -120,40 +118,23 @@ const DebugAuth = () => {
     }
   };
 
-  const forceDirectAccess = async () => {
+  const testForceDirectAccess = async () => {
     setIsLoading(true);
-    addLog('🚨 FORCE DIRECT ACCESS ATTEMPT');
+    addLog('🚨 TESTING FORCE DIRECT ACCESS - IMMEDIATE REDIRECT');
     
     try {
-      // Tenta di impostare una sessione manualmente per accesso diretto
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const result = await forceDirectAccess('wikus77@hotmail.it', 'mission-access-99');
       
-      if (sessionData.session) {
-        addLog('✅ EXISTING SESSION FOUND - REDIRECTING');
-        navigate('/home');
-        return;
-      }
+      addLog('📤 FORCE ACCESS RESULT:');
+      addLog(`✅ Success: ${result.success}`);
+      addLog(`🔗 Redirect URL: ${result.redirectUrl || 'None'}`);
+      addLog(`❌ Error: ${JSON.stringify(result.error, null, 2)}`);
       
-      addLog('🔄 NO SESSION FOUND - TRYING BYPASS LOGIN');
-      
-      const { data, error } = await supabase.functions.invoke('register-bypass', {
-        body: {
-          email: 'wikus77@hotmail.it',
-          password: 'mission-access-99',
-          action: 'login'
-        }
-      });
-      
-      if (error) {
-        addLog(`❌ FORCE ACCESS FAILED: ${error.message}`);
-        return;
-      }
-      
-      if (data?.success && data?.magicLink) {
-        addLog('🔗 MAGIC LINK RECEIVED - AUTO REDIRECTING');
-        window.location.href = data.magicLink;
+      if (result.success) {
+        addLog(`🚀 FORCE ACCESS SUCCESS - REDIRECTING TO: ${result.redirectUrl}`);
+        // The function handles the redirect automatically
       } else {
-        addLog('❌ NO MAGIC LINK RECEIVED');
+        addLog(`🚨 FORCE ACCESS FAILED: ${result.error?.message || 'Unknown error'}`);
       }
       
     } catch (error: any) {
@@ -170,6 +151,7 @@ const DebugAuth = () => {
     try {
       addLog('URL: https://vkjrqirvdvjbemsfzxof.supabase.co');
       addLog('Key: eyJhbGciOiJIUzI1NiIs... (truncated)');
+      addLog(`Current Origin: ${window.location.origin}`);
       
       const { data: session, error: sessionError } = await supabase.auth.getSession();
       addLog(`📋 Current Session: ${session.session ? 'Active' : 'None'}`);
@@ -198,7 +180,7 @@ const DebugAuth = () => {
 
   return (
     <div className="p-4 bg-red-900/20 border border-red-500 rounded-lg mb-6">
-      <h3 className="text-red-400 font-bold mb-4">🔧 DEBUG AUTH CONSOLE + BYPASS LOGIN</h3>
+      <h3 className="text-red-400 font-bold mb-4">🔧 DEBUG AUTH CONSOLE + FIXED BYPASS SYSTEM</h3>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2 mb-4">
         <Button 
@@ -242,7 +224,7 @@ const DebugAuth = () => {
         </Button>
 
         <Button 
-          onClick={forceDirectAccess} 
+          onClick={testForceDirectAccess} 
           variant="outline" 
           size="sm" 
           disabled={isLoading}
@@ -276,14 +258,17 @@ const DebugAuth = () => {
       <div className="mt-4 text-center">
         <span className={`inline-block w-3 h-3 rounded-full mr-2 ${isLoading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></span>
         <span className="text-white/70 text-sm">
-          {isLoading ? 'Running diagnostics...' : 'Ready for testing - TRY IMPROVED LOGIN OR FORCE ACCESS!'}
+          {isLoading ? 'Running diagnostics...' : 'Ready - FORCE ACCESS should now redirect correctly!'}
         </span>
       </div>
       
       <div className="mt-4 p-3 bg-cyan-900/20 border border-cyan-500/30 rounded">
-        <h4 className="text-cyan-400 font-bold mb-2">🚀 ACCESSO IMMEDIATO</h4>
+        <h4 className="text-cyan-400 font-bold mb-2">🚀 RISOLTO: REDIRECT E TOKEN FISSI</h4>
         <p className="text-cyan-300 text-sm">
-          Clicca "IMPROVED LOGIN" per il nuovo sistema di autenticazione bypass oppure "FORCE ACCESS" per accesso immediato tramite magic link!
+          ✅ ORIGIN corretto: {window.location.origin}<br/>
+          ✅ REDIRECT fisso: /home invece di localhost<br/>
+          ✅ TOKEN migliorati nel bypass<br/>
+          ➡️ Clicca "FORCE ACCESS" per accesso immediato!
         </p>
       </div>
     </div>

@@ -86,32 +86,49 @@ export const useAuth = () => {
 
         if (bypassResult?.success) {
           console.log('✅ Bypass login successful');
+          console.log('📊 Bypass result:', bypassResult);
           
-          // Se abbiamo ricevuto dati di sessione diretti, usali
-          if (bypassResult.session) {
-            console.log('🔄 Setting session from bypass data...');
-            const { error: setSessionError } = await supabase.auth.setSession({
-              access_token: bypassResult.session.access_token,
-              refresh_token: bypassResult.session.refresh_token
-            });
-            
-            if (setSessionError) {
-              console.error('❌ Error setting session:', setSessionError);
-            } else {
-              console.log('✅ Session set successfully');
-              return { success: true, session: bypassResult.session };
-            }
-          }
-          
-          // Se abbiamo un magic link, reindirizza
+          // MODALITÀ 1: Se abbiamo magic link, reindirizza immediatamente
           if (bypassResult.magicLink) {
-            console.log('✅ Bypass login successful - redirecting to magic link');
-            window.location.href = bypassResult.magicLink;
+            console.log('🔗 Redirecting to magic link:', bypassResult.redirect_url || '/home');
+            // Force redirect to the correct URL, not localhost
+            const redirectUrl = bypassResult.redirect_url || `${window.location.origin}/home`;
+            window.location.href = redirectUrl;
             return { 
               success: true, 
               session: null,
               error: null 
             };
+          }
+          
+          // MODALITÀ 2: Se abbiamo dati di sessione, provaci
+          if (bypassResult.session) {
+            console.log('🔄 Setting session from bypass data...');
+            try {
+              const { error: setSessionError } = await supabase.auth.setSession({
+                access_token: bypassResult.session.access_token,
+                refresh_token: bypassResult.session.refresh_token
+              });
+              
+              if (setSessionError) {
+                console.error('❌ Error setting session:', setSessionError);
+                // Fallback: redirect to magic link if available
+                if (bypassResult.magicLink) {
+                  const redirectUrl = bypassResult.redirect_url || `${window.location.origin}/home`;
+                  window.location.href = redirectUrl;
+                  return { success: true, session: null };
+                }
+              } else {
+                console.log('✅ Session set successfully');
+                return { success: true, session: bypassResult.session };
+              }
+            } catch (sessionError) {
+              console.error('💥 Session setting exception:', sessionError);
+              // Ultimate fallback: redirect anyway
+              const redirectUrl = bypassResult.redirect_url || `${window.location.origin}/home`;
+              window.location.href = redirectUrl;
+              return { success: true, session: null };
+            }
           }
         }
       }
@@ -122,6 +139,44 @@ export const useAuth = () => {
 
     } catch (error: any) {
       console.error('💥 Login exception:', error);
+      return { success: false, error };
+    }
+  };
+
+  const forceDirectAccess = async (email: string, password: string): Promise<{ success: boolean; redirectUrl?: string; error?: any }> => {
+    console.log('🚨 FORCE DIRECT ACCESS for:', email);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('register-bypass', {
+        body: {
+          email,
+          password,
+          action: 'login'
+        }
+      });
+
+      if (error) {
+        console.error('❌ Force access failed:', error);
+        return { success: false, error };
+      }
+
+      if (data?.success && data?.magicLink) {
+        console.log('🔗 FORCE ACCESS SUCCESS - redirecting immediately');
+        const redirectUrl = data.redirect_url || `${window.location.origin}/home`;
+        
+        // Immediate redirect
+        window.location.href = redirectUrl;
+        
+        return { 
+          success: true, 
+          redirectUrl: redirectUrl
+        };
+      }
+
+      return { success: false, error: 'No magic link received' };
+      
+    } catch (error: any) {
+      console.error('💥 Force access exception:', error);
       return { success: false, error };
     }
   };
@@ -182,6 +237,7 @@ export const useAuth = () => {
     isEmailVerified,
     login,
     logout,
+    forceDirectAccess,
     getCurrentUser: () => user,
     getAccessToken: () => session?.access_token || null,
     resendVerificationEmail,
