@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -19,8 +20,7 @@ export function useAuth() {
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          const isDeveloper = currentSession.user.email === 'wikus77@hotmail.it';
-          setIsEmailVerified(isDeveloper || !!currentSession.user.email_confirmed_at);
+          setIsEmailVerified(!!currentSession.user.email_confirmed_at);
           
           if (event === 'SIGNED_IN') {
             console.log("✅ User successfully signed in:", currentSession.user.email);
@@ -39,8 +39,7 @@ export function useAuth() {
       setUser(initialSession?.user ?? null);
       
       if (initialSession?.user) {
-        const isDeveloper = initialSession.user.email === 'wikus77@hotmail.it';
-        setIsEmailVerified(isDeveloper || !!initialSession.user.email_confirmed_at);
+        setIsEmailVerified(!!initialSession.user.email_confirmed_at);
       }
       
       setIsLoading(false);
@@ -56,70 +55,6 @@ export function useAuth() {
     console.log("Login attempt for email:", email);
     
     try {
-      // Emergency login for developer
-      if (email === 'wikus77@hotmail.it') {
-        console.log("🔓 DEVELOPER LOGIN - Using emergency function");
-        
-        const { data, error } = await supabase.functions.invoke('login-no-captcha', {
-          body: { email }
-        });
-
-        console.log("📥 Edge function response data:", data);
-        console.log("📥 Edge function error:", error);
-
-        if (error) {
-          console.error("❌ Emergency login error:", error);
-          return { success: false, error: error as AuthError };
-        }
-
-        if (data?.access_token && data?.refresh_token) {
-          console.log("✅ Emergency tokens received");
-          console.log("🧠 DEBUG - Access token type:", typeof data.access_token);
-          console.log("🧠 DEBUG - Access token length:", data.access_token.length);
-          console.log("🧠 DEBUG - Refresh token type:", typeof data.refresh_token);
-          console.log("🧠 DEBUG - Refresh token length:", data.refresh_token.length);
-          
-          console.log("🔄 Setting session with received tokens...");
-          const { data: sessionData, error: setSessionError } = await supabase.auth.setSession({
-            access_token: data.access_token,
-            refresh_token: data.refresh_token
-          });
-
-          console.log("🧠 DEBUG - Session data after setSession:", sessionData);
-          console.log("🧠 DEBUG - SetSession error:", setSessionError);
-
-          if (setSessionError) {
-            console.error("❌ Session setting error:", setSessionError);
-            
-            // FALLBACK: Try using action link redirect
-            if (data.action_link) {
-              console.log("🔄 Fallback: Using magic link redirect");
-              window.location.href = data.action_link;
-              return { success: true, session: null };
-            }
-            
-            return { success: false, error: setSessionError };
-          }
-
-          console.log("✅ Emergency session set successfully");
-          return { success: true, session: sessionData.session };
-        } 
-        
-        // If no tokens but we have action link, use magic link fallback
-        else if (data?.action_link) {
-          console.log("🔄 No tokens received, using magic link fallback");
-          window.location.href = data.action_link;
-          return { success: true, session: null };
-        } 
-        
-        else {
-          console.error("❌ No tokens or action link in response:", data);
-          return { success: false, error: { message: "No authentication data received" } as AuthError };
-        }
-      }
-      
-      // Regular login for other users
-      console.log("🔑 Regular login attempt for:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

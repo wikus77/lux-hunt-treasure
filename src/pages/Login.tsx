@@ -27,7 +27,7 @@ const Login = () => {
       });
     }
 
-    // SIMPLIFIED: If already authenticated, redirect immediately
+    // If already authenticated, redirect immediately
     if (!authLoading && isAuthenticated) {
       console.log('✅ User already authenticated - redirecting to /home');
       navigate('/home', { replace: true });
@@ -77,9 +77,9 @@ const Login = () => {
           <div className="flex justify-center mb-4">
             <AnimatedLogo />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-1">Emergency Access</h2>
+          <h2 className="text-2xl font-bold text-white mb-1">Accedi</h2>
           <p className="text-gray-400">
-            Developer login portal
+            Inserisci le tue credenziali per accedere
           </p>
         </div>
 

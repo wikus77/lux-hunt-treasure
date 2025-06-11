@@ -19,8 +19,6 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const isDeveloperEmail = email === 'wikus77@hotmail.it';
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -32,7 +30,6 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
     setIsLoading(true);
     try {
       console.log('🔐 Starting login process for:', email);
-      console.log('🧠 DEBUG - Is developer email:', email === 'wikus77@hotmail.it');
       
       const result = await login(email, password);
       
@@ -79,7 +76,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
         icon={<Mail className="h-4 w-4" />}
         required
         disabled={isLoading}
-        autoComplete="off"
+        autoComplete="email"
       />
 
       <FormField
@@ -92,23 +89,15 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
         icon={<Lock className="h-4 w-4" />}
         required
         disabled={isLoading}
-        autoComplete="off"
+        autoComplete="current-password"
       />
-
-      {isDeveloperEmail && (
-        <div className="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded-md">
-          <p className="text-sm text-red-400">
-            🚨 EMERGENCY ACCESS: Direct session creation bypassing all validation
-          </p>
-        </div>
-      )}
 
       <Button
         type="submit"
         className="w-full"
         disabled={isLoading}
       >
-        {isLoading ? 'Emergency Access...' : 'Accedi'}
+        {isLoading ? 'Accesso in corso...' : 'Accedi'}
       </Button>
 
       {verificationStatus === 'pending' && (
