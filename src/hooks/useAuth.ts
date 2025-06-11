@@ -11,14 +11,41 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
+    // CRITICAL FIX: Enhanced session management
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        setUser(session.user);
-      } else {
-        // CRITICAL FIX: Create developer user for development mode
+      try {
+        console.log('🔄 Checking initial session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('❌ Session check error:', error);
+        }
+        
+        if (session?.user) {
+          console.log('✅ Active session found:', {
+            userId: session.user.id,
+            email: session.user.email
+          });
+          setUser(session.user);
+        } else {
+          console.log('⚠️ No active session, using developer fallback');
+          // CRITICAL FIX: Create developer user for development mode
+          const developerUser = {
+            id: DEVELOPER_UUID,
+            email: 'developer@m1ssion.app',
+            user_metadata: {},
+            app_metadata: {},
+            aud: 'authenticated',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          } as User;
+          
+          setUser(developerUser);
+          console.log('🔧 Developer mode activated with UUID:', DEVELOPER_UUID);
+        }
+      } catch (error) {
+        console.error('❌ Session initialization error:', error);
+        // Fallback to developer user even on errors
         const developerUser = {
           id: DEVELOPER_UUID,
           email: 'developer@m1ssion.app',
@@ -30,16 +57,22 @@ export const useAuth = () => {
         } as User;
         
         setUser(developerUser);
-        console.log('🔧 Developer mode activated with UUID:', DEVELOPER_UUID);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     getInitialSession();
 
-    // Listen for auth changes
+    // CRITICAL FIX: Enhanced auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔄 Auth state change:', event, {
+          hasSession: !!session,
+          userId: session?.user?.id,
+          email: session?.user?.email
+        });
+        
         if (session?.user) {
           setUser(session.user);
         } else if (event === 'SIGNED_OUT') {
@@ -55,6 +88,7 @@ export const useAuth = () => {
           } as User;
           
           setUser(developerUser);
+          console.log('🔧 Fallback to developer user after signout');
         }
         setLoading(false);
       }

@@ -20,7 +20,8 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     currentWeekAreas,
     isGenerating,
     generateBuzzMapArea,
-    dailyBuzzMapCounter
+    dailyBuzzMapCounter,
+    validateUserAccess
   } = useBuzzMapLogic();
 
   // Calculate current radius and display info
@@ -31,21 +32,29 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   // Calculate next radius for preview
   const nextRadius = Math.max(5, currentRadius * 0.95);
   
-  // Developer check
-  const isDeveloper = user?.email === 'wikus77@hotmail.it';
+  // FIXED: Enhanced developer check with fallback UUID support
+  const isDeveloper = user?.email === 'wikus77@hotmail.it' || user?.id === "00000000-0000-4000-a000-000000000000";
 
   const handleBuzzMapPress = async () => {
-    if (!user?.id) {
-      toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
+    // CRITICAL FIX: Use enhanced user validation
+    if (!validateUserAccess()) {
+      console.error('❌ User validation failed:', {
+        userId: user?.id,
+        userEmail: user?.email,
+        hasUser: !!user
+      });
+      toast.error('Errore di autenticazione. Riprova ad accedere.');
       return;
     }
 
     console.log('🔥 BUZZ MAPPA button pressed:', {
-      userId: user.id,
+      userId: user?.id,
+      userEmail: user?.email,
       isDeveloper,
       currentRadius,
       nextRadius,
-      mapCenter
+      mapCenter,
+      userValidation: 'PASSED'
     });
 
     try {
@@ -97,14 +106,17 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     ? `BUZZ MAPPA – ${dailyBuzzMapCounter} BUZZ settimana – ${displayRadius}`
     : `BUZZ MAPPA (€1.99) – ${dailyBuzzMapCounter} BUZZ settimana – 500.0km`;
 
+  // FIXED: Enhanced button state management
+  const isButtonDisabled = isGenerating || !validateUserAccess();
+
   return (
     <div className="absolute bottom-4 left-4 z-50">
       <button
         onClick={handleBuzzMapPress}
-        disabled={isGenerating}
+        disabled={isButtonDisabled}
         className={`
           px-4 py-3 rounded-lg font-medium text-sm transition-all duration-200
-          ${isGenerating 
+          ${isButtonDisabled 
             ? 'bg-gray-600 text-gray-300 cursor-not-allowed' 
             : 'bg-gradient-to-r from-[#00D1FF] to-[#FF007A] text-white hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl'
           }

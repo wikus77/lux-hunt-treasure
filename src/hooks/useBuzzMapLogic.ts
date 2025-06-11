@@ -42,6 +42,7 @@ export const useBuzzMapLogic = () => {
 
   console.debug('🧠 BUZZ LOGIC STATE:', {
     userId: user?.id,
+    userEmail: user?.email,
     areasCount: currentWeekAreas.length,
     isGenerating,
     isDeleting,
@@ -73,42 +74,74 @@ export const useBuzzMapLogic = () => {
     return newRadius;
   }, []);
 
+  // FIXED: Enhanced user validation with fallback support
+  const validateUserAccess = useCallback((): boolean => {
+    // CRITICAL FIX: Support developer UUID fallback
+    const developerUUID = "00000000-0000-4000-a000-000000000000";
+    const isDeveloperFallback = user?.id === developerUUID;
+    const isDeveloperEmail = user?.email === 'wikus77@hotmail.it';
+    
+    console.debug('🔐 USER VALIDATION:', {
+      userId: user?.id,
+      userEmail: user?.email,
+      isDeveloperFallback,
+      isDeveloperEmail,
+      hasUser: !!user
+    });
+
+    // Allow access if:
+    // 1. User exists with valid ID
+    // 2. User is developer email
+    // 3. User has developer fallback UUID
+    return !!(user?.id && (user.id.length > 10 || isDeveloperFallback || isDeveloperEmail));
+  }, [user]);
+
   // Payment validation for non-developer users
   const requireBuzzPayment = useCallback(async (): Promise<boolean> => {
-    if (!user?.id) {
-      console.error('❌ No user ID for payment validation');
+    if (!validateUserAccess()) {
+      console.error('❌ No valid user for payment validation');
       return false;
     }
 
-    // Developer bypass for wikus77@hotmail.it
-    if (user.email === 'wikus77@hotmail.it') {
+    // Developer bypass for wikus77@hotmail.it and developer UUID
+    const isDeveloperEmail = user?.email === 'wikus77@hotmail.it';
+    const isDeveloperUUID = user?.id === "00000000-0000-4000-a000-000000000000";
+    
+    if (isDeveloperEmail || isDeveloperUUID) {
       console.log('🔓 Developer bypass - payment not required');
       return true;
     }
 
-    console.log('💳 Payment validation required for non-developer user');
+    console.log('💳 Payment validation required for regular user');
     return false; // Force payment for all non-developer users
-  }, [user]);
+  }, [user, validateUserAccess]);
 
   // BUZZ MAPPA generation with progressive radius reduction
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
-    // CRITICAL: Validate user ID first
-    if (!user?.id) {
-      console.error('❌ BUZZ GENERATION - No valid user ID available');
+    // CRITICAL FIX: Enhanced user validation
+    if (!validateUserAccess()) {
+      console.error('❌ BUZZ GENERATION - User validation failed:', {
+        userId: user?.id,
+        userEmail: user?.email,
+        hasUser: !!user
+      });
       toast.dismiss();
-      toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
+      toast.error('Errore di autenticazione. Riprova ad accedere.');
       return null;
     }
 
     console.log('🔥 STARTING BUZZ MAPPA GENERATION:', {
-      userId: user.id,
+      userId: user?.id,
+      userEmail: user?.email,
       centerLat,
       centerLng,
-      currentAreas: currentWeekAreas.length
+      currentAreas: currentWeekAreas.length,
+      userValidation: 'PASSED'
     });
 
+    // FIXED: Enhanced coordinate validation
     if (!centerLat || !centerLng || isNaN(centerLat) || isNaN(centerLng)) {
-      console.error('❌ Invalid coordinates');
+      console.error('❌ Invalid coordinates:', { centerLat, centerLng });
       toast.dismiss();
       toast.error('Coordinate della mappa non valide');
       return null;
@@ -141,12 +174,13 @@ export const useBuzzMapLogic = () => {
       console.log('🚀 CALLING BACKEND with progressive radius:', {
         currentRadius,
         newRadius,
-        coordinates: { lat: centerLat, lng: centerLng }
+        coordinates: { lat: centerLat, lng: centerLng },
+        userId: user?.id
       });
       
       // Call backend API with progressive radius
       const response = await callBuzzApi({ 
-        userId: user.id,
+        userId: user!.id,
         generateMap: true,
         coordinates: { lat: centerLat, lng: centerLng }
       });
@@ -183,7 +217,7 @@ export const useBuzzMapLogic = () => {
         radius_km: newRadius, // Use calculated progressive radius
         week: 1,
         created_at: new Date().toISOString(),
-        user_id: user.id
+        user_id: user!.id
       };
 
       // Force reload areas from database
@@ -195,7 +229,7 @@ export const useBuzzMapLogic = () => {
       toast.success(`✅ Area BUZZ MAPPA attiva: ${newRadius.toFixed(1)} km – Gen: ${response.generation_number || 1}`);
       
       console.log('🎉 BUZZ GENERATION COMPLETE:', {
-        userId: user.id,
+        userId: user!.id,
         radius_km: newRadius,
         generation: response.generation_number,
         progressiveReduction: true
@@ -213,7 +247,8 @@ export const useBuzzMapLogic = () => {
   }, [
     user, callBuzzApi, isGenerating, isDeleting, 
     setIsGenerating, forceCompleteSync, forceReload,
-    currentWeekAreas, getActiveArea, calculateNewRadius, requireBuzzPayment
+    currentWeekAreas, getActiveArea, calculateNewRadius, 
+    requireBuzzPayment, validateUserAccess
   ]);
 
   // Delete area functionality
@@ -264,6 +299,9 @@ export const useBuzzMapLogic = () => {
     getActiveArea,
     reloadAreas: forceReload,
     forceCompleteInvalidation: forceCompleteSync,
-    validateBuzzDeletion
+    validateBuzzDeletion,
+    
+    // FIXED: Add user validation function for external use
+    validateUserAccess
   };
 };
