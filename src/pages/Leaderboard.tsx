@@ -15,26 +15,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 
-const samplePlayers = Array.from({ length: 50 }, (_, i) => ({
-  id: i + 1,
-  name: `Giocatore ${i + 1}`,
-  avatar: `https://avatar.vercel.sh/player${i + 1}`,
-  points: Math.floor(10000 - i * 30 + Math.random() * 20),
-  rank: i + 1,
-  cluesFound: Math.floor(50 - i * 0.3 + Math.random() * 10),
-  areasExplored: Math.floor(20 - i * 0.1 + Math.random() * 5),
-  team: i % 5 === 0 ? "Team Alpha" : i % 7 === 0 ? "Team Omega" : i % 3 === 0 ? "Team Gamma" : null,
-  country: i % 4 === 0 ? "🇮🇹" : i % 3 === 0 ? "🇬🇧" : i % 5 === 0 ? "🇺🇸" : "🇪🇺",
-  badges: i < 5 ? ["top10", "explorer"] : i < 15 ? ["explorer"] : i % 7 === 0 ? ["active"] : [],
-  dailyChange: i % 3 === 0 ? Math.floor(Math.random() * 3) + 1 : i % 7 === 0 ? -Math.floor(Math.random() * 3) - 1 : 0,
-}));
-
 const sampleTeams = [
-  { id: 1, name: "Team Alpha", members: 12, totalPoints: 42500, rank: 1, badges: ["top"] },
-  { id: 2, name: "Team Omega", members: 8, totalPoints: 38700, rank: 2, badges: ["top"] },
-  { id: 3, name: "Team Gamma", members: 15, totalPoints: 35600, rank: 3, badges: ["top"] },
-  { id: 4, name: "Team Delta", members: 6, totalPoints: 29800, rank: 4, badges: [] },
-  { id: 5, name: "Team Epsilon", members: 10, totalPoints: 27500, rank: 5, badges: [] },
+  { id: 1, name: "Team Alpha", members: 0, totalPoints: 0, rank: 1, badges: [] }, // LANCIO: Reset teams
+  { id: 2, name: "Team Omega", members: 0, totalPoints: 0, rank: 2, badges: [] },
+  { id: 3, name: "Team Gamma", members: 0, totalPoints: 0, rank: 3, badges: [] },
 ];
 
 const Leaderboard = () => {
@@ -54,8 +38,18 @@ const Leaderboard = () => {
     filteredPlayers,
     isLoading,
     handleLoadMore,
-    hasMorePlayers
-  } = useLeaderboardData(samplePlayers);
+    hasMorePlayers,
+    refreshLeaderboard
+  } = useLeaderboardData();
+
+  // LANCIO: Auto-refresh leaderboard to get real data
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshLeaderboard();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [refreshLeaderboard]);
 
   const handleInvite = (player: any) => {
     setSelectedPlayer(player);
@@ -72,38 +66,36 @@ const Leaderboard = () => {
   };
 
   const simulateRankChange = () => {
-    const randomIndex = Math.floor(Math.random() * 10);
-    const direction = Math.random() > 0.5 ? 1 : -1;
-    const player = samplePlayers[randomIndex];
-    const change = direction * (Math.floor(Math.random() * 2) + 1);
-    
-    const message = change > 0 
-      ? `${player.name} è salito di ${change} posizioni!` 
-      : `${player.name} è sceso di ${Math.abs(change)} posizioni!`;
-    
-    addNotification({
-      title: "Aggiornamento Classifica",
-      description: message
-    });
-    
-    if (player.rank - change <= 10 && player.rank > 10) {
-      playSound();
+    if (filteredPlayers.length === 0) {
       addNotification({
-        title: "🏆 Traguardo Importante!",
-        description: `${player.name} è entrato nella TOP 10!`
+        title: "🚀 LANCIO RESET",
+        description: "Classifica azzerata per il test del 19 luglio!"
       });
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * Math.min(10, filteredPlayers.length));
+    const player = filteredPlayers[randomIndex];
+    
+    if (player) {
+      const message = `${player.name} è in classifica con ${player.points} punti!`;
+      
+      addNotification({
+        title: "Aggiornamento Classifica",
+        description: message
+      });
+      
+      if (player.rank <= 10) {
+        playSound();
+        addNotification({
+          title: "🏆 Traguardo Importante!",
+          description: `${player.name} è nella TOP 10!`
+        });
+      }
     }
   };
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (Math.random() > 0.7) {
-        simulateRankChange();
-      }
-    }, 15000 + Math.random() * 15000);
-    
-    return () => clearInterval(timer);
-  }, []);
+  const topThreePlayers = filteredPlayers.slice(0, 3);
 
   return (
     <motion.div 
@@ -149,7 +141,7 @@ const Leaderboard = () => {
             transition={{ delay: 0.2, duration: 0.5 }}
             style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}
           >
-            CLASSIFICA
+            CLASSIFICA LANCIO
           </motion.h1>
           
           <div className="max-w-4xl mx-auto px-3 sm:px-4">
@@ -164,7 +156,7 @@ const Leaderboard = () => {
                 onFilterChange={setFilter}
               />
               <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
-              <LeaderboardTopUsers players={samplePlayers.slice(0, 3)} />
+              <LeaderboardTopUsers players={topThreePlayers} />
               
               <LeaderboardTabs 
                 filteredPlayers={filteredPlayers}
@@ -177,7 +169,10 @@ const Leaderboard = () => {
                 onTabChange={setActiveTab}
               />
               
-              <LeaderboardProgress currentPosition={42} totalPlayers={100} />
+              <LeaderboardProgress 
+                currentPosition={filteredPlayers.length > 0 ? filteredPlayers.length : 1} 
+                totalPlayers={filteredPlayers.length || 1} 
+              />
             </motion.div>
           </div>
         </div>

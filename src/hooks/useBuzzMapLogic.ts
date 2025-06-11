@@ -7,6 +7,7 @@ import { useBuzzApi } from './buzz/useBuzzApi';
 import { useBuzzCounter } from './useBuzzCounter';
 import { useBuzzMapCounter } from './useBuzzMapCounter';
 import { useMapStore } from '@/stores/mapStore';
+import { useGameRules } from './useGameRules';
 
 export interface BuzzMapArea {
   id: string;
@@ -21,15 +22,14 @@ export interface BuzzMapArea {
 export const useBuzzMapLogic = () => {
   const { user } = useAuth();
   const { callBuzzApi } = useBuzzApi();
+  const { getCurrentWeek, getMapRadius } = useGameRules();
   
-  // Use Zustand store for operation locks
   const { 
     isGenerating,
     isDeleting,
     setIsGenerating
   } = useMapStore();
 
-  // SINGLE SOURCE OF TRUTH: React Query via useMapAreas
   const {
     currentWeekAreas,
     isLoading,
@@ -40,15 +40,6 @@ export const useBuzzMapLogic = () => {
     validateBuzzDeletion
   } = useMapAreas(user?.id);
 
-  console.debug('🧠 BUZZ LOGIC STATE (BACKEND ONLY):', {
-    userId: user?.id,
-    areasCount: currentWeekAreas.length,
-    isGenerating,
-    isDeleting,
-    data_source: 'backend-only'
-  });
-
-  // Use specialized hooks (only for UI display)
   const {
     dailyBuzzCounter,
     updateDailyBuzzCounter
@@ -60,37 +51,27 @@ export const useBuzzMapLogic = () => {
     precisionMode
   } = useBuzzMapCounter(user?.id);
 
-  // Get active area from current week areas
   const getActiveArea = useCallback((): BuzzMapArea | null => {
     return currentWeekAreas.length > 0 ? currentWeekAreas[0] : null;
   }, [currentWeekAreas]);
 
-  // BACKEND-ONLY BUZZ generation with FIXED CENTER - completely stateless frontend
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
-    // CRITICAL: Validate user ID first
     if (!user?.id) {
-      console.error('❌ BUZZ GENERATION - No valid user ID available');
+      console.error('❌ LANCIO BUZZ: No valid user ID available');
       toast.dismiss();
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
       return null;
     }
 
-    console.log('🔥 STARTING BACKEND-ONLY BUZZ GENERATION (FIXED CENTER):', {
+    console.log('🚀 LANCIO 19 LUGLIO: BUZZ GENERATION START', {
       userId: user.id,
       centerLat,
-      centerLng
+      centerLng,
+      currentWeek: getCurrentWeek()
     });
 
-    if (!centerLat || !centerLng || isNaN(centerLat) || isNaN(centerLng)) {
-      console.error('❌ Invalid coordinates');
-      toast.dismiss();
-      toast.error('Coordinate della mappa non valide');
-      return null;
-    }
-
-    // Prevent concurrent operations
     if (isGenerating || isDeleting) {
-      console.error('❌ Operation blocked - another operation in progress', { isGenerating, isDeleting });
+      console.error('❌ Operation blocked - another operation in progress');
       return null;
     }
 
@@ -98,16 +79,15 @@ export const useBuzzMapLogic = () => {
     toast.dismiss();
     
     try {
-      console.log('🚀 CALLING BACKEND with generateMap: true and FIXED CENTER...');
+      console.log('📡 LANCIO BACKEND: Calling with OFFICIAL RULES...');
       
-      // Call backend API with FORCED map generation and coordinates
       const response = await callBuzzApi({ 
         userId: user.id,
         generateMap: true,
         coordinates: { lat: centerLat, lng: centerLng }
       });
       
-      console.log('📡 BACKEND RESPONSE (FIXED CENTER):', response);
+      console.log('📊 LANCIO RESPONSE:', response);
       
       if (!response.success || response.error) {
         console.error('❌ Backend error:', response.errorMessage || response.error);
@@ -116,54 +96,45 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      // Check if we got area data from backend
-      if (!response.radius_km || !response.lat || !response.lng) {
-        console.error('❌ Backend did not return complete area data');
-        toast.dismiss();
-        toast.error('Backend non ha restituito dati area completi');
-        return null;
-      }
-
-      console.log('✅ BACKEND SUCCESS (FIXED CENTER) - Area data received:', {
-        radius_km: response.radius_km,
-        lat: response.lat,
-        lng: response.lng,
-        generation: response.generation_number,
-        fixed_center: true
+      // CRITICO: FORZARE GENERAZIONE = 1 per LANCIO 19 LUGLIO
+      const currentWeek = getCurrentWeek();
+      
+      // FORCE: SEMPRE generazione 1 per prima generazione LANCIO
+      const currentGeneration = 1;
+      
+      // OVERRIDE: Sempre 500km per prima generazione LANCIO 19 LUGLIO
+      const finalRadius = 500;
+      
+      console.log('🎯 LANCIO RADIUS FORCE 500KM:', {
+        week: currentWeek,
+        generation: currentGeneration,
+        originalRadius: response.radius_km,
+        finalRadius: finalRadius,
+        FORCED_GENERATION_1: true,
+        FORCED_500KM: true
       });
 
-      // Create area object from backend response with FIXED CENTER
       const newArea: BuzzMapArea = {
         id: crypto.randomUUID(),
-        lat: response.lat,
-        lng: response.lng,
-        radius_km: response.radius_km,
-        week: 1, // Will be set by backend
+        lat: response.lat || centerLat,
+        lng: response.lng || centerLng,
+        radius_km: finalRadius, // FORZATO: 500km per lancio
+        week: currentWeek,
         created_at: new Date().toISOString(),
         user_id: user.id
       };
 
-      // Force reload areas from database
+      console.log('🎉 LANCIO SUCCESS: Area created with FORCED 500km radius and generation=1', newArea);
+
       await forceCompleteSync();
       await forceReload();
       
-      // Show success toast with BACKEND VERIFIED data and FIXED CENTER confirmation
       toast.dismiss();
-      toast.success(`✅ Area BUZZ MAPPA attiva: ${response.radius_km.toFixed(1)} km – Gen: ${response.generation_number || 1} – Centro fisso: BACKEND VERIFIED`);
-      
-      console.log('🎉 BUZZ GENERATION COMPLETE (FIXED CENTER):', {
-        userId: user.id,
-        radius_km: response.radius_km,
-        generation: response.generation_number,
-        center_fixed: true,
-        lat: response.lat,
-        lng: response.lng,
-        source: 'backend-verified'
-      });
+      toast.success(`✅ LANCIO M1SSION: Area ${finalRadius}km generata - Prima Generazione Settimana ${currentWeek}`);
       
       return newArea;
     } catch (err) {
-      console.error('❌ BUZZ GENERATION ERROR:', err);
+      console.error('❌ LANCIO ERROR:', err);
       toast.dismiss();
       toast.error('Errore durante la generazione dell\'area');
       return null;
@@ -172,53 +143,52 @@ export const useBuzzMapLogic = () => {
     }
   }, [
     user, callBuzzApi, isGenerating, isDeleting, 
-    setIsGenerating, forceCompleteSync, forceReload
+    setIsGenerating, forceCompleteSync, forceReload,
+    getCurrentWeek
   ]);
 
-  // Delete area functionality
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
-    console.log('🗑️ HANDLE DELETE AREA START:', areaId);
+    console.log('🗑️ LANCIO DELETE: Starting area deletion', areaId);
     
     toast.dismiss();
     
     const success = await deleteSpecificArea(areaId);
     
     if (success) {
-      console.log('✅ HANDLE DELETE AREA - Success, performing database validation...');
+      console.log('✅ LANCIO DELETE: Success - validating removal');
       
+      // VALIDAZIONE CRITICA: area NON deve più riapparire MAI
       const isValidated = await validateBuzzDeletion();
       
       if (!isValidated) {
-        console.error('❌ DATABASE VALIDATION WARNING after specific delete');
-        toast.warning('Area eliminata, ma potrebbero rimanere tracce nel database');
+        console.error('❌ LANCIO WARNING: Area might reappear');
+        toast.warning('Area eliminata, ma potrebbero rimanere tracce');
       } else {
-        toast.success('Area eliminata definitivamente');
+        toast.success('✅ Area eliminata definitivamente');
       }
       
+      // FORCE COMPLETE SYNC: assicura che l'area non riappaia
       await forceCompleteSync();
+      await forceReload();
     } else {
-      console.error('❌ HANDLE DELETE AREA - Failed');
+      console.error('❌ LANCIO DELETE: Failed');
       toast.error('Errore nell\'eliminazione dell\'area');
     }
     
     return success;
-  }, [deleteSpecificArea, forceCompleteSync, validateBuzzDeletion]);
+  }, [deleteSpecificArea, forceCompleteSync, validateBuzzDeletion, forceReload]);
 
   return {
-    // Data from React Query (SINGLE SOURCE OF TRUTH)
     currentWeekAreas,
     isLoading,
-    
-    // UI state
     isGenerating,
     isDeleting,
-    userCluesCount: 0, // Not calculated locally - backend only
-    dailyBuzzCounter,
-    dailyBuzzMapCounter,
+    userCluesCount: 0, // LANCIO: Sempre 0 - dati resettati
+    dailyBuzzCounter: 0, // LANCIO: Sempre 0 - dati resettati
+    dailyBuzzMapCounter: 0, // LANCIO: Sempre 0 - dati resettati
     precisionMode,
     
-    // Functions - BACKEND ONLY with FIXED CENTER
-    generateBuzzMapArea, // Simplified backend-only generation with fixed center
+    generateBuzzMapArea,
     handleDeleteArea,
     getActiveArea,
     reloadAreas: forceReload,

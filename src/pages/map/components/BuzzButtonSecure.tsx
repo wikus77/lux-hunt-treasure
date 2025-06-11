@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Circle as CircleIcon, Loader, Lock } from "lucide-react";
 import { motion } from "framer-motion";
@@ -8,6 +8,8 @@ import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useBuzzMapLogic } from "@/hooks/useBuzzMapLogic";
 import { usePaymentVerification } from "@/hooks/usePaymentVerification";
 import { useStripePayment } from "@/hooks/useStripePayment";
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface BuzzButtonSecureProps {
   handleBuzz?: () => void;
@@ -18,11 +20,14 @@ export interface BuzzButtonSecureProps {
 
 const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({ 
   handleBuzz, 
-  radiusKm = 1,
+  radiusKm = 500, // LANCIO: FISSO a 500km per prima generazione
   mapCenter,
   onAreaGenerated
 }) => {
   const [isRippling, setIsRippling] = useState(false);
+  const [realBuzzMapCounter, setRealBuzzMapCounter] = useState(0);
+  const [realWeeklyUsed, setRealWeeklyUsed] = useState(0);
+  const { user } = useAuth();
   const { createMapBuzzNotification } = useNotificationManager();
   const { processBuzzPurchase, loading: stripeLoading } = useStripePayment();
   const {
@@ -39,14 +44,55 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     isGenerating, 
     generateBuzzMapArea,
     getActiveArea,
-    dailyBuzzMapCounter,
     reloadAreas
   } = useBuzzMapLogic();
   
   const activeArea = getActiveArea();
+
+  // SYNC: Read real counters from Supabase
+  useEffect(() => {
+    const fetchRealCounters = async () => {
+      if (!user?.id) return;
+
+      try {
+        // Get real buzz map counter from database
+        const { data: mapCounter } = await supabase
+          .from('user_buzz_map_counter')
+          .select('buzz_map_count')
+          .eq('user_id', user.id)
+          .eq('date', new Date().toISOString().split('T')[0])
+          .single();
+
+        // Get real weekly allowance used
+        const currentWeek = Math.ceil((Date.now() - new Date('2025-07-19').getTime()) / (7 * 24 * 60 * 60 * 1000));
+        const { data: weeklyAllowance } = await supabase
+          .from('weekly_buzz_allowances')
+          .select('used_buzz_count')
+          .eq('user_id', user.id)
+          .eq('week_number', Math.max(1, currentWeek))
+          .eq('year', new Date().getFullYear())
+          .single();
+
+        setRealBuzzMapCounter(mapCounter?.buzz_map_count || 0);
+        setRealWeeklyUsed(weeklyAllowance?.used_buzz_count || 0);
+
+        console.log('📊 LANCIO REAL COUNTERS:', {
+          mapCounter: mapCounter?.buzz_map_count || 0,
+          weeklyUsed: weeklyAllowance?.used_buzz_count || 0
+        });
+      } catch (error) {
+        console.error('❌ LANCIO: Error fetching real counters:', error);
+        // Default to 0 for launch reset state
+        setRealBuzzMapCounter(0);
+        setRealWeeklyUsed(0);
+      }
+    };
+
+    fetchRealCounters();
+  }, [user?.id]);
   
   const handleSecureBuzzMapClick = async () => {
-    // CRITICAL: Verify payment before any map action
+    // LANCIO: Verifica pagamento critica
     const canProceed = await requireBuzzPayment();
     if (!canProceed) {
       await logUnauthorizedAccess('buzz_map_blocked_no_payment', {
@@ -58,78 +104,95 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       return;
     }
 
-    console.log('🔒 SECURE BUZZ MAP: Payment verified, proceeding...');
+    console.log('🚀 LANCIO BUZZ MAP: Payment verified, proceeding with 500km generation...');
     
-    // Trigger ripple effect
     setIsRippling(true);
     setTimeout(() => setIsRippling(false), 1000);
     
-    // Track Plausible event
     if (typeof window !== 'undefined' && window.plausible) {
       window.plausible('buzz_click');
     }
     
-    // Use map center coordinates or default to Rome
+    // LANCIO: Use map center or default coordinates
     const centerLat = mapCenter ? mapCenter[0] : 41.9028;
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
-    console.log('📍 SECURE BUZZ MAP: Using verified coordinates:', { 
+    console.log('📍 LANCIO COORDINATES:', { 
       centerLat, 
       centerLng,
-      mode: 'secure-payment-verified'
+      mode: 'launch-19-july',
+      expectedRadius: '500km'
     });
     
-    // If user is on Free plan, require payment first
     if (subscriptionTier === 'Free') {
       console.log('💳 Free plan detected, redirecting to payment...');
       try {
-        await processBuzzPurchase(true); // true for map buzz
+        await processBuzzPurchase(true);
         return;
       } catch (error) {
-        console.error('❌ Payment failed:', error);
+        console.error('❌ LANCIO: Payment failed:', error);
         await logUnauthorizedAccess('buzz_map_payment_failed', { error });
         return;
       }
     }
     
-    // Generate area with payment verification
+    // LANCIO: Generate area with FORCED 500km radius
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
-      // Track clue unlocked event for map buzz
       if (typeof window !== 'undefined' && window.plausible) {
         window.plausible('clue_unlocked');
       }
       
-      console.log('✅ SECURE BUZZ MAP: Area generated with payment verification', newArea);
+      console.log('🎉 LANCIO SUCCESS: Area generated with FORCED 500km', newArea);
+
+      // Update real counters in Supabase
+      try {
+        await supabase.rpc('increment_buzz_map_counter', { p_user_id: user?.id });
+        
+        // Refresh real counters
+        setRealBuzzMapCounter(prev => prev + 1);
+      } catch (error) {
+        console.error('❌ LANCIO: Error updating counters:', error);
+      }
       
-      // Force reload areas to sync with database
       await reloadAreas();
       
-      // Maintain current map view - no zoom/pan changes
-      console.log('🔒 SECURE: Maintaining current map view');
-      
-      // Execute optional callback without affecting map view
       if (handleBuzz) {
         handleBuzz();
       }
       
-      // Create secure notification
       await createMapBuzzNotification(
-        "Area BUZZ Mappa Verificata",
-        `Nuova area di ricerca generata con pagamento confermato: ${newArea.radius_km.toFixed(1)}km`
+        "Area BUZZ Mappa - Lancio M1SSION",
+        `Nuova area di ricerca generata: ${newArea.radius_km}km - Prima Generazione Settimana 1`
       );
       
+      if (onAreaGenerated) {
+        onAreaGenerated(newArea.lat, newArea.lng, newArea.radius_km);
+      }
+      
     } else {
-      console.error('❌ SECURE BUZZ MAP: Area generation failed');
+      console.error('❌ LANCIO: Area generation failed');
       await logUnauthorizedAccess('buzz_map_generation_failed');
       toast.error('❌ Errore generazione area BUZZ');
     }
   };
 
-  // Security checks
   const isBlocked = !hasValidPayment || remainingBuzz <= 0;
   const isLoading = isGenerating || stripeLoading || verificationLoading;
+  
+  // LANCIO: Mostra sempre 500km per prima generazione
+  const displayRadius = () => {
+    if (activeArea) {
+      return activeArea.radius_km.toFixed(1);
+    }
+    return '500.0'; // LANCIO: Default FISSO 500km
+  };
+  
+  // LANCIO: Mostra numero generazioni corrette (da database reale)
+  const displayGeneration = () => {
+    return realBuzzMapCounter || 0; // Real counter from Supabase
+  };
   
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
@@ -160,18 +223,16 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
             <CircleIcon className="mr-2 h-4 w-4" />
           )}
           <span>
-            {isLoading ? 'Verificando...' : 
+            {isLoading ? 'Generando...' : 
              isBlocked ? 'ACCESSO NEGATO' :
-             `BUZZ MAPPA SICURA (${activeArea ? `${activeArea.radius_km.toFixed(1)}km` : '21.5km'}) - ${dailyBuzzMapCounter} BUZZ`}
+             `BUZZ MAPPA LANCIO (${displayRadius()}km) - Gen ${displayGeneration()}`}
           </span>
           
-          {/* Security indicator */}
           {!isBlocked && hasValidPayment && (
             <div className="absolute top-1 right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
           )}
         </Button>
         
-        {/* Ripple effect overlay - only if not blocked */}
         {isRippling && !isBlocked && (
           <motion.div
             className="absolute inset-0 border-2 border-cyan-400 rounded-full"

@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
+import { useTestMode } from './useTestMode';
+import { useGameRules } from './useGameRules';
 
 interface PaymentVerification {
   hasValidPayment: boolean;
@@ -15,6 +17,9 @@ interface PaymentVerification {
 
 export const usePaymentVerification = () => {
   const { user } = useAuthContext();
+  const { isDeveloperUser, fakePaymentEnabled } = useTestMode();
+  const { getBuzzLimit } = useGameRules();
+  
   const [verification, setVerification] = useState<PaymentVerification>({
     hasValidPayment: false,
     subscriptionTier: 'Free',
@@ -31,10 +36,31 @@ export const usePaymentVerification = () => {
     }
 
     try {
-      // Verifica stato abbonamento attivo
+      if (isDeveloperUser) {
+        // LANCIO 19 LUGLIO: Developer BLACK con regole corrette
+        const blackBuzzLimit = getBuzzLimit('Black');
+        
+        setVerification({
+          hasValidPayment: true,
+          subscriptionTier: 'Black',
+          canAccessPremium: true,
+          remainingBuzz: blackBuzzLimit, // 999 per developer
+          weeklyBuzzLimit: blackBuzzLimit,
+          loading: false
+        });
+        
+        console.log('🔧 LANCIO DEVELOPER: Black tier activated', {
+          buzzLimit: blackBuzzLimit,
+          tier: 'Black',
+          launchReady: true
+        });
+        return;
+      }
+
+      // PRODUZIONE: Verifica pagamento per altri utenti
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('subscription_tier, subscription_end, stripe_customer_id')
+        .select('subscription_tier, subscription_end, stripe_customer_id, email')
         .eq('id', user.id)
         .single();
 
@@ -43,7 +69,26 @@ export const usePaymentVerification = () => {
         throw profileError;
       }
 
-      // Verifica pagamenti completati
+      const { data: subscription, error: subError } = await supabase
+        .from('subscriptions')
+        .select('status, tier, end_date')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      let subscriptionTier = 'Free';
+      let hasActiveSubscription = false;
+
+      if (subscription && new Date(subscription.end_date || '') > new Date()) {
+        subscriptionTier = subscription.tier;
+        hasActiveSubscription = true;
+      } else if (profile?.subscription_tier && profile.subscription_tier !== 'Free') {
+        subscriptionTier = profile.subscription_tier;
+        hasActiveSubscription = true;
+      }
+
       const { data: payments, error: paymentsError } = await supabase
         .from('payment_transactions')
         .select('status, created_at')
@@ -56,31 +101,13 @@ export const usePaymentVerification = () => {
         console.error('❌ Error fetching payments:', paymentsError);
       }
 
-      // Verifica abbonamento attivo
-      const { data: subscription, error: subError } = await supabase
-        .from('subscriptions')
-        .select('status, tier, end_date')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .single();
-
-      const hasActiveSubscription = subscription && 
-        new Date(subscription.end_date || '') > new Date();
-
       const hasValidPayment = (payments && payments.length > 0) || hasActiveSubscription;
-      const subscriptionTier = profile?.subscription_tier || 'Free';
       const canAccessPremium = hasValidPayment && subscriptionTier !== 'Free';
 
-      // Ottieni limiti BUZZ settimanali
-      const { data: tierData } = await supabase
-        .from('subscription_tiers')
-        .select('max_weekly_buzz')
-        .eq('name', subscriptionTier)
-        .single();
+      // LANCIO: Usa regole corrette per limiti
+      const weeklyBuzzLimit = getBuzzLimit(subscriptionTier);
 
-      const weeklyBuzzLimit = tierData?.max_weekly_buzz || 0;
-
-      // Calcola BUZZ rimanenti questa settimana
+      // LANCIO: RESET ALLOWANCES - Verifica allowances fresche
       const { data: allowance } = await supabase
         .from('weekly_buzz_allowances')
         .select('max_buzz_count, used_buzz_count')
@@ -89,8 +116,15 @@ export const usePaymentVerification = () => {
         .limit(1)
         .single();
 
-      const remainingBuzz = allowance ? 
-        Math.max(0, allowance.max_buzz_count - allowance.used_buzz_count) : 0;
+      let remainingBuzz = 0;
+      if (subscriptionTier === 'Black') {
+        remainingBuzz = weeklyBuzzLimit; // 999 per Black
+      } else if (allowance) {
+        remainingBuzz = Math.max(0, allowance.max_buzz_count - allowance.used_buzz_count);
+      } else {
+        // LANCIO: Per utenti nuovi, usa i limiti corretti resettati
+        remainingBuzz = weeklyBuzzLimit;
+      }
 
       setVerification({
         hasValidPayment,
@@ -101,25 +135,27 @@ export const usePaymentVerification = () => {
         loading: false
       });
 
-      console.log('✅ Payment verification completed:', {
+      console.log('✅ LANCIO PAYMENT: Verification completed', {
         hasValidPayment,
         subscriptionTier,
         canAccessPremium,
-        remainingBuzz
+        remainingBuzz,
+        weeklyBuzzLimit,
+        launchReady: true
       });
 
     } catch (error) {
-      console.error('❌ Payment verification failed:', error);
+      console.error('❌ LANCIO PAYMENT: Verification failed', error);
       
-      // Log unauthorized access attempt
       await logUnauthorizedAccess('payment_verification_failed');
       
+      // LANCIO: Fallback sicuro
       setVerification({
         hasValidPayment: false,
         subscriptionTier: 'Free',
         canAccessPremium: false,
         remainingBuzz: 0,
-        weeklyBuzzLimit: 0,
+        weeklyBuzzLimit: 1, // Free = 1 BUZZ settimanale
         loading: false
       });
     }
@@ -139,7 +175,7 @@ export const usePaymentVerification = () => {
         }
       });
       
-      console.warn(`⚠️ Unauthorized access logged: ${eventType} by user ${user.id}`);
+      console.warn(`⚠️ LANCIO SECURITY: Unauthorized access logged - ${eventType}`);
     } catch (error) {
       console.error('❌ Failed to log unauthorized access:', error);
     }
@@ -148,10 +184,15 @@ export const usePaymentVerification = () => {
   const requirePayment = (feature: string): boolean => {
     const { hasValidPayment, canAccessPremium } = verification;
     
+    if (isDeveloperUser && fakePaymentEnabled) {
+      console.log('🔧 LANCIO DEVELOPER: Payment bypass for', feature);
+      return true;
+    }
+    
     if (!hasValidPayment || !canAccessPremium) {
       logUnauthorizedAccess(`blocked_${feature}`);
-      toast.error('Accesso Negato', {
-        description: 'Questa funzione richiede un abbonamento attivo o pagamento valido.',
+      toast.error('Pagamento Richiesto', {
+        description: 'Questa funzione richiede un pagamento verificato.',
         duration: 4000
       });
       return false;
@@ -161,12 +202,21 @@ export const usePaymentVerification = () => {
   };
 
   const requireBuzzPayment = async (): Promise<boolean> => {
-    const { hasValidPayment, remainingBuzz } = verification;
+    const { hasValidPayment, remainingBuzz, subscriptionTier } = verification;
+    
+    if (isDeveloperUser && fakePaymentEnabled) {
+      console.log('🔧 LANCIO DEVELOPER: BUZZ bypass authorized');
+      return true;
+    }
+    
+    if (subscriptionTier === 'Black') {
+      return true; // Black = sempre autorizzato
+    }
     
     if (!hasValidPayment) {
       await logUnauthorizedAccess('blocked_buzz_no_payment');
       toast.error('Pagamento Richiesto', {
-        description: 'Devi effettuare un pagamento per utilizzare questa funzione.',
+        description: 'Devi effettuare un pagamento per utilizzare BUZZ.',
         duration: 4000
       });
       return false;

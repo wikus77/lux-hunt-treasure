@@ -8,6 +8,7 @@ import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { usePaymentVerification } from "@/hooks/usePaymentVerification";
 import { useStripePayment } from "@/hooks/useStripePayment";
+import { useTestMode } from "@/hooks/useTestMode";
 import { supabase } from "@/integrations/supabase/client";
 
 interface BuzzButtonSecureProps {
@@ -22,6 +23,8 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const { callBuzzApi } = useBuzzApi();
   const { createBuzzNotification } = useNotificationManager();
   const { processBuzzPurchase, loading: stripeLoading } = useStripePayment();
+  const { isDeveloperUser } = useTestMode();
+  
   const {
     hasValidPayment,
     canAccessPremium,
@@ -39,7 +42,71 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const handleSecureBuzzPress = async () => {
     if (isProcessing || verificationLoading || !userId) return;
 
-    // CRITICAL: Verify payment before any action
+    // LANCIO 19 LUGLIO: Developer BLACK processo completo
+    if (isDeveloperUser) {
+      console.log('🔧 LANCIO DEVELOPER: Starting BLACK BUZZ process');
+      
+      setShowRipple(true);
+      setTimeout(() => setShowRipple(false), 1000);
+      setIsProcessing(true);
+
+      try {
+        const response = await callBuzzApi({ 
+          userId, 
+          generateMap: false 
+        });
+        
+        if (response.success) {
+          const dynamicClueContent = response.clue_text || 
+            `Indizio BLACK LANCIO - Generato alle ${new Date().toLocaleTimeString()}`;
+          
+          // Inserisci notifica nel database
+          const { error: notificationError } = await supabase
+            .from('user_notifications')
+            .insert({
+              user_id: userId,
+              type: 'buzz',
+              title: 'Nuovo Indizio BLACK - Lancio M1SSION',
+              message: dynamicClueContent,
+              is_read: false,
+              created_at: new Date().toISOString()
+            });
+
+          if (notificationError) {
+            console.error('❌ LANCIO: Error inserting BLACK notification:', notificationError);
+          } else {
+            console.log('✅ LANCIO: BLACK notification inserted successfully');
+          }
+
+          toast.success("🔧 Indizio BLACK Sbloccato - LANCIO!", {
+            description: dynamicClueContent,
+          });
+          
+          await createBuzzNotification(
+            "Nuovo Indizio BLACK - Lancio M1SSION", 
+            dynamicClueContent
+          );
+          
+          onSuccess();
+        } else {
+          console.error('❌ LANCIO: BLACK API failed', response.errorMessage);
+          toast.error("Errore BLACK", {
+            description: response.errorMessage || "Errore sconosciuto",
+          });
+        }
+      } catch (error) {
+        console.error('❌ LANCIO: Developer BLACK Error:', error);
+        toast.error("Errore BLACK", {
+          description: "Errore durante il processo",
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+      
+      return;
+    }
+
+    // PRODUZIONE: Verifica pagamento per altri utenti
     const canProceed = await requireBuzzPayment();
     if (!canProceed) {
       await logUnauthorizedAccess('buzz_blocked_no_payment', {
@@ -50,88 +117,76 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       return;
     }
 
-    // Trigger ripple effect
     setShowRipple(true);
     setTimeout(() => setShowRipple(false), 1000);
     
-    // Track Plausible event
     if (typeof window !== 'undefined' && window.plausible) {
       window.plausible('buzz_click');
     }
     
-    console.log('🔒 SECURE BUZZ: Starting verified buzz process for user:', userId);
+    console.log('🔒 LANCIO SECURE BUZZ: Starting verified process for user:', userId);
     setIsProcessing(true);
     
     try {
-      // If user doesn't have subscription, require payment
       if (subscriptionTier === 'Free') {
-        console.log('💳 No subscription detected, redirecting to payment...');
+        console.log('💳 Free plan detected, redirecting to payment...');
         await processBuzzPurchase(false, buzzCost);
         return;
       }
 
-      // Proceed with buzz generation for premium users
       const response = await callBuzzApi({ 
         userId, 
         generateMap: false 
       });
       
       if (response.success) {
-        console.log('✅ SECURE BUZZ: Response received with payment verification');
+        console.log('✅ LANCIO SECURE BUZZ: Response received with payment verification');
         
-        // Track clue unlocked event
         if (typeof window !== 'undefined' && window.plausible) {
           window.plausible('clue_unlocked');
         }
 
-        // Get dynamic clue content
         const dynamicClueContent = response.clue_text || 
-          `Indizio premium generato alle ${new Date().toLocaleTimeString()}`;
+          `Indizio premium LANCIO generato alle ${new Date().toLocaleTimeString()}`;
         
-        console.log('📝 SECURE: Dynamic clue content:', dynamicClueContent);
-
-        // Register notification on Supabase with verification
         try {
-          console.log('💾 SECURE: Inserting verified notification in Supabase...');
           const { error: notificationError } = await supabase
             .from('user_notifications')
             .insert({
               user_id: userId,
               type: 'buzz',
-              title: 'Nuovo Indizio Premium Verificato',
+              title: 'Nuovo Indizio Premium - Lancio M1SSION',
               message: dynamicClueContent,
               is_read: false,
               created_at: new Date().toISOString()
             });
 
           if (notificationError) {
-            console.error('❌ Error inserting verified notification:', notificationError);
+            console.error('❌ LANCIO: Error inserting verified notification:', notificationError);
           } else {
-            console.log('✅ Verified notification inserted successfully');
+            console.log('✅ LANCIO: Verified notification inserted successfully');
           }
         } catch (notifError) {
-          console.error('❌ Error creating verified notification:', notifError);
+          console.error('❌ LANCIO: Error creating verified notification:', notifError);
         }
 
-        // Create toast notification
-        toast.success("Indizio Premium Sbloccato!", {
+        toast.success("Indizio Premium Sbloccato - LANCIO!", {
           description: dynamicClueContent,
         });
         
-        // Create app notification
         try {
           await createBuzzNotification(
-            "Nuovo Indizio Premium Verificato", 
+            "Nuovo Indizio Premium - Lancio M1SSION", 
             dynamicClueContent
           );
-          console.log('✅ Verified Buzz notification created successfully');
+          console.log('✅ LANCIO: Verified Buzz notification created successfully');
         } catch (notifError) {
-          console.error('❌ Failed to create verified Buzz notification:', notifError);
+          console.error('❌ LANCIO: Failed to create verified Buzz notification:', notifError);
         }
         
         onSuccess();
       } else {
-        console.error('❌ SECURE BUZZ: API response failed:', response.errorMessage);
+        console.error('❌ LANCIO SECURE BUZZ: API response failed:', response.errorMessage);
         const errorMessage = response.errorMessage || "Errore sconosciuto";
         
         await logUnauthorizedAccess('buzz_api_failed', { errorMessage });
@@ -141,7 +196,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         });
       }
     } catch (error) {
-      console.error('❌ SECURE BUZZ: Error during verified call:', error);
+      console.error('❌ LANCIO SECURE BUZZ: Error during verified call:', error);
       
       await logUnauthorizedAccess('buzz_exception', { 
         error: error instanceof Error ? error.message : String(error) 
@@ -155,8 +210,8 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     }
   };
 
-  // Security check: block if no valid payment
-  const isBlocked = !hasValidPayment || remainingBuzz <= 0 || subscriptionTier === 'Free';
+  // LANCIO: Security check corretto
+  const isBlocked = !isDeveloperUser && (!hasValidPayment || remainingBuzz <= 0 || subscriptionTier === 'Free');
   const isLoading = isProcessing || stripeLoading || verificationLoading;
 
   if (verificationLoading) {
@@ -166,6 +221,23 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       </div>
     );
   }
+
+  // LANCIO: Mostra i valori CORRETTI per ogni piano
+  const displayRemainingBuzz = () => {
+    if (isDeveloperUser) return 999;
+    if (subscriptionTier === 'Free') return remainingBuzz || 1;
+    if (subscriptionTier === 'Silver') return remainingBuzz || 3;
+    if (subscriptionTier === 'Gold') return remainingBuzz || 7;
+    return remainingBuzz;
+  };
+
+  const displayWeeklyLimit = () => {
+    if (isDeveloperUser) return 999;
+    if (subscriptionTier === 'Free') return 1;
+    if (subscriptionTier === 'Silver') return 3;
+    if (subscriptionTier === 'Gold') return 7;
+    return remainingBuzz;
+  };
 
   return (
     <motion.button
@@ -185,23 +257,21 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         scale: { type: "spring", stiffness: 300, damping: 20 }
       }}
     >
-      {/* Security overlay for blocked access */}
-      {isBlocked && (
+      {isBlocked && !isDeveloperUser && (
         <div className="absolute inset-0 bg-red-900 bg-opacity-80 rounded-full flex items-center justify-center z-20">
           <Lock className="w-16 h-16 text-red-300" />
         </div>
       )}
 
-      {/* Radial gradient overlay */}
       <div className={`absolute inset-0 rounded-full opacity-90 ${
-        isBlocked ? 'bg-gradient-to-r from-red-600 to-red-800' : 
+        isBlocked && !isDeveloperUser ? 'bg-gradient-to-r from-red-600 to-red-800' : 
         'bg-gradient-to-r from-[#7B2EFF] via-[#00D1FF] to-[#FF59F8]'
       }`} />
       
       <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full z-10">
         {isLoading ? (
           <Loader className="w-12 h-12 animate-spin text-white" />
-        ) : isBlocked ? (
+        ) : isBlocked && !isDeveloperUser ? (
           <>
             <Lock className="w-8 h-8 text-red-300 mb-2" />
             <span className="text-lg font-bold text-red-300 tracking-wider text-center px-4">
@@ -210,7 +280,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
             </span>
             <span className="text-xs text-red-200 mt-1 text-center px-2">
               {subscriptionTier === 'Free' ? 'Abbonamento richiesto' : 
-               `${remainingBuzz} BUZZ rimanenti`}
+               `${displayRemainingBuzz()} BUZZ rimanenti`}
             </span>
           </>
         ) : (
@@ -220,15 +290,15 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
             </span>
             <span className="text-sm text-white/90 mt-1 font-medium">
               Piano: {subscriptionTier}
+              {isDeveloperUser && <span className="text-green-300"> (BLACK)</span>}
             </span>
             <span className="text-xs text-white/70">
-              {remainingBuzz} BUZZ rimanenti
+              {displayRemainingBuzz()}/{displayWeeklyLimit()} BUZZ settimanali
             </span>
           </>
         )}
       </div>
 
-      {/* Ripple effect - only show if not blocked */}
       {showRipple && !isBlocked && (
         <div className="ripple-effect" />
       )}
