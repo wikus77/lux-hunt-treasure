@@ -114,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fetch user role when auth state changes
+  // FIXED: Fetch user role when auth state changes - STABLE VERSION
   useEffect(() => {
     const fetchUserRole = async () => {
       // ✅ CONTROLLO PRIORITARIO: Developer access da localStorage prima di tutto
@@ -134,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log("🔍 ROLE FETCH: No authenticated user, clearing role");
         setUserRole(null);
         setIsRoleLoading(false);
+        setAuthInitialized(true);
         return;
       }
 
@@ -223,29 +224,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserRole(null);
         }
       } finally {
-        if (retryCount >= maxRetries) {
+        if (retryCount >= maxRetries || !auth.isLoading) {
           setIsRoleLoading(false);
+          setAuthInitialized(true);
         }
       }
     };
 
-    fetchUserRole();
-    
-    // Mark auth as initialized after first load
-    if (!authInitialized && !auth.isLoading) {
-      setAuthInitialized(true);
+    // Only fetch role when auth state has stabilized
+    if (!auth.isLoading) {
+      fetchUserRole();
     }
     
-  }, [auth.isAuthenticated, auth.user, auth.isLoading]);
-
-  // Show loading state on first initialization
-  useEffect(() => {
-    if (auth.isLoading && !authInitialized) {
-      console.log('🔄 Auth is initializing...');
-    } else if (authInitialized) {
-      console.log('✅ Auth initialization complete');
-    }
-  }, [auth.isLoading, authInitialized]);
+  }, [auth.isAuthenticated, auth.user, auth.isLoading, retryCount]);
 
   // Create the complete context value by combining auth hook values with role information
   const authContextValue: AuthContextType = {

@@ -2,7 +2,6 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BuzzFeatureWrapper from "@/components/buzz/BuzzFeatureWrapper";
@@ -13,11 +12,9 @@ import BottomNavigation from "@/components/layout/BottomNavigation";
 import { useAuthContext } from "@/contexts/auth";
 
 const Buzz = () => {
-  const { user } = useAuthContext();
-  const { getValidUser } = useAuth();
+  const { user, isAuthenticated } = useAuthContext();
   const navigate = useNavigate();
   const [isValidatingAuth, setIsValidatingAuth] = React.useState(true);
-  const [validatedUser, setValidatedUser] = React.useState(null);
 
   // ✅ FASE 1 - Enhanced authentication check with logging for /buzz page
   React.useEffect(() => {
@@ -25,7 +22,8 @@ const Buzz = () => {
       console.log("🔥 LIVELLO 1 – BUZZ PAGE AUTH CHECK:", {
         user: user ? user.id : "null",
         email: user?.email || "no email",
-        pathname: window.location.pathname
+        pathname: window.location.pathname,
+        isAuthenticated
       });
       
       // Check if developer email - should always have access
@@ -38,40 +36,24 @@ const Buzz = () => {
         userEmail: user?.email
       });
 
-      // Enhanced validation using getValidUser if available
-      let finalUser = user;
-      if (getValidUser) {
-        try {
-          console.log('🔍 LIVELLO 1 – ENHANCED VALIDATION: Using getValidUser...');
-          const validUser = await getValidUser();
-          if (validUser) {
-            finalUser = validUser;
-            console.log('✅ LIVELLO 1 SUCCESS – Enhanced validation passed:', validUser.id);
-          }
-        } catch (error) {
-          console.error('❌ LIVELLO 1 ERROR – Enhanced validation failed:', error);
-        }
-      }
+      const finalAuthenticated = isAuthenticated || hasDeveloperAccess || isDeveloperEmail;
       
-      const isAuthenticated = finalUser || hasDeveloperAccess || isDeveloperEmail;
-      
-      if (!isAuthenticated) {
+      if (!finalAuthenticated) {
         console.log("❌ LIVELLO 1 ERROR - User not authenticated, redirecting to login");
       } else {
         console.log("✅ LIVELLO 1 SUCCESS - User authenticated, showing BUZZ interface");
-        setValidatedUser(finalUser);
       }
       
       setIsValidatingAuth(false);
     };
 
     validateAuthentication();
-  }, [user, getValidUser]);
+  }, [user, isAuthenticated]);
 
   // Enhanced authentication check - allow developer access
   const isDeveloperEmail = user?.email === 'wikus77@hotmail.it';
   const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-  const isAuthenticated = validatedUser || user || hasDeveloperAccess || isDeveloperEmail;
+  const finalAuthenticated = isAuthenticated || hasDeveloperAccess || isDeveloperEmail;
 
   // Show loading during auth validation
   if (isValidatingAuth) {
@@ -91,7 +73,7 @@ const Buzz = () => {
   }
 
   // Proper authentication check with developer bypass
-  if (!isAuthenticated) {
+  if (!finalAuthenticated) {
     return (
       <motion.div 
         className="bg-gradient-to-b from-[#131524]/70 to-black w-full min-h-screen flex items-center justify-center"

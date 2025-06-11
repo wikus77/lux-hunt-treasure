@@ -25,7 +25,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const [isRippling, setIsRippling] = useState(false);
   const [calculatedRadius, setCalculatedRadius] = useState<number | null>(null);
   const { createMapBuzzNotification } = useNotificationManager();
-  const { user, getValidUser, isAuthenticated } = useAuthContext();
+  const { user, isAuthenticated } = useAuthContext();
   const { 
     isGenerating, 
     generateBuzzMapArea,
@@ -40,21 +40,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   // Calculate radius from database
   React.useEffect(() => {
     const calculateCorrectRadius = async () => {
-      // ✅ Try to get valid user first
-      let validUserId = user?.id;
-      
-      if (!validUserId && getValidUser) {
-        try {
-          const validUser = await getValidUser();
-          validUserId = validUser?.id;
-          console.log('🔍 BUZZ BUTTON: Got valid user ID via getValidUser:', validUserId);
-        } catch (error) {
-          console.log('⚠️ BUZZ BUTTON: getValidUser failed:', error);
-        }
-      }
-
-      if (!validUserId) {
-        console.log('❌ BUZZ BUTTON: No valid user ID available for radius calculation');
+      if (!user?.id) {
+        console.log('❌ BUZZ BUTTON: No user ID available for radius calculation');
         return;
       }
 
@@ -64,7 +51,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         const { data: counterData, error } = await supabase
           .from('user_buzz_map_counter')
           .select('buzz_map_count')
-          .eq('user_id', validUserId)
+          .eq('user_id', user.id)
           .eq('date', new Date().toISOString().split('T')[0])
           .maybeSingle();
 
@@ -96,7 +83,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     };
 
     calculateCorrectRadius();
-  }, [user?.id, dailyBuzzMapCounter, getValidUser]);
+  }, [user?.id, dailyBuzzMapCounter]);
   
   const handleBuzzMapClick = async () => {
     console.log('🔥 BUZZ MAPPA: Button clicked');
@@ -105,21 +92,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     console.log('User email:', user?.email);
     console.log('Is authenticated:', isAuthenticated);
     
-    // Enhanced validation using getValidUser
-    let validUser = user;
-    
-    if (!validUser && getValidUser) {
-      try {
-        console.log('🔍 BUZZ MAPPA: Attempting getValidUser...');
-        validUser = await getValidUser();
-        console.log('✅ BUZZ MAPPA: getValidUser result:', validUser?.id);
-      } catch (error) {
-        console.error('❌ BUZZ MAPPA: getValidUser failed:', error);
-      }
-    }
-    
-    if (!validUser?.id) {
-      console.error('❌ BUZZ MAPPA: No valid user available after all validation attempts');
+    if (!user?.id) {
+      console.error('❌ BUZZ MAPPA: No valid user available');
       toast.error('ERRORE AUTENTICAZIONE', {
         description: 'Devi essere loggato per utilizzare BUZZ MAPPA. Effettua nuovamente il login.'
       });
@@ -127,8 +101,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     }
 
     console.log('✅ BUZZ MAPPA: User validated', {
-      userId: validUser.id,
-      email: validUser.email
+      userId: user.id,
+      email: user.email
     });
 
     // Check Supabase session directly
@@ -154,7 +128,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
     console.log('📍 BUZZ MAPPA: Using coordinates:', { 
-      userId: validUser.id,
+      userId: user.id,
       centerLat, 
       centerLng,
       mode: 'backend-fixed-center'

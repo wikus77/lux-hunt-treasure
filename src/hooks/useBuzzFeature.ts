@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
@@ -8,6 +9,7 @@ import { useBuzzUiState } from "@/hooks/buzz/useBuzzUiState";
 import { useBuzzNavigation } from "@/hooks/buzz/useBuzzNavigation";
 import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
+import { useAuthContext } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 // Funzione per generare indizi realmente univoci
@@ -40,6 +42,7 @@ export function useBuzzFeature() {
   const { addNotification, reloadNotifications } = useNotifications();
   const { createBuzzNotification } = useNotificationManager();
   const { callBuzzApi } = useBuzzApi();
+  const { user } = useAuthContext();
 
   const {
     unlockedClues,
@@ -50,25 +53,16 @@ export function useBuzzFeature() {
     getNextVagueClue
   } = useBuzzClues();
 
-  const [cachedUserId, setCachedUserId] = useState<string | null>(null);
   const [lastDynamicClue, setLastDynamicClue] = useState<string>("");
   const [buzzCounter, setBuzzCounter] = useState<number>(0);
 
   useEffect(() => {
-    const prefetchUserId = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (sessionData?.session?.user?.id) {
-        setCachedUserId(sessionData.session.user.id);
-      }
-    };
-
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
     const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
     
-    Promise.all([
-      prefetchUserId(),
-      initializeSound(soundPreference, volume)
-    ]).catch(error => console.error("Error during initialization:", error));
+    initializeSound(soundPreference, volume).catch(error => 
+      console.error("Error during sound initialization:", error)
+    );
     
     if (location.state?.paymentCompleted && location.state?.fromRegularBuzz) {
       try {
@@ -87,8 +81,7 @@ export function useBuzzFeature() {
     }
     
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = cachedUserId || sessionData?.session?.user?.id;
+      const userId = user?.id;
       
       if (!userId) {
         toast.error("Devi effettuare l'accesso per utilizzare questa funzione");
@@ -152,8 +145,7 @@ export function useBuzzFeature() {
   const handleClueButtonClick = async () => {
     playSound();
     
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = cachedUserId || sessionData?.session?.user?.id;
+    const userId = user?.id;
     
     if (!userId) {
       toast.error("Devi effettuare l'accesso per utilizzare questa funzione");

@@ -9,21 +9,21 @@ import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { usePaymentVerification } from "@/hooks/usePaymentVerification";
 import { useStripePayment } from "@/hooks/useStripePayment";
 import { useTestMode } from "@/hooks/useTestMode";
+import { useAuthContext } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 interface BuzzButtonSecureProps {
-  userId: string;
   onSuccess: () => void;
 }
 
 const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
-  userId,
   onSuccess
 }) => {
   const { callBuzzApi } = useBuzzApi();
   const { createBuzzNotification } = useNotificationManager();
   const { processBuzzPurchase, loading: stripeLoading } = useStripePayment();
   const { isDeveloperUser } = useTestMode();
+  const { user } = useAuthContext();
   
   const {
     hasValidPayment,
@@ -40,7 +40,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const [buzzCost, setBuzzCost] = useState<number>(1.99);
 
   const handleSecureBuzzPress = async () => {
-    if (isProcessing || verificationLoading || !userId) return;
+    if (isProcessing || verificationLoading || !user?.id) return;
 
     // LANCIO 19 LUGLIO: Developer BLACK processo completo
     if (isDeveloperUser) {
@@ -52,7 +52,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
 
       try {
         const response = await callBuzzApi({ 
-          userId, 
+          userId: user.id, 
           generateMap: false 
         });
         
@@ -64,7 +64,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           const { error: notificationError } = await supabase
             .from('user_notifications')
             .insert({
-              user_id: userId,
+              user_id: user.id,
               type: 'buzz',
               title: 'Nuovo Indizio BLACK - Lancio M1SSION',
               message: dynamicClueContent,
@@ -124,7 +124,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       window.plausible('buzz_click');
     }
     
-    console.log('🔒 LANCIO SECURE BUZZ: Starting verified process for user:', userId);
+    console.log('🔒 LANCIO SECURE BUZZ: Starting verified process for user:', user.id);
     setIsProcessing(true);
     
     try {
@@ -135,7 +135,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       }
 
       const response = await callBuzzApi({ 
-        userId, 
+        userId: user.id, 
         generateMap: false 
       });
       
@@ -153,7 +153,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           const { error: notificationError } = await supabase
             .from('user_notifications')
             .insert({
-              user_id: userId,
+              user_id: user.id,
               type: 'buzz',
               title: 'Nuovo Indizio Premium - Lancio M1SSION',
               message: dynamicClueContent,

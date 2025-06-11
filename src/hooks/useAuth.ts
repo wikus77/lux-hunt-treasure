@@ -17,8 +17,9 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
+  const [authInitialized, setAuthInitialized] = useState<boolean>(false);
 
-  // Enhanced user validation with session check
+  // Enhanced user validation with session check - FIXED VERSION
   const getValidUser = useCallback(async () => {
     console.log('🔍 GET VALID USER: Starting validation');
     
@@ -35,15 +36,9 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       } as User;
     }
     
-    // First check current user state
+    // Return current user state without additional calls
     if (user) {
       console.log('✅ GET VALID USER: User found in state:', user.id);
-      return user;
-    }
-    
-    // Developer fallback
-    if (user?.email === 'wikus77@hotmail.it' || user?.id === DEVELOPER_UUID) {
-      console.log('🔧 GET VALID USER: Using developer fallback');
       return user;
     }
     
@@ -51,14 +46,14 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     return null;
   }, [user]);
 
-  // Initialize auth state - FIXED VERSION WITHOUT LOOPS
+  // Initialize auth state - STABLE VERSION WITHOUT LOOPS
   useEffect(() => {
     console.log("🔍 AUTH INIT: Initializing auth state");
     let mounted = true;
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
         if (!mounted) return;
         
         console.log('🔍 AUTH STATE CHANGE:', {
@@ -107,11 +102,14 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
           }
         }
         
+        if (!authInitialized) {
+          setAuthInitialized(true);
+        }
         setIsLoading(false);
       }
     );
     
-    // THEN check for existing session - NO MORE setSession CALLS
+    // THEN check for existing session - ONLY ONCE
     const initializeSession = async () => {
       if (!mounted) return;
       
@@ -161,6 +159,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         }
       }
       
+      setAuthInitialized(true);
       setIsLoading(false);
     };
 
@@ -172,7 +171,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       console.log("🔍 AUTH CLEANUP: Cleaning up subscription");
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Empty dependency array to run only once
 
   /**
    * Login function - Enhanced with immediate session sync
@@ -203,10 +202,11 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
           if (result.session && result.session.access_token && result.session.refresh_token) {
             console.log('✅ LOGIN: Developer login successful with session');
             
-            // Update local state immediately
-            setSession(result.session);
-            setUser(result.session.user);
-            setIsEmailVerified(true);
+            // FIXED: Use correct setSession format
+            await supabase.auth.setSession({
+              access_token: result.session.access_token,
+              refresh_token: result.session.refresh_token
+            });
             
             localStorage.setItem('developer_access', 'granted');
             localStorage.setItem('developer_user_email', email);
@@ -257,14 +257,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
 
       if (data.session && data.session.access_token && data.session.refresh_token) {
         console.log("✅ LOGIN: Standard login successful");
-        
-        // Update local state immediately
-        setSession(data.session);
-        setUser(data.session.user);
-        
-        // Update email verification status
-        const isDeveloper = data.session.user.email === 'wikus77@hotmail.it';
-        setIsEmailVerified(isDeveloper || !!data.session.user.email_confirmed_at);
+        // Session will be handled by onAuthStateChange
       }
 
       return { success: true, data };
