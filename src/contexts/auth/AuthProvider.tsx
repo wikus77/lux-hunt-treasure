@@ -1,67 +1,40 @@
+
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import AuthContext from './AuthContext';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/useAuth';
 import { AuthContextType } from './types';
 import { toast } from 'sonner';
 
+// DEVELOPER UUID CONSTANT
+const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // We get the base authentication functionality from our useAuth hook
   const auth = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 3;
 
-  // ✅ CONTROLLO PRIORITARIO: Developer access setup immediato
+  // IMMEDIATE developer setup
   useEffect(() => {
-    const setupDeveloperAccess = async () => {
+    const setupDeveloperAccess = () => {
       const developerEmail = 'wikus77@hotmail.it';
-      
-      // Check for Capacitor environment or localhost
       const isCapacitor = window.location.protocol === 'capacitor:';
       const isLocalhost = window.location.hostname === 'localhost';
       
       if (isCapacitor || isLocalhost) {
-        console.log('🔑 Setting up automatic developer access for:', developerEmail);
+        console.log('🔑 Auto-setting developer access for:', developerEmail);
         localStorage.setItem('developer_access', 'granted');
         localStorage.setItem('developer_user_email', developerEmail);
         localStorage.setItem('captcha_bypassed', 'true');
-        localStorage.setItem('auto_login_developer', 'true');
-        
-        // Try to establish session
-        try {
-          const response = await fetch('https://vkjrqirvdvjbemsfzxof.functions.supabase.co/login-no-captcha', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
-            },
-            body: JSON.stringify({
-              email: developerEmail,
-              redirect_to: 'capacitor://localhost/home'
-            })
-          });
-          
-          if (response.ok) {
-            const result = await response.json();
-            if (result.session) {
-              await supabase.auth.setSession(result.session);
-              console.log('✅ Developer session established automatically');
-            }
-          }
-        } catch (error) {
-          console.log('⚠️ Auto session setup failed, but developer access still granted');
-        }
       }
     };
 
     setupDeveloperAccess();
   }, []);
 
-  // ✅ Auto-redirect sviluppatore a /home se sulla landing
+  // Auto-redirect developer to /home
   useEffect(() => {
     const handleDeveloperAutoRedirect = () => {
       const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
@@ -73,230 +46,96 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Esegui immediatamente e poi dopo un breve delay
     handleDeveloperAutoRedirect();
-    const timer = setTimeout(handleDeveloperAutoRedirect, 100);
-    
-    return () => clearTimeout(timer);
   }, []);
-
-  // Funzione per creare automaticamente il profilo admin
-  const createAdminProfile = async (userId: string, userEmail: string) => {
-    console.log("⚠️ Tentativo di creazione profilo admin per:", userEmail);
-    
-    try {
-      // First try the direct approach
-      const { data: newProfile, error } = await supabase
-        .from("profiles")
-        .insert({
-          id: userId,
-          email: userEmail,
-          role: 'admin',
-          full_name: 'Admin User'
-        })
-        .select('role')
-        .single();
-        
-      if (error) {
-        console.error("❌ Errore nella creazione del profilo admin:", error);
-        
-        // If the direct approach fails, try using the RPC function
-        try {
-          // Call the edge function as a fallback
-          const result = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/create-admin-profile", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
-            },
-            body: JSON.stringify({
-              userId,
-              email: userEmail
-            })
-          });
-          
-          if (!result.ok) {
-            throw new Error("Failed to create admin profile via edge function");
-          }
-          
-          const data = await result.json();
-          console.log("✅ Profilo admin creato tramite funzione:", data);
-          setUserRole('admin');
-          return true;
-        } catch (edgeError) {
-          console.error("❌ Errore nella creazione del profilo tramite funzione:", edgeError);
-          return false;
-        }
-      }
-      
-      console.log("✅ Profilo admin creato con successo:", newProfile?.role);
-      setUserRole(newProfile?.role || 'admin');
-      return true;
-    } catch (err) {
-      console.error("❌ Exception durante la creazione del profilo admin:", err);
-      return false;
-    }
-  };
 
   // Fetch user role when auth state changes
   useEffect(() => {
     const fetchUserRole = async () => {
-      // ✅ CONTROLLO PRIORITARIO: Developer access da localStorage prima di tutto
+      // PRIORITY: Developer access check
       const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
       const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
       
-      if (hasDeveloperAccess || isDeveloperEmail) {
-        console.log("🔑 Developer access rilevato da localStorage - ACCESSO IMMEDIATO");
+      if (hasDeveloperAccess || isDeveloperEmail || auth.user?.email === 'wikus77@hotmail.it') {
+        console.log("🔑 Developer access - IMMEDIATE ADMIN ROLE");
         setUserRole('admin');
         setIsRoleLoading(false);
         setAuthInitialized(true);
         return;
       }
 
-      // Se non c'è utente autenticato, NON fare nulla - lascia che vedano la landing
       if (!auth.isAuthenticated || !auth.user) {
         setUserRole(null);
         setIsRoleLoading(false);
+        setAuthInitialized(true);
         return;
       }
 
       try {
         setIsRoleLoading(true);
-        console.log("🔍 Cerco profilo per user:", auth.user.id, auth.user.email);
+        console.log("🔍 Fetching role for user:", auth.user.id, auth.user.email);
         
-        // Prima prova con l'ID dell'utente
-        const { data: dataById, error: errorById } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
-          .select('role, id')
+          .select('role')
           .eq('id', auth.user.id)
-          .maybeSingle();
+          .single();
 
-        if (dataById && dataById.role) {
-          console.log("✅ Ruolo utente trovato tramite ID:", dataById.role);
-          setUserRole(dataById.role);
-          setIsRoleLoading(false);
-          setRetryCount(0);
-          return;
-        }
-        
-        if (errorById) {
-          console.error('❌ Error fetching user role by ID:', errorById);
+        if (error && error.code !== 'PGRST116') {
+          console.error("❌ Error fetching profile:", error);
+          throw error;
         }
 
-        // Se non trova tramite ID, prova con l'email
-        if (auth.user.email) {
-          const { data: dataByEmail, error: errorByEmail } = await supabase
-            .from('profiles')
-            .select('role, id')
-            .eq('email', auth.user.email)
-            .maybeSingle();
-
-          if (dataByEmail && dataByEmail.role) {
-            console.log("✅ Ruolo utente trovato tramite email:", dataByEmail.role);
-            setUserRole(dataByEmail.role);
-            setIsRoleLoading(false);
-            setRetryCount(0);
-            return;
-          }
-          
-          if (errorByEmail) {
-            console.error('❌ Error fetching user role by email:', errorByEmail);
-          }
-        }
-
-        // Se non trova né per ID né per email e l'utente è wikus77@hotmail.it, crea il profilo admin
-        if (auth.user.email === 'wikus77@hotmail.it') {
-          const success = await createAdminProfile(auth.user.id, auth.user.email);
-          if (success) {
-            setIsRoleLoading(false);
-            setRetryCount(0);
-            return;
-          }
-        }
-        
-        // Se siamo qui, non abbiamo trovato alcun profilo
-        // Incrementiamo il numero di tentativi e proviamo di nuovo se non abbiamo superato il limite
-        if (retryCount < maxRetries) {
-          console.log(`⚠️ Nessun profilo trovato, ritento (${retryCount + 1}/${maxRetries})...`);
-          setRetryCount(prev => prev + 1);
-          
-          // Ritentiamo dopo un breve ritardo
-          setTimeout(() => {
-            fetchUserRole();
-          }, 1000);
-          return;
-        }
-        
-        // Default fallback dopo tutti i tentativi
-        console.log("⚠️ Nessun profilo trovato dopo multipli tentativi");
-        
-        // If user is the admin email but no profile exists, force create one as a last resort
-        if (auth.user.email === 'wikus77@hotmail.it') {
-          setUserRole('admin');
+        if (profile?.role) {
+          console.log("✅ Role found:", profile.role);
+          setUserRole(profile.role);
         } else {
-          setUserRole(null);
+          console.log("⚠️ No profile found, setting default user role");
+          setUserRole('user');
         }
       } catch (error) {
-        console.error('❌ Exception fetching user role:', error);
-        
-        // If user is the admin email, force the role as admin even if there's an error
-        if (auth.user.email === 'wikus77@hotmail.it') {
-          setUserRole('admin');
-        } else {
-          setUserRole(null);
-        }
+        console.error("❌ Error in fetchUserRole:", error);
+        setUserRole('user');
       } finally {
-        if (retryCount >= maxRetries) {
-          setIsRoleLoading(false);
-        }
+        setIsRoleLoading(false);
+        setAuthInitialized(true);
       }
     };
 
     fetchUserRole();
+  }, [auth.isAuthenticated, auth.user]);
+
+  const hasRole = (role: string): boolean => {
+    // Developer always has all roles
+    const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
+    const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
     
-    // Mark auth as initialized after first load
-    if (!authInitialized && !auth.isLoading) {
-      setAuthInitialized(true);
+    if (hasDeveloperAccess || isDeveloperEmail || auth.user?.email === 'wikus77@hotmail.it') {
+      return true;
     }
     
-  }, [auth.isAuthenticated, auth.user, auth.isLoading]);
-
-  // Show loading state on first initialization
-  useEffect(() => {
-    if (auth.isLoading && !authInitialized) {
-      console.log('🔄 Auth is initializing...');
-    } else if (authInitialized) {
-      console.log('✅ Auth initialization complete');
-    }
-  }, [auth.isLoading, authInitialized]);
-
-  // Create the complete context value by combining auth hook values with role information
-  const authContextValue: AuthContextType = {
-    ...auth,
-    userRole,
-    hasRole: (role: string) => {
-      // ✅ CONTROLLO PRIORITARIO: Developer access
-      const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-      const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-      
-      if ((hasDeveloperAccess || isDeveloperEmail) && role === 'admin') {
-        return true;
-      }
-
-      // Special case for wikus77@hotmail.it - always treated as admin
-      if (auth.user?.email === 'wikus77@hotmail.it') {
-        return role === 'admin';
-      }
-      return userRole === role;
-    },
-    isRoleLoading
+    return userRole === role || userRole === 'admin';
   };
 
+  const contextValue: AuthContextType = {
+    ...auth,
+    userRole,
+    hasRole,
+    isRoleLoading,
+    user: auth.user, // Ensure user is properly exposed
+  };
+
+  if (!authInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <div className="text-white">Caricamento...</div>
+      </div>
+    );
+  }
+
   return (
-    <AuthContext.Provider value={authContextValue}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 };
-
-export default AuthProvider;
