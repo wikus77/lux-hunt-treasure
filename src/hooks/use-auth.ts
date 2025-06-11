@@ -14,6 +14,7 @@ export const useAuth = () => {
       setIsLoading(true);
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('🔍 INITIAL SESSION CHECK:', session?.user?.email || 'No session');
 
         if (session) {
           setSession(session);
@@ -33,12 +34,21 @@ export const useAuth = () => {
 
     getSession();
 
-    supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔄 Auth state change:', event, session?.user?.email);
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Auth state change:', event, session?.user?.email || 'No session');
+      
+      // Don't update loading state immediately - wait for session to be processed
       if (session) {
         setSession(session);
         setUser(session.user);
         setIsEmailVerified(session.user?.email_confirmed_at ? true : false);
+        
+        // Log session persistence check
+        setTimeout(async () => {
+          const { data: { session: persistedSession } } = await supabase.auth.getSession();
+          console.log('✅ SESSION PERSISTED:', !!persistedSession, persistedSession?.user?.email);
+          console.log('📦 LOCAL STORAGE TOKEN:', localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token') ? 'Present' : 'Missing');
+        }, 100);
       } else {
         setSession(null);
         setUser(null);
@@ -88,20 +98,7 @@ export const useAuth = () => {
           console.log('✅ Bypass login successful');
           console.log('📊 Bypass result:', bypassResult);
           
-          // MODALITÀ 1: Se abbiamo magic link, reindirizza immediatamente
-          if (bypassResult.magicLink) {
-            console.log('🔗 Redirecting to magic link:', bypassResult.redirect_url || '/home');
-            // Force redirect to the correct URL, not localhost
-            const redirectUrl = bypassResult.redirect_url || `${window.location.origin}/home`;
-            window.location.href = redirectUrl;
-            return { 
-              success: true, 
-              session: null,
-              error: null 
-            };
-          }
-          
-          // MODALITÀ 2: Se abbiamo dati di sessione, provaci
+          // CRITICAL FIX: If we have session data, set it properly with await
           if (bypassResult.session) {
             console.log('🔄 Setting session from bypass data...');
             try {
@@ -112,23 +109,54 @@ export const useAuth = () => {
               
               if (setSessionError) {
                 console.error('❌ Error setting session:', setSessionError);
-                // Fallback: redirect to magic link if available
+                // Fallback: use magic link redirect
                 if (bypassResult.magicLink) {
-                  const redirectUrl = bypassResult.redirect_url || `${window.location.origin}/home`;
-                  window.location.href = redirectUrl;
+                  console.log('🔗 Fallback to magic link redirect');
+                  window.location.href = bypassResult.redirect_url || `${window.location.origin}/home`;
                   return { success: true, session: null };
                 }
               } else {
-                console.log('✅ Session set successfully');
-                return { success: true, session: bypassResult.session };
+                console.log('✅ Session set successfully - waiting for persistence...');
+                
+                // CRITICAL: Wait for session to be persisted before returning
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Verify session was persisted
+                const { data: { session: verifySession } } = await supabase.auth.getSession();
+                console.log('🔍 VERIFICATION SESSION:', verifySession?.user?.email || 'Missing');
+                
+                if (verifySession) {
+                  console.log('✅ Session verified and persisted');
+                  return { success: true, session: verifySession };
+                } else {
+                  console.log('⚠️ Session not persisted, using magic link fallback');
+                  if (bypassResult.magicLink) {
+                    window.location.href = bypassResult.redirect_url || `${window.location.origin}/home`;
+                  }
+                  return { success: true, session: null };
+                }
               }
             } catch (sessionError) {
               console.error('💥 Session setting exception:', sessionError);
-              // Ultimate fallback: redirect anyway
-              const redirectUrl = bypassResult.redirect_url || `${window.location.origin}/home`;
-              window.location.href = redirectUrl;
+              // Ultimate fallback: redirect to magic link
+              if (bypassResult.magicLink) {
+                const redirectUrl = bypassResult.redirect_url || `${window.location.origin}/home`;
+                window.location.href = redirectUrl;
+              }
               return { success: true, session: null };
             }
+          }
+          
+          // MODALITÀ MAGIC LINK: Se abbiamo magic link, reindirizza immediatamente
+          if (bypassResult.magicLink) {
+            console.log('🔗 Redirecting to magic link:', bypassResult.redirect_url || '/home');
+            const redirectUrl = bypassResult.redirect_url || `${window.location.origin}/home`;
+            window.location.href = redirectUrl;
+            return { 
+              success: true, 
+              session: null,
+              error: null 
+            };
           }
         }
       }
@@ -160,20 +188,61 @@ export const useAuth = () => {
         return { success: false, error };
       }
 
-      if (data?.success && data?.magicLink) {
-        console.log('🔗 FORCE ACCESS SUCCESS - redirecting immediately');
-        const redirectUrl = data.redirect_url || `${window.location.origin}/home`;
+      if (data?.success) {
+        console.log('🔗 FORCE ACCESS SUCCESS');
         
-        // Immediate redirect
-        window.location.href = redirectUrl;
+        // CRITICAL FIX: Try session first, then magic link
+        if (data.session) {
+          console.log('🔄 Attempting direct session setup...');
+          try {
+            const { error: setSessionError } = await supabase.auth.setSession({
+              access_token: data.session.access_token,
+              refresh_token: data.session.refresh_token
+            });
+            
+            if (!setSessionError) {
+              console.log('✅ Direct session setup successful - waiting for persistence...');
+              
+              // CRITICAL: Wait for session persistence
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              // Verify session is persisted
+              const { data: { session: verifySession } } = await supabase.auth.getSession();
+              console.log('🔍 SESSION VERIFICATION:', verifySession?.user?.email || 'Missing');
+              console.log('📦 LOCAL STORAGE CHECK:', localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token') ? 'Present' : 'Missing');
+              
+              if (verifySession) {
+                // Success - redirect to /home without using window.location
+                console.log('✅ Session verified - programmatic redirect to /home');
+                return { 
+                  success: true, 
+                  redirectUrl: '/home'
+                };
+              }
+            } else {
+              console.log('⚠️ Session setup failed, using magic link fallback');
+            }
+          } catch (sessionError) {
+            console.log('⚠️ Session setup exception, using magic link fallback');
+          }
+        }
         
-        return { 
-          success: true, 
-          redirectUrl: redirectUrl
-        };
+        // Magic link fallback
+        if (data.magicLink) {
+          console.log('🔗 Using magic link for immediate access');
+          const redirectUrl = data.redirect_url || `${window.location.origin}/home`;
+          
+          // Use window.location for magic link as it's external
+          window.location.href = redirectUrl;
+          
+          return { 
+            success: true, 
+            redirectUrl: redirectUrl
+          };
+        }
       }
 
-      return { success: false, error: 'No magic link received' };
+      return { success: false, error: 'No access method available' };
       
     } catch (error: any) {
       console.error('💥 Force access exception:', error);

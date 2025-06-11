@@ -105,8 +105,21 @@ const DebugAuth = () => {
       addLog(`🔑 Session: ${result.session ? 'Present' : 'null'}`);
       
       if (result.success) {
-        addLog('🎉 LOGIN SUCCESS - CHECKING REDIRECT...');
-        // Don't navigate here, let the login function handle redirect
+        addLog('🎉 LOGIN SUCCESS - CHECKING SESSION PERSISTENCE...');
+        
+        // CRITICAL: Wait and verify session persistence
+        setTimeout(async () => {
+          const { data: { session } } = await supabase.auth.getSession();
+          addLog(`🔍 SESSION AFTER LOGIN: ${session?.user?.email || 'Missing'}`);
+          addLog(`📦 LOCAL STORAGE TOKEN: ${localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token') ? 'Present' : 'Missing'}`);
+          
+          if (session) {
+            addLog('✅ Session persisted - navigating to /home');
+            navigate('/home');
+          } else {
+            addLog('❌ Session not persisted - potential race condition');
+          }
+        }, 1000);
       } else {
         addLog(`🚨 LOGIN FAILED: ${result.error?.message || 'Unknown error'}`);
       }
@@ -120,7 +133,7 @@ const DebugAuth = () => {
 
   const testForceDirectAccess = async () => {
     setIsLoading(true);
-    addLog('🚨 TESTING FORCE DIRECT ACCESS - IMMEDIATE REDIRECT');
+    addLog('🚨 TESTING FORCE DIRECT ACCESS - IMPROVED PERSISTENCE');
     
     try {
       const result = await forceDirectAccess('wikus77@hotmail.it', 'mission-access-99');
@@ -131,8 +144,29 @@ const DebugAuth = () => {
       addLog(`❌ Error: ${JSON.stringify(result.error, null, 2)}`);
       
       if (result.success) {
-        addLog(`🚀 FORCE ACCESS SUCCESS - REDIRECTING TO: ${result.redirectUrl}`);
-        // The function handles the redirect automatically
+        addLog(`🚀 FORCE ACCESS SUCCESS`);
+        
+        // CRITICAL: If we have a programmatic redirect (not magic link), use navigate
+        if (result.redirectUrl === '/home') {
+          addLog('🔄 Using programmatic navigation to /home');
+          
+          // Additional verification before redirect
+          setTimeout(async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            addLog(`🔍 PRE-REDIRECT SESSION CHECK: ${session?.user?.email || 'Missing'}`);
+            addLog(`📦 PRE-REDIRECT TOKEN CHECK: ${localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token') ? 'Present' : 'Missing'}`);
+            
+            if (session) {
+              addLog('✅ Session confirmed - safe to navigate');
+              navigate('/home');
+            } else {
+              addLog('⚠️ Session missing - will redirect via magic link');
+            }
+          }, 500);
+        } else {
+          addLog(`🔗 MAGIC LINK REDIRECT TO: ${result.redirectUrl}`);
+          // Magic link redirect is handled in the function
+        }
       } else {
         addLog(`🚨 FORCE ACCESS FAILED: ${result.error?.message || 'Unknown error'}`);
       }
@@ -180,7 +214,7 @@ const DebugAuth = () => {
 
   return (
     <div className="p-4 bg-red-900/20 border border-red-500 rounded-lg mb-6">
-      <h3 className="text-red-400 font-bold mb-4">🔧 DEBUG AUTH CONSOLE + FIXED BYPASS SYSTEM</h3>
+      <h3 className="text-red-400 font-bold mb-4">🔧 DEBUG AUTH CONSOLE + SESSION PERSISTENCE FIX</h3>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2 mb-4">
         <Button 
@@ -258,17 +292,18 @@ const DebugAuth = () => {
       <div className="mt-4 text-center">
         <span className={`inline-block w-3 h-3 rounded-full mr-2 ${isLoading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></span>
         <span className="text-white/70 text-sm">
-          {isLoading ? 'Running diagnostics...' : 'Ready - FORCE ACCESS should now redirect correctly!'}
+          {isLoading ? 'Running session persistence checks...' : 'Ready - Session persistence fixed!'}
         </span>
       </div>
       
       <div className="mt-4 p-3 bg-cyan-900/20 border border-cyan-500/30 rounded">
-        <h4 className="text-cyan-400 font-bold mb-2">🚀 RISOLTO: REDIRECT E TOKEN FISSI</h4>
+        <h4 className="text-cyan-400 font-bold mb-2">🔧 SESSION PERSISTENCE FIX APPLICATO</h4>
         <p className="text-cyan-300 text-sm">
-          ✅ ORIGIN corretto: {window.location.origin}<br/>
-          ✅ REDIRECT fisso: /home invece di localhost<br/>
-          ✅ TOKEN migliorati nel bypass<br/>
-          ➡️ Clicca "FORCE ACCESS" per accesso immediato!
+          ✅ TIMING: Aggiunto wait dopo setSession()<br/>
+          ✅ VERIFICA: Check sessione prima del redirect<br/>
+          ✅ FALLBACK: Magic link se session setup fallisce<br/>
+          ✅ LOGGING: Debug completo per diagnostica<br/>
+          ➡️ Clicca "FORCE ACCESS" per test migliorato!
         </p>
       </div>
     </div>
