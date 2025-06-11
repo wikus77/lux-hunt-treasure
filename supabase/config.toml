@@ -1,5 +1,9 @@
 
 project_id = "vkjrqirvdvjbemsfzxof"
 
+[auth]
+enable_signup = true
+enable_captcha = false
+
 [functions.login-no-captcha]
 verify_jwt = false

@@ -7,6 +7,7 @@ import RegistrationForm from "@/components/auth/registration-form";
 import RegisterHeader from "@/components/auth/register-header";
 import { Button } from "@/components/ui/button";
 import { useQueryParams } from "@/hooks/useQueryParams";
+import DebugAuth from "@/components/auth/debug-auth";
 
 const Register = () => {
   const { preference } = useQueryParams<{ preference?: 'uomo' | 'donna' }>();
@@ -44,6 +45,11 @@ const Register = () => {
         {/* Header with logo */}
         <RegisterHeader />
         
+        {/* DEBUG COMPONENT - REMOVE AFTER FIXING */}
+        <div className="mb-6">
+          <DebugAuth />
+        </div>
+        
         {/* Mission preference indicator */}
         {missionPreference && (
           <motion.div 
@@ -68,7 +74,7 @@ const Register = () => {
           </motion.div>
         )}
 
-        {/* Registration form - NO CAPTCHA */}
+        {/* Registration form */}
         <div className="glass-card p-6 backdrop-blur-md border border-gray-800 rounded-xl">
           <RegistrationForm missionPreference={missionPreference} />
         </div>
