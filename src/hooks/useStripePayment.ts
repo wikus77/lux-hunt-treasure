@@ -4,6 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 
+// CRITICAL FIX: Dichiarazione globale per ApplePaySession
+declare var ApplePaySession: any;
+
 export const useStripePayment = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +20,7 @@ export const useStripePayment = () => {
       // Mock detection for development - replace with real Stripe logic
       const availability = {
         card: true,
-        apple_pay: window.ApplePaySession && ApplePaySession.canMakePayments(),
+        apple_pay: typeof ApplePaySession !== 'undefined' && ApplePaySession.canMakePayments(),
         google_pay: window.google && window.google.payments,
       };
       

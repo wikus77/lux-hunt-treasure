@@ -14,7 +14,7 @@ export interface Notification {
   date: string;
 }
 
-// CRITICAL FIX: Export NOTIFICATION_CATEGORIES
+// CRITICAL FIX: Export NOTIFICATION_CATEGORIES con GENERIC aggiunto
 export const NOTIFICATION_CATEGORIES = {
   BUZZ: 'buzz',
   MAP_BUZZ: 'buzz_map',
@@ -23,7 +23,8 @@ export const NOTIFICATION_CATEGORIES = {
   MISSION: 'mission',
   LEADERBOARD: 'leaderboard_update',
   WEEKLY: 'weekly_summary',
-  GENERAL: 'general'
+  GENERAL: 'general',
+  GENERIC: 'generic' // ✅ AGGIUNTO per risolvere TS2339
 };
 
 export const useNotifications = () => {

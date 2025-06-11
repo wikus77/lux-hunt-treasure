@@ -16,6 +16,8 @@ const PaymentSilver = () => {
   const [showExplosion, setShowExplosion] = useState(false);
   const [fadeOutExplosion, setFadeOutExplosion] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // CRITICAL FIX: Stato corretto per availability
   const [paymentMethodsAvailable, setPaymentMethodsAvailable] = useState({
     applePayAvailable: false,
     googlePayAvailable: false
@@ -28,22 +30,26 @@ const PaymentSilver = () => {
   } = useStripePayment();
 
   useEffect(() => {
-    // Check available payment methods
-    const availableMethods = detectPaymentMethodAvailability();
-    setPaymentMethodsAvailable(availableMethods);
-    
-    // If neither Apple Pay nor Google Pay is available, default to card
-    if (!availableMethods.applePayAvailable && !availableMethods.googlePayAvailable) {
-      setPaymentMethod('card');
-    } 
-    // If Apple Pay is available on iOS devices, default to it
-    else if (availableMethods.applePayAvailable && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
-      setPaymentMethod('apple');
-    } 
-    // If Google Pay is available on Android devices, default to it
-    else if (availableMethods.googlePayAvailable && /Android/.test(navigator.userAgent)) {
-      setPaymentMethod('google');
-    }
+    // CRITICAL FIX: Gestione corretta della Promise
+    detectPaymentMethodAvailability().then((availability) => {
+      setPaymentMethodsAvailable({
+        applePayAvailable: !!availability.apple_pay,
+        googlePayAvailable: !!availability.google_pay
+      });
+      
+      // If neither Apple Pay nor Google Pay is available, default to card
+      if (!availability.apple_pay && !availability.google_pay) {
+        setPaymentMethod('card');
+      } 
+      // If Apple Pay is available on iOS devices, default to it
+      else if (availability.apple_pay && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+        setPaymentMethod('apple');
+      } 
+      // If Google Pay is available on Android devices, default to it
+      else if (availability.google_pay && /Android/.test(navigator.userAgent)) {
+        setPaymentMethod('google');
+      }
+    });
   }, [detectPaymentMethodAvailability]);
 
   const handlePaymentCompleted = () => {
