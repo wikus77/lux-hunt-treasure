@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 import LoadingManager from "./index/LoadingManager";
@@ -32,18 +33,14 @@ const Index = () => {
       const isCapacitorApp = !!(window as any).Capacitor;
       const userAgent = navigator.userAgent;
       const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
       
-      console.log('Index access check:', { isMobile, hasStoredAccess, isCapacitorApp });
+      console.log('Index access check:', { isMobile, isCapacitorApp });
       
-      if (isMobile && !hasStoredAccess) {
+      if (isMobile) {
         // Mobile users without access need to login
         setShowDeveloperAccess(true);
       } else if (!isMobile) {
         // Web users always see landing page
-        setShowDeveloperAccess(false);
-      } else {
-        // Mobile users with access see landing page
         setShowDeveloperAccess(false);
       }
     };
@@ -167,15 +164,9 @@ const Index = () => {
     window.location.reload();
   }, []);
 
-  const handleAccessGranted = useCallback(() => {
-    setShowDeveloperAccess(false);
-    // Redirect to home after access granted
-    window.location.href = '/home';
-  }, []);
-
   // Show developer access screen for mobile users without access
   if (showDeveloperAccess) {
-    return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
+    return <DeveloperAccess />;
   }
 
   console.log("Index render state:", { introCompleted, pageLoaded, renderContent });

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CommandCenterHome from "@/components/command-center/CommandCenterHome";
@@ -47,20 +48,12 @@ const Home = () => {
       
       const userAgent = navigator.userAgent;
       const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-      const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-      const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
       
-      console.log('Home access check:', { isMobileDevice, hasDeveloperAccess, isCapacitorApp, isDeveloperEmail });
+      console.log('Home access check:', { isMobileDevice, isCapacitorApp });
       
-      // ✅ CONTROLLO PRIORITARIO: ACCESSO IMMEDIATO per sviluppatore
-      if (hasDeveloperAccess || isDeveloperEmail) {
-        console.log('🔑 Developer access - ACCESSO IMMEDIATO a Home');
-        setHasAccess(true);
-        return;
-      }
-      
-      if (isMobileDevice && hasDeveloperAccess) {
-        setHasAccess(true);
+      if (isMobileDevice) {
+        // Mobile users need to login properly now
+        setHasAccess(false);
       } else if (!isMobileDevice) {
         // Web users get redirected to landing page
         window.location.href = '/';
@@ -95,14 +88,6 @@ const Home = () => {
     };
   }, [endActivity, currentMission]);
 
-  const handleAccessGranted = () => {
-    setHasAccess(true);
-    // Store developer email for auto-access
-    localStorage.setItem('developer_user_email', 'wikus77@hotmail.it');
-    localStorage.setItem('developer_access', 'granted');
-    localStorage.setItem('captcha_bypassed', 'true');
-  };
-
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoaded(true);
@@ -136,21 +121,9 @@ const Home = () => {
     return {};
   };
 
-  // ✅ CONTROLLO PRIORITARIO: ACCESSO IMMEDIATO per sviluppatore
-  const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-  const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
-  
-  if (hasDeveloperAccess || isDeveloperEmail) {
-    console.log('🔑 Developer access detected - ACCESSO IMMEDIATO a Home');
-    // Force access for developer
-    if (!hasAccess) {
-      setHasAccess(true);
-    }
-  }
-
   // Show developer access screen for mobile users without access
-  if (isMobile && !hasAccess && !hasDeveloperAccess && !isDeveloperEmail) {
-    return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
+  if (isMobile && !hasAccess) {
+    return <DeveloperAccess />;
   }
 
   if (error) {
