@@ -9,6 +9,30 @@ export const useStripePayment = () => {
   const [error, setError] = useState<string | null>(null);
   const { getCurrentUser } = useAuthContext();
 
+  // CRITICAL FIX: Add missing detectPaymentMethodAvailability function
+  const detectPaymentMethodAvailability = async () => {
+    try {
+      console.log('🔍 Detecting payment method availability...');
+      
+      // Mock detection for development - replace with real Stripe logic
+      const availability = {
+        card: true,
+        apple_pay: window.ApplePaySession && ApplePaySession.canMakePayments(),
+        google_pay: window.google && window.google.payments,
+      };
+      
+      console.log('💳 Payment methods availability:', availability);
+      return availability;
+    } catch (error) {
+      console.error('❌ Error detecting payment methods:', error);
+      return {
+        card: true,
+        apple_pay: false,
+        google_pay: false,
+      };
+    }
+  };
+
   // CRITICAL FIX: Enhanced BUZZ purchase con FORZATURA Stripe TOTALE
   const processBuzzPurchase = async (
     isMapBuzz: boolean = false, 
@@ -217,6 +241,7 @@ export const useStripePayment = () => {
   return {
     loading,
     error,
+    detectPaymentMethodAvailability, // CRITICAL FIX: Export missing function
     processBuzzPurchase,
     processSubscription,
     clearError

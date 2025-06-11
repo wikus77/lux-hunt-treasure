@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -14,6 +13,18 @@ export interface Notification {
   created_at: string;
   date: string;
 }
+
+// CRITICAL FIX: Export NOTIFICATION_CATEGORIES
+export const NOTIFICATION_CATEGORIES = {
+  BUZZ: 'buzz',
+  MAP_BUZZ: 'buzz_map',
+  REWARD: 'reward',
+  SYSTEM: 'system',
+  MISSION: 'mission',
+  LEADERBOARD: 'leaderboard_update',
+  WEEKLY: 'weekly_summary',
+  GENERAL: 'general'
+};
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
