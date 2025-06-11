@@ -16,6 +16,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireEmailVerification = true,
   children
 }) => {
+  // ✅ FIXED: Always call all hooks at the top level
   const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser } = useAuthContext();
   const location = useLocation();
   
@@ -29,6 +30,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     });
   }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser]);
   
+  // Always call getCurrentUser
+  const currentUser = getCurrentUser();
+  const isDeveloperEmail = currentUser?.email === 'wikus77@hotmail.it';
+  
+  // Show loading state
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-black">
@@ -37,29 +43,25 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
   
-  // If user is not authenticated, redirect to login
+  // Check authentication
   if (!isAuthenticated) {
     console.log("User not authenticated, redirecting to:", redirectTo);
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
   
-  // DEVELOPER EMAIL ALWAYS HAS ACCESS - NO VERIFICATION REQUIRED
-  const currentUser = getCurrentUser();
-  const isDeveloperEmail = currentUser?.email === 'wikus77@hotmail.it';
-  
+  // Check email verification for non-developer users
   if (requireEmailVerification && !isEmailVerified && !isDeveloperEmail) {
     console.log("Email not verified, redirecting to verification page");
     return <Navigate to="/login?verification=pending" replace />;
   }
   
-  // User is authenticated and email is verified (or is developer), render the protected route
+  // Render protected content
   return children ? <>{children}</> : <Outlet />;
 };
 
-// Export a component that can be used directly in pages to show a verification alert
 export const EmailVerificationGuard: React.FC<{children: React.ReactNode}> = ({ children }) => {
+  // ✅ Always call hooks at top level
   const { isEmailVerified, getCurrentUser } = useAuthContext();
-  
   const currentUser = getCurrentUser();
   const isDeveloperEmail = currentUser?.email === 'wikus77@hotmail.it';
   

@@ -10,7 +10,7 @@ import DeveloperAccess from "@/components/auth/DeveloperAccess";
 const Index = () => {
   console.log("Index component rendering - PUBLIC LANDING PAGE");
   
-  // State management
+  // ✅ FIXED: Always declare all hooks at the top level
   const [pageLoaded, setPageLoaded] = useState(false);
   const [renderContent, setRenderContent] = useState(false);
   const [introCompleted, setIntroCompleted] = useState(false);
@@ -19,40 +19,7 @@ const Index = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
   
-  // Check for developer access on mount
-  useEffect(() => {
-    const checkAccess = () => {
-      // Check for URL parameter to reset access
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('resetDevAccess') === 'true') {
-        localStorage.removeItem('developer_access');
-        console.log('Developer access reset via URL parameter');
-      }
-      
-      // Enhanced mobile detection including Capacitor
-      const isCapacitorApp = !!(window as any).Capacitor;
-      const userAgent = navigator.userAgent;
-      const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
-      
-      console.log('Index access check:', { isMobile, hasStoredAccess, isCapacitorApp });
-      
-      if (isMobile && !hasStoredAccess) {
-        // Mobile users without access need to login
-        setShowDeveloperAccess(true);
-      } else if (!isMobile) {
-        // Web users always see landing page
-        setShowDeveloperAccess(false);
-      } else {
-        // Mobile users with access see landing page
-        setShowDeveloperAccess(false);
-      }
-    };
-    
-    checkAccess();
-  }, []);
-  
-  // Get event handlers
+  // ✅ Always call useEventHandlers hook
   const {
     showAgeVerification,
     showInviteFriend,
@@ -62,6 +29,32 @@ const Index = () => {
     closeAgeVerification,
     closeInviteFriend
   } = useEventHandlers(countdownCompleted);
+
+  // Check for developer access on mount
+  useEffect(() => {
+    const checkAccess = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('resetDevAccess') === 'true') {
+        localStorage.removeItem('developer_access');
+        console.log('Developer access reset via URL parameter');
+      }
+      
+      const isCapacitorApp = !!(window as any).Capacitor;
+      const userAgent = navigator.userAgent;
+      const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
+      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
+      
+      console.log('Index access check:', { isMobile, hasStoredAccess, isCapacitorApp });
+      
+      if (isMobile && !hasStoredAccess) {
+        setShowDeveloperAccess(true);
+      } else {
+        setShowDeveloperAccess(false);
+      }
+    };
+    
+    checkAccess();
+  }, []);
   
   // Recovery automatico in caso di problemi
   useEffect(() => {
@@ -170,11 +163,10 @@ const Index = () => {
 
   const handleAccessGranted = useCallback(() => {
     setShowDeveloperAccess(false);
-    // Redirect to home after access granted
     window.location.href = '/home';
   }, []);
 
-  // Show developer access screen for mobile users without access
+  // ✅ FIXED: Conditional rendering after all hooks are called
   if (showDeveloperAccess) {
     return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
   }
