@@ -16,7 +16,9 @@ serve(async (req) => {
   try {
     const { email, password } = await req.json();
     
-    // BYPASS CAPTCHA TOTALE per email sviluppatore
+    console.log("🔐 Login attempt for:", email);
+    
+    // FORCE BYPASS CAPTCHA for developer email
     if (email === "wikus77@hotmail.it") {
       console.log("🔓 DEVELOPER LOGIN - BYPASSING ALL CAPTCHA VALIDATION");
       
@@ -25,14 +27,14 @@ serve(async (req) => {
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
       );
 
-      // Login diretto senza CAPTCHA
+      // Direct login without any CAPTCHA validation
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error("Login failed:", error);
+        console.error("❌ Login failed:", error);
         return new Response(
           JSON.stringify({ error: error.message }), 
           { 
@@ -45,13 +47,15 @@ serve(async (req) => {
       console.log("✅ Developer login successful");
       return new Response(JSON.stringify({
         message: "Developer login successful",
-        session: data.session
+        session: data.session,
+        user: data.user
       }), { 
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
+    // For non-developer emails, return unauthorized
     return new Response(
       JSON.stringify({ error: "Only developer access allowed here." }),
       { 

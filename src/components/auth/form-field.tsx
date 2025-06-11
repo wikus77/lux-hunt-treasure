@@ -1,7 +1,7 @@
 
 import { ChangeEvent } from 'react';
 import { Label } from "@/components/ui/label";
-import StyledInput from "@/components/ui/styled-input";
+import { Input } from "@/components/ui/input";
 
 interface FormFieldProps {
   id: string;
@@ -33,18 +33,27 @@ const FormField = ({
   return (
     <div className="space-y-2">
       <Label htmlFor={id} className="text-white">{label}</Label>
-      <StyledInput
-        id={id}
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        className="bg-black/50 border-white/10"
-        icon={icon}
-        required={required}
-        disabled={disabled}
-        autoComplete={autoComplete}
-      />
+      <div className="relative">
+        {icon && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">
+            {icon}
+          </div>
+        )}
+        <Input
+          id={id}
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          className={`bg-black/50 border-white/10 text-white ${icon ? 'pl-10' : 'pl-3'}`}
+          required={required}
+          disabled={disabled}
+          autoComplete={autoComplete}
+          autoCorrect="off"
+          spellCheck={false}
+          data-form-type="other"
+        />
+      </div>
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   );

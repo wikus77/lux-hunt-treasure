@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 import FormField from './form-field';
 import { Mail, Lock } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LoginFormProps {
   verificationStatus?: string | null;
@@ -33,13 +34,40 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
     try {
       console.log('🔐 Starting login process for:', email);
       
+      // Use bypass edge function for developer email
+      if (email === 'wikus77@hotmail.it') {
+        console.log('🔓 DEVELOPER LOGIN - Using bypass edge function');
+        
+        const { data, error } = await supabase.functions.invoke('login-no-captcha', {
+          body: { email, password }
+        });
+
+        if (error) {
+          console.error('❌ Edge function error:', error);
+          toast.error('Errore di login', {
+            description: error.message || 'Errore nella funzione di bypass'
+          });
+          return;
+        }
+
+        if (data?.session) {
+          console.log('✅ Developer login successful via edge function');
+          toast.success('Login effettuato con successo');
+          
+          // Force immediate redirect
+          navigate('/home', { replace: true });
+          return;
+        }
+      }
+      
+      // Regular login for other users
       const result = await login(email, password);
       
       if (result?.success) {
         console.log('✅ Login successful - IMMEDIATE REDIRECT TO HOME');
         toast.success('Login effettuato con successo');
         
-        // REDIRECT FORZATO IMMEDIATO ALLA HOME
+        // FORCE IMMEDIATE REDIRECT
         navigate('/home', { replace: true });
       } else {
         console.error('❌ Login failed:', result?.error);
@@ -88,7 +116,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
       {isDeveloperEmail && (
         <div className="mt-4 p-3 bg-green-900/20 border border-green-500/30 rounded-md">
           <p className="text-sm text-green-400">
-            🔑 Accesso Sviluppatore: Login diretto senza CAPTCHA
+            🔑 Accesso Sviluppatore: Login diretto senza CAPTCHA via Edge Function
           </p>
         </div>
       )}

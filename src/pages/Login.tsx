@@ -27,9 +27,9 @@ const Login = () => {
       });
     }
 
-    // REDIRECT FORZATO IMMEDIATO se già autenticato
+    // FORCE IMMEDIATE REDIRECT if already authenticated
     if (!authLoading && isAuthenticated) {
-      console.log('✅ User authenticated - FORCING IMMEDIATE REDIRECT TO HOME');
+      console.log('✅ User already authenticated - FORCING IMMEDIATE REDIRECT TO HOME');
       navigate('/home', { replace: true });
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);
