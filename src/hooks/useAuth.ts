@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -19,14 +20,14 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
 
   // Enhanced user validation with session check
   const getValidUser = useCallback(async () => {
-    console.log('🔍 LIVELLO 1 – USER VALIDATION: Checking current user validity');
+    console.log('🔍 GET VALID USER: Starting validation');
     
     // ✅ CONTROLLO PRIORITARIO: Developer access
     const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
     const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
     
     if (hasDeveloperAccess || isDeveloperEmail) {
-      console.log("✅ LIVELLO 1 – GET VALID USER: Developer access - returning developer user");
+      console.log("✅ GET VALID USER: Developer access - returning developer user");
       return {
         id: DEVELOPER_UUID,
         email: 'wikus77@hotmail.it',
@@ -36,50 +37,31 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     
     // First check current user state
     if (user) {
-      console.log('✅ LIVELLO 1 SUCCESS: User found in state:', user.id);
-      
-      // Verify session is still valid
-      const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-      if (currentSession?.user) {
-        console.log('✅ LIVELLO 1 SUCCESS: Session validated:', currentSession.user.id);
-        
-        // Force session sync if different
-        if (currentSession.access_token !== session?.access_token) {
-          console.log('🔁 LIVELLO 1: Force session sync');
-          if (currentSession.access_token && currentSession.refresh_token) {
-            await supabase.auth.setSession({
-              access_token: currentSession.access_token,
-              refresh_token: currentSession.refresh_token,
-            });
-            setSession(currentSession);
-            setUser(currentSession.user);
-          }
-        }
-        
-        return currentSession.user;
-      } else {
-        console.log('⚠️ LIVELLO 1 WARNING: User in state but no valid session');
-      }
+      console.log('✅ GET VALID USER: User found in state:', user.id);
+      return user;
     }
     
     // Developer fallback
     if (user?.email === 'wikus77@hotmail.it' || user?.id === DEVELOPER_UUID) {
-      console.log('🔧 LIVELLO 1 DEVELOPER: Using developer fallback');
+      console.log('🔧 GET VALID USER: Using developer fallback');
       return user;
     }
     
-    console.log('❌ LIVELLO 1 ERROR: No valid user found');
+    console.log('❌ GET VALID USER: No valid user found');
     return null;
-  }, [user, session]);
+  }, [user]);
 
-  // Initialize auth state
+  // Initialize auth state - FIXED VERSION WITHOUT LOOPS
   useEffect(() => {
-    console.log("🔍 LIVELLO 1 – SESSIONE: Initializing auth state");
+    console.log("🔍 AUTH INIT: Initializing auth state");
+    let mounted = true;
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log('🔍 LIVELLO 1 – AUTH STATE CHANGE:', {
+        if (!mounted) return;
+        
+        console.log('🔍 AUTH STATE CHANGE:', {
           event,
           hasSession: !!currentSession,
           userId: currentSession?.user?.id,
@@ -87,16 +69,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         });
         
         if (currentSession?.user) {
-          console.log('✅ LIVELLO 1 SUCCESS: Auth state changed, setting user:', currentSession.user.id);
-          
-          // CRITICAL FIX: Ensure session is properly set on auth state change
-          if (currentSession.access_token && currentSession.refresh_token) {
-            await supabase.auth.setSession({
-              access_token: currentSession.access_token,
-              refresh_token: currentSession.refresh_token,
-            });
-            console.log('✅ LIVELLO 1 SUCCESS: Session updated in Supabase client');
-          }
+          console.log('✅ AUTH STATE: Setting user from session:', currentSession.user.id);
           
           setSession(currentSession);
           setUser(currentSession.user);
@@ -106,14 +79,14 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
           setIsEmailVerified(isDeveloper || !!currentSession.user.email_confirmed_at);
           
         } else if (event === 'SIGNED_OUT') {
-          console.log('🔧 LIVELLO 1 SIGNOUT: Checking developer fallback');
+          console.log('🔧 AUTH SIGNOUT: Checking developer fallback');
           
           // Check for developer access from localStorage
           const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
           const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
           
           if (hasDeveloperAccess || isDeveloperEmail) {
-            console.log('🔧 LIVELLO 1 SIGNOUT: Maintaining developer user');
+            console.log('🔧 AUTH SIGNOUT: Maintaining developer user');
             const developerUser = {
               id: DEVELOPER_UUID,
               email: 'wikus77@hotmail.it',
@@ -138,12 +111,14 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       }
     );
     
-    // THEN check for existing session
+    // THEN check for existing session - NO MORE setSession CALLS
     const initializeSession = async () => {
-      console.log('🔍 LIVELLO 1 – SESSIONE: Getting initial session...');
+      if (!mounted) return;
+      
+      console.log('🔍 AUTH INIT: Getting initial session...');
       const { data: { session: initialSession }, error } = await supabase.auth.getSession();
       
-      console.log('🔍 LIVELLO 1 – SESSIONE:', {
+      console.log('🔍 AUTH INIT:', {
         hasSession: !!initialSession,
         userId: initialSession?.user?.id,
         userEmail: initialSession?.user?.email,
@@ -151,16 +126,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       });
       
       if (initialSession?.user) {
-        console.log('✅ LIVELLO 1 SUCCESS: Session found, setting user:', initialSession.user.id);
-        
-        // CRITICAL FIX: Ensure session is properly set in Supabase client
-        if (initialSession.access_token && initialSession.refresh_token) {
-          await supabase.auth.setSession({
-            access_token: initialSession.access_token,
-            refresh_token: initialSession.refresh_token,
-          });
-          console.log('✅ LIVELLO 1 SUCCESS: Session explicitly set in Supabase client');
-        }
+        console.log('✅ AUTH INIT: Session found, setting user:', initialSession.user.id);
         
         setSession(initialSession);
         setUser(initialSession.user);
@@ -170,14 +136,14 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         setIsEmailVerified(isDeveloper || !!initialSession.user.email_confirmed_at);
         
       } else {
-        console.log('🔧 LIVELLO 1 FALLBACK: No session, checking developer access');
+        console.log('🔧 AUTH INIT: No session, checking developer access');
         
         // Check for developer access from localStorage
         const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
         const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
         
         if (hasDeveloperAccess || isDeveloperEmail) {
-          console.log('🔧 LIVELLO 1 FALLBACK: Creating developer user');
+          console.log('🔧 AUTH INIT: Creating developer user');
           const developerUser = {
             id: DEVELOPER_UUID,
             email: 'wikus77@hotmail.it',
@@ -202,7 +168,8 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     
     // Clean up subscription on unmount
     return () => {
-      console.log("🔍 LIVELLO 1 – SESSIONE: Cleaning up subscription");
+      mounted = false;
+      console.log("🔍 AUTH CLEANUP: Cleaning up subscription");
       subscription.unsubscribe();
     };
   }, []);
@@ -211,7 +178,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
    * Login function - Enhanced with immediate session sync
    */
   const login = async (email: string, password: string) => {
-    console.log("🔍 LIVELLO 1 – LOGIN: Login attempt for email:", email);
+    console.log("🔍 LOGIN: Login attempt for email:", email);
     
     // ✅ ACCESSO IMMEDIATO per email sviluppatore
     if (email === 'wikus77@hotmail.it') {
@@ -234,11 +201,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         if (response.ok) {
           const result = await response.json();
           if (result.session && result.session.access_token && result.session.refresh_token) {
-            console.log('🔁 LIVELLO 1 – LOGIN: Force session sync from edge function');
-            await supabase.auth.setSession({
-              access_token: result.session.access_token,
-              refresh_token: result.session.refresh_token,
-            });
+            console.log('✅ LOGIN: Developer login successful with session');
             
             // Update local state immediately
             setSession(result.session);
@@ -249,12 +212,11 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
             localStorage.setItem('developer_user_email', email);
             localStorage.setItem('captcha_bypassed', 'true');
             
-            console.log('✅ LIVELLO 1 – LOGIN: Developer login successful with session');
             return { success: true, developer_access: true, data: result };
           }
         }
       } catch (error) {
-        console.log('⚠️ LIVELLO 1 – LOGIN: Edge function failed, using fallback');
+        console.log('⚠️ LOGIN: Edge function failed, using fallback');
       }
       
       // Fallback for developer
@@ -277,7 +239,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       setUser(developerUser);
       setIsEmailVerified(true);
       
-      console.log('✅ LIVELLO 1 – LOGIN: Developer fallback login successful');
+      console.log('✅ LOGIN: Developer fallback login successful');
       return { success: true, developer_access: true };
     }
 
@@ -289,16 +251,12 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       });
 
       if (error) {
-        console.error("❌ LIVELLO 1 – LOGIN: Error during login:", error);
+        console.error("❌ LOGIN: Error during login:", error);
         throw error;
       }
 
       if (data.session && data.session.access_token && data.session.refresh_token) {
-        console.log("🔁 LIVELLO 1 – LOGIN: Force session sync after successful login");
-        await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        });
+        console.log("✅ LOGIN: Standard login successful");
         
         // Update local state immediately
         setSession(data.session);
@@ -307,13 +265,11 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         // Update email verification status
         const isDeveloper = data.session.user.email === 'wikus77@hotmail.it';
         setIsEmailVerified(isDeveloper || !!data.session.user.email_confirmed_at);
-        
-        console.log("✅ LIVELLO 1 – LOGIN: Login completato senza CAPTCHA con sessione sincronizzata");
       }
 
       return { success: true, data };
     } catch (error: any) {
-      console.error("❌ LIVELLO 1 – LOGIN: Errore durante il login:", error);
+      console.error("❌ LOGIN: Error during login:", error);
       return { success: false, error: error as AuthError };
     }
   };
@@ -322,12 +278,12 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
    * Logout function
    */
   const logout = async () => {
-    console.log("🔍 LIVELLO 1 – SIGNOUT: Starting signout process");
+    console.log("🔍 LOGOUT: Starting signout process");
     try {
       await supabase.auth.signOut();
       toast.success("Logout effettuato");
     } catch (error) {
-      console.error("❌ LIVELLO 1 – SIGNOUT: Logout error:", error);
+      console.error("❌ LOGOUT: Logout error:", error);
       toast.error("Errore durante il logout");
     }
   };
@@ -341,12 +297,12 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
     
     if (hasDeveloperAccess || isDeveloperEmail) {
-      console.log("✅ LIVELLO 1 – AUTH CHECK: Developer access granted");
+      console.log("✅ AUTH CHECK: Developer access granted");
       return true;
     }
     
     const authenticated = !!user && !!session;
-    console.log("🔍 LIVELLO 1 – AUTH CHECK:", { authenticated, hasUser: !!user, hasSession: !!session });
+    console.log("🔍 AUTH CHECK:", { authenticated, hasUser: !!user, hasSession: !!session });
     return authenticated;
   }, [user, session]);
 
@@ -359,7 +315,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
     
     if (hasDeveloperAccess || isDeveloperEmail) {
-      console.log("✅ LIVELLO 1 – GET USER: Developer access - returning developer user");
+      console.log("✅ GET USER: Developer access - returning developer user");
       return {
         id: DEVELOPER_UUID,
         email: 'wikus77@hotmail.it',
@@ -367,7 +323,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       } as User;
     }
     
-    console.log("🔍 LIVELLO 1 – GET USER:", { user: user?.id });
+    console.log("🔍 GET USER:", { user: user?.id });
     return user;
   }, [user]);
 
