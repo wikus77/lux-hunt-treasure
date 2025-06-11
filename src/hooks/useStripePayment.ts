@@ -85,22 +85,43 @@ export const useStripePayment = () => {
     });
   };
 
+  // CRITICAL: BUZZ purchase with mandatory payment validation
   const processBuzzPurchase = async (
     isMapBuzz = false, 
     customPrice?: number, 
     redirectUrl?: string, 
     sessionId?: string,
     paymentMethod?: 'card' | 'apple_pay' | 'google_pay'
-  ) => {
-    return createCheckoutSession({
-      planType: isMapBuzz ? 'BuzzMap' : 'Buzz',
-      customPrice,
-      redirectUrl,
-      isBuzz: !isMapBuzz,
+  ): Promise<boolean> => {
+    console.log('💳 Processing BUZZ purchase:', {
       isMapBuzz,
-      sessionId,
-      paymentMethod
+      customPrice,
+      mandatory: true
     });
+
+    try {
+      const result = await createCheckoutSession({
+        planType: isMapBuzz ? 'BuzzMap' : 'Buzz',
+        customPrice,
+        redirectUrl,
+        isBuzz: !isMapBuzz,
+        isMapBuzz,
+        sessionId,
+        paymentMethod
+      });
+
+      // For BUZZ MAPPA, payment is mandatory
+      if (!result) {
+        console.error('❌ Payment session creation failed');
+        return false;
+      }
+
+      console.log('✅ Payment session created successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ BUZZ payment error:', error);
+      return false;
+    }
   };
 
   const detectPaymentMethodAvailability = () => {

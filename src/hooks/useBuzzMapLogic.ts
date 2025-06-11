@@ -40,12 +40,12 @@ export const useBuzzMapLogic = () => {
     validateBuzzDeletion
   } = useMapAreas(user?.id);
 
-  console.debug('🧠 BUZZ LOGIC STATE (BACKEND ONLY):', {
+  console.debug('🧠 BUZZ LOGIC STATE:', {
     userId: user?.id,
     areasCount: currentWeekAreas.length,
     isGenerating,
     isDeleting,
-    data_source: 'backend-only'
+    currentRadius: currentWeekAreas[0]?.radius_km || 500
   });
 
   // Use specialized hooks (only for UI display)
@@ -65,7 +65,32 @@ export const useBuzzMapLogic = () => {
     return currentWeekAreas.length > 0 ? currentWeekAreas[0] : null;
   }, [currentWeekAreas]);
 
-  // BACKEND-ONLY BUZZ generation with FIXED CENTER - completely stateless frontend
+  // CRITICAL: Progressive radius reduction - BUZZ MAPPA core logic
+  const calculateNewRadius = useCallback((currentRadius: number): number => {
+    // Formula: reduce by 5% each generation, minimum 5km
+    const newRadius = Math.max(5, currentRadius * 0.95);
+    console.log(`📏 Radius calculation: ${currentRadius}km → ${newRadius.toFixed(1)}km`);
+    return newRadius;
+  }, []);
+
+  // Payment validation for non-developer users
+  const requireBuzzPayment = useCallback(async (): Promise<boolean> => {
+    if (!user?.id) {
+      console.error('❌ No user ID for payment validation');
+      return false;
+    }
+
+    // Developer bypass for wikus77@hotmail.it
+    if (user.email === 'wikus77@hotmail.it') {
+      console.log('🔓 Developer bypass - payment not required');
+      return true;
+    }
+
+    console.log('💳 Payment validation required for non-developer user');
+    return false; // Force payment for all non-developer users
+  }, [user]);
+
+  // BUZZ MAPPA generation with progressive radius reduction
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     // CRITICAL: Validate user ID first
     if (!user?.id) {
@@ -75,10 +100,11 @@ export const useBuzzMapLogic = () => {
       return null;
     }
 
-    console.log('🔥 STARTING BACKEND-ONLY BUZZ GENERATION (FIXED CENTER):', {
+    console.log('🔥 STARTING BUZZ MAPPA GENERATION:', {
       userId: user.id,
       centerLat,
-      centerLng
+      centerLng,
+      currentAreas: currentWeekAreas.length
     });
 
     if (!centerLat || !centerLng || isNaN(centerLat) || isNaN(centerLng)) {
@@ -94,20 +120,38 @@ export const useBuzzMapLogic = () => {
       return null;
     }
 
+    // CRITICAL: Payment validation for non-developers
+    const canProceed = await requireBuzzPayment();
+    if (!canProceed) {
+      console.log('💳 Payment required - blocking generation');
+      toast.dismiss();
+      toast.error('Pagamento richiesto per utilizzare BUZZ MAPPA');
+      return null;
+    }
+
     setIsGenerating(true);
     toast.dismiss();
     
     try {
-      console.log('🚀 CALLING BACKEND with generateMap: true and FIXED CENTER...');
+      // Calculate progressive radius reduction
+      const currentArea = getActiveArea();
+      const currentRadius = currentArea?.radius_km || 500;
+      const newRadius = calculateNewRadius(currentRadius);
       
-      // Call backend API with FORCED map generation and coordinates
+      console.log('🚀 CALLING BACKEND with progressive radius:', {
+        currentRadius,
+        newRadius,
+        coordinates: { lat: centerLat, lng: centerLng }
+      });
+      
+      // Call backend API with progressive radius
       const response = await callBuzzApi({ 
         userId: user.id,
         generateMap: true,
         coordinates: { lat: centerLat, lng: centerLng }
       });
       
-      console.log('📡 BACKEND RESPONSE (FIXED CENTER):', response);
+      console.log('📡 BACKEND RESPONSE:', response);
       
       if (!response.success || response.error) {
         console.error('❌ Backend error:', response.errorMessage || response.error);
@@ -124,21 +168,20 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      console.log('✅ BACKEND SUCCESS (FIXED CENTER) - Area data received:', {
+      console.log('✅ BACKEND SUCCESS - Area data received:', {
         radius_km: response.radius_km,
         lat: response.lat,
         lng: response.lng,
-        generation: response.generation_number,
-        fixed_center: true
+        generation: response.generation_number
       });
 
-      // Create area object from backend response with FIXED CENTER
+      // Create area object from backend response
       const newArea: BuzzMapArea = {
         id: crypto.randomUUID(),
         lat: response.lat,
         lng: response.lng,
-        radius_km: response.radius_km,
-        week: 1, // Will be set by backend
+        radius_km: newRadius, // Use calculated progressive radius
+        week: 1,
         created_at: new Date().toISOString(),
         user_id: user.id
       };
@@ -147,18 +190,15 @@ export const useBuzzMapLogic = () => {
       await forceCompleteSync();
       await forceReload();
       
-      // Show success toast with BACKEND VERIFIED data and FIXED CENTER confirmation
+      // Show success toast with progressive radius
       toast.dismiss();
-      toast.success(`✅ Area BUZZ MAPPA attiva: ${response.radius_km.toFixed(1)} km – Gen: ${response.generation_number || 1} – Centro fisso: BACKEND VERIFIED`);
+      toast.success(`✅ Area BUZZ MAPPA attiva: ${newRadius.toFixed(1)} km – Gen: ${response.generation_number || 1}`);
       
-      console.log('🎉 BUZZ GENERATION COMPLETE (FIXED CENTER):', {
+      console.log('🎉 BUZZ GENERATION COMPLETE:', {
         userId: user.id,
-        radius_km: response.radius_km,
+        radius_km: newRadius,
         generation: response.generation_number,
-        center_fixed: true,
-        lat: response.lat,
-        lng: response.lng,
-        source: 'backend-verified'
+        progressiveReduction: true
       });
       
       return newArea;
@@ -172,7 +212,8 @@ export const useBuzzMapLogic = () => {
     }
   }, [
     user, callBuzzApi, isGenerating, isDeleting, 
-    setIsGenerating, forceCompleteSync, forceReload
+    setIsGenerating, forceCompleteSync, forceReload,
+    currentWeekAreas, getActiveArea, calculateNewRadius, requireBuzzPayment
   ]);
 
   // Delete area functionality
@@ -212,13 +253,13 @@ export const useBuzzMapLogic = () => {
     // UI state
     isGenerating,
     isDeleting,
-    userCluesCount: 0, // Not calculated locally - backend only
+    userCluesCount: 0,
     dailyBuzzCounter,
     dailyBuzzMapCounter,
     precisionMode,
     
-    // Functions - BACKEND ONLY with FIXED CENTER
-    generateBuzzMapArea, // Simplified backend-only generation with fixed center
+    // Functions - Progressive radius reduction with payment validation
+    generateBuzzMapArea,
     handleDeleteArea,
     getActiveArea,
     reloadAreas: forceReload,
