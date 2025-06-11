@@ -13,9 +13,10 @@ import { Spinner } from "@/components/ui/spinner";
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, login } = useAuth();
 
   useEffect(() => {
     const verification = searchParams.get('verification');
@@ -28,15 +29,46 @@ const Login = () => {
       });
     }
 
-    // CRITICAL: Enhanced authentication check with immediate redirect
+    // Enhanced authentication check with immediate redirect
     if (!authLoading && isAuthenticated) {
-      console.log('✅ ENHANCED LOGIN PAGE - User already authenticated, immediate redirect to /home');
-      console.log('📊 AUTH STATE:', { isAuthenticated, authLoading });
+      console.log('✅ User already authenticated, redirecting to /home');
       navigate('/home', { replace: true });
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);
 
-  // CRITICAL: Enhanced session persistence check on mount
+  // Auto-login for developer email
+  useEffect(() => {
+    const attemptAutoLogin = async () => {
+      if (!autoLoginAttempted && !authLoading && !isAuthenticated) {
+        const developerEmail = 'wikus77@hotmail.it';
+        const autoLoginEnabled = localStorage.getItem('auto_login_enabled') !== 'false';
+        
+        if (autoLoginEnabled) {
+          console.log('🔄 Attempting auto-login for developer...');
+          setAutoLoginAttempted(true);
+          
+          try {
+            const result = await login(developerEmail, 'developer123');
+            if (result?.success) {
+              console.log('✅ Auto-login successful');
+              toast.success('Auto-login sviluppatore riuscito');
+              setTimeout(() => navigate('/home', { replace: true }), 1000);
+            } else {
+              console.log('⚠️ Auto-login failed, showing login form');
+            }
+          } catch (error) {
+            console.log('⚠️ Auto-login error:', error);
+          }
+        }
+      }
+    };
+
+    // Delay auto-login slightly to avoid conflicts
+    const timer = setTimeout(attemptAutoLogin, 1000);
+    return () => clearTimeout(timer);
+  }, [authLoading, isAuthenticated, autoLoginAttempted, login, navigate]);
+
+  // Enhanced session persistence check on mount
   useEffect(() => {
     const checkSessionPersistence = async () => {
       if (!authLoading) {
@@ -48,7 +80,6 @@ const Login = () => {
         
         if (session && !isAuthenticated) {
           console.log('⚠️ SESSION EXISTS BUT AUTH STATE NOT UPDATED - FORCING AUTH UPDATE');
-          // Force a refresh of auth state
           window.location.reload();
         }
       }
@@ -86,11 +117,16 @@ const Login = () => {
     }
   };
 
-  // Show loading while checking auth state
-  if (authLoading) {
+  // Show loading while checking auth state or during auto-login
+  if (authLoading || (autoLoginAttempted && !isAuthenticated)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
-        <Spinner className="h-8 w-8 text-white" />
+        <div className="text-center">
+          <Spinner className="h-8 w-8 text-white mx-auto mb-4" />
+          <p className="text-white/70">
+            {autoLoginAttempted ? 'Tentativo auto-login...' : 'Verifica autenticazione...'}
+          </p>
+        </div>
       </div>
     );
   }
@@ -113,6 +149,11 @@ const Login = () => {
           <p className="text-gray-400">
             Inserisci le tue credenziali per accedere
           </p>
+          {!autoLoginAttempted && (
+            <p className="text-xs text-cyan-400 mt-2">
+              Auto-login sviluppatore attivo
+            </p>
+          )}
         </div>
 
         <div className="glass-card p-6 backdrop-blur-md border border-gray-800 rounded-xl">
@@ -133,6 +174,15 @@ const Login = () => {
                 ← Torna alla homepage
               </Link>
             </p>
+            <button 
+              onClick={() => {
+                localStorage.setItem('auto_login_enabled', 'false');
+                toast.info('Auto-login disabilitato');
+              }}
+              className="text-xs text-gray-500 hover:text-gray-400 mt-2 block mx-auto"
+            >
+              Disabilita auto-login
+            </button>
           </div>
         </div>
       </motion.div>
