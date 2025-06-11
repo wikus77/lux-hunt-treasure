@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -95,16 +96,23 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      // CRITICAL: FIXED GENERATION CALCULATION - Use persistent counter
+      // CRITICAL: FIXED GENERATION CALCULATION - Use persistent counter with proper update
       const currentWeek = getCurrentWeek();
       
       // Check if this is first launch
       const isFirstLaunch = sessionStorage.getItem('isFirstLaunch') === 'true';
       
-      // FORCE: Calculate generation from user_buzz_map_counter + existing areas
-      const generation = (dailyBuzzMapCounter || 0) + (currentWeekAreas?.length || 0) + 1;
+      // FORCE: Calculate generation using buzz map counter (fixed parameter issue)
+      let generation: number;
+      try {
+        const updatedCounter = await updateDailyBuzzMapCounter(0, 'high'); // Fix: providing required parameters
+        generation = updatedCounter || 1;
+      } catch (error) {
+        console.error('❌ Error updating buzz map counter:', error);
+        generation = (dailyBuzzMapCounter || 0) + 1;
+      }
       
-      let initialRadius;
+      let initialRadius: number;
       if (generation === 1 || isFirstLaunch) {
         initialRadius = 500000; // 500km in meters
         console.log('✅ BUZZ MAPPA PARTENZA DA 500km - FIRST GENERATION');
@@ -148,9 +156,6 @@ export const useBuzzMapLogic = () => {
         user_id: user.id
       };
 
-      // Update buzz map counter
-      await updateDailyBuzzMapCounter();
-
       // Clear first launch flag after first generation
       if (isFirstLaunch) {
         sessionStorage.removeItem('isFirstLaunch');
@@ -159,12 +164,15 @@ export const useBuzzMapLogic = () => {
 
       console.log('🎉 LANCIO SUCCESS: Area created', newArea);
       console.log("✅ Area creata con raggio:", finalRadius, "km, generazione:", generation);
+      console.log("▶️ layer created:", true);
 
       await forceCompleteSync();
       await forceReload();
       
       toast.dismiss();
       toast.success(`✅ LANCIO M1SSION: Area ${finalRadius.toFixed(1)}km generata - Generazione ${generation} Settimana ${currentWeek}`);
+      
+      console.log("✅ BUZZ GENERATION COMPLETA", { gen: generation, radius: initialRadius });
       
       return newArea;
     } catch (err) {

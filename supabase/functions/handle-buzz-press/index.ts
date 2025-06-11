@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { RateLimiter } from "../_shared/rateLimiter.ts";
@@ -76,8 +77,10 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  let requestData: any;
+  
   try {
-    const requestData = await req.json();
+    requestData = await req.json();
     const { userId, generateMap, prizeId, coordinates, sessionId } = requestData as BuzzRequest;
     
     console.log(`🔒 SECURE BUZZ REQUEST START - userId: ${userId}, generateMap: ${generateMap}`);
@@ -404,16 +407,47 @@ serve(async (req) => {
         console.log("✅ Cleared existing BUZZ areas successfully");
       }
       
-      // STEP 3: Get generation count from buzz map counter
-      const { data: mapCounterData, error: mapCounterError } = await supabase
+      // STEP 3: Get generation count from buzz map counter with CRITICAL FIX
+      console.log(`🔄 Getting/updating buzz map counter for user: ${userId}`);
+      
+      // CRITICAL FIX: First get current counter, then increment atomically
+      const { data: currentCounter, error: getCounterError } = await supabase
         .from('user_buzz_map_counter')
         .select('buzz_map_count')
         .eq('user_id', userId)
         .eq('date', new Date().toISOString().split('T')[0])
+        .maybeSingle();
+
+      let currentGeneration = 1; // Default for first use
+      
+      if (getCounterError) {
+        console.error("⚠️ Error getting current counter:", getCounterError);
+      } else if (currentCounter) {
+        currentGeneration = (currentCounter.buzz_map_count || 0) + 1;
+      }
+
+      // CRITICAL FIX: Update counter with proper upsert and conflict resolution
+      const { data: updatedCounter, error: updateCounterError } = await supabase
+        .from('user_buzz_map_counter')
+        .upsert({
+          user_id: userId,
+          date: new Date().toISOString().split('T')[0],
+          buzz_map_count: currentGeneration
+        }, {
+          onConflict: 'user_id,date'
+        })
+        .select('buzz_map_count')
         .single();
 
-      // Calculate generation number correctly
-      const currentGeneration = (mapCounterData?.buzz_map_count || 0) + 1;
+      if (updateCounterError) {
+        console.error("❌ CRITICAL: Error updating buzz map counter:", updateCounterError);
+        // Continue with default generation but log the issue
+        console.log(`⚠️ Using fallback generation: ${currentGeneration}`);
+      } else {
+        currentGeneration = updatedCounter.buzz_map_count;
+        console.log(`✅ Counter updated successfully: generation ${currentGeneration}`);
+      }
+
       console.log(`📍 Current generation count: ${currentGeneration}`);
       
       // STEP 4: Calculate radius with FIXED progressive reduction formula
@@ -453,13 +487,15 @@ serve(async (req) => {
       } else {
         console.log("✅ Map area saved successfully with SECURE CENTER:", savedArea.id);
         
-        // STEP 6: FORCE NOTIFICATION PUSH
+        // STEP 6: FORCE NOTIFICATION PUSH - CRITICAL FIX with proper user_id
+        const notificationMessage = `È stata generata una nuova area BUZZ di ricerca: raggio ${radius_km.toFixed(1)} km.`;
+        
         const { data: notificationData, error: notificationError } = await supabase
           .from('user_notifications')
           .insert({
-            user_id: userId,
+            user_id: userId, // CRITICAL: Use userId directly
             title: "Nuova Area Generata",
-            message: `È stata generata una nuova area BUZZ di ricerca: raggio ${radius_km.toFixed(1)} km.`,
+            message: notificationMessage,
             type: "buzz_generated"
           })
           .select('id')
@@ -467,10 +503,17 @@ serve(async (req) => {
 
         let notificationId = null;
         if (notificationError) {
-          console.error("⚠️ Warning: Could not create notification:", notificationError);
+          console.error("❌ CRITICAL: Could not create notification:", notificationError);
+          console.error("❌ Notification details:", {
+            user_id: userId,
+            title: "Nuova Area Generata",
+            message: notificationMessage,
+            type: "buzz_generated"
+          });
         } else {
           notificationId = notificationData.id;
-          console.log("✅ Notification created:", notificationId);
+          console.log("✅ Notification created successfully:", notificationId);
+          console.log("✅ Notifica inviata con successo per user:", userId);
         }
 
         // STEP 7: Log to buzz_generation_logs
@@ -495,6 +538,7 @@ serve(async (req) => {
         response.generation_number = currentGeneration;
         
         console.log(`🎉 MAP GENERATION COMPLETE (SECURE CENTER): radius=${radius_km.toFixed(2)}km, generation=${currentGeneration}, center=${secureCenter.lat},${secureCenter.lng}`);
+        console.log("✅ BUZZ GENERATION COMPLETA", { gen: currentGeneration, radius: radius_km * 1000 });
       }
     }
 

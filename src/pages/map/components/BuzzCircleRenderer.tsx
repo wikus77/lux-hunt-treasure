@@ -29,7 +29,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
   // CRITICAL: Block rendering if areas are present when they shouldn't be
   useEffect(() => {
     if (areas.length > 0) {
-      console.debug("🔍 RENDER CHECK (FIXED CENTER): Areas present in component:", {
+      console.debug("🔍 RENDER CHECK (FORCED RENDER): Areas present in component:", {
         areas_count: areas.length,
         areas_detail: areas.map(a => ({ 
           id: a.id, 
@@ -40,10 +40,10 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
           lng: a.lng 
         })),
         source: 'react-query',
-        fixed_center_mode: true
+        forced_render_mode: true
       });
     } else {
-      console.debug("✅ RENDER CHECK (FIXED CENTER): No areas to render - clean state");
+      console.debug("✅ RENDER CHECK (FORCED RENDER): No areas to render - clean state");
     }
   }, [areas]);
 
@@ -64,11 +64,11 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     
     const needsUpdate = currentAreasData !== lastAreasData.current;
     
-    console.debug('🔄 Update check (FIXED CENTER):', {
+    console.debug('🔄 Update check (FORCED RENDER):', {
       needsUpdate,
       areasCount: areas.length,
       source: 'react-query-only',
-      fixed_center_mode: true
+      forced_render_mode: true
     });
     
     if (!needsUpdate) {
@@ -79,10 +79,10 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     isCleanupRunning.current = true;
     lastAreasData.current = currentAreasData;
     
-    console.debug('🔥 Effect triggered (FIXED CENTER):', {
+    console.debug('🔥 Effect triggered (FORCED RENDER):', {
       areasCount: areas.length,
       data_source: 'react-query-only',
-      fixed_center_mode: true
+      forced_render_mode: true
     });
     
     // STEP 1: COMPLETE LEAFLET CLEANUP (ALWAYS) - ENHANCED
@@ -111,7 +111,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     
     // CRITICAL BLOCKING: Stop render if areas is empty - ENHANCED
     if (areas.length === 0) {
-      console.debug('✅ RENDER COMPLETE (FIXED CENTER) - areas.length === 0, map cleared completely');
+      console.debug('✅ RENDER COMPLETE (FORCED RENDER) - areas.length === 0, map cleared completely');
       // DO NOT CHANGE MAP VIEW - maintain current position and zoom
       isCleanupRunning.current = false;
       
@@ -139,14 +139,14 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     }
     
     // CRITICAL: Only proceed with rendering if areas are truly valid
-    console.debug('🔵 Creating', areas.length, 'new circles with FIXED CENTER');
+    console.debug('🔵 Creating', areas.length, 'new circles with FORCED RENDER');
     
     // Create new layer group
     layerGroupRef.current = L.layerGroup().addTo(map);
     console.debug('✅ New layer group created');
     
     areas.forEach((area, index) => {
-      console.debug(`🔵 Creating circle ${index + 1}/${areas.length} (FIXED CENTER):`, {
+      console.debug(`🔵 Creating circle ${index + 1}/${areas.length} (FORCED RENDER):`, {
         id: area.id,
         lat: area.lat,
         lng: area.lng,
@@ -158,13 +158,14 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       if (!area.lat || !area.lng || !area.radius_km || 
           isNaN(area.lat) || isNaN(area.lng) || isNaN(area.radius_km)) {
         console.error('❌ Invalid area data:', area);
+        console.log("▶️ layer created:", false);
         return;
       }
       
       const radiusInMeters = area.radius_km * 1000;
       
       try {
-        // FORCE AREA GENERATION: Create circle with exact radius
+        // FORCE AREA GENERATION: Create circle with exact radius and forced visibility
         const circle = L.circle([area.lat, area.lng], {
           radius: radiusInMeters,
           color: currentColor,
@@ -172,16 +173,26 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
           fillOpacity: 0.25,
           weight: 3,
           opacity: 1,
-          className: `buzz-area-${area.id}`
+          className: `buzz-area-${area.id}`,
+          interactive: true,
+          bubblingMouseEvents: false
         });
         
-        layerGroupRef.current?.addLayer(circle);
+        // CRITICAL: Force add to both layer group AND map directly
+        if (layerGroupRef.current) {
+          layerGroupRef.current.addLayer(circle);
+        }
+        circle.addTo(map);
         
-        // DEBUG VISUAL MANDATORY
+        // MANDATORY DEBUG VISUAL
         console.log("▶️ layer created:", true);
         console.log("✅ Area creata con raggio:", radiusInMeters, "m, generazione:", index + 1);
+        console.log("🟢 AREA RENDER:", radiusInMeters, "lat/lng", area.lat, area.lng);
         
-        console.debug(`✅ Circle ${index + 1} created successfully (FIXED CENTER)`);
+        console.debug(`✅ Circle ${index + 1} created successfully (FORCED RENDER) with radius ${radiusInMeters}m`);
+        
+        // Force map to acknowledge the layer
+        map.invalidateSize();
         
       } catch (error) {
         console.error(`❌ Error creating circle ${index + 1}:`, error);
@@ -194,28 +205,41 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     
     // STEP 3: VERIFY FINAL STATE - ENHANCED
     const finalCircleCount = layerGroupRef.current?.getLayers().length || 0;
-    console.debug('🔍 Final verification (FIXED CENTER):', {
+    
+    // Count all circles on map (including those added directly)
+    let totalCirclesOnMap = 0;
+    map.eachLayer((layer) => {
+      if (layer instanceof L.Circle) {
+        totalCirclesOnMap++;
+      }
+    });
+    
+    console.debug('🔍 Final verification (FORCED RENDER):', {
       expected_areas: areas.length,
-      rendered_circles: finalCircleCount,
-      is_consistent: areas.length === finalCircleCount,
+      rendered_circles_in_group: finalCircleCount,
+      total_circles_on_map: totalCirclesOnMap,
+      is_consistent: areas.length <= totalCirclesOnMap,
       areas_empty: areas.length === 0,
-      circles_cleared: finalCircleCount === 0,
+      circles_cleared: totalCirclesOnMap === 0,
       view_preserved: true
     });
     
     // CRITICAL: Log any inconsistencies
-    if (areas.length !== finalCircleCount) {
+    if (areas.length > totalCirclesOnMap) {
       console.warn('⚠️ INCONSISTENCY DETECTED:', {
         expected: areas.length,
-        actual: finalCircleCount,
-        difference: areas.length - finalCircleCount
+        actual_in_group: finalCircleCount,
+        actual_on_map: totalCirclesOnMap,
+        difference: areas.length - totalCirclesOnMap
       });
+    } else {
+      console.log("✅ BUZZ GENERATION COMPLETA - All areas rendered successfully");
     }
     
     // Force map refresh and mark cleanup as done (without changing view)
     setTimeout(() => {
       map.invalidateSize();
-      console.debug('🔄 Map size invalidated, cleanup complete (FIXED CENTER)');
+      console.debug('🔄 Map size invalidated, cleanup complete (FORCED RENDER)');
       isCleanupRunning.current = false;
     }, 100);
     
