@@ -29,6 +29,9 @@ enabled = false
 [functions.register-bypass]
 verify_jwt = false
 
+[functions.login-no-captcha]
+verify_jwt = false
+
 # Additional security bypass for testing
 [auth.security]
 captcha_enabled = false
