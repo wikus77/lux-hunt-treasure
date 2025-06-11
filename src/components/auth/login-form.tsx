@@ -33,21 +33,28 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
 
     setIsLoading(true);
     try {
+      console.log('🔍 LIVELLO 1 – LOGIN FORM: Starting login process for:', email);
+      
       // NO CAPTCHA - Direct login processing
       const result = await login(email, password);
       
       if (result?.success || isDeveloperEmail) {
-        toast.success('Login successful');
-        // Redirect handled by login function for developer
-        if (!isDeveloperEmail) {
+        console.log('✅ LIVELLO 1 – LOGIN FORM: Login successful, navigating to home');
+        toast.success('Login completato');
+        
+        // Force immediate navigation after successful login
+        setTimeout(() => {
           navigate('/home');
-        }
+        }, 500); // Give time for session to sync
+        
       } else {
+        console.error('❌ LIVELLO 1 – LOGIN FORM: Login failed:', result?.error?.message);
         toast.error('Login error', {
           description: result?.error?.message || 'Check your credentials'
         });
       }
     } catch (error: any) {
+      console.error('❌ LIVELLO 1 – LOGIN FORM: Exception during login:', error);
       toast.error('Login error', {
         description: error.message || 'An unexpected error occurred'
       });

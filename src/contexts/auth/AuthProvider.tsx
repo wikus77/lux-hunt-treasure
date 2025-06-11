@@ -25,7 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const isLocalhost = window.location.hostname === 'localhost';
       
       if (isCapacitor || isLocalhost) {
-        console.log('🔑 Setting up automatic developer access for:', developerEmail);
+        console.log('🔑 LIVELLO 1 – DEVELOPER SETUP: Setting up automatic developer access for:', developerEmail);
         localStorage.setItem('developer_access', 'granted');
         localStorage.setItem('developer_user_email', developerEmail);
         localStorage.setItem('captcha_bypassed', 'true');
@@ -48,12 +48,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (response.ok) {
             const result = await response.json();
             if (result.session) {
+              console.log('🔁 LIVELLO 1 – DEVELOPER SETUP: Force session sync');
               await supabase.auth.setSession(result.session);
-              console.log('✅ Developer session established automatically');
+              console.log('✅ LIVELLO 1 – DEVELOPER SETUP: Developer session established automatically');
             }
           }
         } catch (error) {
-          console.log('⚠️ Auto session setup failed, but developer access still granted');
+          console.log('⚠️ LIVELLO 1 – DEVELOPER SETUP: Auto session setup failed, but developer access still granted');
         }
       }
     };
@@ -68,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
       
       if ((hasDeveloperAccess || isDeveloperEmail) && window.location.pathname === '/') {
-        console.log('🚀 Auto-redirecting developer to /home');
+        console.log('🚀 LIVELLO 1 – DEVELOPER SETUP: Auto-redirecting developer to /home');
         window.location.href = '/home';
       }
     };
@@ -146,7 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
       
       if (hasDeveloperAccess || isDeveloperEmail) {
-        console.log("🔑 Developer access rilevato da localStorage - ACCESSO IMMEDIATO");
+        console.log("🔑 LIVELLO 1 – ROLE FETCH: Developer access rilevato da localStorage - ACCESSO IMMEDIATO");
         setUserRole('admin');
         setIsRoleLoading(false);
         setAuthInitialized(true);
@@ -155,6 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Se non c'è utente autenticato, NON fare nulla - lascia che vedano la landing
       if (!auth.isAuthenticated || !auth.user) {
+        console.log("🔍 LIVELLO 1 – ROLE FETCH: No authenticated user, clearing role");
         setUserRole(null);
         setIsRoleLoading(false);
         return;
@@ -162,7 +164,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       try {
         setIsRoleLoading(true);
-        console.log("🔍 Cerco profilo per user:", auth.user.id, auth.user.email);
+        console.log("🔍 LIVELLO 1 – ROLE FETCH: Cerco profilo per user:", auth.user.id, auth.user.email);
+        
+        // Force session sync before profile fetch
+        console.log("🔁 LIVELLO 1 – ROLE FETCH: Ensuring session is synced before profile fetch");
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (currentSession) {
+          await supabase.auth.setSession(currentSession);
+        }
         
         // Prima prova con l'ID dell'utente
         const { data: dataById, error: errorById } = await supabase
@@ -172,7 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .maybeSingle();
 
         if (dataById && dataById.role) {
-          console.log("✅ Ruolo utente trovato tramite ID:", dataById.role);
+          console.log("✅ LIVELLO 1 – ROLE FETCH: Ruolo utente trovato tramite ID:", dataById.role);
           setUserRole(dataById.role);
           setIsRoleLoading(false);
           setRetryCount(0);
@@ -192,7 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .maybeSingle();
 
           if (dataByEmail && dataByEmail.role) {
-            console.log("✅ Ruolo utente trovato tramite email:", dataByEmail.role);
+            console.log("✅ LIVELLO 1 – ROLE FETCH: Ruolo utente trovato tramite email:", dataByEmail.role);
             setUserRole(dataByEmail.role);
             setIsRoleLoading(false);
             setRetryCount(0);
@@ -237,7 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserRole(null);
         }
       } catch (error) {
-        console.error('❌ Exception fetching user role:', error);
+        console.error('❌ LIVELLO 1 – ROLE FETCH: Exception fetching user role:', error);
         
         // If user is the admin email, force the role as admin even if there's an error
         if (auth.user.email === 'wikus77@hotmail.it') {
@@ -300,3 +309,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export default AuthProvider;
+
+}
