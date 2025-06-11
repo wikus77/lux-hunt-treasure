@@ -1,13 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/use-auth';
 import { useSearchAreasLogic } from './useSearchAreasLogic';
 import { MapMarker } from '@/components/maps/types';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
-
-// UUID di fallback per sviluppo - SOLUZIONE DEFINITIVA
-const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
 
 export const useNewMapPage = () => {
   const { user } = useAuth();
@@ -16,24 +13,18 @@ export const useNewMapPage = () => {
   const [newPoint, setNewPoint] = useState<MapMarker | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeMapPoint, setActiveMapPoint] = useState<string | null>(null);
-  const buzzMapPrice = 1.99; // Default price, will be updated by backend
+  const buzzMapPrice = 1.99;
 
   // Default location (Rome, Italy)
   const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
-
-  // FIXED: Ottieni user_id valido per Supabase - SOLUZIONE DEFINITIVA
-  const getValidUserId = useCallback(() => {
-    if (!user?.id) return DEVELOPER_UUID; // Always return valid UUID
-    // Se è developer-fake-id, usa l'UUID di fallback
-    return user.id === 'developer-fake-id' ? DEVELOPER_UUID : user.id;
-  }, [user]);
 
   // Integra la logica BUZZ MAPPA
   const { 
     currentWeekAreas, 
     isGenerating: isBuzzGenerating,
     generateBuzzMapArea,
-    getActiveArea
+    getActiveArea,
+    calculateBuzzMapPrice
   } = useBuzzMapLogic();
 
   // Initialize search areas logic
@@ -50,46 +41,27 @@ export const useNewMapPage = () => {
     setPendingRadius
   } = useSearchAreasLogic(DEFAULT_LOCATION);
 
-  // FIXED: Fetch existing map points on mount con gestione RLS
+  // Fetch existing map points on mount
   useEffect(() => {
     const fetchMapPoints = async () => {
-      const validUserId = getValidUserId();
+      if (!user?.id) return;
       
       try {
-        console.log("📍 Fetching map points for user:", validUserId);
-        
-        // CRITICAL FIX: For developer mode, create mock data if needed
-        if (validUserId === DEVELOPER_UUID) {
-          console.log("🔧 Developer mode: using local storage fallback");
-          const localPoints = localStorage.getItem('dev-map-points');
-          if (localPoints) {
-            setMapPoints(JSON.parse(localPoints));
-          }
-          setIsLoading(false);
-          return;
-        }
-        
         const { data, error } = await supabase
           .from('map_points')
           .select('*')
-          .eq('user_id', validUserId)
-          .order('created_at', { ascending: false });
+          .eq('user_id', user.id);
 
         if (error) {
-          console.error("❌ Error fetching map points:", error);
-          if (error.code === 'PGRST116') {
-            console.log("ℹ️ No map points found or access denied");
-            setMapPoints([]);
-          } else {
-            toast.error(`Errore nel caricamento dei punti: ${error.message}`);
-          }
+          console.error("Error fetching map points:", error);
+          toast.error("Errore nel caricamento dei punti");
           return;
         }
 
-        console.log("✅ Successfully fetched map points:", data?.length || 0, "points");
+        console.log("📍 Fetched map points:", data);
         setMapPoints(data || []);
       } catch (err) {
-        console.error("❌ Exception fetching map points:", err);
+        console.error("Exception fetching map points:", err);
         toast.error("Errore nel caricamento dei punti");
       } finally {
         setIsLoading(false);
@@ -97,22 +69,11 @@ export const useNewMapPage = () => {
     };
 
     fetchMapPoints();
-  }, [getValidUserId]);
+  }, [user]);
 
-  // FIXED: Add a new point to the map con validazione user ID
+  // Add a new point to the map
   const addNewPoint = useCallback((lat: number, lng: number) => {
     console.log("📍 Adding new point at:", lat, lng);
-    
-    const validUserId = getValidUserId();
-    
-    // ALWAYS allow point creation with valid UUID
-    const isDevMode = validUserId === DEVELOPER_UUID;
-    if (isDevMode) {
-      toast.info("Modalità sviluppatore: inserimento simulato", {
-        description: "Punto creato con ID sviluppatore"
-      });
-    }
-
     setNewPoint({
       id: 'new',
       lat,
@@ -126,192 +87,95 @@ export const useNewMapPage = () => {
     if (isAddingSearchArea) {
       toggleAddingSearchArea();
     }
-    
-    toast.success("Punto posizionato. Inserisci titolo e nota.");
-  }, [isAddingSearchArea, toggleAddingSearchArea, getValidUserId]);
+  }, [isAddingSearchArea, toggleAddingSearchArea]);
 
-  // FIXED: Save the point to Supabase con validazione completa e UUID corretto
+  // Save the point to Supabase
   const savePoint = async (title: string, note: string) => {
-    const validUserId = getValidUserId();
-    if (!newPoint) {
-      console.log("❌ Cannot save point: missing newPoint");
-      toast.error("Impossibile salvare: punto non disponibile");
-      return;
-    }
+    if (!newPoint || !user?.id) return;
     
-    // FIXED: Validazione rigorosa con trim
-    const trimmedTitle = title?.trim() || '';
-    const trimmedNote = note?.trim() || '';
-    
-    if (!trimmedTitle) {
-      console.log("❌ Validation failed: empty title after trim");
-      toast.error("Il titolo è obbligatorio");
-      return;
-    }
-
-    // FIXED: Payload completo e validato con UUID corretto
-    const payload = {
-      user_id: validUserId, // Always use the validated UUID
-      latitude: newPoint.lat,
-      longitude: newPoint.lng,
-      title: trimmedTitle,
-      note: trimmedNote
-    };
-
     try {
-      console.log("📍 Saving new point with validated payload:", payload);
-
-      // CRITICAL FIX: Handle developer mode with local storage
-      if (validUserId === DEVELOPER_UUID) {
-        const devPoint = {
-          id: crypto.randomUUID(),
-          ...payload,
-          created_at: new Date().toISOString()
-        };
-        
-        const currentPoints = mapPoints || [];
-        const updatedPoints = [devPoint, ...currentPoints];
-        setMapPoints(updatedPoints);
-        localStorage.setItem('dev-map-points', JSON.stringify(updatedPoints));
-        
-        console.log("✅ Point saved in developer mode:", devPoint);
-        toast.success("Punto salvato (modalità sviluppatore)");
-        setNewPoint(null);
-        setIsAddingPoint(false);
-        return;
-      }
-
       const { data, error } = await supabase
         .from('map_points')
-        .insert([payload])
+        .insert([{
+          user_id: user.id,
+          latitude: newPoint.lat,
+          longitude: newPoint.lng,
+          title,
+          note
+        }])
         .select();
 
       if (error) {
-        console.error("❌ Supabase error saving map point:", error);
-        console.error("❌ Error details:", {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint
-        });
-        
-        toast.error(`Errore nel salvare il punto: ${error.message}`);
+        console.error("Error saving map point:", error);
+        toast.error("Errore nel salvare il punto");
         return;
       }
 
-      if (!data || data.length === 0) {
-        console.error("❌ No data returned from insert");
-        toast.error("Errore nel salvare il punto: nessun dato restituito");
-        return;
-      }
-
-      console.log("✅ Successfully saved new point:", data[0]);
+      console.log("📍 Saved new point:", data);
       toast.success("Punto salvato con successo");
       
       // Add the new point to the current list
-      setMapPoints(prev => [data[0], ...prev]);
+      if (data && data.length > 0) {
+        setMapPoints(prev => [...prev, data[0]]);
+      }
       
       // Reset new point state
       setNewPoint(null);
-      setIsAddingPoint(false);
     } catch (err) {
-      console.error("❌ Exception saving map point:", err);
-      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
-      toast.error(`Errore nell'salvare il punto: ${errorMessage}`);
+      console.error("Exception saving map point:", err);
+      toast.error("Errore nel salvare il punto");
     }
   };
 
-  // FIXED: Update an existing point con validazione
+  // Update an existing point - MODIFIED to return boolean
   const updateMapPoint = async (id: string, title: string, note: string): Promise<boolean> => {
-    const validUserId = getValidUserId();
-    
-    const trimmedTitle = title?.trim() || '';
-    const trimmedNote = note?.trim() || '';
-    
-    if (!trimmedTitle) {
-      toast.error("Il titolo è obbligatorio");
-      return false;
-    }
+    if (!user?.id) return false;
     
     try {
-      console.log("📝 Updating map point:", id, trimmedTitle, trimmedNote);
-
-      // Handle developer mode
-      if (validUserId === DEVELOPER_UUID) {
-        const currentPoints = [...mapPoints];
-        const pointIndex = currentPoints.findIndex(p => p.id === id);
-        if (pointIndex >= 0) {
-          currentPoints[pointIndex] = { 
-            ...currentPoints[pointIndex], 
-            title: trimmedTitle, 
-            note: trimmedNote 
-          };
-          setMapPoints(currentPoints);
-          localStorage.setItem('dev-map-points', JSON.stringify(currentPoints));
-          toast.success("Punto aggiornato (modalità sviluppatore)");
-          setActiveMapPoint(null);
-          return true;
-        }
-        return false;
-      }
-
       const { error } = await supabase
         .from('map_points')
         .update({
-          title: trimmedTitle,
-          note: trimmedNote
+          title,
+          note
         })
         .eq('id', id)
-        .eq('user_id', validUserId);
+        .eq('user_id', user.id);
 
       if (error) {
-        console.error("❌ Error updating map point:", error);
-        toast.error(`Errore nell'aggiornare il punto: ${error.message}`);
+        console.error("Error updating map point:", error);
+        toast.error("Errore nell'aggiornare il punto");
         return false;
       }
 
       // Update local state
       setMapPoints(prev => prev.map(point => 
-        point.id === id ? { ...point, title: trimmedTitle, note: trimmedNote } : point
+        point.id === id ? { ...point, title, note } : point
       ));
       
       toast.success("Punto aggiornato con successo");
       setActiveMapPoint(null);
       return true;
     } catch (err) {
-      console.error("❌ Exception updating map point:", err);
-      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
-      toast.error(`Errore nell'aggiornare il punto: ${errorMessage}`);
+      console.error("Exception updating map point:", err);
+      toast.error("Errore nell'aggiornare il punto");
       return false;
     }
   };
 
-  // FIXED: Delete a map point con controllo RLS
+  // Delete a map point
   const deleteMapPoint = async (id: string): Promise<boolean> => {
-    const validUserId = getValidUserId();
+    if (!user?.id) return false;
     
     try {
-      console.log("🗑️ Deleting map point:", id);
-
-      // Handle developer mode
-      if (validUserId === DEVELOPER_UUID) {
-        const currentPoints = mapPoints.filter(point => point.id !== id);
-        setMapPoints(currentPoints);
-        localStorage.setItem('dev-map-points', JSON.stringify(currentPoints));
-        setActiveMapPoint(null);
-        toast.success("Punto eliminato (modalità sviluppatore)");
-        return true;
-      }
-
       const { error } = await supabase
         .from('map_points')
         .delete()
         .eq('id', id)
-        .eq('user_id', validUserId);
+        .eq('user_id', user.id);
 
       if (error) {
-        console.error("❌ Error deleting map point:", error);
-        toast.error(`Errore nell'eliminare il punto: ${error.message}`);
+        console.error("Error deleting map point:", error);
+        toast.error("Errore nell'eliminare il punto");
         return false;
       }
 
@@ -321,27 +185,17 @@ export const useNewMapPage = () => {
       toast.success("Punto eliminato con successo");
       return true;
     } catch (err) {
-      console.error("❌ Exception deleting map point:", err);
-      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
-      toast.error(`Errore nell'eliminare il punto: ${errorMessage}`);
+      console.error("Exception deleting map point:", err);
+      toast.error("Errore nell'eliminare il punto");
       return false;
     }
   };
 
-  // FIXED: Handle BUZZ button click con validazione user ID
+  // Handle BUZZ button click - Updated for BUZZ MAPPA con messaggi allineati
   const handleBuzz = useCallback(() => {
-    const validUserId = getValidUserId();
-    
-    // ALWAYS allow BUZZ with valid UUID
-    const isDevMode = validUserId === DEVELOPER_UUID;
-    if (isDevMode) {
-      toast.info("Modalità sviluppatore: generazione BUZZ simulata", {
-        description: "Area creata con ID sviluppatore"
-      });
-    }
-
     const activeArea = getActiveArea();
     if (activeArea) {
+      // MESSAGGIO ALLINEATO: usa il valore ESATTO salvato in Supabase
       toast.success(`Area BUZZ MAPPA attiva: ${activeArea.radius_km.toFixed(1)} km`, {
         description: "L'area è già visibile sulla mappa"
       });
@@ -349,7 +203,7 @@ export const useNewMapPage = () => {
     } else {
       toast.info("Premi BUZZ MAPPA per generare una nuova area di ricerca!");
     }
-  }, [getActiveArea, getValidUserId]);
+  }, [getActiveArea]);
 
   // Request user location
   const requestLocationPermission = () => {
@@ -358,6 +212,7 @@ export const useNewMapPage = () => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
+          // Here you would update the map center
           toast.success("Posizione rilevata");
         },
         (error) => {
@@ -378,7 +233,7 @@ export const useNewMapPage = () => {
     isLoading,
     activeMapPoint,
     setActiveMapPoint,
-    buzzMapPrice,
+    buzzMapPrice: calculateBuzzMapPrice(),
     searchAreas,
     isAddingSearchArea,
     activeSearchArea,

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -18,41 +19,6 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   useEffect(() => {
     console.log("useAuth: Initializing auth state");
     
-    // ✅ CONTROLLO PRIORITARIO: Developer access immediato
-    const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-    const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-    
-    if (hasDeveloperAccess || isDeveloperEmail) {
-      console.log("🔑 Developer auth state - ACCESSO IMMEDIATO");
-      
-      // Crea fake user e session per sviluppatore
-      const fakeUser = {
-        id: 'developer-fake-id',
-        email: 'wikus77@hotmail.it',
-        email_confirmed_at: new Date().toISOString(),
-        user_metadata: {},
-        app_metadata: {},
-        aud: 'authenticated',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      } as User;
-      
-      const fakeSession = {
-        access_token: 'developer-fake-access-token',
-        refresh_token: 'developer-fake-refresh-token',
-        expires_at: Math.floor(Date.now() / 1000) + 3600,
-        expires_in: 3600,
-        token_type: 'bearer',
-        user: fakeUser
-      } as Session;
-      
-      setUser(fakeUser);
-      setSession(fakeSession);
-      setIsEmailVerified(true);
-      setIsLoading(false);
-      return;
-    }
-    
     // First set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
@@ -62,10 +28,8 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         
         // Update email verification status
         if (currentSession?.user) {
-          // Per l'email sviluppatore, considera sempre verificata
-          const isDeveloper = currentSession.user.email === 'wikus77@hotmail.it';
-          setIsEmailVerified(isDeveloper || !!currentSession.user.email_confirmed_at);
-          console.log("Email verification status:", isDeveloper || !!currentSession.user.email_confirmed_at);
+          setIsEmailVerified(!!currentSession.user.email_confirmed_at);
+          console.log("Email verification status:", !!currentSession.user.email_confirmed_at);
         } else {
           setIsEmailVerified(false);
         }
@@ -83,9 +47,8 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       
       // Update email verification status
       if (initialSession?.user) {
-        const isDeveloper = initialSession.user.email === 'wikus77@hotmail.it';
-        setIsEmailVerified(isDeveloper || !!initialSession.user.email_confirmed_at);
-        console.log("Initial email verification status:", isDeveloper || !!initialSession.user.email_confirmed_at);
+        setIsEmailVerified(!!initialSession.user.email_confirmed_at);
+        console.log("Initial email verification status:", !!initialSession.user.email_confirmed_at);
       }
       
       // Mark loading as complete after initial check
@@ -100,43 +63,40 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   }, []);
 
   /**
-   * Login function using email and password - ACCESSO IMMEDIATO per sviluppatore
+   * Login function using email and password
    */
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, captchaToken?: string) => {
     console.log("Login attempt for email:", email);
-    
-    // ✅ ACCESSO IMMEDIATO per email sviluppatore
-    if (email === 'wikus77@hotmail.it') {
-      console.log("🔑 DEVELOPER LOGIN: ACCESSO IMMEDIATO - NO CAPTCHA");
-      
-      localStorage.setItem('developer_access', 'granted');
-      localStorage.setItem('developer_user_email', email);
-      localStorage.setItem('captcha_bypassed', 'true');
-      
-      // Redirect immediato a /home
-      window.location.href = '/home';
-      return { success: true, developer_access: true };
-    }
-
-    // ✅ Per altri utenti, procedi senza CAPTCHA
     try {
+      const options: any = {};
+      
+      if (captchaToken) {
+        options.options = {
+          captchaToken: captchaToken
+        };
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        ...options
       });
 
       if (error) {
-        throw error;
+        console.error("Login error:", error.message);
+        return { success: false, error };
       }
 
-      console.log("✅ Login standard completato senza CAPTCHA");
+      console.log("Login successful for:", email);
+      
       return { success: true, data };
-    } catch (error: any) {
-      console.error("Errore durante il login:", error);
-      return { success: false, error: error as AuthError };
+    } catch (error) {
+      console.error("Unexpected login error:", error);
+      return {
+        success: false,
+        error: { message: "Si è verificato un errore imprevisto durante l'accesso." } as AuthError
+      };
     }
-
-    return { success: false, error: { message: "Login non riuscito" } };
   };
 
   /**
@@ -157,14 +117,6 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
    * Check if user is authenticated
    */
   const isAuthenticated = useCallback(() => {
-    // ✅ CONTROLLO PRIORITARIO: Developer access
-    const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-    const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-    
-    if (hasDeveloperAccess || isDeveloperEmail) {
-      return true;
-    }
-    
     return !!user && !!session;
   }, [user, session]);
 
@@ -172,18 +124,6 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
    * Get current authenticated user
    */
   const getCurrentUser = useCallback(() => {
-    // ✅ CONTROLLO PRIORITARIO: Developer access
-    const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-    const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-    
-    if (hasDeveloperAccess || isDeveloperEmail) {
-      return {
-        id: 'developer-fake-id',
-        email: 'wikus77@hotmail.it',
-        email_confirmed_at: new Date().toISOString()
-      } as User;
-    }
-    
     return user;
   }, [user]);
 
@@ -191,14 +131,6 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
    * Get access token
    */
   const getAccessToken = useCallback(() => {
-    // ✅ CONTROLLO PRIORITARIO: Developer access
-    const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-    const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-    
-    if (hasDeveloperAccess || isDeveloperEmail) {
-      return 'developer-fake-access-token';
-    }
-    
     return session?.access_token || null;
   }, [session]);
 
@@ -254,8 +186,8 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     logout,
     getCurrentUser,
     getAccessToken,
-    resendVerificationEmail: async () => ({ success: true }),
-    resetPassword: async () => ({ success: true }),
+    resendVerificationEmail,
+    resetPassword,
     user,
   };
 }

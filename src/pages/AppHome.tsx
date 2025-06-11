@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import CommandCenterHome from "@/components/command-center/CommandCenterHome";
+import { CommandCenterHome } from "@/components/command-center/CommandCenterHome";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
@@ -39,21 +40,21 @@ const AppHome = () => {
       
       const userAgent = navigator.userAgent;
       const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-      const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-      const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
+      const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
       
-      console.log('AppHome access check:', { isMobileDevice, hasDeveloperAccess, isCapacitorApp, isDeveloperEmail });
+      console.log('AppHome access check (Capacitor):', { isMobileDevice, hasStoredAccess, isCapacitorApp });
       
-      // ✅ CONTROLLO PRIORITARIO: ACCESSO IMMEDIATO per sviluppatore
-      if (hasDeveloperAccess || isDeveloperEmail) {
-        console.log('🔑 Developer access - ACCESSO IMMEDIATO a AppHome');
+      // DEVELOPER ACCESS: Always grant access to wikus77@hotmail.it
+      const currentUserEmail = localStorage.getItem('developer_user_email');
+      if (currentUserEmail === 'wikus77@hotmail.it') {
         setHasAccess(true);
         localStorage.setItem('developer_access', 'granted');
         localStorage.setItem('full_access_granted', 'true');
+        console.log('Developer access auto-granted for wikus77@hotmail.it');
         return;
       }
       
-      if (isMobileDevice && hasDeveloperAccess) {
+      if (isMobileDevice && hasStoredAccess) {
         setHasAccess(true);
       } else if (!isMobileDevice) {
         // Web users should NOT be redirected to landing page from internal routes
@@ -69,8 +70,6 @@ const AppHome = () => {
     setHasAccess(true);
     // Store developer email for auto-access
     localStorage.setItem('developer_user_email', 'wikus77@hotmail.it');
-    localStorage.setItem('developer_access', 'granted');
-    localStorage.setItem('captcha_bypassed', 'true');
   };
 
   useEffect(() => {
@@ -93,20 +92,8 @@ const AppHome = () => {
     }
   }, [error]);
 
-  // ✅ CONTROLLO PRIORITARIO: ACCESSO IMMEDIATO per sviluppatore
-  const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-  const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
-  
-  if (hasDeveloperAccess || isDeveloperEmail) {
-    console.log('🔑 Developer access detected - ACCESSO IMMEDIATO a AppHome');
-    // Force access for developer
-    if (!hasAccess) {
-      setHasAccess(true);
-    }
-  }
-
   // Show developer access screen for mobile users without access
-  if (isMobile && !hasAccess && !hasDeveloperAccess && !isDeveloperEmail) {
+  if (isMobile && !hasAccess) {
     return <DeveloperAccess onAccessGranted={handleAccessGranted} />;
   }
 

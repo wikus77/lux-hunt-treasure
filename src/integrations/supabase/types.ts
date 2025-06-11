@@ -556,7 +556,6 @@ export type Database = {
           last_name: string | null
           phone: string | null
           postal_code: string | null
-          preferred_language: string | null
           role: string
           subscription_tier: string
           updated_at: string
@@ -579,7 +578,6 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           postal_code?: string | null
-          preferred_language?: string | null
           role?: string
           subscription_tier?: string
           updated_at?: string
@@ -602,7 +600,6 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           postal_code?: string | null
-          preferred_language?: string | null
           role?: string
           subscription_tier?: string
           updated_at?: string
@@ -887,7 +884,15 @@ export type Database = {
           user_id?: string
           week?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_map_areas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_minigames_progress: {
         Row: {
@@ -948,42 +953,6 @@ export type Database = {
           message?: string
           title?: string
           type?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_payment_methods: {
-        Row: {
-          brand: string
-          created_at: string
-          exp_month: number
-          exp_year: number
-          id: string
-          is_default: boolean
-          last4: string
-          stripe_pm_id: string
-          user_id: string
-        }
-        Insert: {
-          brand: string
-          created_at?: string
-          exp_month: number
-          exp_year: number
-          id?: string
-          is_default?: boolean
-          last4: string
-          stripe_pm_id: string
-          user_id: string
-        }
-        Update: {
-          brand?: string
-          created_at?: string
-          exp_month?: number
-          exp_year?: number
-          id?: string
-          is_default?: boolean
-          last4?: string
-          stripe_pm_id?: string
           user_id?: string
         }
         Relationships: []
@@ -1054,10 +1023,6 @@ export type Database = {
       update_user_subscription_tier: {
         Args: { target_user_id: string; new_tier: string }
         Returns: undefined
-      }
-      validate_buzz_user_id: {
-        Args: { p_user_id: string }
-        Returns: boolean
       }
     }
     Enums: {

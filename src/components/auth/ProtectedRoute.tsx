@@ -43,27 +43,21 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
   
-  // DEVELOPER EMAIL ALWAYS HAS ACCESS - NO VERIFICATION REQUIRED
-  const currentUser = getCurrentUser();
-  const isDeveloperEmail = currentUser?.email === 'wikus77@hotmail.it';
-  
-  if (requireEmailVerification && !isEmailVerified && !isDeveloperEmail) {
+  // Check for email verification if required
+  if (requireEmailVerification && !isEmailVerified) {
     console.log("Email not verified, redirecting to verification page");
     return <Navigate to="/login?verification=pending" replace />;
   }
   
-  // User is authenticated and email is verified (or is developer), render the protected route
+  // User is authenticated and email is verified, render the protected route
   return children ? <>{children}</> : <Outlet />;
 };
 
 // Export a component that can be used directly in pages to show a verification alert
 export const EmailVerificationGuard: React.FC<{children: React.ReactNode}> = ({ children }) => {
-  const { isEmailVerified, getCurrentUser } = useAuthContext();
+  const { isEmailVerified } = useAuthContext();
   
-  const currentUser = getCurrentUser();
-  const isDeveloperEmail = currentUser?.email === 'wikus77@hotmail.it';
-  
-  if (!isEmailVerified && !isDeveloperEmail) {
+  if (!isEmailVerified) {
     return <EmailVerificationAlert />;
   }
   

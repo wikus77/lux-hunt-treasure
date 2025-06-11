@@ -1,4 +1,3 @@
-
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -18,11 +17,7 @@ const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Settings = lazy(() => import("@/pages/Settings"));
-const PersonalInfo = lazy(() => import("@/pages/PersonalInfo"));
-const PasswordSecurity = lazy(() => import("@/pages/PasswordSecurity"));
 const Subscriptions = lazy(() => import("@/pages/Subscriptions"));
-const HelpFaq = lazy(() => import("@/pages/HelpFaq"));
-const PrivacySecurity = lazy(() => import("@/pages/PrivacySecurity"));
 
 // Auth routes
 const Login = lazy(() => import("@/pages/Login"));
@@ -113,24 +108,6 @@ const AppRoutes: React.FC = () => {
             />
             
             <Route path="/settings" element={<Settings />} />
-            
-            <Route
-              path="/personal-info"
-              element={
-                <ProtectedRoute>
-                  <PersonalInfo />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/password-security"
-              element={
-                <ProtectedRoute>
-                  <PasswordSecurity />
-                </ProtectedRoute>
-              }
-            />
 
             <Route
               path="/subscriptions"
@@ -140,17 +117,6 @@ const AppRoutes: React.FC = () => {
                 </ProtectedRoute>
               }
             />
-
-            <Route
-              path="/privacy-security"
-              element={
-                <ProtectedRoute>
-                  <PrivacySecurity />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route path="/help-faq" element={<HelpFaq />} />
 
             {/* Auth routes */}
             <Route path="/login" element={<Login />} />

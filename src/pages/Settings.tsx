@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Lock, ChevronRight, LogOut, Bell, Globe, CreditCard, Key } from "lucide-react";
+import { ArrowLeft, User, Lock, CreditCard, ChevronRight, LogOut, Bell, Globe } from "lucide-react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import BottomNavigation from "@/components/layout/BottomNavigation";
@@ -8,14 +9,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/auth";
 import { Separator } from "@/components/ui/separator";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import AccountSection from "@/components/settings/AccountSection";
-import RegulationSection from "@/components/settings/RegulationSection";
 import AppSection from "@/components/settings/AppSection";
 import NotificationSection from "@/components/settings/NotificationSection";
 import SupportSection from "@/components/settings/SupportSection";
-import PaymentMethodsSection from "@/components/settings/PaymentMethodsSection";
-import PrivacySecuritySection from "@/components/settings/PrivacySecuritySection";
 import RoleSwitcher from "@/components/auth/RoleSwitcher";
 
 const Settings = () => {
@@ -31,10 +28,6 @@ const Settings = () => {
   // Add state for notification settings
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
-  
-  // Add state for collapsible sections
-  const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
-  const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false);
   
   const handleLogout = async () => {
     try {
@@ -60,121 +53,24 @@ const Settings = () => {
       
       <div className="h-[72px] w-full" />
       
-      {/* Title section with back button aligned horizontally - positioned below header */}
-      <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+64px)] mb-6">
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            navigate(-1);
-          }}
-          className="w-6 h-6 text-white"
-          aria-label="Torna alla pagina precedente"
-        >
-          <ArrowLeft />
-        </button>
-        <h1 className="text-xl font-semibold text-white">Impostazioni</h1>
-      </div>
-      
-      {/* Main content with proper spacing */}
-      <div className="pb-24 px-4 max-w-screen-xl mx-auto pt-4">
+      <div className="pb-24 px-4 pt-2 max-w-screen-xl mx-auto">
+        <div className="flex items-center gap-2 mb-6">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 rounded-full" 
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-2xl font-bold text-white">Impostazioni</h1>
+        </div>
+        
         {/* Admin Role Switcher (only visible to admins) */}
         <RoleSwitcher />
         
-        {/* Account Settings - Now collapsible */}
+        {/* Account Settings */}
         <AccountSection />
-        
-        {/* Password e Sicurezza Section - Fixed text consistency */}
-        <div className="mb-6">
-          <div className="glass-card p-4 rounded-xl">
-            <div 
-              className="flex items-center justify-between p-2 bg-black/30 rounded-xl cursor-pointer hover:bg-black/40 transition-colors shadow-lg"
-              onClick={() => navigate('/password-security')}
-            >
-              <div className="flex items-center gap-2">
-                <Key className="h-4 w-4 text-cyan-400" />
-                <span className="text-sm text-white">Password e Sicurezza</span>
-              </div>
-              <Button variant="ghost" size="sm" className="h-8 rounded-xl">
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-        
-        {/* Privacy & Security Section */}
-        <PrivacySecuritySection />
-        
-        {/* Subscription Section - Now collapsible */}
-        <div className="mb-6">
-          <div className="glass-card p-4 rounded-xl">
-            <Collapsible open={isSubscriptionOpen} onOpenChange={setIsSubscriptionOpen}>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-                <h2 className="text-lg font-semibold text-white flex items-center">
-                  <User className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-                  Abbonamento
-                </h2>
-                <ChevronRight 
-                  className={`h-4 w-4 transition-transform ${isSubscriptionOpen ? 'rotate-90' : ''}`} 
-                />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-4">
-                <div className="space-y-4 text-white">
-                  <div className="p-4 border border-white/10 rounded-lg bg-gradient-to-r from-projectx-blue/20 to-projectx-pink/20">
-                    <h3 className="font-semibold mb-2">Piano attuale: Free</h3>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Aggiorna il tuo abbonamento per sbloccare funzionalità premium
-                    </p>
-                    <Button 
-                      onClick={() => navigate('/subscriptions')}
-                      className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-xl"
-                    >
-                      Visualizza tutti i piani
-                    </Button>
-                  </div>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        </div>
-        
-        {/* Regulation Section - Now collapsible */}
-        <div className="mb-6">
-          <div className="glass-card p-4 rounded-xl">
-            <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-                <h2 className="text-lg font-semibold text-white flex items-center">
-                  <Lock className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-                  Regolamento Ufficiale M1SSION™
-                </h2>
-                <ChevronRight className="h-4 w-4" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-4">
-                <RegulationSection />
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        </div>
-        
-        {/* Payment Methods Section - Now properly collapsible */}
-        <div className="mb-6">
-          <div className="glass-card p-4 rounded-xl">
-            <Collapsible open={isPaymentMethodsOpen} onOpenChange={setIsPaymentMethodsOpen}>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-                <h2 className="text-lg font-semibold text-white flex items-center">
-                  <CreditCard className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-                  Metodi di Pagamento
-                </h2>
-                <ChevronRight 
-                  className={`h-4 w-4 transition-transform ${isPaymentMethodsOpen ? 'rotate-90' : ''}`} 
-                />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-4">
-                <PaymentMethodsSection />
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        </div>
         
         {/* App Settings */}
         <AppSection 
@@ -199,7 +95,7 @@ const Settings = () => {
           {!showLogoutConfirm ? (
             <Button 
               variant="destructive" 
-              className="w-full rounded-xl" 
+              className="w-full" 
               onClick={() => setShowLogoutConfirm(true)}
             >
               <LogOut className="h-4 w-4 mr-2" />
@@ -211,14 +107,14 @@ const Settings = () => {
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
-                  className="flex-1 rounded-xl" 
+                  className="flex-1" 
                   onClick={() => setShowLogoutConfirm(false)}
                 >
                   Annulla
                 </Button>
                 <Button 
                   variant="destructive" 
-                  className="flex-1 rounded-xl" 
+                  className="flex-1" 
                   onClick={handleLogout}
                 >
                   Conferma

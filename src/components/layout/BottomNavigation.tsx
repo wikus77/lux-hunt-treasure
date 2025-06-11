@@ -80,20 +80,9 @@ const BottomNavigation = () => {
                   : "text-gray-400 hover:text-gray-300"
               }`}
             >
-              <motion.div className="relative">
+              <div className="relative">
                 {link.isSpecial ? (
-                  <motion.div 
-                    className="relative"
-                    animate={{ 
-                      scale: [1, 1.05, 1], 
-                      opacity: [1, 0.9, 1] 
-                    }}
-                    transition={{ 
-                      repeat: Infinity, 
-                      duration: 3,
-                      ease: "easeInOut"
-                    }}
-                  >
+                  <div className="relative">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] opacity-30 blur-sm animate-pulse" />
                     <div
                       className="absolute inset-0 rounded-full border-2 border-[#00D1FF]/60 animate-spin-slow"
@@ -110,39 +99,19 @@ const BottomNavigation = () => {
                     >
                       {link.icon}
                     </div>
-                  </motion.div>
+                  </div>
                 ) : (
-                  <motion.div
-                    animate={currentPath === link.path ? {
-                      scale: [1, 1.1, 1],
-                      filter: [
-                        "drop-shadow(0 0 5px rgba(0, 209, 255, 0.5))",
-                        "drop-shadow(0 0 12px rgba(123, 46, 255, 0.7))",
-                        "drop-shadow(0 0 5px rgba(0, 209, 255, 0.5))"
-                      ]
-                    } : {}}
-                    transition={{ 
-                      repeat: currentPath === link.path ? Infinity : 0, 
-                      duration: 3,
-                      ease: "easeInOut"
-                    }}
-                  >
-                    {link.icon}
-                  </motion.div>
+                  link.icon
                 )}
 
                 {link.badge && (
-                  <motion.div 
-                    className="absolute -top-1 -right-1 flex items-center justify-center h-4 w-4 bg-[#FF59F8] rounded-full shadow-[0_0_8px_rgba(240,89,255,0.5)]"
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
+                  <div className="absolute -top-1 -right-1 flex items-center justify-center h-4 w-4 bg-[#FF59F8] rounded-full animate-pulse shadow-[0_0_8px_rgba(240,89,255,0.5)]">
                     <span className="text-[8px] font-bold text-white">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
-                  </motion.div>
+                  </div>
                 )}
-              </motion.div>
+              </div>
               <span className="text-xs mt-1">{link.label}</span>
               {currentPath === link.path && (
                 <motion.div

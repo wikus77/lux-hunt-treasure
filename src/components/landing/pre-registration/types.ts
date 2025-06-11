@@ -1,9 +1,4 @@
 
-export interface FormData {
-  name: string;
-  email: string;
-}
-
 export interface PreRegistrationFormData {
   name: string;
   email: string;

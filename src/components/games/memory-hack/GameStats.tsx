@@ -1,6 +1,4 @@
-
 import React from 'react';
-import CountUp from 'react-countup';
 
 interface GameStatsProps {
   moves: number;
@@ -26,17 +24,11 @@ const GameStats: React.FC<GameStatsProps> = ({
     return (
       <div className="flex justify-between items-center mb-4 text-white font-sans">
         <div className="flex items-center gap-4">
-          <span>Tempo: <span className="text-[#00D1FF] font-bold text-glow">
-            <CountUp end={timeLeft} duration={0.5} />s
-          </span></span>
-          <span>Errori: <span className={`font-bold text-glow ${errors > 5 ? 'text-red-400' : 'text-yellow-400'}`}>
-            <CountUp end={errors} duration={0.5} />/5
-          </span></span>
+          <span>Tempo: <span className="text-[#00D1FF] font-bold">{timeLeft}s</span></span>
+          <span>Errori: <span className={`font-bold ${errors > 5 ? 'text-red-400' : 'text-yellow-400'}`}>{errors}/5</span></span>
         </div>
         <div>
-          Coppie: <span className="text-green-400 font-bold text-glow">
-            <CountUp end={matchedPairs} duration={0.5} />/<CountUp end={totalPairs} duration={0.5} />
-          </span>
+          Coppie: <span className="text-green-400 font-bold">{matchedPairs}/{totalPairs}</span>
         </div>
       </div>
     );
@@ -46,18 +38,11 @@ const GameStats: React.FC<GameStatsProps> = ({
   return (
     <div className="flex justify-between items-center mb-4 text-white font-sans">
       <div className="flex items-center gap-4">
-        <span>Mosse: <span className="text-[#00D1FF] font-bold text-glow text-2xl">
-          <CountUp end={moves} duration={1} />
-        </span></span>
-        <span>Tempo: <span className="text-yellow-400 font-bold text-glow">
-          <CountUp end={Math.floor(timeElapsed / 60)} duration={0.5} />:
-          <CountUp end={timeElapsed % 60} duration={0.5} preserveValue />
-        </span></span>
+        <span>Mosse: <span className="text-[#00D1FF] font-bold">{moves}</span></span>
+        <span>Tempo: <span className="text-yellow-400 font-bold">{Math.floor(timeElapsed / 60)}:{(timeElapsed % 60).toString().padStart(2, '0')}</span></span>
       </div>
       <div>
-        Punteggio: <span className="text-green-400 font-bold text-glow text-2xl">
-          <CountUp end={score} duration={2} separator="." />
-        </span>
+        Punteggio: <span className="text-green-400 font-bold">{score}</span>
       </div>
     </div>
   );

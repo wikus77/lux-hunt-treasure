@@ -9,9 +9,7 @@ interface StyledInputProps {
   placeholder: string;
   className?: string;
   icon?: React.ReactNode;
-  readOnly?: boolean;
-  required?: boolean;
-  disabled?: boolean;
+  readOnly?: boolean; // Add support for the readOnly prop
 }
 
 const StyledInput = ({
@@ -22,9 +20,7 @@ const StyledInput = ({
   placeholder,
   className,
   icon,
-  readOnly,
-  required,
-  disabled
+  readOnly
 }: StyledInputProps) => {
   // Split the input value to style first two letters differently
   const firstTwoChars = type === 'password' ? '••'.slice(0, Math.min(2, value.length)) : value.slice(0, 2);
@@ -46,9 +42,7 @@ const StyledInput = ({
         value={value}
         onChange={onChange}
         className={`bg-black/50 border-white/10 ${icon ? 'pl-10' : 'pl-3'} w-full h-10 rounded-md border px-3 py-2 text-base md:text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className} text-transparent`}
-        readOnly={readOnly}
-        required={required}
-        disabled={disabled}
+        readOnly={readOnly} // Pass the readOnly prop to the input element
       />
       {/* Overlay div showing styled text */}
       {value && (

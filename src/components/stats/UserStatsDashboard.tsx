@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { MapPin, Clock, Search, Star, Trophy, Target } from "lucide-react";
 import { SocialShareButtons } from "@/components/social/SocialShareButtons";
-import CountUp from 'react-countup';
 
 interface UserStats {
   areasExplored: number;
@@ -56,7 +55,7 @@ export function UserStatsDashboard() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40" interactive>
+        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <MapPin className="h-5 w-5 text-projectx-pink" />
@@ -66,20 +65,15 @@ export function UserStatsDashboard() {
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>
-                  <CountUp end={stats.areasExplored} duration={2} /> su{" "}
-                  <CountUp end={stats.totalAreas} duration={2} />
-                </span>
-                <span className="text-glow font-bold text-white text-2xl">
-                  <CountUp end={Math.round((stats.areasExplored / stats.totalAreas) * 100)} duration={2} />%
-                </span>
+                <span>{stats.areasExplored} su {stats.totalAreas}</span>
+                <span>{Math.round((stats.areasExplored / stats.totalAreas) * 100)}%</span>
               </div>
               <Progress value={(stats.areasExplored / stats.totalAreas) * 100} className="h-2" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40" interactive>
+        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Search className="h-5 w-5 text-projectx-blue" />
@@ -89,20 +83,15 @@ export function UserStatsDashboard() {
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>
-                  <CountUp end={stats.cluesFound} duration={2} /> su{" "}
-                  <CountUp end={stats.totalClues} duration={2} />
-                </span>
-                <span className="text-glow font-bold text-white text-2xl">
-                  <CountUp end={Math.round((stats.cluesFound / stats.totalClues) * 100)} duration={2} />%
-                </span>
+                <span>{stats.cluesFound} su {stats.totalClues}</span>
+                <span>{Math.round((stats.cluesFound / stats.totalClues) * 100)}%</span>
               </div>
               <Progress value={(stats.cluesFound / stats.totalClues) * 100} className="h-2" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40" interactive>
+        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Clock className="h-5 w-5 text-projectx-neon-blue" />
@@ -110,14 +99,12 @@ export function UserStatsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-glow">
-              <CountUp end={stats.timeSpent} duration={3} decimals={1} /> ore
-            </p>
+            <p className="text-3xl font-bold">{stats.timeSpent} ore</p>
             <p className="text-sm text-muted-foreground">Ultima sessione: 1.5 ore fa</p>
           </CardContent>
         </Card>
         
-        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40" interactive>
+        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Target className="h-5 w-5 text-projectx-gold" />
@@ -125,14 +112,12 @@ export function UserStatsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-glow">
-              <CountUp end={stats.accuracy} duration={2} />%
-            </p>
+            <p className="text-3xl font-bold">{stats.accuracy}%</p>
             <p className="text-sm text-muted-foreground">Tasso di successo indizi</p>
           </CardContent>
         </Card>
         
-        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40" interactive>
+        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Star className="h-5 w-5 text-yellow-400" />
@@ -141,9 +126,7 @@ export function UserStatsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <p className="text-3xl font-bold text-glow">
-                <CountUp end={stats.reputation} duration={2} decimals={1} />
-              </p>
+              <p className="text-3xl font-bold">{stats.reputation}</p>
               <div className="ml-2 flex">
                 {[1, 2, 3, 4, 5].map(star => (
                   <Star
@@ -157,7 +140,7 @@ export function UserStatsDashboard() {
           </CardContent>
         </Card>
         
-        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40" interactive>
+        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Trophy className="h-5 w-5 text-projectx-gold" />
@@ -165,12 +148,8 @@ export function UserStatsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-glow">
-              #<CountUp end={stats.rank} duration={2} />
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Su <CountUp end={stats.totalUsers} duration={2} /> utenti attivi
-            </p>
+            <p className="text-3xl font-bold">#{stats.rank}</p>
+            <p className="text-sm text-muted-foreground">Su {stats.totalUsers} utenti attivi</p>
           </CardContent>
         </Card>
       </div>

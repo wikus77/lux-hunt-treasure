@@ -1,41 +1,28 @@
+
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { motion } from "framer-motion"
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   gradient?: boolean;
-  interactive?: boolean;
 }
 
 const Card = React.forwardRef<
   HTMLDivElement,
   CardProps
->(({ className, gradient = false, interactive = false, children, ...props }, ref) => (
-  <motion.div
+>(({ className, gradient = false, ...props }, ref) => (
+  <div
     ref={ref}
     className={cn(
-      "m1ssion-glass-card overflow-hidden transition-all duration-300 card-hover-effect relative rounded-[24px]",
+      "m1ssion-glass-card overflow-hidden transition-all duration-300 hover:shadow-lg card-hover-effect relative rounded-[24px]",
       className
     )}
-    whileHover={interactive ? { 
-      scale: 1.03,
-      boxShadow: "0 0 25px rgba(0, 209, 255, 0.4), 0 0 50px rgba(123, 46, 255, 0.2)"
-    } : {}}
-    whileTap={interactive ? { scale: 0.97 } : {}}
-    transition={{ duration: 0.3, ease: "easeOut" }}
-    {...(props as any)}
+    {...props}
   >
     {gradient && (
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
     )}
-    <motion.div
-      className="relative"
-      whileHover={interactive ? { y: -2 } : {}}
-      transition={{ duration: 0.2 }}
-    >
-      {children}
-    </motion.div>
-  </motion.div>
+    {props.children}
+  </div>
 ))
 Card.displayName = "Card"
 

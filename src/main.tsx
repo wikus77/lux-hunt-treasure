@@ -2,7 +2,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as Sentry from "@sentry/react";
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './index.css';
 import { Toaster } from 'sonner';
@@ -15,16 +14,6 @@ Sentry.init({
   ],
   tracesSampleRate: 1.0,
   enabled: false // Disabilitato temporaneamente
-});
-
-// Create QueryClient instance for React Query
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
 });
 
 // Gestione errori globale migliorata
@@ -49,10 +38,8 @@ const renderApp = () => {
     // Wrapping dell'app in un errore boundary globale e Toaster per notifiche
     root.render(
       <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <App />
-          <Toaster position="top-right" richColors closeButton />
-        </QueryClientProvider>
+        <App />
+        <Toaster position="top-right" richColors closeButton />
       </React.StrictMode>
     );
     

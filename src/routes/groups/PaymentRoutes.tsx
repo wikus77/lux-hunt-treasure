@@ -5,6 +5,7 @@ import { RoleBasedProtectedRoute } from "../../components/auth/RoleBasedProtecte
 
 // Pages
 import Subscriptions from "../../pages/Subscriptions";
+import PaymentMethods from "../../pages/PaymentMethods";
 import PaymentSilver from "../../pages/PaymentSilver";
 import PaymentGold from "../../pages/PaymentGold";
 import PaymentBlack from "../../pages/PaymentBlack";
@@ -20,6 +21,14 @@ const PaymentRoutes = () => {
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <Subscriptions />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/payment-methods"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+            <PaymentMethods />
           </RoleBasedProtectedRoute>
         }
       />

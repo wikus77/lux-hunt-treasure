@@ -75,36 +75,6 @@ const CountdownTimer = ({ targetDate: propTargetDate, onComplete, className = ""
     return num.toString().padStart(2, "0");
   };
   
-  const AnimatedNumber = ({ value, label }: { value: number | undefined, label: string }) => {
-    const [displayValue, setDisplayValue] = useState(value || 0);
-    
-    useEffect(() => {
-      if (value !== displayValue) {
-        setDisplayValue(value || 0);
-      }
-    }, [value, displayValue]);
-    
-    return (
-      <motion.div className="flex flex-col items-center mx-1 sm:mx-2">
-        <div className="relative overflow-hidden">
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={displayValue}
-              className="text-base sm:text-xl block"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -20, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              {formatNumber(displayValue)}
-            </motion.span>
-          </AnimatePresence>
-        </div>
-        <span className="text-[0.6rem] sm:text-xs uppercase tracking-wider text-gray-400">{label}</span>
-      </motion.div>
-    );
-  };
-  
   if (isComplete && !timeLeft.days && !timeLeft.hours && !timeLeft.minutes && !timeLeft.seconds) {
     return (
       <AnimatePresence>
@@ -115,19 +85,9 @@ const CountdownTimer = ({ targetDate: propTargetDate, onComplete, className = ""
           transition={{ duration: 1.5 }}
           className={`flex flex-col items-center justify-center ${className}`}
         >
-          <motion.div 
-            className="text-center font-orbitron text-white text-glitch text-xl"
-            animate={{
-              textShadow: [
-                "0 0 5px rgba(0, 255, 0, 0.5)",
-                "0 0 20px rgba(0, 255, 0, 0.8)",
-                "0 0 5px rgba(0, 255, 0, 0.5)"
-              ]
-            }}
-            transition={{ duration: 0.5, repeat: 3 }}
-          >
-            MISSION START
-          </motion.div>
+          <div className="text-center font-orbitron text-white">
+            [ 00 : 00 : 00 : 00 ]
+          </div>
         </motion.div>
       </AnimatePresence>
     );
@@ -138,19 +98,31 @@ const CountdownTimer = ({ targetDate: propTargetDate, onComplete, className = ""
       <div className="flex items-center justify-center text-white font-orbitron tracking-wider">
         <span className="opacity-50">[ </span>
         <div className="flex items-center">
-          <AnimatedNumber value={timeLeft.days} label="days" />
+          <div className="flex flex-col items-center mx-1 sm:mx-2">
+            <span className="text-base sm:text-xl">{formatNumber(timeLeft.days)}</span>
+            <span className="text-[0.6rem] sm:text-xs uppercase tracking-wider text-gray-400">days</span>
+          </div>
           
           <span className="opacity-50 mx-0.5">:</span>
           
-          <AnimatedNumber value={timeLeft.hours} label="hours" />
+          <div className="flex flex-col items-center mx-1 sm:mx-2">
+            <span className="text-base sm:text-xl">{formatNumber(timeLeft.hours)}</span>
+            <span className="text-[0.6rem] sm:text-xs uppercase tracking-wider text-gray-400">hours</span>
+          </div>
           
           <span className="opacity-50 mx-0.5">:</span>
           
-          <AnimatedNumber value={timeLeft.minutes} label="minutes" />
+          <div className="flex flex-col items-center mx-1 sm:mx-2">
+            <span className="text-base sm:text-xl">{formatNumber(timeLeft.minutes)}</span>
+            <span className="text-[0.6rem] sm:text-xs uppercase tracking-wider text-gray-400">minutes</span>
+          </div>
           
           <span className="opacity-50 mx-0.5">:</span>
           
-          <AnimatedNumber value={timeLeft.seconds} label="seconds" />
+          <div className="flex flex-col items-center mx-1 sm:mx-2">
+            <span className="text-base sm:text-xl">{formatNumber(timeLeft.seconds)}</span>
+            <span className="text-[0.6rem] sm:text-xs uppercase tracking-wider text-gray-400">seconds</span>
+          </div>
         </div>
         <span className="opacity-50"> ]</span>
       </div>

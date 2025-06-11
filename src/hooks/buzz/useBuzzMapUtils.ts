@@ -18,68 +18,25 @@ export const useBuzzMapUtils = () => {
     return areas[0];
   }, []);
 
-  // CRITICAL FIX: EXACT Progressive radius calculation with GUARANTEED precision
-  const calculateProgressiveRadiusFromCount = useCallback((weeklyBuzzCount: number): number => {
-    const BASE_RADIUS = 100.0; // EXACTLY 100.0 km initial
-    const MIN_RADIUS = 0.5; // EXACTLY 0.5 km minimum
-    const REDUCTION_FACTOR = 0.95; // EXACTLY -5% each time
-    
-    console.log('📏 EXACT PROGRESSIVE RADIUS CALCULATION:', {
-      weeklyBuzzCount,
-      BASE_RADIUS,
-      MIN_RADIUS,
-      REDUCTION_FACTOR
-    });
-    
-    // CRITICAL: For first BUZZ (count 0), return base radius EXACTLY
-    if (weeklyBuzzCount === 0) {
-      console.log('📏 FIRST BUZZ - Using exact base radius:', BASE_RADIUS, 'km');
-      return BASE_RADIUS;
-    }
-    
-    // CRITICAL: Apply EXACT formula: radius = BASE * (REDUCTION_FACTOR ^ count)
-    const radius = BASE_RADIUS * Math.pow(REDUCTION_FACTOR, weeklyBuzzCount);
-    console.log(`📏 EXACT FORMULA: ${BASE_RADIUS} * (${REDUCTION_FACTOR}^${weeklyBuzzCount}) = ${radius.toFixed(2)} km`);
-    
-    const finalRadius = Math.max(MIN_RADIUS, radius);
-    
-    console.log('📏 EXACT CALCULATION RESULT:', {
-      iterations: weeklyBuzzCount,
-      calculatedRadius: radius,
-      finalRadiusWithMinimum: finalRadius,
-      reductionApplied: weeklyBuzzCount > 0 ? `${((1 - Math.pow(REDUCTION_FACTOR, weeklyBuzzCount)) * 100).toFixed(1)}%` : '0%',
-      expectedValue: weeklyBuzzCount === 0 ? '100.0 km' : `${(100 * Math.pow(0.95, weeklyBuzzCount)).toFixed(2)} km`,
-      exactFormula: `100.0 * (0.95^${weeklyBuzzCount})`
-    });
-    
-    // CRITICAL: Round to exactly 2 decimal places for consistency
-    return Math.round(finalRadius * 100) / 100;
-  }, []);
-
-  // Enhanced progressive radius calculation with area-based approach
+  // Calculate next radius with -5% reduction
   const calculateNextRadiusFromArea = useCallback((activeArea: BuzzMapArea | null): number => {
-    const BASE_RADIUS = 100.0;
-    const MIN_RADIUS = 0.5;
-    const REDUCTION_FACTOR = 0.95;
+    const BASE_RADIUS = 100; // 100 km initial
+    const MIN_RADIUS = 5; // 5 km minimum
+    const REDUCTION_FACTOR = 0.95; // -5% each time
 
     if (!activeArea) {
-      console.log('📏 No active area, using exact base radius:', BASE_RADIUS, 'km');
+      console.log('📏 No active area, using base radius:', BASE_RADIUS, 'km');
       return BASE_RADIUS;
     }
 
     const nextRadius = activeArea.radius_km * REDUCTION_FACTOR;
     const finalRadius = Math.max(MIN_RADIUS, nextRadius);
     
-    console.log('📏 AREA-BASED RADIUS CALCULATION:', {
-      previousRadius: activeArea.radius_km,
-      calculatedNextRadius: nextRadius,
-      finalRadiusWithMinimum: finalRadius,
-      reductionPercentage: '5%',
-      exactCalculation: `${activeArea.radius_km} * 0.95 = ${nextRadius.toFixed(2)}`
-    });
+    console.log('📏 Previous radius:', activeArea.radius_km, 'km');
+    console.log('📏 Calculated next radius:', nextRadius, 'km');
+    console.log('📏 Final radius (with minimum):', finalRadius, 'km');
     
-    // CRITICAL: Round to exactly 2 decimal places for consistency
-    return Math.round(finalRadius * 100) / 100;
+    return finalRadius;
   }, []);
 
   // Debug function helper
@@ -103,28 +60,18 @@ export const useBuzzMapUtils = () => {
       isGenerating,
       activeArea: getActiveArea(),
       nextRadius: calculateNextRadius(),
-      progressiveRadiusFromCount: calculateProgressiveRadiusFromCount(currentWeekAreas.length),
       price: calculateBuzzMapPrice(),
       forceUpdateCounter: forceUpdateCounter,
       dailyBuzzCounter: dailyBuzzCounter,
       dailyBuzzMapCounter: dailyBuzzMapCounter,
-      stateTimestamp: new Date().toISOString(),
-      radiusConsistencyCheck: {
-        activeAreaRadius: getActiveArea()?.radius_km,
-        calculatedNextRadius: calculateNextRadius(),
-        weeklyCount: currentWeekAreas.length,
-        shouldBeConsistent: true,
-        exactExpectedRadius: calculateProgressiveRadiusFromCount(currentWeekAreas.length),
-        exactFormula: `100.0 * (0.95^${currentWeekAreas.length})`
-      }
+      stateTimestamp: new Date().toISOString()
     };
-  }, [calculateProgressiveRadiusFromCount]);
+  }, []);
 
   return {
     getCurrentWeek,
     getActiveAreaFromList,
     calculateNextRadiusFromArea,
-    calculateProgressiveRadiusFromCount,
     createDebugReport
   };
 };

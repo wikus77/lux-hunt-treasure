@@ -9,7 +9,6 @@ import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
 import { useMissionManager } from '@/hooks/useMissionManager';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
-import NotificationCategory from "@/components/notifications/NotificationCategory";
 
 const Notifications = () => {
   const [filter, setFilter] = useState<'all' | 'unread' | 'important'>('all');
@@ -88,21 +87,6 @@ const Notifications = () => {
     endActivity(); // Close Dynamic Island when all are read
   };
 
-  // Group notifications by category
-  const groupedNotifications = () => {
-    const filtered = filteredNotifications();
-    const grouped = filtered.reduce((acc, notification) => {
-      const category = notification.type || 'general';
-      if (!acc[category]) {
-        acc[category] = [];
-      }
-      acc[category].push(notification);
-      return acc;
-    }, {} as Record<string, typeof notifications>);
-    
-    return grouped;
-  };
-
   return (
     <motion.div 
       className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
@@ -165,7 +149,7 @@ const Notifications = () => {
                 </Button>
               </div>
               
-              <div className="flex items-center space-x-3 overflow-x-auto mb-6">
+              <div className="flex items-center space-x-3 overflow-x-auto mb-4">
                 <Button
                   variant={filter === 'all' ? 'default' : 'outline'}
                   size="sm"
@@ -196,23 +180,62 @@ const Notifications = () => {
               </div>
               
               <AnimatePresence>
-                {Object.keys(groupedNotifications()).length > 0 ? (
-                  <div className="space-y-4">
-                    {Object.entries(groupedNotifications()).map(([category, categoryNotifications]) => (
-                      <NotificationCategory
-                        key={category}
-                        category={category}
-                        notifications={categoryNotifications}
-                        onSelect={handleMarkAsRead}
-                        onDelete={handleDeleteNotification}
-                      />
+                {filteredNotifications().length > 0 ? (
+                  <ul className="space-y-3">
+                    {filteredNotifications().map(notification => (
+                      <motion.li
+                        key={notification.id}
+                        className="glass-card p-3 sm:p-4 rounded-md border border-white/10"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start">
+                            {notification.type === 'success' && <CheckCircle2 className="w-5 h-5 mr-3 text-green-500" />}
+                            {notification.type === 'info' && <Info className="w-5 h-5 mr-3 text-blue-500" />}
+                            {notification.type === 'alert' && <AlertCircle className="w-5 h-5 mr-3 text-yellow-500" />}
+                            {notification.type === 'critical' && <Star className="w-5 h-5 mr-3 text-red-500" />}
+                            
+                            <div>
+                              <h3 className="text-sm font-semibold text-white">{notification.title}</h3>
+                              <p className="text-xs text-gray-400">{notification.description}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {new Date(notification.date).toLocaleDateString()} - {new Date(notification.date).toLocaleTimeString()}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            {!notification.read && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleMarkAsRead(notification.id)}
+                                className="hover:bg-white/5"
+                              >
+                                <Bell className="w-4 h-4" />
+                                <span className="sr-only">Segna come letto</span>
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteNotification(notification.id)}
+                              className="hover:bg-white/5"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span className="sr-only">Elimina</span>
+                            </Button>
+                          </div>
+                        </div>
+                      </motion.li>
                     ))}
-                  </div>
+                  </ul>
                 ) : (
-                  <div className="text-center text-gray-500 py-8">
-                    <Bell className="w-12 h-12 mx-auto mb-4 text-white/30" />
-                    <p className="text-lg">Nessuna notifica da visualizzare</p>
-                    <p className="text-sm text-white/40 mt-2">Le tue notifiche appariranno qui</p>
+                  <div className="text-center text-gray-500">
+                    Nessuna notifica da visualizzare.
                   </div>
                 )}
               </AnimatePresence>

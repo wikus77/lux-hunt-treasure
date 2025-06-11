@@ -1,22 +1,19 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-type SoundContextType = {
-  soundEnabled: boolean;
-  setSoundEnabled: (value: boolean) => void;
-  volume: number[];
+interface SoundContextType {
   soundPreference: string;
+  volume: number[];
   isEnabled: boolean;
   updateSound: (sound: string) => void;
   updateVolume: (volume: number[]) => void;
   toggleSound: (enabled: boolean) => void;
-};
+}
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
 
 export const SoundProvider = ({ children }: { children: ReactNode }) => {
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [soundPreference, setSoundPreference] = useState('buzz');
+  const [soundPreference, setSoundPreference] = useState('default');
   const [volume, setVolume] = useState([75]);
   const [isEnabled, setIsEnabled] = useState(true);
 
@@ -34,7 +31,6 @@ export const SoundProvider = ({ children }: { children: ReactNode }) => {
     const savedEnabled = localStorage.getItem('soundEnabled');
     if (savedEnabled !== null) {
       setIsEnabled(savedEnabled === 'true');
-      setSoundEnabled(savedEnabled === 'true');
     }
   }, []);
 
@@ -50,14 +46,11 @@ export const SoundProvider = ({ children }: { children: ReactNode }) => {
   
   const toggleSound = (enabled: boolean) => {
     setIsEnabled(enabled);
-    setSoundEnabled(enabled);
     localStorage.setItem('soundEnabled', enabled.toString());
   };
 
   return (
     <SoundContext.Provider value={{ 
-      soundEnabled,
-      setSoundEnabled,
       soundPreference, 
       volume, 
       isEnabled, 
@@ -72,8 +65,8 @@ export const SoundProvider = ({ children }: { children: ReactNode }) => {
 
 export const useSound = () => {
   const context = useContext(SoundContext);
-  if (!context) {
-    throw new Error("useSound must be used within a SoundProvider");
+  if (context === undefined) {
+    throw new Error('useSound must be used within a SoundProvider');
   }
   return context;
 };

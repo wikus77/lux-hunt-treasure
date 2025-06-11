@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,54 +15,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authInitialized, setAuthInitialized] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
-
-  // ✅ CONTROLLO PRIORITARIO: Developer access setup immediato
-  useEffect(() => {
-    const setupDeveloperAccess = async () => {
-      const developerEmail = 'wikus77@hotmail.it';
-      
-      // ACCESSO IMMEDIATO E AUTOMATICO per sviluppatore
-      console.log('🔑 Setting up automatic developer access for:', developerEmail);
-      localStorage.setItem('developer_access', 'granted');
-      localStorage.setItem('developer_user_email', developerEmail);
-      localStorage.setItem('captcha_bypassed', 'true');
-      localStorage.setItem('auto_login_developer', 'true');
-      
-      // Imposta fake session immediata
-      const fakeSession = {
-        access_token: "developer-fake-access-token-" + Date.now(),
-        refresh_token: "developer-fake-refresh-token-" + Date.now(),
-      };
-      
-      try {
-        await supabase.auth.setSession(fakeSession);
-        console.log('✅ Developer fake session established automatically');
-      } catch (error) {
-        console.log('⚠️ Fake session setup failed, but developer access still granted');
-      }
-    };
-
-    setupDeveloperAccess();
-  }, []);
-
-  // ✅ Auto-redirect sviluppatore a /home se sulla landing
-  useEffect(() => {
-    const handleDeveloperAutoRedirect = () => {
-      const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-      const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-      
-      if ((hasDeveloperAccess || isDeveloperEmail) && window.location.pathname === '/') {
-        console.log('🚀 Auto-redirecting developer to /home');
-        window.location.href = '/home';
-      }
-    };
-
-    // Esegui immediatamente e poi dopo un breve delay
-    handleDeveloperAutoRedirect();
-    const timer = setTimeout(handleDeveloperAutoRedirect, 100);
-    
-    return () => clearTimeout(timer);
-  }, []);
 
   // Funzione per creare automaticamente il profilo admin
   const createAdminProfile = async (userId: string, userEmail: string) => {
@@ -121,21 +74,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fetch user role when auth state changes
+  // Fetch user role when auth state changes - NON FORZARE REDIRECT
   useEffect(() => {
     const fetchUserRole = async () => {
-      // ✅ CONTROLLO PRIORITARIO: Developer access da localStorage prima di tutto
-      const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-      const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-      
-      if (hasDeveloperAccess || isDeveloperEmail) {
-        console.log("🔑 Developer access rilevato da localStorage - ACCESSO IMMEDIATO");
-        setUserRole('admin');
-        setIsRoleLoading(false);
-        setAuthInitialized(true);
-        return;
-      }
-
       // Se non c'è utente autenticato, NON fare nulla - lascia che vedano la landing
       if (!auth.isAuthenticated || !auth.user) {
         setUserRole(null);
@@ -255,14 +196,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check if user has a specific role
   const hasRole = (role: string): boolean => {
-    // ✅ CONTROLLO PRIORITARIO: Developer access
-    const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-    const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-    
-    if ((hasDeveloperAccess || isDeveloperEmail) && role === 'admin') {
-      return true;
-    }
-
     // Special case for wikus77@hotmail.it - always treated as admin
     if (auth.user?.email === 'wikus77@hotmail.it') {
       return role === 'admin';

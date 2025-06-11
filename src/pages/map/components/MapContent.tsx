@@ -51,61 +51,72 @@ const MapContent: React.FC<MapContentProps> = ({
   isAddingMapPoint,
   hookHandleMapPointClick
 }) => {
-  // Get current BUZZ areas from unified hook (SINGLE SOURCE OF TRUTH)
-  const { currentWeekAreas, reloadAreas } = useBuzzMapLogic();
+  // Get current BUZZ areas from hook - CRITICAL for updates
+  const { currentWeekAreas, debugCurrentState, reloadAreas } = useBuzzMapLogic();
   
-  // Force reload areas when component mounts
+  // CRITICAL FIX: Force reload areas every time component mounts or changes
   useEffect(() => {
-    console.log('🚨 MAP CONTENT: Component mounted, forcing areas reload');
-    reloadAreas();
+    console.log('🚨 CRITICAL RADIUS - MapContent mounted, forcing areas reload');
+    reloadAreas(); // Force reload areas from DB
   }, [reloadAreas]);
   
-  // Enhanced logging for area changes
+  // ENHANCED DEBUG: Detailed log every area change with radius verification
   useEffect(() => {
-    console.log('🗺️ MAP CONTENT: Area state changed:', {
+    console.log('🗺️ CRITICAL RADIUS - DIRECT LEAFLET MapContent area state changed:', {
       areas: currentWeekAreas,
       count: currentWeekAreas.length,
       timestamp: new Date().toISOString()
     });
     
+    // DEBUG: Complete hook state
+    debugCurrentState();
+    
     if (currentWeekAreas.length > 0) {
       const area = currentWeekAreas[0];
       
-      console.log('🎯 MAP CONTENT: Latest area to display:', {
+      console.log('🎯 CRITICAL RADIUS - DIRECT LEAFLET Latest area to display with FIXED COLOR:', {
         id: area.id,
         lat: area.lat,
         lng: area.lng,
         radius_km: area.radius_km,
         created_at: area.created_at,
         radiusInMeters: area.radius_km * 1000,
-        color: '#00FFFF'
+        fixedColor: '#00FFFF'
       });
       
-      // Verification
+      // CRITICAL VERIFICATION: ensure data is valid and updated
       if (!area.lat || !area.lng || !area.radius_km) {
-        console.error('❌ MAP CONTENT: Invalid area data:', area);
+        console.error('❌ CRITICAL RADIUS - Invalid area data:', area);
       } else {
-        console.log('✅ MAP CONTENT: Area data is valid and ready for rendering');
+        console.log('✅ CRITICAL RADIUS - DIRECT LEAFLET Area data is valid and ready for FORCED rendering with FIXED COLOR');
+        console.log('📏 RENDERING RADIUS with DIRECT LEAFLET:', {
+          radius_km: area.radius_km,
+          radius_meters: area.radius_km * 1000,
+          should_be_updated: true,
+          fixedColor: '#00FFFF'
+        });
       }
     } else {
-      console.log('❌ MAP CONTENT: No areas available for rendering');
+      console.log('❌ CRITICAL RADIUS - No areas available for rendering');
     }
-  }, [currentWeekAreas]);
+  }, [currentWeekAreas, debugCurrentState]);
 
-  // Debug search areas
+  // DEBUG: Search areas logging
   useEffect(() => {
-    console.log('🔍 MAP CONTENT: Search areas:', {
+    console.log('🔍 SEARCH AREAS in MapContent:', {
       count: searchAreas.length,
       areas: searchAreas,
       timestamp: new Date().toISOString()
     });
   }, [searchAreas]);
 
-  console.log('🔄 MAP CONTENT: Re-rendering with areas count:', currentWeekAreas.length);
-  console.log('🔍 MAP CONTENT: Search areas count:', searchAreas.length);
+  // DEBUG: Verify component re-renders when areas change
+  console.log('🔄 CRITICAL RADIUS - DIRECT LEAFLET MapContent re-rendering with areas count:', currentWeekAreas.length);
+  console.log('🔍 Search areas count:', searchAreas.length);
   
+  // Log current radius for update verification
   if (currentWeekAreas.length > 0) {
-    console.log('📏 MAP CONTENT: Current area radius for rendering:', currentWeekAreas[0].radius_km, 'km with FIXED NEON COLOR');
+    console.log('📏 CRITICAL RADIUS - DIRECT LEAFLET Current area radius for rendering:', currentWeekAreas[0].radius_km, 'km with FIXED NEON COLOR');
   }
 
   return (
@@ -123,13 +134,16 @@ const MapContent: React.FC<MapContentProps> = ({
         zIndex: 1
       }}
       className="z-10"
-      whenReady={() => {}}
+      whenReady={() => {}} // Empty function to satisfy the type requirement
     >
+      {/* Add the MapInitializer component to handle map initialization */}
       <MapInitializer onMapReady={(map) => {
         mapRef.current = map;
         handleMapLoad(map);
-        console.log('🗺️ MAP CONTENT: Map initialized and ready for BUZZ areas');
-        console.log('🔍 MAP CONTENT: Map instance available for BUZZ areas:', !!map);
+        console.log('🗺️ CRITICAL RADIUS - DIRECT LEAFLET Map initialized and ready for BUZZ areas with UPDATED RADIUS and FIXED COLOR');
+        
+        // DEBUG: Verify map is ready to receive layers
+        console.log('🔍 Map instance available for BUZZ areas:', !!map);
       }} />
       
       {/* Map Layers */}
@@ -139,17 +153,17 @@ const MapContent: React.FC<MapContentProps> = ({
         deleteSearchArea={deleteSearchArea}
       />
       
-      {/* SEARCH AREAS Layer */}
+      {/* SEARCH AREAS Layer - CRITICAL: Separate layer for search areas */}
       <SearchAreaMapLayer 
         searchAreas={searchAreas}
         setActiveSearchArea={setActiveSearchArea}
         deleteSearchArea={deleteSearchArea}
       />
       
-      {/* BUZZ Map Areas - UNIFIED RENDERING with updated array */}
+      {/* BUZZ Map Areas - CRITICAL: DIRECT LEAFLET RENDERING with updated array and FIXED COLOR */}
       <BuzzMapAreas areas={currentWeekAreas} />
       
-      {/* Map Popup Manager */}
+      {/* Use the MapPopupManager component */}
       <MapPopupManager 
         mapPoints={mapPoints}
         activeMapPoint={activeMapPoint}
@@ -161,7 +175,7 @@ const MapContent: React.FC<MapContentProps> = ({
         handleCancelNewPoint={handleCancelNewPoint}
       />
       
-      {/* Map Event Handler */}
+      {/* Use the MapEventHandler component with properly synced isAddingMapPoint state */}
       <MapEventHandler 
         isAddingSearchArea={isAddingSearchArea} 
         handleMapClickArea={handleMapClickArea}
