@@ -17,7 +17,6 @@ const Login = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuthContext();
 
   useEffect(() => {
-    // Check URL parameters for verification status
     const verification = searchParams.get('verification');
     if (verification === 'pending') {
       setVerificationStatus('pending');
@@ -28,9 +27,9 @@ const Login = () => {
       });
     }
 
-    // CRITICAL FIX: Immediate redirect to home after successful authentication
+    // REDIRECT FORZATO IMMEDIATO se già autenticato
     if (!authLoading && isAuthenticated) {
-      console.log('✅ User authenticated - redirecting to home');
+      console.log('✅ User authenticated - FORCING IMMEDIATE REDIRECT');
       navigate('/home', { replace: true });
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);
@@ -66,7 +65,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12 relative overflow-hidden">
-      {/* Background particles */}
       <BackgroundParticles count={15} />
 
       <motion.div 
@@ -76,7 +74,6 @@ const Login = () => {
         transition={{ duration: 0.5 }}
       >
         <div className="text-center mb-8">
-          {/* Logo animato */}
           <div className="flex justify-center mb-4">
             <AnimatedLogo />
           </div>
