@@ -6,7 +6,6 @@ import FormField from './form-field';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface RegistrationFormProps {
   missionPreference: 'uomo' | 'donna' | null;
@@ -22,8 +21,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
   } = useRegistration();
 
   const handleSubmit = (e: React.FormEvent) => {
-    // Add mission preference to submission - no CAPTCHA needed for developer email
-    originalHandleSubmit(e, undefined, missionPreference);
+    console.log('🔍 SUBMIT CLICKED - NO CAPTCHA REQUIRED');
+    console.log('📝 Form data:', { email: formData.email, missionPreference });
+    
+    // Submit WITHOUT any captcha token - completely removed
+    originalHandleSubmit(e, 'BYPASS_COMPLETELY_DISABLED', missionPreference);
   };
 
   return (

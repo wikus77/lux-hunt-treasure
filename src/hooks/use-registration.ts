@@ -40,17 +40,15 @@ export const useRegistration = () => {
   const handleSubmit = async (e: FormEvent, turnstileToken?: string, missionPreference?: 'uomo' | 'donna' | null) => {
     e.preventDefault();
 
+    console.log('🚀 STARTING REGISTRATION - NO CAPTCHA');
+    console.log('📧 Email:', formData.email);
+    console.log('🔐 Password length:', formData.password.length);
+
     // Validazione client-side
     const validation = validateRegistration(formData);
     if (!validation.isValid) {
+      console.log('❌ Validation failed:', validation.errors);
       setErrors(validation.errors);
-      return;
-    }
-    
-    if (!turnstileToken) {
-      toast.error("Sicurezza", {
-        description: "Completare la verifica di sicurezza"
-      });
       return;
     }
 
@@ -58,37 +56,9 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      // First verify the turnstile token
-      const verifyResponse = await supabase.functions.invoke('verify-turnstile', {
-        body: { token: turnstileToken, action: 'registration' }
-      });
+      console.log('🔄 Calling supabase.auth.signUp...');
       
-      if (!verifyResponse.data?.success) {
-        throw new Error('Security verification failed');
-      }
-
-      // Check if email already exists
-      const { data: existingUsers, error: checkError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', email)
-        .limit(1);
-
-      if (checkError) {
-        console.error("Error checking email:", checkError);
-        throw new Error("Si è verificato un errore nel controllo dell'email.");
-      }
-
-      if (existingUsers && existingUsers.length > 0) {
-        toast.error("Errore", {
-          description: "Email già registrata. Prova un'altra.",
-          duration: 3000
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Register user
+      // Direct signup without ANY captcha verification
       const result = await supabase.auth.signUp({
         email,
         password,
@@ -97,22 +67,27 @@ export const useRegistration = () => {
           data: {
             full_name: name,
             mission_preference: missionPreference || null
-          },
-          captchaToken: turnstileToken // Pass the turnstile token here
+          }
+          // NO captchaToken - completely removed
         }
       });
 
-      const authError = result.error;
+      console.log('✅ SignUp result:', result);
+      console.log('👤 User data:', result.data.user);
+      console.log('🔑 Session data:', result.data.session);
+      console.log('❌ Error data:', result.error);
 
-      if (authError) {
+      if (result.error) {
+        console.error('❌ Registration error:', result.error);
         toast.error("Errore", {
-          description: authError.message || "Errore durante la registrazione.",
+          description: result.error.message || "Errore durante la registrazione.",
           duration: 3000
         });
         setIsSubmitting(false);
         return;
       }
 
+      console.log('🎉 Registration successful!');
       toast.success("Registrazione completata!", {
         description: "Controlla la tua casella email e conferma il tuo account."
       });
@@ -122,7 +97,7 @@ export const useRegistration = () => {
       }, 2000);
 
     } catch (error: any) {
-      console.error("Errore di registrazione:", error);
+      console.error("💥 Registration exception:", error);
       toast.error("Errore", {
         description: error.message || "Si è verificato un errore. Riprova più tardi.",
         duration: 3000

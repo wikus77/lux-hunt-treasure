@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import BackgroundParticles from "@/components/ui/background-particles";
 import RegistrationForm from "@/components/auth/registration-form";
@@ -14,15 +13,22 @@ const Register = () => {
   const [missionPreference, setMissionPreference] = useState<'uomo' | 'donna' | null>(null);
   const navigate = useNavigate();
   
+  console.log('📍 Register page loaded');
+  console.log('🎯 Mission preference from URL:', preference);
+  
   useEffect(() => {
     // If preference is passed via query params, use it
     if (preference === 'uomo' || preference === 'donna') {
+      console.log('✅ Setting mission preference:', preference);
       setMissionPreference(preference);
     } else {
+      console.log('❌ No valid preference, redirecting to mission selection');
       // If no preference is set, redirect to mission selection
       navigate("/select-mission");
     }
   }, [preference, navigate]);
+
+  console.log('🎯 Current mission preference:', missionPreference);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black px-4 py-12 relative overflow-hidden">
@@ -62,8 +68,10 @@ const Register = () => {
           </motion.div>
         )}
 
-        {/* Registration form */}
-        <RegistrationForm missionPreference={missionPreference} />
+        {/* Registration form - NO CAPTCHA */}
+        <div className="glass-card p-6 backdrop-blur-md border border-gray-800 rounded-xl">
+          <RegistrationForm missionPreference={missionPreference} />
+        </div>
 
         {/* Terms and conditions & Login link */}
         <div className="mt-6 text-center space-y-4">
