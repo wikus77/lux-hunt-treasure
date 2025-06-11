@@ -32,6 +32,11 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
           const isDeveloper = currentSession.user.email === 'wikus77@hotmail.it';
           setIsEmailVerified(isDeveloper || !!currentSession.user.email_confirmed_at);
           console.log("Email verification status:", isDeveloper || !!currentSession.user.email_confirmed_at);
+          
+          // CRITICAL: Log successful authentication for redirect
+          if (event === 'SIGNED_IN') {
+            console.log("✅ User successfully signed in:", currentSession.user.email);
+          }
         } else {
           setIsEmailVerified(false);
         }
@@ -78,7 +83,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         throw error;
       }
 
-      console.log("✅ Login completed successfully");
+      console.log("✅ Login completed successfully for:", email);
       return { success: true, data };
     } catch (error: any) {
       console.error("Error during login:", error);

@@ -2,8 +2,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 import FormField from './form-field';
@@ -15,6 +13,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ verificationStatus, onResendVerification }: LoginFormProps) {
+  // CLEAN STATE - No debug values or residual data
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -27,29 +26,30 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error('All fields are required');
+      toast.error('Tutti i campi sono obbligatori');
       return;
     }
 
     setIsLoading(true);
     try {
-      // NO CAPTCHA - Direct login processing
+      console.log('🔐 Starting login process for:', email);
+      
       const result = await login(email, password);
       
-      if (result?.success || isDeveloperEmail) {
-        toast.success('Login successful');
-        // Redirect handled by login function for developer
-        if (!isDeveloperEmail) {
-          navigate('/home');
-        }
+      if (result?.success) {
+        console.log('✅ Login successful - redirecting to home');
+        toast.success('Login effettuato con successo');
+        navigate('/home', { replace: true });
       } else {
-        toast.error('Login error', {
-          description: result?.error?.message || 'Check your credentials'
+        console.error('❌ Login failed:', result?.error);
+        toast.error('Errore di login', {
+          description: result?.error?.message || 'Verifica le tue credenziali'
         });
       }
     } catch (error: any) {
-      toast.error('Login error', {
-        description: error.message || 'An unexpected error occurred'
+      console.error('❌ Login exception:', error);
+      toast.error('Errore di login', {
+        description: error.message || 'Si è verificato un errore imprevisto'
       });
     } finally {
       setIsLoading(false);
@@ -62,7 +62,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
         id="email"
         label="Email"
         type="email"
-        placeholder="Enter your email"
+        placeholder="Inserisci la tua email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         icon={<Mail className="h-4 w-4" />}
@@ -74,7 +74,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
         id="password"
         label="Password"
         type="password"
-        placeholder="Enter your password"
+        placeholder="Inserisci la tua password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         icon={<Lock className="h-4 w-4" />}
@@ -85,7 +85,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
       {isDeveloperEmail && (
         <div className="mt-4 p-3 bg-green-900/20 border border-green-500/30 rounded-md">
           <p className="text-sm text-green-400">
-            🔑 Developer Access: Immediate login - NO CAPTCHA required
+            🔑 Accesso Sviluppatore: Login diretto - Autenticazione REALE
           </p>
         </div>
       )}
@@ -95,13 +95,13 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
         className="w-full"
         disabled={isLoading}
       >
-        {isLoading ? 'Signing in...' : 'Sign In'}
+        {isLoading ? 'Accesso in corso...' : 'Accedi'}
       </Button>
 
       {verificationStatus === 'pending' && (
         <div className="text-center mt-4">
           <p className="text-sm text-yellow-500">
-            Verification pending: check your email to complete verification.
+            Verifica in sospeso: controlla la tua email per completare la verifica.
           </p>
         </div>
       )}
@@ -109,7 +109,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
       {verificationStatus === 'success' && (
         <div className="text-center mt-4">
           <p className="text-sm text-green-500">
-            Email verified successfully!
+            Email verificata con successo!
           </p>
         </div>
       )}
@@ -122,7 +122,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
             onClick={() => onResendVerification(email)}
             disabled={isLoading}
           >
-            {isLoading ? 'Sending...' : 'Resend verification email'}
+            {isLoading ? 'Invio in corso...' : 'Invia nuovamente email di verifica'}
           </Button>
         </div>
       )}
