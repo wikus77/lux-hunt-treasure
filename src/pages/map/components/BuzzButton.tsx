@@ -29,7 +29,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     generateBuzzMapArea,
     getActiveArea,
     dailyBuzzMapCounter,
-    precisionMode,
     reloadAreas
   } = useBuzzMapLogic();
   
