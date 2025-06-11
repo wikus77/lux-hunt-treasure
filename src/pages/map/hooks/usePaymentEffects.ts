@@ -33,10 +33,12 @@ export const usePaymentEffects = (generateSearchArea: (radius: number) => string
             setClueMessage(clue.description);
             setShowCluePopup(true);
 
-            addNotification({
-              title: "Nuovo indizio sbloccato",
-              description: clue.description,
-            });
+            // FIXED: Use correct addNotification signature with title and message
+            addNotification(
+              "Nuovo indizio sbloccato",
+              clue.description,
+              'buzz'
+            );
 
             // Fix: Pass a default radius value (e.g. 50000 for 50km) to generateSearchArea
             const generatedAreaId = generateSearchArea(50000);
