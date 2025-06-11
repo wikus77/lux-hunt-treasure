@@ -13,14 +13,18 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
 
-  // FIXED: Stabilized auth initialization without race conditions
+  // CRITICAL FIX: Stabilized auth initialization without race conditions
   useEffect(() => {
     let isMounted = true;
+    let authInitialized = false;
     
     const initializeAuth = async () => {
+      if (authInitialized) return;
+      authInitialized = true;
+      
       console.log("🔧 useAuth: Initializing with developer support");
       
-      // Check for developer access
+      // PRIORITY: Check for developer access FIRST
       const isDeveloperMode = localStorage.getItem('developer_access') === 'granted' || 
                              localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
       
@@ -82,7 +86,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        if (!isMounted) return;
+        if (!isMounted || !authInitialized) return;
         
         console.log("Auth state changed:", event);
         setSession(currentSession);
@@ -131,11 +135,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       localStorage.setItem('developer_user_email', email);
       localStorage.setItem('captcha_bypassed', 'true');
       
-      // Force redirect to home for developer
-      setTimeout(() => {
-        window.location.href = '/home';
-      }, 100);
-      
+      // FIXED: No forced redirect - let components handle navigation
       return { success: true, developer_access: true };
     }
 
@@ -173,11 +173,6 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       setIsEmailVerified(false);
       
       toast.success("Logout effettuato");
-      
-      // Redirect to login
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 100);
       
     } catch (error) {
       console.error("Logout error:", error);

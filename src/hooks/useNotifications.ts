@@ -41,6 +41,7 @@ export const useNotifications = () => {
       if (!hasDeveloperAccess && !isDeveloperEmail) {
         console.warn('Cannot load notifications - no user ID');
         setNotifications([]);
+        setIsLoading(false);
         return;
       }
       

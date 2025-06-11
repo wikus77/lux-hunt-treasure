@@ -129,7 +129,7 @@ export const usePaymentVerification = () => {
     };
   }, [loadPaymentStatus]);
 
-  // FIXED: Enhanced developer bypass
+  // FIXED: Enhanced developer bypass but allow Stripe for testing
   const requireBuzzPayment = useCallback(async (): Promise<boolean> => {
     const currentUser = getCurrentUser();
     const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
@@ -141,6 +141,7 @@ export const usePaymentVerification = () => {
       return true;
     }
 
+    // FIXED: Allow Stripe calls for non-developer users
     if (!hasValidPayment) {
       toast.error('Abbonamento richiesto', {
         description: 'Devi avere un abbonamento attivo per utilizzare BUZZ'

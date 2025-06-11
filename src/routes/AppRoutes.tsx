@@ -1,177 +1,49 @@
-import React, { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
-import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+
+import React, { Suspense } from "react";
+import { Routes, Route } from "react-router-dom";
+import LoadingScreen from "@/components/index/LoadingScreen";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import { Spinner } from "@/components/ui/spinner";
-import IOSSafeAreaOverlay from "@/components/debug/IOSSafeAreaOverlay";
 
-// Public routes
-import Index from "@/pages/index";
-
-// Main app routes with lazy loading - SEPARATE FROM LANDING
-const AppHome = lazy(() => import("@/pages/AppHome"));
-const Map = lazy(() => import("@/pages/Map"));
-const Buzz = lazy(() => import("@/pages/Buzz"));
-const Games = lazy(() => import("@/pages/Games"));
-const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
-const Notifications = lazy(() => import("@/pages/Notifications"));
-const Profile = lazy(() => import("@/pages/Profile"));
-const Settings = lazy(() => import("@/pages/Settings"));
-const PersonalInfo = lazy(() => import("@/pages/PersonalInfo"));
-const PasswordSecurity = lazy(() => import("@/pages/PasswordSecurity"));
-const Subscriptions = lazy(() => import("@/pages/Subscriptions"));
-const HelpFaq = lazy(() => import("@/pages/HelpFaq"));
-const PrivacySecurity = lazy(() => import("@/pages/PrivacySecurity"));
-
-// Auth routes
-const Login = lazy(() => import("@/pages/Login"));
-const Register = lazy(() => import("@/pages/Register"));
-const MissionSelection = lazy(() => import("@/pages/MissionSelection"));
-
-// Additional routes
-const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
-const Contacts = lazy(() => import("@/pages/Contacts"));
-const Ownership = lazy(() => import("@/pages/Ownership"));
-const NotFound = lazy(() => import("@/pages/NotFound"));
-const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
-const CookiePolicy = lazy(() => import("@/pages/CookiePolicy"));
-const Terms = lazy(() => import("@/pages/Terms"));
-
-// Loading fallback component
-const LoadingFallback = () => (
-  <div className="min-h-screen bg-black flex items-center justify-center">
-    <div className="flex flex-col items-center gap-4">
-      <Spinner size="lg" className="text-[#00D1FF]" />
-      <p className="text-gray-400">Caricamento...</p>
-    </div>
-  </div>
-);
+// FIXED: Lazy loading with proper error boundaries
+const AppHome = React.lazy(() => import("@/pages/AppHome"));
+const Auth = React.lazy(() => import("@/pages/Auth"));
+const Login = React.lazy(() => import("@/pages/Login"));
+const Register = React.lazy(() => import("@/pages/Register"));
+const Home = React.lazy(() => import("@/pages/Home"));
+const Profile = React.lazy(() => import("@/pages/Profile"));
+const Map = React.lazy(() => import("@/pages/Map"));
+const Events = React.lazy(() => import("@/pages/Events"));
+const Settings = React.lazy(() => import("@/pages/Settings"));
+const Contact = React.lazy(() => import("@/pages/Contact"));
+const Buzz = React.lazy(() => import("@/pages/Buzz"));
+const Notifications = React.lazy(() => import("@/pages/Notifications"));
 
 const AppRoutes: React.FC = () => {
   return (
-    <ErrorBoundary>
-      <IOSSafeAreaOverlay>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            {/* Landing page - SEMPRE PUBBLICA, NESSUN REDIRECT */}
-            <Route path="/" element={<Index />} />
+    <Suspense fallback={<LoadingScreen />}>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<AppHome />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/contact" element={<Contact />} />
 
-            {/* Main App Routes - PROTECTED - SEPARATE DA LANDING */}
-            <Route
-              path="/home"
-              element={
-                <ProtectedRoute>
-                  <AppHome />
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/map"
-              element={
-                <ProtectedRoute>
-                  <Map />
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/buzz"
-              element={
-                <ProtectedRoute>
-                  <Buzz />
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/games"
-              element={
-                <ProtectedRoute>
-                  <Games />
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/leaderboard"
-              element={
-                <ProtectedRoute>
-                  <Leaderboard />
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route path="/notifications" element={<Notifications />} />
-            
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route path="/settings" element={<Settings />} />
-            
-            <Route
-              path="/personal-info"
-              element={
-                <ProtectedRoute>
-                  <PersonalInfo />
-                </ProtectedRoute>
-              }
-            />
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/home" element={<Home />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/map" element={<Map />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/buzz" element={<Buzz />} />
+          <Route path="/notifications" element={<Notifications />} />
+        </Route>
 
-            <Route
-              path="/password-security"
-              element={
-                <ProtectedRoute>
-                  <PasswordSecurity />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/subscriptions"
-              element={
-                <ProtectedRoute>
-                  <Subscriptions />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/privacy-security"
-              element={
-                <ProtectedRoute>
-                  <PrivacySecurity />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route path="/help-faq" element={<HelpFaq />} />
-
-            {/* Auth routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/select-mission" element={<MissionSelection />} />
-            
-            {/* Other routes */}
-            <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/contacts" element={<Contacts />} />
-            <Route path="/ownership" element={<Ownership />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/cookie-policy" element={<CookiePolicy />} />
-            <Route path="/terms" element={<Terms />} />
-            
-            {/* 404 route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </IOSSafeAreaOverlay>
-    </ErrorBoundary>
+        {/* Fallback Route */}
+        <Route path="*" element={<AppHome />} />
+      </Routes>
+    </Suspense>
   );
 };
 

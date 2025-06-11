@@ -36,8 +36,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     remainingBuzz,
     subscriptionTier,
     loading: verificationLoading,
-    requireBuzzPayment,
-    logUnauthorizedAccess
+    requireBuzzPayment
   } = usePaymentVerification();
   
   const { 
@@ -96,7 +95,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [user?.id]); // FIXED: Stable dependency
+  }, [user?.id]);
   
   const handleSecureBuzzMapClick = async () => {
     // CRITICAL: Developer bypass check first
@@ -108,12 +107,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     } else {
       const canProceed = await requireBuzzPayment();
       if (!canProceed) {
-        await logUnauthorizedAccess('buzz_map_blocked_no_payment', {
-          subscriptionTier,
-          remainingBuzz,
-          hasValidPayment,
-          mapCenter
-        });
+        console.log('❌ Payment verification failed, blocking access');
         return;
       }
     }
@@ -144,7 +138,6 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         return;
       } catch (error) {
         console.error('❌ LANCIO: Payment failed:', error);
-        await logUnauthorizedAccess('buzz_map_payment_failed', { error });
         return;
       }
     }
@@ -182,12 +175,11 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       
     } else {
       console.error('❌ LANCIO: Area generation failed');
-      await logUnauthorizedAccess('buzz_map_generation_failed', {});
       toast.error('❌ Errore generazione area BUZZ');
     }
   };
 
-  // FIXED: Simplified logic without developer exceptions for blocking
+  // FIXED: Simplified logic with developer exceptions
   const isDeveloper = user?.email === 'wikus77@hotmail.it' || localStorage.getItem('developer_access') === 'granted';
   const isBlocked = !isDeveloper && (!hasValidPayment || remainingBuzz <= 0);
   const isLoading = isGenerating || stripeLoading || verificationLoading;
