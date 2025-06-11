@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PersonalInfo = () => {
   const navigate = useNavigate();
@@ -19,7 +20,9 @@ const PersonalInfo = () => {
     address: "",
     city: "",
     postalCode: "",
-    country: ""
+    country: "",
+    investigativeStyle: "",
+    preferredLanguage: ""
   });
   
   const [personalInfo, setPersonalInfo] = useState({
@@ -30,8 +33,27 @@ const PersonalInfo = () => {
     address: "",
     city: "",
     postalCode: "",
-    country: ""
+    country: "",
+    investigativeStyle: "",
+    preferredLanguage: ""
   });
+
+  const investigativeStyles = [
+    { value: "strategico", label: "Strategico" },
+    { value: "impulsivo", label: "Impulsivo" },
+    { value: "logico", label: "Logico" },
+    { value: "misterioso", label: "Misterioso" },
+    { value: "analitico", label: "Analitico" },
+    { value: "intuitivo", label: "Intuitivo" }
+  ];
+
+  const languages = [
+    { value: "italiano", label: "Italiano" },
+    { value: "english", label: "English" },
+    { value: "français", label: "Français" },
+    { value: "español", label: "Español" },
+    { value: "deutsch", label: "Deutsch" }
+  ];
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -69,7 +91,9 @@ const PersonalInfo = () => {
             address: data.address || "",
             city: data.city || "",
             postalCode: data.postal_code || "",
-            country: data.country || ""
+            country: data.country || "",
+            investigativeStyle: data.investigative_style || "",
+            preferredLanguage: data.preferred_language || "italiano"
           };
           
           setPersonalInfo(userData);
@@ -86,6 +110,14 @@ const PersonalInfo = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    setPersonalInfo(prev => {
+      const newState = { ...prev, [name]: value };
+      setIsDirty(JSON.stringify(newState) !== JSON.stringify(originalInfo));
+      return newState;
+    });
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
     setPersonalInfo(prev => {
       const newState = { ...prev, [name]: value };
       setIsDirty(JSON.stringify(newState) !== JSON.stringify(originalInfo));
@@ -128,6 +160,8 @@ const PersonalInfo = () => {
           city: personalInfo.city,
           postal_code: personalInfo.postalCode,
           country: personalInfo.country,
+          investigative_style: personalInfo.investigativeStyle,
+          preferred_language: personalInfo.preferredLanguage,
           full_name: `${personalInfo.firstName} ${personalInfo.lastName}`.trim(),
           updated_at: new Date().toISOString()
         })
@@ -139,8 +173,8 @@ const PersonalInfo = () => {
         return;
       }
       
-      toast.success("Informazioni Aggiornate", {
-        description: "Le tue informazioni personali sono state aggiornate con successo."
+      toast.success("✅ Profilo aggiornato con successo", {
+        description: "Le tue informazioni personali sono state aggiornate correttamente."
       });
       
       // Update original info to match current info
@@ -161,22 +195,22 @@ const PersonalInfo = () => {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="mr-2"
+          className="mr-2 rounded-lg"
           onClick={() => navigate(-1)}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-bold">Informazioni Personali</h1>
+        <h1 className="text-xl font-bold text-white">Modifica Informazioni Personali</h1>
       </header>
 
       <div className="p-4">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="glass-card mb-4">
-            <h2 className="text-lg font-semibold mb-4">Dati Personali</h2>
+          <div className="glass-card mb-4 rounded-lg">
+            <h2 className="text-lg font-semibold mb-4 text-white">Dati Personali</h2>
             
             <div className="space-y-4">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium mb-1">
+                <label htmlFor="firstName" className="block text-sm font-medium mb-1 text-white">
                   Nome
                 </label>
                 <Input
@@ -184,12 +218,13 @@ const PersonalInfo = () => {
                   name="firstName"
                   value={personalInfo.firstName}
                   onChange={handleInputChange}
+                  className="rounded-lg bg-black/50 border-white/10"
                   required
                 />
               </div>
               
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium mb-1">
+                <label htmlFor="lastName" className="block text-sm font-medium mb-1 text-white">
                   Cognome
                 </label>
                 <Input
@@ -197,12 +232,13 @@ const PersonalInfo = () => {
                   name="lastName"
                   value={personalInfo.lastName}
                   onChange={handleInputChange}
+                  className="rounded-lg bg-black/50 border-white/10"
                   required
                 />
               </div>
               
               <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-1">
+                <label htmlFor="email" className="block text-sm font-medium mb-1 text-white">
                   Email
                 </label>
                 <Input
@@ -211,12 +247,13 @@ const PersonalInfo = () => {
                   type="email"
                   value={personalInfo.email}
                   onChange={handleInputChange}
+                  className="rounded-lg bg-black/50 border-white/10"
                   required
                 />
               </div>
               
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium mb-1">
+                <label htmlFor="phone" className="block text-sm font-medium mb-1 text-white">
                   Telefono
                 </label>
                 <Input
@@ -224,17 +261,68 @@ const PersonalInfo = () => {
                   name="phone"
                   value={personalInfo.phone}
                   onChange={handleInputChange}
+                  className="rounded-lg bg-black/50 border-white/10"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="investigativeStyle" className="block text-sm font-medium mb-1 text-white">
+                  Stile Investigativo
+                </label>
+                <Select 
+                  value={personalInfo.investigativeStyle} 
+                  onValueChange={(value) => handleSelectChange('investigativeStyle', value)}
+                >
+                  <SelectTrigger className="rounded-lg bg-black/50 border-white/10">
+                    <SelectValue placeholder="Seleziona il tuo stile" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black border-white/10 rounded-lg">
+                    {investigativeStyles.map((style) => (
+                      <SelectItem 
+                        key={style.value} 
+                        value={style.value}
+                        className="text-white hover:bg-white/10"
+                      >
+                        {style.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label htmlFor="preferredLanguage" className="block text-sm font-medium mb-1 text-white">
+                  Lingua Preferita
+                </label>
+                <Select 
+                  value={personalInfo.preferredLanguage} 
+                  onValueChange={(value) => handleSelectChange('preferredLanguage', value)}
+                >
+                  <SelectTrigger className="rounded-lg bg-black/50 border-white/10">
+                    <SelectValue placeholder="Seleziona la lingua" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black border-white/10 rounded-lg">
+                    {languages.map((language) => (
+                      <SelectItem 
+                        key={language.value} 
+                        value={language.value}
+                        className="text-white hover:bg-white/10"
+                      >
+                        {language.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
           
-          <div className="glass-card mb-4">
-            <h2 className="text-lg font-semibold mb-4">Indirizzo</h2>
+          <div className="glass-card mb-4 rounded-lg">
+            <h2 className="text-lg font-semibold mb-4 text-white">Indirizzo</h2>
             
             <div className="space-y-4">
               <div>
-                <label htmlFor="address" className="block text-sm font-medium mb-1">
+                <label htmlFor="address" className="block text-sm font-medium mb-1 text-white">
                   Via e Numero
                 </label>
                 <Input
@@ -242,11 +330,12 @@ const PersonalInfo = () => {
                   name="address"
                   value={personalInfo.address}
                   onChange={handleInputChange}
+                  className="rounded-lg bg-black/50 border-white/10"
                 />
               </div>
               
               <div>
-                <label htmlFor="city" className="block text-sm font-medium mb-1">
+                <label htmlFor="city" className="block text-sm font-medium mb-1 text-white">
                   Città
                 </label>
                 <Input
@@ -254,11 +343,12 @@ const PersonalInfo = () => {
                   name="city"
                   value={personalInfo.city}
                   onChange={handleInputChange}
+                  className="rounded-lg bg-black/50 border-white/10"
                 />
               </div>
               
               <div>
-                <label htmlFor="postalCode" className="block text-sm font-medium mb-1">
+                <label htmlFor="postalCode" className="block text-sm font-medium mb-1 text-white">
                   CAP
                 </label>
                 <Input
@@ -266,11 +356,12 @@ const PersonalInfo = () => {
                   name="postalCode"
                   value={personalInfo.postalCode}
                   onChange={handleInputChange}
+                  className="rounded-lg bg-black/50 border-white/10"
                 />
               </div>
               
               <div>
-                <label htmlFor="country" className="block text-sm font-medium mb-1">
+                <label htmlFor="country" className="block text-sm font-medium mb-1 text-white">
                   Paese
                 </label>
                 <Input
@@ -278,19 +369,30 @@ const PersonalInfo = () => {
                   name="country"
                   value={personalInfo.country}
                   onChange={handleInputChange}
+                  className="rounded-lg bg-black/50 border-white/10"
                 />
               </div>
             </div>
           </div>
           
-          <Button 
-            type="submit"
-            disabled={!isDirty || loading}
-            className="w-full bg-white text-black hover:bg-gray-100"
-          >
-            <Save className="mr-2 h-4 w-4" /> 
-            {loading ? "Salvataggio in corso..." : "Salva Modifiche"}
-          </Button>
+          <div className="flex gap-3">
+            <Button 
+              type="button"
+              variant="outline"
+              onClick={() => navigate(-1)}
+              className="flex-1 rounded-lg"
+            >
+              ↩️ Annulla
+            </Button>
+            <Button 
+              type="submit"
+              disabled={!isDirty || loading}
+              className="flex-1 bg-white text-black hover:bg-gray-100 rounded-lg"
+            >
+              <Save className="mr-2 h-4 w-4" /> 
+              {loading ? "Salvataggio..." : "💾 Salva modifiche"}
+            </Button>
+          </div>
         </form>
       </div>
     </div>

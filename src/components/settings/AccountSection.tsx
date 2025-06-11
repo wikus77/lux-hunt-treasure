@@ -1,60 +1,145 @@
 
-import { User, Shield, CreditCard, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { User, Shield, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { useProfileData } from "@/hooks/useProfileData";
 
 const AccountSection = () => {
   const navigate = useNavigate();
+  const [isAccountSectionOpen, setIsAccountSectionOpen] = useState(false);
+  const { profileData } = useProfileData();
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "Non disponibile";
+    return new Date(dateString).toLocaleDateString('it-IT', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getSubscriptionTier = () => {
+    return profileData.subscription?.plan || "Free";
+  };
+
+  const getInvestigativeStyleDisplay = () => {
+    if (!profileData.personalInfo?.investigativeStyle) return "Non definito";
+    
+    const styleMap: { [key: string]: string } = {
+      'strategico': 'Strategico',
+      'impulsivo': 'Impulsivo', 
+      'logico': 'Logico',
+      'misterioso': 'Misterioso',
+      'analitico': 'Analitico',
+      'intuitivo': 'Intuitivo'
+    };
+    
+    return styleMap[profileData.personalInfo.investigativeStyle] || profileData.personalInfo.investigativeStyle;
+  };
 
   return (
-    <section className="p-4">
-      <h2 className="text-xl font-bold mb-4">Account</h2>
-      
-      <div className="space-y-2">
-        <div 
-          className="glass-card flex justify-between items-center p-4 cursor-pointer"
-          onClick={() => navigate('/personal-info')}
-        >
-          <div className="flex items-center">
-            <User className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-            <span>Informazioni Personali</span>
-          </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
-        </div>
-        
-        <div 
-          className="glass-card flex justify-between items-center p-4 cursor-pointer"
-          onClick={() => navigate('/privacy-security')}
-        >
-          <div className="flex items-center">
-            <Shield className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-            <span>Privacy e Sicurezza</span>
-          </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
-        </div>
-
-        <div 
-          className="glass-card flex justify-between items-center p-4 cursor-pointer"
-          onClick={() => navigate('/payment-methods')}
-        >
-          <div className="flex items-center">
-            <CreditCard className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-            <span>Metodi di Pagamento</span>
-          </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
-        </div>
-        
-        <div 
-          className="glass-card flex justify-between items-center p-4 cursor-pointer"
-          onClick={() => navigate('/subscriptions')}
-        >
-          <div className="flex items-center">
-            <Shield className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-            <span>Abbonamento</span>
-          </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
-        </div>
+    <div className="mb-6">
+      <div className="glass-card p-4 rounded-lg">
+        <Collapsible open={isAccountSectionOpen} onOpenChange={setIsAccountSectionOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
+            <h2 className="text-lg font-semibold text-white flex items-center">
+              <User className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+              Informazioni Personali
+            </h2>
+            <ChevronRight 
+              className={`h-4 w-4 transition-transform ${isAccountSectionOpen ? 'rotate-90' : ''}`} 
+            />
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent className="mt-4">
+            <div className="space-y-4 text-white">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                  <span className="text-sm font-medium text-muted-foreground">Nome completo</span>
+                  <span className="text-sm">{profileData.personalInfo?.firstName && profileData.personalInfo?.lastName 
+                    ? `${profileData.personalInfo.firstName} ${profileData.personalInfo.lastName}` 
+                    : profileData.name || "Non specificato"}</span>
+                </div>
+                
+                <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                  <span className="text-sm font-medium text-muted-foreground">Email</span>
+                  <span className="text-sm">{profileData.personalInfo?.email || "Non disponibile"}</span>
+                </div>
+                
+                <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                  <span className="text-sm font-medium text-muted-foreground">Codice Agente</span>
+                  <span className="text-sm font-mono bg-projectx-neon-blue/20 px-2 py-1 rounded-lg">
+                    {profileData.agentCode || "AG-GUEST"}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                  <span className="text-sm font-medium text-muted-foreground">Data registrazione</span>
+                  <span className="text-sm">
+                    {profileData.personalInfo ? formatDate(new Date().toISOString()) : "Non disponibile"}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                  <span className="text-sm font-medium text-muted-foreground">Piano attivo</span>
+                  <span className={`text-sm px-2 py-1 rounded-lg ${
+                    getSubscriptionTier() === 'Free' ? 'bg-gray-600' :
+                    getSubscriptionTier() === 'Silver' ? 'bg-gray-400 text-black' :
+                    getSubscriptionTier() === 'Gold' ? 'bg-yellow-500 text-black' :
+                    getSubscriptionTier() === 'Black' ? 'bg-black text-white border border-white' :
+                    'bg-gray-600'
+                  }`}>
+                    {getSubscriptionTier()}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                  <span className="text-sm font-medium text-muted-foreground">Missioni completate</span>
+                  <span className="text-sm">{profileData.stats?.missionsCompleted || 0}</span>
+                </div>
+                
+                <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                  <span className="text-sm font-medium text-muted-foreground">XP totali</span>
+                  <span className="text-sm">{profileData.stats?.pointsEarned || 0}</span>
+                </div>
+                
+                <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                  <span className="text-sm font-medium text-muted-foreground">Paese</span>
+                  <span className="text-sm">{profileData.personalInfo?.country || "Non specificato"}</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-muted-foreground">Stile investigativo</span>
+                  <span className="text-sm">{getInvestigativeStyleDisplay()}</span>
+                </div>
+              </div>
+              
+              <div className="mt-6 space-y-2">
+                <div 
+                  className="border border-white/10 rounded-lg flex justify-between items-center p-3 cursor-pointer hover:bg-white/5"
+                  onClick={() => navigate('/personal-info')}
+                >
+                  <span className="text-sm">Modifica informazioni personali</span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+                
+                <div 
+                  className="border border-white/10 rounded-lg flex justify-between items-center p-3 cursor-pointer hover:bg-white/5"
+                  onClick={() => navigate('/subscriptions')}
+                >
+                  <div className="flex items-center">
+                    <Shield className="h-4 w-4 mr-2 text-projectx-neon-blue" />
+                    <span className="text-sm">Gestisci abbonamento</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
-    </section>
+    </div>
   );
 };
 
