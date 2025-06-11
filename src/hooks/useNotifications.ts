@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -14,59 +15,44 @@ export interface Notification {
   date: string;
 }
 
-export const NOTIFICATION_CATEGORIES = {
-  GENERIC: 'generic',
-  BUZZ: 'buzz',
-  MAP_BUZZ: 'buzz_map',
-  LEADERBOARD: 'leaderboard',
-  WEEKLY: 'weekly'
-} as const;
-
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { getCurrentUser } = useAuthContext();
 
-  // CRITICAL FIX: Caricamento notifiche potenziato con validazione sessione forzata
+  // CRITICAL FIX: Caricamento notifiche FORZATO con validazione sessione
   const loadNotifications = useCallback(async () => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
     const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
 
-    if (!userId && !isDeveloper) {
-      const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-      if (!hasDeveloperAccess) {
-        console.warn('RIPARAZIONE: Cannot load notifications - no user ID');
-        setNotifications([]);
-        setIsLoading(false);
-        return;
-      }
-      console.log('🔧 RIPARAZIONE: Developer mode - Caricamento notifiche con fallback');
+    if (!userId && !isDeveloper && !localStorage.getItem('developer_access')) {
+      console.warn('Cannot load notifications - no user ID');
+      setNotifications([]);
+      setIsLoading(false);
+      return;
     }
 
     setIsLoading(true);
     
     try {
-      console.log('📨 RIPARAZIONE: Caricamento notifiche con auth potenziato per user:', userId);
+      console.log('📨 CARICAMENTO NOTIFICHE FORZATO per user:', userId);
       
-      // CRITICAL FIX: Forza refresh sessione prima del caricamento
-      const { data: sessionData, error: sessionError } = await supabase.auth.refreshSession();
-      
+      // CRITICAL FIX: Refresh sessione FORZATO
+      const { error: sessionError } = await supabase.auth.refreshSession();
       if (sessionError) {
-        console.error('❌ RIPARAZIONE: Session refresh error:', sessionError);
-      } else {
-        console.log('✅ RIPARAZIONE: Session refreshata con successo');
+        console.error('❌ Session refresh error:', sessionError);
       }
       
-      // CRITICAL FIX: Query potenziata con meccanismo retry
+      // CRITICAL FIX: Query con retry x10
       const queryUserId = userId || '00000000-0000-4000-a000-000000000000';
       let data = null;
       let attempts = 0;
       let success = false;
       
-      while (!success && attempts < 10) { // Aumentato a 10 tentativi
+      while (!success && attempts < 10) {
         attempts++;
-        console.log(`📨 RIPARAZIONE: Caricamento notifiche tentativo ${attempts}/10`);
+        console.log(`📨 Caricamento notifiche tentativo ${attempts}/10`);
         
         try {
           const { data: notificationData, error } = await supabase
@@ -78,9 +64,9 @@ export const useNotifications = () => {
             .limit(100);
 
           if (error) {
-            console.error(`❌ RIPARAZIONE: Tentativo ${attempts} fallito:`, error);
+            console.error(`❌ Tentativo ${attempts} fallito:`, error);
             if (attempts < 10) {
-              await new Promise(resolve => setTimeout(resolve, 200 * attempts)); // Ridotto tempo attesa
+              await new Promise(resolve => setTimeout(resolve, 200));
               continue;
             }
             throw error;
@@ -88,13 +74,11 @@ export const useNotifications = () => {
 
           data = notificationData;
           success = true;
-          console.log(`✅ RIPARAZIONE: Notifiche caricate al tentativo ${attempts}`);
+          console.log(`✅ Notifiche caricate al tentativo ${attempts}, trovate: ${data?.length || 0}`);
           
         } catch (retryError) {
-          console.error(`❌ RIPARAZIONE: Retry tentativo ${attempts} fallito:`, retryError);
-          if (attempts >= 10) {
-            throw retryError;
-          }
+          console.error(`❌ Retry tentativo ${attempts} fallito:`, retryError);
+          if (attempts >= 10) throw retryError;
         }
       }
 
@@ -111,40 +95,37 @@ export const useNotifications = () => {
       }));
 
       setNotifications(mappedNotifications);
-      console.log('✅ RIPARAZIONE: Notifiche caricate con successo:', mappedNotifications.length);
+      console.log('✅ NOTIFICHE CARICATE con successo:', mappedNotifications.length);
       
     } catch (error) {
-      console.error('❌ RIPARAZIONE: Eccezione caricamento notifiche:', error);
+      console.error('❌ ERRORE CRITICO caricamento notifiche:', error);
       setNotifications([]);
     } finally {
       setIsLoading(false);
     }
   }, [getCurrentUser]);
 
-  // CRITICAL FIX: Creazione notifica potenziata con PERSISTENZA FORZATA e retry x20
+  // CRITICAL FIX: Creazione notifica FORZATA con persistenza x20 retry
   const addNotification = useCallback(async (title: string, message: string, type: string = 'generic') => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
     const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
 
     if (!userId && !isDeveloper && !localStorage.getItem('developer_access')) {
-      console.warn('RIPARAZIONE: Cannot add notification - no user ID');
+      console.warn('Cannot add notification - no user ID');
       return;
     }
 
     try {
-      console.log('📨 RIPARAZIONE: Creazione notifica con PERSISTENZA FORZATA:', { title, message, type });
+      console.log('📨 CREAZIONE NOTIFICA FORZATA:', { title, message, type });
       
-      // CRITICAL FIX: Forza refresh sessione prima della scrittura
-      const { data: sessionData, error: sessionError } = await supabase.auth.refreshSession();
-      
+      // CRITICAL FIX: Refresh sessione prima della scrittura
+      const { error: sessionError } = await supabase.auth.refreshSession();
       if (sessionError) {
-        console.error('❌ RIPARAZIONE: Session refresh error durante creazione notifica:', sessionError);
-      } else {
-        console.log('✅ RIPARAZIONE: Session refreshata per creazione notifica');
+        console.error('❌ Session refresh error per notifica:', sessionError);
       }
 
-      // CRITICAL FIX: Creazione notifica potenziata con meccanismo retry aggressivo (20 tentativi)
+      // CRITICAL FIX: Scrittura con retry x20
       const notificationId = crypto.randomUUID();
       const queryUserId = userId || '00000000-0000-4000-a000-000000000000';
       let writeSuccess = false;
@@ -152,7 +133,7 @@ export const useNotifications = () => {
       
       while (!writeSuccess && attempts < 20) {
         attempts++;
-        console.log(`📨 RIPARAZIONE: Notifica scrittura tentativo ${attempts}/20`);
+        console.log(`📨 SCRITTURA NOTIFICA tentativo ${attempts}/20`);
         
         try {
           const { data, error } = await supabase
@@ -171,33 +152,22 @@ export const useNotifications = () => {
             .single();
 
           if (error) {
-            console.error(`❌ RIPARAZIONE: Notifica scrittura tentativo ${attempts} fallito:`, error);
-            
-            // CRITICAL FIX: Se errore RLS, prova con bypass dev
-            if (error.code === 'PGRST301' || error.message.includes('RLS')) {
-              console.log('🔧 RIPARAZIONE: Errore RLS rilevato, tentativo bypass...');
-              
-              // Prova con contesto dev diverso o bypass
-              if (isDeveloper || localStorage.getItem('developer_access')) {
-                console.log('🔧 RIPARAZIONE: Utilizzo bypass developer per RLS');
-                // Continua con accesso developer
-              }
-            }
+            console.error(`❌ Scrittura tentativo ${attempts} fallito:`, error);
             
             if (attempts < 20) {
-              // Backoff progressivo con refresh sessione ogni 5 tentativi
+              // Refresh sessione ogni 5 tentativi
               if (attempts % 5 === 0) {
-                console.log('🔄 RIPARAZIONE: Refresh sessione prima del retry...');
+                console.log('🔄 Refresh sessione retry...');
                 await supabase.auth.refreshSession();
               }
-              await new Promise(resolve => setTimeout(resolve, 100 * attempts)); // Ridotto tempo attesa
+              await new Promise(resolve => setTimeout(resolve, 100));
               continue;
             }
             throw error;
           }
 
           writeSuccess = true;
-          console.log(`✅ RIPARAZIONE: Notifica SCRITTA CON SUCCESSO al tentativo ${attempts}`);
+          console.log(`✅ NOTIFICA SCRITTA CON SUCCESSO al tentativo ${attempts}`);
 
           const newNotification = {
             id: data.id,
@@ -211,32 +181,30 @@ export const useNotifications = () => {
             date: data.created_at
           };
 
-          // Aggiornamento immediato stato locale
+          // Aggiornamento stato locale immediato
           setNotifications(prev => [newNotification, ...prev]);
-          console.log('✅ RIPARAZIONE: Notifica aggiunta allo stato locale');
+          console.log('✅ Notifica aggiunta allo stato locale');
           
-          // Forza reload dopo scrittura riuscita per verificare persistenza
+          // Reload forzato per verifica persistenza
           setTimeout(() => {
-            console.log('🔄 RIPARAZIONE: Forzatura reload notifiche per verificare persistenza...');
+            console.log('🔄 Reload notifiche per verifica...');
             loadNotifications();
-          }, 500); // Ridotto tempo
+          }, 300);
 
         } catch (retryError) {
-          console.error(`❌ RIPARAZIONE: Notifica scrittura tentativo ${attempts} eccezione:`, retryError);
-          if (attempts >= 20) {
-            throw retryError;
-          }
+          console.error(`❌ Eccezione tentativo ${attempts}:`, retryError);
+          if (attempts >= 20) throw retryError;
         }
       }
       
       if (!writeSuccess) {
-        throw new Error('Fallimento scrittura notifica dopo 20 tentativi');
+        throw new Error('Fallimento scrittura dopo 20 tentativi');
       }
       
     } catch (error) {
-      console.error('❌ RIPARAZIONE: ECCEZIONE FINALE aggiunta notifica:', error);
+      console.error('❌ ERRORE CRITICO creazione notifica:', error);
       
-      // Fallback: Aggiungi allo stato locale anche se scrittura DB fallisce
+      // Fallback locale SEMPRE
       const fallbackNotification = {
         id: crypto.randomUUID(),
         title,
@@ -250,7 +218,7 @@ export const useNotifications = () => {
       };
       
       setNotifications(prev => [fallbackNotification, ...prev]);
-      console.log('⚠️ RIPARAZIONE: Notifica aggiunta allo stato locale come fallback');
+      console.log('⚠️ Notifica FALLBACK aggiunta allo stato locale');
     }
   }, [getCurrentUser, loadNotifications]);
 
@@ -329,17 +297,16 @@ export const useNotifications = () => {
     await loadNotifications();
   }, [loadNotifications]);
 
-  // CRITICAL FIX: Inizializzazione potenziata con gestione sessione forzata
+  // CRITICAL FIX: Inizializzazione FORZATA con subscription
   useEffect(() => {
-    console.log('🔄 RIPARAZIONE: Inizializzazione notifiche con caricamento potenziato...');
+    console.log('🔄 INIZIALIZZAZIONE NOTIFICHE FORZATA');
     loadNotifications();
     
-    // Imposta subscription real-time per notifiche
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
     
     if (userId || localStorage.getItem('developer_access')) {
-      console.log('📡 RIPARAZIONE: Impostazione subscription real-time notifiche...');
+      console.log('📡 Subscription real-time notifiche...');
       const channel = supabase
         .channel('notifications-realtime')
         .on('postgres_changes', {
@@ -348,14 +315,13 @@ export const useNotifications = () => {
           table: 'user_notifications',
           filter: `user_id=eq.${userId || '00000000-0000-4000-a000-000000000000'}`
         }, (payload) => {
-          console.log('📨 RIPARAZIONE: Notifica real-time ricevuta:', payload);
-          // Forza reload quando nuova notifica viene inserita
-          setTimeout(() => loadNotifications(), 200); // Ridotto tempo
+          console.log('📨 Notifica real-time ricevuta:', payload);
+          setTimeout(() => loadNotifications(), 100);
         })
         .subscribe();
       
       return () => {
-        console.log('📡 RIPARAZIONE: Pulizia subscription notifiche...');
+        console.log('📡 Pulizia subscription notifiche');
         supabase.removeChannel(channel);
       };
     }

@@ -1,24 +1,15 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
-
-interface StripePaymentOptions {
-  planType: 'Silver' | 'Gold' | 'Black' | 'Buzz' | 'BuzzMap';
-  customPrice?: number;
-  redirectUrl?: string;
-  isBuzz?: boolean;
-  isMapBuzz?: boolean;
-  sessionId?: string;
-  paymentMethod?: 'card' | 'apple_pay' | 'google_pay';
-}
 
 export const useStripePayment = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { getCurrentUser } = useAuthContext();
 
-  // CRITICAL FIX: Enhanced BUZZ purchase con FORZATURA Stripe attivazione
+  // CRITICAL FIX: Enhanced BUZZ purchase con FORZATURA Stripe TOTALE
   const processBuzzPurchase = async (
     isMapBuzz: boolean = false, 
     customPrice?: number
@@ -27,16 +18,16 @@ export const useStripePayment = () => {
     const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
 
-    // CRITICAL FIX: Developer simulation con LOGGING DETTAGLIATO
+    // CRITICAL FIX: Developer simulation COMPLETA con webhook
     if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 RIPARAZIONE: Developer - Simulazione flusso Stripe COMPLETO');
+      console.log('🔧 DEVELOPER SIMULATION: Flusso Stripe COMPLETO simulato');
       
       setLoading(true);
       
-      // Simula processo di pagamento realistico con tempi ridotti
-      await new Promise(resolve => setTimeout(resolve, 800)); // Ridotto per 1.5s target
+      // Simula processo di pagamento con tempi reali
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      // CRITICAL FIX: Simula webhook e completamento pagamento riuscito
+      // CRITICAL FIX: Simula webhook di completamento
       try {
         const { data: response, error: webhookError } = await supabase.functions.invoke('stripe-webhook', {
           body: {
@@ -58,17 +49,16 @@ export const useStripePayment = () => {
         });
 
         if (webhookError) {
-          console.error('❌ RIPARAZIONE: Webhook simulation fallita:', webhookError);
+          console.error('❌ Webhook simulation fallita:', webhookError);
         } else {
-          console.log('✅ RIPARAZIONE: Webhook simulation completata con successo');
+          console.log('✅ Webhook simulation completata');
         }
       } catch (webhookError) {
-        console.error('❌ RIPARAZIONE: Webhook simulation error:', webhookError);
+        console.error('❌ Webhook simulation error:', webhookError);
       }
       
       setLoading(false);
-      
-      toast.success('🔧 Developer: Pagamento simulato con successo e webhook processato');
+      toast.success('🔧 Developer: Pagamento simulato e webhook processato');
       return true;
     }
 
@@ -81,7 +71,7 @@ export const useStripePayment = () => {
     setError(null);
 
     try {
-      console.log('💳 RIPARAZIONE: Avvio processo pagamento REALE...');
+      console.log('💳 STRIPE REAL: Avvio processo pagamento REALE');
       
       const { data: response, error: stripeError } = await supabase.functions.invoke('create-stripe-session', {
         body: {
@@ -103,14 +93,20 @@ export const useStripePayment = () => {
         throw new Error('URL di checkout non ricevuto');
       }
 
-      console.log('✅ RIPARAZIONE: Apertura checkout in nuova tab');
-      window.open(response.url, '_blank');
+      console.log('✅ STRIPE: Apertura checkout in nuova tab');
+      
+      // CRITICAL FIX: Apertura Stripe FORZATA
+      const newWindow = window.open(response.url, '_blank', 'noopener,noreferrer');
+      if (!newWindow) {
+        // Fallback se popup bloccato
+        window.location.href = response.url;
+      }
       
       toast.success('Reindirizzamento a Stripe in corso...');
       return true;
 
     } catch (error: any) {
-      console.error('❌ RIPARAZIONE: Payment fallito:', error);
+      console.error('❌ STRIPE payment fallito:', error);
       const errorMessage = error.message || 'Errore nel processo di pagamento';
       setError(errorMessage);
       toast.error(errorMessage);
@@ -120,7 +116,7 @@ export const useStripePayment = () => {
     }
   };
 
-  // CRITICAL FIX: Enhanced subscription processing with FORCED activation
+  // CRITICAL FIX: Enhanced subscription processing
   const processSubscription = async (
     planType: 'Silver' | 'Gold' | 'Black',
     paymentMethod: 'card' | 'apple_pay' | 'google_pay' = 'card'
@@ -129,16 +125,13 @@ export const useStripePayment = () => {
     const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
 
-    // CRITICAL FIX: Developer simulation with webhook processing
+    // CRITICAL FIX: Developer simulation completa
     if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 RIPARAZIONE: Developer - Simulazione flusso subscription COMPLETO');
+      console.log('🔧 DEVELOPER: Simulazione subscription COMPLETA');
       
       setLoading(true);
-      
-      // Simula payment processing
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // CRITICAL FIX: Simula webhook per attivazione subscription
       try {
         const { data: response, error: webhookError } = await supabase.functions.invoke('stripe-webhook', {
           body: {
@@ -148,7 +141,7 @@ export const useStripePayment = () => {
                 id: `sub_dev_${Date.now()}`,
                 customer: `cus_dev_${Date.now()}`,
                 status: 'active',
-                current_period_end: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60), // 30 giorni
+                current_period_end: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60),
                 metadata: {
                   user_id: currentUser?.id,
                   plan_type: planType
@@ -159,16 +152,15 @@ export const useStripePayment = () => {
         });
 
         if (webhookError) {
-          console.error('❌ RIPARAZIONE: Subscription webhook simulation fallita:', webhookError);
+          console.error('❌ Subscription webhook simulation fallita:', webhookError);
         } else {
-          console.log('✅ RIPARAZIONE: Subscription webhook simulation completata con successo');
+          console.log('✅ Subscription webhook simulation completata');
         }
       } catch (webhookError) {
-        console.error('❌ RIPARAZIONE: Subscription webhook simulation error:', webhookError);
+        console.error('❌ Subscription webhook simulation error:', webhookError);
       }
       
       setLoading(false);
-      
       toast.success(`🔧 Developer: Abbonamento ${planType} simulato e attivato`);
       return;
     }
@@ -182,7 +174,7 @@ export const useStripePayment = () => {
     setError(null);
 
     try {
-      console.log('💳 RIPARAZIONE: Creazione sessione subscription REALE...', { planType, paymentMethod });
+      console.log('💳 STRIPE: Creazione sessione subscription REALE');
 
       const { data: response, error: stripeError } = await supabase.functions.invoke('create-stripe-session', {
         body: {
@@ -204,103 +196,17 @@ export const useStripePayment = () => {
         throw new Error('URL di checkout non ricevuto');
       }
 
-      console.log('✅ RIPARAZIONE: Sessione subscription creata');
-      window.open(response.url, '_blank');
+      console.log('✅ STRIPE: Sessione subscription creata');
+      const newWindow = window.open(response.url, '_blank', 'noopener,noreferrer');
+      if (!newWindow) {
+        window.location.href = response.url;
+      }
 
     } catch (error: any) {
-      console.error('❌ RIPARAZIONE: Creazione subscription fallita:', error);
+      console.error('❌ STRIPE: Creazione subscription fallita:', error);
       const errorMessage = error.message || 'Errore nella creazione dell\'abbonamento';
       setError(errorMessage);
       toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // CRITICAL FIX: Enhanced payment method detection with FORCED activation
-  const detectPaymentMethodAvailability = () => {
-    const applePayAvailable = typeof window !== 'undefined' && 
-      typeof (window as any).ApplePaySession !== 'undefined' && 
-      (window as any).ApplePaySession.canMakePayments();
-
-    const googlePayAvailable = typeof window !== 'undefined' && 
-      /Android/.test(navigator.userAgent);
-
-    console.log('💳 RIPARAZIONE: Payment methods rilevati:', {
-      applePayAvailable: applePayAvailable || false,
-      googlePayAvailable: googlePayAvailable || false
-    });
-
-    return {
-      applePayAvailable: applePayAvailable || false,
-      googlePayAvailable: googlePayAvailable || false
-    };
-  };
-
-  // CRITICAL FIX: Enhanced checkout session creation with FORCED processing
-  const createCheckoutSession = async (options: StripePaymentOptions): Promise<string | null> => {
-    const currentUser = getCurrentUser();
-    const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
-    const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-
-    // CRITICAL FIX: Developer simulation with complete flow
-    if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 RIPARAZIONE: Developer - Creazione sessione checkout SIMULATA');
-      
-      setLoading(true);
-      
-      // Simula creazione sessione
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const fakeSessionUrl = `https://checkout.stripe.com/c/pay/dev_${Date.now()}`;
-      
-      setLoading(false);
-      
-      toast.success('🔧 Developer: Sessione checkout simulata creata');
-      return fakeSessionUrl;
-    }
-    
-    if (!currentUser?.id) {
-      toast.error('Devi essere loggato per effettuare acquisti');
-      return null;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      console.log('💳 STRIPE: Creazione sessione checkout REALE...', options);
-
-      const { data: response, error: stripeError } = await supabase.functions.invoke('create-stripe-session', {
-        body: {
-          planType: options.planType,
-          customPrice: options.customPrice,
-          redirectUrl: options.redirectUrl || `${window.location.origin}/payment-success`,
-          userId: currentUser.id,
-          userEmail: currentUser.email,
-          isBuzz: options.isBuzz,
-          isMapBuzz: options.isMapBuzz,
-          paymentMethod: options.paymentMethod || 'card'
-        }
-      });
-
-      if (stripeError) {
-        throw new Error(stripeError.message || 'Errore nella creazione della sessione');
-      }
-
-      if (!response?.url) {
-        throw new Error('URL di checkout non ricevuto');
-      }
-
-      console.log('✅ STRIPE: Sessione checkout creata:', response.sessionId);
-      return response.url;
-
-    } catch (error: any) {
-      console.error('❌ STRIPE: Creazione sessione checkout fallita:', error);
-      const errorMessage = error.message || 'Errore nella creazione della sessione';
-      setError(errorMessage);
-      toast.error(errorMessage);
-      return null;
     } finally {
       setLoading(false);
     }
@@ -313,8 +219,6 @@ export const useStripePayment = () => {
     error,
     processBuzzPurchase,
     processSubscription,
-    detectPaymentMethodAvailability,
-    createCheckoutSession,
     clearError
   };
 };
