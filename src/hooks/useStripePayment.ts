@@ -144,8 +144,8 @@ export const useStripePayment = () => {
   const detectPaymentMethodAvailability = () => {
     // Check if Apple Pay is available
     const applePayAvailable = typeof window !== 'undefined' && 
-      window.ApplePaySession && 
-      ApplePaySession.canMakePayments();
+      typeof (window as any).ApplePaySession !== 'undefined' && 
+      (window as any).ApplePaySession.canMakePayments();
 
     // Check if Google Pay is available (basic check)
     const googlePayAvailable = typeof window !== 'undefined' && 
