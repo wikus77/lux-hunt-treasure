@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { RateLimiter } from "../_shared/rateLimiter.ts";
@@ -112,6 +113,7 @@ serve(async (req) => {
 
     console.log(`✅ Auth validation passed for user: ${userId}`);
 
+    // Payment verification
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('subscription_tier, subscription_end, stripe_customer_id')
@@ -126,14 +128,6 @@ serve(async (req) => {
       );
     }
 
-    const { data: payments, error: paymentsError } = await supabase
-      .from('payment_transactions')
-      .select('status, created_at, amount')
-      .eq('user_id', userId)
-      .eq('status', 'completed')
-      .order('created_at', { ascending: false })
-      .limit(1);
-
     const { data: subscription, error: subError } = await supabase
       .from('subscriptions')
       .select('status, tier, end_date')
@@ -144,17 +138,15 @@ serve(async (req) => {
     const hasActiveSubscription = subscription && 
       new Date(subscription.end_date || '') > new Date();
     
-    const hasValidPayment = (payments && payments.length > 0) || hasActiveSubscription;
     const subscriptionTier = profile?.subscription_tier || 'Free';
 
     console.log(`🔒 PAYMENT VERIFICATION RESULT:`, {
-      hasValidPayment,
-      subscriptionTier,
       hasActiveSubscription,
-      paymentsCount: payments?.length || 0
+      subscriptionTier,
+      stripeCustomerId: profile?.stripe_customer_id
     });
 
-    if (!hasValidPayment || subscriptionTier === 'Free') {
+    if (!hasActiveSubscription && (subscriptionTier === 'Free' || !profile?.stripe_customer_id)) {
       console.error(`❌ PAYMENT VERIFICATION FAILED - No valid payment or free tier`);
       
       await supabase.from('abuse_logs').insert({
@@ -163,7 +155,7 @@ serve(async (req) => {
         meta: {
           access_type: 'buzz_no_payment',
           subscription_tier: subscriptionTier,
-          has_valid_payment: hasValidPayment,
+          has_active_subscription: hasActiveSubscription,
           timestamp: new Date().toISOString()
         }
       });
@@ -172,45 +164,13 @@ serve(async (req) => {
         JSON.stringify({ 
           success: false, 
           error: true, 
-          errorMessage: "Pagamento richiesto. Questa funzione è disponibile solo per utenti con abbonamento attivo o pagamento confermato." 
+          errorMessage: "Pagamento richiesto. Questa funzione è disponibile solo per utenti con abbonamento attivo." 
         }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    const { data: allowance, error: allowanceError } = await supabase
-      .from('weekly_buzz_allowances')
-      .select('max_buzz_count, used_buzz_count')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (allowance && allowance.used_buzz_count >= allowance.max_buzz_count) {
-      console.error(`❌ BUZZ LIMIT EXCEEDED for user: ${userId}`);
-      
-      await supabase.from('abuse_logs').insert({
-        user_id: userId,
-        event_type: 'unauthorized_access',
-        meta: {
-          access_type: 'buzz_limit_exceeded',
-          used_buzz: allowance.used_buzz_count,
-          max_buzz: allowance.max_buzz_count,
-          timestamp: new Date().toISOString()
-        }
-      });
-
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: true, 
-          errorMessage: "Limite settimanale BUZZ raggiunto. Upgrade del piano necessario." 
-        }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    console.log(`✅ PAYMENT AND LIMITS VERIFIED - Proceeding with secure buzz generation`);
+    console.log(`✅ PAYMENT VERIFIED - Proceeding with secure buzz generation`);
 
     const rateLimiter = new RateLimiter(supabaseUrl, supabaseServiceKey);
     const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
@@ -267,44 +227,6 @@ serve(async (req) => {
 
     console.log(`📍 Updated buzz count: ${buzzCount}`);
 
-    const { data: userClueCount, error: clueCountError } = await supabase
-      .from('user_clues')
-      .select('clue_id', { count: 'exact' })
-      .eq('user_id', userId);
-      
-    if (clueCountError) {
-      console.error("❌ Error getting clue count:", clueCountError);
-      return new Response(
-        JSON.stringify({ success: false, error: true, errorMessage: "Errore conteggio indizi" }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    const clueCount = userClueCount?.length || 0;
-    console.log(`📍 Current clue count: ${clueCount}`);
-    
-    const { data: costData, error: costError } = await supabase.rpc('calculate_buzz_price', {
-      daily_count: clueCount + 1
-    });
-
-    if (costError || costData === null) {
-      console.error("❌ Error calculating buzz cost:", costError);
-      return new Response(
-        JSON.stringify({ success: false, error: true, errorMessage: "Errore calcolo costo" }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    const buzzCost = costData;
-    console.log(`📍 Calculated buzz cost: €${buzzCost}`);
-    
-    if (buzzCost <= 0) {
-      return new Response(
-        JSON.stringify({ success: false, error: true, errorMessage: "Limite giornaliero superato (50 buzzes)" }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
     let clueText = `🔒 Indizio generato per settimana ${currentWeek}`;
     console.log(`📍 Generated SECURE clue: ${clueText}`);
     
@@ -339,7 +261,7 @@ serve(async (req) => {
     };
 
     if (generateMap) {
-      console.log(`🗺️ FORCED MAP GENERATION START for user ${userId}`);
+      console.log(`🗺️ BUZZ MAPPA GENERATION START for user ${userId}`);
       
       let baseCenter = { lat: 41.9028, lng: 12.4964 };
       
@@ -351,6 +273,7 @@ serve(async (req) => {
       const secureCenter = applySecureOffset(baseCenter.lat, baseCenter.lng);
       console.log(`🔒 Applied secure offset: ${secureCenter.lat}, ${secureCenter.lng}`);
       
+      // Clear existing areas
       const { error: deleteError } = await supabase
         .from('user_map_areas')
         .delete()
@@ -360,7 +283,7 @@ serve(async (req) => {
         console.error("⚠️ Warning: Could not clear existing areas:", deleteError);
       }
       
-      // FIXED: Get current generation count and increment atomically
+      // Get current generation count and increment atomically
       const { data: counterData, error: counterError } = await supabase
         .from('user_buzz_map_counter')
         .select('buzz_map_count')
@@ -370,7 +293,7 @@ serve(async (req) => {
 
       let currentGeneration = (counterData?.buzz_map_count || 0) + 1;
       
-      // FIXED: Atomic upsert with onConflict
+      // Atomic upsert with onConflict
       const { data: updatedCounter, error: updateError } = await supabase
         .from('user_buzz_map_counter')
         .upsert({
@@ -391,7 +314,7 @@ serve(async (req) => {
         console.log(`✅ Counter updated successfully: generation ${currentGeneration}`);
       }
 
-      // FIXED: Correct radius calculation: max(500 * 0.95^(generation-1), 5)
+      // Correct radius calculation: max(500 * 0.95^(generation-1), 5)
       let radius_km;
       if (currentGeneration === 1) {
         radius_km = 500;
@@ -418,14 +341,14 @@ serve(async (req) => {
       } else {
         console.log("✅ Map area saved successfully");
         
-        // FIXED: Notification insertion with is_read: false
+        // Force notification insertion
         try {
           const { data: notificationData, error: notificationError } = await supabase
             .from('user_notifications')
             .insert({
               user_id: userId,
-              title: "Nuova Area Generata",
-              message: "Nuova area generata da BUZZ!",
+              title: "NUOVA AREA GENERATA",
+              message: `Area BUZZ MISSION attiva! Raggio attuale: ${radius_km}km`,
               type: "buzz_generated",
               is_read: false
             })
@@ -435,15 +358,10 @@ serve(async (req) => {
           if (notificationError) {
             console.error("❌ Error creating notification:", notificationError);
           } else {
-            console.log("✅ Notifica inviata");
-            console.log("✅ Notification created successfully:", notificationData.id);
+            console.log("✅ Notification inserted successfully:", notificationData.id);
           }
         } catch (notifError) {
-          if (userId) {
-            console.warn("⚠️ Warning: Could not create notification for user:", userId);
-          } else {
-            console.error("❌ user_id is null, cannot create notification");
-          }
+          console.error("❌ Notification exception:", notifError);
         }
 
         response.radius_km = radius_km;
@@ -451,7 +369,7 @@ serve(async (req) => {
         response.lng = secureCenter.lng;
         response.generation_number = currentGeneration;
         
-        console.log(`✅ BUZZ #${currentGeneration} – Raggio: ${radius_km}km – Area generata`);
+        console.log(`✅ BUZZ #${currentGeneration} – Raggio: ${radius_km}km – ID area: ${crypto.randomUUID()} – user: ${user.email}`);
       }
     }
 
@@ -477,18 +395,6 @@ serve(async (req) => {
     );
   }
 });
-
-function generateClueBasedOnWeek(weekNumber: number): string {
-  const vagueClues = [
-    "Cerca dove splende il sole sul metallo lucente",
-    "L'essenza del premio si nasconde tra storia e modernità",
-    "Il tuo obiettivo si muove in spazi aperti e veloci",
-    "Una creazione nata dalla passione e dall'innovazione",
-    "Dove il design incontra la potenza troverai ciò che cerchi"
-  ];
-  
-  return vagueClues[Math.floor(Math.random() * vagueClues.length)];
-}
 
 function translateToEnglish(italianClue: string): string {
   const translations: Record<string, string> = {

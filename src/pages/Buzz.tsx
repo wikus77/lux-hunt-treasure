@@ -13,10 +13,10 @@ import BottomNavigation from "@/components/layout/BottomNavigation";
 import { useAuthContext } from "@/contexts/auth";
 
 const Buzz = () => {
-  const { user } = useAuthContext(); // FIXED: Use useAuthContext instead of useAuth
+  const { user } = useAuthContext();
   const navigate = useNavigate();
 
-  // FIXED: Check authentication properly
+  // Proper authentication check
   if (!user) {
     return (
       <motion.div 
@@ -31,7 +31,7 @@ const Buzz = () => {
           </h1>
           <p className="text-white mb-6">Devi essere autenticato per accedere a questa sezione.</p>
           <Button 
-            onClick={() => navigate("/login")} // FIXED: navigate to /login not /home
+            onClick={() => navigate("/login")}
             className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white px-6 py-2"
           >
             Accedi

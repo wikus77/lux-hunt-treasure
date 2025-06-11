@@ -43,8 +43,8 @@ export const useBuzzMapLogic = () => {
     return currentWeekAreas.length > 0 ? currentWeekAreas[0] : null;
   }, [currentWeekAreas]);
 
-  // FIXED: Get generation count from user_buzz_map_counter.buzz_map_count
-  const getBuzzMapGeneration = useCallback(async (): Promise<number> => {
+  // Get current generation from database atomically
+  const getCurrentGeneration = useCallback(async (): Promise<number> => {
     if (!user?.id) return 1;
 
     try {
@@ -68,7 +68,7 @@ export const useBuzzMapLogic = () => {
     }
   }, [user?.id]);
 
-  // FIXED: Correct radius calculation: max(500 * 0.95^(generation-1), 5)
+  // Correct radius calculation: max(500 * 0.95^(generation-1), 5)
   const calculateBuzzRadius = useCallback((generation: number): number => {
     if (generation === 1) {
       console.log("✅ BUZZ MAPPA PARTENZA DA 500km - FIRST GENERATION");
@@ -80,12 +80,12 @@ export const useBuzzMapLogic = () => {
     return radius;
   }, []);
 
-  // FIXED: Update counter with atomic upsert
+  // Atomic counter update with conflict resolution
   const updateBuzzMapCounter = useCallback(async (): Promise<number> => {
     if (!user?.id) return 1;
 
     try {
-      const currentGeneration = await getBuzzMapGeneration();
+      const currentGeneration = await getCurrentGeneration();
       
       const { data, error } = await supabase
         .from('user_buzz_map_counter')
@@ -110,7 +110,52 @@ export const useBuzzMapLogic = () => {
       console.error('❌ Exception updating counter:', error);
       throw new Error('Errore nell\'aggiornamento del contatore');
     }
-  }, [user?.id, getBuzzMapGeneration]);
+  }, [user?.id, getCurrentGeneration]);
+
+  // Payment verification before BUZZ
+  const verifyPaymentStatus = useCallback(async (): Promise<boolean> => {
+    if (!user?.id) {
+      console.error('❌ No user ID for payment verification');
+      return false;
+    }
+
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('subscription_tier, stripe_customer_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error('❌ Error fetching profile:', profileError);
+        return false;
+      }
+
+      const { data: subscription, error: subError } = await supabase
+        .from('subscriptions')
+        .select('status, end_date')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .single();
+
+      const hasActiveSubscription = subscription && 
+        new Date(subscription.end_date || '') > new Date();
+
+      if (!hasActiveSubscription && (!profile?.stripe_customer_id || profile?.subscription_tier === 'Free')) {
+        console.warn('⚠️ Payment verification failed: no active subscription');
+        toast.error('Pagamento Richiesto', {
+          description: 'Devi avere un abbonamento attivo per usare BUZZ MAPPA.'
+        });
+        return false;
+      }
+
+      console.log('✅ Payment verification passed');
+      return true;
+    } catch (error) {
+      console.error('❌ Payment verification error:', error);
+      return false;
+    }
+  }, [user?.id]);
 
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
@@ -132,17 +177,23 @@ export const useBuzzMapLogic = () => {
       return null;
     }
 
+    // Verify payment first
+    const hasValidPayment = await verifyPaymentStatus();
+    if (!hasValidPayment) {
+      return null;
+    }
+
     setIsGenerating(true);
     toast.dismiss();
     
     try {
-      console.log('📡 LANCIO BACKEND: Calling with OFFICIAL RULES...');
+      console.log('📡 LANCIO BACKEND: Calling with payment verification...');
       
-      // FIXED: Get generation and calculate radius BEFORE API call
+      // Get generation and calculate radius BEFORE API call
       const generation = await updateBuzzMapCounter();
       const radiusKm = calculateBuzzRadius(generation);
       
-      console.log(`✅ BUZZ #${generation} – Raggio: ${radiusKm}km – Pre-API calculation`);
+      console.log(`✅ BUZZ #${generation} – Raggio: ${radiusKm}km – user: ${user.email || user.id}`);
       
       const response = await callBuzzApi({ 
         userId: user.id,
@@ -164,16 +215,37 @@ export const useBuzzMapLogic = () => {
         id: crypto.randomUUID(),
         lat: response.lat || centerLat,
         lng: response.lng || centerLng,
-        radius_km: radiusKm, // Use calculated radius, not response
+        radius_km: radiusKm,
         week: currentWeek,
         created_at: new Date().toISOString(),
         user_id: user.id
       };
 
       console.log('🎉 LANCIO SUCCESS: Area created', newArea);
-      console.log(`✅ BUZZ #${generation} – Raggio: ${radiusKm}km – ID area: ${newArea.id}`);
+      console.log(`✅ BUZZ #${generation} – Raggio: ${radiusKm}km – ID area: ${newArea.id} – user: ${user.email || user.id}`);
 
-      // FIXED: Force complete sync and reload
+      // Force notification insert
+      try {
+        const { error: notificationError } = await supabase
+          .from('user_notifications')
+          .insert({
+            user_id: user.id,
+            title: 'NUOVA AREA GENERATA',
+            message: `Area BUZZ MISSION attiva! Raggio attuale: ${radiusKm}km`,
+            type: 'buzz_generated',
+            is_read: false
+          });
+
+        if (notificationError) {
+          console.error('❌ Notification insert failed:', notificationError);
+        } else {
+          console.log('✅ Notification inserted successfully');
+        }
+      } catch (notifError) {
+        console.error('❌ Notification exception:', notifError);
+      }
+
+      // Force complete sync and reload
       await forceCompleteSync();
       await forceReload();
       
@@ -182,6 +254,21 @@ export const useBuzzMapLogic = () => {
       return newArea;
     } catch (err) {
       console.error('❌ LANCIO ERROR:', err);
+      
+      // Log failure to abuse_logs
+      try {
+        await supabase.from('abuse_logs').insert({
+          user_id: user.id,
+          event_type: 'buzz_fail',
+          meta: {
+            error: err instanceof Error ? err.message : String(err),
+            timestamp: new Date().toISOString()
+          }
+        });
+      } catch (logError) {
+        console.error('❌ Failed to log abuse:', logError);
+      }
+      
       toast.dismiss();
       toast.error('Errore durante la generazione dell\'area');
       return null;
@@ -191,7 +278,7 @@ export const useBuzzMapLogic = () => {
   }, [
     user, callBuzzApi, isGenerating, isDeleting, 
     setIsGenerating, forceCompleteSync, forceReload,
-    getCurrentWeek, calculateBuzzRadius, updateBuzzMapCounter
+    getCurrentWeek, calculateBuzzRadius, updateBuzzMapCounter, verifyPaymentStatus
   ]);
 
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {

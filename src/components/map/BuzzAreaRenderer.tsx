@@ -18,13 +18,13 @@ const BuzzAreaRenderer: React.FC<BuzzAreaRendererProps> = ({ areas }) => {
   const map = useMap();
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
 
-  // FIXED: Use areas.map(a => a.id).join() instead of JSON.stringify for dependency
+  // Use areas.map(a => a.id).join() instead of JSON.stringify for dependency
   const areasKey = areas.map(a => a.id).join(',');
 
   useEffect(() => {
     console.debug('🔵 Rendering buzz areas:', areas.length);
     
-    // Clear existing layers
+    // Clear existing layers properly
     if (layerGroupRef.current) {
       layerGroupRef.current.clearLayers();
       map.removeLayer(layerGroupRef.current);
@@ -68,7 +68,7 @@ const BuzzAreaRenderer: React.FC<BuzzAreaRendererProps> = ({ areas }) => {
       map.invalidateSize();
     }, 100);
 
-  }, [areasKey, map]); // FIXED: Use areasKey instead of areas
+  }, [areasKey, map]); // Use areasKey instead of areas
 
   // Cleanup on unmount
   useEffect(() => {
