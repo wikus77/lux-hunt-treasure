@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/auth";
 import { Separator } from "@/components/ui/separator";
 import AccountSection from "@/components/settings/AccountSection";
-import RegulationSection from "@/components/settings/RegulationSection";
 import AppSection from "@/components/settings/AppSection";
 import NotificationSection from "@/components/settings/NotificationSection";
 import SupportSection from "@/components/settings/SupportSection";
@@ -72,23 +71,6 @@ const Settings = () => {
         
         {/* Account Settings */}
         <AccountSection />
-        
-        {/* Payment Methods Section */}
-        <section className="p-4">
-          <Link 
-            to="/payment-methods"
-            className="glass-card flex justify-between items-center p-4 hover:bg-white/5 transition-colors"
-          >
-            <div className="flex items-center">
-              <CreditCard className="h-5 w-5 mr-3 text-projectx-neon-blue" />
-              <span>Metodi di Pagamento</span>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </Link>
-        </section>
-        
-        {/* Regulation Section */}
-        <RegulationSection />
         
         {/* App Settings */}
         <AppSection 

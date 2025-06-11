@@ -9,7 +9,6 @@ import PersonalInfo from "../../pages/PersonalInfo";
 import PrivacySecurity from "../../pages/PrivacySecurity";
 import LanguageSettings from "../../pages/LanguageSettings";
 import Notifications from "../../pages/Notifications";
-import PaymentMethods from "../../pages/PaymentMethods";
 
 const SettingsRoutes = () => {
   const baseUserRoles = ['user', 'moderator', 'admin'];
@@ -53,14 +52,6 @@ const SettingsRoutes = () => {
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <Notifications />
-          </RoleBasedProtectedRoute>
-        }
-      />
-      <Route
-        path="/payment-methods"
-        element={
-          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <PaymentMethods />
           </RoleBasedProtectedRoute>
         }
       />
