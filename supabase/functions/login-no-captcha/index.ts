@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.192.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,10 +37,23 @@ serve(async (req) => {
     );
 
     // Get user by email first
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(email);
+    const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
     
-    if (userError || !userData.user) {
-      console.error("❌ User not found:", userError);
+    if (userError) {
+      console.error("❌ Error fetching users:", userError);
+      return new Response(
+        JSON.stringify({ error: "Failed to fetch users" }), 
+        { 
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
+
+    const targetUser = userData.users.find(user => user.email === email);
+    
+    if (!targetUser) {
+      console.error("❌ User not found:", email);
       return new Response(
         JSON.stringify({ error: "User not found" }), 
         { 
@@ -51,8 +64,9 @@ serve(async (req) => {
     }
 
     // Create session directly using admin API
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
-      user_id: userData.user.id
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email: email
     });
 
     if (sessionError) {
@@ -69,8 +83,9 @@ serve(async (req) => {
     console.log("✅ Emergency session created successfully");
     return new Response(JSON.stringify({
       message: "Emergency access granted",
-      session: sessionData.session,
-      user: sessionData.user
+      user: targetUser,
+      access_token: sessionData.properties.action_link.split('#')[1].split('&')[0].split('=')[1],
+      refresh_token: sessionData.properties.action_link.split('#')[1].split('&')[1].split('=')[1]
     }), { 
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -79,7 +94,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("❌ Emergency login error:", error);
     return new Response(
-      JSON.stringify({ error: "Emergency login failed" }),
+      JSON.stringify({ error: "Emergency login failed", details: error.message }),
       { 
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" }

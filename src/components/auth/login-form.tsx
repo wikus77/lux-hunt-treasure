@@ -50,13 +50,13 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
           return;
         }
 
-        if (data?.session) {
-          console.log('✅ Emergency session created - Setting session and redirecting');
+        if (data?.access_token && data?.refresh_token) {
+          console.log('✅ Emergency tokens received - Setting session and redirecting');
           
           // Set the session in Supabase auth
           const { error: setSessionError } = await supabase.auth.setSession({
-            access_token: data.session.access_token,
-            refresh_token: data.session.refresh_token
+            access_token: data.access_token,
+            refresh_token: data.refresh_token
           });
 
           if (setSessionError) {
