@@ -16,22 +16,38 @@ const Buzz = () => {
   const { user } = useAuthContext();
   const navigate = useNavigate();
 
-  // FIX 4 - Enhanced authentication check with logging
+  // ✅ FASE 1 - Enhanced authentication check with logging for /buzz page
   React.useEffect(() => {
-    console.log("🔥 FIX 4 – BUZZ PAGE AUTH CHECK:", {
+    console.log("🔥 FASE 1 – BUZZ PAGE AUTH CHECK:", {
       user: user ? user.id : "null",
-      email: user?.email || "no email"
+      email: user?.email || "no email",
+      pathname: window.location.pathname
     });
     
-    if (!user) {
-      console.log("❌ FIX 4 ERROR - User not authenticated, redirecting to login");
+    // Check if developer email - should always have access
+    const isDeveloperEmail = user?.email === 'wikus77@hotmail.it';
+    const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
+    
+    console.log('Developer access check:', {
+      isDeveloperEmail,
+      hasDeveloperAccess,
+      userEmail: user?.email
+    });
+    
+    if (!user && !hasDeveloperAccess) {
+      console.log("❌ FASE 1 ERROR - User not authenticated, redirecting to login");
     } else {
-      console.log("✅ FIX 4 SUCCESS - User authenticated, showing BUZZ interface");
+      console.log("✅ FASE 1 SUCCESS - User authenticated, showing BUZZ interface");
     }
   }, [user]);
 
-  // Proper authentication check
-  if (!user) {
+  // Enhanced authentication check - allow developer access
+  const isDeveloperEmail = user?.email === 'wikus77@hotmail.it';
+  const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
+  const isAuthenticated = user || hasDeveloperAccess || isDeveloperEmail;
+
+  // Proper authentication check with developer bypass
+  if (!isAuthenticated) {
     return (
       <motion.div 
         className="bg-gradient-to-b from-[#131524]/70 to-black w-full min-h-screen flex items-center justify-center"
@@ -46,7 +62,7 @@ const Buzz = () => {
           <p className="text-white mb-6">Devi essere autenticato per accedere a questa sezione.</p>
           <Button 
             onClick={() => {
-              console.log("🔥 FIX 4 – REDIRECT TO LOGIN");
+              console.log("🔥 FASE 1 – REDIRECT TO LOGIN");
               navigate("/login");
             }}
             className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white px-6 py-2"
@@ -113,7 +129,15 @@ const Buzz = () => {
         </div>
       </main>
       
-      <BottomNavigation />
+      {/* ✅ FASE 5 – VISUALIZZAZIONE UI - Ensure BottomNavigation appears */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 z-40"
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom, 34px)'
+        }}
+      >
+        <BottomNavigation />
+      </div>
     </motion.div>
   );
 };

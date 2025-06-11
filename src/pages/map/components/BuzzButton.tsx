@@ -84,14 +84,60 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   }, [user?.id, dailyBuzzMapCounter]);
   
   const handleBuzzMapClick = async () => {
-    // CRITICAL: Validate user ID first
+    // ✅ FASE 1 – ACCESSO E SESSIONE - Enhanced logging
+    console.log('🔥 FASE 1 – ACCESSO E SESSIONE START');
+    console.log('User from useAuth:', user);
+    console.log('User ID:', user?.id);
+    console.log('User email:', user?.email);
+    
+    // Check Supabase session directly
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log('Supabase session check:', { session: session?.user, error: sessionError });
+    
     if (!user?.id) {
       console.error('❌ BUZZ ERROR: No valid user ID available');
+      console.log('FASE 1 – FALLIMENTO: User ID non disponibile');
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
       return;
     }
 
-    console.log('🔥 BUZZ CLICK (FIXED CENTER) - User ID validated:', user.id);
+    console.log('✅ FASE 1 – SUCCESSO: User authenticated', {
+      userId: user.id,
+      email: user.email,
+      sessionExists: !!session
+    });
+
+    // ✅ FASE 2 – CONTROLLO CONDIZIONI DI GENERAZIONE
+    console.log('🔥 FASE 2 – CONTROLLO CONDIZIONI START');
+    
+    // Check subscription status
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_tier, stripe_customer_id')
+        .eq('id', user.id)
+        .single();
+      
+      console.log('Profile data:', profile);
+      console.log('Subscription tier:', profile?.subscription_tier);
+      console.log('Stripe customer ID:', profile?.stripe_customer_id);
+      
+      // Check buzz counters
+      const { data: buzzCounters } = await supabase
+        .from('user_buzz_map_counter')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('date', new Date().toISOString().split('T')[0])
+        .maybeSingle();
+      
+      console.log('Current buzz counters:', buzzCounters);
+      console.log('Daily buzz map counter:', dailyBuzzMapCounter);
+      
+    } catch (error) {
+      console.error('❌ FASE 2 ERROR: Error checking conditions:', error);
+    }
+
+    console.log('✅ FASE 2 – CONTROLLO CONDITIONS COMPLETED');
     
     // Trigger ripple effect
     setIsRippling(true);
@@ -113,8 +159,14 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       mode: 'backend-only-fixed-center'
     });
     
+    // ✅ FASE 3 – CHIAMATA A handle-buzz-press
+    console.log('🔥 FASE 3 – CHIAMATA handle-buzz-press START');
+    console.log('Calling generateBuzzMapArea with:', { centerLat, centerLng });
+    
     // BACKEND-ONLY GENERATION with FIXED CENTER - completely stateless
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
+    
+    console.log('🔥 FASE 3 – RISPOSTA handle-buzz-press:', newArea);
     
     if (newArea) {
       // Track clue unlocked event for map buzz
@@ -136,7 +188,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         handleBuzz();
       }
     } else {
-      console.error('❌ BUZZ FAILED - No area generated');
+      console.error('❌ FASE 3 FALLIMENTO - No area generated');
+      console.log('BUZZ FAILED - Detailed investigation needed');
       toast.error('❌ Errore generazione area BUZZ');
     }
   };

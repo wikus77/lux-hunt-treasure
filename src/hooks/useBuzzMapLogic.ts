@@ -137,6 +137,9 @@ export const useBuzzMapLogic = () => {
   }, [user?.id]);
 
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
+    console.log('🔥 FASE 3 – generateBuzzMapArea START');
+    console.log('Input parameters:', { centerLat, centerLng, userId: user?.id });
+    
     if (!user?.id) {
       console.error('❌ FIX 4 ERROR - No valid user ID available');
       toast.dismiss();
@@ -164,6 +167,7 @@ export const useBuzzMapLogic = () => {
     // FIX 5 - Verify payment first
     const hasValidPayment = await verifyPaymentStatus();
     if (!hasValidPayment) {
+      console.log('❌ FASE 2 FALLIMENTO - Payment verification failed');
       return null;
     }
 
@@ -183,6 +187,7 @@ export const useBuzzMapLogic = () => {
       
       if (!response.success || response.error) {
         console.error('❌ Backend error:', response.errorMessage || response.error);
+        console.log('❌ FASE 3 FALLIMENTO - API call failed');
         toast.dismiss();
         toast.error(response.errorMessage || 'Errore durante la generazione dell\'area');
         return null;
@@ -211,6 +216,7 @@ export const useBuzzMapLogic = () => {
       return newArea;
     } catch (err) {
       console.error('❌ BUZZ ERROR:', err);
+      console.log('❌ FASE 3 FALLIMENTO - Exception in generateBuzzMapArea:', err);
       
       // Log failure to abuse_logs
       try {
