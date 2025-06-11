@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Circle as CircleIcon, Loader } from "lucide-react";
@@ -25,7 +24,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const [isRippling, setIsRippling] = useState(false);
   const [calculatedRadius, setCalculatedRadius] = useState<number | null>(null);
   const { createMapBuzzNotification } = useNotificationManager();
-  const { user } = useAuth();
+  const { user, getValidUser } = useAuth();
   const { 
     isGenerating, 
     generateBuzzMapArea,
@@ -85,59 +84,75 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   
   const handleBuzzMapClick = async () => {
     // ✅ FASE 1 – ACCESSO E SESSIONE - Enhanced logging
-    console.log('🔥 FASE 1 – ACCESSO E SESSIONE START');
+    console.log('🔥 LIVELLO 1 – ACCESSO E SESSIONE START');
     console.log('User from useAuth:', user);
     console.log('User ID:', user?.id);
     console.log('User email:', user?.email);
     
-    // Check Supabase session directly
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    console.log('Supabase session check:', { session: session?.user, error: sessionError });
+    // CRITICAL FIX: Validate session before proceeding
+    console.log('🔍 LIVELLO 1 – SESSION VALIDATION: Checking session validity...');
+    const validUser = await getValidUser();
     
-    if (!user?.id) {
-      console.error('❌ BUZZ ERROR: No valid user ID available');
-      console.log('FASE 1 – FALLIMENTO: User ID non disponibile');
+    if (!validUser) {
+      console.error('❌ LIVELLO 1 ERROR: No valid user available after validation');
+      console.log('LIVELLO 1 – FALLIMENTO: User validation failed');
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
       return;
     }
 
-    console.log('✅ FASE 1 – SUCCESSO: User authenticated', {
-      userId: user.id,
-      email: user.email,
-      sessionExists: !!session
+    console.log('✅ LIVELLO 1 – SUCCESSO: User validated', {
+      userId: validUser.id,
+      email: validUser.email
+    });
+
+    // Check Supabase session directly with enhanced logging
+    console.log('🔍 LIVELLO 1 – SUPABASE SESSION: Checking Supabase session state...');
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log('🔍 LIVELLO 1 – SUPABASE SESSION:', { 
+      hasSession: !!session, 
+      sessionUserId: session?.user?.id,
+      error: sessionError 
     });
 
     // ✅ FASE 2 – CONTROLLO CONDIZIONI DI GENERAZIONE
-    console.log('🔥 FASE 2 – CONTROLLO CONDIZIONI START');
+    console.log('🔥 LIVELLO 2 – CONTROLLO CONDIZIONI START');
     
-    // Check subscription status
+    // Check subscription status with enhanced logging
     try {
-      const { data: profile } = await supabase
+      console.log('🔍 LIVELLO 2 – PROFILE CHECK: Fetching user profile...');
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('subscription_tier, stripe_customer_id')
-        .eq('id', user.id)
+        .eq('id', validUser.id)
         .single();
       
-      console.log('Profile data:', profile);
-      console.log('Subscription tier:', profile?.subscription_tier);
-      console.log('Stripe customer ID:', profile?.stripe_customer_id);
+      console.log('🔍 LIVELLO 2 – PROFILE DATA:', {
+        profile: profile,
+        error: profileError,
+        tier: profile?.subscription_tier,
+        stripeId: profile?.stripe_customer_id
+      });
       
       // Check buzz counters
-      const { data: buzzCounters } = await supabase
+      console.log('🔍 LIVELLO 2 – BUZZ COUNTERS: Fetching buzz counters...');
+      const { data: buzzCounters, error: counterError } = await supabase
         .from('user_buzz_map_counter')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', validUser.id)
         .eq('date', new Date().toISOString().split('T')[0])
         .maybeSingle();
       
-      console.log('Current buzz counters:', buzzCounters);
-      console.log('Daily buzz map counter:', dailyBuzzMapCounter);
+      console.log('🔍 LIVELLO 2 – BUZZ COUNTERS:', {
+        counters: buzzCounters,
+        error: counterError,
+        dailyCount: dailyBuzzMapCounter
+      });
       
     } catch (error) {
-      console.error('❌ FASE 2 ERROR: Error checking conditions:', error);
+      console.error('❌ LIVELLO 2 ERROR: Error checking conditions:', error);
     }
 
-    console.log('✅ FASE 2 – CONTROLLO CONDITIONS COMPLETED');
+    console.log('✅ LIVELLO 2 – CONTROLLO CONDITIONS COMPLETED');
     
     // Trigger ripple effect
     setIsRippling(true);
@@ -152,21 +167,25 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     const centerLat = mapCenter ? mapCenter[0] : 41.9028;
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
-    console.log('📍 BUZZ CALL with FIXED CENTER coordinates:', { 
-      userId: user.id,
+    console.log('📍 LIVELLO 3 – COORDINATES: Using coordinates:', { 
+      userId: validUser.id,
       centerLat, 
       centerLng,
       mode: 'backend-only-fixed-center'
     });
     
     // ✅ FASE 3 – CHIAMATA A handle-buzz-press
-    console.log('🔥 FASE 3 – CHIAMATA handle-buzz-press START');
-    console.log('Calling generateBuzzMapArea with:', { centerLat, centerLng });
+    console.log('🔥 LIVELLO 3 – CHIAMATA handle-buzz-press START');
+    console.log('Calling generateBuzzMapArea with validated user:', { 
+      userId: validUser.id,
+      centerLat, 
+      centerLng 
+    });
     
     // BACKEND-ONLY GENERATION with FIXED CENTER - completely stateless
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
-    console.log('🔥 FASE 3 – RISPOSTA handle-buzz-press:', newArea);
+    console.log('🔥 LIVELLO 3 – RISPOSTA handle-buzz-press:', newArea);
     
     if (newArea) {
       // Track clue unlocked event for map buzz
@@ -174,7 +193,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         window.plausible('clue_unlocked');
       }
       
-      console.log('✅ [BUZZ SUCCESS - FIXED CENTER]', newArea);
+      console.log('✅ LIVELLO 3 SUCCESS - FIXED CENTER:', newArea);
       
       // Force reload areas to sync with database
       await reloadAreas();
@@ -188,8 +207,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         handleBuzz();
       }
     } else {
-      console.error('❌ FASE 3 FALLIMENTO - No area generated');
-      console.log('BUZZ FAILED - Detailed investigation needed');
+      console.error('❌ LIVELLO 3 FALLIMENTO - No area generated');
+      console.log('LIVELLO 3 FAILED - Area generation failed');
       toast.error('❌ Errore generazione area BUZZ');
     }
   };

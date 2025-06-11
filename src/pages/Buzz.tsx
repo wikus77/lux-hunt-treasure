@@ -14,37 +14,81 @@ import { useAuthContext } from "@/contexts/auth";
 
 const Buzz = () => {
   const { user } = useAuthContext();
+  const { getValidUser } = useAuth();
   const navigate = useNavigate();
+  const [isValidatingAuth, setIsValidatingAuth] = React.useState(true);
+  const [validatedUser, setValidatedUser] = React.useState(null);
 
   // ✅ FASE 1 - Enhanced authentication check with logging for /buzz page
   React.useEffect(() => {
-    console.log("🔥 FASE 1 – BUZZ PAGE AUTH CHECK:", {
-      user: user ? user.id : "null",
-      email: user?.email || "no email",
-      pathname: window.location.pathname
-    });
-    
-    // Check if developer email - should always have access
-    const isDeveloperEmail = user?.email === 'wikus77@hotmail.it';
-    const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-    
-    console.log('Developer access check:', {
-      isDeveloperEmail,
-      hasDeveloperAccess,
-      userEmail: user?.email
-    });
-    
-    if (!user && !hasDeveloperAccess) {
-      console.log("❌ FASE 1 ERROR - User not authenticated, redirecting to login");
-    } else {
-      console.log("✅ FASE 1 SUCCESS - User authenticated, showing BUZZ interface");
-    }
-  }, [user]);
+    const validateAuthentication = async () => {
+      console.log("🔥 LIVELLO 1 – BUZZ PAGE AUTH CHECK:", {
+        user: user ? user.id : "null",
+        email: user?.email || "no email",
+        pathname: window.location.pathname
+      });
+      
+      // Check if developer email - should always have access
+      const isDeveloperEmail = user?.email === 'wikus77@hotmail.it';
+      const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
+      
+      console.log('🔍 LIVELLO 1 – DEVELOPER ACCESS CHECK:', {
+        isDeveloperEmail,
+        hasDeveloperAccess,
+        userEmail: user?.email
+      });
+
+      // Enhanced validation using getValidUser if available
+      let finalUser = user;
+      if (getValidUser) {
+        try {
+          console.log('🔍 LIVELLO 1 – ENHANCED VALIDATION: Using getValidUser...');
+          const validUser = await getValidUser();
+          if (validUser) {
+            finalUser = validUser;
+            console.log('✅ LIVELLO 1 SUCCESS – Enhanced validation passed:', validUser.id);
+          }
+        } catch (error) {
+          console.error('❌ LIVELLO 1 ERROR – Enhanced validation failed:', error);
+        }
+      }
+      
+      const isAuthenticated = finalUser || hasDeveloperAccess || isDeveloperEmail;
+      
+      if (!isAuthenticated) {
+        console.log("❌ LIVELLO 1 ERROR - User not authenticated, redirecting to login");
+      } else {
+        console.log("✅ LIVELLO 1 SUCCESS - User authenticated, showing BUZZ interface");
+        setValidatedUser(finalUser);
+      }
+      
+      setIsValidatingAuth(false);
+    };
+
+    validateAuthentication();
+  }, [user, getValidUser]);
 
   // Enhanced authentication check - allow developer access
   const isDeveloperEmail = user?.email === 'wikus77@hotmail.it';
   const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-  const isAuthenticated = user || hasDeveloperAccess || isDeveloperEmail;
+  const isAuthenticated = validatedUser || user || hasDeveloperAccess || isDeveloperEmail;
+
+  // Show loading during auth validation
+  if (isValidatingAuth) {
+    return (
+      <motion.div 
+        className="bg-gradient-to-b from-[#131524]/70 to-black w-full min-h-screen flex items-center justify-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="text-center p-8">
+          <div className="animate-spin w-12 h-12 border-4 border-t-transparent border-blue-500 rounded-full mx-auto mb-4"></div>
+          <p className="text-white">Validating authentication...</p>
+        </div>
+      </motion.div>
+    );
+  }
 
   // Proper authentication check with developer bypass
   if (!isAuthenticated) {
@@ -62,7 +106,7 @@ const Buzz = () => {
           <p className="text-white mb-6">Devi essere autenticato per accedere a questa sezione.</p>
           <Button 
             onClick={() => {
-              console.log("🔥 FASE 1 – REDIRECT TO LOGIN");
+              console.log("🔥 LIVELLO 1 – REDIRECT TO LOGIN");
               navigate("/login");
             }}
             className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white px-6 py-2"
