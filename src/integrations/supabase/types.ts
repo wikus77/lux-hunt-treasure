@@ -165,6 +165,30 @@ export type Database = {
         }
         Relationships: []
       }
+      buzz_logs: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          id: string
+          step: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          step: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          step?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       buzz_map_actions: {
         Row: {
           clue_count: number
