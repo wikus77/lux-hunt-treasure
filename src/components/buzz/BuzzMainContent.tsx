@@ -1,98 +1,167 @@
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Zap, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { useAuthContext } from '@/contexts/auth';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
+import BuzzPulseAnimation from './BuzzPulseAnimation';
+import BuzzCountDisplay from './BuzzCountDisplay';
+import BuzzInfoCard from './BuzzInfoCard';
+import { Spinner } from '@/components/ui/spinner';
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import BuzzButton from "./BuzzButton";
-import { useBuzzClues } from "@/hooks/buzz/useBuzzClues";
-import { useAuth } from "@/hooks/useAuth";
-import { useDynamicIsland } from "@/hooks/useDynamicIsland";
-import ErrorFallback from "../error/ErrorFallback";
-import GradientBox from "@/components/ui/gradient-box";
+interface BuzzMainContentProps {
+  onBuzzPress: () => void;
+  canUseBuzz: boolean;
+  currentBuzzCount: number;
+  maxBuzzCount: number;
+  onNavigateToMap: () => void;
+}
 
-const BuzzMainContent = () => {
-  const { user } = useAuth();
+const BuzzMainContent: React.FC<BuzzMainContentProps> = ({
+  onBuzzPress,
+  canUseBuzz,
+  currentBuzzCount,
+  maxBuzzCount,
+  onNavigateToMap
+}) => {
+  const { isAuthenticated } = useAuthContext();
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [showPulse, setShowPulse] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { incrementUnlockedCluesAndAddClue } = useBuzzClues();
-  const { startActivity, updateActivity, endActivity } = useDynamicIsland();
+  const { playSound } = useSoundEffects();
+  const navigate = useNavigate();
 
-  const handleBuzzSuccess = async () => {
-    // Start Dynamic Island activity when buzz is successful
-    await startActivity({
-      missionId: `buzz-${Date.now()}`,
-      title: "🔍 Operazione Firenze",
-      status: "Area Buzz generata",
-      progress: 25, // 25% progress for area generation
-      timeLeft: 3600, // 1 hour countdown
-    });
-
-    // Update progress after a short delay (simulation)
-    setTimeout(async () => {
-      await updateActivity({
-        status: "Analisi in corso",
-        progress: 50,
+  const handleBuzzPress = async () => {
+    if (!isAuthenticated) {
+      toast.error("Accesso richiesto", {
+        description: "Devi effettuare l'accesso per utilizzare questa funzione."
       });
-    }, 3000);
+      navigate('/login');
+      return;
+    }
 
-    // Call original success handler
-    incrementUnlockedCluesAndAddClue();
+    if (!canUseBuzz) {
+      toast.error("Buzz non disponibile", {
+        description: "Hai raggiunto il limite massimo di Buzz per oggi."
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setIsAnimating(true);
+    playSound('buzz');
+
+    try {
+      await onBuzzPress();
+      setShowPulse(true);
+      
+      setTimeout(() => {
+        setShowPulse(false);
+      }, 3000);
+    } catch (error) {
+      console.error("Error during buzz press:", error);
+      toast.error("Errore", {
+        description: "Si è verificato un errore durante l'operazione."
+      });
+    } finally {
+      setTimeout(() => {
+        setIsAnimating(false);
+        setIsLoading(false);
+      }, 1000);
+    }
   };
 
-  if (error) {
-    return <ErrorFallback message={error} onRetry={() => setError(null)} />;
-  }
+  const handleMapNavigation = () => {
+    playSound('click');
+    onNavigateToMap();
+  };
 
   return (
-    <motion.div 
-      className="min-h-[80vh] flex flex-col items-center justify-center p-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="mb-12 text-center"
-      >
-        <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-[#00D1FF] font-orbitron" style={{ 
-          textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-        }}>BUZZ</h1>
-        <p className="text-white/70 max-w-md mx-auto">
-          Premi il pulsante per ricevere indizi sulla posizione del premio
-        </p>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ 
-          type: "spring",
-          stiffness: 260,
-          damping: 20,
-          delay: 0.2
-        }}
-      >
-        <BuzzButton 
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-          setError={setError}
-          userId={user?.id || ""}
-          onSuccess={handleBuzzSuccess}
-        />
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-      >
-        <GradientBox className="mt-12 text-center max-w-md p-6">
-          <p className="text-white/80">
-            Effettua il pagamento e premiati puoi ottenere degli indizi esclusivi
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
+      {/* Pulse Animation */}
+      {showPulse && <BuzzPulseAnimation />}
+      
+      {/* Main content */}
+      <div className="w-full max-w-md mx-auto text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold mb-2">Buzz</h1>
+          <p className="text-gray-400">
+            Premi il pulsante per inviare un segnale e scoprire nuove aree sulla mappa.
           </p>
-        </GradientBox>
-      </motion.div>
-    </motion.div>
+        </motion.div>
+
+        {/* Buzz Counter */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-8"
+        >
+          <BuzzCountDisplay 
+            current={currentBuzzCount} 
+            max={maxBuzzCount} 
+          />
+        </motion.div>
+
+        {/* Buzz Button */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="mb-12"
+        >
+          <Button
+            onClick={handleBuzzPress}
+            disabled={!canUseBuzz || isAnimating || isLoading}
+            className={`w-32 h-32 rounded-full flex items-center justify-center transition-all ${
+              canUseBuzz 
+                ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600' 
+                : 'bg-gray-700'
+            }`}
+          >
+            {isLoading ? (
+              <Spinner className="w-12 h-12 text-white" />
+            ) : (
+              <Zap className={`w-16 h-16 ${isAnimating ? 'animate-pulse' : ''}`} />
+            )}
+          </Button>
+        </motion.div>
+
+        {/* Info Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="mb-8"
+        >
+          <BuzzInfoCard />
+        </motion.div>
+
+        {/* Map Navigation Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.8 }}
+        >
+          <Button
+            onClick={handleMapNavigation}
+            variant="outline"
+            className="border-cyan-500 text-cyan-500 hover:bg-cyan-950"
+          >
+            <MapPin className="w-4 h-4 mr-2" />
+            Vai alla mappa
+          </Button>
+        </motion.div>
+      </div>
+    </div>
   );
 };
 

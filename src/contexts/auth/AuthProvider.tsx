@@ -152,20 +152,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchUserRole();
     
     // Mark auth as initialized after first load
-    if (!authInitialized && !auth.loading) {
+    if (!authInitialized && !auth.isLoading) {
       setAuthInitialized(true);
     }
     
-  }, [auth.isAuthenticated, auth.user, auth.loading]);
+  }, [auth.isAuthenticated, auth.user, auth.isLoading]);
 
   // Show loading state on first initialization
   useEffect(() => {
-    if (auth.loading && !authInitialized) {
+    if (auth.isLoading && !authInitialized) {
       console.log('🔄 Auth is initializing...');
     } else if (authInitialized) {
       console.log('✅ Auth initialization complete');
     }
-  }, [auth.loading, authInitialized]);
+  }, [auth.isLoading, authInitialized]);
 
   // Check if user has a specific role - REAL AUTH ONLY
   const hasRole = (role: string): boolean => {

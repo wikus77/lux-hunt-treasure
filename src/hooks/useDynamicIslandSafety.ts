@@ -1,33 +1,44 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useAuthContext } from '@/contexts/auth';
 
-import { useEffect } from 'react';
-import { useDynamicIsland } from './useDynamicIsland';
-import { useAuth } from './useAuth';
+interface SafetyCheckResult {
+  isSafe: boolean;
+  reason?: string;
+}
 
 export const useDynamicIslandSafety = () => {
-  const { forceEndActivity } = useDynamicIsland();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuthContext();
+  const [isBuzzSafe, setIsBuzzSafe] = useState<SafetyCheckResult>({ isSafe: true });
 
-  // Chiusura di sicurezza al logout o disconnessione
   useEffect(() => {
-    if (!user) {
-      console.log('🔒 User logged out or session expired - forcing Live Activity closure');
-      forceEndActivity();
-    }
-  }, [user, forceEndActivity]);
+    const checkBuzzSafety = async () => {
+      if (!isAuthenticated || !user) {
+        setIsBuzzSafe({ isSafe: false, reason: 'Not authenticated' });
+        return;
+      }
 
-  // Chiusura di sicurezza prima dell'unmount della pagina
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      console.log('🔄 Page unloading - attempting to close Live Activity');
-      forceEndActivity();
+      try {
+        // Simulate a safety check (replace with actual logic)
+        const randomValue = Math.random();
+        if (randomValue < 0.1) {
+          setIsBuzzSafe({ isSafe: false, reason: 'Simulated safety check failure' });
+          toast.error('Dynamic Island safety check failed. Please try again later.');
+        } else {
+          setIsBuzzSafe({ isSafe: true });
+        }
+      } catch (error: any) {
+        console.error('Error during safety check:', error);
+        setIsBuzzSafe({ isSafe: false, reason: error.message || 'Unknown error' });
+        toast.error('An error occurred during the safety check.');
+      }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [forceEndActivity]);
+    checkBuzzSafety();
+  }, [user, isAuthenticated]);
 
-  return { forceEndActivity };
+  return {
+    isBuzzSafe,
+  };
 };

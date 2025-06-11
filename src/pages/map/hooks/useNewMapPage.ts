@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+import { useAuthContext } from '@/contexts/auth';
 import { useSearchAreasLogic } from './useSearchAreasLogic';
 import { MapMarker } from '@/components/maps/types';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
@@ -10,7 +10,7 @@ import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
 
 export const useNewMapPage = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuthContext();
   const [isAddingPoint, setIsAddingPoint] = useState(false);
   const [mapPoints, setMapPoints] = useState<any[]>([]);
   const [newPoint, setNewPoint] = useState<MapMarker | null>(null);
