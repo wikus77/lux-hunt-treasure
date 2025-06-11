@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -70,12 +69,12 @@ export function useAuth() {
           return { success: false, error: error as AuthError };
         }
 
-        if (data?.session) {
+        if (data?.access_token && data?.refresh_token) {
           console.log("✅ Emergency session received - Setting session");
           
           const { error: setSessionError } = await supabase.auth.setSession({
-            access_token: data.session.access_token,
-            refresh_token: data.session.refresh_token
+            access_token: data.access_token,
+            refresh_token: data.refresh_token
           });
 
           if (setSessionError) {
@@ -83,7 +82,7 @@ export function useAuth() {
             return { success: false, error: setSessionError };
           }
 
-          return { success: true, session: data.session };
+          return { success: true, session: data };
         }
       }
       
@@ -98,7 +97,7 @@ export function useAuth() {
       }
 
       console.log("✅ Login completed successfully for:", email);
-      return { success: true, data, session: data.session };
+      return { success: true, session: data.session };
     } catch (error: any) {
       console.error("Error during login:", error);
       return { success: false, error: error as AuthError };
