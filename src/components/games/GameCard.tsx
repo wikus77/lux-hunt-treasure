@@ -1,87 +1,115 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Play, Lock, Trophy } from "lucide-react";
+import { motion } from 'framer-motion';
+import { Play, Lock, Trophy } from 'lucide-react';
 
 interface GameCardProps {
   title: string;
   description: string;
-  isLocked: boolean;
-  progress?: number;
-  onPlay: () => void;
-  difficulty: 'Facile' | 'Medio' | 'Difficile';
+  difficulty: 'Facile' | 'Medio' | 'Difficile' | 'Molto Difficile' | 'Estremo';
   rewards: string;
+  isLocked: boolean;
+  progress: number;
+  onPlay: () => void;
 }
 
 const GameCard: React.FC<GameCardProps> = ({
   title,
   description,
-  isLocked,
-  progress = 0,
-  onPlay,
   difficulty,
-  rewards
+  rewards,
+  isLocked,
+  progress,
+  onPlay
 }) => {
   const getDifficultyColor = (diff: string) => {
     switch (diff) {
       case 'Facile': return 'text-green-400';
       case 'Medio': return 'text-yellow-400';
-      case 'Difficile': return 'text-red-400';
+      case 'Difficile': return 'text-orange-400';
+      case 'Molto Difficile': return 'text-red-400';
+      case 'Estremo': return 'text-purple-400';
       default: return 'text-gray-400';
     }
   };
 
   return (
-    <Card className="bg-gray-900/50 border-gray-700 hover:border-blue-500 transition-all duration-300">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center gap-2">
-            {isLocked && <Lock className="w-4 h-4 text-gray-400" />}
+    <motion.div
+      className={`m1ssion-glass-card p-6 rounded-xl border ${
+        isLocked ? 'border-gray-600 opacity-60' : 'border-blue-500/30'
+      } bg-black/40 backdrop-blur-sm hover:border-blue-400/50 transition-all duration-300`}
+      whileHover={!isLocked ? { scale: 1.02, y: -2 } : {}}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1">
+          <h3 className="text-xl font-orbitron font-bold text-[#00D1FF] mb-2">
             {title}
-          </CardTitle>
-          <div className={`text-sm ${getDifficultyColor(difficulty)}`}>
+          </h3>
+          <p className="text-white/70 text-sm mb-3">
+            {description}
+          </p>
+        </div>
+        {isLocked && <Lock className="text-gray-500 ml-2" size={20} />}
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <span className="text-white/60 text-sm">Difficoltà:</span>
+          <span className={`font-semibold ${getDifficultyColor(difficulty)}`}>
             {difficulty}
-          </div>
+          </span>
         </div>
-        <CardDescription className="text-gray-300">
-          {description}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {progress > 0 && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Progresso</span>
-                <span className="text-white">{progress}%</span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
-                <div 
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
+
+        <div className="flex justify-between items-center">
+          <span className="text-white/60 text-sm">Ricompense:</span>
+          <span className="text-yellow-400 font-semibold text-sm">
+            {rewards}
+          </span>
+        </div>
+
+        {!isLocked && progress > 0 && (
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-white/60 text-sm">Progresso:</span>
+              <span className="text-blue-400 font-semibold text-sm">
+                {progress}%
+              </span>
             </div>
-          )}
-          
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            <Trophy className="w-4 h-4" />
-            <span>Ricompensa: {rewards}</span>
+            <div className="w-full bg-gray-700 rounded-full h-2">
+              <div
+                className="bg-gradient-to-r from-blue-500 to-cyan-400 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
-          
-          <Button
-            onClick={onPlay}
-            disabled={isLocked}
-            className="w-full"
-            variant={isLocked ? "secondary" : "default"}
-          >
-            <Play className="w-4 h-4 mr-2" />
-            {isLocked ? 'Bloccato' : 'Gioca'}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        )}
+
+        <button
+          onClick={onPlay}
+          disabled={isLocked}
+          className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+            isLocked
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white shadow-lg hover:shadow-xl'
+          }`}
+        >
+          {isLocked ? (
+            <>
+              <Lock size={16} />
+              Bloccato
+            </>
+          ) : (
+            <>
+              <Play size={16} />
+              Gioca Ora
+            </>
+          )}
+        </button>
+      </div>
+    </motion.div>
   );
 };
 
