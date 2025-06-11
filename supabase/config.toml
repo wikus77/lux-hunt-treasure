@@ -5,9 +5,16 @@ project_id = "vkjrqirvdvjbemsfzxof"
 enable_signup = true
 enable_captcha = false
 enable_email_confirmations = false
+enable_phone_confirmations = false
 
-[functions.register-bypass]
-verify_jwt = false
+[auth.email]
+enable_signup = true
+double_confirm_changes = false
+enable_confirmations = false
+
+[auth.sms]
+enable_signup = false
+enable_confirmations = false
 
 [auth.external.google]
 enabled = false
@@ -15,3 +22,15 @@ enabled = false
 [auth.external.github]
 enabled = false
 
+# Disable all bot protection
+[auth.hook.custom_access_token]
+enabled = false
+
+[functions.register-bypass]
+verify_jwt = false
+
+# Additional security bypass for testing
+[auth.security]
+captcha_enabled = false
+refresh_token_rotation_enabled = true
+security_update_password_require_reauthentication = false

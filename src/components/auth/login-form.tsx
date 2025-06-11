@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -30,11 +29,11 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
 
     setIsLoading(true);
     try {
-      console.log('🔐 CRITICAL LOGIN PROCESS STARTING for:', email);
+      console.log('🔐 STARTING ENHANCED LOGIN for:', email);
       
       const result = await login(email, password);
       
-      console.log('🧠 CRITICAL LOGIN RESULT:', {
+      console.log('🧠 LOGIN RESULT:', {
         success: result?.success,
         hasError: !!result?.error,
         hasSession: !!result?.session,
@@ -42,35 +41,22 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
       });
       
       if (result?.success) {
-        console.log('✅ CRITICAL LOGIN SUCCESS - redirecting to /home');
+        console.log('✅ LOGIN SUCCESS - redirecting to /home');
         toast.success('Login effettuato con successo');
         
-        // CRITICAL: Enhanced redirect with session verification
-        setTimeout(async () => {
-          // Double-check session is persisted before redirecting
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          console.log('🔍 CRITICAL PRE-REDIRECT VERIFICATION:', {
-            session: session?.user?.email || 'Missing',
-            accessToken: session?.access_token ? 'Present' : 'Missing'
-          });
-          
-          if (session) {
-            console.log('✅ CRITICAL SESSION VERIFIED - SAFE TO REDIRECT');
-            navigate('/home', { replace: true });
-          } else {
-            console.log('⚠️ CRITICAL SESSION NOT VERIFIED - FORCING RELOAD');
-            window.location.href = '/home';
-          }
+        // Enhanced redirect with verification
+        setTimeout(() => {
+          console.log('🔄 EXECUTING REDIRECT TO /home');
+          navigate('/home', { replace: true });
         }, 1000);
       } else {
-        console.error('❌ CRITICAL LOGIN FAILED:', result?.error);
+        console.error('❌ LOGIN FAILED:', result?.error);
         toast.error('Errore di login', {
           description: result?.error?.message || 'Verifica le tue credenziali'
         });
       }
     } catch (error: any) {
-      console.error('❌ CRITICAL LOGIN EXCEPTION:', error);
+      console.error('❌ LOGIN EXCEPTION:', error);
       toast.error('Errore di login', {
         description: error.message || 'Si è verificato un errore imprevisto'
       });
