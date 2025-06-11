@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -8,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LoginForm } from "@/components/auth/login-form";
 import BackgroundParticles from "@/components/ui/background-particles";
 import { useAuth } from "@/hooks/use-auth";
+import { Spinner } from "@/components/ui/spinner";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
