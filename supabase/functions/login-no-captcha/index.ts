@@ -41,7 +41,7 @@ serve(async (req) => {
 
     console.log("🔍 Getting user by email...");
     
-    // CORRECT API: Use listUsers with email filter
+    // Get all users and find by email
     const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
     
     if (userError) {
@@ -69,34 +69,40 @@ serve(async (req) => {
     }
 
     console.log("✅ User found:", user.id);
-    console.log("🔧 Creating session...");
+    console.log("🔧 Creating session directly with admin.createSession...");
 
-    // Create session directly using admin API
-    const { data, error: sessionError } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
-      email: email,
+    // Use admin.createSession instead of generateLink for direct session creation
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
+      user_id: user.id,
     });
 
-    if (sessionError) {
+    console.log("📤 Raw session response:", JSON.stringify(sessionData));
+    console.log("📤 Session error (if any):", JSON.stringify(sessionError));
+
+    if (sessionError || !sessionData) {
       console.error("❌ Session creation failed:", sessionError);
       return new Response(
-        JSON.stringify({ error: sessionError.message }), 
+        JSON.stringify({ error: sessionError?.message || "Failed to create session" }), 
         { 
-          status: 400,
+          status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
 
-    // Extract tokens from the generated link
-    const url = new URL(data.properties.action_link);
-    const access_token = url.searchParams.get('access_token');
-    const refresh_token = url.searchParams.get('refresh_token');
+    // Extract tokens from session data
+    const access_token = sessionData.access_token;
+    const refresh_token = sessionData.refresh_token;
+
+    console.log("🎫 Access token type:", typeof access_token);
+    console.log("🎫 Access token length:", access_token ? access_token.length : 'null');
+    console.log("🎫 Refresh token type:", typeof refresh_token);
+    console.log("🎫 Refresh token length:", refresh_token ? refresh_token.length : 'null');
 
     if (!access_token || !refresh_token) {
-      console.error("❌ Tokens not found in response");
+      console.error("❌ Missing tokens in session data");
       return new Response(
-        JSON.stringify({ error: "Failed to generate tokens" }), 
+        JSON.stringify({ error: "Failed to generate tokens", debug: sessionData }), 
         { 
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -105,15 +111,21 @@ serve(async (req) => {
     }
 
     console.log("✅ Emergency session created successfully");
-    console.log("🎫 Tokens generated - access_token length:", access_token.length);
-    console.log("🎫 Tokens generated - refresh_token length:", refresh_token.length);
     
-    return new Response(JSON.stringify({
+    const responseData = {
       access_token,
       refresh_token,
       user: user,
       message: "Emergency access granted"
-    }), { 
+    };
+
+    console.log("📤 Final response data:", JSON.stringify({
+      ...responseData,
+      access_token: `${access_token.substring(0, 20)}...`,
+      refresh_token: `${refresh_token.substring(0, 20)}...`
+    }));
+    
+    return new Response(JSON.stringify(responseData), { 
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
