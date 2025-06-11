@@ -13,8 +13,9 @@ import { Spinner } from "@/components/ui/spinner";
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
+  const [developerAutoLoginAttempted, setDeveloperAutoLoginAttempted] = useState(false);
   const [isDeveloperAutoLogin, setIsDeveloperAutoLogin] = useState(false);
+  const [autoLoginError, setAutoLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -30,102 +31,84 @@ const Login = () => {
       });
     }
 
-    // Enhanced authentication check with immediate redirect
+    // Immediate redirect if already authenticated
     if (!authLoading && isAuthenticated) {
       console.log('✅ User already authenticated, redirecting to /home');
       navigate('/home', { replace: true });
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);
 
-  // Developer auto-login - NO PASSWORD, NO CAPTCHA
+  // 🔐 DEVELOPER AUTO-LOGIN - DEFINITIVE IMPLEMENTATION
   useEffect(() => {
-    const attemptDeveloperAutoLogin = async () => {
-      if (!autoLoginAttempted && !authLoading && !isAuthenticated) {
-        const autoLoginEnabled = localStorage.getItem('auto_login_enabled') !== 'false';
+    const executeDeveloperAutoLogin = async () => {
+      if (!developerAutoLoginAttempted && !authLoading && !isAuthenticated) {
+        console.log('🔄 STARTING DEVELOPER AUTO-LOGIN FOR wikus77@hotmail.it');
+        setDeveloperAutoLoginAttempted(true);
+        setIsDeveloperAutoLogin(true);
+        setAutoLoginError(null);
         
-        if (autoLoginEnabled) {
-          console.log('🔄 Attempting DEVELOPER AUTO-LOGIN (NO PASSWORD, NO CAPTCHA)...');
-          setAutoLoginAttempted(true);
-          setIsDeveloperAutoLogin(true);
-          
-          try {
-            // Call the login-no-captcha edge function
-            const { data, error } = await supabase.functions.invoke('login-no-captcha', {
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': 'application/json, text/plain, */*',
-                'cf-bypass-bot-check': 'true',
-                'x-real-ip': '127.0.0.1'
-              }
+        try {
+          // Call the dedicated developer login function
+          console.log('📡 Calling login-no-captcha function...');
+          const { data, error } = await supabase.functions.invoke('login-no-captcha', {
+            headers: {
+              'Content-Type': 'application/json',
+              'User-Agent': 'M1SSION-Developer-AutoLogin',
+              'Accept': 'application/json'
+            }
+          });
+
+          if (error) {
+            console.error('❌ Auto-login function error:', error);
+            setAutoLoginError(`Function error: ${error.message}`);
+            setIsDeveloperAutoLogin(false);
+            return;
+          }
+
+          console.log('📋 Auto-login response:', data);
+
+          if (data?.success && data?.access_token) {
+            console.log('✅ DEVELOPER AUTO-LOGIN SUCCESS - Setting session...');
+            
+            // Force session with developer tokens
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: data.access_token,
+              refresh_token: data.refresh_token || ''
             });
 
-            if (error) {
-              console.error('❌ Developer auto-login function error:', error);
-              setIsDeveloperAutoLogin(false);
-              return;
-            }
-
-            if (data?.success && data?.access_token) {
-              console.log('✅ DEVELOPER AUTO-LOGIN SUCCESS - setting session...');
-              
-              // Force session with developer tokens
-              const { error: sessionError } = await supabase.auth.setSession({
-                access_token: data.access_token,
-                refresh_token: data.refresh_token
+            if (!sessionError) {
+              console.log('✅ DEVELOPER SESSION SET SUCCESSFULLY');
+              toast.success('🔐 Developer Auto-Login Successful', {
+                description: 'Welcome back, developer! Redirecting to home...'
               });
-
-              if (!sessionError) {
-                console.log('✅ DEVELOPER SESSION SET SUCCESSFULLY');
-                toast.success('Auto-login sviluppatore riuscito', {
-                  description: 'Accesso automatico senza password completato'
-                });
-                
-                // Immediate redirect to home
-                setTimeout(() => {
-                  navigate('/home', { replace: true });
-                }, 800);
-              } else {
-                console.error('❌ Session setting error:', sessionError);
-                setIsDeveloperAutoLogin(false);
-              }
+              
+              // Immediate redirect
+              setTimeout(() => {
+                console.log('🏠 Redirecting to /home...');
+                navigate('/home', { replace: true });
+              }, 1000);
             } else {
-              console.log('⚠️ Developer auto-login not available, showing login form');
+              console.error('❌ Session setting error:', sessionError);
+              setAutoLoginError(`Session error: ${sessionError.message}`);
               setIsDeveloperAutoLogin(false);
             }
-          } catch (error) {
-            console.error('⚠️ Developer auto-login error:', error);
+          } else {
+            console.log('⚠️ Auto-login not available or failed');
+            setAutoLoginError(data?.error || 'Auto-login response invalid');
             setIsDeveloperAutoLogin(false);
           }
-        } else {
-          setAutoLoginAttempted(true);
+        } catch (error: any) {
+          console.error('💥 Auto-login exception:', error);
+          setAutoLoginError(`Exception: ${error.message}`);
+          setIsDeveloperAutoLogin(false);
         }
       }
     };
 
-    // Immediate attempt for developer auto-login
-    const timer = setTimeout(attemptDeveloperAutoLogin, 500);
-    return () => clearTimeout(timer);
-  }, [authLoading, isAuthenticated, autoLoginAttempted, navigate]);
-
-  // Enhanced session persistence check on mount
-  useEffect(() => {
-    const checkSessionPersistence = async () => {
-      if (!authLoading) {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('🔍 LOGIN PAGE SESSION CHECK:', {
-          session: session?.user?.email || 'None',
-          localStorage: localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token') ? 'Present' : 'Missing'
-        });
-        
-        if (session && !isAuthenticated) {
-          console.log('⚠️ SESSION EXISTS BUT AUTH STATE NOT UPDATED - FORCING AUTH UPDATE');
-          window.location.reload();
-        }
-      }
-    };
-    
-    checkSessionPersistence();
-  }, [authLoading, isAuthenticated]);
+    // Execute auto-login after a short delay
+    const autoLoginTimer = setTimeout(executeDeveloperAutoLogin, 300);
+    return () => clearTimeout(autoLoginTimer);
+  }, [authLoading, isAuthenticated, developerAutoLoginAttempted, navigate]);
 
   const handleResendVerification = async (email: string) => {
     if (!email) {
@@ -156,20 +139,25 @@ const Login = () => {
     }
   };
 
-  // Show loading during auth check, auto-login attempt, or developer auto-login
-  if (authLoading || isDeveloperAutoLogin || (autoLoginAttempted && !isAuthenticated && isDeveloperAutoLogin)) {
+  // Show loading during auth check or developer auto-login
+  if (authLoading || isDeveloperAutoLogin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
           <Spinner className="h-8 w-8 text-white mx-auto mb-4" />
           <p className="text-white/70">
-            {isDeveloperAutoLogin ? 'Auto-login sviluppatore in corso...' : 
-             autoLoginAttempted ? 'Tentativo auto-login...' : 
-             'Verifica autenticazione...'}
+            {isDeveloperAutoLogin ? '🔐 Developer Auto-Login in progress...' : 'Verifying authentication...'}
           </p>
-          <p className="text-xs text-cyan-400 mt-2">
-            Login automatico senza password attivo
-          </p>
+          {isDeveloperAutoLogin && (
+            <div className="mt-4 text-center">
+              <p className="text-xs text-cyan-400">
+                Auto-login for wikus77@hotmail.it
+              </p>
+              <p className="text-xs text-white/50 mt-1">
+                No password or CAPTCHA required
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -193,9 +181,14 @@ const Login = () => {
           <p className="text-gray-400">
             Inserisci le tue credenziali per accedere
           </p>
-          {!autoLoginAttempted && (
+          {!developerAutoLoginAttempted && (
             <p className="text-xs text-cyan-400 mt-2">
-              Auto-login sviluppatore attivo (NO PASSWORD)
+              🔐 Developer auto-login enabled (NO PASSWORD)
+            </p>
+          )}
+          {autoLoginError && (
+            <p className="text-xs text-red-400 mt-2">
+              Auto-login error: {autoLoginError}
             </p>
           )}
         </div>
@@ -218,16 +211,30 @@ const Login = () => {
                 ← Torna alla homepage
               </Link>
             </p>
-            <button 
-              onClick={() => {
-                localStorage.setItem('auto_login_enabled', 'false');
-                toast.info('Auto-login disabilitato');
-                window.location.reload();
-              }}
-              className="text-xs text-gray-500 hover:text-gray-400 mt-2 block mx-auto"
-            >
-              Disabilita auto-login
-            </button>
+            
+            {/* Developer Controls */}
+            <div className="mt-4 pt-4 border-t border-gray-700">
+              <p className="text-xs text-gray-500 mb-2">Developer Controls</p>
+              <button 
+                onClick={async () => {
+                  setDeveloperAutoLoginAttempted(false);
+                  window.location.reload();
+                }}
+                className="text-xs text-cyan-400 hover:text-cyan-300 mr-4"
+              >
+                🔄 Retry Auto-Login
+              </button>
+              <button 
+                onClick={() => {
+                  localStorage.setItem('auto_login_enabled', 'false');
+                  toast.info('Auto-login disabled');
+                  window.location.reload();
+                }}
+                className="text-xs text-gray-500 hover:text-gray-400"
+              >
+                ❌ Disable Auto-Login
+              </button>
+            </div>
           </div>
         </div>
       </motion.div>
