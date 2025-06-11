@@ -22,6 +22,7 @@ export const CluesSection = () => {
         queryClient.invalidateQueries({ queryKey: ["user_clues", user?.id] });
         localStorage.removeItem("cluesFound");
         localStorage.removeItem("unlockedClues");
+        localStorage.removeItem("buzz_clues");
       }
     };
     

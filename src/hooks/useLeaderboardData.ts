@@ -23,6 +23,9 @@ export const useLeaderboardData = () => {
   const [visiblePlayers, setVisiblePlayers] = useState(50);
   const [players, setPlayers] = useState<Player[]>([]);
 
+  // Check if this is first launch for faster refresh
+  const isFirstLaunch = sessionStorage.getItem('isFirstLaunch') === 'true';
+
   // LANCIO: Connect to real Supabase tables with auto-refresh
   const { data: profiles, isLoading, refetch } = useQuery({
     queryKey: ['leaderboard_data'],
@@ -48,7 +51,7 @@ export const useLeaderboardData = () => {
 
       return profiles || [];
     },
-    refetchInterval: 30000, // CRITICAL: Auto-refresh every 30 seconds
+    refetchInterval: isFirstLaunch ? 5000 : 30000, // CRITICAL: Auto-refresh every 5s if first launch, 30s otherwise
     staleTime: 0, // Always consider data stale
     refetchOnMount: true,
     refetchOnWindowFocus: true
@@ -75,6 +78,14 @@ export const useLeaderboardData = () => {
       setPlayers(realPlayers);
     }
   }, [profiles]);
+
+  // Force immediate refetch if first launch
+  useEffect(() => {
+    if (isFirstLaunch) {
+      console.log('🔄 LANCIO: First launch detected, forcing immediate leaderboard refresh');
+      refetch();
+    }
+  }, [isFirstLaunch, refetch]);
 
   const filteredPlayers = players.filter(player => {
     if (searchQuery && !player.name.toLowerCase().includes(searchQuery.toLowerCase())) {

@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -103,7 +102,7 @@ export const useBuzzMapLogic = () => {
       const isFirstLaunch = sessionStorage.getItem('isFirstLaunch') === 'true';
       
       // FORCE: generation = 1 if first launch, otherwise calculate normally
-      const generation = isFirstLaunch ? 1 : (currentWeekAreas.length || 0) + 1;
+      const generation = isFirstLaunch ? 1 : ((currentWeekAreas?.length || 0) + 1);
       
       // OVERRIDE: Always 500km for first launch (generation 1)
       const finalRadius = isFirstLaunch ? 500 : getMapRadius(currentWeek, generation);
@@ -153,7 +152,7 @@ export const useBuzzMapLogic = () => {
   }, [
     user, callBuzzApi, isGenerating, isDeleting, 
     setIsGenerating, forceCompleteSync, forceReload,
-    getCurrentWeek, getMapRadius, currentWeekAreas.length
+    getCurrentWeek, getMapRadius, currentWeekAreas?.length
   ]);
 
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
