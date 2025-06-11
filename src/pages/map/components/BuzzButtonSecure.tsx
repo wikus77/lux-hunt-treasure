@@ -256,15 +256,3 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
 };
 
 export default BuzzButtonSecure;
-
-// Helper functions
-function displayRadius() {
-  if (activeArea) {
-    return activeArea.radius_km.toFixed(1);
-  }
-  return '500.0'; // LANCIO: Default FISSO 500km
-}
-  
-function displayGeneration() {
-  return realBuzzMapCounter || 0; // Real counter from Supabase
-}
