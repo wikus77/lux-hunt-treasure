@@ -4,6 +4,14 @@ project_id = "vkjrqirvdvjbemsfzxof"
 [auth]
 enable_signup = true
 enable_captcha = false
+enable_email_confirmations = false
 
-[functions.login-no-captcha]
+[functions.register-bypass]
 verify_jwt = false
+
+[auth.external.google]
+enabled = false
+
+[auth.external.github]
+enabled = false
+

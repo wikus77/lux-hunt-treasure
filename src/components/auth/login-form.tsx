@@ -30,11 +30,11 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
 
     setIsLoading(true);
     try {
-      console.log('🔐 Starting login process for:', email);
+      console.log('🔐 CRITICAL LOGIN PROCESS STARTING for:', email);
       
       const result = await login(email, password);
       
-      console.log('🧠 DEBUG - Login result:', {
+      console.log('🧠 CRITICAL LOGIN RESULT:', {
         success: result?.success,
         hasError: !!result?.error,
         hasSession: !!result?.session,
@@ -42,36 +42,35 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
       });
       
       if (result?.success) {
-        console.log('✅ Login successful - redirecting to /home');
+        console.log('✅ CRITICAL LOGIN SUCCESS - redirecting to /home');
         toast.success('Login effettuato con successo');
         
         // CRITICAL: Enhanced redirect with session verification
         setTimeout(async () => {
           // Double-check session is persisted before redirecting
           const { data: { session } } = await supabase.auth.getSession();
-          const tokenCheck = localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
           
-          console.log('🔍 PRE-REDIRECT VERIFICATION:', {
+          console.log('🔍 CRITICAL PRE-REDIRECT VERIFICATION:', {
             session: session?.user?.email || 'Missing',
-            localStorage: tokenCheck ? 'Present' : 'Missing'
+            accessToken: session?.access_token ? 'Present' : 'Missing'
           });
           
-          if (session || tokenCheck) {
-            console.log('✅ SESSION VERIFIED - SAFE TO REDIRECT');
+          if (session) {
+            console.log('✅ CRITICAL SESSION VERIFIED - SAFE TO REDIRECT');
             navigate('/home', { replace: true });
           } else {
-            console.log('⚠️ SESSION NOT VERIFIED - FORCING RELOAD');
+            console.log('⚠️ CRITICAL SESSION NOT VERIFIED - FORCING RELOAD');
             window.location.href = '/home';
           }
-        }, 500);
+        }, 1000);
       } else {
-        console.error('❌ Login failed:', result?.error);
+        console.error('❌ CRITICAL LOGIN FAILED:', result?.error);
         toast.error('Errore di login', {
           description: result?.error?.message || 'Verifica le tue credenziali'
         });
       }
     } catch (error: any) {
-      console.error('❌ Login exception:', error);
+      console.error('❌ CRITICAL LOGIN EXCEPTION:', error);
       toast.error('Errore di login', {
         description: error.message || 'Si è verificato un errore imprevisto'
       });
