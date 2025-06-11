@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -18,7 +19,7 @@ export const useStripePayment = () => {
   const [error, setError] = useState<string | null>(null);
   const { getCurrentUser } = useAuthContext();
 
-  // CRITICAL FIX: Enhanced BUZZ purchase with immediate Stripe activation
+  // CRITICAL FIX: Enhanced BUZZ purchase with forced Stripe activation
   const processBuzzPurchase = async (
     isMapBuzz: boolean = false, 
     customPrice?: number
@@ -27,10 +28,16 @@ export const useStripePayment = () => {
     const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
 
-    // CRITICAL: Developer bypass
+    // CRITICAL: Developer simulation
     if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 Developer: Stripe bypass active');
-      toast.success('🔧 Developer: Pagamento simulato');
+      console.log('🔧 EMERGENCY FIX: Developer - Simulating Stripe payment');
+      
+      // Simulate payment processing delay
+      setLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setLoading(false);
+      
+      toast.success('🔧 Developer: Pagamento simulato con successo');
       return true;
     }
 
@@ -43,12 +50,8 @@ export const useStripePayment = () => {
     setError(null);
 
     try {
-      console.log('💳 STRIPE EMERGENCY FIX: Starting immediate payment process...');
-      console.log('💳 STRIPE: User:', currentUser.email);
-      console.log('💳 STRIPE: Type:', isMapBuzz ? 'BuzzMap' : 'Buzz');
-      console.log('💳 STRIPE: Price:', customPrice || (isMapBuzz ? 2.99 : 1.99));
-
-      // CRITICAL FIX: Call Stripe edge function with enhanced error handling
+      console.log('💳 STRIPE EMERGENCY FIX: Starting payment process...');
+      
       const { data: response, error: stripeError } = await supabase.functions.invoke('create-stripe-session', {
         body: {
           planType: isMapBuzz ? 'BuzzMap' : 'Buzz',
@@ -62,26 +65,21 @@ export const useStripePayment = () => {
       });
 
       if (stripeError) {
-        console.error('❌ STRIPE: Edge function error:', stripeError);
         throw new Error(stripeError.message || 'Errore nella creazione della sessione di pagamento');
       }
 
       if (!response?.url) {
-        console.error('❌ STRIPE: No checkout URL received:', response);
         throw new Error('URL di checkout non ricevuto');
       }
 
-      console.log('✅ STRIPE EMERGENCY FIX: Checkout URL received:', response.url);
-      
-      // CRITICAL FIX: Immediate Stripe checkout opening
+      console.log('✅ STRIPE EMERGENCY FIX: Opening checkout in new tab');
       window.open(response.url, '_blank');
       
       toast.success('Reindirizzamento a Stripe in corso...');
-      
       return true;
 
     } catch (error: any) {
-      console.error('❌ STRIPE EMERGENCY FIX: Payment process failed:', error);
+      console.error('❌ STRIPE EMERGENCY FIX: Payment failed:', error);
       const errorMessage = error.message || 'Errore nel processo di pagamento';
       setError(errorMessage);
       toast.error(errorMessage);
@@ -144,12 +142,10 @@ export const useStripePayment = () => {
 
   // CRITICAL FIX: Enhanced payment method detection
   const detectPaymentMethodAvailability = () => {
-    // Check if Apple Pay is available
     const applePayAvailable = typeof window !== 'undefined' && 
       typeof (window as any).ApplePaySession !== 'undefined' && 
       (window as any).ApplePaySession.canMakePayments();
 
-    // Check if Google Pay is available (basic check)
     const googlePayAvailable = typeof window !== 'undefined' && 
       /Android/.test(navigator.userAgent);
 

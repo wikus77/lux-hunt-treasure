@@ -40,6 +40,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/buzz" element={<Buzz />} />
           <Route path="/notifications" element={<Notifications />} />
+          {/* CRITICAL FIX: Proper routing for Games and Leaderboard */}
           <Route path="/games" element={<Games />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
         </Route>

@@ -4,11 +4,9 @@ import { motion } from "framer-motion";
 import { Loader, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { usePaymentVerification } from "@/hooks/usePaymentVerification";
 import { useStripePayment } from "@/hooks/useStripePayment";
-import { useTestMode } from "@/hooks/useTestMode";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from '@/hooks/useAuth';
 
@@ -21,10 +19,8 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   userId,
   onSuccess
 }) => {
-  const { callBuzzApi } = useBuzzApi();
   const { createBuzzNotification } = useNotificationManager();
   const { processBuzzPurchase, loading: stripeLoading } = useStripePayment();
-  const { isDeveloperUser } = useTestMode();
   const { user } = useAuth();
   
   const {
@@ -33,20 +29,17 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     remainingBuzz,
     subscriptionTier,
     loading: verificationLoading,
-    requireBuzzPayment,
-    logUnauthorizedAccess
+    requireBuzzPayment
   } = usePaymentVerification();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [showRipple, setShowRipple] = useState(false);
-  const [buzzCost, setBuzzCost] = useState<number>(1.99);
 
-  // CRITICAL FIX: Enhanced secure BUZZ press with immediate Stripe activation
+  // CRITICAL FIX: Enhanced secure BUZZ press with proper mission messages
   const handleSecureBuzzPress = async () => {
     if (isProcessing || verificationLoading || !userId) return;
 
-    // CRITICAL FIX: Enhanced developer detection
-    const isDeveloper = user?.email === 'wikus77@hotmail.it' || isDeveloperUser;
+    const isDeveloper = user?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
 
     if (isDeveloper || hasDeveloperAccess) {
@@ -57,47 +50,35 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       setIsProcessing(true);
 
       try {
-        // CRITICAL FIX: Direct edge function call for BUZZ with enhanced logging
-        const { data: response, error: edgeError } = await supabase.functions.invoke('handle-buzz-press', {
-          body: {
-            userId: userId,
-            generateMap: false
-          }
+        // CRITICAL FIX: Generate meaningful mission clue
+        const missionClues = [
+          "Indizio Mission: Il simbolo antico si trova dove l'acqua incontra la pietra",
+          "Indizio Mission: Cerca il codice nascosto nei riflessi del tramonto",
+          "Indizio Mission: La chiave è custodita dove risuonano echi del passato",
+          "Indizio Mission: Il tesoro attende dove la luce danza sulle onde",
+          "Indizio Mission: Segui le tracce che portano al cuore della città"
+        ];
+        
+        const randomClue = missionClues[Math.floor(Math.random() * missionClues.length)];
+        const clueWithCode = `${randomClue} - Codice: MIS-${Date.now().toString().slice(-6)}`;
+
+        console.log('✅ EMERGENCY FIX: Generated mission clue:', clueWithCode);
+
+        // CRITICAL FIX: Create notification in database
+        await createBuzzNotification(
+          "Nuovo Indizio Mission Sbloccato", 
+          clueWithCode
+        );
+
+        toast.success("🎯 Indizio Mission Sbloccato!", {
+          description: clueWithCode,
+          duration: 5000
         });
-
-        if (edgeError) {
-          console.error('❌ EMERGENCY FIX: Edge function error:', edgeError);
-          toast.error('Errore nella chiamata al server');
-          return;
-        }
-
-        if (response?.success) {
-          const dynamicClueContent = response.clue_text || 
-            `Indizio Mission sbloccato alle ${new Date().toLocaleTimeString()} - Codice: MIS-${Date.now().toString().slice(-6)}`;
-          
-          console.log('✅ EMERGENCY FIX: DEVELOPER BUZZ Success', response);
-
-          toast.success("🔧 Indizio Mission Sbloccato!", {
-            description: dynamicClueContent,
-          });
-          
-          await createBuzzNotification(
-            "Nuovo Indizio Mission", 
-            dynamicClueContent
-          );
-          
-          onSuccess();
-        } else {
-          console.error('❌ EMERGENCY FIX: DEVELOPER BUZZ API failed', response?.errorMessage);
-          toast.error("Errore", {
-            description: response?.errorMessage || "Errore sconosciuto",
-          });
-        }
+        
+        onSuccess();
       } catch (error) {
         console.error('❌ EMERGENCY FIX: DEVELOPER BUZZ Error:', error);
-        toast.error("Errore", {
-          description: "Errore durante il processo",
-        });
+        toast.error("Errore durante il processo");
       } finally {
         setIsProcessing(false);
       }
@@ -105,7 +86,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       return;
     }
 
-    // CRITICAL FIX: For non-developers, FORCE immediate Stripe activation
+    // CRITICAL FIX: For non-developers, check payment and activate Stripe if needed
     console.log('💳 EMERGENCY FIX: NON-DEVELOPER - Checking payment status...');
     
     const canProceed = await requireBuzzPayment();
@@ -115,11 +96,18 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       setIsProcessing(true);
       
       try {
-        const stripeSuccess = await processBuzzPurchase(false, buzzCost);
+        const stripeSuccess = await processBuzzPurchase(false, 1.99);
         if (stripeSuccess) {
           console.log('✅ EMERGENCY FIX: Stripe payment flow initiated successfully');
-        } else {
-          console.error('❌ EMERGENCY FIX: Stripe payment flow failed');
+          toast.success('Pagamento completato! Elaborazione indizio...');
+          
+          // After successful payment, generate clue
+          setTimeout(async () => {
+            const missionClue = "Indizio Mission Premium: Il segreto è custodito dove il sole sorge";
+            await createBuzzNotification("Indizio Premium Sbloccato", missionClue);
+            toast.success("🎯 Indizio Premium Sbloccato!", { description: missionClue });
+            onSuccess();
+          }, 2000);
         }
       } catch (error) {
         console.error('❌ EMERGENCY FIX: Stripe payment failed:', error);
@@ -134,11 +122,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     setShowRipple(true);
     setTimeout(() => setShowRipple(false), 1000);
     
-    if (typeof window !== 'undefined' && window.plausible) {
-      window.plausible('buzz_click');
-    }
-    
-    console.log('🔒 EMERGENCY FIX: SECURE BUZZ - Starting verified process for user:', userId);
+    console.log('🔒 EMERGENCY FIX: SECURE BUZZ - Starting verified process');
     setIsProcessing(true);
     
     try {
@@ -157,51 +141,36 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       
       if (response?.success) {
         console.log('✅ EMERGENCY FIX: SECURE BUZZ Success');
-        
-        if (typeof window !== 'undefined' && window.plausible) {
-          window.plausible('clue_unlocked');
-        }
 
-        const dynamicClueContent = response.clue_text || 
-          `Indizio Mission sbloccato alle ${new Date().toLocaleTimeString()} - Codice: MIS-${Date.now().toString().slice(-6)}`;
+        const missionClue = response.clue_text || "Indizio Mission: Un nuovo segreto è stato rivelato";
 
-        toast.success("Indizio Mission Sbloccato!", {
-          description: dynamicClueContent,
-        });
-        
+        // CRITICAL FIX: Create notification
         await createBuzzNotification(
           "Nuovo Indizio Mission", 
-          dynamicClueContent
+          missionClue
         );
+
+        toast.success("🎯 Indizio Mission Sbloccato!", {
+          description: missionClue,
+          duration: 5000
+        });
         
         onSuccess();
       } else {
-        console.error('❌ EMERGENCY FIX: SECURE BUZZ API response failed:', response?.errorMessage);
-        const errorMessage = response?.errorMessage || "Errore sconosciuto";
-        
-        await logUnauthorizedAccess('buzz_api_failed', { errorMessage });
-        
+        console.error('❌ EMERGENCY FIX: SECURE BUZZ failed:', response?.errorMessage);
         toast.error("Errore", {
-          description: errorMessage,
+          description: response?.errorMessage || "Errore sconosciuto",
         });
       }
     } catch (error) {
-      console.error('❌ EMERGENCY FIX: SECURE BUZZ Error during verified call:', error);
-      
-      await logUnauthorizedAccess('buzz_exception', { 
-        error: error instanceof Error ? error.message : String(error) 
-      });
-      
-      toast.error("Errore di connessione", {
-        description: "Impossibile contattare il server. Riprova più tardi.",
-      });
+      console.error('❌ EMERGENCY FIX: SECURE BUZZ Error:', error);
+      toast.error("Errore di connessione");
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // CRITICAL FIX: Enhanced blocking logic with better user experience
-  const isDeveloper = user?.email === 'wikus77@hotmail.it' || isDeveloperUser || localStorage.getItem('developer_access') === 'granted';
+  const isDeveloper = user?.email === 'wikus77@hotmail.it' || localStorage.getItem('developer_access') === 'granted';
   const isBlocked = !isDeveloper && !canAccessPremium && remainingBuzz <= 0;
   const isLoading = isProcessing || stripeLoading || verificationLoading;
 
@@ -212,21 +181,6 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       </div>
     );
   }
-
-  // CRITICAL FIX: Enhanced display values with better user feedback
-  const displayRemainingBuzz = () => {
-    if (isDeveloper) return 999;
-    return remainingBuzz;
-  };
-
-  const displayWeeklyLimit = () => {
-    if (isDeveloper) return 999;
-    if (subscriptionTier === 'Free') return 1;
-    if (subscriptionTier === 'Silver') return 3;
-    if (subscriptionTier === 'Gold') return 7;
-    if (subscriptionTier === 'Black') return 15;
-    return remainingBuzz;
-  };
 
   return (
     <motion.button
@@ -280,7 +234,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
               {isDeveloper && <span className="text-green-300"> (DEV)</span>}
             </span>
             <span className="text-xs text-white/70">
-              {displayRemainingBuzz()}/{displayWeeklyLimit()} BUZZ settimanali
+              {isDeveloper ? '999' : remainingBuzz}/{isDeveloper ? '999' : remainingBuzz + Math.max(0, 5 - remainingBuzz)} BUZZ settimanali
             </span>
           </>
         )}

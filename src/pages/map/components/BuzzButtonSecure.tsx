@@ -8,7 +8,6 @@ import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useBuzzMapLogic } from "@/hooks/useBuzzMapLogic";
 import { usePaymentVerification } from "@/hooks/usePaymentVerification";
 import { useStripePayment } from "@/hooks/useStripePayment";
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
 export interface BuzzButtonSecureProps {
@@ -26,7 +25,6 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
 }) => {
   const [isRippling, setIsRippling] = useState(false);
   const [realBuzzMapCounter, setRealBuzzMapCounter] = useState(0);
-  const [realWeeklyUsed, setRealWeeklyUsed] = useState(0);
   const { user } = useAuth();
   const { createMapBuzzNotification } = useNotificationManager();
   const { processBuzzPurchase, loading: stripeLoading } = useStripePayment();
@@ -43,92 +41,54 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     isGenerating, 
     generateBuzzMapArea,
     getActiveArea,
-    reloadAreas
+    reloadAreas,
+    areas
   } = useBuzzMapLogic();
   
   const activeArea = getActiveArea();
 
+  // CRITICAL FIX: Enhanced counter tracking
   useEffect(() => {
-    let isMounted = true;
-    
-    const fetchRealCounters = async () => {
-      if (!user?.id) return;
-
-      try {
-        const { data: mapCounter } = await supabase
-          .from('user_buzz_map_counter')
-          .select('buzz_map_count')
-          .eq('user_id', user.id)
-          .eq('date', new Date().toISOString().split('T')[0])
-          .single();
-
-        const currentWeek = Math.ceil((Date.now() - new Date('2025-07-19').getTime()) / (7 * 24 * 60 * 60 * 1000));
-        const { data: weeklyAllowance } = await supabase
-          .from('weekly_buzz_allowances')
-          .select('used_buzz_count')
-          .eq('user_id', user.id)
-          .eq('week_number', Math.max(1, currentWeek))
-          .eq('year', new Date().getFullYear())
-          .single();
-
-        if (isMounted) {
-          setRealBuzzMapCounter(mapCounter?.buzz_map_count || 0);
-          setRealWeeklyUsed(weeklyAllowance?.used_buzz_count || 0);
-        }
-
-        console.log('📊 EMERGENCY FIX: Real counters:', {
-          mapCounter: mapCounter?.buzz_map_count || 0,
-          weeklyUsed: weeklyAllowance?.used_buzz_count || 0
-        });
-      } catch (error) {
-        console.error('❌ EMERGENCY FIX: Error fetching real counters:', error);
-        if (isMounted) {
-          setRealBuzzMapCounter(0);
-          setRealWeeklyUsed(0);
-        }
-      }
-    };
-
-    fetchRealCounters();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [user?.id]);
+    const mapCounter = areas.filter(area => 
+      area.user_id === (user?.id || '00000000-0000-4000-a000-000000000000')
+    ).length;
+    setRealBuzzMapCounter(mapCounter);
+    console.log('📊 EMERGENCY FIX: Map counter updated:', mapCounter);
+  }, [areas, user?.id]);
   
-  // CRITICAL FIX: Enhanced secure BUZZ MAP click with STRIPE-FIRST logic
+  // CRITICAL FIX: Enhanced secure BUZZ MAP with proper Stripe integration
   const handleSecureBuzzMapClick = async () => {
-    // CRITICAL FIX: Developer bypass check first
     const isDeveloper = user?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
     
     if (isDeveloper || hasDeveloperAccess) {
       console.log('🔧 EMERGENCY FIX: DEVELOPER BYPASS - Proceeding with map generation');
-    } else {
-      // CRITICAL FIX: For non-developers, FORCE Stripe BEFORE area generation
-      const canProceed = await requireBuzzPayment();
-      if (!canProceed) {
-        console.log('💳 EMERGENCY FIX: Payment required - IMMEDIATE Stripe for BUZZ MAP');
-        try {
-          const stripeSuccess = await processBuzzPurchase(true); // isMapBuzz = true
-          if (stripeSuccess) {
-            console.log('✅ EMERGENCY FIX: Stripe payment completed, proceeding with area generation');
-            // Payment successful, but wait for webhook to complete before generating area
-            toast.success('Pagamento completato! Generando area...');
-            // Continue with area generation after a short delay for webhook processing
-            setTimeout(() => {
-              generateBuzzMapAreaInternal();
-            }, 2000);
-          }
-          return; // Stop here whether payment succeeded or failed
-        } catch (error) {
-          console.error('❌ EMERGENCY FIX: Stripe payment failed:', error);
-          return;
+      generateBuzzMapAreaInternal();
+      return;
+    }
+
+    // CRITICAL FIX: For non-developers, check payment FIRST
+    const canProceed = await requireBuzzPayment();
+    if (!canProceed) {
+      console.log('💳 EMERGENCY FIX: Payment required - IMMEDIATE Stripe for BUZZ MAP');
+      try {
+        const stripeSuccess = await processBuzzPurchase(true, 2.99); // isMapBuzz = true
+        if (stripeSuccess) {
+          console.log('✅ EMERGENCY FIX: Stripe payment completed');
+          toast.success('Pagamento completato! Generando area...');
+          // Continue with area generation after payment
+          setTimeout(() => {
+            generateBuzzMapAreaInternal();
+          }, 2000);
         }
+        return;
+      } catch (error) {
+        console.error('❌ EMERGENCY FIX: Stripe payment failed:', error);
+        return;
       }
     }
 
-    // If we reach here, user has permission or is developer
+    // If payment is valid, proceed directly
     generateBuzzMapAreaInternal();
   };
 
@@ -138,49 +98,19 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     setIsRippling(true);
     setTimeout(() => setIsRippling(false), 1000);
     
-    if (typeof window !== 'undefined' && window.plausible) {
-      window.plausible('buzz_click');
-    }
-    
     const centerLat = mapCenter ? mapCenter[0] : 41.9028;
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
-    console.log('📍 EMERGENCY FIX: BUZZ COORDINATES:', { 
-      centerLat, 
-      centerLng,
-      mode: 'emergency-production-fix'
-    });
+    console.log('📍 EMERGENCY FIX: BUZZ COORDINATES:', { centerLat, centerLng });
     
-    // CRITICAL FIX: Enhanced generateBuzzMapArea call with better error handling
+    // CRITICAL FIX: Enhanced generateBuzzMapArea call
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
-      if (typeof window !== 'undefined' && window.plausible) {
-        window.plausible('clue_unlocked');
-      }
-      
       console.log('🎉 EMERGENCY FIX: BUZZ MAP SUCCESS - Area generated', newArea);
 
-      try {
-        // Update local counter
-        const { data: updatedCounter } = await supabase
-          .from('user_buzz_map_counter')
-          .upsert({
-            user_id: user?.id,
-            date: new Date().toISOString().split('T')[0],
-            buzz_map_count: realBuzzMapCounter + 1
-          }, {
-            onConflict: 'user_id,date'
-          })
-          .select('buzz_map_count')
-          .single();
-
-        if (updatedCounter) {
-          setRealBuzzMapCounter(updatedCounter.buzz_map_count);
-        }
-      } catch (error) {
-        console.error('❌ EMERGENCY FIX: Error updating counters:', error);
-      }
+      // Update counter
+      setRealBuzzMapCounter(prev => prev + 1);
       
       await reloadAreas();
       
@@ -188,9 +118,10 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         handleBuzz();
       }
       
+      // CRITICAL FIX: Create meaningful notification
       await createMapBuzzNotification(
         "Area BUZZ Mappa Generata",
-        `Nuova area di ricerca Mission: ${newArea.radius_km.toFixed(1)}km - Generazione ${realBuzzMapCounter + 1}`
+        `Nuova area di ricerca Mission generata: ${newArea.radius_km.toFixed(1)}km di raggio - Generazione #${realBuzzMapCounter + 1}`
       );
       
       if (onAreaGenerated) {
@@ -203,7 +134,6 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     }
   };
 
-  // CRITICAL FIX: Enhanced logic with improved user experience
   const isDeveloper = user?.email === 'wikus77@hotmail.it' || localStorage.getItem('developer_access') === 'granted';
   const isBlocked = !isDeveloper && (!canAccessPremium || remainingBuzz <= 0);
   const isLoading = isGenerating || stripeLoading || verificationLoading;

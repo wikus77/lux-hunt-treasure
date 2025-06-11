@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -27,12 +28,11 @@ export const useNotifications = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { getCurrentUser } = useAuthContext();
 
-  // CRITICAL FIX: Enhanced notification loading with immediate synchronization
+  // CRITICAL FIX: Enhanced notification loading with forced database sync
   const loadNotifications = useCallback(async () => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
 
-    // Support developer mode
     if (!userId) {
       const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
       const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
@@ -89,7 +89,7 @@ export const useNotifications = () => {
     }
   }, [getCurrentUser]);
 
-  // CRITICAL FIX: Enhanced notification creation with forced database write
+  // CRITICAL FIX: Enhanced notification creation with FORCED database write
   const addNotification = useCallback(async (title: string, message: string, type: string = 'generic') => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
