@@ -31,7 +31,9 @@ export const useMapAreas = () => {
         colorName: 'cyan',
         week: area.week,
         generation: 1,
-        isActive: true
+        isActive: true,
+        user_id: area.user_id,
+        created_at: area.created_at || new Date().toISOString()
       }));
 
       setAreas(buzzAreas);
