@@ -80,10 +80,12 @@ const Games = () => {
     setGameCompleted(prev => ({ ...prev, [gameType]: true }));
     updateStats(points);
     playSound();
-    addNotification({
-      title: "🏆 Missione Completata!",
-      description: `Hai ottenuto ${points} punti nel gioco ${gameData[gameType].title}!`
-    });
+    // FIXED: Use correct addNotification signature
+    addNotification(
+      "🏆 Missione Completata!",
+      `Hai ottenuto ${points} punti nel gioco ${gameData[gameType].title}!`,
+      'generic'
+    );
 
     // Update Dynamic Island with completion
     updateActivity({

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -27,59 +28,63 @@ export const useLeaderboardPosition = () => {
 
     setIsLoading(true);
     try {
-      const { data: leaderboardData, error: leaderboardError } = await supabase
-        .from('leaderboard')
-        .select('user_id, position, score, email, change')
-        .order('position', { ascending: true });
+      // FIXED: Use existing tables instead of non-existent 'leaderboard' table
+      // Create mock leaderboard data from profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email, credits')
+        .order('credits', { ascending: false })
+        .limit(100);
 
-      if (leaderboardError) {
-        console.error('Error fetching leaderboard data:', leaderboardError);
+      if (profilesError) {
+        console.error('Error fetching profiles data:', profilesError);
         return;
       }
 
-      setLeaderboard(leaderboardData || []);
+      // Transform profiles data into leaderboard format
+      const mockLeaderboard: LeaderboardEntry[] = (profilesData || []).map((profile, index) => ({
+        user_id: profile.id,
+        position: index + 1,
+        score: profile.credits || 0,
+        email: profile.email || 'unknown@example.com',
+        change: 'same' as const
+      }));
 
-      const { data: userPositionData, error: userPositionError } = await supabase
-        .from('leaderboard')
-        .select('position')
-        .eq('user_id', currentUser.id)
-        .single();
+      setLeaderboard(mockLeaderboard);
 
-      if (userPositionError && userPositionError.code !== 'PGRST116') {
-        console.error('Error fetching user position:', userPositionError);
-        return;
-      }
-
-      if (userPositionData) {
-        setPosition(userPositionData.position);
+      // Find current user position
+      const userEntry = mockLeaderboard.find(entry => entry.user_id === currentUser?.id);
+      if (userEntry) {
+        setPosition(userEntry.position);
       } else {
         setPosition(null);
       }
 
-      const { count, error: countError } = await supabase
-        .from('leaderboard')
-        .select('*', { count: 'exact', head: true });
+      setTotalUsers(mockLeaderboard.length);
 
-      if (countError) {
-        console.error('Error fetching leaderboard count:', countError);
-        return;
-      }
-
-      setTotalUsers(count || 0);
-
-      const userEntry = leaderboardData?.find(entry => entry.user_id === currentUser.id);
-      
-      // When updating notifications, use the correct signature
+      // Send notifications using the correct format
       if (userEntry && userEntry.position <= 10) {
-        await addNotification('Posizione Top 10!', `Sei nella Top 10 con la posizione ${userEntry.position}!`, 'leaderboard');
+        await addNotification(
+          'Posizione Top 10!', 
+          `Sei nella Top 10 con la posizione ${userEntry.position}!`, 
+          'leaderboard'
+        );
       }
       
       if (userEntry && userEntry.position === 1) {
-        await addNotification('Primo Posto!', 'Congratulazioni! Sei al primo posto nella classifica!', 'leaderboard');
+        await addNotification(
+          'Primo Posto!', 
+          'Congratulazioni! Sei al primo posto nella classifica!', 
+          'leaderboard'
+        );
       }
       
       if (userEntry && userEntry.change === 'up') {
-        await addNotification('Posizione Migliorata!', `La tua posizione è migliorata alla ${userEntry.position}°!`, 'leaderboard');
+        await addNotification(
+          'Posizione Migliorata!', 
+          `La tua posizione è migliorata alla ${userEntry.position}°!`, 
+          'leaderboard'
+        );
       }
 
     } catch (error) {

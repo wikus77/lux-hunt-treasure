@@ -14,6 +14,7 @@ export interface BuzzMapArea {
   radius_km: number;
   week: number;
   created_at: string;
+  user_id?: string; // FIXED: Added missing user_id property
 }
 
 export const useBuzzMapLogic = () => {
@@ -53,7 +54,8 @@ export const useBuzzMapLogic = () => {
         lng: area.lng,
         radius_km: area.radius_km,
         week: area.week,
-        created_at: area.created_at
+        created_at: area.created_at,
+        user_id: area.user_id // FIXED: Include user_id in mapped areas
       }));
 
       setAreas(mappedAreas);
@@ -122,7 +124,8 @@ export const useBuzzMapLogic = () => {
         lng: data.lng,
         radius_km: data.radius_km,
         week: data.week,
-        created_at: data.created_at
+        created_at: data.created_at,
+        user_id: data.user_id // FIXED: Include user_id in new area
       };
 
       // Update local state
@@ -153,6 +156,12 @@ export const useBuzzMapLogic = () => {
     return areas.length > 0 ? areas[0] : null;
   }, [areas]);
 
+  // FIXED: Add missing currentWeekAreas property
+  const currentWeekAreas = useCallback(() => {
+    const currentWeek = Math.ceil((Date.now() - new Date('2025-01-01').getTime()) / (7 * 24 * 60 * 60 * 1000));
+    return areas.filter(area => area.week === currentWeek);
+  }, [areas]);
+
   // Reload areas
   const reloadAreas = useCallback(async () => {
     await loadAreas();
@@ -165,6 +174,7 @@ export const useBuzzMapLogic = () => {
     precisionMode,
     generateBuzzMapArea,
     getActiveArea,
+    currentWeekAreas: currentWeekAreas(), // FIXED: Include currentWeekAreas
     reloadAreas,
     loadAreas
   };

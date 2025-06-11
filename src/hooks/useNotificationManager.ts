@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 export const useNotificationManager = () => {
   const { getCurrentUser } = useAuthContext();
   const [notificationsBannerOpen, setNotificationsBannerOpen] = useState(false);
+  const [notificationsDrawerOpen, setNotificationsDrawerOpen] = useState(false);
   
   const {
     notifications,
@@ -89,8 +90,11 @@ export const useNotificationManager = () => {
   }, []);
 
   const openNotificationsDrawer = useCallback(() => {
-    // This could open a drawer instead of banner
-    setNotificationsBannerOpen(true);
+    setNotificationsDrawerOpen(true);
+  }, []);
+
+  const closeNotificationsDrawer = useCallback(() => {
+    setNotificationsDrawerOpen(false);
   }, []);
 
   return {
@@ -98,6 +102,7 @@ export const useNotificationManager = () => {
     isLoading,
     unreadCount,
     notificationsBannerOpen,
+    notificationsDrawerOpen,
     createNotification,
     createBuzzNotification,
     createMapBuzzNotification,
@@ -108,6 +113,7 @@ export const useNotificationManager = () => {
     openNotificationsBanner,
     closeNotificationsBanner,
     openNotificationsDrawer,
+    closeNotificationsDrawer,
     reloadNotifications
   };
 };

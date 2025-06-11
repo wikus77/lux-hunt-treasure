@@ -67,10 +67,12 @@ const Leaderboard = () => {
 
   const simulateRankChange = () => {
     if (filteredPlayers.length === 0) {
-      addNotification({
-        title: "🚀 LANCIO RESET",
-        description: "Classifica azzerata per il test del 19 luglio!"
-      });
+      // FIXED: Use correct addNotification signature
+      addNotification(
+        "🚀 LANCIO RESET",
+        "Classifica azzerata per il test del 19 luglio!",
+        'generic'
+      );
       return;
     }
 
@@ -80,17 +82,21 @@ const Leaderboard = () => {
     if (player) {
       const message = `${player.name} è in classifica con ${player.points} punti!`;
       
-      addNotification({
-        title: "Aggiornamento Classifica",
-        description: message
-      });
+      // FIXED: Use correct addNotification signature
+      addNotification(
+        "Aggiornamento Classifica",
+        message,
+        'leaderboard'
+      );
       
       if (player.rank <= 10) {
         playSound();
-        addNotification({
-          title: "🏆 Traguardo Importante!",
-          description: `${player.name} è nella TOP 10!`
-        });
+        // FIXED: Use correct addNotification signature
+        addNotification(
+          "🏆 Traguardo Importante!",
+          `${player.name} è nella TOP 10!`,
+          'leaderboard'
+        );
       }
     }
   };
