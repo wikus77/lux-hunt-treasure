@@ -17,12 +17,14 @@ const PersonalInfo = () => {
     lastName: "",
     email: "",
     phone: "",
+    birthDate: "",
     address: "",
     city: "",
     postalCode: "",
     country: "",
     investigativeStyle: "",
-    preferredLanguage: ""
+    preferredLanguage: "",
+    agentCode: ""
   });
   
   const [personalInfo, setPersonalInfo] = useState({
@@ -30,12 +32,14 @@ const PersonalInfo = () => {
     lastName: "",
     email: "",
     phone: "",
+    birthDate: "",
     address: "",
     city: "",
     postalCode: "",
     country: "",
     investigativeStyle: "",
-    preferredLanguage: ""
+    preferredLanguage: "",
+    agentCode: ""
   });
 
   const investigativeStyles = [
@@ -88,12 +92,14 @@ const PersonalInfo = () => {
             lastName: data.last_name || "",
             email: data.email || "",
             phone: data.phone || "",
+            birthDate: data.birth_date || "",
             address: data.address || "",
             city: data.city || "",
             postalCode: data.postal_code || "",
             country: data.country || "",
             investigativeStyle: data.investigative_style || "",
-            preferredLanguage: data.preferred_language || "italiano"
+            preferredLanguage: data.preferred_language || "italiano",
+            agentCode: "X0197" // Always display X0197 as the official agent code
           };
           
           setPersonalInfo(userData);
@@ -156,6 +162,7 @@ const PersonalInfo = () => {
           last_name: personalInfo.lastName,
           email: personalInfo.email,
           phone: personalInfo.phone,
+          birth_date: personalInfo.birthDate,
           address: personalInfo.address,
           city: personalInfo.city,
           postal_code: personalInfo.postalCode,
@@ -190,22 +197,27 @@ const PersonalInfo = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black pb-6">
-      <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="mr-2 rounded-lg"
-          onClick={() => navigate(-1)}
+    <div className="min-h-screen bg-black h-[100dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+80px)]">
+      {/* Title section with back button aligned horizontally - positioned below header */}
+      <div className="flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+64px)] mb-6">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navigate(-1);
+          }}
+          className="w-6 h-6 text-white"
+          aria-label="Torna alla pagina precedente"
         >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-xl font-bold text-white">Modifica Informazioni Personali</h1>
-      </header>
+          <ArrowLeft />
+        </button>
+        <h1 className="text-xl font-semibold text-white">Modifica Informazioni Personali</h1>
+      </div>
 
-      <div className="p-4">
+      {/* Main content with proper spacing */}
+      <div className="p-4 pt-4">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="glass-card mb-4 rounded-lg">
+          <div className="glass-card mb-4 rounded-xl shadow-lg">
             <h2 className="text-lg font-semibold mb-4 text-white">Dati Personali</h2>
             
             <div className="space-y-4">
@@ -218,7 +230,7 @@ const PersonalInfo = () => {
                   name="firstName"
                   value={personalInfo.firstName}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                   required
                 />
               </div>
@@ -232,8 +244,22 @@ const PersonalInfo = () => {
                   name="lastName"
                   value={personalInfo.lastName}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                   required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="birthDate" className="block text-sm font-medium mb-1 text-white">
+                  Data di Nascita
+                </label>
+                <Input
+                  id="birthDate"
+                  name="birthDate"
+                  type="date"
+                  value={personalInfo.birthDate}
+                  onChange={handleInputChange}
+                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
               
@@ -247,7 +273,7 @@ const PersonalInfo = () => {
                   type="email"
                   value={personalInfo.email}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                   required
                 />
               </div>
@@ -261,8 +287,24 @@ const PersonalInfo = () => {
                   name="phone"
                   value={personalInfo.phone}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                 />
+              </div>
+
+              {/* Agent Code - Read Only and Always X0197 */}
+              <div>
+                <label htmlFor="agentCode" className="block text-sm font-medium mb-1 text-white">
+                  Codice Agente
+                </label>
+                <Input
+                  id="agentCode"
+                  name="agentCode"
+                  value="X0197"
+                  readOnly={true}
+                  disabled={true}
+                  className="rounded-xl bg-gray-800/50 border-white/10 opacity-60 cursor-not-allowed font-mono"
+                />
+                <p className="text-xs text-gray-400 mt-1">Il codice agente è univoco e non può essere modificato</p>
               </div>
 
               <div>
@@ -273,10 +315,10 @@ const PersonalInfo = () => {
                   value={personalInfo.investigativeStyle} 
                   onValueChange={(value) => handleSelectChange('investigativeStyle', value)}
                 >
-                  <SelectTrigger className="rounded-lg bg-black/50 border-white/10">
+                  <SelectTrigger className="rounded-xl bg-black/50 border-white/10">
                     <SelectValue placeholder="Seleziona il tuo stile" />
                   </SelectTrigger>
-                  <SelectContent className="bg-black border-white/10 rounded-lg">
+                  <SelectContent className="bg-black border-white/10 rounded-xl">
                     {investigativeStyles.map((style) => (
                       <SelectItem 
                         key={style.value} 
@@ -298,10 +340,10 @@ const PersonalInfo = () => {
                   value={personalInfo.preferredLanguage} 
                   onValueChange={(value) => handleSelectChange('preferredLanguage', value)}
                 >
-                  <SelectTrigger className="rounded-lg bg-black/50 border-white/10">
+                  <SelectTrigger className="rounded-xl bg-black/50 border-white/10">
                     <SelectValue placeholder="Seleziona la lingua" />
                   </SelectTrigger>
-                  <SelectContent className="bg-black border-white/10 rounded-lg">
+                  <SelectContent className="bg-black border-white/10 rounded-xl">
                     {languages.map((language) => (
                       <SelectItem 
                         key={language.value} 
@@ -317,7 +359,7 @@ const PersonalInfo = () => {
             </div>
           </div>
           
-          <div className="glass-card mb-4 rounded-lg">
+          <div className="glass-card mb-4 rounded-xl shadow-lg">
             <h2 className="text-lg font-semibold mb-4 text-white">Indirizzo</h2>
             
             <div className="space-y-4">
@@ -330,7 +372,7 @@ const PersonalInfo = () => {
                   name="address"
                   value={personalInfo.address}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
               
@@ -343,7 +385,7 @@ const PersonalInfo = () => {
                   name="city"
                   value={personalInfo.city}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
               
@@ -356,7 +398,7 @@ const PersonalInfo = () => {
                   name="postalCode"
                   value={personalInfo.postalCode}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
               
@@ -369,7 +411,7 @@ const PersonalInfo = () => {
                   name="country"
                   value={personalInfo.country}
                   onChange={handleInputChange}
-                  className="rounded-lg bg-black/50 border-white/10"
+                  className="rounded-xl bg-black/50 border-white/10"
                 />
               </div>
             </div>
@@ -380,14 +422,14 @@ const PersonalInfo = () => {
               type="button"
               variant="outline"
               onClick={() => navigate(-1)}
-              className="flex-1 rounded-lg"
+              className="flex-1 rounded-xl"
             >
               ↩️ Annulla
             </Button>
             <Button 
               type="submit"
               disabled={!isDirty || loading}
-              className="flex-1 bg-white text-black hover:bg-gray-100 rounded-lg"
+              className="flex-1 bg-white text-black hover:bg-gray-100 rounded-xl"
             >
               <Save className="mr-2 h-4 w-4" /> 
               {loading ? "Salvataggio..." : "💾 Salva modifiche"}

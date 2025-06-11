@@ -1,9 +1,43 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { RateLimiter } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+// Sentry-like error logging for Edge Functions
+const logError = async (error: any, context: any) => {
+  console.error("❌ EDGE FUNCTION ERROR:", error);
+  
+  // Skip logging for developer email
+  if (context?.email === "wikus77@hotmail.it") {
+    return;
+  }
+  
+  // Log to abuse_logs as fallback monitoring
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.38.4");
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    await supabase.from('abuse_logs').insert({
+      user_id: context?.userId || 'unknown',
+      event_type: 'edge_function_error',
+      timestamp: new Date().toISOString(),
+      ip_address: context?.ipAddress || 'unknown',
+      meta: { 
+        function: 'send-mailjet-email',
+        error: error.message || String(error),
+        stack: error.stack,
+        context
+      }
+    });
+  } catch (logError) {
+    console.error("Failed to log error:", logError);
+  }
 };
 
 serve(async (req) => {
@@ -15,6 +49,40 @@ serve(async (req) => {
     const { name, email, phone, subject, message, type } = await req.json();
     
     console.log("📧 Email request received:", { name, email, type });
+    
+    // RATE LIMITING CHECK
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const rateLimiter = new RateLimiter(supabaseUrl, supabaseServiceKey);
+    const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    
+    // Use email as user identifier for anonymous users
+    const userIdentifier = email || ipAddress;
+    
+    const rateLimitResult = await rateLimiter.checkRateLimit(userIdentifier, ipAddress, {
+      maxRequests: 5,
+      windowSeconds: 30,
+      functionName: 'send-mailjet-email'
+    });
+
+    if (!rateLimitResult.allowed) {
+      console.log(`🚫 Rate limit exceeded for email: ${email}`);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Troppe richieste email. Riprova tra qualche secondo." 
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            "Content-Type": "application/json", 
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toISOString(),
+            ...corsHeaders 
+          } 
+        }
+      );
+    }
     
     const MJ_APIKEY_PUBLIC = Deno.env.get('MJ_APIKEY_PUBLIC');
     const MJ_APIKEY_PRIVATE = Deno.env.get('MJ_APIKEY_PRIVATE');
@@ -85,6 +153,13 @@ ${phone ? `<p><strong>Telefono:</strong> ${phone}</p>` : ''}
     
   } catch (error: any) {
     console.error("❌ Error in send-mailjet-email:", error);
+    
+    // Log error with context
+    await logError(error, {
+      userId: 'anonymous',
+      ipAddress: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip"),
+      email: null
+    });
     
     return new Response(JSON.stringify({ 
       success: false, 

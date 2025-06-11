@@ -6,7 +6,7 @@ import { Spinner } from "@/components/ui/spinner";
 import IOSSafeAreaOverlay from "@/components/debug/IOSSafeAreaOverlay";
 
 // Public routes
-import Index from "@/pages/Index";
+import Index from "@/pages/index";
 
 // Main app routes with lazy loading - SEPARATE FROM LANDING
 const AppHome = lazy(() => import("@/pages/AppHome"));
@@ -17,7 +17,11 @@ const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Settings = lazy(() => import("@/pages/Settings"));
+const PersonalInfo = lazy(() => import("@/pages/PersonalInfo"));
+const PasswordSecurity = lazy(() => import("@/pages/PasswordSecurity"));
 const Subscriptions = lazy(() => import("@/pages/Subscriptions"));
+const HelpFaq = lazy(() => import("@/pages/HelpFaq"));
+const PrivacySecurity = lazy(() => import("@/pages/PrivacySecurity"));
 
 // Auth routes
 const Login = lazy(() => import("@/pages/Login"));
@@ -27,8 +31,10 @@ const MissionSelection = lazy(() => import("@/pages/MissionSelection"));
 // Additional routes
 const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
 const Contacts = lazy(() => import("@/pages/Contacts"));
+const Ownership = lazy(() => import("@/pages/Ownership"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
+const CookiePolicy = lazy(() => import("@/pages/CookiePolicy"));
 const Terms = lazy(() => import("@/pages/Terms"));
 
 // Loading fallback component
@@ -108,6 +114,24 @@ const AppRoutes: React.FC = () => {
             />
             
             <Route path="/settings" element={<Settings />} />
+            
+            <Route
+              path="/personal-info"
+              element={
+                <ProtectedRoute>
+                  <PersonalInfo />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/password-security"
+              element={
+                <ProtectedRoute>
+                  <PasswordSecurity />
+                </ProtectedRoute>
+              }
+            />
 
             <Route
               path="/subscriptions"
@@ -118,6 +142,17 @@ const AppRoutes: React.FC = () => {
               }
             />
 
+            <Route
+              path="/privacy-security"
+              element={
+                <ProtectedRoute>
+                  <PrivacySecurity />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route path="/help-faq" element={<HelpFaq />} />
+
             {/* Auth routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -126,7 +161,9 @@ const AppRoutes: React.FC = () => {
             {/* Other routes */}
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/contacts" element={<Contacts />} />
+            <Route path="/ownership" element={<Ownership />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/cookie-policy" element={<CookiePolicy />} />
             <Route path="/terms" element={<Terms />} />
             
             {/* 404 route */}

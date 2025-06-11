@@ -59,7 +59,7 @@ const ProfileTabs = ({
 }: ProfileTabsProps) => {
   return (
     <Tabs defaultValue="stats" className="w-full">
-      <TabsList className="w-full grid grid-cols-4 bg-black/30">
+      <TabsList className="w-full grid grid-cols-4 bg-black/30 rounded-xl">
         <TabsTrigger value="stats" className="text-xs">Statistiche</TabsTrigger>
         <TabsTrigger value="history" className="text-xs">Cronologia</TabsTrigger>
         <TabsTrigger value="badges" className="text-xs">Badge</TabsTrigger>
@@ -67,7 +67,7 @@ const ProfileTabs = ({
       </TabsList>
       
       {/* Stats Tab */}
-      <TabsContent value="stats" className="p-4 bg-black/20 rounded-md mt-2">
+      <TabsContent value="stats" className="p-4 bg-black/20 rounded-xl mt-2">
         <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
           <Award className="h-4 w-4 text-cyan-400" />
           Statistiche Personali
@@ -101,7 +101,7 @@ const ProfileTabs = ({
             </div>
           </div>
           
-          <div className="bg-cyan-900/20 p-3 rounded-md border border-cyan-900/40">
+          <div className="bg-cyan-900/20 p-3 rounded-xl border border-cyan-900/40">
             <span className="text-xs text-cyan-400">Miglior risultato</span>
             <p className="text-sm mt-1">{stats.bestResult}</p>
           </div>
@@ -109,7 +109,7 @@ const ProfileTabs = ({
       </TabsContent>
       
       {/* History Tab */}
-      <TabsContent value="history" className="p-4 bg-black/20 rounded-md mt-2">
+      <TabsContent value="history" className="p-4 bg-black/20 rounded-xl mt-2">
         <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
           <Clock className="h-4 w-4 text-cyan-400" />
           Cronologia Operativa
@@ -140,10 +140,10 @@ const ProfileTabs = ({
             <Textarea 
               value={personalNotes}
               onChange={(e) => setPersonalNotes(e.target.value)}
-              className="bg-black/30 h-20"
+              className="bg-black/30 h-20 rounded-xl"
             />
           ) : (
-            <div className="bg-black/20 p-3 rounded-md border border-gray-800 text-sm italic">
+            <div className="bg-black/20 p-3 rounded-xl border border-gray-800 text-sm italic">
               {personalNotes}
             </div>
           )}
@@ -151,7 +151,7 @@ const ProfileTabs = ({
       </TabsContent>
       
       {/* Badges Tab */}
-      <TabsContent value="badges" className="p-4 bg-black/20 rounded-md mt-2">
+      <TabsContent value="badges" className="p-4 bg-black/20 rounded-xl mt-2">
         <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
           <Award className="h-4 w-4 text-cyan-400" />
           Badge e Traguardi
@@ -161,7 +161,7 @@ const ProfileTabs = ({
           {badges.map((badge) => (
             <div 
               key={badge.id} 
-              className={`p-3 rounded-md border ${badge.unlocked 
+              className={`p-3 rounded-xl border ${badge.unlocked 
                 ? badge.pinned 
                   ? 'border-amber-500 bg-amber-900/20' 
                   : 'border-cyan-900/40 bg-cyan-900/10'
@@ -194,7 +194,7 @@ const ProfileTabs = ({
       </TabsContent>
       
       {/* Account Tab */}
-      <TabsContent value="account" className="p-4 bg-black/20 rounded-md mt-2">
+      <TabsContent value="account" className="p-4 bg-black/20 rounded-xl mt-2">
         <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
           <Shield className="h-4 w-4 text-cyan-400" />
           Sicurezza e Abbonamento
@@ -234,7 +234,7 @@ const AccountTabContent = ({
   return (
     <>
       {/* Subscription */}
-      <div className="mb-4 p-3 rounded-md bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border border-cyan-900/40">
+      <div className="mb-4 p-3 rounded-xl bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border border-cyan-900/40 shadow-lg">
         <div className="flex justify-between items-center">
           <h4 className="text-sm font-bold">Piano attivo: {subscription.plan}</h4>
           <span className="bg-amber-600 text-white text-xs px-2 py-0.5 rounded-full">{subscription.plan}</span>
@@ -253,7 +253,7 @@ const AccountTabContent = ({
         </div>
         
         <Button
-          className="w-full mt-3 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+          className="w-full mt-3 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 rounded-xl"
           size="sm"
           onClick={navigateToSubscriptions}
         >
@@ -284,40 +284,40 @@ const AccountSecuritySettings = ({
   return (
     <div className="space-y-3">
       <div 
-        className="flex items-center justify-between p-2 bg-black/30 rounded-md cursor-pointer hover:bg-black/40 transition-colors"
+        className="flex items-center justify-between p-2 bg-black/30 rounded-xl cursor-pointer hover:bg-black/40 transition-colors shadow-lg"
         onClick={navigateToPersonalInfo}
       >
         <div className="flex items-center gap-2">
           <Shield className="h-4 w-4 text-cyan-400" />
           <span className="text-sm">Informazioni personali</span>
         </div>
-        <Button variant="ghost" size="sm" className="h-8">
+        <Button variant="ghost" size="sm" className="h-8 rounded-xl">
           <Shield className="h-3.5 w-3.5" />
         </Button>
       </div>
       
       <div 
-        className="flex items-center justify-between p-2 bg-black/30 rounded-md cursor-pointer hover:bg-black/40 transition-colors"
+        className="flex items-center justify-between p-2 bg-black/30 rounded-xl cursor-pointer hover:bg-black/40 transition-colors shadow-lg"
         onClick={navigateToPrivacySecurity}
       >
         <div className="flex items-center gap-2">
           <Shield className="h-4 w-4 text-cyan-400" />
           <span className="text-sm">Password e sicurezza</span>
         </div>
-        <Button variant="ghost" size="sm" className="h-8">
+        <Button variant="ghost" size="sm" className="h-8 rounded-xl">
           <Shield className="h-3.5 w-3.5" />
         </Button>
       </div>
       
       <div 
-        className="flex items-center justify-between p-2 bg-black/30 rounded-md cursor-pointer hover:bg-black/40 transition-colors"
+        className="flex items-center justify-between p-2 bg-black/30 rounded-xl cursor-pointer hover:bg-black/40 transition-colors shadow-lg"
         onClick={navigateToPaymentMethods}
       >
         <div className="flex items-center gap-2">
           <Shield className="h-4 w-4 text-cyan-400" />
           <span className="text-sm">Metodi di pagamento</span>
         </div>
-        <Button variant="ghost" size="sm" className="h-8">
+        <Button variant="ghost" size="sm" className="h-8 rounded-xl">
           <Shield className="h-3.5 w-3.5" />
         </Button>
       </div>

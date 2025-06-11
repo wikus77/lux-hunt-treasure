@@ -1,9 +1,11 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import SubscriptionCard from "./SubscriptionCard";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useStripePayment } from "@/hooks/useStripePayment";
+import { useCustomerPortal } from "@/hooks/useCustomerPortal";
 
 interface SubscriptionPlansProps {
   selected: string;
@@ -13,43 +15,50 @@ interface SubscriptionPlansProps {
 export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { availableTiers, currentTier, refetch } = useSubscription();
+  const { processSubscription, loading } = useStripePayment();
+  const { openCustomerPortal, loading: portalLoading } = useCustomerPortal();
 
-  const getSubscriptionFeatures = (type: string) => {
-    switch (type) {
-      case "Base":
-        return [
-          { text: "Accesso gratuito agli eventi mensili" },
-          { text: "1 indizio incluso a settimana" },
-          { text: "Partecipazione alle estrazioni base" }
-        ];
+  const getSubscriptionFeatures = (tierName: string) => {
+    const tier = availableTiers.find(t => t.name === tierName);
+    if (!tier) return [];
+
+    const features = [
+      `${tier.max_weekly_buzz} BUZZ disponibili a settimana`,
+      `Attivo nei giorni: ${tier.buzz_days.join(', ')}`
+    ];
+
+    switch (tierName) {
+      case "Free":
+        features.push("Accesso gratuito agli eventi mensili");
+        features.push("1 indizio incluso a settimana");
+        features.push("Partecipazione alle estrazioni base");
+        break;
       case "Silver":
-        return [
-          { text: "Tutti i vantaggi Base" },
-          { text: "3 indizi premium aggiuntivi a settimana" },
-          { text: "Accesso anticipato ai nuovi eventi" },
-          { text: "Badge Silver nel profilo" }
-        ];
+        features.push("Tutti i vantaggi Free");
+        features.push("3 indizi premium aggiuntivi a settimana");
+        features.push("Accesso anticipato ai nuovi eventi");
+        features.push("Badge Silver nel profilo");
+        break;
       case "Gold":
-        return [
-          { text: "Tutti i vantaggi Silver" },
-          { text: "Indizi illimitati durante l'evento" },
-          { text: "Partecipazione alle estrazioni Gold" },
-          { text: "Badge Gold nel profilo" }
-        ];
+        features.push("Tutti i vantaggi Silver");
+        features.push("Indizi illimitati durante l'evento");
+        features.push("Partecipazione alle estrazioni Gold");
+        features.push("Badge Gold nel profilo");
+        break;
       case "Black":
-        return [
-          { text: "Tutti i vantaggi Gold" },
-          { text: "Accesso VIP ad eventi esclusivi" },
-          { text: "Premi misteriosi aggiuntivi" },
-          { text: "Badge Black nel profilo" }
-        ];
-      default:
-        return [];
+        features.push("Tutti i vantaggi Gold");
+        features.push("Accesso VIP ad eventi esclusivi");
+        features.push("Premi misteriosi aggiuntivi");
+        features.push("Badge Black nel profilo");
+        break;
     }
+
+    return features.map(feature => ({ text: feature }));
   };
   
-  const handleUpdatePlan = (plan: string) => {
-    if (plan === selected) {
+  const handleUpdatePlan = async (plan: string) => {
+    if (plan === currentTier) {
       toast({
         title: "Piano già attivo",
         description: `Sei già abbonato al piano ${plan}`
@@ -57,26 +66,31 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       return;
     }
     
-    // Redirect to appropriate payment page based on selected plan
-    if (plan === "Silver") {
-      navigate("/payment-silver");
-    } else if (plan === "Gold") {
-      navigate("/payment-gold");
-    } else if (plan === "Black") {
-      navigate("/payment-black");
-    } else {
-      // For Base plan (free), just update locally
+    if (plan === "Free") {
+      // Handle downgrade to free plan
       localStorage.setItem('subscription_plan', plan);
       setSelected(plan);
       toast({
         title: "Piano aggiornato",
         description: `Il tuo abbonamento è stato aggiornato a ${plan}`
       });
+      return;
+    }
+
+    try {
+      // Process Stripe subscription
+      await processSubscription(plan as 'Silver' | 'Gold' | 'Black');
+    } catch (error) {
+      console.error('Error processing subscription:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'elaborazione dell'abbonamento"
+      });
     }
   };
   
   const handleCancelSubscription = () => {
-    if (selected === "Base") {
+    if (currentTier === "Free") {
       toast({
         title: "Nessun abbonamento attivo",
         description: "Hai già il piano base gratuito"
@@ -84,69 +98,54 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       return;
     }
     
-    localStorage.setItem('subscription_plan', "Base");
-    setSelected("Base");
+    localStorage.setItem('subscription_plan', "Free");
+    setSelected("Free");
     toast({
       title: "Abbonamento cancellato",
       description: "Il tuo abbonamento è stato cancellato con successo"
     });
   };
 
+  useEffect(() => {
+    setSelected(currentTier);
+  }, [currentTier, setSelected]);
+
   return (
     <section className="w-full px-4 pb-10">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        <SubscriptionCard
-          title="Base"
-          price="Gratis"
-          period="mese"
-          features={getSubscriptionFeatures("Base")}
-          isPopular={false}
-          ctaText="Piano Attuale"
-          type="Base"
-          onClick={() => handleUpdatePlan("Base")}
-          isActive={selected === "Base"}
-        />
-        <SubscriptionCard
-          title="Silver"
-          price="€3,99"
-          period="mese"
-          features={getSubscriptionFeatures("Silver")}
-          isPopular={false}
-          ctaText={selected === "Silver" ? "Piano Attuale" : "Passa a Silver"}
-          type="Silver"
-          onClick={() => handleUpdatePlan("Silver")}
-          isActive={selected === "Silver"}
-        />
-        <SubscriptionCard
-          title="Gold"
-          price="€6,99"
-          period="mese"
-          features={getSubscriptionFeatures("Gold")}
-          isPopular={true}
-          ctaText={selected === "Gold" ? "Piano Attuale" : "Passa a Gold"}
-          type="Gold"
-          onClick={() => handleUpdatePlan("Gold")}
-          isActive={selected === "Gold"}
-        />
-        <SubscriptionCard
-          title="Black"
-          price="€9,99"
-          period="mese"
-          features={getSubscriptionFeatures("Black")}
-          isPopular={false}
-          ctaText={selected === "Black" ? "Piano Attuale" : "Passa a Black"}
-          type="Black"
-          onClick={() => handleUpdatePlan("Black")}
-          isActive={selected === "Black"}
-        />
+        {availableTiers.map((tier) => (
+          <SubscriptionCard
+            key={tier.id}
+            title={tier.name}
+            price={tier.price_monthly === 0 ? "Gratis" : `€${tier.price_monthly.toFixed(2)}`}
+            period={tier.price_monthly === 0 ? "" : "mese"}
+            features={getSubscriptionFeatures(tier.name)}
+            isPopular={tier.name === "Gold"}
+            ctaText={currentTier === tier.name ? "Piano Attuale" : `Passa a ${tier.name}`}
+            type={tier.name}
+            onClick={() => handleUpdatePlan(tier.name)}
+            isActive={currentTier === tier.name}
+            disabled={loading || portalLoading}
+          />
+        ))}
       </div>
       
-      {selected !== "Base" && (
-        <div className="flex justify-center mb-10">
+      {currentTier !== "Free" && (
+        <div className="flex justify-center gap-4 mb-10">
+          <Button 
+            variant="outline"
+            onClick={openCustomerPortal}
+            className="border-blue-500 text-blue-500 hover:bg-blue-500/10"
+            disabled={loading || portalLoading}
+          >
+            {portalLoading ? "Caricamento..." : "Gestisci Abbonamento"}
+          </Button>
+          
           <Button 
             variant="outline"
             onClick={handleCancelSubscription}
             className="border-red-500 text-red-500 hover:bg-red-500/10"
+            disabled={loading || portalLoading}
           >
             Cancella abbonamento
           </Button>

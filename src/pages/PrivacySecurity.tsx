@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ArrowLeft, LockIcon, EyeIcon, EyeOffIcon, ShieldIcon, Download, Trash2, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -115,28 +114,28 @@ const PrivacySecurity = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black pb-6">
-      <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="mr-2"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-xl font-bold">Privacy e Sicurezza</h1>
-      </header>
+    <div className="min-h-screen bg-black">
+      <div className="pt-[calc(env(safe-area-inset-top)+64px)] px-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
+        <header className="flex items-center border-b border-projectx-deep-blue pb-6 mb-6">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="mr-2"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-xl font-bold">Privacy e Sicurezza</h1>
+        </header>
 
-      <div className="p-4">
-        <div className="glass-card mb-6">
+        <div className="glass-card rounded-xl mb-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
             <ShieldIcon className="mr-2 h-5 w-5 text-projectx-neon-blue" />
             Impostazioni di Sicurezza
           </h2>
           
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center p-3 bg-black/20 rounded-xl">
               <div>
                 <p className="font-medium">Autenticazione a Due Fattori</p>
                 <p className="text-sm text-muted-foreground">Aumenta la sicurezza del tuo account</p>
@@ -147,7 +146,7 @@ const PrivacySecurity = () => {
               />
             </div>
             
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center p-3 bg-black/20 rounded-xl">
               <div>
                 <p className="font-medium">Login Biometrico</p>
                 <p className="text-sm text-muted-foreground">Usa impronta digitale o riconoscimento facciale</p>
@@ -160,7 +159,7 @@ const PrivacySecurity = () => {
           </div>
         </div>
         
-        <div className="glass-card mb-6">
+        <div className="glass-card rounded-xl mb-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
             <LockIcon className="mr-2 h-5 w-5 text-projectx-neon-blue" />
             Cambia Password
@@ -178,6 +177,7 @@ const PrivacySecurity = () => {
                   type={showPassword ? "text" : "password"}
                   value={securitySettings.currentPassword}
                   onChange={handleInputChange}
+                  className="rounded-xl"
                   required
                 />
                 <button
@@ -200,6 +200,7 @@ const PrivacySecurity = () => {
                 type={showPassword ? "text" : "password"}
                 value={securitySettings.newPassword}
                 onChange={handleInputChange}
+                className="rounded-xl"
                 required
               />
             </div>
@@ -214,24 +215,25 @@ const PrivacySecurity = () => {
                 type={showPassword ? "text" : "password"}
                 value={securitySettings.confirmPassword}
                 onChange={handleInputChange}
+                className="rounded-xl"
                 required
               />
             </div>
             
             <Button 
               type="submit"
-              className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
+              className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-xl"
             >
               Aggiorna Password
             </Button>
           </form>
         </div>
         
-        <div className="glass-card mb-6">
+        <div className="glass-card rounded-xl mb-6">
           <h2 className="text-lg font-semibold mb-4">Impostazioni Privacy</h2>
           
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center p-3 bg-black/20 rounded-xl">
               <div>
                 <p className="font-medium">Tracciamento Posizione</p>
                 <p className="text-sm text-muted-foreground">Permetti all'app di accedere alla tua posizione</p>
@@ -242,7 +244,7 @@ const PrivacySecurity = () => {
               />
             </div>
             
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center p-3 bg-black/20 rounded-xl">
               <div>
                 <p className="font-medium">Consenso Condivisione Dati</p>
                 <p className="text-sm text-muted-foreground">Condividi dati anonimi per migliorare l'app</p>
@@ -253,7 +255,7 @@ const PrivacySecurity = () => {
               />
             </div>
             
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center p-3 bg-black/20 rounded-xl">
               <div>
                 <p className="font-medium">Email Marketing</p>
                 <p className="text-sm text-muted-foreground">Ricevi email promozionali e newsletter</p>
@@ -267,7 +269,7 @@ const PrivacySecurity = () => {
         </div>
 
         {/* GDPR Privacy Information Section */}
-        <div className="glass-card mb-6">
+        <div className="glass-card rounded-xl mb-6">
           <Collapsible open={isGdprSectionOpen} onOpenChange={setIsGdprSectionOpen}>
             <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
               <h2 className="text-lg font-semibold text-white flex items-center">
@@ -278,7 +280,7 @@ const PrivacySecurity = () => {
             </CollapsibleTrigger>
             
             <CollapsibleContent className="mt-4">
-              <ScrollArea className="h-[400px] w-full rounded-md border border-white/10 p-4">
+              <ScrollArea className="h-[400px] w-full rounded-xl border border-white/10 p-4">
                 <div className="space-y-6 text-white">
                   <div>
                     <h3 className="text-lg font-bold text-projectx-neon-blue mb-2">Privacy e Sicurezza — M1SSION™</h3>
@@ -387,7 +389,7 @@ const PrivacySecurity = () => {
                 <div className="flex gap-4">
                   <Button 
                     onClick={handleDownloadPrivacyPolicy}
-                    className="flex-1 bg-gradient-to-r from-projectx-blue to-projectx-pink"
+                    className="flex-1 bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-xl"
                   >
                     <Download className="h-4 w-4 mr-2" />
                     📄 Scarica Privacy Policy (PDF)
@@ -396,7 +398,7 @@ const PrivacySecurity = () => {
                   <Button 
                     variant="destructive"
                     onClick={() => setShowDeleteForm(!showDeleteForm)}
-                    className="flex-1"
+                    className="flex-1 rounded-xl"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
                     🗑️ Richiedi cancellazione account
@@ -404,7 +406,7 @@ const PrivacySecurity = () => {
                 </div>
 
                 {showDeleteForm && (
-                  <div className="border border-red-500/30 rounded-lg bg-red-950/20 p-4">
+                  <div className="border border-red-500/30 rounded-xl bg-red-950/20 p-4">
                     <h4 className="text-lg font-semibold mb-4">Richiesta Cancellazione Account</h4>
                     <form onSubmit={handleDeleteRequest} className="space-y-4">
                       <div>
@@ -418,6 +420,7 @@ const PrivacySecurity = () => {
                           value={deleteFormData.email}
                           onChange={handleDeleteFormChange}
                           placeholder="Inserisci la tua email"
+                          className="rounded-xl"
                           required
                         />
                       </div>
@@ -433,6 +436,7 @@ const PrivacySecurity = () => {
                           onChange={handleDeleteFormChange}
                           placeholder="Spiega il motivo per cui vuoi cancellare il tuo account..."
                           rows={3}
+                          className="rounded-xl"
                           required
                         />
                       </div>
@@ -441,7 +445,7 @@ const PrivacySecurity = () => {
                         <Button 
                           type="submit"
                           variant="destructive"
-                          className="flex-1"
+                          className="flex-1 rounded-xl"
                         >
                           Invia Richiesta
                         </Button>
@@ -449,6 +453,7 @@ const PrivacySecurity = () => {
                           type="button"
                           variant="outline"
                           onClick={() => setShowDeleteForm(false)}
+                          className="rounded-xl"
                         >
                           Annulla
                         </Button>
