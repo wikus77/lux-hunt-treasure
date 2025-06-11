@@ -31,7 +31,14 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     if (areas.length > 0) {
       console.debug("🔍 RENDER CHECK (FIXED CENTER): Areas present in component:", {
         areas_count: areas.length,
-        areas_detail: areas.map(a => ({ id: a.id, user_id: a.user_id, radius_km: a.radius_km, lat: a.lat, lng: a.lng })),
+        areas_detail: areas.map(a => ({ 
+          id: a.id, 
+          user_id: a.user_id, 
+          radius_km: a.radius_km, 
+          radius_meters: a.radius_km * 1000,
+          lat: a.lat, 
+          lng: a.lng 
+        })),
         source: 'react-query',
         fixed_center_mode: true
       });
@@ -143,7 +150,8 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         id: area.id,
         lat: area.lat,
         lng: area.lng,
-        radius_km: area.radius_km
+        radius_km: area.radius_km,
+        radius_meters: area.radius_km * 1000
       });
       
       // Validate area data
@@ -156,6 +164,7 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
       const radiusInMeters = area.radius_km * 1000;
       
       try {
+        // FORCE AREA GENERATION: Create circle with exact radius
         const circle = L.circle([area.lat, area.lng], {
           radius: radiusInMeters,
           color: currentColor,
@@ -168,10 +177,15 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
         
         layerGroupRef.current?.addLayer(circle);
         
+        // DEBUG VISUAL MANDATORY
+        console.log("▶️ layer created:", true);
+        console.log("✅ Area creata con raggio:", radiusInMeters, "m, generazione:", index + 1);
+        
         console.debug(`✅ Circle ${index + 1} created successfully (FIXED CENTER)`);
         
       } catch (error) {
         console.error(`❌ Error creating circle ${index + 1}:`, error);
+        console.log("▶️ layer created:", false);
       }
     });
     
