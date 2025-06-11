@@ -59,10 +59,13 @@ export function useAuth() {
       // Emergency login for developer
       if (email === 'wikus77@hotmail.it') {
         console.log("🔓 DEVELOPER LOGIN - Using emergency function");
+        console.log("📤 Calling edge function with body:", JSON.stringify({ email }));
         
         const { data, error } = await supabase.functions.invoke('login-no-captcha', {
           body: { email }
         });
+
+        console.log("📥 Edge function response:", { data, error });
 
         if (error) {
           console.error("❌ Emergency login error:", error);
@@ -70,7 +73,9 @@ export function useAuth() {
         }
 
         if (data?.access_token && data?.refresh_token) {
-          console.log("✅ Emergency session received - Setting session");
+          console.log("✅ Emergency tokens received");
+          console.log("🎫 Access token length:", data.access_token.length);
+          console.log("🎫 Refresh token length:", data.refresh_token.length);
           
           const { error: setSessionError } = await supabase.auth.setSession({
             access_token: data.access_token,
@@ -82,11 +87,16 @@ export function useAuth() {
             return { success: false, error: setSessionError };
           }
 
+          console.log("✅ Emergency session set successfully");
           return { success: true, session: data };
+        } else {
+          console.error("❌ No tokens in response:", data);
+          return { success: false, error: { message: "No tokens received" } as AuthError };
         }
       }
       
       // Regular login for other users
+      console.log("🔑 Regular login attempt for:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

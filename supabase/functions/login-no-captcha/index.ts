@@ -14,12 +14,15 @@ serve(async (req) => {
   }
 
   try {
-    const { email } = await req.json();
+    const body = await req.json();
+    const { email } = body;
     
     console.log("🔐 Emergency login attempt for:", email);
+    console.log("📥 Request body:", JSON.stringify(body));
     
     // EMERGENCY BYPASS - Only for developer email
     if (email !== "wikus77@hotmail.it") {
+      console.log("❌ Access denied for email:", email);
       return new Response(
         JSON.stringify({ error: "Access denied" }), 
         { 
@@ -36,10 +39,25 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get user by email first
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(email);
+    console.log("🔍 Getting user by email...");
     
-    if (userError || !userData?.user) {
+    // CORRECT API: Use listUsers with email filter
+    const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
+    
+    if (userError) {
+      console.error("❌ Error listing users:", userError);
+      return new Response(
+        JSON.stringify({ error: userError.message }), 
+        { 
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
+
+    const user = users.find(u => u.email === email);
+    
+    if (!user) {
       console.error("❌ User not found:", email);
       return new Response(
         JSON.stringify({ error: "User not found" }), 
@@ -50,9 +68,13 @@ serve(async (req) => {
       );
     }
 
+    console.log("✅ User found:", user.id);
+    console.log("🔧 Creating session...");
+
     // Create session directly using admin API
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
-      user_id: userData.user.id
+    const { data, error: sessionError } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email: email,
     });
 
     if (sessionError) {
@@ -66,12 +88,31 @@ serve(async (req) => {
       );
     }
 
+    // Extract tokens from the generated link
+    const url = new URL(data.properties.action_link);
+    const access_token = url.searchParams.get('access_token');
+    const refresh_token = url.searchParams.get('refresh_token');
+
+    if (!access_token || !refresh_token) {
+      console.error("❌ Tokens not found in response");
+      return new Response(
+        JSON.stringify({ error: "Failed to generate tokens" }), 
+        { 
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
+
     console.log("✅ Emergency session created successfully");
+    console.log("🎫 Tokens generated - access_token length:", access_token.length);
+    console.log("🎫 Tokens generated - refresh_token length:", refresh_token.length);
     
     return new Response(JSON.stringify({
-      message: "Emergency access granted",
-      user: userData.user,
-      session: sessionData
+      access_token,
+      refresh_token,
+      user: user,
+      message: "Emergency access granted"
     }), { 
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -79,6 +120,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("❌ Emergency login error:", error);
+    console.error("❌ Error stack:", error.stack);
     return new Response(
       JSON.stringify({ error: "Emergency login failed", details: error.message }),
       { 
