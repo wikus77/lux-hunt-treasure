@@ -3,10 +3,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { useAuthContext } from '@/contexts/auth';
+import { useAuth } from '@/hooks/use-auth';
 import FormField from './form-field';
 import { Mail, Lock } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 interface LoginFormProps {
   verificationStatus?: string | null;
@@ -17,7 +16,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuthContext();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const isDeveloperEmail = email === 'wikus77@hotmail.it';
@@ -34,55 +33,16 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
     try {
       console.log('🔐 Starting login process for:', email);
       
-      // EMERGENCY BYPASS for developer email - Use edge function directly
-      if (email === 'wikus77@hotmail.it') {
-        console.log('🚨 EMERGENCY DEVELOPER LOGIN - Using direct session creation');
-        
-        const { data, error } = await supabase.functions.invoke('login-no-captcha', {
-          body: { email, password }
-        });
-
-        if (error) {
-          console.error('❌ Emergency login error:', error);
-          toast.error('Emergency login failed', {
-            description: error.message || 'Errore nella funzione di emergenza'
-          });
-          return;
-        }
-
-        if (data?.access_token && data?.refresh_token) {
-          console.log('✅ Emergency tokens received - Setting session and redirecting');
-          
-          // Set the session in Supabase auth
-          const { error: setSessionError } = await supabase.auth.setSession({
-            access_token: data.access_token,
-            refresh_token: data.refresh_token
-          });
-
-          if (setSessionError) {
-            console.error('❌ Session setting error:', setSessionError);
-            toast.error('Session error');
-            return;
-          }
-
-          toast.success('Emergency access granted');
-          
-          // FORCE IMMEDIATE REDIRECT
-          console.log('🔄 FORCING REDIRECT TO /home');
-          navigate('/home', { replace: true });
-          return;
-        }
-      }
-      
-      // Regular login for other users (fallback)
       const result = await login(email, password);
       
       if (result?.success) {
-        console.log('✅ Regular login successful');
+        console.log('✅ Login successful - redirecting to /home');
         toast.success('Login effettuato con successo');
+        
+        // IMMEDIATE REDIRECT - NO CONDITIONS
         navigate('/home', { replace: true });
       } else {
-        console.error('❌ Regular login failed:', result?.error);
+        console.error('❌ Login failed:', result?.error);
         toast.error('Errore di login', {
           description: result?.error?.message || 'Verifica le tue credenziali'
         });

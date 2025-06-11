@@ -3,16 +3,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { AuthContextType } from '@/contexts/auth/types';
 
-export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRoleLoading'> {
+export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
 
   useEffect(() => {
-    console.log("useAuth: Initializing REAL authentication only");
+    console.log("useAuth: Initializing authentication");
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
@@ -23,7 +22,6 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         if (currentSession?.user) {
           const isDeveloper = currentSession.user.email === 'wikus77@hotmail.it';
           setIsEmailVerified(isDeveloper || !!currentSession.user.email_confirmed_at);
-          console.log("Email verification status:", isDeveloper || !!currentSession.user.email_confirmed_at);
           
           if (event === 'SIGNED_IN') {
             console.log("✅ User successfully signed in:", currentSession.user.email);
@@ -55,16 +53,41 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     };
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: AuthError; session?: Session }> => {
     console.log("Login attempt for email:", email);
     
     try {
-      // BYPASS CAPTCHA COMPLETAMENTE per email sviluppatore
+      // Emergency login for developer
       if (email === 'wikus77@hotmail.it') {
-        console.log("🔓 DEVELOPER LOGIN - NO CAPTCHA VALIDATION");
+        console.log("🔓 DEVELOPER LOGIN - Using emergency function");
+        
+        const { data, error } = await supabase.functions.invoke('login-no-captcha', {
+          body: { email }
+        });
+
+        if (error) {
+          console.error("❌ Emergency login error:", error);
+          return { success: false, error: error as AuthError };
+        }
+
+        if (data?.session) {
+          console.log("✅ Emergency session received - Setting session");
+          
+          const { error: setSessionError } = await supabase.auth.setSession({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token
+          });
+
+          if (setSessionError) {
+            console.error("❌ Session setting error:", setSessionError);
+            return { success: false, error: setSessionError };
+          }
+
+          return { success: true, session: data.session };
+        }
       }
       
-      // Login diretto con Supabase - NO CAPTCHA per sviluppatore
+      // Regular login for other users
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -75,7 +98,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       }
 
       console.log("✅ Login completed successfully for:", email);
-      return { success: true, data };
+      return { success: true, data, session: data.session };
     } catch (error: any) {
       console.error("Error during login:", error);
       return { success: false, error: error as AuthError };

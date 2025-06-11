@@ -7,14 +7,14 @@ import AnimatedLogo from "@/components/logo/AnimatedLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { LoginForm } from "@/components/auth/login-form";
 import BackgroundParticles from "@/components/ui/background-particles";
-import { useAuthContext } from "@/contexts/auth";
+import { useAuth } from "@/hooks/use-auth";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
     const verification = searchParams.get('verification');
@@ -27,9 +27,9 @@ const Login = () => {
       });
     }
 
-    // EMERGENCY CHECK - Force redirect if already authenticated
+    // SIMPLIFIED: If already authenticated, redirect immediately
     if (!authLoading && isAuthenticated) {
-      console.log('🚨 EMERGENCY: User already authenticated - FORCING IMMEDIATE REDIRECT');
+      console.log('✅ User already authenticated - redirecting to /home');
       navigate('/home', { replace: true });
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);

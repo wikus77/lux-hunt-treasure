@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, password } = await req.json();
+    const { email } = await req.json();
     
     console.log("🔐 Emergency login attempt for:", email);
     
@@ -37,22 +37,9 @@ serve(async (req) => {
     );
 
     // Get user by email first
-    const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(email);
     
-    if (userError) {
-      console.error("❌ Error fetching users:", userError);
-      return new Response(
-        JSON.stringify({ error: "Failed to fetch users" }), 
-        { 
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    }
-
-    const targetUser = userData.users.find(user => user.email === email);
-    
-    if (!targetUser) {
+    if (userError || !userData?.user) {
       console.error("❌ User not found:", email);
       return new Response(
         JSON.stringify({ error: "User not found" }), 
@@ -64,9 +51,8 @@ serve(async (req) => {
     }
 
     // Create session directly using admin API
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
-      email: email
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
+      user_id: userData.user.id
     });
 
     if (sessionError) {
@@ -82,49 +68,10 @@ serve(async (req) => {
 
     console.log("✅ Emergency session created successfully");
     
-    // Extract tokens safely from the action link
-    const actionLink = sessionData.properties?.action_link;
-    if (!actionLink) {
-      return new Response(
-        JSON.stringify({ error: "Failed to generate session tokens" }), 
-        { 
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    }
-    
-    // Parse URL fragment safely
-    const hashPart = actionLink.split('#')[1];
-    if (!hashPart) {
-      return new Response(
-        JSON.stringify({ error: "Invalid session link format" }), 
-        { 
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    }
-    
-    const params = new URLSearchParams(hashPart);
-    const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token');
-    
-    if (!access_token || !refresh_token) {
-      return new Response(
-        JSON.stringify({ error: "Failed to extract session tokens" }), 
-        { 
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    }
-
     return new Response(JSON.stringify({
       message: "Emergency access granted",
-      user: targetUser,
-      access_token,
-      refresh_token
+      user: userData.user,
+      session: sessionData
     }), { 
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
