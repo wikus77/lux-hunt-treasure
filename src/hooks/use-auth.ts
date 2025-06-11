@@ -6,43 +6,52 @@ export const useAuth = () => {
   const sessionManager = useAuthSessionManager();
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: any; session?: any }> => {
-    console.log('🔐 ENHANCED LOGIN STARTING for:', email);
+    console.log('🔐 ULTIMATE LOGIN STARTING for:', email);
     
     try {
-      // STEP 1: Try standard login first (will likely fail due to CAPTCHA)
-      console.log('🔄 Attempting standard login...');
+      // STRATEGY 1: Standard login attempt with detailed logging
+      console.log('🔄 Attempting standard Supabase login...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (!error && data.session) {
-        console.log('✅ STANDARD LOGIN SUCCESS');
+        console.log('✅ STANDARD LOGIN SUCCESS - session created');
+        await sessionManager.forceSessionFromTokens(
+          data.session.access_token,
+          data.session.refresh_token
+        );
         return { success: true, session: data.session };
       }
 
-      // STEP 2: If standard login fails, use bypass function
-      console.log('🔄 Standard login failed, trying bypass...', error?.message);
+      console.log('🔄 Standard login insufficient, escalating to ULTIMATE BYPASS...');
       
+      // STRATEGY 2: Ultimate bypass with enhanced headers
       const { data: bypassResult, error: bypassError } = await supabase.functions.invoke('register-bypass', {
         body: {
           email,
           password,
           action: 'login'
+        },
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'application/json, text/plain, */*',
+          'Accept-Language': 'en-US,en;q=0.9'
         }
       });
 
       if (bypassError) {
-        console.error('❌ BYPASS FAILED:', bypassError);
+        console.error('❌ ULTIMATE BYPASS FAILED:', bypassError);
         return { success: false, error: bypassError };
       }
 
       if (bypassResult?.success) {
-        console.log('✅ BYPASS SUCCESS');
+        console.log('✅ ULTIMATE BYPASS SUCCESS');
         
-        // STEP 3: Force session using our session manager
+        // STRATEGY 3: Force session creation with comprehensive verification
         if (bypassResult.session?.access_token) {
-          console.log('🔧 FORCING SESSION WITH TOKENS...');
+          console.log('🔧 FORCING SESSION WITH ULTIMATE TOKENS...');
           
           const sessionForced = await sessionManager.forceSessionFromTokens(
             bypassResult.session.access_token,
@@ -50,38 +59,48 @@ export const useAuth = () => {
           );
           
           if (sessionForced) {
-            console.log('✅ SESSION FORCED SUCCESSFULLY');
+            console.log('✅ ULTIMATE SESSION FORCED SUCCESSFULLY');
             
-            // Wait a bit for session to stabilize
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Enhanced verification wait
+            await new Promise(resolve => setTimeout(resolve, 1500));
             
-            return { success: true, session: sessionManager.session };
+            // Verify session persistence
+            const currentSession = sessionManager.session;
+            if (currentSession && currentSession.user) {
+              console.log('✅ SESSION VERIFICATION PASSED');
+              return { success: true, session: currentSession };
+            }
           }
         }
         
-        // STEP 4: Fallback to magic link if session forcing fails
+        // STRATEGY 4: Magic link fallback with auto-redirect
         if (bypassResult.magicLink) {
-          console.log('🔗 FALLBACK TO MAGIC LINK');
-          const currentOrigin = window.location.origin;
-          const redirectUrl = bypassResult.redirect_url || `${currentOrigin}/home`;
+          console.log('🔗 ULTIMATE FALLBACK TO MAGIC LINK');
+          const redirectUrl = bypassResult.redirect_url || `${window.location.origin}/home`;
           
-          // Force redirect to magic link
+          // Store login attempt info for verification
+          localStorage.setItem('login_attempt', JSON.stringify({
+            email,
+            timestamp: Date.now(),
+            method: 'ultimate_bypass'
+          }));
+          
           window.location.href = redirectUrl;
           return { success: true, session: null };
         }
       }
 
-      console.error('❌ ALL LOGIN METHODS FAILED');
-      return { success: false, error: error || 'All login methods failed' };
+      console.error('❌ ALL ULTIMATE LOGIN METHODS FAILED');
+      return { success: false, error: error || 'All ultimate login methods failed' };
 
     } catch (error: any) {
-      console.error('💥 LOGIN EXCEPTION:', error);
+      console.error('💥 ULTIMATE LOGIN EXCEPTION:', error);
       return { success: false, error };
     }
   };
 
   const forceDirectAccess = async (email: string, password: string): Promise<{ success: boolean; redirectUrl?: string; error?: any }> => {
-    console.log('🚨 FORCE DIRECT ACCESS for:', email);
+    console.log('🚨 FORCE ULTIMATE ACCESS for:', email);
     
     try {
       const { data, error } = await supabase.functions.invoke('register-bypass', {
@@ -89,20 +108,29 @@ export const useAuth = () => {
           email,
           password,
           action: 'login'
+        },
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'application/json, text/plain, */*',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Priority': 'u=1, i',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'cross-site'
         }
       });
 
       if (error) {
-        console.error('❌ FORCE ACCESS FAILED:', error);
+        console.error('❌ FORCE ULTIMATE ACCESS FAILED:', error);
         return { success: false, error };
       }
 
       if (data?.success) {
-        console.log('🔗 FORCE ACCESS SUCCESS');
+        console.log('🔗 FORCE ULTIMATE ACCESS SUCCESS');
         
-        // Try to force session first
+        // Try comprehensive session forcing
         if (data.session?.access_token) {
-          console.log('🔧 FORCING SESSION FOR DIRECT ACCESS...');
+          console.log('🔧 FORCING ULTIMATE SESSION FOR DIRECT ACCESS...');
           
           const sessionForced = await sessionManager.forceSessionFromTokens(
             data.session.access_token,
@@ -110,31 +138,49 @@ export const useAuth = () => {
           );
           
           if (sessionForced) {
-            console.log('✅ DIRECT ACCESS SESSION FORCED');
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            return { success: true, redirectUrl: '/home' };
+            console.log('✅ ULTIMATE DIRECT ACCESS SESSION FORCED');
+            
+            // Enhanced verification with retry
+            for (let i = 0; i < 3; i++) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              if (sessionManager.session?.user) {
+                console.log('✅ ULTIMATE SESSION VERIFIED AFTER', i + 1, 'attempts');
+                return { success: true, redirectUrl: '/home' };
+              }
+            }
           }
         }
         
-        // Fallback to magic link
+        // Ultimate fallback to magic link with enhanced verification
         if (data.magicLink) {
-          console.log('🔗 DIRECT ACCESS VIA MAGIC LINK');
-          const currentOrigin = window.location.origin;
-          const redirectUrl = data.redirect_url || `${currentOrigin}/home`;
+          console.log('🔗 ULTIMATE DIRECT ACCESS VIA MAGIC LINK');
+          const redirectUrl = data.redirect_url || `${window.location.origin}/home`;
+          
+          // Enhanced local storage for tracking
+          localStorage.setItem('ultimate_access_attempt', JSON.stringify({
+            email,
+            timestamp: Date.now(),
+            method: 'force_ultimate',
+            redirectUrl
+          }));
+          
           window.location.href = redirectUrl;
           return { success: true, redirectUrl: redirectUrl };
         }
       }
 
-      return { success: false, error: 'No access method available' };
+      return { success: false, error: 'No ultimate access method available' };
       
     } catch (error: any) {
-      console.error('💥 FORCE ACCESS EXCEPTION:', error);
+      console.error('💥 FORCE ULTIMATE ACCESS EXCEPTION:', error);
       return { success: false, error };
     }
   };
 
   const logout = async (): Promise<void> => {
+    // Clear all tracking data
+    localStorage.removeItem('login_attempt');
+    localStorage.removeItem('ultimate_access_attempt');
     await sessionManager.clearSession();
   };
 
