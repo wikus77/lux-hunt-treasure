@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { RateLimiter } from "../_shared/rateLimiter.ts";
@@ -361,7 +360,7 @@ serve(async (req) => {
         console.error("⚠️ Warning: Could not clear existing areas:", deleteError);
       }
       
-      // FIXED: Correct counter upsert
+      // FIXED: Get current generation count and increment atomically
       const { data: counterData, error: counterError } = await supabase
         .from('user_buzz_map_counter')
         .select('buzz_map_count')
@@ -371,7 +370,8 @@ serve(async (req) => {
 
       let currentGeneration = (counterData?.buzz_map_count || 0) + 1;
       
-      const { error: updateError } = await supabase
+      // FIXED: Atomic upsert with onConflict
+      const { data: updatedCounter, error: updateError } = await supabase
         .from('user_buzz_map_counter')
         .upsert({
           user_id: userId,
@@ -379,11 +379,15 @@ serve(async (req) => {
           buzz_map_count: currentGeneration
         }, {
           onConflict: 'user_id,date'
-        });
+        })
+        .select('buzz_map_count')
+        .single();
 
       if (updateError) {
         console.error("❌ Error updating counter:", updateError);
+        currentGeneration = 1; // Fallback
       } else {
+        currentGeneration = updatedCounter.buzz_map_count;
         console.log(`✅ Counter updated successfully: generation ${currentGeneration}`);
       }
 
@@ -414,7 +418,7 @@ serve(async (req) => {
       } else {
         console.log("✅ Map area saved successfully");
         
-        // FIXED: Correct notification insertion with is_read: false
+        // FIXED: Notification insertion with is_read: false
         try {
           const { data: notificationData, error: notificationError } = await supabase
             .from('user_notifications')

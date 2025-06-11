@@ -43,7 +43,7 @@ export const useBuzzMapLogic = () => {
     return currentWeekAreas.length > 0 ? currentWeekAreas[0] : null;
   }, [currentWeekAreas]);
 
-  // FIXED: Get generation count from user_buzz_map_counter
+  // FIXED: Get generation count from user_buzz_map_counter.buzz_map_count
   const getBuzzMapGeneration = useCallback(async (): Promise<number> => {
     if (!user?.id) return 1;
 
@@ -60,7 +60,8 @@ export const useBuzzMapLogic = () => {
         return 1;
       }
 
-      return (data?.buzz_map_count || 0) + 1;
+      const currentCount = data?.buzz_map_count || 0;
+      return currentCount + 1; // Next generation
     } catch (error) {
       console.error('❌ Exception getting generation count:', error);
       return 1;
@@ -70,14 +71,16 @@ export const useBuzzMapLogic = () => {
   // FIXED: Correct radius calculation: max(500 * 0.95^(generation-1), 5)
   const calculateBuzzRadius = useCallback((generation: number): number => {
     if (generation === 1) {
+      console.log("✅ BUZZ MAPPA PARTENZA DA 500km - FIRST GENERATION");
       return 500;
     }
     
     const radius = Math.max(5, 500 * Math.pow(0.95, generation - 1));
+    console.log("✅ RADIUS REDUCTION: Generation", generation, "= ", radius, "km");
     return radius;
   }, []);
 
-  // FIXED: Update counter with correct upsert
+  // FIXED: Update counter with atomic upsert
   const updateBuzzMapCounter = useCallback(async (): Promise<number> => {
     if (!user?.id) return 1;
 
@@ -98,13 +101,14 @@ export const useBuzzMapLogic = () => {
 
       if (error) {
         console.error('❌ Error updating counter:', error);
-        return currentGeneration;
+        throw new Error('Errore nell\'aggiornamento del contatore');
       }
 
+      console.log('✅ Counter updated successfully: generation', data.buzz_map_count);
       return data.buzz_map_count;
     } catch (error) {
       console.error('❌ Exception updating counter:', error);
-      return 1;
+      throw new Error('Errore nell\'aggiornamento del contatore');
     }
   }, [user?.id, getBuzzMapGeneration]);
 
@@ -134,6 +138,12 @@ export const useBuzzMapLogic = () => {
     try {
       console.log('📡 LANCIO BACKEND: Calling with OFFICIAL RULES...');
       
+      // FIXED: Get generation and calculate radius BEFORE API call
+      const generation = await updateBuzzMapCounter();
+      const radiusKm = calculateBuzzRadius(generation);
+      
+      console.log(`✅ BUZZ #${generation} – Raggio: ${radiusKm}km – Pre-API calculation`);
+      
       const response = await callBuzzApi({ 
         userId: user.id,
         generateMap: true,
@@ -149,32 +159,25 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      // FIXED: Get generation and calculate correct radius
-      const generation = await updateBuzzMapCounter();
-      const radiusKm = calculateBuzzRadius(generation);
-      
-      console.log(`✅ BUZZ #${generation} – Raggio: ${radiusKm}km – Area generata`);
-
       const currentWeek = getCurrentWeek();
       const newArea: BuzzMapArea = {
         id: crypto.randomUUID(),
         lat: response.lat || centerLat,
         lng: response.lng || centerLng,
-        radius_km: radiusKm,
+        radius_km: radiusKm, // Use calculated radius, not response
         week: currentWeek,
         created_at: new Date().toISOString(),
         user_id: user.id
       };
 
       console.log('🎉 LANCIO SUCCESS: Area created', newArea);
+      console.log(`✅ BUZZ #${generation} – Raggio: ${radiusKm}km – ID area: ${newArea.id}`);
 
+      // FIXED: Force complete sync and reload
       await forceCompleteSync();
       await forceReload();
       
-      // FIXED: Show correct toast message
       toast.success(`Area generata correttamente – Raggio: ${radiusKm}km`);
-      
-      console.log(`✅ BUZZ #${generation} – Raggio: ${radiusKm}km – ID area: ${newArea.id}`);
       
       return newArea;
     } catch (err) {

@@ -10,12 +10,13 @@ import BuzzMainContent from "@/components/buzz/BuzzMainContent";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ErrorFallback from "@/components/error/ErrorFallback";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import { useAuthContext } from "@/contexts/auth";
 
 const Buzz = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext(); // FIXED: Use useAuthContext instead of useAuth
   const navigate = useNavigate();
 
-  // FIXED: Redirect to /login when user is not logged in
+  // FIXED: Check authentication properly
   if (!user) {
     return (
       <motion.div 
@@ -30,7 +31,7 @@ const Buzz = () => {
           </h1>
           <p className="text-white mb-6">Devi essere autenticato per accedere a questa sezione.</p>
           <Button 
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/login")} // FIXED: navigate to /login not /home
             className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white px-6 py-2"
           >
             Accedi

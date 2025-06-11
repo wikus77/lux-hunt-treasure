@@ -18,7 +18,7 @@ const BuzzAreaRenderer: React.FC<BuzzAreaRendererProps> = ({ areas }) => {
   const map = useMap();
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
 
-  // FIXED: Use areas.map(a => a.id).join() instead of JSON.stringify
+  // FIXED: Use areas.map(a => a.id).join() instead of JSON.stringify for dependency
   const areasKey = areas.map(a => a.id).join(',');
 
   useEffect(() => {
@@ -41,7 +41,8 @@ const BuzzAreaRenderer: React.FC<BuzzAreaRendererProps> = ({ areas }) => {
     areas.forEach((area, index) => {
       const radiusInMeters = area.radius_km * 1000;
       
-      console.log("🟢 AREA RENDER:", radiusInMeters, "lat/lng", area.lat, area.lng);
+      console.log(`🟢 AREA RENDER: ${radiusInMeters}m (${area.radius_km}km) at lat/lng ${area.lat}, ${area.lng}`);
+      console.log(`✅ BUZZ #${index + 1} – Raggio: ${area.radius_km}km – ID area: ${area.id}`);
       
       try {
         const circle = L.circle([area.lat, area.lng], {
@@ -56,8 +57,6 @@ const BuzzAreaRenderer: React.FC<BuzzAreaRendererProps> = ({ areas }) => {
         if (layerGroupRef.current) {
           layerGroupRef.current.addLayer(circle);
         }
-
-        console.log(`✅ BUZZ #${index + 1} – Raggio: ${area.radius_km}km – ID area: ${area.id}`);
         
       } catch (error) {
         console.error('❌ Error creating circle:', error);
