@@ -14,7 +14,7 @@ const Profile = React.lazy(() => import("@/pages/Profile"));
 const Map = React.lazy(() => import("@/pages/Map"));
 const Events = React.lazy(() => import("@/pages/Events"));
 const Settings = React.lazy(() => import("@/pages/Settings"));
-const Contact = React.lazy(() => import("@/pages/Contact"));
+const Contacts = React.lazy(() => import("@/pages/Contacts"));
 const Buzz = React.lazy(() => import("@/pages/Buzz"));
 const Notifications = React.lazy(() => import("@/pages/Notifications"));
 
@@ -27,7 +27,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/auth" element={<Auth />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/contact" element={<Contact />} />
+        <Route path="/contact" element={<Contacts />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
