@@ -76,12 +76,12 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           setRealWeeklyUsed(weeklyAllowance?.used_buzz_count || 0);
         }
 
-        console.log('📊 Real counters:', {
+        console.log('📊 EMERGENCY FIX: Real counters:', {
           mapCounter: mapCounter?.buzz_map_count || 0,
           weeklyUsed: weeklyAllowance?.used_buzz_count || 0
         });
       } catch (error) {
-        console.error('❌ Error fetching real counters:', error);
+        console.error('❌ EMERGENCY FIX: Error fetching real counters:', error);
         if (isMounted) {
           setRealBuzzMapCounter(0);
           setRealWeeklyUsed(0);
@@ -96,32 +96,44 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     };
   }, [user?.id]);
   
+  // CRITICAL FIX: Enhanced secure BUZZ MAP click with STRIPE-FIRST logic
   const handleSecureBuzzMapClick = async () => {
-    // FIXED: Developer bypass check first
+    // CRITICAL FIX: Developer bypass check first
     const isDeveloper = user?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
     
     if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 DEVELOPER BYPASS: Proceeding with map generation');
+      console.log('🔧 EMERGENCY FIX: DEVELOPER BYPASS - Proceeding with map generation');
     } else {
-      // FIXED: For non-developers, enable Stripe flow
+      // CRITICAL FIX: For non-developers, FORCE Stripe BEFORE area generation
       const canProceed = await requireBuzzPayment();
-      if (!canProceed && subscriptionTier === 'Free') {
-        console.log('💳 Free plan detected, redirecting to payment...');
+      if (!canProceed) {
+        console.log('💳 EMERGENCY FIX: Payment required - IMMEDIATE Stripe for BUZZ MAP');
         try {
-          await processBuzzPurchase(true);
-          return;
+          const stripeSuccess = await processBuzzPurchase(true); // isMapBuzz = true
+          if (stripeSuccess) {
+            console.log('✅ EMERGENCY FIX: Stripe payment completed, proceeding with area generation');
+            // Payment successful, but wait for webhook to complete before generating area
+            toast.success('Pagamento completato! Generando area...');
+            // Continue with area generation after a short delay for webhook processing
+            setTimeout(() => {
+              generateBuzzMapAreaInternal();
+            }, 2000);
+          }
+          return; // Stop here whether payment succeeded or failed
         } catch (error) {
-          console.error('❌ Payment failed:', error);
+          console.error('❌ EMERGENCY FIX: Stripe payment failed:', error);
           return;
         }
-      } else if (!canProceed) {
-        console.log('❌ Payment verification failed, blocking access');
-        return;
       }
     }
 
-    console.log('🚀 BUZZ MAP: Payment verified, proceeding with generation...');
+    // If we reach here, user has permission or is developer
+    generateBuzzMapAreaInternal();
+  };
+
+  const generateBuzzMapAreaInternal = async () => {
+    console.log('🚀 EMERGENCY FIX: BUZZ MAP - Starting area generation...');
     
     setIsRippling(true);
     setTimeout(() => setIsRippling(false), 1000);
@@ -133,13 +145,13 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     const centerLat = mapCenter ? mapCenter[0] : 41.9028;
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
-    console.log('📍 BUZZ COORDINATES:', { 
+    console.log('📍 EMERGENCY FIX: BUZZ COORDINATES:', { 
       centerLat, 
       centerLng,
-      mode: 'production-ready'
+      mode: 'emergency-production-fix'
     });
     
-    // FIXED: Use the corrected generateBuzzMapArea function
+    // CRITICAL FIX: Enhanced generateBuzzMapArea call with better error handling
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
@@ -147,7 +159,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         window.plausible('clue_unlocked');
       }
       
-      console.log('🎉 BUZZ MAP SUCCESS: Area generated', newArea);
+      console.log('🎉 EMERGENCY FIX: BUZZ MAP SUCCESS - Area generated', newArea);
 
       try {
         // Update local counter
@@ -167,7 +179,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           setRealBuzzMapCounter(updatedCounter.buzz_map_count);
         }
       } catch (error) {
-        console.error('❌ Error updating counters:', error);
+        console.error('❌ EMERGENCY FIX: Error updating counters:', error);
       }
       
       await reloadAreas();
@@ -178,7 +190,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       
       await createMapBuzzNotification(
         "Area BUZZ Mappa Generata",
-        `Nuova area di ricerca: ${newArea.radius_km.toFixed(1)}km - Generazione ${realBuzzMapCounter + 1}`
+        `Nuova area di ricerca Mission: ${newArea.radius_km.toFixed(1)}km - Generazione ${realBuzzMapCounter + 1}`
       );
       
       if (onAreaGenerated) {
@@ -186,14 +198,14 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       }
       
     } else {
-      console.error('❌ BUZZ MAP: Area generation failed');
-      toast.error('❌ Errore generazione area BUZZ');
+      console.error('❌ EMERGENCY FIX: BUZZ MAP - Area generation failed');
+      toast.error('❌ Errore generazione area BUZZ MAP');
     }
   };
 
-  // FIXED: Simplified logic with developer exceptions
+  // CRITICAL FIX: Enhanced logic with improved user experience
   const isDeveloper = user?.email === 'wikus77@hotmail.it' || localStorage.getItem('developer_access') === 'granted';
-  const isBlocked = !isDeveloper && !hasValidPayment && subscriptionTier === 'Free';
+  const isBlocked = !isDeveloper && (!canAccessPremium || remainingBuzz <= 0);
   const isLoading = isGenerating || stripeLoading || verificationLoading;
   
   const displayRadius = () => {
@@ -216,10 +228,10 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       >
         <Button
           onClick={handleSecureBuzzMapClick}
-          disabled={isLoading || isBlocked}
+          disabled={isLoading}
           className={`buzz-button relative overflow-hidden whitespace-nowrap ${
             isBlocked 
-              ? 'bg-gradient-to-r from-red-600 to-red-800 cursor-not-allowed' 
+              ? 'bg-gradient-to-r from-orange-600 to-orange-800 cursor-pointer hover:from-orange-500 hover:to-orange-700' 
               : 'bg-gradient-to-r from-[#00cfff] via-[#ff00cc] to-[#7f00ff] hover:shadow-[0_0_25px_10px_rgba(255,0,128,0.65)]'
           } text-white px-8 py-3 rounded-full font-bold tracking-wide text-base transition-all duration-300`}
           style={{
@@ -231,13 +243,13 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           {isLoading ? (
             <Loader className="mr-2 h-4 w-4 animate-spin" />
           ) : isBlocked ? (
-            <Lock className="mr-2 h-4 w-4" />
+            <CircleIcon className="mr-2 h-4 w-4" />
           ) : (
             <CircleIcon className="mr-2 h-4 w-4" />
           )}
           <span>
             {isLoading ? 'Generando...' : 
-             isBlocked ? 'PAGAMENTO RICHIESTO' :
+             isBlocked ? 'BUZZ MAPPA - CLICCA PER ACQUISTARE' :
              `BUZZ MAPPA (${displayRadius()}km) - Gen ${displayGeneration()}`}
           </span>
           

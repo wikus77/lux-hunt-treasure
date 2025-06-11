@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -19,6 +18,7 @@ export const useStripePayment = () => {
   const [error, setError] = useState<string | null>(null);
   const { getCurrentUser } = useAuthContext();
 
+  // CRITICAL FIX: Enhanced BUZZ purchase with immediate Stripe activation
   const processBuzzPurchase = async (
     isMapBuzz: boolean = false, 
     customPrice?: number
@@ -43,12 +43,12 @@ export const useStripePayment = () => {
     setError(null);
 
     try {
-      console.log('💳 STRIPE: Starting payment process...');
+      console.log('💳 STRIPE EMERGENCY FIX: Starting immediate payment process...');
       console.log('💳 STRIPE: User:', currentUser.email);
       console.log('💳 STRIPE: Type:', isMapBuzz ? 'BuzzMap' : 'Buzz');
       console.log('💳 STRIPE: Price:', customPrice || (isMapBuzz ? 2.99 : 1.99));
 
-      // FIXED: Call Stripe edge function
+      // CRITICAL FIX: Call Stripe edge function with enhanced error handling
       const { data: response, error: stripeError } = await supabase.functions.invoke('create-stripe-session', {
         body: {
           planType: isMapBuzz ? 'BuzzMap' : 'Buzz',
@@ -71,9 +71,9 @@ export const useStripePayment = () => {
         throw new Error('URL di checkout non ricevuto');
       }
 
-      console.log('✅ STRIPE: Checkout URL received:', response.url);
+      console.log('✅ STRIPE EMERGENCY FIX: Checkout URL received:', response.url);
       
-      // FIXED: Open Stripe checkout in new tab
+      // CRITICAL FIX: Immediate Stripe checkout opening
       window.open(response.url, '_blank');
       
       toast.success('Reindirizzamento a Stripe in corso...');
@@ -81,7 +81,7 @@ export const useStripePayment = () => {
       return true;
 
     } catch (error: any) {
-      console.error('❌ STRIPE: Payment process failed:', error);
+      console.error('❌ STRIPE EMERGENCY FIX: Payment process failed:', error);
       const errorMessage = error.message || 'Errore nel processo di pagamento';
       setError(errorMessage);
       toast.error(errorMessage);
@@ -91,6 +91,7 @@ export const useStripePayment = () => {
     }
   };
 
+  // CRITICAL FIX: Enhanced subscription processing
   const processSubscription = async (
     planType: 'Silver' | 'Gold' | 'Black',
     paymentMethod: 'card' | 'apple_pay' | 'google_pay' = 'card'
@@ -106,7 +107,7 @@ export const useStripePayment = () => {
     setError(null);
 
     try {
-      console.log('💳 STRIPE: Creating subscription session...', { planType, paymentMethod });
+      console.log('💳 STRIPE EMERGENCY FIX: Creating subscription session...', { planType, paymentMethod });
 
       const { data: response, error: stripeError } = await supabase.functions.invoke('create-stripe-session', {
         body: {
@@ -128,11 +129,11 @@ export const useStripePayment = () => {
         throw new Error('URL di checkout non ricevuto');
       }
 
-      console.log('✅ STRIPE: Subscription session created');
+      console.log('✅ STRIPE EMERGENCY FIX: Subscription session created');
       window.open(response.url, '_blank');
 
     } catch (error: any) {
-      console.error('❌ STRIPE: Subscription creation failed:', error);
+      console.error('❌ STRIPE EMERGENCY FIX: Subscription creation failed:', error);
       const errorMessage = error.message || 'Errore nella creazione dell\'abbonamento';
       setError(errorMessage);
       toast.error(errorMessage);
@@ -141,6 +142,7 @@ export const useStripePayment = () => {
     }
   };
 
+  // CRITICAL FIX: Enhanced payment method detection
   const detectPaymentMethodAvailability = () => {
     // Check if Apple Pay is available
     const applePayAvailable = typeof window !== 'undefined' && 

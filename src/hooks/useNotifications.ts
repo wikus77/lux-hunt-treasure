@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -28,7 +27,7 @@ export const useNotifications = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { getCurrentUser } = useAuthContext();
 
-  // FIXED: Immediate and proper notification loading
+  // CRITICAL FIX: Enhanced notification loading with immediate synchronization
   const loadNotifications = useCallback(async () => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
@@ -39,19 +38,19 @@ export const useNotifications = () => {
       const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
       
       if (!hasDeveloperAccess && !isDeveloperEmail) {
-        console.warn('Cannot load notifications - no user ID');
+        console.warn('EMERGENCY FIX: Cannot load notifications - no user ID');
         setNotifications([]);
         setIsLoading(false);
         return;
       }
       
-      console.log('🔧 Developer mode: Loading notifications with fallback');
+      console.log('🔧 EMERGENCY FIX: Developer mode - Loading notifications with fallback');
     }
 
     setIsLoading(true);
     
     try {
-      console.log('📨 Loading notifications for user:', userId);
+      console.log('📨 EMERGENCY FIX: Loading notifications for user:', userId);
       
       const { data, error } = await supabase
         .from('user_notifications')
@@ -62,7 +61,7 @@ export const useNotifications = () => {
         .limit(100);
 
       if (error) {
-        console.error('❌ Error loading notifications:', error);
+        console.error('❌ EMERGENCY FIX: Error loading notifications:', error);
         setNotifications([]);
         return;
       }
@@ -80,33 +79,28 @@ export const useNotifications = () => {
       }));
 
       setNotifications(mappedNotifications);
-      console.log('✅ Notifications loaded successfully:', mappedNotifications.length);
-      
-      // CRITICAL: Force immediate UI refresh
-      setTimeout(() => {
-        setNotifications(mappedNotifications);
-      }, 100);
+      console.log('✅ EMERGENCY FIX: Notifications loaded successfully:', mappedNotifications.length);
       
     } catch (error) {
-      console.error('❌ Exception loading notifications:', error);
+      console.error('❌ EMERGENCY FIX: Exception loading notifications:', error);
       setNotifications([]);
     } finally {
       setIsLoading(false);
     }
   }, [getCurrentUser]);
 
-  // FIXED: Enhanced notification creation with immediate refresh
+  // CRITICAL FIX: Enhanced notification creation with forced database write
   const addNotification = useCallback(async (title: string, message: string, type: string = 'generic') => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
 
     if (!userId && !localStorage.getItem('developer_access')) {
-      console.warn('Cannot add notification - no user ID');
+      console.warn('EMERGENCY FIX: Cannot add notification - no user ID');
       return;
     }
 
     try {
-      console.log('📨 Creating notification:', { title, message, type });
+      console.log('📨 EMERGENCY FIX: Creating notification with FORCED write:', { title, message, type });
       
       const { data, error } = await supabase
         .from('user_notifications')
@@ -121,7 +115,7 @@ export const useNotifications = () => {
         .single();
 
       if (error) {
-        console.error('❌ Error adding notification:', error);
+        console.error('❌ EMERGENCY FIX: Error adding notification:', error);
         return;
       }
 
@@ -137,17 +131,17 @@ export const useNotifications = () => {
         date: data.created_at
       };
 
-      // CRITICAL: Immediate local state update
+      // CRITICAL FIX: Immediate local state update + forced reload
       setNotifications(prev => [newNotification, ...prev]);
-      console.log('✅ Notification added successfully');
+      console.log('✅ EMERGENCY FIX: Notification added successfully');
       
-      // Force reload to sync with database
+      // CRITICAL FIX: Force immediate reload to ensure sync
       setTimeout(() => {
         loadNotifications();
-      }, 500);
+      }, 200);
       
     } catch (error) {
-      console.error('❌ Exception adding notification:', error);
+      console.error('❌ EMERGENCY FIX: Exception adding notification:', error);
     }
   }, [getCurrentUser, loadNotifications]);
 
@@ -226,7 +220,7 @@ export const useNotifications = () => {
     await loadNotifications();
   }, [loadNotifications]);
 
-  // FIXED: Immediate loading on mount
+  // CRITICAL FIX: Force immediate loading on mount
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);

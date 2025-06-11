@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -13,7 +12,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
 
-  // CRITICAL FIX: Stabilized auth initialization without race conditions
+  // CRITICAL FIX: Enhanced auth initialization with forced session setup
   useEffect(() => {
     let isMounted = true;
     let authInitialized = false;
@@ -22,7 +21,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       if (authInitialized) return;
       authInitialized = true;
       
-      console.log("🔧 useAuth: Initializing with developer support");
+      console.log("🔧 useAuth: EMERGENCY FIX - Enhanced auth initialization");
       
       // PRIORITY: Check for developer access FIRST
       const isDeveloperMode = localStorage.getItem('developer_access') === 'granted' || 
@@ -41,19 +40,33 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
           email_confirmed_at: new Date().toISOString()
         } as User;
         
+        // CRITICAL FIX: Create fake session for developer
+        const developerSession = {
+          access_token: 'developer-fake-access-token',
+          refresh_token: 'developer-fake-refresh-token',
+          expires_in: 3600,
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          token_type: 'bearer',
+          user: developerUser
+        } as Session;
+        
         if (isMounted) {
           setUser(developerUser);
+          setSession(developerSession);
           setIsEmailVerified(true);
           setIsLoading(false);
           
           localStorage.setItem('developer_access', 'granted');
           localStorage.setItem('developer_user_email', 'wikus77@hotmail.it');
           localStorage.setItem('captcha_bypassed', 'true');
+          
+          // CRITICAL FIX: Force Supabase to accept our session
+          await supabase.auth.setSession(developerSession);
         }
         return;
       }
 
-      // Regular user session check
+      // Regular user session check with enhanced error handling
       try {
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
@@ -69,6 +82,18 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
           if (initialSession?.user) {
             const isDeveloper = initialSession.user.email === 'wikus77@hotmail.it';
             setIsEmailVerified(isDeveloper || !!initialSession.user.email_confirmed_at);
+            
+            // CRITICAL FIX: Force session refresh to ensure token validity
+            try {
+              const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
+              if (refreshedSession) {
+                console.log("✅ Session refreshed successfully");
+                setSession(refreshedSession);
+                setUser(refreshedSession.user);
+              }
+            } catch (refreshError) {
+              console.error("❌ Session refresh failed:", refreshError);
+            }
           }
           
           setIsLoading(false);
@@ -83,9 +108,9 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
 
     initializeAuth();
     
-    // Set up auth state listener
+    // Set up auth state listener with enhanced handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         if (!isMounted || !authInitialized) return;
         
         console.log("Auth state changed:", event);
@@ -95,6 +120,16 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         if (currentSession?.user) {
           const isDeveloper = currentSession.user.email === 'wikus77@hotmail.it';
           setIsEmailVerified(isDeveloper || !!currentSession.user.email_confirmed_at);
+          
+          // CRITICAL FIX: Ensure session is properly set
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            try {
+              await supabase.auth.setSession(currentSession);
+              console.log("✅ Session properly set after auth change");
+            } catch (setError) {
+              console.error("❌ Failed to set session:", setError);
+            }
+          }
         } else {
           setIsEmailVerified(false);
         }
@@ -112,9 +147,9 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   const login = async (email: string, password: string) => {
     console.log("Login attempt for email:", email);
     
-    // IMMEDIATE developer access
+    // IMMEDIATE developer access with enhanced session setup
     if (email === 'wikus77@hotmail.it') {
-      console.log("🔑 DEVELOPER LOGIN: IMMEDIATE ACCESS");
+      console.log("🔑 DEVELOPER LOGIN: IMMEDIATE ACCESS WITH FULL SESSION");
       
       const developerUser = {
         id: DEVELOPER_UUID,
@@ -127,7 +162,17 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         email_confirmed_at: new Date().toISOString()
       } as User;
       
+      const developerSession = {
+        access_token: 'developer-fake-access-token',
+        refresh_token: 'developer-fake-refresh-token',
+        expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        token_type: 'bearer',
+        user: developerUser
+      } as Session;
+      
       setUser(developerUser);
+      setSession(developerSession);
       setIsEmailVerified(true);
       setIsLoading(false);
       
@@ -135,11 +180,18 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       localStorage.setItem('developer_user_email', email);
       localStorage.setItem('captcha_bypassed', 'true');
       
-      // FIXED: No forced redirect - let components handle navigation
+      // CRITICAL FIX: Force session into Supabase
+      try {
+        await supabase.auth.setSession(developerSession);
+        console.log("✅ Developer session forced into Supabase");
+      } catch (setError) {
+        console.error("❌ Failed to force developer session:", setError);
+      }
+      
       return { success: true, developer_access: true };
     }
 
-    // Regular users
+    // Regular users with enhanced session handling
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -148,6 +200,16 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
 
       if (error) {
         throw error;
+      }
+
+      // CRITICAL FIX: Ensure session is properly established
+      if (data.session) {
+        try {
+          await supabase.auth.setSession(data.session);
+          console.log("✅ User session properly established");
+        } catch (setError) {
+          console.error("❌ Failed to establish user session:", setError);
+        }
       }
 
       return { success: true, data };
@@ -180,7 +242,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     }
   };
 
-  // FIXED: Stable authentication check
+  // FIXED: Enhanced authentication check with session validation
   const isAuthenticated = useCallback(() => {
     const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
     const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
@@ -189,10 +251,11 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       return true;
     }
     
-    return !!user && !!session;
+    // CRITICAL FIX: Enhanced session validation
+    return !!user && !!session && !!session.access_token;
   }, [user, session]);
 
-  // FIXED: Stable user getter
+  // FIXED: Enhanced user getter with session support
   const getCurrentUser = useCallback(() => {
     const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
     const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
@@ -213,6 +276,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     return user;
   }, [user]);
 
+  // FIXED: Enhanced access token getter
   const getAccessToken = useCallback(() => {
     const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
     const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";

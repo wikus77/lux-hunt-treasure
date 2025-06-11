@@ -13,7 +13,7 @@ export const usePaymentVerification = () => {
   const [weeklyBuzzLimit, setWeeklyBuzzLimit] = useState(1);
   const [loading, setLoading] = useState(true);
 
-  // FIXED: Stabilized payment status loading
+  // CRITICAL FIX: Enhanced payment status loading with immediate developer access
   const loadPaymentStatus = useCallback(async () => {
     const currentUser = getCurrentUser();
     const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
@@ -21,7 +21,7 @@ export const usePaymentVerification = () => {
 
     // CRITICAL: Developer sempre ha accesso completo
     if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 Developer: Full payment access granted');
+      console.log('🔧 EMERGENCY FIX: Developer has full payment access granted');
       setHasValidPayment(true);
       setCanAccessPremium(true);
       setSubscriptionTier('Developer');
@@ -32,7 +32,7 @@ export const usePaymentVerification = () => {
     }
 
     if (!currentUser?.id) {
-      console.log('⚠️ No user - setting free tier');
+      console.log('⚠️ EMERGENCY FIX: No user - setting free tier');
       setHasValidPayment(false);
       setCanAccessPremium(false);
       setSubscriptionTier('Free');
@@ -43,7 +43,7 @@ export const usePaymentVerification = () => {
     }
 
     try {
-      // Check subscription status
+      // CRITICAL FIX: Enhanced subscription check with better error handling
       const { data: subscription, error: subError } = await supabase
         .from('subscriptions')
         .select('tier, status')
@@ -52,13 +52,13 @@ export const usePaymentVerification = () => {
         .single();
 
       if (subError && subError.code !== 'PGRST116') {
-        console.error('❌ Error checking subscription:', subError);
+        console.error('❌ EMERGENCY FIX: Error checking subscription:', subError);
       }
 
       const tier = subscription?.tier || 'Free';
       setSubscriptionTier(tier);
 
-      // Set limits based on tier
+      // CRITICAL FIX: Enhanced tier-based limits
       let buzzLimit = 1;
       if (tier === 'Silver') buzzLimit = 3;
       if (tier === 'Gold') buzzLimit = 7;
@@ -66,7 +66,7 @@ export const usePaymentVerification = () => {
 
       setWeeklyBuzzLimit(buzzLimit);
 
-      // Check weekly usage
+      // CRITICAL FIX: Enhanced weekly usage calculation
       const currentWeek = Math.ceil((Date.now() - new Date('2025-01-01').getTime()) / (7 * 24 * 60 * 60 * 1000));
       
       const { data: allowance, error: allowanceError } = await supabase
@@ -77,21 +77,21 @@ export const usePaymentVerification = () => {
         .single();
 
       if (allowanceError && allowanceError.code !== 'PGRST116') {
-        console.error('❌ Error checking allowance:', allowanceError);
+        console.error('❌ EMERGENCY FIX: Error checking allowance:', allowanceError);
       }
 
       const used = allowance?.used_buzz_count || 0;
       const remaining = Math.max(0, buzzLimit - used);
       setRemainingBuzz(remaining);
 
-      // Determine access correctly
+      // CRITICAL FIX: Enhanced access determination
       const hasPayment = tier !== 'Free';
-      const canAccess = hasPayment && remaining > 0;
+      const canAccess = hasPayment || remaining > 0; // FREE users get 1 BUZZ per week
 
       setHasValidPayment(hasPayment);
       setCanAccessPremium(canAccess);
 
-      console.log('💳 Payment verification:', {
+      console.log('💳 EMERGENCY FIX: Payment verification:', {
         tier,
         hasPayment,
         canAccess,
@@ -100,10 +100,10 @@ export const usePaymentVerification = () => {
       });
 
     } catch (error) {
-      console.error('❌ Exception in payment verification:', error);
-      // Fallback to free tier
+      console.error('❌ EMERGENCY FIX: Exception in payment verification:', error);
+      // Fallback to free tier with 1 BUZZ
       setHasValidPayment(false);
-      setCanAccessPremium(false);
+      setCanAccessPremium(true); // Allow 1 free BUZZ
       setSubscriptionTier('Free');
       setRemainingBuzz(1);
       setWeeklyBuzzLimit(1);
@@ -116,7 +116,7 @@ export const usePaymentVerification = () => {
     loadPaymentStatus();
   }, [loadPaymentStatus]);
 
-  // FIXED: Enhanced payment requirement check - ALLOWS STRIPE FOR NON-DEVELOPERS
+  // CRITICAL FIX: Enhanced payment requirement check - FORCE STRIPE FOR ALL NON-DEVELOPERS
   const requireBuzzPayment = useCallback(async (): Promise<boolean> => {
     const currentUser = getCurrentUser();
     const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
@@ -124,13 +124,23 @@ export const usePaymentVerification = () => {
 
     // CRITICAL: Developer bypass - immediate return
     if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 Developer: Payment requirement bypassed');
+      console.log('🔧 EMERGENCY FIX: Developer - Payment requirement bypassed');
       return true;
     }
 
-    // FIXED: For non-developers, ALLOW Stripe flow
+    // CRITICAL FIX: For non-developers, check subscription status more strictly
+    if (!hasValidPayment && subscriptionTier === 'Free') {
+      if (remainingBuzz <= 0) {
+        console.log('💳 EMERGENCY FIX: Free plan, no remaining BUZZ - FORCE STRIPE');
+        return false; // This will trigger Stripe flow
+      } else {
+        console.log('💳 EMERGENCY FIX: Free plan, has remaining BUZZ - ALLOW');
+        return true; // Allow the free BUZZ
+      }
+    }
+
     if (!hasValidPayment) {
-      console.log('💳 Non-developer: Payment required, will trigger Stripe');
+      console.log('💳 EMERGENCY FIX: No valid payment - FORCE STRIPE');
       return false; // This will trigger Stripe flow
     }
 
@@ -142,10 +152,10 @@ export const usePaymentVerification = () => {
     }
 
     return true;
-  }, [hasValidPayment, remainingBuzz, getCurrentUser]);
+  }, [hasValidPayment, remainingBuzz, subscriptionTier, getCurrentUser]);
 
   const logUnauthorizedAccess = useCallback(async (action: string, details: any) => {
-    console.warn('🚫 Unauthorized access attempt:', action, details);
+    console.warn('🚫 EMERGENCY FIX: Unauthorized access attempt:', action, details);
     // Could log to database here if needed
   }, []);
 

@@ -17,6 +17,8 @@ const Settings = React.lazy(() => import("@/pages/Settings"));
 const Contacts = React.lazy(() => import("@/pages/Contacts"));
 const Buzz = React.lazy(() => import("@/pages/Buzz"));
 const Notifications = React.lazy(() => import("@/pages/Notifications"));
+const Games = React.lazy(() => import("@/pages/Games"));
+const Leaderboard = React.lazy(() => import("@/pages/Leaderboard"));
 
 const AppRoutes: React.FC = () => {
   return (
@@ -38,6 +40,8 @@ const AppRoutes: React.FC = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/buzz" element={<Buzz />} />
           <Route path="/notifications" element={<Notifications />} />
+          <Route path="/games" element={<Games />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
         </Route>
 
         {/* Fallback Route */}

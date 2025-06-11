@@ -41,22 +41,23 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const [showRipple, setShowRipple] = useState(false);
   const [buzzCost, setBuzzCost] = useState<number>(1.99);
 
+  // CRITICAL FIX: Enhanced secure BUZZ press with immediate Stripe activation
   const handleSecureBuzzPress = async () => {
     if (isProcessing || verificationLoading || !userId) return;
 
-    // FIXED: Proper developer detection
+    // CRITICAL FIX: Enhanced developer detection
     const isDeveloper = user?.email === 'wikus77@hotmail.it' || isDeveloperUser;
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
 
     if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 DEVELOPER: Starting BUZZ process');
+      console.log('🔧 EMERGENCY FIX: DEVELOPER - Starting BUZZ process');
       
       setShowRipple(true);
       setTimeout(() => setShowRipple(false), 1000);
       setIsProcessing(true);
 
       try {
-        // FIXED: Direct edge function call for BUZZ
+        // CRITICAL FIX: Direct edge function call for BUZZ with enhanced logging
         const { data: response, error: edgeError } = await supabase.functions.invoke('handle-buzz-press', {
           body: {
             userId: userId,
@@ -65,35 +66,35 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         });
 
         if (edgeError) {
-          console.error('❌ Edge function error:', edgeError);
+          console.error('❌ EMERGENCY FIX: Edge function error:', edgeError);
           toast.error('Errore nella chiamata al server');
           return;
         }
 
         if (response?.success) {
           const dynamicClueContent = response.clue_text || 
-            `Indizio Developer generato alle ${new Date().toLocaleTimeString()}`;
+            `Indizio Mission sbloccato alle ${new Date().toLocaleTimeString()} - Codice: MIS-${Date.now().toString().slice(-6)}`;
           
-          console.log('✅ DEVELOPER BUZZ: Success', response);
+          console.log('✅ EMERGENCY FIX: DEVELOPER BUZZ Success', response);
 
-          toast.success("🔧 Indizio Developer Sbloccato!", {
+          toast.success("🔧 Indizio Mission Sbloccato!", {
             description: dynamicClueContent,
           });
           
           await createBuzzNotification(
-            "Nuovo Indizio Developer", 
+            "Nuovo Indizio Mission", 
             dynamicClueContent
           );
           
           onSuccess();
         } else {
-          console.error('❌ DEVELOPER BUZZ: API failed', response?.errorMessage);
+          console.error('❌ EMERGENCY FIX: DEVELOPER BUZZ API failed', response?.errorMessage);
           toast.error("Errore", {
             description: response?.errorMessage || "Errore sconosciuto",
           });
         }
       } catch (error) {
-        console.error('❌ DEVELOPER BUZZ Error:', error);
+        console.error('❌ EMERGENCY FIX: DEVELOPER BUZZ Error:', error);
         toast.error("Errore", {
           description: "Errore durante il processo",
         });
@@ -104,20 +105,24 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       return;
     }
 
-    // FIXED: For non-developers, ENABLE Stripe flow
-    console.log('💳 NON-DEVELOPER: Checking payment status...');
+    // CRITICAL FIX: For non-developers, FORCE immediate Stripe activation
+    console.log('💳 EMERGENCY FIX: NON-DEVELOPER - Checking payment status...');
     
     const canProceed = await requireBuzzPayment();
     
-    if (!canProceed && subscriptionTier === 'Free') {
-      console.log('💳 Free plan detected, redirecting to Stripe payment...');
+    if (!canProceed) {
+      console.log('💳 EMERGENCY FIX: Payment required - IMMEDIATE Stripe redirect');
       setIsProcessing(true);
       
       try {
-        await processBuzzPurchase(false, buzzCost);
-        console.log('✅ Stripe payment flow initiated');
+        const stripeSuccess = await processBuzzPurchase(false, buzzCost);
+        if (stripeSuccess) {
+          console.log('✅ EMERGENCY FIX: Stripe payment flow initiated successfully');
+        } else {
+          console.error('❌ EMERGENCY FIX: Stripe payment flow failed');
+        }
       } catch (error) {
-        console.error('❌ Stripe payment failed:', error);
+        console.error('❌ EMERGENCY FIX: Stripe payment failed:', error);
         toast.error('Errore nel processo di pagamento');
       } finally {
         setIsProcessing(false);
@@ -125,16 +130,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       return;
     }
 
-    if (!canProceed) {
-      await logUnauthorizedAccess('buzz_blocked_no_payment', {
-        subscriptionTier,
-        remainingBuzz,
-        hasValidPayment
-      });
-      return;
-    }
-
-    // For valid subscription users
+    // For users with valid payment/remaining BUZZ
     setShowRipple(true);
     setTimeout(() => setShowRipple(false), 1000);
     
@@ -142,7 +138,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       window.plausible('buzz_click');
     }
     
-    console.log('🔒 SECURE BUZZ: Starting verified process for user:', userId);
+    console.log('🔒 EMERGENCY FIX: SECURE BUZZ - Starting verified process for user:', userId);
     setIsProcessing(true);
     
     try {
@@ -154,33 +150,33 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       });
 
       if (edgeError) {
-        console.error('❌ Edge function error:', edgeError);
+        console.error('❌ EMERGENCY FIX: Edge function error:', edgeError);
         toast.error('Errore nella chiamata al server');
         return;
       }
       
       if (response?.success) {
-        console.log('✅ SECURE BUZZ: Success');
+        console.log('✅ EMERGENCY FIX: SECURE BUZZ Success');
         
         if (typeof window !== 'undefined' && window.plausible) {
           window.plausible('clue_unlocked');
         }
 
         const dynamicClueContent = response.clue_text || 
-          `Indizio premium generato alle ${new Date().toLocaleTimeString()}`;
+          `Indizio Mission sbloccato alle ${new Date().toLocaleTimeString()} - Codice: MIS-${Date.now().toString().slice(-6)}`;
 
-        toast.success("Indizio Premium Sbloccato!", {
+        toast.success("Indizio Mission Sbloccato!", {
           description: dynamicClueContent,
         });
         
         await createBuzzNotification(
-          "Nuovo Indizio Premium", 
+          "Nuovo Indizio Mission", 
           dynamicClueContent
         );
         
         onSuccess();
       } else {
-        console.error('❌ SECURE BUZZ: API response failed:', response?.errorMessage);
+        console.error('❌ EMERGENCY FIX: SECURE BUZZ API response failed:', response?.errorMessage);
         const errorMessage = response?.errorMessage || "Errore sconosciuto";
         
         await logUnauthorizedAccess('buzz_api_failed', { errorMessage });
@@ -190,7 +186,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         });
       }
     } catch (error) {
-      console.error('❌ SECURE BUZZ: Error during verified call:', error);
+      console.error('❌ EMERGENCY FIX: SECURE BUZZ Error during verified call:', error);
       
       await logUnauthorizedAccess('buzz_exception', { 
         error: error instanceof Error ? error.message : String(error) 
@@ -204,9 +200,9 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     }
   };
 
-  // FIXED: Correct blocking logic
+  // CRITICAL FIX: Enhanced blocking logic with better user experience
   const isDeveloper = user?.email === 'wikus77@hotmail.it' || isDeveloperUser || localStorage.getItem('developer_access') === 'granted';
-  const isBlocked = !isDeveloper && !hasValidPayment && subscriptionTier === 'Free' && remainingBuzz <= 0;
+  const isBlocked = !isDeveloper && !canAccessPremium && remainingBuzz <= 0;
   const isLoading = isProcessing || stripeLoading || verificationLoading;
 
   if (verificationLoading) {
@@ -217,10 +213,9 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     );
   }
 
-  // FIXED: Correct display values
+  // CRITICAL FIX: Enhanced display values with better user feedback
   const displayRemainingBuzz = () => {
     if (isDeveloper) return 999;
-    if (subscriptionTier === 'Free') return remainingBuzz || 1;
     return remainingBuzz;
   };
 
@@ -229,6 +224,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     if (subscriptionTier === 'Free') return 1;
     if (subscriptionTier === 'Silver') return 3;
     if (subscriptionTier === 'Gold') return 7;
+    if (subscriptionTier === 'Black') return 15;
     return remainingBuzz;
   };
 
@@ -268,10 +264,10 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           <>
             <Lock className="w-8 h-8 text-red-300 mb-2" />
             <span className="text-lg font-bold text-red-300 tracking-wider text-center px-4">
-              PAGAMENTO RICHIESTO
+              CLICCA PER ACQUISTARE
             </span>
             <span className="text-xs text-red-200 mt-1 text-center px-2">
-              Abbonamento richiesto
+              BUZZ Mission richiede pagamento
             </span>
           </>
         ) : (
