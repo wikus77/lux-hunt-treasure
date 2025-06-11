@@ -48,9 +48,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           if (response.ok) {
             const result = await response.json();
-            if (result.session) {
+            if (result.session && result.session.access_token && result.session.refresh_token) {
               console.log('🔁 LIVELLO 1 – DEVELOPER SETUP: Force session sync');
-              await supabase.auth.setSession(result.session);
+              await supabase.auth.setSession({
+                access_token: result.session.access_token,
+                refresh_token: result.session.refresh_token,
+              });
               console.log('✅ LIVELLO 1 – DEVELOPER SETUP: Developer session established automatically');
             }
           }
@@ -87,8 +90,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const forceSyncSession = async () => {
       if (auth.user && auth.session) {
         console.log('🔁 FORZA SINCRONIZZAZIONE SESSIONE:', auth.user.id);
-        await supabase.auth.setSession(auth.session);
-        console.log('✅ SESSIONE SINCRONIZZATA:', auth.user.id);
+        if (auth.session.access_token && auth.session.refresh_token) {
+          await supabase.auth.setSession({
+            access_token: auth.session.access_token,
+            refresh_token: auth.session.refresh_token,
+          });
+          console.log('✅ SESSIONE SINCRONIZZATA:', auth.user.id);
+        } else {
+          console.warn('⚠️ SESSIONE INVALIDA O ASSENTE - mancano token');
+        }
       }
     };
 
@@ -183,8 +193,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Force session sync before profile fetch
         console.log("🔁 LIVELLO 1 – ROLE FETCH: Ensuring session is synced before profile fetch");
         const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (currentSession) {
-          await supabase.auth.setSession(currentSession);
+        if (currentSession && currentSession.access_token && currentSession.refresh_token) {
+          await supabase.auth.setSession({
+            access_token: currentSession.access_token,
+            refresh_token: currentSession.refresh_token,
+          });
         }
         
         // Prima prova con l'ID dell'utente

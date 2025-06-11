@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -47,9 +46,14 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         // Force session sync if different
         if (currentSession.access_token !== session?.access_token) {
           console.log('🔁 LIVELLO 1: Force session sync');
-          await supabase.auth.setSession(currentSession);
-          setSession(currentSession);
-          setUser(currentSession.user);
+          if (currentSession.access_token && currentSession.refresh_token) {
+            await supabase.auth.setSession({
+              access_token: currentSession.access_token,
+              refresh_token: currentSession.refresh_token,
+            });
+            setSession(currentSession);
+            setUser(currentSession.user);
+          }
         }
         
         return currentSession.user;
@@ -86,8 +90,13 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
           console.log('✅ LIVELLO 1 SUCCESS: Auth state changed, setting user:', currentSession.user.id);
           
           // CRITICAL FIX: Ensure session is properly set on auth state change
-          await supabase.auth.setSession(currentSession);
-          console.log('✅ LIVELLO 1 SUCCESS: Session updated in Supabase client');
+          if (currentSession.access_token && currentSession.refresh_token) {
+            await supabase.auth.setSession({
+              access_token: currentSession.access_token,
+              refresh_token: currentSession.refresh_token,
+            });
+            console.log('✅ LIVELLO 1 SUCCESS: Session updated in Supabase client');
+          }
           
           setSession(currentSession);
           setUser(currentSession.user);
@@ -145,8 +154,13 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         console.log('✅ LIVELLO 1 SUCCESS: Session found, setting user:', initialSession.user.id);
         
         // CRITICAL FIX: Ensure session is properly set in Supabase client
-        await supabase.auth.setSession(initialSession);
-        console.log('✅ LIVELLO 1 SUCCESS: Session explicitly set in Supabase client');
+        if (initialSession.access_token && initialSession.refresh_token) {
+          await supabase.auth.setSession({
+            access_token: initialSession.access_token,
+            refresh_token: initialSession.refresh_token,
+          });
+          console.log('✅ LIVELLO 1 SUCCESS: Session explicitly set in Supabase client');
+        }
         
         setSession(initialSession);
         setUser(initialSession.user);
@@ -219,9 +233,12 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         
         if (response.ok) {
           const result = await response.json();
-          if (result.session) {
+          if (result.session && result.session.access_token && result.session.refresh_token) {
             console.log('🔁 LIVELLO 1 – LOGIN: Force session sync from edge function');
-            await supabase.auth.setSession(result.session);
+            await supabase.auth.setSession({
+              access_token: result.session.access_token,
+              refresh_token: result.session.refresh_token,
+            });
             
             // Update local state immediately
             setSession(result.session);
@@ -276,9 +293,12 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         throw error;
       }
 
-      if (data.session) {
+      if (data.session && data.session.access_token && data.session.refresh_token) {
         console.log("🔁 LIVELLO 1 – LOGIN: Force session sync after successful login");
-        await supabase.auth.setSession(data.session);
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
         
         // Update local state immediately
         setSession(data.session);
