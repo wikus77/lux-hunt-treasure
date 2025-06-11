@@ -7,7 +7,7 @@ import { useBuzzMapRadius } from './buzz/useBuzzMapRadius';
 import { useBuzzMapNotifications } from './buzz/useBuzzMapNotifications';
 import { toast } from 'sonner';
 
-interface BuzzMapArea {
+export interface BuzzMapArea {
   id: string;
   lat: number;
   lng: number;

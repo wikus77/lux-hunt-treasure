@@ -1,94 +1,107 @@
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthContext } from '@/contexts/auth';
+import { useNotifications } from './useNotifications';
 
-import { useState, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
-import { useNotifications } from "@/hooks/useNotifications";
-
-interface LeaderboardPosition {
-  currentRank: number;
-  previousRank: number | null;
-  isRising: boolean;
-  isFalling: boolean;
-  isNew: boolean;
-  isInTop10: boolean;
-  isInTop100: boolean;
-  rankChange: number;
+interface LeaderboardEntry {
+  user_id: string;
+  position: number;
+  score: number;
+  email: string;
+  change?: 'up' | 'down' | 'same';
 }
 
-export const useLeaderboardPosition = (userId?: string) => {
-  const [position, setPosition] = useState<LeaderboardPosition>({
-    currentRank: 0,
-    previousRank: null,
-    isRising: false,
-    isFalling: false,
-    isNew: false,
-    isInTop10: false,
-    isInTop100: false,
-    rankChange: 0
-  });
-  
-  const { toast } = useToast();
+export const useLeaderboardPosition = () => {
+  const [position, setPosition] = useState<number | null>(null);
+  const [totalUsers, setTotalUsers] = useState<number>(0);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { getCurrentUser } = useAuthContext();
   const { addNotification } = useNotifications();
-  
-  useEffect(() => {
-    // In una implementazione reale, dovresti recuperare i dati dalle API
-    // Qui simuliamo il comportamento
-    const fetchPositionData = () => {
-      // Simuliamo la posizione precedente e attuale
-      const currentRank = Math.floor(Math.random() * 120) + 1; // 1-120
-      const wasInLeaderboard = Math.random() > 0.3; // 70% probabilità di essere già in classifica
-      
-      // Se era già in leaderboard, simula una posizione precedente
-      const previousRank = wasInLeaderboard ? currentRank + Math.floor(Math.random() * 10) - 5 : null;
-      
-      // Nuova posizione
-      const newPosition: LeaderboardPosition = {
-        currentRank,
-        previousRank,
-        isRising: previousRank !== null && currentRank < previousRank,
-        isFalling: previousRank !== null && currentRank > previousRank,
-        isNew: previousRank === null,
-        isInTop10: currentRank <= 10,
-        isInTop100: currentRank <= 100,
-        rankChange: previousRank !== null ? previousRank - currentRank : 0
-      };
-      
-      setPosition(newPosition);
-      
-      // Notifiche per cambiamenti di posizione
-      if (newPosition.isNew && newPosition.isInTop100) {
-        addNotification({
-          title: "🏆 Complimenti!",
-          description: "Sei entrato nella classifica dei top 100!"
-        });
-      } else if (newPosition.isRising && newPosition.rankChange > 0) {
-        addNotification({
-          title: "📈 Movimento in classifica",
-          description: `Hai guadagnato +${newPosition.rankChange} posizioni!`
-        });
-        
-        if (newPosition.isInTop10 && !wasInLeaderboard) {
-          setTimeout(() => {
-            toast({
-              title: "🌟 Wow! Sei nella TOP 10!",
-              description: "Un traguardo incredibile! Continua così!",
-              className: "bg-gradient-to-r from-projectx-blue to-purple-600 border-0"
-            });
-          }, 500);
-        }
-      } else if (newPosition.isFalling && newPosition.rankChange < 0) {
-        addNotification({
-          title: "📉 Movimento in classifica",
-          description: `Hai perso ${Math.abs(newPosition.rankChange)} posizioni.`
-        });
+
+  const fetchLeaderboard = useCallback(async () => {
+    const currentUser = getCurrentUser();
+    if (!currentUser?.id && !localStorage.getItem('developer_access')) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { data: leaderboardData, error: leaderboardError } = await supabase
+        .from('leaderboard')
+        .select('user_id, position, score, email, change')
+        .order('position', { ascending: true });
+
+      if (leaderboardError) {
+        console.error('Error fetching leaderboard data:', leaderboardError);
+        return;
       }
-    };
-    
-    fetchPositionData();
-    
-    // Aggiornamento periodico simulato (ogni 30 secondi in un'app reale)
-    const interval = setInterval(fetchPositionData, 30000);
-    return () => clearInterval(interval);
-  }, [userId]);
-  
-  return position;
+
+      setLeaderboard(leaderboardData || []);
+
+      const { data: userPositionData, error: userPositionError } = await supabase
+        .from('leaderboard')
+        .select('position')
+        .eq('user_id', currentUser.id)
+        .single();
+
+      if (userPositionError && userPositionError.code !== 'PGRST116') {
+        console.error('Error fetching user position:', userPositionError);
+        return;
+      }
+
+      if (userPositionData) {
+        setPosition(userPositionData.position);
+      } else {
+        setPosition(null);
+      }
+
+      const { count, error: countError } = await supabase
+        .from('leaderboard')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        console.error('Error fetching leaderboard count:', countError);
+        return;
+      }
+
+      setTotalUsers(count || 0);
+
+      const userEntry = leaderboardData?.find(entry => entry.user_id === currentUser.id);
+      
+      // When updating notifications, use the correct signature
+      if (userEntry && userEntry.position <= 10) {
+        await addNotification('Posizione Top 10!', `Sei nella Top 10 con la posizione ${userEntry.position}!`, 'leaderboard');
+      }
+      
+      if (userEntry && userEntry.position === 1) {
+        await addNotification('Primo Posto!', 'Congratulazioni! Sei al primo posto nella classifica!', 'leaderboard');
+      }
+      
+      if (userEntry && userEntry.change === 'up') {
+        await addNotification('Posizione Migliorata!', `La tua posizione è migliorata alla ${userEntry.position}°!`, 'leaderboard');
+      }
+
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getCurrentUser, addNotification]);
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, [fetchLeaderboard]);
+
+  const reloadLeaderboard = useCallback(async () => {
+    await fetchLeaderboard();
+  }, [fetchLeaderboard]);
+
+  return {
+    position,
+    totalUsers,
+    leaderboard,
+    isLoading,
+    fetchLeaderboard
+  };
 };

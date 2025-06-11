@@ -1,11 +1,24 @@
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
+import { useNotifications } from './useNotifications';
 import { toast } from 'sonner';
 
 export const useNotificationManager = () => {
   const { getCurrentUser } = useAuthContext();
+  const [notificationsBannerOpen, setNotificationsBannerOpen] = useState(false);
+  
+  const {
+    notifications,
+    isLoading,
+    unreadCount,
+    addNotification,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    reloadNotifications
+  } = useNotifications();
 
   const createNotification = useCallback(async (title: string, message: string, type: string = 'generic') => {
     const currentUser = getCurrentUser();
@@ -59,40 +72,42 @@ export const useNotificationManager = () => {
     return await createNotification(title, message, 'buzz_map');
   }, [createNotification]);
 
-  const reloadNotifications = useCallback(async (force: boolean = false) => {
-    const currentUser = getCurrentUser();
-    const userId = currentUser?.id;
+  const createLeaderboardNotification = useCallback(async (title: string, message: string) => {
+    return await createNotification(title, message, 'leaderboard');
+  }, [createNotification]);
 
-    if (!userId && !localStorage.getItem('developer_access')) {
-      console.warn('Cannot reload notifications - no user ID');
-      return [];
-    }
+  const createWeeklyNotification = useCallback(async (title: string, message: string) => {
+    return await createNotification(title, message, 'weekly');
+  }, [createNotification]);
 
-    try {
-      const { data, error } = await supabase
-        .from('user_notifications')
-        .select('*')
-        .eq('user_id', userId || '00000000-0000-4000-a000-000000000000')
-        .order('created_at', { ascending: false })
-        .limit(50);
+  const openNotificationsBanner = useCallback(() => {
+    setNotificationsBannerOpen(true);
+  }, []);
 
-      if (error) {
-        console.error('❌ Error reloading notifications:', error);
-        return [];
-      }
+  const closeNotificationsBanner = useCallback(() => {
+    setNotificationsBannerOpen(false);
+  }, []);
 
-      console.log('✅ Notifications reloaded:', data.length);
-      return data;
-    } catch (error) {
-      console.error('❌ Exception reloading notifications:', error);
-      return [];
-    }
-  }, [getCurrentUser]);
+  const openNotificationsDrawer = useCallback(() => {
+    // This could open a drawer instead of banner
+    setNotificationsBannerOpen(true);
+  }, []);
 
   return {
+    notifications,
+    isLoading,
+    unreadCount,
+    notificationsBannerOpen,
     createNotification,
     createBuzzNotification,
     createMapBuzzNotification,
+    createLeaderboardNotification,
+    createWeeklyNotification,
+    markAllAsRead,
+    deleteNotification,
+    openNotificationsBanner,
+    closeNotificationsBanner,
+    openNotificationsDrawer,
     reloadNotifications
   };
 };
