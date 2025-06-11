@@ -31,7 +31,13 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     if (areas.length > 0) {
       console.debug("🔍 RENDER CHECK (FIXED CENTER): Areas present in component:", {
         areas_count: areas.length,
-        areas_detail: areas.map(a => ({ id: a.id, user_id: a.user_id, radius_km: a.radius_km, lat: a.lat, lng: a.lng })),
+        areas_detail: areas.map(a => ({ 
+          id: a.id, 
+          user_id: a.user_id || 'no-user-id', // Handle optional user_id
+          radius_km: a.radius_km, 
+          lat: a.lat, 
+          lng: a.lng 
+        })),
         source: 'react-query',
         fixed_center_mode: true
       });

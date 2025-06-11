@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { MapContainer } from 'react-leaflet';
 import { DEFAULT_LOCATION } from '../useMapLogic';
@@ -76,7 +75,7 @@ const MapContent: React.FC<MapContentProps> = ({
         lat: area.lat,
         lng: area.lng,
         radius_km: area.radius_km,
-        created_at: area.created_at,
+        created_at: area.created_at || 'no-timestamp', // Handle optional created_at
         radiusInMeters: area.radius_km * 1000,
         color: '#00FFFF'
       });

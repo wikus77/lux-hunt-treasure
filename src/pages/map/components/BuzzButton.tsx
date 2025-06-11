@@ -1,34 +1,84 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { useAuthContext } from '@/contexts/auth';
 
-interface BuzzButtonProps {
-  onPress: () => void;
-  canPress: boolean;
-  buzzCount: number;
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Zap, MapPin } from 'lucide-react';
+import { toast } from 'sonner';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
+import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
+
+export interface BuzzButtonProps {
+  handleBuzz?: () => void; // Added missing property
+  mapCenter?: [number, number];
+  onAreaGenerated?: (lat: number, lng: number, radiusKm: number) => void;
 }
 
-const BuzzButton: React.FC<BuzzButtonProps> = ({ onPress, canPress, buzzCount }) => {
-  const { isAuthenticated } = useAuthContext();
+const BuzzButton: React.FC<BuzzButtonProps> = ({
+  handleBuzz,
+  mapCenter,
+  onAreaGenerated
+}) => {
+  const { playSound } = useSoundEffects();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { currentWeekAreas } = useBuzzMapLogic();
+
+  const handleBuzzPress = async () => {
+    if (isGenerating) return;
+    
+    setIsGenerating(true);
+    playSound('buzz');
+    
+    try {
+      if (handleBuzz) {
+        handleBuzz();
+      }
+      
+      // Simulate area generation
+      if (mapCenter && onAreaGenerated) {
+        const radius = 5; // Default radius in km
+        onAreaGenerated(mapCenter[0], mapCenter[1], radius);
+      }
+      
+      toast.success('Area BUZZ generata!');
+    } catch (error) {
+      console.error('Error generating buzz area:', error);
+      toast.error('Errore nella generazione dell\'area');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const canUseBuzz = currentWeekAreas.length < 3; // Limit to 3 areas per week
 
   return (
-    <motion.div
-      className="fixed bottom-20 right-4 z-50"
-      initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Button
-        onClick={onPress}
-        disabled={!canPress}
-        className="relative rounded-full w-20 h-20 flex items-center justify-center bg-projectx-blue text-black shadow-md hover:bg-blue-600 transition-colors"
+    <motion.div className="fixed bottom-20 right-4 z-50">
+      <motion.button
+        className={`relative rounded-full shadow-lg transition-all duration-300 ${
+          canUseBuzz
+            ? 'bg-gradient-to-br from-purple-500 to-red-500 hover:scale-110 active:scale-95'
+            : 'bg-gray-500 cursor-not-allowed opacity-50'
+        }`}
+        onClick={handleBuzzPress}
+        disabled={!canUseBuzz || isGenerating}
+        style={{
+          width: '80px',
+          height: '80px',
+        }}
+        whileTap={{ scale: canUseBuzz ? 0.9 : 1 }}
+        aria-label="Genera Area BUZZ"
       >
-        <Zap className="h-8 w-8" />
-        <span className="absolute bottom-1 text-xs text-white">{buzzCount}</span>
-      </Button>
+        <div className="absolute top-0 left-0 w-full h-full rounded-full flex items-center justify-center">
+          {isGenerating ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            >
+              <MapPin className="text-white" size={32} />
+            </motion.div>
+          ) : (
+            <Zap className="text-white" size={32} />
+          )}
+        </div>
+      </motion.button>
     </motion.div>
   );
 };
