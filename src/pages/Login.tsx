@@ -27,12 +27,34 @@ const Login = () => {
       });
     }
 
-    // If already authenticated, redirect immediately
+    // CRITICAL: Enhanced authentication check with immediate redirect
     if (!authLoading && isAuthenticated) {
-      console.log('✅ User already authenticated - redirecting to /home');
+      console.log('✅ ENHANCED LOGIN PAGE - User already authenticated, immediate redirect to /home');
+      console.log('📊 AUTH STATE:', { isAuthenticated, authLoading });
       navigate('/home', { replace: true });
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);
+
+  // CRITICAL: Enhanced session persistence check on mount
+  useEffect(() => {
+    const checkSessionPersistence = async () => {
+      if (!authLoading) {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('🔍 LOGIN PAGE SESSION CHECK:', {
+          session: session?.user?.email || 'None',
+          localStorage: localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token') ? 'Present' : 'Missing'
+        });
+        
+        if (session && !isAuthenticated) {
+          console.log('⚠️ SESSION EXISTS BUT AUTH STATE NOT UPDATED - FORCING AUTH UPDATE');
+          // Force a refresh of auth state
+          window.location.reload();
+        }
+      }
+    };
+    
+    checkSessionPersistence();
+  }, [authLoading, isAuthenticated]);
 
   const handleResendVerification = async (email: string) => {
     if (!email) {
@@ -62,6 +84,15 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
+  // Show loading while checking auth state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <Spinner className="h-8 w-8 text-white" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12 relative overflow-hidden">

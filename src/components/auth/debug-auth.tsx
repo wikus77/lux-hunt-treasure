@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,131 @@ const DebugAuth = () => {
 
   const clearLogs = () => {
     setLogs([]);
+  };
+
+  const testEnhancedSessionDiagnostic = async () => {
+    setIsLoading(true);
+    addLog('🔍 ENHANCED SESSION DIAGNOSTIC STARTING');
+    
+    try {
+      // Check current session state
+      const { data: { session } } = await supabase.auth.getSession();
+      addLog('📊 CURRENT SESSION STATE:');
+      addLog(`✅ Session: ${session ? 'Present' : 'null'}`);
+      addLog(`✅ User: ${session?.user?.email || 'null'}`);
+      addLog(`✅ Access Token: ${session?.access_token ? 'Present' : 'null'}`);
+      addLog(`✅ Refresh Token: ${session?.refresh_token ? 'Present' : 'null'}`);
+      
+      // Check localStorage
+      const tokenStorage = localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
+      addLog(`📦 LOCAL STORAGE TOKEN: ${tokenStorage ? 'Present' : 'Missing'}`);
+      
+      if (tokenStorage) {
+        try {
+          const parsedToken = JSON.parse(tokenStorage);
+          addLog(`🔍 TOKEN DETAILS: ${JSON.stringify({
+            access_token: parsedToken.access_token ? 'Present' : 'Missing',
+            refresh_token: parsedToken.refresh_token ? 'Present' : 'Missing',
+            expires_at: parsedToken.expires_at || 'Missing'
+          })}`);
+        } catch (e) {
+          addLog(`❌ TOKEN PARSE ERROR: ${e}`);
+        }
+      }
+      
+    } catch (error: any) {
+      addLog(`💥 DIAGNOSTIC EXCEPTION: ${error.message || error}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testEnhancedLogin = async () => {
+    setIsLoading(true);
+    addLog('🔐 ENHANCED LOGIN TEST STARTING');
+    
+    try {
+      const result = await login('wikus77@hotmail.it', 'mission-access-99');
+      
+      addLog('📤 ENHANCED LOGIN RESULT:');
+      addLog(`✅ Success: ${result.success}`);
+      addLog(`❌ Error: ${JSON.stringify(result.error, null, 2)}`);
+      addLog(`🔑 Session: ${result.session ? 'Present' : 'null'}`);
+      
+      if (result.success) {
+        addLog('🎉 ENHANCED LOGIN SUCCESS - CHECKING PERSISTENCE...');
+        
+        // Enhanced verification with multiple checks
+        setTimeout(async () => {
+          const { data: { session } } = await supabase.auth.getSession();
+          const tokenStorage = localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
+          
+          addLog(`🔍 POST-LOGIN SESSION: ${session?.user?.email || 'Missing'}`);
+          addLog(`📦 POST-LOGIN TOKEN: ${tokenStorage ? 'Present' : 'Missing'}`);
+          
+          if (session) {
+            addLog('✅ ENHANCED SESSION PERSISTED - NAVIGATING TO /home');
+            navigate('/home');
+          } else {
+            addLog('❌ ENHANCED SESSION NOT PERSISTED - PERSISTENCE FAILURE');
+          }
+        }, 1500);
+      } else {
+        addLog(`🚨 ENHANCED LOGIN FAILED: ${result.error?.message || 'Unknown error'}`);
+      }
+      
+    } catch (error: any) {
+      addLog(`💥 ENHANCED LOGIN EXCEPTION: ${error.message || error}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testEnhancedForceAccess = async () => {
+    setIsLoading(true);
+    addLog('🚨 ENHANCED FORCE ACCESS TEST STARTING');
+    
+    try {
+      const result = await forceDirectAccess('wikus77@hotmail.it', 'mission-access-99');
+      
+      addLog('📤 ENHANCED FORCE ACCESS RESULT:');
+      addLog(`✅ Success: ${result.success}`);
+      addLog(`🔗 Redirect URL: ${result.redirectUrl || 'None'}`);
+      addLog(`❌ Error: ${JSON.stringify(result.error, null, 2)}`);
+      
+      if (result.success) {
+        addLog(`🚀 ENHANCED FORCE ACCESS SUCCESS`);
+        
+        if (result.redirectUrl === '/home') {
+          addLog('🔄 ENHANCED PROGRAMMATIC NAVIGATION TO /home');
+          
+          // Enhanced verification before redirect
+          setTimeout(async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            const tokenStorage = localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
+            
+            addLog(`🔍 PRE-REDIRECT SESSION: ${session?.user?.email || 'Missing'}`);
+            addLog(`📦 PRE-REDIRECT TOKEN: ${tokenStorage ? 'Present' : 'Missing'}`);
+            
+            if (session) {
+              addLog('✅ ENHANCED SESSION CONFIRMED - SAFE TO NAVIGATE');
+              navigate('/home');
+            } else {
+              addLog('⚠️ ENHANCED SESSION MISSING - WILL USE MAGIC LINK');
+            }
+          }, 750);
+        } else {
+          addLog(`🔗 ENHANCED MAGIC LINK REDIRECT TO: ${result.redirectUrl}`);
+        }
+      } else {
+        addLog(`🚨 ENHANCED FORCE ACCESS FAILED: ${result.error?.message || 'Unknown error'}`);
+      }
+      
+    } catch (error: any) {
+      addLog(`💥 ENHANCED FORCE ACCESS EXCEPTION: ${error.message || error}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const testDirectSignUp = async () => {
@@ -214,7 +338,7 @@ const DebugAuth = () => {
 
   return (
     <div className="p-4 bg-red-900/20 border border-red-500 rounded-lg mb-6">
-      <h3 className="text-red-400 font-bold mb-4">🔧 DEBUG AUTH CONSOLE + SESSION PERSISTENCE FIX</h3>
+      <h3 className="text-red-400 font-bold mb-4">🔧 ENHANCED DEBUG AUTH CONSOLE</h3>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2 mb-4">
         <Button 
@@ -224,7 +348,7 @@ const DebugAuth = () => {
           disabled={isLoading}
           className="text-blue-400 border-blue-400 hover:bg-blue-400/10"
         >
-          {isLoading ? '⏳' : '🔧'} Check Config
+          {isLoading ? '⏳' : '🔧'} Config
         </Button>
         
         <Button 
@@ -234,31 +358,31 @@ const DebugAuth = () => {
           disabled={isLoading}
           className="text-orange-400 border-orange-400 hover:bg-orange-400/10"
         >
-          {isLoading ? '⏳' : '🧪'} Test SignUp
+          {isLoading ? '⏳' : '🧪'} SignUp Test
         </Button>
         
         <Button 
-          onClick={testBypassRegistration} 
+          onClick={testEnhancedSessionDiagnostic} 
           variant="outline" 
           size="sm" 
           disabled={isLoading}
-          className="text-green-400 border-green-400 hover:bg-green-400/10"
+          className="text-purple-400 border-purple-400 hover:bg-purple-400/10"
         >
-          {isLoading ? '⏳' : '🚀'} Test Bypass Reg
+          {isLoading ? '⏳' : '🔍'} SESSION CHECK
         </Button>
 
         <Button 
-          onClick={testImprovedLogin} 
+          onClick={testEnhancedLogin} 
           variant="outline" 
           size="sm" 
           disabled={isLoading}
           className="text-cyan-400 border-cyan-400 hover:bg-cyan-400/10"
         >
-          {isLoading ? '⏳' : '🔐'} IMPROVED LOGIN
+          {isLoading ? '⏳' : '🔐'} ENHANCED LOGIN
         </Button>
 
         <Button 
-          onClick={testForceDirectAccess} 
+          onClick={testEnhancedForceAccess} 
           variant="outline" 
           size="sm" 
           disabled={isLoading}
@@ -292,18 +416,19 @@ const DebugAuth = () => {
       <div className="mt-4 text-center">
         <span className={`inline-block w-3 h-3 rounded-full mr-2 ${isLoading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></span>
         <span className="text-white/70 text-sm">
-          {isLoading ? 'Running session persistence checks...' : 'Ready - Session persistence fixed!'}
+          {isLoading ? 'Running enhanced session persistence checks...' : 'Ready - Enhanced session handling active!'}
         </span>
       </div>
       
       <div className="mt-4 p-3 bg-cyan-900/20 border border-cyan-500/30 rounded">
-        <h4 className="text-cyan-400 font-bold mb-2">🔧 SESSION PERSISTENCE FIX APPLICATO</h4>
+        <h4 className="text-cyan-400 font-bold mb-2">🔧 ENHANCED SESSION FIX APPLICATO</h4>
         <p className="text-cyan-300 text-sm">
-          ✅ TIMING: Aggiunto wait dopo setSession()<br/>
-          ✅ VERIFICA: Check sessione prima del redirect<br/>
-          ✅ FALLBACK: Magic link se session setup fallisce<br/>
-          ✅ LOGGING: Debug completo per diagnostica<br/>
-          ➡️ Clicca "FORCE ACCESS" per test migliorato!
+          ✅ PERSISTENCE: Enhanced session validation & recovery<br/>
+          ✅ TIMING: Extended verification delays (1500ms)<br/>
+          ✅ FALLBACK: Intelligent magic link backup<br/>
+          ✅ LOGGING: Comprehensive diagnostic data<br/>
+          ✅ VERIFICATION: Multi-point session checks<br/>
+          ➡️ Clicca "ENHANCED LOGIN" o "FORCE ACCESS" per test!
         </p>
       </div>
     </div>

@@ -20,19 +20,20 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const location = useLocation();
   
   useEffect(() => {
-    console.log("🛡️ Protected route check:", {
+    console.log("🛡️ ENHANCED PROTECTED ROUTE CHECK:", {
       path: location.pathname,
       isAuthenticated,
       isLoading,
       isEmailVerified,
       user: getCurrentUser()?.id,
-      userEmail: getCurrentUser()?.email
+      userEmail: getCurrentUser()?.email,
+      session: !!getCurrentUser()
     });
   }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser]);
   
-  // CRITICAL: Extended loading time to allow session persistence
+  // CRITICAL: Enhanced loading state with extended timeout
   if (isLoading) {
-    console.log("⏳ Authentication still loading, showing spinner...");
+    console.log("⏳ ENHANCED AUTHENTICATION LOADING...");
     return (
       <div className="flex justify-center items-center min-h-screen bg-black">
         <Spinner className="h-8 w-8 text-white" />
@@ -40,25 +41,30 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
   
-  // If user is not authenticated, redirect to login
+  // CRITICAL: Enhanced authentication check
   if (!isAuthenticated) {
-    console.log("❌ User not authenticated, redirecting to:", redirectTo);
+    console.log("❌ ENHANCED AUTH CHECK FAILED - User not authenticated, redirecting to:", redirectTo);
+    console.log("📊 ENHANCED AUTH STATE:", {
+      session: !!getCurrentUser(),
+      loading: isLoading,
+      authenticated: isAuthenticated
+    });
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
   
-  console.log("✅ User authenticated, proceeding to protected route");
+  console.log("✅ ENHANCED AUTH CHECK PASSED - User authenticated");
   
   // DEVELOPER EMAIL ALWAYS HAS ACCESS - NO VERIFICATION REQUIRED
   const currentUser = getCurrentUser();
   const isDeveloperEmail = currentUser?.email === 'wikus77@hotmail.it';
   
   if (requireEmailVerification && !isEmailVerified && !isDeveloperEmail) {
-    console.log("📧 Email not verified, redirecting to verification page");
+    console.log("📧 ENHANCED EMAIL VERIFICATION CHECK - Not verified, redirecting");
     return <Navigate to="/login?verification=pending" replace />;
   }
   
-  // User is authenticated and email is verified (or is developer), render the protected route
-  console.log("🎯 Rendering protected content for authenticated user");
+  // CRITICAL: Enhanced success logging
+  console.log("🎯 ENHANCED PROTECTED ROUTE SUCCESS - Rendering protected content for:", currentUser?.email);
   return children ? <>{children}</> : <Outlet />;
 };
 

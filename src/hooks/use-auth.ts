@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +12,7 @@ export const useAuth = () => {
     const getSession = async () => {
       setIsLoading(true);
       try {
+        console.log('🔍 INITIAL SESSION CHECK: Starting...');
         const { data: { session } } = await supabase.auth.getSession();
         console.log('🔍 INITIAL SESSION CHECK:', session?.user?.email || 'No session');
 
@@ -20,13 +20,15 @@ export const useAuth = () => {
           setSession(session);
           setUser(session.user);
           setIsEmailVerified(session.user?.email_confirmed_at ? true : false);
+          console.log('✅ INITIAL SESSION RESTORED:', session.user.email);
         } else {
           setSession(null);
           setUser(null);
           setIsEmailVerified(false);
+          console.log('❌ NO INITIAL SESSION FOUND');
         }
       } catch (error) {
-        console.error("Error fetching session:", error);
+        console.error("❌ Error fetching session:", error);
       } finally {
         setIsLoading(false);
       }
@@ -34,52 +36,89 @@ export const useAuth = () => {
 
     getSession();
 
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    // CRITICAL: Setup auth state listener with enhanced session persistence
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🔄 Auth state change:', event, session?.user?.email || 'No session');
       
-      // Don't update loading state immediately - wait for session to be processed
       if (session) {
+        // CRITICAL: Enhanced session validation and persistence
+        console.log('✅ SESSION RECEIVED:', {
+          email: session.user.email,
+          accessToken: session.access_token ? 'Present' : 'Missing',
+          refreshToken: session.refresh_token ? 'Present' : 'Missing',
+          expiresAt: session.expires_at,
+          expiresIn: session.expires_in
+        });
+
         setSession(session);
         setUser(session.user);
         setIsEmailVerified(session.user?.email_confirmed_at ? true : false);
         
-        // Log session persistence check
+        // CRITICAL: Verify session persistence after state update
         setTimeout(async () => {
           const { data: { session: persistedSession } } = await supabase.auth.getSession();
-          console.log('✅ SESSION PERSISTED:', !!persistedSession, persistedSession?.user?.email);
-          console.log('📦 LOCAL STORAGE TOKEN:', localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token') ? 'Present' : 'Missing');
+          console.log('🔍 SESSION PERSISTENCE CHECK:', {
+            persisted: !!persistedSession,
+            email: persistedSession?.user?.email || 'None',
+            localStorage: localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token') ? 'Present' : 'Missing'
+          });
+          
+          // If session not persisted, force refresh
+          if (!persistedSession && session) {
+            console.log('⚠️ SESSION NOT PERSISTED - FORCING REFRESH');
+            try {
+              await supabase.auth.setSession({
+                access_token: session.access_token,
+                refresh_token: session.refresh_token || ''
+              });
+              console.log('✅ SESSION REFRESH COMPLETED');
+            } catch (error) {
+              console.error('❌ SESSION REFRESH FAILED:', error);
+            }
+          }
         }, 100);
       } else {
+        console.log('❌ SESSION CLEARED');
         setSession(null);
         setUser(null);
         setIsEmailVerified(false);
       }
       setIsLoading(false);
     });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: any; session?: Session }> => {
-    console.log('🔐 Starting login for:', email);
+    console.log('🔐 ENHANCED LOGIN STARTING for:', email);
     
     try {
-      // PRIMO TENTATIVO: Login standard
-      console.log('🔄 Trying standard login...');
+      // STEP 1: Try standard login first
+      console.log('🔄 Attempting standard login...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (!error && data.session) {
-        console.log('✅ Standard login successful');
-        setSession(data.session);
-        setUser(data.user);
-        setIsEmailVerified(data.user?.email_confirmed_at ? true : false);
+        console.log('✅ STANDARD LOGIN SUCCESS');
+        console.log('📊 LOGIN SESSION DATA:', {
+          email: data.user.email,
+          accessToken: data.session.access_token ? 'Present' : 'Missing',
+          refreshToken: data.session.refresh_token ? 'Present' : 'Missing'
+        });
+        
+        // CRITICAL: Force immediate session persistence check
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const { data: { session: verifySession } } = await supabase.auth.getSession();
+        console.log('🔍 POST-LOGIN SESSION VERIFICATION:', verifySession?.user?.email || 'Missing');
+        
         return { success: true, session: data.session };
       }
 
-      // Se il login standard fallisce per CAPTCHA o altri errori, prova il bypass
+      // STEP 2: If standard login fails, try bypass
       if (error) {
-        console.log('🔄 Standard login failed, trying bypass...', error.message);
+        console.log('🔄 Standard login failed, trying ENHANCED bypass...', error.message);
         
         const { data: bypassResult, error: bypassError } = await supabase.functions.invoke('register-bypass', {
           body: {
@@ -90,46 +129,52 @@ export const useAuth = () => {
         });
 
         if (bypassError) {
-          console.error('❌ Bypass login failed:', bypassError);
+          console.error('❌ ENHANCED BYPASS FAILED:', bypassError);
           return { success: false, error: bypassError };
         }
 
         if (bypassResult?.success) {
-          console.log('✅ Bypass login successful');
-          console.log('📊 Bypass result:', bypassResult);
+          console.log('✅ BYPASS SUCCESS - ENHANCED SESSION HANDLING');
+          console.log('📊 BYPASS RESULT:', bypassResult);
           
-          // CRITICAL FIX: If we have session data, set it properly with await
+          // CRITICAL: Enhanced session setup with validation
           if (bypassResult.session) {
-            console.log('🔄 Setting session from bypass data...');
+            console.log('🔄 SETTING UP ENHANCED SESSION...');
             try {
+              // STEP 2A: Set session with comprehensive error handling
               const { error: setSessionError } = await supabase.auth.setSession({
                 access_token: bypassResult.session.access_token,
-                refresh_token: bypassResult.session.refresh_token
+                refresh_token: bypassResult.session.refresh_token || ''
               });
               
               if (setSessionError) {
-                console.error('❌ Error setting session:', setSessionError);
-                // Fallback: use magic link redirect
+                console.error('❌ ENHANCED SESSION SETUP FAILED:', setSessionError);
+                // Fallback to magic link
                 if (bypassResult.magicLink) {
-                  console.log('🔗 Fallback to magic link redirect');
+                  console.log('🔗 FALLBACK TO MAGIC LINK');
                   window.location.href = bypassResult.redirect_url || `${window.location.origin}/home`;
                   return { success: true, session: null };
                 }
               } else {
-                console.log('✅ Session set successfully - waiting for persistence...');
+                console.log('✅ ENHANCED SESSION SETUP SUCCESS - VERIFYING...');
                 
-                // CRITICAL: Wait for session to be persisted before returning
-                await new Promise(resolve => setTimeout(resolve, 500));
+                // CRITICAL: Extended verification with multiple checks
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
-                // Verify session was persisted
                 const { data: { session: verifySession } } = await supabase.auth.getSession();
-                console.log('🔍 VERIFICATION SESSION:', verifySession?.user?.email || 'Missing');
+                const tokenCheck = localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
+                
+                console.log('🔍 ENHANCED SESSION VERIFICATION:', {
+                  session: verifySession?.user?.email || 'Missing',
+                  localStorage: tokenCheck ? 'Present' : 'Missing',
+                  accessToken: verifySession?.access_token ? 'Present' : 'Missing'
+                });
                 
                 if (verifySession) {
-                  console.log('✅ Session verified and persisted');
+                  console.log('✅ ENHANCED SESSION VERIFIED AND PERSISTED');
                   return { success: true, session: verifySession };
                 } else {
-                  console.log('⚠️ Session not persisted, using magic link fallback');
+                  console.log('⚠️ ENHANCED SESSION NOT PERSISTED - MAGIC LINK FALLBACK');
                   if (bypassResult.magicLink) {
                     window.location.href = bypassResult.redirect_url || `${window.location.origin}/home`;
                   }
@@ -137,42 +182,35 @@ export const useAuth = () => {
                 }
               }
             } catch (sessionError) {
-              console.error('💥 Session setting exception:', sessionError);
-              // Ultimate fallback: redirect to magic link
+              console.error('💥 ENHANCED SESSION EXCEPTION:', sessionError);
               if (bypassResult.magicLink) {
-                const redirectUrl = bypassResult.redirect_url || `${window.location.origin}/home`;
-                window.location.href = redirectUrl;
+                window.location.href = bypassResult.redirect_url || `${window.location.origin}/home`;
               }
               return { success: true, session: null };
             }
           }
           
-          // MODALITÀ MAGIC LINK: Se abbiamo magic link, reindirizza immediatamente
+          // Magic link path
           if (bypassResult.magicLink) {
-            console.log('🔗 Redirecting to magic link:', bypassResult.redirect_url || '/home');
+            console.log('🔗 ENHANCED MAGIC LINK REDIRECT');
             const redirectUrl = bypassResult.redirect_url || `${window.location.origin}/home`;
             window.location.href = redirectUrl;
-            return { 
-              success: true, 
-              session: null,
-              error: null 
-            };
+            return { success: true, session: null };
           }
         }
       }
 
-      // Se tutto fallisce, restituisci l'errore originale
-      console.error('❌ All login methods failed:', error);
+      console.error('❌ ALL ENHANCED LOGIN METHODS FAILED:', error);
       return { success: false, error };
 
     } catch (error: any) {
-      console.error('💥 Login exception:', error);
+      console.error('💥 ENHANCED LOGIN EXCEPTION:', error);
       return { success: false, error };
     }
   };
 
   const forceDirectAccess = async (email: string, password: string): Promise<{ success: boolean; redirectUrl?: string; error?: any }> => {
-    console.log('🚨 FORCE DIRECT ACCESS for:', email);
+    console.log('🚨 ENHANCED FORCE DIRECT ACCESS for:', email);
     
     try {
       const { data, error } = await supabase.functions.invoke('register-bypass', {
@@ -184,57 +222,61 @@ export const useAuth = () => {
       });
 
       if (error) {
-        console.error('❌ Force access failed:', error);
+        console.error('❌ ENHANCED FORCE ACCESS FAILED:', error);
         return { success: false, error };
       }
 
       if (data?.success) {
-        console.log('🔗 FORCE ACCESS SUCCESS');
+        console.log('🔗 ENHANCED FORCE ACCESS SUCCESS');
+        console.log('📊 FORCE ACCESS DATA:', data);
         
-        // CRITICAL FIX: Try session first, then magic link
+        // CRITICAL: Enhanced session setup with comprehensive validation
         if (data.session) {
-          console.log('🔄 Attempting direct session setup...');
+          console.log('🔄 ATTEMPTING ENHANCED DIRECT SESSION SETUP...');
           try {
             const { error: setSessionError } = await supabase.auth.setSession({
               access_token: data.session.access_token,
-              refresh_token: data.session.refresh_token
+              refresh_token: data.session.refresh_token || ''
             });
             
             if (!setSessionError) {
-              console.log('✅ Direct session setup successful - waiting for persistence...');
+              console.log('✅ ENHANCED DIRECT SESSION SETUP SUCCESS - EXTENDED VERIFICATION...');
               
-              // CRITICAL: Wait for session persistence
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              // CRITICAL: Extended verification with multiple persistence checks
+              await new Promise(resolve => setTimeout(resolve, 1500));
               
-              // Verify session is persisted
               const { data: { session: verifySession } } = await supabase.auth.getSession();
-              console.log('🔍 SESSION VERIFICATION:', verifySession?.user?.email || 'Missing');
-              console.log('📦 LOCAL STORAGE CHECK:', localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token') ? 'Present' : 'Missing');
+              const tokenCheck = localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
+              
+              console.log('🔍 ENHANCED FORCE ACCESS VERIFICATION:', {
+                sessionEmail: verifySession?.user?.email || 'Missing',
+                localStorage: tokenCheck ? 'Present' : 'Missing',
+                accessToken: verifySession?.access_token ? 'Present' : 'Missing',
+                refreshToken: verifySession?.refresh_token ? 'Present' : 'Missing'
+              });
               
               if (verifySession) {
-                // Success - redirect to /home without using window.location
-                console.log('✅ Session verified - programmatic redirect to /home');
+                console.log('✅ ENHANCED FORCE ACCESS SESSION VERIFIED - PROGRAMMATIC REDIRECT');
                 return { 
                   success: true, 
                   redirectUrl: '/home'
                 };
+              } else {
+                console.log('⚠️ ENHANCED FORCE ACCESS SESSION NOT PERSISTED');
               }
             } else {
-              console.log('⚠️ Session setup failed, using magic link fallback');
+              console.log('⚠️ ENHANCED FORCE ACCESS SESSION SETUP FAILED');
             }
           } catch (sessionError) {
-            console.log('⚠️ Session setup exception, using magic link fallback');
+            console.log('⚠️ ENHANCED FORCE ACCESS SESSION EXCEPTION');
           }
         }
         
-        // Magic link fallback
+        // Enhanced magic link fallback
         if (data.magicLink) {
-          console.log('🔗 Using magic link for immediate access');
+          console.log('🔗 ENHANCED MAGIC LINK FOR IMMEDIATE ACCESS');
           const redirectUrl = data.redirect_url || `${window.location.origin}/home`;
-          
-          // Use window.location for magic link as it's external
           window.location.href = redirectUrl;
-          
           return { 
             success: true, 
             redirectUrl: redirectUrl
@@ -242,10 +284,10 @@ export const useAuth = () => {
         }
       }
 
-      return { success: false, error: 'No access method available' };
+      return { success: false, error: 'No enhanced access method available' };
       
     } catch (error: any) {
-      console.error('💥 Force access exception:', error);
+      console.error('💥 ENHANCED FORCE ACCESS EXCEPTION:', error);
       return { success: false, error };
     }
   };
