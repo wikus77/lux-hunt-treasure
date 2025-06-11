@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import AuthContext from './AuthContext';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/useAuth';
 import { AuthContextType } from './types';
 import { toast } from 'sonner';
 
@@ -81,6 +81,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     return () => clearTimeout(timer);
   }, []);
+
+  // ✅ FORZARE SINCRONIZZAZIONE SESSIONE dopo login
+  useEffect(() => {
+    const forceSyncSession = async () => {
+      if (auth.user && auth.session) {
+        console.log('🔁 FORZA SINCRONIZZAZIONE SESSIONE:', auth.user.id);
+        await supabase.auth.setSession(auth.session);
+        console.log('✅ SESSIONE SINCRONIZZATA:', auth.user.id);
+      }
+    };
+
+    forceSyncSession();
+  }, [auth.user, auth.session]);
 
   // Funzione per creare automaticamente il profilo admin
   const createAdminProfile = async (userId: string, userEmail: string) => {

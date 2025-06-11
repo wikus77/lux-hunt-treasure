@@ -5,7 +5,7 @@ import { Circle as CircleIcon, Loader } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useBuzzMapLogic } from "@/hooks/useBuzzMapLogic";
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -25,7 +25,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const [isRippling, setIsRippling] = useState(false);
   const [calculatedRadius, setCalculatedRadius] = useState<number | null>(null);
   const { createMapBuzzNotification } = useNotificationManager();
-  const { user, getValidUser } = useAuth();
+  const { user, getValidUser, isAuthenticated } = useAuthContext();
   const { 
     isGenerating, 
     generateBuzzMapArea,
@@ -40,7 +40,23 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   // Calculate radius from database
   React.useEffect(() => {
     const calculateCorrectRadius = async () => {
-      if (!user?.id) return;
+      // ✅ Try to get valid user first
+      let validUserId = user?.id;
+      
+      if (!validUserId && getValidUser) {
+        try {
+          const validUser = await getValidUser();
+          validUserId = validUser?.id;
+          console.log('🔍 BUZZ BUTTON: Got valid user ID via getValidUser:', validUserId);
+        } catch (error) {
+          console.log('⚠️ BUZZ BUTTON: getValidUser failed:', error);
+        }
+      }
+
+      if (!validUserId) {
+        console.log('❌ BUZZ BUTTON: No valid user ID available for radius calculation');
+        return;
+      }
 
       try {
         console.log("🔥 BUZZ MAPPA radius: Calculating from database...");
@@ -48,7 +64,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         const { data: counterData, error } = await supabase
           .from('user_buzz_map_counter')
           .select('buzz_map_count')
-          .eq('user_id', user.id)
+          .eq('user_id', validUserId)
           .eq('date', new Date().toISOString().split('T')[0])
           .maybeSingle();
 
@@ -80,21 +96,33 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     };
 
     calculateCorrectRadius();
-  }, [user?.id, dailyBuzzMapCounter]);
+  }, [user?.id, dailyBuzzMapCounter, getValidUser]);
   
   const handleBuzzMapClick = async () => {
     console.log('🔥 BUZZ MAPPA: Button clicked');
-    console.log('User from useAuth:', user);
+    console.log('User from context:', user);
     console.log('User ID:', user?.id);
     console.log('User email:', user?.email);
+    console.log('Is authenticated:', isAuthenticated);
     
-    // Validate session before proceeding
-    console.log('🔍 BUZZ MAPPA: Checking session validity...');
-    const validUser = await getValidUser();
+    // Enhanced validation using getValidUser
+    let validUser = user;
     
-    if (!validUser) {
-      console.error('❌ BUZZ MAPPA: No valid user available after validation');
-      toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
+    if (!validUser && getValidUser) {
+      try {
+        console.log('🔍 BUZZ MAPPA: Attempting getValidUser...');
+        validUser = await getValidUser();
+        console.log('✅ BUZZ MAPPA: getValidUser result:', validUser?.id);
+      } catch (error) {
+        console.error('❌ BUZZ MAPPA: getValidUser failed:', error);
+      }
+    }
+    
+    if (!validUser?.id) {
+      console.error('❌ BUZZ MAPPA: No valid user available after all validation attempts');
+      toast.error('ERRORE AUTENTICAZIONE', {
+        description: 'Devi essere loggato per utilizzare BUZZ MAPPA. Effettua nuovamente il login.'
+      });
       return;
     }
 
@@ -134,28 +162,38 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     
     console.log('🔥 BUZZ MAPPA: Starting area generation');
     
-    // Generate area with complete flow
-    const newArea = await generateBuzzMapArea(centerLat, centerLng);
-    
-    console.log('🔥 BUZZ MAPPA: Generation result:', newArea);
-    
-    if (newArea) {
-      // Track clue unlocked event for map buzz
-      if (typeof window !== 'undefined' && window.plausible) {
-        window.plausible('clue_unlocked');
+    try {
+      // Generate area with complete flow
+      const newArea = await generateBuzzMapArea(centerLat, centerLng);
+      
+      console.log('🔥 BUZZ MAPPA: Generation result:', newArea);
+      
+      if (newArea) {
+        // Track clue unlocked event for map buzz
+        if (typeof window !== 'undefined' && window.plausible) {
+          window.plausible('clue_unlocked');
+        }
+        
+        console.log('✅ BUZZ MAPPA SUCCESS:', newArea);
+        
+        // Force reload areas to sync with database
+        await reloadAreas();
+        
+        // Execute optional callback without affecting map view
+        if (handleBuzz) {
+          handleBuzz();
+        }
+      } else {
+        console.error('❌ BUZZ MAPPA: Area generation failed');
+        toast.error('ERRORE GENERAZIONE AREA', {
+          description: 'Impossibile generare l\'area BUZZ. Verifica la connessione e riprova.'
+        });
       }
-      
-      console.log('✅ BUZZ MAPPA SUCCESS:', newArea);
-      
-      // Force reload areas to sync with database
-      await reloadAreas();
-      
-      // Execute optional callback without affecting map view
-      if (handleBuzz) {
-        handleBuzz();
-      }
-    } else {
-      console.error('❌ BUZZ MAPPA: Area generation failed');
+    } catch (error: any) {
+      console.error('❌ BUZZ MAPPA: Exception during generation:', error);
+      toast.error('ERRORE BUZZ MAPPA', {
+        description: error?.message || 'Errore sconosciuto durante la generazione'
+      });
     }
   };
 
@@ -178,8 +216,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     return "Calcolo...";
   };
 
-  // Disable button if no valid user
-  const isDisabled = isGenerating || !user?.id;
+  // Disable button only if generating
+  const isDisabled = isGenerating;
   
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">

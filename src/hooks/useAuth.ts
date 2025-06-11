@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -20,6 +21,19 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   // Enhanced user validation with session check
   const getValidUser = useCallback(async () => {
     console.log('🔍 LIVELLO 1 – USER VALIDATION: Checking current user validity');
+    
+    // ✅ CONTROLLO PRIORITARIO: Developer access
+    const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
+    const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
+    
+    if (hasDeveloperAccess || isDeveloperEmail) {
+      console.log("✅ LIVELLO 1 – GET VALID USER: Developer access - returning developer user");
+      return {
+        id: DEVELOPER_UUID,
+        email: 'wikus77@hotmail.it',
+        email_confirmed_at: new Date().toISOString()
+      } as User;
+    }
     
     // First check current user state
     if (user) {
