@@ -22,7 +22,7 @@ const DebugAuth = () => {
     
     try {
       const result = await supabase.auth.signUp({
-        email: 'wikus77@hotmail.it',
+        email: 'test-captcha-check@example.com',
         password: 'TestPassword123!',
         options: {
           emailRedirectTo: window.location.origin + '/auth',
@@ -50,6 +50,40 @@ const DebugAuth = () => {
     } catch (error: any) {
       addLog(`💥 EXCEPTION: ${error.message || error}`);
       addLog(`📊 FULL ERROR: ${JSON.stringify(error, null, 2)}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testBypassRegistration = async () => {
+    setIsLoading(true);
+    addLog('🚀 TESTING BYPASS REGISTRATION');
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('register-bypass', {
+        body: {
+          email: 'wikus77@hotmail.it',
+          password: 'TestPassword123!',
+          fullName: 'Test User',
+          missionPreference: 'uomo'
+        }
+      });
+      
+      addLog('📤 BYPASS RESULT:');
+      addLog(`✅ Data: ${JSON.stringify(data, null, 2)}`);
+      addLog(`❌ Error: ${JSON.stringify(error, null, 2)}`);
+      
+      if (error) {
+        addLog(`🚨 BYPASS FAILED: ${error.message}`);
+      } else if (data?.success) {
+        addLog('🎉 BYPASS REGISTRATION SUCCESS');
+        if (data.requireManualLogin) {
+          addLog('ℹ️ Manual login required after bypass');
+        }
+      }
+      
+    } catch (error: any) {
+      addLog(`💥 BYPASS EXCEPTION: ${error.message || error}`);
     } finally {
       setIsLoading(false);
     }
@@ -91,41 +125,12 @@ const DebugAuth = () => {
     }
   };
 
-  const testCaptchaStatus = async () => {
-    setIsLoading(true);
-    addLog('🛡️ TESTING CAPTCHA STATUS');
-    
-    try {
-      // Try to sign up with a test email to see if CAPTCHA is required
-      const testResult = await supabase.auth.signUp({
-        email: 'test-captcha-check@example.com',
-        password: 'TestPassword123!'
-      });
-      
-      if (testResult.error) {
-        if (testResult.error.message.includes('captcha')) {
-          addLog('🔴 CAPTCHA IS ENABLED ON SUPABASE SERVER');
-          addLog('🛠️ SOLUTION: Disable CAPTCHA in Supabase Dashboard > Auth > Settings');
-        } else {
-          addLog(`⚠️ OTHER AUTH ERROR: ${testResult.error.message}`);
-        }
-      } else {
-        addLog('🟢 CAPTCHA NOT BLOCKING - SIGNUP WORKS');
-      }
-      
-    } catch (error: any) {
-      addLog(`💥 CAPTCHA TEST EXCEPTION: ${error.message || error}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="p-4 bg-red-900/20 border border-red-500 rounded-lg mb-6">
-      <h3 className="text-red-400 font-bold mb-4">🔧 DEBUG AUTH CONSOLE</h3>
+      <h3 className="text-red-400 font-bold mb-4">🔧 DEBUG AUTH CONSOLE + BYPASS</h3>
       
       {/* Action Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
         <Button 
           onClick={checkSupabaseConfig} 
           variant="outline" 
@@ -147,25 +152,22 @@ const DebugAuth = () => {
         </Button>
         
         <Button 
-          onClick={testCaptchaStatus} 
+          onClick={testBypassRegistration} 
           variant="outline" 
           size="sm" 
           disabled={isLoading}
-          className="text-yellow-400 border-yellow-400 hover:bg-yellow-400/10"
+          className="text-green-400 border-green-400 hover:bg-green-400/10"
         >
-          {isLoading ? '⏳' : '🛡️'} Test CAPTCHA
+          {isLoading ? '⏳' : '🚀'} Test Bypass
         </Button>
-      </div>
 
-      {/* Clear Logs Button */}
-      <div className="mb-4">
         <Button 
           onClick={clearLogs} 
           variant="outline" 
           size="sm"
           className="text-gray-400 border-gray-400 hover:bg-gray-400/10"
         >
-          🗑️ Clear Logs
+          🗑️ Clear
         </Button>
       </div>
 
