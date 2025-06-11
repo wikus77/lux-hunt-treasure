@@ -44,10 +44,25 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
         console.log('✅ Login successful - redirecting to /home');
         toast.success('Login effettuato con successo');
         
-        // Small delay to ensure auth state is updated
-        setTimeout(() => {
-          navigate('/home', { replace: true });
-        }, 100);
+        // CRITICAL: Enhanced redirect with session verification
+        setTimeout(async () => {
+          // Double-check session is persisted before redirecting
+          const { data: { session } } = await supabase.auth.getSession();
+          const tokenCheck = localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
+          
+          console.log('🔍 PRE-REDIRECT VERIFICATION:', {
+            session: session?.user?.email || 'Missing',
+            localStorage: tokenCheck ? 'Present' : 'Missing'
+          });
+          
+          if (session || tokenCheck) {
+            console.log('✅ SESSION VERIFIED - SAFE TO REDIRECT');
+            navigate('/home', { replace: true });
+          } else {
+            console.log('⚠️ SESSION NOT VERIFIED - FORCING RELOAD');
+            window.location.href = '/home';
+          }
+        }, 500);
       } else {
         console.error('❌ Login failed:', result?.error);
         toast.error('Errore di login', {
