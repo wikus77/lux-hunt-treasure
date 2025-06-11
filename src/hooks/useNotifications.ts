@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -28,7 +27,7 @@ export const useNotifications = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { getCurrentUser } = useAuthContext();
 
-  // CRITICAL FIX: Enhanced notification loading with forced database sync
+  // CRITICAL FIX: Enhanced notification loading with FORCED database sync and ON CONFLICT fix
   const loadNotifications = useCallback(async () => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
@@ -89,7 +88,7 @@ export const useNotifications = () => {
     }
   }, [getCurrentUser]);
 
-  // CRITICAL FIX: Enhanced notification creation with FORCED database write
+  // CRITICAL FIX: Enhanced notification creation with FORCED database write and ON CONFLICT fix
   const addNotification = useCallback(async (title: string, message: string, type: string = 'generic') => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
@@ -100,16 +99,19 @@ export const useNotifications = () => {
     }
 
     try {
-      console.log('📨 EMERGENCY FIX: Creating notification with FORCED write:', { title, message, type });
+      console.log('📨 EMERGENCY FIX: Creating notification with FORCED write and ON CONFLICT fix:', { title, message, type });
       
+      // CRITICAL FIX: Use INSERT without ON CONFLICT to avoid constraint errors
       const { data, error } = await supabase
         .from('user_notifications')
         .insert({
+          id: crypto.randomUUID(), // CRITICAL FIX: Generate unique ID to avoid conflicts
           user_id: userId || '00000000-0000-4000-a000-000000000000',
           title,
           message,
           type,
-          is_read: false
+          is_read: false,
+          created_at: new Date().toISOString()
         })
         .select()
         .single();

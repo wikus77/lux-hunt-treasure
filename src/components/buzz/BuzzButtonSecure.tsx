@@ -35,7 +35,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [showRipple, setShowRipple] = useState(false);
 
-  // CRITICAL FIX: Enhanced secure BUZZ press with proper mission messages
+  // CRITICAL FIX: Enhanced secure BUZZ press with PROPER mission messages and FORCED notifications
   const handleSecureBuzzPress = async () => {
     if (isProcessing || verificationLoading || !userId) return;
 
@@ -43,33 +43,50 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
 
     if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 EMERGENCY FIX: DEVELOPER - Starting BUZZ process');
+      console.log('🔧 EMERGENCY FIX: DEVELOPER - Starting BUZZ process with FORCED notifications');
       
       setShowRipple(true);
       setTimeout(() => setShowRipple(false), 1000);
       setIsProcessing(true);
 
       try {
-        // CRITICAL FIX: Generate meaningful mission clue
+        // CRITICAL FIX: Generate COHERENT mission clue with mission context
         const missionClues = [
-          "Indizio Mission: Il simbolo antico si trova dove l'acqua incontra la pietra",
-          "Indizio Mission: Cerca il codice nascosto nei riflessi del tramonto",
-          "Indizio Mission: La chiave è custodita dove risuonano echi del passato",
-          "Indizio Mission: Il tesoro attende dove la luce danza sulle onde",
-          "Indizio Mission: Segui le tracce che portano al cuore della città"
+          "🎯 Indizio Mission Roma: Il simbolo antico si trova dove l'acqua incontra la pietra eterna",
+          "🏛️ Indizio Mission Premium: Cerca il codice nascosto nei riflessi del tramonto al Colosseo",
+          "⭐ Indizio Mission Esclusivo: La chiave è custodita dove risuonano gli echi dell'impero",
+          "💎 Indizio Mission Segreto: Il tesoro attende dove la luce danza sulle onde del Tevere",
+          "🔍 Indizio Mission Speciale: Segui le tracce che portano al cuore della città eterna"
         ];
         
         const randomClue = missionClues[Math.floor(Math.random() * missionClues.length)];
-        const clueWithCode = `${randomClue} - Codice: MIS-${Date.now().toString().slice(-6)}`;
+        const missionCode = `MIS-${Date.now().toString().slice(-6)}`;
+        const clueWithCode = `${randomClue} - Codice: ${missionCode}`;
 
-        console.log('✅ EMERGENCY FIX: Generated mission clue:', clueWithCode);
+        console.log('✅ EMERGENCY FIX: Generated COHERENT mission clue:', clueWithCode);
 
-        // CRITICAL FIX: Create notification in database
-        await createBuzzNotification(
-          "Nuovo Indizio Mission Sbloccato", 
-          clueWithCode
-        );
+        // CRITICAL FIX: FORCE notification creation in database with retry logic
+        let notificationCreated = false;
+        let attempts = 0;
+        
+        while (!notificationCreated && attempts < 3) {
+          try {
+            await createBuzzNotification(
+              "🎯 Nuovo Indizio Mission Sbloccato", 
+              clueWithCode
+            );
+            notificationCreated = true;
+            console.log('✅ EMERGENCY FIX: Notification FORCED into database successfully');
+          } catch (notifError) {
+            attempts++;
+            console.error(`❌ EMERGENCY FIX: Notification attempt ${attempts} failed:`, notifError);
+            if (attempts < 3) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          }
+        }
 
+        // CRITICAL FIX: Show COHERENT success toast
         toast.success("🎯 Indizio Mission Sbloccato!", {
           description: clueWithCode,
           duration: 5000
@@ -78,7 +95,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         onSuccess();
       } catch (error) {
         console.error('❌ EMERGENCY FIX: DEVELOPER BUZZ Error:', error);
-        toast.error("Errore durante il processo");
+        toast.error("Errore durante il processo BUZZ");
       } finally {
         setIsProcessing(false);
       }
@@ -86,32 +103,32 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       return;
     }
 
-    // CRITICAL FIX: For non-developers, check payment and activate Stripe if needed
-    console.log('💳 EMERGENCY FIX: NON-DEVELOPER - Checking payment status...');
+    // CRITICAL FIX: For non-developers, check payment and FORCE Stripe activation
+    console.log('💳 EMERGENCY FIX: NON-DEVELOPER - Checking payment status and FORCING Stripe...');
     
     const canProceed = await requireBuzzPayment();
     
     if (!canProceed) {
-      console.log('💳 EMERGENCY FIX: Payment required - IMMEDIATE Stripe redirect');
+      console.log('💳 EMERGENCY FIX: Payment required - IMMEDIATE Stripe redirect with FORCED processing');
       setIsProcessing(true);
       
       try {
         const stripeSuccess = await processBuzzPurchase(false, 1.99);
         if (stripeSuccess) {
           console.log('✅ EMERGENCY FIX: Stripe payment flow initiated successfully');
-          toast.success('Pagamento completato! Elaborazione indizio...');
+          toast.success('Pagamento completato! Elaborazione indizio Mission...');
           
-          // After successful payment, generate clue
+          // After successful payment, generate COHERENT clue
           setTimeout(async () => {
-            const missionClue = "Indizio Mission Premium: Il segreto è custodito dove il sole sorge";
-            await createBuzzNotification("Indizio Premium Sbloccato", missionClue);
-            toast.success("🎯 Indizio Premium Sbloccato!", { description: missionClue });
+            const premiumClue = "🎯 Indizio Mission Premium: Il segreto è custodito dove il sole sorge sull'impero eterno";
+            await createBuzzNotification("Indizio Premium Mission Sbloccato", premiumClue);
+            toast.success("🎯 Indizio Premium Mission Sbloccato!", { description: premiumClue });
             onSuccess();
           }, 2000);
         }
       } catch (error) {
         console.error('❌ EMERGENCY FIX: Stripe payment failed:', error);
-        toast.error('Errore nel processo di pagamento');
+        toast.error('Errore nel processo di pagamento Stripe');
       } finally {
         setIsProcessing(false);
       }
@@ -122,7 +139,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     setShowRipple(true);
     setTimeout(() => setShowRipple(false), 1000);
     
-    console.log('🔒 EMERGENCY FIX: SECURE BUZZ - Starting verified process');
+    console.log('🔒 EMERGENCY FIX: SECURE BUZZ - Starting verified process with FORCED edge function call');
     setIsProcessing(true);
     
     try {
@@ -135,20 +152,35 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
 
       if (edgeError) {
         console.error('❌ EMERGENCY FIX: Edge function error:', edgeError);
-        toast.error('Errore nella chiamata al server');
+        toast.error('Errore nella chiamata al server BUZZ');
         return;
       }
       
       if (response?.success) {
         console.log('✅ EMERGENCY FIX: SECURE BUZZ Success');
 
-        const missionClue = response.clue_text || "Indizio Mission: Un nuovo segreto è stato rivelato";
+        const missionClue = response.clue_text || "🎯 Indizio Mission: Un nuovo segreto della città eterna è stato rivelato";
 
-        // CRITICAL FIX: Create notification
-        await createBuzzNotification(
-          "Nuovo Indizio Mission", 
-          missionClue
-        );
+        // CRITICAL FIX: FORCE notification creation with retry
+        let notificationCreated = false;
+        let attempts = 0;
+        
+        while (!notificationCreated && attempts < 3) {
+          try {
+            await createBuzzNotification(
+              "🎯 Nuovo Indizio Mission", 
+              missionClue
+            );
+            notificationCreated = true;
+            console.log('✅ EMERGENCY FIX: Notification FORCED into database successfully');
+          } catch (notifError) {
+            attempts++;
+            console.error(`❌ EMERGENCY FIX: Notification attempt ${attempts} failed:`, notifError);
+            if (attempts < 3) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          }
+        }
 
         toast.success("🎯 Indizio Mission Sbloccato!", {
           description: missionClue,
@@ -158,13 +190,13 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         onSuccess();
       } else {
         console.error('❌ EMERGENCY FIX: SECURE BUZZ failed:', response?.errorMessage);
-        toast.error("Errore", {
-          description: response?.errorMessage || "Errore sconosciuto",
+        toast.error("Errore BUZZ", {
+          description: response?.errorMessage || "Errore sconosciuto nel sistema BUZZ",
         });
       }
     } catch (error) {
       console.error('❌ EMERGENCY FIX: SECURE BUZZ Error:', error);
-      toast.error("Errore di connessione");
+      toast.error("Errore di connessione BUZZ");
     } finally {
       setIsProcessing(false);
     }

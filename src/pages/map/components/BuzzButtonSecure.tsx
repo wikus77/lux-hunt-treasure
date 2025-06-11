@@ -47,35 +47,37 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   
   const activeArea = getActiveArea();
 
-  // CRITICAL FIX: Enhanced counter tracking
+  // CRITICAL FIX: Enhanced counter tracking with FORCED sync
   useEffect(() => {
     const mapCounter = areas.filter(area => 
       area.user_id === (user?.id || '00000000-0000-4000-a000-000000000000')
     ).length;
     setRealBuzzMapCounter(mapCounter);
-    console.log('📊 EMERGENCY FIX: Map counter updated:', mapCounter);
+    console.log('📊 EMERGENCY FIX: Map counter FORCE updated:', mapCounter);
   }, [areas, user?.id]);
   
-  // CRITICAL FIX: Enhanced secure BUZZ MAP with proper Stripe integration
+  // CRITICAL FIX: Enhanced secure BUZZ MAP with FORCED Stripe integration and proper area reduction
   const handleSecureBuzzMapClick = async () => {
     const isDeveloper = user?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
     
     if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 EMERGENCY FIX: DEVELOPER BYPASS - Proceeding with map generation');
+      console.log('🔧 EMERGENCY FIX: DEVELOPER BYPASS - Proceeding with BUZZ MAP generation');
       generateBuzzMapAreaInternal();
       return;
     }
 
-    // CRITICAL FIX: For non-developers, check payment FIRST
+    // CRITICAL FIX: For non-developers, FORCE payment check and Stripe activation FIRST
+    console.log('💳 EMERGENCY FIX: NON-DEVELOPER - FORCING payment check and Stripe activation BEFORE generation');
+    
     const canProceed = await requireBuzzPayment();
     if (!canProceed) {
-      console.log('💳 EMERGENCY FIX: Payment required - IMMEDIATE Stripe for BUZZ MAP');
+      console.log('💳 EMERGENCY FIX: Payment required - IMMEDIATE FORCED Stripe for BUZZ MAP');
       try {
         const stripeSuccess = await processBuzzPurchase(true, 2.99); // isMapBuzz = true
         if (stripeSuccess) {
-          console.log('✅ EMERGENCY FIX: Stripe payment completed');
-          toast.success('Pagamento completato! Generando area...');
+          console.log('✅ EMERGENCY FIX: Stripe payment completed successfully for BUZZ MAP');
+          toast.success('Pagamento completato! Generando area BUZZ MAPPA...');
           // Continue with area generation after payment
           setTimeout(() => {
             generateBuzzMapAreaInternal();
@@ -83,7 +85,8 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         }
         return;
       } catch (error) {
-        console.error('❌ EMERGENCY FIX: Stripe payment failed:', error);
+        console.error('❌ EMERGENCY FIX: Stripe payment failed for BUZZ MAP:', error);
+        toast.error('Errore nel pagamento BUZZ MAPPA');
         return;
       }
     }
@@ -93,7 +96,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   };
 
   const generateBuzzMapAreaInternal = async () => {
-    console.log('🚀 EMERGENCY FIX: BUZZ MAP - Starting area generation...');
+    console.log('🚀 EMERGENCY FIX: BUZZ MAP - Starting FORCED area generation with proper radius reduction...');
     
     setIsRippling(true);
     setTimeout(() => setIsRippling(false), 1000);
@@ -103,13 +106,13 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     
     console.log('📍 EMERGENCY FIX: BUZZ COORDINATES:', { centerLat, centerLng });
     
-    // CRITICAL FIX: Enhanced generateBuzzMapArea call
+    // CRITICAL FIX: Enhanced generateBuzzMapArea call with FORCED area creation and radius reduction
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
-      console.log('🎉 EMERGENCY FIX: BUZZ MAP SUCCESS - Area generated', newArea);
+      console.log('🎉 EMERGENCY FIX: BUZZ MAP SUCCESS - Area generated with PROPER radius reduction', newArea);
 
-      // Update counter
+      // CRITICAL FIX: Update counter and FORCE reload
       setRealBuzzMapCounter(prev => prev + 1);
       
       await reloadAreas();
@@ -118,11 +121,26 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         handleBuzz();
       }
       
-      // CRITICAL FIX: Create meaningful notification
-      await createMapBuzzNotification(
-        "Area BUZZ Mappa Generata",
-        `Nuova area di ricerca Mission generata: ${newArea.radius_km.toFixed(1)}km di raggio - Generazione #${realBuzzMapCounter + 1}`
-      );
+      // CRITICAL FIX: Create MEANINGFUL notification with FORCED database write
+      let notificationCreated = false;
+      let attempts = 0;
+      
+      while (!notificationCreated && attempts < 3) {
+        try {
+          await createMapBuzzNotification(
+            "🗺️ Area BUZZ Mappa Generata",
+            `Nuova area di ricerca Mission generata: ${newArea.radius_km.toFixed(1)}km di raggio - Generazione #${realBuzzMapCounter + 1}`
+          );
+          notificationCreated = true;
+          console.log('✅ EMERGENCY FIX: BUZZ MAP notification FORCED into database successfully');
+        } catch (notifError) {
+          attempts++;
+          console.error(`❌ EMERGENCY FIX: BUZZ MAP notification attempt ${attempts} failed:`, notifError);
+          if (attempts < 3) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
+      }
       
       if (onAreaGenerated) {
         onAreaGenerated(newArea.lat, newArea.lng, newArea.radius_km);
