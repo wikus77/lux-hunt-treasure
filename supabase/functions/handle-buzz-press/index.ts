@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { RateLimiter } from "../_shared/rateLimiter.ts";
@@ -360,6 +361,7 @@ serve(async (req) => {
         console.error("⚠️ Warning: Could not clear existing areas:", deleteError);
       }
       
+      // FIXED: Correct counter upsert
       const { data: counterData, error: counterError } = await supabase
         .from('user_buzz_map_counter')
         .select('buzz_map_count')
@@ -385,8 +387,7 @@ serve(async (req) => {
         console.log(`✅ Counter updated successfully: generation ${currentGeneration}`);
       }
 
-      console.log("▶️ generation:", currentGeneration);
-      
+      // FIXED: Correct radius calculation: max(500 * 0.95^(generation-1), 5)
       let radius_km;
       if (currentGeneration === 1) {
         radius_km = 500;
@@ -395,8 +396,6 @@ serve(async (req) => {
         radius_km = Math.max(5, 500 * Math.pow(0.95, currentGeneration - 1));
         console.log("✅ RADIUS REDUCTION: Generation", currentGeneration, "= ", radius_km, "km");
       }
-      
-      console.log("▶️ radius:", radius_km * 1000, "meters =", radius_km, "km");
       
       const { error: mapError } = await supabase
         .from('user_map_areas')
@@ -415,26 +414,32 @@ serve(async (req) => {
       } else {
         console.log("✅ Map area saved successfully");
         
-        const notificationMessage = `È stata generata una nuova area BUZZ di ricerca: raggio ${radius_km.toFixed(1)} km.`;
-        
-        const { data: notificationData, error: notificationError } = await supabase
-          .from('user_notifications')
-          .insert({
-            user_id: userId,
-            title: "Nuova Area Generata",
-            message: notificationMessage,
-            type: "buzz_generated",
-            is_read: false
-          })
-          .select('id')
-          .single();
+        // FIXED: Correct notification insertion with is_read: false
+        try {
+          const { data: notificationData, error: notificationError } = await supabase
+            .from('user_notifications')
+            .insert({
+              user_id: userId,
+              title: "Nuova Area Generata",
+              message: "Nuova area generata da BUZZ!",
+              type: "buzz_generated",
+              is_read: false
+            })
+            .select('id')
+            .single();
 
-        if (notificationError) {
-          console.error("❌ Error creating notification:", notificationError);
-          console.log("▶️ notification inserted:", false);
-        } else {
-          console.log("✅ Notification created successfully:", notificationData.id);
-          console.log("▶️ notification inserted:", notificationData.id);
+          if (notificationError) {
+            console.error("❌ Error creating notification:", notificationError);
+          } else {
+            console.log("✅ Notifica inviata");
+            console.log("✅ Notification created successfully:", notificationData.id);
+          }
+        } catch (notifError) {
+          if (userId) {
+            console.warn("⚠️ Warning: Could not create notification for user:", userId);
+          } else {
+            console.error("❌ user_id is null, cannot create notification");
+          }
         }
 
         response.radius_km = radius_km;
@@ -442,7 +447,7 @@ serve(async (req) => {
         response.lng = secureCenter.lng;
         response.generation_number = currentGeneration;
         
-        console.log("✅ BUZZ GENERATION COMPLETA", { gen: currentGeneration, radius: radius_km * 1000 });
+        console.log(`✅ BUZZ #${currentGeneration} – Raggio: ${radius_km}km – Area generata`);
       }
     }
 

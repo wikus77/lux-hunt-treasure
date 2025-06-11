@@ -15,7 +15,7 @@ const Buzz = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // CRITICAL FIX: Check authentication and redirect to login if needed
+  // FIXED: Redirect to /login when user is not logged in
   if (!user) {
     return (
       <motion.div 

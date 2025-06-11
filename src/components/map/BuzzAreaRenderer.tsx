@@ -18,6 +18,9 @@ const BuzzAreaRenderer: React.FC<BuzzAreaRendererProps> = ({ areas }) => {
   const map = useMap();
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
 
+  // FIXED: Use areas.map(a => a.id).join() instead of JSON.stringify
+  const areasKey = areas.map(a => a.id).join(',');
+
   useEffect(() => {
     console.debug('🔵 Rendering buzz areas:', areas.length);
     
@@ -54,12 +57,10 @@ const BuzzAreaRenderer: React.FC<BuzzAreaRendererProps> = ({ areas }) => {
           layerGroupRef.current.addLayer(circle);
         }
 
-        console.log("✅ Area creata con raggio:", radiusInMeters, "m, generazione:", index + 1);
-        console.log("▶️ layer created:", true);
+        console.log(`✅ BUZZ #${index + 1} – Raggio: ${area.radius_km}km – ID area: ${area.id}`);
         
       } catch (error) {
         console.error('❌ Error creating circle:', error);
-        console.log("▶️ layer created:", false);
       }
     });
 
@@ -68,7 +69,7 @@ const BuzzAreaRenderer: React.FC<BuzzAreaRendererProps> = ({ areas }) => {
       map.invalidateSize();
     }, 100);
 
-  }, [areas, map]);
+  }, [areasKey, map]); // FIXED: Use areasKey instead of areas
 
   // Cleanup on unmount
   useEffect(() => {

@@ -1,13 +1,12 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useMapAreas } from './useMapAreas';
 import { useBuzzApi } from './buzz/useBuzzApi';
-import { useBuzzMapRadius } from './buzz/useBuzzMapRadius';
-import { useBuzzMapCounter } from './buzz/useBuzzMapCounter';
-import { useBuzzMapNotifications } from './buzz/useBuzzMapNotifications';
 import { useMapStore } from '@/stores/mapStore';
 import { useGameRules } from './useGameRules';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface BuzzMapArea {
   id: string;
@@ -23,9 +22,6 @@ export const useBuzzMapLogic = () => {
   const { user } = useAuth();
   const { callBuzzApi } = useBuzzApi();
   const { getCurrentWeek } = useGameRules();
-  const { calculateRadius } = useBuzzMapRadius();
-  const { incrementCounter } = useBuzzMapCounter(user?.id);
-  const { sendAreaGeneratedNotification } = useBuzzMapNotifications();
   
   const { 
     isGenerating,
@@ -47,6 +43,71 @@ export const useBuzzMapLogic = () => {
     return currentWeekAreas.length > 0 ? currentWeekAreas[0] : null;
   }, [currentWeekAreas]);
 
+  // FIXED: Get generation count from user_buzz_map_counter
+  const getBuzzMapGeneration = useCallback(async (): Promise<number> => {
+    if (!user?.id) return 1;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_buzz_map_counter')
+        .select('buzz_map_count')
+        .eq('user_id', user.id)
+        .eq('date', new Date().toISOString().split('T')[0])
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('❌ Error getting generation count:', error);
+        return 1;
+      }
+
+      return (data?.buzz_map_count || 0) + 1;
+    } catch (error) {
+      console.error('❌ Exception getting generation count:', error);
+      return 1;
+    }
+  }, [user?.id]);
+
+  // FIXED: Correct radius calculation: max(500 * 0.95^(generation-1), 5)
+  const calculateBuzzRadius = useCallback((generation: number): number => {
+    if (generation === 1) {
+      return 500;
+    }
+    
+    const radius = Math.max(5, 500 * Math.pow(0.95, generation - 1));
+    return radius;
+  }, []);
+
+  // FIXED: Update counter with correct upsert
+  const updateBuzzMapCounter = useCallback(async (): Promise<number> => {
+    if (!user?.id) return 1;
+
+    try {
+      const currentGeneration = await getBuzzMapGeneration();
+      
+      const { data, error } = await supabase
+        .from('user_buzz_map_counter')
+        .upsert({
+          user_id: user.id,
+          date: new Date().toISOString().split('T')[0],
+          buzz_map_count: currentGeneration
+        }, {
+          onConflict: 'user_id,date'
+        })
+        .select('buzz_map_count')
+        .single();
+
+      if (error) {
+        console.error('❌ Error updating counter:', error);
+        return currentGeneration;
+      }
+
+      return data.buzz_map_count;
+    } catch (error) {
+      console.error('❌ Exception updating counter:', error);
+      return 1;
+    }
+  }, [user?.id, getBuzzMapGeneration]);
+
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
     if (!user?.id) {
       console.error('❌ LANCIO BUZZ: No valid user ID available');
@@ -55,7 +116,7 @@ export const useBuzzMapLogic = () => {
       return null;
     }
 
-    console.log('🚀 LANCIO 19 LUGLIO: BUZZ GENERATION START', {
+    console.log('🚀 LANCIO BUZZ GENERATION START', {
       userId: user.id,
       centerLat,
       centerLng,
@@ -88,38 +149,32 @@ export const useBuzzMapLogic = () => {
         return null;
       }
 
-      // FIXED: Use simple counter increment
-      const generation = await incrementCounter();
-      console.log("▶️ generation:", generation);
+      // FIXED: Get generation and calculate correct radius
+      const generation = await updateBuzzMapCounter();
+      const radiusKm = calculateBuzzRadius(generation);
       
-      // FIXED: Use simple radius calculation
-      const radiusInMeters = calculateRadius(generation);
-      const finalRadius = radiusInMeters / 1000; // Convert to km for storage
-      
-      console.log("▶️ radius:", radiusInMeters, "meters =", finalRadius, "km");
+      console.log(`✅ BUZZ #${generation} – Raggio: ${radiusKm}km – Area generata`);
 
       const currentWeek = getCurrentWeek();
       const newArea: BuzzMapArea = {
         id: crypto.randomUUID(),
         lat: response.lat || centerLat,
         lng: response.lng || centerLng,
-        radius_km: finalRadius,
+        radius_km: radiusKm,
         week: currentWeek,
         created_at: new Date().toISOString(),
         user_id: user.id
       };
 
       console.log('🎉 LANCIO SUCCESS: Area created', newArea);
-      console.log("✅ Area creata con raggio:", finalRadius, "km, generazione:", generation);
-      console.log("▶️ layer created:", true);
-
-      // Send notification
-      await sendAreaGeneratedNotification(user.id, finalRadius, generation);
 
       await forceCompleteSync();
       await forceReload();
       
-      console.log("✅ BUZZ GENERATION COMPLETA", { gen: generation, radius: radiusInMeters });
+      // FIXED: Show correct toast message
+      toast.success(`Area generata correttamente – Raggio: ${radiusKm}km`);
+      
+      console.log(`✅ BUZZ #${generation} – Raggio: ${radiusKm}km – ID area: ${newArea.id}`);
       
       return newArea;
     } catch (err) {
@@ -133,7 +188,7 @@ export const useBuzzMapLogic = () => {
   }, [
     user, callBuzzApi, isGenerating, isDeleting, 
     setIsGenerating, forceCompleteSync, forceReload,
-    getCurrentWeek, calculateRadius, incrementCounter, sendAreaGeneratedNotification
+    getCurrentWeek, calculateBuzzRadius, updateBuzzMapCounter
   ]);
 
   const handleDeleteArea = useCallback(async (areaId: string): Promise<boolean> => {
