@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, MapPin } from 'lucide-react';
@@ -75,7 +76,7 @@ const BuzzMainContent: React.FC<BuzzMainContentProps> = ({
   };
 
   const handleMapNavigation = () => {
-    playSound('click');
+    playSound('buzz'); // Using 'buzz' instead of 'click' as it's a valid SoundType
     onNavigateToMap();
   };
 

@@ -67,6 +67,7 @@ export const useBuzzMapUtils = () => {
       return BASE_RADIUS;
     }
 
+    // Use radius_km property from the corrected interface
     const nextRadius = activeArea.radius_km * REDUCTION_FACTOR;
     const finalRadius = Math.max(MIN_RADIUS, nextRadius);
     
