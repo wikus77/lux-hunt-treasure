@@ -2,6 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BuzzFeatureWrapper from "@/components/buzz/BuzzFeatureWrapper";
@@ -12,68 +13,25 @@ import BottomNavigation from "@/components/layout/BottomNavigation";
 import { useAuthContext } from "@/contexts/auth";
 
 const Buzz = () => {
-  const { user, isAuthenticated } = useAuthContext();
+  const { user } = useAuthContext();
   const navigate = useNavigate();
-  const [isValidatingAuth, setIsValidatingAuth] = React.useState(true);
 
-  // ✅ FASE 1 - Enhanced authentication check with logging for /buzz page
+  // FIX 4 - Enhanced authentication check with logging
   React.useEffect(() => {
-    const validateAuthentication = async () => {
-      console.log("🔥 LIVELLO 1 – BUZZ PAGE AUTH CHECK:", {
-        user: user ? user.id : "null",
-        email: user?.email || "no email",
-        pathname: window.location.pathname,
-        isAuthenticated
-      });
-      
-      // Check if developer email - should always have access
-      const isDeveloperEmail = user?.email === 'wikus77@hotmail.it';
-      const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-      
-      console.log('🔍 LIVELLO 1 – DEVELOPER ACCESS CHECK:', {
-        isDeveloperEmail,
-        hasDeveloperAccess,
-        userEmail: user?.email
-      });
+    console.log("🔥 FIX 4 – BUZZ PAGE AUTH CHECK:", {
+      user: user ? user.id : "null",
+      email: user?.email || "no email"
+    });
+    
+    if (!user) {
+      console.log("❌ FIX 4 ERROR - User not authenticated, redirecting to login");
+    } else {
+      console.log("✅ FIX 4 SUCCESS - User authenticated, showing BUZZ interface");
+    }
+  }, [user]);
 
-      const finalAuthenticated = isAuthenticated || hasDeveloperAccess || isDeveloperEmail;
-      
-      if (!finalAuthenticated) {
-        console.log("❌ LIVELLO 1 ERROR - User not authenticated, redirecting to login");
-      } else {
-        console.log("✅ LIVELLO 1 SUCCESS - User authenticated, showing BUZZ interface");
-      }
-      
-      setIsValidatingAuth(false);
-    };
-
-    validateAuthentication();
-  }, [user, isAuthenticated]);
-
-  // Enhanced authentication check - allow developer access
-  const isDeveloperEmail = user?.email === 'wikus77@hotmail.it';
-  const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-  const finalAuthenticated = isAuthenticated || hasDeveloperAccess || isDeveloperEmail;
-
-  // Show loading during auth validation
-  if (isValidatingAuth) {
-    return (
-      <motion.div 
-        className="bg-gradient-to-b from-[#131524]/70 to-black w-full min-h-screen flex items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="text-center p-8">
-          <div className="animate-spin w-12 h-12 border-4 border-t-transparent border-blue-500 rounded-full mx-auto mb-4"></div>
-          <p className="text-white">Validating authentication...</p>
-        </div>
-      </motion.div>
-    );
-  }
-
-  // Proper authentication check with developer bypass
-  if (!finalAuthenticated) {
+  // Proper authentication check
+  if (!user) {
     return (
       <motion.div 
         className="bg-gradient-to-b from-[#131524]/70 to-black w-full min-h-screen flex items-center justify-center"
@@ -88,7 +46,7 @@ const Buzz = () => {
           <p className="text-white mb-6">Devi essere autenticato per accedere a questa sezione.</p>
           <Button 
             onClick={() => {
-              console.log("🔥 LIVELLO 1 – REDIRECT TO LOGIN");
+              console.log("🔥 FIX 4 – REDIRECT TO LOGIN");
               navigate("/login");
             }}
             className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] text-white px-6 py-2"
@@ -155,15 +113,7 @@ const Buzz = () => {
         </div>
       </main>
       
-      {/* ✅ FASE 5 – VISUALIZZAZIONE UI - Ensure BottomNavigation appears */}
-      <div 
-        className="fixed bottom-0 left-0 right-0 z-40"
-        style={{
-          paddingBottom: 'env(safe-area-inset-bottom, 34px)'
-        }}
-      >
-        <BottomNavigation />
-      </div>
+      <BottomNavigation />
     </motion.div>
   );
 };

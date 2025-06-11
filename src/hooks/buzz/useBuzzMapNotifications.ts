@@ -24,13 +24,11 @@ export const useBuzzMapNotifications = () => {
 
       if (error) {
         console.error('❌ Error creating notification:', error);
-        console.error('RLS BLOCKED:', error.message);
         console.log("▶️ notification inserted:", false);
         return false;
       }
 
       console.log('✅ Notification created successfully:', data.id);
-      console.log("NOTIFICA INSERITA", data);
       console.log("▶️ notification inserted:", data.id);
       
       toast.success(`✅ Area ${radiusKm.toFixed(1)}km generata - Generazione ${generation}`);

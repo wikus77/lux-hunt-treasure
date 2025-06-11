@@ -50,10 +50,10 @@ serve(async (req) => {
     requestData = await req.json();
     const { userId, generateMap, coordinates, prizeId, sessionId } = requestData as BuzzRequest;
     
-    console.log(`🔥 BUZZ FUNCTION START - userId: ${userId}, generateMap: ${generateMap}`);
-    console.log(`📡 COORDINATES:`, coordinates);
+    console.log(`🔥 FIX 1 – BUZZ REQUEST START - userId: ${userId}, generateMap: ${generateMap}`);
+    console.log(`📡 Coordinates received:`, coordinates);
     
-    // STEP 1 - USER VALIDATION
+    // STEP 1 - LOG IN BUZZ_LOGS: START
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
@@ -64,10 +64,8 @@ serve(async (req) => {
       details: { generateMap, coordinates, timestamp: new Date().toISOString() }
     });
 
-    // Enhanced user validation
-    console.log(`🔍 USER VALIDATION: Validating userId: ${userId}`);
     if (!userId || typeof userId !== 'string') {
-      console.error("❌ ERRORE: Nessun utente rilevato - Invalid userId:", userId);
+      console.error("❌ FIX 1 ERROR - Invalid userId:", userId);
       return new Response(
         JSON.stringify({ success: false, error: true, errorMessage: "ID utente non valido" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -75,9 +73,8 @@ serve(async (req) => {
     }
 
     const authHeader = req.headers.get("authorization");
-    console.log(`🔍 AUTH HEADER: ${authHeader ? 'Present' : 'Missing'}`);
     if (!authHeader) {
-      console.error("❌ ERRORE: Token di autorizzazione mancante");
+      console.error("❌ FIX 1 ERROR - Missing authorization header");
       return new Response(
         JSON.stringify({ success: false, error: true, errorMessage: "Token di autorizzazione mancante" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -85,139 +82,106 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    console.log(`🔍 TOKEN: Token length: ${token.length}`);
 
-    console.log(`🔍 USER AUTH: Validating token for user: ${userId}`);
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
-    console.log(`🔍 USER AUTH RESULT:`, {
-      hasUser: !!user,
-      userId: user?.id,
-      userEmail: user?.email,
-      authError: authError?.message,
-      userIdMatch: user?.id === userId
-    });
-    
     if (authError || !user || user.id !== userId) {
-      console.error("❌ ERRORE: Autorizzazione non valida:", {
-        authError: authError?.message,
-        hasUser: !!user,
-        userIdMatch: user?.id === userId
-      });
+      console.error("❌ FIX 1 ERROR - Auth validation failed");
       return new Response(
         JSON.stringify({ success: false, error: true, errorMessage: "Autorizzazione non valida" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    console.log(`✅ USER VALIDATION SUCCESS for user: ${userId}`);
+    console.log(`✅ FIX 1 SUCCESS - Auth validation passed for user: ${userId}`);
 
-    // STEP 2 - SUBSCRIPTION CHECK
-    console.log(`🔥 SUBSCRIPTION CHECK START`);
+    // STEP 2 - PAYMENT CHECK WITH LOGGING
+    console.log(`🔥 FIX 1 – PAYMENT CHECK START`);
     
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('subscription_tier, subscription_end, stripe_customer_id, email')
+      .select('subscription_tier, subscription_end, stripe_customer_id')
       .eq('id', userId)
       .single();
 
-    console.log(`🔍 PROFILE FETCH:`, {
-      hasProfile: !!profile,
-      profileError: profileError?.message,
-      tier: profile?.subscription_tier,
-      stripeId: profile?.stripe_customer_id,
-      email: profile?.email
-    });
-
     if (profileError) {
-      console.error("❌ ERRORE: Error fetching user profile:", profileError);
+      console.error("❌ FIX 1 ERROR - Error fetching user profile:", profileError);
       return new Response(
         JSON.stringify({ success: false, error: true, errorMessage: "Profilo utente non trovato" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Developer bypass
-    const isDeveloperUser = profile?.email === 'wikus77@hotmail.it';
-    if (isDeveloperUser) {
-      console.log('🔧 DEVELOPER USER: Bypassing all checks for wikus77@hotmail.it');
-    } else {
-      const { data: subscription, error: subError } = await supabase
-        .from('subscriptions')
-        .select('status, tier, end_date')
-        .eq('user_id', userId)
-        .eq('status', 'active')
-        .single();
+    const { data: subscription, error: subError } = await supabase
+      .from('subscriptions')
+      .select('status, tier, end_date')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .single();
 
-      console.log(`🔍 SUBSCRIPTION FETCH:`, {
-        hasSubscription: !!subscription,
-        subError: subError?.message,
-        status: subscription?.status,
-        tier: subscription?.tier,
-        endDate: subscription?.end_date
+    const hasActiveSubscription = subscription && 
+      new Date(subscription.end_date || '') > new Date();
+    
+    const subscriptionTier = profile?.subscription_tier || 'Free';
+    const paymentStatus = hasActiveSubscription ? 'active' : 'inactive';
+    const stripe_customer_id = profile?.stripe_customer_id;
+
+    // CRITICAL LOGGING - ALL VALUES
+    console.log(`🔍 CRITICAL DEBUG VALUES:`, {
+      user_id: userId,
+      paymentStatus: paymentStatus,
+      stripe_customer_id: stripe_customer_id,
+      hasActiveSubscription: hasActiveSubscription,
+      subscriptionTier: subscriptionTier,
+      profile: profile,
+      subscription: subscription
+    });
+
+    // STEP 3 - LOG IN BUZZ_LOGS: PAYMENT CHECK
+    await supabase.from('buzz_logs').insert({
+      user_id: userId,
+      step: 'payment_check',
+      details: { 
+        paymentStatus, 
+        stripe_customer_id, 
+        hasActiveSubscription, 
+        subscriptionTier,
+        timestamp: new Date().toISOString() 
+      }
+    });
+
+    // PAYMENT VERIFICATION - BLOCK IF NOT ACTIVE
+    if (paymentStatus !== 'active' || !stripe_customer_id) {
+      console.error(`❌ FIX 1 ERROR - Payment check failed:`, {
+        paymentStatus,
+        stripe_customer_id,
+        hasActiveSubscription
       });
-
-      const hasActiveSubscription = subscription && 
-        new Date(subscription.end_date || '') > new Date();
       
-      const subscriptionTier = profile?.subscription_tier || 'Free';
-      const paymentStatus = hasActiveSubscription ? 'active' : 'inactive';
-      const stripe_customer_id = profile?.stripe_customer_id;
-
-      console.log(`🔍 PAYMENT STATUS:`, {
+      await supabase.from('abuse_logs').insert({
         user_id: userId,
-        paymentStatus: paymentStatus,
-        stripe_customer_id: stripe_customer_id,
-        hasActiveSubscription: hasActiveSubscription,
-        subscriptionTier: subscriptionTier
-      });
-
-      await supabase.from('buzz_logs').insert({
-        user_id: userId,
-        step: 'payment_check',
-        details: { 
-          paymentStatus, 
-          stripe_customer_id, 
-          hasActiveSubscription, 
-          subscriptionTier,
-          timestamp: new Date().toISOString() 
+        event_type: 'buzz_no_payment',
+        meta: {
+          access_type: 'buzz_no_payment',
+          paymentStatus,
+          stripe_customer_id,
+          hasActiveSubscription,
+          timestamp: new Date().toISOString()
         }
       });
 
-      // PAYMENT VERIFICATION
-      if (paymentStatus !== 'active' || !stripe_customer_id) {
-        console.error(`❌ ERRORE: Nessun piano attivo:`, {
-          paymentStatus,
-          stripe_customer_id,
-          hasActiveSubscription
-        });
-        
-        await supabase.from('abuse_logs').insert({
-          user_id: userId,
-          event_type: 'buzz_no_payment',
-          meta: {
-            access_type: 'buzz_no_payment',
-            paymentStatus,
-            stripe_customer_id,
-            hasActiveSubscription,
-            timestamp: new Date().toISOString()
-          }
-        });
-
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: true, 
-            errorMessage: "Pagamento richiesto. Questa funzione è disponibile solo per utenti con abbonamento attivo." 
-          }),
-          { status: 402, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: true, 
+          errorMessage: "Pagamento richiesto. Questa funzione è disponibile solo per utenti con abbonamento attivo." 
+        }),
+        { status: 402, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
-    console.log(`✅ SUBSCRIPTION CHECK SUCCESS`);
+    console.log(`✅ FIX 1 SUCCESS - Payment verification passed`);
 
-    // STEP 3 - RATE LIMITING
     const rateLimiter = new RateLimiter(supabaseUrl, supabaseServiceKey);
     const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
     
@@ -247,10 +211,9 @@ serve(async (req) => {
       );
     }
 
-    // STEP 4 - GET CURRENT WEEK
     const { data: weekData, error: weekError } = await supabase.rpc('get_current_mission_week');
     if (weekError) {
-      console.error("❌ ERRORE: Error getting current week:", weekError);
+      console.error("❌ FIX 1 ERROR - Error getting current week:", weekError);
       return new Response(
         JSON.stringify({ success: false, error: true, errorMessage: "Errore nel recupero settimana" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -258,26 +221,24 @@ serve(async (req) => {
     }
     
     const currentWeek = weekData || 1;
-    console.log(`📍 CURRENT WEEK: ${currentWeek}`);
+    console.log(`📍 Current mission week: ${currentWeek}`);
 
-    // STEP 5 - INCREMENT BUZZ COUNTER
     const { data: buzzCount, error: buzzCountError } = await supabase.rpc('increment_buzz_counter', {
       p_user_id: userId
     });
 
     if (buzzCountError) {
-      console.error("❌ ERRORE: Error incrementing buzz counter:", buzzCountError);
+      console.error("❌ FIX 1 ERROR - Error incrementing buzz counter:", buzzCountError);
       return new Response(
         JSON.stringify({ success: false, error: true, errorMessage: "Errore contatore buzz" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    console.log(`📍 BUZZ COUNT: ${buzzCount}`);
+    console.log(`📍 Updated buzz count: ${buzzCount}`);
 
-    // STEP 6 - GENERATE CLUE
     let clueText = `🔒 Indizio generato per settimana ${currentWeek}`;
-    console.log(`📍 CLUE: ${clueText}`);
+    console.log(`📍 Generated clue: ${clueText}`);
     
     const { data: clueData, error: clueError } = await supabase
       .from('user_clues')
@@ -294,14 +255,14 @@ serve(async (req) => {
       .single();
 
     if (clueError) {
-      console.error("❌ ERRORE: Error saving clue:", clueError);
+      console.error("❌ FIX 1 ERROR - Error saving clue:", clueError);
       return new Response(
         JSON.stringify({ success: false, error: true, errorMessage: "Errore salvataggio indizio" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    console.log(`✅ CLUE SAVED with ID: ${clueData.clue_id}`);
+    console.log(`✅ FIX 1 SUCCESS - Clue saved with ID: ${clueData.clue_id}`);
 
     let response: BuzzResponse = {
       success: true,
@@ -310,20 +271,20 @@ serve(async (req) => {
     };
 
     if (generateMap) {
-      console.log(`🔥 BUZZ MAPPA GENERATION START for user ${userId}`);
+      console.log(`🔥 FIX 1 – BUZZ MAPPA GENERATION START for user ${userId}`);
       
       let baseCenter = { lat: 41.9028, lng: 12.4964 };
       
       if (coordinates) {
         baseCenter = { lat: coordinates.lat, lng: coordinates.lng };
-        console.log(`📍 BASE CENTER: ${baseCenter.lat}, ${baseCenter.lng}`);
+        console.log(`📍 Setting new base center: ${baseCenter.lat}, ${baseCenter.lng}`);
       }
       
       const secureCenter = applySecureOffset(baseCenter.lat, baseCenter.lng);
-      console.log(`🔒 SECURE CENTER: ${secureCenter.lat}, ${secureCenter.lng}`);
+      console.log(`🔒 Applied secure offset: ${secureCenter.lat}, ${secureCenter.lng}`);
       
-      // STEP 7 - GET GENERATION COUNT
-      console.log(`🔥 GET CURRENT GENERATION FROM DB`);
+      // STEP 4 - GET GENERATION FROM DB WITH LOGGING
+      console.log(`🔥 FIX 1 – GET CURRENT GENERATION FROM DB`);
       
       const { data: counterData, error: counterError } = await supabase
         .from('user_buzz_map_counter')
@@ -332,27 +293,28 @@ serve(async (req) => {
         .eq('date', new Date().toISOString().split('T')[0])
         .maybeSingle();
 
-      console.log(`🔍 COUNTER FETCH:`, {
-        hasCounterData: !!counterData,
-        counterError: counterError?.message,
-        currentCount: counterData?.buzz_map_count
-      });
-
       let currentGeneration = (counterData?.buzz_map_count || 0) + 1;
-      console.log(`🔥 GENERATION: ${currentGeneration}`);
+      console.log(`🔥 FIX 1 – GENERATION FROM DB: ${currentGeneration}`);
       
-      // STEP 8 - CALCULATE RADIUS
+      // STEP 5 - CALCULATE RADIUS WITH LOGGING
       let radius_km;
       if (currentGeneration === 1) {
         radius_km = 500;
-        console.log("🔥 FIRST GENERATION: 500km");
+        console.log("🔥 FIX 1 – FIRST GENERATION: 500km");
       } else {
         radius_km = Math.max(5, 500 * Math.pow(0.95, currentGeneration - 1));
-        console.log(`🔥 RADIUS CALCULATION: Generation ${currentGeneration} = ${radius_km}km`);
+        console.log(`🔥 FIX 1 – RADIUS CALCULATION: Generation ${currentGeneration} = ${radius_km}km`);
       }
       
-      console.log(`RAGGIO USATO: ${radius_km}km`);
+      // CRITICAL LOGGING - RADIUS CALCULATION
+      console.log(`🔍 CRITICAL RADIUS DEBUG:`, {
+        generation: currentGeneration,
+        radius_km: radius_km,
+        calculation: `500 * 0.95^(${currentGeneration} - 1) = ${500 * Math.pow(0.95, currentGeneration - 1)}`,
+        final_radius: Math.max(5, 500 * Math.pow(0.95, currentGeneration - 1))
+      });
 
+      // STEP 6 - LOG IN BUZZ_LOGS: GENERATION CALCULATED
       await supabase.from('buzz_logs').insert({
         user_id: userId,
         step: 'generation_calculated',
@@ -364,8 +326,7 @@ serve(async (req) => {
         }
       });
       
-      // STEP 9 - UPDATE COUNTER
-      console.log(`🔥 UPDATING COUNTER: Setting generation to ${currentGeneration}`);
+      // Atomic upsert del contatore
       const { data: updatedCounter, error: updateError } = await supabase
         .from('user_buzz_map_counter')
         .upsert({
@@ -378,41 +339,29 @@ serve(async (req) => {
         .select('buzz_map_count')
         .single();
 
-      console.log(`🔍 COUNTER UPDATE:`, {
-        success: !updateError,
-        updateError: updateError?.message,
-        updatedCount: updatedCounter?.buzz_map_count
-      });
-
       if (updateError) {
-        console.error("❌ ERRORE: Error updating counter:", updateError);
+        console.error("❌ FIX 1 ERROR - Error updating counter:", updateError);
         currentGeneration = 1; // Fallback
       } else {
         currentGeneration = updatedCounter.buzz_map_count;
-        console.log(`✅ COUNTER UPDATE SUCCESS: generation ${currentGeneration}`);
+        console.log(`✅ FIX 1 SUCCESS - Counter updated: generation ${currentGeneration}`);
       }
 
-      // STEP 10 - CLEAR EXISTING AREAS
-      console.log(`🔥 CLEARING EXISTING AREAS`);
+      // Clear existing areas
+      console.log(`🔥 FIX 1 – CLEARING EXISTING AREAS`);
       const { error: deleteError, count: deletedCount } = await supabase
         .from('user_map_areas')
         .delete({ count: 'exact' })
         .eq('user_id', userId);
         
-      console.log(`🔍 AREA DELETION:`, {
-        success: !deleteError,
-        deleteError: deleteError?.message,
-        deletedCount: deletedCount
-      });
-        
       if (deleteError) {
-        console.error("❌ ERRORE: Could not clear existing areas:", deleteError);
+        console.error("❌ FIX 1 ERROR - Could not clear existing areas:", deleteError);
       } else {
-        console.log(`✅ CLEARED ${deletedCount} existing areas`);
+        console.log(`✅ FIX 1 SUCCESS - Cleared ${deletedCount} existing areas`);
       }
       
-      // STEP 11 - INSERT NEW AREA
-      console.log(`🔥 INSERTING NEW AREA:`, {
+      // STEP 7 - INSERT NEW AREA WITH EXTENSIVE LOGGING
+      console.log(`🔥 FIX 1 – INSERTING NEW AREA:`, {
         user_id: userId,
         lat: secureCenter.lat,
         lng: secureCenter.lng,
@@ -432,24 +381,15 @@ serve(async (req) => {
         .select()
         .single();
         
-      console.log(`🔍 AREA INSERT RESULT:`, {
-        success: !mapError,
-        mapError: mapError?.message,
-        insertedAreaId: insertedArea?.id,
-        insertedArea: insertedArea
-      });
-        
       if (mapError) {
-        console.error("❌ ERRORE GENERAZIONE:", {
+        console.error("❌ FIX 1 ERROR - Map area insert failed:", {
           error: mapError,
           user_id: userId,
           radius: radius_km,
-          coordinates: secureCenter,
-          rls_check: "user_map_areas RLS might be blocking"
+          coordinates: secureCenter
         });
         
-        console.log('INSERIMENTO AREA: FAIL');
-        
+        // STEP 8 - LOG IN BUZZ_LOGS: AREA INSERT FAILED
         await supabase.from('buzz_logs').insert({
           user_id: userId,
           step: 'area_insert_failed',
@@ -457,17 +397,16 @@ serve(async (req) => {
             error: mapError.message,
             radius_km: radius_km,
             coordinates: secureCenter,
-            rls_blocked: mapError.message.includes('row-level security'),
             timestamp: new Date().toISOString() 
           }
         });
         
         response.error = true;
-        response.errorMessage = `Errore inserimento area: ${mapError.message}`;
+        response.errorMessage = "Errore salvataggio area mappa";
       } else {
-        console.log(`✅ MAP AREA INSERTED:`, insertedArea);
-        console.log('INSERIMENTO AREA: SUCCESS');
+        console.log(`✅ FIX 1 SUCCESS - Map area inserted:`, insertedArea);
         
+        // STEP 9 - LOG IN BUZZ_LOGS: AREA INSERT SUCCESS
         await supabase.from('buzz_logs').insert({
           user_id: userId,
           step: 'area_insert_success',
@@ -479,54 +418,37 @@ serve(async (req) => {
           }
         });
         
-        // STEP 12 - INSERT NOTIFICATION
-        console.log(`🔥 INSERTING NOTIFICATION`);
-        console.log(`📬 NOTIFICATION DATA:`, {
-          user_id: userId,
-          title: "Area BUZZ generata",
-          message: `Hai sbloccato una nuova zona di ricerca.`,
-          type: "buzz",
-          is_read: false
-        });
+        // STEP 10 - INSERT NOTIFICATION WITH LOGGING
+        console.log(`🔥 FIX 1 – INSERTING NOTIFICATION`);
         
         const { data: notificationData, error: notificationError } = await supabase
           .from('user_notifications')
           .insert({
             user_id: userId,
-            title: "Area BUZZ generata",
-            message: `Hai sbloccato una nuova zona di ricerca.`,
-            type: "buzz",
+            title: "NUOVA AREA GENERATA",
+            message: `Area BUZZ MISSION attiva! Raggio attuale: ${radius_km}km`,
+            type: "buzz_generated",
             is_read: false
           })
           .select('id')
           .single();
 
-        console.log(`🔍 NOTIFICATION INSERT RESULT:`, {
-          success: !notificationError,
-          notificationError: notificationError?.message,
-          notificationId: notificationData?.id,
-          rls_blocked: notificationError?.message?.includes('row-level security')
-        });
-
         if (notificationError) {
-          console.error("❌ ERRORE: Notification insert failed:", notificationError);
-          console.error("RLS BLOCKED:", notificationError.message);
-          console.log('INSERIMENTO NOTIFICA: FAIL');
+          console.error("❌ FIX 1 ERROR - Notification insert failed:", notificationError);
           
+          // STEP 11 - LOG IN BUZZ_LOGS: NOTIFICATION INSERT FAILED
           await supabase.from('buzz_logs').insert({
             user_id: userId,
             step: 'notification_insert_failed',
             details: { 
               error: notificationError.message,
-              rls_blocked: notificationError.message.includes('row-level security'),
               timestamp: new Date().toISOString() 
             }
           });
         } else {
-          console.log(`✅ NOTIFICATION INSERTED: ${notificationData.id}`);
-          console.log("NOTIFICA INSERITA");
-          console.log('INSERIMENTO NOTIFICA: SUCCESS');
+          console.log(`✅ FIX 1 SUCCESS - Notification inserted: ${notificationData.id}`);
           
+          // STEP 12 - LOG IN BUZZ_LOGS: NOTIFICATION INSERT SUCCESS
           await supabase.from('buzz_logs').insert({
             user_id: userId,
             step: 'notification_insert_success',
@@ -546,7 +468,7 @@ serve(async (req) => {
       }
     }
 
-    // STEP 13 - FINAL LOG
+    // STEP 13 - LOG IN BUZZ_LOGS: END
     await supabase.from('buzz_logs').insert({
       user_id: userId,
       step: 'end',
@@ -558,7 +480,7 @@ serve(async (req) => {
       }
     });
 
-    console.log(`✅ FINAL RESPONSE:`, response);
+    console.log(`✅ BUZZ RESPONSE:`, response);
 
     return new Response(
       JSON.stringify(response),
@@ -566,10 +488,9 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("❌ ERRORE GENERAZIONE:", error);
-    console.log('INSERIMENTO AREA: FAIL');
-    console.log('INSERIMENTO NOTIFICA: FAIL');
+    console.error("❌ FIX 1 ERROR - General error in BUZZ handling:", error);
     
+    // LOG GENERAL ERROR IN BUZZ_LOGS
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
@@ -584,11 +505,7 @@ serve(async (req) => {
     });
     
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: true, 
-        errorMessage: `Errore del server: ${error.message || "Errore sconosciuto"}` 
-      }),
+      JSON.stringify({ success: false, error: true, errorMessage: error.message || "Errore del server" }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

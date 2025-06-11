@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
@@ -9,7 +8,6 @@ import { useBuzzUiState } from "@/hooks/buzz/useBuzzUiState";
 import { useBuzzNavigation } from "@/hooks/buzz/useBuzzNavigation";
 import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
-import { useAuthContext } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 // Funzione per generare indizi realmente univoci
@@ -42,7 +40,6 @@ export function useBuzzFeature() {
   const { addNotification, reloadNotifications } = useNotifications();
   const { createBuzzNotification } = useNotificationManager();
   const { callBuzzApi } = useBuzzApi();
-  const { user } = useAuthContext();
 
   const {
     unlockedClues,
@@ -53,23 +50,25 @@ export function useBuzzFeature() {
     getNextVagueClue
   } = useBuzzClues();
 
+  const [cachedUserId, setCachedUserId] = useState<string | null>(null);
   const [lastDynamicClue, setLastDynamicClue] = useState<string>("");
   const [buzzCounter, setBuzzCounter] = useState<number>(0);
 
   useEffect(() => {
+    const prefetchUserId = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.user?.id) {
+        setCachedUserId(sessionData.session.user.id);
+      }
+    };
+
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
     const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
     
-    // Fixed: Properly handle the async initializeSound function
-    const initSound = async () => {
-      try {
-        await initializeSound(soundPreference, volume);
-      } catch (error) {
-        console.error("Error during sound initialization:", error);
-      }
-    };
-    
-    initSound();
+    Promise.all([
+      prefetchUserId(),
+      initializeSound(soundPreference, volume)
+    ]).catch(error => console.error("Error during initialization:", error));
     
     if (location.state?.paymentCompleted && location.state?.fromRegularBuzz) {
       try {
@@ -88,7 +87,8 @@ export function useBuzzFeature() {
     }
     
     try {
-      const userId = user?.id;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = cachedUserId || sessionData?.session?.user?.id;
       
       if (!userId) {
         toast.error("Devi effettuare l'accesso per utilizzare questa funzione");
@@ -152,7 +152,8 @@ export function useBuzzFeature() {
   const handleClueButtonClick = async () => {
     playSound();
     
-    const userId = user?.id;
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = cachedUserId || sessionData?.session?.user?.id;
     
     if (!userId) {
       toast.error("Devi effettuare l'accesso per utilizzare questa funzione");
@@ -188,13 +189,10 @@ export function useBuzzFeature() {
       incrementUnlockedCluesAndAddClue();
       
       console.log("💾 Creando notifica indizio extra UNIVOCA...");
-      
-      // Fixed: Properly handle the async createBuzzNotification function
-      try {
-        await createBuzzNotification(
-          "Nuovo Indizio Extra!", 
-          uniqueClue
-        );
+      createBuzzNotification(
+        "Nuovo Indizio Extra!", 
+        uniqueClue
+      ).then(async () => {
         console.log("✅ Notifica indizio extra UNIVOCA creata");
         await reloadNotifications(true);
         
@@ -205,13 +203,13 @@ export function useBuzzFeature() {
         
         setShowDialog(false);
         setShowExplosion(true);
-      } catch (error) {
+      }).catch(error => {
         console.error("❌ Error creating notification:", error);
         toast.error("Errore nel salvataggio dell'indizio", {
           duration: 3000,
         });
         setShowDialog(false);
-      }
+      });
     } catch (error) {
       console.error("❌ Error in handle clue button click:", error);
       toast.error("Si è verificato un errore");

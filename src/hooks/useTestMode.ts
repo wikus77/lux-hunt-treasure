@@ -17,9 +17,7 @@ interface TestModeConfig {
 
 export const useTestMode = () => {
   const { user } = useAuthContext();
-  
-  // ✅ FIXED: Always call useGameRules hook before any conditional logic
-  const gameRulesHook = useGameRules();
+  const { validateClueContent } = useGameRules();
   
   const [testConfig, setTestConfig] = useState<TestModeConfig>({
     isTestMode: false,
@@ -27,10 +25,10 @@ export const useTestMode = () => {
     testLocation: {
       lat: 43.7915,
       lng: 7.6089,
-      address: 'Area di ricerca - Costa del confine'
+      address: 'Area di ricerca - Costa del confine' // NESSUN NOME CITTÀ
     },
     fakePaymentEnabled: false,
-    strictGameRules: true
+    strictGameRules: true // REGOLE FERREE ATTIVE PER LANCIO
   });
 
   useEffect(() => {
@@ -39,15 +37,15 @@ export const useTestMode = () => {
       
       if (isDev) {
         setTestConfig({
-          isTestMode: false,
+          isTestMode: false, // Modalità produzione STRICTA per LANCIO
           isDeveloperUser: true,
           testLocation: {
             lat: 43.7915,
             lng: 7.6089,
-            address: 'Area di ricerca - Costa mediterranea'
+            address: 'Area di ricerca - Costa mediterranea' // GENERICO PER LANCIO
           },
-          fakePaymentEnabled: true,
-          strictGameRules: true
+          fakePaymentEnabled: true, // Pagamenti fittizi per test LANCIO
+          strictGameRules: true // REGOLE FERREE LANCIO 19 LUGLIO
         });
         
         console.log('🔧 DEVELOPER BLACK MODE - LANCIO 19 LUGLIO: Regole di gioco UFFICIALI attivate per', user.email);
@@ -59,6 +57,7 @@ export const useTestMode = () => {
   }, [user]);
 
   const generateSecureClue = (buzzCount: number): string => {
+    // INDIZI SEVERI: MAI nomi di città per LANCIO
     const launchSecureClues = [
       `La soluzione si nasconde dove due nazioni si incontrano, tra i giardini della frontiera (Missione #${buzzCount})`,
       `Cerca dove il mare bacia la terraferma, nei colori del ponente - ${new Date().toLocaleTimeString()}`,
@@ -72,13 +71,20 @@ export const useTestMode = () => {
       `La costa del ponente nasconde tesori: cerca dove i giardini incontrano il mare`
     ];
     
-    const index = (Date.now() + buzzCount) % launchSecureClues.length;
-    return launchSecureClues[index];
+    const index = (buzzCount + new Date().getHours()) % launchSecureClues.length;
+    const selectedClue = launchSecureClues[index];
+    
+    // VALIDAZIONE SEVERISSIMA: Nessun nome città per LANCIO
+    if (!validateClueContent(selectedClue)) {
+      console.error('🚫 CLUE VALIDATION FAILED - LANCIO: Contiene nomi di città!');
+      return `Indizio sicuro per il lancio generato alle ${new Date().toLocaleTimeString()} - Cerca nella zona di confine mediterranea`;
+    }
+    
+    return selectedClue;
   };
 
   return {
     ...testConfig,
-    generateSecureClue,
-    validateClueContent: gameRulesHook.validateClueContent
+    generateSecureClue
   };
 };

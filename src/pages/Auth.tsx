@@ -12,7 +12,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Auth = () => {
-  // ✅ FIXED: Always declare all hooks at the top level
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasCompletedQuiz, setHasCompletedQuiz] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -24,7 +23,7 @@ const Auth = () => {
   
   console.log("Auth page loaded - current path:", location.pathname);
   
-  // ✅ Always call this hook
+  // Handle email verification from URL params
   const wasEmailVerification = useEmailVerificationHandler();
   
   useEffect(() => {
@@ -32,11 +31,13 @@ const Auth = () => {
     
     if (wasEmailVerification) {
       setIsLoading(false);
+      // Wait a moment before redirecting to allow the user to see the success message
       setTimeout(() => {
         navigate('/login?verification=success');
       }, 2000);
     }
     
+    // Check URL for redirects
     const redirect = searchParams.get('redirect');
     if (redirect) {
       console.log("Found redirect parameter:", redirect);
@@ -82,6 +83,7 @@ const Auth = () => {
     console.log("Quiz completed with profile type:", profileType);
     setHasCompletedQuiz(true);
     
+    // Update profile in local storage and session
     localStorage.setItem("investigativeStyle", profileType === "comandante" ? 
       "Ragionatore Strategico" : profileType === "assaltatore" ? 
       "Forza d'Impatto" : "Tessitore di Reti");
@@ -90,16 +92,20 @@ const Auth = () => {
       "bg-cyan-500" : profileType === "assaltatore" ? 
       "bg-red-500" : "bg-purple-500");
     
+    // Save raw profile type for future references
     localStorage.setItem("userProfileType", profileType);
     
+    // Save investigative style to database
     if (userId) {
       try {
         console.log("Saving profile data to database for user:", userId);
         
+        // Update the profile with quiz results
         const { error } = await supabase
           .from('profiles')
           .update({ 
             investigative_style: profileType, 
+            // Initialize points to 0
             credits: 0
           })
           .eq('id', userId);
@@ -111,10 +117,12 @@ const Auth = () => {
           });
         } else {
           console.log("Profile data saved successfully");
+          // Navigate to home page
           toast.success("Profilo completato!", {
             description: "Benvenuto nell'applicazione!"
           });
           
+          // Navigate to home page after a short delay
           setTimeout(() => {
             navigate("/home");
           }, 1000);
@@ -124,10 +132,12 @@ const Auth = () => {
       }
     } else {
       console.error("No userId available, cannot save profile data");
+      // Navigate anyway to prevent user being stuck
       navigate("/home");
     }
   };
 
+  // Add more debug information to help diagnose rendering issues
   useEffect(() => {
     console.log("Current Auth state:", {
       isLoading,
@@ -138,7 +148,6 @@ const Auth = () => {
     });
   }, [isLoading, isLoggedIn, emailVerified, hasCompletedQuiz, userId]);
 
-  // ✅ FIXED: Conditional rendering after all hooks
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center">
