@@ -74,27 +74,47 @@ export function useAuth() {
 
         if (data?.access_token && data?.refresh_token) {
           console.log("✅ Emergency tokens received");
-          console.log("🎫 Access token type:", typeof data.access_token);
-          console.log("🎫 Access token length:", data.access_token.length);
-          console.log("🎫 Refresh token type:", typeof data.refresh_token);
-          console.log("🎫 Refresh token length:", data.refresh_token.length);
+          console.log("🧠 DEBUG - Access token type:", typeof data.access_token);
+          console.log("🧠 DEBUG - Access token length:", data.access_token.length);
+          console.log("🧠 DEBUG - Refresh token type:", typeof data.refresh_token);
+          console.log("🧠 DEBUG - Refresh token length:", data.refresh_token.length);
           
           console.log("🔄 Setting session with received tokens...");
-          const { error: setSessionError } = await supabase.auth.setSession({
+          const { data: sessionData, error: setSessionError } = await supabase.auth.setSession({
             access_token: data.access_token,
             refresh_token: data.refresh_token
           });
 
+          console.log("🧠 DEBUG - Session data after setSession:", sessionData);
+          console.log("🧠 DEBUG - SetSession error:", setSessionError);
+
           if (setSessionError) {
             console.error("❌ Session setting error:", setSessionError);
+            
+            // FALLBACK: Try using action link redirect
+            if (data.action_link) {
+              console.log("🔄 Fallback: Using magic link redirect");
+              window.location.href = data.action_link;
+              return { success: true, session: null };
+            }
+            
             return { success: false, error: setSessionError };
           }
 
           console.log("✅ Emergency session set successfully");
-          return { success: true, session: data };
-        } else {
-          console.error("❌ No tokens in response:", data);
-          return { success: false, error: { message: "No tokens received" } as AuthError };
+          return { success: true, session: sessionData.session };
+        } 
+        
+        // If no tokens but we have action link, use magic link fallback
+        else if (data?.action_link) {
+          console.log("🔄 No tokens received, using magic link fallback");
+          window.location.href = data.action_link;
+          return { success: true, session: null };
+        } 
+        
+        else {
+          console.error("❌ No tokens or action link in response:", data);
+          return { success: false, error: { message: "No authentication data received" } as AuthError };
         }
       }
       

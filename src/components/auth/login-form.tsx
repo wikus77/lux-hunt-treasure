@@ -32,15 +32,25 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
     setIsLoading(true);
     try {
       console.log('🔐 Starting login process for:', email);
+      console.log('🧠 DEBUG - Is developer email:', email === 'wikus77@hotmail.it');
       
       const result = await login(email, password);
+      
+      console.log('🧠 DEBUG - Login result:', {
+        success: result?.success,
+        hasError: !!result?.error,
+        hasSession: !!result?.session,
+        errorMessage: result?.error?.message
+      });
       
       if (result?.success) {
         console.log('✅ Login successful - redirecting to /home');
         toast.success('Login effettuato con successo');
         
-        // IMMEDIATE REDIRECT - NO CONDITIONS
-        navigate('/home', { replace: true });
+        // Small delay to ensure auth state is updated
+        setTimeout(() => {
+          navigate('/home', { replace: true });
+        }, 100);
       } else {
         console.error('❌ Login failed:', result?.error);
         toast.error('Errore di login', {

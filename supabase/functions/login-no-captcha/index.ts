@@ -69,20 +69,23 @@ serve(async (req) => {
     }
 
     console.log("✅ User found:", user.id);
-    console.log("🔧 Creating session directly with admin.createSession...");
+    console.log("🧠 DEBUG - USER ID:", user.id);
+    console.log("🧠 DEBUG - USER EMAIL:", user.email);
 
-    // Use admin.createSession instead of generateLink for direct session creation
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
-      user_id: user.id,
+    // Try using generateLink first as fallback strategy
+    console.log("🔧 Generating magic link for emergency access...");
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email: user.email,
     });
 
-    console.log("📤 Raw session response:", JSON.stringify(sessionData));
-    console.log("📤 Session error (if any):", JSON.stringify(sessionError));
+    console.log("🧠 DEBUG - LINK DATA:", JSON.stringify(linkData));
+    console.log("🧠 DEBUG - LINK ERROR:", JSON.stringify(linkError));
 
-    if (sessionError || !sessionData) {
-      console.error("❌ Session creation failed:", sessionError);
+    if (linkError || !linkData) {
+      console.error("❌ Magic link generation failed:", linkError);
       return new Response(
-        JSON.stringify({ error: sessionError?.message || "Failed to create session" }), 
+        JSON.stringify({ error: linkError?.message || "Failed to generate magic link" }), 
         { 
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -90,19 +93,28 @@ serve(async (req) => {
       );
     }
 
-    // Extract tokens from session data
-    const access_token = sessionData.access_token;
-    const refresh_token = sessionData.refresh_token;
+    // Extract tokens from link data
+    const access_token = linkData.access_token;
+    const refresh_token = linkData.refresh_token;
+    const action_link = linkData.action_link;
 
-    console.log("🎫 Access token type:", typeof access_token);
-    console.log("🎫 Access token length:", access_token ? access_token.length : 'null');
-    console.log("🎫 Refresh token type:", typeof refresh_token);
-    console.log("🎫 Refresh token length:", refresh_token ? refresh_token.length : 'null');
+    console.log("🧠 DEBUG - ACCESS TOKEN TYPE:", typeof access_token);
+    console.log("🧠 DEBUG - ACCESS TOKEN LENGTH:", access_token ? access_token.length : 'null');
+    console.log("🧠 DEBUG - REFRESH TOKEN TYPE:", typeof refresh_token);
+    console.log("🧠 DEBUG - REFRESH TOKEN LENGTH:", refresh_token ? refresh_token.length : 'null');
+    console.log("🧠 DEBUG - ACTION LINK:", action_link ? action_link.substring(0, 50) + '...' : 'null');
 
     if (!access_token || !refresh_token) {
-      console.error("❌ Missing tokens in session data");
+      console.error("❌ Missing tokens in link data");
       return new Response(
-        JSON.stringify({ error: "Failed to generate tokens", debug: sessionData }), 
+        JSON.stringify({ 
+          error: "Failed to generate tokens", 
+          debug: {
+            hasAccessToken: !!access_token,
+            hasRefreshToken: !!refresh_token,
+            hasActionLink: !!action_link
+          }
+        }), 
         { 
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -110,19 +122,26 @@ serve(async (req) => {
       );
     }
 
-    console.log("✅ Emergency session created successfully");
+    console.log("✅ Emergency tokens generated successfully");
     
     const responseData = {
       access_token,
       refresh_token,
-      user: user,
-      message: "Emergency access granted"
+      action_link, // Include action link as backup
+      user: {
+        id: user.id,
+        email: user.email,
+        email_confirmed_at: user.email_confirmed_at,
+        created_at: user.created_at
+      },
+      message: "Emergency access granted via magic link"
     };
 
-    console.log("📤 Final response data:", JSON.stringify({
-      ...responseData,
-      access_token: `${access_token.substring(0, 20)}...`,
-      refresh_token: `${refresh_token.substring(0, 20)}...`
+    console.log("📤 Final response structure:", JSON.stringify({
+      hasAccessToken: !!responseData.access_token,
+      hasRefreshToken: !!responseData.refresh_token,
+      hasActionLink: !!responseData.action_link,
+      userId: responseData.user.id
     }));
     
     return new Response(JSON.stringify(responseData), { 
