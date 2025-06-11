@@ -6,7 +6,6 @@ import AuthContext from './AuthContext';
 import { useAuth } from '@/hooks/use-auth';
 import { AuthContextType } from './types';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Use the base authentication functionality from our useAuth hook
@@ -36,34 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
       if (error) {
         console.error("❌ Error creating admin profile:", error);
-        
-        // If the direct approach fails, try using the RPC function
-        try {
-          // Call the edge function as a fallback
-          const result = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/create-admin-profile", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
-            },
-            body: JSON.stringify({
-              userId,
-              email: userEmail
-            })
-          });
-          
-          if (!result.ok) {
-            throw new Error("Failed to create admin profile via edge function");
-          }
-          
-          const data = await result.json();
-          console.log("✅ Admin profile created via function:", data);
-          setUserRole('admin');
-          return true;
-        } catch (edgeError) {
-          console.error("❌ Error creating profile via function:", edgeError);
-          return false;
-        }
+        return false;
       }
       
       console.log("✅ Admin profile created successfully:", newProfile?.role);
@@ -180,20 +152,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchUserRole();
     
     // Mark auth as initialized after first load
-    if (!authInitialized && !auth.isLoading) {
+    if (!authInitialized && !auth.loading) {
       setAuthInitialized(true);
     }
     
-  }, [auth.isAuthenticated, auth.user, auth.isLoading]);
+  }, [auth.isAuthenticated, auth.user, auth.loading]);
 
   // Show loading state on first initialization
   useEffect(() => {
-    if (auth.isLoading && !authInitialized) {
+    if (auth.loading && !authInitialized) {
       console.log('🔄 Auth is initializing...');
     } else if (authInitialized) {
       console.log('✅ Auth initialization complete');
     }
-  }, [auth.isLoading, authInitialized]);
+  }, [auth.loading, authInitialized]);
 
   // Check if user has a specific role - REAL AUTH ONLY
   const hasRole = (role: string): boolean => {

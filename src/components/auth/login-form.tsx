@@ -32,7 +32,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
 
     setIsLoading(true);
     try {
-      console.log('🔐 Starting emergency login process for:', email);
+      console.log('🔐 Starting login process for:', email);
       
       // EMERGENCY BYPASS for developer email - Use edge function directly
       if (email === 'wikus77@hotmail.it') {
