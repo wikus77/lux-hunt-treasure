@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -89,6 +88,46 @@ const DebugAuth = () => {
     }
   };
 
+  const testLoginBypass = async () => {
+    setIsLoading(true);
+    addLog('🔐 TESTING LOGIN BYPASS');
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('register-bypass', {
+        body: {
+          email: 'wikus77@hotmail.it',
+          password: 'mission-access-99', // o la password corretta
+          action: 'login'
+        }
+      });
+      
+      addLog('📤 LOGIN BYPASS RESULT:');
+      addLog(`✅ Data: ${JSON.stringify(data, null, 2)}`);
+      addLog(`❌ Error: ${JSON.stringify(error, null, 2)}`);
+      
+      if (error) {
+        addLog(`🚨 LOGIN BYPASS FAILED: ${error.message}`);
+      } else if (data?.success) {
+        addLog('🎉 LOGIN BYPASS SUCCESS');
+        if (data.magicLink) {
+          addLog('🔗 Magic Link provided - redirecting...');
+          addLog(`Magic Link: ${data.magicLink}`);
+          
+          // Opzione per reindirizzare automaticamente
+          const shouldRedirect = confirm('Vuoi essere reindirizzato automaticamente al magic link?');
+          if (shouldRedirect) {
+            window.location.href = data.magicLink;
+          }
+        }
+      }
+      
+    } catch (error: any) {
+      addLog(`💥 LOGIN BYPASS EXCEPTION: ${error.message || error}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const checkSupabaseConfig = async () => {
     setIsLoading(true);
     addLog('🔧 CHECKING SUPABASE CONFIG');
@@ -127,10 +166,10 @@ const DebugAuth = () => {
 
   return (
     <div className="p-4 bg-red-900/20 border border-red-500 rounded-lg mb-6">
-      <h3 className="text-red-400 font-bold mb-4">🔧 DEBUG AUTH CONSOLE + BYPASS</h3>
+      <h3 className="text-red-400 font-bold mb-4">🔧 DEBUG AUTH CONSOLE + BYPASS LOGIN</h3>
       
       {/* Action Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-4">
         <Button 
           onClick={checkSupabaseConfig} 
           variant="outline" 
@@ -158,7 +197,17 @@ const DebugAuth = () => {
           disabled={isLoading}
           className="text-green-400 border-green-400 hover:bg-green-400/10"
         >
-          {isLoading ? '⏳' : '🚀'} Test Bypass
+          {isLoading ? '⏳' : '🚀'} Test Bypass Reg
+        </Button>
+
+        <Button 
+          onClick={testLoginBypass} 
+          variant="outline" 
+          size="sm" 
+          disabled={isLoading}
+          className="text-cyan-400 border-cyan-400 hover:bg-cyan-400/10"
+        >
+          {isLoading ? '⏳' : '🔐'} BYPASS LOGIN
         </Button>
 
         <Button 
@@ -188,8 +237,15 @@ const DebugAuth = () => {
       <div className="mt-4 text-center">
         <span className={`inline-block w-3 h-3 rounded-full mr-2 ${isLoading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></span>
         <span className="text-white/70 text-sm">
-          {isLoading ? 'Running diagnostics...' : 'Ready for testing'}
+          {isLoading ? 'Running diagnostics...' : 'Ready for testing - USE BYPASS LOGIN!'}
         </span>
+      </div>
+      
+      <div className="mt-4 p-3 bg-cyan-900/20 border border-cyan-500/30 rounded">
+        <h4 className="text-cyan-400 font-bold mb-2">🚀 ACCESSO IMMEDIATO</h4>
+        <p className="text-cyan-300 text-sm">
+          Clicca "BYPASS LOGIN" per accedere direttamente tramite magic link senza CAPTCHA!
+        </p>
       </div>
     </div>
   );

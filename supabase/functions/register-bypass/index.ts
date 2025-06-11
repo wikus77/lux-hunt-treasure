@@ -13,15 +13,97 @@ serve(async (req) => {
   }
 
   try {
-    const { email, password, fullName, missionPreference } = await req.json();
+    const body = await req.json();
+    const { email, password, fullName, missionPreference, action } = body;
 
-    console.log('🔓 BYPASS REGISTRATION ATTEMPT:', { email, fullName, missionPreference });
+    console.log('🔓 BYPASS REQUEST:', { email, action: action || 'register' });
 
     // Create admin client using service role key
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    // MODALITÀ LOGIN BYPASS
+    if (action === 'login') {
+      console.log('🔐 BYPASS LOGIN ATTEMPT for:', email);
+      
+      // Verifica che l'utente esista
+      const { data: users, error: getUserError } = await supabaseAdmin.auth.admin.listUsers();
+      if (getUserError) {
+        console.error('❌ Error listing users:', getUserError);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'Cannot verify user existence',
+            code: 'USER_VERIFICATION_FAILED'
+          }),
+          { 
+            status: 400,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          }
+        );
+      }
+
+      const existingUser = users.users.find(user => user.email === email);
+      if (!existingUser) {
+        console.error('❌ User not found:', email);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'User not found',
+            code: 'USER_NOT_FOUND'
+          }),
+          { 
+            status: 404,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          }
+        );
+      }
+
+      // Crea una sessione di accesso tramite admin (BYPASS COMPLETO CAPTCHA)
+      const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'magiclink',
+        email: email,
+        options: {
+          redirectTo: `${req.headers.get('origin') || 'http://localhost:3000'}/auth`
+        }
+      });
+
+      if (sessionError) {
+        console.error('❌ Magic link generation failed:', sessionError);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: sessionError.message,
+            code: 'MAGIC_LINK_FAILED'
+          }),
+          { 
+            status: 400,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          }
+        );
+      }
+
+      console.log('✅ Magic link generated successfully');
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          user: existingUser,
+          magicLink: sessionData.properties?.action_link,
+          message: 'Login bypass successful - use magic link',
+          bypassMethod: 'magic_link'
+        }),
+        { 
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        }
+      );
+    }
+
+    // MODALITÀ REGISTRAZIONE (codice esistente)
+    console.log('📝 BYPASS REGISTRATION for:', email);
 
     // Use admin privileges to create user - bypasses CAPTCHA
     const { data: user, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -95,7 +177,7 @@ serve(async (req) => {
     );
 
   } catch (error: any) {
-    console.error('💥 BYPASS REGISTRATION EXCEPTION:', error);
+    console.error('💥 BYPASS EXCEPTION:', error);
     
     return new Response(
       JSON.stringify({ 

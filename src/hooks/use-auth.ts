@@ -1,115 +1,137 @@
-
-import { useState, useEffect, useCallback } from 'react';
-import { AuthError, Session, User } from '@supabase/supabase-js';
-import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
+import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-export function useAuth() {
-  const [session, setSession] = useState<Session | null>(null);
+export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
 
   useEffect(() => {
-    console.log("useAuth: Initializing authentication");
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        console.log("Auth state changed:", event);
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        if (currentSession?.user) {
-          setIsEmailVerified(!!currentSession.user.email_confirmed_at);
-          
-          if (event === 'SIGNED_IN') {
-            console.log("✅ User successfully signed in:", currentSession.user.email);
-          }
+    const getSession = async () => {
+      setIsLoading(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (session) {
+          setSession(session);
+          setUser(session.user);
+          setIsEmailVerified(session.user?.email_confirmed_at ? true : false);
         } else {
+          setSession(null);
+          setUser(null);
           setIsEmailVerified(false);
         }
-        
+      } catch (error) {
+        console.error("Error fetching session:", error);
+      } finally {
         setIsLoading(false);
       }
-    );
-    
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      console.log("Initial session check:", initialSession ? "Found session" : "No session");
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
-      
-      if (initialSession?.user) {
-        setIsEmailVerified(!!initialSession.user.email_confirmed_at);
+    };
+
+    getSession();
+
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        setSession(session);
+        setUser(session.user);
+        setIsEmailVerified(session.user?.email_confirmed_at ? true : false);
+      } else {
+        setSession(null);
+        setUser(null);
+        setIsEmailVerified(false);
       }
-      
       setIsLoading(false);
     });
-    
-    return () => {
-      console.log("useAuth: Cleaning up subscription");
-      subscription.unsubscribe();
-    };
   }, []);
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: AuthError; session?: Session }> => {
-    console.log("Login attempt for email:", email);
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: any; session?: Session }> => {
+    console.log('🔐 Starting login for:', email);
     
     try {
+      // PRIMO TENTATIVO: Login standard
+      console.log('🔄 Trying standard login...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) {
-        throw error;
+      if (!error && data.session) {
+        console.log('✅ Standard login successful');
+        setSession(data.session);
+        setUser(data.user);
+        setIsEmailVerified(data.user?.email_confirmed_at ? true : false);
+        return { success: true, session: data.session };
       }
 
-      console.log("✅ Login completed successfully for:", email);
-      return { success: true, session: data.session };
+      // Se il login standard fallisce per CAPTCHA, prova il bypass
+      if (error && error.message.includes('captcha')) {
+        console.log('🔄 Standard login blocked by CAPTCHA, trying bypass...');
+        
+        const { data: bypassResult, error: bypassError } = await supabase.functions.invoke('register-bypass', {
+          body: {
+            email,
+            password,
+            action: 'login'
+          }
+        });
+
+        if (bypassError) {
+          console.error('❌ Bypass login failed:', bypassError);
+          return { success: false, error: bypassError };
+        }
+
+        if (bypassResult?.success && bypassResult?.magicLink) {
+          console.log('✅ Bypass login successful - redirecting to magic link');
+          
+          // Reindirizza automaticamente al magic link
+          window.location.href = bypassResult.magicLink;
+          
+          return { 
+            success: true, 
+            session: null, // La sessione verrà stabilita dopo il redirect
+            error: null 
+          };
+        }
+      }
+
+      // Se anche il bypass fallisce, restituisci l'errore originale
+      console.error('❌ Both login methods failed:', error);
+      return { success: false, error };
+
     } catch (error: any) {
-      console.error("Error during login:", error);
-      return { success: false, error: error as AuthError };
+      console.error('💥 Login exception:', error);
+      return { success: false, error };
     }
   };
 
-  const logout = async () => {
-    console.log("Logging out user");
+  const logout = async (): Promise<void> => {
     try {
       await supabase.auth.signOut();
-      toast.success("Logout effettuato");
+      setSession(null);
+      setUser(null);
+      setIsEmailVerified(false);
     } catch (error) {
-      console.error("Logout error:", error);
-      toast.error("Errore durante il logout");
+      console.error("Error logging out:", error);
     }
   };
-
-  const isAuthenticated = useCallback(() => {
-    return !!user && !!session;
-  }, [user, session]);
-
-  const getCurrentUser = useCallback(() => {
-    return user;
-  }, [user]);
-
-  const getAccessToken = useCallback(() => {
-    return session?.access_token || null;
-  }, [session]);
 
   const resendVerificationEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email: email,
+        email,
       });
 
       if (error) {
-        console.error("Error sending verification email:", error);
+        console.error("Error resending verification email:", error);
         return { success: false, error: error.message };
       }
 
       return { success: true };
     } catch (error: any) {
-      console.error("Exception sending verification email:", error);
+      console.error("Exception resending verification email:", error);
       return { success: false, error: error.message };
     }
   };
@@ -117,32 +139,32 @@ export function useAuth() {
   const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/reset-password',
+        redirectTo: `${window.location.origin}/auth?type=recovery`,
       });
 
       if (error) {
-        console.error("Error sending password reset email:", error);
+        console.error("Error resetting password:", error);
         return { success: false, error: error.message };
       }
 
       return { success: true };
     } catch (error: any) {
-      console.error("Exception sending password reset email:", error);
+      console.error("Exception resetting password:", error);
       return { success: false, error: error.message };
     }
   };
 
   return {
+    user,
     session,
+    isAuthenticated: !!session,
     isLoading,
     isEmailVerified,
-    isAuthenticated: isAuthenticated(), 
     login,
     logout,
-    getCurrentUser,
-    getAccessToken,
+    getCurrentUser: () => user,
+    getAccessToken: () => session?.access_token || null,
     resendVerificationEmail,
     resetPassword,
-    user,
   };
-}
+};
