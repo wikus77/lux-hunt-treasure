@@ -418,8 +418,15 @@ serve(async (req) => {
           }
         });
         
-        // STEP 10 - INSERT NOTIFICATION WITH LOGGING
+        // STEP 10 - INSERT NOTIFICATION WITH ENHANCED LOGGING
         console.log(`🔥 FIX 1 – INSERTING NOTIFICATION`);
+        console.log(`📬 Notification data to insert:`, {
+          user_id: userId,
+          title: "NUOVA AREA GENERATA",
+          message: `Area BUZZ MISSION attiva! Raggio attuale: ${radius_km}km`,
+          type: "buzz_generated",
+          is_read: false
+        });
         
         const { data: notificationData, error: notificationError } = await supabase
           .from('user_notifications')
@@ -435,6 +442,7 @@ serve(async (req) => {
 
         if (notificationError) {
           console.error("❌ FIX 1 ERROR - Notification insert failed:", notificationError);
+          console.error("RLS BLOCKED:", notificationError.message);
           
           // STEP 11 - LOG IN BUZZ_LOGS: NOTIFICATION INSERT FAILED
           await supabase.from('buzz_logs').insert({
@@ -442,11 +450,13 @@ serve(async (req) => {
             step: 'notification_insert_failed',
             details: { 
               error: notificationError.message,
+              rls_blocked: true,
               timestamp: new Date().toISOString() 
             }
           });
         } else {
           console.log(`✅ FIX 1 SUCCESS - Notification inserted: ${notificationData.id}`);
+          console.log("NOTIFICA INSERITA", notificationData);
           
           // STEP 12 - LOG IN BUZZ_LOGS: NOTIFICATION INSERT SUCCESS
           await supabase.from('buzz_logs').insert({
