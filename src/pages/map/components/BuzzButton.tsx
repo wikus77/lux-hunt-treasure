@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Circle as CircleIcon, Loader } from "lucide-react";
@@ -36,7 +37,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   
   const activeArea = getActiveArea();
 
-  // FIX 2: Calcola il raggio corretto dal database
+  // Calculate radius from database
   React.useEffect(() => {
     const calculateCorrectRadius = async () => {
       if (!user?.id) return;
@@ -44,7 +45,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       try {
         console.log("🔥 BUZZ MAPPA radius: Calculating from database...");
         
-        // Ottieni la generazione corrente dal database
         const { data: counterData, error } = await supabase
           .from('user_buzz_map_counter')
           .select('buzz_map_count')
@@ -83,76 +83,34 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   }, [user?.id, dailyBuzzMapCounter]);
   
   const handleBuzzMapClick = async () => {
-    // ✅ FASE 1 – ACCESSO E SESSIONE - Enhanced logging
-    console.log('🔥 LIVELLO 1 – ACCESSO E SESSIONE START');
+    console.log('🔥 BUZZ MAPPA: Button clicked');
     console.log('User from useAuth:', user);
     console.log('User ID:', user?.id);
     console.log('User email:', user?.email);
     
-    // CRITICAL FIX: Validate session before proceeding
-    console.log('🔍 LIVELLO 1 – SESSION VALIDATION: Checking session validity...');
+    // Validate session before proceeding
+    console.log('🔍 BUZZ MAPPA: Checking session validity...');
     const validUser = await getValidUser();
     
     if (!validUser) {
-      console.error('❌ LIVELLO 1 ERROR: No valid user available after validation');
-      console.log('LIVELLO 1 – FALLIMENTO: User validation failed');
+      console.error('❌ BUZZ MAPPA: No valid user available after validation');
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
       return;
     }
 
-    console.log('✅ LIVELLO 1 – SUCCESSO: User validated', {
+    console.log('✅ BUZZ MAPPA: User validated', {
       userId: validUser.id,
       email: validUser.email
     });
 
-    // Check Supabase session directly with enhanced logging
-    console.log('🔍 LIVELLO 1 – SUPABASE SESSION: Checking Supabase session state...');
+    // Check Supabase session directly
+    console.log('🔍 BUZZ MAPPA: Checking Supabase session state...');
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    console.log('🔍 LIVELLO 1 – SUPABASE SESSION:', { 
+    console.log('🔍 BUZZ MAPPA: Supabase session:', { 
       hasSession: !!session, 
       sessionUserId: session?.user?.id,
       error: sessionError 
     });
-
-    // ✅ FASE 2 – CONTROLLO CONDIZIONI DI GENERAZIONE
-    console.log('🔥 LIVELLO 2 – CONTROLLO CONDIZIONI START');
-    
-    // Check subscription status with enhanced logging
-    try {
-      console.log('🔍 LIVELLO 2 – PROFILE CHECK: Fetching user profile...');
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('subscription_tier, stripe_customer_id')
-        .eq('id', validUser.id)
-        .single();
-      
-      console.log('🔍 LIVELLO 2 – PROFILE DATA:', {
-        profile: profile,
-        error: profileError,
-        tier: profile?.subscription_tier,
-        stripeId: profile?.stripe_customer_id
-      });
-      
-      // Check buzz counters
-      console.log('🔍 LIVELLO 2 – BUZZ COUNTERS: Fetching buzz counters...');
-      const { data: buzzCounters, error: counterError } = await supabase
-        .from('user_buzz_map_counter')
-        .select('*')
-        .eq('user_id', validUser.id)
-        .eq('date', new Date().toISOString().split('T')[0])
-        .maybeSingle();
-      
-      console.log('🔍 LIVELLO 2 – BUZZ COUNTERS:', {
-        counters: buzzCounters,
-        error: counterError,
-        dailyCount: dailyBuzzMapCounter
-      });
-      
-    } catch (error) {
-      console.error('❌ LIVELLO 2 ERROR: Error checking conditions:', error);
-    }
-
-    console.log('✅ LIVELLO 2 – CONTROLLO CONDITIONS COMPLETED');
     
     // Trigger ripple effect
     setIsRippling(true);
@@ -163,29 +121,23 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       window.plausible('buzz_click');
     }
     
-    // Use map center coordinates or default to Rome (will become fixed center)
+    // Use map center coordinates or default to Rome
     const centerLat = mapCenter ? mapCenter[0] : 41.9028;
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
-    console.log('📍 LIVELLO 3 – COORDINATES: Using coordinates:', { 
+    console.log('📍 BUZZ MAPPA: Using coordinates:', { 
       userId: validUser.id,
       centerLat, 
       centerLng,
-      mode: 'backend-only-fixed-center'
+      mode: 'backend-fixed-center'
     });
     
-    // ✅ FASE 3 – CHIAMATA A handle-buzz-press
-    console.log('🔥 LIVELLO 3 – CHIAMATA handle-buzz-press START');
-    console.log('Calling generateBuzzMapArea with validated user:', { 
-      userId: validUser.id,
-      centerLat, 
-      centerLng 
-    });
+    console.log('🔥 BUZZ MAPPA: Starting area generation');
     
-    // BACKEND-ONLY GENERATION with FIXED CENTER - completely stateless
+    // Generate area with complete flow
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
-    console.log('🔥 LIVELLO 3 – RISPOSTA handle-buzz-press:', newArea);
+    console.log('🔥 BUZZ MAPPA: Generation result:', newArea);
     
     if (newArea) {
       // Track clue unlocked event for map buzz
@@ -193,41 +145,35 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         window.plausible('clue_unlocked');
       }
       
-      console.log('✅ LIVELLO 3 SUCCESS - FIXED CENTER:', newArea);
+      console.log('✅ BUZZ MAPPA SUCCESS:', newArea);
       
       // Force reload areas to sync with database
       await reloadAreas();
-      
-      // DO NOT CENTER MAP - maintain current view
-      // onAreaGenerated is NOT called to prevent zoom/pan changes
-      console.log('🔒 MAINTAINING CURRENT MAP VIEW - No zoom/pan changes');
       
       // Execute optional callback without affecting map view
       if (handleBuzz) {
         handleBuzz();
       }
     } else {
-      console.error('❌ LIVELLO 3 FALLIMENTO - No area generated');
-      console.log('LIVELLO 3 FAILED - Area generation failed');
-      toast.error('❌ Errore generazione area BUZZ');
+      console.error('❌ BUZZ MAPPA: Area generation failed');
     }
   };
 
-  // FIX 2: Determina il raggio da mostrare
+  // Determine radius to display
   const getDisplayRadius = () => {
-    // 1. Se c'è un'area attiva, mostra il suo raggio
+    // 1. If there's an active area, show its radius
     if (activeArea) {
       console.log("🔥 BUZZ MAPPA radius: Using active area radius:", activeArea.radius_km);
       return activeArea.radius_km.toFixed(1);
     }
     
-    // 2. Se abbiamo calcolato il raggio, mostralo
+    // 2. If we have calculated radius, show it
     if (calculatedRadius !== null) {
       console.log("🔥 BUZZ MAPPA radius: Using calculated radius:", calculatedRadius);
       return calculatedRadius.toFixed(1);
     }
     
-    // 3. Se non abbiamo dati, mostra "Calcolo..."
+    // 3. If no data available, show "Calcolo..."
     console.log("🔥 BUZZ MAPPA radius: No data available, showing 'Calcolo...'");
     return "Calcolo...";
   };
