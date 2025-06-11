@@ -48,7 +48,6 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   
   const activeArea = getActiveArea();
 
-  // FIXED: Stabilized useEffect with proper dependencies
   useEffect(() => {
     let isMounted = true;
     
@@ -77,12 +76,12 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           setRealWeeklyUsed(weeklyAllowance?.used_buzz_count || 0);
         }
 
-        console.log('📊 LANCIO REAL COUNTERS:', {
+        console.log('📊 Real counters:', {
           mapCounter: mapCounter?.buzz_map_count || 0,
           weeklyUsed: weeklyAllowance?.used_buzz_count || 0
         });
       } catch (error) {
-        console.error('❌ LANCIO: Error fetching real counters:', error);
+        console.error('❌ Error fetching real counters:', error);
         if (isMounted) {
           setRealBuzzMapCounter(0);
           setRealWeeklyUsed(0);
@@ -98,21 +97,31 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   }, [user?.id]);
   
   const handleSecureBuzzMapClick = async () => {
-    // CRITICAL: Developer bypass check first
+    // FIXED: Developer bypass check first
     const isDeveloper = user?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
     
     if (isDeveloper || hasDeveloperAccess) {
       console.log('🔧 DEVELOPER BYPASS: Proceeding with map generation');
     } else {
+      // FIXED: For non-developers, enable Stripe flow
       const canProceed = await requireBuzzPayment();
-      if (!canProceed) {
+      if (!canProceed && subscriptionTier === 'Free') {
+        console.log('💳 Free plan detected, redirecting to payment...');
+        try {
+          await processBuzzPurchase(true);
+          return;
+        } catch (error) {
+          console.error('❌ Payment failed:', error);
+          return;
+        }
+      } else if (!canProceed) {
         console.log('❌ Payment verification failed, blocking access');
         return;
       }
     }
 
-    console.log('🚀 LANCIO BUZZ MAP: Payment verified, proceeding with generation...');
+    console.log('🚀 BUZZ MAP: Payment verified, proceeding with generation...');
     
     setIsRippling(true);
     setTimeout(() => setIsRippling(false), 1000);
@@ -124,24 +133,13 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     const centerLat = mapCenter ? mapCenter[0] : 41.9028;
     const centerLng = mapCenter ? mapCenter[1] : 12.4964;
     
-    console.log('📍 LANCIO COORDINATES:', { 
+    console.log('📍 BUZZ COORDINATES:', { 
       centerLat, 
       centerLng,
-      mode: 'launch-19-july',
-      expectedRadius: '500km'
+      mode: 'production-ready'
     });
     
-    if (subscriptionTier === 'Free' && !isDeveloper && !hasDeveloperAccess) {
-      console.log('💳 Free plan detected, redirecting to payment...');
-      try {
-        await processBuzzPurchase(true);
-        return;
-      } catch (error) {
-        console.error('❌ LANCIO: Payment failed:', error);
-        return;
-      }
-    }
-    
+    // FIXED: Use the corrected generateBuzzMapArea function
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
@@ -149,13 +147,27 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         window.plausible('clue_unlocked');
       }
       
-      console.log('🎉 LANCIO SUCCESS: Area generated', newArea);
+      console.log('🎉 BUZZ MAP SUCCESS: Area generated', newArea);
 
       try {
-        await supabase.rpc('increment_buzz_map_counter', { p_user_id: user?.id });
-        setRealBuzzMapCounter(prev => prev + 1);
+        // Update local counter
+        const { data: updatedCounter } = await supabase
+          .from('user_buzz_map_counter')
+          .upsert({
+            user_id: user?.id,
+            date: new Date().toISOString().split('T')[0],
+            buzz_map_count: realBuzzMapCounter + 1
+          }, {
+            onConflict: 'user_id,date'
+          })
+          .select('buzz_map_count')
+          .single();
+
+        if (updatedCounter) {
+          setRealBuzzMapCounter(updatedCounter.buzz_map_count);
+        }
       } catch (error) {
-        console.error('❌ LANCIO: Error updating counters:', error);
+        console.error('❌ Error updating counters:', error);
       }
       
       await reloadAreas();
@@ -165,8 +177,8 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       }
       
       await createMapBuzzNotification(
-        "Area BUZZ Mappa - Lancio M1SSION",
-        `Nuova area di ricerca generata: ${newArea.radius_km}km - Prima Generazione`
+        "Area BUZZ Mappa Generata",
+        `Nuova area di ricerca: ${newArea.radius_km.toFixed(1)}km - Generazione ${realBuzzMapCounter + 1}`
       );
       
       if (onAreaGenerated) {
@@ -174,17 +186,16 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       }
       
     } else {
-      console.error('❌ LANCIO: Area generation failed');
+      console.error('❌ BUZZ MAP: Area generation failed');
       toast.error('❌ Errore generazione area BUZZ');
     }
   };
 
   // FIXED: Simplified logic with developer exceptions
   const isDeveloper = user?.email === 'wikus77@hotmail.it' || localStorage.getItem('developer_access') === 'granted';
-  const isBlocked = !isDeveloper && (!hasValidPayment || remainingBuzz <= 0);
+  const isBlocked = !isDeveloper && !hasValidPayment && subscriptionTier === 'Free';
   const isLoading = isGenerating || stripeLoading || verificationLoading;
   
-  // FIXED: Safe display functions
   const displayRadius = () => {
     if (activeArea) {
       return activeArea.radius_km.toFixed(1);
@@ -226,8 +237,8 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           )}
           <span>
             {isLoading ? 'Generando...' : 
-             isBlocked ? 'ACCESSO NEGATO' :
-             `BUZZ MAPPA LANCIO (${displayRadius()}km) - Gen ${displayGeneration()}`}
+             isBlocked ? 'PAGAMENTO RICHIESTO' :
+             `BUZZ MAPPA (${displayRadius()}km) - Gen ${displayGeneration()}`}
           </span>
           
           {!isBlocked && (hasValidPayment || isDeveloper) && (

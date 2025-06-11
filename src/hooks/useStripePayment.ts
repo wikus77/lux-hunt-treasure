@@ -19,108 +19,134 @@ export const useStripePayment = () => {
   const [error, setError] = useState<string | null>(null);
   const { getCurrentUser } = useAuthContext();
 
-  const createCheckoutSession = async (options: StripePaymentOptions) => {
+  const processBuzzPurchase = async (
+    isMapBuzz: boolean = false, 
+    customPrice?: number
+  ): Promise<boolean> => {
     const currentUser = getCurrentUser();
     const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
 
     // CRITICAL: Developer bypass
     if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 Developer mode: Bypassing Stripe checkout');
-      toast.success('✅ Developer: Pagamento simulato con successo');
-      return { success: true, developer_mode: true };
+      console.log('🔧 Developer: Stripe bypass active');
+      toast.success('🔧 Developer: Pagamento simulato');
+      return true;
+    }
+
+    if (!currentUser?.id) {
+      toast.error('Devi essere loggato per effettuare acquisti');
+      return false;
     }
 
     setLoading(true);
     setError(null);
 
     try {
-      // Track checkout start event
-      if (typeof window !== 'undefined' && window.plausible) {
-        window.plausible('checkout_start');
+      console.log('💳 STRIPE: Starting payment process...');
+      console.log('💳 STRIPE: User:', currentUser.email);
+      console.log('💳 STRIPE: Type:', isMapBuzz ? 'BuzzMap' : 'Buzz');
+      console.log('💳 STRIPE: Price:', customPrice || (isMapBuzz ? 2.99 : 1.99));
+
+      // FIXED: Call Stripe edge function
+      const { data: response, error: stripeError } = await supabase.functions.invoke('create-stripe-session', {
+        body: {
+          planType: isMapBuzz ? 'BuzzMap' : 'Buzz',
+          customPrice: customPrice || (isMapBuzz ? 2.99 : 1.99),
+          redirectUrl: `${window.location.origin}/payment-success`,
+          userId: currentUser.id,
+          userEmail: currentUser.email,
+          isBuzz: !isMapBuzz,
+          isMapBuzz: isMapBuzz
+        }
+      });
+
+      if (stripeError) {
+        console.error('❌ STRIPE: Edge function error:', stripeError);
+        throw new Error(stripeError.message || 'Errore nella creazione della sessione di pagamento');
       }
 
-      console.log('🚀 Creating Stripe checkout session:', options);
+      if (!response?.url) {
+        console.error('❌ STRIPE: No checkout URL received:', response);
+        throw new Error('URL di checkout non ricevuto');
+      }
 
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
+      console.log('✅ STRIPE: Checkout URL received:', response.url);
+      
+      // FIXED: Open Stripe checkout in new tab
+      window.open(response.url, '_blank');
+      
+      toast.success('Reindirizzamento a Stripe in corso...');
+      
+      return true;
+
+    } catch (error: any) {
+      console.error('❌ STRIPE: Payment process failed:', error);
+      const errorMessage = error.message || 'Errore nel processo di pagamento';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createCheckoutSession = async (options: StripePaymentOptions): Promise<string | null> => {
+    const currentUser = getCurrentUser();
+    
+    if (!currentUser?.id) {
+      toast.error('Devi essere loggato per effettuare acquisti');
+      return null;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('💳 STRIPE: Creating checkout session...', options);
+
+      const { data: response, error: stripeError } = await supabase.functions.invoke('create-stripe-session', {
         body: {
           planType: options.planType,
           customPrice: options.customPrice,
-          redirectUrl: options.redirectUrl,
+          redirectUrl: options.redirectUrl || `${window.location.origin}/payment-success`,
+          userId: currentUser.id,
+          userEmail: currentUser.email,
           isBuzz: options.isBuzz,
           isMapBuzz: options.isMapBuzz,
-          sessionId: options.sessionId,
-          paymentMethod: options.paymentMethod || 'card',
-        },
+          paymentMethod: options.paymentMethod || 'card'
+        }
       });
 
-      if (error) {
-        console.error('❌ Stripe checkout error:', error);
-        throw new Error(error.message);
+      if (stripeError) {
+        throw new Error(stripeError.message || 'Errore nella creazione della sessione');
       }
 
-      if (!data?.url) {
-        throw new Error('Errore nella creazione della sessione di pagamento');
+      if (!response?.url) {
+        throw new Error('URL di checkout non ricevuto');
       }
 
-      console.log('✅ Stripe checkout session created:', data.url);
+      console.log('✅ STRIPE: Checkout session created:', response.sessionId);
+      return response.url;
 
-      // Open Stripe checkout in new tab
-      window.open(data.url, '_blank');
-      
-      return data;
-    } catch (err: any) {
-      console.error('❌ Stripe checkout exception:', err);
-      setError(err.message || 'Si è verificato un errore durante il checkout');
-      toast.error('Errore di pagamento', {
-        description: err.message || 'Si è verificato un errore durante il checkout',
-      });
+    } catch (error: any) {
+      console.error('❌ STRIPE: Checkout session creation failed:', error);
+      const errorMessage = error.message || 'Errore nella creazione della sessione';
+      setError(errorMessage);
+      toast.error(errorMessage);
       return null;
     } finally {
       setLoading(false);
     }
   };
 
-  const processSubscription = async (planType: 'Silver' | 'Gold' | 'Black', paymentMethod?: 'card' | 'apple_pay' | 'google_pay') => {
-    return createCheckoutSession({
-      planType,
-      paymentMethod
-    });
-  };
-
-  const processBuzzPurchase = async (
-    isMapBuzz = false, 
-    customPrice?: number, 
-    redirectUrl?: string, 
-    sessionId?: string,
-    paymentMethod?: 'card' | 'apple_pay' | 'google_pay'
-  ) => {
-    return createCheckoutSession({
-      planType: isMapBuzz ? 'BuzzMap' : 'Buzz',
-      customPrice,
-      redirectUrl,
-      isBuzz: !isMapBuzz,
-      isMapBuzz,
-      sessionId,
-      paymentMethod
-    });
-  };
-
-  const detectPaymentMethodAvailability = () => {
-    const isApplePayAvailable = typeof window.ApplePaySession !== 'undefined' && window.ApplePaySession?.canMakePayments();
-    const isGooglePayAvailable = typeof window.google !== 'undefined' && typeof window.google.payments !== 'undefined';
-    
-    return {
-      applePayAvailable: isApplePayAvailable,
-      googlePayAvailable: isGooglePayAvailable
-    };
-  };
+  const clearError = () => setError(null);
 
   return {
     loading,
     error,
-    processSubscription,
     processBuzzPurchase,
-    detectPaymentMethodAvailability
+    createCheckoutSession,
+    clearError
   };
 };

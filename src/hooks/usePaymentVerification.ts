@@ -112,24 +112,11 @@ export const usePaymentVerification = () => {
     }
   }, [getCurrentUser]);
 
-  // FIXED: Stable effect
   useEffect(() => {
-    let isMounted = true;
-    
-    const initializePaymentStatus = async () => {
-      if (isMounted) {
-        await loadPaymentStatus();
-      }
-    };
-    
-    initializePaymentStatus();
-    
-    return () => {
-      isMounted = false;
-    };
+    loadPaymentStatus();
   }, [loadPaymentStatus]);
 
-  // FIXED: Enhanced developer bypass but allow Stripe for testing
+  // FIXED: Enhanced payment requirement check - ALLOWS STRIPE FOR NON-DEVELOPERS
   const requireBuzzPayment = useCallback(async (): Promise<boolean> => {
     const currentUser = getCurrentUser();
     const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
@@ -141,12 +128,10 @@ export const usePaymentVerification = () => {
       return true;
     }
 
-    // FIXED: Allow Stripe calls for non-developer users
+    // FIXED: For non-developers, ALLOW Stripe flow
     if (!hasValidPayment) {
-      toast.error('Abbonamento richiesto', {
-        description: 'Devi avere un abbonamento attivo per utilizzare BUZZ'
-      });
-      return false;
+      console.log('💳 Non-developer: Payment required, will trigger Stripe');
+      return false; // This will trigger Stripe flow
     }
 
     if (remainingBuzz <= 0) {

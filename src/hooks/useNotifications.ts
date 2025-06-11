@@ -28,7 +28,7 @@ export const useNotifications = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { getCurrentUser } = useAuthContext();
 
-  // FIXED: Stabilized notification loading
+  // FIXED: Immediate and proper notification loading
   const loadNotifications = useCallback(async () => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
@@ -51,6 +51,8 @@ export const useNotifications = () => {
     setIsLoading(true);
     
     try {
+      console.log('📨 Loading notifications for user:', userId);
+      
       const { data, error } = await supabase
         .from('user_notifications')
         .select('*')
@@ -78,7 +80,13 @@ export const useNotifications = () => {
       }));
 
       setNotifications(mappedNotifications);
-      console.log('✅ Notifications loaded:', mappedNotifications.length);
+      console.log('✅ Notifications loaded successfully:', mappedNotifications.length);
+      
+      // CRITICAL: Force immediate UI refresh
+      setTimeout(() => {
+        setNotifications(mappedNotifications);
+      }, 100);
+      
     } catch (error) {
       console.error('❌ Exception loading notifications:', error);
       setNotifications([]);
@@ -87,7 +95,7 @@ export const useNotifications = () => {
     }
   }, [getCurrentUser]);
 
-  // FIXED: Stable notification addition
+  // FIXED: Enhanced notification creation with immediate refresh
   const addNotification = useCallback(async (title: string, message: string, type: string = 'generic') => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
@@ -98,6 +106,8 @@ export const useNotifications = () => {
     }
 
     try {
+      console.log('📨 Creating notification:', { title, message, type });
+      
       const { data, error } = await supabase
         .from('user_notifications')
         .insert({
@@ -127,12 +137,19 @@ export const useNotifications = () => {
         date: data.created_at
       };
 
+      // CRITICAL: Immediate local state update
       setNotifications(prev => [newNotification, ...prev]);
-      console.log('✅ Notification added locally');
+      console.log('✅ Notification added successfully');
+      
+      // Force reload to sync with database
+      setTimeout(() => {
+        loadNotifications();
+      }, 500);
+      
     } catch (error) {
       console.error('❌ Exception adding notification:', error);
     }
-  }, [getCurrentUser]);
+  }, [getCurrentUser, loadNotifications]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
@@ -209,21 +226,9 @@ export const useNotifications = () => {
     await loadNotifications();
   }, [loadNotifications]);
 
-  // FIXED: Stable effect for loading notifications
+  // FIXED: Immediate loading on mount
   useEffect(() => {
-    let isMounted = true;
-    
-    const initializeNotifications = async () => {
-      if (isMounted) {
-        await loadNotifications();
-      }
-    };
-    
-    initializeNotifications();
-    
-    return () => {
-      isMounted = false;
-    };
+    loadNotifications();
   }, [loadNotifications]);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
