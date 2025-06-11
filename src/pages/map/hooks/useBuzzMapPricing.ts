@@ -1,13 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 
 export const useBuzzMapPricing = () => {
   const [buzzMapPrice, setBuzzMapPrice] = useState(7.99);
   const [clueCount, setClueCount] = useState(0);
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   
   useEffect(() => {
     const fetchUserCluesCount = async () => {
