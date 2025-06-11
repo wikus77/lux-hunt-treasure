@@ -60,9 +60,16 @@ export function useBuzzFeature() {
     const soundPreference = localStorage.getItem('buzzSound') || 'default';
     const volume = localStorage.getItem('buzzVolume') ? Number(localStorage.getItem('buzzVolume')) / 100 : 0.5;
     
-    initializeSound(soundPreference, volume).catch(error => 
-      console.error("Error during sound initialization:", error)
-    );
+    // Fixed: Properly handle the async initializeSound function
+    const initSound = async () => {
+      try {
+        await initializeSound(soundPreference, volume);
+      } catch (error) {
+        console.error("Error during sound initialization:", error);
+      }
+    };
+    
+    initSound();
     
     if (location.state?.paymentCompleted && location.state?.fromRegularBuzz) {
       try {
@@ -181,10 +188,13 @@ export function useBuzzFeature() {
       incrementUnlockedCluesAndAddClue();
       
       console.log("💾 Creando notifica indizio extra UNIVOCA...");
-      createBuzzNotification(
-        "Nuovo Indizio Extra!", 
-        uniqueClue
-      ).then(async () => {
+      
+      // Fixed: Properly handle the async createBuzzNotification function
+      try {
+        await createBuzzNotification(
+          "Nuovo Indizio Extra!", 
+          uniqueClue
+        );
         console.log("✅ Notifica indizio extra UNIVOCA creata");
         await reloadNotifications(true);
         
@@ -195,13 +205,13 @@ export function useBuzzFeature() {
         
         setShowDialog(false);
         setShowExplosion(true);
-      }).catch(error => {
+      } catch (error) {
         console.error("❌ Error creating notification:", error);
         toast.error("Errore nel salvataggio dell'indizio", {
           duration: 3000,
         });
         setShowDialog(false);
-      });
+      }
     } catch (error) {
       console.error("❌ Error in handle clue button click:", error);
       toast.error("Si è verificato un errore");

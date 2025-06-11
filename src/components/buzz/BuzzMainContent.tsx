@@ -81,10 +81,9 @@ const BuzzMainContent = () => {
         </div>
       )}
 
-      {/* Secure Buzz Button */}
+      {/* Secure Buzz Button - Removed invalid userId prop */}
       <div className="flex flex-col items-center gap-4">
         <BuzzButtonSecure
-          userId={user.id}
           onSuccess={handleSuccess}
         />
         
