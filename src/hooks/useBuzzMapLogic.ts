@@ -23,7 +23,39 @@ export const useBuzzMapLogic = () => {
   const currentUser = getCurrentUser();
   const userId = currentUser?.id;
 
-  // CRITICAL FIX: Enhanced area loading
+  // CRITICAL FIX: Force complete area deletion before any new generation
+  const deletePreviousBuzzMapAreas = useCallback(async () => {
+    if (!userId) {
+      const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
+      if (!hasDeveloperAccess) return false;
+    }
+
+    try {
+      console.log('🗑️ SURGICAL FIX: FORCING complete deletion of all previous areas for user:', userId);
+      
+      // IMMEDIATE local state cleanup
+      setAreas([]);
+      
+      // FORCED database deletion
+      const { error: deleteError } = await supabase
+        .from('user_map_areas')
+        .delete()
+        .eq('user_id', userId || '00000000-0000-4000-a000-000000000000');
+
+      if (deleteError) {
+        console.error('❌ SURGICAL FIX: Error deleting previous areas:', deleteError);
+        return false;
+      } else {
+        console.log('✅ SURGICAL FIX: ALL previous areas FORCEFULLY DELETED');
+        return true;
+      }
+    } catch (error) {
+      console.error('❌ SURGICAL FIX: Exception deleting areas:', error);
+      return false;
+    }
+  }, [userId]);
+
+  // Enhanced area loading
   useEffect(() => {
     let isMounted = true;
     
@@ -57,7 +89,7 @@ export const useBuzzMapLogic = () => {
 
         if (isMounted) {
           setAreas(mappedAreas);
-          console.log('✅ EMERGENCY FIX: Areas loaded:', mappedAreas.length);
+          console.log('✅ Areas loaded:', mappedAreas.length);
         }
       } catch (error) {
         console.error('❌ Exception loading areas:', error);
@@ -71,7 +103,7 @@ export const useBuzzMapLogic = () => {
     };
   }, [userId]);
 
-  // CRITICAL FIX: Enhanced area generation with PROPER deletion of previous areas and radius reduction
+  // CRITICAL FIX: Enhanced area generation with FORCED deletion and proper Stripe
   const generateBuzzMapArea = useCallback(async (lat: number, lng: number): Promise<BuzzMapArea | null> => {
     if (!userId) {
       const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
@@ -87,36 +119,27 @@ export const useBuzzMapLogic = () => {
     setIsGenerating(true);
     
     try {
-      console.log('🚀 EMERGENCY FIX: Starting area generation with FORCED deletion and radius reduction...');
+      console.log('🚀 SURGICAL FIX: Starting area generation with FORCED deletion...');
 
-      // CRITICAL FIX: FORCED DELETE ALL PREVIOUS AREAS FOR THIS USER FIRST
-      console.log('🗑️ DELETING ALL previous areas for user:', userId);
-      
-      // Force immediate local state cleanup BEFORE database deletion
-      setAreas([]);
-      
-      const { error: deleteError } = await supabase
-        .from('user_map_areas')
-        .delete()
-        .eq('user_id', userId || '00000000-0000-4000-a000-000000000000');
-
-      if (deleteError) {
-        console.error('❌ EMERGENCY FIX: Error deleting previous areas:', deleteError);
-      } else {
-        console.log('✅ EMERGENCY FIX: ALL previous areas DELETED successfully');
+      // STEP 1: FORCE DELETE ALL PREVIOUS AREAS FIRST
+      const deletionSuccess = await deletePreviousBuzzMapAreas();
+      if (!deletionSuccess) {
+        console.error('❌ SURGICAL FIX: Failed to delete previous areas');
+        toast.error('Errore nella pulizia aree precedenti');
+        return null;
       }
 
-      // CRITICAL FIX: Calculate generation count and apply radius reduction (5% per generation)
+      // STEP 2: Calculate generation count and apply radius reduction
       const generationCount = dailyBuzzMapCounter + 1;
       let newRadius = 500; // Start at 500km
       
       if (generationCount > 1) {
         // Apply 5% reduction for each subsequent generation
         newRadius = Math.max(5, 500 * Math.pow(0.95, generationCount - 1));
-        console.log(`📊 EMERGENCY FIX: Radius reduction for generation ${generationCount}: ${newRadius}km`);
+        console.log(`📊 SURGICAL FIX: Radius reduction for generation ${generationCount}: ${newRadius}km`);
       }
 
-      // Call edge function for area generation with proper radius
+      // STEP 3: Call edge function for area generation
       const { data: response, error: edgeError } = await supabase.functions.invoke('handle-buzz-press', {
         body: {
           userId: userId || '00000000-0000-4000-a000-000000000000',
@@ -127,13 +150,13 @@ export const useBuzzMapLogic = () => {
       });
 
       if (edgeError) {
-        console.error('❌ EMERGENCY FIX: Edge function error:', edgeError);
+        console.error('❌ SURGICAL FIX: Edge function error:', edgeError);
         toast.error('Errore nella chiamata al server');
         return null;
       }
 
       if (!response?.success) {
-        console.error('❌ EMERGENCY FIX: Edge function failed:', response?.errorMessage);
+        console.error('❌ SURGICAL FIX: Edge function failed:', response?.errorMessage);
         toast.error(response?.errorMessage || 'Errore nella generazione area');
         return null;
       }
@@ -149,23 +172,23 @@ export const useBuzzMapLogic = () => {
         user_id: userId || '00000000-0000-4000-a000-000000000000'
       };
 
-      // FORCED: Update local state with ONLY the new area (replacing all previous)
+      // Update local state with ONLY the new area
       setAreas([newArea]);
       setDailyBuzzMapCounter(response.generation_number || generationCount);
 
-      console.log('✅ EMERGENCY FIX: NEW SINGLE area generated successfully:', newArea);
+      console.log('✅ SURGICAL FIX: NEW SINGLE area generated successfully:', newArea);
       toast.success(`✅ Nuova area BUZZ MAPPA generata: ${newArea.radius_km.toFixed(1)}km - Gen #${generationCount}`);
 
       return newArea;
 
     } catch (error) {
-      console.error('❌ EMERGENCY FIX: Exception generating area:', error);
+      console.error('❌ SURGICAL FIX: Exception generating area:', error);
       toast.error('Errore imprevisto nella generazione');
       return null;
     } finally {
       setIsGenerating(false);
     }
-  }, [userId, dailyBuzzMapCounter]);
+  }, [userId, dailyBuzzMapCounter, deletePreviousBuzzMapAreas]);
 
   const getActiveArea = useCallback(() => {
     return areas.length > 0 ? areas[0] : null;
@@ -198,7 +221,7 @@ export const useBuzzMapLogic = () => {
         }));
         
         setAreas(mappedAreas);
-        console.log('✅ EMERGENCY FIX: Areas reloaded:', mappedAreas.length);
+        console.log('✅ Areas reloaded:', mappedAreas.length);
       }
     } catch (error) {
       console.error('❌ Error reloading areas:', error);
@@ -213,6 +236,7 @@ export const useBuzzMapLogic = () => {
     getActiveArea,
     currentWeekAreas: currentWeekAreas(),
     reloadAreas,
-    loadAreas: reloadAreas
+    loadAreas: reloadAreas,
+    deletePreviousBuzzMapAreas
   };
 };

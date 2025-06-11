@@ -41,7 +41,7 @@ serve(async (req) => {
     const requestData = await req.json();
     const { userId, generateMap, coordinates, radius } = requestData as BuzzRequest;
     
-    console.log(`🔥 EMERGENCY FIX – BUZZ REQUEST START - userId: ${userId}, generateMap: ${generateMap}`);
+    console.log(`🔥 SURGICAL FIX – BUZZ REQUEST START - userId: ${userId}, generateMap: ${generateMap}`);
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false }
@@ -51,10 +51,10 @@ serve(async (req) => {
     const isDeveloper = userId === '00000000-0000-4000-a000-000000000000';
     
     if (isDeveloper) {
-      console.log('🔧 EMERGENCY FIX: Developer bypass detected - FULL ACCESS GRANTED');
+      console.log('🔧 SURGICAL FIX: Developer bypass detected - FULL ACCESS GRANTED');
     }
 
-    // STEP 1 - LOG START with FORCED database write and PROPER conflict handling
+    // STEP 1 - LOG START with FORCED database write
     try {
       await supabase.from('buzz_logs').insert({
         id: crypto.randomUUID(),
@@ -63,16 +63,16 @@ serve(async (req) => {
         details: { generateMap, coordinates, timestamp: new Date().toISOString() },
         created_at: new Date().toISOString()
       });
-      console.log('✅ EMERGENCY FIX: Start log FORCED into database');
+      console.log('✅ SURGICAL FIX: Start log FORCED into database');
     } catch (logError) {
-      console.error('❌ EMERGENCY FIX: Start log failed (continuing):', logError);
+      console.error('❌ SURGICAL FIX: Start log failed (continuing):', logError);
     }
 
     if (!isDeveloper) {
-      // Regular authentication check for non-developers with enhanced validation
+      // CRITICAL FIX: Enhanced authentication check for non-developers
       const authHeader = req.headers.get("authorization");
       if (!authHeader) {
-        console.error("❌ EMERGENCY FIX - Missing authorization header");
+        console.error("❌ SURGICAL FIX - Missing authorization header");
         return new Response(
           JSON.stringify({ success: false, error: true, errorMessage: "Token di autorizzazione mancante" }),
           { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -85,15 +85,15 @@ serve(async (req) => {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (!payload.sub) {
-          console.error("❌ EMERGENCY FIX - JWT missing sub claim");
+          console.error("❌ SURGICAL FIX - JWT missing sub claim");
           return new Response(
             JSON.stringify({ success: false, error: true, errorMessage: "Token JWT non valido (missing sub)" }),
             { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
           );
         }
-        console.log('✅ EMERGENCY FIX: JWT validation passed with sub claim');
+        console.log('✅ SURGICAL FIX: JWT validation passed with sub claim');
       } catch (jwtError) {
-        console.error("❌ EMERGENCY FIX - JWT parsing failed:", jwtError);
+        console.error("❌ SURGICAL FIX - JWT parsing failed:", jwtError);
         return new Response(
           JSON.stringify({ success: false, error: true, errorMessage: "Token JWT malformato" }),
           { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -103,7 +103,7 @@ serve(async (req) => {
       const { data: { user }, error: authError } = await supabase.auth.getUser(token);
       
       if (authError || !user || user.id !== userId) {
-        console.error("❌ EMERGENCY FIX - Auth validation failed");
+        console.error("❌ SURGICAL FIX - Auth validation failed");
         return new Response(
           JSON.stringify({ success: false, error: true, errorMessage: "Autorizzazione non valida" }),
           { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -111,29 +111,29 @@ serve(async (req) => {
       }
     }
 
-    console.log(`✅ EMERGENCY FIX - Auth validation passed`);
+    console.log(`✅ SURGICAL FIX - Auth validation passed`);
 
     // STEP 2 - ENHANCED MAP GENERATION with FORCED area deletion and radius reduction
     if (generateMap) {
-      console.log('🗺️ EMERGENCY FIX: Starting FORCED map area generation with PROPER deletion and radius reduction');
+      console.log('🗺️ SURGICAL FIX: Starting FORCED map area generation with complete deletion');
       
       const lat = coordinates?.lat || 41.9028;
       const lng = coordinates?.lng || 12.4964;
       
-      // CRITICAL FIX: DELETE ALL PREVIOUS AREAS FOR THIS USER FIRST
-      console.log('🗑️ EMERGENCY FIX: DELETING all previous areas for user:', userId);
+      // CRITICAL FIX: FORCE DELETE ALL PREVIOUS AREAS FOR THIS USER FIRST
+      console.log('🗑️ SURGICAL FIX: FORCING complete deletion of all previous areas for user:', userId);
       const { error: deleteError } = await supabase
         .from('user_map_areas')
         .delete()
         .eq('user_id', userId);
       
       if (deleteError) {
-        console.error('❌ EMERGENCY FIX: Error deleting previous areas:', deleteError);
+        console.error('❌ SURGICAL FIX: Error deleting previous areas:', deleteError);
       } else {
-        console.log('✅ EMERGENCY FIX: Previous areas DELETED successfully');
+        console.log('✅ SURGICAL FIX: Previous areas FORCEFULLY DELETED successfully');
       }
       
-      // CRITICAL FIX: Calculate generation count and dynamic radius
+      // Calculate generation count and dynamic radius
       const { data: counterData } = await supabase
         .from('user_buzz_map_counter')
         .select('buzz_map_count')
@@ -148,10 +148,10 @@ serve(async (req) => {
       let finalRadius = radius || 500;
       if (newCount > 1) {
         finalRadius = Math.max(5, 500 * Math.pow(0.95, newCount - 1));
-        console.log(`📊 EMERGENCY FIX: FORCED radius reduction for generation ${newCount}: ${finalRadius}km`);
+        console.log(`📊 SURGICAL FIX: FORCED radius reduction for generation ${newCount}: ${finalRadius}km`);
       }
 
-      // CRITICAL FIX: Insert new area with FORCED unique ID and PROPER conflict handling
+      // CRITICAL FIX: Insert new area with FORCED unique ID
       const { data: newArea, error: areaError } = await supabase
         .from('user_map_areas')
         .insert({
@@ -167,14 +167,14 @@ serve(async (req) => {
         .single();
 
       if (areaError) {
-        console.error('❌ EMERGENCY FIX: Error creating map area:', areaError);
+        console.error('❌ SURGICAL FIX: Error creating map area:', areaError);
         return new Response(
           JSON.stringify({ success: false, error: true, errorMessage: "Errore creazione area mappa" }),
           { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
 
-      // CRITICAL FIX: Update counter with FORCED increment and PROPER conflict handling
+      // Update counter with proper conflict handling
       let counterResult = newCount;
       try {
         const currentDate = new Date().toISOString().split('T')[0];
@@ -210,10 +210,10 @@ serve(async (req) => {
           counterResult = newCounter?.buzz_map_count || newCount;
         }
       } catch (counterError) {
-        console.error('❌ EMERGENCY FIX: Counter update failed (continuing):', counterError);
+        console.error('❌ SURGICAL FIX: Counter update failed (continuing):', counterError);
       }
 
-      console.log(`✅ EMERGENCY FIX: Map area FORCED creation with radius reduction successful`);
+      console.log(`✅ SURGICAL FIX: Map area FORCED creation with deletion successful`);
       
       return new Response(JSON.stringify({
         success: true,
@@ -230,7 +230,7 @@ serve(async (req) => {
     }
 
     // STEP 3 - REGULAR BUZZ PROCESSING with COHERENT mission messages
-    console.log('🎯 EMERGENCY FIX: Processing regular BUZZ with COHERENT mission messages');
+    console.log('🎯 SURGICAL FIX: Processing regular BUZZ with COHERENT mission messages');
 
     const { data: weekData, error: weekError } = await supabase.rpc('get_current_mission_week');
     const currentWeek = weekData || 1;
@@ -242,10 +242,10 @@ serve(async (req) => {
       });
       buzzCount = buzzCountData || 1;
     } catch (buzzCountError) {
-      console.error("❌ EMERGENCY FIX - Error incrementing buzz counter (continuing):", buzzCountError);
+      console.error("❌ SURGICAL FIX - Error incrementing buzz counter (continuing):", buzzCountError);
     }
 
-    // CRITICAL FIX: Generate COHERENT mission clue with proper Rome/Mission context
+    // Generate COHERENT mission clue with proper Rome/Mission context
     const coherentMissionClues = [
       `🎯 Indizio Mission Roma Settimana ${currentWeek}: Il segreto è custodito dove l'antico incontra il moderno nell'eterna città`,
       `🏛️ Indizio Premium Roma #${buzzCount}: Cerca il simbolo nascosto nei riflessi del tramonto al Colosseo`,
@@ -258,7 +258,7 @@ serve(async (req) => {
     const missionCode = `MIS-${Date.now().toString().slice(-6)}`;
     const clueWithCode = `${randomClue} - Codice: ${missionCode}`;
 
-    // CRITICAL FIX: Save clue to database with FORCED unique ID and PROPER conflict handling
+    // Save clue to database with FORCED unique ID
     try {
       const { data: clueData, error: clueError } = await supabase
         .from('user_clues')
@@ -277,15 +277,15 @@ serve(async (req) => {
         .single();
 
       if (clueError) {
-        console.error("❌ EMERGENCY FIX - Error saving clue (continuing):", clueError);
+        console.error("❌ SURGICAL FIX - Error saving clue (continuing):", clueError);
       } else {
-        console.log("✅ EMERGENCY FIX: Clue FORCED into database successfully");
+        console.log("✅ SURGICAL FIX: Clue FORCED into database successfully");
       }
     } catch (clueError) {
-      console.error("❌ EMERGENCY FIX - Exception saving clue (continuing):", clueError);
+      console.error("❌ SURGICAL FIX - Exception saving clue (continuing):", clueError);
     }
 
-    console.log(`✅ EMERGENCY FIX: Regular BUZZ processed with COHERENT mission message`);
+    console.log(`✅ SURGICAL FIX: Regular BUZZ processed with COHERENT mission message`);
 
     return new Response(JSON.stringify({
       success: true,
@@ -298,7 +298,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('❌ EMERGENCY FIX: Exception in handle-buzz-press:', error);
+    console.error('❌ SURGICAL FIX: Exception in handle-buzz-press:', error);
     return new Response(
       JSON.stringify({ 
         success: false, 

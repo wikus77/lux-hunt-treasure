@@ -28,7 +28,7 @@ export const useNotifications = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { getCurrentUser } = useAuthContext();
 
-  // CRITICAL FIX: Enhanced notification loading with FORCED database sync and PROPER error handling
+  // CRITICAL FIX: Enhanced notification loading with proper auth validation
   const loadNotifications = useCallback(async () => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
@@ -38,20 +38,28 @@ export const useNotifications = () => {
       const isDeveloperEmail = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
       
       if (!hasDeveloperAccess && !isDeveloperEmail) {
-        console.warn('EMERGENCY FIX: Cannot load notifications - no user ID');
+        console.warn('SURGICAL FIX: Cannot load notifications - no user ID');
         setNotifications([]);
         setIsLoading(false);
         return;
       }
       
-      console.log('🔧 EMERGENCY FIX: Developer mode - Loading notifications with fallback');
+      console.log('🔧 SURGICAL FIX: Developer mode - Loading notifications with fallback');
     }
 
     setIsLoading(true);
     
     try {
-      console.log('📨 EMERGENCY FIX: Loading notifications for user:', userId);
+      console.log('📨 SURGICAL FIX: Loading notifications with proper auth for user:', userId);
       
+      // CRITICAL FIX: Ensure we have a valid session before making the request
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session && !localStorage.getItem('developer_access')) {
+        console.error('❌ SURGICAL FIX: No valid session found');
+        setNotifications([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('user_notifications')
         .select('*')
@@ -61,7 +69,7 @@ export const useNotifications = () => {
         .limit(100);
 
       if (error) {
-        console.error('❌ EMERGENCY FIX: Error loading notifications:', error);
+        console.error('❌ SURGICAL FIX: Error loading notifications:', error);
         setNotifications([]);
         return;
       }
@@ -79,37 +87,44 @@ export const useNotifications = () => {
       }));
 
       setNotifications(mappedNotifications);
-      console.log('✅ EMERGENCY FIX: Notifications loaded successfully:', mappedNotifications.length);
+      console.log('✅ SURGICAL FIX: Notifications loaded successfully:', mappedNotifications.length);
       
     } catch (error) {
-      console.error('❌ EMERGENCY FIX: Exception loading notifications:', error);
+      console.error('❌ SURGICAL FIX: Exception loading notifications:', error);
       setNotifications([]);
     } finally {
       setIsLoading(false);
     }
   }, [getCurrentUser]);
 
-  // CRITICAL FIX: Enhanced notification creation with FORCED database write and GUARANTEED persistence
+  // CRITICAL FIX: Enhanced notification creation with FORCED database write
   const addNotification = useCallback(async (title: string, message: string, type: string = 'generic') => {
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
 
     if (!userId && !localStorage.getItem('developer_access')) {
-      console.warn('EMERGENCY FIX: Cannot add notification - no user ID');
+      console.warn('SURGICAL FIX: Cannot add notification - no user ID');
       return;
     }
 
     try {
-      console.log('📨 EMERGENCY FIX: Creating notification with FORCED write and GUARANTEED persistence:', { title, message, type });
+      console.log('📨 SURGICAL FIX: Creating notification with FORCED write:', { title, message, type });
       
-      // CRITICAL FIX: Generate unique ID and force write with multiple attempts
+      // CRITICAL FIX: Ensure we have valid session
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session && !localStorage.getItem('developer_access')) {
+        console.error('❌ SURGICAL FIX: No valid session for notification creation');
+        return;
+      }
+
+      // Generate unique ID and force write with multiple attempts
       const notificationId = crypto.randomUUID();
       let writeSuccess = false;
       let attempts = 0;
       
       while (!writeSuccess && attempts < 10) {
         attempts++;
-        console.log(`📨 EMERGENCY FIX: Notification write attempt ${attempts}/10`);
+        console.log(`📨 SURGICAL FIX: Notification write attempt ${attempts}/10`);
         
         try {
           const { data, error } = await supabase
@@ -128,7 +143,7 @@ export const useNotifications = () => {
             .single();
 
           if (error) {
-            console.error(`❌ EMERGENCY FIX: Notification write attempt ${attempts} failed:`, error);
+            console.error(`❌ SURGICAL FIX: Notification write attempt ${attempts} failed:`, error);
             if (attempts < 10) {
               // Wait before retry with exponential backoff
               await new Promise(resolve => setTimeout(resolve, 100 * attempts));
@@ -138,7 +153,7 @@ export const useNotifications = () => {
           }
 
           writeSuccess = true;
-          console.log(`✅ EMERGENCY FIX: Notification SUCCESSFULLY written on attempt ${attempts}`);
+          console.log(`✅ SURGICAL FIX: Notification SUCCESSFULLY written on attempt ${attempts}`);
 
           const newNotification = {
             id: data.id,
@@ -152,17 +167,17 @@ export const useNotifications = () => {
             date: data.created_at
           };
 
-          // CRITICAL FIX: Immediate local state update
+          // Immediate local state update
           setNotifications(prev => [newNotification, ...prev]);
-          console.log('✅ EMERGENCY FIX: Notification added to local state successfully');
+          console.log('✅ SURGICAL FIX: Notification added to local state successfully');
           
-          // CRITICAL FIX: Force immediate reload to ensure persistence verification
+          // Force immediate reload to ensure persistence verification
           setTimeout(() => {
             loadNotifications();
           }, 200);
 
         } catch (retryError) {
-          console.error(`❌ EMERGENCY FIX: Notification write attempt ${attempts} exception:`, retryError);
+          console.error(`❌ SURGICAL FIX: Notification write attempt ${attempts} exception:`, retryError);
           if (attempts >= 10) {
             throw retryError;
           }
@@ -174,7 +189,7 @@ export const useNotifications = () => {
       }
       
     } catch (error) {
-      console.error('❌ EMERGENCY FIX: FINAL Exception adding notification:', error);
+      console.error('❌ SURGICAL FIX: FINAL Exception adding notification:', error);
     }
   }, [getCurrentUser, loadNotifications]);
 
