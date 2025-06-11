@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Circle as CircleIcon, Loader, Lock } from "lucide-react";
@@ -173,7 +172,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       
     } else {
       console.error('❌ LANCIO: Area generation failed');
-      await logUnauthorizedAccess('buzz_map_generation_failed');
+      await logUnauthorizedAccess('buzz_map_generation_failed', {});
       toast.error('❌ Errore generazione area BUZZ');
     }
   };
@@ -182,17 +181,17 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const isLoading = isGenerating || stripeLoading || verificationLoading;
   
   // LANCIO: Mostra sempre 500km per prima generazione
-  const displayRadius = () => {
+  function displayRadius() {
     if (activeArea) {
       return activeArea.radius_km.toFixed(1);
     }
     return '500.0'; // LANCIO: Default FISSO 500km
-  };
+  }
   
   // LANCIO: Mostra numero generazioni corrette (da database reale)
-  const displayGeneration = () => {
+  function displayGeneration() {
     return realBuzzMapCounter || 0; // Real counter from Supabase
-  };
+  }
   
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
@@ -257,3 +256,15 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
 };
 
 export default BuzzButtonSecure;
+
+// Helper functions
+function displayRadius() {
+  if (activeArea) {
+    return activeArea.radius_km.toFixed(1);
+  }
+  return '500.0'; // LANCIO: Default FISSO 500km
+}
+  
+function displayGeneration() {
+  return realBuzzMapCounter || 0; // Real counter from Supabase
+}
