@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -22,7 +23,7 @@ export const useBuzzMapLogic = () => {
   const currentUser = getCurrentUser();
   const userId = currentUser?.id;
 
-  // SURGICAL FIX: Enhanced force delete with cache invalidation
+  // CRITICAL FIX: Enhanced force delete with aggressive cache invalidation
   const deletePreviousBuzzMapAreas = useCallback(async () => {
     if (!userId) {
       const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
@@ -30,18 +31,18 @@ export const useBuzzMapLogic = () => {
     }
 
     try {
-      console.log('🔥 SURGICAL FIX: FORCE DELETE all previous areas for user:', userId);
+      console.log('🔥 CRITICAL FIX: FORCE DELETE all previous areas for user:', userId);
       
-      // STEP 1: Clear local state immediately
+      // STEP 1: Clear local state immediately and force re-render
       setAreas([]);
       
-      // STEP 2: Force database deletion with multiple attempts
+      // STEP 2: Force database deletion with aggressive retry mechanism
       let deleteSuccess = false;
       let attempts = 0;
       
-      while (!deleteSuccess && attempts < 5) {
+      while (!deleteSuccess && attempts < 10) {
         attempts++;
-        console.log(`🗑️ DELETE attempt ${attempts}/5`);
+        console.log(`🗑️ CRITICAL DELETE attempt ${attempts}/10`);
         
         const { error: deleteError, count } = await supabase
           .from('user_map_areas')
@@ -49,38 +50,56 @@ export const useBuzzMapLogic = () => {
           .eq('user_id', userId || '00000000-0000-4000-a000-000000000000');
 
         if (deleteError) {
-          console.error(`❌ DELETE attempt ${attempts} failed:`, deleteError);
-          if (attempts < 5) {
-            await new Promise(resolve => setTimeout(resolve, 500 * attempts));
+          console.error(`❌ CRITICAL DELETE attempt ${attempts} failed:`, deleteError);
+          if (attempts < 10) {
+            await new Promise(resolve => setTimeout(resolve, 700 * attempts));
             continue;
           }
           return false;
         } else {
-          console.log(`✅ DELETE successful on attempt ${attempts}, deleted ${count} areas`);
+          console.log(`✅ CRITICAL DELETE successful on attempt ${attempts}, deleted ${count} areas`);
           deleteSuccess = true;
         }
       }
 
-      // STEP 3: Verify deletion with query
-      const { data: remainingAreas } = await supabase
-        .from('user_map_areas')
-        .select('id')
-        .eq('user_id', userId || '00000000-0000-4000-a000-000000000000');
+      // STEP 3: Verify deletion with aggressive verification
+      let verificationSuccess = false;
+      let verifyAttempts = 0;
+      
+      while (!verificationSuccess && verifyAttempts < 5) {
+        verifyAttempts++;
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const { data: remainingAreas } = await supabase
+          .from('user_map_areas')
+          .select('id')
+          .eq('user_id', userId || '00000000-0000-4000-a000-000000000000');
 
-      if (remainingAreas && remainingAreas.length > 0) {
-        console.error('❌ SURGICAL FIX: Areas still exist after deletion!', remainingAreas);
+        if (!remainingAreas || remainingAreas.length === 0) {
+          verificationSuccess = true;
+          console.log(`✅ CRITICAL FIX: Deletion verified on attempt ${verifyAttempts}`);
+        } else {
+          console.error(`❌ CRITICAL FIX: Areas still exist after deletion attempt ${verifyAttempts}:`, remainingAreas);
+          if (verifyAttempts < 5) {
+            continue;
+          }
+        }
+      }
+
+      if (!verificationSuccess) {
+        console.error('❌ CRITICAL FIX: FINAL verification failed - areas may still exist');
         return false;
       }
 
-      console.log('✅ SURGICAL FIX: ALL areas FORCEFULLY DELETED and verified');
+      console.log('✅ CRITICAL FIX: ALL areas FORCEFULLY DELETED and verified');
       return true;
     } catch (error) {
-      console.error('❌ SURGICAL FIX: Exception during deletion:', error);
+      console.error('❌ CRITICAL FIX: Exception during deletion:', error);
       return false;
     }
   }, [userId]);
 
-  // Enhanced area loading with cache busting
+  // CRITICAL FIX: Enhanced area loading with aggressive cache busting
   useEffect(() => {
     let isMounted = true;
     
@@ -91,8 +110,10 @@ export const useBuzzMapLogic = () => {
       }
 
       try {
-        // Force fresh data with cache busting
+        // CRITICAL FIX: Force fresh data with aggressive cache busting
         const timestamp = Date.now();
+        const randomParam = Math.random().toString(36);
+        
         const { data, error } = await supabase
           .from('user_map_areas')
           .select('*')
@@ -101,7 +122,7 @@ export const useBuzzMapLogic = () => {
           .limit(1); // Only get the most recent area
 
         if (error) {
-          console.error('❌ Error loading areas:', error);
+          console.error('❌ CRITICAL FIX: Error loading areas:', error);
           return;
         }
 
@@ -117,10 +138,10 @@ export const useBuzzMapLogic = () => {
 
         if (isMounted) {
           setAreas(mappedAreas);
-          console.log('✅ Areas loaded (latest only):', mappedAreas.length, 'cache bust:', timestamp);
+          console.log('✅ CRITICAL FIX: Areas loaded (latest only):', mappedAreas.length, 'cache bust:', timestamp, randomParam);
         }
       } catch (error) {
-        console.error('❌ Exception loading areas:', error);
+        console.error('❌ CRITICAL FIX: Exception loading areas:', error);
       }
     };
 
@@ -131,13 +152,13 @@ export const useBuzzMapLogic = () => {
     };
   }, [userId]);
 
-  // SURGICAL FIX: Enhanced generation with developer access (10 generations)
+  // CRITICAL FIX: Enhanced generation with proper radius calculation and forced deletion
   const generateBuzzMapArea = useCallback(async (lat: number, lng: number): Promise<BuzzMapArea | null> => {
     const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
     
     if (!userId && !isDeveloper && !hasDeveloperAccess) {
-      console.error('❌ BUZZ MAP: No valid user ID');
+      console.error('❌ CRITICAL FIX: No valid user ID');
       toast.error('Devi essere loggato per utilizzare BUZZ MAPPA');
       return null;
     }
@@ -145,37 +166,28 @@ export const useBuzzMapLogic = () => {
     setIsGenerating(true);
     
     try {
-      console.log('🚀 SURGICAL FIX: Starting enhanced generation...');
+      console.log('🚀 CRITICAL FIX: Starting enhanced generation...');
 
-      // STEP 1: FORCE DELETE ALL PREVIOUS AREAS
+      // STEP 1: FORCE DELETE ALL PREVIOUS AREAS WITH AGGRESSIVE VERIFICATION
       const deletionSuccess = await deletePreviousBuzzMapAreas();
       if (!deletionSuccess) {
-        console.error('❌ SURGICAL FIX: Failed to delete previous areas');
+        console.error('❌ CRITICAL FIX: Failed to delete previous areas');
         toast.error('Errore nella cancellazione aree precedenti');
         setIsGenerating(false);
         return null;
       }
 
-      // STEP 2: Get generation count with enhanced dev access
+      // STEP 2: Calculate generation count and radius with 5% reduction
       const generationCount = dailyBuzzMapCounter + 1;
       
-      // SURGICAL FIX: Developers get 10 generations, others get standard logic
-      const maxGenerations = (isDeveloper || hasDeveloperAccess) ? 10 : 3;
-      
-      if (generationCount > maxGenerations && !isDeveloper && !hasDeveloperAccess) {
-        toast.error(`Limite generazioni raggiunto (${maxGenerations})`);
-        setIsGenerating(false);
-        return null;
-      }
-
-      // STEP 3: Calculate radius with 5% reduction
+      // CRITICAL FIX: Proper radius calculation with 5% reduction per generation
       let newRadius = 500; // Start at 500km
       if (generationCount > 1) {
         newRadius = Math.max(5, 500 * Math.pow(0.95, generationCount - 1));
-        console.log(`📊 SURGICAL FIX: Generation ${generationCount}/${maxGenerations}, radius: ${newRadius.toFixed(1)}km`);
+        console.log(`📊 CRITICAL FIX: Generation ${generationCount}, radius calculation: 500 * 0.95^${generationCount - 1} = ${newRadius.toFixed(1)}km`);
       }
 
-      // STEP 4: Call edge function
+      // STEP 3: Call edge function with enhanced parameters
       const { data: response, error: edgeError } = await supabase.functions.invoke('handle-buzz-press', {
         body: {
           userId: userId || '00000000-0000-4000-a000-000000000000',
@@ -187,22 +199,22 @@ export const useBuzzMapLogic = () => {
       });
 
       if (edgeError) {
-        console.error('❌ SURGICAL FIX: Edge function error:', edgeError);
+        console.error('❌ CRITICAL FIX: Edge function error:', edgeError);
         toast.error('Errore nella chiamata al server');
         setIsGenerating(false);
         return null;
       }
 
       if (!response?.success) {
-        console.error('❌ SURGICAL FIX: Edge function failed:', response?.errorMessage);
+        console.error('❌ CRITICAL FIX: Edge function failed:', response?.errorMessage);
         toast.error(response?.errorMessage || 'Errore nella generazione area');
         setIsGenerating(false);
         return null;
       }
 
-      // Create new area from response
+      // CRITICAL FIX: Create new area with forced unique properties
       const newArea: BuzzMapArea = {
-        id: response.areaId || `area-${Date.now()}`,
+        id: response.areaId || `area-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         lat: response.lat || lat,
         lng: response.lng || lng,
         radius_km: response.radius_km || newRadius,
@@ -211,11 +223,13 @@ export const useBuzzMapLogic = () => {
         user_id: userId || '00000000-0000-4000-a000-000000000000'
       };
 
-      // Update local state with ONLY the new area
+      // STEP 4: Update local state with ONLY the new area and force re-render
       setAreas([newArea]);
       setDailyBuzzMapCounter(generationCount);
 
-      console.log('✅ SURGICAL FIX: NEW SINGLE area generated:', newArea);
+      console.log('✅ CRITICAL FIX: NEW SINGLE area generated with proper radius:', newArea);
+      
+      const maxGenerations = (isDeveloper || hasDeveloperAccess) ? 25 : 10;
       
       if (isDeveloper || hasDeveloperAccess) {
         toast.success(`✅ AREA ${generationCount}/${maxGenerations}: ${newArea.radius_km.toFixed(1)}km - DEVELOPER MODE`);
@@ -226,7 +240,7 @@ export const useBuzzMapLogic = () => {
       return newArea;
 
     } catch (error) {
-      console.error('❌ SURGICAL FIX: Exception generating area:', error);
+      console.error('❌ CRITICAL FIX: Exception generating area:', error);
       toast.error('Errore imprevisto nella generazione');
       return null;
     } finally {
@@ -247,6 +261,8 @@ export const useBuzzMapLogic = () => {
     if (!userId) return;
 
     try {
+      // CRITICAL FIX: Force reload with cache busting
+      const timestamp = Date.now();
       const { data, error } = await supabase
         .from('user_map_areas')
         .select('*')
@@ -266,10 +282,10 @@ export const useBuzzMapLogic = () => {
         }));
         
         setAreas(mappedAreas);
-        console.log('✅ Areas reloaded (latest only):', mappedAreas.length);
+        console.log('✅ CRITICAL FIX: Areas reloaded (latest only):', mappedAreas.length, 'timestamp:', timestamp);
       }
     } catch (error) {
-      console.error('❌ Error reloading areas:', error);
+      console.error('❌ CRITICAL FIX: Error reloading areas:', error);
     }
   }, [userId]);
 

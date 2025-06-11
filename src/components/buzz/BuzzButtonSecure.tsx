@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Loader, Lock } from "lucide-react";
+import { Loader, Lock, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
@@ -16,324 +16,208 @@ interface BuzzButtonSecureProps {
   onSuccess: () => void;
 }
 
-const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
-  userId,
-  onSuccess
-}) => {
+const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({ userId, onSuccess }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [buzzCount, setBuzzCount] = useState(0);
+  const { user } = useAuth();
   const { createBuzzNotification } = useNotificationManager();
   const { addNotification } = useNotifications();
   const { processBuzzPurchase, loading: stripeLoading } = useStripePayment();
-  const { user } = useAuth();
-  
   const {
     hasValidPayment,
     canAccessPremium,
     remainingBuzz,
     subscriptionTier,
-    loading: verificationLoading,
-    requireBuzzPayment
+    loading: verificationLoading
   } = usePaymentVerification();
 
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [showRipple, setShowRipple] = useState(false);
+  // CRITICAL FIX: Calculate dynamic price based on buzz count
+  const calculateBuzzPrice = (count: number): number => {
+    if (count <= 5) return 1.99;
+    if (count <= 10) return 2.99;
+    if (count <= 15) return 3.99;
+    return 4.99;
+  };
 
-  // CRITICAL FIX: Enhanced secure BUZZ press with PROPER mission messages and FORCED notifications
-  const handleSecureBuzzPress = async () => {
-    if (isProcessing || verificationLoading || !userId) return;
-
+  // CRITICAL FIX: Enhanced BUZZ with FORCED Stripe for ALL users
+  const handleBuzzClick = async () => {
     const isDeveloper = user?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-
+    
+    // CRITICAL FIX: Developer bypass with clear logging
     if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 EMERGENCY FIX: DEVELOPER - Starting BUZZ process with FORCED notifications');
-      
-      setShowRipple(true);
-      setTimeout(() => setShowRipple(false), 1000);
-      setIsProcessing(true);
-
-      try {
-        // CRITICAL FIX: Generate COHERENT mission clue with mission context
-        const missionClues = [
-          "🎯 Indizio Mission Roma: Il simbolo antico si trova dove l'acqua incontra la pietra eterna",
-          "🏛️ Indizio Mission Premium: Cerca il codice nascosto nei riflessi del tramonto al Colosseo",
-          "⭐ Indizio Mission Esclusivo: La chiave è custodita dove risuonano gli echi dell'impero",
-          "💎 Indizio Mission Segreto: Il tesoro attende dove la luce danza sulle onde del Tevere",
-          "🔍 Indizio Mission Speciale: Segui le tracce che portano al cuore della città eterna"
-        ];
-        
-        const randomClue = missionClues[Math.floor(Math.random() * missionClues.length)];
-        const missionCode = `MIS-${Date.now().toString().slice(-6)}`;
-        const clueWithCode = `${randomClue} - Codice: ${missionCode}`;
-
-        console.log('✅ EMERGENCY FIX: Generated COHERENT mission clue:', clueWithCode);
-
-        // CRITICAL FIX: FORCE notification creation with MULTIPLE methods for guaranteed success
-        let notificationCreated = false;
-        let attempts = 0;
-        
-        while (!notificationCreated && attempts < 10) {
-          attempts++;
-          try {
-            console.log(`📨 EMERGENCY FIX: BUZZ notification creation attempt ${attempts}/10`);
-            
-            // Try both notification methods for maximum reliability
-            await Promise.all([
-              createBuzzNotification("🎯 Nuovo Indizio Mission Sbloccato", clueWithCode),
-              addNotification("🎯 Nuovo Indizio Mission Sbloccato", clueWithCode, "buzz")
-            ]);
-            
-            notificationCreated = true;
-            console.log(`✅ EMERGENCY FIX: BUZZ notification FORCED into database successfully on attempt ${attempts}`);
-          } catch (notifError) {
-            console.error(`❌ EMERGENCY FIX: BUZZ notification attempt ${attempts} failed:`, notifError);
-            if (attempts < 10) {
-              await new Promise(resolve => setTimeout(resolve, 200 * attempts));
-            }
-          }
-        }
-
-        if (!notificationCreated) {
-          console.error('❌ EMERGENCY FIX: Failed to create notification after 10 attempts');
-        }
-
-        // CRITICAL FIX: Show COHERENT success toast
-        toast.success("🎯 Indizio Mission Sbloccato!", {
-          description: clueWithCode,
-          duration: 5000
-        });
-        
-        onSuccess();
-      } catch (error) {
-        console.error('❌ EMERGENCY FIX: DEVELOPER BUZZ Error:', error);
-        toast.error("Errore durante il processo BUZZ");
-      } finally {
-        setIsProcessing(false);
-      }
-      
+      console.log('🔧 DEVELOPER BYPASS - Proceeding with buzz generation');
+      console.log('💳 STRIPE SKIPPED: Developer mode active');
+      handleBuzzSuccess();
       return;
     }
 
-    // CRITICAL FIX: For non-developers, check payment and FORCE Stripe activation
-    console.log('💳 EMERGENCY FIX: NON-DEVELOPER - Checking payment status and FORCING Stripe...');
+    // CRITICAL FIX: FORCE Stripe for ALL non-developers
+    console.log('💳 NON-DEVELOPER - FORCING Stripe checkout modal');
     
-    const canProceed = await requireBuzzPayment();
-    
-    if (!canProceed) {
-      console.log('💳 EMERGENCY FIX: Payment required - IMMEDIATE Stripe redirect with FORCED processing');
-      setIsProcessing(true);
-      
-      try {
-        console.log('💳 OPENING STRIPE CHECKOUT for BUZZ...');
-        const stripeSuccess = await processBuzzPurchase(false, 1.99);
-        if (stripeSuccess) {
-          console.log('✅ EMERGENCY FIX: Stripe payment flow initiated successfully');
-          toast.success('Pagamento completato! Elaborazione indizio Mission...');
-          
-          // After successful payment, generate COHERENT clue with FORCED notification
-          setTimeout(async () => {
-            const premiumClue = "🎯 Indizio Mission Premium: Il segreto è custodito dove il sole sorge sull'impero eterno";
-            
-            // CRITICAL FIX: FORCE notification creation with guaranteed persistence
-            let notificationCreated = false;
-            let attempts = 0;
-            
-            while (!notificationCreated && attempts < 10) {
-              attempts++;
-              try {
-                await Promise.all([
-                  createBuzzNotification("Indizio Premium Mission Sbloccato", premiumClue),
-                  addNotification("Indizio Premium Mission Sbloccato", premiumClue, "buzz")
-                ]);
-                notificationCreated = true;
-                console.log(`✅ EMERGENCY FIX: Premium notification created on attempt ${attempts}`);
-              } catch (notifError) {
-                console.error(`❌ EMERGENCY FIX: Premium notification attempt ${attempts} failed:`, notifError);
-                if (attempts < 10) {
-                  await new Promise(resolve => setTimeout(resolve, 200 * attempts));
-                }
-              }
-            }
-            
-            toast.success("🎯 Indizio Premium Mission Sbloccato!", { description: premiumClue });
-            onSuccess();
-          }, 2000);
-        }
-      } catch (error) {
-        console.error('❌ EMERGENCY FIX: Stripe payment failed:', error);
-        toast.error('Errore nel processo di pagamento Stripe');
-      } finally {
-        setIsProcessing(false);
-      }
-      return;
-    }
-
-    // For users with valid payment/remaining BUZZ
-    setShowRipple(true);
-    setTimeout(() => setShowRipple(false), 1000);
-    
-    console.log('🔒 EMERGENCY FIX: SECURE BUZZ - Starting verified process with FORCED edge function call');
-    setIsProcessing(true);
+    const currentPrice = calculateBuzzPrice(buzzCount + 1);
     
     try {
-      const { data: response, error: edgeError } = await supabase.functions.invoke('handle-buzz-press', {
+      console.log(`💳 STRIPE MODAL: Opening checkout for BUZZ at ${currentPrice}€...`);
+      toast.info(`💳 Apertura pagamento Stripe (${currentPrice}€)...`);
+      
+      // FORCED Stripe modal display
+      const stripeSuccess = await processBuzzPurchase(false, currentPrice);
+      
+      if (stripeSuccess) {
+        console.log('✅ Stripe payment completed for BUZZ');
+        toast.success(`✅ Pagamento completato (${currentPrice}€)! Generando indizio...`);
+        
+        // Continue with buzz generation after payment
+        setTimeout(() => {
+          handleBuzzSuccess();
+        }, 1500);
+      } else {
+        console.log('❌ Stripe payment failed or cancelled');
+        toast.error('❌ Pagamento richiesto per BUZZ');
+        return; // BLOCK execution if Stripe fails
+      }
+      return;
+    } catch (error) {
+      console.error('❌ Stripe payment error for BUZZ:', error);
+      toast.error('❌ Errore nel processo di pagamento BUZZ');
+      return; // BLOCK execution if Stripe fails
+    }
+  };
+
+  const handleBuzzSuccess = async () => {
+    setIsLoading(true);
+    
+    try {
+      console.log('🚀 Starting BUZZ generation...');
+      
+      // Call the buzz press handler
+      const { data, error } = await supabase.functions.invoke('handle-buzz-press', {
         body: {
           userId: userId,
           generateMap: false
         }
       });
 
-      if (edgeError) {
-        console.error('❌ EMERGENCY FIX: Edge function error:', edgeError);
-        toast.error('Errore nella chiamata al server BUZZ');
+      if (error) {
+        console.error('❌ BUZZ generation failed:', error);
+        toast.error('Errore nella generazione dell\'indizio');
         return;
       }
-      
-      if (response?.success) {
-        console.log('✅ EMERGENCY FIX: SECURE BUZZ Success');
 
-        const missionClue = response.clue_text || "🎯 Indizio Mission: Un nuovo segreto della città eterna è stato rivelato";
-
-        // CRITICAL FIX: FORCE notification creation with GUARANTEED persistence and multiple retries
+      if (data?.success) {
+        setBuzzCount(prev => prev + 1);
+        
+        // CRITICAL FIX: Force notification creation with guaranteed persistence
         let notificationCreated = false;
         let attempts = 0;
         
         while (!notificationCreated && attempts < 10) {
           attempts++;
           try {
-            console.log(`📨 EMERGENCY FIX: SECURE BUZZ notification creation attempt ${attempts}/10`);
-            await Promise.all([
-              createBuzzNotification("🎯 Nuovo Indizio Mission", missionClue),
-              addNotification("🎯 Nuovo Indizio Mission", missionClue, "buzz")
-            ]);
+            console.log(`📨 BUZZ notification attempt ${attempts}/10`);
+            await createBuzzNotification(
+              "🎯 Nuovo Indizio Sbloccato",
+              data.clue_text || "Nuovo indizio generato per la tua missione!"
+            );
+            
+            // Also add to local notifications
+            await addNotification(
+              "🎯 Nuovo Indizio Sbloccato",
+              data.clue_text || "Nuovo indizio generato per la tua missione!",
+              "buzz"
+            );
+            
             notificationCreated = true;
-            console.log(`✅ EMERGENCY FIX: SECURE BUZZ notification FORCED into database successfully on attempt ${attempts}`);
+            console.log(`✅ BUZZ notification created on attempt ${attempts}`);
           } catch (notifError) {
-            console.error(`❌ EMERGENCY FIX: SECURE BUZZ notification attempt ${attempts} failed:`, notifError);
+            console.error(`❌ BUZZ notification attempt ${attempts} failed:`, notifError);
             if (attempts < 10) {
-              await new Promise(resolve => setTimeout(resolve, 200 * attempts));
+              await new Promise(resolve => setTimeout(resolve, 500));
             }
           }
         }
-
-        if (!notificationCreated) {
-          console.error('❌ EMERGENCY FIX: Failed to create SECURE BUZZ notification after 10 attempts');
-        }
-
-        toast.success("🎯 Indizio Mission Sbloccato!", {
-          description: missionClue,
-          duration: 5000
-        });
         
+        if (!notificationCreated) {
+          console.error('❌ Failed to create notification after 10 attempts');
+        }
+        
+        toast.success('🎯 Nuovo indizio sbloccato!');
         onSuccess();
       } else {
-        console.error('❌ EMERGENCY FIX: SECURE BUZZ failed:', response?.errorMessage);
-        toast.error("Errore BUZZ", {
-          description: response?.errorMessage || "Errore sconosciuto nel sistema BUZZ",
-        });
+        toast.error(data?.errorMessage || 'Errore nella generazione dell\'indizio');
       }
     } catch (error) {
-      console.error('❌ EMERGENCY FIX: SECURE BUZZ Error:', error);
-      toast.error("Errore di connessione BUZZ");
+      console.error('❌ BUZZ error:', error);
+      toast.error('Errore imprevisto nella generazione dell\'indizio');
     } finally {
-      setIsProcessing(false);
+      setIsLoading(false);
     }
   };
 
   const isDeveloper = user?.email === 'wikus77@hotmail.it' || localStorage.getItem('developer_access') === 'granted';
-  const isBlocked = !isDeveloper && !canAccessPremium && remainingBuzz <= 0;
-  const isLoading = isProcessing || stripeLoading || verificationLoading;
-
-  if (verificationLoading) {
-    return (
-      <div className="w-60 h-60 rounded-full bg-gray-600 flex items-center justify-center">
-        <Loader className="w-12 h-12 animate-spin text-white" />
-      </div>
-    );
-  }
+  const isBlocked = !isDeveloper; // Non-developers always need payment
+  const loading = isLoading || stripeLoading || verificationLoading;
+  const currentPrice = calculateBuzzPrice(buzzCount + 1);
 
   return (
-    <motion.button
-      className="w-60 h-60 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl hover:shadow-[0_0_35px_rgba(123,46,255,0.7)] focus:outline-none disabled:opacity-50"
-      onClick={handleSecureBuzzPress}
-      disabled={isLoading || isBlocked}
+    <motion.div
+      className="relative"
+      whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      whileHover={{ scale: isBlocked ? 1 : 1.05 }}
-      initial={{ boxShadow: "0 0 0px rgba(123, 46, 255, 0)" }}
-      animate={{ 
-        boxShadow: isBlocked ? 
-          "0 0 0px rgba(255, 0, 0, 0)" :
-          ["0 0 12px rgba(123, 46, 255, 0.35)", "0 0 35px rgba(0, 209, 255, 0.7)", "0 0 12px rgba(123, 46, 255, 0.35)"]
-      }}
-      transition={{ 
-        boxShadow: { repeat: isBlocked ? 0 : Infinity, duration: 3 },
-        scale: { type: "spring", stiffness: 300, damping: 20 }
-      }}
     >
-      {isBlocked && !isDeveloper && (
-        <div className="absolute inset-0 bg-red-900 bg-opacity-80 rounded-full flex items-center justify-center z-20">
-          <Lock className="w-16 h-16 text-red-300" />
-        </div>
-      )}
-
-      <div className={`absolute inset-0 rounded-full opacity-90 ${
-        isBlocked && !isDeveloper ? 'bg-gradient-to-r from-red-600 to-red-800' : 
-        'bg-gradient-to-r from-[#7B2EFF] via-[#00D1FF] to-[#FF59F8]'
-      }`} />
-      
-      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full z-10">
-        {isLoading ? (
-          <Loader className="w-12 h-12 animate-spin text-white" />
-        ) : isBlocked && !isDeveloper ? (
-          <>
-            <Lock className="w-8 h-8 text-red-300 mb-2" />
-            <span className="text-lg font-bold text-red-300 tracking-wider text-center px-4">
-              CLICCA PER ACQUISTARE
-            </span>
-            <span className="text-xs text-red-200 mt-1 text-center px-2">
-              BUZZ Mission richiede pagamento
-            </span>
-          </>
+      <Button
+        onClick={handleBuzzClick}
+        disabled={loading}
+        className={`buzz-button relative overflow-hidden ${
+          isBlocked 
+            ? 'bg-gradient-to-r from-orange-600 to-orange-800 hover:from-orange-500 hover:to-orange-700' 
+            : 'bg-gradient-to-r from-[#00cfff] via-[#ff00cc] to-[#7f00ff] hover:shadow-[0_0_25px_10px_rgba(255,0,128,0.65)]'
+        } text-white px-8 py-4 rounded-full font-bold text-lg transition-all duration-300`}
+        style={{
+          animation: loading ? "none" : "buzzGlow 2s infinite ease-in-out",
+          boxShadow: loading ? 'none' : '0 0 20px 6px rgba(255,0,128,0.45)'
+        }}
+      >
+        {loading ? (
+          <Loader className="mr-2 h-5 w-5 animate-spin" />
+        ) : isBlocked ? (
+          <CreditCard className="mr-2 h-5 w-5" />
         ) : (
-          <>
-            <span className="text-3xl font-bold text-white tracking-wider glow-text">
-              BUZZ!
-            </span>
-            <span className="text-sm text-white/90 mt-1 font-medium">
-              Piano: {subscriptionTier}
-              {isDeveloper && <span className="text-green-300"> (DEV)</span>}
-            </span>
-            <span className="text-xs text-white/70">
-              {isDeveloper ? '999' : remainingBuzz}/{isDeveloper ? '999' : remainingBuzz + Math.max(0, 5 - remainingBuzz)} BUZZ settimanali
-            </span>
-          </>
+          <motion.div
+            className="mr-2 w-5 h-5 bg-white rounded-full"
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [1, 0.8, 1],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
         )}
-      </div>
-
-      {showRipple && !isBlocked && (
-        <div className="ripple-effect" />
-      )}
+        <span>
+          {loading ? 'Generando...' : 
+           isBlocked ? `BUZZ (${currentPrice}€)` :
+           `BUZZ ${isDeveloper ? '[DEV]' : ''}`}
+        </span>
+        
+        {!isBlocked && (hasValidPayment || isDeveloper) && (
+          <div className="absolute top-1 right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+        )}
+      </Button>
       
       <style>
         {`
-        .glow-text {
-          text-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(0, 209, 255, 0.6);
-        }
-        @keyframes ripple {
-          0% { transform: scale(0.9); opacity: 0.5; }
-          100% { transform: scale(3); opacity: 0; }
-        }
-        .ripple-effect {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          border-radius: 9999px;
-          background-color: rgba(255, 255, 255, 0.4);
-          animation: ripple 1s ease-out forwards;
-          pointer-events: none;
+        @keyframes buzzGlow {
+          0% { box-shadow: 0 0 15px rgba(255, 0, 204, 0.7); }
+          50% { box-shadow: 0 0 30px rgba(255, 0, 204, 0.9), 0 0 40px rgba(0, 207, 255, 0.6); }
+          100% { box-shadow: 0 0 15px rgba(255, 0, 204, 0.7); }
         }
         `}
       </style>
-    </motion.button>
+    </motion.div>
   );
 };
 

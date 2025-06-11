@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Circle as CircleIcon, Loader, Lock } from "lucide-react";
+import { Circle as CircleIcon, Loader, Lock, CreditCard } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from 'sonner';
 import { useNotificationManager } from "@/hooks/useNotificationManager";
@@ -56,52 +56,63 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     setRealBuzzMapCounter(mapCounter);
     console.log('📊 Map counter updated:', mapCounter);
   }, [areas, user?.id]);
-  
-  // SURGICAL FIX: Enhanced secure BUZZ MAP with FORCED Stripe for non-developers
+
+  // CRITICAL FIX: Calculate dynamic price based on generation count
+  const calculateDynamicPrice = (generationCount: number): number => {
+    if (generationCount <= 5) return 2.99;
+    if (generationCount <= 10) return 4.99;
+    if (generationCount <= 15) return 7.99;
+    return 9.99;
+  };
+
+  // CRITICAL FIX: Enhanced secure BUZZ MAP with FORCED Stripe for ALL users
   const handleSecureBuzzMapClick = async () => {
     const isDeveloper = user?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
     
-    // SURGICAL FIX: Developer bypass with clear logging
+    // CRITICAL FIX: Developer bypass with clear logging
     if (isDeveloper || hasDeveloperAccess) {
-      console.log('🔧 SURGICAL FIX: DEVELOPER BYPASS - Proceeding with area generation');
+      console.log('🔧 DEVELOPER BYPASS - Proceeding with area generation');
       console.log('💳 STRIPE SKIPPED: Developer mode active');
       generateBuzzMapAreaInternal();
       return;
     }
 
-    // SURGICAL FIX: FORCE Stripe for ALL non-developers
-    console.log('💳 SURGICAL FIX: NON-DEVELOPER - FORCING Stripe checkout modal');
+    // CRITICAL FIX: FORCE Stripe for ALL non-developers
+    console.log('💳 NON-DEVELOPER - FORCING Stripe checkout modal');
+    
+    const currentPrice = calculateDynamicPrice(realBuzzMapCounter + 1);
     
     try {
-      console.log('💳 STRIPE MODAL: Opening checkout for BUZZ MAP...');
-      toast.info('💳 Apertura pagamento Stripe...');
+      console.log(`💳 STRIPE MODAL: Opening checkout for BUZZ MAP at ${currentPrice}€...`);
+      toast.info(`💳 Apertura pagamento Stripe (${currentPrice}€)...`);
       
       // FORCED Stripe modal display
-      const stripeSuccess = await processBuzzPurchase(true, 2.99); // isMapBuzz = true
+      const stripeSuccess = await processBuzzPurchase(true, currentPrice);
       
       if (stripeSuccess) {
-        console.log('✅ SURGICAL FIX: Stripe payment completed for BUZZ MAP');
-        toast.success('✅ Pagamento completato! Generando area BUZZ MAPPA...');
+        console.log('✅ Stripe payment completed for BUZZ MAP');
+        toast.success(`✅ Pagamento completato (${currentPrice}€)! Generando area BUZZ MAPPA...`);
         
         // Continue with area generation after payment
         setTimeout(() => {
           generateBuzzMapAreaInternal();
         }, 2000);
       } else {
-        console.log('❌ SURGICAL FIX: Stripe payment failed or cancelled');
+        console.log('❌ Stripe payment failed or cancelled');
         toast.error('❌ Pagamento richiesto per BUZZ MAPPA');
+        return; // BLOCK execution if Stripe fails
       }
       return;
     } catch (error) {
-      console.error('❌ SURGICAL FIX: Stripe payment error for BUZZ MAP:', error);
+      console.error('❌ Stripe payment error for BUZZ MAP:', error);
       toast.error('❌ Errore nel processo di pagamento BUZZ MAPPA');
-      return;
+      return; // BLOCK execution if Stripe fails
     }
   };
 
   const generateBuzzMapAreaInternal = async () => {
-    console.log('🚀 SURGICAL FIX: Starting area generation with forced deletion...');
+    console.log('🚀 Starting area generation with forced deletion...');
     
     setIsRippling(true);
     setTimeout(() => setIsRippling(false), 1000);
@@ -115,7 +126,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     const newArea = await generateBuzzMapArea(centerLat, centerLng);
     
     if (newArea) {
-      console.log('🎉 SURGICAL FIX: BUZZ MAP SUCCESS - Area generated', newArea);
+      console.log('🎉 BUZZ MAP SUCCESS - Area generated', newArea);
 
       // Update counter
       setRealBuzzMapCounter(1); // Always 1 since we delete previous areas
@@ -126,22 +137,22 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         handleBuzz();
       }
       
-      // SURGICAL FIX: Force notification creation with guaranteed persistence
+      // CRITICAL FIX: Force notification creation with guaranteed persistence
       let notificationCreated = false;
       let attempts = 0;
       
       while (!notificationCreated && attempts < 10) {
         attempts++;
         try {
-          console.log(`📨 SURGICAL FIX: BUZZ MAP notification attempt ${attempts}/10`);
+          console.log(`📨 BUZZ MAP notification attempt ${attempts}/10`);
           await createMapBuzzNotification(
             "🗺️ Area BUZZ Mappa Generata",
             `Nuova area di ricerca Mission: ${newArea.radius_km.toFixed(1)}km di raggio - Generazione #${realBuzzMapCounter + 1}`
           );
           notificationCreated = true;
-          console.log(`✅ SURGICAL FIX: BUZZ MAP notification created on attempt ${attempts}`);
+          console.log(`✅ BUZZ MAP notification created on attempt ${attempts}`);
         } catch (notifError) {
-          console.error(`❌ SURGICAL FIX: BUZZ MAP notification attempt ${attempts} failed:`, notifError);
+          console.error(`❌ BUZZ MAP notification attempt ${attempts} failed:`, notifError);
           if (attempts < 10) {
             await new Promise(resolve => setTimeout(resolve, 500));
           }
@@ -149,7 +160,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       }
       
       if (!notificationCreated) {
-        console.error('❌ SURGICAL FIX: Failed to create notification after 10 attempts');
+        console.error('❌ Failed to create notification after 10 attempts');
       }
       
       if (onAreaGenerated) {
@@ -157,12 +168,12 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
       }
       
     } else {
-      console.error('❌ SURGICAL FIX: BUZZ MAP - Area generation failed');
+      console.error('❌ BUZZ MAP - Area generation failed');
       toast.error('❌ Errore generazione area BUZZ MAP');
     }
   };
 
-  // SURGICAL FIX: Enhanced display logic
+  // CRITICAL FIX: Enhanced display logic
   const isDeveloper = user?.email === 'wikus77@hotmail.it' || localStorage.getItem('developer_access') === 'granted';
   const isBlocked = !isDeveloper; // Non-developers always need payment
   const isLoading = isGenerating || stripeLoading || verificationLoading;
@@ -171,16 +182,21 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     if (activeArea) {
       return activeArea.radius_km.toFixed(1);
     }
-    return "500.0"; // Default start radius
+    // CRITICAL FIX: Calculate radius based on generation count with 5% reduction
+    const baseRadius = 500;
+    const reductionFactor = Math.pow(0.95, realBuzzMapCounter);
+    const calculatedRadius = Math.max(5, baseRadius * reductionFactor);
+    return calculatedRadius.toFixed(1);
   };
   
   const displayGeneration = () => {
     return realBuzzMapCounter || 0;
   };
   
-  // SURGICAL FIX: Enhanced generation limits
-  const maxGenerations = isDeveloper ? 10 : 3;
+  // CRITICAL FIX: Enhanced generation limits
+  const maxGenerations = isDeveloper ? 25 : 10; // Increased for developer testing
   const canGenerate = displayGeneration() < maxGenerations;
+  const currentPrice = calculateDynamicPrice(realBuzzMapCounter + 1);
   
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
@@ -210,14 +226,14 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           ) : (!canGenerate && !isDeveloper) ? (
             <Lock className="mr-2 h-4 w-4" />
           ) : isBlocked ? (
-            <CircleIcon className="mr-2 h-4 w-4" />
+            <CreditCard className="mr-2 h-4 w-4" />
           ) : (
             <CircleIcon className="mr-2 h-4 w-4" />
           )}
           <span>
             {isLoading ? 'Generando...' : 
              (!canGenerate && !isDeveloper) ? `LIMITE RAGGIUNTO (${maxGenerations})` :
-             isBlocked ? 'BUZZ MAPPA - CLICCA PER ACQUISTARE' :
+             isBlocked ? `BUZZ MAPPA (${currentPrice}€)` :
              `BUZZ MAPPA (${displayRadius()}km) - ${displayGeneration()}/${maxGenerations} ${isDeveloper ? '[DEV]' : ''}`}
           </span>
           
