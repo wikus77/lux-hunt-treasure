@@ -15,8 +15,8 @@ export interface BuzzMapArea {
   week: number;
   generation: number;
   isActive: boolean;
-  user_id?: string; // Added missing property
-  created_at?: string; // Added missing property
+  user_id: string;
+  created_at: string;
 }
 
 export const useBuzzMapLogic = () => {
@@ -30,6 +30,7 @@ export const useBuzzMapLogic = () => {
     
     setLoading(true);
     try {
+      // CORRETTO: usa 'user_map_areas' invece di 'map_areas'
       const { data, error: fetchError } = await supabase
         .from('user_map_areas')
         .select('*')
@@ -42,7 +43,7 @@ export const useBuzzMapLogic = () => {
         return;
       }
 
-      // Transform to BuzzMapArea format
+      // Transform to BuzzMapArea format con TUTTE le proprietà richieste
       const transformedAreas: BuzzMapArea[] = (data || []).map(area => ({
         id: area.id,
         lat: area.lat,
@@ -56,7 +57,7 @@ export const useBuzzMapLogic = () => {
         generation: 1,
         isActive: true,
         user_id: area.user_id,
-        created_at: area.created_at
+        created_at: area.created_at || new Date().toISOString()
       }));
 
       setCurrentWeekAreas(transformedAreas);
@@ -73,7 +74,12 @@ export const useBuzzMapLogic = () => {
   };
 
   useEffect(() => {
-    fetchCurrentWeekAreas();
+    // Evita cicli infiniti con debounce
+    const timeoutId = setTimeout(() => {
+      fetchCurrentWeekAreas();
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, [user?.id]);
 
   return {

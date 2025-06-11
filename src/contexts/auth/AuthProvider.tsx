@@ -21,7 +21,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log("⚠️ Attempting to create admin profile for:", userEmail);
     
     try {
-      // First try the direct approach
       const { data: newProfile, error } = await supabase
         .from("profiles")
         .insert({
@@ -47,8 +46,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fetch user role when auth state changes - REAL AUTH ONLY
+  // CRITICAL: Evita cicli infiniti con useEffect ottimizzato
   useEffect(() => {
+    // Previeni esecuzioni multiple simultanee
+    if (isRoleLoading && authInitialized) return;
+
     const fetchUserRole = async () => {
       // If not authenticated, set role to null
       if (!auth.isAuthenticated || !auth.user) {
@@ -112,7 +114,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         // If we're here, no profile was found
-        // Increment retry count and try again if not exceeded limit
         if (retryCount < maxRetries) {
           console.log(`⚠️ No profile found, retrying (${retryCount + 1}/${maxRetries})...`);
           setRetryCount(prev => prev + 1);
@@ -149,25 +150,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    fetchUserRole();
-    
-    // Mark auth as initialized after first load
-    if (!authInitialized && !auth.isLoading) {
+    // PREVIENI CICLI: esegui solo quando necessario
+    if (auth.isAuthenticated && auth.user && !authInitialized) {
+      fetchUserRole();
+      setAuthInitialized(true);
+    } else if (!auth.isAuthenticated) {
+      setUserRole(null);
+      setIsRoleLoading(false);
       setAuthInitialized(true);
     }
     
-  }, [auth.isAuthenticated, auth.user, auth.isLoading]);
+  }, [auth.isAuthenticated, auth.user?.id, auth.isLoading, retryCount]);
 
-  // Show loading state on first initialization
-  useEffect(() => {
-    if (auth.isLoading && !authInitialized) {
-      console.log('🔄 Auth is initializing...');
-    } else if (authInitialized) {
-      console.log('✅ Auth initialization complete');
-    }
-  }, [auth.isLoading, authInitialized]);
-
-  // Check if user has a specific role - REAL AUTH ONLY
+  // Check if user has a specific role
   const hasRole = (role: string): boolean => {
     // Special case for wikus77@hotmail.it - always treated as admin
     if (auth.user?.email === 'wikus77@hotmail.it') {

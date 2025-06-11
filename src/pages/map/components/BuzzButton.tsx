@@ -7,7 +7,7 @@ import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 
 export interface BuzzButtonProps {
-  handleBuzz?: () => void; // Added missing property
+  handleBuzz?: () => void;
   mapCenter?: [number, number];
   onAreaGenerated?: (lat: number, lng: number, radiusKm: number) => void;
 }
