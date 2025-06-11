@@ -14,7 +14,7 @@ export interface BuzzMapArea {
   radius_km: number;
   week: number;
   created_at: string;
-  user_id?: string; // FIXED: Added missing user_id property
+  user_id: string; // FIXED: Added missing user_id property
 }
 
 export const useBuzzMapLogic = () => {

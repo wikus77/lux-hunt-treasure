@@ -1,152 +1,162 @@
 
-import { useState, useEffect } from 'react';
-import { useAuthContext } from '@/contexts/auth';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuthContext } from '@/contexts/auth';
+import { toast } from 'sonner';
 
-interface PaymentVerificationResult {
-  hasValidPayment: boolean;
-  canAccessPremium: boolean;
-  subscriptionTier: string;
-  remainingBuzz: number;
-  weeklyBuzzLimit: number;
-  loading: boolean;
-  requireBuzzPayment: () => Promise<boolean>;
-  logUnauthorizedAccess: (event: string, details?: any) => Promise<void>;
-}
+export const usePaymentVerification = () => {
+  const { getCurrentUser } = useAuthContext();
+  const [hasValidPayment, setHasValidPayment] = useState(false);
+  const [canAccessPremium, setCanAccessPremium] = useState(false);
+  const [subscriptionTier, setSubscriptionTier] = useState<string>('Free');
+  const [remainingBuzz, setRemainingBuzz] = useState(0);
+  const [weeklyBuzzLimit, setWeeklyBuzzLimit] = useState(1);
+  const [loading, setLoading] = useState(true);
 
-export const usePaymentVerification = (): PaymentVerificationResult => {
-  const { user, getCurrentUser } = useAuthContext();
-  const [result, setResult] = useState<Omit<PaymentVerificationResult, 'requireBuzzPayment' | 'logUnauthorizedAccess'>>({
-    hasValidPayment: false,
-    canAccessPremium: false,
-    subscriptionTier: 'Free',
-    remainingBuzz: 0,
-    weeklyBuzzLimit: 1,
-    loading: true,
-  });
-
-  useEffect(() => {
-    const verifyPaymentStatus = async () => {
-      // Get current user with developer support
-      const currentUser = getCurrentUser();
-      const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
-      const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-      
-      console.log("🔍 Payment verification for:", {
-        email: currentUser?.email,
-        isDeveloper,
-        hasDeveloperAccess
-      });
-
-      // DEVELOPER BYPASS - always grant access
-      if (isDeveloper || hasDeveloperAccess) {
-        console.log("🔧 Developer bypass activated - granting full access");
-        setResult({
-          hasValidPayment: true,
-          canAccessPremium: true,
-          subscriptionTier: 'Developer',
-          remainingBuzz: 999,
-          weeklyBuzzLimit: 999,
-          loading: false,
-        });
-        return;
-      }
-
-      if (!currentUser?.id) {
-        console.log("❌ No user for payment verification");
-        setResult(prev => ({ ...prev, loading: false }));
-        return;
-      }
-
-      try {
-        // Check subscription status
-        const { data: subscription, error: subError } = await supabase
-          .from('subscriptions')
-          .select('tier, status, end_date')
-          .eq('user_id', currentUser.id)
-          .eq('status', 'active')
-          .single();
-
-        if (subError && subError.code !== 'PGRST116') {
-          console.error("Error checking subscription:", subError);
-        }
-
-        // Check payment methods
-        const { data: paymentMethods, error: pmError } = await supabase
-          .from('user_payment_methods')
-          .select('id')
-          .eq('user_id', currentUser.id);
-
-        if (pmError) {
-          console.error("Error checking payment methods:", pmError);
-        }
-
-        const hasPaymentMethod = paymentMethods && paymentMethods.length > 0;
-        const hasActiveSubscription = subscription && subscription.status === 'active';
-        
-        setResult({
-          hasValidPayment: hasPaymentMethod || hasActiveSubscription || false,
-          canAccessPremium: hasActiveSubscription || false,
-          subscriptionTier: subscription?.tier || 'Free',
-          remainingBuzz: hasActiveSubscription ? 10 : 1, // Example values
-          weeklyBuzzLimit: hasActiveSubscription ? 20 : 1,
-          loading: false,
-        });
-
-      } catch (error) {
-        console.error("Payment verification error:", error);
-        setResult(prev => ({ ...prev, loading: false }));
-      }
-    };
-
-    verifyPaymentStatus();
-  }, [user, getCurrentUser]);
-
-  const requireBuzzPayment = async (): Promise<boolean> => {
+  const loadPaymentStatus = useCallback(async () => {
     const currentUser = getCurrentUser();
     const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
     const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
-    
-    // Developer bypass
-    if (isDeveloper || hasDeveloperAccess) {
-      console.log("🔧 Developer payment bypass - access granted");
-      return true;
-    }
-    
-    // Check if user has valid payment
-    if (result.hasValidPayment && result.canAccessPremium) {
-      return true;
-    }
-    
-    console.log("❌ Payment required - access denied");
-    return false;
-  };
 
-  const logUnauthorizedAccess = async (event: string, details?: any): Promise<void> => {
-    const currentUser = getCurrentUser();
-    
+    // CRITICAL FIX: Developer sempre ha accesso completo
+    if (isDeveloper || hasDeveloperAccess) {
+      console.log('🔧 Developer: Full payment access granted');
+      setHasValidPayment(true);
+      setCanAccessPremium(true);
+      setSubscriptionTier('Developer');
+      setRemainingBuzz(999);
+      setWeeklyBuzzLimit(999);
+      setLoading(false);
+      return;
+    }
+
     if (!currentUser?.id) {
-      console.warn("Cannot log unauthorized access - no user ID");
+      console.log('⚠️ No user - setting free tier');
+      setHasValidPayment(false);
+      setCanAccessPremium(false);
+      setSubscriptionTier('Free');
+      setRemainingBuzz(1);
+      setWeeklyBuzzLimit(1);
+      setLoading(false);
       return;
     }
 
     try {
-      await supabase
-        .from('abuse_logs')
-        .insert({
-          user_id: currentUser.id,
-          event_type: event,
-        });
+      // Check subscription status
+      const { data: subscription, error: subError } = await supabase
+        .from('subscriptions')
+        .select('tier, status')
+        .eq('user_id', currentUser.id)
+        .eq('status', 'active')
+        .single();
+
+      if (subError && subError.code !== 'PGRST116') {
+        console.error('❌ Error checking subscription:', subError);
+      }
+
+      const tier = subscription?.tier || 'Free';
+      setSubscriptionTier(tier);
+
+      // Set limits based on tier
+      let buzzLimit = 1;
+      if (tier === 'Silver') buzzLimit = 3;
+      if (tier === 'Gold') buzzLimit = 7;
+      if (tier === 'Black') buzzLimit = 15;
+
+      setWeeklyBuzzLimit(buzzLimit);
+
+      // Check weekly usage
+      const currentWeek = Math.ceil((Date.now() - new Date('2025-01-01').getTime()) / (7 * 24 * 60 * 60 * 1000));
       
-      console.log(`🚨 Logged unauthorized access: ${event}`, details);
+      const { data: allowance, error: allowanceError } = await supabase
+        .from('weekly_buzz_allowances')
+        .select('used_buzz_count, max_buzz_count')
+        .eq('user_id', currentUser.id)
+        .eq('week_number', currentWeek)
+        .single();
+
+      if (allowanceError && allowanceError.code !== 'PGRST116') {
+        console.error('❌ Error checking allowance:', allowanceError);
+      }
+
+      const used = allowance?.used_buzz_count || 0;
+      const remaining = Math.max(0, buzzLimit - used);
+      setRemainingBuzz(remaining);
+
+      // CRITICAL FIX: Determine access correctly
+      const hasPayment = tier !== 'Free';
+      const canAccess = hasPayment && remaining > 0;
+
+      setHasValidPayment(hasPayment);
+      setCanAccessPremium(canAccess);
+
+      console.log('💳 Payment verification:', {
+        tier,
+        hasPayment,
+        canAccess,
+        remaining,
+        buzzLimit
+      });
+
     } catch (error) {
-      console.error("Failed to log unauthorized access:", error);
+      console.error('❌ Exception in payment verification:', error);
+      // Fallback to free tier
+      setHasValidPayment(false);
+      setCanAccessPremium(false);
+      setSubscriptionTier('Free');
+      setRemainingBuzz(1);
+      setWeeklyBuzzLimit(1);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [getCurrentUser]);
+
+  useEffect(() => {
+    loadPaymentStatus();
+  }, [loadPaymentStatus]);
+
+  const requireBuzzPayment = useCallback(async (): Promise<boolean> => {
+    const currentUser = getCurrentUser();
+    const isDeveloper = currentUser?.email === 'wikus77@hotmail.it';
+    const hasDeveloperAccess = localStorage.getItem('developer_access') === 'granted';
+
+    // CRITICAL FIX: Developer bypass
+    if (isDeveloper || hasDeveloperAccess) {
+      console.log('🔧 Developer: Payment requirement bypassed');
+      return true;
+    }
+
+    if (!hasValidPayment) {
+      toast.error('Abbonamento richiesto', {
+        description: 'Devi avere un abbonamento attivo per utilizzare BUZZ'
+      });
+      return false;
+    }
+
+    if (remainingBuzz <= 0) {
+      toast.error('Limite BUZZ raggiunto', {
+        description: 'Hai esaurito i BUZZ settimanali disponibili'
+      });
+      return false;
+    }
+
+    return true;
+  }, [hasValidPayment, remainingBuzz, getCurrentUser]);
+
+  const logUnauthorizedAccess = useCallback(async (action: string, details: any) => {
+    console.warn('🚫 Unauthorized access attempt:', action, details);
+    // Could log to database here if needed
+  }, []);
 
   return {
-    ...result,
+    hasValidPayment,
+    canAccessPremium,
+    subscriptionTier,
+    remainingBuzz,
+    weeklyBuzzLimit,
+    loading,
     requireBuzzPayment,
     logUnauthorizedAccess,
+    reloadPaymentStatus: loadPaymentStatus
   };
 };

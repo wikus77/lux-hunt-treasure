@@ -22,6 +22,8 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
   useEffect(() => {
     console.log("🔧 useAuth: Initializing with developer support");
     
+    let isMounted = true;
+    
     // Check for developer access immediately
     const isDeveloperMode = localStorage.getItem('developer_access') === 'granted' || 
                            localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
@@ -39,21 +41,25 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
         email_confirmed_at: new Date().toISOString()
       } as User;
       
-      setUser(developerUser);
-      setIsEmailVerified(true);
-      setIsLoading(false);
+      if (isMounted) {
+        setUser(developerUser);
+        setIsEmailVerified(true);
+        setIsLoading(false);
+        
+        // Store developer access flags
+        localStorage.setItem('developer_access', 'granted');
+        localStorage.setItem('developer_user_email', 'wikus77@hotmail.it');
+        localStorage.setItem('captcha_bypassed', 'true');
+      }
       
-      // Store developer access flags
-      localStorage.setItem('developer_access', 'granted');
-      localStorage.setItem('developer_user_email', 'wikus77@hotmail.it');
-      localStorage.setItem('captcha_bypassed', 'true');
-      
-      return;
+      return () => { isMounted = false; };
     }
 
     // Set up auth state listener for regular users
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        if (!isMounted) return;
+        
         console.log("Auth state changed:", event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
@@ -71,6 +77,8 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      if (!isMounted) return;
+      
       console.log("Initial session check:", initialSession ? "Found session" : "No session");
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
@@ -84,6 +92,7 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
     });
     
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -117,6 +126,11 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       localStorage.setItem('developer_user_email', email);
       localStorage.setItem('captcha_bypassed', 'true');
       
+      // Force redirect to home for developer
+      setTimeout(() => {
+        window.location.href = '/home';
+      }, 100);
+      
       return { success: true, developer_access: true };
     }
 
@@ -149,7 +163,19 @@ export function useAuth(): Omit<AuthContextType, 'userRole' | 'hasRole' | 'isRol
       localStorage.removeItem('developer_access');
       localStorage.removeItem('developer_user_email');
       localStorage.removeItem('captcha_bypassed');
+      
+      // Reset state
+      setUser(null);
+      setSession(null);
+      setIsEmailVerified(false);
+      
       toast.success("Logout effettuato");
+      
+      // Redirect to login
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 100);
+      
     } catch (error) {
       console.error("Logout error:", error);
       toast.error("Errore durante il logout");
