@@ -48,11 +48,22 @@ serve(async (req) => {
   
   try {
     requestData = await req.json();
-    const { userId, generateMap, prizeId, coordinates, sessionId } = requestData as BuzzRequest;
+    const { userId, generateMap, coordinates, prizeId, sessionId } = requestData as BuzzRequest;
     
     console.log(`🔥 FIX 1 – BUZZ REQUEST START - userId: ${userId}, generateMap: ${generateMap}`);
     console.log(`📡 Coordinates received:`, coordinates);
     
+    // STEP 1 - LOG IN BUZZ_LOGS: START
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+    
+    await supabase.from('buzz_logs').insert({
+      user_id: userId,
+      step: 'start',
+      details: { generateMap, coordinates, timestamp: new Date().toISOString() }
+    });
+
     if (!userId || typeof userId !== 'string') {
       console.error("❌ FIX 1 ERROR - Invalid userId:", userId);
       return new Response(
@@ -71,9 +82,6 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
-    });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
@@ -87,8 +95,8 @@ serve(async (req) => {
 
     console.log(`✅ FIX 1 SUCCESS - Auth validation passed for user: ${userId}`);
 
-    // FIX 5 - PAGAMENTO STRIPE VERIFICATO
-    console.log(`🔥 FIX 5 – VERIFICA PAGAMENTO START`);
+    // STEP 2 - PAYMENT CHECK WITH LOGGING
+    console.log(`🔥 FIX 1 – PAYMENT CHECK START`);
     
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -97,7 +105,7 @@ serve(async (req) => {
       .single();
 
     if (profileError) {
-      console.error("❌ FIX 5 ERROR - Error fetching user profile:", profileError);
+      console.error("❌ FIX 1 ERROR - Error fetching user profile:", profileError);
       return new Response(
         JSON.stringify({ success: false, error: true, errorMessage: "Profilo utente non trovato" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -115,23 +123,49 @@ serve(async (req) => {
       new Date(subscription.end_date || '') > new Date();
     
     const subscriptionTier = profile?.subscription_tier || 'Free';
+    const paymentStatus = hasActiveSubscription ? 'active' : 'inactive';
+    const stripe_customer_id = profile?.stripe_customer_id;
 
-    console.log(`🔒 FIX 5 VERIFICATION:`, {
-      hasActiveSubscription,
-      subscriptionTier,
-      stripeCustomerId: profile?.stripe_customer_id
+    // CRITICAL LOGGING - ALL VALUES
+    console.log(`🔍 CRITICAL DEBUG VALUES:`, {
+      user_id: userId,
+      paymentStatus: paymentStatus,
+      stripe_customer_id: stripe_customer_id,
+      hasActiveSubscription: hasActiveSubscription,
+      subscriptionTier: subscriptionTier,
+      profile: profile,
+      subscription: subscription
     });
 
-    if (!hasActiveSubscription && (subscriptionTier === 'Free' || !profile?.stripe_customer_id)) {
-      console.error(`❌ FIX 5 ERROR - Tentato BUZZ senza abbonamento`);
+    // STEP 3 - LOG IN BUZZ_LOGS: PAYMENT CHECK
+    await supabase.from('buzz_logs').insert({
+      user_id: userId,
+      step: 'payment_check',
+      details: { 
+        paymentStatus, 
+        stripe_customer_id, 
+        hasActiveSubscription, 
+        subscriptionTier,
+        timestamp: new Date().toISOString() 
+      }
+    });
+
+    // PAYMENT VERIFICATION - BLOCK IF NOT ACTIVE
+    if (paymentStatus !== 'active' || !stripe_customer_id) {
+      console.error(`❌ FIX 1 ERROR - Payment check failed:`, {
+        paymentStatus,
+        stripe_customer_id,
+        hasActiveSubscription
+      });
       
       await supabase.from('abuse_logs').insert({
         user_id: userId,
         event_type: 'buzz_no_payment',
         meta: {
           access_type: 'buzz_no_payment',
-          subscription_tier: subscriptionTier,
-          has_active_subscription: hasActiveSubscription,
+          paymentStatus,
+          stripe_customer_id,
+          hasActiveSubscription,
           timestamp: new Date().toISOString()
         }
       });
@@ -146,7 +180,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`✅ FIX 5 SUCCESS - Payment verified`);
+    console.log(`✅ FIX 1 SUCCESS - Payment verification passed`);
 
     const rateLimiter = new RateLimiter(supabaseUrl, supabaseServiceKey);
     const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
@@ -237,7 +271,7 @@ serve(async (req) => {
     };
 
     if (generateMap) {
-      console.log(`🔥 FIX 2 – BUZZ MAPPA GENERATION START for user ${userId}`);
+      console.log(`🔥 FIX 1 – BUZZ MAPPA GENERATION START for user ${userId}`);
       
       let baseCenter = { lat: 41.9028, lng: 12.4964 };
       
@@ -249,8 +283,8 @@ serve(async (req) => {
       const secureCenter = applySecureOffset(baseCenter.lat, baseCenter.lng);
       console.log(`🔒 Applied secure offset: ${secureCenter.lat}, ${secureCenter.lng}`);
       
-      // FIX 2 - RAGGIO CORRETTO
-      console.log(`🔥 FIX 2 – GET CURRENT GENERATION FROM DB`);
+      // STEP 4 - GET GENERATION FROM DB WITH LOGGING
+      console.log(`🔥 FIX 1 – GET CURRENT GENERATION FROM DB`);
       
       const { data: counterData, error: counterError } = await supabase
         .from('user_buzz_map_counter')
@@ -260,17 +294,37 @@ serve(async (req) => {
         .maybeSingle();
 
       let currentGeneration = (counterData?.buzz_map_count || 0) + 1;
-      console.log(`🔥 FIX 2 – GENERATION FROM DB: ${currentGeneration}`);
+      console.log(`🔥 FIX 1 – GENERATION FROM DB: ${currentGeneration}`);
       
-      // FIX 2 - CALCOLO RAGGIO CORRETTO
+      // STEP 5 - CALCULATE RADIUS WITH LOGGING
       let radius_km;
       if (currentGeneration === 1) {
         radius_km = 500;
-        console.log("🔥 FIX 2 – FIRST GENERATION: 500km");
+        console.log("🔥 FIX 1 – FIRST GENERATION: 500km");
       } else {
         radius_km = Math.max(5, 500 * Math.pow(0.95, currentGeneration - 1));
-        console.log(`🔥 FIX 2 – RADIUS CALCULATION: Generation ${currentGeneration} = ${radius_km}km`);
+        console.log(`🔥 FIX 1 – RADIUS CALCULATION: Generation ${currentGeneration} = ${radius_km}km`);
       }
+      
+      // CRITICAL LOGGING - RADIUS CALCULATION
+      console.log(`🔍 CRITICAL RADIUS DEBUG:`, {
+        generation: currentGeneration,
+        radius_km: radius_km,
+        calculation: `500 * 0.95^(${currentGeneration} - 1) = ${500 * Math.pow(0.95, currentGeneration - 1)}`,
+        final_radius: Math.max(5, 500 * Math.pow(0.95, currentGeneration - 1))
+      });
+
+      // STEP 6 - LOG IN BUZZ_LOGS: GENERATION CALCULATED
+      await supabase.from('buzz_logs').insert({
+        user_id: userId,
+        step: 'generation_calculated',
+        details: { 
+          generation: currentGeneration, 
+          radius_km: radius_km,
+          calculation: `500 * 0.95^(${currentGeneration} - 1)`,
+          timestamp: new Date().toISOString() 
+        }
+      });
       
       // Atomic upsert del contatore
       const { data: updatedCounter, error: updateError } = await supabase
@@ -286,11 +340,11 @@ serve(async (req) => {
         .single();
 
       if (updateError) {
-        console.error("❌ FIX 2 ERROR - Error updating counter:", updateError);
+        console.error("❌ FIX 1 ERROR - Error updating counter:", updateError);
         currentGeneration = 1; // Fallback
       } else {
         currentGeneration = updatedCounter.buzz_map_count;
-        console.log(`✅ FIX 2 SUCCESS - Counter updated: generation ${currentGeneration}`);
+        console.log(`✅ FIX 1 SUCCESS - Counter updated: generation ${currentGeneration}`);
       }
 
       // Clear existing areas
@@ -306,7 +360,7 @@ serve(async (req) => {
         console.log(`✅ FIX 1 SUCCESS - Cleared ${deletedCount} existing areas`);
       }
       
-      // FIX 1 - INSERT NEW AREA WITH EXTENSIVE LOGGING
+      // STEP 7 - INSERT NEW AREA WITH EXTENSIVE LOGGING
       console.log(`🔥 FIX 1 – INSERTING NEW AREA:`, {
         user_id: userId,
         lat: secureCenter.lat,
@@ -334,13 +388,38 @@ serve(async (req) => {
           radius: radius_km,
           coordinates: secureCenter
         });
+        
+        // STEP 8 - LOG IN BUZZ_LOGS: AREA INSERT FAILED
+        await supabase.from('buzz_logs').insert({
+          user_id: userId,
+          step: 'area_insert_failed',
+          details: { 
+            error: mapError.message,
+            radius_km: radius_km,
+            coordinates: secureCenter,
+            timestamp: new Date().toISOString() 
+          }
+        });
+        
         response.error = true;
         response.errorMessage = "Errore salvataggio area mappa";
       } else {
         console.log(`✅ FIX 1 SUCCESS - Map area inserted:`, insertedArea);
         
-        // FIX 3 - NOTIFICHE FORZATE
-        console.log(`🔥 FIX 3 – INSERTING NOTIFICATION`);
+        // STEP 9 - LOG IN BUZZ_LOGS: AREA INSERT SUCCESS
+        await supabase.from('buzz_logs').insert({
+          user_id: userId,
+          step: 'area_insert_success',
+          details: { 
+            area_id: insertedArea.id,
+            radius_km: radius_km,
+            coordinates: secureCenter,
+            timestamp: new Date().toISOString() 
+          }
+        });
+        
+        // STEP 10 - INSERT NOTIFICATION WITH LOGGING
+        console.log(`🔥 FIX 1 – INSERTING NOTIFICATION`);
         
         const { data: notificationData, error: notificationError } = await supabase
           .from('user_notifications')
@@ -355,9 +434,29 @@ serve(async (req) => {
           .single();
 
         if (notificationError) {
-          console.error("❌ FIX 3 ERROR - Notification insert failed:", notificationError);
+          console.error("❌ FIX 1 ERROR - Notification insert failed:", notificationError);
+          
+          // STEP 11 - LOG IN BUZZ_LOGS: NOTIFICATION INSERT FAILED
+          await supabase.from('buzz_logs').insert({
+            user_id: userId,
+            step: 'notification_insert_failed',
+            details: { 
+              error: notificationError.message,
+              timestamp: new Date().toISOString() 
+            }
+          });
         } else {
-          console.log(`✅ FIX 3 SUCCESS - Notification inserted: ${notificationData.id}`);
+          console.log(`✅ FIX 1 SUCCESS - Notification inserted: ${notificationData.id}`);
+          
+          // STEP 12 - LOG IN BUZZ_LOGS: NOTIFICATION INSERT SUCCESS
+          await supabase.from('buzz_logs').insert({
+            user_id: userId,
+            step: 'notification_insert_success',
+            details: { 
+              notification_id: notificationData.id,
+              timestamp: new Date().toISOString() 
+            }
+          });
         }
 
         response.radius_km = radius_km;
@@ -369,6 +468,18 @@ serve(async (req) => {
       }
     }
 
+    // STEP 13 - LOG IN BUZZ_LOGS: END
+    await supabase.from('buzz_logs').insert({
+      user_id: userId,
+      step: 'end',
+      details: { 
+        success: response.success,
+        error: response.error,
+        radius_km: response.radius_km,
+        timestamp: new Date().toISOString() 
+      }
+    });
+
     console.log(`✅ BUZZ RESPONSE:`, response);
 
     return new Response(
@@ -378,6 +489,20 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("❌ FIX 1 ERROR - General error in BUZZ handling:", error);
+    
+    // LOG GENERAL ERROR IN BUZZ_LOGS
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+    
+    await supabase.from('buzz_logs').insert({
+      user_id: requestData?.userId || 'unknown',
+      step: 'general_error',
+      details: { 
+        error: error.message || String(error),
+        timestamp: new Date().toISOString() 
+      }
+    });
     
     return new Response(
       JSON.stringify({ success: false, error: true, errorMessage: error.message || "Errore del server" }),
