@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Circle as CircleIcon, Loader } from "lucide-react";
@@ -6,6 +7,7 @@ import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useBuzzMapLogic } from "@/hooks/useBuzzMapLogic";
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface BuzzButtonProps {
   handleBuzz?: () => void;
@@ -21,6 +23,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   onAreaGenerated
 }) => {
   const [isRippling, setIsRippling] = useState(false);
+  const [calculatedRadius, setCalculatedRadius] = useState<number | null>(null);
   const { createMapBuzzNotification } = useNotificationManager();
   const { user } = useAuth();
   const { 
@@ -33,6 +36,52 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   } = useBuzzMapLogic();
   
   const activeArea = getActiveArea();
+
+  // FIX 2: Calcola il raggio corretto dal database
+  React.useEffect(() => {
+    const calculateCorrectRadius = async () => {
+      if (!user?.id) return;
+
+      try {
+        console.log("🔥 BUZZ MAPPA radius: Calculating from database...");
+        
+        // Ottieni la generazione corrente dal database
+        const { data: counterData, error } = await supabase
+          .from('user_buzz_map_counter')
+          .select('buzz_map_count')
+          .eq('user_id', user.id)
+          .eq('date', new Date().toISOString().split('T')[0])
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('❌ BUZZ MAPPA radius: Error getting counter:', error);
+          setCalculatedRadius(null);
+          return;
+        }
+
+        const currentCount = counterData?.buzz_map_count || 0;
+        const nextGeneration = currentCount + 1;
+        
+        let radius;
+        if (nextGeneration === 1) {
+          radius = 500;
+          console.log("🔥 BUZZ MAPPA radius: First generation = 500km");
+        } else {
+          radius = Math.max(5, 500 * Math.pow(0.95, nextGeneration - 1));
+          console.log(`🔥 BUZZ MAPPA radius: Generation ${nextGeneration} = ${radius}km`);
+        }
+        
+        console.log("🔥 BUZZ MAPPA radius:", radius);
+        setCalculatedRadius(radius);
+        
+      } catch (error) {
+        console.error('❌ BUZZ MAPPA radius: Exception:', error);
+        setCalculatedRadius(null);
+      }
+    };
+
+    calculateCorrectRadius();
+  }, [user?.id, dailyBuzzMapCounter]);
   
   const handleBuzzMapClick = async () => {
     // CRITICAL: Validate user ID first
@@ -92,6 +141,25 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     }
   };
 
+  // FIX 2: Determina il raggio da mostrare
+  const getDisplayRadius = () => {
+    // 1. Se c'è un'area attiva, mostra il suo raggio
+    if (activeArea) {
+      console.log("🔥 BUZZ MAPPA radius: Using active area radius:", activeArea.radius_km);
+      return activeArea.radius_km.toFixed(1);
+    }
+    
+    // 2. Se abbiamo calcolato il raggio, mostralo
+    if (calculatedRadius !== null) {
+      console.log("🔥 BUZZ MAPPA radius: Using calculated radius:", calculatedRadius);
+      return calculatedRadius.toFixed(1);
+    }
+    
+    // 3. Se non abbiamo dati, mostra "Calcolo..."
+    console.log("🔥 BUZZ MAPPA radius: No data available, showing 'Calcolo...'");
+    return "Calcolo...";
+  };
+
   // Disable button if no valid user
   const isDisabled = isGenerating || !user?.id;
   
@@ -117,7 +185,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             <CircleIcon className="mr-2 h-4 w-4" />
           )}
           <span>
-            {isGenerating ? 'Generando...' : `BUZZ MAPPA (${activeArea ? `${activeArea.radius_km.toFixed(1)}km` : '21.5km'})  ${dailyBuzzMapCounter} BUZZ settimana`}
+            {isGenerating ? 'Generando...' : `BUZZ MAPPA (${getDisplayRadius()}km) ${dailyBuzzMapCounter} BUZZ settimana`}
           </span>
         </Button>
         
