@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +8,7 @@ import { AuthContextType } from './types';
 import { toast } from 'sonner';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // We get the base authentication functionality from our useAuth hook
+  // Use the base authentication functionality from our useAuth hook
   const auth = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
@@ -15,57 +16,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
 
-  // ✅ CONTROLLO PRIORITARIO: Developer access setup immediato
-  useEffect(() => {
-    const setupDeveloperAccess = async () => {
-      const developerEmail = 'wikus77@hotmail.it';
-      
-      // ACCESSO IMMEDIATO E AUTOMATICO per sviluppatore
-      console.log('🔑 Setting up automatic developer access for:', developerEmail);
-      localStorage.setItem('developer_access', 'granted');
-      localStorage.setItem('developer_user_email', developerEmail);
-      localStorage.setItem('captcha_bypassed', 'true');
-      localStorage.setItem('auto_login_developer', 'true');
-      
-      // Imposta fake session immediata
-      const fakeSession = {
-        access_token: "developer-fake-access-token-" + Date.now(),
-        refresh_token: "developer-fake-refresh-token-" + Date.now(),
-      };
-      
-      try {
-        await supabase.auth.setSession(fakeSession);
-        console.log('✅ Developer fake session established automatically');
-      } catch (error) {
-        console.log('⚠️ Fake session setup failed, but developer access still granted');
-      }
-    };
-
-    setupDeveloperAccess();
-  }, []);
-
-  // ✅ Auto-redirect sviluppatore a /home se sulla landing
-  useEffect(() => {
-    const handleDeveloperAutoRedirect = () => {
-      const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-      const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-      
-      if ((hasDeveloperAccess || isDeveloperEmail) && window.location.pathname === '/') {
-        console.log('🚀 Auto-redirecting developer to /home');
-        window.location.href = '/home';
-      }
-    };
-
-    // Esegui immediatamente e poi dopo un breve delay
-    handleDeveloperAutoRedirect();
-    const timer = setTimeout(handleDeveloperAutoRedirect, 100);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Funzione per creare automaticamente il profilo admin
+  // Function to automatically create admin profile
   const createAdminProfile = async (userId: string, userEmail: string) => {
-    console.log("⚠️ Tentativo di creazione profilo admin per:", userEmail);
+    console.log("⚠️ Attempting to create admin profile for:", userEmail);
     
     try {
       // First try the direct approach
@@ -81,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
         
       if (error) {
-        console.error("❌ Errore nella creazione del profilo admin:", error);
+        console.error("❌ Error creating admin profile:", error);
         
         // If the direct approach fails, try using the RPC function
         try {
@@ -103,40 +56,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           
           const data = await result.json();
-          console.log("✅ Profilo admin creato tramite funzione:", data);
+          console.log("✅ Admin profile created via function:", data);
           setUserRole('admin');
           return true;
         } catch (edgeError) {
-          console.error("❌ Errore nella creazione del profilo tramite funzione:", edgeError);
+          console.error("❌ Error creating profile via function:", edgeError);
           return false;
         }
       }
       
-      console.log("✅ Profilo admin creato con successo:", newProfile?.role);
+      console.log("✅ Admin profile created successfully:", newProfile?.role);
       setUserRole(newProfile?.role || 'admin');
       return true;
     } catch (err) {
-      console.error("❌ Exception durante la creazione del profilo admin:", err);
+      console.error("❌ Exception during admin profile creation:", err);
       return false;
     }
   };
 
-  // Fetch user role when auth state changes
+  // Fetch user role when auth state changes - REAL AUTH ONLY
   useEffect(() => {
     const fetchUserRole = async () => {
-      // ✅ CONTROLLO PRIORITARIO: Developer access da localStorage prima di tutto
-      const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-      const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-      
-      if (hasDeveloperAccess || isDeveloperEmail) {
-        console.log("🔑 Developer access rilevato da localStorage - ACCESSO IMMEDIATO");
-        setUserRole('admin');
-        setIsRoleLoading(false);
-        setAuthInitialized(true);
-        return;
-      }
-
-      // Se non c'è utente autenticato, NON fare nulla - lascia che vedano la landing
+      // If not authenticated, set role to null
       if (!auth.isAuthenticated || !auth.user) {
         setUserRole(null);
         setIsRoleLoading(false);
@@ -145,9 +86,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       try {
         setIsRoleLoading(true);
-        console.log("🔍 Cerco profilo per user:", auth.user.id, auth.user.email);
+        console.log("🔍 Searching for profile for user:", auth.user.id, auth.user.email);
         
-        // Prima prova con l'ID dell'utente
+        // First try with user ID
         const { data: dataById, error: errorById } = await supabase
           .from('profiles')
           .select('role, id')
@@ -155,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .maybeSingle();
 
         if (dataById && dataById.role) {
-          console.log("✅ Ruolo utente trovato tramite ID:", dataById.role);
+          console.log("✅ User role found via ID:", dataById.role);
           setUserRole(dataById.role);
           setIsRoleLoading(false);
           setRetryCount(0);
@@ -166,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error('❌ Error fetching user role by ID:', errorById);
         }
 
-        // Se non trova tramite ID, prova con l'email
+        // If not found via ID, try with email
         if (auth.user.email) {
           const { data: dataByEmail, error: errorByEmail } = await supabase
             .from('profiles')
@@ -175,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .maybeSingle();
 
           if (dataByEmail && dataByEmail.role) {
-            console.log("✅ Ruolo utente trovato tramite email:", dataByEmail.role);
+            console.log("✅ User role found via email:", dataByEmail.role);
             setUserRole(dataByEmail.role);
             setIsRoleLoading(false);
             setRetryCount(0);
@@ -187,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
-        // Se non trova né per ID né per email e l'utente è wikus77@hotmail.it, crea il profilo admin
+        // If not found and user is wikus77@hotmail.it, create admin profile
         if (auth.user.email === 'wikus77@hotmail.it') {
           const success = await createAdminProfile(auth.user.id, auth.user.email);
           if (success) {
@@ -197,21 +138,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         
-        // Se siamo qui, non abbiamo trovato alcun profilo
-        // Incrementiamo il numero di tentativi e proviamo di nuovo se non abbiamo superato il limite
+        // If we're here, no profile was found
+        // Increment retry count and try again if not exceeded limit
         if (retryCount < maxRetries) {
-          console.log(`⚠️ Nessun profilo trovato, ritento (${retryCount + 1}/${maxRetries})...`);
+          console.log(`⚠️ No profile found, retrying (${retryCount + 1}/${maxRetries})...`);
           setRetryCount(prev => prev + 1);
           
-          // Ritentiamo dopo un breve ritardo
+          // Retry after a brief delay
           setTimeout(() => {
             fetchUserRole();
           }, 1000);
           return;
         }
         
-        // Default fallback dopo tutti i tentativi
-        console.log("⚠️ Nessun profilo trovato dopo multipli tentativi");
+        // Default fallback after all attempts
+        console.log("⚠️ No profile found after multiple attempts");
         
         // If user is the admin email but no profile exists, force create one as a last resort
         if (auth.user.email === 'wikus77@hotmail.it') {
@@ -253,16 +194,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [auth.isLoading, authInitialized]);
 
-  // Check if user has a specific role
+  // Check if user has a specific role - REAL AUTH ONLY
   const hasRole = (role: string): boolean => {
-    // ✅ CONTROLLO PRIORITARIO: Developer access
-    const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-    const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
-    
-    if ((hasDeveloperAccess || isDeveloperEmail) && role === 'admin') {
-      return true;
-    }
-
     // Special case for wikus77@hotmail.it - always treated as admin
     if (auth.user?.email === 'wikus77@hotmail.it') {
       return role === 'admin';

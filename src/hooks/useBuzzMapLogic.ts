@@ -40,7 +40,7 @@ export const useBuzzMapLogic = () => {
     validateBuzzDeletion
   } = useMapAreas(user?.id);
 
-  console.debug('🧠 BUZZ LOGIC STATE:', {
+  console.debug('🧠 BUZZ LOGIC STATE - REAL AUTH:', {
     userId: user?.id,
     userEmail: user?.email,
     areasCount: currentWeekAreas.length,
@@ -74,40 +74,29 @@ export const useBuzzMapLogic = () => {
     return newRadius;
   }, []);
 
-  // FIXED: Enhanced user validation with fallback support
+  // REAL USER VALIDATION - NO FAKE FALLBACKS
   const validateUserAccess = useCallback((): boolean => {
-    // CRITICAL FIX: Support developer UUID fallback
-    const developerUUID = "00000000-0000-4000-a000-000000000000";
-    const isDeveloperFallback = user?.id === developerUUID;
-    const isDeveloperEmail = user?.email === 'wikus77@hotmail.it';
-    
-    console.debug('🔐 USER VALIDATION:', {
+    console.debug('🔐 USER VALIDATION - REAL AUTH ONLY:', {
       userId: user?.id,
       userEmail: user?.email,
-      isDeveloperFallback,
-      isDeveloperEmail,
       hasUser: !!user
     });
 
-    // Allow access if:
-    // 1. User exists with valid ID
-    // 2. User is developer email
-    // 3. User has developer fallback UUID
-    return !!(user?.id && (user.id.length > 10 || isDeveloperFallback || isDeveloperEmail));
+    // REAL authentication required - no fake fallbacks
+    return !!(user?.id && user?.email);
   }, [user]);
 
-  // Payment validation for non-developer users
+  // Payment validation for non-developer users - REAL EMAIL CHECK
   const requireBuzzPayment = useCallback(async (): Promise<boolean> => {
     if (!validateUserAccess()) {
       console.error('❌ No valid user for payment validation');
       return false;
     }
 
-    // Developer bypass for wikus77@hotmail.it and developer UUID
+    // Developer bypass for wikus77@hotmail.it ONLY
     const isDeveloperEmail = user?.email === 'wikus77@hotmail.it';
-    const isDeveloperUUID = user?.id === "00000000-0000-4000-a000-000000000000";
     
-    if (isDeveloperEmail || isDeveloperUUID) {
+    if (isDeveloperEmail) {
       console.log('🔓 Developer bypass - payment not required');
       return true;
     }
@@ -116,30 +105,29 @@ export const useBuzzMapLogic = () => {
     return false; // Force payment for all non-developer users
   }, [user, validateUserAccess]);
 
-  // BUZZ MAPPA generation with progressive radius reduction
+  // BUZZ MAPPA generation with progressive radius reduction - REAL AUTH
   const generateBuzzMapArea = useCallback(async (centerLat: number, centerLng: number): Promise<BuzzMapArea | null> => {
-    // CRITICAL FIX: Enhanced user validation
+    // CRITICAL FIX: REAL authentication validation
     if (!validateUserAccess()) {
-      console.error('❌ BUZZ GENERATION - User validation failed:', {
+      console.error('❌ BUZZ GENERATION - User validation failed - REAL AUTH REQUIRED:', {
         userId: user?.id,
         userEmail: user?.email,
         hasUser: !!user
       });
       toast.dismiss();
-      toast.error('Errore di autenticazione. Riprova ad accedere.');
+      toast.error('Errore di autenticazione. Effettua il login.');
       return null;
     }
 
-    console.log('🔥 STARTING BUZZ MAPPA GENERATION:', {
-      userId: user?.id,
-      userEmail: user?.email,
+    console.log('🔥 STARTING BUZZ MAPPA GENERATION - REAL AUTH:', {
+      userId: user!.id,
+      userEmail: user!.email,
       centerLat,
       centerLng,
-      currentAreas: currentWeekAreas.length,
-      userValidation: 'PASSED'
+      currentAreas: currentWeekAreas.length
     });
 
-    // FIXED: Enhanced coordinate validation
+    // Enhanced coordinate validation
     if (!centerLat || !centerLng || isNaN(centerLat) || isNaN(centerLng)) {
       console.error('❌ Invalid coordinates:', { centerLat, centerLng });
       toast.dismiss();
@@ -171,14 +159,15 @@ export const useBuzzMapLogic = () => {
       const currentRadius = currentArea?.radius_km || 500;
       const newRadius = calculateNewRadius(currentRadius);
       
-      console.log('🚀 CALLING BACKEND with progressive radius:', {
+      console.log('🚀 CALLING BACKEND with progressive radius - REAL AUTH:', {
         currentRadius,
         newRadius,
         coordinates: { lat: centerLat, lng: centerLng },
-        userId: user?.id
+        userId: user!.id,
+        userEmail: user!.email
       });
       
-      // Call backend API with progressive radius
+      // Call backend API with progressive radius - REAL AUTH TOKEN
       const response = await callBuzzApi({ 
         userId: user!.id,
         generateMap: true,
@@ -228,7 +217,7 @@ export const useBuzzMapLogic = () => {
       toast.dismiss();
       toast.success(`✅ Area BUZZ MAPPA attiva: ${newRadius.toFixed(1)} km – Gen: ${response.generation_number || 1}`);
       
-      console.log('🎉 BUZZ GENERATION COMPLETE:', {
+      console.log('🎉 BUZZ GENERATION COMPLETE - REAL AUTH:', {
         userId: user!.id,
         radius_km: newRadius,
         generation: response.generation_number,
@@ -301,7 +290,7 @@ export const useBuzzMapLogic = () => {
     forceCompleteInvalidation: forceCompleteSync,
     validateBuzzDeletion,
     
-    // FIXED: Add user validation function for external use
+    // User validation function for external use - REAL AUTH
     validateUserAccess
   };
 };

@@ -85,7 +85,7 @@ export const useStripePayment = () => {
     });
   };
 
-  // CRITICAL FIX: Enhanced BUZZ purchase validation
+  // BUZZ purchase validation - REAL AUTH ONLY
   const processBuzzPurchase = async (
     isMapBuzz = false, 
     customPrice?: number, 
@@ -93,7 +93,7 @@ export const useStripePayment = () => {
     sessionId?: string,
     paymentMethod?: 'card' | 'apple_pay' | 'google_pay'
   ): Promise<boolean> => {
-    console.log('💳 Processing BUZZ purchase:', {
+    console.log('💳 Processing BUZZ purchase - REAL AUTH ONLY:', {
       isMapBuzz,
       customPrice,
       mandatory: true,
@@ -101,15 +101,13 @@ export const useStripePayment = () => {
     });
 
     try {
-      // CRITICAL FIX: For BUZZ MAPPA, simulate payment success for developers
-      // In production, this should always create a real checkout session
+      // REAL authentication check - Developer email only
       const currentUser = await supabase.auth.getUser();
-      const isDeveloper = currentUser.data.user?.email === 'wikus77@hotmail.it' || 
-                         currentUser.data.user?.id === "00000000-0000-4000-a000-000000000000";
+      const isDeveloper = currentUser.data.user?.email === 'wikus77@hotmail.it';
       
       if (isDeveloper) {
-        console.log('🔓 Developer payment bypass - simulating success');
-        toast.success('Pagamento sviluppatore simulato');
+        console.log('🔓 Developer payment bypass - REAL EMAIL VERIFIED');
+        toast.success('Pagamento sviluppatore autorizzato');
         return true;
       }
 

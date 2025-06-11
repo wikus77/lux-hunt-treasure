@@ -32,29 +32,28 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   // Calculate next radius for preview
   const nextRadius = Math.max(5, currentRadius * 0.95);
   
-  // FIXED: Enhanced developer check with fallback UUID support
-  const isDeveloper = user?.email === 'wikus77@hotmail.it' || user?.id === "00000000-0000-4000-a000-000000000000";
+  // REAL AUTHENTICATION CHECK - Developer email only
+  const isDeveloper = user?.email === 'wikus77@hotmail.it';
 
   const handleBuzzMapPress = async () => {
-    // CRITICAL FIX: Use enhanced user validation
-    if (!validateUserAccess()) {
-      console.error('❌ User validation failed:', {
+    // CRITICAL FIX: Use REAL authentication validation
+    if (!user || !user.id || !user.email) {
+      console.error('❌ User not authenticated - REAL AUTH REQUIRED:', {
         userId: user?.id,
         userEmail: user?.email,
         hasUser: !!user
       });
-      toast.error('Errore di autenticazione. Riprova ad accedere.');
+      toast.error('Errore di autenticazione. Effettua il login.');
       return;
     }
 
-    console.log('🔥 BUZZ MAPPA button pressed:', {
-      userId: user?.id,
-      userEmail: user?.email,
+    console.log('🔥 BUZZ MAPPA button pressed - REAL AUTH:', {
+      userId: user.id,
+      userEmail: user.email,
       isDeveloper,
       currentRadius,
       nextRadius,
-      mapCenter,
-      userValidation: 'PASSED'
+      mapCenter
     });
 
     try {
@@ -106,8 +105,8 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     ? `BUZZ MAPPA – ${dailyBuzzMapCounter} BUZZ settimana – ${displayRadius}`
     : `BUZZ MAPPA (€1.99) – ${dailyBuzzMapCounter} BUZZ settimana – 500.0km`;
 
-  // FIXED: Enhanced button state management
-  const isButtonDisabled = isGenerating || !validateUserAccess();
+  // Button state management - REAL AUTH
+  const isButtonDisabled = isGenerating || !user || !user.id;
 
   return (
     <div className="absolute bottom-4 left-4 z-50">
