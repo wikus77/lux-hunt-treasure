@@ -30,15 +30,17 @@ const Login = () => {
         description: "La tua email è stata verificata con successo."
       });
     }
+  }, [searchParams]);
 
-    // Immediate redirect if already authenticated
-    if (!authLoading && isAuthenticated) {
+  // CRITICAL: Separate useEffect for authentication check and redirect
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && !isDeveloperAutoLogin) {
       console.log('✅ User already authenticated, redirecting to /home');
       navigate('/home', { replace: true });
     }
-  }, [navigate, searchParams, authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated, navigate, isDeveloperAutoLogin]);
 
-  // 🔐 CRITICAL DEVELOPER AUTO-LOGIN - RESTORED TO WORKING VERSION
+  // 🔐 CRITICAL DEVELOPER AUTO-LOGIN - FIXED VERSION
   useEffect(() => {
     const executeDeveloperAutoLogin = async () => {
       if (!developerAutoLoginAttempted && !authLoading && !isAuthenticated) {
@@ -112,11 +114,14 @@ const Login = () => {
                 duration: 3000
               });
               
+              // CRITICAL: Reset auto-login state before redirect
+              setIsDeveloperAutoLogin(false);
+              
               // CRITICAL: Immediate redirect on success
               setTimeout(() => {
                 console.log('🏠 CRITICAL: Executing redirect to /home...');
                 navigate('/home', { replace: true });
-              }, 1500);
+              }, 1000);
             } else {
               console.error('❌ CRITICAL: Session setting failed:', sessionResult.error);
               setAutoLoginError(`Session error: ${sessionResult.error?.message || 'Unknown session error'}`);
@@ -143,8 +148,10 @@ const Login = () => {
     };
 
     // CRITICAL: Execute auto-login immediately after component mount
-    const autoLoginTimer = setTimeout(executeDeveloperAutoLogin, 100);
-    return () => clearTimeout(autoLoginTimer);
+    if (!authLoading && !isAuthenticated && !developerAutoLoginAttempted) {
+      const autoLoginTimer = setTimeout(executeDeveloperAutoLogin, 100);
+      return () => clearTimeout(autoLoginTimer);
+    }
   }, [authLoading, isAuthenticated, developerAutoLoginAttempted, navigate]);
 
   async function handleResendVerification(email: string) {
@@ -194,7 +201,7 @@ const Login = () => {
                 Using login-no-captcha edge function
               </p>
               <p className="text-xs text-green-400 mt-1">
-                ✅ RESTORED TO WORKING VERSION
+                ✅ FIXED INFINITE LOOP VERSION
               </p>
             </div>
           )}
@@ -261,6 +268,7 @@ const Login = () => {
                 onClick={async () => {
                   setDeveloperAutoLoginAttempted(false);
                   setAutoLoginError(null);
+                  setIsDeveloperAutoLogin(false);
                   console.log('🔄 CRITICAL: Manual retry auto-login triggered');
                   window.location.reload();
                 }}
