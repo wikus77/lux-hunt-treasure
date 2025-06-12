@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Loader, Zap } from "lucide-react";
@@ -109,6 +108,12 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     const newDailyCount = dailyCount + 1;
     setDailyCount(newDailyCount);
     console.log(`🔢 BUZZ: Counter IMPERATIVELY incremented to ${newDailyCount}/50`);
+
+    // IMPERATIVE: Show immediate toast feedback
+    toast.success("🎯 BUZZ attivato!", {
+      description: `Tentativo ${newDailyCount}/50 in corso...`,
+      duration: 2000,
+    });
 
     // Check daily limit AFTER incrementing counter
     if (dailyCount >= 50) {
@@ -384,7 +389,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const isProcessing = isLoading || paymentLoading;
 
   return (
-    <div className="flex flex-col items-center justify-center h-full min-h-[500px]">
+    <div className="flex flex-col items-center justify-center h-full min-h-[500px] pb-safe">
       {/* IMPERATIVE: Perfect circular button with glow aura */}
       <motion.button
         className="w-80 h-80 rounded-full relative overflow-hidden focus:outline-none disabled:opacity-50"
@@ -399,10 +404,20 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           boxShadow: isBlocked 
             ? "none" 
             : "0 0 30px rgba(123, 46, 255, 0.8), 0 0 60px rgba(0, 209, 255, 0.6), 0 0 90px rgba(255, 89, 248, 0.4)",
-          animation: isBlocked ? "none" : "buzzGlowPulse 2s infinite ease-in-out"
         }}
         transition={{ 
           scale: { type: "spring", stiffness: 300, damping: 20 }
+        }}
+        animate={!isBlocked ? {
+          boxShadow: [
+            "0 0 20px rgba(123, 46, 255, 0.6), 0 0 40px rgba(0, 209, 255, 0.4), 0 0 60px rgba(255, 89, 248, 0.3)",
+            "0 0 40px rgba(123, 46, 255, 0.9), 0 0 80px rgba(0, 209, 255, 0.7), 0 0 120px rgba(255, 89, 248, 0.5)",
+            "0 0 20px rgba(123, 46, 255, 0.6), 0 0 40px rgba(0, 209, 255, 0.4), 0 0 60px rgba(255, 89, 248, 0.3)"
+          ]
+        } : {}}
+        transition={{
+          ...transition,
+          boxShadow: { repeat: Infinity, duration: 2, ease: "easeInOut" }
         }}
       >
         {/* Animated glow effect layer */}
@@ -468,27 +483,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             />
           </div>
         )}
-        
-        {/* Custom styles for glow animation */}
-        <style jsx>{`
-          @keyframes buzzGlowPulse {
-            0% { 
-              box-shadow: 0 0 20px rgba(123, 46, 255, 0.6), 
-                         0 0 40px rgba(0, 209, 255, 0.4), 
-                         0 0 60px rgba(255, 89, 248, 0.3);
-            }
-            50% { 
-              box-shadow: 0 0 40px rgba(123, 46, 255, 0.9), 
-                         0 0 80px rgba(0, 209, 255, 0.7), 
-                         0 0 120px rgba(255, 89, 248, 0.5);
-            }
-            100% { 
-              box-shadow: 0 0 20px rgba(123, 46, 255, 0.6), 
-                         0 0 40px rgba(0, 209, 255, 0.4), 
-                         0 0 60px rgba(255, 89, 248, 0.3);
-            }
-          }
-        `}</style>
       </motion.button>
     </div>
   );
