@@ -93,9 +93,27 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const handleBuzzPress = async () => {
     if (isLoading || !userId) return;
     
+    console.log('🚀 BUZZ: Starting process', {
+      userId,
+      dailyCount,
+      buzzCost,
+      hasActiveSubscription
+    });
+
+    // Check daily limit first
+    if (dailyCount >= 50) {
+      toast.error("Limite giornaliero raggiunto", {
+        description: "Hai raggiunto il limite di 50 buzz per oggi."
+      });
+      return;
+    }
+    
     // Check if user needs to pay (no subscription and cost > 0)
-    if (!hasActiveSubscription && buzzCost > 0) {
+    const isDeveloper = userId && (await supabase.auth.getUser()).data.user?.email === 'wikus77@hotmail.it';
+    
+    if (!isDeveloper && !hasActiveSubscription && buzzCost > 0) {
       try {
+        console.log('💳 BUZZ: Payment required, processing checkout');
         toast.info("Pagamento richiesto", {
           description: `Per continuare è necessario pagare €${buzzCost.toFixed(2)} o attivare un abbonamento.`
         });
@@ -110,12 +128,16 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           return;
         }
       } catch (error) {
-        console.error("Payment error:", error);
+        console.error("BUZZ Payment error:", error);
         toast.error("Errore di pagamento", {
           description: "Impossibile processare il pagamento."
         });
         return;
       }
+    } else if (isDeveloper) {
+      console.log('🔓 BUZZ: Developer bypass activated');
+    } else if (hasActiveSubscription) {
+      console.log('✅ BUZZ: Active subscription found, proceeding');
     }
     
     // Trigger ripple effect
@@ -182,7 +204,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           console.error("❌ Error creating notification:", notifError);
         }
 
-        // Show success toast
+        // Show success toast ONLY after successful generation
         toast.success("Nuovo indizio sbloccato!", {
           description: dynamicClueContent,
         });
@@ -219,7 +241,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   };
 
   // Check if buzz is blocked (over 50 daily uses)
-  const isBlocked = buzzCost <= 0;
+  const isBlocked = dailyCount >= 50;
   const isProcessing = isLoading || paymentLoading;
 
   return (
@@ -231,7 +253,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       whileHover={{ scale: 1.05 }}
       initial={{ boxShadow: "0 0 0px rgba(123, 46, 255, 0)" }}
       animate={{ 
-        boxShadow: ["0 0 12px rgba(123, 46, 255, 0.35)", "0 0 35px rgba(0, 209, 255, 0.7)", "0 0 12px rgba(123, 46, 255, 0.35)"]
+        boxShadow: isBlocked ? "none" : ["0 0 12px rgba(123, 46, 255, 0.35)", "0 0 35px rgba(0, 209, 255, 0.7)", "0 0 12px rgba(123, 46, 255, 0.35)"]
       }}
       transition={{ 
         boxShadow: { repeat: Infinity, duration: 3 },

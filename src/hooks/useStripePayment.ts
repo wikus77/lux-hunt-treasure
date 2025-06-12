@@ -85,7 +85,7 @@ export const useStripePayment = () => {
     });
   };
 
-  // Enhanced BUZZ purchase validation with mandatory payment check
+  // Enhanced BUZZ purchase validation with MANDATORY payment check
   const processBuzzPurchase = async (
     isMapBuzz = false, 
     customPrice?: number, 
@@ -132,8 +132,8 @@ export const useStripePayment = () => {
         return true;
       }
 
-      // No subscription found, payment is mandatory
-      console.log('💳 No active subscription, payment required');
+      // No subscription found, payment is MANDATORY
+      console.log('💳 No active subscription, payment REQUIRED');
 
       const result = await createCheckoutSession({
         planType: isMapBuzz ? 'BuzzMap' : 'Buzz',
@@ -145,7 +145,7 @@ export const useStripePayment = () => {
         paymentMethod
       });
 
-      // For BUZZ purchases, payment is mandatory for non-subscribers
+      // For BUZZ purchases, payment is MANDATORY for non-subscribers
       if (!result) {
         console.error('❌ Payment session creation failed');
         toast.error('Pagamento richiesto', {
@@ -154,7 +154,7 @@ export const useStripePayment = () => {
         return false;
       }
 
-      console.log('✅ Payment session created successfully');
+      console.log('✅ Payment session created successfully, redirecting to Stripe');
       return true;
     } catch (error) {
       console.error('❌ BUZZ payment error:', error);
