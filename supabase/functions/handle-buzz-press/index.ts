@@ -178,7 +178,7 @@ serve(async (req) => {
 
     console.log(`✅ Clue saved with ID: ${clueData.clue_id}`);
 
-    // FORCE GENERATE MAP ALWAYS WHEN generateMap = true
+    // FORCE GENERATE MAP ALWAYS WHEN generateMap = true with PROGRESSIVE RADIUS
     let response: BuzzResponse = {
       success: true,
       clue_text: clueText,
@@ -186,7 +186,7 @@ serve(async (req) => {
     };
 
     if (generateMap) {
-      console.log(`🗺️ FORCED MAP GENERATION START for user ${userId}`);
+      console.log(`🗺️ PROGRESSIVE RADIUS MAP GENERATION START for user ${userId}`);
       
       // STEP 1: Get or set fixed center coordinates for this user
       let fixedCenter = { lat: 41.9028, lng: 12.4964 }; // Default Rome
@@ -210,35 +210,23 @@ serve(async (req) => {
         console.log(`📍 Setting new fixed center: ${fixedCenter.lat}, ${fixedCenter.lng}`);
       }
       
-      // STEP 2: Clear existing BUZZ areas
-      console.log(`🧹 Clearing existing BUZZ areas...`);
-      const { error: deleteError } = await supabase
+      // STEP 2: Count existing map areas for this user to determine generation
+      const { data: existingAreas, error: countError } = await supabase
         .from('user_map_areas')
-        .delete()
+        .select('*')
         .eq('user_id', userId);
         
-      if (deleteError) {
-        console.error("⚠️ Warning: Could not clear existing areas:", deleteError);
-      } else {
-        console.log("✅ Cleared existing BUZZ areas successfully");
-      }
-      
-      // STEP 3: Get generation count
-      const { data: generationData, error: genError } = await supabase.rpc('increment_map_generation_counter', {
-        p_user_id: userId,
-        p_week: currentWeek
-      });
-
-      const currentGeneration = generationData || 1;
+      const currentGeneration = (existingAreas?.length || 0) + 1;
       console.log(`📍 Current generation count: ${currentGeneration}`);
       
-      // STEP 4: Calculate radius with FIXED progressive reduction formula
-      let radius_km = Math.max(5, 100 * Math.pow(0.95, currentGeneration - 1));
+      // STEP 3: Calculate PROGRESSIVE radius: 500km -> 5km
+      // Formula: radius = max(5, 500 * (0.7^(generation-1)))
+      let radius_km = Math.max(5, 500 * Math.pow(0.7, currentGeneration - 1));
       
-      console.log(`📏 FIXED CENTER - Calculated radius: ${radius_km.toFixed(2)}km (generation: ${currentGeneration})`);
+      console.log(`📏 PROGRESSIVE RADIUS - Calculated radius: ${radius_km.toFixed(2)}km (generation: ${currentGeneration})`);
       console.log(`📍 FIXED CENTER - Using coordinates: lat=${fixedCenter.lat}, lng=${fixedCenter.lng}`);
       
-      // STEP 5: Save area to database with FIXED CENTER
+      // STEP 4: Save area to database with PROGRESSIVE RADIUS
       const { error: mapError, data: savedArea } = await supabase
         .from('user_map_areas')
         .insert({
@@ -257,15 +245,15 @@ serve(async (req) => {
         response.error = true;
         response.errorMessage = "Errore salvataggio area mappa";
       } else {
-        console.log("✅ Map area saved successfully with FIXED CENTER:", savedArea.id);
+        console.log("✅ Map area saved successfully with PROGRESSIVE RADIUS:", savedArea.id);
         
-        // Add map data to response with FIXED CENTER
+        // Add map data to response with PROGRESSIVE RADIUS
         response.radius_km = radius_km;
         response.lat = fixedCenter.lat;
         response.lng = fixedCenter.lng;
         response.generation_number = currentGeneration;
         
-        console.log(`🎉 MAP GENERATION COMPLETE (FIXED CENTER): radius=${radius_km.toFixed(2)}km, generation=${currentGeneration}, center=${fixedCenter.lat},${fixedCenter.lng}`);
+        console.log(`🎉 MAP GENERATION COMPLETE (PROGRESSIVE RADIUS): radius=${radius_km.toFixed(2)}km, generation=${currentGeneration}, center=${fixedCenter.lat},${fixedCenter.lng}`);
       }
     }
 

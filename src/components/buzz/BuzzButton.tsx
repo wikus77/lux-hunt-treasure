@@ -5,6 +5,7 @@ import { Loader } from "lucide-react";
 import { toast } from "sonner";
 import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
+import { useStripePayment } from "@/hooks/useStripePayment";
 import { supabase } from "@/integrations/supabase/client";
 
 interface BuzzButtonProps {
@@ -24,17 +25,42 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 }) => {
   const { callBuzzApi } = useBuzzApi();
   const { createBuzzNotification } = useNotificationManager();
+  const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
   const [buzzCost, setBuzzCost] = useState<number>(1.99);
   const [dailyCount, setDailyCount] = useState<number>(0);
   const [showRipple, setShowRipple] = useState(false);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
 
-  // Carica il costo attuale del buzz
+  // Check subscription status
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if (!userId) return;
+      
+      try {
+        const { data: subscription } = await supabase
+          .from('subscriptions')
+          .select('status, tier')
+          .eq('user_id', userId)
+          .eq('status', 'active')
+          .single();
+
+        setHasActiveSubscription(!!subscription);
+      } catch (error) {
+        console.log("No active subscription found");
+        setHasActiveSubscription(false);
+      }
+    };
+
+    checkSubscription();
+  }, [userId]);
+
+  // Load current buzz cost and daily count
   useEffect(() => {
     const loadBuzzCost = async () => {
       if (!userId) return;
       
       try {
-        // Ottieni il conteggio giornaliero attuale
+        // Get today's buzz count
         const { data: countData, error: countError } = await supabase
           .from('user_buzz_counter')
           .select('buzz_count')
@@ -45,19 +71,19 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         const currentCount = countData?.buzz_count || 0;
         setDailyCount(currentCount);
 
-        // Calcola il costo per il prossimo buzz
+        // Calculate cost for next buzz
         const { data: costData, error: costError } = await supabase.rpc('calculate_buzz_price', {
           daily_count: currentCount + 1
         });
 
         if (costError) {
-          console.error("Errore nel calcolo del costo:", costError);
+          console.error("Error calculating cost:", costError);
           return;
         }
 
         setBuzzCost(costData || 1.99);
       } catch (error) {
-        console.error("Errore nel caricamento del costo buzz:", error);
+        console.error("Error loading buzz cost:", error);
       }
     };
 
@@ -66,6 +92,31 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 
   const handleBuzzPress = async () => {
     if (isLoading || !userId) return;
+    
+    // Check if user needs to pay (no subscription and cost > 0)
+    if (!hasActiveSubscription && buzzCost > 0) {
+      try {
+        toast.info("Pagamento richiesto", {
+          description: `Per continuare è necessario pagare €${buzzCost.toFixed(2)} o attivare un abbonamento.`
+        });
+
+        // Process payment
+        const paymentSuccess = await processBuzzPurchase(false, buzzCost);
+        
+        if (!paymentSuccess) {
+          toast.error("Pagamento necessario", {
+            description: "Il pagamento è richiesto per utilizzare il BUZZ."
+          });
+          return;
+        }
+      } catch (error) {
+        console.error("Payment error:", error);
+        toast.error("Errore di pagamento", {
+          description: "Impossibile processare il pagamento."
+        });
+        return;
+      }
+    }
     
     // Trigger ripple effect
     setShowRipple(true);
@@ -76,7 +127,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       window.plausible('buzz_click');
     }
     
-    console.log("🚀 Iniziando processo BUZZ per user:", userId);
+    console.log("🚀 Starting BUZZ process for user:", userId);
     setIsLoading(true);
     setError(null);
     
@@ -87,28 +138,28 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       });
       
       if (response.success) {
-        console.log("✅ Risposta BUZZ API ricevuta:", response);
+        console.log("✅ BUZZ API response received:", response);
         
         // Track clue unlocked event
         if (typeof window !== 'undefined' && window.plausible) {
           window.plausible('clue_unlocked');
         }
         
-        // Aggiorna il costo per il prossimo utilizzo
+        // Update cost for next use
         setDailyCount(prev => prev + 1);
         const { data: newCostData } = await supabase.rpc('calculate_buzz_price', {
           daily_count: dailyCount + 2
         });
         if (newCostData) setBuzzCost(newCostData);
 
-        // Ottieni il contenuto dinamico reale dell'indizio
+        // Get dynamic clue content
         const dynamicClueContent = response.clue_text || `Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`;
         
-        console.log("📝 Contenuto dinamico indizio:", dynamicClueContent);
+        console.log("📝 Dynamic clue content:", dynamicClueContent);
 
-        // Registra immediatamente la notifica su Supabase con il contenuto reale
+        // Register notification in Supabase immediately
         try {
-          console.log("💾 Inserendo notifica in Supabase...");
+          console.log("💾 Inserting notification in Supabase...");
           const { error: notificationError, data: insertedNotification } = await supabase
             .from('user_notifications')
             .insert({
@@ -123,33 +174,33 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             .single();
 
           if (notificationError) {
-            console.error("❌ Errore inserimento notifica:", notificationError);
+            console.error("❌ Error inserting notification:", notificationError);
           } else {
-            console.log("✅ Notifica inserita con successo:", insertedNotification);
+            console.log("✅ Notification inserted successfully:", insertedNotification);
           }
         } catch (notifError) {
-          console.error("❌ Errore creazione notifica:", notifError);
+          console.error("❌ Error creating notification:", notifError);
         }
 
-        // Create toast notification con contenuto dinamico
+        // Show success toast
         toast.success("Nuovo indizio sbloccato!", {
           description: dynamicClueContent,
         });
         
-        // Create app notification in the BUZZ category con contenuto reale
+        // Create app notification in BUZZ category
         try {
           await createBuzzNotification(
             "Nuovo Indizio Buzz", 
             dynamicClueContent
           );
-          console.log("✅ Buzz notification created successfully with dynamic content");
+          console.log("✅ Buzz notification created successfully");
         } catch (notifError) {
           console.error("❌ Failed to create Buzz notification:", notifError);
         }
         
         onSuccess();
       } else {
-        console.error("❌ Errore risposta BUZZ API:", response.errorMessage);
+        console.error("❌ BUZZ API error:", response.errorMessage);
         const errorMessage = response.errorMessage || "Errore sconosciuto";
         setError(errorMessage);
         toast.error("Errore", {
@@ -157,7 +208,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         });
       }
     } catch (error) {
-      console.error("❌ Errore durante la chiamata a Buzz API:", error);
+      console.error("❌ Error during Buzz API call:", error);
       setError("Si è verificato un errore di comunicazione con il server");
       toast.error("Errore di connessione", {
         description: "Impossibile contattare il server. Riprova più tardi.",
@@ -167,14 +218,15 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     }
   };
 
-  // Determina se il buzz è bloccato (oltre 50 utilizzi giornalieri)
+  // Check if buzz is blocked (over 50 daily uses)
   const isBlocked = buzzCost <= 0;
+  const isProcessing = isLoading || paymentLoading;
 
   return (
     <motion.button
       className="w-60 h-60 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl hover:shadow-[0_0_35px_rgba(123,46,255,0.7)] focus:outline-none disabled:opacity-50"
       onClick={handleBuzzPress}
-      disabled={isLoading || isBlocked}
+      disabled={isProcessing || isBlocked}
       whileTap={{ scale: 0.95 }}
       whileHover={{ scale: 1.05 }}
       initial={{ boxShadow: "0 0 0px rgba(123, 46, 255, 0)" }}
@@ -212,7 +264,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       )}
       
       <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full z-10">
-        {isLoading ? (
+        {isProcessing ? (
           <Loader className="w-12 h-12 animate-spin text-white" />
         ) : isBlocked ? (
           <>
@@ -228,9 +280,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             <span className="text-3xl font-bold text-white tracking-wider glow-text">
               BUZZ!
             </span>
-            <span className="text-sm text-white/90 mt-1 font-medium">
-              €{buzzCost.toFixed(2)}
-            </span>
+            {!hasActiveSubscription && (
+              <span className="text-sm text-white/90 mt-1 font-medium">
+                €{buzzCost.toFixed(2)}
+              </span>
+            )}
             <span className="text-xs text-white/70">
               {dailyCount}/50 oggi
             </span>

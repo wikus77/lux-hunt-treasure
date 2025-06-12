@@ -85,7 +85,7 @@ export const useStripePayment = () => {
     });
   };
 
-  // BUZZ purchase validation - REAL AUTH ONLY
+  // Enhanced BUZZ purchase validation with mandatory payment check
   const processBuzzPurchase = async (
     isMapBuzz = false, 
     customPrice?: number, 
@@ -93,7 +93,7 @@ export const useStripePayment = () => {
     sessionId?: string,
     paymentMethod?: 'card' | 'apple_pay' | 'google_pay'
   ): Promise<boolean> => {
-    console.log('💳 Processing BUZZ purchase - REAL AUTH ONLY:', {
+    console.log('💳 Processing BUZZ purchase - PAYMENT REQUIRED:', {
       isMapBuzz,
       customPrice,
       mandatory: true,
@@ -101,8 +101,16 @@ export const useStripePayment = () => {
     });
 
     try {
-      // REAL authentication check - Developer email only
+      // Check for active subscription first
       const currentUser = await supabase.auth.getUser();
+      if (!currentUser.data.user?.id) {
+        toast.error('Accesso richiesto', {
+          description: 'Devi essere loggato per utilizzare questa funzione.'
+        });
+        return false;
+      }
+
+      // Check for developer bypass
       const isDeveloper = currentUser.data.user?.email === 'wikus77@hotmail.it';
       
       if (isDeveloper) {
@@ -110,6 +118,22 @@ export const useStripePayment = () => {
         toast.success('Pagamento sviluppatore autorizzato');
         return true;
       }
+
+      // Check for active subscription
+      const { data: subscription, error: subError } = await supabase
+        .from('subscriptions')
+        .select('status, tier')
+        .eq('user_id', currentUser.data.user.id)
+        .eq('status', 'active')
+        .single();
+
+      if (!subError && subscription) {
+        console.log('✅ Active subscription found, allowing action');
+        return true;
+      }
+
+      // No subscription found, payment is mandatory
+      console.log('💳 No active subscription, payment required');
 
       const result = await createCheckoutSession({
         planType: isMapBuzz ? 'BuzzMap' : 'Buzz',
@@ -121,9 +145,12 @@ export const useStripePayment = () => {
         paymentMethod
       });
 
-      // For BUZZ MAPPA, payment is mandatory for non-developers
+      // For BUZZ purchases, payment is mandatory for non-subscribers
       if (!result) {
         console.error('❌ Payment session creation failed');
+        toast.error('Pagamento richiesto', {
+          description: 'È necessario completare il pagamento per continuare.'
+        });
         return false;
       }
 
@@ -131,6 +158,9 @@ export const useStripePayment = () => {
       return true;
     } catch (error) {
       console.error('❌ BUZZ payment error:', error);
+      toast.error('Errore di pagamento', {
+        description: 'Impossibile processare il pagamento.'
+      });
       return false;
     }
   };
