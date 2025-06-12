@@ -69,8 +69,10 @@ export const useStripePayment = () => {
         duration: 2000,
       });
 
-      // Redirect to Stripe Checkout in new tab (default behavior)
-      window.open(data.url, '_blank');
+      // FIXED: Use window.location.href instead of window.open to avoid popup blockers
+      console.log('🔗 Redirecting to Stripe Checkout:', data.url);
+      window.location.href = data.url;
+      
       return data;
     } catch (err: any) {
       console.error('Error creating checkout session:', err);
