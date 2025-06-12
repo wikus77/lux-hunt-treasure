@@ -99,21 +99,22 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const handleBuzzPress = async () => {
     if (isLoading || !userId) return;
     
-    console.log('🚀 BUZZ: Starting process with MANDATORY payment verification');
+    console.log('🚀 BUZZ: Starting process - IMPERATIVE counter increment');
 
     // CRITICAL: Show ripple immediately
     setShowRipple(true);
     setTimeout(() => setShowRipple(false), 1000);
 
-    // CRITICAL: UPDATE COUNTER IMMEDIATELY (even before API call)
+    // IMPERATIVE: UPDATE COUNTER IMMEDIATELY (before any checks)
     const newDailyCount = dailyCount + 1;
     setDailyCount(newDailyCount);
-    console.log(`🔢 BUZZ: Counter incremented to ${newDailyCount}/50 - IMPERATIVO`);
+    console.log(`🔢 BUZZ: Counter IMPERATIVELY incremented to ${newDailyCount}/50`);
 
-    // Check daily limit first
+    // Check daily limit AFTER incrementing counter
     if (dailyCount >= 50) {
       toast.error("Limite giornaliero raggiunto", {
-        description: "Hai raggiunto il limite di 50 buzz per oggi."
+        description: "Hai raggiunto il limite di 50 buzz per oggi.",
+        duration: 4000,
       });
       
       // Log abuse attempt
@@ -129,12 +130,13 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     }
     
     // Check developer mode
-    const isDeveloper = userId && (await supabase.auth.getUser()).data.user?.email === 'wikus77@hotmail.it';
+    const { data: userData } = await supabase.auth.getUser();
+    const isDeveloper = userData.user?.email === 'wikus77@hotmail.it';
     
     if (isDeveloper) {
       console.log('🔓 BUZZ: Developer mode activated - simulating valid response');
       
-      // DEVELOPER MODE: Always show success
+      // DEVELOPER MODE: Always show success toast (IMPERATIVE)
       toast.success("🎯 Nuovo indizio sbloccato! (DEV MODE)", {
         description: `Test sviluppatore - Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`,
         duration: 4000,
@@ -168,9 +170,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       try {
         console.log('💳 BUZZ: Payment REQUIRED - processing checkout');
         
-        // Show payment requirement toast
+        // Show payment requirement toast (IMPERATIVE)
         toast.error("Pagamento richiesto", {
-          description: `Per continuare è necessario pagare €${buzzCost.toFixed(2)} o attivare un abbonamento.`
+          description: `Per continuare è necessario pagare €${buzzCost.toFixed(2)} o attivare un abbonamento.`,
+          duration: 4000,
         });
 
         // MANDATORY: Process payment before allowing buzz
@@ -178,7 +181,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         
         if (!paymentSuccess) {
           toast.error("Pagamento necessario", {
-            description: "Il pagamento è obbligatorio per utilizzare il BUZZ."
+            description: "Il pagamento è obbligatorio per utilizzare il BUZZ.",
+            duration: 4000,
           });
           
           // Log payment failure
@@ -197,7 +201,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       } catch (error) {
         console.error("❌ BUZZ Payment error:", error);
         toast.error("Errore di pagamento", {
-          description: "Impossibile processare il pagamento."
+          description: "Impossibile processare il pagamento.",
+          duration: 4000,
         });
         return;
       }
@@ -228,7 +233,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           window.plausible('clue_unlocked');
         }
         
-        // CRITICAL: Update counter in DB
+        // IMPERATIVE: Update counter in DB
         try {
           await supabase
             .from('user_buzz_counter')
@@ -237,7 +242,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
               date: new Date().toISOString().split('T')[0],
               buzz_count: newDailyCount
             });
-          console.log(`📊 BUZZ: Counter updated in DB to ${newDailyCount} - IMPERATIVO`);
+          console.log(`📊 BUZZ: Counter updated in DB to ${newDailyCount} - IMPERATIVE`);
         } catch (dbError) {
           console.error("❌ BUZZ: Failed to update counter in DB:", dbError);
         }
@@ -252,6 +257,12 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         
         console.log("📝 BUZZ: Dynamic clue content:", dynamicClueContent);
 
+        // IMPERATIVE: Show success toast
+        toast.success("🎯 Nuovo indizio sbloccato!", {
+          description: dynamicClueContent,
+          duration: 4000,
+        });
+        
         // CRITICAL: Register notification in Supabase
         try {
           console.log("💾 BUZZ: Inserting notification in Supabase...");
@@ -274,12 +285,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         } catch (notifError) {
           console.error("❌ BUZZ: Error creating notification:", notifError);
         }
-
-        // CRITICAL: Show success toast - IMPERATIVO
-        toast.success("🎯 Nuovo indizio sbloccato!", {
-          description: dynamicClueContent,
-          duration: 4000,
-        });
         
         // Create app notification in BUZZ category
         try {
@@ -318,10 +323,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         const errorMessage = response.errorMessage || "Errore sconosciuto";
         setError(errorMessage);
         
-        // CRITICAL: Show error toast - IMPERATIVO
+        // IMPERATIVE: Show error toast
         toast.error("❌ Errore BUZZ", {
           description: errorMessage,
-          duration: 3000,
+          duration: 4000,
         });
         
         // Log failure
@@ -346,10 +351,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       console.error("❌ BUZZ: Error during API call:", error);
       setError("Si è verificato un errore di comunicazione con il server");
       
-      // CRITICAL: Show connection error toast - IMPERATIVO
+      // IMPERATIVE: Show connection error toast
       toast.error("❌ Errore di connessione", {
         description: "Impossibile contattare il server. Riprova più tardi.",
-        duration: 3000,
+        duration: 4000,
       });
       
       // Log connection error
@@ -380,50 +385,46 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 
   return (
     <div className="flex flex-col items-center justify-center h-full min-h-[500px]">
+      {/* IMPERATIVE: Perfect circular button with glow aura */}
       <motion.button
-        className="w-80 h-80 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl focus:outline-none disabled:opacity-50"
+        className="w-80 h-80 rounded-full relative overflow-hidden focus:outline-none disabled:opacity-50"
         onClick={handleBuzzPress}
         disabled={isProcessing || isBlocked}
         whileTap={{ scale: 0.95 }}
         whileHover={{ scale: 1.05 }}
-        initial={{ boxShadow: "0 0 0px rgba(123, 46, 255, 0)" }}
-        animate={{ 
-          boxShadow: isBlocked ? "none" : [
-            "0 0 20px rgba(123, 46, 255, 0.4)", 
-            "0 0 50px rgba(0, 209, 255, 0.8)", 
-            "0 0 20px rgba(123, 46, 255, 0.4)"
-          ]
+        style={{
+          background: isBlocked 
+            ? "linear-gradient(135deg, #666, #999)" 
+            : "linear-gradient(135deg, #7B2EFF, #00D1FF, #FF59F8)",
+          boxShadow: isBlocked 
+            ? "none" 
+            : "0 0 30px rgba(123, 46, 255, 0.8), 0 0 60px rgba(0, 209, 255, 0.6), 0 0 90px rgba(255, 89, 248, 0.4)",
+          animation: isBlocked ? "none" : "buzzGlowPulse 2s infinite ease-in-out"
         }}
         transition={{ 
-          boxShadow: { repeat: Infinity, duration: 2.5 },
           scale: { type: "spring", stiffness: 300, damping: 20 }
         }}
-        style={{
-          animation: isBlocked ? "none" : "buzzButtonGlow 2.5s infinite ease-in-out"
-        }}
       >
-        {/* Radial gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#7B2EFF] via-[#00D1FF] to-[#FF59F8] opacity-90 rounded-full" />
-        
+        {/* Animated glow effect layer */}
         {!isBlocked && (
           <motion.div
-            className="absolute inset-0 rounded-full"
-            initial={{ opacity: 0.4, scale: 1 }}
-            animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.05, 1] }}
-            transition={{ repeat: Infinity, duration: 2.5 }}
+            className="absolute -inset-4 rounded-full opacity-50 blur-xl"
+            style={{ 
+              background: "linear-gradient(135deg, #7B2EFF, #00D1FF, #FF59F8)"
+            }}
+            animate={{ 
+              scale: [1, 1.1, 1],
+              opacity: [0.3, 0.7, 0.3]
+            }}
+            transition={{ 
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
           />
         )}
         
-        {!isBlocked && (
-          <motion.div
-            className="absolute -inset-2 rounded-full blur-xl"
-            style={{ background: "linear-gradient(to right, #7B2EFF, #00D1FF, #FF59F8)", opacity: 0.5 }}
-            initial={{ opacity: 0.2 }}
-            animate={{ opacity: [0.2, 0.5, 0.2] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-          />
-        )}
-        
+        {/* Main content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full z-10">
           {isProcessing ? (
             <Loader className="w-16 h-16 animate-spin text-white" />
@@ -439,14 +440,16 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           ) : (
             <>
               <Zap className="w-16 h-16 text-white mb-2" />
-              <span className="text-4xl font-bold text-white tracking-wider glow-text">
+              <span className="text-4xl font-bold text-white tracking-wider">
                 BUZZ!
               </span>
+              {/* IMPERATIVE: Dynamic price display */}
               {!hasActiveSubscription && (
                 <span className="text-lg text-white/90 mt-2 font-bold">
                   €{buzzCost.toFixed(2)}
                 </span>
               )}
+              {/* IMPERATIVE: Counter display */}
               <span className="text-sm text-white/70 mt-1">
                 {dailyCount}/50 oggi
               </span>
@@ -454,11 +457,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           )}
         </div>
 
-        {/* Ripple effect */}
+        {/* IMPERATIVE: Real ripple effect */}
         {showRipple && (
-          <div className="absolute inset-0 rounded-full">
+          <div className="absolute inset-0 rounded-full pointer-events-none">
             <motion.div
-              className="absolute inset-0 rounded-full bg-white opacity-30"
+              className="absolute inset-0 rounded-full bg-white"
               initial={{ scale: 0.8, opacity: 0.6 }}
               animate={{ scale: 2.5, opacity: 0 }}
               transition={{ duration: 1, ease: "easeOut" }}
@@ -466,18 +469,26 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           </div>
         )}
         
-        <style>
-          {`
-          @keyframes buzzButtonGlow {
-            0% { box-shadow: 0 0 15px rgba(255, 89, 248, 0.6); }
-            50% { box-shadow: 0 0 35px rgba(255, 89, 248, 0.9), 0 0 50px rgba(0, 209, 255, 0.6); }
-            100% { box-shadow: 0 0 15px rgba(255, 89, 248, 0.6); }
+        {/* Custom styles for glow animation */}
+        <style jsx>{`
+          @keyframes buzzGlowPulse {
+            0% { 
+              box-shadow: 0 0 20px rgba(123, 46, 255, 0.6), 
+                         0 0 40px rgba(0, 209, 255, 0.4), 
+                         0 0 60px rgba(255, 89, 248, 0.3);
+            }
+            50% { 
+              box-shadow: 0 0 40px rgba(123, 46, 255, 0.9), 
+                         0 0 80px rgba(0, 209, 255, 0.7), 
+                         0 0 120px rgba(255, 89, 248, 0.5);
+            }
+            100% { 
+              box-shadow: 0 0 20px rgba(123, 46, 255, 0.6), 
+                         0 0 40px rgba(0, 209, 255, 0.4), 
+                         0 0 60px rgba(255, 89, 248, 0.3);
+            }
           }
-          .glow-text {
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(0, 209, 255, 0.7);
-          }
-          `}
-        </style>
+        `}</style>
       </motion.button>
     </div>
   );
