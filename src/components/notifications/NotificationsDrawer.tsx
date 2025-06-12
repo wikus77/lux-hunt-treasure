@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import NotificationItem from "./NotificationItem";
 import NotificationDialog from "./NotificationDialog";
-import { Bell, MapPin, Car, Trophy, Circle, Calendar } from "lucide-react";
+import { Bell, MapPin, Car, Trophy, Circle, Calendar, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
 import type { Notification } from "@/hooks/useNotifications";
@@ -31,27 +31,41 @@ const NotificationsDrawer = ({ open, onOpenChange }: NotificationsDrawerProps) =
   const [activeCategory, setActiveCategory] = useState<NotificationCategory>("all");
   const { notifications, unreadCount, markAllAsRead, reloadNotifications, deleteNotification } = useNotifications();
 
-  // Reload notifications when the drawer opens
+  // FIXED: Reload notifications when the drawer opens and every 5 seconds
   useEffect(() => {
     if (open) {
-      console.log("Drawer opened, reloading notifications");
+      console.log("📱 DRAWER: Opened, forcing reload");
       reloadNotifications();
+      
+      // FIXED: Auto-refresh every 5 seconds while drawer is open
+      const interval = setInterval(() => {
+        console.log("🔄 DRAWER: Auto-refreshing notifications");
+        reloadNotifications();
+      }, 5000);
+      
+      return () => clearInterval(interval);
     }
   }, [open, reloadNotifications]);
 
   const handleMarkAllAsRead = () => {
-    console.log("Marking all notifications as read");
+    console.log("✅ DRAWER: Marking all notifications as read");
     markAllAsRead();
   };
 
   const handleSelectNotification = (notification: Notification) => {
-    console.log("Selected notification:", notification);
+    console.log("👁️ DRAWER: Selected notification:", notification);
     setSelectedNotification(notification);
   };
 
   const handleDeleteNotification = (id: string) => {
-    console.log("Deleting notification:", id);
+    console.log("🗑️ DRAWER: Deleting notification:", id);
     deleteNotification(id);
+  };
+
+  // FIXED: Manual reload button handler
+  const handleManualReload = () => {
+    console.log("🔄 DRAWER: Manual reload requested");
+    reloadNotifications();
   };
 
   // Filter notifications based on selected category
@@ -72,6 +86,15 @@ const NotificationsDrawer = ({ open, onOpenChange }: NotificationsDrawerProps) =
                   {unreadCount}
                 </span>
               )}
+              {/* FIXED: Manual reload button in header */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleManualReload}
+                className="ml-auto p-1 h-6 w-6"
+              >
+                <RefreshCw className="h-3 w-3" />
+              </Button>
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               Tutte le notifiche ricevute di recente.
@@ -111,6 +134,16 @@ const NotificationsDrawer = ({ open, onOpenChange }: NotificationsDrawerProps) =
                 {filteredNotifications.length === 0 ? (
                   <div className="text-center py-6 text-muted-foreground">
                     <p>Non hai notifiche in questa categoria.</p>
+                    {/* FIXED: Reload button in empty state */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleManualReload}
+                      className="mt-2"
+                    >
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Ricarica
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-2">

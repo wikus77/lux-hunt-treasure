@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -60,24 +59,25 @@ export function useNotifications() {
     }
   }, []);
 
-  // Carica le notifiche da Supabase con rate limiting migliorato e visibility check
+  // FIXED: Carica le notifiche da Supabase con polling più frequente (5s) e controlli migliorati
   const reloadNotifications = useCallback(async (force = false) => {
     // Controlla se la pagina è visibile - ottimizzazione polling
     if (!force && document.visibilityState !== 'visible') {
-      console.log("⏸️ Skipping reload - page not visible");
+      console.log("⏸️ NOTIFICATIONS: Skipping reload - page not visible");
       return true;
     }
 
     const now = Date.now();
-    if (!force && now - lastReloadTimeRef.current < 3000 && !isInitialLoadRef.current) {
-      console.log("⏱️ Skipping reload due to rate limiting");
+    // FIXED: Ridotto rate limiting da 3s a 1s per maggiore responsività
+    if (!force && now - lastReloadTimeRef.current < 1000 && !isInitialLoadRef.current) {
+      console.log("⏱️ NOTIFICATIONS: Skipping reload due to rate limiting");
       return true;
     }
     
     try {
-      console.log("🔄 Reloading notifications UNIVOCHE...");
+      console.log("🔄 NOTIFICATIONS: Reloading notifications from Supabase...");
       
-      if (isInitialLoadRef.current || now - lastReloadTimeRef.current > 3000) {
+      if (isInitialLoadRef.current || now - lastReloadTimeRef.current > 1000) {
         setIsLoading(true);
       }
       
@@ -92,7 +92,7 @@ export function useNotifications() {
       // Se l'utente è autenticato, carica da Supabase
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        console.log("👤 Utente autenticato, caricamento da Supabase...");
+        console.log("👤 NOTIFICATIONS: User authenticated, loading from Supabase...");
         const { data: supabaseNotifs, error } = await supabase
           .from('user_notifications')
           .select<'*', UserNotificationRow>('*')
@@ -101,9 +101,9 @@ export function useNotifications() {
           .order('created_at', { ascending: false });
           
         if (error) {
-          console.error("❌ Error fetching notifications from Supabase:", error);
+          console.error("❌ NOTIFICATIONS: Error fetching from Supabase:", error);
         } else if (supabaseNotifs && supabaseNotifs.length > 0) {
-          console.log("✅ Loaded UNIQUE notifications from Supabase:", supabaseNotifs.length);
+          console.log("✅ NOTIFICATIONS: Loaded from Supabase:", supabaseNotifs.length);
           
           // Converti notifiche Supabase al nostro formato, ordinando per timestamp
           notifs = supabaseNotifs
@@ -123,7 +123,7 @@ export function useNotifications() {
       }
       
       const unreadCount = notifs.filter(n => !n.read).length;
-      console.log("📊 Loaded notifications:", notifs.length, "Unread:", unreadCount);
+      console.log("📊 NOTIFICATIONS: Total:", notifs.length, "Unread:", unreadCount);
       
       setNotifications(notifs);
       setUnreadCount(unreadCount);
@@ -138,7 +138,7 @@ export function useNotifications() {
       
       return true;
     } catch (e) {
-      console.error("❌ Errore nel caricamento delle notifiche:", e);
+      console.error("❌ NOTIFICATIONS: Error loading:", e);
       setNotifications([]);
       setUnreadCount(0);
       setIsLoading(false);
@@ -184,57 +184,13 @@ export function useNotifications() {
     }
   }, [notifications, saveNotifications]);
 
-  // Aggiorna in realtime se qualcuno chiama reload da altrove con visibility check
-  useEffect(() => {
-    const listener = () => {
-      if (document.visibilityState === 'visible') {
-        const now = Date.now();
-        if (now - lastReloadTimeRef.current > 3000 || isInitialLoadRef.current) {
-          reloadNotifications();
-        }
-      }
-    };
-    listeners.push(listener);
-
-    const storageEvent = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY && document.visibilityState === 'visible') {
-        const now = Date.now();
-        if (now - lastReloadTimeRef.current > 3000 || isInitialLoadRef.current) {
-          reloadNotifications();
-        }
-      }
-    };
-    
-    // Listener per visibility change
-    const visibilityChangeHandler = () => {
-      if (document.visibilityState === 'visible' && !isInitialLoadRef.current) {
-        console.log("👁️ Page became visible, checking for updates...");
-        reloadNotifications();
-      }
-    };
-    
-    window.addEventListener('storage', storageEvent);
-    document.addEventListener('visibilitychange', visibilityChangeHandler);
-
-    if (isInitialLoadRef.current) {
-      reloadNotifications();
-    }
-
-    return () => {
-      listeners = listeners.filter(fn => fn !== listener);
-      window.removeEventListener('storage', storageEvent);
-      document.removeEventListener('visibilitychange', visibilityChangeHandler);
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
-      }
-    };
-  }, [reloadNotifications]);
-
-  // Setup Supabase realtime subscription con visibility check
+  // FIXED: Setup Supabase realtime subscription con maggiore responsività
   useEffect(() => {
     const setupRealtimeSubscription = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      
+      console.log('🔔 NOTIFICATIONS: Setting up real-time subscription for user:', user.id);
       
       const channel = supabase
         .channel('notification-changes')
@@ -246,29 +202,68 @@ export function useNotifications() {
               filter: `user_id=eq.${user.id}`
             }, 
             (payload) => {
-              console.log('Realtime notification update:', payload);
-              if (document.visibilityState === 'visible') {
-                const now = Date.now();
-                if (now - lastReloadTimeRef.current > 3000) {
-                  reloadNotifications(true);
-                } else {
-                  setTimeout(() => {
-                    if (document.visibilityState === 'visible') {
-                      reloadNotifications(true);
-                    }
-                  }, 3000 - (now - lastReloadTimeRef.current));
-                }
+              console.log('🔔 NOTIFICATIONS: Real-time update received:', payload);
+              // FIXED: Reload immediato per eventi INSERT/UPDATE
+              if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                console.log('🔔 NOTIFICATIONS: New notification detected, forcing reload');
+                reloadNotifications(true);
               }
             }
         )
         .subscribe();
       
       return () => {
+        console.log('🔔 NOTIFICATIONS: Unsubscribing from real-time');
         supabase.removeChannel(channel);
       };
     };
     
     setupRealtimeSubscription();
+  }, [reloadNotifications]);
+
+  // FIXED: Setup polling più frequente (5s invece di 180s)
+  useEffect(() => {
+    const startPolling = () => {
+      // FIXED: Poll ogni 5 secondi invece di 3 minuti per notifiche
+      const interval = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          console.log('🔄 NOTIFICATIONS: Polling for updates...');
+          reloadNotifications();
+        }
+      }, 5000); // 5 secondi
+      
+      return interval;
+    };
+    
+    // Initial load
+    if (!isInitialLoadRef.current) {
+      reloadNotifications().then(() => {
+        console.log('📱 NOTIFICATIONS: Initial load completed');
+        isInitialLoadRef.current = true;
+      });
+    }
+    
+    const pollingInterval = startPolling();
+    
+    return () => {
+      clearInterval(pollingInterval);
+    };
+  }, [reloadNotifications]);
+
+  // FIXED: Aggiorna quando la pagina diventa visibile
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !isInitialLoadRef.current) {
+        console.log("👁️ NOTIFICATIONS: Page visible, checking for updates...");
+        reloadNotifications(true);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [reloadNotifications]);
 
   // Singola notifica come letta
@@ -403,11 +398,17 @@ export function useNotifications() {
     return notifications.filter(n => n.type === category);
   }, [notifications]);
 
+  // FIXED: Manual reload function con force flag
+  const manualReload = useCallback(async () => {
+    console.log("🔄 NOTIFICATIONS: Manual reload requested");
+    return await reloadNotifications(true);
+  }, [reloadNotifications]);
+
   return {
     notifications,
     unreadCount,
     isLoading,
-    reloadNotifications,
+    reloadNotifications: manualReload,
     markAllAsRead,
     markAsRead,
     addNotification,

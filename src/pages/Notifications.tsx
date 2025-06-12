@@ -13,12 +13,30 @@ import NotificationCategory from "@/components/notifications/NotificationCategor
 
 const Notifications = () => {
   const [filter, setFilter] = useState<'all' | 'unread' | 'important'>('all');
-  const { notifications, markAsRead, deleteNotification, markAllAsRead } = useNotifications();
+  const { notifications, markAsRead, deleteNotification, markAllAsRead, reloadNotifications } = useNotifications();
   const { playSound } = useBuzzSound();
   const { startActivity, updateActivity, endActivity } = useDynamicIsland();
   const { currentMission } = useMissionManager();
 
   useDynamicIslandSafety();
+
+  // FIXED: Force reload on component mount and when returning to page
+  useEffect(() => {
+    console.log('📱 NOTIFICATIONS: Page mounted, forcing reload');
+    reloadNotifications();
+  }, [reloadNotifications]);
+
+  // FIXED: Auto-reload every 5 seconds when page is visible
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        console.log('🔄 NOTIFICATIONS: Auto-refreshing notifications');
+        reloadNotifications();
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [reloadNotifications]);
 
   const filteredNotifications = () => {
     switch (filter) {
@@ -86,6 +104,12 @@ const Notifications = () => {
     markAllAsRead();
     playSound();
     endActivity(); // Close Dynamic Island when all are read
+  };
+
+  // FIXED: Force reload button for manual refresh
+  const handleManualReload = () => {
+    console.log('🔄 NOTIFICATIONS: Manual reload button pressed');
+    reloadNotifications();
   };
 
   // Group notifications by category
@@ -159,10 +183,17 @@ const Notifications = () => {
             <div className="glass-card p-4 sm:p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-white">Le tue notifiche</h2>
-                <Button variant="ghost" size="sm" onClick={handleMarkAllAsRead}>
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Segna tutto come letto
-                </Button>
+                <div className="flex gap-2">
+                  {/* FIXED: Manual reload button */}
+                  <Button variant="ghost" size="sm" onClick={handleManualReload}>
+                    <Bell className="w-4 h-4 mr-2" />
+                    Aggiorna
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleMarkAllAsRead}>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Segna tutto come letto
+                  </Button>
+                </div>
               </div>
               
               <div className="flex items-center space-x-3 overflow-x-auto mb-6">
@@ -213,6 +244,15 @@ const Notifications = () => {
                     <Bell className="w-12 h-12 mx-auto mb-4 text-white/30" />
                     <p className="text-lg">Nessuna notifica da visualizzare</p>
                     <p className="text-sm text-white/40 mt-2">Le tue notifiche appariranno qui</p>
+                    {/* FIXED: Debug info for empty state */}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleManualReload}
+                      className="mt-4"
+                    >
+                      Ricarica notifiche
+                    </Button>
                   </div>
                 )}
               </AnimatePresence>

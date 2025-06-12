@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useProfileNotifications } from "@/hooks/profile/useProfileNotifications";
 import { useNotifications, NOTIFICATION_CATEGORIES } from "@/hooks/useNotifications";
@@ -18,33 +17,32 @@ export function useNotificationManager() {
   
   const [notificationsBannerOpen, setNotificationsBannerOpen] = useState(false);
   
-  // Add a polling mechanism for notifications with extended interval and visibility check
+  // FIXED: Reduced polling interval to 5 seconds for better responsiveness
   const pollingIntervalRef = useRef<number | null>(null);
   const isInitialLoadDone = useRef<boolean>(false);
   
-  // Setup notification polling - check every 180 seconds (3 minutes) per ottimizzazione
+  // FIXED: Setup notification polling every 5 seconds instead of 3 minutes
   useEffect(() => {
     const startPolling = () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
       
-      // Poll ogni 180 secondi (3 minuti) invece di 60 per ridurre carico
+      // FIXED: Poll every 5 seconds instead of 180 seconds
       pollingIntervalRef.current = window.setInterval(() => {
-        // Controllo visibility prima del polling
         if (document.visibilityState === 'visible') {
-          console.log('Polling for new notifications...');
+          console.log('🔄 NOTIFICATION_MANAGER: Polling for new notifications...');
           reloadNotifications();
         } else {
-          console.log('⏸️ Skipping polling - page not visible');
+          console.log('⏸️ NOTIFICATION_MANAGER: Skipping polling - page not visible');
         }
-      }, 180000) as unknown as number; // 3 minuti
+      }, 5000) as unknown as number; // 5 seconds
     };
     
-    // Initial load - only if not done yet
+    // Initial load
     if (!isInitialLoadDone.current) {
       reloadNotifications().then(() => {
-        console.log('Initial notifications loaded');
+        console.log('📱 NOTIFICATION_MANAGER: Initial notifications loaded');
         isInitialLoadDone.current = true;
         startPolling();
       });
@@ -60,7 +58,6 @@ export function useNotificationManager() {
   // Handle opening notifications banner
   const openNotificationsBanner = useCallback(() => {
     setNotificationsBannerOpen(true);
-    // We don't need to reload on every open - helps reduce flickering
   }, []);
 
   // Handle closing notifications banner
@@ -71,14 +68,9 @@ export function useNotificationManager() {
   // Handle opening notifications drawer
   const openNotificationsDrawer = useCallback(() => {
     setShowNotifications(true);
-    // Only reload if we haven't loaded recently
-    const lastLoadTime = isInitialLoadDone.current === true ? 0 : Date.now() - 180000; // 3 minuti
-    if (!isInitialLoadDone.current || lastLoadTime > 180000) {
-      reloadNotifications().then(() => {
-        console.log('Notifications reloaded on drawer open');
-        isInitialLoadDone.current = true;
-      });
-    }
+    // FIXED: Always reload when drawer opens for fresh data
+    console.log('📱 NOTIFICATION_MANAGER: Drawer opened, reloading notifications');
+    reloadNotifications();
   }, [setShowNotifications, reloadNotifications]);
 
   // Handle closing notifications drawer
@@ -86,13 +78,13 @@ export function useNotificationManager() {
     setShowNotifications(false);
     // Mark notifications as read when drawer is closed
     markAllAsRead().then(() => {
-      console.log('All notifications marked as read on drawer close');
+      console.log('✅ NOTIFICATION_MANAGER: All notifications marked as read on drawer close');
     });
   }, [setShowNotifications, markAllAsRead]);
 
-  // Create notification with proper type checking and categorization
+  // FIXED: Enhanced notification creation with immediate reload
   const createNotification = useCallback(async (title: string, description: string, type = NOTIFICATION_CATEGORIES.GENERIC) => {
-    console.log(`Creating notification of type ${type}: ${title}`);
+    console.log(`📝 NOTIFICATION_MANAGER: Creating notification of type ${type}:`, title);
     
     // Use sonner toast to show notification
     toast(title, {
@@ -107,16 +99,23 @@ export function useNotificationManager() {
         type 
       });
       
-      if (!result) {
-        console.error("Failed to create notification");
+      if (result) {
+        console.log('✅ NOTIFICATION_MANAGER: Notification created successfully');
+        // FIXED: Force reload after successful creation
+        setTimeout(() => {
+          console.log('🔄 NOTIFICATION_MANAGER: Reloading after notification creation');
+          reloadNotifications();
+        }, 500);
+      } else {
+        console.error("❌ NOTIFICATION_MANAGER: Failed to create notification");
       }
       
       return result;
     } catch (error) {
-      console.error("Error creating notification:", error);
+      console.error("❌ NOTIFICATION_MANAGER: Error creating notification:", error);
       return false;
     }
-  }, [addNotification]);
+  }, [addNotification, reloadNotifications]);
 
   // Create BUZZ notification
   const createBuzzNotification = useCallback(async (title: string, description: string) => {
@@ -138,9 +137,9 @@ export function useNotificationManager() {
     return await createNotification(title, description, NOTIFICATION_CATEGORIES.WEEKLY);
   }, [createNotification]);
 
-  // Manual reload function that can be called by components
+  // FIXED: Manual reload function with immediate execution
   const manualReload = useCallback(async () => {
-    console.log("Manual notification reload requested");
+    console.log("🔄 NOTIFICATION_MANAGER: Manual notification reload requested");
     return await reloadNotifications();
   }, [reloadNotifications]);
 
