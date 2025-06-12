@@ -24,6 +24,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 }) => {
   const { playSound } = useSoundEffects();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showRipple, setShowRipple] = useState(false);
   const { reloadAreas } = useBuzzMapLogic();
   const { buzzMapPrice, radiusKm, incrementGeneration } = useBuzzMapPricing();
   const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
@@ -71,6 +72,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     }
     
     console.log('🗺️ BUZZ MAPPA: Starting generation process with MANDATORY payment verification');
+    
+    // Trigger ripple effect immediately
+    setShowRipple(true);
+    setTimeout(() => setShowRipple(false), 1000);
     
     setIsGenerating(true);
     playSound('buzz');
@@ -319,6 +324,18 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         {/* Animated glow effect */}
         {canUseBuzz && (
           <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-purple-500 to-red-500 opacity-20 blur-xl animate-pulse" />
+        )}
+
+        {/* Ripple effect */}
+        {showRipple && (
+          <div className="absolute inset-0 rounded-full">
+            <motion.div
+              className="absolute inset-0 rounded-full bg-white opacity-30"
+              initial={{ scale: 0.8, opacity: 0.6 }}
+              animate={{ scale: 2.5, opacity: 0 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            />
+          </div>
         )}
       </motion.button>
     </motion.div>

@@ -101,6 +101,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     
     console.log('🚀 BUZZ: Starting process with MANDATORY payment verification');
 
+    // CRITICAL: INCREMENT COUNTER ON EVERY CLICK (even if failed)
+    const newDailyCount = dailyCount + 1;
+    setDailyCount(newDailyCount);
+    console.log(`🔢 BUZZ: Counter incremented to ${newDailyCount}/50`);
+
     // Check daily limit first
     if (dailyCount >= 50) {
       toast.error("Limite giornaliero raggiunto", {
@@ -118,6 +123,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       }
       return;
     }
+    
+    // Trigger ripple effect immediately
+    setShowRipple(true);
+    setTimeout(() => setShowRipple(false), 1000);
     
     // CRITICAL: Check if user needs to pay (no subscription and cost > 0)
     const isDeveloper = userId && (await supabase.auth.getUser()).data.user?.email === 'wikus77@hotmail.it';
@@ -165,10 +174,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       console.log('✅ BUZZ: Active subscription verified, proceeding');
     }
     
-    // Trigger ripple effect
-    setShowRipple(true);
-    setTimeout(() => setShowRipple(false), 1000);
-    
     // Track Plausible event
     if (typeof window !== 'undefined' && window.plausible) {
       window.plausible('buzz_click');
@@ -192,10 +197,19 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           window.plausible('clue_unlocked');
         }
         
-        // CRITICAL: Update counter immediately in UI and reload data
-        const newCount = dailyCount + 1;
-        setDailyCount(newCount);
-        console.log(`📊 BUZZ: UI counter updated to ${newCount}/50`);
+        // CRITICAL: Update counter in DB
+        try {
+          await supabase
+            .from('user_buzz_counter')
+            .upsert({
+              user_id: userId,
+              date: new Date().toISOString().split('T')[0],
+              buzz_count: newDailyCount
+            });
+          console.log(`📊 BUZZ: Counter updated in DB to ${newDailyCount}`);
+        } catch (dbError) {
+          console.error("❌ BUZZ: Failed to update counter in DB:", dbError);
+        }
         
         // Reload all buzz data to ensure sync
         setTimeout(() => {
@@ -257,7 +271,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
               action: 'BUZZ_CLICK',
               details: {
                 cost: buzzCost,
-                daily_count: newCount,
+                daily_count: newDailyCount,
                 timestamp: new Date().toISOString(),
                 success: true
               }
@@ -289,6 +303,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
               action: 'BUZZ_ERROR',
               details: {
                 error: errorMessage,
+                daily_count: newDailyCount,
                 timestamp: new Date().toISOString()
               }
             });
@@ -316,6 +331,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             action: 'BUZZ_CONNECTION_ERROR',
             details: {
               error: error?.message || 'Unknown connection error',
+              daily_count: newDailyCount,
               timestamp: new Date().toISOString()
             }
           });
@@ -404,7 +420,14 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 
         {/* Ripple effect */}
         {showRipple && (
-          <div className="ripple-effect" />
+          <div className="absolute inset-0 rounded-full">
+            <motion.div
+              className="absolute inset-0 rounded-full bg-white opacity-30"
+              initial={{ scale: 0.8, opacity: 0.6 }}
+              animate={{ scale: 2.5, opacity: 0 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            />
+          </div>
         )}
         
         <style>
@@ -416,19 +439,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           }
           .glow-text {
             text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(0, 209, 255, 0.7);
-          }
-          @keyframes ripple {
-            0% { transform: scale(0.9); opacity: 0.6; }
-            100% { transform: scale(3); opacity: 0; }
-          }
-          .ripple-effect {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 9999px;
-            background-color: rgba(255, 255, 255, 0.4);
-            animation: ripple 1s ease-out forwards;
-            pointer-events: none;
           }
           `}
         </style>

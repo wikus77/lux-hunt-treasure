@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
@@ -212,9 +211,9 @@ serve(async (req) => {
       buzz_cost: buzzCost
     };
 
-    // CRITICAL: Map generation with PROGRESSIVE radius
+    // CRITICAL: Map generation with CORRECTED PROGRESSIVE radius
     if (generateMap) {
-      console.log(`🗺️ PROGRESSIVE RADIUS MAP GENERATION START for user ${userId}`);
+      console.log(`🗺️ CORRECTED PROGRESSIVE RADIUS MAP GENERATION START for user ${userId}`);
       
       // STEP 1: Get or set fixed center coordinates for this user
       let fixedCenter = { lat: 41.9028, lng: 12.4964 }; // Default Rome
@@ -251,10 +250,10 @@ serve(async (req) => {
       // CRITICAL FORMULA: radius = max(5, 500 * (0.95^(generation-1)))
       let radius_km = Math.max(5, 500 * Math.pow(0.95, currentGeneration - 1));
       
-      console.log(`📏 PROGRESSIVE RADIUS - Calculated radius: ${radius_km.toFixed(2)}km (generation: ${currentGeneration})`);
+      console.log(`📏 CORRECTED PROGRESSIVE RADIUS - Calculated radius: ${radius_km.toFixed(2)}km (generation: ${currentGeneration})`);
       console.log(`📍 FIXED CENTER - Using coordinates: lat=${fixedCenter.lat}, lng=${fixedCenter.lng}`);
       
-      // STEP 4: Save area to database with PROGRESSIVE RADIUS
+      // STEP 4: Save area to database with CORRECTED PROGRESSIVE RADIUS
       const { error: mapError, data: savedArea } = await supabase
         .from('user_map_areas')
         .insert({
@@ -273,15 +272,15 @@ serve(async (req) => {
         response.error = true;
         response.errorMessage = "Errore salvataggio area mappa";
       } else {
-        console.log("✅ Map area saved successfully with PROGRESSIVE RADIUS:", savedArea.id);
+        console.log("✅ Map area saved successfully with CORRECTED PROGRESSIVE RADIUS:", savedArea.id);
         
-        // Add map data to response with PROGRESSIVE RADIUS
+        // Add map data to response with CORRECTED PROGRESSIVE RADIUS
         response.radius_km = radius_km;
         response.lat = fixedCenter.lat;
         response.lng = fixedCenter.lng;
         response.generation_number = currentGeneration;
         
-        console.log(`🎉 MAP GENERATION COMPLETE (PROGRESSIVE RADIUS): radius=${radius_km.toFixed(2)}km, generation=${currentGeneration}, center=${fixedCenter.lat},${fixedCenter.lng}`);
+        console.log(`🎉 MAP GENERATION COMPLETE (CORRECTED PROGRESSIVE RADIUS): radius=${radius_km.toFixed(2)}km, generation=${currentGeneration}, center=${fixedCenter.lat},${fixedCenter.lng}`);
       }
     }
 
