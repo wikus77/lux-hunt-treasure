@@ -1,94 +1,6 @@
 
-import React, { useRef, useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-
-// Dynamic imports for 3D libraries to handle potential loading issues
-const Canvas = React.lazy(() => import('@react-three/fiber').then(module => ({ default: module.Canvas })));
-const useFrame = React.lazy(() => import('@react-three/fiber').then(module => ({ default: module.useFrame })));
-
-// Simple 3D car component that will be dynamically loaded
-const PorscheModel = () => {
-  const groupRef = useRef<any>(null);
-  const [hovered, setHovered] = useState(false);
-
-  // This will be handled by the Canvas wrapper
-  return (
-    <group 
-      ref={groupRef}
-      onPointerEnter={() => setHovered(true)}
-      onPointerLeave={() => setHovered(false)}
-      scale={hovered ? 1.1 : 1}
-    >
-      {/* Car body - main chassis */}
-      <mesh position={[0, 0.3, 0]}>
-        <boxGeometry args={[4, 1, 1.8]} />
-        <meshPhysicalMaterial 
-          color={0x0a0a0a}
-          metalness={0.9}
-          roughness={0.1}
-        />
-      </mesh>
-      
-      {/* Car hood */}
-      <mesh position={[1.5, 0.5, 0]}>
-        <boxGeometry args={[1, 0.4, 1.6]} />
-        <meshPhysicalMaterial 
-          color={0x0a0a0a}
-          metalness={0.9}
-          roughness={0.1}
-        />
-      </mesh>
-      
-      {/* Car roof/cabin */}
-      <mesh position={[-0.5, 1, 0]}>
-        <boxGeometry args={[2, 0.8, 1.4]} />
-        <meshPhysicalMaterial 
-          color={0x0a0a0a}
-          metalness={0.9}
-          roughness={0.1}
-        />
-      </mesh>
-      
-      {/* Wheels */}
-      <mesh position={[1.2, -0.3, 0.9]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.35, 0.35, 0.3]} />
-        <meshPhysicalMaterial color={0x333333} metalness={0.8} roughness={0.2} />
-      </mesh>
-      <mesh position={[1.2, -0.3, -0.9]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.35, 0.35, 0.3]} />
-        <meshPhysicalMaterial color={0x333333} metalness={0.8} roughness={0.2} />
-      </mesh>
-      <mesh position={[-1.2, -0.3, 0.9]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.35, 0.35, 0.3]} />
-        <meshPhysicalMaterial color={0x333333} metalness={0.8} roughness={0.2} />
-      </mesh>
-      <mesh position={[-1.2, -0.3, -0.9]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.35, 0.35, 0.3]} />
-        <meshPhysicalMaterial color={0x333333} metalness={0.8} roughness={0.2} />
-      </mesh>
-      
-      {/* Headlights */}
-      <mesh position={[2.1, 0.4, 0.6]}>
-        <sphereGeometry args={[0.15]} />
-        <meshBasicMaterial color={0xffffff} />
-      </mesh>
-      <mesh position={[2.1, 0.4, -0.6]}>
-        <sphereGeometry args={[0.15]} />
-        <meshBasicMaterial color={0xffffff} />
-      </mesh>
-      
-      {/* Taillights */}
-      <mesh position={[-2.1, 0.4, 0.6]}>
-        <sphereGeometry args={[0.1]} />
-        <meshBasicMaterial color={0xff0000} />
-      </mesh>
-      <mesh position={[-2.1, 0.4, -0.6]}>
-        <sphereGeometry args={[0.1]} />
-        <meshBasicMaterial color={0xff0000} />
-      </mesh>
-    </group>
-  );
-};
 
 // M1SSION Logo background
 const LogoBackground = () => {
@@ -104,86 +16,268 @@ const LogoBackground = () => {
   );
 };
 
-// Simple 3D Scene component
-const Simple3DScene = () => {
+// CSS-based 3D Porsche Model
+const CSS3DPorsche = () => {
   const [rotation, setRotation] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setRotation(prev => prev + 0.01);
-    }, 16); // ~60fps
+    if (!isHovered) {
+      const interval = setInterval(() => {
+        setRotation(prev => prev + 0.5);
+      }, 16); // ~60fps
 
-    return () => clearInterval(interval);
-  }, []);
+      return () => clearInterval(interval);
+    }
+  }, [isHovered]);
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
       <div 
-        className="transform-gpu transition-transform duration-100"
+        className="transform-gpu transition-transform duration-200 cursor-pointer"
         style={{ 
-          transform: `perspective(800px) rotateY(${rotation}rad) rotateX(0.1rad)`,
-          width: '200px',
-          height: '100px'
+          transform: `perspective(1000px) rotateY(${rotation}deg) rotateX(-5deg)`,
+          transformStyle: 'preserve-3d'
         }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onClick={() => setRotation(prev => prev + 45)}
       >
-        {/* Simplified car silhouette */}
-        <div className="relative w-full h-full">
-          {/* Car body */}
+        {/* Car Container */}
+        <div className="relative" style={{ width: '280px', height: '140px' }}>
+          
+          {/* Main Car Body */}
           <div 
-            className="absolute bg-black rounded-lg shadow-2xl"
+            className="absolute rounded-lg shadow-2xl"
             style={{
               width: '100%',
-              height: '40%',
-              top: '30%',
+              height: '50%',
+              top: '25%',
               background: 'linear-gradient(145deg, #0a0a0a, #1a1a1a)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1)'
+              boxShadow: '0 12px 40px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.1)',
+              transform: 'translateZ(20px)'
             }}
           />
-          {/* Car roof */}
+          
+          {/* Car Hood */}
           <div 
-            className="absolute bg-black rounded-lg"
+            className="absolute rounded-lg"
             style={{
-              width: '60%',
-              height: '25%',
-              top: '15%',
-              left: '20%',
+              width: '35%',
+              height: '30%',
+              top: '20%',
+              right: '5%',
               background: 'linear-gradient(145deg, #0a0a0a, #2a2a2a)',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)'
+              boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1)',
+              transform: 'translateZ(25px)'
             }}
           />
-          {/* Wheels */}
+          
+          {/* Car Roof/Cabin */}
           <div 
-            className="absolute bg-gray-800 rounded-full border border-gray-600"
+            className="absolute rounded-lg"
             style={{
-              width: '20px',
-              height: '20px',
-              bottom: '10%',
-              left: '15%',
-              background: 'radial-gradient(circle, #333, #111)'
+              width: '50%',
+              height: '25%',
+              top: '10%',
+              left: '25%',
+              background: 'linear-gradient(145deg, #0a0a0a, #2a2a2a)',
+              boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1)',
+              transform: 'translateZ(30px)'
             }}
           />
+          
+          {/* Windshield */}
           <div 
-            className="absolute bg-gray-800 rounded-full border border-gray-600"
+            className="absolute rounded"
             style={{
-              width: '20px',
-              height: '20px',
-              bottom: '10%',
+              width: '40%',
+              height: '20%',
+              top: '12%',
+              left: '30%',
+              background: 'linear-gradient(145deg, rgba(100,100,100,0.3), rgba(150,150,150,0.2))',
+              backdropFilter: 'blur(1px)',
+              transform: 'translateZ(32px)'
+            }}
+          />
+          
+          {/* Front Wheels */}
+          <div 
+            className="absolute rounded-full border-2 border-gray-600"
+            style={{
+              width: '24px',
+              height: '24px',
+              bottom: '15%',
               right: '15%',
-              background: 'radial-gradient(circle, #333, #111)'
+              background: 'radial-gradient(circle, #333, #111)',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.6)',
+              transform: 'translateZ(15px)'
             }}
           />
+          <div 
+            className="absolute rounded-full border-2 border-gray-600"
+            style={{
+              width: '24px',
+              height: '24px',
+              bottom: '15%',
+              left: '15%',
+              background: 'radial-gradient(circle, #333, #111)',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.6)',
+              transform: 'translateZ(15px)'
+            }}
+          />
+          
           {/* Headlights */}
           <div 
-            className="absolute bg-white rounded-full"
+            className="absolute rounded-full"
+            style={{
+              width: '12px',
+              height: '12px',
+              top: '35%',
+              right: '8%',
+              background: 'radial-gradient(circle, #ffffff, #e0e0e0)',
+              boxShadow: '0 0 12px rgba(255,255,255,0.8)',
+              transform: 'translateZ(26px)'
+            }}
+          />
+          <div 
+            className="absolute rounded-full"
+            style={{
+              width: '12px',
+              height: '12px',
+              bottom: '35%',
+              right: '8%',
+              background: 'radial-gradient(circle, #ffffff, #e0e0e0)',
+              boxShadow: '0 0 12px rgba(255,255,255,0.8)',
+              transform: 'translateZ(26px)'
+            }}
+          />
+          
+          {/* Taillights */}
+          <div 
+            className="absolute rounded-full"
             style={{
               width: '8px',
               height: '8px',
               top: '40%',
-              right: '5%',
-              boxShadow: '0 0 10px rgba(255,255,255,0.8)'
+              left: '5%',
+              background: 'radial-gradient(circle, #ff4444, #cc0000)',
+              boxShadow: '0 0 8px rgba(255,68,68,0.6)',
+              transform: 'translateZ(22px)'
             }}
           />
+          <div 
+            className="absolute rounded-full"
+            style={{
+              width: '8px',
+              height: '8px',
+              bottom: '40%',
+              left: '5%',
+              background: 'radial-gradient(circle, #ff4444, #cc0000)',
+              boxShadow: '0 0 8px rgba(255,68,68,0.6)',
+              transform: 'translateZ(22px)'
+            }}
+          />
+          
+          {/* Side Mirrors */}
+          <div 
+            className="absolute rounded"
+            style={{
+              width: '6px',
+              height: '4px',
+              top: '25%',
+              right: '20%',
+              background: '#1a1a1a',
+              transform: 'translateZ(35px)'
+            }}
+          />
+          <div 
+            className="absolute rounded"
+            style={{
+              width: '6px',
+              height: '4px',
+              bottom: '25%',
+              right: '20%',
+              background: '#1a1a1a',
+              transform: 'translateZ(35px)'
+            }}
+          />
+          
+          {/* Ground Shadow */}
+          <div 
+            className="absolute rounded-full opacity-30"
+            style={{
+              width: '120%',
+              height: '20px',
+              bottom: '-10px',
+              left: '-10%',
+              background: 'radial-gradient(ellipse, rgba(0,0,0,0.6), transparent)',
+              transform: 'translateZ(-10px)'
+            }}
+          />
+          
         </div>
+      </div>
+    </div>
+  );
+};
+
+// Fallback static image
+const StaticPorsche = () => {
+  return (
+    <div className="relative w-full h-full flex items-center justify-center">
+      <div className="relative" style={{ width: '200px', height: '100px' }}>
+        {/* Simplified static car silhouette */}
+        <div 
+          className="absolute bg-black rounded-lg shadow-2xl"
+          style={{
+            width: '100%',
+            height: '40%',
+            top: '30%',
+            background: 'linear-gradient(145deg, #0a0a0a, #1a1a1a)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.8)'
+          }}
+        />
+        <div 
+          className="absolute bg-black rounded-lg"
+          style={{
+            width: '60%',
+            height: '25%',
+            top: '15%',
+            left: '20%',
+            background: 'linear-gradient(145deg, #0a0a0a, #2a2a2a)'
+          }}
+        />
+        <div 
+          className="absolute bg-gray-800 rounded-full border border-gray-600"
+          style={{
+            width: '20px',
+            height: '20px',
+            bottom: '10%',
+            left: '15%',
+            background: 'radial-gradient(circle, #333, #111)'
+          }}
+        />
+        <div 
+          className="absolute bg-gray-800 rounded-full border border-gray-600"
+          style={{
+            width: '20px',
+            height: '20px',
+            bottom: '10%',
+            right: '15%',
+            background: 'radial-gradient(circle, #333, #111)'
+          }}
+        />
+        <div 
+          className="absolute bg-white rounded-full"
+          style={{
+            width: '8px',
+            height: '8px',
+            top: '40%',
+            right: '5%',
+            boxShadow: '0 0 10px rgba(255,255,255,0.8)'
+          }}
+        />
       </div>
     </div>
   );
@@ -196,35 +290,31 @@ interface Porsche3DProps {
 const Porsche3D: React.FC<Porsche3DProps> = ({ className = "" }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const [use3D, setUse3D] = useState(false);
 
   useEffect(() => {
-    // Check if 3D libraries are available
-    const check3DSupport = async () => {
+    // Simulate loading time and check for 3D support
+    const timer = setTimeout(() => {
       try {
-        await import('@react-three/fiber');
-        await import('@react-three/drei');
-        setUse3D(true);
-      } catch (err) {
-        console.log('3D libraries not available, using fallback');
-        setUse3D(false);
-      }
-      
-      // Simulate loading time
-      setTimeout(() => {
+        // Test CSS 3D support
+        const testElement = document.createElement('div');
+        testElement.style.transform = 'perspective(1px) translateZ(0)';
         setIsLoaded(true);
-      }, 500);
-    };
+      } catch (err) {
+        setError(true);
+        setIsLoaded(true);
+      }
+    }, 500);
 
-    check3DSupport();
+    return () => clearTimeout(timer);
   }, []);
 
-  if (error || !use3D) {
-    // Fallback - Enhanced 2D representation
+  if (!isLoaded) {
     return (
       <div className={`relative w-full h-full bg-black/30 ${className}`}>
         <LogoBackground />
-        <Simple3DScene />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-white/70 text-sm">Caricamento 3D...</div>
+        </div>
       </div>
     );
   }
@@ -233,47 +323,13 @@ const Porsche3D: React.FC<Porsche3DProps> = ({ className = "" }) => {
     <div className={`relative w-full h-full ${className}`}>
       <LogoBackground />
       
-      {!isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="text-white/70 text-sm">Caricamento 3D...</div>
-        </div>
-      )}
-      
       <motion.div 
         className="w-full h-full"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isLoaded ? 1 : 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        <Suspense fallback={<Simple3DScene />}>
-          <Canvas
-            className="w-full h-full cursor-grab active:cursor-grabbing"
-            onCreated={() => setIsLoaded(true)}
-            onError={() => setError(true)}
-            camera={{ position: [8, 4, 8], fov: 50 }}
-          >
-            {/* Lighting setup */}
-            <ambientLight intensity={0.3} />
-            <directionalLight position={[10, 10, 5]} intensity={1} />
-            <directionalLight position={[-10, 10, -5]} intensity={0.5} />
-            <pointLight position={[0, 10, 0]} intensity={0.5} />
-            
-            {/* 3D Porsche Model */}
-            <PorscheModel />
-            
-            {/* Basic controls */}
-            <orbitControls
-              enablePan={false}
-              enableZoom={true}
-              maxDistance={15}
-              minDistance={5}
-              maxPolarAngle={Math.PI / 2}
-              autoRotate={false}
-              enableDamping
-              dampingFactor={0.05}
-            />
-          </Canvas>
-        </Suspense>
+        {error ? <StaticPorsche /> : <CSS3DPorsche />}
       </motion.div>
     </div>
   );

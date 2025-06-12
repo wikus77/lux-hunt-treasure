@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
@@ -133,7 +134,7 @@ export const useBuzzFeature = () => {
         }
         
         // Forza reload immediato delle notifiche
-        await reloadNotifications(true);
+        await reloadNotifications();
         
         toast.success("Hai ricevuto un nuovo indizio univoco!", {
           description: uniqueClueContent,
@@ -194,7 +195,7 @@ export const useBuzzFeature = () => {
         uniqueClue
       ).then(async () => {
         console.log("✅ Notifica indizio extra UNIVOCA creata");
-        await reloadNotifications(true);
+        await reloadNotifications();
         
         toast.success("Hai ricevuto un nuovo indizio extra!", {
           description: uniqueClue,
@@ -242,47 +243,6 @@ export const useBuzzFeature = () => {
       duration: 3000,
     });
   };
-
-  const processBuzzPurchase = useCallback(async (buzzType: 'single' | 'map', areaId?: string) => {
-    const { data } = await createStripeCheckout(buzzType, areaId);
-    
-    if (data.success) {
-      console.log('✅ BUZZ: Payment successful, processing buzz action');
-      
-      let buzzResult;
-      if (buzzType === 'single') {
-        buzzResult = await handleBuzzPress();
-      } else {
-        buzzResult = await handleMapBuzzPress(areaId!);
-      }
-
-      if (buzzResult?.success) {
-        console.log('✅ BUZZ: Action completed successfully');
-        // FIXED: Call reloadNotifications without arguments
-        reloadNotifications();
-        
-        setShowPaymentModal(false);
-        toast.success(
-          buzzType === 'single' 
-            ? "🎯 BUZZ attivato! Hai ricevuto un nuovo indizio!" 
-            : "🗺️ BUZZ MAPPA completato! Area sbloccata!"
-        );
-      } else {
-        console.error('❌ BUZZ: Action failed after successful payment');
-        toast.error("Pagamento effettuato ma errore nell'elaborazione. Contatta il supporto.");
-      }
-    }
-  }, [handleBuzzPress, handleMapBuzzPress, createStripeCheckout, reloadNotifications]);
-
-  const handleQuickBuzz = useCallback(async () => {
-    const result = await handleBuzzPress();
-    if (result?.success) {
-      console.log('✅ BUZZ: Quick buzz successful');
-      // FIXED: Call reloadNotifications without arguments
-      reloadNotifications();
-      toast.success("🎯 BUZZ attivato! Hai ricevuto un nuovo indizio!");
-    }
-  }, [handleBuzzPress, reloadNotifications]);
 
   return {
     showDialog,
