@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Loader, Zap } from "lucide-react";
@@ -99,27 +98,26 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const handleBuzzPress = async () => {
     if (isLoading || !userId) return;
     
-    console.log('🚀 BUZZ: Starting process - MANDATORY counter increment');
+    console.log('🚀 BUZZ: Starting process - IMPERATIVE counter increment');
 
     // CRITICAL: Show ripple immediately
     setShowRipple(true);
     setTimeout(() => setShowRipple(false), 1000);
 
-    // MANDATORY: UPDATE COUNTER IMMEDIATELY (before any checks)
+    // IMPERATIVE: UPDATE COUNTER IMMEDIATELY (before any checks)
     const newDailyCount = dailyCount + 1;
     setDailyCount(newDailyCount);
-    console.log(`🔢 BUZZ: Counter IMMEDIATELY incremented to ${newDailyCount}/50`);
+    console.log(`🔢 BUZZ: Counter IMPERATIVELY incremented to ${newDailyCount}/50`);
 
-    // MANDATORY: Show processing toast IMMEDIATELY
-    toast("🎯 BUZZ in elaborazione...", {
+    // IMPERATIVE: Show immediate toast feedback
+    toast.success("🎯 BUZZ attivato!", {
       description: `Tentativo ${newDailyCount}/50 in corso...`,
-      duration: 3000,
+      duration: 2000,
     });
 
     // Check daily limit AFTER incrementing counter
     if (dailyCount >= 50) {
-      // MANDATORY: Show error toast
-      toast.error("❌ Limite giornaliero raggiunto", {
+      toast.error("Limite giornaliero raggiunto", {
         description: "Hai raggiunto il limite di 50 buzz per oggi.",
         duration: 4000,
       });
@@ -141,10 +139,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     const isDeveloper = userData.user?.email === 'wikus77@hotmail.it';
     
     if (isDeveloper) {
-      console.log('🔓 BUZZ: DEVELOPER MODE ACTIVATED - simulating valid response');
+      console.log('🔓 BUZZ: Developer mode activated - simulating valid response');
       
-      // DEVELOPER MODE: Always show success toast (MANDATORY)
-      toast.success("✅ Nuovo indizio sbloccato! (DEV MODE)", {
+      // DEVELOPER MODE: Always show success toast (IMPERATIVE)
+      toast.success("🎯 Nuovo indizio sbloccato! (DEV MODE)", {
         description: `Test sviluppatore - Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`,
         duration: 4000,
       });
@@ -163,17 +161,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         console.error("❌ BUZZ: Failed to update developer counter in DB:", dbError);
       }
       
-      // MANDATORY: Create notification for developer
-      try {
-        await createBuzzNotification(
-          "Nuovo Indizio Buzz (DEV)", 
-          `Test sviluppatore - Indizio generato alle ${new Date().toLocaleTimeString()}`
-        );
-        console.log("✅ BUZZ: Developer notification created");
-      } catch (notifError) {
-        console.error("❌ BUZZ: Failed to create developer notification:", notifError);
-      }
-      
       // Reload data
       setTimeout(() => {
         loadBuzzData();
@@ -188,8 +175,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       try {
         console.log('💳 BUZZ: Payment REQUIRED - processing checkout');
         
-        // MANDATORY: Show payment requirement toast
-        toast.error("💳 Pagamento richiesto", {
+        // Show payment requirement toast (IMPERATIVE)
+        toast.error("Pagamento richiesto", {
           description: `Per continuare è necessario pagare €${buzzCost.toFixed(2)} o attivare un abbonamento.`,
           duration: 4000,
         });
@@ -198,8 +185,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         const paymentSuccess = await processBuzzPurchase(false, buzzCost);
         
         if (!paymentSuccess) {
-          // MANDATORY: Show payment failure toast
-          toast.error("❌ Pagamento necessario", {
+          toast.error("Pagamento necessario", {
             description: "Il pagamento è obbligatorio per utilizzare il BUZZ.",
             duration: 4000,
           });
@@ -219,8 +205,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         console.log('✅ BUZZ: Payment completed successfully');
       } catch (error) {
         console.error("❌ BUZZ Payment error:", error);
-        // MANDATORY: Show payment error toast
-        toast.error("❌ Errore di pagamento", {
+        toast.error("Errore di pagamento", {
           description: "Impossibile processare il pagamento.",
           duration: 4000,
         });
@@ -253,7 +238,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           window.plausible('clue_unlocked');
         }
         
-        // MANDATORY: Update counter in DB
+        // IMPERATIVE: Update counter in DB
         try {
           await supabase
             .from('user_buzz_counter')
@@ -262,7 +247,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
               date: new Date().toISOString().split('T')[0],
               buzz_count: newDailyCount
             });
-          console.log(`📊 BUZZ: Counter updated in DB to ${newDailyCount} - MANDATORY`);
+          console.log(`📊 BUZZ: Counter updated in DB to ${newDailyCount} - IMPERATIVE`);
         } catch (dbError) {
           console.error("❌ BUZZ: Failed to update counter in DB:", dbError);
         }
@@ -277,7 +262,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         
         console.log("📝 BUZZ: Dynamic clue content:", dynamicClueContent);
 
-        // MANDATORY: Show success toast
+        // IMPERATIVE: Show success toast
         toast.success("🎯 Nuovo indizio sbloccato!", {
           description: dynamicClueContent,
           duration: 4000,
@@ -343,7 +328,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         const errorMessage = response.errorMessage || "Errore sconosciuto";
         setError(errorMessage);
         
-        // MANDATORY: Show error toast
+        // IMPERATIVE: Show error toast
         toast.error("❌ Errore BUZZ", {
           description: errorMessage,
           duration: 4000,
@@ -371,7 +356,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       console.error("❌ BUZZ: Error during API call:", error);
       setError("Si è verificato un errore di comunicazione con il server");
       
-      // MANDATORY: Show connection error toast
+      // IMPERATIVE: Show connection error toast
       toast.error("❌ Errore di connessione", {
         description: "Impossibile contattare il server. Riprova più tardi.",
         duration: 4000,
@@ -404,8 +389,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const isProcessing = isLoading || paymentLoading;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen pb-safe">
-      {/* MANDATORY: Perfect circular button with glow aura */}
+    <div className="flex flex-col items-center justify-center h-full min-h-[500px] pb-safe">
+      {/* IMPERATIVE: Perfect circular button with glow aura */}
       <motion.button
         className="w-80 h-80 rounded-full relative overflow-hidden focus:outline-none disabled:opacity-50"
         onClick={handleBuzzPress}
@@ -420,6 +405,9 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             ? "none" 
             : "0 0 30px rgba(123, 46, 255, 0.8), 0 0 60px rgba(0, 209, 255, 0.6), 0 0 90px rgba(255, 89, 248, 0.4)",
         }}
+        transition={{ 
+          scale: { type: "spring", stiffness: 300, damping: 20 }
+        }}
         animate={!isBlocked ? {
           boxShadow: [
             "0 0 20px rgba(123, 46, 255, 0.6), 0 0 40px rgba(0, 209, 255, 0.4), 0 0 60px rgba(255, 89, 248, 0.3)",
@@ -428,7 +416,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           ]
         } : {}}
         transition={{
-          scale: { type: "spring", stiffness: 300, damping: 20 },
+          ...transition,
           boxShadow: { repeat: Infinity, duration: 2, ease: "easeInOut" }
         }}
       >
@@ -470,13 +458,13 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
               <span className="text-4xl font-bold text-white tracking-wider">
                 BUZZ!
               </span>
-              {/* MANDATORY: Dynamic price display */}
+              {/* IMPERATIVE: Dynamic price display */}
               {!hasActiveSubscription && (
                 <span className="text-lg text-white/90 mt-2 font-bold">
                   €{buzzCost.toFixed(2)}
                 </span>
               )}
-              {/* MANDATORY: Counter display */}
+              {/* IMPERATIVE: Counter display */}
               <span className="text-sm text-white/70 mt-1">
                 {dailyCount}/50 oggi
               </span>
@@ -484,7 +472,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           )}
         </div>
 
-        {/* MANDATORY: Real ripple effect */}
+        {/* IMPERATIVE: Real ripple effect */}
         {showRipple && (
           <div className="absolute inset-0 rounded-full pointer-events-none">
             <motion.div
