@@ -53,6 +53,16 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       if (!isDeveloper && (subError || !subscription)) {
         console.log('💳 BUZZ MAPPA: Payment REQUIRED - no active subscription found');
         
+        // Log abuse attempt
+        try {
+          await supabase.from('abuse_logs').insert({
+            user_id: user.id,
+            event_type: 'buzz_map_payment_required'
+          });
+        } catch (error) {
+          console.error("Failed to log abuse:", error);
+        }
+        
         // Show payment requirement toast
         toast.error("Pagamento richiesto", {
           description: `Per generare un'area BUZZ è necessario pagare €${buzzMapPrice.toFixed(2)} o attivare un abbonamento.`
@@ -100,24 +110,50 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         // Calculate actual radius for this generation
         const actualRadius = incrementGeneration();
         
+        // CRITICAL: Register notification in Supabase
+        try {
+          await supabase
+            .from('user_notifications')
+            .insert({
+              user_id: user.id,
+              type: 'buzz_map',
+              title: 'Area BUZZ Mappa generata',
+              message: `Nuova area di ricerca generata con raggio ${actualRadius}km`,
+              is_read: false,
+              created_at: new Date().toISOString()
+            });
+          console.log('✅ BUZZ MAPPA: Notification registered in user_notifications');
+        } catch (notifError) {
+          console.error("❌ BUZZ MAPPA: Failed to create notification:", notifError);
+        }
+
+        // CRITICAL: Log event in buzz_logs
+        try {
+          await supabase
+            .from('buzz_logs')
+            .insert({
+              user_id: user.id,
+              step: 'buzz_map_generated',
+              action: 'BUZZ_MAPPA_PREMUTO',
+              details: {
+                cost: buzzMapPrice,
+                radius_km: actualRadius,
+                lat: response.lat,
+                lng: response.lng,
+                generation_number: response.generation_number,
+                timestamp: new Date().toISOString(),
+                success: true
+              }
+            });
+          console.log("✅ BUZZ MAPPA: Event logged in buzz_logs");
+        } catch (logError) {
+          console.error("❌ BUZZ MAPPA: Failed to log event:", logError);
+        }
+        
         // ONLY show success toast AFTER real generation
         toast.success("Area BUZZ generata!", {
           description: `Nuova area di ricerca attiva con raggio ${actualRadius}km`
         });
-        
-        // Create notification in database
-        await supabase
-          .from('user_notifications')
-          .insert({
-            user_id: user.id,
-            type: 'buzz_map',
-            title: 'Area BUZZ Mappa generata',
-            message: `Nuova area di ricerca generata con raggio ${actualRadius}km`,
-            is_read: false,
-            created_at: new Date().toISOString()
-          });
-
-        console.log('✅ BUZZ MAPPA: Notification registered in user_notifications');
         
         // Notify parent component with actual generated area data
         if (onAreaGenerated) {
@@ -133,6 +169,23 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         toast.error("Errore generazione", {
           description: response.errorMessage || "Impossibile generare l'area BUZZ"
         });
+        
+        // Log failure
+        try {
+          await supabase
+            .from('buzz_logs')
+            .insert({
+              user_id: user.id,
+              step: 'buzz_map_failed',
+              action: 'BUZZ_MAPPA_ERRORE',
+              details: {
+                error: response.errorMessage || "Generation failed",
+                timestamp: new Date().toISOString()
+              }
+            });
+        } catch (logError) {
+          console.error("❌ BUZZ MAPPA: Failed to log error:", logError);
+        }
       }
       
     } catch (error) {
@@ -140,6 +193,23 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       toast.error('Errore di connessione', {
         description: 'Impossibile contattare il server. Riprova più tardi.'
       });
+      
+      // Log connection error
+      try {
+        await supabase
+          .from('buzz_logs')
+          .insert({
+            user_id: user.id,
+            step: 'buzz_map_connection_error',
+            action: 'BUZZ_MAPPA_CONNECTION_ERROR',
+            details: {
+              error: error?.message || 'Unknown connection error',
+              timestamp: new Date().toISOString()
+            }
+          });
+      } catch (logError) {
+        console.error("❌ BUZZ MAPPA: Failed to log connection error:", logError);
+      }
     } finally {
       setIsGenerating(false);
     }

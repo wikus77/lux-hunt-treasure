@@ -94,6 +94,33 @@ serve(async (req) => {
     const currentWeek = weekData || 1;
     console.log(`📍 Current mission week: ${currentWeek}`);
 
+    // CRITICAL: Ensure user profile exists (fix foreign key constraint error)
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .single();
+
+    if (profileError || !profile) {
+      console.log("📝 Creating missing user profile");
+      const { error: createProfileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: user.email,
+          created_at: new Date().toISOString()
+        });
+      
+      if (createProfileError) {
+        console.error("❌ Error creating profile:", createProfileError);
+        return new Response(
+          JSON.stringify({ success: false, error: true, errorMessage: "Errore creazione profilo utente" }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+      console.log("✅ User profile created successfully");
+    }
+
     // Update buzz counter
     const { data: buzzCount, error: buzzCountError } = await supabase.rpc('increment_buzz_counter', {
       p_user_id: userId

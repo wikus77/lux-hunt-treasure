@@ -102,6 +102,16 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       toast.error("Limite giornaliero raggiunto", {
         description: "Hai raggiunto il limite di 50 buzz per oggi."
       });
+      
+      // Log abuse attempt
+      try {
+        await supabase.from('abuse_logs').insert({
+          user_id: userId,
+          event_type: 'buzz_limit_exceeded'
+        });
+      } catch (error) {
+        console.error("Failed to log abuse:", error);
+      }
       return;
     }
     
@@ -124,6 +134,16 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           toast.error("Pagamento necessario", {
             description: "Il pagamento è obbligatorio per utilizzare il BUZZ."
           });
+          
+          // Log payment failure
+          try {
+            await supabase.from('abuse_logs').insert({
+              user_id: userId,
+              event_type: 'buzz_payment_required'
+            });
+          } catch (error) {
+            console.error("Failed to log payment requirement:", error);
+          }
           return;
         }
         
@@ -183,7 +203,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         
         console.log("📝 BUZZ: Dynamic clue content:", dynamicClueContent);
 
-        // Register notification in Supabase
+        // CRITICAL: Register notification in Supabase
         try {
           console.log("💾 BUZZ: Inserting notification in Supabase...");
           const { error: notificationError } = await supabase
@@ -222,18 +242,19 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           console.error("❌ BUZZ: Failed to create app notification:", notifError);
         }
         
-        // Log event in buzz_logs - using raw insert without the action field
+        // CRITICAL: Log event in buzz_logs with new action field
         try {
           await supabase
             .from('buzz_logs')
             .insert({
               user_id: userId,
               step: 'buzz_generated',
+              action: 'BUZZ_CLICK',
               details: {
                 cost: buzzCost,
                 daily_count: newCount,
-                action: 'BUZZ_CLICK',
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                success: true
               }
             });
           console.log("✅ BUZZ: Event logged in buzz_logs");
@@ -249,6 +270,23 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         toast.error("Errore", {
           description: errorMessage,
         });
+        
+        // Log failure
+        try {
+          await supabase
+            .from('buzz_logs')
+            .insert({
+              user_id: userId,
+              step: 'buzz_failed',
+              action: 'BUZZ_ERROR',
+              details: {
+                error: errorMessage,
+                timestamp: new Date().toISOString()
+              }
+            });
+        } catch (logError) {
+          console.error("❌ BUZZ: Failed to log error:", logError);
+        }
       }
     } catch (error) {
       console.error("❌ BUZZ: Error during API call:", error);
@@ -256,6 +294,23 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       toast.error("Errore di connessione", {
         description: "Impossibile contattare il server. Riprova più tardi.",
       });
+      
+      // Log connection error
+      try {
+        await supabase
+          .from('buzz_logs')
+          .insert({
+            user_id: userId,
+            step: 'buzz_connection_error',
+            action: 'BUZZ_CONNECTION_ERROR',
+            details: {
+              error: error?.message || 'Unknown connection error',
+              timestamp: new Date().toISOString()
+            }
+          });
+      } catch (logError) {
+        console.error("❌ BUZZ: Failed to log connection error:", logError);
+      }
     } finally {
       setIsLoading(false);
     }

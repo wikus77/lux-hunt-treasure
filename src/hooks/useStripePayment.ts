@@ -63,8 +63,14 @@ export const useStripePayment = () => {
         });
       }
 
-      // Redirect to Stripe Checkout
-      window.location.href = data.url;
+      // CRITICAL: Show payment processing toast
+      toast.info("Reindirizzamento a Stripe", {
+        description: "Apertura pagina di pagamento...",
+        duration: 2000,
+      });
+
+      // Redirect to Stripe Checkout in new tab (default behavior)
+      window.open(data.url, '_blank');
       return data;
     } catch (err: any) {
       console.error('Error creating checkout session:', err);
@@ -134,6 +140,16 @@ export const useStripePayment = () => {
 
       // CRITICAL: No subscription found, payment is MANDATORY
       console.log('💳 No active subscription, payment REQUIRED');
+
+      // Log payment requirement
+      try {
+        await supabase.from('abuse_logs').insert({
+          user_id: currentUser.data.user.id,
+          event_type: isMapBuzz ? 'buzz_map_payment_attempt' : 'buzz_payment_attempt'
+        });
+      } catch (error) {
+        console.error("Failed to log payment attempt:", error);
+      }
 
       const result = await createCheckoutSession({
         planType: isMapBuzz ? 'BuzzMap' : 'Buzz',
