@@ -24,14 +24,17 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 }) => {
   const { playSound } = useSoundEffects();
   const [isGenerating, setIsGenerating] = useState(false);
-  const { currentWeekAreas } = useBuzzMapLogic();
+  const { reloadAreas } = useBuzzMapLogic();
   const { buzzMapPrice, radiusKm, incrementGeneration } = useBuzzMapPricing();
   const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
   const { user } = useAuth();
   const { callBuzzApi } = useBuzzApi();
 
   const handleBuzzPress = async () => {
-    if (isGenerating || paymentLoading || !user?.id) return;
+    if (isGenerating || paymentLoading || !user?.id) {
+      console.log('🗺️ BUZZ MAPPA: Button click ignored - already processing or no user');
+      return;
+    }
     
     console.log('🗺️ BUZZ MAPPA: Starting generation process with MANDATORY payment verification');
     
@@ -108,7 +111,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         console.log('✅ BUZZ MAPPA: Area generated successfully with response:', response);
         
         // Calculate actual radius for this generation
-        const actualRadius = incrementGeneration();
+        const actualRadius = response.radius_km;
         
         // CRITICAL: Register notification in Supabase
         try {
@@ -152,11 +155,19 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         
         // ONLY show success toast AFTER real generation
         toast.success("Area BUZZ generata!", {
-          description: `Nuova area di ricerca attiva con raggio ${actualRadius}km`
+          description: `Nuova area di ricerca attiva con raggio ${actualRadius}km`,
+          duration: 4000
         });
+        
+        // CRITICAL: Force reload areas to show new area immediately
+        setTimeout(() => {
+          console.log('🔄 BUZZ MAPPA: Triggering area reload');
+          reloadAreas();
+        }, 500);
         
         // Notify parent component with actual generated area data
         if (onAreaGenerated) {
+          console.log('🎯 BUZZ MAPPA: Calling onAreaGenerated callback');
           onAreaGenerated(response.lat, response.lng, response.radius_km);
         }
         
@@ -215,7 +226,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     }
   };
 
-  const canUseBuzz = currentWeekAreas.length < 3; // Limit to 3 areas per week
+  // CRITICAL: Always allow button unless actively processing
+  const canUseBuzz = !isGenerating && !paymentLoading && user?.id;
   const isProcessing = isGenerating || paymentLoading;
 
   return (
@@ -227,7 +239,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             : 'bg-gray-500 cursor-not-allowed opacity-50'
         }`}
         onClick={handleBuzzPress}
-        disabled={!canUseBuzz || isProcessing}
+        disabled={!canUseBuzz}
         style={{
           width: '80px',
           height: '80px',
