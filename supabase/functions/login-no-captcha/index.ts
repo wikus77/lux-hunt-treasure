@@ -57,8 +57,8 @@ serve(async (req) => {
 
     console.log('✅ Developer user found:', developerUser.email);
 
-    // Step 2: Generate magic link with proper token extraction
-    console.log('🔧 Generating magic link for token extraction...');
+    // Step 2: Use admin.generateLink to create a proper session link
+    console.log('🔧 Generating session link...');
     
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
@@ -68,125 +68,112 @@ serve(async (req) => {
       }
     });
 
-    if (linkError) {
-      console.error('❌ Magic link generation failed:', linkError);
+    if (linkError || !linkData) {
+      console.error('❌ Link generation failed:', linkError);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Magic link generation failed',
-          details: linkError.message
+          error: 'Link generation failed',
+          details: linkError?.message || 'No link data'
         }),
         { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
 
-    console.log('✅ Magic link generated successfully');
+    console.log('✅ Link generated successfully');
 
-    // Step 3: Extract tokens from magic link
+    // Step 3: Extract tokens from the action link
     let access_token = '';
     let refresh_token = '';
     
-    if (linkData?.properties?.action_link) {
+    if (linkData.properties?.action_link) {
       const url = new URL(linkData.properties.action_link);
-      access_token = url.searchParams.get('access_token') || '';
-      refresh_token = url.searchParams.get('refresh_token') || '';
+      const urlTokens = {
+        access: url.searchParams.get('access_token'),
+        refresh: url.searchParams.get('refresh_token'),
+        type: url.searchParams.get('type')
+      };
       
-      console.log('📊 Tokens extracted from magic link:', {
-        hasAccessToken: !!access_token,
-        hasRefreshToken: !!refresh_token,
-        accessTokenLength: access_token.length,
-        refreshTokenLength: refresh_token.length
+      console.log('🔍 URL analysis:', {
+        hasActionLink: true,
+        urlParams: Array.from(url.searchParams.keys()),
+        hasAccess: !!urlTokens.access,
+        hasRefresh: !!urlTokens.refresh,
+        type: urlTokens.type
       });
+      
+      if (urlTokens.access) {
+        access_token = urlTokens.access;
+        refresh_token = urlTokens.refresh || '';
+      }
     }
 
-    // Step 4: Fallback - Create manual session if tokens not found
-    if (!access_token || !refresh_token) {
-      console.log('⚠️ No tokens in magic link, creating manual session...');
+    // Step 4: If no tokens from URL, use the alternative approach
+    if (!access_token) {
+      console.log('⚠️ No tokens in URL, using alternative approach...');
       
-      // Generate manual JWT tokens using the correct Supabase user structure
-      const now = Math.floor(Date.now() / 1000);
-      const exp = now + 3600; // 1 hour from now
-      
-      // Create a proper JWT header and payload
-      const header = {
-        alg: 'HS256',
-        typ: 'JWT'
-      };
-      
-      const payload = {
-        aud: 'authenticated',
-        exp: exp,
-        iat: now,
-        iss: `https://${Deno.env.get('SUPABASE_URL')?.replace('https://', '')}`,
-        sub: developerUser.id,
-        email: developerUser.email,
-        phone: '',
-        app_metadata: {
-          provider: 'developer_bypass',
-          providers: ['developer_bypass']
-        },
-        user_metadata: {
-          developer_auto_login: true
-        },
-        role: 'authenticated',
-        aal: 'aal1',
-        amr: [{ method: 'developer_bypass', timestamp: now }],
-        session_id: crypto.randomUUID()
-      };
-
-      // Encode to base64url (not base64)
-      const base64UrlEncode = (obj: any) => {
-        return btoa(JSON.stringify(obj))
-          .replace(/\+/g, '-')
-          .replace(/\//g, '_')
-          .replace(/=/g, '');
-      };
-
-      const headerEncoded = base64UrlEncode(header);
-      const payloadEncoded = base64UrlEncode(payload);
-      
-      // Create signature using JWT_SECRET (if available) or fallback
-      const secret = Deno.env.get('SUPABASE_JWT_SECRET') || Deno.env.get('JWT_SECRET') || 'fallback-secret';
-      const data = `${headerEncoded}.${payloadEncoded}`;
-      
-      // Simple HMAC-SHA256 signature
-      const encoder = new TextEncoder();
-      const key = await crypto.subtle.importKey(
-        'raw',
-        encoder.encode(secret),
-        { name: 'HMAC', hash: 'SHA-256' },
-        false,
-        ['sign']
+      // Use admin.inviteUserByEmail which can generate valid tokens
+      const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+        developerUser.email,
+        {
+          redirectTo: `${Deno.env.get('SUPABASE_URL')}/auth/v1/callback`,
+          data: {
+            developer_auto_login: true,
+            bypass_confirmation: true
+          }
+        }
       );
-      
-      const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(data));
-      const signatureBase64Url = btoa(String.fromCharCode(...new Uint8Array(signature)))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
-      
-      access_token = `${data}.${signatureBase64Url}`;
-      refresh_token = crypto.randomUUID();
-      
-      console.log('✅ Manual tokens created:', {
-        accessTokenLength: access_token.length,
-        refreshTokenLength: refresh_token.length,
-        expiresAt: new Date(exp * 1000).toISOString()
-      });
+
+      if (inviteError) {
+        console.error('❌ Invite failed:', inviteError);
+      } else if (inviteData?.user) {
+        console.log('✅ Invite created for existing user');
+        
+        // Generate a session token using a different approach
+        const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.generateLink({
+          type: 'signup',
+          email: developerUser.email,
+          password: 'temp-developer-bypass',
+          options: {
+            redirectTo: `${Deno.env.get('SUPABASE_URL')}/auth/v1/callback`,
+            data: {
+              developer_auto_login: true
+            }
+          }
+        });
+
+        if (!sessionError && sessionData?.properties?.action_link) {
+          const sessionUrl = new URL(sessionData.properties.action_link);
+          access_token = sessionUrl.searchParams.get('access_token') || '';
+          refresh_token = sessionUrl.searchParams.get('refresh_token') || '';
+          
+          console.log('🔧 Alternative tokens extracted:', {
+            hasAccess: !!access_token,
+            hasRefresh: !!refresh_token,
+            accessLength: access_token.length
+          });
+        }
+      }
     }
 
-    if (!access_token || !refresh_token) {
-      console.error('❌ No valid tokens generated');
+    // Step 5: Final validation and response
+    if (!access_token) {
+      console.error('❌ No valid tokens generated through any method');
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'No valid tokens generated'
+          error: 'No valid tokens generated',
+          debug: {
+            userFound: !!developerUser,
+            linkGenerated: !!linkData,
+            alternativeAttempted: true
+          }
         }),
         { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
 
-    // Step 5: Return properly formatted session response
+    // Create successful response
     const sessionResponse = {
       success: true,
       access_token: access_token,
@@ -200,24 +187,23 @@ serve(async (req) => {
         email_confirmed_at: developerUser.email_confirmed_at,
         created_at: developerUser.created_at,
         updated_at: developerUser.updated_at,
-        app_metadata: {
-          provider: 'developer_bypass',
-          providers: ['developer_bypass']
-        },
+        app_metadata: developerUser.app_metadata || {},
         user_metadata: {
+          ...developerUser.user_metadata,
           developer_auto_login: true
         }
       },
-      method: 'developer_magic_link_bypass',
-      message: 'Developer auto-login successful with valid tokens'
+      method: 'admin_link_extraction',
+      message: 'Developer auto-login successful'
     };
 
     console.log('✅ DEVELOPER AUTO-LOGIN SUCCESSFUL');
-    console.log('📊 Final token validation:', {
-      accessTokenFormat: access_token.split('.').length === 3 ? 'Valid JWT' : 'Invalid format',
-      refreshTokenPresent: !!refresh_token,
-      userPresent: !!sessionResponse.user,
-      expiresAt: new Date(sessionResponse.expires_at * 1000).toISOString()
+    console.log('📊 Final response validation:', {
+      hasAccessToken: !!sessionResponse.access_token,
+      hasRefreshToken: !!sessionResponse.refresh_token,
+      hasUser: !!sessionResponse.user,
+      tokenLength: sessionResponse.access_token.length,
+      method: sessionResponse.method
     });
 
     return new Response(
@@ -234,8 +220,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || 'Developer auto-login failed',
-        details: error.toString(),
+        error: 'Developer auto-login failed',
+        details: error.message || error.toString(),
         timestamp: new Date().toISOString()
       }),
       { 

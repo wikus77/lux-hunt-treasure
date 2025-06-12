@@ -37,70 +37,60 @@ const Login = () => {
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);
 
-  // 🔐 CORRECTED DEVELOPER AUTO-LOGIN
+  // 🔐 FIXED DEVELOPER AUTO-LOGIN
   useEffect(() => {
     const executeDeveloperAutoLogin = async () => {
       if (!developerAutoLoginAttempted && !authLoading && !isAuthenticated) {
-        console.log('🔄 STARTING CORRECTED DEVELOPER AUTO-LOGIN FOR wikus77@hotmail.it');
+        console.log('🔄 STARTING FIXED DEVELOPER AUTO-LOGIN FOR wikus77@hotmail.it');
         setDeveloperAutoLoginAttempted(true);
         setIsDeveloperAutoLogin(true);
         setAutoLoginError(null);
         
         try {
-          console.log('📡 Calling corrected login-no-captcha function...');
+          console.log('📡 Calling fixed login-no-captcha function...');
           
           const functionResponse = await supabase.functions.invoke('login-no-captcha', {
             headers: {
               'Content-Type': 'application/json',
-              'User-Agent': 'M1SSION-Developer-AutoLogin-Corrected',
+              'User-Agent': 'M1SSION-Developer-AutoLogin-Fixed',
               'Accept': 'application/json'
             }
           });
 
-          console.log('📋 Corrected function response:', {
+          console.log('📋 Fixed function response:', {
             data: functionResponse.data,
             error: functionResponse.error,
             status: 'Response received'
           });
 
           if (functionResponse.error) {
-            console.error('❌ Corrected auto-login function error:', functionResponse.error);
+            console.error('❌ Fixed auto-login function error:', functionResponse.error);
             setAutoLoginError(`Function error: ${functionResponse.error.message}`);
             setIsDeveloperAutoLogin(false);
             return;
           }
 
           const data = functionResponse.data;
-          console.log('📊 Corrected function data analysis:', {
+          console.log('📊 Fixed function data analysis:', {
             hasData: !!data,
             isSuccess: data?.success,
             hasAccessToken: !!data?.access_token,
             hasRefreshToken: !!data?.refresh_token,
             tokenLength: data?.access_token?.length || 0,
             method: data?.method,
-            hasUser: !!data?.user,
-            tokenFormat: data?.access_token?.split('.').length === 3 ? 'Valid JWT' : 'Invalid format'
+            hasUser: !!data?.user
           });
 
           if (data?.success && data?.access_token && data?.refresh_token) {
-            console.log('✅ CORRECTED DEVELOPER AUTO-LOGIN SUCCESS - Setting session with valid tokens...');
+            console.log('✅ FIXED DEVELOPER AUTO-LOGIN SUCCESS - Setting session with valid tokens...');
             
-            // Validate token format before setting session
-            const tokenParts = data.access_token.split('.');
-            if (tokenParts.length !== 3) {
-              console.error('❌ Invalid JWT format - token does not have 3 parts');
-              setAutoLoginError('Invalid JWT format received');
-              setIsDeveloperAutoLogin(false);
-              return;
-            }
-            
-            console.log('🔧 Setting session with corrected valid tokens...');
+            console.log('🔧 Setting session with fixed valid tokens...');
             const sessionResult = await supabase.auth.setSession({
               access_token: data.access_token,
               refresh_token: data.refresh_token
             });
 
-            console.log('📊 Corrected session result:', {
+            console.log('📊 Fixed session result:', {
               hasError: !!sessionResult.error,
               hasData: !!sessionResult.data,
               hasSession: !!sessionResult.data?.session,
@@ -110,43 +100,42 @@ const Login = () => {
             });
 
             if (!sessionResult.error && sessionResult.data?.session) {
-              console.log('✅ CORRECTED DEVELOPER SESSION SET SUCCESSFULLY');
-              console.log('👤 Corrected user authenticated:', sessionResult.data.user?.email);
+              console.log('✅ FIXED DEVELOPER SESSION SET SUCCESSFULLY');
+              console.log('👤 Fixed user authenticated:', sessionResult.data.user?.email);
               
-              toast.success('🔐 Corrected Developer Auto-Login Successful', {
+              toast.success('🔐 Fixed Developer Auto-Login Successful', {
                 description: `Welcome back! Method: ${data.method}`
               });
               
               // Immediate redirect on success
               setTimeout(() => {
-                console.log('🏠 Executing corrected redirect to /home...');
+                console.log('🏠 Executing fixed redirect to /home...');
                 navigate('/home', { replace: true });
               }, 1000);
             } else {
-              console.error('❌ Corrected session setting failed:', sessionResult.error);
+              console.error('❌ Fixed session setting failed:', sessionResult.error);
               setAutoLoginError(`Session error: ${sessionResult.error?.message || 'Unknown session error'}`);
               setIsDeveloperAutoLogin(false);
             }
           } else {
-            console.log('⚠️ Corrected auto-login response invalid or failed');
-            setAutoLoginError(data?.error || 'Invalid corrected auto-login response');
+            console.log('⚠️ Fixed auto-login response invalid or failed');
+            setAutoLoginError(data?.error || 'Invalid fixed auto-login response');
             setIsDeveloperAutoLogin(false);
           }
         } catch (error: any) {
-          console.error('💥 Corrected auto-login exception:', error);
-          console.error('🔴 Auth error details:', error);
+          console.error('💥 Fixed auto-login exception:', error);
           setAutoLoginError(`Exception: ${error.message}`);
           setIsDeveloperAutoLogin(false);
         }
       }
     };
 
-    // Execute corrected auto-login after a short delay
+    // Execute fixed auto-login after a short delay
     const autoLoginTimer = setTimeout(executeDeveloperAutoLogin, 300);
     return () => clearTimeout(autoLoginTimer);
   }, [authLoading, isAuthenticated, developerAutoLoginAttempted, navigate]);
 
-  const handleResendVerification = async (email: string) => {
+  async function handleResendVerification(email: string) {
     if (!email) {
       toast.error("Errore", {
         description: "Inserisci la tua email per ricevere nuovamente il link di verifica."
@@ -173,7 +162,7 @@ const Login = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   // Show loading during auth check or developer auto-login
   if (authLoading || isDeveloperAutoLogin) {
@@ -182,12 +171,12 @@ const Login = () => {
         <div className="text-center">
           <Spinner className="h-8 w-8 text-white mx-auto mb-4" />
           <p className="text-white/70">
-            {isDeveloperAutoLogin ? '🔐 Corrected Developer Auto-Login in progress...' : 'Verifying authentication...'}
+            {isDeveloperAutoLogin ? '🔐 Fixed Developer Auto-Login in progress...' : 'Verifying authentication...'}
           </p>
           {isDeveloperAutoLogin && (
             <div className="mt-4 text-center max-w-md">
               <p className="text-xs text-cyan-400">
-                Corrected auto-login for wikus77@hotmail.it
+                Fixed auto-login for wikus77@hotmail.it
               </p>
               <p className="text-xs text-white/50 mt-1">
                 Using corrected token generation
@@ -219,7 +208,7 @@ const Login = () => {
           </p>
           {!developerAutoLoginAttempted && (
             <p className="text-xs text-cyan-400 mt-2">
-              🔐 Corrected developer auto-login enabled
+              🔐 Fixed developer auto-login enabled
             </p>
           )}
           {autoLoginError && (
@@ -250,9 +239,9 @@ const Login = () => {
               </Link>
             </p>
             
-            {/* Corrected Developer Controls */}
+            {/* Fixed Developer Controls */}
             <div className="mt-4 pt-4 border-t border-gray-700">
-              <p className="text-xs text-gray-500 mb-2">Corrected Developer Controls</p>
+              <p className="text-xs text-gray-500 mb-2">Fixed Developer Controls</p>
               <button 
                 onClick={async () => {
                   setDeveloperAutoLoginAttempted(false);
@@ -261,22 +250,22 @@ const Login = () => {
                 }}
                 className="text-xs text-cyan-400 hover:text-cyan-300 mr-4"
               >
-                🔄 Retry Corrected Auto-Login
+                🔄 Retry Fixed Auto-Login
               </button>
               <button 
                 onClick={() => {
-                  console.log('🔍 Corrected session state:', {
+                  console.log('🔍 Fixed session state:', {
                     isAuthenticated,
                     authLoading,
                     developerAutoLoginAttempted,
                     autoLoginError,
                     timestamp: new Date().toISOString()
                   });
-                  toast.info('Corrected diagnostic info logged to console');
+                  toast.info('Fixed diagnostic info logged to console');
                 }}
                 className="text-xs text-gray-500 hover:text-gray-400"
               >
-                🔍 Corrected Debug Info
+                🔍 Fixed Debug Info
               </button>
             </div>
           </div>
