@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -38,61 +37,70 @@ const Login = () => {
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);
 
-  // 🔐 ENHANCED DEVELOPER AUTO-LOGIN WITH ADMIN SESSION
+  // 🔐 CORRECTED DEVELOPER AUTO-LOGIN
   useEffect(() => {
     const executeDeveloperAutoLogin = async () => {
       if (!developerAutoLoginAttempted && !authLoading && !isAuthenticated) {
-        console.log('🔄 STARTING ENHANCED DEVELOPER AUTO-LOGIN FOR wikus77@hotmail.it');
+        console.log('🔄 STARTING CORRECTED DEVELOPER AUTO-LOGIN FOR wikus77@hotmail.it');
         setDeveloperAutoLoginAttempted(true);
         setIsDeveloperAutoLogin(true);
         setAutoLoginError(null);
         
         try {
-          console.log('📡 Calling enhanced login-no-captcha function...');
+          console.log('📡 Calling corrected login-no-captcha function...');
           
           const functionResponse = await supabase.functions.invoke('login-no-captcha', {
             headers: {
               'Content-Type': 'application/json',
-              'User-Agent': 'M1SSION-Developer-AutoLogin-Enhanced',
+              'User-Agent': 'M1SSION-Developer-AutoLogin-Corrected',
               'Accept': 'application/json'
             }
           });
 
-          console.log('📋 Enhanced function response:', {
+          console.log('📋 Corrected function response:', {
             data: functionResponse.data,
             error: functionResponse.error,
             status: 'Response received'
           });
 
           if (functionResponse.error) {
-            console.error('❌ Enhanced auto-login function error:', functionResponse.error);
+            console.error('❌ Corrected auto-login function error:', functionResponse.error);
             setAutoLoginError(`Function error: ${functionResponse.error.message}`);
             setIsDeveloperAutoLogin(false);
             return;
           }
 
           const data = functionResponse.data;
-          console.log('📊 Enhanced function data analysis:', {
+          console.log('📊 Corrected function data analysis:', {
             hasData: !!data,
             isSuccess: data?.success,
             hasAccessToken: !!data?.access_token,
             hasRefreshToken: !!data?.refresh_token,
             tokenLength: data?.access_token?.length || 0,
             method: data?.method,
-            hasUser: !!data?.user
+            hasUser: !!data?.user,
+            tokenFormat: data?.access_token?.split('.').length === 3 ? 'Valid JWT' : 'Invalid format'
           });
 
           if (data?.success && data?.access_token && data?.refresh_token) {
-            console.log('✅ ENHANCED DEVELOPER AUTO-LOGIN SUCCESS - Setting session with admin tokens...');
+            console.log('✅ CORRECTED DEVELOPER AUTO-LOGIN SUCCESS - Setting session with valid tokens...');
             
-            // Set session with admin-generated tokens
-            console.log('🔧 Setting session with enhanced admin tokens...');
+            // Validate token format before setting session
+            const tokenParts = data.access_token.split('.');
+            if (tokenParts.length !== 3) {
+              console.error('❌ Invalid JWT format - token does not have 3 parts');
+              setAutoLoginError('Invalid JWT format received');
+              setIsDeveloperAutoLogin(false);
+              return;
+            }
+            
+            console.log('🔧 Setting session with corrected valid tokens...');
             const sessionResult = await supabase.auth.setSession({
               access_token: data.access_token,
               refresh_token: data.refresh_token
             });
 
-            console.log('📊 Enhanced session result:', {
+            console.log('📊 Corrected session result:', {
               hasError: !!sessionResult.error,
               hasData: !!sessionResult.data,
               hasSession: !!sessionResult.data?.session,
@@ -102,37 +110,38 @@ const Login = () => {
             });
 
             if (!sessionResult.error && sessionResult.data?.session) {
-              console.log('✅ ENHANCED DEVELOPER SESSION SET SUCCESSFULLY');
-              console.log('👤 Enhanced user authenticated:', sessionResult.data.user?.email);
+              console.log('✅ CORRECTED DEVELOPER SESSION SET SUCCESSFULLY');
+              console.log('👤 Corrected user authenticated:', sessionResult.data.user?.email);
               
-              toast.success('🔐 Enhanced Developer Auto-Login Successful', {
-                description: `Welcome back! Admin method: ${data.method}`
+              toast.success('🔐 Corrected Developer Auto-Login Successful', {
+                description: `Welcome back! Method: ${data.method}`
               });
               
               // Immediate redirect on success
               setTimeout(() => {
-                console.log('🏠 Executing enhanced redirect to /home...');
+                console.log('🏠 Executing corrected redirect to /home...');
                 navigate('/home', { replace: true });
               }, 1000);
             } else {
-              console.error('❌ Enhanced session setting failed:', sessionResult.error);
-              setAutoLoginError(`Enhanced session error: ${sessionResult.error?.message || 'Unknown session error'}`);
+              console.error('❌ Corrected session setting failed:', sessionResult.error);
+              setAutoLoginError(`Session error: ${sessionResult.error?.message || 'Unknown session error'}`);
               setIsDeveloperAutoLogin(false);
             }
           } else {
-            console.log('⚠️ Enhanced auto-login response invalid or failed');
-            setAutoLoginError(data?.error || 'Invalid enhanced auto-login response');
+            console.log('⚠️ Corrected auto-login response invalid or failed');
+            setAutoLoginError(data?.error || 'Invalid corrected auto-login response');
             setIsDeveloperAutoLogin(false);
           }
         } catch (error: any) {
-          console.error('💥 Enhanced auto-login exception:', error);
-          setAutoLoginError(`Enhanced exception: ${error.message}`);
+          console.error('💥 Corrected auto-login exception:', error);
+          console.error('🔴 Auth error details:', error);
+          setAutoLoginError(`Exception: ${error.message}`);
           setIsDeveloperAutoLogin(false);
         }
       }
     };
 
-    // Execute enhanced auto-login after a short delay
+    // Execute corrected auto-login after a short delay
     const autoLoginTimer = setTimeout(executeDeveloperAutoLogin, 300);
     return () => clearTimeout(autoLoginTimer);
   }, [authLoading, isAuthenticated, developerAutoLoginAttempted, navigate]);
@@ -173,15 +182,15 @@ const Login = () => {
         <div className="text-center">
           <Spinner className="h-8 w-8 text-white mx-auto mb-4" />
           <p className="text-white/70">
-            {isDeveloperAutoLogin ? '🔐 Enhanced Developer Auto-Login in progress...' : 'Verifying authentication...'}
+            {isDeveloperAutoLogin ? '🔐 Corrected Developer Auto-Login in progress...' : 'Verifying authentication...'}
           </p>
           {isDeveloperAutoLogin && (
             <div className="mt-4 text-center max-w-md">
               <p className="text-xs text-cyan-400">
-                Enhanced auto-login for wikus77@hotmail.it
+                Corrected auto-login for wikus77@hotmail.it
               </p>
               <p className="text-xs text-white/50 mt-1">
-                Using admin session creation
+                Using corrected token generation
               </p>
             </div>
           )}
@@ -210,13 +219,13 @@ const Login = () => {
           </p>
           {!developerAutoLoginAttempted && (
             <p className="text-xs text-cyan-400 mt-2">
-              🔐 Enhanced developer auto-login enabled
+              🔐 Corrected developer auto-login enabled
             </p>
           )}
           {autoLoginError && (
             <div className="mt-2 p-2 bg-red-900/20 border border-red-500/30 rounded">
               <p className="text-xs text-red-400">
-                Enhanced auto-login error: {autoLoginError}
+                Auto-login error: {autoLoginError}
               </p>
             </div>
           )}
@@ -241,9 +250,9 @@ const Login = () => {
               </Link>
             </p>
             
-            {/* Enhanced Developer Controls */}
+            {/* Corrected Developer Controls */}
             <div className="mt-4 pt-4 border-t border-gray-700">
-              <p className="text-xs text-gray-500 mb-2">Enhanced Developer Controls</p>
+              <p className="text-xs text-gray-500 mb-2">Corrected Developer Controls</p>
               <button 
                 onClick={async () => {
                   setDeveloperAutoLoginAttempted(false);
@@ -252,22 +261,22 @@ const Login = () => {
                 }}
                 className="text-xs text-cyan-400 hover:text-cyan-300 mr-4"
               >
-                🔄 Retry Enhanced Auto-Login
+                🔄 Retry Corrected Auto-Login
               </button>
               <button 
                 onClick={() => {
-                  console.log('🔍 Enhanced session state:', {
+                  console.log('🔍 Corrected session state:', {
                     isAuthenticated,
                     authLoading,
                     developerAutoLoginAttempted,
                     autoLoginError,
                     timestamp: new Date().toISOString()
                   });
-                  toast.info('Enhanced diagnostic info logged to console');
+                  toast.info('Corrected diagnostic info logged to console');
                 }}
                 className="text-xs text-gray-500 hover:text-gray-400"
               >
-                🔍 Enhanced Debug Info
+                🔍 Corrected Debug Info
               </button>
             </div>
           </div>
