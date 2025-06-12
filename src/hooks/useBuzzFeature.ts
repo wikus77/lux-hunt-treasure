@@ -29,7 +29,7 @@ const generateUniqueClue = (userId: string, buzzCount: number): string => {
   return uniqueClues[index];
 };
 
-export function useBuzzFeature() {
+export const useBuzzFeature = () => {
   const { showDialog, setShowDialog, showExplosion, setShowExplosion, 
           showClueBanner, setShowClueBanner, handleExplosionCompleted } = useBuzzUiState();
   
@@ -242,6 +242,47 @@ export function useBuzzFeature() {
       duration: 3000,
     });
   };
+
+  const processBuzzPurchase = useCallback(async (buzzType: 'single' | 'map', areaId?: string) => {
+    const { data } = await createStripeCheckout(buzzType, areaId);
+    
+    if (data.success) {
+      console.log('✅ BUZZ: Payment successful, processing buzz action');
+      
+      let buzzResult;
+      if (buzzType === 'single') {
+        buzzResult = await handleBuzzPress();
+      } else {
+        buzzResult = await handleMapBuzzPress(areaId!);
+      }
+
+      if (buzzResult?.success) {
+        console.log('✅ BUZZ: Action completed successfully');
+        // FIXED: Call reloadNotifications without arguments
+        reloadNotifications();
+        
+        setShowPaymentModal(false);
+        toast.success(
+          buzzType === 'single' 
+            ? "🎯 BUZZ attivato! Hai ricevuto un nuovo indizio!" 
+            : "🗺️ BUZZ MAPPA completato! Area sbloccata!"
+        );
+      } else {
+        console.error('❌ BUZZ: Action failed after successful payment');
+        toast.error("Pagamento effettuato ma errore nell'elaborazione. Contatta il supporto.");
+      }
+    }
+  }, [handleBuzzPress, handleMapBuzzPress, createStripeCheckout, reloadNotifications]);
+
+  const handleQuickBuzz = useCallback(async () => {
+    const result = await handleBuzzPress();
+    if (result?.success) {
+      console.log('✅ BUZZ: Quick buzz successful');
+      // FIXED: Call reloadNotifications without arguments
+      reloadNotifications();
+      toast.success("🎯 BUZZ attivato! Hai ricevuto un nuovo indizio!");
+    }
+  }, [handleBuzzPress, reloadNotifications]);
 
   return {
     showDialog,

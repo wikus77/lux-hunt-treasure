@@ -2,6 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import GradientBox from "@/components/ui/gradient-box";
+import Porsche3D from "@/components/3d/Porsche3D";
 
 interface PrizeVisionProps {
   progress: number;
@@ -34,22 +35,20 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
         </div>
       </div>
       
-      <div className="relative h-60 sm:h-72 md:h-80 lg:h-96">
-        {/* Prize image - car covered by cloth on red carpet */}
+      <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
+        {/* 3D Porsche component with blur filter */}
         <div 
-          className="w-full h-full bg-center bg-contain bg-no-repeat transition-all duration-700"
-          style={{ 
-            backgroundImage: "url('/lovable-uploads/4c6e1a87-13cd-49d8-89dc-83704f46ebd5.png')", 
-            filter: getBlurLevel(),
-            backgroundPosition: "center",
-          }}
-        ></div>
+          className="w-full h-full transition-all duration-700"
+          style={{ filter: getBlurLevel() }}
+        >
+          <Porsche3D className="w-full h-full" />
+        </div>
         
         {/* Status overlay */}
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           {status === "locked" && (
             <motion.div 
-              className="p-3 rounded-full bg-black/50 backdrop-blur-sm"
+              className="p-3 rounded-full bg-black/50 backdrop-blur-sm pointer-events-auto"
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ repeat: Infinity, duration: 2 }}
             >
@@ -61,7 +60,7 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
           )}
           
           {status !== "locked" && status !== "unlocked" && (
-            <div className="p-4 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-center max-w-xs">
+            <div className="p-4 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-center max-w-xs pointer-events-auto">
               <p className="text-white font-medium">
                 {status === "partial" ? "Visibilità parziale. Acquista più indizi per sbloccare." : "Sei vicino! Ancora qualche indizio per la vittoria."}
               </p>
