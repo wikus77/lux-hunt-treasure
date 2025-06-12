@@ -55,41 +55,45 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     checkSubscription();
   }, [userId]);
 
-  // Load current buzz cost and daily count
-  useEffect(() => {
-    const loadBuzzCost = async () => {
-      if (!userId) return;
+  // FIXED: Load current buzz cost and daily count with proper refresh
+  const loadBuzzData = async () => {
+    if (!userId) return;
+    
+    try {
+      console.log('📊 BUZZ: Loading daily count and cost for user:', userId);
       
-      try {
-        // Get today's buzz count
-        const { data: countData, error: countError } = await supabase
-          .from('user_buzz_counter')
-          .select('buzz_count')
-          .eq('user_id', userId)
-          .eq('date', new Date().toISOString().split('T')[0])
-          .single();
+      // Get today's buzz count
+      const { data: countData, error: countError } = await supabase
+        .from('user_buzz_counter')
+        .select('buzz_count')
+        .eq('user_id', userId)
+        .eq('date', new Date().toISOString().split('T')[0])
+        .single();
 
-        const currentCount = countData?.buzz_count || 0;
-        setDailyCount(currentCount);
+      const currentCount = countData?.buzz_count || 0;
+      console.log('📊 BUZZ: Current daily count loaded:', currentCount);
+      setDailyCount(currentCount);
 
-        // Calculate cost for next buzz
-        const { data: costData, error: costError } = await supabase.rpc('calculate_buzz_price', {
-          daily_count: currentCount + 1
-        });
+      // Calculate cost for next buzz
+      const { data: costData, error: costError } = await supabase.rpc('calculate_buzz_price', {
+        daily_count: currentCount + 1
+      });
 
-        if (costError) {
-          console.error("Error calculating cost:", costError);
-          return;
-        }
-
-        setBuzzCost(costData || 1.99);
-        console.log(`💰 BUZZ: Current cost calculated: €${costData || 1.99}, daily count: ${currentCount}`);
-      } catch (error) {
-        console.error("Error loading buzz cost:", error);
+      if (costError) {
+        console.error("Error calculating cost:", costError);
+        return;
       }
-    };
 
-    loadBuzzCost();
+      const newCost = costData || 1.99;
+      setBuzzCost(newCost);
+      console.log(`💰 BUZZ: Cost updated to €${newCost} for count ${currentCount + 1}`);
+    } catch (error) {
+      console.error("Error loading buzz data:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadBuzzData();
   }, [userId]);
 
   const handleBuzzPress = async () => {
@@ -188,15 +192,15 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           window.plausible('clue_unlocked');
         }
         
-        // Update counter for next use
+        // FIXED: Update counter immediately in UI and reload data
         const newCount = dailyCount + 1;
         setDailyCount(newCount);
+        console.log(`📊 BUZZ: UI counter updated to ${newCount}/50`);
         
-        // Calculate new cost for display
-        const { data: newCostData } = await supabase.rpc('calculate_buzz_price', {
-          daily_count: newCount + 1
-        });
-        if (newCostData) setBuzzCost(newCostData);
+        // Reload all buzz data to ensure sync
+        setTimeout(() => {
+          loadBuzzData();
+        }, 500);
 
         // Get dynamic clue content
         const dynamicClueContent = response.clue_text || `Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`;
@@ -226,9 +230,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           console.error("❌ BUZZ: Error creating notification:", notifError);
         }
 
-        // ONLY show success toast AFTER successful generation
-        toast.success("Nuovo indizio sbloccato!", {
+        // FIXED: Show success toast with better messaging
+        toast.success("🎯 Nuovo indizio sbloccato!", {
           description: dynamicClueContent,
+          duration: 4000,
         });
         
         // Create app notification in BUZZ category
@@ -267,8 +272,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         console.error("❌ BUZZ: API error:", response.errorMessage);
         const errorMessage = response.errorMessage || "Errore sconosciuto";
         setError(errorMessage);
-        toast.error("Errore", {
+        
+        // FIXED: Show error toast with clear message
+        toast.error("❌ Errore BUZZ", {
           description: errorMessage,
+          duration: 3000,
         });
         
         // Log failure
@@ -291,8 +299,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     } catch (error) {
       console.error("❌ BUZZ: Error during API call:", error);
       setError("Si è verificato un errore di comunicazione con il server");
-      toast.error("Errore di connessione", {
+      
+      // FIXED: Show connection error toast
+      toast.error("❌ Errore di connessione", {
         description: "Impossibile contattare il server. Riprova più tardi.",
+        duration: 3000,
       });
       
       // Log connection error
