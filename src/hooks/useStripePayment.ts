@@ -85,7 +85,7 @@ export const useStripePayment = () => {
     });
   };
 
-  // Enhanced BUZZ purchase validation with MANDATORY payment check
+  // CRITICAL: Enhanced BUZZ purchase validation with MANDATORY payment check
   const processBuzzPurchase = async (
     isMapBuzz = false, 
     customPrice?: number, 
@@ -110,7 +110,7 @@ export const useStripePayment = () => {
         return false;
       }
 
-      // Check for developer bypass
+      // Check for developer bypass ONLY for wikus77@hotmail.it
       const isDeveloper = currentUser.data.user?.email === 'wikus77@hotmail.it';
       
       if (isDeveloper) {
@@ -119,7 +119,7 @@ export const useStripePayment = () => {
         return true;
       }
 
-      // Check for active subscription
+      // MANDATORY: Check for active subscription
       const { data: subscription, error: subError } = await supabase
         .from('subscriptions')
         .select('status, tier')
@@ -132,7 +132,7 @@ export const useStripePayment = () => {
         return true;
       }
 
-      // No subscription found, payment is MANDATORY
+      // CRITICAL: No subscription found, payment is MANDATORY
       console.log('💳 No active subscription, payment REQUIRED');
 
       const result = await createCheckoutSession({
@@ -145,7 +145,7 @@ export const useStripePayment = () => {
         paymentMethod
       });
 
-      // For BUZZ purchases, payment is MANDATORY for non-subscribers
+      // CRITICAL: For BUZZ purchases, payment is MANDATORY for non-subscribers
       if (!result) {
         console.error('❌ Payment session creation failed');
         toast.error('Pagamento richiesto', {

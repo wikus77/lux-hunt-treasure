@@ -33,18 +33,13 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const handleBuzzPress = async () => {
     if (isGenerating || paymentLoading || !user?.id) return;
     
-    console.log('🗺️ BUZZ MAPPA: Starting generation process', {
-      userId: user.id,
-      mapCenter,
-      currentPrice: buzzMapPrice,
-      radiusKm
-    });
+    console.log('🗺️ BUZZ MAPPA: Starting generation process with MANDATORY payment verification');
     
     setIsGenerating(true);
     playSound('buzz');
     
     try {
-      // Check for active subscription first
+      // MANDATORY: Check for active subscription first
       const { data: subscription, error: subError } = await supabase
         .from('subscriptions')
         .select('status, tier')
@@ -54,31 +49,35 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 
       const isDeveloper = user.email === 'wikus77@hotmail.it';
       
+      // CRITICAL: Block if no subscription and not developer
       if (!isDeveloper && (subError || !subscription)) {
-        // No subscription found, payment required
-        console.log('💳 BUZZ MAPPA: Payment required, no active subscription');
-        toast.info("Pagamento richiesto", {
+        console.log('💳 BUZZ MAPPA: Payment REQUIRED - no active subscription found');
+        
+        // Show payment requirement toast
+        toast.error("Pagamento richiesto", {
           description: `Per generare un'area BUZZ è necessario pagare €${buzzMapPrice.toFixed(2)} o attivare un abbonamento.`
         });
 
-        // Process payment
+        // MANDATORY: Process payment before allowing generation
         const paymentSuccess = await processBuzzPurchase(true, buzzMapPrice);
         
         if (!paymentSuccess) {
           toast.error("Pagamento necessario", {
-            description: "Il pagamento è richiesto per generare aree BUZZ."
+            description: "Il pagamento è obbligatorio per generare aree BUZZ."
           });
           setIsGenerating(false);
           return;
         }
+        
+        console.log('✅ BUZZ MAPPA: Payment completed successfully');
       } else if (isDeveloper) {
-        console.log('🔓 BUZZ MAPPA: Developer bypass activated');
+        console.log('🔓 BUZZ MAPPA: Developer bypass activated for wikus77@hotmail.it');
       } else {
-        console.log('✅ BUZZ MAPPA: Active subscription found, proceeding');
+        console.log('✅ BUZZ MAPPA: Active subscription verified, proceeding');
       }
 
-      // Generate map area using the unified API
-      if (!mapCenter) {
+      // Verify map center coordinates
+      if (!mapCenter || !Array.isArray(mapCenter) || mapCenter.length !== 2) {
         toast.error("Errore posizione", {
           description: "Impossibile determinare la posizione sulla mappa."
         });
@@ -86,17 +85,25 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         return;
       }
 
+      console.log('🗺️ BUZZ MAPPA: Calling unified API for map generation');
+
+      // Generate map area using the unified API with coordinates
       const response = await callBuzzApi({
         userId: user.id,
         generateMap: true,
         coordinates: { lat: mapCenter[0], lng: mapCenter[1] }
       });
 
-      if (response.success) {
-        console.log('✅ BUZZ MAPPA: Area generated successfully', response);
+      if (response.success && response.radius_km && response.lat && response.lng) {
+        console.log('✅ BUZZ MAPPA: Area generated successfully with response:', response);
         
-        // Update generation count
+        // Calculate actual radius for this generation
         const actualRadius = incrementGeneration();
+        
+        // ONLY show success toast AFTER real generation
+        toast.success("Area BUZZ generata!", {
+          description: `Nuova area di ricerca attiva con raggio ${actualRadius}km`
+        });
         
         // Create notification in database
         await supabase
@@ -110,13 +117,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             created_at: new Date().toISOString()
           });
 
-        // Show success toast ONLY after real generation
-        toast.success("Area BUZZ generata!", {
-          description: `Nuova area di ricerca attiva con raggio ${actualRadius}km`
-        });
+        console.log('✅ BUZZ MAPPA: Notification registered in user_notifications');
         
-        // Notify parent component
-        if (onAreaGenerated && response.lat && response.lng && response.radius_km) {
+        // Notify parent component with actual generated area data
+        if (onAreaGenerated) {
           onAreaGenerated(response.lat, response.lng, response.radius_km);
         }
         
@@ -125,7 +129,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           handleBuzz();
         }
       } else {
-        console.error('❌ BUZZ MAPPA: Generation failed', response.errorMessage);
+        console.error('❌ BUZZ MAPPA: Generation failed or incomplete response', response);
         toast.error("Errore generazione", {
           description: response.errorMessage || "Impossibile generare l'area BUZZ"
         });

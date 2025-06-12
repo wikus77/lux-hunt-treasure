@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
-import { toast } from 'sonner';
 
 export const useBuzzMapPricing = () => {
   const [buzzMapPrice, setBuzzMapPrice] = useState(7.99);
@@ -54,12 +53,12 @@ export const useBuzzMapPricing = () => {
         const generationCount = mapAreas?.length || 0;
         setMapGenerationCount(generationCount);
 
-        // Calculate radius with progressive reduction: 500km -> 5km
-        // Formula: radius = max(5, 500 * (0.7^generation_count))
+        // CRITICAL: Apply correct progression formula: radius = 500 * (0.7^generation_count)
+        // Minimum radius: 5km (5000 meters)
         let calculatedRadius = Math.max(5, 500 * Math.pow(0.7, generationCount));
         setRadiusKm(Math.round(calculatedRadius));
         
-        console.log(`🗺️ Map pricing calculated: price=€${price}, radius=${calculatedRadius}km, generation=${generationCount}`);
+        console.log(`🗺️ BUZZ MAPPA: Pricing calculated - price=€${price}, radius=${calculatedRadius.toFixed(2)}km, generation=${generationCount}`);
         
       } catch (err) {
         console.error('Exception fetching user data:', err);
@@ -78,11 +77,17 @@ export const useBuzzMapPricing = () => {
     const newCount = mapGenerationCount + 1;
     setMapGenerationCount(newCount);
     
-    // Update radius for next generation
-    let newRadius = Math.max(5, 500 * Math.pow(0.7, newCount));
-    setRadiusKm(Math.round(newRadius));
+    // CRITICAL: Calculate radius for CURRENT generation (before incrementing)
+    const currentRadius = Math.max(5, 500 * Math.pow(0.7, mapGenerationCount));
     
-    return Math.round(500 * Math.pow(0.7, mapGenerationCount)); // Return current radius for this generation
+    // Update radius for NEXT generation display
+    const nextRadius = Math.max(5, 500 * Math.pow(0.7, newCount));
+    setRadiusKm(Math.round(nextRadius));
+    
+    console.log(`🗺️ BUZZ MAPPA: Generation incremented to ${newCount}, current radius: ${currentRadius.toFixed(2)}km, next radius: ${nextRadius.toFixed(2)}km`);
+    
+    // Return current radius for this generation
+    return Math.round(currentRadius);
   };
 
   return { 

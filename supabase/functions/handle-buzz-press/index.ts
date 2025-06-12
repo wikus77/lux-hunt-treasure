@@ -178,7 +178,7 @@ serve(async (req) => {
 
     console.log(`✅ Clue saved with ID: ${clueData.clue_id}`);
 
-    // FORCE GENERATE MAP ALWAYS WHEN generateMap = true with PROGRESSIVE RADIUS
+    // FORCE GENERATE MAP ALWAYS WHEN generateMap = true with CORRECT PROGRESSIVE RADIUS
     let response: BuzzResponse = {
       success: true,
       clue_text: clueText,
@@ -219,8 +219,8 @@ serve(async (req) => {
       const currentGeneration = (existingAreas?.length || 0) + 1;
       console.log(`📍 Current generation count: ${currentGeneration}`);
       
-      // STEP 3: Calculate PROGRESSIVE radius: 500km -> 5km
-      // Formula: radius = max(5, 500 * (0.7^(generation-1)))
+      // STEP 3: Calculate CORRECT PROGRESSIVE radius: 500km → 5km
+      // CRITICAL FORMULA: radius = max(5, 500 * (0.7^(generation-1)))
       let radius_km = Math.max(5, 500 * Math.pow(0.7, currentGeneration - 1));
       
       console.log(`📏 PROGRESSIVE RADIUS - Calculated radius: ${radius_km.toFixed(2)}km (generation: ${currentGeneration})`);
