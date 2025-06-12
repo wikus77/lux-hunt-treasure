@@ -222,15 +222,19 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           console.error("❌ BUZZ: Failed to create app notification:", notifError);
         }
         
-        // Log event in buzz_logs
+        // Log event in buzz_logs - using raw insert without the action field
         try {
           await supabase
             .from('buzz_logs')
             .insert({
               user_id: userId,
-              action: 'buzz_generated',
-              cost: buzzCost,
-              daily_count: newCount
+              step: 'buzz_generated',
+              details: {
+                cost: buzzCost,
+                daily_count: newCount,
+                action: 'BUZZ_CLICK',
+                timestamp: new Date().toISOString()
+              }
             });
           console.log("✅ BUZZ: Event logged in buzz_logs");
         } catch (logError) {

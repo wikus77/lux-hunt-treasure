@@ -167,6 +167,7 @@ export type Database = {
       }
       buzz_logs: {
         Row: {
+          action: string | null
           created_at: string | null
           details: Json | null
           id: string
@@ -174,6 +175,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          action?: string | null
           created_at?: string | null
           details?: Json | null
           id?: string
@@ -181,6 +183,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          action?: string | null
           created_at?: string | null
           details?: Json | null
           id?: string
