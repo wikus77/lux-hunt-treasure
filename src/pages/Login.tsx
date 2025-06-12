@@ -16,6 +16,7 @@ const Login = () => {
   const [developerAutoLoginAttempted, setDeveloperAutoLoginAttempted] = useState(false);
   const [isDeveloperAutoLogin, setIsDeveloperAutoLogin] = useState(false);
   const [autoLoginError, setAutoLoginError] = useState<string | null>(null);
+  const [autoLoginDetails, setAutoLoginDetails] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -38,75 +39,116 @@ const Login = () => {
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);
 
-  // 🔐 DEVELOPER AUTO-LOGIN - DEFINITIVE IMPLEMENTATION
+  // 🔐 ENHANCED DEVELOPER AUTO-LOGIN WITH DETAILED DIAGNOSTICS
   useEffect(() => {
     const executeDeveloperAutoLogin = async () => {
       if (!developerAutoLoginAttempted && !authLoading && !isAuthenticated) {
-        console.log('🔄 STARTING DEVELOPER AUTO-LOGIN FOR wikus77@hotmail.it');
+        console.log('🔄 STARTING ENHANCED DEVELOPER AUTO-LOGIN FOR wikus77@hotmail.it');
         setDeveloperAutoLoginAttempted(true);
         setIsDeveloperAutoLogin(true);
         setAutoLoginError(null);
+        setAutoLoginDetails(null);
         
         try {
-          // Call the dedicated developer login function
-          console.log('📡 Calling login-no-captcha function...');
-          const { data, error } = await supabase.functions.invoke('login-no-captcha', {
+          // Call the dedicated developer login function with enhanced logging
+          console.log('📡 Calling login-no-captcha function with diagnostics...');
+          
+          const functionResponse = await supabase.functions.invoke('login-no-captcha', {
             headers: {
               'Content-Type': 'application/json',
-              'User-Agent': 'M1SSION-Developer-AutoLogin',
+              'User-Agent': 'M1SSION-Developer-AutoLogin-Enhanced',
               'Accept': 'application/json'
             }
           });
 
-          if (error) {
-            console.error('❌ Auto-login function error:', error);
-            setAutoLoginError(`Function error: ${error.message}`);
+          console.log('📋 Function response received:', {
+            data: functionResponse.data,
+            error: functionResponse.error,
+            status: 'Response logged'
+          });
+
+          if (functionResponse.error) {
+            console.error('❌ Auto-login function error:', functionResponse.error);
+            setAutoLoginError(`Function error: ${functionResponse.error.message}`);
+            setAutoLoginDetails(`Error details: ${JSON.stringify(functionResponse.error)}`);
             setIsDeveloperAutoLogin(false);
             return;
           }
 
-          console.log('📋 Auto-login response:', data);
+          const data = functionResponse.data;
+          console.log('📊 Function data analysis:', {
+            hasData: !!data,
+            isSuccess: data?.success,
+            hasAccessToken: !!data?.access_token,
+            hasRefreshToken: !!data?.refresh_token,
+            tokenLength: data?.access_token?.length || 0,
+            method: data?.method
+          });
 
           if (data?.success && data?.access_token) {
-            console.log('✅ DEVELOPER AUTO-LOGIN SUCCESS - Setting session...');
+            console.log('✅ DEVELOPER AUTO-LOGIN SUCCESS - Analyzing tokens...');
             
-            // Force session with developer tokens
-            const { error: sessionError } = await supabase.auth.setSession({
+            // Detailed token analysis
+            console.log('🔍 Token Analysis:', {
+              accessTokenType: typeof data.access_token,
+              accessTokenLength: data.access_token.length,
+              refreshTokenType: typeof data.refresh_token,
+              refreshTokenLength: data.refresh_token?.length || 0,
+              expiresAt: data.expires_at,
+              tokenStructure: data.access_token.split('.').length === 3 ? 'JWT format' : 'Custom format'
+            });
+            
+            // Force session with enhanced error handling
+            console.log('🔧 Setting session with received tokens...');
+            const sessionResult = await supabase.auth.setSession({
               access_token: data.access_token,
               refresh_token: data.refresh_token || ''
             });
 
-            if (!sessionError) {
+            console.log('📊 Session result:', {
+              hasError: !!sessionResult.error,
+              hasData: !!sessionResult.data,
+              hasSession: !!sessionResult.data?.session,
+              hasUser: !!sessionResult.data?.user,
+              errorMessage: sessionResult.error?.message
+            });
+
+            if (!sessionResult.error && sessionResult.data?.session) {
               console.log('✅ DEVELOPER SESSION SET SUCCESSFULLY');
+              console.log('👤 User authenticated:', sessionResult.data.user?.email);
+              
               toast.success('🔐 Developer Auto-Login Successful', {
-                description: 'Welcome back, developer! Redirecting to home...'
+                description: `Welcome back! Method: ${data.method}`
               });
               
-              // Immediate redirect
+              // Enhanced redirect with verification
               setTimeout(() => {
-                console.log('🏠 Redirecting to /home...');
+                console.log('🏠 Executing redirect to /home...');
                 navigate('/home', { replace: true });
-              }, 1000);
+              }, 1500);
             } else {
-              console.error('❌ Session setting error:', sessionError);
-              setAutoLoginError(`Session error: ${sessionError.message}`);
+              console.error('❌ Session setting failed:', sessionResult.error);
+              setAutoLoginError(`Session error: ${sessionResult.error?.message || 'Unknown session error'}`);
+              setAutoLoginDetails(`Session details: ${JSON.stringify(sessionResult.error)}`);
               setIsDeveloperAutoLogin(false);
             }
           } else {
-            console.log('⚠️ Auto-login not available or failed');
-            setAutoLoginError(data?.error || 'Auto-login response invalid');
+            console.log('⚠️ Auto-login response invalid or failed');
+            setAutoLoginError(data?.error || 'Invalid auto-login response');
+            setAutoLoginDetails(`Response: ${JSON.stringify(data)}`);
             setIsDeveloperAutoLogin(false);
           }
         } catch (error: any) {
           console.error('💥 Auto-login exception:', error);
           setAutoLoginError(`Exception: ${error.message}`);
+          setAutoLoginDetails(`Stack: ${error.stack || 'No stack trace'}`);
           setIsDeveloperAutoLogin(false);
         }
       }
     };
 
     // Execute auto-login after a short delay
-    const autoLoginTimer = setTimeout(executeDeveloperAutoLogin, 300);
+    const autoLoginTimer = setTimeout(executeDeveloperAutoLogin, 500);
     return () => clearTimeout(autoLoginTimer);
   }, [authLoading, isAuthenticated, developerAutoLoginAttempted, navigate]);
 
@@ -146,15 +188,15 @@ const Login = () => {
         <div className="text-center">
           <Spinner className="h-8 w-8 text-white mx-auto mb-4" />
           <p className="text-white/70">
-            {isDeveloperAutoLogin ? '🔐 Developer Auto-Login in progress...' : 'Verifying authentication...'}
+            {isDeveloperAutoLogin ? '🔐 Enhanced Developer Auto-Login in progress...' : 'Verifying authentication...'}
           </p>
           {isDeveloperAutoLogin && (
-            <div className="mt-4 text-center">
+            <div className="mt-4 text-center max-w-md">
               <p className="text-xs text-cyan-400">
                 Auto-login for wikus77@hotmail.it
               </p>
               <p className="text-xs text-white/50 mt-1">
-                No password or CAPTCHA required
+                Enhanced diagnostics mode active
               </p>
             </div>
           )}
@@ -183,13 +225,20 @@ const Login = () => {
           </p>
           {!developerAutoLoginAttempted && (
             <p className="text-xs text-cyan-400 mt-2">
-              🔐 Developer auto-login enabled (NO PASSWORD)
+              🔐 Enhanced developer auto-login enabled
             </p>
           )}
           {autoLoginError && (
-            <p className="text-xs text-red-400 mt-2">
-              Auto-login error: {autoLoginError}
-            </p>
+            <div className="mt-2 p-2 bg-red-900/20 border border-red-500/30 rounded">
+              <p className="text-xs text-red-400">
+                Auto-login error: {autoLoginError}
+              </p>
+              {autoLoginDetails && (
+                <p className="text-xs text-red-300/70 mt-1">
+                  {autoLoginDetails}
+                </p>
+              )}
+            </div>
           )}
         </div>
 
@@ -212,27 +261,34 @@ const Login = () => {
               </Link>
             </p>
             
-            {/* Developer Controls */}
+            {/* Enhanced Developer Controls */}
             <div className="mt-4 pt-4 border-t border-gray-700">
-              <p className="text-xs text-gray-500 mb-2">Developer Controls</p>
+              <p className="text-xs text-gray-500 mb-2">Enhanced Developer Controls</p>
               <button 
                 onClick={async () => {
                   setDeveloperAutoLoginAttempted(false);
+                  setAutoLoginError(null);
+                  setAutoLoginDetails(null);
                   window.location.reload();
                 }}
                 className="text-xs text-cyan-400 hover:text-cyan-300 mr-4"
               >
-                🔄 Retry Auto-Login
+                🔄 Retry Enhanced Auto-Login
               </button>
               <button 
                 onClick={() => {
-                  localStorage.setItem('auto_login_enabled', 'false');
-                  toast.info('Auto-login disabled');
-                  window.location.reload();
+                  console.log('🔍 Current session state:', {
+                    isAuthenticated,
+                    authLoading,
+                    developerAutoLoginAttempted,
+                    autoLoginError,
+                    autoLoginDetails
+                  });
+                  toast.info('Diagnostic info logged to console');
                 }}
                 className="text-xs text-gray-500 hover:text-gray-400"
               >
-                ❌ Disable Auto-Login
+                🔍 Debug Info
               </button>
             </div>
           </div>
