@@ -6,9 +6,9 @@ import { motion } from 'framer-motion';
 const LogoBackground = () => {
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-      <div className="text-6xl md:text-8xl font-orbitron font-bold opacity-10 select-none">
+      <div className="text-6xl md:text-8xl font-orbitron font-bold opacity-15 select-none">
         <span className="text-[#00BFFF]" style={{ 
-          textShadow: "0 0 20px rgba(0, 191, 255, 0.3)"
+          textShadow: "0 0 20px rgba(0, 191, 255, 0.4)"
         }}>M1</span>
         <span className="text-white">SSION</span>
       </div>
@@ -16,7 +16,7 @@ const LogoBackground = () => {
   );
 };
 
-// Enhanced CSS-based 3D Porsche 992.1 Turbo Model
+// Enhanced CSS-based 3D Porsche 992.1 Turbo - Black Edition Showroom
 const CSS3DPorsche = () => {
   const [rotation, setRotation] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -24,7 +24,7 @@ const CSS3DPorsche = () => {
   useEffect(() => {
     if (!isHovered) {
       const interval = setInterval(() => {
-        setRotation(prev => prev + 0.3);
+        setRotation(prev => prev + 0.2);
       }, 16); // ~60fps
 
       return () => clearInterval(interval);
@@ -33,163 +33,181 @@ const CSS3DPorsche = () => {
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
+      {/* Red carpet base */}
+      <div 
+        className="absolute bottom-0 w-full h-8"
+        style={{
+          background: 'linear-gradient(90deg, #8B0000, #DC143C, #8B0000)',
+          borderRadius: '2px',
+          transform: 'perspective(800px) rotateX(85deg)',
+          transformOrigin: 'bottom',
+          boxShadow: '0 -2px 10px rgba(220, 20, 60, 0.3)'
+        }}
+      />
+      
       <div 
         className="transform-gpu transition-transform duration-300 cursor-pointer"
         style={{ 
-          transform: `perspective(1200px) rotateY(${rotation}deg) rotateX(-8deg)`,
+          transform: `perspective(1200px) rotateY(${rotation}deg) rotateX(-5deg)`,
           transformStyle: 'preserve-3d'
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={() => setRotation(prev => prev + 45)}
       >
-        {/* Car Container - Porsche 992.1 Turbo proportions */}
-        <div className="relative" style={{ width: '320px', height: '160px' }}>
+        {/* Car Container - Porsche 992.1 Turbo Black Edition */}
+        <div className="relative" style={{ width: '340px', height: '170px' }}>
           
-          {/* Main Car Body - Lower and wider for Turbo look */}
+          {/* Main Car Body - Lower, wider, more aggressive for 992.1 Turbo */}
           <div 
             className="absolute rounded-lg shadow-2xl"
             style={{
               width: '100%',
-              height: '45%',
-              top: '30%',
-              background: 'linear-gradient(145deg, #0a0a0a, #1a1a1a, #0a0a0a)',
-              boxShadow: '0 15px 50px rgba(0,0,0,0.9), inset 0 3px 6px rgba(255,255,255,0.1)',
+              height: '48%',
+              top: '28%',
+              background: 'linear-gradient(145deg, #000000, #1a1a1a, #000000)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.9), inset 0 4px 8px rgba(255,255,255,0.15), 0 0 30px rgba(255,255,255,0.1)',
               transform: 'translateZ(25px)',
-              borderRadius: '8px 8px 12px 12px'
+              borderRadius: '10px 10px 14px 14px',
+              border: '1px solid rgba(255,255,255,0.1)'
             }}
           />
           
-          {/* Porsche distinctive front - longer hood */}
+          {/* Porsche distinctive front - longer, more aggressive */}
           <div 
             className="absolute rounded-lg"
             style={{
-              width: '40%',
-              height: '28%',
-              top: '22%',
-              right: '3%',
-              background: 'linear-gradient(145deg, #0a0a0a, #2a2a2a, #0a0a0a)',
-              boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.1)',
+              width: '42%',
+              height: '32%',
+              top: '18%',
+              right: '2%',
+              background: 'linear-gradient(145deg, #000000, #2a2a2a, #000000)',
+              boxShadow: 'inset 0 3px 6px rgba(255,255,255,0.15), 0 8px 25px rgba(0,0,0,0.8)',
               transform: 'translateZ(30px)',
-              borderRadius: '6px 4px 8px 8px'
+              borderRadius: '8px 6px 10px 10px',
+              border: '1px solid rgba(255,255,255,0.08)'
             }}
           />
           
-          {/* Porsche cabin - characteristic sloped roofline */}
+          {/* Porsche cabin - characteristic sloped roofline 992.1 */}
           <div 
             className="absolute rounded-lg"
             style={{
-              width: '45%',
-              height: '22%',
-              top: '12%',
-              left: '28%',
-              background: 'linear-gradient(145deg, #0a0a0a, #2a2a2a)',
-              boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.1)',
+              width: '48%',
+              height: '26%',
+              top: '8%',
+              left: '26%',
+              background: 'linear-gradient(145deg, #000000, #2a2a2a)',
+              boxShadow: 'inset 0 3px 6px rgba(255,255,255,0.12), 0 6px 20px rgba(0,0,0,0.7)',
               transform: 'translateZ(35px)',
-              borderRadius: '6px 6px 4px 4px'
+              borderRadius: '8px 8px 6px 6px',
+              border: '1px solid rgba(255,255,255,0.06)'
             }}
           />
           
-          {/* Windshield - Porsche style */}
+          {/* Windshield - Porsche style with reflection */}
           <div 
             className="absolute rounded"
             style={{
-              width: '35%',
-              height: '18%',
-              top: '14%',
-              left: '32%',
-              background: 'linear-gradient(145deg, rgba(80,80,80,0.4), rgba(120,120,120,0.3))',
+              width: '38%',
+              height: '22%',
+              top: '10%',
+              left: '30%',
+              background: 'linear-gradient(145deg, rgba(100,100,100,0.6), rgba(160,160,160,0.4))',
               backdropFilter: 'blur(1px)',
               transform: 'translateZ(37px)',
-              borderRadius: '4px 4px 2px 2px'
+              borderRadius: '6px 6px 3px 3px',
+              boxShadow: '0 0 15px rgba(255,255,255,0.2)'
             }}
           />
           
-          {/* Turbo wheels - larger and more detailed */}
+          {/* Turbo wheels - larger, more detailed, black rims */}
           <div 
-            className="absolute rounded-full border-2 border-gray-500"
+            className="absolute rounded-full border-2 border-gray-700"
             style={{
-              width: '28px',
-              height: '28px',
-              bottom: '12%',
-              right: '12%',
-              background: 'radial-gradient(circle, #444, #111, #222)',
-              boxShadow: '0 6px 12px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.2)',
+              width: '32px',
+              height: '32px',
+              bottom: '8%',
+              right: '10%',
+              background: 'radial-gradient(circle, #222, #000, #111)',
+              boxShadow: '0 8px 16px rgba(0,0,0,0.9), inset 0 3px 6px rgba(255,255,255,0.25)',
               transform: 'translateZ(18px)'
             }}
           >
-            {/* Rim detail */}
-            <div className="absolute inset-2 rounded-full border border-gray-400 bg-gradient-to-r from-gray-600 to-gray-800"></div>
+            {/* Rim detail - Black sport rims */}
+            <div className="absolute inset-2 rounded-full border border-gray-600 bg-gradient-to-r from-gray-700 to-gray-900"></div>
+            <div className="absolute inset-3 rounded-full bg-black border border-gray-500"></div>
           </div>
           <div 
-            className="absolute rounded-full border-2 border-gray-500"
+            className="absolute rounded-full border-2 border-gray-700"
             style={{
-              width: '28px',
-              height: '28px',
-              bottom: '12%',
-              left: '12%',
-              background: 'radial-gradient(circle, #444, #111, #222)',
-              boxShadow: '0 6px 12px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.2)',
+              width: '32px',
+              height: '32px',
+              bottom: '8%',
+              left: '10%',
+              background: 'radial-gradient(circle, #222, #000, #111)',
+              boxShadow: '0 8px 16px rgba(0,0,0,0.9), inset 0 3px 6px rgba(255,255,255,0.25)',
               transform: 'translateZ(18px)'
             }}
           >
-            {/* Rim detail */}
-            <div className="absolute inset-2 rounded-full border border-gray-400 bg-gradient-to-r from-gray-600 to-gray-800"></div>
+            {/* Rim detail - Black sport rims */}
+            <div className="absolute inset-2 rounded-full border border-gray-600 bg-gradient-to-r from-gray-700 to-gray-900"></div>
+            <div className="absolute inset-3 rounded-full bg-black border border-gray-500"></div>
           </div>
           
-          {/* Distinctive Porsche headlights - LED style */}
+          {/* Distinctive Porsche headlights - Modern LED style */}
           <div 
             className="absolute rounded-full"
             style={{
-              width: '16px',
+              width: '18px',
+              height: '14px',
+              top: '32%',
+              right: '4%',
+              background: 'radial-gradient(ellipse, #ffffff, #f8f8f8)',
+              boxShadow: '0 0 20px rgba(255,255,255,0.95), 0 0 12px rgba(200,200,255,0.8)',
+              transform: 'translateZ(32px)',
+              borderRadius: '60% 40%'
+            }}
+          />
+          <div 
+            className="absolute rounded-full"
+            style={{
+              width: '18px',
+              height: '14px',
+              bottom: '32%',
+              right: '4%',
+              background: 'radial-gradient(ellipse, #ffffff, #f8f8f8)',
+              boxShadow: '0 0 20px rgba(255,255,255,0.95), 0 0 12px rgba(200,200,255,0.8)',
+              transform: 'translateZ(32px)',
+              borderRadius: '60% 40%'
+            }}
+          />
+          
+          {/* Porsche taillights - Distinctive LED strip design */}
+          <div 
+            className="absolute rounded"
+            style={{
+              width: '14px',
               height: '12px',
               top: '35%',
-              right: '6%',
-              background: 'radial-gradient(ellipse, #ffffff, #f0f0f0)',
-              boxShadow: '0 0 15px rgba(255,255,255,0.9), 0 0 8px rgba(200,200,255,0.6)',
-              transform: 'translateZ(32px)',
-              borderRadius: '50% 30%'
+              left: '2%',
+              background: 'linear-gradient(90deg, #ff4444, #cc0000)',
+              boxShadow: '0 0 15px rgba(255,68,68,0.8)',
+              transform: 'translateZ(27px)',
+              borderRadius: '50%'
             }}
           />
           <div 
-            className="absolute rounded-full"
+            className="absolute rounded"
             style={{
-              width: '16px',
+              width: '14px',
               height: '12px',
               bottom: '35%',
-              right: '6%',
-              background: 'radial-gradient(ellipse, #ffffff, #f0f0f0)',
-              boxShadow: '0 0 15px rgba(255,255,255,0.9), 0 0 8px rgba(200,200,255,0.6)',
-              transform: 'translateZ(32px)',
-              borderRadius: '50% 30%'
-            }}
-          />
-          
-          {/* Porsche taillights - distinctive design */}
-          <div 
-            className="absolute rounded"
-            style={{
-              width: '12px',
-              height: '10px',
-              top: '38%',
-              left: '3%',
-              background: 'radial-gradient(ellipse, #ff4444, #cc0000)',
-              boxShadow: '0 0 10px rgba(255,68,68,0.7)',
+              left: '2%',
+              background: 'linear-gradient(90deg, #ff4444, #cc0000)',
+              boxShadow: '0 0 15px rgba(255,68,68,0.8)',
               transform: 'translateZ(27px)',
-              borderRadius: '40%'
-            }}
-          />
-          <div 
-            className="absolute rounded"
-            style={{
-              width: '12px',
-              height: '10px',
-              bottom: '38%',
-              left: '3%',
-              background: 'radial-gradient(ellipse, #ff4444, #cc0000)',
-              boxShadow: '0 0 10px rgba(255,68,68,0.7)',
-              transform: 'translateZ(27px)',
-              borderRadius: '40%'
+              borderRadius: '50%'
             }}
           />
           
@@ -197,78 +215,96 @@ const CSS3DPorsche = () => {
           <div 
             className="absolute rounded"
             style={{
-              width: '8px',
-              height: '5px',
-              top: '22%',
-              right: '18%',
-              background: '#1a1a1a',
+              width: '10px',
+              height: '6px',
+              top: '18%',
+              right: '16%',
+              background: '#000000',
               transform: 'translateZ(40px)',
-              borderRadius: '3px'
+              borderRadius: '4px',
+              border: '1px solid rgba(255,255,255,0.1)'
             }}
           />
           <div 
             className="absolute rounded"
             style={{
-              width: '8px',
-              height: '5px',
-              bottom: '22%',
-              right: '18%',
-              background: '#1a1a1a',
+              width: '10px',
+              height: '6px',
+              bottom: '18%',
+              right: '16%',
+              background: '#000000',
               transform: 'translateZ(40px)',
-              borderRadius: '3px'
+              borderRadius: '4px',
+              border: '1px solid rgba(255,255,255,0.1)'
             }}
           />
           
-          {/* Turbo air intakes */}
+          {/* Turbo air intakes - More prominent */}
           <div 
             className="absolute rounded"
             style={{
-              width: '6px',
-              height: '8px',
-              top: '45%',
-              right: '25%',
-              background: 'linear-gradient(90deg, #000, #333)',
+              width: '8px',
+              height: '12px',
+              top: '42%',
+              right: '22%',
+              background: 'linear-gradient(90deg, #000, #222)',
               transform: 'translateZ(28px)',
-              borderRadius: '2px'
+              borderRadius: '3px',
+              border: '1px solid rgba(255,255,255,0.05)'
             }}
           />
           <div 
             className="absolute rounded"
             style={{
-              width: '6px',
-              height: '8px',
-              bottom: '45%',
-              right: '25%',
-              background: 'linear-gradient(90deg, #000, #333)',
+              width: '8px',
+              height: '12px',
+              bottom: '42%',
+              right: '22%',
+              background: 'linear-gradient(90deg, #000, #222)',
               transform: 'translateZ(28px)',
-              borderRadius: '2px'
+              borderRadius: '3px',
+              border: '1px solid rgba(255,255,255,0.05)'
             }}
           />
           
-          {/* Enhanced ground shadow with showroom effect */}
+          {/* Enhanced ground shadow with showroom lighting */}
           <div 
-            className="absolute rounded-full opacity-40"
+            className="absolute rounded-full opacity-50"
             style={{
-              width: '140%',
-              height: '25px',
-              bottom: '-15px',
-              left: '-20%',
-              background: 'radial-gradient(ellipse, rgba(0,0,0,0.8), rgba(0,0,0,0.3), transparent)',
+              width: '150%',
+              height: '30px',
+              bottom: '-20px',
+              left: '-25%',
+              background: 'radial-gradient(ellipse, rgba(0,0,0,0.9), rgba(0,0,0,0.4), transparent)',
               transform: 'translateZ(-15px)',
-              filter: 'blur(8px)'
+              filter: 'blur(10px)'
             }}
           />
           
-          {/* Showroom floor reflection */}
+          {/* Showroom floor reflection with red carpet */}
+          <div 
+            className="absolute rounded-full opacity-30"
+            style={{
+              width: '130%',
+              height: '20px',
+              bottom: '-10px',
+              left: '-15%',
+              background: 'linear-gradient(90deg, transparent, rgba(220,20,60,0.2), transparent)',
+              transform: 'translateZ(-5px)'
+            }}
+          />
+          
+          {/* Premium showroom lighting effects */}
           <div 
             className="absolute rounded-full opacity-20"
             style={{
-              width: '120%',
-              height: '15px',
-              bottom: '-8px',
-              left: '-10%',
-              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
-              transform: 'translateZ(-5px)'
+              width: '200%',
+              height: '40px',
+              top: '-20px',
+              left: '-50%',
+              background: 'radial-gradient(ellipse, rgba(255,255,255,0.3), transparent)',
+              transform: 'translateZ(-10px)',
+              filter: 'blur(15px)'
             }}
           />
           
@@ -282,58 +318,69 @@ const CSS3DPorsche = () => {
 const StaticPorsche = () => {
   return (
     <div className="relative w-full h-full flex items-center justify-center">
-      <div className="relative" style={{ width: '240px', height: '120px' }}>
-        {/* Simplified static car silhouette */}
+      {/* Red carpet */}
+      <div 
+        className="absolute bottom-0 w-full h-6"
+        style={{
+          background: 'linear-gradient(90deg, #8B0000, #DC143C, #8B0000)',
+          borderRadius: '2px'
+        }}
+      />
+      
+      <div className="relative" style={{ width: '280px', height: '140px' }}>
+        {/* Simplified static car silhouette - black luxury */}
         <div 
-          className="absolute bg-black rounded-lg shadow-2xl"
+          className="absolute bg-black rounded-lg shadow-2xl border"
           style={{
             width: '100%',
-            height: '40%',
-            top: '30%',
-            background: 'linear-gradient(145deg, #0a0a0a, #1a1a1a)',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.8)'
+            height: '45%',
+            top: '25%',
+            background: 'linear-gradient(145deg, #000000, #1a1a1a)',
+            boxShadow: '0 15px 50px rgba(0,0,0,0.9)',
+            border: '1px solid rgba(255,255,255,0.1)'
           }}
         />
         <div 
           className="absolute bg-black rounded-lg"
           style={{
-            width: '55%',
-            height: '25%',
-            top: '15%',
-            left: '22%',
-            background: 'linear-gradient(145deg, #0a0a0a, #2a2a2a)'
+            width: '60%',
+            height: '30%',
+            top: '10%',
+            left: '20%',
+            background: 'linear-gradient(145deg, #000000, #2a2a2a)',
+            border: '1px solid rgba(255,255,255,0.08)'
           }}
         />
-        {/* Wheels */}
+        {/* Wheels - Black sport rims */}
         <div 
-          className="absolute bg-gray-800 rounded-full border border-gray-600"
+          className="absolute bg-gray-900 rounded-full border-2 border-gray-700"
           style={{
-            width: '24px',
-            height: '24px',
-            bottom: '8%',
-            left: '12%',
-            background: 'radial-gradient(circle, #333, #111)'
+            width: '28px',
+            height: '28px',
+            bottom: '5%',
+            left: '10%',
+            background: 'radial-gradient(circle, #222, #000)'
           }}
         />
         <div 
-          className="absolute bg-gray-800 rounded-full border border-gray-600"
+          className="absolute bg-gray-900 rounded-full border-2 border-gray-700"
           style={{
-            width: '24px',
-            height: '24px',
-            bottom: '8%',
-            right: '12%',
-            background: 'radial-gradient(circle, #333, #111)'
+            width: '28px',
+            height: '28px',
+            bottom: '5%',
+            right: '10%',
+            background: 'radial-gradient(circle, #222, #000)'
           }}
         />
         {/* Headlight */}
         <div 
           className="absolute bg-white rounded-full"
           style={{
-            width: '10px',
-            height: '8px',
-            top: '40%',
-            right: '5%',
-            boxShadow: '0 0 12px rgba(255,255,255,0.8)'
+            width: '12px',
+            height: '10px',
+            top: '35%',
+            right: '3%',
+            boxShadow: '0 0 15px rgba(255,255,255,0.9)'
           }}
         />
       </div>
@@ -368,7 +415,9 @@ const Porsche3D: React.FC<Porsche3DProps> = ({ className = "" }) => {
 
   if (!isLoaded) {
     return (
-      <div className={`relative w-full h-full bg-gradient-to-b from-gray-900 to-black ${className}`}>
+      <div className={`relative w-full h-full ${className}`} style={{
+        background: 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #0a0a0a 100%)'
+      }}>
         <LogoBackground />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-white/70 text-sm">Caricamento showroom...</div>
@@ -378,7 +427,9 @@ const Porsche3D: React.FC<Porsche3DProps> = ({ className = "" }) => {
   }
 
   return (
-    <div className={`relative w-full h-full bg-gradient-to-b from-gray-900 to-black ${className}`}>
+    <div className={`relative w-full h-full ${className}`} style={{
+      background: 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #0a0a0a 100%)'
+    }}>
       <LogoBackground />
       
       <motion.div 
