@@ -30,6 +30,40 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const { user } = useAuth();
   const { callBuzzApi } = useBuzzApi();
 
+  // CRITICAL: Calculate dynamic pricing based on generation count
+  const [currentGeneration, setCurrentGeneration] = useState(1);
+  const [dynamicPrice, setDynamicPrice] = useState(7.99);
+
+  // Update pricing based on generation
+  React.useEffect(() => {
+    const loadGenerationCount = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data: existingAreas } = await supabase
+          .from('user_map_areas')
+          .select('*')
+          .eq('user_id', user.id);
+          
+        const nextGeneration = (existingAreas?.length || 0) + 1;
+        setCurrentGeneration(nextGeneration);
+        
+        // Dynamic pricing: €7.99 → €29.99 progressive
+        const basePrice = 7.99;
+        const maxPrice = 29.99;
+        const priceIncrement = (maxPrice - basePrice) / 10; // Over 10 generations
+        const newPrice = Math.min(maxPrice, basePrice + (nextGeneration - 1) * priceIncrement);
+        setDynamicPrice(parseFloat(newPrice.toFixed(2)));
+        
+        console.log(`💰 BUZZ MAPPA: Dynamic pricing - Generation ${nextGeneration}, Price €${newPrice.toFixed(2)}`);
+      } catch (error) {
+        console.error('❌ Error loading generation count:', error);
+      }
+    };
+    
+    loadGenerationCount();
+  }, [user?.id]);
+
   const handleBuzzPress = async () => {
     if (isGenerating || paymentLoading || !user?.id) {
       console.log('🗺️ BUZZ MAPPA: Button click ignored - already processing or no user');
@@ -68,11 +102,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         
         // Show payment requirement toast
         toast.error("Pagamento richiesto", {
-          description: `Per generare un'area BUZZ è necessario pagare €${buzzMapPrice.toFixed(2)} o attivare un abbonamento.`
+          description: `Per generare un'area BUZZ è necessario pagare €${dynamicPrice.toFixed(2)} o attivare un abbonamento.`
         });
 
         // MANDATORY: Process payment before allowing generation
-        const paymentSuccess = await processBuzzPurchase(true, buzzMapPrice);
+        const paymentSuccess = await processBuzzPurchase(true, dynamicPrice);
         
         if (!paymentSuccess) {
           toast.error("Pagamento necessario", {
@@ -139,7 +173,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
               step: 'buzz_map_generated',
               action: 'BUZZ_MAPPA_PREMUTO',
               details: {
-                cost: buzzMapPrice,
+                cost: dynamicPrice,
                 radius_km: actualRadius,
                 lat: response.lat,
                 lng: response.lng,
@@ -164,6 +198,11 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           console.log('🔄 BUZZ MAPPA: Triggering area reload');
           reloadAreas();
         }, 500);
+        
+        // Update generation count for next time
+        setCurrentGeneration(prev => prev + 1);
+        const nextPrice = Math.min(29.99, 7.99 + currentGeneration * 2.2);
+        setDynamicPrice(parseFloat(nextPrice.toFixed(2)));
         
         // Notify parent component with actual generated area data
         if (onAreaGenerated) {
@@ -241,10 +280,19 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         onClick={handleBuzzPress}
         disabled={!canUseBuzz}
         style={{
-          width: '80px',
-          height: '80px',
+          width: '90px',
+          height: '90px',
         }}
         whileTap={{ scale: canUseBuzz ? 0.9 : 1 }}
+        animate={{ 
+          boxShadow: canUseBuzz 
+            ? ["0 0 15px rgba(123, 46, 255, 0.6)", "0 0 30px rgba(0, 209, 255, 0.8)", "0 0 15px rgba(123, 46, 255, 0.6)"]
+            : "none"
+        }}
+        transition={{ 
+          boxShadow: { repeat: Infinity, duration: 2.5 },
+          scale: { type: "spring", stiffness: 300, damping: 20 }
+        }}
         aria-label="Genera Area BUZZ"
       >
         <div className="absolute top-0 left-0 w-full h-full rounded-full flex flex-col items-center justify-center">
@@ -253,17 +301,25 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             >
-              <MapPin className="text-white" size={24} />
+              <MapPin className="text-white" size={28} />
             </motion.div>
           ) : (
             <>
-              <Zap className="text-white" size={24} />
-              <span className="text-xs text-white/90 mt-1">
-                €{buzzMapPrice.toFixed(2)}
+              <Zap className="text-white" size={28} />
+              <span className="text-xs text-white/90 mt-1 font-bold">
+                €{dynamicPrice.toFixed(2)}
+              </span>
+              <span className="text-xs text-white/70 leading-none">
+                Gen {currentGeneration}
               </span>
             </>
           )}
         </div>
+        
+        {/* Animated glow effect */}
+        {canUseBuzz && (
+          <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-purple-500 to-red-500 opacity-20 blur-xl animate-pulse" />
+        )}
       </motion.button>
     </motion.div>
   );

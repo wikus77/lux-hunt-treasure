@@ -36,10 +36,25 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
     return null;
   }
 
+  // CRITICAL: Show only the LATEST area (most recent by creation date)
+  const latestArea = areas.reduce((latest, current) => {
+    const latestTime = new Date(latest.created_at).getTime();
+    const currentTime = new Date(current.created_at).getTime();
+    return currentTime > latestTime ? current : latest;
+  });
+
+  console.log('🎯 BuzzMapAreas - Showing ONLY latest area:', {
+    id: latestArea.id,
+    lat: latestArea.lat,
+    lng: latestArea.lng,
+    radius_km: latestArea.radius_km,
+    created_at: latestArea.created_at
+  });
+
   return (
     <>
-      {/* Circle rendering logic */}
-      <BuzzCircleRenderer areas={areas} />
+      {/* CRITICAL: Only render the latest area */}
+      <BuzzCircleRenderer areas={[latestArea]} />
       
       {/* Glow styles */}
       <style>

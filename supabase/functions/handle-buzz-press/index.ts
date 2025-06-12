@@ -247,7 +247,7 @@ serve(async (req) => {
       const currentGeneration = (existingAreas?.length || 0) + 1;
       console.log(`📍 Current generation count: ${currentGeneration}`);
       
-      // STEP 3: Calculate CORRECT PROGRESSIVE radius: 500km → 5km
+      // STEP 3: Calculate CORRECTED PROGRESSIVE radius: 500km → 5km
       // CRITICAL FORMULA: radius = max(5, 500 * (0.95^(generation-1)))
       let radius_km = Math.max(5, 500 * Math.pow(0.95, currentGeneration - 1));
       

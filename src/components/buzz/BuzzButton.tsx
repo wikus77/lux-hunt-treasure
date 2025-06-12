@@ -192,7 +192,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           window.plausible('clue_unlocked');
         }
         
-        // FIXED: Update counter immediately in UI and reload data
+        // CRITICAL: Update counter immediately in UI and reload data
         const newCount = dailyCount + 1;
         setDailyCount(newCount);
         console.log(`📊 BUZZ: UI counter updated to ${newCount}/50`);
@@ -230,7 +230,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           console.error("❌ BUZZ: Error creating notification:", notifError);
         }
 
-        // FIXED: Show success toast with better messaging
+        // CRITICAL: Show success toast with better messaging
         toast.success("🎯 Nuovo indizio sbloccato!", {
           description: dynamicClueContent,
           duration: 4000,
@@ -273,7 +273,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         const errorMessage = response.errorMessage || "Errore sconosciuto";
         setError(errorMessage);
         
-        // FIXED: Show error toast with clear message
+        // CRITICAL: Show error toast with clear message
         toast.error("❌ Errore BUZZ", {
           description: errorMessage,
           duration: 3000,
@@ -300,7 +300,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       console.error("❌ BUZZ: Error during API call:", error);
       setError("Si è verificato un errore di comunicazione con il server");
       
-      // FIXED: Show connection error toast
+      // CRITICAL: Show connection error toast
       toast.error("❌ Errore di connessione", {
         description: "Impossibile contattare il server. Riprova più tardi.",
         duration: 3000,
@@ -332,106 +332,108 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const isProcessing = isLoading || paymentLoading;
 
   return (
-    <motion.button
-      className="w-60 h-60 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl hover:shadow-[0_0_35px_rgba(123,46,255,0.7)] focus:outline-none disabled:opacity-50"
-      onClick={handleBuzzPress}
-      disabled={isProcessing || isBlocked}
-      whileTap={{ scale: 0.95 }}
-      whileHover={{ scale: 1.05 }}
-      initial={{ boxShadow: "0 0 0px rgba(123, 46, 255, 0)" }}
-      animate={{ 
-        boxShadow: isBlocked ? "none" : ["0 0 12px rgba(123, 46, 255, 0.35)", "0 0 35px rgba(0, 209, 255, 0.7)", "0 0 12px rgba(123, 46, 255, 0.35)"]
-      }}
-      transition={{ 
-        boxShadow: { repeat: Infinity, duration: 3 },
-        scale: { type: "spring", stiffness: 300, damping: 20 }
-      }}
-      style={{
-        animation: isBlocked ? "none" : "buzzButtonGlow 3s infinite ease-in-out"
-      }}
-    >
-      {/* Radial gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#7B2EFF] via-[#00D1FF] to-[#FF59F8] opacity-90 rounded-full" />
-      
-      {!isBlocked && (
-        <motion.div
-          className="absolute inset-0 rounded-full"
-          initial={{ opacity: 0.4, scale: 1 }}
-          animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.05, 1] }}
-          transition={{ repeat: Infinity, duration: 3 }}
-        />
-      )}
-      
-      {!isBlocked && (
-        <motion.div
-          className="absolute -inset-1 rounded-full blur-xl"
-          style={{ background: "linear-gradient(to right, #7B2EFF, #00D1FF, #FF59F8)", opacity: 0.5 }}
-          initial={{ opacity: 0.2 }}
-          animate={{ opacity: [0.2, 0.45, 0.2] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-        />
-      )}
-      
-      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full z-10">
-        {isProcessing ? (
-          <Loader className="w-12 h-12 animate-spin text-white" />
-        ) : isBlocked ? (
-          <>
-            <span className="text-2xl font-bold text-red-300 tracking-wider">
-              BLOCCATO
-            </span>
-            <span className="text-xs text-red-200 mt-1">
-              Limite giornaliero raggiunto
-            </span>
-          </>
-        ) : (
-          <>
-            <span className="text-3xl font-bold text-white tracking-wider glow-text">
-              BUZZ!
-            </span>
-            {!hasActiveSubscription && (
-              <span className="text-sm text-white/90 mt-1 font-medium">
-                €{buzzCost.toFixed(2)}
-              </span>
-            )}
-            <span className="text-xs text-white/70">
-              {dailyCount}/50 oggi
-            </span>
-          </>
+    <div className="flex flex-col items-center justify-center h-full">
+      <motion.button
+        className="w-72 h-72 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl hover:shadow-[0_0_35px_rgba(123,46,255,0.7)] focus:outline-none disabled:opacity-50"
+        onClick={handleBuzzPress}
+        disabled={isProcessing || isBlocked}
+        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.05 }}
+        initial={{ boxShadow: "0 0 0px rgba(123, 46, 255, 0)" }}
+        animate={{ 
+          boxShadow: isBlocked ? "none" : ["0 0 20px rgba(123, 46, 255, 0.4)", "0 0 50px rgba(0, 209, 255, 0.8)", "0 0 20px rgba(123, 46, 255, 0.4)"]
+        }}
+        transition={{ 
+          boxShadow: { repeat: Infinity, duration: 2.5 },
+          scale: { type: "spring", stiffness: 300, damping: 20 }
+        }}
+        style={{
+          animation: isBlocked ? "none" : "buzzButtonGlow 2.5s infinite ease-in-out"
+        }}
+      >
+        {/* Radial gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#7B2EFF] via-[#00D1FF] to-[#FF59F8] opacity-90 rounded-full" />
+        
+        {!isBlocked && (
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            initial={{ opacity: 0.4, scale: 1 }}
+            animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.05, 1] }}
+            transition={{ repeat: Infinity, duration: 2.5 }}
+          />
         )}
-      </div>
+        
+        {!isBlocked && (
+          <motion.div
+            className="absolute -inset-2 rounded-full blur-xl"
+            style={{ background: "linear-gradient(to right, #7B2EFF, #00D1FF, #FF59F8)", opacity: 0.5 }}
+            initial={{ opacity: 0.2 }}
+            animate={{ opacity: [0.2, 0.5, 0.2] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+          />
+        )}
+        
+        <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full z-10">
+          {isProcessing ? (
+            <Loader className="w-16 h-16 animate-spin text-white" />
+          ) : isBlocked ? (
+            <>
+              <span className="text-3xl font-bold text-red-300 tracking-wider">
+                BLOCCATO
+              </span>
+              <span className="text-sm text-red-200 mt-2">
+                Limite giornaliero raggiunto
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="text-4xl font-bold text-white tracking-wider glow-text">
+                BUZZ!
+              </span>
+              {!hasActiveSubscription && (
+                <span className="text-lg text-white/90 mt-2 font-bold">
+                  €{buzzCost.toFixed(2)}
+                </span>
+              )}
+              <span className="text-sm text-white/70 mt-1">
+                {dailyCount}/50 oggi
+              </span>
+            </>
+          )}
+        </div>
 
-      {/* Ripple effect */}
-      {showRipple && (
-        <div className="ripple-effect" />
-      )}
-      
-      <style>
-        {`
-        @keyframes buzzButtonGlow {
-          0% { box-shadow: 0 0 8px rgba(255, 89, 248, 0.6); }
-          50% { box-shadow: 0 0 22px rgba(255, 89, 248, 0.8), 0 0 35px rgba(0, 209, 255, 0.5); }
-          100% { box-shadow: 0 0 8px rgba(255, 89, 248, 0.6); }
-        }
-        .glow-text {
-          text-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(0, 209, 255, 0.6);
-        }
-        @keyframes ripple {
-          0% { transform: scale(0.9); opacity: 0.5; }
-          100% { transform: scale(3); opacity: 0; }
-        }
-        .ripple-effect {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          border-radius: 9999px;
-          background-color: rgba(255, 255, 255, 0.4);
-          animation: ripple 1s ease-out forwards;
-          pointer-events: none;
-        }
-        `}
-      </style>
-    </motion.button>
+        {/* Ripple effect */}
+        {showRipple && (
+          <div className="ripple-effect" />
+        )}
+        
+        <style>
+          {`
+          @keyframes buzzButtonGlow {
+            0% { box-shadow: 0 0 15px rgba(255, 89, 248, 0.6); }
+            50% { box-shadow: 0 0 35px rgba(255, 89, 248, 0.9), 0 0 50px rgba(0, 209, 255, 0.6); }
+            100% { box-shadow: 0 0 15px rgba(255, 89, 248, 0.6); }
+          }
+          .glow-text {
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(0, 209, 255, 0.7);
+          }
+          @keyframes ripple {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            100% { transform: scale(3); opacity: 0; }
+          }
+          .ripple-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 9999px;
+            background-color: rgba(255, 255, 255, 0.4);
+            animation: ripple 1s ease-out forwards;
+            pointer-events: none;
+          }
+          `}
+        </style>
+      </motion.button>
+    </div>
   );
 };
 
