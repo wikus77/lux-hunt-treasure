@@ -26,7 +26,13 @@ serve(async (req) => {
       }
     );
 
-    // Step 1: Get developer user by email
+    // Use regular client for sign in
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    );
+
+    // Step 1: Check if developer user exists
     console.log('🔍 Looking for developer user...');
     const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
     
@@ -57,220 +63,99 @@ serve(async (req) => {
 
     console.log('✅ Developer user found:', developerUser.email);
 
-    // Step 2: Use admin.updateUser to force email confirmation if needed
-    console.log('🔧 Ensuring user is confirmed...');
+    // Step 2: Ensure user is confirmed and has a password
+    console.log('🔧 Ensuring user is confirmed and setting temporary password...');
+    
+    // Set a known password for the developer user
+    const tempPassword = 'DevLogin2025!';
+    
     const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       developerUser.id,
       { 
         email_confirm: true,
-        email_confirmed_at: new Date().toISOString()
+        email_confirmed_at: new Date().toISOString(),
+        password: tempPassword
       }
     );
 
     if (updateError) {
-      console.log('⚠️ Update user failed (but continuing):', updateError.message);
+      console.log('⚠️ Update user failed:', updateError.message);
     } else {
-      console.log('✅ User confirmed successfully');
+      console.log('✅ User confirmed and password set');
     }
 
-    // Step 3: Generate a password reset link (which contains valid tokens)
-    console.log('🔧 Generating password reset link for token extraction...');
+    // Step 3: Use regular sign in with known credentials
+    console.log('🔧 Attempting sign in with password...');
     
-    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email: developerUser.email,
-      options: {
-        redirectTo: `${Deno.env.get('SUPABASE_URL')}/auth/v1/callback`
-      }
+    const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
+      email: 'wikus77@hotmail.it',
+      password: tempPassword
     });
 
-    if (resetError || !resetData) {
-      console.error('❌ Reset link generation failed:', resetError);
+    if (signInError) {
+      console.error('❌ Sign in failed:', signInError);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Reset link generation failed',
-          details: resetError?.message || 'No reset data'
+          error: 'Sign in failed',
+          details: signInError.message
         }),
         { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
 
-    console.log('✅ Reset link generated successfully');
-
-    let access_token = '';
-    let refresh_token = '';
-    
-    // Step 4: Extract tokens from the action link
-    if (resetData.properties?.action_link) {
-      const url = new URL(resetData.properties.action_link);
-      access_token = url.searchParams.get('access_token') || '';
-      refresh_token = url.searchParams.get('refresh_token') || '';
-      
-      console.log('🔍 Token extraction from reset link:', {
-        hasActionLink: true,
-        hasAccess: !!access_token,
-        hasRefresh: !!refresh_token,
-        accessLength: access_token.length,
-        refreshLength: refresh_token.length
-      });
-    }
-
-    // Step 5: If no tokens from reset link, try magic link approach
-    if (!access_token) {
-      console.log('🔄 Trying magic link approach...');
-      
-      const { data: magicData, error: magicError } = await supabaseAdmin.auth.admin.generateLink({
-        type: 'magiclink',
-        email: developerUser.email,
-        options: {
-          redirectTo: `${Deno.env.get('SUPABASE_URL')}/auth/v1/callback`
-        }
-      });
-
-      if (!magicError && magicData?.properties?.action_link) {
-        const magicUrl = new URL(magicData.properties.action_link);
-        access_token = magicUrl.searchParams.get('access_token') || '';
-        refresh_token = magicUrl.searchParams.get('refresh_token') || '';
-        
-        console.log('🔍 Token extraction from magic link:', {
-          hasAccess: !!access_token,
-          hasRefresh: !!refresh_token,
-          accessLength: access_token.length,
-          refreshLength: refresh_token.length
-        });
-      }
-    }
-
-    // Step 6: If still no tokens, try direct user invitation
-    if (!access_token) {
-      console.log('🔄 Trying user invitation approach...');
-      
-      const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-        developerUser.email,
-        {
-          redirectTo: `${Deno.env.get('SUPABASE_URL')}/auth/v1/callback`,
-          data: {
-            developer_auto_login: true
-          }
-        }
-      );
-
-      if (!inviteError && inviteData?.user) {
-        console.log('✅ User invitation successful');
-        
-        // Try to generate another link after invitation
-        const { data: postInviteData, error: postInviteError } = await supabaseAdmin.auth.admin.generateLink({
-          type: 'signup',
-          email: developerUser.email,
-          options: {
-            redirectTo: `${Deno.env.get('SUPABASE_URL')}/auth/v1/callback`
-          }
-        });
-
-        if (!postInviteError && postInviteData?.properties?.action_link) {
-          const postInviteUrl = new URL(postInviteData.properties.action_link);
-          access_token = postInviteUrl.searchParams.get('access_token') || '';
-          refresh_token = postInviteUrl.searchParams.get('refresh_token') || '';
-          
-          console.log('🔍 Token extraction post-invite:', {
-            hasAccess: !!access_token,
-            hasRefresh: !!refresh_token,
-            accessLength: access_token.length,
-            refreshLength: refresh_token.length
-          });
-        }
-      }
-    }
-
-    // Step 7: Create a valid session response if we have tokens
-    if (access_token && access_token.length > 0) {
-      console.log('✅ VALID TOKENS FOUND - Creating session response');
-      
-      // Verify the token is properly formatted
-      try {
-        const tokenParts = access_token.split('.');
-        if (tokenParts.length !== 3) {
-          throw new Error('Invalid JWT format');
-        }
-        
-        // Decode the payload to verify it's valid
-        const payload = JSON.parse(atob(tokenParts[1].replace(/-/g, '+').replace(/_/g, '/')));
-        console.log('🔍 Token payload verification:', {
-          sub: payload.sub,
-          email: payload.email,
-          exp: payload.exp,
-          aud: payload.aud
-        });
-        
-      } catch (parseError) {
-        console.error('❌ Token validation failed:', parseError);
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: 'Generated token is invalid',
-            details: parseError.message
-          }),
-          { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-        );
-      }
-
-      const sessionResponse = {
-        success: true,
-        access_token: access_token,
-        refresh_token: refresh_token,
-        expires_at: Math.floor(Date.now() / 1000) + 3600,
-        expires_in: 3600,
-        token_type: 'bearer',
-        user: {
-          id: developerUser.id,
-          email: developerUser.email,
-          email_confirmed_at: developerUser.email_confirmed_at || new Date().toISOString(),
-          created_at: developerUser.created_at,
-          updated_at: developerUser.updated_at,
-          app_metadata: developerUser.app_metadata || {},
-          user_metadata: {
-            ...developerUser.user_metadata,
-            developer_auto_login: true
-          }
-        },
-        method: 'admin_token_extraction',
-        message: 'Developer auto-login successful'
-      };
-
-      console.log('✅ DEVELOPER AUTO-LOGIN SUCCESSFUL');
-      console.log('📊 Final response validation:', {
-        hasAccessToken: !!sessionResponse.access_token,
-        hasRefreshToken: !!sessionResponse.refresh_token,
-        hasUser: !!sessionResponse.user,
-        tokenLength: sessionResponse.access_token.length,
-        method: sessionResponse.method
-      });
-
+    if (!signInData.session) {
+      console.error('❌ No session created');
       return new Response(
-        JSON.stringify(sessionResponse),
-        { 
-          status: 200, 
-          headers: { 'Content-Type': 'application/json', ...corsHeaders } 
-        }
+        JSON.stringify({ 
+          success: false, 
+          error: 'No session created'
+        }),
+        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
 
-    // If we reach here, no tokens were generated by any method
-    console.error('❌ NO VALID TOKENS GENERATED BY ANY METHOD');
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: 'No valid tokens generated by any method',
-        debug: {
-          userFound: !!developerUser,
-          resetLinkTried: true,
-          magicLinkTried: true,
-          invitationTried: true,
-          finalTokenLength: access_token.length
+    console.log('✅ SIGN IN SUCCESS - Valid session created');
+
+    // Step 4: Return the valid session
+    const sessionResponse = {
+      success: true,
+      access_token: signInData.session.access_token,
+      refresh_token: signInData.session.refresh_token,
+      expires_at: Math.floor(Date.now() / 1000) + (signInData.session.expires_in || 3600),
+      expires_in: signInData.session.expires_in || 3600,
+      token_type: 'bearer',
+      user: {
+        id: signInData.user.id,
+        email: signInData.user.email,
+        email_confirmed_at: signInData.user.email_confirmed_at,
+        created_at: signInData.user.created_at,
+        updated_at: signInData.user.updated_at,
+        app_metadata: signInData.user.app_metadata || {},
+        user_metadata: {
+          ...signInData.user.user_metadata,
+          developer_auto_login: true
         }
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      },
+      method: 'password_signin',
+      message: 'Developer auto-login successful via password'
+    };
+
+    console.log('✅ DEVELOPER AUTO-LOGIN SUCCESSFUL');
+    console.log('📊 Session validation:', {
+      hasAccessToken: !!sessionResponse.access_token,
+      hasRefreshToken: !!sessionResponse.refresh_token,
+      hasUser: !!sessionResponse.user,
+      tokenLength: sessionResponse.access_token.length,
+      method: sessionResponse.method
+    });
+
+    return new Response(
+      JSON.stringify(sessionResponse),
+      { 
+        status: 200, 
+        headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+      }
     );
 
   } catch (error: any) {
