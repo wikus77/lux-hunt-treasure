@@ -26,11 +26,16 @@ export const useBuzzMapLogic = () => {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchCurrentWeekAreas = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('❌ useBuzzMapLogic: No user ID, skipping fetch');
+      return;
+    }
     
+    console.log('🔄 useBuzzMapLogic: Fetching areas for user:', user.id);
     setLoading(true);
+    
     try {
-      // CORRETTO: usa 'user_map_areas' invece di 'map_areas'
+      // CRITICAL: Use 'user_map_areas' table and fetch ALL areas for this user
       const { data, error: fetchError } = await supabase
         .from('user_map_areas')
         .select('*')
@@ -38,31 +43,41 @@ export const useBuzzMapLogic = () => {
         .order('created_at', { ascending: false });
 
       if (fetchError) {
-        console.error('Error fetching current week areas:', fetchError);
+        console.error('❌ useBuzzMapLogic: Error fetching areas:', fetchError);
         setError(fetchError);
         return;
       }
 
-      // Transform to BuzzMapArea format con TUTTE le proprietà richieste
-      const transformedAreas: BuzzMapArea[] = (data || []).map(area => ({
-        id: area.id,
-        lat: area.lat,
-        lng: area.lng,
-        radius_km: area.radius_km,
-        coordinates: { lat: area.lat, lng: area.lng },
-        radius: area.radius_km * 1000,
-        color: '#00FFFF',
-        colorName: 'cyan',
-        week: area.week,
-        generation: 1,
-        isActive: true,
-        user_id: area.user_id,
-        created_at: area.created_at || new Date().toISOString()
-      }));
+      console.log('✅ useBuzzMapLogic: Raw data from user_map_areas:', data);
 
+      // Transform to BuzzMapArea format with ALL required properties
+      const transformedAreas: BuzzMapArea[] = (data || []).map((area, index) => {
+        const transformedArea = {
+          id: area.id,
+          lat: area.lat,
+          lng: area.lng,
+          radius_km: area.radius_km,
+          coordinates: { lat: area.lat, lng: area.lng },
+          radius: area.radius_km * 1000, // Convert to meters
+          color: '#00FFFF', // Cyan color for BUZZ areas
+          colorName: 'cyan',
+          week: area.week || 1,
+          generation: index + 1,
+          isActive: true,
+          user_id: area.user_id,
+          created_at: area.created_at || new Date().toISOString()
+        };
+        
+        console.log(`🔄 useBuzzMapLogic: Transformed area ${index + 1}:`, transformedArea);
+        return transformedArea;
+      });
+
+      console.log('✅ useBuzzMapLogic: Setting transformed areas:', transformedAreas.length);
       setCurrentWeekAreas(transformedAreas);
+      setError(null);
+      
     } catch (err) {
-      console.error('Exception fetching areas:', err);
+      console.error('❌ useBuzzMapLogic: Exception fetching areas:', err);
       setError(err as Error);
     } finally {
       setLoading(false);
@@ -70,16 +85,53 @@ export const useBuzzMapLogic = () => {
   };
 
   const reloadAreas = () => {
+    console.log('🔄 useBuzzMapLogic: Manual reload triggered');
     fetchCurrentWeekAreas();
   };
 
+  // CRITICAL: Auto-fetch on user change and setup real-time subscription
   useEffect(() => {
-    // Evita cicli infiniti con debounce
-    const timeoutId = setTimeout(() => {
-      fetchCurrentWeekAreas();
-    }, 100);
+    fetchCurrentWeekAreas();
     
-    return () => clearTimeout(timeoutId);
+    // Set up real-time subscription for new areas
+    if (user?.id) {
+      console.log('🔔 useBuzzMapLogic: Setting up real-time subscription for user:', user.id);
+      
+      const channel = supabase
+        .channel('user_map_areas_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'user_map_areas',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('🔔 useBuzzMapLogic: New area inserted via real-time:', payload);
+            fetchCurrentWeekAreas(); // Refresh the list
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'user_map_areas',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('🔔 useBuzzMapLogic: Area updated via real-time:', payload);
+            fetchCurrentWeekAreas(); // Refresh the list
+          }
+        )
+        .subscribe();
+
+      return () => {
+        console.log('🔔 useBuzzMapLogic: Unsubscribing from real-time');
+        supabase.removeChannel(channel);
+      };
+    }
   }, [user?.id]);
 
   return {

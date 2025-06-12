@@ -75,10 +75,25 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
 }) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   const mapRef = useRef<L.Map | null>(null);
-  const { currentWeekAreas } = useBuzzMapLogic();
+  
+  // CRITICAL: Use the hook to get BUZZ areas with real-time updates
+  const { currentWeekAreas, loading: areasLoading, reloadAreas } = useBuzzMapLogic();
   
   // Use Zustand store for consistent state management
   const { isAddingMapPoint, mapStatus } = useMapStore();
+
+  // CRITICAL: Debug logging for BUZZ areas
+  React.useEffect(() => {
+    console.log("🗺️ MapContainer - BUZZ areas updated:", {
+      areasCount: currentWeekAreas.length,
+      loading: areasLoading,
+      areas: currentWeekAreas.map(area => ({
+        id: area.id,
+        center: [area.lat, area.lng],
+        radius: area.radius_km
+      }))
+    });
+  }, [currentWeekAreas, areasLoading]);
 
   // Debug logging for point addition state
   React.useEffect(() => {
@@ -93,7 +108,32 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   const handleMapMoveCallback = handleMapMove(mapRef, setMapCenter);
   const handleMapReadyCallback = handleMapReady(mapRef, handleMapMoveCallback);
   const handleAddNewPointCallback = handleAddNewPoint(isAddingPoint, addNewPoint, setIsAddingPoint);
-  const handleAreaGeneratedCallback = handleAreaGenerated(mapRef);
+  
+  // CRITICAL: Enhanced area generation callback with reload
+  const handleAreaGeneratedCallback = (lat: number, lng: number, radiusKm: number) => {
+    console.log('🎯 MapContainer - Area generated, updating map and reloading areas:', { lat, lng, radiusKm });
+    
+    // Update map center and zoom
+    if (mapRef.current) {
+      mapRef.current.setView([lat, lng], 13);
+      
+      // Calculate appropriate zoom for radius
+      const radiusMeters = radiusKm * 1000;
+      const bounds = L.latLng(lat, lng).toBounds(radiusMeters * 2);
+      
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+        }
+      }, 100);
+    }
+    
+    // CRITICAL: Force reload areas to show new area immediately
+    setTimeout(() => {
+      console.log('🔄 MapContainer - Forcing areas reload after generation');
+      reloadAreas();
+    }, 500);
+  };
 
   return (
     <div 
@@ -149,7 +189,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           url='https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
         />
         
-        {/* Visualizza le aree BUZZ MAPPA */}
+        {/* CRITICAL: Display BUZZ MAPPA areas with real-time updates */}
         <BuzzMapAreas areas={currentWeekAreas} />
         
         {/* Display search areas */}
@@ -191,7 +231,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         isAddingSearchArea={isAddingSearchArea} 
       />
 
-      {/* Use the BuzzButton component with map center and area generation callback */}
+      {/* CRITICAL: Use the BuzzButton component with enhanced area generation callback */}
       <BuzzButton 
         handleBuzz={handleBuzz} 
         mapCenter={mapCenter}
