@@ -57,78 +57,105 @@ serve(async (req) => {
 
     console.log('✅ Developer user found:', developerUser.email);
 
-    // Step 2: Generate a proper session using admin auth
-    console.log('🔧 Generating developer session...');
+    // Step 2: Generate proper session using admin generateLink
+    console.log('🔧 Generating developer session with proper Supabase methods...');
     
     try {
-      // Strategy 1: Use admin createUser session with proper token structure
-      const now = Math.floor(Date.now() / 1000);
-      const expiresAt = now + 3600; // 1 hour from now
-      
-      // Create a properly formatted JWT payload
-      const jwtPayload = {
-        aud: 'authenticated',
-        exp: expiresAt,
-        iat: now,
-        iss: `https://${Deno.env.get('SUPABASE_URL')?.replace('https://', '')}/auth/v1`,
-        sub: developerUser.id,
-        email: developerUser.email,
-        email_confirmed_at: developerUser.email_confirmed_at || new Date().toISOString(),
-        phone: '',
-        confirmation_sent_at: new Date().toISOString(),
-        confirmed_at: developerUser.confirmed_at || new Date().toISOString(),
-        app_metadata: {
-          provider: 'email',
-          providers: ['email'],
-          ...developerUser.app_metadata
-        },
-        user_metadata: {
-          ...developerUser.user_metadata
-        },
-        role: 'authenticated',
-        aal: 'aal1',
-        amr: [{ method: 'email', timestamp: now }],
-        session_id: `developer_session_${Date.now()}`
-      };
+      // Use admin generateLink to create a valid session
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'magiclink',
+        email: 'wikus77@hotmail.it',
+        options: {
+          redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('/auth/v1', '')}/auth/v1/callback`
+        }
+      });
 
-      // Create base64url encoded token parts
-      const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
-      
-      const payload = btoa(JSON.stringify(jwtPayload))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
-      
-      const signature = btoa(`developer_signature_${Date.now()}`)
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
+      if (linkError) {
+        console.error('❌ Generate link failed:', linkError);
+        
+        // Fallback: try to create session directly
+        console.log('🔄 Attempting direct session creation...');
+        
+        const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.createSession({
+          user_id: developerUser.id,
+          session: {
+            expires_at: Math.floor(Date.now() / 1000) + 3600 // 1 hour
+          }
+        });
 
-      const accessToken = `${header}.${payload}.${signature}`;
-      const refreshToken = `developer_refresh_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        if (sessionError) {
+          console.error('❌ Direct session creation failed:', sessionError);
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: 'Session creation failed',
+              details: sessionError.message
+            }),
+            { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+          );
+        }
 
-      console.log('✅ Developer tokens generated successfully');
+        console.log('✅ Direct session created successfully');
+        
+        const sessionResponse = {
+          success: true,
+          access_token: sessionData.access_token,
+          refresh_token: sessionData.refresh_token,
+          expires_at: sessionData.expires_at,
+          expires_in: sessionData.expires_in || 3600,
+          token_type: 'bearer',
+          user: sessionData.user,
+          session: sessionData,
+          method: 'direct_session_creation'
+        };
+
+        return new Response(
+          JSON.stringify(sessionResponse),
+          { 
+            status: 200, 
+            headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+          }
+        );
+      }
+
+      console.log('✅ Magic link generated successfully');
+      
+      // Extract tokens from the magic link URL
+      const magicUrl = new URL(linkData.properties.action_link);
+      const accessToken = magicUrl.searchParams.get('access_token');
+      const refreshToken = magicUrl.searchParams.get('refresh_token');
+      const expiresIn = parseInt(magicUrl.searchParams.get('expires_in') || '3600');
+      const expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
+
+      if (!accessToken || !refreshToken) {
+        console.error('❌ No tokens found in magic link');
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'No tokens in magic link response'
+          }),
+          { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
+      }
+
+      console.log('✅ Tokens extracted from magic link');
       console.log('📊 Access token length:', accessToken.length);
       console.log('📊 Refresh token length:', refreshToken.length);
-      console.log('📊 Token expires at:', new Date(expiresAt * 1000).toISOString());
 
       const sessionResponse = {
         success: true,
         access_token: accessToken,
         refresh_token: refreshToken,
         expires_at: expiresAt,
-        expires_in: 3600,
+        expires_in: expiresIn,
         token_type: 'bearer',
         user: {
           id: developerUser.id,
           email: developerUser.email,
           email_confirmed_at: developerUser.email_confirmed_at,
           confirmed_at: developerUser.confirmed_at,
-          app_metadata: jwtPayload.app_metadata,
-          user_metadata: jwtPayload.user_metadata,
+          app_metadata: developerUser.app_metadata,
+          user_metadata: developerUser.user_metadata,
           aud: 'authenticated',
           role: 'authenticated',
           created_at: developerUser.created_at,
@@ -138,27 +165,26 @@ serve(async (req) => {
           access_token: accessToken,
           refresh_token: refreshToken,
           expires_at: expiresAt,
-          expires_in: 3600,
+          expires_in: expiresIn,
           token_type: 'bearer',
           user: {
             id: developerUser.id,
             email: developerUser.email,
             email_confirmed_at: developerUser.email_confirmed_at,
             confirmed_at: developerUser.confirmed_at,
-            app_metadata: jwtPayload.app_metadata,
-            user_metadata: jwtPayload.user_metadata,
+            app_metadata: developerUser.app_metadata,
+            user_metadata: developerUser.user_metadata,
             aud: 'authenticated',
             role: 'authenticated',
             created_at: developerUser.created_at,
             updated_at: developerUser.updated_at
           }
         },
-        method: 'developer_token_generation',
-        message: 'Developer auto-login successful with custom token generation'
+        method: 'magic_link_token_extraction',
+        message: 'Developer auto-login successful with valid Supabase tokens'
       };
 
       console.log('✅ DEVELOPER AUTO-LOGIN SUCCESSFUL');
-      console.log('📊 Response structure validated');
 
       return new Response(
         JSON.stringify(sessionResponse),
