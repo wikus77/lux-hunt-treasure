@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Loader, Zap } from "lucide-react";
@@ -109,9 +110,9 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     setDailyCount(newDailyCount);
     console.log(`🔢 BUZZ: Counter IMPERATIVELY incremented to ${newDailyCount}/50`);
 
-    // IMPERATIVE: Show immediate toast feedback
-    toast.success("🎯 BUZZ attivato!", {
-      description: `Tentativo ${newDailyCount}/50 in corso...`,
+    // IMPERATIVE: Show toast immediately for feedback
+    toast.info("🎯 Processing BUZZ...", {
+      description: `Request ${newDailyCount}/50 processing...`,
       duration: 2000,
     });
 
@@ -389,101 +390,103 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const isProcessing = isLoading || paymentLoading;
 
   return (
-    <div className="flex flex-col items-center justify-center h-full min-h-[500px] pb-safe">
-      {/* IMPERATIVE: Perfect circular button with glow aura */}
-      <motion.button
-        className="w-80 h-80 rounded-full relative overflow-hidden focus:outline-none disabled:opacity-50"
-        onClick={handleBuzzPress}
-        disabled={isProcessing || isBlocked}
-        whileTap={{ scale: 0.95 }}
-        whileHover={{ scale: 1.05 }}
-        style={{
-          background: isBlocked 
-            ? "linear-gradient(135deg, #666, #999)" 
-            : "linear-gradient(135deg, #7B2EFF, #00D1FF, #FF59F8)",
-          boxShadow: isBlocked 
-            ? "none" 
-            : "0 0 30px rgba(123, 46, 255, 0.8), 0 0 60px rgba(0, 209, 255, 0.6), 0 0 90px rgba(255, 89, 248, 0.4)",
-        }}
-        transition={{ 
-          scale: { type: "spring", stiffness: 300, damping: 20 }
-        }}
-        animate={!isBlocked ? {
-          boxShadow: [
-            "0 0 20px rgba(123, 46, 255, 0.6), 0 0 40px rgba(0, 209, 255, 0.4), 0 0 60px rgba(255, 89, 248, 0.3)",
-            "0 0 40px rgba(123, 46, 255, 0.9), 0 0 80px rgba(0, 209, 255, 0.7), 0 0 120px rgba(255, 89, 248, 0.5)",
-            "0 0 20px rgba(123, 46, 255, 0.6), 0 0 40px rgba(0, 209, 255, 0.4), 0 0 60px rgba(255, 89, 248, 0.3)"
-          ]
-        } : {}}
-        transition={{
-          ...transition,
-          boxShadow: { repeat: Infinity, duration: 2, ease: "easeInOut" }
-        }}
-      >
-        {/* Animated glow effect layer */}
-        {!isBlocked && (
-          <motion.div
-            className="absolute -inset-4 rounded-full opacity-50 blur-xl"
-            style={{ 
-              background: "linear-gradient(135deg, #7B2EFF, #00D1FF, #FF59F8)"
-            }}
-            animate={{ 
-              scale: [1, 1.1, 1],
-              opacity: [0.3, 0.7, 0.3]
-            }}
-            transition={{ 
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-        )}
-        
-        {/* Main content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full z-10">
-          {isProcessing ? (
-            <Loader className="w-16 h-16 animate-spin text-white" />
-          ) : isBlocked ? (
-            <>
-              <span className="text-3xl font-bold text-red-300 tracking-wider">
-                BLOCCATO
-              </span>
-              <span className="text-sm text-red-200 mt-2">
-                Limite giornaliero raggiunto
-              </span>
-            </>
-          ) : (
-            <>
-              <Zap className="w-16 h-16 text-white mb-2" />
-              <span className="text-4xl font-bold text-white tracking-wider">
-                BUZZ!
-              </span>
-              {/* IMPERATIVE: Dynamic price display */}
-              {!hasActiveSubscription && (
-                <span className="text-lg text-white/90 mt-2 font-bold">
-                  €{buzzCost.toFixed(2)}
-                </span>
-              )}
-              {/* IMPERATIVE: Counter display */}
-              <span className="text-sm text-white/70 mt-1">
-                {dailyCount}/50 oggi
-              </span>
-            </>
-          )}
-        </div>
-
-        {/* IMPERATIVE: Real ripple effect */}
-        {showRipple && (
-          <div className="absolute inset-0 rounded-full pointer-events-none">
+    <div className="flex items-center justify-center min-h-screen w-full px-4 pb-safe">
+      <div className="flex flex-col items-center justify-center relative">
+        {/* PERFECT CENTERED CIRCULAR BUTTON WITH DEFINITIVE GLOW */}
+        <motion.button
+          className="w-80 h-80 rounded-full relative overflow-hidden focus:outline-none disabled:opacity-50"
+          onClick={handleBuzzPress}
+          disabled={isProcessing || isBlocked}
+          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.05 }}
+          style={{
+            background: isBlocked 
+              ? "linear-gradient(135deg, #666, #999)" 
+              : "linear-gradient(135deg, #7B2EFF, #00D1FF, #FF59F8)",
+            boxShadow: isBlocked 
+              ? "none" 
+              : "0 0 30px rgba(123, 46, 255, 0.8), 0 0 60px rgba(0, 209, 255, 0.6), 0 0 90px rgba(255, 89, 248, 0.4)",
+          }}
+          animate={
+            !isBlocked ? {
+              boxShadow: [
+                "0 0 20px rgba(123, 46, 255, 0.6), 0 0 40px rgba(0, 209, 255, 0.4), 0 0 60px rgba(255, 89, 248, 0.3)",
+                "0 0 40px rgba(123, 46, 255, 0.9), 0 0 80px rgba(0, 209, 255, 0.7), 0 0 120px rgba(255, 89, 248, 0.5)",
+                "0 0 20px rgba(123, 46, 255, 0.6), 0 0 40px rgba(0, 209, 255, 0.4), 0 0 60px rgba(255, 89, 248, 0.3)"
+              ]
+            } : {}
+          }
+          transition={{
+            scale: { type: "spring", stiffness: 300, damping: 20 },
+            boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+          }}
+        >
+          {/* Animated background glow layer */}
+          {!isBlocked && (
             <motion.div
-              className="absolute inset-0 rounded-full bg-white"
+              className="absolute -inset-4 rounded-full opacity-50 blur-xl"
+              style={{ 
+                background: "linear-gradient(135deg, #7B2EFF, #00D1FF, #FF59F8)"
+              }}
+              animate={{ 
+                scale: [1, 1.1, 1],
+                opacity: [0.3, 0.7, 0.3]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+          )}
+          
+          {/* Main content centered */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full z-10">
+            {isProcessing ? (
+              <Loader className="w-16 h-16 animate-spin text-white" />
+            ) : isBlocked ? (
+              <>
+                <span className="text-3xl font-bold text-red-300 tracking-wider">
+                  BLOCCATO
+                </span>
+                <span className="text-sm text-red-200 mt-2">
+                  Limite giornaliero raggiunto
+                </span>
+              </>
+            ) : (
+              <>
+                <Zap className="w-16 h-16 text-white mb-2" />
+                <span className="text-4xl font-bold text-white tracking-wider">
+                  BUZZ!
+                </span>
+                {/* MANDATORY: Dynamic price display */}
+                {!hasActiveSubscription && (
+                  <span className="text-lg text-white/90 mt-2 font-bold">
+                    €{buzzCost.toFixed(2)}
+                  </span>
+                )}
+                {/* MANDATORY: Counter display */}
+                <span className="text-sm text-white/70 mt-1">
+                  {dailyCount}/50 oggi
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* MANDATORY: Real ripple effect on click */}
+          {showRipple && (
+            <motion.div
+              className="absolute inset-0 rounded-full pointer-events-none"
               initial={{ scale: 0.8, opacity: 0.6 }}
               animate={{ scale: 2.5, opacity: 0 }}
               transition={{ duration: 1, ease: "easeOut" }}
+              style={{
+                background: "radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 70%)"
+              }}
             />
-          </div>
-        )}
-      </motion.button>
+          )}
+        </motion.button>
+      </div>
     </div>
   );
 };
