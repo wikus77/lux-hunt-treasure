@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Loader, Zap } from "lucide-react";
@@ -405,9 +406,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             ? "none" 
             : "0 0 30px rgba(123, 46, 255, 0.8), 0 0 60px rgba(0, 209, 255, 0.6), 0 0 90px rgba(255, 89, 248, 0.4)",
         }}
-        transition={{ 
-          scale: { type: "spring", stiffness: 300, damping: 20 }
-        }}
         animate={!isBlocked ? {
           boxShadow: [
             "0 0 20px rgba(123, 46, 255, 0.6), 0 0 40px rgba(0, 209, 255, 0.4), 0 0 60px rgba(255, 89, 248, 0.3)",
@@ -416,7 +414,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           ]
         } : {}}
         transition={{
-          ...transition,
+          scale: { type: "spring", stiffness: 300, damping: 20 },
           boxShadow: { repeat: Infinity, duration: 2, ease: "easeInOut" }
         }}
       >
