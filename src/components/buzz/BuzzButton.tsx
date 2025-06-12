@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Loader } from "lucide-react";
+import { Loader, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
@@ -55,7 +55,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     checkSubscription();
   }, [userId]);
 
-  // FIXED: Load current buzz cost and daily count with proper refresh
+  // Load current buzz cost and daily count
   const loadBuzzData = async () => {
     if (!userId) return;
     
@@ -101,10 +101,14 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     
     console.log('🚀 BUZZ: Starting process with MANDATORY payment verification');
 
-    // CRITICAL: INCREMENT COUNTER ON EVERY CLICK (even if failed)
+    // CRITICAL: Show ripple immediately
+    setShowRipple(true);
+    setTimeout(() => setShowRipple(false), 1000);
+
+    // CRITICAL: UPDATE COUNTER IMMEDIATELY (even before API call)
     const newDailyCount = dailyCount + 1;
     setDailyCount(newDailyCount);
-    console.log(`🔢 BUZZ: Counter incremented to ${newDailyCount}/50`);
+    console.log(`🔢 BUZZ: Counter incremented to ${newDailyCount}/50 - IMPERATIVO`);
 
     // Check daily limit first
     if (dailyCount >= 50) {
@@ -124,14 +128,43 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       return;
     }
     
-    // Trigger ripple effect immediately
-    setShowRipple(true);
-    setTimeout(() => setShowRipple(false), 1000);
-    
-    // CRITICAL: Check if user needs to pay (no subscription and cost > 0)
+    // Check developer mode
     const isDeveloper = userId && (await supabase.auth.getUser()).data.user?.email === 'wikus77@hotmail.it';
     
-    if (!isDeveloper && !hasActiveSubscription && buzzCost > 0) {
+    if (isDeveloper) {
+      console.log('🔓 BUZZ: Developer mode activated - simulating valid response');
+      
+      // DEVELOPER MODE: Always show success
+      toast.success("🎯 Nuovo indizio sbloccato! (DEV MODE)", {
+        description: `Test sviluppatore - Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`,
+        duration: 4000,
+      });
+      
+      // Update counter in DB for developer
+      try {
+        await supabase
+          .from('user_buzz_counter')
+          .upsert({
+            user_id: userId,
+            date: new Date().toISOString().split('T')[0],
+            buzz_count: newDailyCount
+          });
+        console.log(`📊 BUZZ: Developer counter updated in DB to ${newDailyCount}`);
+      } catch (dbError) {
+        console.error("❌ BUZZ: Failed to update developer counter in DB:", dbError);
+      }
+      
+      // Reload data
+      setTimeout(() => {
+        loadBuzzData();
+      }, 500);
+      
+      onSuccess();
+      return;
+    }
+    
+    // CRITICAL: Check if user needs to pay (no subscription and cost > 0)
+    if (!hasActiveSubscription && buzzCost > 0) {
       try {
         console.log('💳 BUZZ: Payment REQUIRED - processing checkout');
         
@@ -168,8 +201,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         });
         return;
       }
-    } else if (isDeveloper) {
-      console.log('🔓 BUZZ: Developer bypass activated for wikus77@hotmail.it');
     } else if (hasActiveSubscription) {
       console.log('✅ BUZZ: Active subscription verified, proceeding');
     }
@@ -206,7 +237,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
               date: new Date().toISOString().split('T')[0],
               buzz_count: newDailyCount
             });
-          console.log(`📊 BUZZ: Counter updated in DB to ${newDailyCount}`);
+          console.log(`📊 BUZZ: Counter updated in DB to ${newDailyCount} - IMPERATIVO`);
         } catch (dbError) {
           console.error("❌ BUZZ: Failed to update counter in DB:", dbError);
         }
@@ -244,7 +275,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           console.error("❌ BUZZ: Error creating notification:", notifError);
         }
 
-        // CRITICAL: Show success toast with better messaging
+        // CRITICAL: Show success toast - IMPERATIVO
         toast.success("🎯 Nuovo indizio sbloccato!", {
           description: dynamicClueContent,
           duration: 4000,
@@ -287,7 +318,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         const errorMessage = response.errorMessage || "Errore sconosciuto";
         setError(errorMessage);
         
-        // CRITICAL: Show error toast with clear message
+        // CRITICAL: Show error toast - IMPERATIVO
         toast.error("❌ Errore BUZZ", {
           description: errorMessage,
           duration: 3000,
@@ -315,7 +346,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       console.error("❌ BUZZ: Error during API call:", error);
       setError("Si è verificato un errore di comunicazione con il server");
       
-      // CRITICAL: Show connection error toast
+      // CRITICAL: Show connection error toast - IMPERATIVO
       toast.error("❌ Errore di connessione", {
         description: "Impossibile contattare il server. Riprova più tardi.",
         duration: 3000,
@@ -348,16 +379,20 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const isProcessing = isLoading || paymentLoading;
 
   return (
-    <div className="flex flex-col items-center justify-center h-full">
+    <div className="flex flex-col items-center justify-center h-full min-h-[500px]">
       <motion.button
-        className="w-72 h-72 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl hover:shadow-[0_0_35px_rgba(123,46,255,0.7)] focus:outline-none disabled:opacity-50"
+        className="w-80 h-80 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-xl focus:outline-none disabled:opacity-50"
         onClick={handleBuzzPress}
         disabled={isProcessing || isBlocked}
         whileTap={{ scale: 0.95 }}
         whileHover={{ scale: 1.05 }}
         initial={{ boxShadow: "0 0 0px rgba(123, 46, 255, 0)" }}
         animate={{ 
-          boxShadow: isBlocked ? "none" : ["0 0 20px rgba(123, 46, 255, 0.4)", "0 0 50px rgba(0, 209, 255, 0.8)", "0 0 20px rgba(123, 46, 255, 0.4)"]
+          boxShadow: isBlocked ? "none" : [
+            "0 0 20px rgba(123, 46, 255, 0.4)", 
+            "0 0 50px rgba(0, 209, 255, 0.8)", 
+            "0 0 20px rgba(123, 46, 255, 0.4)"
+          ]
         }}
         transition={{ 
           boxShadow: { repeat: Infinity, duration: 2.5 },
@@ -403,6 +438,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             </>
           ) : (
             <>
+              <Zap className="w-16 h-16 text-white mb-2" />
               <span className="text-4xl font-bold text-white tracking-wider glow-text">
                 BUZZ!
               </span>
