@@ -2,7 +2,6 @@
 import React from "react";
 import { motion } from "framer-motion";
 import GradientBox from "@/components/ui/gradient-box";
-import Porsche3D from "@/components/3d/Porsche3D";
 
 interface PrizeVisionProps {
   progress: number;
@@ -25,10 +24,16 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
       </div>
       
       <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
-        {/* 3D Porsche component - NO FILTERS OR OVERLAYS */}
-        <div className="w-full h-full">
-          <Porsche3D className="w-full h-full" />
-        </div>
+        {/* Premium Porsche video - autoplay, muted, loop */}
+        <video
+          src="https://vkjrqirvdvjbemsfzxof.supabase.co/storage/v1/object/public/videos//20250612_0824_Rotating%20Porsche%20Showcase_simple_compose_01jxhcza4bfbatqkg8k84g20rj.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover"
+          style={{ borderRadius: '0' }}
+        />
         
         {/* Progress bar */}
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
