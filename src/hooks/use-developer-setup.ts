@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { User } from '@supabase/supabase-js';
 
 export const useDeveloperSetup = () => {
   const [isSetupComplete, setIsSetupComplete] = useState(false);
@@ -11,32 +12,24 @@ export const useDeveloperSetup = () => {
     try {
       console.log('🔧 Checking developer user setup...');
       
-      // Check if developer user exists
-      const { data: users, error: userError } = await supabase.auth.admin.listUsers();
+      // Try to get current session first
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (userError) {
-        console.error('❌ Cannot check users:', userError);
-        // Fallback: assume user exists and try to sign them up if needed
-        await ensureDeveloperRegistration();
+      if (session?.user?.email === 'wikus77@hotmail.it') {
+        console.log('✅ Developer user already authenticated');
+        await ensureDeveloperRole(session.user.id);
+        setIsSetupComplete(true);
         return;
       }
 
-      const developerUser = users.users.find(user => user.email === 'wikus77@hotmail.it');
-      
-      if (!developerUser) {
-        console.log('👤 Developer user not found, creating...');
-        await ensureDeveloperRegistration();
-      } else {
-        console.log('✅ Developer user exists:', developerUser.email);
-        // Ensure developer role is assigned
-        await ensureDeveloperRole(developerUser.id);
-      }
-      
+      // If not authenticated as developer, try to ensure registration exists
+      await ensureDeveloperRegistration();
       setIsSetupComplete(true);
     } catch (error: any) {
       console.error('💥 Developer setup error:', error);
       // Fallback: try to register anyway
       await ensureDeveloperRegistration();
+      setIsSetupComplete(true);
     } finally {
       setIsLoading(false);
     }
@@ -55,9 +48,9 @@ export const useDeveloperSetup = () => {
       });
 
       if (error) {
-        if (error.message.includes('already registered')) {
+        if (error.message.includes('already registered') || error.message.includes('User already registered')) {
           console.log('✅ Developer user already exists');
-          // Try to get the user ID and ensure role
+          // Try to ensure role is assigned
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
             await ensureDeveloperRole(user.id);
