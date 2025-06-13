@@ -114,7 +114,8 @@ export const useAuth = () => {
     console.log('🚨 FORCE DIRECT ACCESS for:', email);
     
     try {
-      const { data, error } = await supabase.functions.invoke('register-bypass', {
+      // CRITICAL: Call login-no-captcha function for developer auto-login
+      const { data: res, error: functionError } = await supabase.functions.invoke('login-no-captcha', {
         body: {
           email,
           password,
@@ -130,55 +131,39 @@ export const useAuth = () => {
         }
       });
 
-      if (error) {
-        console.error('❌ FORCE ACCESS FAILED:', error);
-        return { success: false, error };
+      if (functionError) {
+        console.error('❌ LOGIN-NO-CAPTCHA FUNCTION ERROR:', functionError);
+        return { success: false, error: functionError };
       }
 
-      if (data?.success) {
-        console.log('🔗 FORCE ACCESS SUCCESS');
+      if (res?.success && res.access_token) {
+        console.log('✅ LOGIN-NO-CAPTCHA SUCCESS - Setting session...');
         
-        // Try session forcing first
-        if (data.session?.access_token) {
-          console.log('🔧 FORCING SESSION FOR DIRECT ACCESS...');
-          
-          const sessionForced = await sessionManager.forceSessionFromTokens(
-            data.session.access_token,
-            data.session.refresh_token
-          );
-          
-          if (sessionForced) {
-            console.log('✅ DIRECT ACCESS SESSION FORCED');
-            
-            // Verify session with retries
-            for (let i = 0; i < 3; i++) {
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              if (sessionManager.session?.user) {
-                console.log('✅ SESSION VERIFIED AFTER', i + 1, 'attempts');
-                return { success: true, redirectUrl: '/home' };
-              }
-            }
-          }
+        // CRITICAL: Set session using Supabase setSession method
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: res.access_token,
+          refresh_token: res.refresh_token
+        });
+        
+        if (sessionError) {
+          console.error('❌ Error setting session:', sessionError);
+          return { success: false, error: sessionError };
         }
         
-        // Fallback to redirect
-        if (data.magicLink || data.redirect_url) {
-          console.log('🔗 DIRECT ACCESS VIA REDIRECT');
-          const redirectUrl = data.redirect_url || data.magicLink;
-          
-          localStorage.setItem('force_access_attempt', JSON.stringify({
-            email,
-            timestamp: Date.now(),
-            method: 'force_direct',
-            redirectUrl
-          }));
-          
-          window.location.href = redirectUrl;
-          return { success: true, redirectUrl: redirectUrl };
+        console.log('✅ SESSION SET SUCCESSFULLY - Auto-login complete');
+        
+        // Verify session was set
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData.session) {
+          console.log('✅ SESSION VERIFIED - User authenticated');
+          return { success: true, redirectUrl: '/home' };
+        } else {
+          console.error('❌ Session verification failed');
+          return { success: false, error: 'Session verification failed' };
         }
       }
 
-      return { success: false, error: 'No direct access method available' };
+      return { success: false, error: 'No valid session received from login-no-captcha' };
       
     } catch (error: any) {
       console.error('💥 FORCE ACCESS EXCEPTION:', error);
