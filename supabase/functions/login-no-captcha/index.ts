@@ -7,32 +7,18 @@ serve(async (req) => {
     const { email } = await req.json();
 
     const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") || "http://localhost:54321",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
+      Deno.env.get("SUPABASE_URL") ?? "http://localhost:54321",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Chiamata corretta alla funzione RPC
     const { data: userList, error: fetchError } = await supabase.rpc("get_user_by_email", {
       email_input: email,
     });
 
-    if (fetchError) {
-      console.error("RPC Error:", fetchError);
+    if (fetchError || !userList || userList.length === 0) {
+      console.error("❌ RPC error", fetchError);
       return new Response(
-        JSON.stringify({ success: false, error: "RPC call failed", details: fetchError }),
-        { status: 500 }
-      );
-    }
-
-    if (!userList || userList.length === 0) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Developer user not found" }),
+        JSON.stringify({ success: false, error: "Developer user not found", details: fetchError }),
         { status: 404 }
       );
     }
@@ -44,9 +30,13 @@ serve(async (req) => {
     });
 
     if (sessionError || !session) {
-      console.error("Session Error:", sessionError);
+      console.error("❌ Session error", sessionError);
       return new Response(
-        JSON.stringify({ success: false, error: "Session creation failed", details: sessionError }),
+        JSON.stringify({
+          success: false,
+          error: "Session creation failed",
+          details: sessionError?.message,
+        }),
         { status: 500 }
       );
     }
@@ -60,11 +50,10 @@ serve(async (req) => {
       }),
       { status: 200 }
     );
-  } catch (error) {
-    console.error("Function Error:", error);
-    return new Response(
-      JSON.stringify({ success: false, error: "Internal server error", details: error.message }),
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("❌ Unexpected error", err);
+    return new Response(JSON.stringify({ success: false, error: "Unhandled exception", details: err }), {
+      status: 500,
+    });
   }
 });
