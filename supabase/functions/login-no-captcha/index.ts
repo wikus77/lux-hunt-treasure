@@ -14,15 +14,38 @@ serve(async (req) => {
 
   try {
     console.log('🔐 DEVELOPER AUTO-LOGIN REQUEST - START');
-    const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', {
+    
+    // Verifica variabili d'ambiente
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    
+    console.log('📋 ENV CHECK:', {
+      hasUrl: !!supabaseUrl,
+      hasServiceKey: !!serviceKey,
+      hasAnonKey: !!anonKey,
+      urlValue: supabaseUrl
+    });
+    
+    if (!supabaseUrl || !serviceKey || !anonKey) {
+      console.error('❌ Missing environment variables');
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Missing environment variables',
+        details: `URL: ${!!supabaseUrl}, ServiceKey: ${!!serviceKey}, AnonKey: ${!!anonKey}`
+      }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, serviceKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    const supabaseClient = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_ANON_KEY') ?? '');
+    const supabaseClient = createClient(supabaseUrl, anonKey);
 
     console.log('🔍 Looking for developer user...');
     const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
     if (userError) {
+      console.error('❌ Error listing users:', userError);
       return new Response(JSON.stringify({
         success: false,
         error: 'Cannot retrieve users',
@@ -32,25 +55,39 @@ serve(async (req) => {
 
     const developerUser = userData.users.find((user) => user.email === 'wikus77@hotmail.it');
     if (!developerUser) {
+      console.log('❌ Developer user not found in users list');
       return new Response(JSON.stringify({
         success: false,
         error: 'Developer user not found'
       }), { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
     }
 
+    console.log('✅ Developer user found, updating password...');
     const tempPassword = 'DevLogin2025!';
-    await supabaseAdmin.auth.admin.updateUserById(developerUser.id, {
+    
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(developerUser.id, {
       email_confirm: true,
       email_confirmed_at: new Date().toISOString(),
       password: tempPassword
     });
+    
+    if (updateError) {
+      console.error('❌ Error updating user:', updateError);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Cannot update user',
+        details: updateError.message
+      }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+    }
 
+    console.log('🔑 Attempting sign in...');
     const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
       email: 'wikus77@hotmail.it',
       password: tempPassword
     });
 
     if (signInError || !signInData.session) {
+      console.error('❌ Sign in failed:', signInError);
       return new Response(JSON.stringify({
         success: false,
         error: 'Sign in failed',
@@ -58,6 +95,7 @@ serve(async (req) => {
       }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
     }
 
+    console.log('✅ AUTO-LOGIN COMPLETATO');
     return new Response(JSON.stringify({
       success: true,
       access_token: signInData.session.access_token,
@@ -85,10 +123,13 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    console.error('CRITICAL ERROR STACK:', error.stack || error);
+    console.error('CRITICAL ERROR MESSAGE:', error.message || error.toString());
     return new Response(JSON.stringify({
       success: false,
       error: 'Developer auto-login failed',
       details: error.message || error.toString(),
+      stack: error.stack || 'No stack trace available',
       timestamp: new Date().toISOString()
     }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
   }
