@@ -1219,9 +1219,7 @@ export type Database = {
       }
       get_user_by_email: {
         Args: { email_param: string }
-        Returns: {
-          id: string
-        }[]
+        Returns: unknown[]
       }
       handle_new_user: {
         Args: { new_user_id: string; user_email: string }
