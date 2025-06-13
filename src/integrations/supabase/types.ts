@@ -1217,6 +1217,12 @@ export type Database = {
           agent_code: string
         }[]
       }
+      get_user_by_email: {
+        Args: { email_param: string }
+        Returns: {
+          id: string
+        }[]
+      }
       handle_new_user: {
         Args: { new_user_id: string; user_email: string }
         Returns: undefined

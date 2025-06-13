@@ -10,11 +10,7 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  const { data: users, error } = await supabase
-    .from("auth.users")
-    .select("id")
-    .eq("email", email)
-    .limit(1);
+  const { data: users, error } = await supabase.rpc("get_user_by_email", { email_param: email });
 
   if (error || !users?.length) {
     return new Response(JSON.stringify({
@@ -43,5 +39,3 @@ serve(async (req) => {
     user: session.user
   }), { status: 200 });
 });
-
-
