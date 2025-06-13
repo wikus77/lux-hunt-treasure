@@ -6,10 +6,11 @@ serve(async (req) => {
   const { email } = await req.json();
 
   const supabase = createClient(
-    "http://localhost:54321",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    "http://localhost:54321", // locale
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
+  // Chiamata corretta alla funzione pubblica con parametro email_input
   const { data: userList, error: fetchError } = await supabase.rpc("get_user_by_email", {
     email_input: email,
   });
@@ -29,11 +30,7 @@ serve(async (req) => {
 
   if (sessionError || !session) {
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: "Session creation failed",
-        details: sessionError.message,
-      }),
+      JSON.stringify({ success: false, error: "Session creation failed", details: sessionError }),
       { status: 500 }
     );
   }
