@@ -1,4 +1,3 @@
-
 import { useAuthSessionManager } from './use-auth-session-manager';
 import { supabase } from '@/integrations/supabase/client';
 import { CapacitorHttp, Capacitor } from '@capacitor/core';
@@ -119,15 +118,27 @@ export const useAuth = () => {
     try {
       console.log('📡 Calling login-no-captcha function with enhanced mobile handling...');
       
-      const response = await fetch("https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Origin": "https://m1ssion.com", // Obbligatorio per WebView su iPhone
-        },
-      });
+      const isCapacitor = !!window.Capacitor;
 
-      const { access_token, refresh_token } = await response.json();
+      let response;
+      if (isCapacitor) {
+        response = await CapacitorHttp.post({
+          url: 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha',
+          headers: {
+            'Content-Type': 'application/json',
+            'Origin': 'https://m1ssion.com',
+          },
+          data: {},
+        });
+      } else {
+        const raw = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        response = await raw.json();
+      }
+
+      const { access_token, refresh_token } = response.data || response;
 
       const { data, error } = await supabase.auth.setSession({
         access_token,
