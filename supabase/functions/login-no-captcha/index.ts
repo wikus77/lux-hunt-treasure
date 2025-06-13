@@ -10,18 +10,22 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  const { data: users, error } = await supabase.rpc("get_user_by_email", { email_param: email });
+  // Ottieni l'utente sviluppatore tramite la nuova funzione pubblica collegata alla view
+  const { data: userList, error: fetchError } = await supabase.rpc('get_user_by_email', {
+    email_input: email,
+  });
 
-  if (error || !users?.length) {
-    return new Response(JSON.stringify({
-      success: false,
-      error: "Developer user not found",
-      details: error?.message
-    }), { status: 404 });
+  if (fetchError || !userList || userList.length === 0) {
+    return new Response(
+      JSON.stringify({ success: false, error: 'Developer user not found', details: fetchError }),
+      { status: 404 }
+    );
   }
 
+  const user = userList[0];
+
   const { data: session, error: sessionError } = await supabase.auth.admin.createSession({
-    user_id: users[0].id,
+    user_id: user.id,
   });
 
   if (sessionError || !session) {
