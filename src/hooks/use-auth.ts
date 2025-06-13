@@ -1,3 +1,4 @@
+
 import { useAuthSessionManager } from './use-auth-session-manager';
 import { supabase } from '@/integrations/supabase/client';
 import { CapacitorHttp, Capacitor } from '@capacitor/core';
@@ -206,7 +207,7 @@ export const useAuth = () => {
         }
       }
 
-      console.error('❌ Invalid response from login-no-captcha:', res);
+      console.error('❌ Invalid response from login-no-captcha:', response);
       return { success: false, error: 'No valid session received from login-no-captcha' };
       
     } catch (error: any) {
