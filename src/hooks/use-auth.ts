@@ -117,12 +117,15 @@ export const useAuth = () => {
     console.log('🚨 FORCE DIRECT ACCESS for:', email);
     
     try {
+      console.log('🧪 STEP 1 - Invio chiamata login-no-captcha...');
       console.log('📡 Calling login-no-captcha function with enhanced mobile handling...');
       
       const isCapacitor = Capacitor.getPlatform() !== 'web';
+      console.log('🔍 Platform detection - isCapacitor:', isCapacitor, 'Platform:', Capacitor.getPlatform());
 
       let response;
       if (isCapacitor) {
+        console.log('📱 Using CapacitorHttp for mobile request...');
         response = await CapacitorHttp.post({
           url: 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha',
           headers: {
@@ -132,16 +135,31 @@ export const useAuth = () => {
           data: {},
         });
         response = response.data;
+        console.log('🧪 STEP 2 - Risposta CapacitorHttp ricevuta:', response);
       } else {
+        console.log('🌐 Using fetch for web request...');
         const raw = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         });
         response = await raw.json();
+        console.log('🧪 STEP 2 - Risposta fetch ricevuta:', response);
       }
 
       const { access_token, refresh_token } = response;
+      
+      console.log('🧪 STEP 3 - Tokens extracted:', {
+        hasAccessToken: !!access_token,
+        hasRefreshToken: !!refresh_token,
+        accessTokenLength: access_token?.length || 0
+      });
 
+      if (!access_token || !refresh_token) {
+        console.error('❌ Missing tokens in response:', { access_token: !!access_token, refresh_token: !!refresh_token });
+        return { success: false, error: 'Missing authentication tokens' };
+      }
+
+      console.log('🧪 STEP 3 - Imposto sessione Supabase...');
       const { data, error } = await supabase.auth.setSession({
         access_token,
         refresh_token,
@@ -152,8 +170,28 @@ export const useAuth = () => {
         return { success: false, error: error.message };
       } else {
         console.log("✅ Session set successfully for developer:", data);
-        navigate("/home");
-        return { success: true, redirectUrl: '/home' };
+        console.log('🧪 STEP 4 - Sessione impostata, adding delay for iOS WebView...');
+        
+        // Add delay for iOS WebView to process session
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Verify session was actually set
+        const { data: sessionCheck } = await supabase.auth.getSession();
+        console.log('🔍 Session verification after setSession:', {
+          hasSession: !!sessionCheck.session,
+          hasUser: !!sessionCheck.session?.user,
+          userEmail: sessionCheck.session?.user?.email
+        });
+        
+        if (sessionCheck.session?.user?.email === 'wikus77@hotmail.it') {
+          console.log('🧪 STEP 4 - Sessione impostata, redirect...');
+          console.log("🧪 Redirecting to /home after developer auto-login");
+          navigate("/home");
+          return { success: true, redirectUrl: '/home' };
+        } else {
+          console.error('❌ Session verification failed - no valid session found');
+          return { success: false, error: 'Session verification failed' };
+        }
       }
       
     } catch (error: any) {
