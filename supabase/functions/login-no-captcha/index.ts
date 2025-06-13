@@ -18,23 +18,59 @@ serve(async (req) => {
 
   try {
     console.log("🧪 STEP 1 - Starting login-no-captcha function...");
+    console.log("🧪 Request method:", req.method);
+    console.log("🧪 Request headers:", Object.fromEntries(req.headers.entries()));
     
-    // Parse request body
-    const { email } = await req.json();
-    console.log("🧪 STEP 2 - Email received:", email);
+    // Parse request body with validation
+    let requestBody;
+    try {
+      requestBody = await req.json();
+      console.log("🧪 STEP 2 - Request body parsed:", requestBody);
+    } catch (parseError) {
+      console.error("❌ Failed to parse request body:", parseError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid JSON in request body" }),
+        { 
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
 
-    // Create Supabase client with service role key
+    const { email } = requestBody;
+    
+    if (!email) {
+      console.error("❌ Email not provided in request");
+      return new Response(
+        JSON.stringify({ success: false, error: "Email is required" }),
+        { 
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+    
+    console.log("🧪 STEP 3 - Email received:", email);
+
+    // Create Supabase client with enhanced environment checks
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "http://localhost:54321";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
-    console.log("🧪 STEP 3 - Environment check:", {
+    console.log("🧪 STEP 4 - Environment check:", {
       supabaseUrl,
       hasServiceKey: !!serviceRoleKey,
-      serviceKeyLength: serviceRoleKey?.length || 0
+      serviceKeyLength: serviceRoleKey?.length || 0,
+      serviceKeyStart: serviceRoleKey?.substring(0, 10) + "..." || "N/A"
     });
 
     if (!serviceRoleKey) {
-      console.error("❌ SUPABASE_SERVICE_ROLE_KEY not found");
+      console.error("❌ SUPABASE_SERVICE_ROLE_KEY not found in environment");
       return new Response(
         JSON.stringify({ success: false, error: "Service key not configured" }),
         { 
@@ -47,63 +83,43 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
-    console.log("🧪 STEP 4 - Supabase client created");
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+    console.log("🧪 STEP 5 - Supabase client created successfully");
 
-    // Call the RPC function to get user by email
-    console.log("🧪 STEP 5 - Calling RPC get_user_by_email with email_input:", email);
+    // CRITICAL FIX: Use correct parameter name 'email_param' instead of 'email_input'
+    console.log("🧪 STEP 6 - Calling RPC get_user_by_email with email_param:", email);
     const { data: userList, error: fetchError } = await supabase.rpc("get_user_by_email", {
-      email_input: email,
+      email_param: email,  // FIXED: Changed from email_input to email_param
     });
 
-    console.log("🧪 STEP 6 - RPC Response:", {
+    console.log("🧪 STEP 7 - RPC Response:", {
       hasData: !!userList,
       dataLength: userList?.length || 0,
       hasError: !!fetchError,
-      error: fetchError
+      error: fetchError,
+      userData: userList?.[0] ? {
+        id: userList[0].id,
+        email: userList[0].email,
+        hasId: !!userList[0].id
+      } : null
     });
 
-    if (fetchError || !userList || userList.length === 0) {
-      console.error("❌ RPC error or no user found:", fetchError);
+    if (fetchError) {
+      console.error("❌ RPC call failed with error:", fetchError);
       return new Response(
-        JSON.stringify({ success: false, error: "Developer user not found", details: fetchError }),
-        { 
-          status: 404,
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders
+        JSON.stringify({ 
+          success: false, 
+          error: "Database query failed", 
+          details: {
+            message: fetchError.message,
+            code: fetchError.code,
+            hint: fetchError.hint
           }
-        }
-      );
-    }
-
-    const user = userList[0];
-    console.log("🧪 STEP 7 - User found:", {
-      userId: user.id,
-      userEmail: user.email
-    });
-
-    // Create admin session
-    console.log("🧪 STEP 8 - Creating admin session for user:", user.id);
-    const { data: session, error: sessionError } = await supabase.auth.admin.createSession({
-      user_id: user.id,
-    });
-
-    console.log("🧪 STEP 9 - Session creation result:", {
-      hasSession: !!session,
-      hasUser: !!session?.user,
-      hasAccessToken: !!session?.session?.access_token,
-      hasRefreshToken: !!session?.session?.refresh_token,
-      sessionError
-    });
-
-    if (sessionError || !session) {
-      console.error("❌ Session creation failed:", sessionError);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Session creation failed",
-          details: sessionError?.message,
         }),
         { 
           status: 500,
@@ -115,14 +131,106 @@ serve(async (req) => {
       );
     }
 
-    console.log("✅ STEP 10 - Login successful, returning tokens");
+    if (!userList || userList.length === 0) {
+      console.error("❌ No user found for email:", email);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Developer user not found",
+          details: { searchedEmail: email }
+        }),
+        { 
+          status: 404,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    const user = userList[0];
+    console.log("🧪 STEP 8 - User found:", {
+      userId: user.id,
+      userEmail: user.email,
+      userExists: !!user
+    });
+
+    // Create admin session with enhanced logging
+    console.log("🧪 STEP 9 - Creating admin session for user:", user.id);
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
+      user_id: user.id,
+    });
+
+    console.log("🧪 STEP 10 - Session creation result:", {
+      hasSessionData: !!sessionData,
+      hasSession: !!sessionData?.session,
+      hasUser: !!sessionData?.user,
+      hasAccessToken: !!sessionData?.session?.access_token,
+      hasRefreshToken: !!sessionData?.session?.refresh_token,
+      sessionError: sessionError,
+      accessTokenLength: sessionData?.session?.access_token?.length || 0,
+      refreshTokenLength: sessionData?.session?.refresh_token?.length || 0
+    });
+
+    if (sessionError) {
+      console.error("❌ Session creation failed with error:", sessionError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Session creation failed",
+          details: {
+            message: sessionError.message,
+            status: sessionError.status
+          }
+        }),
+        { 
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    if (!sessionData || !sessionData.session) {
+      console.error("❌ No session data returned from createSession");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "No session created",
+          details: "Session data is null or undefined"
+        }),
+        { 
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    console.log("✅ STEP 11 - Login successful, returning tokens");
+    const response = {
+      success: true,
+      access_token: sessionData.session.access_token,
+      refresh_token: sessionData.session.refresh_token,
+      user: sessionData.user,
+      session: sessionData.session
+    };
+
+    console.log("🧪 STEP 12 - Final response prepared:", {
+      success: response.success,
+      hasAccessToken: !!response.access_token,
+      hasRefreshToken: !!response.refresh_token,
+      hasUser: !!response.user,
+      userEmail: response.user?.email
+    });
+
     return new Response(
-      JSON.stringify({
-        success: true,
-        access_token: session.session.access_token,
-        refresh_token: session.session.refresh_token,
-        user: session.user,
-      }),
+      JSON.stringify(response),
       { 
         status: 200,
         headers: {
@@ -131,12 +239,18 @@ serve(async (req) => {
         }
       }
     );
+
   } catch (err) {
     console.error("❌ Unexpected error in login-no-captcha:", err);
+    console.error("❌ Error stack:", err.stack);
     return new Response(JSON.stringify({ 
       success: false, 
       error: "Unhandled exception", 
-      details: err.message || err 
+      details: {
+        message: err.message || err,
+        name: err.name,
+        stack: err.stack
+      }
     }), {
       status: 500,
       headers: {

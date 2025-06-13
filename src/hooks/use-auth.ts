@@ -1,4 +1,3 @@
-
 import { useAuthSessionManager } from './use-auth-session-manager';
 import { supabase } from '@/integrations/supabase/client';
 import { CapacitorHttp, Capacitor } from '@capacitor/core';
@@ -117,34 +116,73 @@ export const useAuth = () => {
     console.log('🚨 FORCE DIRECT ACCESS for:', email);
     
     try {
-      console.log('🧪 STEP 1 - Invio chiamata login-no-captcha...');
+      console.log('🧪 STEP 1 - Calling enhanced login-no-captcha...');
       console.log('📡 Calling login-no-captcha function with enhanced mobile handling...');
       
       const isCapacitor = Capacitor.getPlatform() !== 'web';
       console.log('🔍 Platform detection - isCapacitor:', isCapacitor, 'Platform:', Capacitor.getPlatform());
 
       let response;
+      const requestPayload = { email };
+      const endpoint = 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha';
+      
+      console.log('🧪 Request payload:', requestPayload);
+      console.log('🧪 Endpoint:', endpoint);
+
       if (isCapacitor) {
         console.log('📱 Using CapacitorHttp for mobile request...');
-        response = await CapacitorHttp.post({
-          url: 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha',
-          headers: {
-            'Content-Type': 'application/json',
-            'Origin': 'https://m1ssion.com',
-          },
-          data: { email },
-        });
-        response = response.data;
-        console.log('🧪 STEP 2 - Risposta CapacitorHttp ricevuta:', response);
+        try {
+          const capacitorResponse = await CapacitorHttp.post({
+            url: endpoint,
+            headers: {
+              'Content-Type': 'application/json',
+              'Origin': 'https://m1ssion.com',
+            },
+            data: requestPayload,
+          });
+          response = capacitorResponse.data;
+          console.log('🧪 STEP 2 - CapacitorHttp response received:', response);
+        } catch (capacitorError) {
+          console.error('❌ CapacitorHttp error:', capacitorError);
+          throw new Error(`CapacitorHttp failed: ${capacitorError.message}`);
+        }
       } else {
         console.log('🌐 Using fetch for web request...');
-        const raw = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
-        response = await raw.json();
-        console.log('🧪 STEP 2 - Risposta fetch ricevuta:', response);
+        try {
+          const fetchResponse = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify(requestPayload),
+          });
+          
+          console.log('🧪 Fetch response status:', fetchResponse.status);
+          console.log('🧪 Fetch response headers:', Object.fromEntries(fetchResponse.headers.entries()));
+          
+          if (!fetchResponse.ok) {
+            const errorText = await fetchResponse.text();
+            console.error('❌ Fetch response not ok:', errorText);
+            throw new Error(`HTTP ${fetchResponse.status}: ${errorText}`);
+          }
+          
+          response = await fetchResponse.json();
+          console.log('🧪 STEP 2 - Fetch response received:', response);
+        } catch (fetchError) {
+          console.error('❌ Fetch error:', fetchError);
+          throw new Error(`Fetch failed: ${fetchError.message}`);
+        }
+      }
+
+      if (!response) {
+        console.error('❌ No response received');
+        return { success: false, error: 'No response from server' };
+      }
+
+      if (!response.success) {
+        console.error('❌ Server returned error:', response.error);
+        return { success: false, error: response.error || 'Server error' };
       }
 
       const { access_token, refresh_token } = response;
@@ -152,15 +190,19 @@ export const useAuth = () => {
       console.log('🧪 STEP 3 - Tokens extracted:', {
         hasAccessToken: !!access_token,
         hasRefreshToken: !!refresh_token,
-        accessTokenLength: access_token?.length || 0
+        accessTokenLength: access_token?.length || 0,
+        refreshTokenLength: refresh_token?.length || 0
       });
 
       if (!access_token || !refresh_token) {
-        console.error('❌ Missing tokens in response:', { access_token: !!access_token, refresh_token: !!refresh_token });
+        console.error('❌ Missing tokens in response:', { 
+          access_token: !!access_token, 
+          refresh_token: !!refresh_token 
+        });
         return { success: false, error: 'Missing authentication tokens' };
       }
 
-      console.log('🧪 STEP 3 - Imposto sessione Supabase...');
+      console.log('🧪 STEP 4 - Setting session with Supabase...');
       const { data, error } = await supabase.auth.setSession({
         access_token,
         refresh_token,
@@ -171,10 +213,10 @@ export const useAuth = () => {
         return { success: false, error: error.message };
       } else {
         console.log("✅ Session set successfully for developer:", data);
-        console.log('🧪 STEP 4 - Sessione impostata, adding delay for iOS WebView...');
+        console.log('🧪 STEP 5 - Session set, adding delay for iOS WebView...');
         
         // Add delay for iOS WebView to process session
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Verify session was actually set
         const { data: sessionCheck } = await supabase.auth.getSession();
@@ -185,7 +227,7 @@ export const useAuth = () => {
         });
         
         if (sessionCheck.session?.user?.email === 'wikus77@hotmail.it') {
-          console.log('🧪 STEP 4 - Sessione impostata, redirect...');
+          console.log('🧪 STEP 6 - Session verified, redirecting...');
           console.log("🧪 Redirecting to /home after developer auto-login");
           navigate("/home");
           return { success: true, redirectUrl: '/home' };
@@ -197,7 +239,7 @@ export const useAuth = () => {
       
     } catch (error: any) {
       console.error('💥 FORCE ACCESS EXCEPTION:', error);
-      return { success: false, error };
+      return { success: false, error: error.message || 'Unknown error occurred' };
     }
   };
 
