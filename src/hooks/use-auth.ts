@@ -1,4 +1,5 @@
 
+
 import { useAuthSessionManager } from './use-auth-session-manager';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -114,33 +115,105 @@ export const useAuth = () => {
     console.log('🚨 FORCE DIRECT ACCESS for:', email);
     
     try {
-      // CRITICAL: Use direct fetch instead of supabase.functions.invoke to bypass FunctionsFetchError
-      console.log('📡 Calling login-no-captcha function with direct fetch...');
+      console.log('📡 Calling login-no-captcha function with enhanced mobile handling...');
       
-      const response = await fetch("https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`,
-          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          "Accept": "application/json, text/plain, */*",
-          "Accept-Language": "en-US,en;q=0.9",
-          "Origin": "capacitor://localhost"
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          action: 'login'
-        })
-      });
+      let response: any;
+      
+      // Check if we're in a Capacitor environment
+      const isCapacitor = typeof window !== 'undefined' && 
+        (window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost');
+      
+      if (isCapacitor) {
+        console.log('📱 Using CapacitorHttp for mobile environment');
+        
+        // Import CapacitorHttp dynamically for mobile
+        try {
+          const { CapacitorHttp } = await import('@capacitor/core');
+          
+          const httpResponse = await CapacitorHttp.post({
+            url: "https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`,
+              "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
+              "Origin": "https://m1ssion.com",
+              "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15"
+            },
+            data: {
+              email,
+              password,
+              action: 'login'
+            }
+          });
+          
+          if (httpResponse.status !== 200) {
+            console.error('❌ CapacitorHttp request failed:', httpResponse.status);
+            return { success: false, error: `HTTP ${httpResponse.status}` };
+          }
+          
+          response = httpResponse;
+          
+        } catch (capacitorError) {
+          console.log('⚠️ CapacitorHttp not available, falling back to fetch');
+          
+          // Fallback to enhanced fetch with explicit headers
+          const fetchResponse = await fetch("https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`,
+              "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
+              "Origin": "https://m1ssion.com",
+              "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15"
+            },
+            body: JSON.stringify({
+              email,
+              password,
+              action: 'login'
+            })
+          });
+          
+          if (!fetchResponse.ok) {
+            console.error('❌ Enhanced fetch failed:', fetchResponse.status);
+            return { success: false, error: `HTTP ${fetchResponse.status}` };
+          }
+          
+          response = {
+            data: await fetchResponse.json(),
+            status: fetchResponse.status
+          };
+        }
+      } else {
+        console.log('🌐 Using standard fetch for web environment');
+        
+        // Standard web environment
+        const fetchResponse = await fetch("https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`,
+            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
+            "Origin": "https://m1ssion.com"
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            action: 'login'
+          })
+        });
 
-      if (!response.ok) {
-        console.error('❌ DIRECT FETCH FAILED:', response.status, response.statusText);
-        return { success: false, error: `HTTP ${response.status}: ${response.statusText}` };
+        if (!fetchResponse.ok) {
+          console.error('❌ Standard fetch failed:', fetchResponse.status);
+          return { success: false, error: `HTTP ${fetchResponse.status}` };
+        }
+
+        response = {
+          data: await fetchResponse.json(),
+          status: fetchResponse.status
+        };
       }
 
-      const res = await response.json();
+      const res = response.data;
       console.log('📋 Function response:', res);
 
       if (res?.success && res.access_token && res.refresh_token) {
@@ -205,3 +278,4 @@ export const useAuth = () => {
     resetPassword: async (email: string) => ({ success: true }),
   };
 };
+
