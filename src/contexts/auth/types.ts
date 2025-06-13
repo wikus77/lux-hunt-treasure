@@ -1,6 +1,7 @@
 
 export interface AuthContextType {
-  login: (email: string, password: string, captchaToken?: string) => Promise<{ success: boolean; error?: any }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: any; session?: any }>;
+  register: (email: string, password: string) => Promise<{ success: boolean; error?: any; data?: any }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -22,6 +23,7 @@ export interface User {
   app_metadata: Record<string, any>;
   user_metadata: Record<string, any>;
   aud: string;
+  email_confirmed_at?: string;
 }
 
 export interface Session {

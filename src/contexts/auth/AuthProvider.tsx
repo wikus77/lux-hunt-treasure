@@ -8,44 +8,42 @@ import { AuthContextType } from './types';
 import { useNavigate } from 'react-router-dom';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Use the base authentication functionality from our useAuth hook
   const auth = useAuth();
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
 
-  // Enhanced session monitoring for developer auto-login
+  // Enhanced session monitoring
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('🔍 Auth state change:', event, 'Session exists:', !!session);
       
-      // Force redirect for developer auto-login
-      if (event === 'SIGNED_IN' && session?.user?.email === 'wikus77@hotmail.it') {
-        console.log("🧪 Developer session detected, forcing redirect to /home");
-        setTimeout(() => {
-          navigate('/home');
-        }, 100);
+      // Handle successful authentication
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log("✅ User signed in successfully:", session.user.email);
+        
+        // Check if user should be redirected to home
+        const currentPath = window.location.pathname;
+        if (currentPath === '/login' || currentPath === '/auth' || currentPath === '/') {
+          console.log("🏠 Redirecting authenticated user to /home");
+          setTimeout(() => {
+            navigate('/home');
+          }, 1000);
+        }
+      }
+      
+      // Handle sign out
+      if (event === 'SIGNED_OUT') {
+        console.log("🚪 User signed out");
+        setUserRole(null);
+        setIsRoleLoading(false);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  // Monitor session changes for developer auto-login redirect
-  useEffect(() => {
-    if (auth.session?.user?.email === 'wikus77@hotmail.it' && !auth.isLoading) {
-      console.log("🧪 Developer session active, checking current location...");
-      
-      // Only redirect if not already on a protected page
-      const currentPath = window.location.pathname;
-      if (currentPath === '/login' || currentPath === '/') {
-        console.log("🧪 Sessione attiva, redirect forzato a /home...");
-        navigate('/home');
-      }
-    }
-  }, [auth.session, auth.isLoading, navigate]);
-
-  // Simplified role fetching - no special cases
+  // Fetch user role when user changes
   useEffect(() => {
     const fetchUserRole = async () => {
       if (!auth.user?.id || auth.isLoading) {
@@ -58,14 +56,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsRoleLoading(true);
         console.log("🔍 Fetching role for user:", auth.user.id, auth.user.email);
         
-        const { data } = await supabase
-          .from('profiles')
+        // Check user_roles table for developer role
+        const { data: roleData } = await supabase
+          .from('user_roles')
           .select('role')
-          .eq('id', auth.user.id)
-          .maybeSingle();
+          .eq('user_id', auth.user.id)
+          .single();
 
-        setUserRole(data?.role || 'user');
-        console.log("✅ User role found:", data?.role || 'user');
+        if (roleData?.role) {
+          setUserRole(roleData.role);
+          console.log("✅ User role found:", roleData.role);
+        } else {
+          // Check profiles table as fallback
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', auth.user.id)
+            .single();
+
+          setUserRole(profileData?.role || 'user');
+          console.log("✅ User role from profiles:", profileData?.role || 'user');
+        }
       } catch (error) {
         console.error('❌ Error fetching user role:', error);
         setUserRole('user'); // Default to user role
@@ -88,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return userRole === role;
   };
 
-  // Create the complete context value by combining auth hook values with role information
+  // Create the complete context value
   const authContextValue: AuthContextType = {
     ...auth,
     userRole,

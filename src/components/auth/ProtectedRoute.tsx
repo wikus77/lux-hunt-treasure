@@ -15,23 +15,25 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireEmailVerification = true,
   children
 }) => {
-  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser } = useAuthContext();
+  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole } = useAuthContext();
   const location = useLocation();
   
   useEffect(() => {
-    console.log("🛡️ CRITICAL PROTECTED ROUTE CHECK:", {
+    console.log("🛡️ PROTECTED ROUTE CHECK:", {
       path: location.pathname,
       isAuthenticated,
       isLoading,
       isEmailVerified,
       user: getCurrentUser()?.id,
-      userEmail: getCurrentUser()?.email
+      userEmail: getCurrentUser()?.email,
+      userRole,
+      isDeveloper: hasRole('developer')
     });
-  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser]);
+  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole]);
   
-  // CRITICAL: Extended loading state
+  // Show loading during authentication check
   if (isLoading) {
-    console.log("⏳ CRITICAL AUTHENTICATION LOADING...");
+    console.log("⏳ AUTHENTICATION LOADING...");
     return (
       <div className="flex justify-center items-center min-h-screen bg-black">
         <Spinner className="h-8 w-8 text-white" />
@@ -39,24 +41,24 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
   
-  // CRITICAL: Authentication check
+  // Check authentication
   if (!isAuthenticated) {
-    console.log("❌ CRITICAL AUTH CHECK FAILED - User not authenticated, redirecting to:", redirectTo);
+    console.log("❌ AUTH CHECK FAILED - User not authenticated, redirecting to:", redirectTo);
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
   
-  console.log("✅ CRITICAL AUTH CHECK PASSED - User authenticated");
+  console.log("✅ AUTH CHECK PASSED - User authenticated");
   
-  // CRITICAL: Developer email always has access
+  // Developer users bypass email verification
   const currentUser = getCurrentUser();
-  const isDeveloperEmail = currentUser?.email === 'wikus77@hotmail.it';
+  const isDeveloper = hasRole('developer');
   
-  if (requireEmailVerification && !isEmailVerified && !isDeveloperEmail) {
-    console.log("📧 CRITICAL EMAIL VERIFICATION CHECK - Not verified, redirecting");
+  if (requireEmailVerification && !isEmailVerified && !isDeveloper) {
+    console.log("📧 EMAIL VERIFICATION CHECK - Not verified, redirecting");
     return <Navigate to="/login?verification=pending" replace />;
   }
   
-  console.log("🎯 CRITICAL PROTECTED ROUTE SUCCESS - Rendering protected content for:", currentUser?.email);
+  console.log("🎯 PROTECTED ROUTE SUCCESS - Rendering protected content for:", currentUser?.email);
   return children ? <>{children}</> : <Outlet />;
 };
 
