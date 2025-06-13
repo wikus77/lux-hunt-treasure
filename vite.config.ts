@@ -10,11 +10,7 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     proxy: {
-      '/functions/v1': {
-        target: 'http://localhost:54321',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/functions\/v1/, '/functions/v1'),
-      },
+      '/functions/v1': 'http://localhost:54321'
     },
   },
   plugins: [
