@@ -8,12 +8,14 @@ import { StandardLoginForm } from "@/components/auth/StandardLoginForm";
 import BackgroundParticles from "@/components/ui/background-particles";
 import { useAuth } from "@/hooks/use-auth";
 import { Spinner } from "@/components/ui/spinner";
+import { useDeveloperSetup } from "@/hooks/use-developer-setup";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isSetupComplete, isLoading: setupLoading } = useDeveloperSetup();
 
   useEffect(() => {
     const verification = searchParams.get('verification');
@@ -33,13 +35,15 @@ const Login = () => {
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);
 
-  // Show loading during auth check
-  if (authLoading) {
+  // Show loading during auth check or developer setup
+  if (authLoading || setupLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
           <Spinner className="h-8 w-8 text-white mx-auto mb-4" />
-          <p className="text-white/70">Verifica autenticazione...</p>
+          <p className="text-white/70">
+            {setupLoading ? 'Configurazione sistema developer...' : 'Verifica autenticazione...'}
+          </p>
         </div>
       </div>
     );
@@ -76,6 +80,23 @@ const Login = () => {
             </p>
           </div>
         </div>
+
+        {/* Developer Info Panel */}
+        {isSetupComplete && (
+          <motion.div 
+            className="mt-4 p-3 bg-green-900/20 border border-green-500/30 rounded-lg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <p className="text-green-400 text-sm text-center">
+              ✅ Sistema developer configurato correttamente
+            </p>
+            <p className="text-green-300 text-xs text-center mt-1">
+              Login developer: wikus77@hotmail.it
+            </p>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );

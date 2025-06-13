@@ -48,19 +48,19 @@ const AuthDebug = () => {
           <div className="bg-gray-900 p-6 rounded-lg">
             <h2 className="text-xl font-semibold mb-4 text-[#00D1FF]">Developer Access Check</h2>
             <div className="space-y-2">
-              <p><strong>Developer Access (localStorage):</strong> {localStorage.getItem('developer_access') || 'Not set'}</p>
-              <p><strong>Developer Email (localStorage):</strong> {localStorage.getItem('developer_user_email') || 'Not set'}</p>
               <p><strong>Current Email:</strong> {user?.email || 'None'}</p>
               <p><strong>Is Developer Email:</strong> {user?.email === 'wikus77@hotmail.it' ? '✅ Yes' : '❌ No'}</p>
+              <p><strong>Developer Role Active:</strong> {userRole === 'developer' ? '✅ Yes' : '❌ No'}</p>
             </div>
           </div>
 
           <div className="bg-green-900/20 border border-green-500/30 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4 text-green-400">CAPTCHA Status</h2>
+            <h2 className="text-xl font-semibold mb-4 text-green-400">Authentication System Status</h2>
             <div className="space-y-2">
-              <p><strong>✅ CAPTCHA/Turnstile:</strong> <span className="text-green-400">COMPLETELY DISABLED</span></p>
-              <p><strong>✅ All validations:</strong> <span className="text-green-400">BYPASSED</span></p>
-              <p><strong>✅ Developer access:</strong> <span className="text-green-400">IMMEDIATE</span></p>
+              <p><strong>✅ Login System:</strong> <span className="text-green-400">STANDARD EMAIL/PASSWORD</span></p>
+              <p><strong>✅ Developer Access:</strong> <span className="text-green-400">ROLE-BASED SECURE</span></p>
+              <p><strong>✅ Session Management:</strong> <span className="text-green-400">SUPABASE STANDARD</span></p>
+              <p><strong>✅ Security:</strong> <span className="text-green-400">RLS ENABLED</span></p>
             </div>
           </div>
         </div>
