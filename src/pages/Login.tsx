@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -61,7 +60,7 @@ const Login = () => {
           if (result.success) {
             console.log('✅ DEVELOPER AUTO-LOGIN SUCCESS');
             
-            // CRITICAL: Force session verification
+            // CRITICAL: Force session verification and immediate navigation
             await new Promise(resolve => setTimeout(resolve, 1000));
             
             const { data: sessionData } = await supabase.auth.getSession();
@@ -71,7 +70,7 @@ const Login = () => {
               userEmail: sessionData.session?.user?.email
             });
 
-            if (sessionData.session?.user) {
+            if (sessionData.session?.user?.email === 'wikus77@hotmail.it') {
               console.log('✅ SESSION VERIFIED - Navigating to /home');
               toast.success('🔐 Developer Auto-Login Successful', {
                 description: `Welcome back, ${sessionData.session.user.email}!`

@@ -1,4 +1,3 @@
-
 import { useAuthSessionManager } from './use-auth-session-manager';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -114,7 +113,9 @@ export const useAuth = () => {
     console.log('🚨 FORCE DIRECT ACCESS for:', email);
     
     try {
-      // CRITICAL: Call login-no-captcha function for developer auto-login
+      // CRITICAL: Call login-no-captcha function with proper headers
+      console.log('📡 Calling login-no-captcha function...');
+      
       const { data: res, error: functionError } = await supabase.functions.invoke('login-no-captcha', {
         body: {
           email,
@@ -122,6 +123,7 @@ export const useAuth = () => {
           action: 'login'
         },
         headers: {
+          'Content-Type': 'application/json',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           'Accept': 'application/json, text/plain, */*',
           'Accept-Language': 'en-US,en;q=0.9',
@@ -136,7 +138,9 @@ export const useAuth = () => {
         return { success: false, error: functionError };
       }
 
-      if (res?.success && res.access_token) {
+      console.log('📋 Function response:', res);
+
+      if (res?.success && res.access_token && res.refresh_token) {
         console.log('✅ LOGIN-NO-CAPTCHA SUCCESS - Setting session...');
         
         // CRITICAL FIX: Use direct Supabase setSession method
@@ -155,18 +159,19 @@ export const useAuth = () => {
         
         // Verify session was set
         const { data: verifySession } = await supabase.auth.getSession();
-        if (verifySession.session) {
-          console.log('✅ SESSION VERIFIED - User authenticated');
+        if (verifySession.session && verifySession.session.user.email === 'wikus77@hotmail.it') {
+          console.log('✅ SESSION VERIFIED - Developer user authenticated');
           console.log('👤 User email:', verifySession.session.user.email);
           
-          // Force immediate redirect to /home
+          // Force immediate redirect to /home for developer user
           return { success: true, redirectUrl: '/home' };
         } else {
-          console.error('❌ Session verification failed');
+          console.error('❌ Session verification failed or wrong user');
           return { success: false, error: 'Session verification failed' };
         }
       }
 
+      console.error('❌ Invalid response from login-no-captcha:', res);
       return { success: false, error: 'No valid session received from login-no-captcha' };
       
     } catch (error: any) {
