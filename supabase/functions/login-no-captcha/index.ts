@@ -43,7 +43,10 @@ serve(async (req) => {
     const supabaseClient = createClient(supabaseUrl, anonKey);
 
     console.log('🔍 Looking for developer user...');
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: userData, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('*');
+      
     if (userError) {
       console.error('❌ Error listing users:', userError);
       return new Response(JSON.stringify({
@@ -53,7 +56,7 @@ serve(async (req) => {
       }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
     }
 
-    const developerUser = userData.users.find((user) => user.email === 'wikus77@hotmail.it');
+    const developerUser = userData.find((user) => user.email === 'wikus77@hotmail.it');
     if (!developerUser) {
       console.log('❌ Developer user not found in users list');
       return new Response(JSON.stringify({
