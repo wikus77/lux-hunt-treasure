@@ -1,3 +1,4 @@
+
 import { useAuthSessionManager } from './use-auth-session-manager';
 import { supabase } from '@/integrations/supabase/client';
 import { CapacitorHttp, Capacitor } from '@capacitor/core';
@@ -11,7 +12,7 @@ export const useAuth = () => {
     console.log('🔐 ENHANCED LOGIN STARTING for:', email);
     
     try {
-      // STRATEGY 1: Try standard login first (now with fixed credentials)
+      // STRATEGY 1: Try standard login first
       console.log('🔄 Attempting standard Supabase login...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -117,10 +118,11 @@ export const useAuth = () => {
     
     try {
       console.log('🧪 STEP 1 - Calling enhanced login-no-captcha...');
-      console.log('📡 Calling login-no-captcha function with enhanced mobile handling...');
+      console.log('📡 Calling login-no-captcha function with iPhone 16 Plus optimization...');
       
       const isCapacitor = Capacitor.getPlatform() !== 'web';
-      console.log('🔍 Platform detection - isCapacitor:', isCapacitor, 'Platform:', Capacitor.getPlatform());
+      const isIOS = Capacitor.getPlatform() === 'ios';
+      console.log('🔍 Platform detection - isCapacitor:', isCapacitor, 'isIOS:', isIOS, 'Platform:', Capacitor.getPlatform());
 
       let response;
       const requestPayload = { email };
@@ -129,18 +131,32 @@ export const useAuth = () => {
       console.log('🧪 Request payload:', requestPayload);
       console.log('🧪 Endpoint:', endpoint);
 
-      if (isCapacitor) {
-        console.log('📱 Using CapacitorHttp for mobile request...');
+      if (isCapacitor || isIOS) {
+        console.log('📱 Using CapacitorHttp for mobile/iOS request...');
         try {
           const capacitorResponse = await CapacitorHttp.post({
             url: endpoint,
             headers: {
               'Content-Type': 'application/json',
+              'Accept': 'application/json',
               'Origin': 'https://m1ssion.com',
+              'User-Agent': 'M1SSION-App/1.0 (iPhone; iOS 17.0)',
             },
             data: requestPayload,
+            readTimeout: 30000,
+            connectTimeout: 10000,
           });
-          response = capacitorResponse.data;
+          
+          console.log('🧪 CapacitorHttp response status:', capacitorResponse.status);
+          console.log('🧪 CapacitorHttp response headers:', capacitorResponse.headers);
+          console.log('🧪 CapacitorHttp response data:', capacitorResponse.data);
+          
+          if (capacitorResponse.status >= 200 && capacitorResponse.status < 300) {
+            response = capacitorResponse.data;
+          } else {
+            throw new Error(`HTTP ${capacitorResponse.status}: ${JSON.stringify(capacitorResponse.data)}`);
+          }
+          
           console.log('🧪 STEP 2 - CapacitorHttp response received:', response);
         } catch (capacitorError) {
           console.error('❌ CapacitorHttp error:', capacitorError);
@@ -153,9 +169,11 @@ export const useAuth = () => {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
-              'Accept': 'application/json'
+              'Accept': 'application/json',
+              'User-Agent': 'M1SSION-Web/1.0'
             },
             body: JSON.stringify(requestPayload),
+            signal: AbortSignal.timeout(30000), // 30 second timeout
           });
           
           console.log('🧪 Fetch response status:', fetchResponse.status);
@@ -216,7 +234,7 @@ export const useAuth = () => {
         console.log('🧪 STEP 5 - Session set, adding delay for iOS WebView...');
         
         // Add delay for iOS WebView to process session
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, isIOS ? 2000 : 1000));
         
         // Verify session was actually set
         const { data: sessionCheck } = await supabase.auth.getSession();
@@ -229,7 +247,13 @@ export const useAuth = () => {
         if (sessionCheck.session?.user?.email === 'wikus77@hotmail.it') {
           console.log('🧪 STEP 6 - Session verified, redirecting...');
           console.log("🧪 Redirecting to /home after developer auto-login");
-          navigate("/home");
+          
+          // Force navigation with replace for iOS
+          if (isIOS) {
+            window.location.replace('/home');
+          } else {
+            navigate("/home");
+          }
           return { success: true, redirectUrl: '/home' };
         } else {
           console.error('❌ Session verification failed - no valid session found');
