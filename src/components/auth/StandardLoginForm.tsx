@@ -20,6 +20,13 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
   const { login, register, resendVerificationEmail } = useAuth();
   const navigate = useNavigate();
 
+  // Auto-fill developer credentials for testing
+  const fillDeveloperCredentials = () => {
+    setEmail('wikus77@hotmail.it');
+    setPassword('Wikus190877!@#');
+    toast.info('Credenziali developer compilate automaticamente');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -29,9 +36,12 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
     }
 
     setIsLoading(true);
+    console.log('🔐 LOGIN ATTEMPT:', { email, passwordLength: password.length });
+    
     try {
       if (isRegistering) {
         // Registration flow
+        console.log('📝 REGISTRATION FLOW for:', email);
         const result = await register(email, password);
         
         if (result?.success) {
@@ -40,15 +50,25 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           });
           setIsRegistering(false);
         } else {
+          console.error('❌ REGISTRATION FAILED:', result?.error);
           toast.error('Errore di registrazione', {
             description: result?.error?.message || 'Verifica i dati inseriti'
           });
         }
       } else {
         // Login flow
+        console.log('🔑 LOGIN FLOW for:', email);
         const result = await login(email, password);
         
+        console.log('📊 LOGIN RESULT:', {
+          success: result?.success,
+          hasError: !!result?.error,
+          hasSession: !!result?.session,
+          errorMessage: result?.error?.message
+        });
+        
         if (result?.success) {
+          console.log('✅ LOGIN SUCCESS - redirecting to /home');
           toast.success('Login effettuato con successo', {
             description: 'Benvenuto in M1SSION!'
           });
@@ -57,6 +77,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
             navigate('/home', { replace: true });
           }, 1000);
         } else {
+          console.error('❌ LOGIN FAILED:', result?.error);
           toast.error('Errore di login', {
             description: result?.error?.message || 'Verifica le tue credenziali'
           });
@@ -155,6 +176,16 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           disabled={isLoading}
         >
           {isRegistering ? 'Hai già un account? Accedi' : 'Non hai un account? Registrati'}
+        </button>
+
+        {/* Developer Quick Access Button */}
+        <button
+          type="button"
+          className="w-full text-center text-xs text-green-400 hover:text-green-300 transition-colors border border-green-400/30 rounded py-2"
+          onClick={fillDeveloperCredentials}
+          disabled={isLoading}
+        >
+          🔧 Developer: Compila credenziali test
         </button>
       </div>
 

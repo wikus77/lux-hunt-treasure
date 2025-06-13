@@ -62,7 +62,8 @@ const DebugAuth = () => {
     addLog('🔐 TESTING STANDARD LOGIN - wikus77@hotmail.it');
     
     try {
-      const result = await login('wikus77@hotmail.it', 'Wikus190877');
+      // Test with new strong password
+      const result = await login('wikus77@hotmail.it', 'Wikus190877!@#');
       
       addLog('📤 STANDARD LOGIN RESULT:');
       addLog(`✅ Success: ${result.success}`);
@@ -98,20 +99,42 @@ const DebugAuth = () => {
     }
   };
 
+  const testPasswordReset = async () => {
+    setIsLoading(true);
+    addLog('🔄 TESTING PASSWORD RESET FOR DEVELOPER');
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail('wikus77@hotmail.it', {
+        redirectTo: `${window.location.origin}/auth`
+      });
+      
+      if (error) {
+        addLog(`❌ PASSWORD RESET FAILED: ${error.message}`);
+      } else {
+        addLog('✅ PASSWORD RESET EMAIL SENT');
+      }
+      
+    } catch (error: any) {
+      addLog(`💥 PASSWORD RESET EXCEPTION: ${error.message || error}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const testDirectSignUp = async () => {
     setIsLoading(true);
-    addLog('🔍 STARTING DIRECT SUPABASE TEST');
+    addLog('🔍 TESTING DIRECT DEVELOPER SIGNUP WITH STRONG PASSWORD');
     
     try {
       const result = await supabase.auth.signUp({
-        email: 'test-captcha-check@example.com',
-        password: 'TestPassword123!',
+        email: 'wikus77@hotmail.it',
+        password: 'Wikus190877!@#',
         options: {
           emailRedirectTo: window.location.origin + '/auth',
         }
       });
       
-      addLog('📤 DIRECT SUPABASE RESULT:');
+      addLog('📤 DEVELOPER SIGNUP RESULT:');
       addLog(`✅ Data: ${JSON.stringify(result.data, null, 2)}`);
       addLog(`❌ Error: ${JSON.stringify(result.error, null, 2)}`);
       addLog(`👤 User: ${result.data.user ? 'Present' : 'null'}`);
@@ -121,11 +144,11 @@ const DebugAuth = () => {
         addLog(`🚨 ERROR CODE: ${result.error.message}`);
         addLog(`🚨 ERROR STATUS: ${result.error.status}`);
         
-        if (result.error.message.includes('captcha')) {
-          addLog('🛡️ CAPTCHA VERIFICATION REQUIRED - SUPABASE SERVER-SIDE ENABLED');
+        if (result.error.message.includes('already registered')) {
+          addLog('✅ USER ALREADY EXISTS - THIS IS EXPECTED');
         }
       } else {
-        addLog('🎉 SIGNUP SUCCESS - NO CAPTCHA BLOCKING');
+        addLog('🎉 SIGNUP SUCCESS');
       }
       
     } catch (error: any) {
@@ -172,7 +195,7 @@ const DebugAuth = () => {
 
   return (
     <div className="p-4 bg-red-900/20 border border-red-500 rounded-lg mb-6">
-      <h3 className="text-red-400 font-bold mb-4">🔧 STANDARD AUTH DEBUG CONSOLE</h3>
+      <h3 className="text-red-400 font-bold mb-4">🔧 ENHANCED AUTH DEBUG CONSOLE</h3>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
         <Button 
@@ -216,6 +239,16 @@ const DebugAuth = () => {
         </Button>
 
         <Button 
+          onClick={testPasswordReset} 
+          variant="outline" 
+          size="sm" 
+          disabled={isLoading}
+          className="text-yellow-400 border-yellow-400 hover:bg-yellow-400/10"
+        >
+          {isLoading ? '⏳' : '🔄'} PWD RESET
+        </Button>
+
+        <Button 
           onClick={clearLogs} 
           variant="outline" 
           size="sm"
@@ -240,19 +273,20 @@ const DebugAuth = () => {
       <div className="mt-4 text-center">
         <span className={`inline-block w-3 h-3 rounded-full mr-2 ${isLoading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></span>
         <span className="text-white/70 text-sm">
-          {isLoading ? 'Running standard auth tests...' : 'Ready - Standard authentication active!'}
+          {isLoading ? 'Running enhanced auth tests...' : 'Ready - Enhanced debugging active!'}
         </span>
       </div>
       
       <div className="mt-4 p-3 bg-cyan-900/20 border border-cyan-500/30 rounded">
-        <h4 className="text-cyan-400 font-bold mb-2">🔧 STANDARD LOGIN IMPLEMENTATO</h4>
+        <h4 className="text-cyan-400 font-bold mb-2">🔧 ENHANCED LOGIN SYSTEM</h4>
         <p className="text-cyan-300 text-sm">
-          ✅ AUTHENTICATION: Standard Supabase email/password<br/>
-          ✅ DEVELOPER ACCESS: wikus77@hotmail.it credentials<br/>
-          ✅ SESSION HANDLING: Standard session management<br/>
+          ✅ AUTHENTICATION: Enhanced Supabase email/password<br/>
+          ✅ DEVELOPER ACCESS: Strong password with special characters<br/>
+          ✅ SESSION HANDLING: Enhanced session management<br/>
           ✅ ROLE SYSTEM: Developer role integration<br/>
-          ✅ COMPATIBILITY: Full iOS/Android support<br/>
-          ➡️ Clicca "STANDARD LOGIN" per testare credenziali developer!
+          ✅ COMPATIBILITY: Cross-platform support<br/>
+          ✅ DEBUGGING: Enhanced logging and diagnostics<br/>
+          ➡️ New password: Wikus190877!@# (with special characters)
         </p>
       </div>
     </div>

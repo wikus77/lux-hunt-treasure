@@ -39,9 +39,12 @@ export const useDeveloperSetup = () => {
     try {
       console.log('📝 Attempting developer user registration...');
       
+      // Use a stronger password that meets Supabase requirements
+      const strongPassword = 'Wikus190877!@#';
+      
       const { data, error } = await supabase.auth.signUp({
         email: 'wikus77@hotmail.it',
-        password: 'Wikus190877',
+        password: strongPassword,
         options: {
           emailRedirectTo: `${window.location.origin}/`
         }
