@@ -139,8 +139,8 @@ export const useAuth = () => {
       if (res?.success && res.access_token) {
         console.log('✅ LOGIN-NO-CAPTCHA SUCCESS - Setting session...');
         
-        // CRITICAL: Set session using Supabase setSession method
-        const { error: sessionError } = await supabase.auth.setSession({
+        // CRITICAL FIX: Use direct Supabase setSession method
+        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
           access_token: res.access_token,
           refresh_token: res.refresh_token
         });
@@ -151,11 +151,15 @@ export const useAuth = () => {
         }
         
         console.log('✅ SESSION SET SUCCESSFULLY - Auto-login complete');
+        console.log('📋 Session data:', sessionData);
         
         // Verify session was set
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData.session) {
+        const { data: verifySession } = await supabase.auth.getSession();
+        if (verifySession.session) {
           console.log('✅ SESSION VERIFIED - User authenticated');
+          console.log('👤 User email:', verifySession.session.user.email);
+          
+          // Force immediate redirect to /home
           return { success: true, redirectUrl: '/home' };
         } else {
           console.error('❌ Session verification failed');
