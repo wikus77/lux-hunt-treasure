@@ -113,31 +113,33 @@ export const useAuth = () => {
     console.log('🚨 FORCE DIRECT ACCESS for:', email);
     
     try {
-      // CRITICAL: Call login-no-captcha function with proper headers
-      console.log('📡 Calling login-no-captcha function...');
+      // CRITICAL: Use direct fetch instead of supabase.functions.invoke to bypass FunctionsFetchError
+      console.log('📡 Calling login-no-captcha function with direct fetch...');
       
-      const { data: res, error: functionError } = await supabase.functions.invoke('login-no-captcha', {
-        body: {
+      const response = await fetch("https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabase.supabaseKey}`,
+          "apikey": supabase.supabaseKey,
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+          "Accept": "application/json, text/plain, */*",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Origin": "capacitor://localhost"
+        },
+        body: JSON.stringify({
           email,
           password,
           action: 'login'
-        },
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'application/json, text/plain, */*',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'cf-bypass-bot-check': 'true',
-          'x-real-ip': '127.0.0.1',
-          'x-forwarded-for': '127.0.0.1'
-        }
+        })
       });
 
-      if (functionError) {
-        console.error('❌ LOGIN-NO-CAPTCHA FUNCTION ERROR:', functionError);
-        return { success: false, error: functionError };
+      if (!response.ok) {
+        console.error('❌ DIRECT FETCH FAILED:', response.status, response.statusText);
+        return { success: false, error: `HTTP ${response.status}: ${response.statusText}` };
       }
 
+      const res = await response.json();
       console.log('📋 Function response:', res);
 
       if (res?.success && res.access_token && res.refresh_token) {
