@@ -43,28 +43,21 @@ serve(async (req) => {
     const supabaseClient = createClient(supabaseUrl, anonKey);
 
     console.log('🔍 Looking for developer user...');
-    const { data: userData, error: userError } = await supabaseAdmin
+    const { data: users, error: fetchError } = await supabaseAdmin
       .from('users')
-      .select('*');
-      
-    if (userError) {
-      console.error('❌ Error listing users:', userError);
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Cannot retrieve users',
-        details: userError.message
-      }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
-    }
+      .select('*')
+      .eq('email', 'wikus77@hotmail.it');
 
-    const developerUser = userData.find((user) => user.email === 'wikus77@hotmail.it');
-    if (!developerUser) {
-      console.log('❌ Developer user not found in users list');
+    if (fetchError || !users || users.length === 0) {
+      console.error('❌ Error fetching user or user not found:', fetchError);
       return new Response(JSON.stringify({
         success: false,
-        error: 'Developer user not found'
+        error: 'Developer user not found',
+        details: fetchError?.message
       }), { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
     }
 
+    const developerUser = users[0];
     console.log('✅ Developer user found, updating password...');
     const tempPassword = 'DevLogin2025!';
     
