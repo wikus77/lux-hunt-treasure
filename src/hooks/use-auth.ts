@@ -132,7 +132,7 @@ export const useAuth = () => {
             'Content-Type': 'application/json',
             'Origin': 'https://m1ssion.com',
           },
-          data: {},
+          data: { email },
         });
         response = response.data;
         console.log('🧪 STEP 2 - Risposta CapacitorHttp ricevuta:', response);
@@ -141,6 +141,7 @@ export const useAuth = () => {
         const raw = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
         });
         response = await raw.json();
         console.log('🧪 STEP 2 - Risposta fetch ricevuta:', response);

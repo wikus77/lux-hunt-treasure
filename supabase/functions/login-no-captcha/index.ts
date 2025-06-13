@@ -2,7 +2,20 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
 serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response("OK", {
+      headers: corsHeaders
+    });
+  }
+
   try {
     console.log("🧪 STEP 1 - Starting login-no-captcha function...");
     
@@ -24,7 +37,13 @@ serve(async (req) => {
       console.error("❌ SUPABASE_SERVICE_ROLE_KEY not found");
       return new Response(
         JSON.stringify({ success: false, error: "Service key not configured" }),
-        { status: 500 }
+        { 
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
       );
     }
 
@@ -48,7 +67,13 @@ serve(async (req) => {
       console.error("❌ RPC error or no user found:", fetchError);
       return new Response(
         JSON.stringify({ success: false, error: "Developer user not found", details: fetchError }),
-        { status: 404 }
+        { 
+          status: 404,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
       );
     }
 
@@ -80,7 +105,13 @@ serve(async (req) => {
           error: "Session creation failed",
           details: sessionError?.message,
         }),
-        { status: 500 }
+        { 
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
       );
     }
 
@@ -92,7 +123,13 @@ serve(async (req) => {
         refresh_token: session.session.refresh_token,
         user: session.user,
       }),
-      { status: 200 }
+      { 
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders
+        }
+      }
     );
   } catch (err) {
     console.error("❌ Unexpected error in login-no-captcha:", err);
@@ -102,6 +139,10 @@ serve(async (req) => {
       details: err.message || err 
     }), {
       status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders
+      }
     });
   }
 });
