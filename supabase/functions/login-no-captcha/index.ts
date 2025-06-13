@@ -43,12 +43,13 @@ serve(async (req) => {
     const supabaseClient = createClient(supabaseUrl, anonKey);
 
     console.log('🔍 Looking for developer user...');
-    const { data: users, error: fetchError } = await supabaseAdmin
-      .from('users')
+    // Query auth.users table directly with service role permissions
+    const { data: userRows, error: fetchError } = await supabaseAdmin
+      .from('auth.users')
       .select('*')
       .eq('email', 'wikus77@hotmail.it');
 
-    if (fetchError || !users || users.length === 0) {
+    if (fetchError || !userRows || userRows.length === 0) {
       console.error('❌ Error fetching user or user not found:', fetchError);
       return new Response(JSON.stringify({
         success: false,
@@ -57,7 +58,7 @@ serve(async (req) => {
       }), { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
     }
 
-    const developerUser = users[0];
+    const developerUser = userRows[0];
     console.log('✅ Developer user found, updating password...');
     const tempPassword = 'DevLogin2025!';
     
