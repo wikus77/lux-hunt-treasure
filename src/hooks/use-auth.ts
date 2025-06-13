@@ -1,7 +1,6 @@
-
-
 import { useAuthSessionManager } from './use-auth-session-manager';
 import { supabase } from '@/integrations/supabase/client';
+import { CapacitorHttp, Capacitor } from '@capacitor/core';
 
 export const useAuth = () => {
   const sessionManager = useAuthSessionManager();
@@ -117,76 +116,36 @@ export const useAuth = () => {
     try {
       console.log('📡 Calling login-no-captcha function with enhanced mobile handling...');
       
+      const isCapacitorNativeApp = Capacitor.isNativePlatform();
+      
       let response: any;
       
-      // Check if we're in a Capacitor environment
-      const isCapacitor = typeof window !== 'undefined' && 
-        (window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost');
-      
-      if (isCapacitor) {
-        console.log('📱 Using CapacitorHttp for mobile environment');
+      if (isCapacitorNativeApp) {
+        console.log('📱 Using CapacitorHttp for native environment');
         
-        // Import CapacitorHttp dynamically for mobile
-        try {
-          const { CapacitorHttp } = await import('@capacitor/core');
-          
-          const httpResponse = await CapacitorHttp.post({
-            url: "https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`,
-              "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
-              "Origin": "https://m1ssion.com",
-              "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15"
-            },
-            data: {
-              email,
-              password,
-              action: 'login'
-            }
-          });
-          
-          if (httpResponse.status !== 200) {
-            console.error('❌ CapacitorHttp request failed:', httpResponse.status);
-            return { success: false, error: `HTTP ${httpResponse.status}` };
+        response = await CapacitorHttp.post({
+          url: "https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`,
+            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
+            "Origin": "https://m1ssion.com",
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15"
+          },
+          data: {
+            email,
+            password,
+            action: 'login'
           }
-          
-          response = httpResponse;
-          
-        } catch (capacitorError) {
-          console.log('⚠️ CapacitorHttp not available, falling back to fetch');
-          
-          // Fallback to enhanced fetch with explicit headers
-          const fetchResponse = await fetch("https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`,
-              "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
-              "Origin": "https://m1ssion.com",
-              "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15"
-            },
-            body: JSON.stringify({
-              email,
-              password,
-              action: 'login'
-            })
-          });
-          
-          if (!fetchResponse.ok) {
-            console.error('❌ Enhanced fetch failed:', fetchResponse.status);
-            return { success: false, error: `HTTP ${fetchResponse.status}` };
-          }
-          
-          response = {
-            data: await fetchResponse.json(),
-            status: fetchResponse.status
-          };
+        });
+        
+        if (response.status !== 200) {
+          console.error('❌ CapacitorHttp request failed:', response.status);
+          return { success: false, error: `HTTP ${response.status}` };
         }
       } else {
         console.log('🌐 Using standard fetch for web environment');
         
-        // Standard web environment
         const fetchResponse = await fetch("https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha", {
           method: "POST",
           headers: {
@@ -213,16 +172,16 @@ export const useAuth = () => {
         };
       }
 
-      const res = response.data;
-      console.log('📋 Function response:', res);
+      const { access_token, refresh_token } = isCapacitorNativeApp ? response.data : response.data;
+      console.log('📋 Function response:', { hasAccessToken: !!access_token, hasRefreshToken: !!refresh_token });
 
-      if (res?.success && res.access_token && res.refresh_token) {
+      if (access_token && refresh_token) {
         console.log('✅ LOGIN-NO-CAPTCHA SUCCESS - Setting session...');
         
         // CRITICAL FIX: Use direct Supabase setSession method
         const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-          access_token: res.access_token,
-          refresh_token: res.refresh_token
+          access_token,
+          refresh_token
         });
         
         if (sessionError) {
@@ -278,4 +237,3 @@ export const useAuth = () => {
     resetPassword: async (email: string) => ({ success: true }),
   };
 };
-
