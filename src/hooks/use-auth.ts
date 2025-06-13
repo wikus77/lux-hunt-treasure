@@ -1,3 +1,4 @@
+
 import { useAuthSessionManager } from './use-auth-session-manager';
 import { supabase } from '@/integrations/supabase/client';
 import { CapacitorHttp, Capacitor } from '@capacitor/core';
@@ -118,7 +119,7 @@ export const useAuth = () => {
     try {
       console.log('📡 Calling login-no-captcha function with enhanced mobile handling...');
       
-      const isCapacitor = !!window.Capacitor;
+      const isCapacitor = Capacitor.getPlatform() !== 'web';
 
       let response;
       if (isCapacitor) {
@@ -130,6 +131,7 @@ export const useAuth = () => {
           },
           data: {},
         });
+        response = response.data;
       } else {
         const raw = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha', {
           method: 'POST',
@@ -138,7 +140,7 @@ export const useAuth = () => {
         response = await raw.json();
       }
 
-      const { access_token, refresh_token } = response.data || response;
+      const { access_token, refresh_token } = response;
 
       const { data, error } = await supabase.auth.setSession({
         access_token,
