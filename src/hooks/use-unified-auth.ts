@@ -25,9 +25,9 @@ export const useUnifiedAuth = () => {
   });
 
   useEffect(() => {
-    console.log('🔧 UNIFIED AUTH: Initializing single auth system');
+    console.log('🔧 UNIFIED AUTH: Initializing auth system - NO AUTO REDIRECTS');
     
-    // SINGLE AUTH STATE LISTENER - eliminato ogni conflitto
+    // REMOVED: All automatic navigation and redirects
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('🔍 UNIFIED AUTH STATE CHANGE:', { event, hasSession: !!session, userEmail: session?.user?.email });
@@ -42,10 +42,10 @@ export const useUnifiedAuth = () => {
       }
     );
 
-    // CHECK EXISTING SESSION ONCE
+    // CHECK EXISTING SESSION ONCE - NO REDIRECTS
     const checkInitialSession = async () => {
       try {
-        console.log('🔍 UNIFIED AUTH: Checking initial session');
+        console.log('🔍 UNIFIED AUTH: Checking initial session - NO REDIRECTS');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -117,7 +117,7 @@ export const useUnifiedAuth = () => {
       }
 
       if (data.session) {
-        console.log('✅ UNIFIED AUTH: Login success - session created');
+        console.log('✅ UNIFIED AUTH: Login success - session created - NO AUTO REDIRECT');
         await forceSessionFromTokens(
           data.session.access_token,
           data.session.refresh_token
@@ -135,7 +135,7 @@ export const useUnifiedAuth = () => {
   };
 
   const logout = async (): Promise<void> => {
-    console.log('🚪 UNIFIED AUTH: Logout starting');
+    console.log('🚪 UNIFIED AUTH: Logout starting - NO AUTO REDIRECT');
     await supabase.auth.signOut();
     localStorage.removeItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
     console.log('✅ UNIFIED AUTH: Logout complete');

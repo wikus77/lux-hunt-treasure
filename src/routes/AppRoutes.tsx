@@ -37,28 +37,33 @@ const AppRoutes: React.FC = () => {
       <IOSSafeAreaOverlay>
         <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><span className="text-gray-400">Caricamento...</span></div>}>
           <Routes>
-            {/* Public landing page */}
+            {/* Public landing page - ALWAYS accessible */}
             <Route path="/" element={<Index />} />
-            {/* PATCH LOGIN */}
-            <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/home" />} />
+            
+            {/* Auth routes - EXPLICIT routing control */}
+            <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            {/* Protected routes */}
-            <Route path="/home" element={isAuthenticated ? <AppHome /> : <Navigate to="/login" />} />
-            <Route path="/map" element={isAuthenticated ? <Map /> : <Navigate to="/login" />} />
-            <Route path="/buzz" element={isAuthenticated ? <Buzz /> : <Navigate to="/login" />} />
-            <Route path="/games" element={isAuthenticated ? <Games /> : <Navigate to="/login" />} />
-            <Route path="/leaderboard" element={isAuthenticated ? <Leaderboard /> : <Navigate to="/login" />} />
-            <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
-            <Route path="/subscriptions" element={isAuthenticated ? <Subscriptions /> : <Navigate to="/login" />} />
-            {/* Semi-protected */}
+            
+            {/* Protected routes - EXPLICIT control without auto-redirects */}
+            <Route path="/home" element={isAuthenticated ? <AppHome /> : <Navigate to="/login" replace />} />
+            <Route path="/map" element={isAuthenticated ? <Map /> : <Navigate to="/login" replace />} />
+            <Route path="/buzz" element={isAuthenticated ? <Buzz /> : <Navigate to="/login" replace />} />
+            <Route path="/games" element={isAuthenticated ? <Games /> : <Navigate to="/login" replace />} />
+            <Route path="/leaderboard" element={isAuthenticated ? <Leaderboard /> : <Navigate to="/login" replace />} />
+            <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" replace />} />
+            <Route path="/subscriptions" element={isAuthenticated ? <Subscriptions /> : <Navigate to="/login" replace />} />
+            
+            {/* Semi-protected - EXPLICIT control */}
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/select-mission" element={<MissionSelection />} />
-            {/* Public info routes */}
+            
+            {/* Public info routes - ALWAYS accessible */}
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />
+            
             {/* 404 route */}
             <Route path="*" element={<NotFound />} />
           </Routes>

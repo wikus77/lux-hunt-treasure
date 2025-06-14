@@ -18,8 +18,6 @@ export const UnifiedAuthProvider = ({ children }: { children: React.ReactNode })
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // --- Role logic additions ---
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState<boolean>(false);
 
@@ -60,12 +58,15 @@ export const UnifiedAuthProvider = ({ children }: { children: React.ReactNode })
       }
     };
 
+    // REMOVED: All automatic redirects and navigation logic
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('🔍 AUTH STATE CHANGE:', { event, hasSession: !!session });
+      
       setSession(session);
       setUser(session?.user ?? null);
       setIsAuthenticated(!!session?.user);
 
-      // Load role if possible
+      // Load role if possible - NO NAVIGATION
       if (session?.user?.id) {
         loadUserRole(session.user.id);
       } else {
@@ -113,6 +114,6 @@ export const UnifiedAuthProvider = ({ children }: { children: React.ReactNode })
 
 export const useUnifiedAuthContext = () => {
   const context = useContext(UnifiedAuthContext);
-  if (!context) throw new Error('useUnifiedAuthContext deve essere usato all’interno di UnifiedAuthProvider');
+  if (!context) throw new Error('useUnifiedAuthContext deve essere usato all\'interno di UnifiedAuthProvider');
   return context;
 };

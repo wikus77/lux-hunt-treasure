@@ -31,11 +31,12 @@ const Login = () => {
         description: "La tua email è stata verificata con successo."
       });
     }
-    // Se autenticato, esegui subito redirect a /home
-    if (!authLoading && isAuthenticated) {
-      navigate("/home", { replace: true });
-    }
-  }, [searchParams, authLoading, isAuthenticated, navigate]);
+  }, [searchParams]);
+
+  // REMOVED: Automatic redirect logic - user must manually navigate
+  useEffect(() => {
+    console.log('🔍 LOGIN PAGE: Auth state check - NO AUTO REDIRECTS', { isAuthenticated, authLoading });
+  }, [isAuthenticated, authLoading]);
 
   // Mostra loading durante controllo auth/setup
   if (authLoading || setupLoading) {
@@ -51,7 +52,6 @@ const Login = () => {
     );
   }
 
-  // SE ARRIVI QUI sei sicuramente NON autenticato: mostra SEMPRE login UI
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12 relative overflow-hidden">
       <BackgroundParticles count={15} />
@@ -107,4 +107,3 @@ const Login = () => {
 };
 
 export default Login;
-
