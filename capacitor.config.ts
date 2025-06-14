@@ -6,7 +6,11 @@ const config: CapacitorConfig = {
   appName: 'M1SSION',
   webDir: 'dist',
   server: {
-    url: 'http://localhost:3000',
+    // NOTA: Sostituire 192.168.1.100 con l'IP locale reale del PC
+    // Su Mac: ipconfig getifaddr en0
+    // Su Windows: ipconfig | findstr IPv4
+    // Su Linux: hostname -I
+    url: 'http://192.168.1.100:8080',
     cleartext: true,
     androidScheme: 'https'
   },
