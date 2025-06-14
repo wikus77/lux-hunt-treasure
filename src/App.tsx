@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { UnifiedAuthProvider } from "@/contexts/auth/UnifiedAuthProvider";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Lazy load pages
@@ -15,9 +16,6 @@ const queryClient = new QueryClient();
 
 // Create a separate component that uses the auth provider inside the router
 const AppContent = () => {
-  // Import UnifiedAuthProvider inside the router context
-  const { UnifiedAuthProvider } = require("@/contexts/auth/UnifiedAuthProvider");
-  
   return (
     <UnifiedAuthProvider>
       <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center">
