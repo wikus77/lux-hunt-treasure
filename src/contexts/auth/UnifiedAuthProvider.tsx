@@ -13,8 +13,19 @@ const UnifiedAuthContext = createContext<UnifiedAuthContextType | undefined>(und
 
 export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const auth = useUnifiedAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  
+  // Safe navigation hook with fallback
+  let navigate: (path: string, options?: any) => void;
+  let location: { pathname: string };
+  
+  try {
+    navigate = useNavigate();
+    location = useLocation();
+  } catch (error) {
+    console.warn('🔧 UNIFIED AUTH: useNavigate/useLocation not available yet, using fallback');
+    navigate = () => {};
+    location = { pathname: '/' };
+  }
 
   // Simplified role management - no conflicts with session manager
   const userRole = auth.user?.user_metadata?.role || 'user';
