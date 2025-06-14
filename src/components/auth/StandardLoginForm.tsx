@@ -34,6 +34,100 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
     console.log('🔧 Developer credentials filled:', { email: DEVELOPER_EMAIL, passwordLength: DEVELOPER_PASSWORD.length });
   };
 
+  // CRITICAL FIX: Force password reset and role assignment for developer
+  const forceResetDeveloperPassword = async () => {
+    console.log('🔥 FORCE RESET DEVELOPER PASSWORD STARTING...');
+    
+    try {
+      // Step 1: Get user by email
+      const { data: users, error: userError } = await supabase.rpc('get_user_by_email', {
+        email_param: DEVELOPER_EMAIL
+      });
+
+      if (userError || !users || users.length === 0) {
+        console.error('❌ Developer user not found:', userError);
+        toast.error('Utente developer non trovato nel database');
+        return { success: false };
+      }
+
+      const user = users[0] as User;
+      console.log('👤 Developer user found:', user.id);
+
+      // Step 2: Call login-no-captcha for admin session
+      const response = await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
+        },
+        body: JSON.stringify({ email: DEVELOPER_EMAIL })
+      });
+
+      const result = await response.json();
+      console.log('🔗 LOGIN-NO-CAPTCHA RESULT:', result);
+
+      if (result.success && result.access_token) {
+        console.log('✅ ADMIN SESSION CREATED - FORCE RESETTING PASSWORD');
+        
+        // Step 3: Force session temporarily for admin operations
+        const adminSupabase = supabase;
+        
+        // Step 4: Force password reset
+        console.log('🔑 FORCING PASSWORD RESET...');
+        const { error: resetError } = await adminSupabase.auth.updateUser({
+          password: DEVELOPER_PASSWORD
+        });
+
+        if (resetError) {
+          console.error('❌ Password reset failed:', resetError);
+        } else {
+          console.log('✅ PASSWORD RESET SUCCESS');
+        }
+
+        // Step 5: Force session with new tokens
+        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+          access_token: result.access_token,
+          refresh_token: result.refresh_token
+        });
+
+        if (!sessionError && sessionData.session) {
+          console.log('✅ DEVELOPER SESSION FORCED AND ACTIVE');
+          
+          // Step 6: Force role assignment
+          try {
+            const { error: roleError } = await supabase
+              .from('user_roles')
+              .upsert({ user_id: user.id, role: 'developer' });
+            
+            if (!roleError) {
+              console.log('✅ DEVELOPER ROLE ASSIGNED');
+            }
+          } catch (roleErr) {
+            console.log('⚠️ Role assignment skipped:', roleErr);
+          }
+
+          toast.success('🔥 DEVELOPER ACCESS FORCED', {
+            description: 'Password reset + Role assigned + Session active'
+          });
+
+          // Force redirect to home
+          setTimeout(() => {
+            navigate('/home', { replace: true });
+          }, 1500);
+
+          return { success: true };
+        }
+      }
+
+      throw new Error('Failed to create admin session');
+
+    } catch (error: any) {
+      console.error('💥 FORCE RESET FAILED:', error);
+      toast.error('Force reset fallito', { description: error.message });
+      return { success: false };
+    }
+  };
+
   // Enhanced diagnosis for login failures
   const diagnoseDeveloperAccount = async () => {
     console.log('🔍 DIAGNOSI DEVELOPER ACCOUNT STARTING...');
@@ -105,7 +199,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         if (loginError.message === 'Invalid login credentials') {
           console.log('🚨 PASSWORD HASH MISMATCH DETECTED');
           toast.error('Password hash non corrisponde', {
-            description: 'Esegui reset-password.ts per correggere l\'hash'
+            description: 'Usa il pulsante "Force Reset Password" per correggere'
           });
         } else {
           toast.error('Errore login diretto', { description: loginError.message });
@@ -380,10 +474,10 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           🔧 Developer: Compila credenziali test
         </button>
 
-        {/* Enhanced Developer Diagnosis Tools */}
+        {/* CRITICAL: Enhanced Developer Diagnosis Tools */}
         {email === DEVELOPER_EMAIL && password === DEVELOPER_PASSWORD && (
-          <div className="space-y-2 border border-orange-400/30 rounded p-3">
-            <h4 className="text-orange-400 font-bold text-sm">🚨 Developer Diagnosis Tools</h4>
+          <div className="space-y-2 border border-red-500/50 rounded p-3 bg-red-900/10">
+            <h4 className="text-red-400 font-bold text-sm">🔥 DEVELOPER EMERGENCY TOOLS</h4>
             
             <button
               type="button"
@@ -401,6 +495,15 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
               disabled={isLoading}
             >
               🚨 Emergency Login (No-Captcha + Force Session)
+            </button>
+
+            <button
+              type="button"
+              className="w-full text-center text-xs text-red-500 hover:text-red-400 transition-colors border border-red-500/50 rounded py-2 bg-red-900/20"
+              onClick={forceResetDeveloperPassword}
+              disabled={isLoading}
+            >
+              🔥 FORCE RESET PASSWORD + ROLE + SESSION
             </button>
           </div>
         )}

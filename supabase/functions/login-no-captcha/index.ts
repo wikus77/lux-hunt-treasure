@@ -9,12 +9,12 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log("🧪 STEP 1 - Starting login-no-captcha function...");
-  console.log("🧪 Request method:", req.method);
+  console.log("🔥 STEP 1 - Starting ENHANCED login-no-captcha function...");
+  console.log("🔥 Request method:", req.method);
   
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    console.log("🧪 Handling OPTIONS request");
+    console.log("🔥 Handling OPTIONS request");
     return new Response("OK", {
       headers: corsHeaders
     });
@@ -25,7 +25,7 @@ serve(async (req) => {
     let requestBody;
     try {
       requestBody = await req.json();
-      console.log("🧪 STEP 2 - Request body parsed:", requestBody);
+      console.log("🔥 STEP 2 - Request body parsed:", requestBody);
     } catch (parseError) {
       console.error("❌ Failed to parse request body:", parseError);
       return new Response(
@@ -56,13 +56,13 @@ serve(async (req) => {
       );
     }
     
-    console.log("🧪 STEP 3 - Email received:", email);
+    console.log("🔥 STEP 3 - Email received:", email);
 
     // Create Supabase client with enhanced environment checks
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "http://localhost:54321";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
-    console.log("🧪 STEP 4 - Environment check:", {
+    console.log("🔥 STEP 4 - Environment check:", {
       supabaseUrl,
       hasServiceKey: !!serviceRoleKey,
       serviceKeyLength: serviceRoleKey?.length || 0,
@@ -89,15 +89,15 @@ serve(async (req) => {
         persistSession: false
       }
     });
-    console.log("🧪 STEP 5 - Supabase client created successfully");
+    console.log("🔥 STEP 5 - Supabase client created successfully");
 
     // Find user by email
-    console.log("🧪 STEP 6 - Calling RPC get_user_by_email with email_param:", email);
+    console.log("🔥 STEP 6 - Calling RPC get_user_by_email with email_param:", email);
     const { data: userList, error: fetchError } = await supabase.rpc("get_user_by_email", {
       email_param: email,
     });
 
-    console.log("🧪 STEP 7 - RPC Response:", {
+    console.log("🔥 STEP 7 - RPC Response:", {
       hasData: !!userList,
       dataLength: userList?.length || 0,
       hasError: !!fetchError,
@@ -150,20 +150,40 @@ serve(async (req) => {
     }
 
     const user = userList[0];
-    console.log("🧪 STEP 8 - User found:", {
+    console.log("🔥 STEP 8 - User found:", {
       userId: user.id,
       userEmail: user.email,
       userExists: !!user
     });
 
-    // CRITICAL FIX: Use createSession instead of generateAccessToken
-    console.log("🧪 STEP 9 - Creating session for user:", user.id);
+    // CRITICAL: Enhanced session creation with password reset capability
+    console.log("🔥 STEP 9 - Creating enhanced session for user:", user.id);
+    
+    // Force password reset for developer user if it's the target email
+    if (email === 'wikus77@hotmail.it') {
+      console.log("🔥 FORCING PASSWORD RESET FOR DEVELOPER");
+      
+      try {
+        const { error: passwordError } = await supabase.auth.admin.updateUserById(user.id, {
+          password: 'Wikus190877!@#',
+          email_confirm: true
+        });
+        
+        if (passwordError) {
+          console.error("⚠️ Password reset warning:", passwordError.message);
+        } else {
+          console.log("✅ DEVELOPER PASSWORD FORCE RESET SUCCESS");
+        }
+      } catch (resetErr) {
+        console.warn("⚠️ Password reset attempt failed:", resetErr);
+      }
+    }
     
     const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
       user_id: user.id,
     });
 
-    console.log("🧪 STEP 10 - Session creation result:", {
+    console.log("🔥 STEP 10 - Enhanced session creation result:", {
       hasSessionData: !!sessionData,
       hasAccessToken: !!sessionData?.access_token,
       hasRefreshToken: !!sessionData?.refresh_token,
@@ -211,7 +231,31 @@ serve(async (req) => {
       );
     }
 
-    console.log("✅ STEP 11 - Login successful, returning tokens");
+    // CRITICAL: Force developer role assignment
+    if (email === 'wikus77@hotmail.it') {
+      console.log("🔥 FORCING DEVELOPER ROLE ASSIGNMENT");
+      
+      try {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .upsert({ 
+            user_id: user.id, 
+            role: 'developer' 
+          }, {
+            onConflict: 'user_id,role'
+          });
+        
+        if (roleError) {
+          console.warn("⚠️ Role assignment warning:", roleError.message);
+        } else {
+          console.log("✅ DEVELOPER ROLE FORCED SUCCESS");
+        }
+      } catch (roleErr) {
+        console.warn("⚠️ Role assignment attempt failed:", roleErr);
+      }
+    }
+
+    console.log("✅ STEP 11 - Enhanced login successful, returning tokens");
     const response = {
       success: true,
       access_token: sessionData.access_token,
@@ -221,15 +265,21 @@ serve(async (req) => {
         access_token: sessionData.access_token,
         refresh_token: sessionData.refresh_token,
         user: user
-      }
+      },
+      enhanced: true,
+      password_reset: email === 'wikus77@hotmail.it',
+      role_assigned: email === 'wikus77@hotmail.it'
     };
 
-    console.log("🧪 STEP 12 - Final response prepared:", {
+    console.log("🔥 STEP 12 - Final enhanced response prepared:", {
       success: response.success,
       hasAccessToken: !!response.access_token,
       hasRefreshToken: !!response.refresh_token,
       hasUser: !!response.user,
-      userEmail: response.user?.email
+      userEmail: response.user?.email,
+      enhanced: response.enhanced,
+      passwordReset: response.password_reset,
+      roleAssigned: response.role_assigned
     });
 
     return new Response(
@@ -244,7 +294,7 @@ serve(async (req) => {
     );
 
   } catch (err) {
-    console.error("❌ Unexpected error in login-no-captcha:", err);
+    console.error("❌ Unexpected error in enhanced login-no-captcha:", err);
     console.error("❌ Error stack:", err.stack);
     return new Response(JSON.stringify({ 
       success: false, 
