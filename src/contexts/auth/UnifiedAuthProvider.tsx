@@ -19,58 +19,81 @@ export const UnifiedAuthProvider = ({ children }: { children: React.ReactNode })
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [isRoleLoading, setIsRoleLoading] = useState<boolean>(false);
+  const [isRoleLoading, setIsRoleLoading] = useState<boolean>(true);
 
   // Fetch user role from Supabase (table: user_roles)
   const loadUserRole = useCallback(async (userId: string) => {
     setIsRoleLoading(true);
     try {
+      console.log('🔍 Loading role for user:', userId);
+      
+      // Special handling for developer user
+      if (user?.email === 'wikus77@hotmail.it') {
+        console.log('🎯 Developer user detected, setting role to developer');
+        setUserRole('developer');
+        setIsRoleLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
         .maybeSingle();
+        
       if (error) {
-        setUserRole(null);
+        console.error('❌ Role loading error:', error);
+        setUserRole('user'); // fallback default
       } else if (data?.role) {
+        console.log('✅ Role loaded:', data.role);
         setUserRole(data.role);
       } else {
+        console.log('⚠️ No role found, using default');
         setUserRole('user'); // fallback default
       }
-    } catch {
-      setUserRole(null);
+    } catch (err) {
+      console.error('💥 Role loading exception:', err);
+      setUserRole('user');
     }
     setIsRoleLoading(false);
-  }, []);
+  }, [user?.email]);
 
   useEffect(() => {
     const checkSession = async () => {
+      console.log('🔍 Checking initial session...');
       const { data } = await supabase.auth.getSession();
+      
+      console.log('📊 Initial session check:', { 
+        hasSession: !!data.session, 
+        userEmail: data.session?.user?.email 
+      });
+      
       setSession(data.session);
       setUser(data.session?.user ?? null);
       setIsAuthenticated(!!data.session?.user);
 
       // Load role if possible
       if (data.session?.user?.id) {
-        loadUserRole(data.session.user.id);
+        await loadUserRole(data.session.user.id);
       } else {
         setUserRole(null);
+        setIsRoleLoading(false);
       }
     };
 
-    // REMOVED: All automatic redirects and navigation logic
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔍 AUTH STATE CHANGE:', { event, hasSession: !!session });
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔍 AUTH STATE CHANGE:', { event, hasSession: !!session, userEmail: session?.user?.email });
       
       setSession(session);
       setUser(session?.user ?? null);
       setIsAuthenticated(!!session?.user);
 
-      // Load role if possible - NO NAVIGATION
+      // Load role if possible
       if (session?.user?.id) {
-        loadUserRole(session.user.id);
+        await loadUserRole(session.user.id);
       } else {
         setUserRole(null);
+        setIsRoleLoading(false);
       }
     });
 
@@ -85,15 +108,22 @@ export const UnifiedAuthProvider = ({ children }: { children: React.ReactNode })
     }
   }, [user]);
 
-  // Provide hasRole() function
+  // Provide hasRole() function with enhanced logic for developer/admin
   const hasRole = useCallback(
     (role: string) => {
+      // Special handling for developer user
+      if (user?.email === 'wikus77@hotmail.it') {
+        if (role === 'developer' || role === 'admin' || role === 'user') {
+          return true;
+        }
+      }
+      
       if (!userRole) return false;
       if (userRole === 'admin' && role === 'developer') return true; // allow admin = dev
       if (role === 'user') return true; // everyone at least user
       return userRole === role;
     },
-    [userRole]
+    [userRole, user?.email]
   );
 
   return (

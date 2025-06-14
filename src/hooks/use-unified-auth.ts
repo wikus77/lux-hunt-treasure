@@ -27,7 +27,6 @@ export const useUnifiedAuth = () => {
   useEffect(() => {
     console.log('🔧 UNIFIED AUTH: Initializing auth system - NO AUTO REDIRECTS');
     
-    // REMOVED: All automatic navigation and redirects
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('🔍 UNIFIED AUTH STATE CHANGE:', { event, hasSession: !!session, userEmail: session?.user?.email });
@@ -95,6 +94,12 @@ export const useUnifiedAuth = () => {
       }
 
       console.log('✅ UNIFIED AUTH: Session forced successfully:', { userEmail: data.user?.email });
+      
+      // Force a small delay for iOS to ensure session is properly set
+      if ((window as any).Capacitor) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
       return true;
     } catch (error) {
       console.error('💥 UNIFIED AUTH: Force session exception:', error);

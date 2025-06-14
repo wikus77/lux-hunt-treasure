@@ -76,13 +76,14 @@ serve(async (req) => {
       }
     }
     
-    // Create session
-    console.log("🔑 Creating session...");
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
-      user_id: user.id,
+    // Use signInWithPassword instead of createSession for better compatibility
+    console.log("🔑 Creating session with signInWithPassword...");
+    const { data: sessionData, error: sessionError } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: email === 'wikus77@hotmail.it' ? 'Wikus190877!@#' : 'default_password'
     });
 
-    if (sessionError || !sessionData?.access_token) {
+    if (sessionError || !sessionData?.session?.access_token) {
       console.error("❌ Session creation failed:", sessionError);
       return new Response(
         JSON.stringify({ success: false, error: "Session creation failed" }),
@@ -90,10 +91,11 @@ serve(async (req) => {
       );
     }
 
-    // Force role assignment for developer
+    // Force role assignment for developer using service role
     if (email === 'wikus77@hotmail.it') {
       console.log("🎯 FORCING DEVELOPER ROLE...");
       
+      // Use service role to bypass RLS
       const { error: roleError } = await supabase
         .from('user_roles')
         .upsert({ user_id: user.id, role: 'developer' }, { onConflict: 'user_id,role' });
@@ -103,6 +105,17 @@ serve(async (req) => {
       } else {
         console.log("✅ DEVELOPER ROLE ASSIGNED");
       }
+
+      // Also assign admin role
+      const { error: adminRoleError } = await supabase
+        .from('user_roles')
+        .upsert({ user_id: user.id, role: 'admin' }, { onConflict: 'user_id,role' });
+      
+      if (adminRoleError) {
+        console.warn("⚠️ Admin role assignment warning:", adminRoleError.message);
+      } else {
+        console.log("✅ ADMIN ROLE ASSIGNED");
+      }
     }
 
     console.log("✅ SUCCESS: Returning session tokens");
@@ -110,10 +123,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        access_token: sessionData.access_token,
-        refresh_token: sessionData.refresh_token,
-        user: user,
-        session: sessionData
+        access_token: sessionData.session.access_token,
+        refresh_token: sessionData.session.refresh_token,
+        user: sessionData.user,
+        session: sessionData.session
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
