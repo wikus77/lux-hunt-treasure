@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuthContext } from '@/contexts/auth/UnifiedAuthProvider';
 
 export const useAuth = () => {
-  const { session, user, isAuthenticated, isLoading, forceSessionFromTokens } = useUnifiedAuthContext();
+  const { session, user, isAuthenticated } = useUnifiedAuthContext();
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: any; session?: any }> => {
     console.log('🔐 STANDARD LOGIN STARTING for:', email);
@@ -23,10 +23,6 @@ export const useAuth = () => {
 
       if (data.session) {
         console.log('✅ LOGIN SUCCESS - session created');
-        await forceSessionFromTokens(
-          data.session.access_token,
-          data.session.refresh_token
-        );
         return { success: true, session: data.session };
       }
 
@@ -124,8 +120,6 @@ export const useAuth = () => {
     user,
     session,
     isAuthenticated,
-    isLoading,
-    isEmailVerified: user?.email_confirmed_at ? true : false,
     login,
     register,
     logout,

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useDynamicIslandSafety } from '@/hooks/useDynamicIslandSafety';
@@ -69,7 +68,7 @@ export const useDynamicIsland = () => {
   const performSafetyChecks = () => {
     // Basic safety check implementation
     console.log('🔒 Dynamic Island safety checks performed');
-    return isBuzzSafe.isSafe;
+    return isBuzzSafe; // use directly as boolean
   };
 
   const showIsland = (message: string, type: IslandState['type']) => {
