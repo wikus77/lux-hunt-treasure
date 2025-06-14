@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import FormField from './form-field';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 // OFFICIAL DEVELOPER CREDENTIALS - SYNCHRONIZED
 const DEVELOPER_EMAIL = 'wikus77@hotmail.it';
@@ -68,7 +69,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         return;
       }
 
-      const user = users[0];
+      const user = users[0] as User;
       console.log('✅ DEVELOPER USER FOUND:', user.email, 'ID:', user.id);
 
       // Check email confirmation
