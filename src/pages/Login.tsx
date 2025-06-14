@@ -4,18 +4,18 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
-import { StandardLoginForm } from "@/components/auth/StandardLoginForm";
+import { LoginFormUI } from "@/components/auth/LoginFormUI";
 import BackgroundParticles from "@/components/ui/background-particles";
-import { useAuth } from "@/hooks/use-auth";
+import { useUnifiedAuth } from "@/hooks/use-unified-auth";
 import { Spinner } from "@/components/ui/spinner";
 import { useDeveloperSetup } from "@/hooks/use-developer-setup";
-import LoginDebugHelper from "@/components/debug/LoginDebugHelper";
+import CompactLoginDebug from "@/components/auth/CompactLoginDebug";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
   const { isSetupComplete, isLoading: setupLoading } = useDeveloperSetup();
 
   useEffect(() => {
@@ -29,11 +29,9 @@ const Login = () => {
       });
     }
 
-    // CRITICAL: Only redirect if user is actually authenticated
-    // This prevents the automatic redirect that was causing the routing problems
+    // UNIFIED AUTH: Single redirect logic
     if (!authLoading && isAuthenticated) {
-      console.log('✅ User authenticated on login page, redirecting to /home');
-      // Add a delay to ensure the auth state is stable
+      console.log('✅ UNIFIED AUTH: User authenticated, redirecting to /home');
       setTimeout(() => {
         navigate('/home', { replace: true });
       }, 100);
@@ -54,9 +52,9 @@ const Login = () => {
     );
   }
 
-  // CRITICAL: Only show login form if user is NOT authenticated
+  // Show redirect message if authenticated
   if (isAuthenticated) {
-    console.log('🔄 User already authenticated, showing redirect message');
+    console.log('🔄 UNIFIED AUTH: Already authenticated, showing redirect message');
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
@@ -70,7 +68,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12 relative overflow-hidden">
       <BackgroundParticles count={15} />
-      <LoginDebugHelper />
+      <CompactLoginDebug />
 
       <motion.div 
         className="w-full max-w-md z-10"
@@ -89,7 +87,7 @@ const Login = () => {
         </div>
 
         <div className="glass-card p-6 backdrop-blur-md border border-gray-800 rounded-xl">
-          <StandardLoginForm verificationStatus={verificationStatus} />
+          <LoginFormUI verificationStatus={verificationStatus} />
 
           <div className="mt-6 text-center">
             <p className="text-sm text-white/50 mt-2">

@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuthContext } from '@/contexts/auth';
+import { useUnifiedAuth } from '@/hooks/use-unified-auth';
 import { Spinner } from '@/components/ui/spinner';
 
 interface ProtectedRouteProps {
@@ -15,25 +15,22 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireEmailVerification = true,
   children
 }) => {
-  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole } = useAuthContext();
+  const { isAuthenticated, isLoading, isEmailVerified, user } = useUnifiedAuth();
   const location = useLocation();
   
   useEffect(() => {
-    console.log("🛡️ PROTECTED ROUTE CHECK:", {
+    console.log("🛡️ UNIFIED PROTECTED ROUTE CHECK:", {
       path: location.pathname,
       isAuthenticated,
       isLoading,
       isEmailVerified,
-      user: getCurrentUser()?.id,
-      userEmail: getCurrentUser()?.email,
-      userRole,
-      isDeveloper: hasRole('developer')
+      userEmail: user?.email
     });
-  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole]);
+  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, user]);
   
   // Show loading during authentication check
   if (isLoading) {
-    console.log("⏳ AUTHENTICATION LOADING...");
+    console.log("⏳ UNIFIED AUTH: Loading...");
     return (
       <div className="flex justify-center items-center min-h-screen bg-black">
         <div className="text-center">
@@ -44,24 +41,23 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
   
-  // Check authentication - CRITICAL: Only redirect if actually not authenticated
+  // Check authentication
   if (!isAuthenticated) {
-    console.log("❌ AUTH CHECK FAILED - User not authenticated, redirecting to:", redirectTo);
+    console.log("❌ UNIFIED AUTH: Not authenticated, redirecting to:", redirectTo);
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
   
-  console.log("✅ AUTH CHECK PASSED - User authenticated");
+  console.log("✅ UNIFIED AUTH: Authenticated");
   
-  // Developer users bypass email verification
-  const currentUser = getCurrentUser();
-  const isDeveloper = hasRole('developer');
+  // Check email verification (skip for developer)
+  const isDeveloper = user?.email === 'wikus77@hotmail.it';
   
   if (requireEmailVerification && !isEmailVerified && !isDeveloper) {
-    console.log("📧 EMAIL VERIFICATION CHECK - Not verified, redirecting");
+    console.log("📧 UNIFIED AUTH: Email not verified, redirecting");
     return <Navigate to="/login?verification=pending" replace />;
   }
   
-  console.log("🎯 PROTECTED ROUTE SUCCESS - Rendering protected content for:", currentUser?.email);
+  console.log("🎯 UNIFIED PROTECTED ROUTE: Success for:", user?.email);
   return children ? <>{children}</> : <Outlet />;
 };
 
