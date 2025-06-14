@@ -11,7 +11,6 @@ const corsHeaders = {
 serve(async (req) => {
   console.log("🧪 STEP 1 - Starting login-no-captcha function...");
   console.log("🧪 Request method:", req.method);
-  console.log("🧪 Request headers:", Object.fromEntries(req.headers.entries()));
   
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -92,10 +91,10 @@ serve(async (req) => {
     });
     console.log("🧪 STEP 5 - Supabase client created successfully");
 
-    // CRITICAL FIX: Use correct parameter name 'email_param' instead of 'email_input'
+    // Find user by email
     console.log("🧪 STEP 6 - Calling RPC get_user_by_email with email_param:", email);
     const { data: userList, error: fetchError } = await supabase.rpc("get_user_by_email", {
-      email_param: email,  // FIXED: Changed from email_input to email_param
+      email_param: email,
     });
 
     console.log("🧪 STEP 7 - RPC Response:", {
@@ -157,29 +156,29 @@ serve(async (req) => {
       userExists: !!user
     });
 
-    // Create admin session with enhanced logging
-    console.log("🧪 STEP 9 - Creating admin session for user:", user.id);
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
+    // CRITICAL FIX: Use generateAccessToken instead of admin.createSession
+    console.log("🧪 STEP 9 - Generating access token for user:", user.id);
+    
+    // Use the correct method to generate session for admin purposes
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateAccessToken({
       user_id: user.id,
     });
 
-    console.log("🧪 STEP 10 - Session creation result:", {
+    console.log("🧪 STEP 10 - Token generation result:", {
       hasSessionData: !!sessionData,
-      hasSession: !!sessionData?.session,
-      hasUser: !!sessionData?.user,
-      hasAccessToken: !!sessionData?.session?.access_token,
-      hasRefreshToken: !!sessionData?.session?.refresh_token,
+      hasAccessToken: !!sessionData?.access_token,
+      hasRefreshToken: !!sessionData?.refresh_token,
       sessionError: sessionError,
-      accessTokenLength: sessionData?.session?.access_token?.length || 0,
-      refreshTokenLength: sessionData?.session?.refresh_token?.length || 0
+      accessTokenLength: sessionData?.access_token?.length || 0,
+      refreshTokenLength: sessionData?.refresh_token?.length || 0
     });
 
     if (sessionError) {
-      console.error("❌ Session creation failed with error:", sessionError);
+      console.error("❌ Token generation failed with error:", sessionError);
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Session creation failed",
+          error: "Token generation failed",
           details: {
             message: sessionError.message,
             status: sessionError.status
@@ -195,13 +194,13 @@ serve(async (req) => {
       );
     }
 
-    if (!sessionData || !sessionData.session) {
-      console.error("❌ No session data returned from createSession");
+    if (!sessionData || !sessionData.access_token) {
+      console.error("❌ No access token generated");
       return new Response(
         JSON.stringify({
           success: false,
-          error: "No session created",
-          details: "Session data is null or undefined"
+          error: "No token generated",
+          details: "Token data is null or undefined"
         }),
         { 
           status: 500,
@@ -216,10 +215,14 @@ serve(async (req) => {
     console.log("✅ STEP 11 - Login successful, returning tokens");
     const response = {
       success: true,
-      access_token: sessionData.session.access_token,
-      refresh_token: sessionData.session.refresh_token,
-      user: sessionData.user,
-      session: sessionData.session
+      access_token: sessionData.access_token,
+      refresh_token: sessionData.refresh_token,
+      user: user,
+      session: {
+        access_token: sessionData.access_token,
+        refresh_token: sessionData.refresh_token,
+        user: user
+      }
     };
 
     console.log("🧪 STEP 12 - Final response prepared:", {

@@ -33,6 +33,98 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
     console.log('🔧 Developer credentials filled:', { email: DEVELOPER_EMAIL, passwordLength: DEVELOPER_PASSWORD.length });
   };
 
+  // Enhanced diagnosis for login failures
+  const diagnoseDeveloperAccount = async () => {
+    console.log('🔍 DIAGNOSI DEVELOPER ACCOUNT STARTING...');
+    
+    try {
+      // Check if user exists in database
+      const { data: users, error: userError } = await supabase.rpc('get_user_by_email', {
+        email_param: DEVELOPER_EMAIL
+      });
+
+      console.log('👤 USER LOOKUP RESULT:', {
+        hasData: !!users,
+        dataLength: users?.length || 0,
+        error: userError,
+        userData: users?.[0] ? {
+          id: users[0].id,
+          email: users[0].email,
+          email_confirmed_at: users[0].email_confirmed_at
+        } : null
+      });
+
+      if (userError) {
+        console.error('❌ USER LOOKUP ERROR:', userError);
+        toast.error('Errore verifica utente', { description: userError.message });
+        return;
+      }
+
+      if (!users || users.length === 0) {
+        console.error('❌ DEVELOPER USER NOT FOUND');
+        toast.error('Utente developer non trovato', { 
+          description: 'Il developer non esiste nel database' 
+        });
+        return;
+      }
+
+      const user = users[0];
+      console.log('✅ DEVELOPER USER FOUND:', user.email, 'ID:', user.id);
+
+      // Check email confirmation
+      if (!user.email_confirmed_at) {
+        console.warn('⚠️ EMAIL NOT CONFIRMED');
+        toast.warning('Email non confermata', { 
+          description: 'Il developer deve confermare la email' 
+        });
+      } else {
+        console.log('✅ EMAIL CONFIRMED AT:', user.email_confirmed_at);
+      }
+
+      // Try direct password login with detailed logging
+      console.log('🔐 TESTING DIRECT LOGIN WITH EXACT PASSWORD...');
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+        email: DEVELOPER_EMAIL,
+        password: DEVELOPER_PASSWORD,
+      });
+
+      console.log('📊 DIRECT LOGIN RESULT:', {
+        hasData: !!loginData,
+        hasSession: !!loginData?.session,
+        hasUser: !!loginData?.user,
+        hasAccessToken: !!loginData?.session?.access_token,
+        error: loginError,
+        errorMessage: loginError?.message,
+        errorStatus: loginError?.status
+      });
+
+      if (loginError) {
+        console.error('❌ DIRECT LOGIN ERROR:', loginError);
+        
+        if (loginError.message === 'Invalid login credentials') {
+          console.log('🚨 PASSWORD HASH MISMATCH DETECTED');
+          toast.error('Password hash non corrisponde', {
+            description: 'Esegui reset-password.ts per correggere l\'hash'
+          });
+        } else {
+          toast.error('Errore login diretto', { description: loginError.message });
+        }
+      } else if (loginData?.session) {
+        console.log('✅ DIRECT LOGIN SUCCESS!');
+        toast.success('Login diretto riuscito!', {
+          description: 'Il problema era nel form, non nel database'
+        });
+        
+        // Navigate to home after successful login
+        setTimeout(() => navigate('/home'), 1000);
+      }
+
+    } catch (error: any) {
+      console.error('💥 DIAGNOSIS EXCEPTION:', error);
+      toast.error('Errore durante diagnosi', { description: error.message });
+    }
+  };
+
   // Enhanced login with session forcing capability
   const attemptLoginNoCapcha = async () => {
     console.log('🧪 TENTATIVO LOGIN-NO-CAPTCHA per developer');
@@ -141,21 +233,14 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         } else {
           console.error('❌ STANDARD LOGIN FAILED:', result?.error);
           
-          // If this is the developer email and standard login failed, try login-no-captcha
+          // If this is the developer email and standard login failed, show enhanced options
           if (email === DEVELOPER_EMAIL && password === DEVELOPER_PASSWORD) {
-            console.log('🔄 TENTATIVO FALLBACK LOGIN-NO-CAPTCHA per developer');
+            console.log('🚨 DEVELOPER LOGIN FAILED - SHOWING DIAGNOSIS OPTIONS');
             
-            toast.info('Tentativo login alternativo...', {
-              description: 'Usando login-no-captcha per developer'
+            toast.error('Login developer fallito', {
+              description: 'Usa i pulsanti di diagnosi per identificare il problema',
+              duration: 5000
             });
-
-            const fallbackResult = await attemptLoginNoCapcha();
-            
-            if (!fallbackResult?.success) {
-              toast.error('Errore di login', {
-                description: 'Entrambi i metodi di login sono falliti. Verifica le credenziali.'
-              });
-            }
           } else {
             toast.error('Errore di login', {
               description: result?.error?.message || 'Verifica le tue credenziali'
@@ -268,16 +353,29 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           🔧 Developer: Compila credenziali test
         </button>
 
-        {/* Emergency Developer Login Button */}
+        {/* Enhanced Developer Diagnosis Tools */}
         {email === DEVELOPER_EMAIL && password === DEVELOPER_PASSWORD && (
-          <button
-            type="button"
-            className="w-full text-center text-xs text-orange-400 hover:text-orange-300 transition-colors border border-orange-400/30 rounded py-2"
-            onClick={attemptLoginNoCapcha}
-            disabled={isLoading}
-          >
-            🚨 Developer: Login Emergency (No-Captcha)
-          </button>
+          <div className="space-y-2 border border-orange-400/30 rounded p-3">
+            <h4 className="text-orange-400 font-bold text-sm">🚨 Developer Diagnosis Tools</h4>
+            
+            <button
+              type="button"
+              className="w-full text-center text-xs text-orange-400 hover:text-orange-300 transition-colors border border-orange-400/30 rounded py-2"
+              onClick={diagnoseDeveloperAccount}
+              disabled={isLoading}
+            >
+              🔍 Diagnosi Account Developer
+            </button>
+            
+            <button
+              type="button"
+              className="w-full text-center text-xs text-red-400 hover:text-red-300 transition-colors border border-red-400/30 rounded py-2"
+              onClick={attemptLoginNoCapcha}
+              disabled={isLoading}
+            >
+              🚨 Emergency Login (No-Captcha)
+            </button>
+          </div>
         )}
       </div>
 
