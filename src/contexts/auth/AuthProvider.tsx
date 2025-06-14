@@ -5,43 +5,40 @@ import { supabase } from '@/integrations/supabase/client';
 import AuthContext from './AuthContext';
 import { useAuth } from '@/hooks/use-auth';
 import { AuthContextType } from './types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const auth = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
 
-  // Enhanced session monitoring
+  // CRITICAL: Remove automatic redirects that cause the routing problems
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔍 Auth state change:', event, 'Session exists:', !!session);
+      console.log('🔍 Auth Provider - Auth state change:', event, 'Session exists:', !!session);
+      console.log('📍 Current location:', location.pathname);
       
-      // Handle successful authentication
-      if (event === 'SIGNED_IN' && session?.user) {
-        console.log("✅ User signed in successfully:", session.user.email);
-        
-        // Check if user should be redirected to home
-        const currentPath = window.location.pathname;
-        if (currentPath === '/login' || currentPath === '/auth' || currentPath === '/') {
-          console.log("🏠 Redirecting authenticated user to /home");
-          setTimeout(() => {
-            navigate('/home');
-          }, 1000);
-        }
-      }
+      // DO NOT automatically redirect on auth state changes
+      // Let each page handle its own authentication requirements
       
-      // Handle sign out
       if (event === 'SIGNED_OUT') {
-        console.log("🚪 User signed out");
+        console.log("🚪 User signed out, clearing role");
         setUserRole(null);
         setIsRoleLoading(false);
+        
+        // Only redirect to login if user is on a protected route
+        const protectedRoutes = ['/home', '/profile', '/events', '/buzz', '/map', '/settings', '/games', '/leaderboard'];
+        if (protectedRoutes.some(route => location.pathname.startsWith(route))) {
+          console.log("🔄 Redirecting from protected route to login");
+          navigate('/login');
+        }
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   // Fetch user role when user changes
   useEffect(() => {

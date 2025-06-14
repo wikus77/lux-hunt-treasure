@@ -28,10 +28,14 @@ const Login = () => {
       });
     }
 
-    // Redirect if already authenticated
+    // CRITICAL: Only redirect if user is actually authenticated AND not on login page
+    // This prevents the automatic redirect that was causing the routing problems
     if (!authLoading && isAuthenticated) {
-      console.log('✅ User already authenticated, redirecting to /home');
-      navigate('/home', { replace: true });
+      console.log('✅ User authenticated on login page, redirecting to /home');
+      // Add a delay to ensure the auth state is stable
+      setTimeout(() => {
+        navigate('/home', { replace: true });
+      }, 100);
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);
 
@@ -44,6 +48,19 @@ const Login = () => {
           <p className="text-white/70">
             {setupLoading ? 'Configurazione sistema developer...' : 'Verifica autenticazione...'}
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // CRITICAL: Only show login form if user is NOT authenticated
+  if (isAuthenticated) {
+    console.log('🔄 User already authenticated, showing redirect message');
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-center">
+          <Spinner className="h-8 w-8 text-white mx-auto mb-4" />
+          <p className="text-white/70">Accesso effettuato, reindirizzamento...</p>
         </div>
       </div>
     );

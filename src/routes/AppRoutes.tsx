@@ -46,14 +46,9 @@ const LoadingFallback = () => (
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // CRITICAL: Enhanced routing logic for Capacitor
-  const isCapacitorApp = typeof window !== 'undefined' && 
-    (window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost');
-
-  console.log('🔍 ENHANCED ROUTING STATE:', {
+  console.log('🚦 ROUTES - Current auth state:', {
     isAuthenticated,
     isLoading,
-    isCapacitorApp,
     currentPath: window.location.pathname,
     timestamp: new Date().toISOString()
   });
@@ -63,20 +58,14 @@ const AppRoutes: React.FC = () => {
       <IOSSafeAreaOverlay>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            {/* CRITICAL: Enhanced landing page routing */}
-            <Route 
-              path="/" 
-              element={
-                // For Capacitor app, redirect authenticated users to /home immediately
-                isCapacitorApp && isAuthenticated ? (
-                  <Navigate to="/home" replace />
-                ) : (
-                  <Index />
-                )
-              } 
-            />
+            {/* Public landing page - CRITICAL: No automatic redirects */}
+            <Route path="/" element={<Index />} />
 
-            {/* Main App Routes - PROTECTED - SEPARATE FROM LANDING */}
+            {/* Auth routes - accessible to non-authenticated users */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
+            {/* Protected app routes - require authentication */}
             <Route
               path="/home"
               element={
@@ -122,8 +111,6 @@ const AppRoutes: React.FC = () => {
               }
             />
             
-            <Route path="/notifications" element={<Notifications />} />
-            
             <Route
               path="/profile"
               element={
@@ -133,8 +120,6 @@ const AppRoutes: React.FC = () => {
               }
             />
             
-            <Route path="/settings" element={<Settings />} />
-
             <Route
               path="/subscriptions"
               element={
@@ -144,12 +129,12 @@ const AppRoutes: React.FC = () => {
               }
             />
 
-            {/* Auth routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            {/* Semi-protected routes */}
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/select-mission" element={<MissionSelection />} />
             
-            {/* Other routes */}
+            {/* Public info routes */}
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />

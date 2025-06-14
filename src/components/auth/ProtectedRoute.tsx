@@ -36,12 +36,15 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     console.log("⏳ AUTHENTICATION LOADING...");
     return (
       <div className="flex justify-center items-center min-h-screen bg-black">
-        <Spinner className="h-8 w-8 text-white" />
+        <div className="text-center">
+          <Spinner className="h-8 w-8 text-white mx-auto mb-4" />
+          <p className="text-white/70">Verifica autenticazione...</p>
+        </div>
       </div>
     );
   }
   
-  // Check authentication
+  // Check authentication - CRITICAL: Only redirect if actually not authenticated
   if (!isAuthenticated) {
     console.log("❌ AUTH CHECK FAILED - User not authenticated, redirecting to:", redirectTo);
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
