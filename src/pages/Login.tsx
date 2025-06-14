@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -18,7 +19,6 @@ const Login = () => {
   const { isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
   const { isSetupComplete, isLoading: setupLoading } = useDeveloperSetup();
   
-  // Integra l'auto-recovery
   useAutoRecovery();
 
   useEffect(() => {
@@ -31,10 +31,13 @@ const Login = () => {
         description: "La tua email è stata verificata con successo."
       });
     }
-    // 🔒 NON fare nessun redirect automatico su /login, lascia che l'utente possa sempre vedere la login se non è autenticato
-  }, [searchParams]);
+    // Se autenticato, esegui subito redirect a /home
+    if (!authLoading && isAuthenticated) {
+      navigate("/home", { replace: true });
+    }
+  }, [searchParams, authLoading, isAuthenticated, navigate]);
 
-  // Show loading during auth check or developer setup
+  // Mostra loading durante controllo auth/setup
   if (authLoading || setupLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
@@ -48,18 +51,7 @@ const Login = () => {
     );
   }
 
-  // Mostra SEMPRE la pagina login agli utenti non autenticati (nessun redirect automatico dietro le quinte)
-  if (isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-center">
-          <Spinner className="h-8 w-8 text-white mx-auto mb-4" />
-          <p className="text-white/70">Accesso effettuato, reindirizzamento...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // SE ARRIVI QUI sei sicuramente NON autenticato: mostra SEMPRE login UI
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12 relative overflow-hidden">
       <BackgroundParticles count={15} />
@@ -115,3 +107,4 @@ const Login = () => {
 };
 
 export default Login;
+
