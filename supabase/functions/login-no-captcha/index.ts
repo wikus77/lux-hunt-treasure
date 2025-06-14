@@ -156,15 +156,14 @@ serve(async (req) => {
       userExists: !!user
     });
 
-    // CRITICAL FIX: Use generateAccessToken instead of admin.createSession
-    console.log("🧪 STEP 9 - Generating access token for user:", user.id);
+    // CRITICAL FIX: Use createSession instead of generateAccessToken
+    console.log("🧪 STEP 9 - Creating session for user:", user.id);
     
-    // Use the correct method to generate session for admin purposes
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateAccessToken({
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
       user_id: user.id,
     });
 
-    console.log("🧪 STEP 10 - Token generation result:", {
+    console.log("🧪 STEP 10 - Session creation result:", {
       hasSessionData: !!sessionData,
       hasAccessToken: !!sessionData?.access_token,
       hasRefreshToken: !!sessionData?.refresh_token,
@@ -174,11 +173,11 @@ serve(async (req) => {
     });
 
     if (sessionError) {
-      console.error("❌ Token generation failed with error:", sessionError);
+      console.error("❌ Session creation failed with error:", sessionError);
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Token generation failed",
+          error: "Session creation failed",
           details: {
             message: sessionError.message,
             status: sessionError.status
@@ -200,7 +199,7 @@ serve(async (req) => {
         JSON.stringify({
           success: false,
           error: "No token generated",
-          details: "Token data is null or undefined"
+          details: "Session data is null or undefined"
         }),
         { 
           status: 500,

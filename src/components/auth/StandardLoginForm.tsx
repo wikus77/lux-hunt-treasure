@@ -112,8 +112,17 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         }
       } else if (loginData?.session) {
         console.log('✅ DIRECT LOGIN SUCCESS!');
+        
+        // Force session persistence
+        await supabase.auth.setSession({
+          access_token: loginData.session.access_token,
+          refresh_token: loginData.session.refresh_token,
+        });
+        
+        console.log('✅ SESSION FORCED TO PERSIST');
+        
         toast.success('Login diretto riuscito!', {
-          description: 'Il problema era nel form, non nel database'
+          description: 'Sessione forzata e persistita'
         });
         
         // Navigate to home after successful login
@@ -146,7 +155,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
       if (result.success && result.access_token && result.refresh_token) {
         console.log('✅ Tokens ricevuti, forzando sessione...');
         
-        // Forza impostazione sessione con i token ricevuti
+        // Force session with received tokens and explicit persistence
         const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
           access_token: result.access_token,
           refresh_token: result.refresh_token
@@ -160,8 +169,16 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         if (sessionData.session) {
           console.log('✅ SESSIONE FORZATA CON SUCCESSO:', sessionData.session.user?.email);
           
+          // Double-check persistence
+          const { data: verifySession } = await supabase.auth.getSession();
+          console.log('🔍 VERIFICA SESSIONE DOPO SETSESSION:', {
+            hasSession: !!verifySession.session,
+            hasUser: !!verifySession.session?.user,
+            userEmail: verifySession.session?.user?.email
+          });
+          
           toast.success('Login developer riuscito', {
-            description: 'Sessione forzata tramite login-no-captcha'
+            description: 'Sessione forzata e verificata tramite login-no-captcha'
           });
 
           setTimeout(() => {
@@ -222,8 +239,17 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           errorMessage: result?.error?.message
         });
         
-        if (result?.success) {
-          console.log('✅ STANDARD LOGIN SUCCESS - redirecting to /home');
+        if (result?.success && result?.session) {
+          console.log('✅ STANDARD LOGIN SUCCESS - forcing session persistence');
+          
+          // Ensure session persistence after successful login
+          await supabase.auth.setSession({
+            access_token: result.session.access_token,
+            refresh_token: result.session.refresh_token
+          });
+          
+          console.log('✅ Session persistence forced - redirecting to /home');
+          
           toast.success('Login effettuato con successo', {
             description: 'Benvenuto in M1SSION!'
           });
@@ -374,7 +400,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
               onClick={attemptLoginNoCapcha}
               disabled={isLoading}
             >
-              🚨 Emergency Login (No-Captcha)
+              🚨 Emergency Login (No-Captcha + Force Session)
             </button>
           </div>
         )}
