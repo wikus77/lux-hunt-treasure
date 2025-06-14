@@ -5,7 +5,8 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Spinner } from "@/components/ui/spinner";
 import IOSSafeAreaOverlay from "@/components/debug/IOSSafeAreaOverlay";
-import { useAuth } from "@/hooks/use-auth";
+// ⭕️ PATCH: utilizziamo solo il nuovo sistema unificato (useUnifiedAuth)
+import { useUnifiedAuth } from "@/hooks/use-unified-auth";
 
 // Public routes
 import Index from "@/pages/Index";
@@ -44,7 +45,8 @@ const LoadingFallback = () => (
 );
 
 const AppRoutes: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  // ⭕️ PATCH: qui usiamo il nuovo sistema unificato di auth
+  const { isAuthenticated, isLoading } = useUnifiedAuth();
 
   console.log('🚦 ROUTES - Current auth state:', {
     isAuthenticated,
@@ -150,3 +152,4 @@ const AppRoutes: React.FC = () => {
 };
 
 export default AppRoutes;
+
