@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useUnifiedAuthContext } from '@/contexts/auth/UnifiedAuthProvider';
 
 interface UnifiedAuthState {
   session: Session | null;
@@ -12,6 +13,9 @@ interface UnifiedAuthState {
 }
 
 export const useUnifiedAuth = () => {
+  // Get role properties from UnifiedAuthProvider
+  const { userRole, hasRole, isRoleLoading } = useUnifiedAuthContext();
+  
   const [authState, setAuthState] = useState<UnifiedAuthState>({
     session: null,
     user: null,
@@ -191,6 +195,11 @@ export const useUnifiedAuth = () => {
 
   return {
     ...authState,
+    // Role properties from UnifiedAuthProvider
+    userRole,
+    hasRole,
+    isRoleLoading,
+    // Auth methods
     login,
     logout,
     register,
