@@ -4,7 +4,7 @@
   "appName": "M1SSION",
   "webDir": "build",
   "server": {
-    "url": "http://192.168.1.100:8080",
+    "url": "http://192.168.178.126:3000",
     "cleartext": true
   },
   "plugins": {
