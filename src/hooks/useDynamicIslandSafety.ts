@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useAuthContext } from '@/contexts/auth';
+import { useUnifiedAuthContext } from '@/contexts/auth/UnifiedAuthProvider';
 
 interface SafetyCheckResult {
   isSafe: boolean;
@@ -9,7 +10,7 @@ interface SafetyCheckResult {
 }
 
 export const useDynamicIslandSafety = () => {
-  const { user, isAuthenticated } = useAuthContext();
+  const { user, isAuthenticated } = useUnifiedAuthContext();
   const [isBuzzSafe, setIsBuzzSafe] = useState<SafetyCheckResult>({ isSafe: true });
 
   useEffect(() => {
