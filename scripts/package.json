@@ -1,0 +1,14 @@
+
+{
+  "name": "m1ssion-scripts",
+  "version": "1.0.0",
+  "description": "Script per gestione developer M1SSION",
+  "scripts": {
+    "reset-password": "tsx reset-password.ts",
+    "reset-dev": "SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY tsx reset-password.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "@supabase/supabase-js": "^2.49.4"
+  }
+}

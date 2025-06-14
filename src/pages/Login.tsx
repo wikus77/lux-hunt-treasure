@@ -9,6 +9,7 @@ import BackgroundParticles from "@/components/ui/background-particles";
 import { useAuth } from "@/hooks/use-auth";
 import { Spinner } from "@/components/ui/spinner";
 import { useDeveloperSetup } from "@/hooks/use-developer-setup";
+import LoginDebugHelper from "@/components/debug/LoginDebugHelper";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
@@ -28,7 +29,7 @@ const Login = () => {
       });
     }
 
-    // CRITICAL: Only redirect if user is actually authenticated AND not on login page
+    // CRITICAL: Only redirect if user is actually authenticated
     // This prevents the automatic redirect that was causing the routing problems
     if (!authLoading && isAuthenticated) {
       console.log('✅ User authenticated on login page, redirecting to /home');
@@ -69,6 +70,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12 relative overflow-hidden">
       <BackgroundParticles count={15} />
+      <LoginDebugHelper />
 
       <motion.div 
         className="w-full max-w-md z-10"
