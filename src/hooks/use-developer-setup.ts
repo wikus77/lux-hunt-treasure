@@ -4,6 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 
+// OFFICIAL DEVELOPER CREDENTIALS - SYNCHRONIZED ACROSS ALL COMPONENTS
+const DEVELOPER_EMAIL = 'wikus77@hotmail.it';
+const DEVELOPER_PASSWORD = 'Wikus190877!@#';
+
 export const useDeveloperSetup = () => {
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,7 +19,7 @@ export const useDeveloperSetup = () => {
       // Try to get current session first
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (session?.user?.email === 'wikus77@hotmail.it') {
+      if (session?.user?.email === DEVELOPER_EMAIL) {
         console.log('✅ Developer user already authenticated');
         await ensureDeveloperRole(session.user.id);
         setIsSetupComplete(true);
@@ -39,12 +43,9 @@ export const useDeveloperSetup = () => {
     try {
       console.log('📝 Attempting developer user registration...');
       
-      // Use a stronger password that meets Supabase requirements
-      const strongPassword = 'Wikus190877!@#';
-      
       const { data, error } = await supabase.auth.signUp({
-        email: 'wikus77@hotmail.it',
-        password: strongPassword,
+        email: DEVELOPER_EMAIL,
+        password: DEVELOPER_PASSWORD,
         options: {
           emailRedirectTo: `${window.location.origin}/`
         }
@@ -93,5 +94,11 @@ export const useDeveloperSetup = () => {
     ensureDeveloperUser();
   }, []);
 
-  return { isSetupComplete, isLoading };
+  return { 
+    isSetupComplete, 
+    isLoading,
+    // Export credentials for other components to use
+    DEVELOPER_EMAIL,
+    DEVELOPER_PASSWORD
+  };
 };

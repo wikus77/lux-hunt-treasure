@@ -7,6 +7,10 @@ import { useAuth } from '@/hooks/use-auth';
 import FormField from './form-field';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
+// OFFICIAL DEVELOPER CREDENTIALS - SYNCHRONIZED
+const DEVELOPER_EMAIL = 'wikus77@hotmail.it';
+const DEVELOPER_PASSWORD = 'Wikus190877!@#';
+
 interface StandardLoginFormProps {
   verificationStatus?: string | null;
 }
@@ -22,9 +26,10 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
 
   // Auto-fill developer credentials for testing
   const fillDeveloperCredentials = () => {
-    setEmail('wikus77@hotmail.it');
-    setPassword('Wikus190877!@#');
+    setEmail(DEVELOPER_EMAIL);
+    setPassword(DEVELOPER_PASSWORD);
     toast.info('Credenziali developer compilate automaticamente');
+    console.log('🔧 Developer credentials filled:', { email: DEVELOPER_EMAIL, passwordLength: DEVELOPER_PASSWORD.length });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,7 +41,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
     }
 
     setIsLoading(true);
-    console.log('🔐 LOGIN ATTEMPT:', { email, passwordLength: password.length });
+    console.log('🔐 LOGIN ATTEMPT:', { email, passwordLength: password.length, exactPassword: password });
     
     try {
       if (isRegistering) {
@@ -57,7 +62,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         }
       } else {
         // Login flow
-        console.log('🔑 LOGIN FLOW for:', email);
+        console.log('🔑 LOGIN FLOW for:', email, 'with password length:', password.length);
         const result = await login(email, password);
         
         console.log('📊 LOGIN RESULT:', {
@@ -78,6 +83,15 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           }, 1000);
         } else {
           console.error('❌ LOGIN FAILED:', result?.error);
+          
+          // Enhanced error handling for developer debugging
+          if (email === DEVELOPER_EMAIL) {
+            console.error('🚨 DEVELOPER LOGIN FAILED - Password being sent:', password);
+            console.error('🚨 Expected password length:', DEVELOPER_PASSWORD.length);
+            console.error('🚨 Actual password length:', password.length);
+            console.error('🚨 Password match:', password === DEVELOPER_PASSWORD);
+          }
+          
           toast.error('Errore di login', {
             description: result?.error?.message || 'Verifica le tue credenziali'
           });
