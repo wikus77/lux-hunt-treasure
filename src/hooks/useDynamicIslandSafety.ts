@@ -1,21 +1,15 @@
 
 import { useUnifiedAuthContext } from '@/contexts/auth/UnifiedAuthProvider';
 
-export function useDynamicIslandSafety() {
+export const useDynamicIslandSafety = () => {
   const { user, session, isAuthenticated } = useUnifiedAuthContext();
 
-  const isActive = !!user && !!session && isAuthenticated === true;
-  
-  // Add the missing isBuzzSafe property that useDynamicIsland.ts expects
-  const isBuzzSafe = {
-    isSafe: isActive && !!session && !user?.user_metadata?.banned
-  };
+  const isBuzzSafe = !!user?.id && !!session?.access_token && isAuthenticated === true;
 
   return {
-    isActive,
     user,
     session,
     isAuthenticated,
     isBuzzSafe,
-  };
-}
+  }
+};

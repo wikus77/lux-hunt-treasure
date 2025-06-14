@@ -1,68 +1,47 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useUnifiedAuth } from '@/hooks/use-unified-auth';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { Session, User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
-interface UnifiedAuthContextType extends ReturnType<typeof useUnifiedAuth> {
-  userRole: string | null;
-  hasRole: (role: string) => boolean;
-  isRoleLoading: boolean;
+interface UnifiedAuthContextType {
+  session: Session | null;
+  user: User | null;
+  isAuthenticated: boolean;
 }
 
 const UnifiedAuthContext = createContext<UnifiedAuthContextType | undefined>(undefined);
 
-export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const auth = useUnifiedAuth();
-  
-  // Safe navigation hook with fallback
-  let navigate: (path: string, options?: any) => void;
-  let location: { pathname: string };
-  
-  try {
-    navigate = useNavigate();
-    location = useLocation();
-  } catch (error) {
-    console.warn('🔧 UNIFIED AUTH: useNavigate/useLocation not available yet, using fallback');
-    navigate = () => {};
-    location = { pathname: '/' };
-  }
+export const UnifiedAuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
-  // Simplified role management
-  const userRole = auth.user?.user_metadata?.role || 'user';
-  const isRoleLoading = false;
-  
-  const hasRole = (role: string): boolean => {
-    return userRole === role;
-  };
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+    };
 
-  // Clean auth context value
-  const authContextValue: UnifiedAuthContextType = {
-    ...auth,
-    userRole,
-    hasRole,
-    isRoleLoading
-  };
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
 
-  console.log('🔧 UNIFIED AUTH PROVIDER: Context value:', {
-    isAuthenticated: auth.isAuthenticated,
-    isLoading: auth.isLoading,
-    userEmail: auth.user?.email,
-    currentPath: location.pathname
-  });
+    checkSession();
+    return () => listener?.subscription.unsubscribe();
+  }, []);
+
+  const isAuthenticated = !!user?.id && !!session?.access_token;
 
   return (
-    <UnifiedAuthContext.Provider value={authContextValue}>
+    <UnifiedAuthContext.Provider value={{ session, user, isAuthenticated }}>
       {children}
     </UnifiedAuthContext.Provider>
   );
 };
 
-export const useUnifiedAuthContext = (): UnifiedAuthContextType => {
+export const useUnifiedAuthContext = () => {
   const context = useContext(UnifiedAuthContext);
-  
-  if (context === undefined) {
-    throw new Error('useUnifiedAuthContext deve essere usato all\'interno di un UnifiedAuthProvider');
-  }
-  
+  if (!context) throw new Error('useUnifiedAuthContext deve essere usato all’interno di UnifiedAuthProvider');
   return context;
 };
