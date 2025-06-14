@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUnifiedAuth } from '@/hooks/use-unified-auth';
 
@@ -27,15 +27,15 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     location = { pathname: '/' };
   }
 
-  // Simplified role management - no conflicts with session manager
+  // Simplified role management
   const userRole = auth.user?.user_metadata?.role || 'user';
-  const isRoleLoading = false; // Simplified for now
+  const isRoleLoading = false;
   
   const hasRole = (role: string): boolean => {
     return userRole === role;
   };
 
-  // Single, clean auth context value
+  // Clean auth context value
   const authContextValue: UnifiedAuthContextType = {
     ...auth,
     userRole,
