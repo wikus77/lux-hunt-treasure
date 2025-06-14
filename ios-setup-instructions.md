@@ -1,107 +1,96 @@
 
 # 📱 Setup iOS Development - M1SSION
 
-## 🔧 Configurazione rapida per sviluppo iOS
+## 🔧 Configurazione aggiornata per IP locale 192.168.178.126
 
-### 1. Trova l'IP locale del tuo computer
+### ✅ CONFIGURAZIONE CORRENTE
 
-**Mac:**
-```bash
-ipconfig getifaddr en0
-```
+**IP Locale configurato:** `192.168.178.126:3000`
+**Stato:** Configurazione Capacitor aggiornata e pronta per sync
 
-**Windows:**
-```bash
-ipconfig | findstr IPv4
-```
+### 1. Verifica connessione di rete
 
-**Linux:**
-```bash
-hostname -I
-```
+Assicurati che:
+- iPhone e PC siano sulla stessa rete WiFi
+- Il server React sia attivo su: `http://192.168.178.126:3000`
+- Testa l'URL dal browser Safari su iPhone per verificare raggiungibilità
 
-### 2. Aggiorna configurazione Capacitor
-
-Modifica `capacitor.config.ts` sostituendo `192.168.1.100` con il tuo IP locale:
-
-```typescript
-server: {
-  url: 'http://TUO_IP_LOCALE:8080',
-  cleartext: true,
-  androidScheme: 'https'
-}
-```
-
-### 3. Avvia server React
+### 2. Build e sincronizzazione
 
 ```bash
-npm run dev
-```
-
-Verifica che il server sia raggiungibile da browser su: `http://TUO_IP_LOCALE:8080`
-
-### 4. Sincronizza Capacitor
-
-```bash
+# Build del progetto React
 npm run build
+
+# Sincronizza Capacitor con le nuove configurazioni
 npx cap sync ios
-```
 
-### 5. Apri in Xcode
-
-```bash
+# Apri in Xcode
 npx cap open ios
 ```
 
-### 6. Build e Deploy
+### 3. Deploy su iPhone
 
-1. In Xcode: Product > Clean Build Folder
-2. Seleziona il tuo dispositivo iOS fisico
-3. Build e installa l'app
+1. **Pulisci build precedenti:**
+   - In Xcode: Product > Clean Build Folder
+   - Disinstalla versioni precedenti dell'app da iPhone
 
-## ⚠️ Risoluzione problemi comuni
+2. **Configura target:**
+   - Seleziona il tuo dispositivo iOS fisico
+   - Assicurati che sia sulla stessa rete WiFi (192.168.178.x)
 
-### Errore di connessione
-- Verifica che iPhone e PC siano sulla stessa rete WiFi
-- Controlla firewall del PC (deve permettere connessioni porta 8080)
-- Testa l'URL dal browser Safari su iPhone
+3. **Build e installa:**
+   - Build e installa l'app aggiornata
+   - Avvia l'app e verifica connessione
 
-### Firewall Mac
-```bash
-sudo pfctl -d  # Disabilita temporaneamente
-```
+### 4. Test Login Developer
 
-### Firewall Windows
-Aggiungi eccezione per porta 8080 in Windows Defender
+**Credenziali ufficiali:**
+- Email: `wikus77@hotmail.it`
+- Password: `Wikus190877!@#`
 
-### Debug WebView
-Apri Safari > Develop > [Nome iPhone] > [M1SSION] per ispezionare WebView
+**Test da eseguire:**
+1. Apri app su iPhone
+2. Vai alla schermata login
+3. Inserisci credenziali developer
+4. Verifica accesso e ruoli
+5. Controlla console Xcode per eventuali errori
 
-## ✅ Checklist verifica
+### 5. Debug e monitoraggio
 
-- [ ] IP locale identificato correttamente
-- [ ] Server React attivo su porta 8080
-- [ ] URL testato da browser iPhone
-- [ ] Firewall configurato per porta 8080
-- [ ] Dispositivi sulla stessa rete WiFi
-- [ ] Capacitor sincronizzato
-- [ ] Build Xcode pulita
-- [ ] App installata su dispositivo fisico
+**Console Safari (per debug WebView):**
+- Safari > Develop > [Nome iPhone] > [M1SSION]
 
-## 🔄 Script automatico setup
+**Logs Xcode:**
+- Monitora console per errori di rete o autenticazione
 
-```bash
-#!/bin/bash
-# Ottieni IP automaticamente e aggiorna config
-IP=$(ipconfig getifaddr en0)
-echo "IP locale rilevato: $IP"
+### ⚠️ Troubleshooting
 
-# Backup configurazione esistente
-cp capacitor.config.ts capacitor.config.ts.backup
+**Se l'app non si connette:**
+1. Verifica che il server React risponda su `http://192.168.178.126:3000`
+2. Controlla firewall/antivirus sul PC
+3. Assicurati che iPhone sia sulla rete WiFi corretta
+4. Riavvia l'app dopo modifiche alla configurazione
 
-# Aggiorna configurazione con IP dinamico
-sed -i '' "s/192\.168\.1\.100/$IP/g" capacitor.config.ts
+**Se il login fallisce:**
+1. Verifica connessione internet iPhone
+2. Controlla logs backend Supabase
+3. Testa le stesse credenziali da browser web
 
-echo "Configurazione aggiornata con IP: $IP"
-echo "Esegui: npm run build && npx cap sync ios"
-```
+### ✅ Checklist post-deployment
+
+- [ ] Server React attivo su IP 192.168.178.126:3000
+- [ ] App installata su iPhone (versione aggiornata)
+- [ ] Login developer funzionante
+- [ ] Nessun errore in console Xcode
+- [ ] Sessione auth persistente
+- [ ] Interfaccia responsive e stabile
+
+### 🎯 Stato Attuale Sistema
+
+**✅ Backend Supabase:** Stabile e operativo
+**✅ Login tradizionale:** Implementato per tutti gli utenti
+**✅ Credenziali developer:** Configurate e testate
+**✅ Configurazione Capacitor:** Aggiornata con IP corretto
+**✅ Cross-platform:** Compatibile iOS/Android/Web
+
+**📱 Pronto per test iOS con IP 192.168.178.126**
