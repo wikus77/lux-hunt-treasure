@@ -49,9 +49,9 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         dataLength: users?.length || 0,
         error: userError,
         userData: users?.[0] ? {
-          id: users[0].id,
-          email: users[0].email,
-          email_confirmed_at: users[0].email_confirmed_at
+          id: (users[0] as User).id,
+          email: (users[0] as User).email,
+          email_confirmed_at: (users[0] as User).email_confirmed_at
         } : null
       });
 
