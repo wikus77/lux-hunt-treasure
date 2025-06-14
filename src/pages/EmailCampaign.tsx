@@ -1,13 +1,12 @@
-
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthContext } from "@/contexts/auth";
+import { useUnifiedAuth } from '@/hooks/use-unified-auth';
 import CampaignSender from "@/components/email/CampaignSender";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
 
 const EmailCampaign = () => {
-  const { hasRole, isAuthenticated, isRoleLoading } = useAuthContext();
+  const { hasRole, isAuthenticated, isRoleLoading } = useUnifiedAuth();
   const navigate = useNavigate();
 
   useEffect(() => {

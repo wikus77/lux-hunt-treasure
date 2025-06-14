@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuthContext } from '@/contexts/auth';
+import { useUnifiedAuth } from '@/hooks/use-unified-auth';
 
 export interface BuzzMapArea {
   id: string;
@@ -20,7 +19,7 @@ export interface BuzzMapArea {
 }
 
 export const useBuzzMapLogic = () => {
-  const { user } = useAuthContext();
+  const { user } = useUnifiedAuth();
   const [currentWeekAreas, setCurrentWeekAreas] = useState<BuzzMapArea[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);

@@ -1,7 +1,6 @@
-
 import React, { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuthContext } from '@/contexts/auth';
+import { useUnifiedAuth } from '@/hooks/use-unified-auth';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
 
@@ -20,7 +19,7 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
   children,
   bypassCheck = false
 }) => {
-  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole, isRoleLoading } = useAuthContext();
+  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole, isRoleLoading } = useUnifiedAuth();
   const location = useLocation();
   
   const currentUser = getCurrentUser();

@@ -1,80 +1,50 @@
-
-import { User, Settings, LogOut, CreditCard } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useNavigate } from "react-router-dom";
-import { useAuthContext } from "@/contexts/auth";
+import { useNavigate } from 'react-router-dom';
+import { Cog6ToothIcon, ArrowRightOnRectangleIcon, UserIcon } from '@heroicons/react/24/outline';
+import { useUnifiedAuth } from '@/hooks/use-unified-auth';
 
-interface UserMenuProps {
-  onClickMail?: () => void;
-  enableAvatarUpload?: boolean;
-}
-
-const UserMenu = ({ onClickMail, enableAvatarUpload }: UserMenuProps) => {
+const UserMenu: React.FC = () => {
   const navigate = useNavigate();
-  const { logout, getCurrentUser } = useAuthContext();
+  const { user, logout } = useUnifiedAuth();
 
-  const handleSignOut = () => {
-    if (logout) {
-      logout();
-    }
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="rounded-full"
-          id="profile-button"
-        >
-          <Avatar className="h-8 w-8 border border-cyan-400/30 hover:border-cyan-400/70 transition-colors">
-            <AvatarFallback className="bg-black">
-              <User className="h-4 w-4 text-cyan-400" />
-            </AvatarFallback>
+        <button className="rounded-full h-9 w-9">
+          <Avatar className="h-9 w-9">
+            <AvatarImage src={user?.user_metadata?.avatar_url || "/images/avatars/placeholder.svg"} alt={user?.email || "User Avatar"} />
+            <AvatarFallback>{user?.email ? user.email[0].toUpperCase() : '?'}</AvatarFallback>
           </Avatar>
-        </Button>
+        </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="glass-card border-cyan-400/30">
-        <DropdownMenuLabel className="text-white">Il mio profilo</DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-white/10" />
-        <DropdownMenuItem 
-          className="text-white/80 hover:text-white hover:bg-white/10"
-          onClick={() => navigate("/profile")}
-        >
-          <User className="mr-2 h-4 w-4 text-cyan-400" />
-          Il mio profilo
+      <DropdownMenuContent className="w-56 mr-2">
+        <DropdownMenuLabel>Il mio account</DropdownMenuLabel>
+        <DropdownMenuItem onClick={() => navigate('/profile')}>
+          <UserIcon className="h-4 w-4 mr-2" />
+          Profilo
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          className="text-white/80 hover:text-white hover:bg-white/10"
-          onClick={() => navigate("/settings")}
-        >
-          <Settings className="mr-2 h-4 w-4 text-cyan-400" />
+        <DropdownMenuItem onClick={() => navigate('/settings')}>
+          <Cog6ToothIcon className="h-4 w-4 mr-2" />
           Impostazioni
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          className="text-white/80 hover:text-white hover:bg-white/10"
-          onClick={() => navigate("/subscriptions")}
-        >
-          <CreditCard className="mr-2 h-4 w-4 text-cyan-400" />
-          I miei Abbonamenti
-        </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-white/10" />
-        <DropdownMenuItem 
-          className="text-white/80 hover:text-white hover:bg-white/10"
-          onClick={handleSignOut}
-        >
-          <LogOut className="mr-2 h-4 w-4 text-pink-500" />
-          Esci
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleLogout}>
+          <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
+          Logout
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

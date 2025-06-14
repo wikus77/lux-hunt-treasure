@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
-import { useAuthContext } from "@/contexts/auth";
+import { useUnifiedAuth } from '@/hooks/use-unified-auth';
 
 export const useProfileSubscription = () => {
-  const { getCurrentUser } = useAuthContext();
+  const { getCurrentUser } = useUnifiedAuth();
   const [subscription, setSubscription] = useState({
     plan: "Gold",
     expiry: "2025-12-31",

@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Save } from "lucide-react";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useAuthContext } from "@/contexts/auth";
+import { useUnifiedAuth } from '@/hooks/use-unified-auth';
 
 interface ProfileHeaderProps {
   agentCode: string;
@@ -23,7 +22,7 @@ const ProfileHeader = ({
 }: ProfileHeaderProps) => {
   const [showCodeText, setShowCodeText] = useState(false);
   const isMobile = useIsMobile();
-  const { user } = useAuthContext();
+  const { user } = useUnifiedAuth();
   
   // Special admin constants
   const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';

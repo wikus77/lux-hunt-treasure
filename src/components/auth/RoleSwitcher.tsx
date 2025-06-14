@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { useAuthContext } from '@/contexts/auth';
+import { useUnifiedAuth } from '@/hooks/use-unified-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Select,
@@ -13,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 const RoleSwitcher = () => {
-  const { userRole, getCurrentUser } = useAuthContext();
+  const { userRole, getCurrentUser } = useUnifiedAuth();
   const [selectedRole, setSelectedRole] = useState<string>(userRole || 'user');
   const [isAdmin, setIsAdmin] = useState(false);
   

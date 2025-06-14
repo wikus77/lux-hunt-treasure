@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthContext } from "@/contexts/auth";
+import { useUnifiedAuth } from '@/hooks/use-unified-auth';
 
 interface ConsentTypes {
   marketing: boolean;
@@ -24,7 +23,7 @@ interface UserConsent {
 type CustomTables = 'user_consents' | 'consent_history';
 
 export function useConsentManagement() {
-  const { isAuthenticated, user } = useAuthContext();
+  const { user, isAuthenticated } = useUnifiedAuth();
   const [consents, setConsents] = useState<ConsentTypes>({
     marketing: false,
     analytics: false,
