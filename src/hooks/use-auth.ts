@@ -1,11 +1,9 @@
 
-import { useAuthSessionManager } from './use-auth-session-manager';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useUnifiedAuthContext } from '@/contexts/auth/UnifiedAuthProvider';
 
 export const useAuth = () => {
-  const sessionManager = useAuthSessionManager();
-  const navigate = useNavigate();
+  const { session, user, isAuthenticated, isLoading, forceSessionFromTokens } = useUnifiedAuthContext();
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: any; session?: any }> => {
     console.log('🔐 STANDARD LOGIN STARTING for:', email);
@@ -25,7 +23,7 @@ export const useAuth = () => {
 
       if (data.session) {
         console.log('✅ LOGIN SUCCESS - session created');
-        await sessionManager.forceSessionFromTokens(
+        await forceSessionFromTokens(
           data.session.access_token,
           data.session.refresh_token
         );
@@ -70,7 +68,7 @@ export const useAuth = () => {
   const logout = async (): Promise<void> => {
     console.log('🚪 LOGOUT STARTING');
     await supabase.auth.signOut();
-    await sessionManager.clearSession();
+    localStorage.removeItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
     console.log('✅ LOGOUT COMPLETE');
   };
 
@@ -123,17 +121,17 @@ export const useAuth = () => {
   };
 
   return {
-    user: sessionManager.user,
-    session: sessionManager.session,
-    isAuthenticated: sessionManager.isAuthenticated,
-    isLoading: sessionManager.isLoading,
-    isEmailVerified: sessionManager.user?.email_confirmed_at ? true : false,
+    user,
+    session,
+    isAuthenticated,
+    isLoading,
+    isEmailVerified: user?.email_confirmed_at ? true : false,
     login,
     register,
     logout,
     resetPassword,
     resendVerificationEmail,
-    getCurrentUser: () => sessionManager.user,
-    getAccessToken: () => sessionManager.session?.access_token || null,
+    getCurrentUser: () => user,
+    getAccessToken: () => session?.access_token || null,
   };
 };

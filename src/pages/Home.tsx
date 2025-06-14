@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
+import { useUnifiedAuthContext } from "@/contexts/auth/UnifiedAuthProvider";
 
 const Home = () => {
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +24,11 @@ const Home = () => {
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
+  
+  // Usa il context auth in modo sicuro
+  const authContext = useUnifiedAuthContext();
+  const { user, isAuthenticated } = authContext || { user: null, isAuthenticated: false };
+  
   const { startActivity, updateActivity, endActivity } = useDynamicIsland();
   const { currentMission } = useMissionManager();
   const {
@@ -49,11 +55,11 @@ const Home = () => {
       const userAgent = navigator.userAgent;
       const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       
-      console.log('Home access check:', { isMobileDevice, isCapacitorApp });
+      console.log('Home access check:', { isMobileDevice, isCapacitorApp, isAuthenticated });
       
       if (isMobileDevice) {
         // Mobile users need to login properly now
-        setHasAccess(false);
+        setHasAccess(isAuthenticated);
       } else if (!isMobileDevice) {
         // Web users get redirected to landing page
         window.location.href = '/';
@@ -62,7 +68,7 @@ const Home = () => {
     };
     
     checkAccess();
-  }, []);
+  }, [isAuthenticated]);
 
   // Dynamic Island integration for HOME - Active mission con logging avanzato
   useEffect(() => {

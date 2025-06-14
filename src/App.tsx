@@ -19,8 +19,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <BrowserRouter>
-          <UnifiedAuthProvider>
+        <UnifiedAuthProvider>
+          <BrowserRouter>
             <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center">
               <div className="text-white">Caricamento...</div>
             </div>}>
@@ -32,8 +32,8 @@ function App() {
                 </Route>
               </Routes>
             </Suspense>
-          </UnifiedAuthProvider>
-        </BrowserRouter>
+          </BrowserRouter>
+        </UnifiedAuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

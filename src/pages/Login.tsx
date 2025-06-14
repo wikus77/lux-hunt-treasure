@@ -10,6 +10,7 @@ import { useUnifiedAuth } from "@/hooks/use-unified-auth";
 import { Spinner } from "@/components/ui/spinner";
 import { useDeveloperSetup } from "@/hooks/use-developer-setup";
 import CompactLoginDebug from "@/components/auth/CompactLoginDebug";
+import { useAutoRecovery } from "@/hooks/use-auto-recovery";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
@@ -17,6 +18,9 @@ const Login = () => {
   const [searchParams] = useSearchParams();
   const { isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
   const { isSetupComplete, isLoading: setupLoading } = useDeveloperSetup();
+  
+  // Integra l'auto-recovery
+  useAutoRecovery();
 
   useEffect(() => {
     const verification = searchParams.get('verification');
