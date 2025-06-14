@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -32,15 +31,8 @@ const Login = () => {
         description: "La tua email è stata verificata con successo."
       });
     }
-
-    // UNIFIED AUTH: Single redirect logic
-    if (!authLoading && isAuthenticated) {
-      console.log('✅ UNIFIED AUTH: User authenticated, redirecting to /home');
-      setTimeout(() => {
-        navigate('/home', { replace: true });
-      }, 100);
-    }
-  }, [navigate, searchParams, authLoading, isAuthenticated]);
+    // 🔒 NON fare nessun redirect automatico su /login, lascia che l'utente possa sempre vedere la login se non è autenticato
+  }, [searchParams]);
 
   // Show loading during auth check or developer setup
   if (authLoading || setupLoading) {
@@ -56,9 +48,8 @@ const Login = () => {
     );
   }
 
-  // Show redirect message if authenticated
+  // Mostra SEMPRE la pagina login agli utenti non autenticati (nessun redirect automatico dietro le quinte)
   if (isAuthenticated) {
-    console.log('🔄 UNIFIED AUTH: Already authenticated, showing redirect message');
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">

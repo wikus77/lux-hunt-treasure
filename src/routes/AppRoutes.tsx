@@ -63,7 +63,7 @@ const AppRoutes: React.FC = () => {
             {/* Public landing page - CRITICAL: No automatic redirects */}
             <Route path="/" element={<Index />} />
 
-            {/* Auth routes - accessible to non-authenticated users */}
+            {/* Auth routes - ACCESSIBILI SOLO A NON AUTENTICATI */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             
