@@ -6,12 +6,15 @@ import UserLocationMarker from './UserLocationMarker';
 import MapMarkers from './MapMarkers';
 import SearchAreaMapLayer from '../SearchAreaMapLayer';
 import PrizeLocationCircle from './PrizeLocationCircle';
+import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 
-interface MapContentProps {
+export interface MapContentProps {
   selectedWeek: number;
 }
 
 export const MapContent: React.FC<MapContentProps> = ({ selectedWeek }) => {
+  const { currentWeekAreas } = useBuzzMapLogic();
+  
   return (
     <>
       <TileLayer
@@ -21,7 +24,7 @@ export const MapContent: React.FC<MapContentProps> = ({ selectedWeek }) => {
         maxZoom={19}
       />
       
-      <BuzzMapAreas selectedWeek={selectedWeek} />
+      <BuzzMapAreas areas={currentWeekAreas} selectedWeek={selectedWeek} />
       <SearchAreaMapLayer />
       <UserLocationMarker />
       <MapMarkers />

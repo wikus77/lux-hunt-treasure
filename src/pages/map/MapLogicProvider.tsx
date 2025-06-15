@@ -245,40 +245,10 @@ const MapLogicProvider = () => {
         }}
       >
         {/* Map content */}
-        <MapContent 
-          mapRef={mapRef}
-          handleMapLoad={handleMapLoad}
-          searchAreas={searchAreas}
-          setActiveSearchArea={setActiveSearchArea}
-          deleteSearchArea={deleteSearchArea}
-          mapPoints={mapPoints}
-          activeMapPoint={activeMapPoint}
-          setActiveMapPoint={setActiveMapPoint}
-          handleUpdatePoint={handleUpdatePoint}
-          deleteMapPoint={deleteMapPoint}
-          newPoint={newPoint}
-          handleSaveNewPoint={handleSaveNewPoint}
-          handleCancelNewPoint={handleCancelNewPoint}
-          isAddingSearchArea={isAddingSearchArea}
-          handleMapClickArea={handleMapClickArea}
-          setPendingRadius={setPendingRadius}
-          isAddingMapPoint={isAddingMapPoint || isAddingPoint}
-          hookHandleMapPointClick={hookHandleMapPointClick}
-          selectedWeek={1}
-        />
+        <MapContent selectedWeek={1} />
 
         {/* Map controls */}
-        <MapControls
-          requestLocationPermission={requestLocationPermission}
-          toggleAddingSearchArea={toggleAddingSearchArea}
-          isAddingSearchArea={isAddingSearchArea}
-          handleBuzz={handleBuzz}
-          isAddingMapPoint={isAddingMapPoint || isAddingPoint}
-          showHelpDialog={showHelpDialog}
-          setShowHelpDialog={setShowHelpDialog}
-          mapCenter={mapCenter}
-          onAreaGenerated={handleAreaGenerated}
-        />
+        <MapControls />
         
         {/* Technical status logger */}
         <TechnicalStatus 

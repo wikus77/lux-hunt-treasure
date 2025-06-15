@@ -1,11 +1,17 @@
 
 import React from 'react';
-import { BuzzMapArea } from '@/hooks/useBuzzMapLogic';
 import BuzzCircleRenderer from './BuzzCircleRenderer';
 import { getCurrentColor, getCurrentColorName, getBuzzGlowStyles } from './BuzzColorManager';
 
-interface BuzzMapAreasProps {
-  areas: BuzzMapArea[];
+export interface BuzzMapAreasProps {
+  areas: {
+    id: string;
+    lat: number;
+    lng: number;
+    radius_km: number;
+    created_at: string;
+    isActive: boolean;
+  }[];
   selectedWeek: number;
 }
 
