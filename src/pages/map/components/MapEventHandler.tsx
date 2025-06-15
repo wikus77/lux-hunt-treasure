@@ -26,9 +26,6 @@ export const MapEventHandler: React.FC<MapEventHandlerProps> = ({
       if (isAddingPoint || isAddingSearchArea) {
         onMapClick(e);
       }
-    },
-    ready: () => {
-      console.log('🗺️ CRITICAL: Map ready event via useMapEvents');
     }
   });
 
