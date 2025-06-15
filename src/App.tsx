@@ -1,7 +1,7 @@
+
 import React from 'react';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './components/theme-provider';
-import { AuthProvider } from './contexts/AuthContext';
 import { Toaster } from 'sonner';
 import AppRoutes from './AppRoutes';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -24,15 +24,13 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <GlobalErrorHandler>
         <ThemeProvider defaultTheme="dark" storageKey="m1ssion-theme">
-          <AuthProvider>
-            <UnifiedAuthProvider>
-              <Toaster position="bottom-right" />
-              <CookiebotInit />
-              <ErrorBoundary>
-                <AppRoutes />
-              </ErrorBoundary>
-            </UnifiedAuthProvider>
-          </AuthProvider>
+          <UnifiedAuthProvider>
+            <Toaster position="bottom-right" />
+            <CookiebotInit />
+            <ErrorBoundary fallback={<div>Something went wrong</div>}>
+              <AppRoutes />
+            </ErrorBoundary>
+          </UnifiedAuthProvider>
         </ThemeProvider>
       </GlobalErrorHandler>
     </QueryClientProvider>
