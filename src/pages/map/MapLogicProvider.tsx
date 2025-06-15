@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
+import { DEFAULT_LOCATION, useMapLogic } from './hooks/useMapLogic';
 import { useMapPoints } from './hooks/useMapPoints';
 import { useMapInitialization } from './hooks/useMapInitialization';
 import LoadingScreen from './LoadingScreen';
@@ -135,19 +135,13 @@ const MapLogicProvider = () => {
     deleteMapPoint
   );
   
-  // Use our custom hook for map initialization
+  // CRITICAL FIX: Correct function call without parameters - line 145 fix
   const {
     mapLoaded,
     setMapLoaded,
     mapRef,
     handleMapLoad
-  } = useMapInitialization(
-    isAddingMapPoint,
-    isAddingPoint,
-    isAddingSearchArea,
-    hookHandleMapPointClick,
-    handleMapClickArea
-  );
+  } = useMapInitialization();
 
   // Handle area generation callback
   const handleAreaGenerated = (lat: number, lng: number, radius: number) => {
