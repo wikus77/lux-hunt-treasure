@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { TileLayer } from 'react-leaflet';
 import BuzzMapAreas from './BuzzMapAreas';
 import UserLocationMarker from './UserLocationMarker';
@@ -12,18 +12,28 @@ export interface MapContentProps {
   selectedWeek: number;
 }
 
-export const MapContent: React.FC<MapContentProps> = ({ selectedWeek }) => {
+// CRITICAL FIX: Memoize MapContent to prevent unnecessary re-renders
+export const MapContent: React.FC<MapContentProps> = memo(({ selectedWeek }) => {
   const { currentWeekAreas } = useBuzzMapLogic();
+  
+  console.log('🗺️ RENDER: MapContent rendering for week:', selectedWeek);
   
   return (
     <>
+      {/* CRITICAL FIX: Single TileLayer with optimized settings */}
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         subdomains="abcd"
         maxZoom={19}
+        minZoom={3}
+        updateWhenIdle={true}
+        keepBuffer={2}
+        updateWhenZooming={false}
+        key="main-tile-layer" // Prevent re-mount
       />
       
+      {/* CRITICAL FIX: Stable order of layers */}
       <BuzzMapAreas areas={currentWeekAreas} selectedWeek={selectedWeek} />
       <SearchAreaMapLayer />
       <UserLocationMarker />
@@ -31,6 +41,8 @@ export const MapContent: React.FC<MapContentProps> = ({ selectedWeek }) => {
       <PrizeLocationCircle />
     </>
   );
-};
+});
+
+MapContent.displayName = 'MapContent';
 
 export default MapContent;

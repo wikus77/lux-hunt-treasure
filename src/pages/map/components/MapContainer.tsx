@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useCallback } from 'react';
 import { MapContainer as LeafletMapContainer } from 'react-leaflet';
 import { useMapView } from '../hooks/useMapView';
 import { MapContent } from './MapContent';
@@ -68,27 +68,53 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   showHelpDialog,
   setShowHelpDialog
 }) => {
-  // Get properly typed map configuration
+  // CRITICAL FIX: Single source of truth for map configuration
   const mapViewConfig = useMapView();
+  const isMapInitialized = useRef(false);
   
-  // Extract values with guaranteed types
-  const mapCenter: [number, number] = mapViewConfig.mapCenter;
-  const mapZoom: number = mapViewConfig.mapZoom;
-
-  const mapProps = useMemo(() => ({
-    center: mapCenter,
-    zoom: mapZoom,
+  // CRITICAL FIX: Memoize map configuration to prevent re-renders
+  const mapConfiguration = useMemo(() => ({
+    center: mapViewConfig.mapCenter,
+    zoom: mapViewConfig.mapZoom,
     className: "w-full h-full relative z-0",
     zoomControl: false,
     attributionControl: false,
-    onClick: onMapClick
-  }), [mapCenter, mapZoom, onMapClick]);
+    preferCanvas: true, // Better performance
+    maxZoom: 19,
+    minZoom: 3,
+    worldCopyJump: false, // Prevent world duplication
+    closePopupOnClick: false
+  }), [mapViewConfig.mapCenter, mapViewConfig.mapZoom]);
+
+  // CRITICAL FIX: Stable click handler to prevent re-renders
+  const handleMapClick = useCallback((e: any) => {
+    if (!isMapInitialized.current) return;
+    onMapClick(e);
+  }, [onMapClick]);
+
+  // CRITICAL FIX: Map ready handler to prevent premature interactions
+  const handleMapReady = useCallback((map: any) => {
+    console.log('🗺️ CRITICAL: Map initialized and ready');
+    isMapInitialized.current = true;
+    
+    // Store map reference
+    if (mapRef && typeof mapRef === 'object' && 'current' in mapRef) {
+      mapRef.current = map;
+    }
+    
+    // Single size invalidation after mount
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+  }, [mapRef]);
 
   return (
     <div className="relative w-full h-full">
       <LeafletMapContainer 
-        ref={mapRef}
-        {...mapProps}
+        ref={handleMapReady}
+        {...mapConfiguration}
+        onClick={handleMapClick}
+        whenReady={handleMapReady}
       >
         <MapContent selectedWeek={selectedWeek} />
         <MapControls />
