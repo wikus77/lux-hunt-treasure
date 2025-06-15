@@ -1,5 +1,5 @@
 
-import React, { useState, lazy, Suspense, useEffect } from 'react';
+import React, { useState, lazy, Suspense, useEffect, useRef } from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import MapPageHeader from './map/components/MapPageHeader';
 import NotesSection from './map/NotesSection';
@@ -30,6 +30,9 @@ const NewMapPage = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const { updateActivity, endActivity } = useDynamicIsland();
   const { currentMission, updateMissionProgress } = useMissionManager();
+  
+  // CRITICAL FIX: Proper mutable ref for map instance
+  const mapRef = useRef<any>(null);
   
   const {
     isAddingPoint,
@@ -122,7 +125,7 @@ const NewMapPage = () => {
           <div className="m1ssion-glass-card p-4 sm:p-6 mb-6">
             <Suspense fallback={<MapLoadingFallback />}>
               <MapContainer
-                mapRef={React.createRef()}
+                mapRef={mapRef}
                 onMapClick={() => {}}
                 selectedWeek={1}
                 isAddingPoint={isAddingPoint}

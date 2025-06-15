@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 
 interface MapViewConfig {
@@ -9,11 +10,16 @@ export function useMapView(): MapViewConfig {
   const [mapCenter, setMapCenter] = useState<[number, number]>([45.4642, 9.1900]);
   const [mapZoom, setMapZoom] = useState<number>(6);
 
-  // You can add logic here to update map center and zoom based on user location or other factors
+  // CRITICAL FIX: Stable configuration to prevent re-renders
   useEffect(() => {
-    // Default configuration for Italy
-    setMapCenter([45.4642, 9.1900]);
-    setMapZoom(6);
+    // Default configuration for Italy - only set once
+    const defaultCenter: [number, number] = [45.4642, 9.1900];
+    const defaultZoom = 6;
+    
+    setMapCenter(defaultCenter);
+    setMapZoom(defaultZoom);
+    
+    console.log('🗺️ Map view initialized:', { center: defaultCenter, zoom: defaultZoom });
   }, []);
 
   return {

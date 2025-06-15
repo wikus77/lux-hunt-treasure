@@ -71,6 +71,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   // CRITICAL FIX: Single source of truth for map configuration
   const mapViewConfig = useMapView();
   const isMapInitialized = useRef(false);
+  const internalMapRef = useRef<any>(null);
   
   // CRITICAL FIX: Memoize map configuration to prevent re-renders
   const mapConfiguration = useMemo(() => ({
@@ -92,26 +93,41 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     onMapClick(e);
   }, [onMapClick]);
 
-  // CRITICAL FIX: Map ready handler to prevent premature interactions
-  const handleMapReady = useCallback((map: any) => {
+  // CRITICAL FIX: Map ready handler to prevent premature interactions - FIXED TS2322
+  const handleMapReady = useCallback(() => {
     console.log('🗺️ CRITICAL: Map initialized and ready');
     isMapInitialized.current = true;
     
-    // Store map reference
-    if (mapRef && typeof mapRef === 'object' && 'current' in mapRef) {
-      mapRef.current = map;
-    }
-    
     // Single size invalidation after mount
     setTimeout(() => {
-      map.invalidateSize();
+      if (internalMapRef.current) {
+        internalMapRef.current.invalidateSize();
+      }
     }, 100);
+  }, []);
+
+  // CRITICAL FIX: Map reference handler - FIXED TS2540
+  const handleMapReference = useCallback((map: any) => {
+    if (map) {
+      // Store in internal ref (mutable)
+      internalMapRef.current = map;
+      
+      // Update external ref if provided - FIXED: Check if ref has current property
+      if (mapRef && 'current' in mapRef && mapRef.current !== undefined) {
+        // CRITICAL FIX: Only assign if the ref is mutable
+        try {
+          (mapRef as React.MutableRefObject<any>).current = map;
+        } catch (error) {
+          console.warn('🔧 MapRef is read-only, using internal ref instead');
+        }
+      }
+    }
   }, [mapRef]);
 
   return (
     <div className="relative w-full h-full">
       <LeafletMapContainer 
-        ref={handleMapReady}
+        ref={handleMapReference}
         {...mapConfiguration}
         onClick={handleMapClick}
         whenReady={handleMapReady}
