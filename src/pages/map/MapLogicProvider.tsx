@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './hooks/useMapLogic';
@@ -235,13 +236,18 @@ const MapLogicProvider = () => {
           minHeight: '500px',
           width: '100%',
           display: 'block',
-          position: 'relative'
+          position: 'relative',
+          // CRITICAL VISUAL FIX: Ensure proper container constraints
+          maxWidth: '100%',
+          maxHeight: '70vh'
         }}
       >
-        {/* Map content */}
-        <MapContent selectedWeek={1} />
+        {/* CRITICAL VISUAL FIX: Map content with proper constraints */}
+        <div className="w-full h-full relative">
+          <MapContent selectedWeek={1} />
+        </div>
 
-        {/* Map controls */}
+        {/* Map controls overlay */}
         <MapControls />
         
         {/* Technical status logger */}

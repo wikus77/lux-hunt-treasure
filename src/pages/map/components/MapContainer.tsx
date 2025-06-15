@@ -1,3 +1,4 @@
+
 import React, { useMemo, useRef, useCallback } from 'react';
 import { MapContainer as LeafletMapContainer } from 'react-leaflet';
 import { useMapView } from '../hooks/useMapView';
@@ -80,11 +81,13 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     className: "w-full h-full relative z-0",
     zoomControl: false,
     attributionControl: false,
-    preferCanvas: true, // Better performance
+    preferCanvas: true,
     maxZoom: 19,
     minZoom: 3,
-    worldCopyJump: false, // Prevent world duplication
-    closePopupOnClick: false
+    worldCopyJump: false,
+    closePopupOnClick: false,
+    // CRITICAL: Force single container rendering
+    key: "leaflet-map-container" // Prevent re-mount
   }), [mapViewConfig.mapCenter, mapViewConfig.mapZoom]);
 
   // CRITICAL FIX: Stable click handler to prevent re-renders
@@ -93,30 +96,31 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     onMapClick(e);
   }, [onMapClick]);
 
-  // CRITICAL FIX: Map ready handler to prevent premature interactions - FIXED TS2322
+  // CRITICAL FIX: Map ready handler to prevent premature interactions
   const handleMapReady = useCallback(() => {
     console.log('🗺️ CRITICAL: Map initialized and ready');
     isMapInitialized.current = true;
     
-    // Single size invalidation after mount
+    // CRITICAL: Single size invalidation after mount
     setTimeout(() => {
       if (internalMapRef.current) {
+        console.log('🔧 VISUAL FIX: Invalidating map size for proper rendering');
         internalMapRef.current.invalidateSize();
       }
     }, 100);
   }, []);
 
-  // CRITICAL FIX: Map reference handler - FIXED TS2540
+  // CRITICAL FIX: Map reference handler
   const handleMapReference = useCallback((map: any) => {
     if (map) {
       // Store in internal ref (mutable)
       internalMapRef.current = map;
       
-      // Update external ref if provided - FIXED: Check if ref has current property
+      // Update external ref if provided
       if (mapRef && 'current' in mapRef && mapRef.current !== undefined) {
-        // CRITICAL FIX: Only assign if the ref is mutable
         try {
           (mapRef as React.MutableRefObject<any>).current = map;
+          console.log('🗺️ VISUAL: Map reference set successfully');
         } catch (error) {
           console.warn('🔧 MapRef is read-only, using internal ref instead');
         }
@@ -125,7 +129,8 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   }, [mapRef]);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full overflow-hidden">
+      {/* CRITICAL FIX: Single LeafletMapContainer with stable configuration */}
       <LeafletMapContainer 
         ref={handleMapReference}
         {...mapConfiguration}
@@ -137,10 +142,15 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           isAddingPoint={isAddingPoint}
           isAddingSearchArea={isAddingSearchArea}
         />
+        
+        {/* CRITICAL FIX: Single MapContent to prevent tile duplication */}
         <MapContent selectedWeek={selectedWeek} />
+        
+        {/* Map controls overlay */}
         <MapControls />
       </LeafletMapContainer>
       
+      {/* Technical status overlay */}
       <TechnicalStatus />
     </div>
   );
