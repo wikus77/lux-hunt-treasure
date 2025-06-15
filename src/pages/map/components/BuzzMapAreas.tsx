@@ -15,6 +15,23 @@ export interface BuzzMapAreasProps {
   selectedWeek: number;
 }
 
+// Transform raw area data to BuzzMapArea format for rendering
+const transformAreaData = (area: BuzzMapAreasProps['areas'][0]) => ({
+  id: area.id,
+  lat: area.lat,
+  lng: area.lng,
+  radius_km: area.radius_km,
+  coordinates: { lat: area.lat, lng: area.lng },
+  radius: area.radius_km * 1000, // Convert km to meters
+  color: getCurrentColor(),
+  colorName: getCurrentColorName(),
+  week: 1,
+  generation: 1,
+  isActive: area.isActive,
+  user_id: '',
+  created_at: area.created_at
+});
+
 const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, selectedWeek }) => {
   const currentColor = getCurrentColor();
   const currentColorName = getCurrentColorName();
@@ -59,10 +76,13 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, selectedWeek }) => {
     created_at: latestArea.created_at
   });
 
+  // Transform the latest area to the correct format
+  const transformedArea = transformAreaData(latestArea);
+
   return (
     <>
-      {/* CRITICAL: Only render the latest area */}
-      <BuzzCircleRenderer areas={[latestArea]} />
+      {/* CRITICAL: Only render the latest area with correct data structure */}
+      <BuzzCircleRenderer areas={[transformedArea]} />
       
       {/* Glow styles */}
       <style>

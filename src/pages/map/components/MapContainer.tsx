@@ -69,10 +69,10 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   setShowHelpDialog
 }) => {
   const mapView = useMapView();
-  const { mapCenter, mapZoom } = mapView || { 
-    mapCenter: [45.4642, 9.1900] as [number, number], 
-    mapZoom: 6 
-  };
+  
+  // Safe extraction with fallback values
+  const mapCenter: [number, number] = mapView?.mapCenter || [45.4642, 9.1900];
+  const mapZoom: number = mapView?.mapZoom || 6;
 
   const mapProps = useMemo(() => ({
     center: mapCenter,
