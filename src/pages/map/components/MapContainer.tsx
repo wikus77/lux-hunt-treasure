@@ -3,8 +3,6 @@ import React, { useMemo, useRef, useCallback } from 'react';
 import { MapContainer as LeafletMapContainer } from 'react-leaflet';
 import { useMapView } from '../hooks/useMapView';
 import { MapContent } from './MapContent';
-import { MapControls } from './MapControls';
-import TechnicalStatus from './TechnicalStatus';
 import MapEventHandler from './MapEventHandler';
 
 export interface MapContainerProps {
