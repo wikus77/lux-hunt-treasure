@@ -8,9 +8,6 @@ import { useEventHandlers } from "./index/EventHandlers";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
 
 const Index = () => {
-  console.log("Index component rendering - PUBLIC LANDING PAGE");
-  
-  // State management
   const [pageLoaded, setPageLoaded] = useState(false);
   const [renderContent, setRenderContent] = useState(false);
   const [introCompleted, setIntroCompleted] = useState(false);
@@ -18,37 +15,25 @@ const Index = () => {
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
-  
-  // Check for developer access on mount
+
+  // Check for mobile or developer override
   useEffect(() => {
     const checkAccess = () => {
-      // Check for URL parameter to reset access
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('resetDevAccess') === 'true') {
-        localStorage.removeItem('developer_access');
-        console.log('Developer access reset via URL parameter');
+      if (urlParams.get("resetDevAccess") === "true") {
+        localStorage.removeItem("developer_access");
       }
-      
-      // Enhanced mobile detection including Capacitor
+
       const isCapacitorApp = !!(window as any).Capacitor;
       const userAgent = navigator.userAgent;
       const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-      
-      console.log('Index access check:', { isMobile, isCapacitorApp });
-      
-      if (isMobile) {
-        // Mobile users without access need to login
-        setShowDeveloperAccess(true);
-      } else if (!isMobile) {
-        // Web users always see landing page
-        setShowDeveloperAccess(false);
-      }
+
+      setShowDeveloperAccess(isMobile);
     };
-    
+
     checkAccess();
   }, []);
-  
-  // Get event handlers
+
   const {
     showAgeVerification,
     showInviteFriend,
@@ -56,102 +41,73 @@ const Index = () => {
     handleAgeVerified,
     openInviteFriend,
     closeAgeVerification,
-    closeInviteFriend
+    closeInviteFriend,
   } = useEventHandlers(countdownCompleted);
-  
-  // Recovery automatico in caso di problemi
+
+  // Retry system
   useEffect(() => {
     if (error && retryCount < 2) {
-      const recoveryTimeout = setTimeout(() => {
-        console.log(`⚠️ Tentativo di recovery automatico #${retryCount + 1}`);
+      const timeout = setTimeout(() => {
         setError(null);
-        setRetryCount(prev => prev + 1);
+        setRetryCount((prev) => prev + 1);
       }, 2000);
-      
-      return () => clearTimeout(recoveryTimeout);
+      return () => clearTimeout(timeout);
     }
   }, [error, retryCount]);
-  
-  // Verifica se l'intro è già stata mostrata in precedenza
+
+  // Check for intro already played
   useEffect(() => {
     try {
-      if (typeof window !== 'undefined') {
-        const skipIntro = localStorage.getItem("skipIntro");
-        if (skipIntro === "true") {
-          console.log("Intro already shown, skipping...");
-          setIntroCompleted(true);
-        } else {
-          console.log("No skipIntro flag found, will show intro");
-          setIntroCompleted(false);
-        }
-      }
-    } catch (error) {
-      console.error("localStorage error:", error);
+      const skipIntro = localStorage.getItem("skipIntro");
+      setIntroCompleted(skipIntro === "true");
+    } catch (err) {
+      console.error("LocalStorage error:", err);
       setIntroCompleted(false);
     }
   }, []);
 
-  // Protezione contro errori di rendering
+  // Hide unwanted sections from old templates
   useEffect(() => {
-    try {
-      const observer = new MutationObserver(() => {
-        const allSections = document.querySelectorAll("section");
-        allSections.forEach((section) => {
-          const text = section.textContent?.toLowerCase() || "";
-          if (
-            text.includes("cosa puoi vincere") ||
-            text.includes("vuoi provarci") ||
-            text.includes("premio principale") ||
-            text.includes("auto di lusso")
-          ) {
-            section.style.display = "none";
-            console.log("✅ Sezione 'Cosa puoi vincere' rimossa con MutationObserver.");
-          }
-        });
+    const observer = new MutationObserver(() => {
+      const sections = document.querySelectorAll("section");
+      sections.forEach((section) => {
+        const txt = section.textContent?.toLowerCase() || "";
+        if (
+          txt.includes("cosa puoi vincere") ||
+          txt.includes("vuoi provarci") ||
+          txt.includes("premio principale") ||
+          txt.includes("auto di lusso")
+        ) {
+          section.style.display = "none";
+        }
       });
+    });
 
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-
-      return () => {
-        observer.disconnect();
-        console.log("🛑 MutationObserver disattivato.");
-      };
-    } catch (err) {
-      console.error("Errore nel setup MutationObserver:", err);
-    }
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, []);
-  
-  // Controllo periodico della salute del componente
+
+  // Health check timeout
   useEffect(() => {
-    const healthCheckTimeout = setTimeout(() => {
+    const timeout = setTimeout(() => {
       if (!renderContent && pageLoaded) {
-        console.warn("❌ Health check fallito: contenuto non renderizzato dopo 8 secondi");
         setError(new Error("Timeout di rendering del contenuto"));
       }
     }, 8000);
-    
-    return () => clearTimeout(healthCheckTimeout);
+    return () => clearTimeout(timeout);
   }, [renderContent, pageLoaded]);
-  
-  // Handlers for child components
+
   const handleLoaded = useCallback((isLoaded: boolean, canRender: boolean) => {
-    console.log("handleLoaded chiamato con:", { isLoaded, canRender });
     setPageLoaded(isLoaded);
     setRenderContent(canRender);
   }, []);
 
   const handleIntroComplete = useCallback(() => {
-    console.log("Intro completed callback, setting introCompleted to true");
     setIntroCompleted(true);
     try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem("skipIntro", "true");
-      }
-    } catch (error) {
-      console.error("Error setting localStorage:", error);
+      localStorage.setItem("skipIntro", "true");
+    } catch (err) {
+      console.error("Error saving intro skip flag:", err);
     }
   }, []);
 
@@ -160,26 +116,19 @@ const Index = () => {
   }, []);
 
   const handleRetry = useCallback(() => {
-    console.log("Retry richiesto dall'utente");
     window.location.reload();
   }, []);
 
-  // Show developer access screen for mobile users without access
   if (showDeveloperAccess) {
     return <DeveloperAccess />;
   }
 
-  console.log("Index render state:", { introCompleted, pageLoaded, renderContent });
-
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden full-viewport smooth-scroll">
       <CookiebotInit />
-      
       <LoadingManager onLoaded={handleLoaded} />
-      
       <CountdownManager onCountdownComplete={handleCountdownComplete} />
-      
-      <MainContent 
+      <MainContent
         pageLoaded={pageLoaded}
         introCompleted={introCompleted}
         renderContent={renderContent}
