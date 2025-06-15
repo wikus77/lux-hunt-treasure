@@ -3,7 +3,7 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from 'sonner';
-import AppRoutes from './AppRoutes';
+import AppRoutes from './routes/AppRoutes'; // ✅ Percorso corretto!
 import { ErrorBoundary } from 'react-error-boundary';
 import CookiebotInit from './components/CookiebotInit';
 import './i18n';
