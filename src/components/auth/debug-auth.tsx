@@ -5,10 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
 
-// OFFICIAL DEVELOPER CREDENTIALS - SYNCHRONIZED
-const DEVELOPER_EMAIL = 'wikus77@hotmail.it';
-const DEVELOPER_PASSWORD = 'Wikus190877!@#';
-
 const DebugAuth = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -63,12 +59,11 @@ const DebugAuth = () => {
 
   const testStandardLogin = async () => {
     setIsLoading(true);
-    addLog('🔐 TESTING STANDARD LOGIN - SYNCHRONIZED CREDENTIALS');
-    addLog(`📧 Email: ${DEVELOPER_EMAIL}`);
-    addLog(`🔐 Password: ${DEVELOPER_PASSWORD} (${DEVELOPER_PASSWORD.length} chars)`);
+    addLog('🔐 TESTING STANDARD LOGIN - wikus77@hotmail.it');
     
     try {
-      const result = await login(DEVELOPER_EMAIL, DEVELOPER_PASSWORD);
+      // Test with new strong password
+      const result = await login('wikus77@hotmail.it', 'Wikus190877!@#');
       
       addLog('📤 STANDARD LOGIN RESULT:');
       addLog(`✅ Success: ${result.success}`);
@@ -109,7 +104,7 @@ const DebugAuth = () => {
     addLog('🔄 TESTING PASSWORD RESET FOR DEVELOPER');
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(DEVELOPER_EMAIL, {
+      const { error } = await supabase.auth.resetPasswordForEmail('wikus77@hotmail.it', {
         redirectTo: `${window.location.origin}/auth`
       });
       
@@ -128,14 +123,12 @@ const DebugAuth = () => {
 
   const testDirectSignUp = async () => {
     setIsLoading(true);
-    addLog('🔍 TESTING DIRECT DEVELOPER SIGNUP WITH SYNCHRONIZED PASSWORD');
-    addLog(`📧 Email: ${DEVELOPER_EMAIL}`);
-    addLog(`🔐 Password: ${DEVELOPER_PASSWORD} (${DEVELOPER_PASSWORD.length} chars)`);
+    addLog('🔍 TESTING DIRECT DEVELOPER SIGNUP WITH STRONG PASSWORD');
     
     try {
       const result = await supabase.auth.signUp({
-        email: DEVELOPER_EMAIL,
-        password: DEVELOPER_PASSWORD,
+        email: 'wikus77@hotmail.it',
+        password: 'Wikus190877!@#',
         options: {
           emailRedirectTo: window.location.origin + '/auth',
         }
@@ -242,7 +235,7 @@ const DebugAuth = () => {
           disabled={isLoading}
           className="text-cyan-400 border-cyan-400 hover:bg-cyan-400/10"
         >
-          {isLoading ? '⏳' : '🔐'} SYNCHRONIZED LOGIN
+          {isLoading ? '⏳' : '🔐'} STANDARD LOGIN
         </Button>
 
         <Button 
@@ -280,21 +273,20 @@ const DebugAuth = () => {
       <div className="mt-4 text-center">
         <span className={`inline-block w-3 h-3 rounded-full mr-2 ${isLoading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></span>
         <span className="text-white/70 text-sm">
-          {isLoading ? 'Running synchronized auth tests...' : 'Ready - Synchronized credentials active!'}
+          {isLoading ? 'Running enhanced auth tests...' : 'Ready - Enhanced debugging active!'}
         </span>
       </div>
       
       <div className="mt-4 p-3 bg-cyan-900/20 border border-cyan-500/30 rounded">
-        <h4 className="text-cyan-400 font-bold mb-2">🔧 SYNCHRONIZED LOGIN SYSTEM</h4>
+        <h4 className="text-cyan-400 font-bold mb-2">🔧 ENHANCED LOGIN SYSTEM</h4>
         <p className="text-cyan-300 text-sm">
-          ✅ AUTHENTICATION: Synchronized Supabase email/password<br/>
-          ✅ DEVELOPER ACCESS: {DEVELOPER_EMAIL}<br/>
-          ✅ PASSWORD: {DEVELOPER_PASSWORD} ({DEVELOPER_PASSWORD.length} chars)<br/>
+          ✅ AUTHENTICATION: Enhanced Supabase email/password<br/>
+          ✅ DEVELOPER ACCESS: Strong password with special characters<br/>
           ✅ SESSION HANDLING: Enhanced session management<br/>
           ✅ ROLE SYSTEM: Developer role integration<br/>
           ✅ COMPATIBILITY: Cross-platform support<br/>
           ✅ DEBUGGING: Enhanced logging and diagnostics<br/>
-          ➡️ All components now use synchronized credentials
+          ➡️ New password: Wikus190877!@# (with special characters)
         </p>
       </div>
     </div>

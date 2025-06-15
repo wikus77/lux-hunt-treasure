@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { useUnifiedAuth } from '@/hooks/use-unified-auth';
+import { useAuthContext } from '@/contexts/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
@@ -27,7 +28,7 @@ const BuzzMainContent: React.FC<BuzzMainContentProps> = ({
   maxBuzzCount,
   onNavigateToMap
 }) => {
-  const { isAuthenticated } = useUnifiedAuth();
+  const { isAuthenticated } = useAuthContext();
   const [isAnimating, setIsAnimating] = useState(false);
   const [showPulse, setShowPulse] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

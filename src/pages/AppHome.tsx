@@ -32,7 +32,7 @@ const AppHome = () => {
 
   const { isConnected } = useRealTimeNotifications();
 
-  // Enhanced access check with iOS persistence support
+  // Check for developer access and Capacitor environment
   useEffect(() => {
     const checkAccess = () => {
       const isCapacitorApp = !!(window as any).Capacitor;
@@ -41,32 +41,11 @@ const AppHome = () => {
       const userAgent = navigator.userAgent;
       const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       
-      console.log('🍎 AppHome access check:', { isMobileDevice, isCapacitorApp });
+      console.log('AppHome access check:', { isMobileDevice, isCapacitorApp });
       
       if (isMobileDevice) {
-        // Enhanced iOS access detection
-        const hasStoredAccess = localStorage.getItem('developer_access_granted') === 'true' || 
-                                localStorage.getItem('hasStoredAccess') === 'true';
-        const isDeveloperUser = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it' ||
-                                localStorage.getItem('ios_user_email') === 'wikus77@hotmail.it';
-        const hasIosSession = localStorage.getItem('ios_session_token');
-        const hasUnlimitedAccess = localStorage.getItem('unlimited_access') === 'true';
-        
-        console.log('🍎 iOS session check:', { 
-          hasStoredAccess, 
-          isDeveloperUser, 
-          hasIosSession: !!hasIosSession,
-          hasUnlimitedAccess 
-        });
-        
-        // Grant access if any iOS persistence indicator is found
-        if (isDeveloperUser || hasUnlimitedAccess || hasStoredAccess || hasIosSession) {
-          console.log('✅ iOS access granted via persistence');
-          setHasAccess(true);
-        } else {
-          console.log('❌ No iOS access found');
-          setHasAccess(false);
-        }
+        // Mobile users need to login properly now
+        setHasAccess(false);
       } else if (!isMobileDevice) {
         // Web users should NOT be redirected to landing page from internal routes
         // They should see the app home but with limited functionality
@@ -75,10 +54,6 @@ const AppHome = () => {
     };
     
     checkAccess();
-    
-    // Re-check periodically for iOS session updates
-    const interval = setInterval(checkAccess, 2000);
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {

@@ -57,39 +57,6 @@ export type Database = {
         }
         Relationships: []
       }
-      admin_logs: {
-        Row: {
-          context: string | null
-          created_at: string
-          device: string | null
-          event_type: string
-          id: string
-          note: string | null
-          timestamp: string
-          user_id: string | null
-        }
-        Insert: {
-          context?: string | null
-          created_at?: string
-          device?: string | null
-          event_type: string
-          id?: string
-          note?: string | null
-          timestamp?: string
-          user_id?: string | null
-        }
-        Update: {
-          context?: string | null
-          created_at?: string
-          device?: string | null
-          event_type?: string
-          id?: string
-          note?: string | null
-          timestamp?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       admin_prizes: {
         Row: {
           address: string
@@ -162,42 +129,6 @@ export type Database = {
           target_users?: string[] | null
           title?: string
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      backup_logs: {
-        Row: {
-          backup_date: string
-          backup_type: string
-          created_at: string
-          duration_seconds: number | null
-          error_message: string | null
-          file_size: number | null
-          id: string
-          status: string
-          storage_path: string | null
-        }
-        Insert: {
-          backup_date?: string
-          backup_type?: string
-          created_at?: string
-          duration_seconds?: number | null
-          error_message?: string | null
-          file_size?: number | null
-          id?: string
-          status?: string
-          storage_path?: string | null
-        }
-        Update: {
-          backup_date?: string
-          backup_type?: string
-          created_at?: string
-          duration_seconds?: number | null
-          error_message?: string | null
-          file_size?: number | null
-          id?: string
-          status?: string
-          storage_path?: string | null
         }
         Relationships: []
       }
@@ -422,36 +353,6 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      map_click_events: {
-        Row: {
-          created_at: string
-          event_type: string
-          id: string
-          lat: number
-          lng: number
-          user_id: string
-          zoom: number
-        }
-        Insert: {
-          created_at?: string
-          event_type?: string
-          id?: string
-          lat: number
-          lng: number
-          user_id: string
-          zoom?: number
-        }
-        Update: {
-          created_at?: string
-          event_type?: string
-          id?: string
-          lat?: number
-          lng?: number
-          user_id?: string
-          zoom?: number
         }
         Relationships: []
       }
@@ -759,7 +660,6 @@ export type Database = {
           subscription_end: string | null
           subscription_start: string | null
           subscription_tier: string
-          tier: string | null
           updated_at: string
           username: string | null
         }
@@ -788,7 +688,6 @@ export type Database = {
           subscription_end?: string | null
           subscription_start?: string | null
           subscription_tier?: string
-          tier?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -817,7 +716,6 @@ export type Database = {
           subscription_end?: string | null
           subscription_start?: string | null
           subscription_tier?: string
-          tier?: string | null
           updated_at?: string
           username?: string | null
         }

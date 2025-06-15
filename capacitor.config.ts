@@ -2,14 +2,13 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.m1ssion.app',
+  appId: 'it.m1ssion.app',
   appName: 'M1SSION',
   webDir: 'dist',
-  bundledWebRuntime: false,
   server: {
-    androidScheme: 'http',
-    iosScheme: 'http'
-    // Removed localhost URL - app will now load from bundled files
+    url: 'http://localhost:3000',
+    cleartext: true,
+    androidScheme: 'https'
   },
   plugins: {
     DynamicIsland: {

@@ -6,12 +6,6 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import FormField from './form-field';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import type { User } from '@supabase/supabase-js';
-
-// OFFICIAL DEVELOPER CREDENTIALS - SYNCHRONIZED
-const DEVELOPER_EMAIL = 'wikus77@hotmail.it';
-const DEVELOPER_PASSWORD = 'Wikus190877!@#';
 
 interface StandardLoginFormProps {
   verificationStatus?: string | null;
@@ -28,267 +22,9 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
 
   // Auto-fill developer credentials for testing
   const fillDeveloperCredentials = () => {
-    setEmail(DEVELOPER_EMAIL);
-    setPassword(DEVELOPER_PASSWORD);
+    setEmail('wikus77@hotmail.it');
+    setPassword('Wikus190877!@#');
     toast.info('Credenziali developer compilate automaticamente');
-    console.log('🔧 Developer credentials filled:', { email: DEVELOPER_EMAIL, passwordLength: DEVELOPER_PASSWORD.length });
-  };
-
-  // CRITICAL FIX: Force password reset and role assignment for developer
-  const forceResetDeveloperPassword = async () => {
-    console.log('🔥 FORCE RESET DEVELOPER PASSWORD STARTING...');
-    
-    try {
-      // Step 1: Get user by email
-      const { data: users, error: userError } = await supabase.rpc('get_user_by_email', {
-        email_param: DEVELOPER_EMAIL
-      });
-
-      if (userError || !users || users.length === 0) {
-        console.error('❌ Developer user not found:', userError);
-        toast.error('Utente developer non trovato nel database');
-        return { success: false };
-      }
-
-      const user = users[0] as User;
-      console.log('👤 Developer user found:', user.id);
-
-      // Step 2: Call login-no-captcha for admin session
-      const response = await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
-        },
-        body: JSON.stringify({ email: DEVELOPER_EMAIL })
-      });
-
-      const result = await response.json();
-      console.log('🔗 LOGIN-NO-CAPTCHA RESULT:', result);
-
-      if (result.success && result.access_token) {
-        console.log('✅ ADMIN SESSION CREATED - FORCE RESETTING PASSWORD');
-        
-        // Step 3: Force session temporarily for admin operations
-        const adminSupabase = supabase;
-        
-        // Step 4: Force password reset
-        console.log('🔑 FORCING PASSWORD RESET...');
-        const { error: resetError } = await adminSupabase.auth.updateUser({
-          password: DEVELOPER_PASSWORD
-        });
-
-        if (resetError) {
-          console.error('❌ Password reset failed:', resetError);
-        } else {
-          console.log('✅ PASSWORD RESET SUCCESS');
-        }
-
-        // Step 5: Force session with new tokens
-        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-          access_token: result.access_token,
-          refresh_token: result.refresh_token
-        });
-
-        if (!sessionError && sessionData.session) {
-          console.log('✅ DEVELOPER SESSION FORCED AND ACTIVE');
-          
-          // Step 6: Force role assignment
-          try {
-            const { error: roleError } = await supabase
-              .from('user_roles')
-              .upsert({ user_id: user.id, role: 'developer' });
-            
-            if (!roleError) {
-              console.log('✅ DEVELOPER ROLE ASSIGNED');
-            }
-          } catch (roleErr) {
-            console.log('⚠️ Role assignment skipped:', roleErr);
-          }
-
-          toast.success('🔥 DEVELOPER ACCESS FORCED', {
-            description: 'Password reset + Role assigned + Session active'
-          });
-
-          // Force redirect to home
-          setTimeout(() => {
-            navigate('/home', { replace: true });
-          }, 1500);
-
-          return { success: true };
-        }
-      }
-
-      throw new Error('Failed to create admin session');
-
-    } catch (error: any) {
-      console.error('💥 FORCE RESET FAILED:', error);
-      toast.error('Force reset fallito', { description: error.message });
-      return { success: false };
-    }
-  };
-
-  // Enhanced diagnosis for login failures
-  const diagnoseDeveloperAccount = async () => {
-    console.log('🔍 DIAGNOSI DEVELOPER ACCOUNT STARTING...');
-    
-    try {
-      // Check if user exists in database
-      const { data: users, error: userError } = await supabase.rpc('get_user_by_email', {
-        email_param: DEVELOPER_EMAIL
-      });
-
-      console.log('👤 USER LOOKUP RESULT:', {
-        hasData: !!users,
-        dataLength: users?.length || 0,
-        error: userError,
-        userData: users?.[0] ? {
-          id: (users[0] as User).id,
-          email: (users[0] as User).email,
-          email_confirmed_at: (users[0] as User).email_confirmed_at
-        } : null
-      });
-
-      if (userError) {
-        console.error('❌ USER LOOKUP ERROR:', userError);
-        toast.error('Errore verifica utente', { description: userError.message });
-        return;
-      }
-
-      if (!users || users.length === 0) {
-        console.error('❌ DEVELOPER USER NOT FOUND');
-        toast.error('Utente developer non trovato', { 
-          description: 'Il developer non esiste nel database' 
-        });
-        return;
-      }
-
-      const user = users[0] as User;
-      console.log('✅ DEVELOPER USER FOUND:', user.email, 'ID:', user.id);
-
-      // Check email confirmation
-      if (!user.email_confirmed_at) {
-        console.warn('⚠️ EMAIL NOT CONFIRMED');
-        toast.warning('Email non confermata', { 
-          description: 'Il developer deve confermare la email' 
-        });
-      } else {
-        console.log('✅ EMAIL CONFIRMED AT:', user.email_confirmed_at);
-      }
-
-      // Try direct password login with detailed logging
-      console.log('🔐 TESTING DIRECT LOGIN WITH EXACT PASSWORD...');
-      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-        email: DEVELOPER_EMAIL,
-        password: DEVELOPER_PASSWORD,
-      });
-
-      console.log('📊 DIRECT LOGIN RESULT:', {
-        hasData: !!loginData,
-        hasSession: !!loginData?.session,
-        hasUser: !!loginData?.user,
-        hasAccessToken: !!loginData?.session?.access_token,
-        error: loginError,
-        errorMessage: loginError?.message,
-        errorStatus: loginError?.status
-      });
-
-      if (loginError) {
-        console.error('❌ DIRECT LOGIN ERROR:', loginError);
-        
-        if (loginError.message === 'Invalid login credentials') {
-          console.log('🚨 PASSWORD HASH MISMATCH DETECTED');
-          toast.error('Password hash non corrisponde', {
-            description: 'Usa il pulsante "Force Reset Password" per correggere'
-          });
-        } else {
-          toast.error('Errore login diretto', { description: loginError.message });
-        }
-      } else if (loginData?.session) {
-        console.log('✅ DIRECT LOGIN SUCCESS!');
-        
-        // Force session persistence
-        await supabase.auth.setSession({
-          access_token: loginData.session.access_token,
-          refresh_token: loginData.session.refresh_token,
-        });
-        
-        console.log('✅ SESSION FORCED TO PERSIST');
-        
-        toast.success('Login diretto riuscito!', {
-          description: 'Sessione forzata e persistita'
-        });
-        
-        // Navigate to home after successful login
-        setTimeout(() => navigate('/home'), 1000);
-      }
-
-    } catch (error: any) {
-      console.error('💥 DIAGNOSIS EXCEPTION:', error);
-      toast.error('Errore durante diagnosi', { description: error.message });
-    }
-  };
-
-  // Enhanced login with session forcing capability
-  const attemptLoginNoCapcha = async () => {
-    console.log('🧪 TENTATIVO LOGIN-NO-CAPTCHA per developer');
-    
-    try {
-      const response = await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/login-no-captcha`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
-        },
-        body: JSON.stringify({ email: DEVELOPER_EMAIL })
-      });
-
-      const result = await response.json();
-      console.log('🔗 LOGIN-NO-CAPTCHA RESPONSE:', result);
-
-      if (result.success && result.access_token && result.refresh_token) {
-        console.log('✅ Tokens ricevuti, forzando sessione...');
-        
-        // Force session with received tokens and explicit persistence
-        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-          access_token: result.access_token,
-          refresh_token: result.refresh_token
-        });
-
-        if (sessionError) {
-          console.error('❌ Errore setSession:', sessionError);
-          throw new Error(`Errore setSession: ${sessionError.message}`);
-        }
-
-        if (sessionData.session) {
-          console.log('✅ SESSIONE FORZATA CON SUCCESSO:', sessionData.session.user?.email);
-          
-          // Double-check persistence
-          const { data: verifySession } = await supabase.auth.getSession();
-          console.log('🔍 VERIFICA SESSIONE DOPO SETSESSION:', {
-            hasSession: !!verifySession.session,
-            hasUser: !!verifySession.session?.user,
-            userEmail: verifySession.session?.user?.email
-          });
-          
-          toast.success('Login developer riuscito', {
-            description: 'Sessione forzata e verificata tramite login-no-captcha'
-          });
-
-          setTimeout(() => {
-            navigate('/home', { replace: true });
-          }, 1000);
-          
-          return { success: true, session: sessionData.session };
-        }
-      }
-
-      throw new Error(result.error || 'Login-no-captcha fallito');
-
-    } catch (error: any) {
-      console.error('❌ LOGIN-NO-CAPTCHA FAILED:', error);
-      return { success: false, error };
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -300,7 +36,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
     }
 
     setIsLoading(true);
-    console.log('🔐 LOGIN ATTEMPT:', { email, passwordLength: password.length, exactPassword: password });
+    console.log('🔐 LOGIN ATTEMPT:', { email, passwordLength: password.length });
     
     try {
       if (isRegistering) {
@@ -320,10 +56,8 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           });
         }
       } else {
-        // Login flow - Enhanced for developer
-        console.log('🔑 LOGIN FLOW for:', email, 'with password length:', password.length);
-        
-        // Try standard login first
+        // Login flow
+        console.log('🔑 LOGIN FLOW for:', email);
         const result = await login(email, password);
         
         console.log('📊 LOGIN RESULT:', {
@@ -333,17 +67,8 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           errorMessage: result?.error?.message
         });
         
-        if (result?.success && result?.session) {
-          console.log('✅ STANDARD LOGIN SUCCESS - forcing session persistence');
-          
-          // Ensure session persistence after successful login
-          await supabase.auth.setSession({
-            access_token: result.session.access_token,
-            refresh_token: result.session.refresh_token
-          });
-          
-          console.log('✅ Session persistence forced - redirecting to /home');
-          
+        if (result?.success) {
+          console.log('✅ LOGIN SUCCESS - redirecting to /home');
           toast.success('Login effettuato con successo', {
             description: 'Benvenuto in M1SSION!'
           });
@@ -352,21 +77,10 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
             navigate('/home', { replace: true });
           }, 1000);
         } else {
-          console.error('❌ STANDARD LOGIN FAILED:', result?.error);
-          
-          // If this is the developer email and standard login failed, show enhanced options
-          if (email === DEVELOPER_EMAIL && password === DEVELOPER_PASSWORD) {
-            console.log('🚨 DEVELOPER LOGIN FAILED - SHOWING DIAGNOSIS OPTIONS');
-            
-            toast.error('Login developer fallito', {
-              description: 'Usa i pulsanti di diagnosi per identificare il problema',
-              duration: 5000
-            });
-          } else {
-            toast.error('Errore di login', {
-              description: result?.error?.message || 'Verifica le tue credenziali'
-            });
-          }
+          console.error('❌ LOGIN FAILED:', result?.error);
+          toast.error('Errore di login', {
+            description: result?.error?.message || 'Verifica le tue credenziali'
+          });
         }
       }
     } catch (error: any) {
@@ -473,40 +187,6 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         >
           🔧 Developer: Compila credenziali test
         </button>
-
-        {/* CRITICAL: Enhanced Developer Diagnosis Tools */}
-        {email === DEVELOPER_EMAIL && password === DEVELOPER_PASSWORD && (
-          <div className="space-y-2 border border-red-500/50 rounded p-3 bg-red-900/10">
-            <h4 className="text-red-400 font-bold text-sm">🔥 DEVELOPER EMERGENCY TOOLS</h4>
-            
-            <button
-              type="button"
-              className="w-full text-center text-xs text-orange-400 hover:text-orange-300 transition-colors border border-orange-400/30 rounded py-2"
-              onClick={diagnoseDeveloperAccount}
-              disabled={isLoading}
-            >
-              🔍 Diagnosi Account Developer
-            </button>
-            
-            <button
-              type="button"
-              className="w-full text-center text-xs text-red-400 hover:text-red-300 transition-colors border border-red-400/30 rounded py-2"
-              onClick={attemptLoginNoCapcha}
-              disabled={isLoading}
-            >
-              🚨 Emergency Login (No-Captcha + Force Session)
-            </button>
-
-            <button
-              type="button"
-              className="w-full text-center text-xs text-red-500 hover:text-red-400 transition-colors border border-red-500/50 rounded py-2 bg-red-900/20"
-              onClick={forceResetDeveloperPassword}
-              disabled={isLoading}
-            >
-              🔥 FORCE RESET PASSWORD + ROLE + SESSION
-            </button>
-          </div>
-        )}
       </div>
 
       {verificationStatus === 'pending' && (

@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, Lock } from 'lucide-react';
-import { useUnifiedAuth } from '@/hooks/use-unified-auth';
+import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
@@ -19,7 +20,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   currentCount,
   maxCount
 }) => {
-  const { isAuthenticated, user } = useUnifiedAuth();
+  const { isAuthenticated, user } = useAuthContext();
   const { playSound } = useSoundEffects();
   const [isLocked, setIsLocked] = useState(false);
   const { currentWeekAreas } = useBuzzMapLogic();

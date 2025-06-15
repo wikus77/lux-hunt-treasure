@@ -1,10 +1,11 @@
+
 import React from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LockKeyholeIcon, Brain, Bomb, Fingerprint, MapPin, Satellite, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useUnifiedAuth } from '@/hooks/use-unified-auth';
+import { useAuthContext } from "@/contexts/auth";
 import type { GameKey } from "@/types/minigames";
 
 interface GameCardProps {
@@ -16,9 +17,10 @@ interface GameCardProps {
 
 const GameCard = ({ title, description, icon, gameKey }: GameCardProps) => {
   const navigate = useNavigate();
-  const { user } = useUnifiedAuth();
+  const { getCurrentUser } = useAuthContext();
   
-  const isSpecialUser = user?.email === 'wikus77@hotmail.it';
+  const currentUser = getCurrentUser();
+  const isSpecialUser = currentUser?.email === 'wikus77@hotmail.it';
 
   const handleGameClick = () => {
     navigate('/games');

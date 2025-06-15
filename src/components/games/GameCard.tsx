@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
-import { useUnifiedAuth } from '@/hooks/use-unified-auth';
+import { useAuthContext } from '@/contexts/auth';
 
 interface Game {
   title: string;
@@ -21,7 +22,7 @@ interface GameCardProps {
 }
 
 export const GameCard: React.FC<GameCardProps> = ({ game, isCompleted, onPlay }) => {
-  const { getCurrentUser } = useUnifiedAuth();
+  const { getCurrentUser } = useAuthContext();
   
   const currentUser = getCurrentUser();
   const isSpecialUser = currentUser?.email === 'wikus77@hotmail.it';

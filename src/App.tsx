@@ -1,39 +1,50 @@
 
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider } from './components/theme-provider';
-import { Toaster } from 'sonner';
-import AppRoutes from './routes/AppRoutes';
-import { ErrorBoundary } from 'react-error-boundary';
-import CookiebotInit from './components/CookiebotInit';
-import './i18n';
-import { UnifiedAuthProvider } from '@/contexts/auth/UnifiedAuthProvider';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { Toaster } from "sonner";
+import { AuthProvider } from "./contexts/auth/AuthProvider";
+import { SoundProvider } from "./contexts/SoundContext";
+import { ErrorBoundary } from "./components/error/ErrorBoundary";
+import GlobalLayout from "./components/layout/GlobalLayout";
+import AppRoutes from "./routes/AppRoutes";
+import SafeAreaToggle from "./components/debug/SafeAreaToggle";
 
 function App() {
+  console.log("🚀 App component rendering...");
+  
   return (
-    <BrowserRouter>
-      <ThemeProvider defaultTheme="dark" storageKey="m1ssion-theme">
-        <UnifiedAuthProvider>
-          <Toaster
-            position="bottom-right"
-            richColors
-            closeButton
-            duration={4000}
-            toastOptions={{
-              style: {
-                background: 'rgba(0, 0, 0, 0.85)',
-                color: '#fff',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-              },
+    <ErrorBoundary fallback={
+      <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
+        <div className="glass-card p-6 max-w-md mx-auto text-center">
+          <h2 className="text-xl font-bold mb-4">ERRORE CRITICO DI SISTEMA</h2>
+          <p className="mb-6">L'applicazione ha riscontrato un errore fatale. Ricarica la pagina.</p>
+          <button 
+            onClick={() => {
+              // Clear all storage and reload
+              localStorage.clear();
+              sessionStorage.clear();
+              window.location.reload();
             }}
-          />
-          <CookiebotInit />
-          <ErrorBoundary fallback={<div style={{ color: 'white', padding: 20 }}>🚨 Qualcosa è andato storto.</div>}>
-            <AppRoutes />
-          </ErrorBoundary>
-        </UnifiedAuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+            className="px-4 py-2 bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-md"
+          >
+            🔄 RIAVVIA EMERGENZA
+          </button>
+        </div>
+      </div>
+    }>
+      <Router>
+        <SoundProvider>
+          <AuthProvider>
+            <SafeAreaToggle>
+              <GlobalLayout>
+                <AppRoutes />
+                <Toaster position="top-right" />
+              </GlobalLayout>
+            </SafeAreaToggle>
+          </AuthProvider>
+        </SoundProvider>
+      </Router>
+    </ErrorBoundary>
   );
 }
 

@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useUnifiedAuth } from '@/hooks/use-unified-auth';
+import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
@@ -12,7 +13,7 @@ interface EmailVerificationAlertProps {
 export const EmailVerificationAlert: React.FC<EmailVerificationAlertProps> = ({ 
   onResendClick
 }) => {
-  const { getCurrentUser, resendVerificationEmail } = useUnifiedAuth();
+  const { getCurrentUser, resendVerificationEmail } = useAuthContext();
   const [isResending, setIsResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const user = getCurrentUser();

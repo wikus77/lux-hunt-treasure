@@ -1,15 +1,18 @@
-import React from 'react';
-import { useUnifiedAuth } from '@/hooks/use-unified-auth';
 
-const AgentCodeDisplay = () => {
-  const { user } = useUnifiedAuth();
+import React, { useEffect, useState } from 'react';
+import { useAuthContext } from '@/contexts/auth';
+import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
+import AgentBadge from '@/components/AgentBadge';
 
-  return (
-    <div className="text-sm text-gray-500">
-      {user?.id ? `Agente: ${user.id.substring(0, 8)}` : 'Agente: Sconosciuto'}
-    </div>
-  );
+interface AgentCodeDisplayProps {
+  agentCode?: string;
+}
+
+// This component is now just a wrapper for AgentBadge
+// We keep it for backward compatibility
+const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = () => {
+  return <AgentBadge />;
 };
 
 export default AgentCodeDisplay;
-

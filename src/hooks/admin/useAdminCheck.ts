@@ -1,10 +1,10 @@
 
 import { useEffect, useState } from 'react';
-import { useUnifiedAuth } from '@/hooks/use-unified-auth';
+import { useAuthContext } from '@/contexts/auth';
 import { useNavigate } from 'react-router-dom';
 
 export const useAdminCheck = (redirectOnFail = true) => {
-  const { isAuthenticated, hasRole, isRoleLoading } = useUnifiedAuth();
+  const { isAuthenticated, hasRole, isRoleLoading } = useAuthContext();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const navigate = useNavigate();
   

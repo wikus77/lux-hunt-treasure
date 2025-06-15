@@ -4,22 +4,18 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
-import { LoginFormUI } from "@/components/auth/LoginFormUI";
+import { StandardLoginForm } from "@/components/auth/StandardLoginForm";
 import BackgroundParticles from "@/components/ui/background-particles";
-import { useUnifiedAuth } from "@/hooks/use-unified-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { Spinner } from "@/components/ui/spinner";
 import { useDeveloperSetup } from "@/hooks/use-developer-setup";
-import CompactLoginDebug from "@/components/auth/CompactLoginDebug";
-import { useAutoRecovery } from "@/hooks/use-auto-recovery";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { isSetupComplete, isLoading: setupLoading } = useDeveloperSetup();
-  
-  useAutoRecovery();
 
   useEffect(() => {
     const verification = searchParams.get('verification');
@@ -31,14 +27,15 @@ const Login = () => {
         description: "La tua email è stata verificata con successo."
       });
     }
-  }, [searchParams]);
 
-  // REMOVED: Automatic redirect logic - user must manually navigate
-  useEffect(() => {
-    console.log('🔍 LOGIN PAGE: Auth state check - NO AUTO REDIRECTS', { isAuthenticated, authLoading });
-  }, [isAuthenticated, authLoading]);
+    // Redirect if already authenticated
+    if (!authLoading && isAuthenticated) {
+      console.log('✅ User already authenticated, redirecting to /home');
+      navigate('/home', { replace: true });
+    }
+  }, [navigate, searchParams, authLoading, isAuthenticated]);
 
-  // Mostra loading durante controllo auth/setup
+  // Show loading during auth check or developer setup
   if (authLoading || setupLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
@@ -55,7 +52,6 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12 relative overflow-hidden">
       <BackgroundParticles count={15} />
-      <CompactLoginDebug />
 
       <motion.div 
         className="w-full max-w-md z-10"
@@ -74,7 +70,7 @@ const Login = () => {
         </div>
 
         <div className="glass-card p-6 backdrop-blur-md border border-gray-800 rounded-xl">
-          <LoginFormUI verificationStatus={verificationStatus} />
+          <StandardLoginForm verificationStatus={verificationStatus} />
 
           <div className="mt-6 text-center">
             <p className="text-sm text-white/50 mt-2">

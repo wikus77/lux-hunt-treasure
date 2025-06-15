@@ -1,6 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useDynamicIslandSafety } from '@/hooks/useDynamicIslandSafety';
+import { useAuthContext } from '@/contexts/auth';
 
 interface IslandState {
   isVisible: boolean;
@@ -17,11 +19,7 @@ interface ActivityData {
 }
 
 export const useDynamicIsland = () => {
-  // Evita l'uso diretto di useAuthContext durante l'inizializzazione
-  const [authReady, setAuthReady] = useState(false);
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
+  const { user, isAuthenticated } = useAuthContext();
   const [islandState, setIslandState] = useState<IslandState>({
     isVisible: false,
     message: '',
@@ -29,26 +27,6 @@ export const useDynamicIsland = () => {
   });
   const { playSound } = useSoundEffects();
   const { isBuzzSafe } = useDynamicIslandSafety();
-
-  // Carica il context auth in modo sicuro dopo il mount
-  useEffect(() => {
-    const loadAuthContext = async () => {
-      try {
-        // Importa dinamicamente per evitare errori di context
-        const { useUnifiedAuthContext } = await import('@/contexts/auth/UnifiedAuthProvider');
-        const authContext = useUnifiedAuthContext();
-        
-        setUser(authContext.user);
-        setIsAuthenticated(authContext.isAuthenticated);
-        setAuthReady(true);
-      } catch (error) {
-        console.warn('Auth context not available yet:', error);
-        setAuthReady(false);
-      }
-    };
-
-    loadAuthContext();
-  }, []);
 
   const playNotificationSound = (type: IslandState['type']) => {
     // Map notification types to available sound types
@@ -68,11 +46,11 @@ export const useDynamicIsland = () => {
   const performSafetyChecks = () => {
     // Basic safety check implementation
     console.log('🔒 Dynamic Island safety checks performed');
-    return isBuzzSafe; // use directly as boolean
+    return isBuzzSafe.isSafe;
   };
 
   const showIsland = (message: string, type: IslandState['type']) => {
-    if (!authReady || !isAuthenticated || !user) {
+    if (!isAuthenticated || !user) {
       console.warn("Dynamic Island: User not authenticated, skipping island display");
       return;
     }
@@ -116,10 +94,10 @@ export const useDynamicIsland = () => {
   };
 
   useEffect(() => {
-    if (authReady && isAuthenticated && user) {
+    if (isAuthenticated && user) {
       performSafetyChecks();
     }
-  }, [authReady, isAuthenticated, user]);
+  }, [isAuthenticated, user]);
 
   return {
     islandState,

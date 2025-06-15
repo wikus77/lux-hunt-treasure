@@ -1,9 +1,11 @@
 
+import { useAuthSessionManager } from './use-auth-session-manager';
 import { supabase } from '@/integrations/supabase/client';
-import { useUnifiedAuthContext } from '@/contexts/auth/UnifiedAuthProvider';
+import { useNavigate } from 'react-router-dom';
 
 export const useAuth = () => {
-  const { session, user, isAuthenticated } = useUnifiedAuthContext();
+  const sessionManager = useAuthSessionManager();
+  const navigate = useNavigate();
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: any; session?: any }> => {
     console.log('🔐 STANDARD LOGIN STARTING for:', email);
@@ -23,6 +25,10 @@ export const useAuth = () => {
 
       if (data.session) {
         console.log('✅ LOGIN SUCCESS - session created');
+        await sessionManager.forceSessionFromTokens(
+          data.session.access_token,
+          data.session.refresh_token
+        );
         return { success: true, session: data.session };
       }
 
@@ -64,7 +70,7 @@ export const useAuth = () => {
   const logout = async (): Promise<void> => {
     console.log('🚪 LOGOUT STARTING');
     await supabase.auth.signOut();
-    localStorage.removeItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
+    await sessionManager.clearSession();
     console.log('✅ LOGOUT COMPLETE');
   };
 
@@ -117,15 +123,17 @@ export const useAuth = () => {
   };
 
   return {
-    user,
-    session,
-    isAuthenticated,
+    user: sessionManager.user,
+    session: sessionManager.session,
+    isAuthenticated: sessionManager.isAuthenticated,
+    isLoading: sessionManager.isLoading,
+    isEmailVerified: sessionManager.user?.email_confirmed_at ? true : false,
     login,
     register,
     logout,
     resetPassword,
     resendVerificationEmail,
-    getCurrentUser: () => user,
-    getAccessToken: () => session?.access_token || null,
+    getCurrentUser: () => sessionManager.user,
+    getAccessToken: () => sessionManager.session?.access_token || null,
   };
 };

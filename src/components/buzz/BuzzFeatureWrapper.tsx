@@ -1,5 +1,6 @@
+
 import React, { ReactNode } from "react";
-import { useUnifiedAuth } from '@/hooks/use-unified-auth';
+import { useAuthContext } from "@/contexts/auth";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ErrorFallback from "../error/ErrorFallback";
@@ -9,7 +10,7 @@ interface BuzzFeatureWrapperProps {
 }
 
 const BuzzFeatureWrapper: React.FC<BuzzFeatureWrapperProps> = ({ children }) => {
-  const { user, isLoading } = useUnifiedAuth();
+  const { user, isLoading } = useAuthContext();
 
   // Se stiamo caricando, mostra un indicatore di caricamento
   if (isLoading) {
