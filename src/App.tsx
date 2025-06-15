@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from 'sonner';
 import AppRoutes from './routes/AppRoutes';
@@ -10,18 +10,8 @@ import './i18n';
 import { UnifiedAuthProvider } from '@/contexts/auth/UnifiedAuthProvider';
 
 function App() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        refetchOnWindowFocus: false,
-        retry: false,
-        staleTime: 1000 * 60 * 5, // 5 minuti per evitare refetch inutili
-      },
-    },
-  });
-
   return (
-    <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
       <ThemeProvider defaultTheme="dark" storageKey="m1ssion-theme">
         <UnifiedAuthProvider>
           <Toaster
@@ -43,9 +33,8 @@ function App() {
           </ErrorBoundary>
         </UnifiedAuthProvider>
       </ThemeProvider>
-    </QueryClientProvider>
+    </BrowserRouter>
   );
 }
 
 export default App;
-
