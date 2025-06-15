@@ -1,218 +1,241 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/use-auth';
-import FormField from './form-field';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { LoginFormFields } from './forms/LoginFormFields';
+import { RegistrationFormFields } from './forms/RegistrationFormFields';
 
 interface StandardLoginFormProps {
   verificationStatus?: string | null;
 }
 
-export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps) {
+export const StandardLoginForm: React.FC<StandardLoginFormProps> = ({ 
+  verificationStatus 
+}) => {
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
-  const { login, register, resendVerificationEmail } = useAuth();
   const navigate = useNavigate();
 
-  // Auto-fill developer credentials for testing
-  const fillDeveloperCredentials = () => {
-    setEmail('wikus77@hotmail.it');
-    setPassword('Wikus190877!@#');
-    toast.info('Credenziali developer compilate automaticamente');
-  };
+  // Auto-fill developer credentials
+  useEffect(() => {
+    const isDeveloper = window.location.hostname === 'localhost' || window.location.hostname.includes('lovable');
+    if (isDeveloper) {
+      setEmail('wikus77@hotmail.it');
+      setPassword('Wikus190877!@#');
+    }
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Handle verification status messages
+  useEffect(() => {
+    if (verificationStatus === 'pending') {
+      toast.info("Verifica email", {
+        description: "Controlla la tua email per verificare l'account."
+      });
+    }
+  }, [verificationStatus]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error('Tutti i campi sono obbligatori');
-      return;
-    }
-
     setIsLoading(true);
-    console.log('🔐 LOGIN ATTEMPT:', { email, passwordLength: password.length });
-    
+
     try {
-      if (isRegistering) {
-        // Registration flow
-        console.log('📝 REGISTRATION FLOW for:', email);
-        const result = await register(email, password);
-        
-        if (result?.success) {
-          toast.success('Registrazione completata', {
-            description: 'Controlla la tua email per verificare l\'account'
-          });
-          setIsRegistering(false);
-        } else {
-          console.error('❌ REGISTRATION FAILED:', result?.error);
-          toast.error('Errore di registrazione', {
-            description: result?.error?.message || 'Verifica i dati inseriti'
-          });
-        }
-      } else {
-        // Login flow
-        console.log('🔑 LOGIN FLOW for:', email);
-        const result = await login(email, password);
-        
-        console.log('📊 LOGIN RESULT:', {
-          success: result?.success,
-          hasError: !!result?.error,
-          hasSession: !!result?.session,
-          errorMessage: result?.error?.message
+      console.log('🔐 Attempting login for:', email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password
+      });
+
+      if (error) {
+        console.error('❌ Login error:', error);
+        toast.error("Errore di accesso", {
+          description: error.message === 'Invalid login credentials' 
+            ? "Email o password non corretti" 
+            : error.message
+        });
+        return;
+      }
+
+      if (data.user) {
+        console.log('✅ Login successful for user:', data.user.id);
+        toast.success("Accesso effettuato", {
+          description: "Benvenuto in M1SSION™!"
         });
         
-        if (result?.success) {
-          console.log('✅ LOGIN SUCCESS - redirecting to /home');
-          toast.success('Login effettuato con successo', {
-            description: 'Benvenuto in M1SSION!'
-          });
-          
-          setTimeout(() => {
-            navigate('/home', { replace: true });
-          }, 1000);
-        } else {
-          console.error('❌ LOGIN FAILED:', result?.error);
-          toast.error('Errore di login', {
-            description: result?.error?.message || 'Verifica le tue credenziali'
-          });
-        }
+        // Navigate to home after short delay
+        setTimeout(() => {
+          navigate('/home');
+        }, 1000);
       }
-    } catch (error: any) {
-      console.error('❌ AUTH ERROR:', error);
-      toast.error('Errore di sistema', {
-        description: error.message || 'Si è verificato un errore imprevisto'
+    } catch (error) {
+      console.error('❌ Login exception:', error);
+      toast.error("Errore inaspettato", {
+        description: "Riprova tra qualche momento"
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleResendVerification = async () => {
-    if (!email) {
-      toast.error('Inserisci la tua email per ricevere il link di verifica');
-      return;
-    }
-
+  const handleRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
+
     try {
-      const result = await resendVerificationEmail(email);
+      console.log('📝 Attempting registration for:', email);
       
-      if (result?.success) {
-        toast.success('Email di verifica inviata', {
-          description: 'Controlla la tua casella di posta'
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password,
+        options: {
+          emailRedirectTo: redirectUrl
+        }
+      });
+
+      if (error) {
+        console.error('❌ Registration error:', error);
+        toast.error("Errore di registrazione", {
+          description: error.message === 'User already registered' 
+            ? "Utente già registrato. Prova ad accedere." 
+            : error.message
         });
-      } else {
-        toast.error('Errore invio email', {
-          description: result?.error || 'Riprova più tardi'
-        });
+        return;
       }
-    } catch (error: any) {
-      toast.error('Errore di sistema', {
-        description: error.message || 'Riprova più tardi'
+
+      if (data.user) {
+        console.log('✅ Registration successful for user:', data.user.id);
+        
+        if (!data.user.email_confirmed_at) {
+          toast.success("Registrazione completata", {
+            description: "Controlla la tua email per verificare l'account"
+          });
+        } else {
+          toast.success("Registrazione completata", {
+            description: "Benvenuto in M1SSION™!"
+          });
+          setTimeout(() => {
+            navigate('/home');
+          }, 1000);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Registration exception:', error);
+      toast.error("Errore inaspettato", {
+        description: "Riprova tra qualche momento"
       });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const resetForm = () => {
+    if (!email.includes('wikus77')) {
+      setEmail('');
+    }
+    setPassword('');
+    setConfirmPassword('');
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+  };
+
+  const switchMode = () => {
+    setIsLogin(!isLogin);
+    resetForm();
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <FormField
-        id="email"
-        label="Email"
-        type="email"
-        placeholder="Inserisci la tua email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        icon={<Mail className="h-4 w-4" />}
-        required
-        disabled={isLoading}
-        autoComplete="email"
-      />
-
-      <div className="space-y-2">
-        <FormField
-          id="password"
-          label="Password"
-          type={showPassword ? "text" : "password"}
-          placeholder={isRegistering ? "Crea una password sicura" : "Inserisci la tua password"}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          icon={<Lock className="h-4 w-4" />}
-          required
-          disabled={isLoading}
-          autoComplete={isRegistering ? "new-password" : "current-password"}
-        />
-        
+    <div className="space-y-6">
+      <div className="flex rounded-lg bg-gray-800/30 p-1">
         <button
-          type="button"
-          className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors"
-          onClick={() => setShowPassword(!showPassword)}
+          onClick={() => { setIsLogin(true); resetForm(); }}
+          className={`flex-1 rounded-md py-2 px-4 text-sm font-medium transition-all ${
+            isLogin
+              ? 'bg-gradient-to-r from-projectx-blue to-projectx-pink text-white'
+              : 'text-gray-300 hover:text-white'
+          }`}
         >
-          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          {showPassword ? 'Nascondi password' : 'Mostra password'}
+          Accedi
+        </button>
+        <button
+          onClick={() => { setIsLogin(false); resetForm(); }}
+          className={`flex-1 rounded-md py-2 px-4 text-sm font-medium transition-all ${
+            !isLogin
+              ? 'bg-gradient-to-r from-projectx-blue to-projectx-pink text-white'
+              : 'text-gray-300 hover:text-white'
+          }`}
+        >
+          Registrati
         </button>
       </div>
 
-      <div className="space-y-3">
-        <Button
-          type="submit"
-          className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
-          disabled={isLoading}
-        >
-          {isLoading ? 'Caricamento...' : isRegistering ? 'Registrati' : 'Accedi'}
-        </Button>
+      <motion.div
+        key={isLogin ? 'login' : 'register'}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-4"
+      >
+        {isLogin ? (
+          <LoginFormFields
+            email={email}
+            password={password}
+            showPassword={showPassword}
+            isLoading={isLoading}
+            onEmailChange={setEmail}
+            onPasswordChange={setPassword}
+            onTogglePassword={() => setShowPassword(!showPassword)}
+            onSubmit={handleLogin}
+          />
+        ) : (
+          <RegistrationFormFields
+            email={email}
+            password={password}
+            confirmPassword={confirmPassword}
+            showPassword={showPassword}
+            showConfirmPassword={showConfirmPassword}
+            isLoading={isLoading}
+            onEmailChange={setEmail}
+            onPasswordChange={setPassword}
+            onConfirmPasswordChange={setConfirmPassword}
+            onTogglePassword={() => setShowPassword(!showPassword)}
+            onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
+            onSubmit={handleRegistration}
+          />
+        )}
+      </motion.div>
 
-        <button
-          type="button"
-          className="w-full text-center text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
-          onClick={() => setIsRegistering(!isRegistering)}
-          disabled={isLoading}
-        >
-          {isRegistering ? 'Hai già un account? Accedi' : 'Non hai un account? Registrati'}
-        </button>
-
-        {/* Developer Quick Access Button */}
-        <button
-          type="button"
-          className="w-full text-center text-xs text-green-400 hover:text-green-300 transition-colors border border-green-400/30 rounded py-2"
-          onClick={fillDeveloperCredentials}
-          disabled={isLoading}
-        >
-          🔧 Developer: Compila credenziali test
-        </button>
+      <div className="text-center text-sm text-gray-400">
+        {isLogin ? (
+          <p>
+            Non hai un account?{' '}
+            <button
+              onClick={switchMode}
+              className="text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
+              Registrati qui
+            </button>
+          </p>
+        ) : (
+          <p>
+            Hai già un account?{' '}
+            <button
+              onClick={switchMode}
+              className="text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
+              Accedi qui
+            </button>
+          </p>
+        )}
       </div>
-
-      {verificationStatus === 'pending' && (
-        <div className="text-center mt-4">
-          <p className="text-sm text-yellow-500 mb-2">
-            Verifica in sospeso: controlla la tua email per completare la verifica.
-          </p>
-          <Button
-            type="button"
-            variant="link"
-            onClick={handleResendVerification}
-            disabled={isLoading}
-            className="text-cyan-400 hover:text-cyan-300"
-          >
-            {isLoading ? 'Invio in corso...' : 'Invia nuovamente email di verifica'}
-          </Button>
-        </div>
-      )}
-
-      {verificationStatus === 'success' && (
-        <div className="text-center mt-4">
-          <p className="text-sm text-green-500">
-            Email verificata con successo! Ora puoi accedere.
-          </p>
-        </div>
-      )}
-    </form>
+    </div>
   );
-}
+};
