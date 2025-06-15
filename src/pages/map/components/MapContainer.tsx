@@ -68,11 +68,12 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   showHelpDialog,
   setShowHelpDialog
 }) => {
-  const mapView = useMapView();
+  // Get properly typed map configuration
+  const mapViewConfig = useMapView();
   
-  // Safe extraction with fallback values
-  const mapCenter: [number, number] = mapView?.mapCenter || [45.4642, 9.1900];
-  const mapZoom: number = mapView?.mapZoom || 6;
+  // Extract values with guaranteed types
+  const mapCenter: [number, number] = mapViewConfig.mapCenter;
+  const mapZoom: number = mapViewConfig.mapZoom;
 
   const mapProps = useMemo(() => ({
     center: mapCenter,
