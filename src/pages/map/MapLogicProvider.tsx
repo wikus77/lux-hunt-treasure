@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './hooks/useMapLogic';
 import { useMapPoints } from './hooks/useMapPoints';
 import { useMapInitialization } from './hooks/useMapInitialization';
 import LoadingScreen from './LoadingScreen';
-import { MapContent } from './components/MapContent';
+import { MapContainer } from './components/MapContainer';
 import { MapControls } from './components/MapControls';
 import TechnicalStatus from './components/TechnicalStatus';
 import { useMapStore } from '@/stores/mapStore';
@@ -164,6 +163,29 @@ const MapLogicProvider = () => {
       }, 100);
     }
   };
+
+  // Handle map click
+  const handleMapClick = (e: any) => {
+    console.log('🗺️ Map click event received:', e);
+    if (isAddingSearchArea) {
+      handleMapClickArea(e);
+    }
+  };
+
+  // Function to add new point
+  const addNewPoint = (lat: number, lng: number) => {
+    const newPointId = `point-${Date.now()}`;
+    const newPoint = {
+      id: newPointId,
+      lat,
+      lng,
+      title: '',
+      note: '',
+      position: { lat, lng }
+    };
+    addMapPoint(newPoint);
+    setActiveMapPoint(newPointId);
+  };
   
   // Synchronize point states using Zustand
   useEffect(() => {
@@ -242,13 +264,41 @@ const MapLogicProvider = () => {
           maxHeight: '70vh'
         }}
       >
-        {/* CRITICAL VISUAL FIX: Map content with proper constraints */}
-        <div className="w-full h-full relative">
-          <MapContent selectedWeek={1} />
-        </div>
-
-        {/* Map controls overlay */}
-        <MapControls />
+        {/* CRITICAL FIX: Use the proper MapContainer component for Leaflet rendering */}
+        <MapContainer
+          mapRef={mapRef}
+          onMapClick={handleMapClick}
+          selectedWeek={1}
+          isAddingPoint={isAddingPoint}
+          setIsAddingPoint={setIsAddingPoint}
+          addNewPoint={addNewPoint}
+          mapPoints={mapPoints.map(p => ({
+            id: p.id,
+            lat: p.lat,
+            lng: p.lng,
+            title: p.title,
+            note: p.note,
+            position: { lat: p.lat, lng: p.lng }
+          }))}
+          activeMapPoint={activeMapPoint}
+          setActiveMapPoint={setActiveMapPoint}
+          handleUpdatePoint={handleUpdatePointWrapper}
+          deleteMapPoint={deleteMapPoint}
+          newPoint={newPoint}
+          handleSaveNewPoint={handleSaveNewPoint}
+          handleCancelNewPoint={handleCancelNewPoint}
+          handleBuzz={handleBuzz}
+          requestLocationPermission={requestLocationPermission}
+          isAddingSearchArea={isAddingSearchArea}
+          handleMapClickArea={handleMapClickArea}
+          searchAreas={searchAreas}
+          setActiveSearchArea={setActiveSearchArea}
+          deleteSearchArea={deleteSearchArea}
+          setPendingRadius={setPendingRadius}
+          toggleAddingSearchArea={toggleAddingSearchArea}
+          showHelpDialog={showHelpDialog}
+          setShowHelpDialog={setShowHelpDialog}
+        />
         
         {/* Technical status logger */}
         <TechnicalStatus 

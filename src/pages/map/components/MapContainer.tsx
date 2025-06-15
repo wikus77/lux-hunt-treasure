@@ -93,8 +93,16 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   // CRITICAL FIX: Stable click handler to prevent re-renders
   const handleMapClick = useCallback((e: any) => {
     if (!isMapInitialized.current) return;
-    onMapClick(e);
-  }, [onMapClick]);
+    
+    console.log('🗺️ MapContainer: Click received', { isAddingPoint, isAddingSearchArea });
+    
+    if (isAddingPoint) {
+      addNewPoint(e.latlng.lat, e.latlng.lng);
+      setIsAddingPoint(false);
+    } else if (isAddingSearchArea) {
+      onMapClick(e);
+    }
+  }, [onMapClick, isAddingPoint, isAddingSearchArea, addNewPoint, setIsAddingPoint]);
 
   // CRITICAL FIX: Map ready handler to prevent premature interactions
   const handleMapReady = useCallback(() => {
@@ -145,13 +153,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         
         {/* CRITICAL FIX: Single MapContent to prevent tile duplication */}
         <MapContent selectedWeek={selectedWeek} />
-        
-        {/* Map controls overlay */}
-        <MapControls />
       </LeafletMapContainer>
-      
-      {/* Technical status overlay */}
-      <TechnicalStatus />
     </div>
   );
 };
