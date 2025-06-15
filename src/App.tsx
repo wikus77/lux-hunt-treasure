@@ -15,6 +15,7 @@ function App() {
       queries: {
         refetchOnWindowFocus: false,
         retry: false,
+        staleTime: 1000 * 60 * 5, // 5 minuti per evitare refetch inutili
       },
     },
   });
@@ -23,9 +24,21 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="m1ssion-theme">
         <UnifiedAuthProvider>
-          <Toaster position="bottom-right" />
+          <Toaster
+            position="bottom-right"
+            richColors
+            closeButton
+            duration={4000}
+            toastOptions={{
+              style: {
+                background: 'rgba(0, 0, 0, 0.85)',
+                color: '#fff',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              },
+            }}
+          />
           <CookiebotInit />
-          <ErrorBoundary fallback={<div>Something went wrong</div>}>
+          <ErrorBoundary fallback={<div style={{ color: 'white', padding: 20 }}>🚨 Qualcosa è andato storto.</div>}>
             <AppRoutes />
           </ErrorBoundary>
         </UnifiedAuthProvider>
@@ -35,3 +48,4 @@ function App() {
 }
 
 export default App;
+
