@@ -16,7 +16,7 @@ const Index = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
 
-  // Check for mobile or developer override
+  // Verifica accesso sviluppatore e ambiente mobile
   useEffect(() => {
     const checkAccess = () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -25,8 +25,7 @@ const Index = () => {
       }
 
       const isCapacitorApp = !!(window as any).Capacitor;
-      const userAgent = navigator.userAgent;
-      const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
+      const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) || isCapacitorApp;
 
       setShowDeveloperAccess(isMobile);
     };
@@ -34,6 +33,7 @@ const Index = () => {
     checkAccess();
   }, []);
 
+  // Gestori eventi da custom hook
   const {
     showAgeVerification,
     showInviteFriend,
@@ -44,7 +44,7 @@ const Index = () => {
     closeInviteFriend,
   } = useEventHandlers(countdownCompleted);
 
-  // Retry system
+  // Sistema di retry automatico
   useEffect(() => {
     if (error && retryCount < 2) {
       const timeout = setTimeout(() => {
@@ -55,22 +55,21 @@ const Index = () => {
     }
   }, [error, retryCount]);
 
-  // Check for intro already played
+  // Verifica se l’intro è già stata mostrata
   useEffect(() => {
     try {
       const skipIntro = localStorage.getItem("skipIntro");
       setIntroCompleted(skipIntro === "true");
     } catch (err) {
-      console.error("LocalStorage error:", err);
+      console.error("Errore localStorage:", err);
       setIntroCompleted(false);
     }
   }, []);
 
-  // Hide unwanted sections from old templates
+  // Rimozione sezioni obsolete da template precedenti
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      const sections = document.querySelectorAll("section");
-      sections.forEach((section) => {
+      document.querySelectorAll("section").forEach((section) => {
         const txt = section.textContent?.toLowerCase() || "";
         if (
           txt.includes("cosa puoi vincere") ||
@@ -87,7 +86,7 @@ const Index = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Health check timeout
+  // Timeout per health check
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (!renderContent && pageLoaded) {
@@ -97,28 +96,33 @@ const Index = () => {
     return () => clearTimeout(timeout);
   }, [renderContent, pageLoaded]);
 
+  // Callback caricamento completato
   const handleLoaded = useCallback((isLoaded: boolean, canRender: boolean) => {
     setPageLoaded(isLoaded);
     setRenderContent(canRender);
   }, []);
 
+  // Callback intro completata
   const handleIntroComplete = useCallback(() => {
     setIntroCompleted(true);
     try {
       localStorage.setItem("skipIntro", "true");
     } catch (err) {
-      console.error("Error saving intro skip flag:", err);
+      console.error("Errore salvataggio intro:", err);
     }
   }, []);
 
+  // Callback countdown terminato
   const handleCountdownComplete = useCallback((isCompleted: boolean) => {
     setCountdownCompleted(isCompleted);
   }, []);
 
+  // Callback retry manuale
   const handleRetry = useCallback(() => {
     window.location.reload();
   }, []);
 
+  // Accesso sviluppatore su mobile
   if (showDeveloperAccess) {
     return <DeveloperAccess />;
   }
@@ -149,3 +153,4 @@ const Index = () => {
 };
 
 export default Index;
+
