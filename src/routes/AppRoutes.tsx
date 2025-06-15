@@ -18,10 +18,12 @@ const Notifications = lazy(() => import("@/pages/Notifications"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const Subscriptions = lazy(() => import("@/pages/Subscriptions"));
+
 // Auth routes
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
 const MissionSelection = lazy(() => import("@/pages/MissionSelection"));
+
 // Additional routes
 const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
 const Contacts = lazy(() => import("@/pages/Contacts"));
@@ -35,16 +37,22 @@ const AppRoutes: React.FC = () => {
   return (
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
-        <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><span className="text-gray-400">Caricamento...</span></div>}>
+        <Suspense
+          fallback={
+            <div className="min-h-screen bg-black flex items-center justify-center">
+              <span className="text-gray-400">Caricamento...</span>
+            </div>
+          }
+        >
           <Routes>
-            {/* Public landing page - ALWAYS accessible */}
+            {/* Public landing page */}
             <Route path="/" element={<Index />} />
-            
-            {/* Auth routes - EXPLICIT routing control */}
+
+            {/* Auth routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            
-            {/* Protected routes - EXPLICIT control without auto-redirects */}
+
+            {/* Protected routes */}
             <Route path="/home" element={isAuthenticated ? <AppHome /> : <Navigate to="/login" replace />} />
             <Route path="/map" element={isAuthenticated ? <Map /> : <Navigate to="/login" replace />} />
             <Route path="/buzz" element={isAuthenticated ? <Buzz /> : <Navigate to="/login" replace />} />
@@ -52,19 +60,19 @@ const AppRoutes: React.FC = () => {
             <Route path="/leaderboard" element={isAuthenticated ? <Leaderboard /> : <Navigate to="/login" replace />} />
             <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" replace />} />
             <Route path="/subscriptions" element={isAuthenticated ? <Subscriptions /> : <Navigate to="/login" replace />} />
-            
-            {/* Semi-protected - EXPLICIT control */}
+
+            {/* Semi-protected routes */}
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/select-mission" element={<MissionSelection />} />
-            
-            {/* Public info routes - ALWAYS accessible */}
+
+            {/* Public info pages */}
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />
-            
-            {/* 404 route */}
+
+            {/* 404 Not Found */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
@@ -74,3 +82,4 @@ const AppRoutes: React.FC = () => {
 };
 
 export default AppRoutes;
+
