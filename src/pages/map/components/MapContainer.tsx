@@ -1,10 +1,10 @@
-
 import React, { useMemo, useRef, useCallback } from 'react';
 import { MapContainer as LeafletMapContainer } from 'react-leaflet';
 import { useMapView } from '../hooks/useMapView';
 import { MapContent } from './MapContent';
 import { MapControls } from './MapControls';
 import TechnicalStatus from './TechnicalStatus';
+import MapEventHandler from './MapEventHandler';
 
 export interface MapContainerProps {
   mapRef: React.RefObject<any>;
@@ -129,9 +129,14 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       <LeafletMapContainer 
         ref={handleMapReference}
         {...mapConfiguration}
-        onClick={handleMapClick}
         whenReady={handleMapReady}
       >
+        {/* CRITICAL FIX: Event handling moved to proper component */}
+        <MapEventHandler 
+          onMapClick={handleMapClick}
+          isAddingPoint={isAddingPoint}
+          isAddingSearchArea={isAddingSearchArea}
+        />
         <MapContent selectedWeek={selectedWeek} />
         <MapControls />
       </LeafletMapContainer>
