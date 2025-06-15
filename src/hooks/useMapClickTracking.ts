@@ -27,7 +27,7 @@ export function useMapClickTracking() {
     
     try {
       const { data, error } = await supabase
-        .from('map_click_events')
+        .from<any>('map_click_events') // ✅ FIX: tipizzazione compatibile temporanea
         .insert({
           user_id: user.id,
           lat,
