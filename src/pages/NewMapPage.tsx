@@ -9,8 +9,12 @@ import { useNewMapPage } from './map/hooks/useNewMapPage';
 import { useDynamicIsland } from '@/hooks/useDynamicIsland';
 import { useMissionManager } from '@/hooks/useMissionManager';
 
-// Lazy load heavy map components
-const MapContainer = lazy(() => import('./map/components/MapContainer'));
+// Lazy load heavy map components with proper default export handling
+const MapContainer = lazy(() => 
+  import('./map/components/MapContainer').then(module => ({ 
+    default: module.MapContainer || module.default 
+  }))
+);
 
 const MapLoadingFallback = () => (
   <div className="h-96 bg-gray-900/50 rounded-lg flex items-center justify-center">
@@ -148,6 +152,9 @@ const NewMapPage = () => {
                 toggleAddingSearchArea={toggleAddingSearchArea}
                 showHelpDialog={showHelpDialog}
                 setShowHelpDialog={setShowHelpDialog}
+                mapRef={React.createRef()}
+                onMapClick={() => {}}
+                selectedWeek={1}
               />
             </Suspense>
           </div>

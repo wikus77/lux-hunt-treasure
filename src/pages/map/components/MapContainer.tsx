@@ -4,7 +4,7 @@ import { MapContainer as LeafletMapContainer } from 'react-leaflet';
 import { useMapView } from '../hooks/useMapView';
 import { MapContent } from './MapContent';
 import { MapControls } from './MapControls';
-import { TechnicalStatus } from './TechnicalStatus';
+import TechnicalStatus from './TechnicalStatus';
 
 interface MapContainerProps {
   mapRef: React.RefObject<any>;
@@ -17,7 +17,8 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   onMapClick,
   selectedWeek
 }) => {
-  const { mapCenter, mapZoom } = useMapView();
+  const mapView = useMapView();
+  const { mapCenter, mapZoom } = mapView || { mapCenter: [45.4642, 9.1900] as [number, number], mapZoom: 6 };
 
   const mapProps = useMemo(() => ({
     center: mapCenter,
@@ -42,3 +43,5 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     </div>
   );
 };
+
+export default MapContainer;

@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { TileLayer } from 'react-leaflet';
-import { BuzzMapAreas } from './BuzzMapAreas';
-import { UserLocationMarker } from './UserLocationMarker';
-import { MapMarkers } from './MapMarkers';
-import { SearchAreaMapLayer } from '../SearchAreaMapLayer';
-import { PrizeLocationCircle } from './PrizeLocationCircle';
+import BuzzMapAreas from './BuzzMapAreas';
+import UserLocationMarker from './UserLocationMarker';
+import MapMarkers from './MapMarkers';
+import SearchAreaMapLayer from '../SearchAreaMapLayer';
+import PrizeLocationCircle from './PrizeLocationCircle';
 
 interface MapContentProps {
   selectedWeek: number;
@@ -29,3 +29,5 @@ export const MapContent: React.FC<MapContentProps> = ({ selectedWeek }) => {
     </>
   );
 };
+
+export default MapContent;

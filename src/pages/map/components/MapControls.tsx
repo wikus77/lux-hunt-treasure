@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ZoomControl } from 'react-leaflet';
-import { LocationButton } from './LocationButton';
+import LocationButton from './LocationButton';
 
 export const MapControls: React.FC = () => {
   return (
@@ -11,3 +11,5 @@ export const MapControls: React.FC = () => {
     </>
   );
 };
+
+export default MapControls;

@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
 import { useMapPoints } from './hooks/useMapPoints';
 import { useMapInitialization } from './hooks/useMapInitialization';
 import LoadingScreen from './LoadingScreen';
-import MapContent from './components/MapContent';
-import MapControls from './components/MapControls';
+import { MapContent } from './components/MapContent';
+import { MapControls } from './components/MapControls';
 import TechnicalStatus from './components/TechnicalStatus';
 import { useMapStore } from '@/stores/mapStore';
 import 'leaflet/dist/leaflet.css';
@@ -265,6 +264,7 @@ const MapLogicProvider = () => {
           setPendingRadius={setPendingRadius}
           isAddingMapPoint={isAddingMapPoint || isAddingPoint}
           hookHandleMapPointClick={hookHandleMapPointClick}
+          selectedWeek={1}
         />
 
         {/* Map controls */}

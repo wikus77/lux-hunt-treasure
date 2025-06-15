@@ -6,14 +6,16 @@ import { getCurrentColor, getCurrentColorName, getBuzzGlowStyles } from './BuzzC
 
 interface BuzzMapAreasProps {
   areas: BuzzMapArea[];
+  selectedWeek: number;
 }
 
-const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
+const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, selectedWeek }) => {
   const currentColor = getCurrentColor();
   const currentColorName = getCurrentColorName();
   
   console.log('🗺️ BuzzMapAreas - Rendering areas:', {
     areasCount: areas.length,
+    selectedWeek,
     areas: areas.map(area => ({
       id: area.id,
       lat: area.lat,

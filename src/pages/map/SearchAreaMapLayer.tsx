@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 
 type SearchAreaMapLayerProps = {
-  searchAreas: SearchArea[];
-  setActiveSearchArea: (id: string | null) => void;
-  deleteSearchArea: (id: string) => Promise<boolean>;
+  searchAreas?: SearchArea[];
+  setActiveSearchArea?: (id: string | null) => void;
+  deleteSearchArea?: (id: string) => Promise<boolean>;
 };
 
 const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
-  searchAreas,
+  searchAreas = [],
   setActiveSearchArea,
   deleteSearchArea
 }) => {
@@ -54,6 +54,8 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
   // Handle delete - now without browser confirm
   const handleDelete = async (areaId: string, areaLabel: string) => {
     console.log("🗑️ DELETE FROM POPUP: Delete requested for area:", areaId, areaLabel);
+    
+    if (!deleteSearchArea) return;
     
     try {
       const success = await deleteSearchArea(areaId);
@@ -101,7 +103,9 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
               eventHandlers={{
                 click: () => {
                   console.log("🔵 CLICK: Search area clicked:", area.id);
-                  setActiveSearchArea(area.id);
+                  if (setActiveSearchArea) {
+                    setActiveSearchArea(area.id);
+                  }
                 },
                 mouseover: () => {
                   console.log("🔵 HOVER: Mouse over search area:", area.id);
