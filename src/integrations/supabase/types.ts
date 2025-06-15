@@ -425,6 +425,36 @@ export type Database = {
         }
         Relationships: []
       }
+      map_click_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          lat: number
+          lng: number
+          user_id: string
+          zoom: number
+        }
+        Insert: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          lat: number
+          lng: number
+          user_id: string
+          zoom?: number
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          lat?: number
+          lng?: number
+          user_id?: string
+          zoom?: number
+        }
+        Relationships: []
+      }
       map_points: {
         Row: {
           created_at: string
