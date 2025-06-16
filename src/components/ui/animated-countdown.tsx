@@ -66,54 +66,41 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
     );
   }
 
-  // Design IDENTICO allo screenshot: layout verticale con parentesi quadre
+  // Layout orizzontale esatto come negli screenshot
   return (
-    <div className="flex flex-col items-center justify-center text-white font-orbitron my-6">
-      <div className="text-lg opacity-50 mb-2">[</div>
-      
-      <div className="flex flex-col items-center space-y-1">
-        <div className="text-2xl md:text-3xl font-bold tracking-wider">
-          {String(timeLeft.days).padStart(2, '0')}
-        </div>
-        <div className="text-xs uppercase tracking-widest opacity-70">
-          DAYS
-        </div>
+    <div className="flex flex-col items-center justify-center text-white my-6">
+      {/* Layout orizzontale con parentesi quadre e due punti */}
+      <div className="flex items-center justify-center gap-1 text-base md:text-lg font-mono tracking-wider">
+        <span className="opacity-50">[</span>
+        <span className="mx-2 font-bold">{String(timeLeft.days).padStart(2, '0')}</span>
+        <span className="opacity-50">]</span>
+        
+        <span className="mx-2 opacity-50">:</span>
+        
+        <span className="opacity-50">[</span>
+        <span className="mx-2 font-bold">{String(timeLeft.hours).padStart(2, '0')}</span>
+        <span className="opacity-50">]</span>
+        
+        <span className="mx-2 opacity-50">:</span>
+        
+        <span className="opacity-50">[</span>
+        <span className="mx-2 font-bold">{String(timeLeft.minutes).padStart(2, '0')}</span>
+        <span className="opacity-50">]</span>
+        
+        <span className="mx-2 opacity-50">:</span>
+        
+        <span className="opacity-50">[</span>
+        <span className="mx-2 font-bold">{String(timeLeft.seconds).padStart(2, '0')}</span>
+        <span className="opacity-50">]</span>
       </div>
       
-      <div className="text-lg opacity-50 my-1">:</div>
-      
-      <div className="flex flex-col items-center space-y-1">
-        <div className="text-2xl md:text-3xl font-bold tracking-wider">
-          {String(timeLeft.hours).padStart(2, '0')}
-        </div>
-        <div className="text-xs uppercase tracking-widest opacity-70">
-          HOURS
-        </div>
+      {/* Labels sotto i numeri */}
+      <div className="flex items-center justify-center gap-8 mt-1 text-xs uppercase tracking-widest opacity-70">
+        <span>DAYS</span>
+        <span>HOURS</span>
+        <span>MINUTES</span>
+        <span>SECONDS</span>
       </div>
-      
-      <div className="text-lg opacity-50 my-1">:</div>
-      
-      <div className="flex flex-col items-center space-y-1">
-        <div className="text-2xl md:text-3xl font-bold tracking-wider">
-          {String(timeLeft.minutes).padStart(2, '0')}
-        </div>
-        <div className="text-xs uppercase tracking-widest opacity-70">
-          MINUTES
-        </div>
-      </div>
-      
-      <div className="text-lg opacity-50 my-1">:</div>
-      
-      <div className="flex flex-col items-center space-y-1">
-        <div className="text-2xl md:text-3xl font-bold tracking-wider">
-          {String(timeLeft.seconds).padStart(2, '0')}
-        </div>
-        <div className="text-xs uppercase tracking-widest opacity-70">
-          SECONDS
-        </div>
-      </div>
-      
-      <div className="text-lg opacity-50 mt-2">]</div>
     </div>
   );
 };
