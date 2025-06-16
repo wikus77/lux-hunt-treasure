@@ -45,7 +45,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
     return (
       <div className="text-center">
         <div className="text-2xl md:text-3xl font-bold text-green-400 font-orbitron">
-          MISSION START
+          STARTS ON AUGUST 19
         </div>
       </div>
     );
@@ -53,19 +53,21 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
 
   return (
     <div className="flex flex-col items-center justify-center text-white my-6 font-orbitron">
-      {/* Countdown numbers with exact spacing matching screenshot */}
-      <div className="flex items-center justify-center gap-3 text-lg md:text-xl font-mono tracking-wider">
-        <span className="text-white font-bold text-2xl md:text-3xl">{String(timeLeft.days).padStart(2, '0')}</span>
-        <span className="text-white/70">:</span>
-        <span className="text-white font-bold text-2xl md:text-3xl">{String(timeLeft.hours).padStart(2, '0')}</span>
-        <span className="text-white/70">:</span>
-        <span className="text-white font-bold text-2xl md:text-3xl">{String(timeLeft.minutes).padStart(2, '0')}</span>
-        <span className="text-white/70">:</span>
-        <span className="text-white font-bold text-2xl md:text-3xl">{String(timeLeft.seconds).padStart(2, '0')}</span>
+      {/* Countdown numbers with exact spacing matching the image */}
+      <div className="flex items-center justify-center text-lg md:text-xl font-mono tracking-wider">
+        <span className="text-white/70">[</span>
+        <span className="text-white font-bold text-2xl md:text-3xl mx-2">{String(timeLeft.days).padStart(2, '0')}</span>
+        <span className="text-white/70 mx-1">:</span>
+        <span className="text-white font-bold text-2xl md:text-3xl mx-2">{String(timeLeft.hours).padStart(2, '0')}</span>
+        <span className="text-white/70 mx-1">:</span>
+        <span className="text-white font-bold text-2xl md:text-3xl mx-2">{String(timeLeft.minutes).padStart(2, '0')}</span>
+        <span className="text-white/70 mx-1">:</span>
+        <span className="text-white font-bold text-2xl md:text-3xl mx-2">{String(timeLeft.seconds).padStart(2, '0')}</span>
+        <span className="text-white/70">]</span>
       </div>
       
-      {/* Labels underneath */}
-      <div className="flex items-center justify-center gap-8 md:gap-12 mt-2 text-xs uppercase tracking-widest opacity-70">
+      {/* Labels underneath with exact spacing */}
+      <div className="flex items-center justify-center gap-8 md:gap-12 mt-2 text-xs uppercase tracking-widest text-gray-400">
         <span>DAYS</span>
         <span>HOURS</span>
         <span>MINUTES</span>
