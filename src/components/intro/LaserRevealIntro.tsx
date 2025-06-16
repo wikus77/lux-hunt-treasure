@@ -46,7 +46,7 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
         <h1 className="laser-logo font-orbitron">M1SSION</h1>
       </div>
       
-      {/* Text reveal - AGGIORNATO */}
+      {/* Text reveal - TESTO CORRETTO */}
       <div className={`text-reveal ${phase >= 4 ? 'visible' : ''}`}>
         <p className="laser-text font-orbitron" style={{ fontWeight: 700, color: '#FFFFFF' }}>
           STARTS ON AUGUST 19

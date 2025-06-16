@@ -32,31 +32,22 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     }
   }, [introCompleted, pageLoaded]);
   
-  // MIGLIORAMENTO: Verifica localStorage in modo sicuro con gestione errori
+  // RIMOZIONE PERMANENTE: Non saltiamo mai l'intro
   useEffect(() => {
     try {
-      // Solo lato client dopo montaggio del componente
       if (typeof window !== 'undefined') {
-        // Force the intro to show every time for now (for testing)
+        // Forza sempre la visualizzazione dell'intro
         try {
           localStorage.removeItem("hasSeenIntro");
+          localStorage.removeItem("skipIntro");
         } catch (e) {
           console.warn("Non è stato possibile accedere a localStorage, ignoriamo:", e);
         }
         
         setHasCheckedStorage(true);
-        
-        // Uncommenta questa parte per abilitare il salt dell'intro per gli utenti di ritorno
-        // const hasSeenIntro = localStorage.getItem("hasSeenIntro");
-        // if (hasSeenIntro === "true") {
-        //   console.log("User has already seen the intro, skipping...");
-        //   handleIntroComplete();
-        // }
-        // setHasCheckedStorage(true);
       }
     } catch (error) {
       console.error("Error accessing localStorage:", error);
-      // In caso di errore con localStorage, consideriamo come check eseguito
       setHasCheckedStorage(true);
       setError(error as Error);
     }
@@ -124,7 +115,7 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     return <LoadingScreen />;
   }
   
-  // MIGLIORAMENTO: Rendering più sicuro dell'intro
+  // RIPRISTINO: Mostra sempre l'intro se non completata
   if (!introCompleted) {
     return (
       <div className="fixed inset-0 z-[9999] bg-black">
