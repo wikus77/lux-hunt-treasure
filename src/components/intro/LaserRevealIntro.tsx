@@ -20,7 +20,7 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
     timeouts.push(setTimeout(() => setPhase(4), 4000));  // Text reveal
     timeouts.push(setTimeout(() => setPhase(5), 6000));  // Complete
     
-    // Auto complete after 7 seconds
+    // Auto complete dopo 7 secondi
     timeouts.push(setTimeout(() => {
       onComplete();
     }, 7000));
@@ -46,9 +46,19 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
         <h1 className="laser-logo font-orbitron">M1SSION</h1>
       </div>
       
-      {/* Text reveal - TESTO CORRETTO */}
+      {/* Text reveal - FORZATURA TESTO CORRETTO */}
       <div className={`text-reveal ${phase >= 4 ? 'visible' : ''}`}>
-        <p className="laser-text font-orbitron" style={{ fontWeight: 700, color: '#FFFFFF' }}>
+        <p 
+          className="laser-text font-orbitron" 
+          style={{ 
+            fontWeight: 700, 
+            color: '#FFFFFF',
+            fontFamily: 'Orbitron, sans-serif',
+            textAlign: 'center',
+            fontSize: '1.5rem',
+            letterSpacing: '0.1em'
+          }}
+        >
           STARTS ON AUGUST 19
         </p>
       </div>
