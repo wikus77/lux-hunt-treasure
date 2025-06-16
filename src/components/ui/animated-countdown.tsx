@@ -66,13 +66,13 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
     );
   }
 
-  // Design ESATTO come nello screenshot 05.52.10: numeri grandi bianchi, etichette piccole grigie
+  // Design IDENTICO allo screenshot con parentesi quadre: [ 32 ] [ 18 ] [ 07 ] [ 50 ]
   return (
-    <div className="flex items-center justify-center gap-10 md:gap-16 lg:gap-20 my-8">
+    <div className="flex items-center justify-center gap-8 md:gap-12 lg:gap-16 my-6">
       {/* Days */}
       <div className="flex flex-col items-center">
-        <div className="text-5xl md:text-7xl lg:text-8xl font-bold text-white font-mono leading-none tracking-tight">
-          {String(timeLeft.days).padStart(2, '0')}
+        <div className="text-white text-3xl md:text-5xl lg:text-6xl font-mono font-bold tracking-wider">
+          [ {String(timeLeft.days).padStart(2, '0')} ]
         </div>
         <div className="text-xs md:text-sm text-gray-400 uppercase tracking-widest font-normal mt-2">
           DAYS
@@ -81,8 +81,8 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
 
       {/* Hours */}
       <div className="flex flex-col items-center">
-        <div className="text-5xl md:text-7xl lg:text-8xl font-bold text-white font-mono leading-none tracking-tight">
-          {String(timeLeft.hours).padStart(2, '0')}
+        <div className="text-white text-3xl md:text-5xl lg:text-6xl font-mono font-bold tracking-wider">
+          [ {String(timeLeft.hours).padStart(2, '0')} ]
         </div>
         <div className="text-xs md:text-sm text-gray-400 uppercase tracking-widest font-normal mt-2">
           HOURS
@@ -91,8 +91,8 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
 
       {/* Minutes */}
       <div className="flex flex-col items-center">
-        <div className="text-5xl md:text-7xl lg:text-8xl font-bold text-white font-mono leading-none tracking-tight">
-          {String(timeLeft.minutes).padStart(2, '0')}
+        <div className="text-white text-3xl md:text-5xl lg:text-6xl font-mono font-bold tracking-wider">
+          [ {String(timeLeft.minutes).padStart(2, '0')} ]
         </div>
         <div className="text-xs md:text-sm text-gray-400 uppercase tracking-widest font-normal mt-2">
           MINUTES
@@ -101,8 +101,8 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
 
       {/* Seconds */}
       <div className="flex flex-col items-center">
-        <div className="text-5xl md:text-7xl lg:text-8xl font-bold text-white font-mono leading-none tracking-tight">
-          {String(timeLeft.seconds).padStart(2, '0')}
+        <div className="text-white text-3xl md:text-5xl lg:text-6xl font-mono font-bold tracking-wider">
+          [ {String(timeLeft.seconds).padStart(2, '0')} ]
         </div>
         <div className="text-xs md:text-sm text-gray-400 uppercase tracking-widest font-normal mt-2">
           SECONDS
