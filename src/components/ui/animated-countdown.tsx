@@ -66,45 +66,45 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
     );
   }
 
-  // Stile esattamente come nello screenshot approvato: compatto, centrato, pulito
+  // Stile esattamente come nello screenshot: numeri grandi bianchi, etichette piccole grigie, layout orizzontale centrato
   return (
-    <div className="flex items-center justify-center space-x-6 md:space-x-8 mb-8">
+    <div className="flex items-center justify-center gap-8 md:gap-12 my-6">
       {/* Days */}
       <div className="flex flex-col items-center">
-        <div className="text-3xl md:text-4xl font-bold text-white font-mono tracking-tight">
+        <div className="text-4xl md:text-6xl lg:text-7xl font-bold text-white font-mono leading-none">
           {String(timeLeft.days).padStart(2, '0')}
         </div>
-        <div className="text-xs md:text-sm text-gray-300 uppercase tracking-wider font-medium mt-1">
+        <div className="text-xs md:text-sm text-gray-400 uppercase tracking-widest font-medium mt-1">
           DAYS
         </div>
       </div>
 
       {/* Hours */}
       <div className="flex flex-col items-center">
-        <div className="text-3xl md:text-4xl font-bold text-white font-mono tracking-tight">
+        <div className="text-4xl md:text-6xl lg:text-7xl font-bold text-white font-mono leading-none">
           {String(timeLeft.hours).padStart(2, '0')}
         </div>
-        <div className="text-xs md:text-sm text-gray-300 uppercase tracking-wider font-medium mt-1">
+        <div className="text-xs md:text-sm text-gray-400 uppercase tracking-widest font-medium mt-1">
           HOURS
         </div>
       </div>
 
       {/* Minutes */}
       <div className="flex flex-col items-center">
-        <div className="text-3xl md:text-4xl font-bold text-white font-mono tracking-tight">
+        <div className="text-4xl md:text-6xl lg:text-7xl font-bold text-white font-mono leading-none">
           {String(timeLeft.minutes).padStart(2, '0')}
         </div>
-        <div className="text-xs md:text-sm text-gray-300 uppercase tracking-wider font-medium mt-1">
+        <div className="text-xs md:text-sm text-gray-400 uppercase tracking-widest font-medium mt-1">
           MINUTES
         </div>
       </div>
 
       {/* Seconds */}
       <div className="flex flex-col items-center">
-        <div className="text-3xl md:text-4xl font-bold text-white font-mono tracking-tight">
+        <div className="text-4xl md:text-6xl lg:text-7xl font-bold text-white font-mono leading-none">
           {String(timeLeft.seconds).padStart(2, '0')}
         </div>
-        <div className="text-xs md:text-sm text-gray-300 uppercase tracking-wider font-medium mt-1">
+        <div className="text-xs md:text-sm text-gray-400 uppercase tracking-widest font-medium mt-1">
           SECONDS
         </div>
       </div>
