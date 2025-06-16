@@ -9,24 +9,28 @@
     <!-- Favicon aggiornato -->
     <link rel="icon" href="/public/lovable-uploads/83efc483-d057-4f1b-ac21-93d56e796e1f.png" type="image/png" />
     
-    <!-- Script per reindirizzare HTTP a HTTPS - migliorato -->
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- Script per reindirizzare HTTP a HTTPS -->
     <script>
-      // Redirect HTTP to HTTPS except on localhost
-      if (window.location.protocol === 'http:' && !window.location.hostname.match(/localhost|127.0.0.1/)) {
+      if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
         window.location.href = window.location.href.replace('http:', 'https:');
       }
     </script>
     
-    <!-- Plausible Analytics - Script principale attivo -->
-    <script defer data-domain="m1ssion.com" src="https://plausible.io/js/script.outbound-links.tagged-events.js"></script>
+    <!-- Google tag (gtag.js) - Google Ads -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9824MZJZ63" crossorigin="anonymous"></script>
     <script>
-      window.plausible = window.plausible || function () {
-        (window.plausible.q = window.plausible.q || []).push(arguments);
-      };
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-9824MZJZ63');
     </script>
     
-    <!-- Rajdhani Font from Google Fonts -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&display=swap">
+    <!-- Orbitron Font from Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&display=swap">
     <meta name="description" content="M1SSION - Un'esperienza di gioco rivoluzionaria" />
     <meta name="author" content="M1SSION Team" />
 
@@ -39,7 +43,7 @@
     <meta name="twitter:site" content="@m1ssion_game" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
-    <!-- Google Analytics 4 (condizionale tramite Cookie Script) -->
+    <!-- ✅ Google Analytics 4 (attivo solo dopo consenso Cookie Script) -->
     <script type="text/plain" data-type="text/javascript" data-name="google-analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-9824MZJZ63" crossorigin="anonymous"></script>
     <script type="text/plain" data-name="google-analytics">
       window.dataLayer = window.dataLayer || [];
@@ -48,9 +52,9 @@
       gtag('config', 'G-9824MZJZ63');
     </script>
     
-    <!-- Cookie Script CMP - aggiornato per HTTPS -->
-    <script type="text/plain" charset="UTF-8" src="https://cdn.cookie-script.com/s/2db074620da1ba3a3cc6c19025d1d99d.js"></script>
-    <script type="text/plain" charset="UTF-8" data-cookiescriptreport="report" src="https://report.cookie-script.com/r/2db074620da1ba3a3cc6c19025d1d99d.js"></script>
+    <!-- Cookie Script CMP -->
+    <script type="text/javascript" charset="UTF-8" src="//cdn.cookie-script.com/s/2db074620da1ba3a3cc6c19025d1d99d.js"></script>
+    <script type="text/javascript" charset="UTF-8" data-cookiescriptreport="report" src="//report.cookie-script.com/r/2db074620da1ba3a3cc6c19025d1d99d.js"></script>
   </head>
 
   <body>
