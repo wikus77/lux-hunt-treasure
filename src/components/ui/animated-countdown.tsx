@@ -44,7 +44,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
   if (isComplete) {
     return (
       <div className="text-center">
-        <div className="text-2xl md:text-3xl font-bold text-green-400 font-orbitron">
+        <div className="text-2xl md:text-3xl font-bold text-white font-orbitron" style={{ fontWeight: 700 }}>
           STARTS ON AUGUST 19
         </div>
       </div>
@@ -81,7 +81,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
       </div>
       
       {/* Labels underneath with exact spacing */}
-      <div className="flex items-center justify-center gap-12 md:gap-16 mt-3 text-xs uppercase tracking-widest text-gray-400 font-orbitron">
+      <div className="flex items-center justify-center gap-12 md:gap-16 mt-3 text-xs uppercase tracking-widest font-orbitron" style={{ color: '#B0B0B0' }}>
         <span>DAYS</span>
         <span>HOURS</span>
         <span>MINUTES</span>

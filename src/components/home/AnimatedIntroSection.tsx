@@ -89,9 +89,9 @@ export default function AnimatedIntroSection({ onEnd }: { onEnd: () => void }) {
         ))}
       </div>
       
-      {/* TESTO CRITICO - STARTS ON AUGUST 19 */}
+      {/* TESTO AGGIORNATO - STARTS ON AUGUST 19 */}
       <motion.div
-        className="text-yellow-400 mt-8 text-lg sm:text-2xl font-orbitron"
+        className="text-white mt-8 text-lg sm:text-2xl font-orbitron"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 5.25, duration: 0.8 }}
