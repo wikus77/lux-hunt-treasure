@@ -1,8 +1,8 @@
 
 export const getMissionDeadline = (): Date => {
   console.log("Getting mission deadline");
-  // Target date: 19 July 2025
-  return new Date(2025, 6, 19, 0, 0, 0);
+  // Target date: 19 August 2025, 00:01 (Europe/Rome timezone)
+  return new Date(2025, 7, 19, 0, 1, 0); // Month is 0-indexed (7 = August)
 };
 
 // Calculate the remaining days consistently throughout the application

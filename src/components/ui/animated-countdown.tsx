@@ -58,7 +58,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
 
     return (
       <div className="flex flex-col items-center">
-        <div className="relative w-16 h-20 md:w-20 md:h-24 perspective-1000">
+        <div className="relative w-20 h-24 md:w-24 md:h-28 perspective-1000">
           <motion.div
             className="absolute inset-0 bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg shadow-xl border border-gray-600 flex items-center justify-center overflow-hidden"
             animate={{
@@ -66,12 +66,12 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
             }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            <span className="text-2xl md:text-3xl font-bold text-white font-mono">
+            <span className="text-3xl md:text-4xl font-bold text-white font-mono">
               {String(displayValue).padStart(2, '0')}
             </span>
           </motion.div>
         </div>
-        <span className="text-xs md:text-sm text-gray-400 mt-2 uppercase tracking-wider">
+        <span className="text-sm md:text-base text-gray-300 mt-3 uppercase tracking-wider font-medium">
           {label}
         </span>
       </div>
@@ -86,7 +86,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
         className="text-center"
       >
         <motion.div 
-          className="text-xl md:text-2xl font-bold text-green-400"
+          className="text-2xl md:text-3xl font-bold text-green-400"
           animate={{
             textShadow: [
               "0 0 5px rgba(0, 255, 0, 0.5)",
@@ -103,13 +103,13 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
   }
 
   return (
-    <div className="flex items-center justify-center space-x-4 md:space-x-6">
+    <div className="flex items-center justify-center space-x-6 md:space-x-8 bg-black/80 px-8 py-6 rounded-2xl border border-cyan-500/20 shadow-2xl backdrop-blur-sm">
       <FlipCard value={timeLeft.days} label="giorni" />
-      <div className="text-2xl md:text-3xl text-white font-bold">:</div>
+      <div className="text-3xl md:text-4xl text-cyan-400 font-bold">:</div>
       <FlipCard value={timeLeft.hours} label="ore" />
-      <div className="text-2xl md:text-3xl text-white font-bold">:</div>
+      <div className="text-3xl md:text-4xl text-cyan-400 font-bold">:</div>
       <FlipCard value={timeLeft.minutes} label="min" />
-      <div className="text-2xl md:text-3xl text-white font-bold">:</div>
+      <div className="text-3xl md:text-4xl text-cyan-400 font-bold">:</div>
       <FlipCard value={timeLeft.seconds} label="sec" />
     </div>
   );
