@@ -53,21 +53,35 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
 
   return (
     <div className="flex flex-col items-center justify-center text-white my-6 font-orbitron">
-      {/* Countdown numbers with exact spacing matching the image */}
-      <div className="flex items-center justify-center text-lg md:text-xl font-mono tracking-wider">
-        <span className="text-white/70">[</span>
-        <span className="text-white font-bold text-2xl md:text-3xl mx-2">{String(timeLeft.days).padStart(2, '0')}</span>
-        <span className="text-white/70 mx-1">:</span>
-        <span className="text-white font-bold text-2xl md:text-3xl mx-2">{String(timeLeft.hours).padStart(2, '0')}</span>
-        <span className="text-white/70 mx-1">:</span>
-        <span className="text-white font-bold text-2xl md:text-3xl mx-2">{String(timeLeft.minutes).padStart(2, '0')}</span>
-        <span className="text-white/70 mx-1">:</span>
-        <span className="text-white font-bold text-2xl md:text-3xl mx-2">{String(timeLeft.seconds).padStart(2, '0')}</span>
-        <span className="text-white/70">]</span>
+      {/* Countdown numbers with exact bracket format */}
+      <div className="flex items-center justify-center text-lg md:text-xl font-orbitron tracking-wider">
+        <span className="text-white/70">[ </span>
+        <span className="text-white font-bold text-3xl md:text-4xl mx-1" style={{ fontWeight: 700 }}>
+          {String(timeLeft.days).padStart(2, '0')}
+        </span>
+        <span className="text-white/70"> ]</span>
+        <span className="text-white/70 mx-3">:</span>
+        <span className="text-white/70">[ </span>
+        <span className="text-white font-bold text-3xl md:text-4xl mx-1" style={{ fontWeight: 700 }}>
+          {String(timeLeft.hours).padStart(2, '0')}
+        </span>
+        <span className="text-white/70"> ]</span>
+        <span className="text-white/70 mx-3">:</span>
+        <span className="text-white/70">[ </span>
+        <span className="text-white font-bold text-3xl md:text-4xl mx-1" style={{ fontWeight: 700 }}>
+          {String(timeLeft.minutes).padStart(2, '0')}
+        </span>
+        <span className="text-white/70"> ]</span>
+        <span className="text-white/70 mx-3">:</span>
+        <span className="text-white/70">[ </span>
+        <span className="text-white font-bold text-3xl md:text-4xl mx-1" style={{ fontWeight: 700 }}>
+          {String(timeLeft.seconds).padStart(2, '0')}
+        </span>
+        <span className="text-white/70"> ]</span>
       </div>
       
       {/* Labels underneath with exact spacing */}
-      <div className="flex items-center justify-center gap-8 md:gap-12 mt-2 text-xs uppercase tracking-widest text-gray-400">
+      <div className="flex items-center justify-center gap-12 md:gap-16 mt-3 text-xs uppercase tracking-widest text-gray-400 font-orbitron">
         <span>DAYS</span>
         <span>HOURS</span>
         <span>MINUTES</span>
