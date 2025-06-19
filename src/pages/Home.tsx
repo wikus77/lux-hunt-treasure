@@ -55,8 +55,10 @@ const Home = () => {
         // Mobile users need to login properly now
         setHasAccess(false);
       } else if (!isMobileDevice) {
-        // Web users get redirected to landing page
-        window.location.href = '/';
+        // Web users get redirected to landing page if not already there
+        if (window.location.pathname !== '/') {
+          window.location.href = '/';
+        }
         return;
       }
     };
