@@ -31,6 +31,8 @@ cd <YOUR_PROJECT_NAME>
 
 # Step 3: Install the necessary dependencies.
 npm i
+# If `npm ci` fails because the lock file is out of sync, run `npm install` to
+# regenerate `package-lock.json`.
 
 # Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
