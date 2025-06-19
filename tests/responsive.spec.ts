@@ -1,5 +1,6 @@
 
 import { test, expect } from '@playwright/test';
+import fs from 'fs';
 import { devices } from './utils/devices';
 
 for (const device of devices) {
@@ -26,6 +27,7 @@ for (const device of devices) {
     expect(await navigation.isVisible()).toBeTruthy();
     
     // Take a screenshot for visual verification
+    fs.mkdirSync('test-results', { recursive: true });
     await page.screenshot({ path: `./test-results/${device.name.replace(/\s+/g, '-').toLowerCase()}.png` });
     
     await context.close();
