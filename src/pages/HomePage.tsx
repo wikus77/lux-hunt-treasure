@@ -28,7 +28,7 @@ const HomePage = () => {
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
-  const { startActivity,  updateActivity, endActivity } = useDynamicIsland();
+  const { startActivity, updateActivity, endActivity } = useDynamicIsland();
   const { currentMission } = useMissionManager();
   
   // Local storage hooks for mission data
