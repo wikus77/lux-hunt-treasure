@@ -7,6 +7,8 @@ interface Mission {
   status: "active" | "completed" | "pending";
   progress: number;
   timeLeft: string;
+  foundClues: number;
+  totalClues: number;
 }
 
 export function useMissionManager() {
@@ -15,8 +17,22 @@ export function useMissionManager() {
     name: "Caccia al Tesoro Urbano",
     status: "active",
     progress: 62,
-    timeLeft: "48:00:00"
+    timeLeft: "48:00:00",
+    foundClues: 3,
+    totalClues: 12
   });
 
-  return { currentMission, setCurrentMission };
+  const updateMissionProgress = (newProgress: number) => {
+    setCurrentMission(prev => ({
+      ...prev,
+      progress: newProgress,
+      foundClues: Math.floor((newProgress / 100) * prev.totalClues)
+    }));
+  };
+
+  return { 
+    currentMission, 
+    setCurrentMission,
+    updateMissionProgress
+  };
 }
