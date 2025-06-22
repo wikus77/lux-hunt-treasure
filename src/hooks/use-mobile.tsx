@@ -1,27 +1,24 @@
 
-import * as React from "react"
+import { useState, useEffect } from "react";
 
-const MOBILE_BREAKPOINT = 768
+export function useIsMobile(breakpoint: number = 768) {
+  const [isMobile, setIsMobile] = useState(false);
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  useEffect(() => {
+    const checkDevice = () => {
+      const userAgent = navigator.userAgent;
+      const isCapacitorApp = !!(window as any).Capacitor;
+      const isMobileUserAgent = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
+      const isSmallScreen = window.innerWidth < breakpoint;
+      
+      setIsMobile(isMobileUserAgent || isCapacitorApp || isSmallScreen);
+    };
 
-  React.useEffect(() => {
-    // Initial check
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
+    checkDevice();
+    window.addEventListener("resize", checkDevice);
     
-    // Check immediately on mount
-    checkIsMobile()
-    
-    // Then add listener to window resize
-    window.addEventListener("resize", checkIsMobile)
-    
-    // Clean up
-    return () => window.removeEventListener("resize", checkIsMobile)
-  }, [])
+    return () => window.removeEventListener("resize", checkDevice);
+  }, [breakpoint]);
 
-  // Return true or false (with default fallback to false if undefined during SSR)
-  return isMobile ?? false
+  return isMobile;
 }

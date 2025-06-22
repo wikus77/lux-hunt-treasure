@@ -1,36 +1,22 @@
 
-import { useState, useEffect } from 'react';
-import { useDynamicIsland } from './useDynamicIsland';
+import { useState, useEffect } from "react";
 
 interface Mission {
   id: string;
   name: string;
-  status: 'active' | 'completed' | 'inactive';
+  status: "active" | "completed" | "pending";
   progress: number;
-  timeLeft: number;
-  foundClues?: number;
+  timeLeft: string;
 }
 
-export const useMissionManager = () => {
-  const { startActivity, updateActivity, endActivity } = useDynamicIsland();
-  const [currentMission, setCurrentMission] = useState<Mission | null>(null);
+export function useMissionManager() {
+  const [currentMission, setCurrentMission] = useState<Mission>({
+    id: "M001",
+    name: "Caccia al Tesoro Urbano",
+    status: "active",
+    progress: 62,
+    timeLeft: "48:00:00"
+  });
 
-  const updateMissionProgress = (cluesFound: number) => {
-    if (currentMission) {
-      const updatedMission = { ...currentMission, foundClues: cluesFound };
-      setCurrentMission(updatedMission);
-      updateActivity({
-        status: `${cluesFound} indizi trovati`,
-        progress: (cluesFound / 10) * 100 // Assuming 10 total clues
-      });
-    }
-  };
-
-  return {
-    currentMission,
-    updateMissionProgress,
-    startActivity,
-    updateActivity,
-    endActivity
-  };
-};
+  return { currentMission, setCurrentMission };
+}
