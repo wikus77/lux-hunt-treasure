@@ -1,293 +1,479 @@
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Zap, MapPin } from 'lucide-react';
-import { toast } from 'sonner';
-import { useSoundEffects } from '@/hooks/use-sound-effects';
-import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
-import { useBuzzMapPricing } from '@/pages/map/hooks/useBuzzMapPricing';
-import { useStripePayment } from '@/hooks/useStripePayment';
-import { useAuth } from '@/hooks/use-auth';
-import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Loader, Zap } from "lucide-react";
+import { toast } from "sonner";
+import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
+import { useNotificationManager } from "@/hooks/useNotificationManager";
+import { useStripePayment } from "@/hooks/useStripePayment";
+import { useBuzzCounter } from "@/hooks/useBuzzCounter";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
-export interface BuzzButtonProps {
-  handleBuzz?: () => void;
-  mapCenter?: [number, number];
-  onAreaGenerated?: (lat: number, lng: number, radiusKm: number) => void;
+interface BuzzButtonProps {
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  userId: string;
+  onSuccess: () => void;
 }
 
 const BuzzButton: React.FC<BuzzButtonProps> = ({
-  handleBuzz,
-  mapCenter,
-  onAreaGenerated
+  isLoading,
+  setIsLoading,
+  setError,
+  userId,
+  onSuccess
 }) => {
-  const { playSound } = useSoundEffects();
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [showRipple, setShowRipple] = useState(false);
-  const { reloadAreas } = useBuzzMapLogic();
-  const { buzzMapPrice, radiusKm, incrementGeneration } = useBuzzMapPricing();
-  const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
-  const { user } = useAuth();
   const { callBuzzApi } = useBuzzApi();
+  const { createBuzzNotification } = useNotificationManager();
+  const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
+  const { dailyBuzzCounter, loadDailyBuzzCounter, updateDailyBuzzCounter } = useBuzzCounter(userId);
+  const queryClient = useQueryClient();
+  
+  const [buzzCost, setBuzzCost] = useState<number>(1.99);
+  const [showRipple, setShowRipple] = useState(false);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
 
-  // CRITICAL: Calculate dynamic pricing based on generation count
-  const [currentGeneration, setCurrentGeneration] = useState(1);
-  const [dynamicPrice, setDynamicPrice] = useState(7.99);
-
-  // Update pricing based on generation
-  React.useEffect(() => {
-    const loadGenerationCount = async () => {
-      if (!user?.id) return;
+  // Check subscription status
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if (!userId) return;
       
       try {
-        const { data: existingAreas } = await supabase
-          .from('user_map_areas')
-          .select('*')
-          .eq('user_id', user.id);
-          
-        const nextGeneration = (existingAreas?.length || 0) + 1;
-        setCurrentGeneration(nextGeneration);
-        
-        // Dynamic pricing: €7.99 → €29.99 progressive
-        const basePrice = 7.99;
-        const maxPrice = 29.99;
-        const priceIncrement = (maxPrice - basePrice) / 10; // Over 10 generations
-        const newPrice = Math.min(maxPrice, basePrice + (nextGeneration - 1) * priceIncrement);
-        setDynamicPrice(parseFloat(newPrice.toFixed(2)));
-        
-        console.log(`💰 BUZZ MAPPA: Dynamic pricing - Generation ${nextGeneration}, Price €${newPrice.toFixed(2)}`);
+        const { data: subscription } = await supabase
+          .from('subscriptions')
+          .select('status, tier')
+          .eq('user_id', userId)
+          .eq('status', 'active')
+          .single();
+
+        setHasActiveSubscription(!!subscription);
+        console.log('🔍 BUZZ: Subscription status checked:', !!subscription);
       } catch (error) {
-        console.error('❌ Error loading generation count:', error);
+        console.log("🔍 BUZZ: No active subscription found");
+        setHasActiveSubscription(false);
       }
     };
-    
-    loadGenerationCount();
-  }, [user?.id]);
 
-  const handleBuzzPress = async () => {
-    if (isGenerating || paymentLoading || !user?.id) {
-      console.log('🗺️ BUZZ MAPPA: Button click ignored - already processing or no user');
-      return;
-    }
-    
-    console.log('🗺️ BUZZ MAPPA: Starting generation process with MANDATORY payment verification');
-    
-    // Trigger ripple effect immediately
-    setShowRipple(true);
-    setTimeout(() => setShowRipple(false), 1000);
-    
-    setIsGenerating(true);
-    playSound('buzz');
+    checkSubscription();
+  }, [userId]);
+
+  // Load current buzz cost and daily count with integrated useBuzzCounter
+  const loadBuzzData = async () => {
+    if (!userId) return;
     
     try {
-      // MANDATORY: Check for active subscription first
-      const { data: subscription, error: subError } = await supabase
-        .from('subscriptions')
-        .select('status, tier')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .single();
-
-      const isDeveloper = user.email === 'wikus77@hotmail.it';
+      console.log('📊 BUZZ: Loading daily count and cost for user:', userId);
       
-      // CRITICAL: Block if no subscription and not developer
-      if (!isDeveloper && (subError || !subscription)) {
-        console.log('💳 BUZZ MAPPA: Payment REQUIRED - no active subscription found');
-        
-        // Log abuse attempt
-        try {
-          await supabase.from('abuse_logs').insert({
-            user_id: user.id,
-            event_type: 'buzz_map_payment_required'
-          });
-        } catch (error) {
-          console.error("Failed to log abuse:", error);
-        }
-        
-        // Show payment requirement toast
-        toast.error("Pagamento richiesto", {
-          description: `Per generare un'area BUZZ è necessario pagare €${dynamicPrice.toFixed(2)} o attivare un abbonamento.`
-        });
+      // Use integrated useBuzzCounter hook
+      await loadDailyBuzzCounter();
+      
+      // Calculate cost for next buzz
+      const { data: costData, error: costError } = await supabase.rpc('calculate_buzz_price', {
+        daily_count: dailyBuzzCounter + 1
+      });
 
-        // MANDATORY: Process payment before allowing generation
-        const paymentSuccess = await processBuzzPurchase(true, dynamicPrice);
-        
-        if (!paymentSuccess) {
-          toast.error("Pagamento necessario", {
-            description: "Il pagamento è obbligatorio per generare aree BUZZ."
-          });
-          setIsGenerating(false);
-          return;
-        }
-        
-        console.log('✅ BUZZ MAPPA: Payment completed successfully');
-      } else if (isDeveloper) {
-        console.log('🔓 BUZZ MAPPA: Developer bypass activated for wikus77@hotmail.it');
-      } else {
-        console.log('✅ BUZZ MAPPA: Active subscription verified, proceeding');
-      }
-
-      // Verify map center coordinates
-      if (!mapCenter || !Array.isArray(mapCenter) || mapCenter.length !== 2) {
-        toast.error("Errore posizione", {
-          description: "Impossibile determinare la posizione sulla mappa."
-        });
-        setIsGenerating(false);
+      if (costError) {
+        console.error("Error calculating cost:", costError);
         return;
       }
 
-      console.log('🗺️ BUZZ MAPPA: Calling unified API for map generation');
+      const newCost = costData || 1.99;
+      setBuzzCost(newCost);
+      console.log(`💰 BUZZ: Cost updated to €${newCost} for count ${dailyBuzzCounter + 1}`);
+    } catch (error) {
+      console.error("Error loading buzz data:", error);
+    }
+  };
 
-      // Generate map area using the unified API with coordinates
-      const response = await callBuzzApi({
-        userId: user.id,
-        generateMap: true,
-        coordinates: { lat: mapCenter[0], lng: mapCenter[1] }
+  useEffect(() => {
+    loadBuzzData();
+  }, [userId, dailyBuzzCounter, loadDailyBuzzCounter]);
+
+  const handleBuzzPress = async () => {
+    if (isLoading || !userId) return;
+    
+    console.log('🚀 BUZZ: Starting process - IMPERATIVE counter increment');
+
+    // CRITICAL: Show ripple immediately
+    setShowRipple(true);
+    setTimeout(() => setShowRipple(false), 1000);
+
+    // IMPERATIVE: Show immediate toast feedback - ALWAYS
+    toast.success("🎯 BUZZ attivato!", {
+      description: `Tentativo ${dailyBuzzCounter + 1}/50 in corso...`,
+      duration: 2000,
+    });
+
+    // IMPERATIVE: UPDATE COUNTER IMMEDIATELY using integrated hook
+    const newDailyCount = await updateDailyBuzzCounter();
+    console.log(`🔢 BUZZ: Counter IMPERATIVELY incremented to ${newDailyCount}/50`);
+
+    // Invalidate React Query cache for immediate sync
+    queryClient.invalidateQueries({ queryKey: ['buzz-counter', userId] });
+    queryClient.invalidateQueries({ queryKey: ['user-buzz-counter', userId] });
+
+    // Check daily limit AFTER incrementing counter
+    if (dailyBuzzCounter >= 50) {
+      toast.error("Limite giornaliero raggiunto", {
+        description: "Hai raggiunto il limite di 50 buzz per oggi.",
+        duration: 4000,
       });
+      
+      // Log abuse attempt
+      try {
+        await supabase.from('abuse_logs').insert({
+          user_id: userId,
+          event_type: 'buzz_limit_exceeded'
+        });
+      } catch (error) {
+        console.error("Failed to log abuse:", error);
+      }
+      return;
+    }
+    
+    // Check developer mode
+    const { data: userData } = await supabase.auth.getUser();
+    const isDeveloper = userData.user?.email === 'wikus77@hotmail.it';
+    
+    if (isDeveloper) {
+      console.log('🔓 BUZZ: Developer mode activated - simulating valid response');
+      
+      // DEVELOPER MODE: Always show success toast (IMPERATIVE)
+      toast.success("🎯 Nuovo indizio sbloccato! (DEV MODE)", {
+        description: `Test sviluppatore - Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`,
+        duration: 4000,
+      });
+      
+      // IMPERATIVE: Force notification creation and UI update
+      try {
+        await createBuzzNotification(
+          "Nuovo Indizio Buzz (DEV)", 
+          `Test sviluppatore - Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`
+        );
+        console.log("✅ BUZZ: Developer notification created and triggered");
+        
+        // Force notification system refresh
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      } catch (notifError) {
+        console.error("❌ BUZZ: Failed to create developer notification:", notifError);
+      }
+      
+      // Reload data with cache invalidation
+      setTimeout(async () => {
+        await loadBuzzData();
+        queryClient.invalidateQueries({ queryKey: ['buzz-data'] });
+      }, 500);
+      
+      onSuccess();
+      return;
+    }
+    
+    // CRITICAL: Check if user needs to pay (no subscription and cost > 0)
+    if (!hasActiveSubscription && buzzCost > 0) {
+      try {
+        console.log('💳 BUZZ: Payment REQUIRED - processing checkout');
+        
+        // Show payment requirement toast (IMPERATIVE)
+        toast.error("Pagamento richiesto", {
+          description: `Per continuare è necessario pagare €${buzzCost.toFixed(2)} o attivare un abbonamento.`,
+          duration: 4000,
+        });
 
-      if (response.success && response.radius_km && response.lat && response.lng) {
-        console.log('✅ BUZZ MAPPA: Area generated successfully with response:', response);
+        // MANDATORY: Process payment before allowing buzz
+        const paymentSuccess = await processBuzzPurchase(false, buzzCost);
         
-        // Calculate actual radius for this generation
-        const actualRadius = response.radius_km;
+        if (!paymentSuccess) {
+          toast.error("Pagamento necessario", {
+            description: "Il pagamento è obbligatorio per utilizzare il BUZZ.",
+            duration: 4000,
+          });
+          
+          // Log payment failure
+          try {
+            await supabase.from('abuse_logs').insert({
+              user_id: userId,
+              event_type: 'buzz_payment_required'
+            });
+          } catch (error) {
+            console.error("Failed to log payment requirement:", error);
+          }
+          return;
+        }
         
-        // CRITICAL: Register notification in Supabase
+        console.log('✅ BUZZ: Payment completed successfully');
+      } catch (error) {
+        console.error("❌ BUZZ Payment error:", error);
+        toast.error("Errore di pagamento", {
+          description: "Impossibile processare il pagamento.",
+          duration: 4000,
+        });
+        return;
+      }
+    } else if (hasActiveSubscription) {
+      console.log('✅ BUZZ: Active subscription verified, proceeding');
+    }
+    
+    // Track Plausible event
+    if (typeof window !== 'undefined' && window.plausible) {
+      window.plausible('buzz_click');
+    }
+    
+    console.log("🚀 BUZZ: Starting API call for user:", userId);
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await callBuzzApi({ 
+        userId, 
+        generateMap: false 
+      });
+      
+      if (response.success) {
+        console.log("✅ BUZZ: API response received successfully:", response);
+        
+        // Track clue unlocked event
+        if (typeof window !== 'undefined' && window.plausible) {
+          window.plausible('clue_unlocked');
+        }
+        
+        // Get dynamic clue content
+        const dynamicClueContent = response.clue_text || `Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`;
+        
+        console.log("📝 BUZZ: Dynamic clue content:", dynamicClueContent);
+
+        // IMPERATIVE: Show success toast - ALWAYS
+        toast.success("🎯 Nuovo indizio sbloccato!", {
+          description: dynamicClueContent,
+          duration: 4000,
+        });
+        
+        // CRITICAL: Register notification in Supabase and trigger UI update
         try {
-          await supabase
+          console.log("💾 BUZZ: Inserting notification in Supabase...");
+          const { error: notificationError } = await supabase
             .from('user_notifications')
             .insert({
-              user_id: user.id,
-              type: 'buzz_map',
-              title: 'Area BUZZ Mappa generata',
-              message: `Nuova area di ricerca generata con raggio ${actualRadius}km`,
+              user_id: userId,
+              type: 'buzz',
+              title: 'Nuovo Indizio Buzz',
+              message: dynamicClueContent,
               is_read: false,
               created_at: new Date().toISOString()
             });
-          console.log('✅ BUZZ MAPPA: Notification registered in user_notifications');
-        } catch (notifError) {
-          console.error("❌ BUZZ MAPPA: Failed to create notification:", notifError);
-        }
 
-        // CRITICAL: Log event in buzz_logs
+          if (notificationError) {
+            console.error("❌ BUZZ: Error inserting notification:", notificationError);
+          } else {
+            console.log("✅ BUZZ: Notification inserted successfully");
+          }
+        } catch (notifError) {
+          console.error("❌ BUZZ: Error creating notification:", notifError);
+        }
+        
+        // Create app notification and force UI refresh
+        try {
+          await createBuzzNotification(
+            "Nuovo Indizio Buzz", 
+            dynamicClueContent
+          );
+          console.log("✅ BUZZ: App notification created successfully");
+          
+          // IMPERATIVE: Force notification system refresh
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+          queryClient.invalidateQueries({ queryKey: ['user-notifications'] });
+        } catch (notifError) {
+          console.error("❌ BUZZ: Failed to create app notification:", notifError);
+        }
+        
+        // CRITICAL: Log event in buzz_logs with new action field
         try {
           await supabase
             .from('buzz_logs')
             .insert({
-              user_id: user.id,
-              step: 'buzz_map_generated',
-              action: 'BUZZ_MAPPA_PREMUTO',
+              user_id: userId,
+              step: 'buzz_generated',
+              action: 'BUZZ_CLICK',
               details: {
-                cost: dynamicPrice,
-                radius_km: actualRadius,
-                lat: response.lat,
-                lng: response.lng,
-                generation_number: response.generation_number,
+                cost: buzzCost,
+                daily_count: newDailyCount,
                 timestamp: new Date().toISOString(),
                 success: true
               }
             });
-          console.log("✅ BUZZ MAPPA: Event logged in buzz_logs");
+          console.log("✅ BUZZ: Event logged in buzz_logs");
         } catch (logError) {
-          console.error("❌ BUZZ MAPPA: Failed to log event:", logError);
+          console.error("❌ BUZZ: Failed to log event:", logError);
         }
         
-        // ONLY show success toast AFTER real generation
-        toast.success("Area BUZZ generata!", {
-          description: `Nuova area di ricerca attiva con raggio ${actualRadius}km`,
-          duration: 4000
-        });
-        
-        // CRITICAL: Force reload areas to show new area immediately
-        setTimeout(() => {
-          console.log('🔄 BUZZ MAPPA: Triggering area reload');
-          reloadAreas();
-        }, 500);
-        
-        // Update generation count for next time
-        setCurrentGeneration(prev => prev + 1);
-        
-        // Call the area generated callback if provided
-        if (onAreaGenerated) {
-          onAreaGenerated(response.lat, response.lng, actualRadius);
-        }
-        
-        // Call legacy handleBuzz if provided
-        if (handleBuzz) {
-          handleBuzz();
-        }
-        
+        onSuccess();
       } else {
-        console.error('❌ BUZZ MAPPA: Invalid response from API:', response);
-        toast.error("Errore generazione", {
-          description: response.error || "Errore durante la generazione dell'area BUZZ"
+        console.error("❌ BUZZ: API error:", response.errorMessage);
+        const errorMessage = response.errorMessage || "Errore sconosciuto";
+        setError(errorMessage);
+        
+        // IMPERATIVE: Show error toast - ALWAYS
+        toast.error("❌ Errore BUZZ", {
+          description: errorMessage,
+          duration: 4000,
         });
+        
+        // Log failure
+        try {
+          await supabase
+            .from('buzz_logs')
+            .insert({
+              user_id: userId,
+              step: 'buzz_failed',
+              action: 'BUZZ_ERROR',
+              details: {
+                error: errorMessage,
+                daily_count: newDailyCount,
+                timestamp: new Date().toISOString()
+              }
+            });
+        } catch (logError) {
+          console.error("❌ BUZZ: Failed to log error:", logError);
+        }
       }
     } catch (error) {
-      console.error('❌ BUZZ MAPPA: Generation failed:', error);
-      toast.error("Errore", {
-        description: "Errore durante la generazione dell'area BUZZ"
+      console.error("❌ BUZZ: Error during API call:", error);
+      setError("Si è verificato un errore di comunicazione con il server");
+      
+      // IMPERATIVE: Show connection error toast - ALWAYS
+      toast.error("❌ Errore di connessione", {
+        description: "Impossibile contattare il server. Riprova più tardi.",
+        duration: 4000,
       });
+      
+      // Log connection error
+      try {
+        await supabase
+          .from('buzz_logs')
+          .insert({
+            user_id: userId,
+            step: 'buzz_connection_error',
+            action: 'BUZZ_CONNECTION_ERROR',
+            details: {
+              error: error?.message || 'Unknown connection error',
+              daily_count: newDailyCount,
+              timestamp: new Date().toISOString()
+            }
+          });
+      } catch (logError) {
+        console.error("❌ BUZZ: Failed to log connection error:", logError);
+      }
     } finally {
-      setIsGenerating(false);
+      setIsLoading(false);
+      
+      // IMPERATIVE: Reload all data and invalidate cache
+      setTimeout(async () => {
+        await loadBuzzData();
+        queryClient.invalidateQueries({ queryKey: ['buzz-counter', userId] });
+        queryClient.invalidateQueries({ queryKey: ['buzz-data'] });
+        queryClient.invalidateQueries({ queryKey: ['user-buzz-counter'] });
+      }, 500);
     }
   };
 
-  const buttonText = isGenerating ? 'GENERANDO...' : 'BUZZ MAPPA';
-  const buttonIcon = isGenerating ? <MapPin className="animate-spin" /> : <Zap />;
+  // Check if buzz is blocked (over 50 daily uses)
+  const isBlocked = dailyBuzzCounter >= 50;
+  const isProcessing = isLoading || paymentLoading;
 
   return (
-    <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-30">
-      <motion.div className="relative">
-        {/* Ripple effect overlay */}
+    <div className="flex flex-col items-center justify-center min-h-screen pb-safe">
+      {/* IMPERATIVE: Perfect circular button with glow aura */}
+      <motion.button
+        className="w-80 h-80 rounded-full relative overflow-hidden focus:outline-none disabled:opacity-50"
+        onClick={handleBuzzPress}
+        disabled={isProcessing || isBlocked}
+        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.05 }}
+        style={{
+          background: isBlocked 
+            ? "linear-gradient(135deg, #666, #999)" 
+            : "linear-gradient(135deg, #7B2EFF, #00D1FF, #FF59F8)",
+          boxShadow: isBlocked 
+            ? "none" 
+            : "0 0 30px rgba(123, 46, 255, 0.8), 0 0 60px rgba(0, 209, 255, 0.6), 0 0 90px rgba(255, 89, 248, 0.4)",
+        }}
+        animate={!isBlocked ? {
+          boxShadow: [
+            "0 0 20px rgba(123, 46, 255, 0.6), 0 0 40px rgba(0, 209, 255, 0.4), 0 0 60px rgba(255, 89, 248, 0.3)",
+            "0 0 40px rgba(123, 46, 255, 0.9), 0 0 80px rgba(0, 209, 255, 0.7), 0 0 120px rgba(255, 89, 248, 0.5)",
+            "0 0 20px rgba(123, 46, 255, 0.6), 0 0 40px rgba(0, 209, 255, 0.4), 0 0 60px rgba(255, 89, 248, 0.3)"
+          ]
+        } : {}}
+        transition={{
+          scale: { type: "spring", stiffness: 300, damping: 20 },
+          boxShadow: { repeat: Infinity, duration: 2, ease: "easeInOut" }
+        }}
+      >
+        {/* Animated glow effect layer */}
+        {!isBlocked && (
+          <motion.div
+            className="absolute -inset-4 rounded-full opacity-50 blur-xl"
+            style={{ 
+              background: "linear-gradient(135deg, #7B2EFF, #00D1FF, #FF59F8)"
+            }}
+            animate={{ 
+              scale: [1, 1.1, 1],
+              opacity: [0.3, 0.7, 0.3]
+            }}
+            transition={{ 
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        )}
+        
+        {/* Main content */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full z-10">
+          {isProcessing ? (
+            <Loader className="w-16 h-16 animate-spin text-white" />
+          ) : isBlocked ? (
+            <>
+              <span className="text-3xl font-bold text-red-300 tracking-wider">
+                BLOCCATO
+              </span>
+              <span className="text-sm text-red-200 mt-2">
+                Limite giornaliero raggiunto
+              </span>
+            </>
+          ) : (
+            <>
+              <Zap className="w-16 h-16 text-white mb-2" />
+              <span className="text-4xl font-bold text-white tracking-wider">
+                BUZZ!
+              </span>
+              {/* IMPERATIVE: Dynamic price display */}
+              {!hasActiveSubscription && (
+                <span className="text-lg text-white/90 mt-2 font-bold">
+                  €{buzzCost.toFixed(2)}
+                </span>
+              )}
+              {/* IMPERATIVE: Counter display with integrated hook */}
+              <span className="text-sm text-white/70 mt-1">
+                {dailyBuzzCounter}/50 oggi
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* IMPERATIVE: Real ripple effect */}
         {showRipple && (
-          <div className="absolute inset-0 -m-8">
-            <div className="w-16 h-16 rounded-full border-2 border-cyan-400 animate-ripple absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-          </div>
-        )}
-        
-        {/* Main BUZZ button */}
-        <motion.button
-          onClick={handleBuzzPress}
-          disabled={isGenerating || paymentLoading}
-          className={`
-            px-8 py-4 rounded-full font-orbitron font-bold text-lg
-            bg-gradient-to-r from-cyan-500 to-purple-600
-            text-white shadow-2xl
-            transform transition-all duration-300
-            hover:scale-110 hover:shadow-cyan-400/50
-            disabled:opacity-50 disabled:cursor-not-allowed
-            border-2 border-cyan-400/30
-            ${isGenerating ? 'animate-pulse' : 'hover:border-cyan-400/60'}
-          `}
-          style={{
-            boxShadow: '0 0 20px rgba(6, 182, 212, 0.5), 0 0 40px rgba(6, 182, 212, 0.3)',
-            textShadow: '0 0 10px rgba(255, 255, 255, 0.8)'
-          }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <div className="flex items-center space-x-3">
+          <div className="absolute inset-0 rounded-full pointer-events-none">
             <motion.div
-              animate={isGenerating ? { rotate: 360 } : { rotate: 0 }}
-              transition={{ duration: 2, repeat: isGenerating ? Infinity : 0, ease: "linear" }}
-            >
-              {buttonIcon}
-            </motion.div>
-            <span>{buttonText}</span>
-            {!isGenerating && (
-              <span className="text-sm opacity-80">€{dynamicPrice.toFixed(2)}</span>
-            )}
-          </div>
-        </motion.button>
-        
-        {/* Generation info */}
-        {!isGenerating && (
-          <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs text-white/60 text-center whitespace-nowrap">
-            Generazione #{currentGeneration} • Raggio ~{radiusKm}km
+              className="absolute inset-0 rounded-full bg-white"
+              initial={{ scale: 0.8, opacity: 0.6 }}
+              animate={{ scale: 2.5, opacity: 0 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            />
           </div>
         )}
-      </motion.div>
+      </motion.button>
     </div>
   );
 };

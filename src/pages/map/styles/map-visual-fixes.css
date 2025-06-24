@@ -1,0 +1,92 @@
+
+/* CRITICAL VISUAL FIXES FOR LEAFLET MAP RENDERING */
+
+/* Prevent tile duplication and ensure proper container sizing */
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  position: relative !important;
+  outline: none;
+  /* CRITICAL: Prevent tile overflow */
+  overflow: hidden !important;
+  /* CRITICAL: Ensure visibility */
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+}
+
+/* Ensure tiles render properly without duplication */
+.leaflet-tile-pane {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  /* CRITICAL: Prevent z-index conflicts */
+  z-index: 200 !important;
+}
+
+.leaflet-tile {
+  /* CRITICAL: Ensure smooth tile rendering */
+  image-rendering: auto !important;
+  image-rendering: crisp-edges !important;
+  image-rendering: -webkit-optimize-contrast !important;
+  /* Prevent tile gaps */
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  /* CRITICAL: Ensure tiles are visible */
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Fix for mobile rendering issues */
+.leaflet-container img {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+/* Prevent multiple map instances */
+.leaflet-map-pane {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  /* CRITICAL: Single pane rendering */
+  z-index: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Ensure proper layer stacking */
+.leaflet-overlay-pane {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  z-index: 400 !important;
+}
+
+/* Fix for control positioning */
+.leaflet-control-container {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  z-index: 800 !important;
+}
+
+/* CRITICAL: Ensure map container has proper height in all contexts */
+div[style*="height: 70vh"] .leaflet-container,
+.m1ssion-glass-card .leaflet-container {
+  min-height: 500px !important;
+  height: 100% !important;
+}
+
+/* Prevent CSS conflicts that might hide the map */
+.leaflet-container * {
+  box-sizing: border-box;
+}
+
+/* Ensure the map is always visible and rendered */
+.leaflet-container canvas,
+.leaflet-container svg {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}

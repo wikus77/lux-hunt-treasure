@@ -73,6 +73,7 @@ export default function AnimatedIntroSection({ onEnd }: { onEnd: () => void }) {
       >
         M1SSION
       </motion.h1>
+      
       {/* Storytelling testo riga per riga progressiva */}
       <div className="space-y-5 max-w-2xl mx-auto relative z-10 min-h-[200px] flex flex-col justify-center">
         {textLines.slice(0, visibleLine).map((line, idx) => (
@@ -87,14 +88,16 @@ export default function AnimatedIntroSection({ onEnd }: { onEnd: () => void }) {
           </motion.p>
         ))}
       </div>
-      {/* Sotto motto */}
+      
+      {/* TESTO AGGIORNATO - STARTS ON AUGUST 19 */}
       <motion.div
-        className="mission-motto text-yellow-400 mt-8 text-lg sm:text-2xl"
+        className="text-white mt-8 text-lg sm:text-2xl font-orbitron"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 5.25, duration: 0.8 }}
+        style={{ fontWeight: 700 }}
       >
-        IT IS POSSIBLE
+        STARTS ON AUGUST 19
       </motion.div>
 
       {/* Pulsante Skip */}

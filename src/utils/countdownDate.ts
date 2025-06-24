@@ -1,17 +1,13 @@
 
-export const getMissionDeadline = (): Date => {
+export const getMissionDeadline = () => {
   console.log("Getting mission deadline");
-  // Target date: 19 July 2025
-  return new Date(2025, 6, 19, 0, 0, 0);
+  return new Date('2025-08-19T23:59:59');
 };
 
-// Calculate the remaining days consistently throughout the application
-export const getRemainingDays = (): number => {
-  const targetDate = getMissionDeadline();
+export const getRemainingDays = () => {
+  const deadline = getMissionDeadline();
   const now = new Date();
-  const diff = targetDate.getTime() - now.getTime();
-  
-  if (diff <= 0) return 0;
-  
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
+  const diffTime = deadline.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays > 0 ? diffDays : 0;
 };

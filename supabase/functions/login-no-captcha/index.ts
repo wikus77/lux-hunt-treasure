@@ -1,177 +1,263 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  console.log("🧪 STEP 1 - Starting login-no-captcha function...");
+  console.log("🧪 Request method:", req.method);
+  console.log("🧪 Request headers:", Object.fromEntries(req.headers.entries()));
+  
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    console.log("🧪 Handling OPTIONS request");
+    return new Response("OK", {
+      headers: corsHeaders
+    });
   }
 
   try {
-    console.log('🔐 DEVELOPER AUTO-LOGIN REQUEST - START');
-
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
+    // Parse request body with validation
+    let requestBody;
+    try {
+      requestBody = await req.json();
+      console.log("🧪 STEP 2 - Request body parsed:", requestBody);
+    } catch (parseError) {
+      console.error("❌ Failed to parse request body:", parseError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid JSON in request body" }),
+        { 
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
         }
-      }
-    );
-
-    // Use regular client for sign in
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    );
-
-    // Step 1: Check if developer user exists
-    console.log('🔍 Looking for developer user...');
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
-    
-    if (userError) {
-      console.error('❌ Error listing users:', userError);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Cannot retrieve users',
-          details: userError.message 
-        }),
-        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
 
-    const developerUser = userData.users.find(user => user.email === 'wikus77@hotmail.it');
+    const { email } = requestBody;
     
-    if (!developerUser) {
-      console.error('❌ Developer user not found');
+    if (!email) {
+      console.error("❌ Email not provided in request");
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Developer user not found' 
-        }),
-        { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        JSON.stringify({ success: false, error: "Email is required" }),
+        { 
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
       );
     }
-
-    console.log('✅ Developer user found:', developerUser.email);
-
-    // Step 2: Ensure user is confirmed and has a password
-    console.log('🔧 Ensuring user is confirmed and setting temporary password...');
     
-    // Set a known password for the developer user
-    const tempPassword = 'DevLogin2025!';
-    
-    const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      developerUser.id,
-      { 
-        email_confirm: true,
-        email_confirmed_at: new Date().toISOString(),
-        password: tempPassword
-      }
-    );
+    console.log("🧪 STEP 3 - Email received:", email);
 
-    if (updateError) {
-      console.log('⚠️ Update user failed:', updateError.message);
-    } else {
-      console.log('✅ User confirmed and password set');
-    }
-
-    // Step 3: Use regular sign in with known credentials
-    console.log('🔧 Attempting sign in with password...');
+    // Create Supabase client with enhanced environment checks
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "http://localhost:54321";
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
-    const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
-      email: 'wikus77@hotmail.it',
-      password: tempPassword
+    console.log("🧪 STEP 4 - Environment check:", {
+      supabaseUrl,
+      hasServiceKey: !!serviceRoleKey,
+      serviceKeyLength: serviceRoleKey?.length || 0,
+      serviceKeyStart: serviceRoleKey?.substring(0, 10) + "..." || "N/A"
     });
 
-    if (signInError) {
-      console.error('❌ Sign in failed:', signInError);
+    if (!serviceRoleKey) {
+      console.error("❌ SUPABASE_SERVICE_ROLE_KEY not found in environment");
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Sign in failed',
-          details: signInError.message
-        }),
-        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
-    }
-
-    if (!signInData.session) {
-      console.error('❌ No session created');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'No session created'
-        }),
-        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
-    }
-
-    console.log('✅ SIGN IN SUCCESS - Valid session created');
-
-    // Step 4: Return the valid session
-    const sessionResponse = {
-      success: true,
-      access_token: signInData.session.access_token,
-      refresh_token: signInData.session.refresh_token,
-      expires_at: Math.floor(Date.now() / 1000) + (signInData.session.expires_in || 3600),
-      expires_in: signInData.session.expires_in || 3600,
-      token_type: 'bearer',
-      user: {
-        id: signInData.user.id,
-        email: signInData.user.email,
-        email_confirmed_at: signInData.user.email_confirmed_at,
-        created_at: signInData.user.created_at,
-        updated_at: signInData.user.updated_at,
-        app_metadata: signInData.user.app_metadata || {},
-        user_metadata: {
-          ...signInData.user.user_metadata,
-          developer_auto_login: true
+        JSON.stringify({ success: false, error: "Service key not configured" }),
+        { 
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
         }
-      },
-      method: 'password_signin',
-      message: 'Developer auto-login successful via password'
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+    console.log("🧪 STEP 5 - Supabase client created successfully");
+
+    // CRITICAL FIX: Use correct parameter name 'email_param' instead of 'email_input'
+    console.log("🧪 STEP 6 - Calling RPC get_user_by_email with email_param:", email);
+    const { data: userList, error: fetchError } = await supabase.rpc("get_user_by_email", {
+      email_param: email,  // FIXED: Changed from email_input to email_param
+    });
+
+    console.log("🧪 STEP 7 - RPC Response:", {
+      hasData: !!userList,
+      dataLength: userList?.length || 0,
+      hasError: !!fetchError,
+      error: fetchError,
+      userData: userList?.[0] ? {
+        id: userList[0].id,
+        email: userList[0].email,
+        hasId: !!userList[0].id
+      } : null
+    });
+
+    if (fetchError) {
+      console.error("❌ RPC call failed with error:", fetchError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Database query failed", 
+          details: {
+            message: fetchError.message,
+            code: fetchError.code,
+            hint: fetchError.hint
+          }
+        }),
+        { 
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    if (!userList || userList.length === 0) {
+      console.error("❌ No user found for email:", email);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Developer user not found",
+          details: { searchedEmail: email }
+        }),
+        { 
+          status: 404,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    const user = userList[0];
+    console.log("🧪 STEP 8 - User found:", {
+      userId: user.id,
+      userEmail: user.email,
+      userExists: !!user
+    });
+
+    // Create admin session with enhanced logging
+    console.log("🧪 STEP 9 - Creating admin session for user:", user.id);
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
+      user_id: user.id,
+    });
+
+    console.log("🧪 STEP 10 - Session creation result:", {
+      hasSessionData: !!sessionData,
+      hasSession: !!sessionData?.session,
+      hasUser: !!sessionData?.user,
+      hasAccessToken: !!sessionData?.session?.access_token,
+      hasRefreshToken: !!sessionData?.session?.refresh_token,
+      sessionError: sessionError,
+      accessTokenLength: sessionData?.session?.access_token?.length || 0,
+      refreshTokenLength: sessionData?.session?.refresh_token?.length || 0
+    });
+
+    if (sessionError) {
+      console.error("❌ Session creation failed with error:", sessionError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Session creation failed",
+          details: {
+            message: sessionError.message,
+            status: sessionError.status
+          }
+        }),
+        { 
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    if (!sessionData || !sessionData.session) {
+      console.error("❌ No session data returned from createSession");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "No session created",
+          details: "Session data is null or undefined"
+        }),
+        { 
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders
+          }
+        }
+      );
+    }
+
+    console.log("✅ STEP 11 - Login successful, returning tokens");
+    const response = {
+      success: true,
+      access_token: sessionData.session.access_token,
+      refresh_token: sessionData.session.refresh_token,
+      user: sessionData.user,
+      session: sessionData.session
     };
 
-    console.log('✅ DEVELOPER AUTO-LOGIN SUCCESSFUL');
-    console.log('📊 Session validation:', {
-      hasAccessToken: !!sessionResponse.access_token,
-      hasRefreshToken: !!sessionResponse.refresh_token,
-      hasUser: !!sessionResponse.user,
-      tokenLength: sessionResponse.access_token.length,
-      method: sessionResponse.method
+    console.log("🧪 STEP 12 - Final response prepared:", {
+      success: response.success,
+      hasAccessToken: !!response.access_token,
+      hasRefreshToken: !!response.refresh_token,
+      hasUser: !!response.user,
+      userEmail: response.user?.email
     });
 
     return new Response(
-      JSON.stringify(sessionResponse),
+      JSON.stringify(response),
       { 
-        status: 200, 
-        headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders
+        }
       }
     );
 
-  } catch (error: any) {
-    console.error('💥 DEVELOPER AUTO-LOGIN CRITICAL ERROR:', error);
-    
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: 'Developer auto-login failed',
-        details: error.message || error.toString(),
-        timestamp: new Date().toISOString()
-      }),
-      { 
-        status: 500, 
-        headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+  } catch (err) {
+    console.error("❌ Unexpected error in login-no-captcha:", err);
+    console.error("❌ Error stack:", err.stack);
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: "Unhandled exception", 
+      details: {
+        message: err.message || err,
+        name: err.name,
+        stack: err.stack
       }
-    );
+    }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders
+      }
+    });
   }
 });

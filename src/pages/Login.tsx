@@ -1,23 +1,21 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
-import { supabase } from "@/integrations/supabase/client";
-import { LoginForm } from "@/components/auth/login-form";
+import { StandardLoginForm } from "@/components/auth/StandardLoginForm";
 import BackgroundParticles from "@/components/ui/background-particles";
 import { useAuth } from "@/hooks/use-auth";
 import { Spinner } from "@/components/ui/spinner";
+import { useDeveloperSetup } from "@/hooks/use-developer-setup";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [developerAutoLoginAttempted, setDeveloperAutoLoginAttempted] = useState(false);
-  const [isDeveloperAutoLogin, setIsDeveloperAutoLogin] = useState(false);
-  const [autoLoginError, setAutoLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isSetupComplete, isLoading: setupLoading } = useDeveloperSetup();
 
   useEffect(() => {
     const verification = searchParams.get('verification');
@@ -30,159 +28,22 @@ const Login = () => {
       });
     }
 
-    // Immediate redirect if already authenticated
+    // Redirect if already authenticated
     if (!authLoading && isAuthenticated) {
       console.log('✅ User already authenticated, redirecting to /home');
       navigate('/home', { replace: true });
     }
   }, [navigate, searchParams, authLoading, isAuthenticated]);
 
-  // 🔐 SIMPLIFIED DEVELOPER AUTO-LOGIN
-  useEffect(() => {
-    const executeDeveloperAutoLogin = async () => {
-      if (!developerAutoLoginAttempted && !authLoading && !isAuthenticated) {
-        console.log('🔄 STARTING DEVELOPER AUTO-LOGIN for wikus77@hotmail.it');
-        setDeveloperAutoLoginAttempted(true);
-        setIsDeveloperAutoLogin(true);
-        setAutoLoginError(null);
-        
-        try {
-          console.log('📡 Calling login-no-captcha function...');
-          
-          const functionResponse = await supabase.functions.invoke('login-no-captcha', {
-            headers: {
-              'Content-Type': 'application/json',
-              'User-Agent': 'M1SSION-Developer-AutoLogin',
-              'Accept': 'application/json'
-            }
-          });
-
-          console.log('📋 Function response:', {
-            data: functionResponse.data,
-            error: functionResponse.error,
-            status: 'Response received'
-          });
-
-          if (functionResponse.error) {
-            console.error('❌ Auto-login function error:', functionResponse.error);
-            setAutoLoginError(`Function error: ${functionResponse.error.message}`);
-            setIsDeveloperAutoLogin(false);
-            return;
-          }
-
-          const data = functionResponse.data;
-          console.log('📊 Function data analysis:', {
-            hasData: !!data,
-            isSuccess: data?.success,
-            hasAccessToken: !!data?.access_token,
-            hasRefreshToken: !!data?.refresh_token,
-            tokenLength: data?.access_token?.length || 0,
-            method: data?.method,
-            hasUser: !!data?.user
-          });
-
-          if (data?.success && data?.access_token && data?.refresh_token) {
-            console.log('✅ DEVELOPER AUTO-LOGIN SUCCESS - Setting session with valid tokens...');
-            
-            console.log('🔧 Setting session with password-generated tokens...');
-            const sessionResult = await supabase.auth.setSession({
-              access_token: data.access_token,
-              refresh_token: data.refresh_token
-            });
-
-            console.log('📊 Session result:', {
-              hasError: !!sessionResult.error,
-              hasData: !!sessionResult.data,
-              hasSession: !!sessionResult.data?.session,
-              hasUser: !!sessionResult.data?.user,
-              errorMessage: sessionResult.error?.message,
-              userEmail: sessionResult.data?.user?.email
-            });
-
-            if (!sessionResult.error && sessionResult.data?.session) {
-              console.log('✅ DEVELOPER SESSION SET SUCCESSFULLY');
-              console.log('👤 User authenticated:', sessionResult.data.user?.email);
-              
-              toast.success('🔐 Developer Auto-Login Successful', {
-                description: `Welcome back! Method: ${data.method}`
-              });
-              
-              // Immediate redirect on success
-              setTimeout(() => {
-                console.log('🏠 Executing redirect to /home...');
-                navigate('/home', { replace: true });
-              }, 1000);
-            } else {
-              console.error('❌ Session setting failed:', sessionResult.error);
-              setAutoLoginError(`Session error: ${sessionResult.error?.message || 'Unknown session error'}`);
-              setIsDeveloperAutoLogin(false);
-            }
-          } else {
-            console.log('⚠️ Auto-login response invalid or failed');
-            setAutoLoginError(data?.error || 'Invalid auto-login response');
-            setIsDeveloperAutoLogin(false);
-          }
-        } catch (error: any) {
-          console.error('💥 Auto-login exception:', error);
-          setAutoLoginError(`Exception: ${error.message}`);
-          setIsDeveloperAutoLogin(false);
-        }
-      }
-    };
-
-    // Execute auto-login after a short delay
-    const autoLoginTimer = setTimeout(executeDeveloperAutoLogin, 300);
-    return () => clearTimeout(autoLoginTimer);
-  }, [authLoading, isAuthenticated, developerAutoLoginAttempted, navigate]);
-
-  async function handleResendVerification(email: string) {
-    if (!email) {
-      toast.error("Errore", {
-        description: "Inserisci la tua email per ricevere nuovamente il link di verifica."
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email
-      });
-
-      if (error) throw error;
-
-      toast.success("Email inviata", {
-        description: "Un nuovo link di verifica è stato inviato alla tua email."
-      });
-    } catch (error: any) {
-      toast.error("Errore", {
-        description: error.message || "Impossibile inviare l'email di verifica."
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  // Show loading during auth check or developer auto-login
-  if (authLoading || isDeveloperAutoLogin) {
+  // Show loading during auth check or developer setup
+  if (authLoading || setupLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
           <Spinner className="h-8 w-8 text-white mx-auto mb-4" />
           <p className="text-white/70">
-            {isDeveloperAutoLogin ? '🔐 Developer Auto-Login in progress...' : 'Verifying authentication...'}
+            {setupLoading ? 'Configurazione sistema developer...' : 'Verifica autenticazione...'}
           </p>
-          {isDeveloperAutoLogin && (
-            <div className="mt-4 text-center max-w-md">
-              <p className="text-xs text-cyan-400">
-                Auto-login for wikus77@hotmail.it
-              </p>
-              <p className="text-xs text-white/50 mt-1">
-                Using password-based authentication
-              </p>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -202,74 +63,40 @@ const Login = () => {
           <div className="flex justify-center mb-4">
             <AnimatedLogo />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-1">Accedi</h2>
+          <h2 className="text-2xl font-bold text-white mb-1">M1SSION™</h2>
           <p className="text-gray-400">
-            Inserisci le tue credenziali per accedere
+            Accedi o registrati per iniziare la tua missione
           </p>
-          {!developerAutoLoginAttempted && (
-            <p className="text-xs text-cyan-400 mt-2">
-              🔐 Developer auto-login enabled
-            </p>
-          )}
-          {autoLoginError && (
-            <div className="mt-2 p-2 bg-red-900/20 border border-red-500/30 rounded">
-              <p className="text-xs text-red-400">
-                Auto-login error: {autoLoginError}
-              </p>
-            </div>
-          )}
         </div>
 
         <div className="glass-card p-6 backdrop-blur-md border border-gray-800 rounded-xl">
-          <LoginForm 
-            verificationStatus={verificationStatus}
-            onResendVerification={handleResendVerification}
-          />
+          <StandardLoginForm verificationStatus={verificationStatus} />
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-white/70">
-              Non hai un account?{" "}
-              <Link to="/register" className="text-cyan-400 hover:text-cyan-300 transition-colors">
-                Registrati
-              </Link>
-            </p>
             <p className="text-sm text-white/50 mt-2">
               <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
                 ← Torna alla homepage
               </Link>
             </p>
-            
-            {/* Developer Controls */}
-            <div className="mt-4 pt-4 border-t border-gray-700">
-              <p className="text-xs text-gray-500 mb-2">Developer Controls</p>
-              <button 
-                onClick={async () => {
-                  setDeveloperAutoLoginAttempted(false);
-                  setAutoLoginError(null);
-                  window.location.reload();
-                }}
-                className="text-xs text-cyan-400 hover:text-cyan-300 mr-4"
-              >
-                🔄 Retry Auto-Login
-              </button>
-              <button 
-                onClick={() => {
-                  console.log('🔍 Session state:', {
-                    isAuthenticated,
-                    authLoading,
-                    developerAutoLoginAttempted,
-                    autoLoginError,
-                    timestamp: new Date().toISOString()
-                  });
-                  toast.info('Diagnostic info logged to console');
-                }}
-                className="text-xs text-gray-500 hover:text-gray-400"
-              >
-                🔍 Debug Info
-              </button>
-            </div>
           </div>
         </div>
+
+        {/* Developer Info Panel */}
+        {isSetupComplete && (
+          <motion.div 
+            className="mt-4 p-3 bg-green-900/20 border border-green-500/30 rounded-lg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <p className="text-green-400 text-sm text-center">
+              ✅ Sistema developer configurato correttamente
+            </p>
+            <p className="text-green-300 text-xs text-center mt-1">
+              Login developer: wikus77@hotmail.it
+            </p>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );
