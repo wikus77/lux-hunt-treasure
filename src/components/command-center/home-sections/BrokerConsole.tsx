@@ -1,277 +1,218 @@
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, ChevronDown } from "lucide-react";
-import { useLongPress } from "@/hooks/useLongPress";
-import { useIsMobile } from "@/hooks/use-mobile";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { ShoppingCart, Lock, Unlock, Coins, Info } from 'lucide-react';
 
-interface ClueData {
+interface Clue {
   id: string;
   code: string;
   title: string;
   description: string;
   cost: number;
-  type: "basic" | "premium" | "exclusive";
   progressValue: number;
+  difficulty: "easy" | "medium" | "hard";
+  category: string;
 }
 
 interface BrokerConsoleProps {
   credits: number;
-  onPurchaseClue: (clue: ClueData) => void;
+  purchasedClues: Clue[];
+  onPurchaseClue: (clue: Clue) => void;
 }
 
-export function BrokerConsole({ credits, onPurchaseClue }: BrokerConsoleProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const isMobile = useIsMobile();
+export const BrokerConsole: React.FC<BrokerConsoleProps> = ({ 
+  credits, 
+  purchasedClues, 
+  onPurchaseClue 
+}) => {
+  const [selectedClue, setSelectedClue] = useState<Clue | null>(null);
 
-  // Long press functionality for mobile fullscreen
-  const longPressProps = useLongPress(
-    () => {
-      if (isMobile) {
-        setIsFullscreen(true);
-      }
+  const availableClues: Clue[] = [
+    {
+      id: "clue-001",
+      code: "ALPHA-7",
+      title: "Traccia Fotografica",
+      description: "Immagine georeferenziata della zona target con coordinate precise.",
+      cost: 150,
+      progressValue: 8,
+      difficulty: "easy",
+      category: "Navigazione"
     },
     {
-      threshold: 800, // 800ms for long press
-    }
-  );
-
-  const availableClues: ClueData[] = [
-    {
-      id: "clue_001",
-      code: "CLU-001",
-      title: "Coordinate Base",
-      description: "Rivela la zona generale dell'obiettivo",
-      cost: 50,
-      type: "basic",
-      progressValue: 5
-    },
-    {
-      id: "clue_002", 
-      code: "CLU-002",
-      title: "Dettaglio Architettonico",
-      description: "Informazioni specifiche sull'edificio target",
-      cost: 120,
-      type: "premium",
-      progressValue: 10
-    },
-    {
-      id: "clue_003",
-      code: "CLU-003", 
-      title: "Intel Esclusivo",
-      description: "Accesso a intelligence riservata di alto livello",
+      id: "clue-002",
+      code: "BRAVO-12",
+      title: "Codice di Accesso",
+      description: "Sequenza numerica per l'apertura del primo checkpoint.",
       cost: 250,
-      type: "exclusive",
-      progressValue: 20
+      progressValue: 12,
+      difficulty: "medium",
+      category: "Sicurezza"
+    },
+    {
+      id: "clue-003",
+      code: "CHARLIE-9",
+      title: "Intel Temporale",
+      description: "Orario esatto di attivazione del prossimo obiettivo.",
+      cost: 300,
+      progressValue: 15,
+      difficulty: "medium",
+      category: "Timing"
+    },
+    {
+      id: "clue-004",
+      code: "DELTA-15",
+      title: "Bypass Quantico",
+      description: "Protocollo avanzato per aggirare i sistemi di sicurezza.",
+      cost: 500,
+      progressValue: 25,
+      difficulty: "hard",
+      category: "Hacking"
     }
   ];
 
-  const getClueStyle = (type: string) => {
-    switch (type) {
-      case "basic":
-        return "bg-[#1C1C1F]/80";
-      case "premium":
-        return "bg-[#1C1C1F]/90";
-      case "exclusive":
-        return "bg-[#1C1C1F]";
-      default:
-        return "bg-[#1C1C1F]/80";
-    }
-  };
-
-  // Handle click for desktop or toggle expansion
-  const handleClick = () => {
-    if (!isMobile) {
-      setIsFullscreen(true);
-    } else {
-      setIsExpanded(!isExpanded);
-    }
-  };
-
-  // Handle header click for expansion toggle
-  const handleHeaderClick = () => {
-    setIsExpanded(!isExpanded);
-  };
-
-  // Fullscreen component
-  const FullscreenView = () => (
-    <motion.div
-      className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md"
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ duration: 0.3 }}
-      onClick={() => setIsFullscreen(false)}
-    >
-      <div className="h-full w-full p-6 overflow-y-auto">
-        <div className="rounded-[20px] bg-[#1C1C1F] backdrop-blur-xl overflow-hidden relative"
-          style={{
-            background: 'linear-gradient(135deg, #1C1C1F 0%, rgba(28, 28, 31, 0.95) 50%, rgba(54, 94, 255, 0.1) 100%)',
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
-          }}
-        >
-          <div 
-            className="absolute top-0 left-0 w-full h-[1px]"
-            style={{
-              background: 'linear-gradient(90deg, #FC1EFF 0%, #365EFF 50%, #FACC15 100%)'
-            }}
-          />
-          
-          <div className="p-6 border-b border-white/10 flex justify-between items-center">
-            <h2 className="text-xl md:text-2xl font-orbitron font-bold text-white">
-              M1SSION CONSOLE
-            </h2>
-            
-            <div className="flex items-center space-x-2">
-              <span className="text-xs text-white/70">Crediti disponibili</span>
-              <span className="text-lg font-bold text-white">{credits}</span>
-            </div>
-          </div>
-          
-          <div className="p-6">
-            <p className="text-white/70 text-sm mb-4">
-              Acquista indizi per avvicinarti all'obiettivo principale.
-            </p>
-            
-            <div className="space-y-3">
-              {availableClues.map((clue, index) => (
-                <motion.div
-                  key={clue.id}
-                  className={`p-4 rounded-[16px] ${getClueStyle(clue.type)} hover:scale-105 transition-all duration-200 shadow-md`}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-white/80 text-xs font-mono">{clue.code}</span>
-                    <span className="text-white font-bold">{clue.cost} crediti</span>
-                  </div>
-                  
-                  <h3 className="text-white font-bold text-sm mb-1 font-orbitron">{clue.title}</h3>
-                  <p className="text-white/60 text-xs mb-3">{clue.description}</p>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-green-400 text-xs">+{clue.progressValue}% progresso</span>
-                    <button
-                      className={`px-3 py-1 rounded-full text-xs transition-all font-orbitron ${
-                        credits >= clue.cost
-                          ? "bg-gradient-to-r from-[#365EFF] to-[#FC1EFF] text-white hover:scale-105 hover:shadow-lg"
-                          : "bg-gray-600 text-gray-400 cursor-not-allowed"
-                      }`}
-                      disabled={credits < clue.cost}
-                      onClick={() => onPurchaseClue(clue)}
-                    >
-                      Acquista
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
+  const unpurchasedClues = availableClues.filter(
+    clue => !purchasedClues.some(purchased => purchased.id === clue.id)
   );
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case "easy": return "text-green-400 border-green-400/30";
+      case "medium": return "text-yellow-400 border-yellow-400/30";
+      case "hard": return "text-red-400 border-red-400/30";
+      default: return "text-gray-400 border-gray-400/30";
+    }
+  };
 
   return (
-    <>
-      <motion.div 
-        className="rounded-[20px] bg-[#1C1C1F] backdrop-blur-xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] mb-4 relative"
-        style={{
-          background: 'linear-gradient(135deg, #1C1C1F 0%, rgba(28, 28, 31, 0.95) 50%, rgba(54, 94, 255, 0.1) 100%)',
-          boxShadow: "0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
-        }}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        <div 
-          className="absolute top-0 left-0 w-full h-[1px]"
-          style={{
-            background: 'linear-gradient(90deg, #FC1EFF 0%, #365EFF 50%, #FACC15 100%)'
-          }}
-        />
-        
-        <div 
-          className="p-6 border-b border-white/10 flex justify-between items-center"
-          onClick={handleHeaderClick}
-          {...(isMobile ? longPressProps : {})}
-        >
-          <h2 className="text-lg md:text-xl font-orbitron font-bold text-white">
-            M1SSION CONSOLE
-          </h2>
-          
-          <div className="flex items-center space-x-2">
-            <span className="text-xs text-white/70">Crediti disponibili</span>
-            <span className="text-lg font-bold text-white">{credits}</span>
-            <motion.div
-              animate={{ rotate: isExpanded ? 180 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ChevronDown className="w-4 h-4 text-white/60" />
-            </motion.div>
-          </div>
+    <motion.div 
+      className="bg-gradient-to-br from-gray-900/95 to-black/95 rounded-xl border border-yellow-500/30 p-6"
+      style={{
+        boxShadow: "0 0 20px rgba(255, 193, 7, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.8)"
+      }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <ShoppingCart className="w-6 h-6 text-yellow-400" />
+          <h3 className="text-lg font-orbitron font-bold text-white">BROKER CONSOLE</h3>
         </div>
         
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="overflow-hidden"
-            >
-              <div className="p-6">
-                <p className="text-white/70 text-sm mb-4">
-                  Acquista indizi per avvicinarti all'obiettivo principale.
-                </p>
-                
-                <div className="space-y-3 max-h-[calc(100vh-25rem)] overflow-y-auto pr-1 custom-scrollbar">
-                  {availableClues.map((clue, index) => (
-                    <motion.div
-                      key={clue.id}
-                      className={`p-4 rounded-[16px] ${getClueStyle(clue.type)} hover:scale-105 transition-all duration-200 shadow-md`}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-white/80 text-xs font-mono">{clue.code}</span>
-                        <span className="text-white font-bold">{clue.cost} crediti</span>
-                      </div>
-                      
-                      <h3 className="text-white font-bold text-sm mb-1 font-orbitron">{clue.title}</h3>
-                      <p className="text-white/60 text-xs mb-3">{clue.description}</p>
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-green-400 text-xs">+{clue.progressValue}% progresso</span>
-                        <button
-                          className={`px-3 py-1 rounded-full text-xs transition-all font-orbitron ${
-                            credits >= clue.cost
-                              ? "bg-gradient-to-r from-[#365EFF] to-[#FC1EFF] text-white hover:scale-105 hover:shadow-lg"
-                              : "bg-gray-600 text-gray-400 cursor-not-allowed"
-                          }`}
-                          disabled={credits < clue.cost}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onPurchaseClue(clue);
-                          }}
-                        >
-                          Acquista
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))}
+        <div className="flex items-center space-x-2 bg-black/30 px-3 py-2 rounded-lg border border-yellow-400/20">
+          <Coins className="w-4 h-4 text-yellow-400" />
+          <span className="font-orbitron font-bold text-yellow-400">{credits}</span>
+          <span className="text-xs font-orbitron text-yellow-400/70">CREDITI</span>
+        </div>
+      </div>
+
+      {/* Clues List */}
+      <div className="space-y-3 max-h-80 overflow-y-auto">
+        {unpurchasedClues.map((clue) => (
+          <motion.div
+            key={clue.id}
+            className={`bg-black/30 rounded-lg p-4 border cursor-pointer transition-all duration-300 ${
+              selectedClue?.id === clue.id 
+                ? 'border-cyan-400/50 bg-cyan-400/5' 
+                : 'border-white/10 hover:border-white/20'
+            }`}
+            onClick={() => setSelectedClue(clue)}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center space-x-3">
+                <span className="text-xs font-orbitron text-cyan-400 bg-cyan-400/10 px-2 py-1 rounded-full">
+                  {clue.code}
+                </span>
+                <span className={`text-xs font-orbitron px-2 py-1 rounded-full border ${getDifficultyColor(clue.difficulty)}`}>
+                  {clue.difficulty.toUpperCase()}
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-orbitron font-bold text-yellow-400">
+                  {clue.cost}
+                </span>
+                <Coins className="w-4 h-4 text-yellow-400" />
+              </div>
+            </div>
+
+            <h4 className="text-sm font-orbitron font-bold text-white mb-1">
+              {clue.title}
+            </h4>
+            
+            <p className="text-xs text-white/70 mb-2">
+              {clue.description}
+            </p>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-orbitron text-purple-400">
+                +{clue.progressValue}% PROGRESSO
+              </span>
+              <span className="text-xs font-orbitron text-white/50">
+                {clue.category}
+              </span>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Purchase Button */}
+      {selectedClue && (
+        <motion.div
+          className="mt-6 pt-4 border-t border-white/10"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.button
+            className={`w-full font-orbitron font-bold py-3 px-4 rounded-lg transition-all duration-300 ${
+              credits >= selectedClue.cost
+                ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow-lg hover:shadow-green-400/50'
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+            }`}
+            onClick={() => selectedClue && credits >= selectedClue.cost && onPurchaseClue(selectedClue)}
+            disabled={credits < selectedClue.cost}
+            whileHover={credits >= selectedClue.cost ? { scale: 1.02 } : {}}
+            whileTap={credits >= selectedClue.cost ? { scale: 0.98 } : {}}
+          >
+            <div className="flex items-center justify-center space-x-2">
+              {credits >= selectedClue.cost ? (
+                <Unlock className="w-4 h-4" />
+              ) : (
+                <Lock className="w-4 h-4" />
+              )}
+              <span>
+                {credits >= selectedClue.cost 
+                  ? `ACQUISTA ${selectedClue.code}` 
+                  : 'CREDITI INSUFFICIENTI'
+                }
+              </span>
+            </div>
+          </motion.button>
+          
+          {selectedClue && (
+            <div className="mt-3 p-3 bg-blue-400/10 rounded-lg border border-blue-400/20">
+              <div className="flex items-start space-x-2">
+                <Info className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-blue-400">
+                  <strong>{selectedClue.title}:</strong> {selectedClue.description}
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
-      </motion.div>
+        </motion.div>
+      )}
 
-      {/* Fullscreen overlay for desktop */}
-      {isFullscreen && <FullscreenView />}
-    </>
+      {unpurchasedClues.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-white/50 font-orbitron text-sm">
+            Tutti gli indizi sono stati acquistati
+          </p>
+        </div>
+      )}
+    </motion.div>
   );
-}
+};
