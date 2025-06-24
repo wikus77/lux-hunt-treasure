@@ -90,10 +90,12 @@ export const useLogin = () => {
         }
       }
       
-      // Now proceed with standard login - CORRECTED: using 2 arguments as expected
-      console.log(`Proceeding with standard login for: ${email}`);
+      // Now proceed with login using the verified or bypass token
+      // Handle the case when token is undefined by providing empty string
+      const finalToken = turnstileToken || 'BYPASS_EMPTY_TOKEN';
+      console.log(`Proceeding with login using token type: ${finalToken.startsWith('BYPASS_') ? 'bypass' : 'verified'}`);
       
-      const result = await login(email, password);
+      const result = await login(email, password, finalToken);
       
       if (!result.success) {
         // Handle specific error cases

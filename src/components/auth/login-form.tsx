@@ -16,7 +16,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, forceDirectAccess } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,11 +29,11 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
 
     setIsLoading(true);
     try {
-      console.log('🔐 STANDARD LOGIN for:', email);
+      console.log('🔐 STARTING ULTIMATE LOGIN for:', email);
       
       const result = await login(email, password);
       
-      console.log('🧠 LOGIN RESULT:', {
+      console.log('🧠 ULTIMATE LOGIN RESULT:', {
         success: result?.success,
         hasError: !!result?.error,
         hasSession: !!result?.session,
@@ -41,25 +41,92 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
       });
       
       if (result?.success) {
-        console.log('✅ LOGIN SUCCESS - redirecting to /home');
+        console.log('✅ ULTIMATE LOGIN SUCCESS - redirecting to /home');
         toast.success('Login effettuato con successo', {
-          description: 'Benvenuto in M1SSION!'
+          description: 'Accesso confermato con sistema avanzato'
         });
         
+        // Enhanced redirect with comprehensive verification
         setTimeout(() => {
-          console.log('🔄 EXECUTING REDIRECT TO /home');
+          console.log('🔄 EXECUTING ULTIMATE REDIRECT TO /home');
           navigate('/home', { replace: true });
-        }, 1000);
+        }, 1200);
       } else {
-        console.error('❌ LOGIN FAILED:', result?.error);
+        console.error('❌ ULTIMATE LOGIN FAILED:', result?.error);
         toast.error('Errore di login', {
           description: result?.error?.message || 'Verifica le tue credenziali'
         });
       }
     } catch (error: any) {
-      console.error('❌ LOGIN EXCEPTION:', error);
+      console.error('❌ ULTIMATE LOGIN EXCEPTION:', error);
       toast.error('Errore di login', {
         description: error.message || 'Si è verificato un errore imprevisto'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUltimateLogin = async () => {
+    if (!email || !password) {
+      toast.error('Inserisci email e password per il login avanzato');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log('🚨 STARTING ULTIMATE ENHANCED LOGIN for:', email);
+      
+      const result = await login(email, password);
+      
+      if (result?.success) {
+        toast.success('Login avanzato completato', {
+          description: 'Sistema di bypass attivato con successo'
+        });
+        setTimeout(() => navigate('/home', { replace: true }), 1000);
+      } else {
+        toast.error('Login avanzato fallito', {
+          description: 'Contattare il supporto tecnico'
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ ULTIMATE ENHANCED LOGIN FAILED:', error);
+      toast.error('Errore sistema avanzato', {
+        description: error.message
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForceAccess = async () => {
+    if (!email || !password) {
+      toast.error('Inserisci email e password per l\'accesso forzato');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log('💥 STARTING FORCE ULTIMATE ACCESS for:', email);
+      
+      const result = await forceDirectAccess(email, password);
+      
+      if (result?.success) {
+        toast.success('Accesso forzato riuscito', {
+          description: 'Sistema di emergenza attivato'
+        });
+        if (result.redirectUrl) {
+          setTimeout(() => navigate(result.redirectUrl!, { replace: true }), 800);
+        }
+      } else {
+        toast.error('Accesso forzato fallito', {
+          description: 'Sistema di emergenza non disponibile'
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ FORCE ULTIMATE ACCESS FAILED:', error);
+      toast.error('Errore accesso forzato', {
+        description: error.message
       });
     } finally {
       setIsLoading(false);
@@ -97,11 +164,33 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
       <div className="space-y-2">
         <Button
           type="submit"
-          className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+          className="w-full"
           disabled={isLoading}
         >
           {isLoading ? 'Accesso in corso...' : 'Accedi'}
         </Button>
+
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleUltimateLogin}
+            disabled={isLoading}
+            className="text-xs"
+          >
+            {isLoading ? 'Caricamento...' : 'LOGIN AVANZATO'}
+          </Button>
+          
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleForceAccess}
+            disabled={isLoading}
+            className="text-xs"
+          >
+            {isLoading ? 'Caricamento...' : 'ACCESSO FORZATO'}
+          </Button>
+        </div>
       </div>
 
       {verificationStatus === 'pending' && (
@@ -127,7 +216,6 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
             variant="link"
             onClick={() => onResendVerification(email)}
             disabled={isLoading}
-            className="text-cyan-400 hover:text-cyan-300"
           >
             {isLoading ? 'Invio in corso...' : 'Invia nuovamente email di verifica'}
           </Button>

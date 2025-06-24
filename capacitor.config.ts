@@ -6,8 +6,6 @@ const config: CapacitorConfig = {
   appName: 'M1SSION',
   webDir: 'dist',
   server: {
-    url: 'http://localhost:3000',
-    cleartext: true,
     androidScheme: 'https'
   },
   plugins: {

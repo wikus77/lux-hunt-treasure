@@ -1129,30 +1129,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       weekly_buzz_allowances: {
         Row: {
           created_at: string
@@ -1241,23 +1217,9 @@ export type Database = {
           agent_code: string
         }[]
       }
-      get_user_by_email: {
-        Args: { email_param: string }
-        Returns: unknown[]
-      }
-      get_user_roles: {
-        Args: { user_id: string }
-        Returns: {
-          role: string
-        }[]
-      }
       handle_new_user: {
         Args: { new_user_id: string; user_email: string }
         Returns: undefined
-      }
-      has_role: {
-        Args: { user_id: string; role_name: string }
-        Returns: boolean
       }
       increment_buzz_counter: {
         Args: { p_user_id: string }

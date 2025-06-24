@@ -1,15 +1,13 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-// Temporarily disable Sentry until DSN is configured
-// import * as Sentry from "@sentry/react";
+import * as Sentry from "@sentry/react";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './index.css';
 import { Toaster } from 'sonner';
 
-// Initialize Sentry - temporarily disabled until DSN is configured
-/*
+// Initialize Sentry - temporarily disabled
 Sentry.init({
   dsn: "[INSERISCI LA TUA DSN DI SENTRY QUI]",
   integrations: [
@@ -18,170 +16,78 @@ Sentry.init({
   tracesSampleRate: 1.0,
   enabled: false // Disabilitato temporaneamente
 });
-*/
 
-// Create QueryClient instance for React Query with enhanced configuration
+// Create QueryClient instance for React Query
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 2,
+      retry: 1,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
     },
   },
 });
 
-// Enhanced error handling for better debugging
+// Gestione errori globale migliorata
 const renderApp = () => {
-  console.log("🚀 ENHANCED APP INITIALIZATION - Starting render");
+  console.log("Attempting to render app");
   
   const rootElement = document.getElementById('root');
 
   if (!rootElement) {
-    console.error("❌ Root element not found!");
-    // Enhanced fallback for missing root element
+    console.error("Root element not found!");
+    // Fallback per visualizzare un messaggio di errore anche se root non esiste
     const fallbackElement = document.createElement('div');
-    fallbackElement.innerHTML = `
-      <div style="padding: 20px; color: white; background: black; text-align: center;">
-        <h1>🚨 CRITICAL ERROR</h1>
-        <p>Root element not found. Please refresh the page.</p>
-        <button onclick="window.location.reload()" style="background: #333; color: white; padding: 8px 16px; margin-top: 16px; border: none; border-radius: 4px; cursor: pointer;">
-          🔄 Ricarica App
-        </button>
-      </div>
-    `;
+    fallbackElement.innerHTML = '<div style="padding: 20px; color: white; background: black;">Root element not found. Please refresh the page.</div>';
     document.body.appendChild(fallbackElement);
     return;
   }
   
   try {
-    console.log("✅ Creating React root with enhanced configuration");
+    console.log("Creating React root");
     const root = ReactDOM.createRoot(rootElement);
     
-    // Enhanced app rendering with better error boundaries
+    // Wrapping dell'app in un errore boundary globale e Toaster per notifiche
     root.render(
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>
           <App />
-          <Toaster 
-            position="top-right" 
-            richColors 
-            closeButton 
-            duration={4000}
-            toastOptions={{
-              style: {
-                background: 'rgba(0, 0, 0, 0.8)',
-                color: 'white',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-              },
-            }}
-          />
+          <Toaster position="top-right" richColors closeButton />
         </QueryClientProvider>
       </React.StrictMode>
     );
     
-    console.log("✅ ENHANCED REACT APP MOUNTED SUCCESSFULLY");
+    console.log("React app mounted successfully");
   } catch (error) {
-    console.error("💥 CRITICAL ERROR RENDERING APP:", error);
+    console.error("Error rendering app:", error);
     
-    // Enhanced error display with better styling
+    // Fallback error display migliorato
     if (rootElement) {
       const errorDiv = document.createElement('div');
-      errorDiv.style.cssText = `
-        padding: 20px;
-        color: white;
-        background: linear-gradient(135deg, #000, #111);
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      `;
-      errorDiv.innerHTML = `
-        <h1 style="color: #ff4444; margin-bottom: 20px;">🚨 ERRORE CRITICO DI SISTEMA</h1>
-        <p style="margin-bottom: 20px; max-width: 500px;">
-          Si è verificato un errore durante il caricamento dell'applicazione M1SSION. 
-          Riprova tra qualche istante o contatta il supporto.
-        </p>
-        <div style="margin-top: 20px;">
-          <button 
-            onclick="window.location.reload()" 
-            style="
-              background: linear-gradient(135deg, #4361ee, #7209b7);
-              color: white;
-              padding: 12px 24px;
-              margin: 8px;
-              border: none;
-              border-radius: 8px;
-              cursor: pointer;
-              font-size: 16px;
-            "
-          >
-            🔄 Ricarica Applicazione
-          </button>
-          <button 
-            onclick="localStorage.clear(); sessionStorage.clear(); window.location.reload();" 
-            style="
-              background: #333;
-              color: white;
-              padding: 12px 24px;
-              margin: 8px;
-              border: none;
-              border-radius: 8px;
-              cursor: pointer;
-              font-size: 16px;
-            "
-          >
-            🧹 Reset Completo
-          </button>
-        </div>
-        <p style="margin-top: 20px; font-size: 12px; color: #888;">
-          Error: ${error?.message || 'Unknown error'}
-        </p>
-      `;
+      errorDiv.style.padding = '20px';
+      errorDiv.style.color = 'white';
+      errorDiv.style.backgroundColor = 'black';
+      errorDiv.innerHTML = '<h1>Error Loading Application</h1><p>Si è verificato un errore durante il caricamento dell\'applicazione. Riprova tra qualche istante o contatta il supporto.</p><button onclick="window.location.reload()" style="background: #333; color: white; padding: 8px 16px; margin-top: 16px; border: none; border-radius: 4px;">Ricarica pagina</button>';
       rootElement.appendChild(errorDiv);
     }
   }
 };
 
-// Enhanced DOM readiness check
+// Assicuriamo che il DOM sia completamente caricato e che l'app sia idratata correttamente
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    console.log("📄 DOM fully loaded - initializing enhanced app");
+    console.log("DOM fully loaded");
     renderApp();
   });
 } else {
-  console.log("📄 DOM already loaded - initializing enhanced app immediately");
+  console.log("DOM already loaded");
   renderApp();
 }
 
-// Enhanced global error handling
+// Gestione errori non catturati
 window.addEventListener('error', (event) => {
-  console.error('🚨 GLOBAL ERROR CAUGHT:', {
-    message: event.error?.message,
-    filename: event.filename,
-    lineno: event.lineno,
-    colno: event.colno,
-    error: event.error
-  });
+  console.error('Global error caught:', event.error);
 });
 
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('🚨 UNHANDLED PROMISE REJECTION:', {
-    reason: event.reason,
-    promise: event.promise
-  });
+  console.error('Unhandled Promise Rejection:', event.reason);
 });
-
-// Enhanced debug info for Capacitor
-if (typeof window !== 'undefined') {
-  console.log('🔍 ENHANCED ENVIRONMENT INFO:', {
-    protocol: window.location.protocol,
-    hostname: window.location.hostname,
-    isCapacitor: window.location.protocol === 'capacitor:',
-    userAgent: navigator.userAgent,
-    timestamp: new Date().toISOString()
-  });
-}

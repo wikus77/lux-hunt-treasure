@@ -5,45 +5,14 @@ import { supabase } from '@/integrations/supabase/client';
 import AuthContext from './AuthContext';
 import { useAuth } from '@/hooks/use-auth';
 import { AuthContextType } from './types';
-import { useNavigate } from 'react-router-dom';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Use the base authentication functionality from our useAuth hook
   const auth = useAuth();
-  const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
 
-  // Enhanced session monitoring
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔍 Auth state change:', event, 'Session exists:', !!session);
-      
-      // Handle successful authentication
-      if (event === 'SIGNED_IN' && session?.user) {
-        console.log("✅ User signed in successfully:", session.user.email);
-        
-        // Check if user should be redirected to home
-        const currentPath = window.location.pathname;
-        if (currentPath === '/login' || currentPath === '/auth' || currentPath === '/') {
-          console.log("🏠 Redirecting authenticated user to /home");
-          setTimeout(() => {
-            navigate('/home');
-          }, 1000);
-        }
-      }
-      
-      // Handle sign out
-      if (event === 'SIGNED_OUT') {
-        console.log("🚪 User signed out");
-        setUserRole(null);
-        setIsRoleLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  // Fetch user role when user changes
+  // Simplified role fetching - no special cases
   useEffect(() => {
     const fetchUserRole = async () => {
       if (!auth.user?.id || auth.isLoading) {
@@ -56,27 +25,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsRoleLoading(true);
         console.log("🔍 Fetching role for user:", auth.user.id, auth.user.email);
         
-        // Check user_roles table for developer role
-        const { data: roleData } = await supabase
-          .from('user_roles')
+        const { data } = await supabase
+          .from('profiles')
           .select('role')
-          .eq('user_id', auth.user.id)
-          .single();
+          .eq('id', auth.user.id)
+          .maybeSingle();
 
-        if (roleData?.role) {
-          setUserRole(roleData.role);
-          console.log("✅ User role found:", roleData.role);
-        } else {
-          // Check profiles table as fallback
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', auth.user.id)
-            .single();
-
-          setUserRole(profileData?.role || 'user');
-          console.log("✅ User role from profiles:", profileData?.role || 'user');
-        }
+        setUserRole(data?.role || 'user');
+        console.log("✅ User role found:", data?.role || 'user');
       } catch (error) {
         console.error('❌ Error fetching user role:', error);
         setUserRole('user'); // Default to user role
@@ -99,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return userRole === role;
   };
 
-  // Create the complete context value
+  // Create the complete context value by combining auth hook values with role information
   const authContextValue: AuthContextType = {
     ...auth,
     userRole,
