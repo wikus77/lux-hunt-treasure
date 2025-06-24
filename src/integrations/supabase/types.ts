@@ -425,24 +425,6 @@ export type Database = {
         }
         Relationships: []
       }
-      live_events: {
-        Row: {
-          created_at: string | null
-          id: string
-          message: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          message: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          message?: string
-        }
-        Relationships: []
-      }
       map_click_events: {
         Row: {
           created_at: string
@@ -1186,7 +1168,6 @@ export type Database = {
           id: string
           is_deleted: boolean | null
           is_read: boolean | null
-          is_read_bool: boolean | null
           message: string
           title: string
           type: string
@@ -1197,7 +1178,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean | null
           is_read?: boolean | null
-          is_read_bool?: boolean | null
           message: string
           title: string
           type?: string
@@ -1208,7 +1188,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean | null
           is_read?: boolean | null
-          is_read_bool?: boolean | null
           message?: string
           title?: string
           type?: string

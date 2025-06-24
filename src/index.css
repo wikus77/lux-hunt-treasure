@@ -1,17 +1,6 @@
 
-
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
-@import "./styles/theme.css";
-@import "./styles/animations/index.css";
-@import "./styles/micro-interactions.css";
-@import "./styles/mobile-optimizations.css";
-@import "./styles/utilities.css";
-@import "./pages/map/styles/map-visual-fixes.css";
-
-/* Import Orbitron font che corrisponde al design negli screenshot */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap');
+@import './styles/mobile-optimizations.css';
 
 @tailwind base;
 @tailwind components;
@@ -25,12 +14,10 @@
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-family: 'Orbitron', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-medium tracking-wide text-gradient-text;
-    font-family: 'Orbitron', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    @apply font-orbitron font-semibold tracking-wide text-gradient-text;
   }
 
   h1 { @apply text-3xl md:text-4xl mb-6; }
@@ -95,7 +82,6 @@
     @apply bg-gradient-to-r from-[#7B2EFF] to-[#00D1FF] text-white font-medium py-3 px-6 rounded-full;
     box-shadow: 0 4px 15px rgba(123, 46, 255, 0.3);
     transition: all 0.3s ease;
-    font-family: 'Orbitron', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   .btn-gradient:hover {
@@ -147,7 +133,6 @@
   .dynamic-code {
     font-weight: 600;
     text-shadow: 0 0 2px rgba(0, 255, 255, 0.3);
-    font-family: 'Orbitron', monospace;
   }
 
   .mobile-px {
@@ -177,12 +162,10 @@
   .form-input {
     @apply bg-black/60 border border-white/10 rounded-lg p-3 text-white w-full;
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
-    font-family: 'Orbitron', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   .form-label {
     @apply text-sm text-white/80 mb-1 block;
-    font-family: 'Orbitron', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   .feature-card {
@@ -191,7 +174,6 @@
 
   .badge {
     @apply inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-full;
-    font-family: 'Orbitron', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   .badge-primary {

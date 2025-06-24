@@ -1,9 +1,10 @@
 
-import React, { useMemo, useRef, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { MapContainer as LeafletMapContainer } from 'react-leaflet';
 import { useMapView } from '../hooks/useMapView';
 import { MapContent } from './MapContent';
-import MapEventHandler from './MapEventHandler';
+import { MapControls } from './MapControls';
+import TechnicalStatus from './TechnicalStatus';
 
 export interface MapContainerProps {
   mapRef: React.RefObject<any>;
@@ -67,91 +68,33 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   showHelpDialog,
   setShowHelpDialog
 }) => {
-  // CRITICAL FIX: Single source of truth for map configuration
+  // Get properly typed map configuration
   const mapViewConfig = useMapView();
-  const isMapInitialized = useRef(false);
-  const internalMapRef = useRef<any>(null);
   
-  // CRITICAL FIX: Memoize map configuration to prevent re-renders
-  const mapConfiguration = useMemo(() => ({
-    center: mapViewConfig.mapCenter,
-    zoom: mapViewConfig.mapZoom,
+  // Extract values with guaranteed types
+  const mapCenter: [number, number] = mapViewConfig.mapCenter;
+  const mapZoom: number = mapViewConfig.mapZoom;
+
+  const mapProps = useMemo(() => ({
+    center: mapCenter,
+    zoom: mapZoom,
     className: "w-full h-full relative z-0",
     zoomControl: false,
     attributionControl: false,
-    preferCanvas: true,
-    maxZoom: 19,
-    minZoom: 3,
-    worldCopyJump: false,
-    closePopupOnClick: false,
-    // CRITICAL: Force single container rendering
-    key: "leaflet-map-container" // Prevent re-mount
-  }), [mapViewConfig.mapCenter, mapViewConfig.mapZoom]);
-
-  // CRITICAL FIX: Stable click handler to prevent re-renders
-  const handleMapClick = useCallback((e: any) => {
-    if (!isMapInitialized.current) return;
-    
-    console.log('🗺️ MapContainer: Click received', { isAddingPoint, isAddingSearchArea });
-    
-    if (isAddingPoint) {
-      addNewPoint(e.latlng.lat, e.latlng.lng);
-      setIsAddingPoint(false);
-    } else if (isAddingSearchArea) {
-      onMapClick(e);
-    }
-  }, [onMapClick, isAddingPoint, isAddingSearchArea, addNewPoint, setIsAddingPoint]);
-
-  // CRITICAL FIX: Map ready handler to prevent premature interactions
-  const handleMapReady = useCallback(() => {
-    console.log('🗺️ CRITICAL: Map initialized and ready');
-    isMapInitialized.current = true;
-    
-    // CRITICAL: Single size invalidation after mount
-    setTimeout(() => {
-      if (internalMapRef.current) {
-        console.log('🔧 VISUAL FIX: Invalidating map size for proper rendering');
-        internalMapRef.current.invalidateSize();
-      }
-    }, 100);
-  }, []);
-
-  // CRITICAL FIX: Map reference handler
-  const handleMapReference = useCallback((map: any) => {
-    if (map) {
-      // Store in internal ref (mutable)
-      internalMapRef.current = map;
-      
-      // Update external ref if provided
-      if (mapRef && 'current' in mapRef && mapRef.current !== undefined) {
-        try {
-          (mapRef as React.MutableRefObject<any>).current = map;
-          console.log('🗺️ VISUAL: Map reference set successfully');
-        } catch (error) {
-          console.warn('🔧 MapRef is read-only, using internal ref instead');
-        }
-      }
-    }
-  }, [mapRef]);
+    onClick: onMapClick
+  }), [mapCenter, mapZoom, onMapClick]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
-      {/* CRITICAL FIX: Single LeafletMapContainer with stable configuration */}
+    <div className="relative w-full h-full">
       <LeafletMapContainer 
-        ref={handleMapReference}
-        {...mapConfiguration}
-        whenReady={handleMapReady}
+        ref={mapRef}
+        {...mapProps}
       >
-        {/* CRITICAL FIX: Event handling moved to proper component */}
-        <MapEventHandler 
-          onMapClick={handleMapClick}
-          isAddingPoint={isAddingPoint}
-          isAddingSearchArea={isAddingSearchArea}
-        />
-        
-        {/* CRITICAL FIX: Single MapContent to prevent tile duplication */}
         <MapContent selectedWeek={selectedWeek} />
+        <MapControls />
       </LeafletMapContainer>
+      
+      <TechnicalStatus />
     </div>
   );
 };
