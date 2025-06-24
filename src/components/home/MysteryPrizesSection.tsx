@@ -1,25 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-
-const mysteryPrizes = [
-  {
-    description: "Premio Misterioso #1 - Prossimo Evento",
-    imageUrl: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    description: "Premio Misterioso #2 - Estate 2025",
-    imageUrl: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    description: "Premio Misterioso #3 - Autunno 2025", 
-    imageUrl: "https://images.unsplash.com/photo-1595294652224-62d0e45e3fe5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    description: "Premio Speciale - Natale 2025",
-    imageUrl: "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-  }
-];
+import { mysteryPrizes } from "@/data/mysteryPrizesData";
 
 export const MysteryPrizesSection = () => {
   return (
@@ -56,3 +38,5 @@ export const MysteryPrizesSection = () => {
     </section>
   );
 };
+
+export default MysteryPrizesSection;
