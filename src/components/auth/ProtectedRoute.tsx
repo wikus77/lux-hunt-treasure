@@ -15,25 +15,23 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireEmailVerification = true,
   children
 }) => {
-  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole } = useAuthContext();
+  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser } = useAuthContext();
   const location = useLocation();
   
   useEffect(() => {
-    console.log("🛡️ PROTECTED ROUTE CHECK:", {
+    console.log("🛡️ CRITICAL PROTECTED ROUTE CHECK:", {
       path: location.pathname,
       isAuthenticated,
       isLoading,
       isEmailVerified,
       user: getCurrentUser()?.id,
-      userEmail: getCurrentUser()?.email,
-      userRole,
-      isDeveloper: hasRole('developer')
+      userEmail: getCurrentUser()?.email
     });
-  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole]);
+  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser]);
   
-  // Show loading during authentication check
+  // CRITICAL: Extended loading state
   if (isLoading) {
-    console.log("⏳ AUTHENTICATION LOADING...");
+    console.log("⏳ CRITICAL AUTHENTICATION LOADING...");
     return (
       <div className="flex justify-center items-center min-h-screen bg-black">
         <Spinner className="h-8 w-8 text-white" />
@@ -41,24 +39,24 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
   
-  // Check authentication
+  // CRITICAL: Authentication check
   if (!isAuthenticated) {
-    console.log("❌ AUTH CHECK FAILED - User not authenticated, redirecting to:", redirectTo);
+    console.log("❌ CRITICAL AUTH CHECK FAILED - User not authenticated, redirecting to:", redirectTo);
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
   
-  console.log("✅ AUTH CHECK PASSED - User authenticated");
+  console.log("✅ CRITICAL AUTH CHECK PASSED - User authenticated");
   
-  // Developer users bypass email verification
+  // CRITICAL: Developer email always has access
   const currentUser = getCurrentUser();
-  const isDeveloper = hasRole('developer');
+  const isDeveloperEmail = currentUser?.email === 'wikus77@hotmail.it';
   
-  if (requireEmailVerification && !isEmailVerified && !isDeveloper) {
-    console.log("📧 EMAIL VERIFICATION CHECK - Not verified, redirecting");
+  if (requireEmailVerification && !isEmailVerified && !isDeveloperEmail) {
+    console.log("📧 CRITICAL EMAIL VERIFICATION CHECK - Not verified, redirecting");
     return <Navigate to="/login?verification=pending" replace />;
   }
   
-  console.log("🎯 PROTECTED ROUTE SUCCESS - Rendering protected content for:", currentUser?.email);
+  console.log("🎯 CRITICAL PROTECTED ROUTE SUCCESS - Rendering protected content for:", currentUser?.email);
   return children ? <>{children}</> : <Outlet />;
 };
 

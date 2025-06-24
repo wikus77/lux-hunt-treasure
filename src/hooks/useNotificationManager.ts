@@ -17,37 +17,27 @@ export function useNotificationManager() {
   
   const [notificationsBannerOpen, setNotificationsBannerOpen] = useState(false);
   
-  // CRITICAL FIX: Optimized polling interval to 60 seconds
+  // FIXED: Reduced polling interval to 5 seconds for better responsiveness
   const pollingIntervalRef = useRef<number | null>(null);
   const isInitialLoadDone = useRef<boolean>(false);
-  const isPageVisible = useRef<boolean>(true);
   
-  // CRITICAL FIX: Visibility change handler
-  const handleVisibilityChange = useCallback(() => {
-    isPageVisible.current = document.visibilityState === 'visible';
-    console.log('👁️ NOTIFICATION_MANAGER: Page visibility changed:', isPageVisible.current);
-  }, []);
-
-  // CRITICAL FIX: Optimized notification polling every 60 seconds
+  // FIXED: Setup notification polling every 5 seconds instead of 3 minutes
   useEffect(() => {
     const startPolling = () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
       
-      // CRITICAL FIX: Reduced from 5s to 60s for better performance
+      // FIXED: Poll every 5 seconds instead of 180 seconds
       pollingIntervalRef.current = window.setInterval(() => {
-        if (isPageVisible.current) {
+        if (document.visibilityState === 'visible') {
           console.log('🔄 NOTIFICATION_MANAGER: Polling for new notifications...');
           reloadNotifications();
         } else {
           console.log('⏸️ NOTIFICATION_MANAGER: Skipping polling - page not visible');
         }
-      }, 60000) as unknown as number; // 60 seconds
+      }, 5000) as unknown as number; // 5 seconds
     };
-    
-    // Setup visibility listener
-    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     // Initial load
     if (!isInitialLoadDone.current) {
@@ -62,9 +52,8 @@ export function useNotificationManager() {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [reloadNotifications, handleVisibilityChange]);
+  }, [reloadNotifications]);
 
   // Handle opening notifications banner
   const openNotificationsBanner = useCallback(() => {
@@ -79,6 +68,7 @@ export function useNotificationManager() {
   // Handle opening notifications drawer
   const openNotificationsDrawer = useCallback(() => {
     setShowNotifications(true);
+    // FIXED: Always reload when drawer opens for fresh data
     console.log('📱 NOTIFICATION_MANAGER: Drawer opened, reloading notifications');
     reloadNotifications();
   }, [setShowNotifications, reloadNotifications]);
@@ -86,6 +76,7 @@ export function useNotificationManager() {
   // Handle closing notifications drawer
   const closeNotificationsDrawer = useCallback(() => {
     setShowNotifications(false);
+    // Mark notifications as read when drawer is closed
     markAllAsRead().then(() => {
       console.log('✅ NOTIFICATION_MANAGER: All notifications marked as read on drawer close');
     });

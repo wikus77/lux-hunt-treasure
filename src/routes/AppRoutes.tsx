@@ -4,7 +4,6 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Spinner } from "@/components/ui/spinner";
 import IOSSafeAreaOverlay from "@/components/debug/IOSSafeAreaOverlay";
-import { useAuth } from "@/hooks/use-auth";
 
 // Public routes
 import Index from "@/pages/Index";
@@ -43,39 +42,15 @@ const LoadingFallback = () => (
 );
 
 const AppRoutes: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  // CRITICAL: Enhanced routing logic for Capacitor
-  const isCapacitorApp = typeof window !== 'undefined' && 
-    (window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost');
-
-  console.log('🔍 ENHANCED ROUTING STATE:', {
-    isAuthenticated,
-    isLoading,
-    isCapacitorApp,
-    currentPath: window.location.pathname,
-    timestamp: new Date().toISOString()
-  });
-
   return (
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            {/* CRITICAL: Enhanced landing page routing */}
-            <Route 
-              path="/" 
-              element={
-                // For Capacitor app, redirect authenticated users to /home immediately
-                isCapacitorApp && isAuthenticated ? (
-                  <Navigate to="/home" replace />
-                ) : (
-                  <Index />
-                )
-              } 
-            />
+            {/* Landing page - SEMPRE PUBBLICA, NESSUN REDIRECT */}
+            <Route path="/" element={<Index />} />
 
-            {/* Main App Routes - PROTECTED - SEPARATE FROM LANDING */}
+            {/* Main App Routes - PROTECTED - SEPARATE DA LANDING */}
             <Route
               path="/home"
               element={

@@ -57,39 +57,6 @@ export type Database = {
         }
         Relationships: []
       }
-      admin_logs: {
-        Row: {
-          context: string | null
-          created_at: string
-          device: string | null
-          event_type: string
-          id: string
-          note: string | null
-          timestamp: string
-          user_id: string | null
-        }
-        Insert: {
-          context?: string | null
-          created_at?: string
-          device?: string | null
-          event_type: string
-          id?: string
-          note?: string | null
-          timestamp?: string
-          user_id?: string | null
-        }
-        Update: {
-          context?: string | null
-          created_at?: string
-          device?: string | null
-          event_type?: string
-          id?: string
-          note?: string | null
-          timestamp?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       admin_prizes: {
         Row: {
           address: string
@@ -162,42 +129,6 @@ export type Database = {
           target_users?: string[] | null
           title?: string
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      backup_logs: {
-        Row: {
-          backup_date: string
-          backup_type: string
-          created_at: string
-          duration_seconds: number | null
-          error_message: string | null
-          file_size: number | null
-          id: string
-          status: string
-          storage_path: string | null
-        }
-        Insert: {
-          backup_date?: string
-          backup_type?: string
-          created_at?: string
-          duration_seconds?: number | null
-          error_message?: string | null
-          file_size?: number | null
-          id?: string
-          status?: string
-          storage_path?: string | null
-        }
-        Update: {
-          backup_date?: string
-          backup_type?: string
-          created_at?: string
-          duration_seconds?: number | null
-          error_message?: string | null
-          file_size?: number | null
-          id?: string
-          status?: string
-          storage_path?: string | null
         }
         Relationships: []
       }
@@ -422,54 +353,6 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      live_events: {
-        Row: {
-          created_at: string | null
-          id: string
-          message: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          message: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          message?: string
-        }
-        Relationships: []
-      }
-      map_click_events: {
-        Row: {
-          created_at: string
-          event_type: string
-          id: string
-          lat: number
-          lng: number
-          user_id: string
-          zoom: number
-        }
-        Insert: {
-          created_at?: string
-          event_type?: string
-          id?: string
-          lat: number
-          lng: number
-          user_id: string
-          zoom?: number
-        }
-        Update: {
-          created_at?: string
-          event_type?: string
-          id?: string
-          lat?: number
-          lng?: number
-          user_id?: string
-          zoom?: number
         }
         Relationships: []
       }
@@ -777,7 +660,6 @@ export type Database = {
           subscription_end: string | null
           subscription_start: string | null
           subscription_tier: string
-          tier: string | null
           updated_at: string
           username: string | null
         }
@@ -806,7 +688,6 @@ export type Database = {
           subscription_end?: string | null
           subscription_start?: string | null
           subscription_tier?: string
-          tier?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -835,7 +716,6 @@ export type Database = {
           subscription_end?: string | null
           subscription_start?: string | null
           subscription_tier?: string
-          tier?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -1186,7 +1066,6 @@ export type Database = {
           id: string
           is_deleted: boolean | null
           is_read: boolean | null
-          is_read_bool: boolean | null
           message: string
           title: string
           type: string
@@ -1197,7 +1076,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean | null
           is_read?: boolean | null
-          is_read_bool?: boolean | null
           message: string
           title: string
           type?: string
@@ -1208,7 +1086,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean | null
           is_read?: boolean | null
-          is_read_bool?: boolean | null
           message?: string
           title?: string
           type?: string
@@ -1248,30 +1125,6 @@ export type Database = {
           is_default?: boolean
           last4?: string
           stripe_pm_id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: string
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -1364,23 +1217,9 @@ export type Database = {
           agent_code: string
         }[]
       }
-      get_user_by_email: {
-        Args: { email_param: string }
-        Returns: unknown[]
-      }
-      get_user_roles: {
-        Args: { user_id: string }
-        Returns: {
-          role: string
-        }[]
-      }
       handle_new_user: {
         Args: { new_user_id: string; user_email: string }
         Returns: undefined
-      }
-      has_role: {
-        Args: { user_id: string; role_name: string }
-        Returns: boolean
       }
       increment_buzz_counter: {
         Args: { p_user_id: string }

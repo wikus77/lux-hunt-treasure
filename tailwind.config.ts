@@ -1,4 +1,3 @@
-
 import type { Config } from 'tailwindcss';
 import animate from 'tailwindcss-animate';
 
@@ -194,6 +193,7 @@ const config: Config = {
         'glow': 'glow 0.6s ease-in-out 2s forwards',
       },
       fontFamily: {
+        'inter': ['Inter', 'sans-serif'],
         'orbitron': ['Orbitron', 'sans-serif'],
       },
       backgroundImage: {

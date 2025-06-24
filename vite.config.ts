@@ -1,41 +1,36 @@
 
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
-import path from "path"
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import path from "path";
+import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   server: {
-    host: true,
+    host: "::",
     port: 8080,
-    watch: {
-      usePolling: true,
-      interval: 1000,
-      ignored: [
-        '**/node_modules/**',
-        '**/.git/**',
-        '**/dist/**',
-        '**/build/**',
-        '**/.turbo/**',
-        '**/.cache/**',
-        '**/.output/**',
-        '**/.vercel/**',
-        '**/ios/**',
-        '**/android/**',
-        '**/public/lovable-uploads/**',
-        '**/tests/**',
-        '**/*.spec.ts',
-        '**/*.test.ts'
-      ]
-    },
-    fs: {
-      strict: false
-    }
   },
-  plugins: [react()],
+  plugins: [
+    react(),
+    mode === 'development' &&
+    componentTagger(),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-})
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'router-vendor': ['react-router-dom'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-toast'],
+          'supabase-vendor': ['@supabase/supabase-js'],
+          'animation-vendor': ['framer-motion', 'lottie-react']
+        }
+      }
+    }
+  }
+}));

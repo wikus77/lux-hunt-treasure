@@ -3,7 +3,7 @@ import React from 'react';
 import { Marker } from 'react-leaflet';
 
 interface UserLocationMarkerProps {
-  position?: [number, number];
+  position: [number, number];
 }
 
 const UserLocationMarker: React.FC<UserLocationMarkerProps> = ({ position }) => {
