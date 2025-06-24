@@ -4,14 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Locate } from "lucide-react";
 
 interface LocationButtonProps {
-  requestLocationPermission: () => void;
+  requestLocationPermission?: () => void;
 }
 
 const LocationButton: React.FC<LocationButtonProps> = ({ requestLocationPermission }) => {
+  const handleClick = () => {
+    if (requestLocationPermission) {
+      requestLocationPermission();
+    }
+  };
+
   return (
     <div className="absolute top-6 right-6 z-20">
       <Button
-        onClick={requestLocationPermission}
+        onClick={handleClick}
         variant="outline"
         size="icon"
         className="bg-black/50 border border-cyan-500/30 rounded-full h-10 w-10 hover:bg-black/70 hover:border-cyan-500/60"

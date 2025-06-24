@@ -1,4 +1,5 @@
-import React, { useState, lazy, Suspense, useEffect } from 'react';
+
+import React, { useState, lazy, Suspense, useEffect, useRef } from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import MapPageHeader from './map/components/MapPageHeader';
 import NotesSection from './map/NotesSection';
@@ -9,8 +10,12 @@ import { useNewMapPage } from './map/hooks/useNewMapPage';
 import { useDynamicIsland } from '@/hooks/useDynamicIsland';
 import { useMissionManager } from '@/hooks/useMissionManager';
 
-// Lazy load heavy map components
-const MapContainer = lazy(() => import('./map/components/MapContainer'));
+// Fix lazy load with proper default export handling
+const MapContainer = lazy(() => 
+  import('./map/components/MapContainer').then(module => ({ 
+    default: module.default || module.MapContainer
+  }))
+);
 
 const MapLoadingFallback = () => (
   <div className="h-96 bg-gray-900/50 rounded-lg flex items-center justify-center">
@@ -25,6 +30,9 @@ const NewMapPage = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const { updateActivity, endActivity } = useDynamicIsland();
   const { currentMission, updateMissionProgress } = useMissionManager();
+  
+  // CRITICAL FIX: Proper mutable ref for map instance
+  const mapRef = useRef<any>(null);
   
   const {
     isAddingPoint,
@@ -117,6 +125,9 @@ const NewMapPage = () => {
           <div className="m1ssion-glass-card p-4 sm:p-6 mb-6">
             <Suspense fallback={<MapLoadingFallback />}>
               <MapContainer
+                mapRef={mapRef}
+                onMapClick={() => {}}
+                selectedWeek={1}
                 isAddingPoint={isAddingPoint}
                 setIsAddingPoint={setIsAddingPoint}
                 addNewPoint={addNewPoint}

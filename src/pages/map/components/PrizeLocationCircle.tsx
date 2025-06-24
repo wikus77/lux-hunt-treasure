@@ -3,8 +3,8 @@ import React from 'react';
 import { Circle } from 'react-leaflet';
 
 interface PrizeLocationCircleProps {
-  center: [number, number];
-  radius: number;
+  center?: [number, number];
+  radius?: number;
 }
 
 const PrizeLocationCircle: React.FC<PrizeLocationCircleProps> = ({ center, radius }) => {

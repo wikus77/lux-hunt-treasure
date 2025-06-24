@@ -1,19 +1,44 @@
 
 import React from 'react';
-import { BuzzMapArea } from '@/hooks/useBuzzMapLogic';
 import BuzzCircleRenderer from './BuzzCircleRenderer';
 import { getCurrentColor, getCurrentColorName, getBuzzGlowStyles } from './BuzzColorManager';
 
-interface BuzzMapAreasProps {
-  areas: BuzzMapArea[];
+export interface BuzzMapAreasProps {
+  areas: {
+    id: string;
+    lat: number;
+    lng: number;
+    radius_km: number;
+    created_at: string;
+    isActive: boolean;
+  }[];
+  selectedWeek: number;
 }
 
-const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
+// Transform raw area data to BuzzMapArea format for rendering
+const transformAreaData = (area: BuzzMapAreasProps['areas'][0]) => ({
+  id: area.id,
+  lat: area.lat,
+  lng: area.lng,
+  radius_km: area.radius_km,
+  coordinates: { lat: area.lat, lng: area.lng },
+  radius: area.radius_km * 1000, // Convert km to meters
+  color: getCurrentColor(),
+  colorName: getCurrentColorName(),
+  week: 1,
+  generation: 1,
+  isActive: area.isActive,
+  user_id: '',
+  created_at: area.created_at
+});
+
+const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas, selectedWeek }) => {
   const currentColor = getCurrentColor();
   const currentColorName = getCurrentColorName();
   
   console.log('🗺️ BuzzMapAreas - Rendering areas:', {
     areasCount: areas.length,
+    selectedWeek,
     areas: areas.map(area => ({
       id: area.id,
       lat: area.lat,
@@ -51,10 +76,13 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
     created_at: latestArea.created_at
   });
 
+  // Transform the latest area to the correct format
+  const transformedArea = transformAreaData(latestArea);
+
   return (
     <>
-      {/* CRITICAL: Only render the latest area */}
-      <BuzzCircleRenderer areas={[latestArea]} />
+      {/* CRITICAL: Only render the latest area with correct data structure */}
+      <BuzzCircleRenderer areas={[transformedArea]} />
       
       {/* Glow styles */}
       <style>

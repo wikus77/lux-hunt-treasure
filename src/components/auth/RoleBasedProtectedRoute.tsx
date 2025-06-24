@@ -16,21 +16,17 @@ interface RoleBasedProtectedRouteProps {
 export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = ({ 
   redirectTo = '/login',
   requireEmailVerification = true,
-  allowedRoles = ['user', 'admin', 'moderator'],
+  allowedRoles = ['user', 'developer', 'admin'],
   children,
-  bypassCheck = false // For debugging, can bypass role check if needed
+  bypassCheck = false
 }) => {
   const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole, isRoleLoading } = useAuthContext();
   const location = useLocation();
   
-  // Admin detection - permetti sempre accesso a wikus77@hotmail.it
   const currentUser = getCurrentUser();
-  const isAdminEmail = currentUser?.email === 'wikus77@hotmail.it';
-  const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname === '/test-admin-ui' || location.pathname === '/auth-debug';
-  
-  // ✅ CONTROLLO PRIORITARIO: Developer access
-  const hasDeveloperAccess = localStorage.getItem("developer_access") === "granted";
-  const isDeveloperEmail = localStorage.getItem("developer_user_email") === "wikus77@hotmail.it";
+  const isDeveloper = hasRole('developer');
+  const isAdmin = hasRole('admin');
+  const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname === '/test-admin-ui';
   
   useEffect(() => {
     console.log("🛡️ Role-based protected route check:", {
@@ -44,22 +40,15 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
       email: currentUser?.email,
       allowedRoles,
       bypassCheck,
-      isAdminEmail,
-      hasDeveloperAccess,
-      isDeveloperEmail
+      isDeveloper,
+      isAdmin
     });
-  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, currentUser, userRole, allowedRoles, isRoleLoading, bypassCheck, isAdminEmail, hasDeveloperAccess, isDeveloperEmail]);
+  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, currentUser, userRole, allowedRoles, isRoleLoading, bypassCheck, isDeveloper, isAdmin]);
   
-  // ✅ BYPASS PRIORITARIO per developer access
-  if (hasDeveloperAccess || isDeveloperEmail) {
-    console.log("🔑 Developer access granted - bypassing all role checks");
-    return children ? <>{children}</> : <Outlet />;
-  }
-  
-  // Special case for admin routes - only allow wikus77@hotmail.it
-  if (isAdminRoute && !isAdminEmail && !isLoading) {
-    console.log("⛔ Access denied to admin route for non-admin email:", getCurrentUser()?.email);
-    toast.error("Accesso riservato all'amministratore");
+  // Special case for admin routes - only allow developers and admins
+  if (isAdminRoute && !isDeveloper && !isAdmin && !isLoading && !isRoleLoading) {
+    console.log("⛔ Access denied to admin route for user:", getCurrentUser()?.email);
+    toast.error("Accesso riservato agli amministratori");
     return <Navigate to="/login" replace />;
   }
   
@@ -72,7 +61,7 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
           {isRoleLoading ? 'Caricamento ruolo...' : 'Caricamento autenticazione...'}
         </div>
         <div className="mt-2 text-xs text-gray-400">
-          {isAdminEmail ? 'Admin email rilevata, autorizzazione in corso...' : 'Verifica permessi in corso...'}
+          {isDeveloper ? 'Developer access rilevato...' : 'Verifica permessi in corso...'}
         </div>
       </div>
     );
@@ -84,25 +73,22 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
   
-  // Check for email verification if required
-  if (requireEmailVerification && !isEmailVerified && !isAdminEmail) {
+  // Check for email verification if required (bypass for developers)
+  if (requireEmailVerification && !isEmailVerified && !isDeveloper) {
     console.log("⚠️ Email not verified, redirecting to verification page");
     return <Navigate to="/login?verification=pending" replace />;
   }
   
-  // Special bypass for admin email - permetti sempre l'accesso
-  if (isAdminEmail) {
-    console.log("✅ Accesso consentito per email admin:", isAdminEmail);
+  // Special access for developers and admins
+  if (isDeveloper || isAdmin) {
+    console.log("✅ Developer/Admin access granted for:", currentUser?.email);
     return children ? <>{children}</> : <Outlet />;
   }
   
-  // Check if user has the required role - only if role loading is complete and we're not bypassing
+  // Check if user has the required role
   const hasRequiredRole = allowedRoles.some(role => hasRole(role));
   
-  // Special bypass for debugging or admin email
-  const shouldBypass = bypassCheck || isAdminEmail;
-  
-  if (!hasRequiredRole && !shouldBypass) {
+  if (!hasRequiredRole && !bypassCheck) {
     console.log("⛔ User does not have required role:", userRole, "needed:", allowedRoles);
     toast.error("Accesso negato", {
       description: "Non hai i permessi necessari per accedere a questa pagina"
@@ -110,14 +96,12 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
     return <Navigate to="/access-denied" replace />;
   }
   
-  if (shouldBypass && !hasRequiredRole) {
-    console.log("⚠️ Bypassing role check:", shouldBypass ? "bypass enabled" : "admin email");
-    toast.info("Accesso consentito in modalità speciale", {
-      description: "Stai accedendo con privilegi speciali"
-    });
+  if (bypassCheck && !hasRequiredRole) {
+    console.log("⚠️ Bypassing role check");
+    toast.info("Accesso consentito in modalità speciale");
   }
   
-  // User is authenticated, email is verified, and has the required role (or bypass is active)
+  // User is authenticated, email is verified, and has the required role
   console.log("✅ Accesso confermato per:", currentUser?.email);
   return children ? <>{children}</> : <Outlet />;
 };

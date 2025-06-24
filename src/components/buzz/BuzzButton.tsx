@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Loader, Zap } from "lucide-react";
@@ -5,7 +6,9 @@ import { toast } from "sonner";
 import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useStripePayment } from "@/hooks/useStripePayment";
+import { useBuzzCounter } from "@/hooks/useBuzzCounter";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface BuzzButtonProps {
   isLoading: boolean;
@@ -25,8 +28,10 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const { callBuzzApi } = useBuzzApi();
   const { createBuzzNotification } = useNotificationManager();
   const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
+  const { dailyBuzzCounter, loadDailyBuzzCounter, updateDailyBuzzCounter } = useBuzzCounter(userId);
+  const queryClient = useQueryClient();
+  
   const [buzzCost, setBuzzCost] = useState<number>(1.99);
-  const [dailyCount, setDailyCount] = useState<number>(0);
   const [showRipple, setShowRipple] = useState(false);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
 
@@ -54,28 +59,19 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     checkSubscription();
   }, [userId]);
 
-  // Load current buzz cost and daily count
+  // Load current buzz cost and daily count with integrated useBuzzCounter
   const loadBuzzData = async () => {
     if (!userId) return;
     
     try {
       console.log('📊 BUZZ: Loading daily count and cost for user:', userId);
       
-      // Get today's buzz count
-      const { data: countData, error: countError } = await supabase
-        .from('user_buzz_counter')
-        .select('buzz_count')
-        .eq('user_id', userId)
-        .eq('date', new Date().toISOString().split('T')[0])
-        .single();
-
-      const currentCount = countData?.buzz_count || 0;
-      console.log('📊 BUZZ: Current daily count loaded:', currentCount);
-      setDailyCount(currentCount);
-
+      // Use integrated useBuzzCounter hook
+      await loadDailyBuzzCounter();
+      
       // Calculate cost for next buzz
       const { data: costData, error: costError } = await supabase.rpc('calculate_buzz_price', {
-        daily_count: currentCount + 1
+        daily_count: dailyBuzzCounter + 1
       });
 
       if (costError) {
@@ -85,7 +81,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 
       const newCost = costData || 1.99;
       setBuzzCost(newCost);
-      console.log(`💰 BUZZ: Cost updated to €${newCost} for count ${currentCount + 1}`);
+      console.log(`💰 BUZZ: Cost updated to €${newCost} for count ${dailyBuzzCounter + 1}`);
     } catch (error) {
       console.error("Error loading buzz data:", error);
     }
@@ -93,7 +89,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 
   useEffect(() => {
     loadBuzzData();
-  }, [userId]);
+  }, [userId, dailyBuzzCounter, loadDailyBuzzCounter]);
 
   const handleBuzzPress = async () => {
     if (isLoading || !userId) return;
@@ -104,19 +100,22 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
     setShowRipple(true);
     setTimeout(() => setShowRipple(false), 1000);
 
-    // IMPERATIVE: UPDATE COUNTER IMMEDIATELY (before any checks)
-    const newDailyCount = dailyCount + 1;
-    setDailyCount(newDailyCount);
-    console.log(`🔢 BUZZ: Counter IMPERATIVELY incremented to ${newDailyCount}/50`);
-
-    // IMPERATIVE: Show immediate toast feedback
+    // IMPERATIVE: Show immediate toast feedback - ALWAYS
     toast.success("🎯 BUZZ attivato!", {
-      description: `Tentativo ${newDailyCount}/50 in corso...`,
+      description: `Tentativo ${dailyBuzzCounter + 1}/50 in corso...`,
       duration: 2000,
     });
 
+    // IMPERATIVE: UPDATE COUNTER IMMEDIATELY using integrated hook
+    const newDailyCount = await updateDailyBuzzCounter();
+    console.log(`🔢 BUZZ: Counter IMPERATIVELY incremented to ${newDailyCount}/50`);
+
+    // Invalidate React Query cache for immediate sync
+    queryClient.invalidateQueries({ queryKey: ['buzz-counter', userId] });
+    queryClient.invalidateQueries({ queryKey: ['user-buzz-counter', userId] });
+
     // Check daily limit AFTER incrementing counter
-    if (dailyCount >= 50) {
+    if (dailyBuzzCounter >= 50) {
       toast.error("Limite giornaliero raggiunto", {
         description: "Hai raggiunto il limite di 50 buzz per oggi.",
         duration: 4000,
@@ -147,23 +146,24 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         duration: 4000,
       });
       
-      // Update counter in DB for developer
+      // IMPERATIVE: Force notification creation and UI update
       try {
-        await supabase
-          .from('user_buzz_counter')
-          .upsert({
-            user_id: userId,
-            date: new Date().toISOString().split('T')[0],
-            buzz_count: newDailyCount
-          });
-        console.log(`📊 BUZZ: Developer counter updated in DB to ${newDailyCount}`);
-      } catch (dbError) {
-        console.error("❌ BUZZ: Failed to update developer counter in DB:", dbError);
+        await createBuzzNotification(
+          "Nuovo Indizio Buzz (DEV)", 
+          `Test sviluppatore - Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`
+        );
+        console.log("✅ BUZZ: Developer notification created and triggered");
+        
+        // Force notification system refresh
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      } catch (notifError) {
+        console.error("❌ BUZZ: Failed to create developer notification:", notifError);
       }
       
-      // Reload data
-      setTimeout(() => {
-        loadBuzzData();
+      // Reload data with cache invalidation
+      setTimeout(async () => {
+        await loadBuzzData();
+        queryClient.invalidateQueries({ queryKey: ['buzz-data'] });
       }, 500);
       
       onSuccess();
@@ -238,37 +238,18 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           window.plausible('clue_unlocked');
         }
         
-        // IMPERATIVE: Update counter in DB
-        try {
-          await supabase
-            .from('user_buzz_counter')
-            .upsert({
-              user_id: userId,
-              date: new Date().toISOString().split('T')[0],
-              buzz_count: newDailyCount
-            });
-          console.log(`📊 BUZZ: Counter updated in DB to ${newDailyCount} - IMPERATIVE`);
-        } catch (dbError) {
-          console.error("❌ BUZZ: Failed to update counter in DB:", dbError);
-        }
-        
-        // Reload all buzz data to ensure sync
-        setTimeout(() => {
-          loadBuzzData();
-        }, 500);
-
         // Get dynamic clue content
         const dynamicClueContent = response.clue_text || `Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`;
         
         console.log("📝 BUZZ: Dynamic clue content:", dynamicClueContent);
 
-        // IMPERATIVE: Show success toast
+        // IMPERATIVE: Show success toast - ALWAYS
         toast.success("🎯 Nuovo indizio sbloccato!", {
           description: dynamicClueContent,
           duration: 4000,
         });
         
-        // CRITICAL: Register notification in Supabase
+        // CRITICAL: Register notification in Supabase and trigger UI update
         try {
           console.log("💾 BUZZ: Inserting notification in Supabase...");
           const { error: notificationError } = await supabase
@@ -291,13 +272,17 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           console.error("❌ BUZZ: Error creating notification:", notifError);
         }
         
-        // Create app notification in BUZZ category
+        // Create app notification and force UI refresh
         try {
           await createBuzzNotification(
             "Nuovo Indizio Buzz", 
             dynamicClueContent
           );
           console.log("✅ BUZZ: App notification created successfully");
+          
+          // IMPERATIVE: Force notification system refresh
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+          queryClient.invalidateQueries({ queryKey: ['user-notifications'] });
         } catch (notifError) {
           console.error("❌ BUZZ: Failed to create app notification:", notifError);
         }
@@ -328,7 +313,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         const errorMessage = response.errorMessage || "Errore sconosciuto";
         setError(errorMessage);
         
-        // IMPERATIVE: Show error toast
+        // IMPERATIVE: Show error toast - ALWAYS
         toast.error("❌ Errore BUZZ", {
           description: errorMessage,
           duration: 4000,
@@ -356,7 +341,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       console.error("❌ BUZZ: Error during API call:", error);
       setError("Si è verificato un errore di comunicazione con il server");
       
-      // IMPERATIVE: Show connection error toast
+      // IMPERATIVE: Show connection error toast - ALWAYS
       toast.error("❌ Errore di connessione", {
         description: "Impossibile contattare il server. Riprova più tardi.",
         duration: 4000,
@@ -381,15 +366,23 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
       }
     } finally {
       setIsLoading(false);
+      
+      // IMPERATIVE: Reload all data and invalidate cache
+      setTimeout(async () => {
+        await loadBuzzData();
+        queryClient.invalidateQueries({ queryKey: ['buzz-counter', userId] });
+        queryClient.invalidateQueries({ queryKey: ['buzz-data'] });
+        queryClient.invalidateQueries({ queryKey: ['user-buzz-counter'] });
+      }, 500);
     }
   };
 
   // Check if buzz is blocked (over 50 daily uses)
-  const isBlocked = dailyCount >= 50;
+  const isBlocked = dailyBuzzCounter >= 50;
   const isProcessing = isLoading || paymentLoading;
 
   return (
-    <div className="flex flex-col items-center justify-center h-full min-h-[500px] pb-safe">
+    <div className="flex flex-col items-center justify-center min-h-screen pb-safe">
       {/* IMPERATIVE: Perfect circular button with glow aura */}
       <motion.button
         className="w-80 h-80 rounded-full relative overflow-hidden focus:outline-none disabled:opacity-50"
@@ -405,9 +398,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             ? "none" 
             : "0 0 30px rgba(123, 46, 255, 0.8), 0 0 60px rgba(0, 209, 255, 0.6), 0 0 90px rgba(255, 89, 248, 0.4)",
         }}
-        transition={{ 
-          scale: { type: "spring", stiffness: 300, damping: 20 }
-        }}
         animate={!isBlocked ? {
           boxShadow: [
             "0 0 20px rgba(123, 46, 255, 0.6), 0 0 40px rgba(0, 209, 255, 0.4), 0 0 60px rgba(255, 89, 248, 0.3)",
@@ -416,7 +406,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           ]
         } : {}}
         transition={{
-          ...transition,
+          scale: { type: "spring", stiffness: 300, damping: 20 },
           boxShadow: { repeat: Infinity, duration: 2, ease: "easeInOut" }
         }}
       >
@@ -464,9 +454,9 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
                   €{buzzCost.toFixed(2)}
                 </span>
               )}
-              {/* IMPERATIVE: Counter display */}
+              {/* IMPERATIVE: Counter display with integrated hook */}
               <span className="text-sm text-white/70 mt-1">
-                {dailyCount}/50 oggi
+                {dailyBuzzCounter}/50 oggi
               </span>
             </>
           )}

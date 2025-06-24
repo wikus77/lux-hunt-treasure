@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface AnimatedCountdownProps {
   targetDate: Date;
@@ -42,75 +41,52 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({ targetDate
     return () => clearInterval(interval);
   }, [targetDate, onComplete]);
 
-  const FlipCard: React.FC<{ value: number; label: string }> = ({ value, label }) => {
-    const [displayValue, setDisplayValue] = useState(value);
-    const [isFlipping, setIsFlipping] = useState(false);
-
-    useEffect(() => {
-      if (value !== displayValue) {
-        setIsFlipping(true);
-        setTimeout(() => {
-          setDisplayValue(value);
-          setIsFlipping(false);
-        }, 150);
-      }
-    }, [value, displayValue]);
-
-    return (
-      <div className="flex flex-col items-center">
-        <div className="relative w-16 h-20 md:w-20 md:h-24 perspective-1000">
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg shadow-xl border border-gray-600 flex items-center justify-center overflow-hidden"
-            animate={{
-              rotateX: isFlipping ? -90 : 0,
-            }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          >
-            <span className="text-2xl md:text-3xl font-bold text-white font-mono">
-              {String(displayValue).padStart(2, '0')}
-            </span>
-          </motion.div>
-        </div>
-        <span className="text-xs md:text-sm text-gray-400 mt-2 uppercase tracking-wider">
-          {label}
-        </span>
-      </div>
-    );
-  };
-
   if (isComplete) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="text-center"
-      >
-        <motion.div 
-          className="text-xl md:text-2xl font-bold text-green-400"
-          animate={{
-            textShadow: [
-              "0 0 5px rgba(0, 255, 0, 0.5)",
-              "0 0 20px rgba(0, 255, 0, 0.8)",
-              "0 0 5px rgba(0, 255, 0, 0.5)"
-            ]
-          }}
-          transition={{ duration: 0.5, repeat: 3 }}
-        >
-          MISSION START
-        </motion.div>
-      </motion.div>
+      <div className="text-center">
+        <div className="text-2xl md:text-3xl font-bold text-white font-orbitron" style={{ fontWeight: 700 }}>
+          STARTS ON AUGUST 19
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center space-x-4 md:space-x-6">
-      <FlipCard value={timeLeft.days} label="giorni" />
-      <div className="text-2xl md:text-3xl text-white font-bold">:</div>
-      <FlipCard value={timeLeft.hours} label="ore" />
-      <div className="text-2xl md:text-3xl text-white font-bold">:</div>
-      <FlipCard value={timeLeft.minutes} label="min" />
-      <div className="text-2xl md:text-3xl text-white font-bold">:</div>
-      <FlipCard value={timeLeft.seconds} label="sec" />
+    <div className="flex flex-col items-center justify-center text-white my-6 font-orbitron">
+      {/* Countdown numbers with exact bracket format */}
+      <div className="flex items-center justify-center text-lg md:text-xl font-orbitron tracking-wider">
+        <span className="text-white/70">[ </span>
+        <span className="text-white font-bold text-3xl md:text-4xl mx-1" style={{ fontWeight: 700 }}>
+          {String(timeLeft.days).padStart(2, '0')}
+        </span>
+        <span className="text-white/70"> ]</span>
+        <span className="text-white/70 mx-3">:</span>
+        <span className="text-white/70">[ </span>
+        <span className="text-white font-bold text-3xl md:text-4xl mx-1" style={{ fontWeight: 700 }}>
+          {String(timeLeft.hours).padStart(2, '0')}
+        </span>
+        <span className="text-white/70"> ]</span>
+        <span className="text-white/70 mx-3">:</span>
+        <span className="text-white/70">[ </span>
+        <span className="text-white font-bold text-3xl md:text-4xl mx-1" style={{ fontWeight: 700 }}>
+          {String(timeLeft.minutes).padStart(2, '0')}
+        </span>
+        <span className="text-white/70"> ]</span>
+        <span className="text-white/70 mx-3">:</span>
+        <span className="text-white/70">[ </span>
+        <span className="text-white font-bold text-3xl md:text-4xl mx-1" style={{ fontWeight: 700 }}>
+          {String(timeLeft.seconds).padStart(2, '0')}
+        </span>
+        <span className="text-white/70"> ]</span>
+      </div>
+      
+      {/* Labels underneath with exact spacing */}
+      <div className="flex items-center justify-center gap-12 md:gap-16 mt-3 text-xs uppercase tracking-widest font-orbitron" style={{ color: '#B0B0B0' }}>
+        <span>DAYS</span>
+        <span>HOURS</span>
+        <span>MINUTES</span>
+        <span>SECONDS</span>
+      </div>
     </div>
   );
 };
