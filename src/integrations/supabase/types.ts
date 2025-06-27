@@ -1252,6 +1252,54 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          address: string | null
+          cap: string | null
+          citta: string | null
+          city: string | null
+          cognome: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+          nome: string | null
+          numero_civico: string | null
+          surname: string | null
+          via: string | null
+        }
+        Insert: {
+          address?: string | null
+          cap?: string | null
+          citta?: string | null
+          city?: string | null
+          cognome?: string | null
+          created_at?: string | null
+          email?: string | null
+          id: string
+          name?: string | null
+          nome?: string | null
+          numero_civico?: string | null
+          surname?: string | null
+          via?: string | null
+        }
+        Update: {
+          address?: string | null
+          cap?: string | null
+          citta?: string | null
+          city?: string | null
+          cognome?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          nome?: string | null
+          numero_civico?: string | null
+          surname?: string | null
+          via?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1397,6 +1445,10 @@ export type Database = {
       log_potential_abuse: {
         Args: { p_event_type: string; p_user_id: string }
         Returns: boolean
+      }
+      setup_developer_user: {
+        Args: { uid: string }
+        Returns: undefined
       }
       update_user_subscription_tier: {
         Args: { target_user_id: string; new_tier: string }
