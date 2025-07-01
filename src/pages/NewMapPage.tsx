@@ -10,6 +10,9 @@ import { useNewMapPage } from './map/hooks/useNewMapPage';
 import { useDynamicIsland } from '@/hooks/useDynamicIsland';
 import { useMissionManager } from '@/hooks/useMissionManager';
 
+// Import the critical CSS fix
+import './map/styles/map-container-fix.css';
+
 // Fix lazy load with proper default export handling
 const MapContainer = lazy(() => 
   import('./map/components/MapContainer').then(module => ({ 
@@ -122,7 +125,8 @@ const NewMapPage = () => {
         }}
       >
         <div className="container mx-auto px-4 pt-4 pb-2 max-w-6xl">
-          <div className="m1ssion-glass-card p-4 sm:p-6 mb-6">
+          {/* CRITICAL FIX: Full height container for map */}
+          <div className="m1ssion-glass-card p-4 sm:p-6 mb-6" style={{ minHeight: '70vh', height: 'auto' }}>
             <Suspense fallback={<MapLoadingFallback />}>
               <MapContainer
                 mapRef={mapRef}

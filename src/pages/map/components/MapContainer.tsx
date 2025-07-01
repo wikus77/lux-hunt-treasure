@@ -75,18 +75,20 @@ export const MapContainer: React.FC<MapContainerProps> = ({
 
   console.log('🗺️ MapContainer rendering with center:', stableCenter, 'zoom:', stableZoom);
 
+  // CRITICAL FIX: Proper whenReady callback without parameters
   const handleMapReady = useCallback(() => {
     console.log('🗺️ Map instance ready');
+    // Map ref is handled by react-leaflet internally
   }, []);
 
   return (
     <div 
       className="w-full relative"
       style={{ 
-        // CRITICAL FIX: Proper height and overflow for map visibility
-        height: '70vh',
-        minHeight: '500px',
-        maxHeight: '80vh',
+        // CRITICAL FIX: Full height container for proper map visibility
+        height: '100%',
+        minHeight: '70vh',
+        width: '100%',
         borderRadius: '24px',
         overflow: 'hidden',
         // CRITICAL: Ensure proper z-index and visibility
@@ -96,7 +98,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         visibility: 'visible'
       }}
     >
-      {/* CRITICAL FIX: Leaflet Map Container with stable props */}
+      {/* CRITICAL FIX: Leaflet Map Container with stable props and full sizing */}
       <LeafletMapContainer
         center={stableCenter}
         zoom={stableZoom}
@@ -105,6 +107,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           // CRITICAL: Ensure map takes full container space
           width: '100%', 
           height: '100%',
+          minHeight: '70vh',
           borderRadius: '24px',
           zIndex: 1,
           position: 'relative'
