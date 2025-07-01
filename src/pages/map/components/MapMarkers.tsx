@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -79,7 +80,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
           position={[newPoint.lat, newPoint.lng]}
           icon={customIcon}
         >
-          <Popup autoOpen>
+          <Popup autoPan={true}>
             <div className="p-2 bg-black/90 text-white rounded">
               <h3 className="font-bold text-cyan-400 mb-2">Nuovo Punto</h3>
               <input

@@ -75,12 +75,9 @@ export const MapContainer: React.FC<MapContainerProps> = ({
 
   console.log('🗺️ MapContainer rendering with center:', stableCenter, 'zoom:', stableZoom);
 
-  const handleMapReady = useCallback((mapInstance: any) => {
-    if (mapRef) {
-      mapRef.current = mapInstance;
-    }
-    console.log('🗺️ Map instance ready and assigned to ref');
-  }, [mapRef]);
+  const handleMapReady = useCallback(() => {
+    console.log('🗺️ Map instance ready');
+  }, []);
 
   return (
     <div 
@@ -121,7 +118,17 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         key={`map-${stableCenter[0]}-${stableCenter[1]}-${stableZoom}`}
       >
         {/* Map content with stable props */}
-        <MapContent selectedWeek={selectedWeek} />
+        <MapContent 
+          selectedWeek={selectedWeek} 
+          mapPoints={mapPoints}
+          activeMapPoint={activeMapPoint}
+          setActiveMapPoint={setActiveMapPoint}
+          handleUpdatePoint={handleUpdatePoint}
+          deleteMapPoint={deleteMapPoint}
+          newPoint={newPoint}
+          handleSaveNewPoint={handleSaveNewPoint}
+          handleCancelNewPoint={handleCancelNewPoint}
+        />
         
         {/* Event handlers */}
         <MapEventHandler

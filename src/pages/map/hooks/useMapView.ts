@@ -1,13 +1,14 @@
+
 import { useState, useEffect } from 'react';
 
 interface MapViewConfig {
-  mapCenter: [number, number];
-  mapZoom: number;
+  center: [number, number];
+  zoom: number;
 }
 
 export function useMapView(): MapViewConfig {
-  const [mapCenter, setMapCenter] = useState<[number, number]>([45.4642, 9.1900]);
-  const [mapZoom, setMapZoom] = useState<number>(6);
+  const [center, setCenter] = useState<[number, number]>([45.4642, 9.1900]);
+  const [zoom, setZoom] = useState<number>(6);
 
   // CRITICAL FIX: Stable configuration to prevent re-renders
   useEffect(() => {
@@ -15,15 +16,15 @@ export function useMapView(): MapViewConfig {
     const defaultCenter: [number, number] = [45.4642, 9.1900];
     const defaultZoom = 6;
     
-    setMapCenter(defaultCenter);
-    setMapZoom(defaultZoom);
+    setCenter(defaultCenter);
+    setZoom(defaultZoom);
     
     console.log('🗺️ Map view initialized:', { center: defaultCenter, zoom: defaultZoom });
   }, []);
 
   return {
-    mapCenter,
-    mapZoom
+    center,
+    zoom
   };
 }
 

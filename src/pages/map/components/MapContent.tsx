@@ -10,10 +10,35 @@ import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 
 export interface MapContentProps {
   selectedWeek: number;
+  mapPoints: {
+    id: string;
+    lat: number;
+    lng: number;
+    title: string;
+    note: string;
+    position: { lat: number; lng: number };
+  }[];
+  activeMapPoint: string | null;
+  setActiveMapPoint: React.Dispatch<React.SetStateAction<string | null>>;
+  handleUpdatePoint: (id: string, title: string, note: string) => Promise<boolean>;
+  deleteMapPoint: (id: string) => Promise<boolean>;
+  newPoint: any | null;
+  handleSaveNewPoint: (title: string, note: string) => void;
+  handleCancelNewPoint: () => void;
 }
 
 // CRITICAL FIX: Memoize MapContent to prevent tile layer re-mounting
-export const MapContent: React.FC<MapContentProps> = memo(({ selectedWeek }) => {
+export const MapContent: React.FC<MapContentProps> = memo(({ 
+  selectedWeek,
+  mapPoints,
+  activeMapPoint,
+  setActiveMapPoint,
+  handleUpdatePoint,
+  deleteMapPoint,
+  newPoint,
+  handleSaveNewPoint,
+  handleCancelNewPoint
+}) => {
   const { currentWeekAreas } = useBuzzMapLogic();
   
   console.log('🗺️ VISUAL RENDER: MapContent rendering for week:', selectedWeek);
@@ -42,7 +67,16 @@ export const MapContent: React.FC<MapContentProps> = memo(({ selectedWeek }) => 
       <BuzzMapAreas areas={currentWeekAreas} selectedWeek={selectedWeek} />
       <SearchAreaMapLayer />
       <UserLocationMarker />
-      <MapMarkers />
+      <MapMarkers 
+        mapPoints={mapPoints}
+        activeMapPoint={activeMapPoint}
+        setActiveMapPoint={setActiveMapPoint}
+        handleUpdatePoint={handleUpdatePoint}
+        deleteMapPoint={deleteMapPoint}
+        newPoint={newPoint}
+        handleSaveNewPoint={handleSaveNewPoint}
+        handleCancelNewPoint={handleCancelNewPoint}
+      />
       <PrizeLocationCircle />
     </>
   );
