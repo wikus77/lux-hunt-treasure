@@ -1,35 +1,41 @@
 
 import { useState, useEffect } from 'react';
 
-interface MapViewConfig {
+export interface MapViewConfig {
   center: [number, number];
   zoom: number;
 }
 
-export function useMapView(): MapViewConfig {
-  const [center, setCenter] = useState<[number, number]>([45.4642, 9.1900]);
-  const [zoom, setZoom] = useState<number>(6);
+export const useMapView = () => {
+  const [center, setCenter] = useState<[number, number]>([41.9028, 12.4964]); // Rome
+  const [zoom, setZoom] = useState(6);
 
-  // CRITICAL FIX: Stable configuration to prevent re-renders
+  // Try to get user location for better initial view
   useEffect(() => {
-    // Default configuration for Italy - only set once
-    const defaultCenter: [number, number] = [45.4642, 9.1900];
-    const defaultZoom = 6;
-    
-    setCenter(defaultCenter);
-    setZoom(defaultZoom);
-    
-    console.log('🗺️ Map view initialized:', { center: defaultCenter, zoom: defaultZoom });
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCenter([latitude, longitude]);
+          setZoom(10);
+          console.log('🗺️ User location found:', latitude, longitude);
+        },
+        (error) => {
+          console.log('🗺️ Could not get user location, using default (Rome)');
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 5000,
+          maximumAge: 300000 // 5 minutes
+        }
+      );
+    }
   }, []);
 
   return {
     center,
-    zoom
+    zoom,
+    setCenter,
+    setZoom
   };
-}
-
-// Component to automatically set the map view when the provided location changes
-export const SetViewOnChange = ({ center, zoom }: { center: [number, number]; zoom?: number }) => {
-  // This component was moved to useMapView.tsx, keeping it here for compatibility
-  return null;
 };

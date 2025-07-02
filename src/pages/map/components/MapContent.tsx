@@ -27,7 +27,6 @@ export interface MapContentProps {
   handleCancelNewPoint: () => void;
 }
 
-// CRITICAL FIX: Memoize MapContent to prevent tile layer re-mounting
 export const MapContent: React.FC<MapContentProps> = memo(({ 
   selectedWeek,
   mapPoints,
@@ -41,29 +40,28 @@ export const MapContent: React.FC<MapContentProps> = memo(({
 }) => {
   const { currentWeekAreas } = useBuzzMapLogic();
   
-  console.log('🗺️ VISUAL RENDER: MapContent rendering for week:', selectedWeek);
+  console.log('🗺️ MapContent rendering for week:', selectedWeek);
   
   return (
     <>
-      {/* CRITICAL FIX: Single stable TileLayer with unique key */}
+      {/* CRITICAL: Dark theme tile layer with proper error handling */}
       <TileLayer
-        key="single-tile-layer"
+        key="dark-tiles"
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         subdomains="abcd"
         maxZoom={19}
         minZoom={3}
-        updateWhenIdle={true}
-        keepBuffer={2}
-        updateWhenZooming={false}
-        // CRITICAL: Prevent tile duplication
-        noWrap={true}
-        bounds={undefined}
-        // CRITICAL: Ensure tiles load properly
+        updateWhenIdle={false}
+        keepBuffer={4}
+        updateWhenZooming={true}
+        noWrap={false}
         crossOrigin={true}
+        errorTileUrl="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzFhMWExYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2IiBmb250LXNpemU9IjE0Ij5NYXBwYTwvdGV4dD48L3N2Zz4="
+        opacity={1}
       />
       
-      {/* CRITICAL FIX: Stable layer order to prevent visual conflicts */}
+      {/* Overlay layers in correct order */}
       <BuzzMapAreas areas={currentWeekAreas} selectedWeek={selectedWeek} />
       <SearchAreaMapLayer />
       <UserLocationMarker />
@@ -83,5 +81,4 @@ export const MapContent: React.FC<MapContentProps> = memo(({
 });
 
 MapContent.displayName = 'MapContent';
-
 export default MapContent;

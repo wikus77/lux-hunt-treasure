@@ -1,5 +1,5 @@
 
-import React, { useMemo, useRef, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect, useRef } from 'react';
 import { MapContainer as LeafletMapContainer } from 'react-leaflet';
 import { useMapView } from '../hooks/useMapView';
 import { MapContent } from './MapContent';
@@ -68,59 +68,66 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   setShowHelpDialog
 }) => {
   const { center, zoom } = useMapView();
+  const mapInstanceRef = useRef<any>(null);
 
-  // CRITICAL FIX: Memoized map center to prevent constant re-rendering
+  // Stable values to prevent re-renders
   const stableCenter = useMemo(() => center, [center[0], center[1]]);
   const stableZoom = useMemo(() => zoom, [zoom]);
 
-  console.log('🗺️ MapContainer rendering with center:', stableCenter, 'zoom:', stableZoom);
-
-  // CRITICAL FIX: Proper whenReady callback without parameters
-  const handleMapReady = useCallback(() => {
+  // Handle map ready and force proper sizing
+  const handleMapReady = useCallback((mapInstance: any) => {
     console.log('🗺️ Map instance ready');
-    // Map ref is handled by react-leaflet internally
+    mapInstanceRef.current = mapInstance;
+    
+    // Critical fix: Force map to recognize container size
+    setTimeout(() => {
+      if (mapInstance) {
+        mapInstance.invalidateSize({ animate: false });
+        console.log('🗺️ Map size invalidated');
+      }
+    }, 100);
+    
+    // Additional resize after tiles load
+    setTimeout(() => {
+      if (mapInstance) {
+        mapInstance.invalidateSize({ animate: true });
+        console.log('🗺️ Map size re-invalidated');
+      }
+    }, 1000);
+  }, []);
+
+  // Force resize on window resize (important for Capacitor)
+  useEffect(() => {
+    const handleResize = () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return (
-    <div 
-      className="w-full relative"
-      style={{ 
-        // CRITICAL FIX: Full height container for proper map visibility
-        height: '100%',
-        minHeight: '70vh',
-        width: '100%',
-        borderRadius: '24px',
-        overflow: 'hidden',
-        // CRITICAL: Ensure proper z-index and visibility
-        zIndex: 1,
-        position: 'relative',
-        display: 'block',
-        visibility: 'visible'
-      }}
-    >
-      {/* CRITICAL FIX: Leaflet Map Container with stable props and full sizing */}
+    <div className="relative w-full h-full">
       <LeafletMapContainer
         center={stableCenter}
         zoom={stableZoom}
-        className="w-full h-full rounded-[24px]"
+        className="w-full h-full"
         style={{ 
-          // CRITICAL: Ensure map takes full container space
           width: '100%', 
           height: '100%',
-          minHeight: '70vh',
-          borderRadius: '24px',
+          minHeight: '500px',
           zIndex: 1,
-          position: 'relative'
+          backgroundColor: '#1a1a1a'
         }}
         zoomControl={true}
         scrollWheelZoom={true}
         doubleClickZoom={true}
         dragging={true}
         whenReady={handleMapReady}
-        // CRITICAL: Prevent constant re-mounting
         key={`map-${stableCenter[0]}-${stableCenter[1]}-${stableZoom}`}
       >
-        {/* Map content with stable props */}
         <MapContent 
           selectedWeek={selectedWeek} 
           mapPoints={mapPoints}
@@ -133,7 +140,6 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           handleCancelNewPoint={handleCancelNewPoint}
         />
         
-        {/* Event handlers */}
         <MapEventHandler
           onMapClick={onMapClick}
           isAddingPoint={isAddingPoint}
@@ -158,7 +164,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
 
       {/* Help Dialog Overlay */}
       {showHelpDialog && (
-        <div className="absolute inset-0 z-50 bg-black/50 flex items-center justify-center p-4 rounded-[24px]">
+        <div className="absolute inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-black/90 backdrop-blur-xl p-6 rounded-xl border border-cyan-500/30 max-w-md">
             <h3 className="text-lg font-bold text-white mb-4">Aiuto Mappa</h3>
             <div className="text-gray-300 space-y-2 text-sm">

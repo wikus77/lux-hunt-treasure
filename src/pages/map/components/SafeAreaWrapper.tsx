@@ -6,21 +6,21 @@ interface SafeAreaWrapperProps {
   className?: string;
 }
 
-const SafeAreaWrapper: React.FC<SafeAreaWrapperProps> = ({ children, className = '' }) => {
+const SafeAreaWrapper: React.FC<SafeAreaWrapperProps> = ({ 
+  children, 
+  className = '' 
+}) => {
   return (
     <div 
-      className={`
-        pt-[env(safe-area-inset-top)]
-        pb-[env(safe-area-inset-bottom)]
-        pl-[env(safe-area-inset-left)]
-        pr-[env(safe-area-inset-right)]
-        ${className}
-      `}
+      className={`w-full h-full ${className}`}
       style={{
-        paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-        paddingLeft: 'env(safe-area-inset-left)',
-        paddingRight: 'env(safe-area-inset-right)'
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingLeft: 'env(safe-area-inset-left, 0px)',
+        paddingRight: 'env(safe-area-inset-right, 0px)',
+        // Fallback per dispositivi che non supportano env()
+        minHeight: '100vh',
+        minHeight: '100dvh'
       }}
     >
       {children}

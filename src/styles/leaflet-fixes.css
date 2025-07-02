@@ -1,0 +1,64 @@
+
+/* CRITICAL LEAFLET FIXES FOR CAPACITOR iOS */
+
+/* Import Leaflet CSS */
+@import 'leaflet/dist/leaflet.css';
+
+/* Fix for missing marker icons in production */
+.leaflet-default-icon-path {
+  background-image: url('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png');
+}
+
+/* Fix container sizing */
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  position: relative !important;
+  outline: none !important;
+  background: #1a1a1a !important;
+}
+
+/* Fix for tiles not loading */
+.leaflet-tile-pane {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.leaflet-tile {
+  opacity: 1 !important;
+  visibility: visible !important;
+  filter: none !important;
+}
+
+/* Fix for Capacitor touch events */
+.leaflet-container {
+  touch-action: manipulation !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+/* Dark theme for tiles */
+.leaflet-tile-container img {
+  filter: brightness(0.6) contrast(1.2) !important;
+}
+
+/* Fix attribution positioning */
+.leaflet-control-attribution {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  font-size: 10px !important;
+}
+
+/* Ensure proper stacking */
+.leaflet-map-pane {
+  z-index: 1 !important;
+}
+
+.leaflet-overlay-pane {
+  z-index: 2 !important;
+}
+
+.leaflet-control-container {
+  z-index: 1000 !important;
+}
