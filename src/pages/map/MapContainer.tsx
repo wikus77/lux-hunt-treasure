@@ -3,11 +3,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MapContainer as LeafletMapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import './leaflet-fixes.css';
+import '../../styles/leaflet-fixes.css';
 import MapContent from './MapContent';
-import MapControls from './MapControls';
-import BuzzMapButton from './BuzzMapButton';
-import MapZoomControls from './MapZoomControls';
+import MapControls from '../../components/map/MapControls';
+import BuzzMapButton from './components/BuzzMapButton';
+import MapZoomControls from './components/MapZoomControls';
 import HelpDialog from './HelpDialog';
 import { useBuzzMapLogic } from '@/hooks/map/useBuzzMapLogic';
 

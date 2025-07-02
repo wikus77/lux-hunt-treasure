@@ -1,11 +1,10 @@
-
 import React, { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
-import UserMapAreas from './UserMapAreas';
+import UserMapAreas from './components/UserMapArea';
 import SearchAreaMapLayer from './SearchAreaMapLayer';
-import MapPopupManager from './MapPopupManager';
-import MapEventHandler from './MapEventHandler';
-import PrizeAreaOverlay from './PrizeAreaOverlay';
+import MapPopupManager from '../../components/map/MapPopupManager';
+import MapEventHandler from '../../components/map/MapEventHandler';
+import PrizeAreaOverlay from './components/PrizeAreaOverlay';
 
 interface MapContentProps {
   mapRef: React.MutableRefObject<L.Map | null>;
