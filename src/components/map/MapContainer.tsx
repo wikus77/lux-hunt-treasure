@@ -102,10 +102,10 @@ const MapContainer: React.FC<MapContainerProps> = ({
     return () => clearTimeout(timer);
   }, [mapReady]);
 
-  // Handle whenReady event properly
-  const handleWhenReady = (e: L.LeafletEvent) => {
-    const map = e.target as L.Map;
-    handleMapReady(map);
+  // Handle whenReady event - no parameters expected by React Leaflet
+  const handleWhenReady = () => {
+    // The map instance will be available through the MapContent component
+    console.log('🗺️ Map is ready');
   };
 
   return (
