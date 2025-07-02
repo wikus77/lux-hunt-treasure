@@ -27,7 +27,7 @@ const UserMapArea: React.FC<UserMapAreaProps> = ({ areas, onAreaClick }) => {
         <Circle
           key={area.id}
           center={[area.lat, area.lng]}
-          radius={area.radius_km * 1000} // Convert km to meters
+          radius={area.radius_km * 1000}
           pathOptions={{
             fillColor: '#00D1FF',
             fillOpacity: 0.3,

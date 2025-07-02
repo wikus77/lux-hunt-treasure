@@ -44,7 +44,6 @@ export const MapContent: React.FC<MapContentProps> = memo(({
   
   return (
     <>
-      {/* CRITICAL: Enhanced dark theme tile layer with robust error handling */}
       <TileLayer
         key="dark-tiles-primary"
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -64,7 +63,6 @@ export const MapContent: React.FC<MapContentProps> = memo(({
           load: () => console.log('🗺️ Tiles loading completed'),
           tileerror: (e) => {
             console.log('🗺️ Tile error:', e);
-            // Enhanced retry with exponential backoff
             setTimeout(() => {
               const target = e.target as any;
               if (target && target.src) {
@@ -82,7 +80,6 @@ export const MapContent: React.FC<MapContentProps> = memo(({
         errorTileUrl="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzFhMWExYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2IiBmb250LXNpemU9IjE0Ij5NYXBwYTwvdGV4dD48L3N2Zz4="
       />
       
-      {/* Overlay layers in correct z-index order */}
       <BuzzMapAreas areas={currentWeekAreas} selectedWeek={selectedWeek} />
       <SearchAreaMapLayer />
       <UserLocationMarker />

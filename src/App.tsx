@@ -1,51 +1,36 @@
 
-import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { Toaster } from "sonner";
-import { AuthProvider } from "./contexts/auth/AuthProvider";
-import { SoundProvider } from "./contexts/SoundContext";
-import { ErrorBoundary } from "./components/error/ErrorBoundary";
-import GlobalLayout from "./components/layout/GlobalLayout";
-import AppRoutes from "./routes/AppRoutes";
-import SafeAreaToggle from "./components/debug/SafeAreaToggle";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/auth";
+import { DynamicIslandProvider } from "@/contexts/DynamicIslandContext";
+import { MissionProvider } from "@/contexts/MissionContext";
+import Index from "./pages/Index";
+import MapPage from "./pages/map/MapPage";
 
-function App() {
-  console.log("🚀 App component rendering...");
-  
-  return (
-    <ErrorBoundary fallback={
-      <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
-        <div className="glass-card p-6 max-w-md mx-auto text-center">
-          <h2 className="text-xl font-bold mb-4">ERRORE CRITICO DI SISTEMA</h2>
-          <p className="mb-6">L'applicazione ha riscontrato un errore fatale. Ricarica la pagina.</p>
-          <button 
-            onClick={() => {
-              // Clear all storage and reload
-              localStorage.clear();
-              sessionStorage.clear();
-              window.location.reload();
-            }}
-            className="px-4 py-2 bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-md"
-          >
-            🔄 RIAVVIA EMERGENZA
-          </button>
-        </div>
-      </div>
-    }>
-      <Router>
-        <SoundProvider>
-          <AuthProvider>
-            <SafeAreaToggle>
-              <GlobalLayout>
-                <AppRoutes />
-                <Toaster position="top-right" />
-              </GlobalLayout>
-            </SafeAreaToggle>
-          </AuthProvider>
-        </SoundProvider>
-      </Router>
-    </ErrorBoundary>
-  );
-}
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <DynamicIslandProvider>
+        <MissionProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/map" element={<MapPage />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </MissionProvider>
+      </DynamicIslandProvider>
+    </AuthProvider>
+  </QueryClientProvider>
+);
 
 export default App;

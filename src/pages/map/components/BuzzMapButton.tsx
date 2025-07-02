@@ -31,7 +31,6 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     setIsGenerating(true);
     
     try {
-      // Use current location or default to Rome
       const coordinates = currentLocation || { lat: 41.9028, lng: 12.4964 };
       
       console.log('🗺️ BUZZ MAPPA: Generating area at coordinates:', coordinates);
@@ -49,10 +48,8 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
           description: `Raggio: ${response.map_area.radius_km.toFixed(1)} km`
         });
 
-        // Reload areas to show the new one
         await reloadAreas();
         
-        // Call success callback
         if (onBuzzSuccess) {
           onBuzzSuccess(response.map_area);
         }

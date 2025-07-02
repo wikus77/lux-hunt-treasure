@@ -70,21 +70,17 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   const { center, zoom } = useMapView();
   const internalMapRef = useRef<any>(null);
 
-  // Stable values to prevent re-renders
   const stableCenter = useMemo(() => center, [center[0], center[1]]);
   const stableZoom = useMemo(() => zoom, [zoom]);
 
-  // CRITICAL FIX: whenReady callback with proper ref assignment
   const handleMapReady = useCallback(() => {
     console.log('🗺️ Map is ready - initializing');
     
     if (internalMapRef.current) {
       const mapInstance = internalMapRef.current;
       
-      // FIXED: Safe assignment to external mutable ref
       if (mapRef && 'current' in mapRef) {
         try {
-          // Cast to mutable ref for assignment
           (mapRef as React.MutableRefObject<any>).current = mapInstance;
           console.log('🗺️ External mapRef assigned successfully');
         } catch (error) {
@@ -92,12 +88,10 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         }
       }
       
-      // CRITICAL: Double invalidateSize for Capacitor iOS
       setTimeout(() => {
         mapInstance.invalidateSize({ animate: false });
         console.log('🗺️ Map size invalidated (immediate)');
         
-        // Secondary invalidation for complex layouts
         setTimeout(() => {
           mapInstance.invalidateSize({ animate: true });
           console.log('🗺️ Map size re-invalidated (delayed)');
@@ -106,7 +100,6 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     }
   }, [mapRef]);
 
-  // Force resize on window resize (critical for Capacitor)
   useEffect(() => {
     const handleResize = () => {
       if (internalMapRef.current) {
@@ -176,7 +169,6 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         />
       </LeafletMapContainer>
 
-      {/* Help Dialog Overlay */}
       {showHelpDialog && (
         <div className="absolute inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-black/90 backdrop-blur-xl p-6 rounded-xl border border-cyan-500/30 max-w-md">
