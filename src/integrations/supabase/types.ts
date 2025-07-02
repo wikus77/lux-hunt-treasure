@@ -57,6 +57,39 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_logs: {
+        Row: {
+          context: string | null
+          created_at: string
+          device: string | null
+          event_type: string
+          id: string
+          note: string | null
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          context?: string | null
+          created_at?: string
+          device?: string | null
+          event_type: string
+          id?: string
+          note?: string | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Update: {
+          context?: string | null
+          created_at?: string
+          device?: string | null
+          event_type?: string
+          id?: string
+          note?: string | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       admin_prizes: {
         Row: {
           address: string
@@ -129,6 +162,42 @@ export type Database = {
           target_users?: string[] | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      backup_logs: {
+        Row: {
+          backup_date: string
+          backup_type: string
+          created_at: string
+          duration_seconds: number | null
+          error_message: string | null
+          file_size: number | null
+          id: string
+          status: string
+          storage_path: string | null
+        }
+        Insert: {
+          backup_date?: string
+          backup_type?: string
+          created_at?: string
+          duration_seconds?: number | null
+          error_message?: string | null
+          file_size?: number | null
+          id?: string
+          status?: string
+          storage_path?: string | null
+        }
+        Update: {
+          backup_date?: string
+          backup_type?: string
+          created_at?: string
+          duration_seconds?: number | null
+          error_message?: string | null
+          file_size?: number | null
+          id?: string
+          status?: string
+          storage_path?: string | null
         }
         Relationships: []
       }
@@ -353,6 +422,54 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      live_events: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+        }
+        Relationships: []
+      }
+      map_click_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          lat: number
+          lng: number
+          user_id: string
+          zoom: number
+        }
+        Insert: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          lat: number
+          lng: number
+          user_id: string
+          zoom?: number
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          lat?: number
+          lng?: number
+          user_id?: string
+          zoom?: number
         }
         Relationships: []
       }
@@ -660,6 +777,7 @@ export type Database = {
           subscription_end: string | null
           subscription_start: string | null
           subscription_tier: string
+          tier: string | null
           updated_at: string
           username: string | null
         }
@@ -688,6 +806,7 @@ export type Database = {
           subscription_end?: string | null
           subscription_start?: string | null
           subscription_tier?: string
+          tier?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -716,6 +835,7 @@ export type Database = {
           subscription_end?: string | null
           subscription_start?: string | null
           subscription_tier?: string
+          tier?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -1066,6 +1186,7 @@ export type Database = {
           id: string
           is_deleted: boolean | null
           is_read: boolean | null
+          is_read_bool: boolean | null
           message: string
           title: string
           type: string
@@ -1076,6 +1197,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean | null
           is_read?: boolean | null
+          is_read_bool?: boolean | null
           message: string
           title: string
           type?: string
@@ -1086,6 +1208,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean | null
           is_read?: boolean | null
+          is_read_bool?: boolean | null
           message?: string
           title?: string
           type?: string
@@ -1126,6 +1249,54 @@ export type Database = {
           last4?: string
           stripe_pm_id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          address: string | null
+          cap: string | null
+          citta: string | null
+          city: string | null
+          cognome: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+          nome: string | null
+          numero_civico: string | null
+          surname: string | null
+          via: string | null
+        }
+        Insert: {
+          address?: string | null
+          cap?: string | null
+          citta?: string | null
+          city?: string | null
+          cognome?: string | null
+          created_at?: string | null
+          email?: string | null
+          id: string
+          name?: string | null
+          nome?: string | null
+          numero_civico?: string | null
+          surname?: string | null
+          via?: string | null
+        }
+        Update: {
+          address?: string | null
+          cap?: string | null
+          citta?: string | null
+          city?: string | null
+          cognome?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          nome?: string | null
+          numero_civico?: string | null
+          surname?: string | null
+          via?: string | null
         }
         Relationships: []
       }
@@ -1274,6 +1445,10 @@ export type Database = {
       log_potential_abuse: {
         Args: { p_event_type: string; p_user_id: string }
         Returns: boolean
+      }
+      setup_developer_user: {
+        Args: { uid: string }
+        Returns: undefined
       }
       update_user_subscription_tier: {
         Args: { target_user_id: string; new_tier: string }

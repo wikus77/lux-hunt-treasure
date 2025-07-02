@@ -1,0 +1,209 @@
+
+/* Leaflet iOS Capacitor Fixes */
+.map-container-wrapper {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #1a1a2e;
+}
+
+.map-container {
+  height: 100% !important;
+  width: 100% !important;
+  z-index: 1;
+  background: #1a1a2e !important;
+}
+
+/* Fix for iOS safe areas */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  background: #1a1a2e !important;
+  font-family: inherit;
+}
+
+/* Dark tile optimization */
+.leaflet-tile {
+  filter: brightness(0.9) contrast(1.1);
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Control positioning for iOS */
+.leaflet-control-container {
+  pointer-events: none;
+}
+
+.leaflet-control {
+  pointer-events: auto;
+}
+
+/* Custom controls positioning */
+.leaflet-top.leaflet-right {
+  top: env(safe-area-inset-top, 10px) !important;
+  right: env(safe-area-inset-right, 10px) !important;
+}
+
+.leaflet-bottom.leaflet-left {
+  bottom: env(safe-area-inset-bottom, 10px) !important;
+  left: env(safe-area-inset-left, 10px) !important;
+}
+
+/* Popup styling */
+.leaflet-popup-content-wrapper {
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  border: 1px solid rgba(0, 209, 255, 0.3);
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+}
+
+.leaflet-popup-tip {
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(0, 209, 255, 0.3);
+}
+
+.leaflet-popup-close-button {
+  color: #00D1FF !important;
+  font-size: 18px !important;
+  padding: 4px 8px !important;
+}
+
+/* BUZZ area styling */
+.buzz-area-glow {
+  filter: drop-shadow(0 0 12px #00D1FF77);
+  animation: buzzGlow 3s infinite ease-in-out;
+}
+
+@keyframes buzzGlow {
+  0% { filter: drop-shadow(0 0 6px #00D1FF55); }
+  50% { filter: drop-shadow(0 0 18px #00D1FF99); }
+  100% { filter: drop-shadow(0 0 6px #00D1FF55); }
+}
+
+/* Search area pulse */
+.search-area-pulse {
+  animation: searchAreaPulse 4s infinite ease-in-out;
+}
+
+@keyframes searchAreaPulse {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.5; }
+  100% { opacity: 0.3; }
+}
+
+/* Prize area golden glow */
+.prize-area-glow {
+  filter: drop-shadow(0 0 15px #FFD70077);
+  animation: prizeGlow 2s infinite ease-in-out;
+}
+
+@keyframes prizeGlow {
+  0% { filter: drop-shadow(0 0 8px #FFD70055); }
+  50% { filter: drop-shadow(0 0 20px #FFD700AA); }
+  100% { filter: drop-shadow(0 0 8px #FFD70055); }
+}
+
+/* Map point neon marker */
+.map-point-marker {
+  filter: drop-shadow(0 0 8px #00f0ff);
+  animation: mapPointPulse 2s infinite;
+}
+
+@keyframes mapPointPulse {
+  0% { filter: drop-shadow(0 0 4px #00f0ff77); }
+  50% { filter: drop-shadow(0 0 20px #00f0ff99); }
+  100% { filter: drop-shadow(0 0 4px #00f0ff77); }
+}
+
+/* Input styling in popups */
+.leaflet-popup-content input,
+.leaflet-popup-content textarea {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(0, 209, 255, 0.3);
+  color: white;
+  border-radius: 8px;
+  padding: 8px;
+  width: 100%;
+  margin: 4px 0;
+}
+
+.leaflet-popup-content input:focus,
+.leaflet-popup-content textarea:focus {
+  border-color: #00D1FF;
+  outline: none;
+  box-shadow: 0 0 8px rgba(0, 209, 255, 0.3);
+}
+
+/* Button styling in popups */
+.leaflet-popup-content button {
+  background: linear-gradient(135deg, #00D1FF 0%, #7B2EFF 100%);
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin: 4px 2px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.leaflet-popup-content button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 209, 255, 0.3);
+}
+
+.leaflet-popup-content button.destructive {
+  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+}
+
+/* Z-index management */
+.leaflet-pane {
+  z-index: auto;
+}
+
+.leaflet-overlay-pane {
+  z-index: 200;
+}
+
+.leaflet-marker-pane {
+  z-index: 300;
+}
+
+.leaflet-tooltip-pane {
+  z-index: 400;
+}
+
+.leaflet-popup-pane {
+  z-index: 500;
+}
+
+.leaflet-control-pane {
+  z-index: 600;
+}
+
+/* iOS WebView optimization */
+.leaflet-container img {
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Prevent zoom issues on iOS */
+.leaflet-container {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
+/* Force hardware acceleration */
+.leaflet-zoom-animated {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Loading state */
+.leaflet-tile-loaded {
+  opacity: 1 !important;
+}
