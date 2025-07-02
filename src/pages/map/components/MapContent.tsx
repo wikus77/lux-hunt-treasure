@@ -44,24 +44,30 @@ export const MapContent: React.FC<MapContentProps> = memo(({
   
   return (
     <>
-      {/* CRITICAL: Dark theme tile layer with proper error handling */}
+      {/* CRITICAL: Enhanced dark theme tile layer with robust error handling */}
       <TileLayer
-        key="dark-tiles"
+        key="dark-tiles-primary"
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         subdomains="abcd"
         maxZoom={19}
         minZoom={3}
         updateWhenIdle={false}
-        keepBuffer={4}
+        keepBuffer={6}
         updateWhenZooming={true}
         noWrap={false}
         crossOrigin={true}
-        errorTileUrl="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzFhMWExYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2IiBmb250LXNpemU9IjE0Ij5NYXBwYTwvdGV4dD48L3N2Zz4="
         opacity={1}
+        className="leaflet-tile-layer-fixed"
+        eventHandlers={{
+          loading: () => console.log('🗺️ Tiles loading started'),
+          load: () => console.log('🗺️ Tiles loading completed'),
+          tileerror: (e) => console.log('🗺️ Tile error:', e)
+        }}
+        errorTileUrl="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzFhMWExYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2IiBmb250LXNpemU9IjE0Ij5NYXBwYTwvdGV4dD48L3N2Zz4="
       />
       
-      {/* Overlay layers in correct order */}
+      {/* Overlay layers in correct z-index order */}
       <BuzzMapAreas areas={currentWeekAreas} selectedWeek={selectedWeek} />
       <SearchAreaMapLayer />
       <UserLocationMarker />

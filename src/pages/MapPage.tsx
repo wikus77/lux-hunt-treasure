@@ -102,21 +102,22 @@ const MapPage = () => {
       {/* Main content */}
       <main className="pt-20 pb-20">
         <div className="container mx-auto px-4 pt-4 pb-2 max-w-6xl">
-          {/* Map container with proper sizing */}
+          {/* CRITICAL: Map container with fixed sizing and proper background */}
           <div 
-            className="bg-gray-900/20 backdrop-blur-sm border border-gray-800/30 rounded-2xl p-4 mb-6"
+            className="m1ssion-glass-card bg-gray-900/20 backdrop-blur-sm border border-gray-800/30 rounded-2xl p-4 mb-6"
             style={{ 
               minHeight: '70vh',
               height: 'auto',
-              position: 'relative'
+              position: 'relative',
+              overflow: 'hidden'
             }}
           >
             <div 
-              className="w-full rounded-xl overflow-hidden"
+              className="w-full rounded-xl overflow-hidden bg-[#1a1a1a]"
               style={{ 
                 height: '70vh',
                 minHeight: '500px',
-                backgroundColor: '#1a1a1a'
+                position: 'relative'
               }}
             >
               <Suspense fallback={<MapLoadingFallback />}>

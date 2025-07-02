@@ -68,63 +68,49 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   setShowHelpDialog
 }) => {
   const { center, zoom } = useMapView();
-  const mapInstanceRef = useRef<any>(null);
+  const internalMapRef = useRef<any>(null);
 
   // Stable values to prevent re-renders
   const stableCenter = useMemo(() => center, [center[0], center[1]]);
   const stableZoom = useMemo(() => zoom, [zoom]);
 
-  // FIXED: Handle map ready with correct parameter signature
-  const handleMapReady = useCallback(() => {
-    // The map instance is available via the ref after initialization
-    const mapInstance = mapInstanceRef.current;
-    if (mapInstance) {
-      console.log('🗺️ Map instance ready');
-      
-      // Critical fix: Force map to recognize container size
-      setTimeout(() => {
-        if (mapInstance) {
-          mapInstance.invalidateSize({ animate: false });
-          console.log('🗺️ Map size invalidated');
-        }
-      }, 100);
-      
-      // Additional resize after tiles load
-      setTimeout(() => {
-        if (mapInstance) {
-          mapInstance.invalidateSize({ animate: true });
-          console.log('🗺️ Map size re-invalidated');
-        }
-      }, 1000);
-    }
-  }, []);
-
-  // Set the map instance ref when the component mounts
-  const setMapRef = useCallback((map: any) => {
-    mapInstanceRef.current = map;
-    // FIXED: Check if mapRef is mutable before assigning
-    if (mapRef && 'current' in mapRef) {
-      // Type guard to check if it's a MutableRefObject
-      const mutableRef = mapRef as React.MutableRefObject<any>;
-      if (mutableRef) {
-        try {
-          mutableRef.current = map;
-        } catch (error) {
-          // If assignment fails, it means the ref is read-only
-          console.log('🗺️ Map ref is read-only, skipping assignment');
-        }
+  // FIXED: Proper map initialization with ref handling
+  const handleMapCreated = useCallback((mapInstance: any) => {
+    console.log('🗺️ Map instance created');
+    
+    // Store in internal ref
+    internalMapRef.current = mapInstance;
+    
+    // FIXED: Safe assignment to external ref
+    if (mapRef && typeof mapRef === 'object' && 'current' in mapRef) {
+      try {
+        (mapRef as any).current = mapInstance;
+      } catch (error) {
+        console.log('🗺️ External mapRef is read-only');
       }
     }
-    if (map) {
-      handleMapReady();
+    
+    // Critical: Force map to recognize container size immediately
+    if (mapInstance) {
+      setTimeout(() => {
+        mapInstance.invalidateSize({ animate: false });
+        console.log('🗺️ Map size invalidated (immediate)');
+      }, 50);
+      
+      // Secondary invalidation for complex layouts
+      setTimeout(() => {
+        mapInstance.invalidateSize({ animate: true });
+        console.log('🗺️ Map size re-invalidated (delayed)');
+      }, 500);
     }
-  }, [handleMapReady, mapRef]);
+  }, [mapRef]);
 
-  // Force resize on window resize (important for Capacitor)
+  // Force resize on window resize (critical for Capacitor)
   useEffect(() => {
     const handleResize = () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.invalidateSize();
+      if (internalMapRef.current) {
+        internalMapRef.current.invalidateSize();
+        console.log('🗺️ Map resized on window resize');
       }
     };
 
@@ -133,23 +119,24 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   }, []);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full bg-gray-900">
       <LeafletMapContainer
         center={stableCenter}
         zoom={stableZoom}
-        className="w-full h-full"
+        className="w-full h-full leaflet-container-fixed"
         style={{ 
           width: '100%', 
           height: '100%',
-          minHeight: '500px',
+          minHeight: '70vh',
           zIndex: 1,
-          backgroundColor: '#1a1a1a'
+          backgroundColor: '#1a1a1a',
+          position: 'relative'
         }}
         zoomControl={true}
         scrollWheelZoom={true}
         doubleClickZoom={true}
         dragging={true}
-        ref={setMapRef}
+        whenCreated={handleMapCreated}
         key={`map-${stableCenter[0]}-${stableCenter[1]}-${stableZoom}`}
       >
         <MapContent 
