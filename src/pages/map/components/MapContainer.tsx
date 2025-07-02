@@ -102,8 +102,18 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   // Set the map instance ref when the component mounts
   const setMapRef = useCallback((map: any) => {
     mapInstanceRef.current = map;
-    if (mapRef) {
-      mapRef.current = map;
+    // FIXED: Check if mapRef is mutable before assigning
+    if (mapRef && 'current' in mapRef) {
+      // Type guard to check if it's a MutableRefObject
+      const mutableRef = mapRef as React.MutableRefObject<any>;
+      if (mutableRef) {
+        try {
+          mutableRef.current = map;
+        } catch (error) {
+          // If assignment fails, it means the ref is read-only
+          console.log('🗺️ Map ref is read-only, skipping assignment');
+        }
+      }
     }
     if (map) {
       handleMapReady();
