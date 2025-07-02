@@ -20,6 +20,8 @@ interface BuzzApiResponse {
   lng?: number;
   radius_km?: number;
   generation_number?: number;
+  clue_text?: string;
+  error?: string;
   errorMessage?: string;
 }
 
@@ -48,6 +50,7 @@ export const useBuzzApi = () => {
           console.error('Error creating map area:', error);
           return {
             success: false,
+            error: error.message,
             errorMessage: error.message
           };
         }
@@ -67,15 +70,20 @@ export const useBuzzApi = () => {
         };
       }
 
+      // For regular BUZZ calls, generate a clue
+      const clueText = `Indizio dinamico generato alle ${new Date().toLocaleTimeString()}`;
+      
       return {
-        success: false,
-        errorMessage: 'Invalid parameters'
+        success: true,
+        clue_text: clueText
       };
     } catch (error) {
       console.error('BuzzApi error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return {
         success: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error'
+        error: errorMessage,
+        errorMessage: errorMessage
       };
     } finally {
       setLoading(false);
