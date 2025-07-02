@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SafeAreaWrapper } from '@/components/ui/SafeAreaWrapper';
+import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 import MapContainer from './map/MapContainer';
 import MapPageHeader from './map/components/MapPageHeader';
 import { useNewMapPage } from '@/hooks/useNewMapPage';
