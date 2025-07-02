@@ -74,24 +74,26 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   const stableCenter = useMemo(() => center, [center[0], center[1]]);
   const stableZoom = useMemo(() => zoom, [zoom]);
 
-  // FIXED: Proper map initialization with ref handling
-  const handleMapCreated = useCallback((mapInstance: any) => {
-    console.log('🗺️ Map instance created');
+  // FIXED: Proper map initialization with whenReady callback
+  const handleMapReady = useCallback(() => {
+    console.log('🗺️ Map is ready');
     
-    // Store in internal ref
-    internalMapRef.current = mapInstance;
-    
-    // FIXED: Safe assignment to external ref
-    if (mapRef && typeof mapRef === 'object' && 'current' in mapRef) {
-      try {
-        (mapRef as any).current = mapInstance;
-      } catch (error) {
-        console.log('🗺️ External mapRef is read-only');
+    // Get the map instance from the internal ref
+    if (internalMapRef.current) {
+      const mapInstance = internalMapRef.current;
+      
+      // FIXED: Safe assignment to external ref
+      if (mapRef && typeof mapRef === 'object' && 'current' in mapRef) {
+        try {
+          if ('current' in mapRef && typeof mapRef.current !== 'string') {
+            (mapRef as any).current = mapInstance;
+          }
+        } catch (error) {
+          console.log('🗺️ External mapRef assignment failed, continuing...');
+        }
       }
-    }
-    
-    // Critical: Force map to recognize container size immediately
-    if (mapInstance) {
+      
+      // Critical: Force map to recognize container size immediately
       setTimeout(() => {
         mapInstance.invalidateSize({ animate: false });
         console.log('🗺️ Map size invalidated (immediate)');
@@ -136,7 +138,8 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         scrollWheelZoom={true}
         doubleClickZoom={true}
         dragging={true}
-        whenCreated={handleMapCreated}
+        whenReady={handleMapReady}
+        ref={internalMapRef}
         key={`map-${stableCenter[0]}-${stableCenter[1]}-${stableZoom}`}
       >
         <MapContent 
