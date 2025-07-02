@@ -74,39 +74,35 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   const stableCenter = useMemo(() => center, [center[0], center[1]]);
   const stableZoom = useMemo(() => zoom, [zoom]);
 
-  // FIXED: Proper map initialization with whenReady callback
+  // CRITICAL FIX: whenReady callback with proper ref assignment
   const handleMapReady = useCallback(() => {
-    console.log('🗺️ Map is ready');
+    console.log('🗺️ Map is ready - initializing');
     
-    // Get the map instance from the internal ref
     if (internalMapRef.current) {
       const mapInstance = internalMapRef.current;
       
-      // FIXED: Safe assignment to external ref with proper type checking
-      if (mapRef && typeof mapRef === 'object' && 'current' in mapRef) {
+      // FIXED: Safe assignment to external mutable ref
+      if (mapRef && 'current' in mapRef) {
         try {
-          // Check if mapRef.current is writable
-          const descriptor = Object.getOwnPropertyDescriptor(mapRef, 'current');
-          if (!descriptor || descriptor.writable !== false) {
-            (mapRef as React.MutableRefObject<any>).current = mapInstance;
-            console.log('🗺️ External mapRef assigned successfully');
-          }
+          // Cast to mutable ref for assignment
+          (mapRef as React.MutableRefObject<any>).current = mapInstance;
+          console.log('🗺️ External mapRef assigned successfully');
         } catch (error) {
-          console.log('🗺️ External mapRef assignment failed, continuing with internal ref');
+          console.log('🗺️ External mapRef assignment failed, using internal ref');
         }
       }
       
-      // Critical: Force map to recognize container size immediately
+      // CRITICAL: Double invalidateSize for Capacitor iOS
       setTimeout(() => {
         mapInstance.invalidateSize({ animate: false });
         console.log('🗺️ Map size invalidated (immediate)');
+        
+        // Secondary invalidation for complex layouts
+        setTimeout(() => {
+          mapInstance.invalidateSize({ animate: true });
+          console.log('🗺️ Map size re-invalidated (delayed)');
+        }, 500);
       }, 100);
-      
-      // Secondary invalidation for complex layouts
-      setTimeout(() => {
-        mapInstance.invalidateSize({ animate: true });
-        console.log('🗺️ Map size re-invalidated (delayed)');
-      }, 500);
     }
   }, [mapRef]);
 

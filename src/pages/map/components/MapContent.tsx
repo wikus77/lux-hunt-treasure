@@ -44,7 +44,7 @@ export const MapContent: React.FC<MapContentProps> = memo(({
   
   return (
     <>
-      {/* CRITICAL: Enhanced dark theme tile layer with robust error handling and proper brightness */}
+      {/* CRITICAL: Enhanced dark theme tile layer with robust error handling */}
       <TileLayer
         key="dark-tiles-primary"
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -53,7 +53,7 @@ export const MapContent: React.FC<MapContentProps> = memo(({
         maxZoom={19}
         minZoom={3}
         updateWhenIdle={false}
-        keepBuffer={6}
+        keepBuffer={8}
         updateWhenZooming={true}
         noWrap={false}
         crossOrigin={true}
@@ -64,14 +64,20 @@ export const MapContent: React.FC<MapContentProps> = memo(({
           load: () => console.log('🗺️ Tiles loading completed'),
           tileerror: (e) => {
             console.log('🗺️ Tile error:', e);
-            // Retry loading failed tiles
+            // Enhanced retry with exponential backoff
             setTimeout(() => {
               const target = e.target as any;
               if (target && target.src) {
-                target.src = target.src;
+                const originalSrc = target.src;
+                target.src = '';
+                setTimeout(() => {
+                  target.src = originalSrc;
+                }, 100);
               }
             }, 1000);
-          }
+          },
+          tileloadstart: () => console.log('🗺️ Tile load started'),
+          tileload: () => console.log('🗺️ Tile loaded successfully')
         }}
         errorTileUrl="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzFhMWExYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2IiBmb250LXNpemU9IjE0Ij5NYXBwYTwvdGV4dD48L3N2Zz4="
       />

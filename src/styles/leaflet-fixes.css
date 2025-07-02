@@ -1,5 +1,5 @@
 
-/* CRITICAL LEAFLET FIXES FOR CAPACITOR iOS - COMPLETE SOLUTION */
+/* CRITICAL LEAFLET FIXES FOR CAPACITOR iOS - ENHANCED */
 
 /* Import Leaflet CSS */
 @import 'leaflet/dist/leaflet.css';
@@ -22,6 +22,7 @@
   display: block !important;
   opacity: 1 !important;
   visibility: visible !important;
+  z-index: 1 !important;
 }
 
 /* CRITICAL: Tile pane positioning and rendering */
@@ -32,13 +33,15 @@
   z-index: 200 !important;
   opacity: 1 !important;
   visibility: visible !important;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* CRITICAL: Individual tile rendering fixes */
 .leaflet-tile {
   opacity: 1 !important;
   visibility: visible !important;
-  filter: brightness(0.7) contrast(1.1) !important;
+  filter: brightness(0.7) contrast(1.2) saturate(0.8) hue-rotate(180deg) !important;
   image-rendering: auto !important;
   image-rendering: crisp-edges !important;
   image-rendering: -webkit-optimize-contrast !important;
@@ -48,6 +51,7 @@
   max-width: none !important;
   max-height: none !important;
   background: transparent !important;
+  display: block !important;
 }
 
 /* CRITICAL: Map pane structure */
@@ -66,6 +70,26 @@
   left: 0 !important;
   top: 0 !important;
   z-index: 400 !important;
+}
+
+/* CRITICAL: Shadow pane for overlays */
+.leaflet-shadow-pane {
+  z-index: 500 !important;
+}
+
+/* CRITICAL: Marker pane */
+.leaflet-marker-pane {
+  z-index: 600 !important;
+}
+
+/* CRITICAL: Tooltip pane */
+.leaflet-tooltip-pane {
+  z-index: 650 !important;
+}
+
+/* CRITICAL: Popup pane */
+.leaflet-popup-pane {
+  z-index: 700 !important;
 }
 
 /* CRITICAL: Controls positioning */
@@ -123,7 +147,7 @@
 .leaflet-tile-container img {
   opacity: 1 !important;
   visibility: visible !important;
-  filter: brightness(0.7) contrast(1.1) !important;
+  filter: brightness(0.7) contrast(1.2) saturate(0.8) hue-rotate(180deg) !important;
 }
 
 /* CRITICAL: SafeArea integration */
@@ -159,4 +183,24 @@
 .leaflet-tile-loading {
   opacity: 0.5 !important;
   transition: opacity 0.3s !important;
+}
+
+/* CRITICAL: Glow effect for BUZZ areas */
+.buzz-area-glow {
+  filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5)) !important;
+}
+
+/* CRITICAL: Force tile layer visibility */
+.leaflet-layer {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* CRITICAL: Capacitor viewport fix */
+@media screen and (max-width: 768px) {
+  .leaflet-container,
+  .leaflet-container-fixed {
+    width: 100vw !important;
+    height: 100% !important;
+  }
 }

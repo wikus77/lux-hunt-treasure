@@ -34,6 +34,7 @@ const MapPage = () => {
   const { updateActivity } = useDynamicIsland();
   const { currentMission, updateMissionProgress } = useMissionManager();
   
+  // CRITICAL FIX: Mutable ref for proper assignment
   const mapRef = useRef<any>(null);
   
   const {
@@ -84,26 +85,25 @@ const MapPage = () => {
 
   return (
     <div 
-      className="bg-gradient-to-b from-[#131524]/70 to-black w-full overflow-hidden"
+      className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
       style={{ 
-        height: '100dvh',
+        height: '100vh',
+        overflow: 'hidden',
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'env(safe-area-inset-bottom)',
         paddingLeft: 'env(safe-area-inset-left)',
         paddingRight: 'env(safe-area-inset-right)'
       }}
     >
-      {/* Header with SafeArea */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#131524]/90 backdrop-blur-sm">
-        <div style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-          <MapPageHeader />
-        </div>
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#131524]/90 backdrop-blur-sm" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        <MapPageHeader />
       </header>
       
       {/* Main content */}
       <main className="pt-20 pb-20 h-full overflow-y-auto">
         <div className="container mx-auto px-4 pt-4 pb-2 max-w-6xl">
-          {/* CRITICAL: Map container with fixed sizing and proper background */}
+          {/* CRITICAL: Map container with fixed sizing */}
           <div 
             className="m1ssion-glass-card bg-gray-900/20 backdrop-blur-sm border border-gray-800/30 rounded-2xl p-4 mb-6"
             style={{ 
@@ -187,11 +187,9 @@ const MapPage = () => {
         </div>
       </main>
       
-      {/* Bottom Navigation with SafeArea */}
-      <div className="fixed bottom-0 left-0 right-0 z-50">
-        <div style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <BottomNavigation />
-        </div>
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <BottomNavigation />
       </div>
     </div>
   );
