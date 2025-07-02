@@ -1,22 +1,18 @@
+
 import React from 'react';
-import SafeAreaWrapper from '@/components/layout/SafeAreaWrapper';
-import BottomNavigation from '@/components/layout/BottomNavigation';
-import MapPageHeader from '@/components/map/MapPageHeader';
-import MapContainer from '@/components/map/MapContainer';
-import MapSidebar from '@/components/map/MapSidebar';
-import { useNewMapPage } from '@/hooks/map/useNewMapPage';
+import { SafeAreaWrapper } from '@/components/ui/SafeAreaWrapper';
+import MapContainer from './map/MapContainer';
+import MapPageHeader from './map/components/MapPageHeader';
+import { useNewMapPage } from '@/hooks/useNewMapPage';
 
 const MapPage: React.FC = () => {
   const {
-    // Map state
     isAddingPoint,
     setIsAddingPoint,
     mapPoints,
     newPoint,
     activeMapPoint,
     setActiveMapPoint,
-    
-    // Search areas
     searchAreas,
     isAddingSearchArea,
     activeSearchArea,
@@ -26,72 +22,43 @@ const MapPage: React.FC = () => {
     deleteSearchArea,
     toggleAddingSearchArea,
     setPendingRadius,
-    
-    // Point operations
     addNewPoint,
     savePoint,
     updateMapPoint,
     deleteMapPoint,
-    
-    // Other functions
     handleBuzz,
-    requestLocationPermission,
+    requestLocationPermission
   } = useNewMapPage();
 
   return (
-    <SafeAreaWrapper>
-      <div className="bg-gradient-to-b from-[#131524]/70 to-black w-full h-full overflow-hidden">
-        {/* Header */}
+    <SafeAreaWrapper className="h-full bg-background">
+      <div className="flex flex-col h-full">
         <MapPageHeader />
         
-        {/* Main Content */}
-        <main className="pt-safe-top pb-safe-bottom h-full overflow-hidden">
-          <div className="container mx-auto px-4 h-full flex flex-col gap-4 pt-4">
-            {/* Map Container */}
-            <div className="flex-1 min-h-0">
-              <MapContainer
-                isAddingPoint={isAddingPoint}
-                setIsAddingPoint={setIsAddingPoint}
-                addNewPoint={addNewPoint}
-                mapPoints={mapPoints}
-                activeMapPoint={activeMapPoint}
-                setActiveMapPoint={setActiveMapPoint}
-                handleUpdatePoint={updateMapPoint}
-                deleteMapPoint={deleteMapPoint}
-                newPoint={newPoint}
-                handleSaveNewPoint={savePoint}
-                handleCancelNewPoint={() => savePoint('', '')}
-                handleBuzz={handleBuzz}
-                requestLocationPermission={requestLocationPermission}
-                isAddingSearchArea={isAddingSearchArea}
-                handleMapClickArea={handleMapClickArea}
-                searchAreas={searchAreas}
-                setActiveSearchArea={setActiveSearchArea}
-                deleteSearchArea={deleteSearchArea}
-                setPendingRadius={setPendingRadius}
-                toggleAddingSearchArea={toggleAddingSearchArea}
-              />
-            </div>
-            
-            {/* Sidebar */}
-            <div className="h-80 overflow-hidden">
-              <MapSidebar
-                mapPoints={mapPoints}
-                isAddingMapPoint={isAddingPoint}
-                toggleAddingMapPoint={() => setIsAddingPoint(prev => !prev)}
-                setActiveMapPoint={setActiveMapPoint}
-                deleteMapPoint={deleteMapPoint}
-                searchAreas={searchAreas}
-                setActiveSearchArea={setActiveSearchArea}
-                handleAddArea={handleAddArea}
-                isAddingSearchArea={isAddingSearchArea}
-                deleteSearchArea={deleteSearchArea}
-              />
-            </div>
-          </div>
-        </main>
-        
-        <BottomNavigation />
+        <div className="flex-1 relative">
+          <MapContainer
+            isAddingPoint={isAddingPoint}
+            setIsAddingPoint={setIsAddingPoint}
+            addNewPoint={addNewPoint}
+            mapPoints={mapPoints}
+            activeMapPoint={activeMapPoint}
+            setActiveMapPoint={setActiveMapPoint}
+            handleUpdatePoint={updateMapPoint}
+            deleteMapPoint={deleteMapPoint}
+            newPoint={newPoint}
+            handleSaveNewPoint={savePoint}
+            handleCancelNewPoint={() => {}}
+            handleBuzz={handleBuzz}
+            isAddingSearchArea={isAddingSearchArea}
+            handleMapClickArea={handleMapClickArea}
+            searchAreas={searchAreas}
+            setActiveSearchArea={setActiveSearchArea}
+            deleteSearchArea={deleteSearchArea}
+            setPendingRadius={setPendingRadius}
+            requestLocationPermission={requestLocationPermission}
+            toggleAddingSearchArea={toggleAddingSearchArea}
+          />
+        </div>
       </div>
     </SafeAreaWrapper>
   );

@@ -1,7 +1,4 @@
 
-/* Leaflet CSS fixes for iOS Capacitor */
-
-/* Core container fixes */
 .map-container-wrapper {
   width: 100%;
   height: 100%;
@@ -20,29 +17,24 @@
   background: #1a1b23 !important;
 }
 
-/* Fix Leaflet marker icons */
 .leaflet-marker-icon {
   background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAApCAYAAADAk4LOAAAFgUlEQVR4Aa1XA5BjWRTN2oW17d3YaZtr2962HUzbXNfN1+2Gve8TmfP3yNf4IeaEJv2PAARZkkCGMBgKx2C0kchDwCghKjDUwPOtmP+ATCM4laBQBqYEhQNQ6gAAEE7E4/3tL5FS4JJnFw8FMHYdUB3UwdH3dR0J+y3Aqe1vu37LzMKpGdqgxREO0MF3lJUqF2MzkcwKggKM8wkqQhwaBIFmOjw4BVzPU5Ag5IqaEQ6ZbJRt2oAyPWDUICSdwJ3MQQgvKLAjAoNwXgf+SLPnAYBAIGAhAgfZN0gB+Xle2Zzg0oEm9YqxBXhKAECEg+JClHdoP7EKQa9oFZRsApAsZUhJMqnHyNM7r9rTxwIDAZLnBoBBAAAKsBgB8AIEGYhQwAQRJAAQjF3uSQCHEBLI6MAYINhRAVPMwCZOAWnB7EeIgQAE8MhU6oYlgE2sVGBdz+EXCElc1REYFNCKyKT3E7TQEbqPKKNP6QHGC9XnJ7Q9OO8ZqGKx37CuAHPAyMjlWGTpAC/wGDtk3I0KsqQQoBhXQN4QPz7PNS4pP3c2iVmqmQBArYNpY3hqRFTxwLOAIkEBmSxs6mHOmqF5vUKfKISCNZ6gXWg1n2oSI/VABJjmsCJnw7YjPGKONJgkRSHMD4NmhWmIhYlhOUOKLUIyWbEUgKJWMzIjCDrJJKjJKCmZAUCYnKVCCQD+BaCZQFgBAXkiQ6RQAA/CdDaiBqBQBQ/4gAVu4AAiBBoCAOiBlgIAjGgvMOTGg7M/wALQAy0wJ4QAAQhJC8AjwABgEChgJ6MAYvAKRgOgXQSUCg4A4oARgCJHmBgAL6MAAP4DggJEJAIOCjQA8AE4gg6AACAQQTF+YEgAUAAQKsAjkOHwAABlHAAXwABgJeB0KALgAKcAj+AGgAFIKQOALwABIARgYg+ACwDVQAwNpQDwJZ+C5XqOgTjAAGRaQEFEGI1ACEE5TqAgaXAAOOKGAB04FgAAJgwBZgIGYNHGgAACVAA3OAAKKYABiOeQQgiFEAB1FJAAMhEgABPSAUQNWKQALLQAU4KQAA8jMUREwCPCgFCFwA+AQIEAIA=');
   background-repeat: no-repeat;
   background-size: contain;
 }
 
-/* Dark theme tiles adjustments */
 .leaflet-tile-pane {
   filter: brightness(0.9) contrast(1.1) saturate(1.2);
 }
 
-/* BUZZ area glow effect */
 .buzz-area-glow {
   filter: drop-shadow(0 0 8px #00D1FF) drop-shadow(0 0 16px rgba(0, 209, 255, 0.5));
 }
 
-/* Prize area glow effect */
 .prize-area-glow {
   filter: drop-shadow(0 0 6px #FFD700) drop-shadow(0 0 12px rgba(255, 215, 0, 0.4));
 }
 
-/* Search area pulse animation */
 .search-area-pulse {
   animation: pulseGlow 2s infinite;
 }
@@ -56,7 +48,6 @@
   }
 }
 
-/* iOS Capacitor specific fixes */
 @supports (-webkit-touch-callout: none) {
   .map-container {
     -webkit-transform: translateZ(0);
@@ -70,7 +61,6 @@
   }
 }
 
-/* Safe area handling */
 .pt-safe-top {
   padding-top: env(safe-area-inset-top, 0px);
 }
@@ -79,7 +69,6 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Z-index layering */
 .leaflet-control-container {
   z-index: 1000 !important;
 }
@@ -92,18 +81,15 @@
   z-index: 1050 !important;
 }
 
-/* Ensure map tiles load properly */
 .leaflet-tile {
   max-width: none !important;
   max-height: none !important;
 }
 
-/* Control positioning adjustments for mobile */
 .leaflet-control {
   margin: 8px !important;
 }
 
-/* Custom control styling */
 .leaflet-bar {
   background: rgba(0, 0, 0, 0.7) !important;
   border: 1px solid rgba(0, 209, 255, 0.3) !important;
@@ -128,7 +114,6 @@
   color: #00E5FF !important;
 }
 
-/* Popup styling */
 .leaflet-popup-content-wrapper {
   background: rgba(0, 0, 0, 0.9) !important;
   color: white !important;
@@ -142,7 +127,6 @@
   border: 1px solid rgba(0, 209, 255, 0.3) !important;
 }
 
-/* Attribution styling */
 .leaflet-control-attribution {
   background: rgba(0, 0, 0, 0.5) !important;
   color: rgba(255, 255, 255, 0.7) !important;
@@ -155,7 +139,6 @@
   color: #00D1FF !important;
 }
 
-/* Mobile responsiveness */
 @media (max-width: 768px) {
   .leaflet-control-zoom {
     position: absolute !important;
@@ -168,7 +151,6 @@
   }
 }
 
-/* Performance optimizations */
 .leaflet-layer,
 .leaflet-control-zoom-in,
 .leaflet-control-zoom-out {

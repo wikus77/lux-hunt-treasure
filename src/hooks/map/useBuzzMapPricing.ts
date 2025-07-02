@@ -15,7 +15,6 @@ export const useBuzzMapPricing = () => {
       if (!user?.id) return;
       
       try {
-        // Get user clues count
         const { count: clueCount, error: clueError } = await supabase
           .from('user_clues')
           .select('*', { count: 'exact', head: true })
@@ -29,7 +28,6 @@ export const useBuzzMapPricing = () => {
         const totalClues = clueCount || 0;
         setClueCount(totalClues);
         
-        // Calculate price based on clue count
         let price = 7.99;
         if (totalClues > 40) price = 29.99;
         else if (totalClues > 30) price = 19.99;
@@ -38,7 +36,6 @@ export const useBuzzMapPricing = () => {
         
         setBuzzMapPrice(price);
 
-        // Get map generation count
         const { data: mapAreas, error: mapError } = await supabase
           .from('user_map_areas')
           .select('*')
@@ -53,7 +50,6 @@ export const useBuzzMapPricing = () => {
         const generationCount = mapAreas?.length || 0;
         setMapGenerationCount(generationCount);
 
-        // Calculate radius: 500 * (0.7^generation_count), minimum 5km
         let calculatedRadius = Math.max(5, 500 * Math.pow(0.7, generationCount));
         setRadiusKm(Math.round(calculatedRadius));
         

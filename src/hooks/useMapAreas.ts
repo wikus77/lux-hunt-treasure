@@ -19,7 +19,6 @@ export const useMapAreas = () => {
         return;
       }
 
-      // Transform to BuzzMapArea format
       const buzzAreas: BuzzMapArea[] = data.map(area => ({
         id: area.id,
         lat: area.lat,

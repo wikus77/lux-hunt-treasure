@@ -11,7 +11,6 @@ import MapZoomControls from './components/MapZoomControls';
 import HelpDialog from './HelpDialog';
 import { useBuzzMapLogic } from '@/hooks/map/useBuzzMapLogic';
 
-// Default location (Rome)
 const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
 
 interface MapContainerProps {
@@ -64,15 +63,12 @@ const MapContainer: React.FC<MapContainerProps> = ({
   const mapRef = useRef<L.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
   
-  // Get BUZZ areas
   const { currentWeekAreas, reloadAreas } = useBuzzMapLogic();
 
-  // Handle map ready
   const handleMapReady = (map: L.Map) => {
     mapRef.current = map;
     setMapReady(true);
     
-    // iOS Capacitor fixes
     setTimeout(() => {
       if (map) {
         map.invalidateSize();
@@ -80,7 +76,6 @@ const MapContainer: React.FC<MapContainerProps> = ({
       }
     }, 100);
     
-    // Additional iOS fix
     setTimeout(() => {
       if (map) {
         map.invalidateSize();
@@ -90,7 +85,6 @@ const MapContainer: React.FC<MapContainerProps> = ({
     }, 500);
   };
 
-  // Force map update on mount for iOS
   useEffect(() => {
     const timer = setTimeout(() => {
       if (mapRef.current && mapReady) {
@@ -102,9 +96,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
     return () => clearTimeout(timer);
   }, [mapReady]);
 
-  // Handle whenReady event - no parameters expected by React Leaflet
   const handleWhenReady = () => {
-    // The map instance will be available through the MapContent component
     console.log('🗺️ Map is ready');
   };
 
@@ -124,13 +116,11 @@ const MapContainer: React.FC<MapContainerProps> = ({
         inertia={true}
         whenReady={handleWhenReady}
       >
-        {/* Dark tiles */}
         <TileLayer
           attribution='&copy; CartoDB'
           url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
         />
         
-        {/* Map Content */}
         <MapContent
           mapRef={mapRef}
           handleMapLoad={handleMapReady}
@@ -153,7 +143,6 @@ const MapContainer: React.FC<MapContainerProps> = ({
           currentWeekAreas={currentWeekAreas}
         />
         
-        {/* Map Controls */}
         <MapControls
           requestLocationPermission={requestLocationPermission}
           toggleAddingSearchArea={toggleAddingSearchArea}
@@ -162,11 +151,9 @@ const MapContainer: React.FC<MapContainerProps> = ({
           setShowHelpDialog={setShowHelpDialog}
         />
         
-        {/* Zoom Controls */}
         <MapZoomControls />
       </LeafletMapContainer>
       
-      {/* BUZZ Button */}
       <BuzzMapButton 
         onBuzzPress={handleBuzz}
         mapCenter={mapCenter}
@@ -176,7 +163,6 @@ const MapContainer: React.FC<MapContainerProps> = ({
         }}
       />
       
-      {/* Help Dialog */}
       <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
     </div>
   );

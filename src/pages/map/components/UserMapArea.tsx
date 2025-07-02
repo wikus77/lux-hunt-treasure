@@ -23,7 +23,6 @@ const UserMapAreas: React.FC<UserMapAreasProps> = ({ areas }) => {
     return null;
   }
 
-  // Show only the latest area
   const latestArea = areas.reduce((latest, current) => {
     const latestTime = new Date(latest.created_at).getTime();
     const currentTime = new Date(current.created_at).getTime();

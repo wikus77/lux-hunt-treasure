@@ -12,17 +12,14 @@ import { displayNewClueNotification, showCluesLimitReachedNotification, showClue
 import { BUZZ_STORAGE_KEYS, MAX_BUZZ_CLUES } from "@/utils/buzzConstants";
 
 export const useBuzzClues = () => {
-  // Initialize with saved unlocked clues count or 0
   const [unlockedClues, setUnlockedClues] = useState<number>(() => loadUnlockedCluesCount());
   const [usedVagueClues, setUsedVagueClues] = useState<string[]>(() => loadUsedVagueClues());
   const [lastVagueClue, setLastVagueClue] = useState<string | null>(null);
 
-  // Use a function to get notifications to avoid the "Invalid hook call" error
   const getNotifications = () => {
     try {
       return useNotifications();
     } catch (e) {
-      // Return a default object if called outside a component
       return {
         addNotification: null
       };
@@ -31,12 +28,10 @@ export const useBuzzClues = () => {
 
   const { addNotification } = getNotifications();
 
-  // Save unlocked clues count to localStorage when it changes
   useEffect(() => {
     saveUnlockedCluesCount(unlockedClues);
   }, [unlockedClues]);
 
-  // Save used vague clues to localStorage when they change
   useEffect(() => {
     saveUsedVagueClues(usedVagueClues);
   }, [usedVagueClues]);
@@ -44,7 +39,6 @@ export const useBuzzClues = () => {
   const incrementUnlockedCluesAndAddClue = useCallback(() => {
     let updatedCount = 0;
     setUnlockedClues(prevCount => {
-      // Ensure we don't exceed MAX_CLUES
       if (prevCount >= MAX_BUZZ_CLUES) {
         showCluesLimitReachedNotification();
         updatedCount = prevCount;
@@ -60,7 +54,6 @@ export const useBuzzClues = () => {
         setLastVagueClue(nextClue);
         const newUsed = [...prevUsed, nextClue];
 
-        // Display notification for the new clue
         displayNewClueNotification(nextClue, addNotification);
 
         return newUsed;

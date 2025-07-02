@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
 import UserMapAreas from './components/UserMapArea';
@@ -51,7 +52,6 @@ const MapContent: React.FC<MapContentProps> = ({
 }) => {
   const map = useMap();
   
-  // Initialize map reference
   useEffect(() => {
     if (map && !mapRef.current) {
       mapRef.current = map;
@@ -61,20 +61,16 @@ const MapContent: React.FC<MapContentProps> = ({
 
   return (
     <>
-      {/* BUZZ Map Areas */}
       <UserMapAreas areas={currentWeekAreas} />
       
-      {/* Prize Area Overlay */}
       <PrizeAreaOverlay />
       
-      {/* Search Areas Layer */}
       <SearchAreaMapLayer 
         searchAreas={searchAreas}
         setActiveSearchArea={setActiveSearchArea}
         deleteSearchArea={deleteSearchArea}
       />
       
-      {/* Map Popup Manager */}
       <MapPopupManager 
         mapPoints={mapPoints}
         activeMapPoint={activeMapPoint}
@@ -86,7 +82,6 @@ const MapContent: React.FC<MapContentProps> = ({
         handleCancelNewPoint={handleCancelNewPoint}
       />
       
-      {/* Map Event Handler */}
       <MapEventHandler 
         isAddingSearchArea={isAddingSearchArea} 
         handleMapClickArea={handleMapClickArea}

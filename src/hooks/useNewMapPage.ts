@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useAuthContext } from '@/contexts/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,19 +7,16 @@ import { toast } from 'sonner';
 export const useNewMapPage = () => {
   const { user } = useAuthContext();
   
-  // Map state
   const [isAddingPoint, setIsAddingPoint] = useState(false);
   const [mapPoints, setMapPoints] = useState<any[]>([]);
   const [newPoint, setNewPoint] = useState<any | null>(null);
   const [activeMapPoint, setActiveMapPoint] = useState<string | null>(null);
   
-  // Search areas
   const [searchAreas, setSearchAreas] = useState<any[]>([]);
   const [isAddingSearchArea, setIsAddingSearchArea] = useState(false);
   const [activeSearchArea, setActiveSearchArea] = useState<string | null>(null);
   const [pendingRadius, setPendingRadius] = useState<number>(1000);
 
-  // Point operations
   const addNewPoint = useCallback((lat: number, lng: number) => {
     const point = {
       id: `temp-${Date.now()}`,
@@ -107,7 +105,6 @@ export const useNewMapPage = () => {
     }
   }, []);
 
-  // Search area operations
   const handleAddArea = useCallback(() => {
     setIsAddingSearchArea(true);
   }, []);
@@ -144,7 +141,6 @@ export const useNewMapPage = () => {
     setIsAddingSearchArea(prev => !prev);
   }, []);
 
-  // Other functions
   const handleBuzz = useCallback(() => {
     console.log('BUZZ pressed');
     toast.info('Funzione BUZZ non ancora implementata');
@@ -168,7 +164,6 @@ export const useNewMapPage = () => {
   }, []);
 
   return {
-    // Map state
     isAddingPoint,
     setIsAddingPoint,
     mapPoints,
@@ -176,7 +171,6 @@ export const useNewMapPage = () => {
     activeMapPoint,
     setActiveMapPoint,
     
-    // Search areas
     searchAreas,
     isAddingSearchArea,
     activeSearchArea,
@@ -187,13 +181,11 @@ export const useNewMapPage = () => {
     toggleAddingSearchArea,
     setPendingRadius,
     
-    // Point operations
     addNewPoint,
     savePoint,
     updateMapPoint,
     deleteMapPoint,
     
-    // Other functions
     handleBuzz,
     requestLocationPermission
   };

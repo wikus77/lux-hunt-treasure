@@ -24,7 +24,6 @@ const MapZoomControls: React.FC = () => {
         },
         (error) => {
           console.error('Geolocation error:', error);
-          // Fallback to Rome
           map.setView([41.9028, 12.4964], 13);
         }
       );

@@ -36,16 +36,13 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     setIsProcessing(true);
 
     try {
-      // Process payment
       const result = await processBuzzPurchase(true, buzzMapPrice);
       
       if (result) {
-        // Generate area
         const currentRadius = incrementGeneration();
         const lat = mapCenter?.[0] || 41.9028;
         const lng = mapCenter?.[1] || 12.4964;
         
-        // Call callback
         if (onAreaGenerated) {
           onAreaGenerated(lat, lng, currentRadius);
         }
@@ -77,7 +74,6 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
         </div>
       </Button>
       
-      {/* Info badge */}
       <div className="absolute -top-2 -left-2 bg-black/80 text-white text-xs px-2 py-1 rounded-full border border-cyan-500/30">
         {radiusKm}km
       </div>
