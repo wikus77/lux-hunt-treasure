@@ -1,11 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
 import { useMapPoints } from './hooks/useMapPoints';
 import { useMapInitialization } from './hooks/useMapInitialization';
 import LoadingScreen from './LoadingScreen';
-import { MapContent } from './components/MapContent';
-import { MapControls } from './components/MapControls';
+import MapContent from './components/MapContent';
+import MapControls from './components/MapControls';
 import TechnicalStatus from './components/TechnicalStatus';
 import { useMapStore } from '@/stores/mapStore';
 import 'leaflet/dist/leaflet.css';
@@ -245,10 +246,39 @@ const MapLogicProvider = () => {
         }}
       >
         {/* Map content */}
-        <MapContent selectedWeek={1} />
+        <MapContent 
+          mapRef={mapRef}
+          handleMapLoad={handleMapLoad}
+          searchAreas={searchAreas}
+          setActiveSearchArea={setActiveSearchArea}
+          deleteSearchArea={deleteSearchArea}
+          mapPoints={mapPoints}
+          activeMapPoint={activeMapPoint}
+          setActiveMapPoint={setActiveMapPoint}
+          handleUpdatePoint={handleUpdatePoint}
+          deleteMapPoint={deleteMapPoint}
+          newPoint={newPoint}
+          handleSaveNewPoint={handleSaveNewPoint}
+          handleCancelNewPoint={handleCancelNewPoint}
+          isAddingSearchArea={isAddingSearchArea}
+          handleMapClickArea={handleMapClickArea}
+          setPendingRadius={setPendingRadius}
+          isAddingMapPoint={isAddingMapPoint || isAddingPoint}
+          hookHandleMapPointClick={hookHandleMapPointClick}
+        />
 
         {/* Map controls */}
-        <MapControls />
+        <MapControls
+          requestLocationPermission={requestLocationPermission}
+          toggleAddingSearchArea={toggleAddingSearchArea}
+          isAddingSearchArea={isAddingSearchArea}
+          handleBuzz={handleBuzz}
+          isAddingMapPoint={isAddingMapPoint || isAddingPoint}
+          showHelpDialog={showHelpDialog}
+          setShowHelpDialog={setShowHelpDialog}
+          mapCenter={mapCenter}
+          onAreaGenerated={handleAreaGenerated}
+        />
         
         {/* Technical status logger */}
         <TechnicalStatus 

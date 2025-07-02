@@ -1,4 +1,3 @@
-
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import MapPageHeader from './map/components/MapPageHeader';
@@ -10,12 +9,8 @@ import { useNewMapPage } from './map/hooks/useNewMapPage';
 import { useDynamicIsland } from '@/hooks/useDynamicIsland';
 import { useMissionManager } from '@/hooks/useMissionManager';
 
-// Fix lazy load with proper default export handling
-const MapContainer = lazy(() => 
-  import('./map/components/MapContainer').then(module => ({ 
-    default: module.default || module.MapContainer
-  }))
-);
+// Lazy load heavy map components
+const MapContainer = lazy(() => import('./map/components/MapContainer'));
 
 const MapLoadingFallback = () => (
   <div className="h-96 bg-gray-900/50 rounded-lg flex items-center justify-center">
@@ -122,9 +117,6 @@ const NewMapPage = () => {
           <div className="m1ssion-glass-card p-4 sm:p-6 mb-6">
             <Suspense fallback={<MapLoadingFallback />}>
               <MapContainer
-                mapRef={React.createRef()}
-                onMapClick={() => {}}
-                selectedWeek={1}
                 isAddingPoint={isAddingPoint}
                 setIsAddingPoint={setIsAddingPoint}
                 addNewPoint={addNewPoint}
