@@ -7,8 +7,8 @@ import SidebarLayout from './components/SidebarLayout';
 import RightSidebarContent from './components/RightSidebarContent';
 import { Spinner } from '@/components/ui/spinner';
 import { useNewMapPage } from './hooks/useNewMapPage';
-import { useDynamicIsland } from '@/hooks/useDynamicIsland';
-import { useMissionManager } from '@/hooks/useMissionManager';
+import { useDynamicIsland } from '@/contexts/DynamicIslandContext';
+import { useMissionManager } from '@/contexts/MissionContext';
 import './styles/leaflet-fixes.css';
 
 const MapContainer = lazy(() => 

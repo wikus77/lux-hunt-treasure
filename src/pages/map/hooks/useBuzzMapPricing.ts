@@ -5,6 +5,7 @@ import { useBuzzClues } from '@/hooks/useBuzzClues';
 export const useBuzzMapPricing = () => {
   const [buzzMapPrice, setBuzzMapPrice] = useState(7.99);
   const [radiusKm, setRadiusKm] = useState(100);
+  const [generation, setGeneration] = useState(1);
   const { unlockedClues } = useBuzzClues();
 
   useEffect(() => {
@@ -28,8 +29,16 @@ export const useBuzzMapPricing = () => {
     }
   }, [unlockedClues]);
 
+  const incrementGeneration = () => {
+    setGeneration(prev => prev + 1);
+    const newRadius = 100 * Math.pow(0.95, generation);
+    setRadiusKm(newRadius);
+  };
+
   return {
     buzzMapPrice,
-    radiusKm
+    radiusKm,
+    generation,
+    incrementGeneration
   };
 };

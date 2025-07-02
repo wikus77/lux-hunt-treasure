@@ -1,94 +1,46 @@
 
-import { useState, useCallback, useEffect } from "react";
-import { useNotifications } from "@/hooks/useNotifications";
-import { 
-  getNextVagueClue, 
-  loadUnlockedCluesCount, 
-  loadUsedVagueClues,
-  saveUnlockedCluesCount,
-  saveUsedVagueClues 
-} from "@/utils/buzzClueUtils";
-import { displayNewClueNotification, showCluesLimitReachedNotification, showCluesResetNotification } from "@/utils/buzzNotificationUtils";
-import { BUZZ_STORAGE_KEYS, MAX_BUZZ_CLUES } from "@/utils/buzzConstants";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthContext } from '@/contexts/auth';
 
 export const useBuzzClues = () => {
-  // Initialize with saved unlocked clues count or 0
-  const [unlockedClues, setUnlockedClues] = useState<number>(() => loadUnlockedCluesCount());
-  const [usedVagueClues, setUsedVagueClues] = useState<string[]>(() => loadUsedVagueClues());
-  const [lastVagueClue, setLastVagueClue] = useState<string | null>(null);
+  const [unlockedClues, setUnlockedClues] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuthContext();
 
-  // Use a function to get notifications to avoid the "Invalid hook call" error
-  const getNotifications = () => {
-    try {
-      return useNotifications();
-    } catch (e) {
-      // Return a default object if called outside a component
-      return {
-        addNotification: null
-      };
-    }
-  };
-
-  const { addNotification } = getNotifications();
-
-  // Save unlocked clues count to localStorage when it changes
   useEffect(() => {
-    saveUnlockedCluesCount(unlockedClues);
-  }, [unlockedClues]);
-
-  // Save used vague clues to localStorage when they change
-  useEffect(() => {
-    saveUsedVagueClues(usedVagueClues);
-  }, [usedVagueClues]);
-
-  const incrementUnlockedCluesAndAddClue = useCallback(() => {
-    let updatedCount = 0;
-    setUnlockedClues(prevCount => {
-      // Ensure we don't exceed MAX_CLUES
-      if (prevCount >= MAX_BUZZ_CLUES) {
-        showCluesLimitReachedNotification();
-        updatedCount = prevCount;
-        return prevCount;
+    const fetchUnlockedClues = async () => {
+      if (!user?.id) {
+        setUnlockedClues(0);
+        setLoading(false);
+        return;
       }
-      updatedCount = Math.min(prevCount + 1, MAX_BUZZ_CLUES);
-      return updatedCount;
-    });
 
-    if (updatedCount && updatedCount <= MAX_BUZZ_CLUES) {
-      setUsedVagueClues(prevUsed => {
-        const nextClue = getNextVagueClue(prevUsed);
-        setLastVagueClue(nextClue);
-        const newUsed = [...prevUsed, nextClue];
+      try {
+        const { data, error } = await supabase
+          .from('user_clues')
+          .select('*')
+          .eq('user_id', user.id);
 
-        // Display notification for the new clue
-        displayNewClueNotification(nextClue, addNotification);
+        if (error) {
+          console.error('Error fetching clues:', error);
+          setUnlockedClues(0);
+        } else {
+          setUnlockedClues(data?.length || 0);
+        }
+      } catch (err) {
+        console.error('Exception fetching clues:', err);
+        setUnlockedClues(0);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        return newUsed;
-      });
-    }
-    return updatedCount;
-  }, [addNotification]);
-
-  const resetUnlockedClues = useCallback(() => {
-    setUnlockedClues(0);
-    setUsedVagueClues([]);
-    setLastVagueClue(null);
-
-    localStorage.removeItem(BUZZ_STORAGE_KEYS.UNLOCKED_CLUES_COUNT);
-    localStorage.removeItem(BUZZ_STORAGE_KEYS.USED_VAGUE_CLUES);
-    
-    showCluesResetNotification();
-  }, []);
+    fetchUnlockedClues();
+  }, [user?.id]);
 
   return {
     unlockedClues,
-    setUnlockedClues,
-    usedVagueClues,
-    lastVagueClue,
-    setLastVagueClue,
-    incrementUnlockedCluesAndAddClue,
-    resetUnlockedClues,
-    getNextVagueClue: () => getNextVagueClue(usedVagueClues),
-    MAX_CLUES: MAX_BUZZ_CLUES
+    loading
   };
 };
