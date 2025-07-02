@@ -18,7 +18,6 @@ const SafeAreaWrapper: React.FC<SafeAreaWrapperProps> = ({
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         paddingLeft: 'env(safe-area-inset-left, 0px)',
         paddingRight: 'env(safe-area-inset-right, 0px)',
-        minHeight: '100vh',
         minHeight: '100dvh'
       }}
     >

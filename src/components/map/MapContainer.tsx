@@ -102,6 +102,12 @@ const MapContainer: React.FC<MapContainerProps> = ({
     return () => clearTimeout(timer);
   }, [mapReady]);
 
+  // Handle whenReady event properly
+  const handleWhenReady = (e: L.LeafletEvent) => {
+    const map = e.target as L.Map;
+    handleMapReady(map);
+  };
+
   return (
     <div className="map-container-wrapper">
       <LeafletMapContainer 
@@ -116,7 +122,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
         fadeAnimation={true}
         markerZoomAnimation={true}
         inertia={true}
-        whenReady={(e) => handleMapReady(e.target)}
+        whenReady={handleWhenReady}
       >
         {/* Dark tiles */}
         <TileLayer
