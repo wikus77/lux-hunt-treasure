@@ -74,27 +74,41 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   const stableCenter = useMemo(() => center, [center[0], center[1]]);
   const stableZoom = useMemo(() => zoom, [zoom]);
 
-  // Handle map ready and force proper sizing
-  const handleMapReady = useCallback((mapInstance: any) => {
-    console.log('🗺️ Map instance ready');
-    mapInstanceRef.current = mapInstance;
-    
-    // Critical fix: Force map to recognize container size
-    setTimeout(() => {
-      if (mapInstance) {
-        mapInstance.invalidateSize({ animate: false });
-        console.log('🗺️ Map size invalidated');
-      }
-    }, 100);
-    
-    // Additional resize after tiles load
-    setTimeout(() => {
-      if (mapInstance) {
-        mapInstance.invalidateSize({ animate: true });
-        console.log('🗺️ Map size re-invalidated');
-      }
-    }, 1000);
+  // FIXED: Handle map ready with correct parameter signature
+  const handleMapReady = useCallback(() => {
+    // The map instance is available via the ref after initialization
+    const mapInstance = mapInstanceRef.current;
+    if (mapInstance) {
+      console.log('🗺️ Map instance ready');
+      
+      // Critical fix: Force map to recognize container size
+      setTimeout(() => {
+        if (mapInstance) {
+          mapInstance.invalidateSize({ animate: false });
+          console.log('🗺️ Map size invalidated');
+        }
+      }, 100);
+      
+      // Additional resize after tiles load
+      setTimeout(() => {
+        if (mapInstance) {
+          mapInstance.invalidateSize({ animate: true });
+          console.log('🗺️ Map size re-invalidated');
+        }
+      }, 1000);
+    }
   }, []);
+
+  // Set the map instance ref when the component mounts
+  const setMapRef = useCallback((map: any) => {
+    mapInstanceRef.current = map;
+    if (mapRef) {
+      mapRef.current = map;
+    }
+    if (map) {
+      handleMapReady();
+    }
+  }, [handleMapReady, mapRef]);
 
   // Force resize on window resize (important for Capacitor)
   useEffect(() => {
@@ -125,7 +139,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         scrollWheelZoom={true}
         doubleClickZoom={true}
         dragging={true}
-        whenReady={handleMapReady}
+        ref={setMapRef}
         key={`map-${stableCenter[0]}-${stableCenter[1]}-${stableZoom}`}
       >
         <MapContent 
