@@ -38,7 +38,7 @@
 .leaflet-tile {
   opacity: 1 !important;
   visibility: visible !important;
-  filter: brightness(0.6) contrast(1.2) !important;
+  filter: brightness(0.7) contrast(1.1) !important;
   image-rendering: auto !important;
   image-rendering: crisp-edges !important;
   image-rendering: -webkit-optimize-contrast !important;
@@ -47,6 +47,7 @@
   padding: 0 !important;
   max-width: none !important;
   max-height: none !important;
+  background: transparent !important;
 }
 
 /* CRITICAL: Map pane structure */
@@ -122,16 +123,13 @@
 .leaflet-tile-container img {
   opacity: 1 !important;
   visibility: visible !important;
-  filter: brightness(0.6) contrast(1.2) !important;
+  filter: brightness(0.7) contrast(1.1) !important;
 }
 
 /* CRITICAL: SafeArea integration */
 @supports (padding: env(safe-area-inset-top)) {
   .leaflet-container-fixed {
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    padding-left: env(safe-area-inset-left, 0px);
-    padding-right: env(safe-area-inset-right, 0px);
+    padding: 0 !important;
   }
 }
 
@@ -149,4 +147,16 @@
 
 .leaflet-control-zoom a:hover {
   background-color: rgba(0, 209, 255, 0.2) !important;
+}
+
+/* CRITICAL: Tile error handling */
+.leaflet-tile-error {
+  opacity: 0.2 !important;
+  filter: grayscale(100%) !important;
+}
+
+/* CRITICAL: Loading tiles animation */
+.leaflet-tile-loading {
+  opacity: 0.5 !important;
+  transition: opacity 0.3s !important;
 }

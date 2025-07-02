@@ -82,14 +82,17 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     if (internalMapRef.current) {
       const mapInstance = internalMapRef.current;
       
-      // FIXED: Safe assignment to external ref
+      // FIXED: Safe assignment to external ref with proper type checking
       if (mapRef && typeof mapRef === 'object' && 'current' in mapRef) {
         try {
-          if ('current' in mapRef && typeof mapRef.current !== 'string') {
-            (mapRef as any).current = mapInstance;
+          // Check if mapRef.current is writable
+          const descriptor = Object.getOwnPropertyDescriptor(mapRef, 'current');
+          if (!descriptor || descriptor.writable !== false) {
+            (mapRef as React.MutableRefObject<any>).current = mapInstance;
+            console.log('🗺️ External mapRef assigned successfully');
           }
         } catch (error) {
-          console.log('🗺️ External mapRef assignment failed, continuing...');
+          console.log('🗺️ External mapRef assignment failed, continuing with internal ref');
         }
       }
       
@@ -97,7 +100,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       setTimeout(() => {
         mapInstance.invalidateSize({ animate: false });
         console.log('🗺️ Map size invalidated (immediate)');
-      }, 50);
+      }, 100);
       
       // Secondary invalidation for complex layouts
       setTimeout(() => {
@@ -121,7 +124,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   }, []);
 
   return (
-    <div className="relative w-full h-full bg-gray-900">
+    <div className="relative w-full h-full bg-gray-900 overflow-hidden">
       <LeafletMapContainer
         center={stableCenter}
         zoom={stableZoom}
@@ -138,6 +141,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         scrollWheelZoom={true}
         doubleClickZoom={true}
         dragging={true}
+        touchZoom={true}
         whenReady={handleMapReady}
         ref={internalMapRef}
         key={`map-${stableCenter[0]}-${stableCenter[1]}-${stableZoom}`}

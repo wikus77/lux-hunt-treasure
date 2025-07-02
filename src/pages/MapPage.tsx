@@ -84,8 +84,9 @@ const MapPage = () => {
 
   return (
     <div 
-      className="bg-gradient-to-b from-[#131524]/70 to-black w-full min-h-screen"
+      className="bg-gradient-to-b from-[#131524]/70 to-black w-full overflow-hidden"
       style={{ 
+        height: '100dvh',
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'env(safe-area-inset-bottom)',
         paddingLeft: 'env(safe-area-inset-left)',
@@ -100,14 +101,14 @@ const MapPage = () => {
       </header>
       
       {/* Main content */}
-      <main className="pt-20 pb-20">
+      <main className="pt-20 pb-20 h-full overflow-y-auto">
         <div className="container mx-auto px-4 pt-4 pb-2 max-w-6xl">
           {/* CRITICAL: Map container with fixed sizing and proper background */}
           <div 
             className="m1ssion-glass-card bg-gray-900/20 backdrop-blur-sm border border-gray-800/30 rounded-2xl p-4 mb-6"
             style={{ 
-              minHeight: '70vh',
-              height: 'auto',
+              height: '70vh',
+              minHeight: '500px',
               position: 'relative',
               overflow: 'hidden'
             }}
@@ -115,8 +116,7 @@ const MapPage = () => {
             <div 
               className="w-full rounded-xl overflow-hidden bg-[#1a1a1a]"
               style={{ 
-                height: '70vh',
-                minHeight: '500px',
+                height: '100%',
                 position: 'relative'
               }}
             >
