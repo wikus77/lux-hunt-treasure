@@ -19,7 +19,7 @@ const Index = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [showDeveloperAccess, setShowDeveloperAccess] = useState(false);
   
-  // Check for developer access on mount - NO AUTOMATIC REDIRECTS
+  // Check for developer access on mount
   useEffect(() => {
     const checkAccess = () => {
       // Check for URL parameter to reset access
@@ -36,11 +36,11 @@ const Index = () => {
       
       console.log('Index access check:', { isMobile, isCapacitorApp });
       
-      // CRITICAL: Landing page is always accessible for web users
-      // Mobile users may see developer access but NO automatic redirects
       if (isMobile) {
+        // Mobile users without access need to login
         setShowDeveloperAccess(true);
-      } else {
+      } else if (!isMobile) {
+        // Web users always see landing page
         setShowDeveloperAccess(false);
       }
     };

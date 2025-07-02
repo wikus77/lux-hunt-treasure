@@ -425,24 +425,6 @@ export type Database = {
         }
         Relationships: []
       }
-      live_events: {
-        Row: {
-          created_at: string | null
-          id: string
-          message: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          message: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          message?: string
-        }
-        Relationships: []
-      }
       map_click_events: {
         Row: {
           created_at: string
@@ -1186,7 +1168,6 @@ export type Database = {
           id: string
           is_deleted: boolean | null
           is_read: boolean | null
-          is_read_bool: boolean | null
           message: string
           title: string
           type: string
@@ -1197,7 +1178,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean | null
           is_read?: boolean | null
-          is_read_bool?: boolean | null
           message: string
           title: string
           type?: string
@@ -1208,7 +1188,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean | null
           is_read?: boolean | null
-          is_read_bool?: boolean | null
           message?: string
           title?: string
           type?: string
@@ -1249,54 +1228,6 @@ export type Database = {
           last4?: string
           stripe_pm_id?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      user_profiles: {
-        Row: {
-          address: string | null
-          cap: string | null
-          citta: string | null
-          city: string | null
-          cognome: string | null
-          created_at: string | null
-          email: string | null
-          id: string
-          name: string | null
-          nome: string | null
-          numero_civico: string | null
-          surname: string | null
-          via: string | null
-        }
-        Insert: {
-          address?: string | null
-          cap?: string | null
-          citta?: string | null
-          city?: string | null
-          cognome?: string | null
-          created_at?: string | null
-          email?: string | null
-          id: string
-          name?: string | null
-          nome?: string | null
-          numero_civico?: string | null
-          surname?: string | null
-          via?: string | null
-        }
-        Update: {
-          address?: string | null
-          cap?: string | null
-          citta?: string | null
-          city?: string | null
-          cognome?: string | null
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          name?: string | null
-          nome?: string | null
-          numero_civico?: string | null
-          surname?: string | null
-          via?: string | null
         }
         Relationships: []
       }
@@ -1445,10 +1376,6 @@ export type Database = {
       log_potential_abuse: {
         Args: { p_event_type: string; p_user_id: string }
         Returns: boolean
-      }
-      setup_developer_user: {
-        Args: { uid: string }
-        Returns: undefined
       }
       update_user_subscription_tier: {
         Args: { target_user_id: string; new_tier: string }

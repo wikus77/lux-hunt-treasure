@@ -1,25 +1,38 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
+export function useLocalStorage<T>(key: string, initialValue: T) {
+  // State to store our value
   const [storedValue, setStoredValue] = useState<T>(() => {
+    if (typeof window === "undefined") {
+      return initialValue;
+    }
+    
     try {
-      if (typeof window === 'undefined') {
-        return initialValue;
-      }
+      // Get from local storage by key
       const item = window.localStorage.getItem(key);
+      // Parse stored json or if none return initialValue
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
+      // If error also return initialValue
       console.error(`Error reading localStorage key "${key}":`, error);
       return initialValue;
     }
   });
 
+  // Return a wrapped version of useState's setter function that ...
+  // ... persists the new value to localStorage.
   const setValue = (value: T | ((val: T) => T)) => {
     try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      // Allow value to be a function so we have same API as useState
+      const valueToStore =
+        value instanceof Function ? value(storedValue) : value;
+      
+      // Save state
       setStoredValue(valueToStore);
-      if (typeof window !== 'undefined') {
+      
+      // Save to local storage
+      if (typeof window !== "undefined") {
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       }
     } catch (error) {
@@ -27,5 +40,19 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
     }
   };
 
-  return [storedValue, setValue];
+  // Listen for changes to the key in other instances/tabs
+  useEffect(() => {
+    function handleStorageChange(event) {
+      if (event.key === key && event.newValue) {
+        setStoredValue(JSON.parse(event.newValue));
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("storage", handleStorageChange);
+      return () => window.removeEventListener("storage", handleStorageChange);
+    }
+  }, [key]);
+
+  return [storedValue, setValue] as const;
 }

@@ -1,4 +1,3 @@
-
 // Type definitions
 export type RegistrationFormData = {
   name: string;

@@ -1,36 +1,35 @@
+
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import AuthContext from './AuthContext';
 import { useAuth } from '@/hooks/use-auth';
 import { AuthContextType } from './types';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const auth = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
 
-  // Enhanced session monitoring - NO AUTOMATIC REDIRECTS FROM LANDING
+  // Enhanced session monitoring
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔍 Auth state change:', event, 'Session exists:', !!session, 'Current path:', location.pathname);
+      console.log('🔍 Auth state change:', event, 'Session exists:', !!session);
       
-      // Handle successful authentication - ONLY from login/auth pages
+      // Handle successful authentication
       if (event === 'SIGNED_IN' && session?.user) {
         console.log("✅ User signed in successfully:", session.user.email);
         
-        // CRITICAL: Only redirect from login/auth pages, NOT from landing page
-        const currentPath = location.pathname;
-        if (currentPath === '/login' || currentPath === '/auth') {
-          console.log("🏠 Redirecting authenticated user from auth page to /home");
+        // Check if user should be redirected to home
+        const currentPath = window.location.pathname;
+        if (currentPath === '/login' || currentPath === '/auth' || currentPath === '/') {
+          console.log("🏠 Redirecting authenticated user to /home");
           setTimeout(() => {
             navigate('/home');
           }, 1000);
         }
-        // NO redirect if user is on landing page (/)
       }
       
       // Handle sign out
@@ -42,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, location.pathname]);
+  }, [navigate]);
 
   // Fetch user role when user changes
   useEffect(() => {

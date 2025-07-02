@@ -1,116 +1,84 @@
 
 import React, { useEffect } from 'react';
-import { useMapEvents } from 'react-leaflet';
-import UserLocationMarker from './UserLocationMarker';
-import MapMarkers from './MapMarkers';
-import MapSearchAreas from './MapSearchAreas';
+import { useMap } from 'react-leaflet';
 
 interface MapEventHandlerProps {
-  onMapClick: (e: any) => void;
-  isAddingPoint: boolean;
-  setIsAddingPoint: React.Dispatch<React.SetStateAction<boolean>>;
-  addNewPoint: (lat: number, lng: number) => void;
-  mapPoints: any[];
-  activeMapPoint: string | null;
-  setActiveMapPoint: React.Dispatch<React.SetStateAction<string | null>>;
-  handleUpdatePoint: (id: string, title: string, note: string) => Promise<boolean>;
-  deleteMapPoint: (id: string) => Promise<boolean>;
-  newPoint: any | null;
-  handleSaveNewPoint: (title: string, note: string) => void;
-  handleCancelNewPoint: () => void;
   isAddingSearchArea: boolean;
+  isAddingMapPoint: boolean;
   handleMapClickArea: (e: any) => void;
   searchAreas: any[];
-  setActiveSearchArea: React.Dispatch<React.SetStateAction<string | null>>;
-  deleteSearchArea: (id: string) => Promise<boolean>;
-  setPendingRadius: (value: number) => void;
+  setPendingRadius: (radius: number) => void;
+  onMapPointClick: (lat: number, lng: number) => void;
 }
 
 const MapEventHandler: React.FC<MapEventHandlerProps> = ({
-  onMapClick,
-  isAddingPoint,
-  setIsAddingPoint,
-  addNewPoint,
-  mapPoints,
-  activeMapPoint,
-  setActiveMapPoint,
-  handleUpdatePoint,
-  deleteMapPoint,
-  newPoint,
-  handleSaveNewPoint,
-  handleCancelNewPoint,
   isAddingSearchArea,
+  isAddingMapPoint,
   handleMapClickArea,
   searchAreas,
-  setActiveSearchArea,
-  deleteSearchArea,
-  setPendingRadius
+  setPendingRadius,
+  onMapPointClick
 }) => {
-  // Handle map events
-  const map = useMapEvents({
-    click: (e) => {
-      console.log('🗺️ Map click detected at:', e.latlng);
-      
-      if (isAddingPoint) {
-        console.log('📍 Adding new point at:', e.latlng.lat, e.latlng.lng);
-        addNewPoint(e.latlng.lat, e.latlng.lng);
-        setIsAddingPoint(false);
-      } else if (isAddingSearchArea) {
-        console.log('🔍 Adding search area at:', e.latlng.lat, e.latlng.lng);
-        handleMapClickArea(e);
-      } else {
-        onMapClick(e);
-      }
-    },
-    
-    zoomend: () => {
-      console.log('🔍 Map zoom changed to:', map.getZoom());
-    },
-    
-    moveend: () => {
-      const center = map.getCenter();
-      console.log('🗺️ Map moved to:', center.lat, center.lng);
-    }
-  });
-
-  // Log map readiness
+  const map = useMap();
+  
+  // Handle cursor style based on mode
   useEffect(() => {
-    if (map) {
-      console.log('🗺️ Map events handler ready');
-      
-      // Force map to invalidate size after mount
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 100);
+    if (!map) return;
+    
+    const mapContainer = map.getContainer();
+    
+    if (isAddingMapPoint || isAddingSearchArea) {
+      mapContainer.style.cursor = 'crosshair';
+      console.log(`🎯 Cursor changed to crosshair (Adding ${isAddingMapPoint ? 'point' : 'search area'})`);
+    } else {
+      mapContainer.style.cursor = 'grab';
+      console.log("🎯 Cursor changed to grab (normal mode)");
     }
-  }, [map]);
-
-  return (
-    <>
-      {/* User location marker */}
-      <UserLocationMarker />
+    
+    return () => {
+      mapContainer.style.cursor = 'grab';
+    };
+  }, [map, isAddingMapPoint, isAddingSearchArea]);
+  
+  // Handle map click events
+  useEffect(() => {
+    if (!map) return;
+    
+    const handleMapClick = (e: L.LeafletMouseEvent) => {
+      console.log("🗺️ clic su mappa registrato:", {
+        isAddingMapPoint,
+        isAddingSearchArea,
+        coordinates: e.latlng
+      });
       
-      {/* Map points/markers */}
-      <MapMarkers
-        mapPoints={mapPoints}
-        activeMapPoint={activeMapPoint}
-        setActiveMapPoint={setActiveMapPoint}
-        handleUpdatePoint={handleUpdatePoint}
-        deleteMapPoint={deleteMapPoint}
-        newPoint={newPoint}
-        handleSaveNewPoint={handleSaveNewPoint}
-        handleCancelNewPoint={handleCancelNewPoint}
-      />
-      
-      {/* Search areas */}
-      <MapSearchAreas
-        searchAreas={searchAreas}
-        setActiveSearchArea={setActiveSearchArea}
-        deleteSearchArea={deleteSearchArea}
-        setPendingRadius={setPendingRadius}
-      />
-    </>
-  );
+      if (isAddingSearchArea) {
+        console.log("🔵 Handling click for search area");
+        handleMapClickArea(e);
+      } else if (isAddingMapPoint) {
+        console.log("⭐ Handling click for map point at:", e.latlng.lat, e.latlng.lng);
+        onMapPointClick(e.latlng.lat, e.latlng.lng);
+      } else {
+        console.log("❌ Click ignored - not in adding mode");
+      }
+    };
+    
+    // Add the click listener
+    map.on('click', handleMapClick);
+    
+    // Debug logging for current state
+    console.log("🔄 MapEventHandler - Current state:", {
+      isAddingMapPoint,
+      isAddingSearchArea,
+      hasMapClickListener: true
+    });
+    
+    return () => {
+      map.off('click', handleMapClick);
+      console.log("🗑️ Map click listener removed");
+    };
+  }, [map, isAddingSearchArea, isAddingMapPoint, handleMapClickArea, onMapPointClick]);
+  
+  return null;
 };
 
 export default MapEventHandler;

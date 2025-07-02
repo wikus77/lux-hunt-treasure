@@ -1,80 +1,204 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import './laser-reveal-styles.css';
 
 interface LaserRevealIntroProps {
   onComplete: () => void;
-  onSkip: () => void;
+  onSkip?: () => void;
 }
 
 const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip }) => {
-  const [phase, setPhase] = useState(0);
+  const [laserPhase, setLaserPhase] = useState(1); // 1: left to right, 2: right to left, 3: left to right again
+  const [showLogo, setShowLogo] = useState(false);
+  const [showDate, setShowDate] = useState(false);
+  const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    const timeouts: NodeJS.Timeout[] = [];
+    // Timeline of animations - enhanced with multiple laser passes
+    const firstLaserPassTimeout = setTimeout(() => setLaserPhase(2), 1000); // First pass completes
+    const secondLaserPassTimeout = setTimeout(() => setLaserPhase(3), 2000); // Second pass completes
     
-    // Phase timing
-    timeouts.push(setTimeout(() => setPhase(1), 500));   // Laser appears
-    timeouts.push(setTimeout(() => setPhase(2), 1500));  // Cutting animation
-    timeouts.push(setTimeout(() => setPhase(3), 3000));  // Logo reveal
-    timeouts.push(setTimeout(() => setPhase(4), 4000));  // Text reveal
-    timeouts.push(setTimeout(() => setPhase(5), 6000));  // Complete
+    // Start showing logo during third pass
+    const logoTimeout = setTimeout(() => setShowLogo(true), 2400);
     
-    // Auto complete dopo 7 secondi
-    timeouts.push(setTimeout(() => {
-      onComplete();
-    }, 7000));
+    // Show date text after logo
+    const dateTimeout = setTimeout(() => setShowDate(true), 4000);
+    
+    // Begin fade out of the entire intro
+    const fadeOutTimeout = setTimeout(() => setFadeOut(true), 7000);
+    
+    // Complete the intro after fade out
+    const completeTimeout = setTimeout(() => onComplete(), 7800);
 
     return () => {
-      timeouts.forEach(timeout => clearTimeout(timeout));
+      clearTimeout(firstLaserPassTimeout);
+      clearTimeout(secondLaserPassTimeout);
+      clearTimeout(logoTimeout);
+      clearTimeout(dateTimeout);
+      clearTimeout(fadeOutTimeout);
+      clearTimeout(completeTimeout);
     };
   }, [onComplete]);
 
   return (
-    <div className="laser-intro-container">
-      {/* Background */}
-      <div className="laser-background" />
+    <motion.div 
+      className="laser-reveal-container"
+      initial={{ opacity: 1 }}
+      animate={{ opacity: fadeOut ? 0 : 1 }}
+      transition={{ duration: 0.8 }}
+    >
+      {/* First laser pass (left to right) - with star point and cyan to magenta color transition */}
+      {laserPhase === 1 && (
+        <>
+          <motion.div 
+            className="laser-star"
+            initial={{ left: "-10%", top: "50%", transform: "translate(0, -50%)" }}
+            animate={{ left: "105%", top: "50%", transform: "translate(0, -50%)" }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="laser-line thin-laser"
+            initial={{ 
+              left: "-10%", 
+              width: "5%", 
+              opacity: 0,
+              background: "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)"
+            }}
+            animate={{ 
+              left: "105%", 
+              width: "100%", 
+              opacity: [0, 1, 1, 0.8],
+              background: [
+                "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(127, 114, 255, 0) 0%, rgba(127, 114, 255, 1) 50%, rgba(127, 114, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(255, 0, 255, 0) 0%, rgba(255, 0, 255, 1) 50%, rgba(255, 0, 255, 0) 100%)"
+              ]
+            }}
+            transition={{ 
+              left: { duration: 1, ease: "easeInOut" },
+              width: { duration: 0.3, ease: "easeOut" },
+              opacity: { times: [0, 0.1, 0.7, 1], duration: 1 },
+              background: { duration: 1, times: [0, 0.5, 1] }
+            }}
+          />
+        </>
+      )}
       
-      {/* Laser effect */}
-      <div className={`laser-beam ${phase >= 1 ? 'active' : ''}`} />
+      {/* Second laser pass (right to left) - with star point and magenta to cyan color transition */}
+      {laserPhase === 2 && (
+        <>
+          <motion.div 
+            className="laser-star"
+            initial={{ left: "105%", top: "50%", transform: "translate(0, -50%)" }}
+            animate={{ left: "-10%", top: "50%", transform: "translate(0, -50%)" }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+            style={{ backgroundColor: "#ff00ff", boxShadow: "0 0 8px 4px rgba(255, 0, 255, 0.8)" }}
+          />
+          <motion.div 
+            className="laser-line thin-laser"
+            initial={{ 
+              left: "105%", 
+              width: "5%", 
+              opacity: 0,
+              background: "linear-gradient(to right, rgba(255, 0, 255, 0) 0%, rgba(255, 0, 255, 1) 50%, rgba(255, 0, 255, 0) 100%)"
+            }}
+            animate={{ 
+              left: "-10%", 
+              width: "100%", 
+              opacity: [0, 1, 1, 0.8],
+              background: [
+                "linear-gradient(to right, rgba(255, 0, 255, 0) 0%, rgba(255, 0, 255, 1) 50%, rgba(255, 0, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(127, 114, 255, 0) 0%, rgba(127, 114, 255, 1) 50%, rgba(127, 114, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)"
+              ]
+            }}
+            transition={{ 
+              left: { duration: 1, ease: "easeInOut" },
+              width: { duration: 0.3, ease: "easeOut" },
+              opacity: { times: [0, 0.1, 0.7, 1], duration: 1 },
+              background: { duration: 1, times: [0, 0.5, 1] }
+            }}
+          />
+        </>
+      )}
       
-      {/* Metal plate effect */}
-      <div className={`metal-plate ${phase >= 2 ? 'cutting' : ''}`} />
+      {/* Third laser pass (left to right) - with star point and cyan to magenta color transition */}
+      {laserPhase === 3 && (
+        <>
+          <motion.div 
+            className="laser-star"
+            initial={{ left: "-10%", top: "50%", transform: "translate(0, -50%)" }}
+            animate={{ left: "105%", top: "50%", transform: "translate(0, -50%)" }}
+            transition={{ duration: 1.8, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="laser-line thin-laser"
+            initial={{ 
+              left: "-10%", 
+              width: "5%", 
+              opacity: 0,
+              background: "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)"
+            }}
+            animate={{ 
+              left: "105%", 
+              width: "100%", 
+              opacity: [0, 1, 1, 0.8, 1, 0.7, 0.4, 0.2],
+              background: [
+                "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(127, 114, 255, 0) 0%, rgba(127, 114, 255, 1) 50%, rgba(127, 114, 255, 0) 100%)",
+                "linear-gradient(to right, rgba(255, 0, 255, 0) 0%, rgba(255, 0, 255, 1) 50%, rgba(255, 0, 255, 0) 100%)"
+              ]
+            }}
+            transition={{ 
+              left: { duration: 1.8, ease: "easeInOut" },
+              width: { duration: 0.3, ease: "easeOut" },
+              opacity: { times: [0, 0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 1], duration: 1.8 },
+              background: { duration: 1.8, times: [0, 0.5, 1] }
+            }}
+          />
+        </>
+      )}
       
-      {/* Logo reveal */}
-      <div className={`logo-reveal ${phase >= 3 ? 'visible' : ''}`}>
-        <h1 className="laser-logo font-orbitron">
-          <span style={{ color: '#00F0FF', fontWeight: 700 }}>M1</span>
-          <span style={{ color: '#FFFFFF', fontWeight: 700 }}>SSION</span>
-        </h1>
-      </div>
-      
-      {/* Text reveal */}
-      <div className={`text-reveal ${phase >= 4 ? 'visible' : ''}`}>
-        <p 
-          className="laser-text font-orbitron" 
-          style={{ 
-            fontWeight: 700, 
-            color: '#FFFFFF',
-            fontFamily: 'Orbitron, sans-serif',
-            textAlign: 'center',
-            fontSize: '1.5rem',
-            letterSpacing: '0.1em'
-          }}
+      {/* M1SSION Logo with enhanced glitch effect - appears during third laser pass */}
+      {showLogo && (
+        <motion.div 
+          className="intro-logo-container"
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7, type: "spring", stiffness: 100 }}
         >
-          STARTS ON AUGUST 19
-        </p>
-      </div>
+          <h1 className="intro-logo glitch-text" data-text="M1SSION">
+            <span className="cyan-text">M1</span>SSION
+          </h1>
+          
+          {/* Date text with smooth fade-in */}
+          {showDate && (
+            <motion.p 
+              className="intro-date"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, ease: "easeOut" }}
+            >
+              STARTS ON JULY 19
+            </motion.p>
+          )}
+        </motion.div>
+      )}
       
-      {/* Skip button */}
-      <button 
-        className="laser-skip-button"
-        onClick={onSkip}
-        style={{ opacity: phase >= 2 ? 1 : 0 }}
-      >
-        Skip
-      </button>
-    </div>
+      {/* Digital noise overlay for enhanced tech effect */}
+      <div className="digital-noise"></div>
+      
+      {/* Skip button - maintained from original */}
+      {onSkip && (
+        <button 
+          onClick={onSkip} 
+          className="skip-button"
+        >
+          Skip intro
+        </button>
+      )}
+    </motion.div>
   );
 };
 
