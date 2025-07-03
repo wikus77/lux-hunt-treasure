@@ -13,7 +13,12 @@ export const useStripePayment = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuthContext();
 
-  const processBuzzPurchase = async (isBuzzMap: boolean = false, amount: number): Promise<boolean> => {
+  const processBuzzPurchase = async (
+    isBuzzMap: boolean = false, 
+    amount: number,
+    redirectUrl?: string,
+    sessionId?: string
+  ): Promise<boolean> => {
     if (!user) {
       toast.error('Devi essere loggato per effettuare acquisti');
       return false;
@@ -27,7 +32,9 @@ export const useStripePayment = () => {
           user_id: user.id,
           amount,
           is_buzz_map: isBuzzMap,
-          currency: 'EUR'
+          currency: 'EUR',
+          redirect_url: redirectUrl,
+          session_id: sessionId
         }
       });
 
@@ -91,13 +98,13 @@ export const useStripePayment = () => {
   };
 
   const detectPaymentMethodAvailability = () => {
-    // Detect Apple Pay availability
-    const applePayAvailable = window.ApplePaySession && 
-      ApplePaySession.canMakePayments && 
-      ApplePaySession.canMakePayments();
+    // Detect Apple Pay availability with proper type checking
+    const applePayAvailable = typeof window !== 'undefined' && 
+      'ApplePaySession' in window && 
+      (window as any).ApplePaySession?.canMakePayments?.();
 
     // Detect Google Pay availability (basic check)
-    const googlePayAvailable = 'PaymentRequest' in window;
+    const googlePayAvailable = typeof window !== 'undefined' && 'PaymentRequest' in window;
 
     return {
       applePayAvailable: applePayAvailable || false,
