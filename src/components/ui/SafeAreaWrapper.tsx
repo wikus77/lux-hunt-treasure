@@ -1,26 +1,15 @@
 
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface SafeAreaWrapperProps {
   children: React.ReactNode;
   className?: string;
 }
 
-const SafeAreaWrapper: React.FC<SafeAreaWrapperProps> = ({ 
-  children, 
-  className = '' 
-}) => {
+const SafeAreaWrapper: React.FC<SafeAreaWrapperProps> = ({ children, className }) => {
   return (
-    <div 
-      className={`safe-area-wrapper ${className}`}
-      style={{
-        paddingTop: 'env(safe-area-inset-top, 0px)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        paddingLeft: 'env(safe-area-inset-left, 0px)',
-        paddingRight: 'env(safe-area-inset-right, 0px)',
-        minHeight: '100dvh'
-      }}
-    >
+    <div className={cn("pt-safe-top pb-safe-bottom", className)}>
       {children}
     </div>
   );
