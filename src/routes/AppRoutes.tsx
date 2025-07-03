@@ -1,4 +1,3 @@
-
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -46,11 +45,11 @@ const LoadingFallback = () => (
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // CRITICAL: Enhanced routing logic for Capacitor
+  // Enhanced routing logic for Capacitor iOS
   const isCapacitorApp = typeof window !== 'undefined' && 
     (window.location.protocol === 'capacitor:' || window.location.hostname === 'localhost');
 
-  console.log('🔍 ENHANCED ROUTING STATE:', {
+  console.log('🔍 ROUTING STATE:', {
     isAuthenticated,
     isLoading,
     isCapacitorApp,
@@ -63,12 +62,11 @@ const AppRoutes: React.FC = () => {
       <IOSSafeAreaOverlay>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            {/* CRITICAL: Enhanced landing page routing */}
+            {/* Landing page routing - Fixed for iOS */}
             <Route 
               path="/" 
               element={
-                // For Capacitor app, redirect authenticated users to /home immediately
-                isCapacitorApp && isAuthenticated ? (
+                isCapacitorApp && isAuthenticated && !isLoading ? (
                   <Navigate to="/home" replace />
                 ) : (
                   <Index />
@@ -76,7 +74,7 @@ const AppRoutes: React.FC = () => {
               } 
             />
 
-            {/* Main App Routes - PROTECTED - SEPARATE FROM LANDING */}
+            {/* Main App Routes - PROTECTED */}
             <Route
               path="/home"
               element={
@@ -86,6 +84,7 @@ const AppRoutes: React.FC = () => {
               }
             />
             
+            {/* MAP ROUTE - iOS Optimized */}
             <Route
               path="/map"
               element={

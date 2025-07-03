@@ -1,0 +1,55 @@
+
+/* iOS Capacitor specific fixes for Leaflet */
+.leaflet-container {
+  background: transparent !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Fix iOS touch events */
+.leaflet-container a {
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+/* iOS keyboard and viewport fixes */
+.leaflet-container {
+  -webkit-transform: translateZ(0) !important;
+  transform: translateZ(0) !important;
+  position: relative !important;
+}
+
+/* Ensure proper z-index for iOS */
+.leaflet-map-pane {
+  z-index: 1 !important;
+}
+
+.leaflet-control-container {
+  z-index: 1000 !important;
+}
+
+/* iOS safe area compatibility */
+.map-container-wrapper {
+  -webkit-overflow-scrolling: touch !important;
+  overflow: hidden !important;
+}
+
+/* Prevent iOS bounce effect */
+.leaflet-container {
+  -webkit-overflow-scrolling: auto !important;
+  overflow: hidden !important;
+}
+
+/* iOS marker fixes */
+.leaflet-marker-icon {
+  -webkit-transform-origin: center bottom !important;
+  transform-origin: center bottom !important;
+}
+
+/* Popup fixes for iOS */
+.leaflet-popup {
+  -webkit-transform: translateZ(0) !important;
+  transform: translateZ(0) !important;
+}
