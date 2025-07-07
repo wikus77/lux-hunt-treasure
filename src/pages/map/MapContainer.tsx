@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MapContainer as LeafletMapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import './leaflet-fixes.css';
+import './components/leaflet-fixes.css';
 import MapContent from './MapContent';
 import MapControls from './components/MapControls';
 import BuzzMapButton from './components/BuzzMapButton';
@@ -205,6 +205,13 @@ const MapContainer: React.FC<MapContainerProps> = ({
           isAddingSearchArea={isAddingSearchArea}
           isAddingMapPoint={isAddingPoint}
           setShowHelpDialog={setShowHelpDialog}
+          handleBuzz={handleBuzz}
+          showHelpDialog={showHelpDialog}
+          mapCenter={mapCenter}
+          onAreaGenerated={(lat, lng, radius) => {
+            console.log('🎯 Area generated:', { lat, lng, radius });
+            reloadAreas();
+          }}
         />
         
         {/* Zoom Controls */}
