@@ -28,9 +28,9 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    // Capacitor iOS optimizations
+    // Fixed minification settings for Capacitor iOS
     target: 'es2015',
-    minify: 'terser',
+    minify: mode === 'production' ? 'terser' : false,
     sourcemap: false,
     rollupOptions: {
       output: {
@@ -47,10 +47,20 @@ export default defineConfig(({ mode }) => ({
         }
       }
     },
-    // Capacitor iOS specific optimizations
+    // Enhanced Capacitor iOS optimizations
     emptyOutDir: true,
     cssCodeSplit: false,
     chunkSizeWarningLimit: 1000,
+    // Terser options for iOS compatibility
+    terserOptions: {
+      compress: {
+        drop_console: mode === 'production',
+        drop_debugger: mode === 'production',
+      },
+      format: {
+        comments: false,
+      },
+    },
   },
   // iOS Safari compatibility
   define: {
@@ -59,5 +69,7 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
     exclude: ['@capacitor/core']
-  }
+  },
+  // Improved asset handling
+  assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.mp3', '**/*.wav']
 }));

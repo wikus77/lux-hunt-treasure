@@ -171,6 +171,4 @@
   color: white;
 }
 
-/* Font import for terminal text */
-@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@300;400;700&display=swap');
+/* Font imports for terminal text - MOVED TO index.html */
