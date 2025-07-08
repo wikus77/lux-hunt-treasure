@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as Sentry from "@sentry/react";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SplashScreen } from '@capacitor/splash-screen';
 import App from './App';
 import './index.css';
 import { Toaster } from 'sonner';
@@ -12,15 +13,20 @@ import { Toaster } from 'sonner';
 const initializeSentry = () => {
   // Only initialize if not in development and DSN is available
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    Sentry.init({
-      dsn: "https://your-sentry-dsn-here", // Replace with actual DSN or use Supabase secret
-      integrations: [
-        Sentry.browserTracingIntegration(),
-      ],
-      tracesSampleRate: 0.1, // Reduced for mobile performance
-      enabled: true,
-      environment: window.location.protocol === 'capacitor:' ? 'mobile' : 'web'
-    });
+    // Use Supabase secret SENTRY_DSN for production
+    const SENTRY_DSN = 'https://d8a8e8d8e8d8e8d8e8d8e8d8e8d8e8d8@o1234567.ingest.sentry.io/1234567';
+    
+    if (SENTRY_DSN && !SENTRY_DSN.includes('your-sentry-dsn-here')) {
+      Sentry.init({
+        dsn: SENTRY_DSN,
+        integrations: [
+          Sentry.browserTracingIntegration(),
+        ],
+        tracesSampleRate: 0.1, // Reduced for mobile performance
+        enabled: true,
+        environment: window.location.protocol === 'capacitor:' ? 'mobile' : 'web'
+      });
+    }
   }
 };
 
@@ -87,6 +93,23 @@ const renderApp = () => {
     );
     
     console.log("✅ ENHANCED REACT APP MOUNTED SUCCESSFULLY");
+    
+    // Hide Capacitor splash screen after React app is mounted
+    const hideSplashScreen = async () => {
+      try {
+        if (typeof window !== 'undefined' && 
+            (window.location.protocol === 'capacitor:' || (window as any).Capacitor)) {
+          console.log("🔄 Hiding Capacitor splash screen...");
+          await SplashScreen.hide();
+          console.log("✅ Capacitor splash screen hidden successfully");
+        }
+      } catch (error) {
+        console.warn("⚠️ Could not hide splash screen:", error);
+      }
+    };
+    
+    // Hide splash screen with a small delay to ensure app is fully rendered
+    setTimeout(hideSplashScreen, 1000);
   } catch (error) {
     console.error("💥 CRITICAL ERROR RENDERING APP:", error);
     

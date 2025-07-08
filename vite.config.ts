@@ -51,38 +51,40 @@ export default defineConfig(({ mode }) => ({
     emptyOutDir: true,
     cssCodeSplit: false,
     chunkSizeWarningLimit: 1000,
-    // Terser options for iOS compatibility - PRESERVE FUNCTION NAMES
+    // Enhanced Terser options for iOS Capacitor compatibility
     terserOptions: {
       compress: {
-        drop_console: mode === 'production',
+        drop_console: false, // Keep console for debugging in production
         drop_debugger: mode === 'production',
-        // Preserve function names for iOS Capacitor compatibility
         keep_fnames: true,
         keep_classnames: true,
+        // Prevent unsafe optimizations
+        pure_funcs: [],
+        unsafe: false,
+        unsafe_comps: false,
       },
       mangle: {
-        // Disable mangling to prevent minified function names
         keep_fnames: true,
         keep_classnames: true,
         reserved: [
-          // Preserve React/ReactDOM function names
-          'React', 'ReactDOM', 'useState', 'useEffect', 'useCallback', 'useMemo',
-          // Preserve router function names
-          'useNavigate', 'useLocation', 'Link', 'Router', 'Routes', 'Route',
-          // Preserve Capacitor function names
-          'Capacitor', 'CapacitorApp', 'StatusBar', 'SplashScreen',
-          // Preserve Supabase function names
-          'supabase', 'createClient', 'signInWithPassword', 'signUp',
-          // Preserve animation function names
-          'motion', 'AnimatePresence', 'framerMotion',
-          // Preserve UI component names
-          'Button', 'Dialog', 'Toast', 'Card', 'Avatar', 'Badge'
+          // Critical React functions
+          'React', 'ReactDOM', 'useState', 'useEffect', 'useCallback', 'useMemo', 'useRef',
+          // Router functions
+          'useNavigate', 'useLocation', 'useParams', 'Link', 'Navigate', 'Routes', 'Route',
+          // Capacitor functions
+          'Capacitor', 'SplashScreen', 'StatusBar', 'Device', 'App',
+          // Supabase functions
+          'supabase', 'createClient', 'from', 'select', 'insert', 'update', 'delete',
+          // Animation functions
+          'motion', 'AnimatePresence', 'useAnimation', 'framer',
+          // Custom components
+          'BottomNavigationComponent', 'explicitNavigationHandler', 'explicitAuthHandler'
         ]
       },
       format: {
         comments: false,
-        // Preserve function names in output
         keep_fnames: true,
+        preserve_annotations: true,
       },
     },
   },
