@@ -1,0 +1,120 @@
+/* M1SSION™ Bottom Navigation Bar - iOS Capacitor Optimized */
+
+/* Touch target optimization for mobile */
+.mobile-touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* Hardware acceleration for iOS */
+.bottom-nav-hardware-acceleration {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* iOS safe area support */
+.ios-safe-area-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom, 34px) + 12px);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Neon glow animations */
+@keyframes neon-pulse {
+  0% { 
+    filter: drop-shadow(0 0 5px rgba(0, 209, 255, 0.5));
+  }
+  50% { 
+    filter: drop-shadow(0 0 12px rgba(123, 46, 255, 0.7));
+  }
+  100% { 
+    filter: drop-shadow(0 0 5px rgba(0, 209, 255, 0.5));
+  }
+}
+
+.neon-active-glow {
+  animation: neon-pulse 3s infinite ease-in-out;
+}
+
+/* Buzz button special animation */
+@keyframes buzz-orbit {
+  0% { 
+    border-color: rgba(0, 209, 255, 0.6);
+  }
+  50% { 
+    border-color: rgba(123, 46, 255, 0.8);
+  }
+  100% { 
+    border-color: rgba(0, 209, 255, 0.6);
+  }
+}
+
+.buzz-special-effect {
+  animation: buzz-orbit 4s infinite ease-in-out;
+}
+
+/* Badge pulse animation */
+@keyframes badge-pulse {
+  0% { 
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(240, 89, 255, 0.5);
+  }
+  50% { 
+    transform: scale(1.2);
+    box-shadow: 0 0 16px rgba(240, 89, 255, 0.8);
+  }
+  100% { 
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(240, 89, 255, 0.5);
+  }
+}
+
+.notification-badge-pulse {
+  animation: badge-pulse 2s infinite;
+}
+
+/* Line glow effect */
+.line-glow {
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(0, 209, 255, 0.3) 25%, 
+    rgba(0, 209, 255, 0.6) 50%, 
+    rgba(0, 209, 255, 0.3) 75%, 
+    transparent 100%
+  );
+  height: 1px;
+  opacity: 0.8;
+}
+
+/* iOS specific optimizations */
+@supports (-webkit-touch-callout: none) {
+  .bottom-navigation-ios {
+    -webkit-overflow-scrolling: touch;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .bottom-nav-blur {
+    backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(0, 0, 0, 0.85);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .neon-active-glow,
+  .buzz-special-effect,
+  .notification-badge-pulse {
+    animation: none;
+  }
+}
