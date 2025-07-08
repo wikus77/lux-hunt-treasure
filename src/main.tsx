@@ -1,24 +1,30 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-// Temporarily disable Sentry until DSN is configured
-// import * as Sentry from "@sentry/react";
+import * as Sentry from "@sentry/react";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './index.css';
 import { Toaster } from 'sonner';
 
-// Initialize Sentry - temporarily disabled until DSN is configured
-/*
-Sentry.init({
-  dsn: "[INSERISCI LA TUA DSN DI SENTRY QUI]",
-  integrations: [
-    Sentry.browserTracingIntegration(),
-  ],
-  tracesSampleRate: 1.0,
-  enabled: false // Disabilitato temporaneamente
-});
-*/
+// Mobile-compatible Sentry initialization
+// Uses Supabase secret for DSN to work in Capacitor environments
+const initializeSentry = () => {
+  // Only initialize if not in development and DSN is available
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    Sentry.init({
+      dsn: "https://your-sentry-dsn-here", // Replace with actual DSN or use Supabase secret
+      integrations: [
+        Sentry.browserTracingIntegration(),
+      ],
+      tracesSampleRate: 0.1, // Reduced for mobile performance
+      enabled: true,
+      environment: window.location.protocol === 'capacitor:' ? 'mobile' : 'web'
+    });
+  }
+};
+
+initializeSentry();
 
 // Create QueryClient instance for React Query with enhanced configuration
 const queryClient = new QueryClient({

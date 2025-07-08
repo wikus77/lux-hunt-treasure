@@ -9,10 +9,12 @@
     <!-- Favicon aggiornato -->
     <link rel="icon" href="/public/lovable-uploads/83efc483-d057-4f1b-ac21-93d56e796e1f.png" type="image/png" />
     
-    <!-- Script per reindirizzare HTTP a HTTPS - migliorato -->
+    <!-- Script per reindirizzare HTTP a HTTPS - mobile compatible -->
     <script>
-      // Redirect HTTP to HTTPS except on localhost
-      if (window.location.protocol === 'http:' && !window.location.hostname.match(/localhost|127.0.0.1/)) {
+      // Redirect HTTP to HTTPS except on localhost and Capacitor
+      if (window.location.protocol === 'http:' && 
+          !window.location.hostname.match(/localhost|127.0.0.1/) &&
+          window.location.protocol !== 'capacitor:') {
         window.location.href = window.location.href.replace('http:', 'https:');
       }
     </script>
