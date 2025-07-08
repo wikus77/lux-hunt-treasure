@@ -1,46 +1,35 @@
-import React, { lazy, Suspense } from "react";
+import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import { Spinner } from "@/components/ui/spinner";
 import IOSSafeAreaOverlay from "@/components/debug/IOSSafeAreaOverlay";
 import { useAuth } from "@/hooks/use-auth";
 
 // Public routes
 import Index from "@/pages/Index";
 
-// Main app routes with lazy loading - SEPARATE FROM LANDING
-const AppHome = lazy(() => import("@/pages/AppHome"));
-const Map = lazy(() => import("@/pages/Map"));
-const Buzz = lazy(() => import("@/pages/Buzz"));
-const Games = lazy(() => import("@/pages/Games"));
-const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
-const Notifications = lazy(() => import("@/pages/Notifications"));
-const Profile = lazy(() => import("@/pages/Profile"));
-const Settings = lazy(() => import("@/pages/Settings"));
-const Subscriptions = lazy(() => import("@/pages/Subscriptions"));
+// Main app routes - STATIC IMPORTS FOR CAPACITOR iOS COMPATIBILITY
+import AppHome from "@/pages/AppHome";
+import Map from "@/pages/Map";
+import Buzz from "@/pages/Buzz";
+import Games from "@/pages/Games";
+import Leaderboard from "@/pages/Leaderboard";
+import Notifications from "@/pages/Notifications";
+import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
+import Subscriptions from "@/pages/Subscriptions";
 
 // Auth routes
-const Login = lazy(() => import("@/pages/Login"));
-const Register = lazy(() => import("@/pages/Register"));
-const MissionSelection = lazy(() => import("@/pages/MissionSelection"));
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import MissionSelection from "@/pages/MissionSelection";
 
 // Additional routes
-const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
-const Contacts = lazy(() => import("@/pages/Contacts"));
-const NotFound = lazy(() => import("@/pages/NotFound"));
-const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
-const Terms = lazy(() => import("@/pages/Terms"));
-
-// Loading fallback component
-const LoadingFallback = () => (
-  <div className="min-h-screen bg-black flex items-center justify-center">
-    <div className="flex flex-col items-center gap-4">
-      <Spinner size="lg" className="text-[#00D1FF]" />
-      <p className="text-gray-400">Caricamento...</p>
-    </div>
-  </div>
-);
+import HowItWorks from "@/pages/HowItWorks";
+import Contacts from "@/pages/Contacts";
+import NotFound from "@/pages/NotFound";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import Terms from "@/pages/Terms";
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -60,8 +49,7 @@ const AppRoutes: React.FC = () => {
   return (
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
+        <Routes>
             {/* Landing page routing - Fixed for iOS */}
             <Route 
               path="/" 
@@ -156,8 +144,7 @@ const AppRoutes: React.FC = () => {
             
             {/* 404 route */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
+        </Routes>
       </IOSSafeAreaOverlay>
     </ErrorBoundary>
   );
