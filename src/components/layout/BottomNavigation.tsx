@@ -5,17 +5,23 @@ import { Mail, Map, Home, Award, User, Circle, Gamepad2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useNavigationStore } from "@/stores/navigationStore";
+import { explicitNavigationHandler } from "@/utils/iosCapacitorFunctions";
 
-const BottomNavigation = () => {
+// Explicit function name for iOS Capacitor compatibility
+const BottomNavigationComponent = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
   const { unreadCount } = useNotifications();
   const { setCurrentTab, addToHistory } = useNavigationStore();
 
-  // Capacitor iOS detection
-  const isCapacitor = typeof window !== 'undefined' && 
-    (!!(window as any).Capacitor || window.location.protocol === 'capacitor:');
+  // Capacitor iOS detection with explicit function name
+  const detectCapacitorEnvironment = (): boolean => {
+    return typeof window !== 'undefined' && 
+      (!!(window as any).Capacitor || window.location.protocol === 'capacitor:');
+  };
+  
+  const isCapacitor = detectCapacitorEnvironment();
 
   console.log('🧭 BottomNavigation render:', {
     currentPath,
@@ -43,25 +49,31 @@ const BottomNavigation = () => {
     { icon: <Award className="h-6 w-6" />, label: "Classifica", path: "/leaderboard" },
   ];
 
-  // iOS Capacitor compatible navigation handler
-  const handleNavigation = (path: string, e: React.MouseEvent) => {
+  // iOS Capacitor compatible navigation handler with explicit name
+  const handleNavigationExplicit = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
     
     console.log('🧭 Navigation clicked:', { path, isCapacitor });
     
-    // Update navigation store
-    setCurrentTab(path);
-    addToHistory(path);
+    // Update navigation store with explicit function calls
+    const updateNavigationState = () => {
+      setCurrentTab(path);
+      addToHistory(path);
+    };
+    updateNavigationState();
     
-    // Use React Router navigate for Capacitor compatibility
-    navigate(path, { replace: false });
+    // Use explicit navigation helper
+    explicitNavigationHandler(path, navigate);
     
-    // iOS WebView scroll fix
-    if (isCapacitor) {
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-      }, 100);
-    }
+    // iOS WebView scroll fix with explicit function
+    const applyIOSScrollFix = () => {
+      if (isCapacitor) {
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+        }, 100);
+      }
+    };
+    applyIOSScrollFix();
   };
 
   return (
@@ -105,7 +117,7 @@ const BottomNavigation = () => {
           {links.map((link) => (
             <button
               key={link.path}
-              onClick={(e) => handleNavigation(link.path, e)}
+              onClick={(e) => handleNavigationExplicit(link.path, e)}
               className={`relative flex flex-col items-center justify-center w-16 h-16 transition-colors mobile-touch-target cursor-pointer ${
                 currentPath === link.path
                   ? "text-[#00D1FF]"
@@ -207,4 +219,6 @@ const BottomNavigation = () => {
   );
 };
 
+// Export with explicit name for iOS Capacitor compatibility
+const BottomNavigation = BottomNavigationComponent;
 export default BottomNavigation;

@@ -51,24 +51,52 @@ export default defineConfig(({ mode }) => ({
     emptyOutDir: true,
     cssCodeSplit: false,
     chunkSizeWarningLimit: 1000,
-    // Terser options for iOS compatibility
+    // Terser options for iOS compatibility - PRESERVE FUNCTION NAMES
     terserOptions: {
       compress: {
         drop_console: mode === 'production',
         drop_debugger: mode === 'production',
+        // Preserve function names for iOS Capacitor compatibility
+        keep_fnames: true,
+        keep_classnames: true,
+      },
+      mangle: {
+        // Disable mangling to prevent minified function names
+        keep_fnames: true,
+        keep_classnames: true,
+        reserved: [
+          // Preserve React/ReactDOM function names
+          'React', 'ReactDOM', 'useState', 'useEffect', 'useCallback', 'useMemo',
+          // Preserve router function names
+          'useNavigate', 'useLocation', 'Link', 'Router', 'Routes', 'Route',
+          // Preserve Capacitor function names
+          'Capacitor', 'CapacitorApp', 'StatusBar', 'SplashScreen',
+          // Preserve Supabase function names
+          'supabase', 'createClient', 'signInWithPassword', 'signUp',
+          // Preserve animation function names
+          'motion', 'AnimatePresence', 'framerMotion',
+          // Preserve UI component names
+          'Button', 'Dialog', 'Toast', 'Card', 'Avatar', 'Badge'
+        ]
       },
       format: {
         comments: false,
+        // Preserve function names in output
+        keep_fnames: true,
       },
     },
   },
-  // iOS Safari compatibility
+  // iOS Safari compatibility - EXPLICIT GLOBALS
   define: {
     global: 'globalThis',
+    // Prevent minification of critical React functions
+    'process.env.NODE_ENV': JSON.stringify(mode),
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
-    exclude: ['@capacitor/core']
+    exclude: ['@capacitor/core'],
+    // Force explicit imports to prevent minification issues
+    force: true
   },
   // Improved asset handling
   assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.mp3', '**/*.wav']
