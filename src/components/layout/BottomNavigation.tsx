@@ -1,14 +1,27 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Mail, Map, Home, Award, User, Circle, Gamepad2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useNavigationStore } from "@/stores/navigationStore";
 
 const BottomNavigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
   const { unreadCount } = useNotifications();
+  const { setCurrentTab, addToHistory } = useNavigationStore();
+
+  // Capacitor iOS detection
+  const isCapacitor = typeof window !== 'undefined' && 
+    (!!(window as any).Capacitor || window.location.protocol === 'capacitor:');
+
+  console.log('🧭 BottomNavigation render:', {
+    currentPath,
+    isCapacitor,
+    unreadCount
+  });
 
   // Standard navigation links without subscriptions
   const links = [
@@ -30,32 +43,50 @@ const BottomNavigation = () => {
     { icon: <Award className="h-6 w-6" />, label: "Classifica", path: "/leaderboard" },
   ];
 
-  const handleLinkClick = (path: string, e: React.MouseEvent) => {
-    if (path === "/home") {
-      e.preventDefault();
-      window.location.href = "/home";
+  // iOS Capacitor compatible navigation handler
+  const handleNavigation = (path: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    console.log('🧭 Navigation clicked:', { path, isCapacitor });
+    
+    // Update navigation store
+    setCurrentTab(path);
+    addToHistory(path);
+    
+    // Use React Router navigate for Capacitor compatibility
+    navigate(path, { replace: false });
+    
+    // iOS WebView scroll fix
+    if (isCapacitor) {
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 100);
     }
   };
 
   return (
     <div
+      className="bottom-navigation-ios"
       style={{
         position: "fixed",
         left: 0,
         right: 0,
         bottom: "0px",
         zIndex: 9999,
-        paddingBottom: "calc(env(safe-area-inset-bottom, 34px) + 12px)",
+        paddingBottom: isCapacitor ? "calc(env(safe-area-inset-bottom, 34px) + 12px)" : "12px",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
         backgroundColor: "rgba(0,0,0,0.95)",
         transform: "translateZ(0)",
         WebkitTransform: "translateZ(0)",
         isolation: "isolate",
+        WebkitBackfaceVisibility: "hidden",
+        backfaceVisibility: "hidden",
+        willChange: "transform",
       }}
     >
       <motion.div
-        className="h-16 backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 border-t border-white/10 px-3"
+        className="h-16 backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 border-t border-white/10 px-3 bottom-nav-hardware-acceleration"
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
@@ -66,19 +97,31 @@ const BottomNavigation = () => {
           display: "flex",
           alignItems: "center",
           borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+          WebkitTapHighlightColor: "transparent",
+          touchAction: "manipulation",
         }}
       >
         <div className="flex items-center justify-around h-full max-w-lg mx-auto w-full">
           {links.map((link) => (
-            <Link
+            <button
               key={link.path}
-              to={link.path}
-              onClick={(e) => handleLinkClick(link.path, e)}
-              className={`relative flex flex-col items-center justify-center w-16 h-16 transition-colors mobile-touch-target ${
+              onClick={(e) => handleNavigation(link.path, e)}
+              className={`relative flex flex-col items-center justify-center w-16 h-16 transition-colors mobile-touch-target cursor-pointer ${
                 currentPath === link.path
                   ? "text-[#00D1FF]"
                   : "text-gray-400 hover:text-gray-300"
               }`}
+              style={{
+                background: "none",
+                border: "none",
+                outline: "none",
+                WebkitTapHighlightColor: "transparent",
+                WebkitTouchCallout: "none",
+                userSelect: "none",
+                touchAction: "manipulation",
+                minHeight: "44px",
+                minWidth: "44px",
+              }}
             >
               <motion.div className="relative">
                 {link.isSpecial ? (
@@ -143,7 +186,7 @@ const BottomNavigation = () => {
                   </motion.div>
                 )}
               </motion.div>
-              <span className="text-xs mt-1">{link.label}</span>
+              <span className="text-xs mt-1 select-none">{link.label}</span>
               {currentPath === link.path && (
                 <motion.div
                   className="absolute bottom-0 w-6 h-1 bg-[#00D1FF] rounded-t-md"
@@ -155,7 +198,7 @@ const BottomNavigation = () => {
                   }}
                 />
               )}
-            </Link>
+            </button>
           ))}
         </div>
         <div className="line-glow absolute top-0 left-0 w-full"></div>
