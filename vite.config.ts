@@ -23,9 +23,21 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Capacitor iOS Build Configuration
+  base: mode === 'production' ? './' : '/',
   build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    // Capacitor iOS optimizations
+    target: 'es2015',
+    minify: 'terser',
+    sourcemap: false,
     rollupOptions: {
       output: {
+        // Static asset naming for Capacitor compatibility
+        entryFileNames: 'assets/[name].[hash].js',
+        chunkFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash].[ext]',
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
           'router-vendor': ['react-router-dom'],
@@ -34,6 +46,18 @@ export default defineConfig(({ mode }) => ({
           'animation-vendor': ['framer-motion', 'lottie-react']
         }
       }
-    }
+    },
+    // Capacitor iOS specific optimizations
+    emptyOutDir: true,
+    cssCodeSplit: false,
+    chunkSizeWarningLimit: 1000,
+  },
+  // iOS Safari compatibility
+  define: {
+    global: 'globalThis',
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom'],
+    exclude: ['@capacitor/core']
   }
 }));
