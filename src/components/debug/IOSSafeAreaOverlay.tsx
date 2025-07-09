@@ -1,84 +1,117 @@
 
-import React from 'react';
+// M1SSION™ - iOS Safe Area Debug Overlay
+import React, { useEffect, useState } from 'react';
+import { getSafeAreaInsets, detectCapacitorEnvironment } from '@/utils/iosCapacitorFunctions';
 
 interface IOSSafeAreaOverlayProps {
-  children: React.ReactNode;
+  visible?: boolean;
+  opacity?: number;
 }
 
-const IOSSafeAreaOverlay: React.FC<IOSSafeAreaOverlayProps> = ({ children }) => {
-  // SEMPRE VISIBILE in modalità development e Lovable preview
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  const isLovablePreview = window.location.hostname.includes('lovableproject.com');
-  
-  // FORZATA SEMPRE ATTIVA per Lovable preview e development
-  const shouldShowOverlay = isDevelopment || isLovablePreview;
+export const IOSSafeAreaOverlay: React.FC<IOSSafeAreaOverlayProps> = ({
+  visible = false,
+  opacity = 0.3
+}) => {
+  const [safeArea, setSafeArea] = useState({ top: 0, bottom: 0, left: 0, right: 0 });
+  const [isCapacitor, setIsCapacitor] = useState(false);
+
+  useEffect(() => {
+    const updateSafeArea = () => {
+      const insets = getSafeAreaInsets();
+      setSafeArea(insets);
+      setIsCapacitor(detectCapacitorEnvironment());
+    };
+
+    updateSafeArea();
+
+    const handleOrientationChange = () => {
+      setTimeout(updateSafeArea, 100);
+    };
+
+    window.addEventListener('orientationchange', handleOrientationChange);
+    window.addEventListener('resize', updateSafeArea);
+
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      window.removeEventListener('resize', updateSafeArea);
+    };
+  }, []);
+
+  if (!visible || !isCapacitor) return null;
 
   return (
-    <div className="relative">
-      {/* iOS Safe Area Visual Overlay - SEMPRE ATTIVO SU LOVABLE */}
-      {shouldShowOverlay && (
-        <div className="fixed inset-0 pointer-events-none z-[200]">
-          {/* Top Safe Area - OBBLIGATORIA */}
-          <div 
-            className="absolute top-0 left-0 right-0 bg-red-500/30 border-b-2 border-red-500"
-            style={{ height: '47px' }}
-          >
-            <div className="text-xs text-red-500 text-center pt-1 font-mono font-bold">
-              SAFE AREA iOS TOP (47px) - SOLO LOVABLE PREVIEW
-            </div>
-          </div>
-          
-          {/* Bottom Safe Area */}
-          <div 
-            className="absolute bottom-0 left-0 right-0 bg-red-500/30 border-t-2 border-red-500"
-            style={{ height: '34px' }}
-          >
-            <div className="text-xs text-red-500 text-center pt-1 font-mono font-bold">
-              SAFE AREA iOS BOTTOM (34px)
-            </div>
-          </div>
-          
-          {/* Left Safe Area */}
-          <div 
-            className="absolute top-0 bottom-0 left-0 bg-yellow-500/10 border-r border-yellow-500"
-            style={{ width: '0px' }}
-          />
-          
-          {/* Right Safe Area */}
-          <div 
-            className="absolute top-0 bottom-0 right-0 bg-yellow-500/10 border-l border-yellow-500"
-            style={{ width: '0px' }}
-          />
-          
-          {/* Notch Simulation */}
-          <div 
-            className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-black rounded-b-2xl"
-            style={{ width: '154px', height: '30px' }}
-          >
-            <div className="text-xs text-gray-400 text-center pt-2 font-mono">
-              NOTCH
-            </div>
-          </div>
+    <div className="fixed inset-0 pointer-events-none z-[9998]">
+      {/* Top safe area */}
+      {safeArea.top > 0 && (
+        <div
+          className="absolute top-0 left-0 right-0 bg-red-500 flex items-center justify-center"
+          style={{ 
+            height: `${safeArea.top}px`,
+            opacity
+          }}
+        >
+          <span className="text-white text-xs font-mono">
+            TOP SAFE AREA ({safeArea.top}px)
+          </span>
         </div>
       )}
-      
-      {/* App Content */}
-      {children}
-      
-      {/* Debug Info - SEMPRE VISIBILE */}
-      {shouldShowOverlay && (
-        <div className="fixed bottom-4 left-4 bg-black/90 text-white p-3 rounded text-xs font-mono z-[201] border border-red-500/50">
-          📱 iOS Safe Area Test Mode - ATTIVO
-          <br />
-          Top: 47px | Bottom: 34px
-          <br />
-          🔴 SOLO LOVABLE PREVIEW
-          <br />
-          ⚠️ HEADER DEVE STARE SOTTO LA ZONA ROSSA
+
+      {/* Bottom safe area */}
+      {safeArea.bottom > 0 && (
+        <div
+          className="absolute bottom-0 left-0 right-0 bg-blue-500 flex items-center justify-center"
+          style={{ 
+            height: `${safeArea.bottom}px`,
+            opacity
+          }}
+        >
+          <span className="text-white text-xs font-mono">
+            BOTTOM SAFE AREA ({safeArea.bottom}px)
+          </span>
         </div>
       )}
+
+      {/* Left safe area */}
+      {safeArea.left > 0 && (
+        <div
+          className="absolute top-0 bottom-0 left-0 bg-green-500 flex items-center justify-center"
+          style={{ 
+            width: `${safeArea.left}px`,
+            opacity,
+            writingMode: 'vertical-rl',
+            textOrientation: 'mixed'
+          }}
+        >
+          <span className="text-white text-xs font-mono">
+            LEFT ({safeArea.left}px)
+          </span>
+        </div>
+      )}
+
+      {/* Right safe area */}
+      {safeArea.right > 0 && (
+        <div
+          className="absolute top-0 bottom-0 right-0 bg-yellow-500 flex items-center justify-center"
+          style={{ 
+            width: `${safeArea.right}px`,
+            opacity,
+            writingMode: 'vertical-lr',
+            textOrientation: 'mixed'
+          }}
+        >
+          <span className="text-white text-xs font-mono">
+            RIGHT ({safeArea.right}px)
+          </span>
+        </div>
+      )}
+
+      {/* Info panel */}
+      <div className="absolute top-16 left-4 bg-black bg-opacity-80 text-white p-2 rounded text-xs font-mono">
+        <div>Platform: {isCapacitor ? 'Capacitor' : 'Web'}</div>
+        <div>Orientation: {window.innerWidth > window.innerHeight ? 'Landscape' : 'Portrait'}</div>
+        <div>Viewport: {window.innerWidth}×{window.innerHeight}</div>
+        <div>Safe Area: T{safeArea.top} B{safeArea.bottom} L{safeArea.left} R{safeArea.right}</div>
+      </div>
     </div>
   );
 };
-
-export default IOSSafeAreaOverlay;

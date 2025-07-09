@@ -1,46 +1,42 @@
 
+// M1SSION™ - Safe Area Debug Toggle
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { Eye, EyeOff } from 'lucide-react';
-import SafeAreaVisualizer from './SafeAreaVisualizer';
+import { detectCapacitorEnvironment } from '@/utils/iosCapacitorFunctions';
 
 interface SafeAreaToggleProps {
-  children: React.ReactNode;
+  onToggle: (visible: boolean) => void;
+  initialVisible?: boolean;
 }
 
-const SafeAreaToggle: React.FC<SafeAreaToggleProps> = ({ children }) => {
-  const [showVisualizer, setShowVisualizer] = useState(false);
+export const SafeAreaToggle: React.FC<SafeAreaToggleProps> = ({
+  onToggle,
+  initialVisible = false
+}) => {
+  const [visible, setVisible] = useState(initialVisible);
+  const isCapacitor = detectCapacitorEnvironment();
+
+  const handleToggle = () => {
+    const newVisible = !visible;
+    setVisible(newVisible);
+    onToggle(newVisible);
+  };
+
+  // Only show in Capacitor environment
+  if (!isCapacitor) return null;
 
   return (
-    <>
-      {/* Toggle Button - only show on development/internal preview */}
-      {process.env.NODE_ENV === 'development' && (
-        <button
-          onClick={() => setShowVisualizer(!showVisualizer)}
-          className="fixed bottom-4 right-4 z-[140] p-4 rounded-full bg-cyan-500 hover:bg-cyan-600 border-2 border-cyan-300 shadow-lg transition-all duration-300"
-          title="Toggle Safe Area Preview"
-          style={{ 
-            background: 'linear-gradient(45deg, #00D4FF, #0099CC)',
-            boxShadow: '0 0 20px rgba(0, 212, 255, 0.5)'
-          }}
-        >
-          {showVisualizer ? (
-            <EyeOff className="w-6 h-6 text-white" />
-          ) : (
-            <Eye className="w-6 h-6 text-white" />
-          )}
-        </button>
-      )}
-
-      {/* Content */}
-      {showVisualizer ? (
-        <SafeAreaVisualizer onClose={() => setShowVisualizer(false)}>
-          {children}
-        </SafeAreaVisualizer>
-      ) : (
-        children
-      )}
-    </>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleToggle}
+      className="fixed top-4 right-4 z-[9999] bg-black/80 text-white border-white/20"
+    >
+      {visible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      <span className="ml-2 text-xs">
+        {visible ? 'Hide' : 'Show'} Safe Area
+      </span>
+    </Button>
   );
 };
-
-export default SafeAreaToggle;

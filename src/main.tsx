@@ -213,4 +213,11 @@ if (typeof window !== 'undefined') {
     userAgent: navigator.userAgent,
     timestamp: new Date().toISOString()
   });
+  
+  // Initialize Capacitor if available
+  if (window.location.protocol === 'capacitor:' || (window as any).Capacitor) {
+    import('@/utils/iosCapacitorFunctions').then(({ initializeCapacitorWithExplicitName }) => {
+      initializeCapacitorWithExplicitName();
+    });
+  }
 }

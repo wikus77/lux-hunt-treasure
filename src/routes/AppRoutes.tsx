@@ -2,7 +2,7 @@ import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import IOSSafeAreaOverlay from "@/components/debug/IOSSafeAreaOverlay";
+import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
 import { useAuth } from "@/hooks/use-auth";
 
 // Public routes

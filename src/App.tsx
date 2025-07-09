@@ -7,7 +7,7 @@ import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import GlobalLayout from "./components/layout/GlobalLayout";
 import AppRoutes from "./routes/AppRoutes";
-import SafeAreaToggle from "./components/debug/SafeAreaToggle";
+import { SafeAreaToggle } from "./components/debug/SafeAreaToggle";
 
 function App() {
   console.log("🚀 App component rendering...");
