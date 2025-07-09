@@ -20,7 +20,9 @@ export const SafeAreaVisualizer: React.FC<SafeAreaVisualizerProps> = ({
   return (
     <>
       {/* Safe Area Overlay */}
-      <IOSSafeAreaOverlay visible={overlayVisible} />
+      <IOSSafeAreaOverlay visible={overlayVisible}>
+        <div>Debug content</div>
+      </IOSSafeAreaOverlay>
       
       {/* Status Bar Simulator */}
       {includeStatusBar && (
@@ -31,8 +33,10 @@ export const SafeAreaVisualizer: React.FC<SafeAreaVisualizerProps> = ({
       <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2">
         <SafeAreaToggle 
           onToggle={setOverlayVisible} 
-          initialVisible={overlayVisible} 
-        />
+          initialVisible={overlayVisible}
+        >
+          <div>Toggle content</div>
+        </SafeAreaToggle>
         
         {includeStatusBar && (
           <button

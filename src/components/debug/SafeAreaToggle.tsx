@@ -6,11 +6,13 @@ import { Eye, EyeOff } from 'lucide-react';
 import { detectCapacitorEnvironment } from '@/utils/iosCapacitorFunctions';
 
 interface SafeAreaToggleProps {
-  onToggle: (visible: boolean) => void;
+  children: React.ReactNode;
+  onToggle?: (visible: boolean) => void;
   initialVisible?: boolean;
 }
 
 export const SafeAreaToggle: React.FC<SafeAreaToggleProps> = ({
+  children,
   onToggle,
   initialVisible = false
 }) => {
@@ -20,23 +22,27 @@ export const SafeAreaToggle: React.FC<SafeAreaToggleProps> = ({
   const handleToggle = () => {
     const newVisible = !visible;
     setVisible(newVisible);
-    onToggle(newVisible);
+    onToggle?.(newVisible);
   };
 
-  // Only show in Capacitor environment
-  if (!isCapacitor) return null;
-
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handleToggle}
-      className="fixed top-4 right-4 z-[9999] bg-black/80 text-white border-white/20"
-    >
-      {visible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-      <span className="ml-2 text-xs">
-        {visible ? 'Hide' : 'Show'} Safe Area
-      </span>
-    </Button>
+    <>
+      {children}
+      
+      {/* Only show toggle in Capacitor environment */}
+      {isCapacitor && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleToggle}
+          className="fixed top-4 right-4 z-[9999] bg-black/80 text-white border-white/20"
+        >
+          {visible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          <span className="ml-2 text-xs">
+            {visible ? 'Hide' : 'Show'} Safe Area
+          </span>
+        </Button>
+      )}
+    </>
   );
 };

@@ -4,11 +4,13 @@ import React, { useEffect, useState } from 'react';
 import { getSafeAreaInsets, detectCapacitorEnvironment } from '@/utils/iosCapacitorFunctions';
 
 interface IOSSafeAreaOverlayProps {
+  children: React.ReactNode;
   visible?: boolean;
   opacity?: number;
 }
 
 export const IOSSafeAreaOverlay: React.FC<IOSSafeAreaOverlayProps> = ({
+  children,
   visible = false,
   opacity = 0.3
 }) => {
@@ -37,10 +39,14 @@ export const IOSSafeAreaOverlay: React.FC<IOSSafeAreaOverlayProps> = ({
     };
   }, []);
 
-  if (!visible || !isCapacitor) return null;
+  if (!visible || !isCapacitor) {
+    return <>{children}</>;
+  }
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[9998]">
+    <>
+      {children}
+      <div className="fixed inset-0 pointer-events-none z-[9998]">
       {/* Top safe area */}
       {safeArea.top > 0 && (
         <div
@@ -112,6 +118,7 @@ export const IOSSafeAreaOverlay: React.FC<IOSSafeAreaOverlayProps> = ({
         <div>Viewport: {window.innerWidth}×{window.innerHeight}</div>
         <div>Safe Area: T{safeArea.top} B{safeArea.bottom} L{safeArea.left} R{safeArea.right}</div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
