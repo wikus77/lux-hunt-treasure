@@ -1,78 +1,124 @@
+// M1SSION™ - Navigation Store for iOS Capacitor Compatibility
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface NavigationState {
   currentTab: string;
-  previousTab: string | null;
-  tabHistory: string[];
-  buzzNotificationCount: number;
-  gameProgress: Record<string, number>;
-  setCurrentTab: (tab: string) => void;
-  addToHistory: (tab: string) => void;
-  setBuzzNotificationCount: (count: number) => void;
-  updateGameProgress: (gameId: string, progress: number) => void;
-  resetNavigation: () => void;
+  history: string[];
+  isCapacitor: boolean;
+  lastNavigation: number;
 }
 
-export const useNavigationStore = create<NavigationState>()(
+interface NavigationActions {
+  setCurrentTab: (tab: string) => void;
+  addToHistory: (path: string) => void;
+  goBack: () => string | null;
+  clearHistory: () => void;
+  setCapacitorMode: (isCapacitor: boolean) => void;
+  getNavigationInfo: () => NavigationState;
+}
+
+type NavigationStore = NavigationState & NavigationActions;
+
+export const useNavigationStore = create<NavigationStore>()(
   persist(
     (set, get) => ({
-      currentTab: '/home',
-      previousTab: null,
-      tabHistory: ['/home'],
-      buzzNotificationCount: 0,
-      gameProgress: {},
+      // State
+      currentTab: '/',
+      history: ['/'],
+      isCapacitor: false,
+      lastNavigation: Date.now(),
 
+      // Actions
       setCurrentTab: (tab: string) => {
-        const { currentTab: prev } = get();
+        console.log('🏪 Navigation Store: Setting current tab to:', tab);
         set({ 
           currentTab: tab, 
-          previousTab: prev 
+          lastNavigation: Date.now() 
         });
       },
 
-      addToHistory: (tab: string) => {
-        const { tabHistory } = get();
-        const newHistory = [...tabHistory, tab];
-        // Keep only last 10 items
-        if (newHistory.length > 10) {
-          newHistory.shift();
-        }
-        set({ tabHistory: newHistory });
-      },
-
-      setBuzzNotificationCount: (count: number) => {
-        set({ buzzNotificationCount: count });
-      },
-
-      updateGameProgress: (gameId: string, progress: number) => {
-        const { gameProgress } = get();
+      addToHistory: (path: string) => {
+        const { history } = get();
+        const newHistory = [...history, path].slice(-10); // Keep last 10 entries
+        console.log('🏪 Navigation Store: Adding to history:', path);
         set({ 
-          gameProgress: { 
-            ...gameProgress, 
-            [gameId]: progress 
-          } 
+          history: newHistory, 
+          lastNavigation: Date.now() 
         });
       },
 
-      resetNavigation: () => {
-        set({
-          currentTab: '/home',
-          previousTab: null,
-          tabHistory: ['/home'],
-          buzzNotificationCount: 0,
-          gameProgress: {}
+      goBack: () => {
+        const { history } = get();
+        if (history.length > 1) {
+          const newHistory = history.slice(0, -1);
+          const previousPath = newHistory[newHistory.length - 1];
+          set({ 
+            history: newHistory, 
+            currentTab: previousPath,
+            lastNavigation: Date.now() 
+          });
+          console.log('🏪 Navigation Store: Going back to:', previousPath);
+          return previousPath;
+        }
+        return null;
+      },
+
+      clearHistory: () => {
+        console.log('🏪 Navigation Store: Clearing history');
+        set({ 
+          history: ['/'], 
+          currentTab: '/',
+          lastNavigation: Date.now() 
         });
-      }
+      },
+
+      setCapacitorMode: (isCapacitor: boolean) => {
+        console.log('🏪 Navigation Store: Setting Capacitor mode:', isCapacitor);
+        set({ 
+          isCapacitor,
+          lastNavigation: Date.now() 
+        });
+      },
+
+      getNavigationInfo: () => {
+        return get();
+      },
     }),
     {
-      name: 'navigation-storage',
+      name: 'm1ssion-navigation-store',
       partialize: (state) => ({
         currentTab: state.currentTab,
-        tabHistory: state.tabHistory,
-        buzzNotificationCount: state.buzzNotificationCount,
-        gameProgress: state.gameProgress
-      })
+        history: state.history,
+        isCapacitor: state.isCapacitor,
+      }),
     }
   )
 );
+
+// Explicit helper functions for iOS Capacitor compatibility
+export const navigationHelpers = {
+  explicitSetTab: (tab: string) => {
+    const store = useNavigationStore.getState();
+    store.setCurrentTab(tab);
+    return tab;
+  },
+  
+  explicitAddHistory: (path: string) => {
+    const store = useNavigationStore.getState();
+    store.addToHistory(path);
+    return path;
+  },
+  
+  explicitGoBack: () => {
+    const store = useNavigationStore.getState();
+    return store.goBack();
+  },
+
+  getExplicitNavigationState: () => {
+    const store = useNavigationStore.getState();
+    return store.getNavigationInfo();
+  },
+};
+
+console.log('✅ M1SSION Navigation Store initialized');
