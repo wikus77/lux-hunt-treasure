@@ -1,24 +1,41 @@
-
-import { Link } from "react-router-dom";
-import { Bell, Settings } from "lucide-react";
+// M1SSION™ - Enhanced Unified Header with Breadcrumbs
+import { Link, useLocation } from "react-router-dom";
+import { Bell, Settings, ChevronRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
   leftComponent?: React.ReactNode;
   onClickMail?: () => void;
+  showBreadcrumbs?: boolean;
 }
+
+// Page title mapping
+const pageTitles: Record<string, string> = {
+  '/home': 'Centro Comando',
+  '/map': 'Mappa Operativa',
+  '/buzz': 'Buzz Radar',
+  '/games': 'Mini Games',
+  '/leaderboard': 'Classifica',
+  '/notifications': 'Notifiche',
+  '/profile': 'Profilo Agente',
+  '/settings': 'Impostazioni'
+};
 
 const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   profileImage,
   leftComponent,
   onClickMail,
+  showBreadcrumbs = true
 }) => {
+  const location = useLocation();
   const { unreadCount, openNotificationsDrawer } = useNotificationManager();
+  const { goBackWithFeedback, canGoBack } = useEnhancedNavigation();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
 
@@ -66,7 +83,6 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     console.log('Profile click - Capacitor:', { isMobile, hasStoredAccess, isCapacitorApp, isDeveloperUser });
     
     if (!isDeveloperUser && isMobile && !hasStoredAccess) {
-      // Clear any existing access and reload to trigger login
       localStorage.removeItem('developer_access');
       localStorage.removeItem('developer_user');
       localStorage.removeItem('full_access_granted');
@@ -75,6 +91,9 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     }
   };
 
+  const currentPageTitle = pageTitles[location.pathname] || 'M1SSION';
+  const isHomePage = location.pathname === '/home';
+
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
@@ -82,39 +101,62 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="fixed left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70"
       style={{ 
-        // CRITICAL FIX: Position header below the safe zone
-        top: 'calc(47px + env(safe-area-inset-top, 0px))', // 47px fixed + env fallback
+        top: 'calc(47px + env(safe-area-inset-top, 0px))',
         paddingTop: '0px',
         marginTop: '0px'
       }}
     >
       <div className="container mx-auto h-full max-w-screen-xl">
+        {/* Main Header Row */}
         <div className="flex items-center justify-between h-[72px] px-3 sm:px-4">
           {/* Left Section */}
           <div className="flex items-center">
             {leftComponent ? (
               leftComponent
             ) : (
-              <Link
-                to="/home"
-                className="text-xl sm:text-2xl font-orbitron font-bold"
-              >
-                <span className="text-[#00D1FF]" style={{ 
-                  textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-                }}>M1</span>
-                <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
-              </Link>
+              <div className="flex items-center">
+                {/* Back Button for non-home pages */}
+                {!isHomePage && canGoBack && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => goBackWithFeedback()}
+                    className="mr-2 rounded-full hover:bg-white/10"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </Button>
+                )}
+                
+                <Link
+                  to="/home"
+                  className="text-xl sm:text-2xl font-orbitron font-bold"
+                >
+                  <span className="text-[#00D1FF]" style={{ 
+                    textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+                  }}>M1</span>
+                  <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+                </Link>
+              </div>
             )}
           </div>
 
-          {/* Center section - removed M1-AGENT badge */}
+          {/* Center section - Page Title */}
           <div className="flex items-center justify-center">
-            {/* Empty center area */}
+            {!isHomePage && (
+              <motion.h1 
+                className="text-lg font-semibold text-white/90"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                {currentPageTitle}
+              </motion.h1>
+            )}
           </div>
 
           {/* Right Section */}
           <div className="flex items-center space-x-1 sm:space-x-3">
-            {/* Notifications - Enable for developer or web users */}
+            {/* Notifications */}
             <Button
               variant="ghost"
               size="icon"
@@ -132,7 +174,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               )}
             </Button>
 
-            {/* Settings - Enable for developer */}
+            {/* Settings */}
             {hasAccess ? (
               <Link to="/settings">
                 <Button
@@ -154,7 +196,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               </Button>
             )}
 
-            {/* Profile Avatar - ALWAYS CLICKABLE for developer access */}
+            {/* Profile Avatar */}
             {hasAccess ? (
               <Link to="/profile">
                 <ProfileAvatar
@@ -172,6 +214,24 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             )}
           </div>
         </div>
+
+        {/* Breadcrumbs Row */}
+        {showBreadcrumbs && !isHomePage && (
+          <motion.div 
+            className="px-3 sm:px-4 pb-3 border-t border-white/10"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            transition={{ delay: 0.3 }}
+          >
+            <div className="flex items-center text-sm text-white/70 mt-3">
+              <Link to="/home" className="hover:text-white transition-colors">
+                Home
+              </Link>
+              <ChevronRight className="w-4 h-4 mx-2" />
+              <span className="text-[#00D1FF]">{currentPageTitle}</span>
+            </div>
+          </motion.div>
+        )}
       </div>
     </motion.header>
   );
