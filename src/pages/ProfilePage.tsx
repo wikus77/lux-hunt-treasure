@@ -50,7 +50,7 @@ export const ProfilePage: React.FC = () => {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const { user, logout } = useAuth();
-  const { toLogin, toHome } = useEnhancedNavigation();
+  const { navigateWithFeedback, toHome } = useEnhancedNavigation();
   const { vibrate } = useCapacitorHardware();
 
   // Load user profile and stats
@@ -121,7 +121,7 @@ export const ProfilePage: React.FC = () => {
     try {
       await vibrate(50);
       await logout();
-      await toLogin();
+      await navigateWithFeedback('/login');
       toast.success('Logout effettuato con successo');
     } catch (err) {
       console.error('Error during logout:', err);

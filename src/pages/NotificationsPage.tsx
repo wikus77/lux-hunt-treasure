@@ -26,7 +26,7 @@ interface Notification {
   id: string;
   title: string;
   content: string;
-  message_type: 'info' | 'urgent' | 'success' | 'warning';
+  message_type: string; // Changed to generic string to match database
   is_read: boolean;
   created_at: string;
   expiry_date?: string;

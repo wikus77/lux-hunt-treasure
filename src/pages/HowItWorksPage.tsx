@@ -89,7 +89,7 @@ const steps: HowItWorksStep[] = [
 
 export const HowItWorksPage: React.FC = () => {
   const [activeStep, setActiveStep] = useState(1);
-  const { navigateTo } = useEnhancedNavigation();
+  const { navigateWithFeedback } = useEnhancedNavigation();
   const { vibrate } = useCapacitorHardware();
 
   // Handle step selection
@@ -101,7 +101,7 @@ export const HowItWorksPage: React.FC = () => {
   // Handle start mission
   const handleStartMission = preserveFunctionName(async () => {
     await vibrate(50);
-    navigateTo('/register');
+    navigateWithFeedback('/register');
   }, 'handleStartMission');
 
   return (

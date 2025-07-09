@@ -100,7 +100,7 @@ const gamesList: GameCard[] = [
 
 export const GamesPage: React.FC = () => {
   const [selectedGame, setSelectedGame] = useState<GameCard | null>(null);
-  const { navigateTo } = useEnhancedNavigation();
+  const { navigateWithFeedback } = useEnhancedNavigation();
   const { vibrate } = useCapacitorHardware();
 
   // Handle game selection
@@ -126,7 +126,7 @@ export const GamesPage: React.FC = () => {
     toast.success(`Avviando ${selectedGame?.title}...`);
     
     // Navigate to specific game route
-    navigateTo(`/games/${gameId}`);
+    navigateWithFeedback(`/games/${gameId}`);
   }, 'startGame');
 
   // Get difficulty styling
