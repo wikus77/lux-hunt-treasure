@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
+import GlobalLayout from "@/components/layout/GlobalLayout";
 import { useAuth } from "@/hooks/use-auth";
 
 // Public routes
@@ -63,12 +64,14 @@ const AppRoutes: React.FC = () => {
               } 
             />
 
-            {/* Main App Routes - PROTECTED */}
+            {/* Main App Routes - PROTECTED with GlobalLayout */}
             <Route
               path="/home"
               element={
                 <ProtectedRoute>
-                  <AppHome />
+                  <GlobalLayout>
+                    <AppHome />
+                  </GlobalLayout>
                 </ProtectedRoute>
               }
             />
@@ -78,7 +81,9 @@ const AppRoutes: React.FC = () => {
               path="/map"
               element={
                 <ProtectedRoute>
-                  <Map />
+                  <GlobalLayout>
+                    <Map />
+                  </GlobalLayout>
                 </ProtectedRoute>
               }
             />
@@ -87,7 +92,9 @@ const AppRoutes: React.FC = () => {
               path="/buzz"
               element={
                 <ProtectedRoute>
-                  <Buzz />
+                  <GlobalLayout>
+                    <Buzz />
+                  </GlobalLayout>
                 </ProtectedRoute>
               }
             />
@@ -96,7 +103,9 @@ const AppRoutes: React.FC = () => {
               path="/games"
               element={
                 <ProtectedRoute>
-                  <Games />
+                  <GlobalLayout>
+                    <Games />
+                  </GlobalLayout>
                 </ProtectedRoute>
               }
             />
@@ -105,29 +114,49 @@ const AppRoutes: React.FC = () => {
               path="/leaderboard"
               element={
                 <ProtectedRoute>
-                  <Leaderboard />
+                  <GlobalLayout>
+                    <Leaderboard />
+                  </GlobalLayout>
                 </ProtectedRoute>
               }
             />
             
-            <Route path="/notifications" element={<Notifications />} />
+            <Route 
+              path="/notifications" 
+              element={
+                <GlobalLayout>
+                  <Notifications />
+                </GlobalLayout>
+              } 
+            />
             
             <Route
               path="/profile"
               element={
                 <ProtectedRoute>
-                  <Profile />
+                  <GlobalLayout>
+                    <Profile />
+                  </GlobalLayout>
                 </ProtectedRoute>
               }
             />
             
-            <Route path="/settings" element={<Settings />} />
+            <Route 
+              path="/settings" 
+              element={
+                <GlobalLayout>
+                  <Settings />
+                </GlobalLayout>
+              } 
+            />
 
             <Route
               path="/subscriptions"
               element={
                 <ProtectedRoute>
-                  <Subscriptions />
+                  <GlobalLayout>
+                    <Subscriptions />
+                  </GlobalLayout>
                 </ProtectedRoute>
               }
             />

@@ -36,10 +36,8 @@ function App() {
         <SoundProvider>
           <AuthProvider>
             <SafeAreaToggle>
-              <GlobalLayout>
-                <AppRoutes />
-                <Toaster position="top-right" />
-              </GlobalLayout>
+              <AppRoutes />
+              <Toaster position="top-right" />
             </SafeAreaToggle>
           </AuthProvider>
         </SoundProvider>
