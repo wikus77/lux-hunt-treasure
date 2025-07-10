@@ -93,6 +93,10 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
   const currentPageTitle = pageTitles[location.pathname] || 'M1SSION';
   const isHomePage = location.pathname === '/home';
+  
+  // Pages that should NOT show back arrow (accessible only via BottomNavigation)
+  const bottomNavPages = ['/map', '/buzz', '/games', '/notifications', '/leaderboard'];
+  const isBottomNavPage = bottomNavPages.includes(location.pathname);
 
   return (
     <motion.header
@@ -115,8 +119,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               leftComponent
             ) : (
               <div className="flex items-center">
-                {/* Back Button for non-home pages */}
-                {!isHomePage && canGoBack && (
+                {/* Back Button - Only show for non-home pages that aren't bottom nav pages */}
+                {!isHomePage && !isBottomNavPage && canGoBack && (
                   <Button
                     variant="ghost"
                     size="icon"

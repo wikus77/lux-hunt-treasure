@@ -194,7 +194,12 @@ export const LeaderboardPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen p-4 space-y-6">
+    <div className="min-h-[100dvh] w-full overflow-x-hidden p-4 space-y-6" style={{
+      paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+      paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
+      paddingLeft: 'max(16px, env(safe-area-inset-left, 16px))',
+      paddingRight: 'max(16px, env(safe-area-inset-right, 16px))'
+    }}>
       {/* Header */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}

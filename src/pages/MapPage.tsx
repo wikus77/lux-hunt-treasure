@@ -61,14 +61,19 @@ const MapPage: React.FC = () => {
 
   return (
     <SafeAreaWrapper className="h-full bg-background">
-      <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex flex-col h-[100dvh] w-full overflow-hidden" style={{
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)'
+      }}>
         <MapPageHeader />
         
         <div 
-          className="flex-1 relative"
+          className="flex-1 relative w-full"
           style={{
-            minHeight: '400px', // Ensure minimum height
-            height: 'calc(100vh - 72px)' // Account for header
+            minHeight: '400px',
+            height: 'calc(100dvh - 152px)',
+            maxWidth: '100vw',
+            overflow: 'hidden'
           }}
         >
           <MapContainer
