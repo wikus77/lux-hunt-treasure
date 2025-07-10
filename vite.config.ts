@@ -1,4 +1,8 @@
 
+// 🔐 Customized for M1SSION™ by Joseph – Cleaned on 2025-07-10
+// M1SSION™ Treasure Hunt App - Custom Vite Configuration
+// Optimized for Capacitor iOS/Android deployment with enhanced build settings
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -23,10 +27,10 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Capacitor iOS Build Configuration
+  // M1SSION™ Capacitor iOS Build Configuration - Custom Output
   base: mode === 'production' ? './' : '/',
   build: {
-    outDir: 'dist',
+    outDir: 'build', // M1SSION™ custom build directory
     assetsDir: 'assets',
     // Fixed minification settings for Capacitor iOS
     target: 'es2015',

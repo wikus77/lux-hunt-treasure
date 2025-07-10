@@ -1,4 +1,8 @@
 
+// 🔐 Customized for M1SSION™ by Joseph – Cleaned on 2025-07-10
+// M1SSION™ Treasure Hunt App - Custom Tailwind Design System
+// Enhanced with app-specific colors, animations, and mobile optimizations
+
 import type { Config } from 'tailwindcss';
 import animate from 'tailwindcss-animate';
 
@@ -60,7 +64,10 @@ const config: Config = {
         'm1ssion': {
           'blue': '#00a3ff',
           'pink': '#ff00ff',
-          'deep-blue': '#131524'
+          'deep-blue': '#131524',
+          // M1SSION™ custom brand colors - Joseph 2025-07-10
+          'treasure-gold': '#FFD700',
+          'agent-cyan': '#00E5FF'
         }
       },
       borderRadius: {

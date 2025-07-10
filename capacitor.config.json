@@ -1,4 +1,6 @@
 {
+  "_comment": "🔐 Customized for M1SSION™ by Joseph – Cleaned on 2025-07-10",
+  "_description": "M1SSION™ Treasure Hunt App - Custom Capacitor Configuration",
   "appId": "com.m1ssion.app",
   "appName": "M1SSION",
   "webDir": "build",
