@@ -1,6 +1,7 @@
 // M1SSION™ - Capacitor Hardware Integration Hook
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { playSound } from '@/utils/audio';
 
 interface CapacitorHardwareState {
   isCapacitor: boolean;
@@ -83,8 +84,7 @@ export const useCapacitorHardware = () => {
           if (!status.connected) {
             toast({
               title: "Connessione persa",
-              description: "Controlla la tua connessione internet",
-              variant: "destructive"
+              description: "Controlla la tua connessione internet"
             });
           }
         });
@@ -169,6 +169,7 @@ export const useCapacitorHardware = () => {
   return {
     ...state,
     ...hardwareFunctions,
+    playSound,
     isLoading: false
   };
 };

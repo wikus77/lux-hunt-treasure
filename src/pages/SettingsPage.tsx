@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 interface UserSettings {
@@ -46,6 +46,7 @@ const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, updateProfile, logout } = useAuth();
   const { vibrate, playSound } = useCapacitorHardware();
+  const { toast } = useToast();
   
   const [settings, setSettings] = useState<UserSettings>({
     notifications: {
@@ -112,15 +113,13 @@ const SettingsPage: React.FC = () => {
 
       toast({
         title: 'Impostazioni Salvate',
-        description: 'Le tue preferenze sono state aggiornate.',
-        variant: 'success'
+        description: 'Le tue preferenze sono state aggiornate.'
       });
     } catch (error) {
       console.error('Errore nel salvataggio:', error);
       toast({
         title: 'Errore',
-        description: 'Impossibile salvare le impostazioni.',
-        variant: 'destructive'
+        description: 'Impossibile salvare le impostazioni.'
       });
     } finally {
       setIsLoading(false);
@@ -145,8 +144,7 @@ const SettingsPage: React.FC = () => {
     } catch (error) {
       toast({
         title: 'Errore',
-        description: 'Impossibile effettuare il logout.',
-        variant: 'destructive'
+        description: 'Impossibile effettuare il logout.'
       });
     }
   };

@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 interface GameState {
@@ -31,6 +31,7 @@ interface GameStats {
 const MemoryHackGame: React.FC = () => {
   const navigate = useNavigate();
   const { vibrate, playSound } = useCapacitorHardware();
+  const { toast } = useToast();
   
   const [gameState, setGameState] = useState<GameState>({
     sequence: [],
@@ -189,8 +190,7 @@ const MemoryHackGame: React.FC = () => {
 
     toast({
       title: 'Livello Completato!',
-      description: `+${levelScore} punti. Livello ${newLevel}`,
-      variant: 'success'
+      description: `+${levelScore} punti. Livello ${newLevel}`
     });
 
     // Prossimo livello dopo 2 secondi
@@ -223,8 +223,7 @@ const MemoryHackGame: React.FC = () => {
 
     toast({
       title: 'Gioco Completato!',
-      description: `Hai completato tutti i livelli! Score: ${gameState.score}`,
-      variant: 'success'
+      description: `Hai completato tutti i livelli! Score: ${gameState.score}`
     });
 
     updateStats(gameState.score, finalTime, true);
@@ -237,8 +236,7 @@ const MemoryHackGame: React.FC = () => {
     
     toast({
       title: 'Game Over',
-      description: `Livello raggiunto: ${gameState.currentLevel}`,
-      variant: 'destructive'
+      description: `Livello raggiunto: ${gameState.currentLevel}`
     });
 
     updateStats(gameState.score, finalTime, false);

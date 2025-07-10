@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 interface FormData {
@@ -30,8 +30,9 @@ interface FormErrors {
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { login, register, user, loading } = useAuth();
-  const { vibrate, playSound } = useCapacitorHardware();
+  const { login, register, user, isLoading: authLoading } = useAuth();
+  const { vibrate } = useCapacitorHardware();
+  const { toast } = useToast();
   
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -49,11 +50,11 @@ const LoginPage: React.FC = () => {
 
   // Redirect se già autenticato
   useEffect(() => {
-    if (user && !loading) {
+    if (user && !authLoading) {
       const redirectTo = searchParams.get('redirect') || '/';
       navigate(redirectTo, { replace: true });
     }
-  }, [user, loading, navigate, searchParams]);
+  }, [user, authLoading, navigate, searchParams]);
 
   // Validazione form
   const validateForm = (): boolean => {
@@ -117,23 +118,14 @@ const LoginPage: React.FC = () => {
 
         toast({
           title: 'Accesso Effettuato',
-          description: 'Benvenuto in M1SSION™',
-          variant: 'success'
+          description: 'Benvenuto in M1SSION™'
         });
         
-        playSound('success');
         vibrate(100);
         
       } else {
         // Registrazione
-        const { error } = await register(
-          formData.email,
-          formData.password,
-          {
-            full_name: formData.fullName,
-            agent_code: generateAgentCode()
-          }
-        );
+        const { error } = await register(formData.email, formData.password);
         
         if (error) {
           setErrors({ general: getErrorMessage(error.message) });
@@ -143,11 +135,9 @@ const LoginPage: React.FC = () => {
 
         toast({
           title: 'Registrazione Completata',
-          description: 'Benvenuto Agente! Accesso automatico in corso...',
-          variant: 'success'
+          description: 'Benvenuto Agente! Accesso automatico in corso...'
         });
         
-        playSound('success');
         vibrate(100);
       }
       
@@ -221,7 +211,7 @@ const LoginPage: React.FC = () => {
     visible: { opacity: 1, y: 0 }
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <SafeAreaWrapper className="min-h-screen bg-background flex items-center justify-center">
         <motion.div

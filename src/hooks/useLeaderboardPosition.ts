@@ -70,8 +70,7 @@ export const useLeaderboardPosition = (userId?: string) => {
           setTimeout(() => {
             toast({
               title: "🌟 Wow! Sei nella TOP 10!",
-              description: "Un traguardo incredibile! Continua così!",
-              className: "bg-gradient-to-r from-projectx-blue to-purple-600 border-0"
+              description: "Un traguardo incredibile! Continua così!"
             });
           }, 500);
         }

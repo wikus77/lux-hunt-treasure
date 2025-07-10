@@ -122,6 +122,11 @@ export const useAuth = () => {
     }
   };
 
+  const updateProfile = async (data: any): Promise<void> => {
+    console.log('📝 UPDATE PROFILE:', data);
+    // Implementazione updateProfile se necessaria
+  };
+
   return {
     user: sessionManager.user,
     session: sessionManager.session,
@@ -133,7 +138,8 @@ export const useAuth = () => {
     logout,
     resetPassword,
     resendVerificationEmail,
+    updateProfile,
     getCurrentUser: () => sessionManager.user,
-    getAccessToken: () => sessionManager.session?.access_token || null,
+    getAccessToken: () => sessionManager.session?.access_token || '',
   };
 };
