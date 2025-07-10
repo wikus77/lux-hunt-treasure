@@ -1,4 +1,3 @@
-
 export interface Clue {
   id: number;
   title: string;
