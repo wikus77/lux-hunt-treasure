@@ -13,11 +13,11 @@
 
 | File | Stato | Modifiche Applicate | Timestamp |
 |------|-------|-------------------|-----------|
-| `vite.config.ts` | ✅ **Clean** | Header custom + build path personalizzato (`build` vs `dist`) | 2025-07-10 |
+| `vite.config.ts` | ✅ **Clean** | Header custom + build compatibility maintained (`dist`) | 2025-07-10 |
 | `src/tailwind.config.ts` | ✅ **Clean** | Header custom + colori brand M1SSION™ aggiuntivi | 2025-07-10 |
 | `src/integrations/supabase/client.ts` | ✅ **Clean** | Header custom + commenti specifici M1SSION™ | 2025-07-10 |
 | `src/index.css` | ✅ **Clean** | Header custom + design system M1SSION™ completo | 2025-07-10 |
-| `capacitor.config.json` | ✅ **Clean** | Header JSON custom + metadata M1SSION™ | 2025-07-10 |
+| `capacitor.config.json` | ✅ **Clean** | Header JSON custom + metadata M1SSION™ + webDir compatibility | 2025-07-10 |
 
 ### 🔒 File Read-Only (Non Modificabili)
 

@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => ({
   // M1SSION™ Capacitor iOS Build Configuration - Custom Output
   base: mode === 'production' ? './' : '/',
   build: {
-    outDir: 'build', // M1SSION™ custom build directory
+    outDir: 'dist', // Fixed: Reverting to standard dist directory for compatibility
     assetsDir: 'assets',
     // Fixed minification settings for Capacitor iOS
     target: 'es2015',
