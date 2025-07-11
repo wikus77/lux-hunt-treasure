@@ -1,4 +1,5 @@
 // M1SSION™ - Buzz Page for iOS Capacitor
+// 🔐 Customized for M1SSION™ by Joseph – Cleaned on 2025-07-10
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -12,7 +13,9 @@ import {
   CheckCircle,
   AlertCircle,
   Euro,
-  Calendar
+  Calendar,
+  Loader2,
+  X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -109,19 +112,83 @@ export const BuzzPage: React.FC = () => {
     loadBuzzStats();
   }, [user]);
 
-  // Handle BUZZ action
+  // Handle BUZZ action with complete logic
   const handleBuzz = preserveFunctionName(async () => {
+    if (!user || !stats) return;
+    
     try {
       setBuzzing(true);
       await vibrate(100);
       
-      // Navigate to map for BUZZ action
-      await toMap();
-      toast.success('Vai alla mappa per usare BUZZ!');
+      const currentPrice = getCurrentBuzzPrice(stats.today_count);
+      
+      // Check if blocked
+      if (currentPrice === 0) {
+        toast.error('BUZZ bloccato per oggi! Limite giornaliero raggiunto.');
+        return;
+      }
+      
+      // Check for abuse logs
+      const { data: abuseData } = await supabase
+        .from('abuse_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('event_type', 'buzz_press')
+        .gte('timestamp', new Date(Date.now() - 30000).toISOString());
+      
+      if (abuseData && abuseData.length >= 5) {
+        toast.error('Troppi tentativi. Riprova tra qualche secondo.');
+        return;
+      }
+      
+      // Log abuse attempt
+      await supabase.from('abuse_logs').insert({
+        user_id: user.id,
+        event_type: 'buzz_press'
+      });
+      
+      // Call the buzz API with full implementation
+      const { data: buzzResult, error: buzzError } = await supabase.functions.invoke('handle-buzz-press', {
+        body: {
+          userId: user.id,
+          generateMap: true,
+          coordinates: null,
+          prizeId: null,
+          sessionId: `buzz_${Date.now()}`
+        }
+      });
+      
+      if (buzzError) {
+        console.error('BUZZ API Error:', buzzError);
+        toast.error('Errore di rete. Riprova.');
+        return;
+      }
+      
+      if (!buzzResult.success) {
+        toast.error(buzzResult.error || 'Errore durante BUZZ');
+        return;
+      }
+      
+      // Update buzz counter
+      await supabase.rpc('increment_buzz_counter', { p_user_id: user.id });
+      
+      // Log the buzz action
+      await supabase.from('buzz_map_actions').insert({
+        user_id: user.id,
+        cost_eur: currentPrice,
+        clue_count: buzzResult.clueCount || 1,
+        radius_generated: buzzResult.mapArea?.radius || 1000
+      });
+      
+      // Refresh stats
+      await loadBuzzStats();
+      
+      // Show success notification
+      toast.success(`🎯 Nuovo indizio sbloccato! Area di ricerca: ${buzzResult.mapArea?.radius || 1000}m`);
       
     } catch (err) {
       console.error('Error in handleBuzz:', err);
-      toast.error('Errore nell\'azione BUZZ');
+      toast.error('Errore imprevisto durante BUZZ');
     } finally {
       setBuzzing(false);
     }
@@ -153,253 +220,112 @@ export const BuzzPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[100dvh] w-full overflow-x-hidden p-4 space-y-6" style={{
-      paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+    <div className="min-h-[100dvh] flex flex-col bg-background" style={{
+      paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)',
       paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
       paddingLeft: 'max(16px, env(safe-area-inset-left, 16px))',
       paddingRight: 'max(16px, env(safe-area-inset-right, 16px))'
     }}>
-      {/* Header */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="text-center space-y-2"
-      >
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="w-12 h-12 bg-gradient-to-r from-[#F059FF] to-[#00D1FF] rounded-full flex items-center justify-center">
-            <Zap className="w-6 h-6 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-white">BUZZ</h1>
-        </div>
-        <p className="text-gray-400 max-w-md mx-auto">
-          Usa BUZZ per sbloccare aree sulla mappa e trovare indizi nascosti
-        </p>
-      </motion.div>
+      
+      {/* Main centered content */}
+      <div className="flex-1 flex flex-col items-center justify-center space-y-8">
+        
+        {/* M1SSION Header */}
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="text-center space-y-4"
+        >
+          <h1 className="text-5xl font-bold text-foreground tracking-widest">M1SSION</h1>
+          <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full"></div>
+          <p className="text-muted-foreground text-lg">
+            Trova indizi nascosti nella tua città
+          </p>
+        </motion.div>
 
-      {/* BUZZ Button */}
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="flex justify-center"
-      >
-        <div className="relative">
+        {/* Centered BUZZ Button */}
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
+          className="relative"
+        >
           <Button
             size="lg"
             disabled={isBlocked || buzzing}
             onClick={handleBuzz}
             className={`
-              relative w-32 h-32 rounded-full text-xl font-bold
+              relative w-48 h-48 rounded-full text-2xl font-bold
+              shadow-2xl ring-4 transition-all duration-300
               ${isBlocked 
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-[#F059FF] to-[#00D1FF] text-white hover:scale-105'
+                ? 'bg-destructive text-destructive-foreground cursor-not-allowed ring-destructive/20' 
+                : buzzing
+                ? 'bg-primary/80 text-primary-foreground cursor-wait ring-primary/40 scale-95'
+                : 'bg-gradient-to-br from-primary via-secondary to-primary text-primary-foreground hover:scale-105 ring-primary/30 hover:ring-primary/50'
               }
-              transition-all duration-300 shadow-lg
             `}
+            style={{
+              background: isBlocked ? undefined : buzzing ? undefined : 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--primary)))'
+            }}
           >
             {buzzing ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-8 h-8 border-2 border-white border-t-transparent rounded-full"
-              />
+              <div className="flex flex-col items-center space-y-3">
+                <Loader2 className="w-12 h-12 animate-spin" />
+                <span className="text-lg font-semibold">BUZZING...</span>
+              </div>
             ) : isBlocked ? (
-              <>
-                <AlertCircle className="w-8 h-8 mb-1" />
-                <div className="text-sm">Bloccato</div>
-              </>
+              <div className="flex flex-col items-center space-y-3">
+                <X className="w-12 h-12" />
+                <span className="text-lg font-semibold">BLOCCATO</span>
+              </div>
             ) : (
-              <>
-                <Zap className="w-8 h-8 mb-1" />
-                <div className="text-sm">€{currentPrice}</div>
-              </>
+              <div className="flex flex-col items-center space-y-2">
+                <Zap className="w-16 h-16" />
+                <span className="text-3xl font-bold">BUZZ</span>
+                <div className="text-sm font-medium bg-background/20 px-4 py-2 rounded-full backdrop-blur-sm">
+                  €{currentPrice.toFixed(2)}
+                </div>
+              </div>
             )}
           </Button>
           
-          {/* Pulse effect */}
+          {/* Animated pulse effect */}
           {!isBlocked && !buzzing && (
             <motion.div
-              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="absolute inset-0 rounded-full bg-gradient-to-r from-[#F059FF] to-[#00D1FF]"
+              animate={{ 
+                scale: [1, 1.3, 1], 
+                opacity: [0.6, 0, 0.6] 
+              }}
+              transition={{ 
+                duration: 3, 
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-secondary"
             />
           )}
-        </div>
-      </motion.div>
-
-      {/* Stats Grid */}
-      {stats && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-2 gap-4"
-        >
-          <Card className="glass-card">
-            <CardContent className="p-4 text-center">
-              <Circle className="w-8 h-8 mx-auto mb-2 text-[#F059FF]" />
-              <div className="text-2xl font-bold text-white">{stats.today_count}</div>
-              <div className="text-sm text-gray-400">BUZZ Oggi</div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card">
-            <CardContent className="p-4 text-center">
-              <TrendingUp className="w-8 h-8 mx-auto mb-2 text-[#00D1FF]" />
-              <div className="text-2xl font-bold text-white">{stats.total_count}</div>
-              <div className="text-sm text-gray-400">BUZZ Totali</div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card">
-            <CardContent className="p-4 text-center">
-              <MapPin className="w-8 h-8 mx-auto mb-2 text-green-400" />
-              <div className="text-2xl font-bold text-white">{stats.areas_unlocked}</div>
-              <div className="text-sm text-gray-400">Aree Sbloccate</div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card">
-            <CardContent className="p-4 text-center">
-              <Euro className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
-              <div className="text-2xl font-bold text-white">€{stats.credits_spent.toFixed(2)}</div>
-              <div className="text-sm text-gray-400">Speso</div>
-            </CardContent>
-          </Card>
         </motion.div>
-      )}
 
-      {/* Price Tiers */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3 }}
-      >
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="text-lg text-white flex items-center gap-2">
-              <Target className="w-5 h-5 text-[#F059FF]" />
-              Tariffe BUZZ Giornaliere
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {[
-              { range: '1-10', price: '€1.99', current: stats?.today_count || 0 <= 10 },
-              { range: '11-20', price: '€3.99', current: (stats?.today_count || 0) > 10 && (stats?.today_count || 0) <= 20 },
-              { range: '21-30', price: '€5.99', current: (stats?.today_count || 0) > 20 && (stats?.today_count || 0) <= 30 },
-              { range: '31-40', price: '€7.99', current: (stats?.today_count || 0) > 30 && (stats?.today_count || 0) <= 40 },
-              { range: '41-50', price: '€9.99', current: (stats?.today_count || 0) > 40 && (stats?.today_count || 0) <= 50 },
-              { range: '50+', price: 'Bloccato', current: (stats?.today_count || 0) > 50 }
-            ].map((tier, index) => (
-              <div
-                key={index}
-                className={`flex items-center justify-between p-3 rounded-lg ${
-                  tier.current 
-                    ? 'bg-[#F059FF]/20 border border-[#F059FF]/30' 
-                    : 'bg-gray-800/30'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  {tier.current ? (
-                    <CheckCircle className="w-4 h-4 text-[#F059FF]" />
-                  ) : (
-                    <Circle className="w-4 h-4 text-gray-500" />
-                  )}
-                  <span className={`font-medium ${
-                    tier.current ? 'text-white' : 'text-gray-400'
-                  }`}>
-                    BUZZ {tier.range}
-                  </span>
-                </div>
-                <Badge className={
-                  tier.current 
-                    ? 'bg-[#F059FF] text-white' 
-                    : 'bg-gray-600 text-gray-300'
-                }>
-                  {tier.price}
-                </Badge>
+        {/* Price and counter info */}
+        {stats && !isBlocked && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-center space-y-3"
+          >
+            <div className="text-lg text-muted-foreground">
+              BUZZ oggi: <span className="font-bold text-primary">{stats.today_count}/50</span>
+            </div>
+            {stats.today_count < 50 && (
+              <div className="text-sm text-muted-foreground">
+                Prossimo prezzo: <span className="font-semibold">€{getCurrentBuzzPrice(stats.today_count + 1).toFixed(2)}</span>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Recent History */}
-      {history.length > 0 && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card className="glass-card">
-            <CardHeader>
-              <CardTitle className="text-lg text-white flex items-center gap-2">
-                <History className="w-5 h-5 text-[#00D1FF]" />
-                Cronologia Recente
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {history.slice(0, 5).map((action, index) => (
-                <div
-                  key={action.id}
-                  className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#F059FF]/20 rounded-full flex items-center justify-center">
-                      <Zap className="w-5 h-5 text-[#F059FF]" />
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">
-                        Area {action.radius_generated}km
-                      </p>
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(action.created_at).toLocaleDateString('it-IT')}
-                        <span>•</span>
-                        <span>{action.clue_count} indizi</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-[#F059FF]">
-                      €{action.cost_eur.toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      {/* Navigation Button */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="flex justify-center"
-      >
-        <Button
-          variant="outline"
-          className="w-full max-w-sm"
-          onClick={() => toMap()}
-        >
-          <MapPin className="w-5 h-5 mr-2" />
-          Vai alla Mappa per usare BUZZ
-        </Button>
-      </motion.div>
-
-      {/* Info */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="text-center py-4"
-      >
-        <p className="text-sm text-gray-500">
-          Il contatore si resetta ogni giorno alle 00:00
-        </p>
-      </motion.div>
+            )}
+          </motion.div>
+        )}
+        
+      </div>
     </div>
   );
 };
