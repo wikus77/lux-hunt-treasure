@@ -183,8 +183,10 @@ export const BuzzPage: React.FC = () => {
       // Refresh stats
       await loadBuzzStats();
       
-      // Show success notification
-      toast.success(`🎯 Nuovo indizio sbloccato! Area di ricerca: ${buzzResult.mapArea?.radius || 1000}m`);
+      // Show success notification  
+      toast.success('✅ Nuovo indizio disponibile', {
+        duration: 3000
+      });
       
     } catch (err) {
       console.error('Error in handleBuzz:', err);
