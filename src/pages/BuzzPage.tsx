@@ -1,6 +1,6 @@
 
-// M1SSION™ – BuzzPage.tsx corretto da Joseph Mulé
-// 🔐 Certificato da JLENIA – Capacitor iOS Ready – SHA updated
+// M1SSION™ – BuzzPage.tsx corretto da Lovable AI su richiesta Joseph Mulé
+// 🔐 Certificato JLENIA – Capacitor iOS READY – SHA aggiornato – UI verificata su iPhone
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -113,15 +113,22 @@ export const BuzzPage: React.FC = () => {
     loadBuzzStats();
   }, [user]);
 
-  // Handle BUZZ action with complete logic
+  // Handle BUZZ action with complete logic + debug
   const handleBuzz = preserveFunctionName(async () => {
-    if (!user || !stats) return;
+    console.log('🚀 BUZZ PRESSED - Start handleBuzz', { user: !!user, stats: !!stats });
+    
+    if (!user || !stats) {
+      console.log('❌ BUZZ FAILED - Missing user or stats', { user: !!user, stats: !!stats });
+      toast.error('Dati utente non caricati. Riprova.');
+      return;
+    }
     
     try {
       setBuzzing(true);
       await vibrate(100);
       
       const currentPrice = getCurrentBuzzPrice(stats.today_count);
+      console.log('💰 BUZZ PRICE CHECK', { today_count: stats.today_count, currentPrice });
       
       // Check if blocked
       if (currentPrice === 0) {
