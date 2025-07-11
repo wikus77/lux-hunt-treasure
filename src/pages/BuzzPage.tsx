@@ -187,9 +187,11 @@ export const BuzzPage: React.FC = () => {
         return;
       }
       
+      // 🧪 DEBUG COMPLETO DEL FLUSSO BUZZ - by Joseph Mulé
       console.log('📝 CLUE TEXT VALIDO M1SSION™:', { 
         clue_text: buzzResult.clue_text,
-        success: buzzResult.success 
+        success: buzzResult.success,
+        full_response: buzzResult
       });
       
       // ✅ NOTIFICA GIÀ SALVATA DALL'EDGE FUNCTION - NON DUPLICARE
@@ -208,9 +210,9 @@ export const BuzzPage: React.FC = () => {
       // Refresh stats
       await loadBuzzStats();
       
-      // ✅ TOAST SUCCESS - CONFORME M1SSION™ - by Joseph Mulé
-      toast.success('Indizio ricevuto', {
-        duration: 2000,
+      // ✅ TOAST SUCCESS CON CLUE_TEXT REALE - CONFORME M1SSION™ - by Joseph Mulé
+      toast.success(buzzResult.clue_text, {
+        duration: 4000,
         position: 'top-center',
         style: { zIndex: 9999 }
       });
