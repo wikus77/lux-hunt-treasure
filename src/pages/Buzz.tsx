@@ -1,6 +1,6 @@
 
-// M1SSION™ – Buzz.tsx corretto da Lovable AI su richiesta Joseph Mulé
-// 🔐 Certificato JLENIA – Capacitor iOS READY – SHA aggiornato – UI verificata su iPhone
+// M1SSION™ – BuzzPage.tsx aggiornato da Lovable AI su richiesta Joseph Mulé
+// 🔐 Certificato JLENIA – Animazione Shockwave + Notifica persistente – SHA aggiornato – iOS Ready
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -48,6 +48,7 @@ export const Buzz: React.FC = () => {
   const [history, setHistory] = useState<BuzzHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [buzzing, setBuzzing] = useState(false);
+  const [showShockwave, setShowShockwave] = useState(false);
   const { user } = useAuth();
   const { toMap } = useEnhancedNavigation();
   const { vibrate } = useCapacitorHardware();
@@ -177,8 +178,21 @@ export const Buzz: React.FC = () => {
         return;
       }
       
+      // 🌀 ATTIVA ANIMAZIONE SHOCKWAVE
+      setShowShockwave(true);
+      setTimeout(() => setShowShockwave(false), 1500);
+      
       // Update buzz counter
       await supabase.rpc('increment_buzz_counter', { p_user_id: user.id });
+      
+      // 📬 INSERISCI NOTIFICA PERSISTENTE
+      await supabase.from('user_notifications').insert({
+        user_id: user.id,
+        title: '✅ Nuovo indizio disponibile',
+        message: 'Hai appena ricevuto un nuovo indizio. Apri la sezione Clues per visualizzarlo.',
+        type: 'clue',
+        is_read: false
+      });
       
       // Log the buzz action
       await supabase.from('buzz_map_actions').insert({
@@ -254,44 +268,57 @@ export const Buzz: React.FC = () => {
       >
           
           {/* BUZZ Button - Perfect Center */}
-          <Button
-            size="lg"
-            disabled={isBlocked || buzzing}
-            onClick={handleBuzz}
-            className={`
-              relative w-48 h-48 rounded-full text-2xl font-bold border-4 border-red-500
-              shadow-2xl ring-4 transition-all duration-300 z-20
-              ${isBlocked 
-                ? 'bg-destructive text-destructive-foreground cursor-not-allowed ring-destructive/20' 
-                : buzzing
-                ? 'bg-primary/80 text-primary-foreground cursor-wait ring-primary/40 scale-95'
-                : 'bg-gradient-to-br from-primary via-secondary to-primary text-primary-foreground hover:scale-105 ring-primary/30 hover:ring-primary/50'
-              }
-            `}
-            style={{
-              background: isBlocked ? undefined : buzzing ? undefined : 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--primary)))'
-            }}
-          >
-            {buzzing ? (
-              <div className="flex flex-col items-center space-y-3">
-                <Loader2 className="w-12 h-12 animate-spin" />
-                <span className="text-lg font-semibold">BUZZING...</span>
-              </div>
-            ) : isBlocked ? (
-              <div className="flex flex-col items-center space-y-3">
-                <X className="w-12 h-12" />
-                <span className="text-lg font-semibold">BLOCCATO</span>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center space-y-2">
-                <Zap className="w-16 h-16" />
-                <span className="text-3xl font-bold">BUZZ</span>
-                <div className="text-sm font-medium bg-background/20 px-4 py-2 rounded-full backdrop-blur-sm">
-                  €{currentPrice.toFixed(2)}
+          <div className="relative">
+            <Button
+              size="lg"
+              disabled={isBlocked || buzzing}
+              onClick={handleBuzz}
+              className={`
+                relative w-48 h-48 rounded-full text-2xl font-bold border-4 border-red-500
+                shadow-2xl ring-4 transition-all duration-300 z-20
+                ${isBlocked 
+                  ? 'bg-destructive text-destructive-foreground cursor-not-allowed ring-destructive/20' 
+                  : buzzing
+                  ? 'bg-primary/80 text-primary-foreground cursor-wait ring-primary/40 scale-95'
+                  : 'bg-gradient-to-br from-primary via-secondary to-primary text-primary-foreground hover:scale-105 ring-primary/30 hover:ring-primary/50'
+                }
+              `}
+              style={{
+                background: isBlocked ? undefined : buzzing ? undefined : 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--primary)))'
+              }}
+            >
+              {buzzing ? (
+                <div className="flex flex-col items-center space-y-3">
+                  <Loader2 className="w-12 h-12 animate-spin" />
+                  <span className="text-lg font-semibold">BUZZING...</span>
                 </div>
-              </div>
+              ) : isBlocked ? (
+                <div className="flex flex-col items-center space-y-3">
+                  <X className="w-12 h-12" />
+                  <span className="text-lg font-semibold">BLOCCATO</span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center space-y-2">
+                  <Zap className="w-16 h-16" />
+                  <span className="text-3xl font-bold">BUZZ</span>
+                  <div className="text-sm font-medium bg-background/20 px-4 py-2 rounded-full backdrop-blur-sm">
+                    €{currentPrice.toFixed(2)}
+                  </div>
+                </div>
+              )}
+            </Button>
+            
+            {/* 🌀 SHOCKWAVE ANIMATION */}
+            {showShockwave && (
+              <motion.div
+                className="absolute inset-0 rounded-full border-4 border-primary"
+                initial={{ scale: 0, opacity: 0.6 }}
+                animate={{ scale: 3, opacity: 0 }}
+                transition={{ duration: 1.5, ease: 'easeOut' }}
+                style={{ zIndex: 10 }}
+              />
             )}
-          </Button>
+          </div>
           
           {/* Animated pulse effect */}
           {!isBlocked && !buzzing && (
