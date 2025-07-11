@@ -28,7 +28,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   const { vibrate } = useCapacitorHardware();
 
   // Handle BUZZ action with complete logic + debug
-  const handleBuzz = preserveFunctionName(async () => {
+  const handleBuzz = async () => {
     console.log('🚀 BUZZ PRESSED - Start handleBuzz', { user: !!user, currentPrice });
     
     if (!user) {
@@ -175,7 +175,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     } finally {
       setBuzzing(false);
     }
-  }, 'handleBuzz');
+  };
 
   return (
     <div className="relative flex flex-col items-center space-y-6">
