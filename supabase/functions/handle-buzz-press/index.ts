@@ -33,8 +33,12 @@ interface BuzzResponse {
 }
 
 serve(async (req) => {
+  // 🚨 DEBUG: Log di ogni richiesta ricevuta
+  console.log(`🔥 BUZZ EDGE FUNCTION CALLED - Method: ${req.method}, URL: ${req.url}, Time: ${new Date().toISOString()}`);
+  
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
+    console.log(`✅ CORS preflight handled`);
     return new Response("ok", { headers: corsHeaders });
   }
 
