@@ -97,8 +97,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       const buzzResult = await callBuzzApi({
         userId: user.id,
         generateMap: true,
-        coordinates: undefined,
-        prizeId: undefined,
+        coordinates: null, // Fix: null instead of undefined
+        prizeId: null, // Fix: null instead of undefined
         sessionId: `buzz_${Date.now()}`
       });
       
@@ -115,12 +115,18 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       
       if (buzzResult.error) {
         console.error('BUZZ API Error:', buzzResult.errorMessage);
-        toast.error(buzzResult.errorMessage || 'Errore di rete. Riprova.');
+        // Prevent duplicate toasts
+        if (!buzzing) {
+          toast.error(buzzResult.errorMessage || 'Errore di rete. Riprova.');
+        }
         return;
       }
       
       if (!buzzResult.success) {
-        toast.error(buzzResult.errorMessage || 'Errore durante BUZZ');
+        // Prevent duplicate toasts
+        if (!buzzing) {
+          toast.error(buzzResult.errorMessage || 'Errore durante BUZZ');
+        }
         return;
       }
       

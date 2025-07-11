@@ -191,33 +191,63 @@ serve(async (req) => {
       );
     }
     
+    // 🚨 DEBUG: Log user authentication
+    const { data: authUser, error: authError } = await supabase.auth.getUser();
+    console.log('🔐 Auth User Check:', { 
+      hasUser: !!authUser?.user, 
+      userId: authUser?.user?.id, 
+      authError: authError?.message 
+    });
+    
     // Insert clue into user_clues table with full BUZZ_CLUE_ENGINE data
+    console.log('💾 Attempting to save clue to user_clues...');
+    const cluePayload = {
+      user_id: userId,
+      title_it: `Indizio ${clueEngineResult.clue_category} #${buzzCount}`,
+      description_it: clueEngineResult.clue_text,
+      title_en: `${clueEngineResult.clue_category} Clue #${buzzCount}`,
+      description_en: translateToEnglish(clueEngineResult.clue_text),
+      clue_type: 'buzz',
+      buzz_cost: buzzCost,
+      week_number: currentWeek,
+      is_misleading: clueEngineResult.is_misleading,
+      location_id: clueEngineResult.location_id,
+      prize_id: clueEngineResult.prize_id,
+      clue_category: clueEngineResult.clue_category
+    };
+    
+    console.log('💾 Clue payload:', cluePayload);
+    
     const { data: clueData, error: clueError } = await supabase
       .from('user_clues')
-      .insert({
-        user_id: userId,
-        title_it: `Indizio ${clueEngineResult.clue_category} #${buzzCount}`,
-        description_it: clueEngineResult.clue_text,
-        title_en: `${clueEngineResult.clue_category} Clue #${buzzCount}`,
-        description_en: translateToEnglish(clueEngineResult.clue_text),
-        clue_type: 'buzz',
-        buzz_cost: buzzCost,
-        week_number: currentWeek,
-        is_misleading: clueEngineResult.is_misleading,
-        location_id: clueEngineResult.location_id,
-        prize_id: clueEngineResult.prize_id,
-        clue_category: clueEngineResult.clue_category
-      })
+      .insert(cluePayload)
       .select('clue_id')
       .single();
 
     if (clueError) {
-      console.error("❌ Error saving clue:", clueError);
+      console.error("❌ Error saving clue - DETAILED:", {
+        error: clueError,
+        message: clueError.message,
+        details: clueError.details,
+        hint: clueError.hint,
+        code: clueError.code
+      });
       return new Response(
-        JSON.stringify({ success: false, error: true, errorMessage: "Errore salvataggio indizio" }),
+        JSON.stringify({ 
+          success: false, 
+          error: true, 
+          errorMessage: `Errore salvataggio indizio: ${clueError.message}`,
+          debugInfo: {
+            code: clueError.code,
+            details: clueError.details,
+            hint: clueError.hint
+          }
+        }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
+    
+    console.log('✅ Clue saved successfully:', clueData);
 
     console.log(`✅ Clue saved with ID: ${clueData.clue_id}`);
 

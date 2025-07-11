@@ -53,13 +53,13 @@ export function useBuzzApi() {
         generateMap 
       };
 
-      // Add coordinates if generateMap is true
+      // Add coordinates if generateMap is true and coordinates provided
       if (generateMap && coordinates) {
         payload.coordinates = coordinates;
         console.log(`🗺️ BUZZ API Call with generateMap=true and coordinates:`, coordinates);
       }
 
-      // Add optional parameters
+      // Add optional parameters only if they exist
       if (prizeId) payload.prizeId = prizeId;
       if (sessionId) payload.sessionId = sessionId;
       
