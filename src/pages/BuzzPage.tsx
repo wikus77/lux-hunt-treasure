@@ -1,6 +1,6 @@
 
-// M1SSION™ – BuzzPage.tsx corretto da Lovable AI su richiesta Joseph Mulé
-// 🔐 Certificato JLENIA – Capacitor iOS READY – SHA aggiornato – UI verificata su iPhone
+// M1SSION™ – BuzzPage.tsx aggiornato da Lovable AI su richiesta Joseph Mulé
+// 🔐 Certificato JLENIA – Indizio in notifica + onda shockwave – SHA aggiornato – iOS Ready
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -48,6 +48,7 @@ export const BuzzPage: React.FC = () => {
   const [history, setHistory] = useState<BuzzHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [buzzing, setBuzzing] = useState(false);
+  const [showShockwave, setShowShockwave] = useState(false);
   const { user } = useAuth();
   const { toMap } = useEnhancedNavigation();
   const { vibrate } = useCapacitorHardware();
@@ -125,6 +126,7 @@ export const BuzzPage: React.FC = () => {
     
     try {
       setBuzzing(true);
+      setShowShockwave(true);
       await vibrate(100);
       
       const currentPrice = getCurrentBuzzPrice(stats.today_count);
@@ -177,6 +179,15 @@ export const BuzzPage: React.FC = () => {
         return;
       }
       
+      // ✅ SALVA NOTIFICA CON INDIZIO REALE
+      await supabase.from('user_notifications').insert({
+        user_id: user.id,
+        title: '✅ Nuovo indizio disponibile',
+        message: buzzResult.clue_text || 'Indizio ricevuto ma testo non disponibile.',
+        type: 'clue',
+        is_read: false
+      });
+      
       // Update buzz counter
       await supabase.rpc('increment_buzz_counter', { p_user_id: user.id });
       
@@ -191,12 +202,17 @@ export const BuzzPage: React.FC = () => {
       // Refresh stats
       await loadBuzzStats();
       
-      // ✅ NOTIFICA FORZATA - IMPLEMENTAZIONE DIRETTA
+      // ✅ TOAST SUCCESS
       toast.success('✅ Nuovo indizio disponibile', {
         duration: 3000,
         position: 'top-center',
         style: { zIndex: 9999 }
       });
+      
+      // Reset shockwave after animation
+      setTimeout(() => {
+        setShowShockwave(false);
+      }, 1500);
       
       // Forza aggiornamento statistiche
       setTimeout(() => {
@@ -253,28 +269,23 @@ export const BuzzPage: React.FC = () => {
         className="relative flex flex-col items-center space-y-6"
       >
           
-          {/* BUZZ Button - Perfect Center */}
+          {/* BUZZ Button - Stile uguale a BUZZ MAPPA */}
           <Button
             size="lg"
             disabled={isBlocked || buzzing}
             onClick={handleBuzz}
-            className={`
-              relative w-48 h-48 rounded-full text-2xl font-bold border-4 border-red-500
-              shadow-2xl ring-4 transition-all duration-300 z-20
-              ${isBlocked 
-                ? 'bg-destructive text-destructive-foreground cursor-not-allowed ring-destructive/20' 
-                : buzzing
-                ? 'bg-primary/80 text-primary-foreground cursor-wait ring-primary/40 scale-95'
-                : 'bg-gradient-to-br from-primary via-secondary to-primary text-primary-foreground hover:scale-105 ring-primary/30 hover:ring-primary/50'
-              }
-            `}
+            className="relative w-48 h-48 rounded-full text-2xl font-bold shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 z-20"
             style={{
-              background: isBlocked ? undefined : buzzing ? undefined : 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--primary)))'
+              background: isBlocked 
+                ? '#ef4444' 
+                : 'linear-gradient(135deg, #00D1FF 0%, #0099CC 50%, #7B2EFF 100%)',
+              boxShadow: '0 0 20px rgba(0, 209, 255, 0.5)',
+              color: 'white'
             }}
           >
             {buzzing ? (
               <div className="flex flex-col items-center space-y-3">
-                <Loader2 className="w-12 h-12 animate-spin" />
+                <Zap className="w-12 h-12" />
                 <span className="text-lg font-semibold">BUZZING...</span>
               </div>
             ) : isBlocked ? (
@@ -293,19 +304,15 @@ export const BuzzPage: React.FC = () => {
             )}
           </Button>
           
-          {/* Animated pulse effect */}
-          {!isBlocked && !buzzing && (
+          {/* 🌀 SHOCKWAVE ANIMATION - ONDA CIRCOLARE PURA */}
+          {showShockwave && (
             <motion.div
-              animate={{ 
-                scale: [1, 1.3, 1], 
-                opacity: [0.6, 0, 0.6] 
-              }}
-              transition={{ 
-                duration: 3, 
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-secondary z-10"
+              key={Date.now()}
+              className="absolute w-48 h-48 rounded-full border-4 border-cyan-500"
+              initial={{ scale: 0, opacity: 0.6 }}
+              animate={{ scale: 4, opacity: 0 }}
+              transition={{ duration: 1.5, ease: 'easeOut' }}
+              style={{ zIndex: 10 }}
             />
           )}
 
