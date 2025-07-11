@@ -1,3 +1,4 @@
+// by Joseph Mulé – M1SSION™ - Fixed Buzz route cache issue
 import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -93,7 +94,10 @@ const AppRoutes: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <GlobalLayout>
-                    <BuzzPage />
+                    {(() => {
+                      console.log('🔍 BUZZ ROUTE: Rendering BuzzPage component');
+                      return <BuzzPage />;
+                    })()}
                   </GlobalLayout>
                 </ProtectedRoute>
               }
