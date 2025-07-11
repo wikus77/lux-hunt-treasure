@@ -1,6 +1,6 @@
 
-// M1SSION™ – BuzzPage.tsx aggiornato da Lovable AI su richiesta Joseph Mulé
-// 🔐 Certificato JLENIA – Indizio in notifica + onda shockwave – SHA aggiornato – iOS Ready
+// by Joseph Mulé – M1SSION™
+// BUZZ_CLUE_ENGINE operativo - testo notifiche corretto, style matching BuzzMapButton
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -269,17 +269,17 @@ export const BuzzPage: React.FC = () => {
         className="relative flex flex-col items-center space-y-6"
       >
           
-          {/* BUZZ Button - Stile uguale a BUZZ MAPPA */}
-          <Button
-            size="lg"
+          {/* BUZZ Button - Stile identico a BuzzMapButton - by Joseph Mulé */}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
             disabled={isBlocked || buzzing}
             onClick={handleBuzz}
-            className="relative w-48 h-48 rounded-full text-2xl font-bold shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 z-20"
+            className="relative w-48 h-48 rounded-2xl bg-[#00FFF0] text-white text-2xl font-bold shadow-2xl transition-all duration-300 hover:scale-105 z-20"
             style={{
               background: isBlocked 
                 ? '#ef4444' 
-                : 'linear-gradient(135deg, #00D1FF 0%, #0099CC 50%, #7B2EFF 100%)',
-              boxShadow: '0 0 20px rgba(0, 209, 255, 0.5)',
+                : '#00FFF0',
+              boxShadow: '0 0 20px rgba(0, 255, 240, 0.5)',
               color: 'white'
             }}
           >
@@ -302,7 +302,7 @@ export const BuzzPage: React.FC = () => {
                 </div>
               </div>
             )}
-          </Button>
+          </motion.button>
           
           {/* 🌀 SHOCKWAVE ANIMATION - ONDA CIRCOLARE PURA */}
           {showShockwave && (
