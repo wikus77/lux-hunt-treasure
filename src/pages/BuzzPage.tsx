@@ -1,3 +1,4 @@
+
 // M1SSION™ - Buzz Page for iOS Capacitor
 // 🔐 Customized for M1SSION™ by Joseph – Cleaned on 2025-07-10
 import React, { useState, useEffect } from 'react';
@@ -183,9 +184,10 @@ export const BuzzPage: React.FC = () => {
       // Refresh stats
       await loadBuzzStats();
       
-      // Show success notification  
+      // ✅ NOTIFICA FORZATA - IMPLEMENTAZIONE DIRETTA
       toast.success('✅ Nuovo indizio disponibile', {
-        duration: 3000
+        duration: 3000,
+        position: 'top-center'
       });
       
     } catch (err) {
@@ -211,7 +213,7 @@ export const BuzzPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="min-h-screen w-full fixed inset-0 flex items-center justify-center bg-background">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -222,14 +224,17 @@ export const BuzzPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen w-full fixed inset-0 flex items-center justify-center bg-background" style={{
-      paddingTop: 'env(safe-area-inset-top, 0px)',
-      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-      paddingLeft: 'env(safe-area-inset-left, 0px)',
-      paddingRight: 'env(safe-area-inset-right, 0px)'
-    }}>
+    <div 
+      className="min-h-screen w-full fixed inset-0 flex items-center justify-center bg-background z-10" 
+      style={{
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingLeft: 'env(safe-area-inset-left, 0px)',
+        paddingRight: 'env(safe-area-inset-right, 0px)'
+      }}
+    >
       
-      {/* Absolute centered BUZZ Button */}
+      {/* ✅ TASTO BUZZ CENTRATO FORZATO */}
       <div className="absolute inset-0 flex items-center justify-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -245,7 +250,7 @@ export const BuzzPage: React.FC = () => {
             onClick={handleBuzz}
             className={`
               relative w-48 h-48 rounded-full text-2xl font-bold
-              shadow-2xl ring-4 transition-all duration-300
+              shadow-2xl ring-4 transition-all duration-300 z-20
               ${isBlocked 
                 ? 'bg-destructive text-destructive-foreground cursor-not-allowed ring-destructive/20' 
                 : buzzing
@@ -290,13 +295,13 @@ export const BuzzPage: React.FC = () => {
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
-              className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-secondary"
+              className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-secondary z-10"
             />
           )}
 
           {/* Price info below button */}
           {stats && !isBlocked && (
-            <div className="text-center space-y-2">
+            <div className="text-center space-y-2 z-30">
               <div className="text-lg text-muted-foreground">
                 BUZZ oggi: <span className="font-bold text-primary">{stats.today_count}/50</span>
               </div>
