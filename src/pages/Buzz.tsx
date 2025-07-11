@@ -1,6 +1,6 @@
 
 // M1SSION™ – BuzzPage.tsx aggiornato da Lovable AI su richiesta Joseph Mulé
-// 🔐 Certificato JLENIA – Animazione Shockwave + Notifica persistente – SHA aggiornato – iOS Ready
+// 🔐 Certificato JLENIA – Visualizzazione indizio diretta + Shockwave BUZZ – SHA aggiornato – Capacitor iOS Ready
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -185,11 +185,11 @@ export const Buzz: React.FC = () => {
       // Update buzz counter
       await supabase.rpc('increment_buzz_counter', { p_user_id: user.id });
       
-      // 📬 INSERISCI NOTIFICA PERSISTENTE
+      // 📬 INSERISCI NOTIFICA PERSISTENTE CON INDIZIO REALE
       await supabase.from('user_notifications').insert({
         user_id: user.id,
         title: '✅ Nuovo indizio disponibile',
-        message: 'Hai appena ricevuto un nuovo indizio. Apri la sezione Clues per visualizzarlo.',
+        message: buzzResult.clue || buzzResult.clueText || 'Hai ottenuto un nuovo indizio. Apri la sezione Clues per visualizzarlo.',
         type: 'clue',
         is_read: false
       });
@@ -308,33 +308,17 @@ export const Buzz: React.FC = () => {
               )}
             </Button>
             
-            {/* 🌀 SHOCKWAVE ANIMATION */}
+            {/* 🌀 SHOCKWAVE ANIMATION - SOLO AL CLICK */}
             {showShockwave && (
               <motion.div
-                className="absolute inset-0 rounded-full border-4 border-primary"
+                className="absolute inset-0 rounded-full border-4 border-cyan-400"
                 initial={{ scale: 0, opacity: 0.6 }}
                 animate={{ scale: 3, opacity: 0 }}
-                transition={{ duration: 1.5, ease: 'easeOut' }}
+                transition={{ duration: 1.2, ease: 'easeOut' }}
                 style={{ zIndex: 10 }}
               />
             )}
           </div>
-          
-          {/* Animated pulse effect */}
-          {!isBlocked && !buzzing && (
-            <motion.div
-              animate={{ 
-                scale: [1, 1.3, 1], 
-                opacity: [0.6, 0, 0.6] 
-              }}
-              transition={{ 
-                duration: 3, 
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-secondary z-10"
-            />
-          )}
 
           {/* Instruction text below button */}
           <div className="text-center space-y-2 z-30 max-w-md px-4">
