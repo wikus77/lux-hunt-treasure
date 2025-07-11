@@ -65,6 +65,20 @@ export function useBuzzApi() {
       
       console.log(`📡 Calling handle-buzz-press with unified payload:`, payload);
       
+      // 🚨 CRITICAL: Check user session before calling edge function
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      console.log('🔐 SESSION CHECK:', {
+        hasSession: !!sessionData?.session,
+        hasUser: !!sessionData?.session?.user,
+        userId: sessionData?.session?.user?.id,
+        sessionError: sessionError?.message
+      });
+      
+      if (!sessionData?.session) {
+        console.error('❌ No active session found');
+        return { success: false, error: true, errorMessage: "Sessione non valida. Effettua l'accesso nuovamente." };
+      }
+      
       // 🚨 DEBUG: Pre edge function call
       console.log('🚨 EDGE FUNCTION CALL START:', {
         function: 'handle-buzz-press',
@@ -72,9 +86,10 @@ export function useBuzzApi() {
         timestamp: new Date().toISOString()
       });
       
-      // 🚨 CRITICAL DEBUG: Test if edge function exists and can be called
+      // 🚨 CRITICAL: Call edge function with verified session
+      console.log('🔐 Calling edge function with authenticated user...');
       const { data, error } = await supabase.functions.invoke("handle-buzz-press", {
-        body: payload,
+        body: payload
       });
       
       // 🚨 DEBUG: Post edge function call

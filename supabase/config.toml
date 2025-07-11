@@ -32,6 +32,9 @@ verify_jwt = false
 [functions.login-no-captcha]
 verify_jwt = false
 
+[functions.handle-buzz-press]
+verify_jwt = true
+
 # Additional security bypass for testing
 [auth.security]
 captcha_enabled = false
