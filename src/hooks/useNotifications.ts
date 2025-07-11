@@ -85,9 +85,11 @@ export function useNotifications() {
         clearTimeout(loadingTimeoutRef.current);
       }
       
-      // Carica da localStorage come fallback
-      const stored = localStorage.getItem(STORAGE_KEY);
-      let notifs: Notification[] = stored ? JSON.parse(stored) : [];
+      // by Joseph Mulé – M1SSION™ – RESET_LOCALSTORAGE_110725
+      // CRITICAL: Clear localStorage on reset - don't load old cached data
+      console.log("🧹 NOTIFICATIONS: Clearing localStorage cache after DB reset");
+      localStorage.removeItem(STORAGE_KEY);
+      let notifs: Notification[] = [];
       
       // Se l'utente è autenticato, carica da Supabase
       const { data: { user } } = await supabase.auth.getUser();
