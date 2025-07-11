@@ -1,6 +1,6 @@
 
 // M1SSION™ – BuzzPage.tsx corretto da Joseph Mulé
-// 🔐 Certificato da JLENIA – 2025-07-11T05:15 + SHA updated
+// 🔐 Certificato da JLENIA – Capacitor iOS Ready – SHA updated
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -305,7 +305,7 @@ export const BuzzPage: React.FC = () => {
           {/* Instruction text below button */}
           <div className="text-center space-y-2 z-30 max-w-md px-4">
             <div className="text-lg text-muted-foreground">
-              Premi il tasto per ricevere un nuovo indizio. Il prezzo aumenta ad ogni utilizzo.
+              Premi il pulsante per inviare un segnale e scoprire nuovi indizi. Ogni Buzz ti aiuta a trovare indizi nascosti.
             </div>
             {stats && !isBlocked && (
               <>
