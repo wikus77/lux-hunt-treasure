@@ -1,6 +1,6 @@
 
 // M1SSION™ – BuzzPage.tsx aggiornato da Lovable AI su richiesta Joseph Mulé
-// 🔐 Certificato JLENIA – Visualizzazione indizio diretta + Shockwave BUZZ – SHA aggiornato – Capacitor iOS Ready
+// 🔐 Certificato JLENIA – Indizio in notifica + onda shockwave – SHA aggiornato – iOS Ready
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -189,7 +189,7 @@ export const Buzz: React.FC = () => {
       await supabase.from('user_notifications').insert({
         user_id: user.id,
         title: '✅ Nuovo indizio disponibile',
-        message: buzzResult.clue || buzzResult.clueText || 'Hai ottenuto un nuovo indizio. Apri la sezione Clues per visualizzarlo.',
+        message: buzzResult.clue || 'Indizio ricevuto ma testo non disponibile.',
         type: 'clue',
         is_read: false
       });
@@ -289,7 +289,7 @@ export const Buzz: React.FC = () => {
             >
               {buzzing ? (
                 <div className="flex flex-col items-center space-y-3">
-                  <Loader2 className="w-12 h-12 animate-spin" />
+                  <Zap className="w-12 h-12" />
                   <span className="text-lg font-semibold">BUZZING...</span>
                 </div>
               ) : isBlocked ? (
@@ -308,13 +308,14 @@ export const Buzz: React.FC = () => {
               )}
             </Button>
             
-            {/* 🌀 SHOCKWAVE ANIMATION - SOLO AL CLICK */}
+            {/* 🌀 SHOCKWAVE ANIMATION - ONDA CIRCOLARE PURA */}
             {showShockwave && (
               <motion.div
-                className="absolute inset-0 rounded-full border-4 border-cyan-400"
+                key={Date.now()}
+                className="absolute w-48 h-48 rounded-full border-4 border-cyan-500"
                 initial={{ scale: 0, opacity: 0.6 }}
-                animate={{ scale: 3, opacity: 0 }}
-                transition={{ duration: 1.2, ease: 'easeOut' }}
+                animate={{ scale: 4, opacity: 0 }}
+                transition={{ duration: 1.5, ease: 'easeOut' }}
                 style={{ zIndex: 10 }}
               />
             )}
