@@ -20,18 +20,37 @@ export const useDynamicIslandSafety = () => {
       }
 
       try {
-        // Simulate a safety check (replace with actual logic)
-        const randomValue = Math.random();
-        if (randomValue < 0.1) {
-          setIsBuzzSafe({ isSafe: false, reason: 'Simulated safety check failure' });
-          toast.error('Dynamic Island safety check failed. Please try again later.');
-        } else {
-          setIsBuzzSafe({ isSafe: true });
+        // by Joseph Mulé – M1SSION™ – FIXED: Deterministic safety check
+        // Verifica che l'utente abbia una sessione valida e ID valido
+        if (!user.id || user.id.length < 10) {
+          setIsBuzzSafe({ isSafe: false, reason: 'User ID non valido' });
+          console.log('🔒 Dynamic Island safety: User ID non valido');
+          return;
         }
+        
+        // Verifica che l'utente abbia email verificata
+        if (!user.email_confirmed_at) {
+          setIsBuzzSafe({ isSafe: false, reason: 'Email non verificata' });
+          console.log('🔒 Dynamic Island safety: Email non verificata');
+          return;
+        }
+        
+        // Verifica che l'utente abbia una sessione attiva
+        const { data: session } = await supabase.auth.getSession();
+        if (!session?.session) {
+          setIsBuzzSafe({ isSafe: false, reason: 'Sessione non attiva' });
+          console.log('🔒 Dynamic Island safety: Sessione non attiva');
+          return;
+        }
+        
+        // Tutto OK
+        setIsBuzzSafe({ isSafe: true });
+        console.log('✅ Dynamic Island safety check passed');
+        
       } catch (error: any) {
         console.error('Error during safety check:', error);
         setIsBuzzSafe({ isSafe: false, reason: error.message || 'Unknown error' });
-        toast.error('An error occurred during the safety check.');
+        console.log('❌ Dynamic Island safety check failed:', error.message);
       }
     };
 

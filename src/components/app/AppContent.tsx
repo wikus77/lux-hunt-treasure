@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { ThemeProvider } from "../theme-provider";
 import { toast } from "sonner";
 import { Spinner } from "../ui/spinner";
-import { Toaster } from "sonner";
+// by Joseph Mulé – M1SSION™ – REMOVED: Duplicate Toaster (already in App.tsx)
+// import { Toaster } from "sonner";
 import { Toaster as ShadcnToaster } from "../ui/toaster";
 import AppRoutes from "../../routes/AppRoutes";
 
@@ -81,7 +82,7 @@ function AppContent() {
       {hydrated ? (
         <>
           <AppRoutes />
-          <Toaster />
+          {/* by Joseph Mulé – M1SSION™ – REMOVED: Duplicate Toaster (already in App.tsx) */}
           <ShadcnToaster />
         </>
       ) : (

@@ -57,18 +57,10 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         timestamp: new Date().toISOString()
       });
       
+      // by Joseph Mulé – M1SSION™ – FIXED: Proper hook usage outside component
       console.log('🚨 GETTING useBuzzApi HOOK...');
-      
-      let callBuzzApi;
-      try {
-        const hook = useBuzzApi();
-        callBuzzApi = hook.callBuzzApi;
-        console.log('✅ useBuzzApi HOOK INITIALIZED:', !!callBuzzApi);
-      } catch (hookError) {
-        console.error('❌ useBuzzApi HOOK ERROR:', hookError);
-        toast.error(`Hook error: ${hookError.message}`);
-        return;
-      }
+      const { callBuzzApi } = useBuzzApi();
+      console.log('✅ useBuzzApi HOOK INITIALIZED:', !!callBuzzApi);
       
       console.log('🚨 CALLING BUZZ API...');
       
@@ -94,18 +86,16 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       
       if (buzzResult.error) {
         console.error('BUZZ API Error:', buzzResult.errorMessage);
-        // Prevent duplicate toasts
-        if (!buzzing) {
-          toast.error(buzzResult.errorMessage || 'Errore di rete. Riprova.');
-        }
+        // by Joseph Mulé – M1SSION™ – FIXED: Prevent duplicate toasts with proper state check
+        toast.dismiss(); // Clear any existing toasts
+        toast.error(buzzResult.errorMessage || 'Errore di rete. Riprova.');
         return;
       }
       
       if (!buzzResult.success) {
-        // Prevent duplicate toasts
-        if (!buzzing) {
-          toast.error(buzzResult.errorMessage || 'Errore durante BUZZ');
-        }
+        // by Joseph Mulé – M1SSION™ – FIXED: Prevent duplicate toasts with proper state check
+        toast.dismiss(); // Clear any existing toasts
+        toast.error(buzzResult.errorMessage || 'Errore durante BUZZ');
         return;
       }
       

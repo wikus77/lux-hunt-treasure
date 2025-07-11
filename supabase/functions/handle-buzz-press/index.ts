@@ -76,10 +76,14 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user || user.id !== userId) {
-      console.error("❌ Auth validation failed");
+      console.error("❌ Auth validation failed:", authError?.message);
       return new Response(
-        JSON.stringify({ success: false, error: true, errorMessage: "Autorizzazione non valida" }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({ 
+          success: false, 
+          error: true, 
+          errorMessage: `Autorizzazione non valida: ${authError?.message || 'User mismatch'}` 
+        }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -191,13 +195,8 @@ serve(async (req) => {
       );
     }
     
-    // 🚨 DEBUG: Log user authentication
-    const { data: authUser, error: authError } = await supabase.auth.getUser();
-    console.log('🔐 Auth User Check:', { 
-      hasUser: !!authUser?.user, 
-      userId: authUser?.user?.id, 
-      authError: authError?.message 
-    });
+    // by Joseph Mulé – M1SSION™ – FIXED: Proper auth validation using existing token
+    console.log('🔐 Using already validated user from request:', userId);
     
     // Insert clue into user_clues table with full BUZZ_CLUE_ENGINE data
     console.log('💾 Attempting to save clue to user_clues...');
