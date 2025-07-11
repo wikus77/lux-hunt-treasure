@@ -78,7 +78,20 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         timestamp: new Date().toISOString()
       });
       
-      const { callBuzzApi } = useBuzzApi();
+      console.log('🚨 GETTING useBuzzApi HOOK...');
+      
+      let callBuzzApi;
+      try {
+        const hook = useBuzzApi();
+        callBuzzApi = hook.callBuzzApi;
+        console.log('✅ useBuzzApi HOOK INITIALIZED:', !!callBuzzApi);
+      } catch (hookError) {
+        console.error('❌ useBuzzApi HOOK ERROR:', hookError);
+        toast.error(`Hook error: ${hookError.message}`);
+        return;
+      }
+      
+      console.log('🚨 CALLING BUZZ API...');
       
       // Call the buzz API with correct hook implementation
       const buzzResult = await callBuzzApi({
@@ -88,6 +101,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         prizeId: undefined,
         sessionId: `buzz_${Date.now()}`
       });
+      
+      console.log('✅ BUZZ API CALL COMPLETED');
       
       // 🚨 DEBUG: Log post-chiamata edge function
       console.log('🚨 POST-BUZZ API CALL:', {
