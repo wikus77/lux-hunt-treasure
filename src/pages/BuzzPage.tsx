@@ -180,16 +180,16 @@ export const BuzzPage: React.FC = () => {
         return;
       }
       
-      // ✅ VERIFICA CLUE_TEXT VALIDO - FALLBACK DI SICUREZZA
-      if (!buzzResult?.clue_text) {
+      // ✅ VERIFICA CLUE_TEXT VALIDO - LOGICA M1SSION™ - by Joseph Mulé
+      if (!buzzResult?.clue_text || buzzResult.clue_text.trim() === '') {
         console.error('❌ CLUE_TEXT NON VALIDO:', buzzResult);
-        toast.error('Errore: indizio non disponibile.');
+        toast.error('Errore nel recupero dell\'indizio');
         return;
       }
       
-      console.log('📝 CLUE TEXT VALIDO:', { 
+      console.log('📝 CLUE TEXT VALIDO M1SSION™:', { 
         clue_text: buzzResult.clue_text,
-        full_result: buzzResult 
+        success: buzzResult.success 
       });
       
       // ✅ NOTIFICA GIÀ SALVATA DALL'EDGE FUNCTION - NON DUPLICARE
@@ -208,9 +208,9 @@ export const BuzzPage: React.FC = () => {
       // Refresh stats
       await loadBuzzStats();
       
-      // ✅ TOAST SUCCESS
-      toast.success('✅ Nuovo indizio disponibile', {
-        duration: 3000,
+      // ✅ TOAST SUCCESS - CONFORME M1SSION™ - by Joseph Mulé
+      toast.success('Indizio ricevuto', {
+        duration: 2000,
         position: 'top-center',
         style: { zIndex: 9999 }
       });

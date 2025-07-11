@@ -495,96 +495,103 @@ async function generateSmartClue(supabase: any, userId: string, currentWeek: num
   }
 }
 
-// Generate target-based clues from buzz_game_targets
+// by Joseph Mulé – M1SSION™
+// ✅ CORRETTA GENERAZIONE INDIZI - MAI RIVELARE MARCA/MODELLO
 async function generateTargetClue(week: number, category: 'location' | 'prize', target: any, usedClues: any[]): Promise<{clue_text: string, is_misleading: boolean}> {
-  const is_misleading = Math.random() < 0.25; // 25% chance of misleading clue
+  const is_misleading = Math.random() < 0.25; // 25% chance M1SSION™ logic
   
-  // Week 1: Very vague, symbolic clues
-  const week1Clues = {
-    location: [
-      "Dove le strade si intrecciano come fili dorati",
-      "Nel regno dei sapori e delle tradizioni antiche", 
-      "Tra colline che sussurrano segreti al vento",
-      "Dove il sole dipinge ombre danzanti sui muri",
-      "Nel cuore pulsante di terre benedette"
-    ],
-    prize: [
-      "Un gioiello di metallo e passione ti attende",
-      "L'incarnazione della velocità e dell'eleganza",
-      "Un sogno che ronza di potenza nascosta",
-      "Quattro ruote che portano verso l'infinito",
-      "Il frutto della maestria e dell'innovazione"
-    ]
-  };
-  
-  // Week 2: Generic geographic/mechanical clues  
-  const week2Clues = {
-    location: [
-      "In una provincia del Nord-Ovest, tra montagne e mare",
-      "Dove l'industria incontra la bellezza naturale",
-      "In terra ligure, vicino al confine con la Francia",
-      "Nella regione dei fiori e del pesto",
-      "Lungo la costa che guarda verso la Provenza"
-    ],
-    prize: [
-      `Il rombo di un ${target.prize_description} echeggia nell'aria`,
-      `Cavalli di potenza racchiusi in una macchina da sogno`,
-      `Accelerazione mozzafiato e linee da capogiro`,
-      `Lusso e prestazioni in perfetta armonia`,
-      "Un capolavoro dell'ingegneria automobilistica moderna"
-    ]
-  };
-  
-  // Week 3: More precise location/technical details using target data
-  const week3Clues = {
-    location: [
-      `Nel cuore di ${target.city}, strada principale`,
-      `Vicino all'indirizzo ${target.address.split(',')[0]}`,
-      `Coordinate approssimative: ${target.lat.toFixed(1)}°N, ${target.lon.toFixed(1)}°E`,
-      `In provincia della città che ospita il premio`,
-      "Lungo la via principale, tra i palazzi storici"
-    ],
-    prize: [
-      `Il rombo del ${target.prize_description} che ti aspetta`,
-      `${target.prize_description} - il tuo obiettivo finale`,
-      `Lusso su quattro ruote: ${target.prize_description}`,
-      "Aerodinamica studiata nei minimi dettagli",
-      "Il premio che cambierà la tua vita"
-    ]
-  };
-  
-  // Week 4: Very precise, decodable clues
-  const week4Clues = {
-    location: [
-      "V-E-N-T-I-M-I-G-L-I-A: riarrangia le lettere",
-      "Coordinate: 43.7915°N, 7.6089°E (±50km)",
-      "CAP 18039, lungo la via principale della città",
-      "Anagramma della regione: LIGURIA → L-I-G-U-R-I-A",
-      "Al numero 232 del corso principale"
-    ],
-    prize: [
-      `Anagramma del marchio: ${scrambleText(target.prize_description.split(' ')[0] || 'AUTO')}`,
-      `Il modello nasconde: ${scrambleText(target.prize_description.split(' ')[1] || 'SPEED')}`,
-      `Anno ${new Date().getFullYear()}, colore ${getRandomColor()}`,
-      `Numero telaio che inizia con: ${generateVinStart()}`,
-      `Valore stimato: €${Math.floor(Math.random() * 500000 + 100000)}`
-    ]
-  };
-  
-  const weekClues = [week1Clues, week2Clues, week3Clues, week4Clues];
-  const selectedWeekClues = weekClues[Math.min(week - 1, 3)];
-  const categoryClues = selectedWeekClues[category];
-  
-  // Filter out already used clues
-  const usedTexts = usedClues.map(uc => uc.custom_clue_text);
-  const availableClues = categoryClues.filter(clue => !usedTexts.includes(clue));
-  
-  // If all clues used, use fallback
-  const clue_text = availableClues.length > 0 
-    ? availableClues[Math.floor(Math.random() * availableClues.length)]
-    : `Indizio ${category} settimana ${week} - ID: ${Math.random().toString(36).substr(2, 9)}`;
+  if (category === 'prize') {
+    // ✅ WEEK 1-2: INDIZI PRIZE VAGHI (MAI MARCA)
+    if (week <= 2) {
+      const prizeClues = [
+        `Un tesoro su quattro ruote ti aspetta nel sud.`,
+        `La velocità incontra l'eleganza in un luogo ricco di storia.`,
+        `Potenza e prestigio nascosti dove il sole scalda la terra.`,
+        `Un premio che farà battere il cuore, celato tra antiche pietre.`,
+        `Quattro ruote di lusso dormono sotto il cielo siciliano.`
+      ];
+      return { 
+        clue_text: prizeClues[Math.floor(Math.random() * prizeClues.length)], 
+        is_misleading 
+      };
+    }
     
-  return { clue_text, is_misleading };
+    // ✅ WEEK 3: INDIZI PRIZE MEDI (MAI MARCA)
+    if (week === 3) {
+      const prizeClues = [
+        `Quattro ruote di lusso attendono nella terra dei templi.`,
+        `Un coupé esclusivo riposa dove la Magna Grecia fiorì.`,
+        `Potenza alemanna nascosta nel cuore della Sicilia storica.`,
+        `Un gigante dell'automotive si cela tra rovine millenarie.`,
+        `450 cavalli che non fanno rumore, in attesa del proprietario.`
+      ];
+      return { 
+        clue_text: prizeClues[Math.floor(Math.random() * prizeClues.length)], 
+        is_misleading 
+      };
+    }
+    
+    // ✅ WEEK 4+: INDIZI PRIZE PRECISI (MA MAI MARCA ESPLICITA)
+    const prizeClues = [
+      `450 cavalli di pura potenza aspettano nella valle dei templi.`,
+      `Un coupé che sfida le leggi della fisica, nascosto ad Agrigento.`,
+      `Lusso tedesco che incontra la bellezza siciliana, tra strade antiche.`,
+      `Una macchina dei sogni riposa dove Akragas dominava il Mediterraneo.`,
+      `Ingegneria di precisione che attende su quattro ruote dorate.`
+    ];
+    return { 
+      clue_text: prizeClues[Math.floor(Math.random() * prizeClues.length)], 
+      is_misleading 
+    };
+  }
+  
+  // ✅ CATEGORY LOCATION - CORRETTI E PROGRESSIVI
+  if (category === 'location') {
+    // WEEK 1-2: LOCATION VAGHI
+    if (week <= 2) {
+      const locationClues = [
+        `Dove i templi greci guardano il mare, la risposta ti attende.`,
+        `Nella terra della Magna Grecia, tra colline e antiche pietre.`,
+        `Un luogo dove storia millenaria incontra la modernità siciliana.`,
+        `Tra le rovine di Akragas, qualcosa di prezioso si nasconde.`,
+        `Nel sud dell'isola, dove il passato sussurra ai visitatori.`
+      ];
+      return { 
+        clue_text: locationClues[Math.floor(Math.random() * locationClues.length)], 
+        is_misleading 
+      };
+    }
+    
+    // WEEK 3: LOCATION MEDI  
+    if (week === 3) {
+      const locationClues = [
+        `Nella città dei templi, lungo una strada che porta il nome di un fiore.`,
+        `Ad Agrigento, dove le strade moderne incontrano la storia antica.`,
+        `Nel cuore della Valle dei Templi, su una via che profuma di rose.`,
+        `Dove Luigi Pirandello nacque, in una strada dal nome botanico.`,
+        `Tra coordinate siciliane, vicino a monumenti UNESCO.`
+      ];
+      return { 
+        clue_text: locationClues[Math.floor(Math.random() * locationClues.length)], 
+        is_misleading 
+      };
+    }
+    
+    // WEEK 4+: LOCATION PRECISI
+    const locationClues = [
+      `Via Rossi 13, dove Agrigento custodisce i suoi segreti moderni.`,
+      `Nel numero 13 di via Rossi, la città dei templi rivela sorprese.`,
+      `Agrigento, via Rossi al civico 13: coordinate 37.3156, 13.5858.`,
+      `Tra le coordinate 37°18'56" N, 13°35'09" E troverai ciò che cerchi.`,
+      `${target.address} - l'indirizzo del destino ti attende.`
+    ];
+    return { 
+      clue_text: locationClues[Math.floor(Math.random() * locationClues.length)], 
+      is_misleading 
+    };
+  }
+  
+  return { clue_text: "Indizio M1SSION™ in elaborazione", is_misleading: false };
 }
 
 // Helper functions
