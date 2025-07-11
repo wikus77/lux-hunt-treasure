@@ -37,7 +37,7 @@ function App() {
           <AuthProvider>
             <SafeAreaToggle>
               <AppRoutes />
-              <Toaster position="top-right" />
+              <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
             </SafeAreaToggle>
           </AuthProvider>
         </SoundProvider>

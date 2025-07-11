@@ -187,7 +187,8 @@ export const BuzzPage: React.FC = () => {
       // ✅ NOTIFICA FORZATA - IMPLEMENTAZIONE DIRETTA
       toast.success('✅ Nuovo indizio disponibile', {
         duration: 3000,
-        position: 'top-center'
+        position: 'top-center',
+        style: { zIndex: 9999 }
       });
       
     } catch (err) {
@@ -225,7 +226,7 @@ export const BuzzPage: React.FC = () => {
 
   return (
     <div 
-      className="fixed inset-0 z-10 flex items-center justify-center bg-background"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background overflow-hidden"
       style={{
         paddingTop: 'env(safe-area-inset-top, 0px)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
@@ -246,7 +247,7 @@ export const BuzzPage: React.FC = () => {
             disabled={isBlocked || buzzing}
             onClick={handleBuzz}
             className={`
-              relative w-48 h-48 rounded-full text-2xl font-bold
+              relative w-48 h-48 rounded-full text-2xl font-bold border-4 border-red-500
               shadow-2xl ring-4 transition-all duration-300 z-20
               ${isBlocked 
                 ? 'bg-destructive text-destructive-foreground cursor-not-allowed ring-destructive/20' 
