@@ -181,19 +181,19 @@ export const BuzzPage: React.FC = () => {
         return;
       }
       
-      // ✅ VERIFICA CLUE_TEXT VALIDO - LOGICA M1SSION™ - by Joseph Mulé
-      if (!buzzResult?.clue_text || buzzResult.clue_text.trim() === '') {
-        console.error('❌ CLUE_TEXT NON VALIDO:', buzzResult);
-        toast.error('Errore nel recupero dell\'indizio');
-        return;
-      }
-      
       // 🧪 DEBUG COMPLETO DEL FLUSSO BUZZ - by Joseph Mulé
-      console.log('📝 CLUE TEXT VALIDO M1SSION™:', { 
+      console.log('📝 BUZZ RESULT M1SSION™:', { 
         clue_text: buzzResult.clue_text,
         success: buzzResult.success,
         full_response: buzzResult
       });
+      
+      // ✅ VERIFICA CLUE_TEXT VALIDO - LOGICA M1SSION™ - by Joseph Mulé
+      if (!buzzResult?.clue_text || buzzResult.clue_text.trim() === '') {
+        console.error('❌ CLUE_TEXT NON VALIDO:', buzzResult);
+        toast.error('❌ Indizio non ricevuto dal server');
+        return;
+      }
       
       // ✅ NOTIFICA GIÀ SALVATA DALL'EDGE FUNCTION - NON DUPLICARE
       // ✅ CONTATORE GIÀ INCREMENTATO DALL'EDGE FUNCTION - NON DUPLICARE
@@ -206,15 +206,23 @@ export const BuzzPage: React.FC = () => {
         radius_generated: buzzResult.radius_km || 1000
       });
       
-      // Refresh stats
-      await loadBuzzStats();
-      
       // ✅ TOAST SUCCESS CON CLUE_TEXT REALE - CONFORME M1SSION™ - by Joseph Mulé
       toast.success(buzzResult.clue_text, {
         duration: 4000,
         position: 'top-center',
-        style: { zIndex: 9999 }
+        style: { 
+          zIndex: 9999,
+          background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
+          color: 'white',
+          fontWeight: 'bold'
+        }
       });
+      
+      // Force immediate stats reload - by Joseph Mulé - M1SSION™
+      setTimeout(async () => {
+        await loadBuzzStats();
+        console.log('🔄 Stats aggiornate post-BUZZ');
+      }, 100);
       
       // Reset shockwave after animation
       setTimeout(() => {
