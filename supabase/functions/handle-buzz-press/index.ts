@@ -563,8 +563,8 @@ async function generateTargetClue(week: number, category: 'location' | 'prize', 
       "Al numero 232 del corso principale"
     ],
     prize: [
-      `Anagramma del marchio: ${scrambleText(prize.name?.split(' ')[0] || 'AUTO')}`,
-      `Il modello nasconde: ${scrambleText(prize.name?.split(' ')[1] || 'SPEED')}`,
+      `Anagramma del marchio: ${scrambleText(target.prize_description.split(' ')[0] || 'AUTO')}`,
+      `Il modello nasconde: ${scrambleText(target.prize_description.split(' ')[1] || 'SPEED')}`,
       `Anno ${new Date().getFullYear()}, colore ${getRandomColor()}`,
       `Numero telaio che inizia con: ${generateVinStart()}`,
       `Valore stimato: €${Math.floor(Math.random() * 500000 + 100000)}`
