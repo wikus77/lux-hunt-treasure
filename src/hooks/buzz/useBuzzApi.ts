@@ -65,8 +65,26 @@ export function useBuzzApi() {
       
       console.log(`📡 Calling handle-buzz-press with unified payload:`, payload);
       
+      // 🚨 DEBUG: Pre edge function call
+      console.log('🚨 EDGE FUNCTION CALL START:', {
+        function: 'handle-buzz-press',
+        payload,
+        timestamp: new Date().toISOString()
+      });
+      
       const { data, error } = await supabase.functions.invoke("handle-buzz-press", {
         body: payload,
+      });
+      
+      // 🚨 DEBUG: Post edge function call
+      console.log('🚨 EDGE FUNCTION CALL RESULT:', {
+        hasData: !!data,
+        hasError: !!error,
+        dataSuccess: data?.success,
+        dataError: data?.error,
+        errorMessage: error?.message,
+        fullData: data,
+        fullError: error
       });
       
       if (error) {

@@ -70,6 +70,14 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       });
 
       // ✅ CHIAMATA API CORRETTA USANDO HOOK - by Joseph Mulé - M1SSION™
+      // 🚨 DEBUG: Log pre-chiamata edge function
+      console.log('🚨 PRE-BUZZ API CALL:', {
+        userId: user.id,
+        generateMap: true,
+        targetExists: true,
+        timestamp: new Date().toISOString()
+      });
+      
       const { callBuzzApi } = useBuzzApi();
       
       // Call the buzz API with correct hook implementation
@@ -79,6 +87,15 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         coordinates: undefined,
         prizeId: undefined,
         sessionId: `buzz_${Date.now()}`
+      });
+      
+      // 🚨 DEBUG: Log post-chiamata edge function
+      console.log('🚨 POST-BUZZ API CALL:', {
+        success: buzzResult?.success,
+        error: buzzResult?.error,
+        errorMessage: buzzResult?.errorMessage,
+        hasClueText: !!buzzResult?.clue_text,
+        fullResult: buzzResult
       });
       
       if (buzzResult.error) {
