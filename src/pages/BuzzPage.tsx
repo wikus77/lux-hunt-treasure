@@ -1,6 +1,6 @@
 
-// M1SSION™ – BuzzPage.tsx aggiornato da Joseph Mulé
-// 🔐 Certificato da JLENIA – timestamp 2025-07-11T03:48:59Z + SHA hash a7f3c8e1
+// M1SSION™ – BuzzPage.tsx corretto da Joseph Mulé
+// 🔐 Certificato da JLENIA – 2025-07-11T05:15 + SHA updated
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -191,6 +191,11 @@ export const BuzzPage: React.FC = () => {
         style: { zIndex: 9999 }
       });
       
+      // Forza aggiornamento statistiche
+      setTimeout(() => {
+        loadBuzzStats();
+      }, 500);
+      
     } catch (err) {
       console.error('Error in handleBuzz:', err);
       toast.error('Errore imprevisto durante BUZZ');
@@ -300,7 +305,7 @@ export const BuzzPage: React.FC = () => {
           {/* Instruction text below button */}
           <div className="text-center space-y-2 z-30 max-w-md px-4">
             <div className="text-lg text-muted-foreground">
-              Premi il pulsante per inviare un segnale e scoprire nuove aree sulla mappa
+              Premi il tasto per ricevere un nuovo indizio. Il prezzo aumenta ad ogni utilizzo.
             </div>
             {stats && !isBlocked && (
               <>
