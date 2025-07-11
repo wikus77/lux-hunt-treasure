@@ -277,24 +277,26 @@ export const BuzzPage: React.FC = () => {
         className="relative flex flex-col items-center space-y-6"
       >
           
-          {/* BUZZ Button - Statico con colore BuzzMapButton - by Joseph Mulé */}
+          {/* BUZZ Button - FORMA ROTONDA E GRADIENT FUCSIA/ROSA M1SSION™ - by Joseph Mulé */}
           <motion.button
             whileTap={{ scale: 0.97 }}
             disabled={isBlocked || buzzing}
             onClick={handleBuzz}
-            className="relative w-48 h-48 rounded-2xl text-2xl font-bold shadow-2xl z-20"
+            className="relative w-48 h-48 rounded-full text-lg font-semibold px-6 py-4 text-white tracking-wide shadow-2xl z-20 bg-gradient-to-br from-[#F213A4] to-[#FF4D4D]"
             style={{
               background: isBlocked 
                 ? '#ef4444' 
-                : '#00FFF0',
-              boxShadow: '0 0 20px rgba(0, 255, 240, 0.5)',
-              color: isBlocked ? 'white' : 'black'
+                : 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
+              boxShadow: isBlocked 
+                ? '0 0 20px rgba(239, 68, 68, 0.5)' 
+                : '0 0 20px rgba(242, 19, 164, 0.5)',
+              color: 'white'
             }}
           >
             {buzzing ? (
               <div className="flex flex-col items-center space-y-3">
-                <Zap className="w-12 h-12 text-black" />
-                <span className="text-lg font-semibold text-black">BUZZING...</span>
+                <Zap className="w-12 h-12 text-white" />
+                <span className="text-lg font-semibold text-white">BUZZING...</span>
               </div>
             ) : isBlocked ? (
               <div className="flex flex-col items-center space-y-3">
@@ -303,27 +305,28 @@ export const BuzzPage: React.FC = () => {
               </div>
             ) : (
               <div className="flex flex-col items-center space-y-2">
-                <Zap className="w-16 h-16 text-black" />
-                <span className="text-3xl font-bold text-black">BUZZ</span>
-                <div className="text-sm font-medium bg-black/20 px-4 py-2 rounded-full backdrop-blur-sm text-black">
+                <Zap className="w-16 h-16 text-white" />
+                <span className="text-3xl font-bold text-white">BUZZ</span>
+                <div className="text-sm font-medium bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm text-white">
                   €{currentPrice.toFixed(2)}
                 </div>
               </div>
             )}
           </motion.button>
           
-          {/* 🌀 SHOCKWAVE ANIMATION - ONDA CIRCOLARE MIGLIORATA by Joseph Mulé */}
+          {/* 🌀 SHOCKWAVE ANIMATION - ONDA CIRCOLARE GRADIENT FUCSIA by Joseph Mulé */}
           {showShockwave && (
             <motion.div
               key={Date.now()}
-              className="absolute w-48 h-48 rounded-full border-4 border-[#00FFF0]"
+              className="absolute w-48 h-48 rounded-full border-4 border-[#F213A4]"
               initial={{ scale: 0, opacity: 0.8 }}
               animate={{ scale: 3.5, opacity: 0 }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
               style={{ 
                 zIndex: 10,
                 borderWidth: '3px',
-                filter: 'blur(0.5px)'
+                filter: 'blur(0.5px)',
+                borderColor: '#F213A4'
               }}
             />
           )}
