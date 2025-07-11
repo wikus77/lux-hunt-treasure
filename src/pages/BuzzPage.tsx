@@ -222,36 +222,23 @@ export const BuzzPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background" style={{
-      paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)',
-      paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
-      paddingLeft: 'max(16px, env(safe-area-inset-left, 16px))',
-      paddingRight: 'max(16px, env(safe-area-inset-right, 16px))'
+    <div className="min-h-screen w-full fixed inset-0 flex items-center justify-center bg-background" style={{
+      paddingTop: 'env(safe-area-inset-top, 0px)',
+      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      paddingLeft: 'env(safe-area-inset-left, 0px)',
+      paddingRight: 'env(safe-area-inset-right, 0px)'
     }}>
       
-      {/* Main centered content */}
-      <div className="flex-1 flex flex-col items-center justify-center space-y-8">
-        
-        {/* M1SSION Header */}
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="text-center space-y-4"
-        >
-          <h1 className="text-5xl font-bold text-foreground tracking-widest">M1SSION</h1>
-          <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full"></div>
-          <p className="text-muted-foreground text-lg">
-            Trova indizi nascosti nella tua città
-          </p>
-        </motion.div>
-
-        {/* Centered BUZZ Button */}
+      {/* Absolute centered BUZZ Button */}
+      <div className="absolute inset-0 flex items-center justify-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
-          className="relative"
+          className="relative flex flex-col items-center space-y-6"
         >
+          
+          {/* BUZZ Button - Perfect Center */}
           <Button
             size="lg"
             disabled={isBlocked || buzzing}
@@ -306,27 +293,22 @@ export const BuzzPage: React.FC = () => {
               className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-secondary"
             />
           )}
-        </motion.div>
 
-        {/* Price and counter info */}
-        {stats && !isBlocked && (
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-center space-y-3"
-          >
-            <div className="text-lg text-muted-foreground">
-              BUZZ oggi: <span className="font-bold text-primary">{stats.today_count}/50</span>
-            </div>
-            {stats.today_count < 50 && (
-              <div className="text-sm text-muted-foreground">
-                Prossimo prezzo: <span className="font-semibold">€{getCurrentBuzzPrice(stats.today_count + 1).toFixed(2)}</span>
+          {/* Price info below button */}
+          {stats && !isBlocked && (
+            <div className="text-center space-y-2">
+              <div className="text-lg text-muted-foreground">
+                BUZZ oggi: <span className="font-bold text-primary">{stats.today_count}/50</span>
               </div>
-            )}
-          </motion.div>
-        )}
-        
+              {stats.today_count < 50 && (
+                <div className="text-sm text-muted-foreground">
+                  Prossimo: <span className="font-semibold">€{getCurrentBuzzPrice(stats.today_count + 1).toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+          )}
+          
+        </motion.div>
       </div>
     </div>
   );
