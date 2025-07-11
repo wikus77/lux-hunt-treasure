@@ -206,6 +206,39 @@ export type Database = {
         }
         Relationships: []
       }
+      buzz_game_targets: {
+        Row: {
+          address: string
+          city: string
+          created_at: string
+          id: string
+          is_active: boolean
+          lat: number
+          lon: number
+          prize_description: string
+        }
+        Insert: {
+          address: string
+          city: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lat: number
+          lon: number
+          prize_description: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lat?: number
+          lon?: number
+          prize_description?: string
+        }
+        Relationships: []
+      }
       buzz_generation_logs: {
         Row: {
           buzz_count_generated: number

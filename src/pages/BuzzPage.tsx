@@ -270,12 +270,7 @@ export const BuzzPage: React.FC = () => {
         paddingRight: 'env(safe-area-inset-right, 0px)'
       }}
     >
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
-        className="relative flex flex-col items-center space-y-6"
-      >
+      <div className="relative flex flex-col items-center space-y-6">
           
           {/* BUZZ Button - FORMA ROTONDA + GRADIENT FUCSIA M1SSION™ DEFINITIVO - by Joseph Mulé */}
           <motion.button
@@ -349,7 +344,7 @@ export const BuzzPage: React.FC = () => {
             )}
           </div>
           
-      </motion.div>
+      </div>
     </div>
   );
 };

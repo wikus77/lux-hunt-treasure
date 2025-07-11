@@ -388,22 +388,21 @@ async function generateSmartClue(supabase: any, userId: string, currentWeek: num
   console.log(`🧬 BUZZ_CLUE_ENGINE Starting for user ${userId}, week ${currentWeek}`);
   
   try {
-    // STEP 1: Get available prizes and location data
-    const { data: availablePrizes, error: prizesError } = await supabase
-      .from('prizes')
+    // STEP 1: Get active target from buzz_game_targets (SISTEMA INTEGRATO)
+    const { data: activeTarget, error: targetError } = await supabase
+      .from('buzz_game_targets')
       .select('*')
-      .eq('is_active', true);
+      .eq('is_active', true)
+      .single();
       
-    if (prizesError || !availablePrizes || availablePrizes.length === 0) {
-      console.error('❌ No active prizes found:', prizesError);
-      return { success: false, clue_text: '', clue_category: 'location', is_misleading: false, error: 'Nessun premio attivo trovato' };
+    if (targetError || !activeTarget) {
+      console.error('❌ No active target found:', targetError);
+      return { success: false, clue_text: '', clue_category: 'location', is_misleading: false, error: 'Nessun target attivo trovato nel sistema' };
     }
     
-    // STEP 2: Select random prize (simulating location + prize combination)
-    const selectedPrize = availablePrizes[Math.floor(Math.random() * availablePrizes.length)];
-    console.log(`🎁 Selected prize: ${selectedPrize.name} (ID: ${selectedPrize.id})`);
+    console.log(`🎯 Active target: ${activeTarget.prize_description} in ${activeTarget.city} (ID: ${activeTarget.id})`);
     
-    // STEP 3: Determine clue category (50% location, 50% prize)
+    // STEP 2: Determine clue category (50% location, 50% prize)
     const clueCategory: 'location' | 'prize' = Math.random() > 0.5 ? 'location' : 'prize';
     
     // STEP 4: Check if user has already used clues for this combination
@@ -419,8 +418,8 @@ async function generateSmartClue(supabase: any, userId: string, currentWeek: num
       return { success: false, clue_text: '', clue_category, is_misleading: false, error: 'Errore controllo indizi utilizzati' };
     }
     
-    // STEP 5: Generate appropriate clue based on week and category
-    const clueData = await generateWeeklyClue(currentWeek, clueCategory, selectedPrize, usedClues || []);
+    // STEP 5: Generate appropriate clue based on week and category using activeTarget
+    const clueData = await generateTargetClue(currentWeek, clueCategory, activeTarget, usedClues || []);
     
     // STEP 6: Mark clue as used
     const { error: markUsedError } = await supabase
@@ -444,8 +443,8 @@ async function generateSmartClue(supabase: any, userId: string, currentWeek: num
       clue_text: clueData.clue_text,
       clue_category: clueCategory,
       is_misleading: clueData.is_misleading,
-      location_id: clueCategory === 'location' ? selectedPrize.id : undefined,
-      prize_id: clueCategory === 'prize' ? selectedPrize.id : undefined
+      location_id: clueCategory === 'location' ? activeTarget.id : undefined,
+      prize_id: clueCategory === 'prize' ? activeTarget.id : undefined
     };
     
   } catch (error) {
@@ -454,8 +453,8 @@ async function generateSmartClue(supabase: any, userId: string, currentWeek: num
   }
 }
 
-// Generate weekly progressive clues
-async function generateWeeklyClue(week: number, category: 'location' | 'prize', prize: any, usedClues: any[]): Promise<{clue_text: string, is_misleading: boolean}> {
+// Generate target-based clues from buzz_game_targets
+async function generateTargetClue(week: number, category: 'location' | 'prize', target: any, usedClues: any[]): Promise<{clue_text: string, is_misleading: boolean}> {
   const is_misleading = Math.random() < 0.25; // 25% chance of misleading clue
   
   // Week 1: Very vague, symbolic clues
@@ -486,29 +485,29 @@ async function generateWeeklyClue(week: number, category: 'location' | 'prize', 
       "Lungo la costa che guarda verso la Provenza"
     ],
     prize: [
-      `Motore ${prize.engine || 'potente'} che ruggisce sotto il cofano`,
-      `${prize.power || '500'}+ cavalli pronti a scatenarsi`,
-      `Accelerazione da ${prize.acceleration || '0-100'} che toglie il fiato`,
-      `Trazione ${prize.traction || 'integrale'} per dominare l'asfalto`,
+      `Il rombo di un ${target.prize_description} echeggia nell'aria`,
+      `Cavalli di potenza racchiusi in una macchina da sogno`,
+      `Accelerazione mozzafiato e linee da capogiro`,
+      `Lusso e prestazioni in perfetta armonia`,
       "Un capolavoro dell'ingegneria automobilistica moderna"
     ]
   };
   
-  // Week 3: More precise location/technical details
+  // Week 3: More precise location/technical details using target data
   const week3Clues = {
     location: [
-      "Nella provincia di Imperia, città di confine",
-      "Dove il Roja sfocia nel Mediterraneo",
-      "Tra i mercati dei fiori e le spiagge liguri",
-      "Nella città che unisce Italia e Francia",
-      "Lungo il Corso Limone Piemonte, tra i palazzi storici"
+      `Nel cuore di ${target.city}, strada principale`,
+      `Vicino all'indirizzo ${target.address.split(',')[0]}`,
+      `Coordinate approssimative: ${target.lat.toFixed(1)}°N, ${target.lon.toFixed(1)}°E`,
+      `In provincia della città che ospita il premio`,
+      "Lungo la via principale, tra i palazzi storici"
     ],
     prize: [
-      `Il suono inconfondibile del ${prize.engine || 'V8'} che si risveglia`,
-      `${prize.name || 'Supercar'} - leggenda su quattro ruote`,
-      `Peso/potenza perfetto per prestazioni da sogno`,
+      `Il rombo del ${target.prize_description} che ti aspetta`,
+      `${target.prize_description} - il tuo obiettivo finale`,
+      `Lusso su quattro ruote: ${target.prize_description}`,
       "Aerodinamica studiata nei minimi dettagli",
-      "Tecnologia racing trasferita su strada"
+      "Il premio che cambierà la tua vita"
     ]
   };
   
