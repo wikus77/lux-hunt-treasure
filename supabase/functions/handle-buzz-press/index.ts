@@ -306,7 +306,7 @@ serve(async (req) => {
         .from('user_notifications')
         .insert({
           user_id: userId,
-          title: 'Indizio ricevuto',
+          title: '🧩 Nuovo indizio M1SSION™',
           message: clueEngineResult.clue_text,
           type: 'clue',
           is_read: false
@@ -314,11 +314,32 @@ serve(async (req) => {
         
       if (notificationError) {
         console.error("❌ Error saving notification:", notificationError);
+        await supabase.from('admin_logs').insert({
+          user_id: userId,
+          event_type: 'notification_error',
+          context: `Failed to save notification: ${notificationError.message}`,
+          note: `Clue text: "${clueEngineResult.clue_text.substring(0, 50)}..."`,
+          device: 'web_app'
+        });
       } else {
-        console.log("✅ Notification saved successfully");
+        console.log("✅ Notification saved successfully with clue_text");
+        await supabase.from('admin_logs').insert({
+          user_id: userId,
+          event_type: 'notification_success',
+          context: `Notification saved successfully`,
+          note: `Clue text: "${clueEngineResult.clue_text.substring(0, 50)}..."`,
+          device: 'web_app'
+        });
       }
     } else {
       console.error("❌ Cannot save notification: clue_text is empty or null");
+      await supabase.from('admin_logs').insert({
+        user_id: userId,
+        event_type: 'clue_text_error',
+        context: `BUZZ_CLUE_ENGINE returned empty clue_text`,
+        note: `Engine result: ${JSON.stringify(clueEngineResult)}`,
+        device: 'web_app'
+      });
     }
 
     // Final logging and admin tracking

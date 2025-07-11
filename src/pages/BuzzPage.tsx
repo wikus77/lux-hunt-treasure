@@ -192,14 +192,7 @@ export const BuzzPage: React.FC = () => {
         full_result: buzzResult 
       });
       
-      // ✅ SALVA NOTIFICA CON INDIZIO REALE VALIDATO
-      await supabase.from('user_notifications').insert({
-        user_id: user.id,
-        title: 'Indizio ricevuto',
-        message: buzzResult.clue_text,
-        type: 'clue',
-        is_read: false
-      });
+      // ✅ NOTIFICA GIÀ SALVATA DALL'EDGE FUNCTION - NON DUPLICARE
       
       // Update buzz counter
       await supabase.rpc('increment_buzz_counter', { p_user_id: user.id });
