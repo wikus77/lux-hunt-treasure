@@ -1075,44 +1075,73 @@ export type Database = {
       user_clues: {
         Row: {
           buzz_cost: number
+          clue_category: string | null
           clue_id: string
           clue_type: string
           created_at: string
           description_en: string | null
           description_fr: string | null
           description_it: string
+          is_misleading: boolean | null
+          location_id: string | null
+          prize_id: string | null
           title_en: string | null
           title_fr: string | null
           title_it: string
           user_id: string
+          week_number: number | null
         }
         Insert: {
           buzz_cost: number
+          clue_category?: string | null
           clue_id?: string
           clue_type?: string
           created_at?: string
           description_en?: string | null
           description_fr?: string | null
           description_it: string
+          is_misleading?: boolean | null
+          location_id?: string | null
+          prize_id?: string | null
           title_en?: string | null
           title_fr?: string | null
           title_it: string
           user_id: string
+          week_number?: number | null
         }
         Update: {
           buzz_cost?: number
+          clue_category?: string | null
           clue_id?: string
           clue_type?: string
           created_at?: string
           description_en?: string | null
           description_fr?: string | null
           description_it?: string
+          is_misleading?: boolean | null
+          location_id?: string | null
+          prize_id?: string | null
           title_en?: string | null
           title_fr?: string | null
           title_it?: string
           user_id?: string
+          week_number?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "user_clues_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "prizes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_clues_prize_id_fkey"
+            columns: ["prize_id"]
+            isOneToOne: false
+            referencedRelation: "prizes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_clues_user_id_fkey"
             columns: ["user_id"]
@@ -1326,6 +1355,36 @@ export type Database = {
           role?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_used_clues: {
+        Row: {
+          clue_category: string
+          custom_clue_text: string | null
+          id: string
+          prize_clue_id: string | null
+          used_at: string | null
+          user_id: string
+          week_number: number
+        }
+        Insert: {
+          clue_category: string
+          custom_clue_text?: string | null
+          id?: string
+          prize_clue_id?: string | null
+          used_at?: string | null
+          user_id: string
+          week_number: number
+        }
+        Update: {
+          clue_category?: string
+          custom_clue_text?: string | null
+          id?: string
+          prize_clue_id?: string | null
+          used_at?: string | null
+          user_id?: string
+          week_number?: number
         }
         Relationships: []
       }

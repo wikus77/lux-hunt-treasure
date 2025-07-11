@@ -175,21 +175,33 @@ serve(async (req) => {
       );
     }
 
-    // Generate clue based on current week
-    const clueText = generateClueBasedOnWeek(currentWeek);
-    console.log(`📍 Generated clue: ${clueText}`);
+    // 🧬 BUZZ_CLUE_ENGINE - Generate clue with progressive logic
+    const clueEngineResult = await generateSmartClue(supabase, userId, currentWeek);
+    console.log(`🧬 BUZZ_CLUE_ENGINE Result:`, clueEngineResult);
     
-    // Insert clue into user_clues table
+    if (!clueEngineResult.success) {
+      return new Response(
+        JSON.stringify({ success: false, error: true, errorMessage: clueEngineResult.error }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    
+    // Insert clue into user_clues table with full BUZZ_CLUE_ENGINE data
     const { data: clueData, error: clueError } = await supabase
       .from('user_clues')
       .insert({
         user_id: userId,
-        title_it: `Indizio Buzz #${buzzCount}`,
-        description_it: clueText,
-        title_en: `Buzz Clue #${buzzCount}`,
-        description_en: translateToEnglish(clueText),
+        title_it: `Indizio ${clueEngineResult.clue_category} #${buzzCount}`,
+        description_it: clueEngineResult.clue_text,
+        title_en: `${clueEngineResult.clue_category} Clue #${buzzCount}`,
+        description_en: translateToEnglish(clueEngineResult.clue_text),
         clue_type: 'buzz',
-        buzz_cost: buzzCost
+        buzz_cost: buzzCost,
+        week_number: currentWeek,
+        is_misleading: clueEngineResult.is_misleading,
+        location_id: clueEngineResult.location_id,
+        prize_id: clueEngineResult.prize_id,
+        clue_category: clueEngineResult.clue_category
       })
       .select('clue_id')
       .single();
@@ -207,7 +219,7 @@ serve(async (req) => {
     // Initialize response
     let response: BuzzResponse = {
       success: true,
-      clue_text: clueText,
+      clue_text: clueEngineResult.clue_text,
       buzz_cost: buzzCost
     };
 
@@ -348,7 +360,196 @@ function generateClueBasedOnWeek(weekNumber: number): string {
   }
 }
 
+// 🧬 BUZZ_CLUE_ENGINE - Intelligent clue generation system
+interface ClueEngineResult {
+  success: boolean;
+  clue_text: string;
+  clue_category: 'location' | 'prize';
+  is_misleading: boolean;
+  location_id?: string;
+  prize_id?: string;
+  error?: string;
+}
+
+async function generateSmartClue(supabase: any, userId: string, currentWeek: number): Promise<ClueEngineResult> {
+  console.log(`🧬 BUZZ_CLUE_ENGINE Starting for user ${userId}, week ${currentWeek}`);
+  
+  try {
+    // STEP 1: Get available prizes and location data
+    const { data: availablePrizes, error: prizesError } = await supabase
+      .from('prizes')
+      .select('*')
+      .eq('is_active', true);
+      
+    if (prizesError || !availablePrizes || availablePrizes.length === 0) {
+      console.error('❌ No active prizes found:', prizesError);
+      return { success: false, clue_text: '', clue_category: 'location', is_misleading: false, error: 'Nessun premio attivo trovato' };
+    }
+    
+    // STEP 2: Select random prize (simulating location + prize combination)
+    const selectedPrize = availablePrizes[Math.floor(Math.random() * availablePrizes.length)];
+    console.log(`🎁 Selected prize: ${selectedPrize.name} (ID: ${selectedPrize.id})`);
+    
+    // STEP 3: Determine clue category (50% location, 50% prize)
+    const clueCategory: 'location' | 'prize' = Math.random() > 0.5 ? 'location' : 'prize';
+    
+    // STEP 4: Check if user has already used clues for this combination
+    const { data: usedClues, error: usedError } = await supabase
+      .from('user_used_clues')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('week_number', currentWeek)
+      .eq('clue_category', clueCategory);
+      
+    if (usedError) {
+      console.error('❌ Error checking used clues:', usedError);
+      return { success: false, clue_text: '', clue_category, is_misleading: false, error: 'Errore controllo indizi utilizzati' };
+    }
+    
+    // STEP 5: Generate appropriate clue based on week and category
+    const clueData = await generateWeeklyClue(currentWeek, clueCategory, selectedPrize, usedClues || []);
+    
+    // STEP 6: Mark clue as used
+    const { error: markUsedError } = await supabase
+      .from('user_used_clues')
+      .insert({
+        user_id: userId,
+        custom_clue_text: clueData.clue_text,
+        week_number: currentWeek,
+        clue_category: clueCategory,
+        used_at: new Date().toISOString()
+      });
+      
+    if (markUsedError) {
+      console.log('⚠️ Warning: Could not mark clue as used:', markUsedError);
+    }
+    
+    console.log(`✅ BUZZ_CLUE_ENGINE Generated: ${clueData.clue_text}`);
+    
+    return {
+      success: true,
+      clue_text: clueData.clue_text,
+      clue_category: clueCategory,
+      is_misleading: clueData.is_misleading,
+      location_id: clueCategory === 'location' ? selectedPrize.id : undefined,
+      prize_id: clueCategory === 'prize' ? selectedPrize.id : undefined
+    };
+    
+  } catch (error) {
+    console.error('❌ BUZZ_CLUE_ENGINE Error:', error);
+    return { success: false, clue_text: '', clue_category: 'location', is_misleading: false, error: 'Errore nel motore indizi' };
+  }
+}
+
+// Generate weekly progressive clues
+async function generateWeeklyClue(week: number, category: 'location' | 'prize', prize: any, usedClues: any[]): Promise<{clue_text: string, is_misleading: boolean}> {
+  const is_misleading = Math.random() < 0.25; // 25% chance of misleading clue
+  
+  // Week 1: Very vague, symbolic clues
+  const week1Clues = {
+    location: [
+      "Dove le strade si intrecciano come fili dorati",
+      "Nel regno dei sapori e delle tradizioni antiche", 
+      "Tra colline che sussurrano segreti al vento",
+      "Dove il sole dipinge ombre danzanti sui muri",
+      "Nel cuore pulsante di terre benedette"
+    ],
+    prize: [
+      "Un gioiello di metallo e passione ti attende",
+      "L'incarnazione della velocità e dell'eleganza",
+      "Un sogno che ronza di potenza nascosta",
+      "Quattro ruote che portano verso l'infinito",
+      "Il frutto della maestria e dell'innovazione"
+    ]
+  };
+  
+  // Week 2: Generic geographic/mechanical clues  
+  const week2Clues = {
+    location: [
+      "In una provincia del Nord-Ovest, tra montagne e mare",
+      "Dove l'industria incontra la bellezza naturale",
+      "In terra ligure, vicino al confine con la Francia",
+      "Nella regione dei fiori e del pesto",
+      "Lungo la costa che guarda verso la Provenza"
+    ],
+    prize: [
+      `Motore ${prize.engine || 'potente'} che ruggisce sotto il cofano`,
+      `${prize.power || '500'}+ cavalli pronti a scatenarsi`,
+      `Accelerazione da ${prize.acceleration || '0-100'} che toglie il fiato`,
+      `Trazione ${prize.traction || 'integrale'} per dominare l'asfalto`,
+      "Un capolavoro dell'ingegneria automobilistica moderna"
+    ]
+  };
+  
+  // Week 3: More precise location/technical details
+  const week3Clues = {
+    location: [
+      "Nella provincia di Imperia, città di confine",
+      "Dove il Roja sfocia nel Mediterraneo",
+      "Tra i mercati dei fiori e le spiagge liguri",
+      "Nella città che unisce Italia e Francia",
+      "Lungo il Corso Limone Piemonte, tra i palazzi storici"
+    ],
+    prize: [
+      `Il suono inconfondibile del ${prize.engine || 'V8'} che si risveglia`,
+      `${prize.name || 'Supercar'} - leggenda su quattro ruote`,
+      `Peso/potenza perfetto per prestazioni da sogno`,
+      "Aerodinamica studiata nei minimi dettagli",
+      "Tecnologia racing trasferita su strada"
+    ]
+  };
+  
+  // Week 4: Very precise, decodable clues
+  const week4Clues = {
+    location: [
+      "V-E-N-T-I-M-I-G-L-I-A: riarrangia le lettere",
+      "Coordinate: 43.7915°N, 7.6089°E (±50km)",
+      "CAP 18039, lungo la via principale della città",
+      "Anagramma della regione: IILAG",
+      "Al numero 232 del corso principale"
+    ],
+    prize: [
+      `Anagramma del marchio: ${scrambleText(prize.name?.split(' ')[0] || 'AUTO')}`,
+      `Il modello nasconde: ${scrambleText(prize.name?.split(' ')[1] || 'SPEED')}`,
+      `Anno ${new Date().getFullYear()}, colore ${getRandomColor()}`,
+      `Numero telaio che inizia con: ${generateVinStart()}`,
+      `Valore stimato: €${Math.floor(Math.random() * 500000 + 100000)}`
+    ]
+  };
+  
+  const weekClues = [week1Clues, week2Clues, week3Clues, week4Clues];
+  const selectedWeekClues = weekClues[Math.min(week - 1, 3)];
+  const categoryClues = selectedWeekClues[category];
+  
+  // Filter out already used clues
+  const usedTexts = usedClues.map(uc => uc.custom_clue_text);
+  const availableClues = categoryClues.filter(clue => !usedTexts.includes(clue));
+  
+  // If all clues used, use fallback
+  const clue_text = availableClues.length > 0 
+    ? availableClues[Math.floor(Math.random() * availableClues.length)]
+    : `Indizio ${category} settimana ${week} - ID: ${Math.random().toString(36).substr(2, 9)}`;
+    
+  return { clue_text, is_misleading };
+}
+
+// Helper functions
+function scrambleText(text: string): string {
+  return text.split('').sort(() => Math.random() - 0.5).join(' ');
+}
+
+function getRandomColor(): string {
+  const colors = ['Rosso', 'Blu', 'Nero', 'Bianco', 'Grigio', 'Verde'];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
+function generateVinStart(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  return Array.from({length: 3}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
 function translateToEnglish(italianClue: string): string {
+  // Basic translation fallback - in real implementation, use a translation service
   const translations: Record<string, string> = {
     "Cerca dove splende il sole sul metallo lucente": "Look where the sun shines on gleaming metal",
     "L'essenza del premio si nasconde tra storia e modernità": "The essence of the prize hides between history and modernity",
@@ -357,5 +558,8 @@ function translateToEnglish(italianClue: string): string {
     "Dove il design incontra la potenza troverai ciò che cerchi": "Where design meets power, you'll find what you seek"
   };
   
-  return translations[italianClue] || italianClue;
+  return translations[italianClue] || italianClue.replace(/à|è|ì|ò|ù/g, (match) => {
+    const map: Record<string, string> = { 'à': 'a', 'è': 'e', 'ì': 'i', 'ò': 'o', 'ù': 'u' };
+    return map[match] || match;
+  });
 }
