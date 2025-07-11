@@ -180,18 +180,23 @@ export const BuzzPage: React.FC = () => {
         return;
       }
       
-      // ✅ SALVA NOTIFICA CON INDIZIO REALE - FIX DEFINITIVO JOSEPH MULÉ
-      const clueText = buzzResult.clue_text || buzzResult.description_it || buzzResult.clue?.text || '⚠️ Indizio generato ma non ricevuto. Riprova tra poco.';
-      console.log('📝 CLUE TEXT DEBUG:', { 
-        clue_text: buzzResult.clue_text, 
-        description_it: buzzResult.description_it, 
+      // ✅ VERIFICA CLUE_TEXT VALIDO - FALLBACK DI SICUREZZA
+      if (!buzzResult?.clue_text) {
+        console.error('❌ CLUE_TEXT NON VALIDO:', buzzResult);
+        toast.error('Errore: indizio non disponibile.');
+        return;
+      }
+      
+      console.log('📝 CLUE TEXT VALIDO:', { 
+        clue_text: buzzResult.clue_text,
         full_result: buzzResult 
       });
       
+      // ✅ SALVA NOTIFICA CON INDIZIO REALE VALIDATO
       await supabase.from('user_notifications').insert({
         user_id: user.id,
-        title: '✅ Nuovo indizio disponibile',
-        message: clueText,
+        title: 'Indizio ricevuto',
+        message: buzzResult.clue_text,
         type: 'clue',
         is_read: false
       });

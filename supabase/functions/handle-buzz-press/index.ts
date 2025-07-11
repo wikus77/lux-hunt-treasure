@@ -300,6 +300,27 @@ serve(async (req) => {
       }
     }
 
+    // ✅ INSERIRE NOTIFICA PER L'UTENTE CON CLUE_TEXT VALIDO
+    if (clueEngineResult.clue_text && clueEngineResult.clue_text.trim() !== '') {
+      const { error: notificationError } = await supabase
+        .from('user_notifications')
+        .insert({
+          user_id: userId,
+          title: 'Indizio ricevuto',
+          message: clueEngineResult.clue_text,
+          type: 'clue',
+          is_read: false
+        });
+        
+      if (notificationError) {
+        console.error("❌ Error saving notification:", notificationError);
+      } else {
+        console.log("✅ Notification saved successfully");
+      }
+    } else {
+      console.error("❌ Cannot save notification: clue_text is empty or null");
+    }
+
     // Final logging and admin tracking
     await supabase.from('admin_logs').insert({
       user_id: userId,
