@@ -518,7 +518,7 @@ async function generateWeeklyClue(week: number, category: 'location' | 'prize', 
       "V-E-N-T-I-M-I-G-L-I-A: riarrangia le lettere",
       "Coordinate: 43.7915°N, 7.6089°E (±50km)",
       "CAP 18039, lungo la via principale della città",
-      "Anagramma della regione: IILAG",
+      "Anagramma della regione: LIGURIA → L-I-G-U-R-I-A",
       "Al numero 232 del corso principale"
     ],
     prize: [

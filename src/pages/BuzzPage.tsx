@@ -277,20 +277,19 @@ export const BuzzPage: React.FC = () => {
         className="relative flex flex-col items-center space-y-6"
       >
           
-          {/* BUZZ Button - FORMA ROTONDA E GRADIENT FUCSIA/ROSA M1SSION™ - by Joseph Mulé */}
+          {/* BUZZ Button - FORMA ROTONDA + GRADIENT FUCSIA M1SSION™ DEFINITIVO - by Joseph Mulé */}
           <motion.button
             whileTap={{ scale: 0.97 }}
             disabled={isBlocked || buzzing}
             onClick={handleBuzz}
-            className="relative w-48 h-48 rounded-full text-lg font-semibold px-6 py-4 text-white tracking-wide shadow-2xl z-20 bg-gradient-to-br from-[#F213A4] to-[#FF4D4D]"
+            className="relative w-48 h-48 rounded-full text-lg font-semibold text-white tracking-wide shadow-lg z-20"
             style={{
               background: isBlocked 
-                ? '#ef4444' 
+                ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' 
                 : 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
               boxShadow: isBlocked 
-                ? '0 0 20px rgba(239, 68, 68, 0.5)' 
-                : '0 0 20px rgba(242, 19, 164, 0.5)',
-              color: 'white'
+                ? '0 0 15px rgba(239, 68, 68, 0.4)' 
+                : '0 0 15px rgba(242, 19, 164, 0.4)'
             }}
           >
             {buzzing ? (
