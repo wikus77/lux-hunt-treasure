@@ -225,7 +225,7 @@ export const BuzzPage: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen w-full fixed inset-0 flex items-center justify-center bg-background z-10" 
+      className="fixed inset-0 z-10 flex items-center justify-center bg-background"
       style={{
         paddingTop: 'env(safe-area-inset-top, 0px)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
@@ -233,15 +233,12 @@ export const BuzzPage: React.FC = () => {
         paddingRight: 'env(safe-area-inset-right, 0px)'
       }}
     >
-      
-      {/* ✅ TASTO BUZZ CENTRATO FORZATO */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
-          className="relative flex flex-col items-center space-y-6"
-        >
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
+        className="relative flex flex-col items-center space-y-6"
+      >
           
           {/* BUZZ Button - Perfect Center */}
           <Button
@@ -313,8 +310,7 @@ export const BuzzPage: React.FC = () => {
             </div>
           )}
           
-        </motion.div>
-      </div>
+      </motion.div>
     </div>
   );
 };
