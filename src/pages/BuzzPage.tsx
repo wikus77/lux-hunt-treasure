@@ -1,6 +1,7 @@
 
 // by Joseph Mulé – M1SSION™
 // BUZZ_CLUE_ENGINE operativo - testo notifiche corretto, style matching BuzzMapButton
+// ✅ INTERVENTO DEFINITIVO: BUZZ button statico, notifiche con clue_text corretto
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -179,9 +180,13 @@ export const BuzzPage: React.FC = () => {
         return;
       }
       
-      // ✅ SALVA NOTIFICA CON INDIZIO REALE - FIX DEFINITIVO
-      const clueText = buzzResult.clue_text || buzzResult.clue?.text || buzzResult.description_it || 'Indizio generato ma non ricevuto. Riprova tra poco.';
-      console.log('📝 CLUE TEXT DEBUG:', { clue_text: buzzResult.clue_text, full_result: buzzResult });
+      // ✅ SALVA NOTIFICA CON INDIZIO REALE - FIX DEFINITIVO JOSEPH MULÉ
+      const clueText = buzzResult.clue_text || buzzResult.description_it || buzzResult.clue?.text || '⚠️ Indizio generato ma non ricevuto. Riprova tra poco.';
+      console.log('📝 CLUE TEXT DEBUG:', { 
+        clue_text: buzzResult.clue_text, 
+        description_it: buzzResult.description_it, 
+        full_result: buzzResult 
+      });
       
       await supabase.from('user_notifications').insert({
         user_id: user.id,
@@ -272,18 +277,18 @@ export const BuzzPage: React.FC = () => {
         className="relative flex flex-col items-center space-y-6"
       >
           
-          {/* BUZZ Button - Stile identico a BuzzMapButton - by Joseph Mulé */}
+          {/* BUZZ Button - Statico con colore BuzzMapButton - by Joseph Mulé */}
           <motion.button
             whileTap={{ scale: 0.97 }}
             disabled={isBlocked || buzzing}
             onClick={handleBuzz}
-            className="relative w-48 h-48 rounded-2xl bg-[#00FFF0] text-white text-2xl font-bold shadow-2xl transition-all duration-300 hover:scale-105 z-20"
+            className="relative w-48 h-48 rounded-2xl text-2xl font-bold shadow-2xl z-20"
             style={{
               background: isBlocked 
                 ? '#ef4444' 
                 : '#00FFF0',
               boxShadow: '0 0 20px rgba(0, 255, 240, 0.5)',
-              color: 'white'
+              color: isBlocked ? 'white' : 'black'
             }}
           >
             {buzzing ? (

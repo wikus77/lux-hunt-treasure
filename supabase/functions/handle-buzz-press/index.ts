@@ -217,10 +217,10 @@ serve(async (req) => {
 
     console.log(`✅ Clue saved with ID: ${clueData.clue_id}`);
 
-    // Initialize response with FIXED clue_text propagation
+    // Initialize response with GUARANTEED clue_text propagation
     let response: BuzzResponse = {
       success: true,
-      clue_text: clueEngineResult.clue_text || "Indizio generato ma non ricevuto. Riprova tra poco.",
+      clue_text: clueEngineResult.clue_text || "⚠️ Indizio generato ma non ricevuto. Riprova tra poco.",
       buzz_cost: buzzCost
     };
     

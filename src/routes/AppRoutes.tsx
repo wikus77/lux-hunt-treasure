@@ -12,7 +12,7 @@ import Index from "@/pages/Index";
 // Main app routes - STATIC IMPORTS FOR CAPACITOR iOS COMPATIBILITY
 import AppHome from "@/pages/AppHome";
 import Map from "@/pages/Map";
-import Buzz from "@/pages/Buzz";
+import { BuzzPage } from "@/pages/BuzzPage";
 import Games from "@/pages/Games";
 import Leaderboard from "@/pages/Leaderboard";
 import Notifications from "@/pages/Notifications";
@@ -93,7 +93,7 @@ const AppRoutes: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <GlobalLayout>
-                    <Buzz />
+                    <BuzzPage />
                   </GlobalLayout>
                 </ProtectedRoute>
               }

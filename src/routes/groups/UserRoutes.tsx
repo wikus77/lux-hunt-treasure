@@ -7,7 +7,7 @@ import { ProtectedRoute } from "../../components/auth/ProtectedRoute";
 import Home from "../../pages/Home";
 import Profile from "../../pages/Profile";
 import Events from "../../pages/Events";
-import Buzz from "../../pages/Buzz";
+import { BuzzPage } from "../../pages/BuzzPage";
 import Map from "../../pages/Map";
 import Games from "../../pages/Games";
 import TestAgent from "../../pages/TestAgent";
@@ -45,7 +45,7 @@ const UserRoutes = () => {
         path="/buzz"
         element={
           <ProtectedRoute>
-            <Buzz />
+            <BuzzPage />
           </ProtectedRoute>
         }
       />
