@@ -217,12 +217,15 @@ serve(async (req) => {
 
     console.log(`✅ Clue saved with ID: ${clueData.clue_id}`);
 
-    // Initialize response
+    // Initialize response with FIXED clue_text propagation
     let response: BuzzResponse = {
       success: true,
-      clue_text: clueEngineResult.clue_text,
+      clue_text: clueEngineResult.clue_text || "Indizio generato ma non ricevuto. Riprova tra poco.",
       buzz_cost: buzzCost
     };
+    
+    console.log(`🔍 CLUE PROPAGATION DEBUG - Generated text: "${clueEngineResult.clue_text}"`);
+    console.log(`🔍 CLUE PROPAGATION DEBUG - Response text: "${response.clue_text}"`);
 
     // CRITICAL: Map generation with CORRECTED PROGRESSIVE radius
     if (generateMap) {
@@ -296,6 +299,15 @@ serve(async (req) => {
         console.log(`🎉 MAP GENERATION COMPLETE (CORRECTED PROGRESSIVE RADIUS): radius=${radius_km.toFixed(2)}km, generation=${currentGeneration}, center=${fixedCenter.lat},${fixedCenter.lng}`);
       }
     }
+
+    // Final logging and admin tracking
+    await supabase.from('admin_logs').insert({
+      user_id: userId,
+      event_type: 'buzz_clue_generated',
+      context: `Week ${currentWeek}, Category: ${clueEngineResult.clue_category}, Misleading: ${clueEngineResult.is_misleading}`,
+      note: `Generated clue: "${clueEngineResult.clue_text.substring(0, 50)}..."`,
+      device: 'web_app'
+    });
 
     console.log(`✅ BUZZ RESPONSE:`, response);
 

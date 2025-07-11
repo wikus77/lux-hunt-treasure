@@ -179,11 +179,14 @@ export const BuzzPage: React.FC = () => {
         return;
       }
       
-      // ✅ SALVA NOTIFICA CON INDIZIO REALE
+      // ✅ SALVA NOTIFICA CON INDIZIO REALE - FIX DEFINITIVO
+      const clueText = buzzResult.clue_text || buzzResult.clue?.text || buzzResult.description_it || 'Indizio generato ma non ricevuto. Riprova tra poco.';
+      console.log('📝 CLUE TEXT DEBUG:', { clue_text: buzzResult.clue_text, full_result: buzzResult });
+      
       await supabase.from('user_notifications').insert({
         user_id: user.id,
         title: '✅ Nuovo indizio disponibile',
-        message: buzzResult.clue_text || 'Indizio ricevuto ma testo non disponibile.',
+        message: clueText,
         type: 'clue',
         is_read: false
       });
@@ -285,34 +288,38 @@ export const BuzzPage: React.FC = () => {
           >
             {buzzing ? (
               <div className="flex flex-col items-center space-y-3">
-                <Zap className="w-12 h-12" />
-                <span className="text-lg font-semibold">BUZZING...</span>
+                <Zap className="w-12 h-12 text-black" />
+                <span className="text-lg font-semibold text-black">BUZZING...</span>
               </div>
             ) : isBlocked ? (
               <div className="flex flex-col items-center space-y-3">
-                <X className="w-12 h-12" />
-                <span className="text-lg font-semibold">BLOCCATO</span>
+                <X className="w-12 h-12 text-white" />
+                <span className="text-lg font-semibold text-white">BLOCCATO</span>
               </div>
             ) : (
               <div className="flex flex-col items-center space-y-2">
-                <Zap className="w-16 h-16" />
-                <span className="text-3xl font-bold">BUZZ</span>
-                <div className="text-sm font-medium bg-background/20 px-4 py-2 rounded-full backdrop-blur-sm">
+                <Zap className="w-16 h-16 text-black" />
+                <span className="text-3xl font-bold text-black">BUZZ</span>
+                <div className="text-sm font-medium bg-black/20 px-4 py-2 rounded-full backdrop-blur-sm text-black">
                   €{currentPrice.toFixed(2)}
                 </div>
               </div>
             )}
           </motion.button>
           
-          {/* 🌀 SHOCKWAVE ANIMATION - ONDA CIRCOLARE PURA */}
+          {/* 🌀 SHOCKWAVE ANIMATION - ONDA CIRCOLARE MIGLIORATA by Joseph Mulé */}
           {showShockwave && (
             <motion.div
               key={Date.now()}
-              className="absolute w-48 h-48 rounded-full border-4 border-cyan-500"
-              initial={{ scale: 0, opacity: 0.6 }}
-              animate={{ scale: 4, opacity: 0 }}
-              transition={{ duration: 1.5, ease: 'easeOut' }}
-              style={{ zIndex: 10 }}
+              className="absolute w-48 h-48 rounded-full border-4 border-[#00FFF0]"
+              initial={{ scale: 0, opacity: 0.8 }}
+              animate={{ scale: 3.5, opacity: 0 }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              style={{ 
+                zIndex: 10,
+                borderWidth: '3px',
+                filter: 'blur(0.5px)'
+              }}
             />
           )}
 
