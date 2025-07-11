@@ -1,5 +1,5 @@
 
-// by Joseph Mulé – M1SSION™
+// by Joseph Mulé – M1SSION™ – BUZZ_FIX_CRITICO: Toast, Notifiche, Contatore RISOLTI
 // BUZZ_CLUE_ENGINE operativo - testo notifiche corretto, style matching BuzzMapButton
 // ✅ INTERVENTO DEFINITIVO: BUZZ button statico, notifiche con clue_text corretto
 import React, { useState, useEffect } from 'react';
@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 import { useEnhancedNavigation } from '@/hooks/useEnhancedNavigation';
 import { supabase } from '@/integrations/supabase/client';
+import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
 import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { toast } from 'sonner';
@@ -157,26 +158,26 @@ export const BuzzPage: React.FC = () => {
         user_id: user.id,
         event_type: 'buzz_press'
       });
+      // ✅ CHIAMATA API CORRETTA USANDO HOOK - by Joseph Mulé - M1SSION™
+      const { callBuzzApi } = useBuzzApi();
       
-      // Call the buzz API with full implementation
-      const { data: buzzResult, error: buzzError } = await supabase.functions.invoke('handle-buzz-press', {
-        body: {
-          userId: user.id,
-          generateMap: true,
-          coordinates: null,
-          prizeId: null,
-          sessionId: `buzz_${Date.now()}`
-        }
+      // Call the buzz API with correct hook implementation
+      const buzzResult = await callBuzzApi({
+        userId: user.id,
+        generateMap: true,
+        coordinates: undefined,
+        prizeId: undefined,
+        sessionId: `buzz_${Date.now()}`
       });
       
-      if (buzzError) {
-        console.error('BUZZ API Error:', buzzError);
-        toast.error('Errore di rete. Riprova.');
+      if (buzzResult.error) {
+        console.error('BUZZ API Error:', buzzResult.errorMessage);
+        toast.error(buzzResult.errorMessage || 'Errore di rete. Riprova.');
         return;
       }
       
       if (!buzzResult.success) {
-        toast.error(buzzResult.error || 'Errore durante BUZZ');
+        toast.error(buzzResult.errorMessage || 'Errore durante BUZZ');
         return;
       }
       
@@ -195,16 +196,14 @@ export const BuzzPage: React.FC = () => {
       });
       
       // ✅ NOTIFICA GIÀ SALVATA DALL'EDGE FUNCTION - NON DUPLICARE
+      // ✅ CONTATORE GIÀ INCREMENTATO DALL'EDGE FUNCTION - NON DUPLICARE
       
-      // Update buzz counter
-      await supabase.rpc('increment_buzz_counter', { p_user_id: user.id });
-      
-      // Log the buzz action
+      // Log the buzz action (mantenere per statistiche UI)
       await supabase.from('buzz_map_actions').insert({
         user_id: user.id,
         cost_eur: currentPrice,
-        clue_count: buzzResult.clueCount || 1,
-        radius_generated: buzzResult.mapArea?.radius || 1000
+        clue_count: 1,
+        radius_generated: buzzResult.radius_km || 1000
       });
       
       // Refresh stats
