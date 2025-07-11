@@ -1,6 +1,6 @@
 
-// M1SSION™ - Buzz Page for iOS Capacitor
-// 🔐 Customized for M1SSION™ by Joseph – Cleaned on 2025-07-10
+// M1SSION™ – BuzzPage.tsx aggiornato da Joseph Mulé
+// 🔐 Certificato da JLENIA – timestamp 2025-07-11T03:48:59Z + SHA hash a7f3c8e1
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -297,19 +297,24 @@ export const BuzzPage: React.FC = () => {
             />
           )}
 
-          {/* Price info below button */}
-          {stats && !isBlocked && (
-            <div className="text-center space-y-2 z-30">
-              <div className="text-lg text-muted-foreground">
-                BUZZ oggi: <span className="font-bold text-primary">{stats.today_count}/50</span>
-              </div>
-              {stats.today_count < 50 && (
-                <div className="text-sm text-muted-foreground">
-                  Prossimo: <span className="font-semibold">€{getCurrentBuzzPrice(stats.today_count + 1).toFixed(2)}</span>
-                </div>
-              )}
+          {/* Instruction text below button */}
+          <div className="text-center space-y-2 z-30 max-w-md px-4">
+            <div className="text-lg text-muted-foreground">
+              Premi il pulsante per inviare un segnale e scoprire nuove aree sulla mappa
             </div>
-          )}
+            {stats && !isBlocked && (
+              <>
+                <div className="text-lg text-muted-foreground">
+                  BUZZ oggi: <span className="font-bold text-primary">{stats.today_count}/50</span>
+                </div>
+                {stats.today_count < 50 && (
+                  <div className="text-sm text-muted-foreground">
+                    Prossimo: <span className="font-semibold">€{getCurrentBuzzPrice(stats.today_count + 1).toFixed(2)}</span>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
           
       </motion.div>
     </div>
