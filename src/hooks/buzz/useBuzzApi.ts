@@ -72,6 +72,7 @@ export function useBuzzApi() {
         timestamp: new Date().toISOString()
       });
       
+      // 🚨 CRITICAL DEBUG: Test if edge function exists and can be called
       const { data, error } = await supabase.functions.invoke("handle-buzz-press", {
         body: payload,
       });
@@ -84,16 +85,26 @@ export function useBuzzApi() {
         dataError: data?.error,
         errorMessage: error?.message,
         fullData: data,
-        fullError: error
+        fullError: error,
+        rawResponse: { data, error }
       });
       
+      // 🚨 CRITICAL: Handle edge function deploy/existence issues
       if (error) {
-        console.error("Errore chiamata funzione buzz:", error);
-        return { success: false, error: true, errorMessage: `Errore durante l'elaborazione dell'indizio: ${error.message}` };
+        console.error("❌ EDGE FUNCTION ERROR:", error);
+        toast.error(`Edge function error: ${error.message}`);
+        return { success: false, error: true, errorMessage: `Edge function error: ${error.message}` };
       }
       
-      if (!data || !data.success) {
-        console.error("Risposta negativa dalla funzione:", data?.error || "Errore sconosciuto");
+      if (!data) {
+        console.error("❌ EDGE FUNCTION RETURNED NULL DATA");
+        toast.error("Edge function returned no data");
+        return { success: false, error: true, errorMessage: "Edge function returned no data" };
+      }
+      
+      if (!data.success) {
+        console.error("❌ EDGE FUNCTION RETURNED FAILURE:", data?.error || "Unknown error");
+        toast.error(`Errore salvataggio indizio: ${data?.errorMessage || data?.error || "Unknown error"}`);
         return { 
           success: false, 
           error: true,
