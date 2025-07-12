@@ -1,7 +1,7 @@
 // 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/use-auth';
 import { useProfileData } from '@/hooks/useProfileData';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -152,7 +152,7 @@ const AgentProfileSettings: React.FC = () => {
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
               <img
-                src={profileData.avatar || '/placeholder.svg'}
+                src={profileData.profileImage || '/placeholder.svg'}
                 alt="Avatar"
                 className="w-24 h-24 rounded-full border-2 border-[#00D1FF]/30 object-cover"
               />

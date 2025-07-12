@@ -1,9 +1,9 @@
 // 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/use-auth';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
-import BottomNavigation from '@/components/navigation/BottomNavigation';
+import BottomNavigation from '@/components/layout/BottomNavigation';
 import { User, Shield, Target, Bell, CreditCard, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

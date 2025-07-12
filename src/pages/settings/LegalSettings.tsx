@@ -1,7 +1,7 @@
 // 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,33 +40,11 @@ const LegalSettings: React.FC = () => {
 
     setLoading(true);
     try {
-      // Delete user data from all tables
-      const tables = [
-        'user_clues',
-        'user_buzz_counter',
-        'user_buzz_map',
-        'user_buzz_map_counter',
-        'user_map_areas',
-        'user_notifications',
-        'user_payment_methods',
-        'payment_transactions',
-        'subscriptions',
-        'device_tokens',
-        'map_points',
-        'search_areas',
-        'live_activity_state',
-        'user_buzz_bonuses',
-        'newsletter_subscribers'
-      ];
-
-      // Delete from all related tables
-      for (const table of tables) {
-        try {
-          await supabase.from(table).delete().eq('user_id', user.id);
-        } catch (error) {
-          console.warn(`Warning: Could not delete from ${table}:`, error);
-        }
-      }
+      // Delete from specific tables that reference user_id
+      await supabase.from('user_clues').delete().eq('user_id', user.id);
+      await supabase.from('user_buzz_counter').delete().eq('user_id', user.id);
+      await supabase.from('user_notifications').delete().eq('user_id', user.id);
+      await supabase.from('subscriptions').delete().eq('user_id', user.id);
 
       // Delete profile (this should cascade to other references)
       await supabase.from('profiles').delete().eq('id', user.id);

@@ -1,7 +1,7 @@
 // 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/use-auth';
 import { useProfileSubscription } from '@/hooks/profile/useProfileSubscription';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';

@@ -807,9 +807,12 @@ export type Database = {
           id: string
           investigative_style: string | null
           last_name: string | null
+          notifications_enabled: boolean | null
           phone: string | null
           postal_code: string | null
           preferred_language: string | null
+          preferred_rewards: string[] | null
+          recovery_key: string | null
           role: string
           stripe_customer_id: string | null
           subscription_end: string | null
@@ -818,6 +821,7 @@ export type Database = {
           tier: string | null
           updated_at: string
           username: string | null
+          weekly_hints: string | null
         }
         Insert: {
           address?: string | null
@@ -836,9 +840,12 @@ export type Database = {
           id: string
           investigative_style?: string | null
           last_name?: string | null
+          notifications_enabled?: boolean | null
           phone?: string | null
           postal_code?: string | null
           preferred_language?: string | null
+          preferred_rewards?: string[] | null
+          recovery_key?: string | null
           role?: string
           stripe_customer_id?: string | null
           subscription_end?: string | null
@@ -847,6 +854,7 @@ export type Database = {
           tier?: string | null
           updated_at?: string
           username?: string | null
+          weekly_hints?: string | null
         }
         Update: {
           address?: string | null
@@ -865,9 +873,12 @@ export type Database = {
           id?: string
           investigative_style?: string | null
           last_name?: string | null
+          notifications_enabled?: boolean | null
           phone?: string | null
           postal_code?: string | null
           preferred_language?: string | null
+          preferred_rewards?: string[] | null
+          recovery_key?: string | null
           role?: string
           stripe_customer_id?: string | null
           subscription_end?: string | null
@@ -876,6 +887,7 @@ export type Database = {
           tier?: string | null
           updated_at?: string
           username?: string | null
+          weekly_hints?: string | null
         }
         Relationships: []
       }
