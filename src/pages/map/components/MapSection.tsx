@@ -1,4 +1,4 @@
-// ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™
+// 🔧 FILE CREATO O MODIFICATO — BY JOSEPH MULE
 import React, { lazy, Suspense } from 'react';
 import MapLoadingFallback from './MapLoadingFallback';
 
@@ -64,7 +64,7 @@ const MapSection: React.FC<MapSectionProps> = ({
       </div>
       {/* Container mappa con fix overflow */}
       <div className="relative rounded-lg overflow-hidden border border-white/10" 
-           style={{ paddingTop: "16px", minHeight: "400px" }}>
+           style={{ paddingTop: "0px", minHeight: "400px" }}>
         <Suspense fallback={<MapLoadingFallback />}>
           <MapContainer
             isAddingPoint={isAddingPoint}

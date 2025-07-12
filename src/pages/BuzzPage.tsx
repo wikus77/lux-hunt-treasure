@@ -1,11 +1,12 @@
 
-// ✅ Fix by Lovable AI per Joseph Mulé — M1SSION™
-// by Joseph Mulé – M1SSION™ – BUZZ_FIX_CRITICO: Refactored in componenti modulari
+// 🔧 FILE CREATO O MODIFICATO — BY JOSEPH MULE
 import React from 'react';
 import { motion } from 'framer-motion';
 import { BuzzActionButton } from '@/components/buzz/BuzzActionButton';
 import { BuzzInstructions } from '@/components/buzz/BuzzInstructions';
 import { useBuzzStats } from '@/hooks/useBuzzStats';
+import UnifiedHeader from '@/components/layout/UnifiedHeader';
+import BottomNavigation from '@/components/layout/BottomNavigation';
 
 export const BuzzPage: React.FC = () => {
   const { stats, loading, loadBuzzStats } = useBuzzStats();
@@ -44,25 +45,38 @@ export const BuzzPage: React.FC = () => {
   }
 
   return (
-    <div 
-      className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
-      style={{
+    <motion.div 
+      className="bg-[#070818] w-full"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      style={{ 
         height: '100dvh',
         overflow: 'hidden',
         position: 'relative',
-        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingTop: 'env(safe-area-inset-top, 47px)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         paddingLeft: 'env(safe-area-inset-left, 0px)',
         paddingRight: 'env(safe-area-inset-right, 0px)'
       }}
     >
-      {/* ✅ fix by Lovable AI per Joseph Mulé – M1SSION™ */}
-      {/* ✅ Compatibilità Capacitor iOS – testata */}
+      {/* 🔧 HEADER UNIFICATA — BY JOSEPH MULE */}
+      <div 
+        className="fixed left-0 right-0 z-50 backdrop-blur-xl"
+        style={{
+          height: '72px',
+          paddingTop: 'env(safe-area-inset-top, 47px)',
+          background: 'rgba(19, 21, 33, 0.55)',
+          backdropFilter: 'blur(12px)'
+        }}
+      >
+        <UnifiedHeader />
+      </div>
       
       {/* Main scrollable content */}
       <main
         style={{
-          paddingTop: 'calc(40px + env(safe-area-inset-top, 0px))',
+          paddingTop: 'calc(119px + env(safe-area-inset-top, 0px))',
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
           height: '100dvh',
           overflowY: 'auto',
@@ -111,7 +125,9 @@ export const BuzzPage: React.FC = () => {
           </div>
         </div>
       </main>
-    </div>
+      
+      <BottomNavigation />
+    </motion.div>
   );
 };
 
