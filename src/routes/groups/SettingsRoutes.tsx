@@ -9,6 +9,7 @@ import PersonalInfo from "../../pages/PersonalInfo";
 import PrivacySecurity from "../../pages/PrivacySecurity";
 import LanguageSettings from "../../pages/LanguageSettings";
 import Notifications from "../../pages/Notifications";
+import SettingsPage from "../../pages/settings/SettingsPage";
 
 const SettingsRoutes = () => {
   const baseUserRoles = ['user', 'moderator', 'admin'];
@@ -19,7 +20,7 @@ const SettingsRoutes = () => {
         path="/settings"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <Settings />
+            <SettingsPage />
           </RoleBasedProtectedRoute>
         }
       />
