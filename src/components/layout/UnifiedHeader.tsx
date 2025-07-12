@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Bell, Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
-import ProfileAvatar from "@/components/profile/ProfileAvatar";
+import ProfileDropdown from "@/components/profile/ProfileDropdown";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
@@ -188,13 +188,11 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               </Button>
             </Link>
 
-            {/* Profile Avatar - Fix by Lovable AI per Joseph Mulé – M1SSION™ */}
-            <Link to="/profile">
-              <ProfileAvatar
-                profileImage={profileImage}
-                className="w-10 h-10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF] transition-colors cursor-pointer"
-              />
-            </Link>
+            {/* Profile Dropdown - 🔐 FIRMATO: BY JOSEPH MULE — Capacitor iOS Compatible */}
+            <ProfileDropdown
+              profileImage={profileImage}
+              className="cursor-pointer"
+            />
           </div>
         </div>
 

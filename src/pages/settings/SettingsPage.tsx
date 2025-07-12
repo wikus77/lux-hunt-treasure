@@ -83,7 +83,7 @@ const SettingsPage: React.FC = () => {
       <UnifiedHeader profileImage={user?.user_metadata?.avatar_url} />
       
       <div 
-        className="pt-[119px] pb-20 px-4 space-y-6"
+        className="px-4 space-y-6"
         style={{ 
           paddingTop: 'calc(119px + env(safe-area-inset-top, 0px))',
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
