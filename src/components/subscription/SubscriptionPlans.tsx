@@ -1,9 +1,12 @@
 
+// ✅ COMPONENT MODIFICATO
+// BY JOSEPH MULE — 2025-07-12
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import SubscriptionCard from "./SubscriptionCard";
+import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
 
 interface SubscriptionPlansProps {
   selected: string;
@@ -13,6 +16,8 @@ interface SubscriptionPlansProps {
 export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  // TASK 1 — Sincronizzazione Piano Attivo da Supabase
+  const { subscription, upgradeSubscription } = useProfileSubscription();
 
   const getSubscriptionFeatures = (type: string) => {
     switch (type) {
@@ -65,8 +70,8 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
     } else if (plan === "Black") {
       navigate("/subscriptions/black");
     } else {
-      // For Base plan (free), just update locally
-      localStorage.setItem('subscription_plan', plan);
+      // For Base plan (free), update via hook
+      upgradeSubscription(plan);
       setSelected(plan);
       toast({
         title: "Piano aggiornato",
@@ -84,7 +89,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       return;
     }
     
-    localStorage.setItem('subscription_plan', "Base");
+    upgradeSubscription("Base");
     setSelected("Base");
     toast({
       title: "Abbonamento cancellato",

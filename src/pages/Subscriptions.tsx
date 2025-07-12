@@ -1,3 +1,5 @@
+// ✅ COMPONENT MODIFICATO
+// BY JOSEPH MULE — 2025-07-12
 import React, { useState, useEffect } from 'react';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { ArrowLeft } from "lucide-react";
@@ -7,10 +9,13 @@ import { SubscriptionHeader } from "@/components/subscription/SubscriptionHeader
 import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { SubscriptionBenefits } from "@/components/subscription/SubscriptionBenefits";
 import { SubscriptionFAQ } from "@/components/subscription/SubscriptionFAQ";
+import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
 
 const Subscriptions = () => {
   const navigate = useNavigate();
-  const [selected, setSelected] = useState<string>("Base");
+  // TASK 1 — Sincronizzazione Piano Attivo (PRIORITÀ MASSIMA)
+  const { subscription } = useProfileSubscription();
+  const [selected, setSelected] = useState<string>(subscription.plan);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   
   // Componente React da utilizzare come leftComponent
@@ -27,29 +32,12 @@ const Subscriptions = () => {
     </div>
   );
 
+  // TASK 1 — Sincronizzazione Piano Attivo da Supabase
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
-    
-    // Carica l'abbonamento corrente
-    const currentPlan = localStorage.getItem('subscription_plan');
-    if (currentPlan) {
-      setSelected(currentPlan);
-    }
-    
-    // Ascolta cambiamenti nell'abbonamento
-    const handleStorageChange = () => {
-      const updatedPlan = localStorage.getItem('subscription_plan');
-      if (updatedPlan) {
-        setSelected(updatedPlan);
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
+    // Forza sincronizzazione con hook subscription
+    setSelected(subscription.plan);
+  }, [subscription.plan]);
 
   return (
     <div 

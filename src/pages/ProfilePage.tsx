@@ -24,6 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { toast } from 'sonner';
+import { useProfileSubscription } from '@/hooks/profile/useProfileSubscription';
 
 interface ProfileData {
   id: string;
@@ -52,6 +53,8 @@ export const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
   const { navigateWithFeedback, toHome } = useEnhancedNavigation();
   const { vibrate } = useCapacitorHardware();
+  // TASK 1 — Sincronizzazione Piano Attivo da Supabase
+  const { subscription } = useProfileSubscription();
 
   // Load user profile and stats
   const loadProfileData = preserveFunctionName(async () => {
@@ -137,10 +140,13 @@ export const ProfilePage: React.FC = () => {
   // Get agent rank based on subscription tier
   const getAgentRank = (tier: string): { label: string; icon: any; color: string } => {
     switch (tier) {
+      case 'Black':
       case 'premium':
         return { label: 'Agente Elite', icon: Crown, color: 'text-yellow-400' };
+      case 'Gold':
       case 'gold':
         return { label: 'Agente Senior', icon: Star, color: 'text-yellow-500' };
+      case 'Silver':
       case 'silver':
         return { label: 'Agente Operativo', icon: Shield, color: 'text-gray-400' };
       default:
@@ -173,7 +179,8 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
-  const agentRank = getAgentRank(profile.subscription_tier);
+  // Usa i dati sincronizzati del piano da Supabase
+  const agentRank = getAgentRank(subscription.plan);
   const AgentIcon = agentRank.icon;
 
   return (

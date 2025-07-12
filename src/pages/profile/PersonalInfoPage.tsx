@@ -47,10 +47,10 @@ const PersonalInfoPage: React.FC = () => {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit for iOS compatibility
       toast({
         title: "Errore", 
-        description: "L'immagine deve essere inferiore a 5MB.",
+        description: "Il file è troppo grande. Massimo 2MB consentiti per iOS.",
         variant: "destructive",
       });
       return;
@@ -223,13 +223,14 @@ const PersonalInfoPage: React.FC = () => {
                 >
                   <Upload className="h-3 w-3" />
                 </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  className="hidden"
-                />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/jpg"
+                    capture="environment"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
               </div>
               <p className="text-sm text-white/60 mt-2">Clicca per cambiare avatar</p>
             </div>
