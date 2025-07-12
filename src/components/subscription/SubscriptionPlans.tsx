@@ -1,12 +1,12 @@
 
-// ✅ COMPONENT MODIFICATO
-// BY JOSEPH MULE — 2025-07-12
+// 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import SubscriptionCard from "./SubscriptionCard";
 import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SubscriptionPlansProps {
   selected: string;
@@ -53,7 +53,9 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
     }
   };
   
-  const handleUpdatePlan = (plan: string) => {
+  // TASK A — ABILITARE BOTTONE Passa a <Piano>
+  // TASK B — FLUSSO handleUpgrade(tier)
+  const handleUpdatePlan = async (plan: string) => {
     if (plan === selected) {
       toast({
         title: "Piano già attivo",
@@ -62,20 +64,37 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       return;
     }
     
-    // Redirect to appropriate payment page based on selected plan - BY JOSEPH MULE
-    if (plan === "Silver") {
-      navigate("/subscriptions/silver");
-    } else if (plan === "Gold") {
-      navigate("/subscriptions/gold");
-    } else if (plan === "Black") {
-      navigate("/subscriptions/black");
-    } else {
-      // For Base plan (free), update via hook
-      upgradeSubscription(plan);
-      setSelected(plan);
+    try {
+      // TASK B — FLUSSO handleUpgrade(tier)
+      if (plan === "Silver" || plan === "Gold" || plan === "Black") {
+        // Redirect to payment page for upgrade
+        navigate(`/subscriptions/${plan.toLowerCase()}`);
+      } else if (plan === "Base") {
+        // For Base plan (free), update directly via hook
+        await upgradeSubscription(plan);
+        setSelected(plan);
+        
+        // TASK D — FUNZIONE updateUserTierInSupabase(tier)
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('profiles').update({ 
+            subscription_tier: plan 
+          }).eq('id', user.id);
+          
+          localStorage.setItem("userTier", plan);
+        }
+        
+        toast({
+          title: "✅ Upgrade completato con successo!",
+          description: `Il tuo abbonamento è stato aggiornato a ${plan}`
+        });
+      }
+    } catch (error) {
+      console.error('Upgrade error:', error);
       toast({
-        title: "Piano aggiornato",
-        description: `Il tuo abbonamento è stato aggiornato a ${plan}`
+        title: "❌ Errore durante l'upgrade. Riprova.",
+        description: "Si è verificato un errore durante l'aggiornamento del piano.",
+        variant: "destructive"
       });
     }
   };

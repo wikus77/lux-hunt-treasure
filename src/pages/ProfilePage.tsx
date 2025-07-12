@@ -1,3 +1,4 @@
+// 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
 // M1SSION™ - Profile Page for iOS Capacitor
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -110,6 +111,14 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     loadProfileData();
+    
+    // 🧠 CONFERMA INTERATTIVA - Listen for subscription updates
+    const handleStorageChange = () => {
+      loadProfileData();
+    };
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [user]);
 
   // Handle navigation with haptic feedback - BY JOSEPH MULE
@@ -179,9 +188,27 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
-  // Usa i dati sincronizzati del piano da Supabase
+  // 🧠 CONFERMA INTERATTIVA - Badge animato per piano attivo
   const agentRank = getAgentRank(subscription.plan);
   const AgentIcon = agentRank.icon;
+  
+  // Badge animato in ProfilePage.tsx (es: "Gold attivo ✅")
+  const getActivePlanBadge = () => {
+    if (subscription.plan === "Base") return null;
+    
+    return (
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="mt-2"
+      >
+        <Badge className={`${agentRank.color.replace('text-', 'bg-')} text-black`}>
+          {subscription.plan} attivo ✅
+        </Badge>
+      </motion.div>
+    );
+  };
 
   return (
     <div className="min-h-screen p-4 space-y-6">
@@ -227,6 +254,7 @@ export const ProfilePage: React.FC = () => {
                   <span className={`font-medium ${agentRank.color}`}>
                     {agentRank.label}
                   </span>
+                  {getActivePlanBadge()}
                 </div>
 
                 {profile.agent_code && (
