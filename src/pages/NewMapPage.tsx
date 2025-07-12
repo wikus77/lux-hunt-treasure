@@ -105,8 +105,8 @@ const NewMapPage = () => {
       
       <main
         style={{
-          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px) + 20px)',
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 60px)', // fix by Lovable AI per Joseph Mulé – M1SSION™
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px) + 40px)', // fix by Lovable AI per Joseph Mulé – M1SSION™
           height: '100dvh',
           overflowY: 'auto',
           position: 'relative',
