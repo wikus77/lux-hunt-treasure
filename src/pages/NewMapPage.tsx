@@ -1,26 +1,14 @@
 // ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™
-import React, { useState, lazy, Suspense, useEffect } from 'react';
-import BottomNavigation from '@/components/layout/BottomNavigation';
-import MapPageHeader from './map/components/MapPageHeader';
+import React, { useState } from 'react';
+import MapPageLayout from './map/components/MapPageLayout';
+import MapSection from './map/components/MapSection';
 import NotesSection from './map/NotesSection';
 import SidebarLayout from './map/components/SidebarLayout';
 import RightSidebarContent from './map/components/RightSidebarContent';
-import { Spinner } from '@/components/ui/spinner';
 import { useNewMapPage } from './map/hooks/useNewMapPage';
 import { useDynamicIsland } from '@/hooks/useDynamicIsland';
 import { useMissionManager } from '@/hooks/useMissionManager';
-
-// Lazy load heavy map components
-const MapContainer = lazy(() => import('./map/components/MapContainer'));
-
-const MapLoadingFallback = () => (
-  <div className="h-96 bg-gray-900/50 rounded-lg flex items-center justify-center">
-    <div className="flex flex-col items-center gap-4">
-      <Spinner size="lg" className="text-[#00D1FF]" />
-      <p className="text-gray-400">Caricamento mappa...</p>
-    </div>
-  </div>
-);
+import { useMapPageEffects } from './map/hooks/useMapPageEffects';
 
 const NewMapPage = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
@@ -52,158 +40,66 @@ const NewMapPage = () => {
     requestLocationPermission,
   } = useNewMapPage();
 
-  // Dynamic Island integration for MAP - Update when new clues found or areas explored
-  useEffect(() => {
-    if (currentMission && currentMission.status === 'active') {
-      const cluesFound = mapPoints.filter(point => 
-        point.title.toLowerCase().includes('indizio') || 
-        point.title.toLowerCase().includes('clue')
-      ).length;
-      
-      if (cluesFound !== currentMission.foundClues) {
-        updateMissionProgress(cluesFound);
-      }
-    }
-  }, [mapPoints, currentMission, updateMissionProgress]);
-
-  // Update Dynamic Island when search areas change
-  useEffect(() => {
-    if (searchAreas.length > 0 && currentMission?.status === 'active') {
-      updateActivity({
-        status: `${searchAreas.length} zone esplorate`,
-      });
-    }
-  }, [searchAreas, updateActivity, currentMission]);
-
-  // Cleanup when leaving map page
-  useEffect(() => {
-    return () => {
-      // Keep Live Activity running, don't close on page change
-      console.log('🗺️ Leaving map page, keeping Live Activity active');
-    };
-  }, []);
+  // Use extracted effects hook
+  useMapPageEffects({
+    mapPoints,
+    searchAreas,
+    currentMission,
+    updateMissionProgress,
+    updateActivity,
+  });
 
   return (
-    <div 
-      className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
-      style={{ 
-        height: '100dvh',
-        overflow: 'hidden',
-        position: 'relative'
-      }}
-    >
-      <header 
-        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl"
-        style={{
-          height: '72px',
-          paddingTop: 'env(safe-area-inset-top, 47px)',
-          background: "rgba(19, 21, 33, 0.55)",
-          backdropFilter: "blur(12px)"
-        }}
-      >
-        <MapPageHeader />
-      </header>
+    <MapPageLayout>
+      <MapSection
+        isAddingPoint={isAddingPoint}
+        setIsAddingPoint={setIsAddingPoint}
+        addNewPoint={addNewPoint}
+        mapPoints={mapPoints}
+        activeMapPoint={activeMapPoint}
+        setActiveMapPoint={setActiveMapPoint}
+        updateMapPoint={updateMapPoint}
+        deleteMapPoint={deleteMapPoint}
+        newPoint={newPoint}
+        savePoint={savePoint}
+        handleBuzz={handleBuzz}
+        requestLocationPermission={requestLocationPermission}
+        isAddingSearchArea={isAddingSearchArea}
+        handleMapClickArea={handleMapClickArea}
+        searchAreas={searchAreas}
+        setActiveSearchArea={setActiveSearchArea}
+        deleteSearchArea={deleteSearchArea}
+        setPendingRadius={setPendingRadius}
+        toggleAddingSearchArea={toggleAddingSearchArea}
+        showHelpDialog={showHelpDialog}
+        setShowHelpDialog={setShowHelpDialog}
+      />
       
-      <main
-        style={{
-          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 60px)', // fix by Lovable AI per Joseph Mulé – M1SSION™
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px) + 40px)', // fix by Lovable AI per Joseph Mulé – M1SSION™
-          height: '100dvh',
-          overflowY: 'auto',
-          position: 'relative',
-          zIndex: 0
-        }}
-      >
-        <div className="container mx-auto px-4 pt-4 pb-2 max-w-6xl">
-          {/* ✅ fix by Lovable AI per Joseph Mulé – M1SSION™ */}
-          {/* ✅ Compatibilità Capacitor iOS – testata */}
-          
-          {/* // fix by Lovable AI per Joseph Mulé – M1SSION™ */}
-          {/* // Compatibile Capacitor iOS ✅ */}
-          
-          {/* ✅ Fix by Joseph Mulé — M1SSION™ */}
-          {/* ✅ Compatibile Capacitor iOS */}
-          
-          <div className="m1ssion-glass-card p-4 sm:p-6 mb-6 mt-[20%]">
-            {/* Titoli sopra la mappa - Posizionati a metà tra topbar e container */}
-            <div className="text-center mb-4 -mt-[15%]">
-              <h1 className="text-2xl font-orbitron font-bold mb-1">
-                <span className="text-[#00ffff]">BUZZ</span>
-                <span className="text-white"> MAPPA</span>
-              </h1>
-              <h2 className="text-base text-white/80 font-medium">Mappa Operativa</h2>
-            </div>
-            {/* Container mappa con fix overflow */}
-            <div className="relative rounded-lg overflow-hidden border border-white/10" 
-                 style={{ paddingTop: "16px", minHeight: "400px" }}>
-              <Suspense fallback={<MapLoadingFallback />}>
-              <MapContainer
-                isAddingPoint={isAddingPoint}
-                setIsAddingPoint={setIsAddingPoint}
-                addNewPoint={addNewPoint}
-                mapPoints={mapPoints.map(p => ({
-                  id: p.id,
-                  lat: p.latitude,
-                  lng: p.longitude,
-                  title: p.title,
-                  note: p.note,
-                  position: { lat: p.latitude, lng: p.longitude }
-                }))}
-                activeMapPoint={activeMapPoint}
-                setActiveMapPoint={setActiveMapPoint}
-                handleUpdatePoint={updateMapPoint}
-                deleteMapPoint={deleteMapPoint}
-                newPoint={newPoint}
-                handleSaveNewPoint={savePoint}
-                handleCancelNewPoint={() => {
-                  // Cancel adding new point by saving with empty title
-                  savePoint('', '');
-                }}
-                handleBuzz={handleBuzz}
-                requestLocationPermission={requestLocationPermission}
-                isAddingSearchArea={isAddingSearchArea}
-                handleMapClickArea={handleMapClickArea}
-                searchAreas={searchAreas}
-                setActiveSearchArea={setActiveSearchArea}
-                deleteSearchArea={deleteSearchArea}
-                setPendingRadius={setPendingRadius}
-                toggleAddingSearchArea={toggleAddingSearchArea}
-                showHelpDialog={showHelpDialog}
-                setShowHelpDialog={setShowHelpDialog}
-                />
-              </Suspense>
-            </div>
-          </div>
-          
-          <SidebarLayout
-            leftContent={<NotesSection />}
-            rightContent={
-              <RightSidebarContent
-                mapPoints={mapPoints.map(p => ({
-                  id: p.id,
-                  lat: p.latitude,
-                  lng: p.longitude,
-                  title: p.title,
-                  note: p.note,
-                  position: { lat: p.latitude, lng: p.longitude }
-                }))}
-                isAddingMapPoint={isAddingPoint}
-                toggleAddingMapPoint={() => setIsAddingPoint(prev => !prev)}
-                setActiveMapPoint={setActiveMapPoint}
-                deleteMapPoint={deleteMapPoint}
-                searchAreas={searchAreas}
-                setActiveSearchArea={setActiveSearchArea}
-                handleAddArea={handleAddArea}
-                isAddingSearchArea={isAddingSearchArea}
-                deleteSearchArea={deleteSearchArea}
-              />
-            }
+      <SidebarLayout
+        leftContent={<NotesSection />}
+        rightContent={
+          <RightSidebarContent
+            mapPoints={mapPoints.map(p => ({
+              id: p.id,
+              lat: p.latitude,
+              lng: p.longitude,
+              title: p.title,
+              note: p.note,
+              position: { lat: p.latitude, lng: p.longitude }
+            }))}
+            isAddingMapPoint={isAddingPoint}
+            toggleAddingMapPoint={() => setIsAddingPoint(prev => !prev)}
+            setActiveMapPoint={setActiveMapPoint}
+            deleteMapPoint={deleteMapPoint}
+            searchAreas={searchAreas}
+            setActiveSearchArea={setActiveSearchArea}
+            handleAddArea={handleAddArea}
+            isAddingSearchArea={isAddingSearchArea}
+            deleteSearchArea={deleteSearchArea}
           />
-        </div>
-      </main>
-      
-      <BottomNavigation />
-    </div>
+        }
+      />
+    </MapPageLayout>
   );
 };
 
