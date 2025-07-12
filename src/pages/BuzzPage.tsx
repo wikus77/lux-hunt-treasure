@@ -70,42 +70,46 @@ export const BuzzPage: React.FC = () => {
         }}
       >
         <div className="container mx-auto px-4">
-          {/* Titolo BUZZ */}
+          {/* // fix by Lovable AI per Joseph Mulé – M1SSION™ */}
+          {/* // Compatibile Capacitor iOS ✅ */}
+          
+          {/* Titolo BUZZ - Spostato fuori dal container */}
           <div className="text-center mt-6 mb-8">
-            <h1 className="text-4xl sm:text-5xl font-orbitron font-bold">
+            <h1 className="text-4xl font-orbitron font-bold">
               <span className="text-[#00ffff]">BU</span>
               <span className="text-white">ZZ</span>
             </h1>
           </div>
 
-          {/* Container principale con descrizione e pulsante */}
+          {/* Container principale con descrizione */}
           <div className="max-w-3xl mx-auto">
             <div className="glass-card p-4 sm:p-6 mb-6">
-              <div className="text-center space-y-6">
-                {/* Descrizione BUZZ */}
+              <div className="text-center space-y-4">
+                {/* Descrizione BUZZ nel container */}
                 <div className="text-white/80 space-y-2">
-                  <p>Premi il pulsante per inviare un segnale e scoprire nuovi indizi.</p>
-                  <p>Ogni Buzz ti aiuta a trovare indizi nascosti.</p>
+                  <p>Premi il pulsante per inviare un segnale e scoprire nuovi indizi. Ogni Buzz ti aiuta a trovare indizi nascosti.</p>
                   <p className="font-semibold">BUZZ oggi: {stats?.today_count || 0}/50</p>
                   <p className="text-[#00ffff]">Prossimo: €{currentPrice.toFixed(2)}</p>
                 </div>
-
-                {/* Pulsante BUZZ */}
-                <BuzzActionButton
-                  currentPrice={currentPrice}
-                  isBlocked={isBlocked}
-                  todayCount={stats?.today_count || 0}
-                  onSuccess={handleBuzzSuccess}
-                />
-                
-                {/* Istruzioni */}
-                <BuzzInstructions
-                  stats={stats}
-                  isBlocked={isBlocked}
-                  getCurrentBuzzPrice={getCurrentBuzzPrice}
-                />
               </div>
             </div>
+
+            {/* Pulsante BUZZ - Fuori dal container */}
+            <div className="text-center mb-6">
+              <BuzzActionButton
+                currentPrice={currentPrice}
+                isBlocked={isBlocked}
+                todayCount={stats?.today_count || 0}
+                onSuccess={handleBuzzSuccess}
+              />
+            </div>
+            
+            {/* Istruzioni */}
+            <BuzzInstructions
+              stats={stats}
+              isBlocked={isBlocked}
+              getCurrentBuzzPrice={getCurrentBuzzPrice}
+            />
           </div>
         </div>
       </main>
