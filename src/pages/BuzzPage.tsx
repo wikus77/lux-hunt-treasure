@@ -1,4 +1,5 @@
 
+// ✅ Fix by Lovable AI per Joseph Mulé — M1SSION™
 // by Joseph Mulé – M1SSION™ – BUZZ_FIX_CRITICO: Refactored in componenti modulari
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -84,9 +85,20 @@ export const BuzzPage: React.FC = () => {
             </h1>
           </div>
 
-          {/* Container principale con descrizione */}
+          {/* Container principale - Pulsante BUZZ prima del container */}
           <div className="max-w-3xl mx-auto">
-            <div className="glass-card p-4 sm:p-6 mb-6">
+            {/* Pulsante BUZZ - Prima del container */}
+            <div className="text-center mb-6">
+              <BuzzActionButton
+                currentPrice={currentPrice}
+                isBlocked={isBlocked}
+                todayCount={stats?.today_count || 0}
+                onSuccess={handleBuzzSuccess}
+              />
+            </div>
+
+            {/* Container con descrizione - Spostato sotto il pulsante */}
+            <div className="m1ssion-glass-card p-4 sm:p-6 mb-6">
               <div className="text-center space-y-4">
                 {/* Descrizione BUZZ nel container */}
                 <div className="text-white/80 space-y-2">
@@ -95,16 +107,6 @@ export const BuzzPage: React.FC = () => {
                   <p className="text-[#00ffff]">Prossimo: €{currentPrice.toFixed(2)}</p>
                 </div>
               </div>
-            </div>
-
-            {/* Pulsante BUZZ - Fuori dal container */}
-            <div className="text-center mb-6">
-              <BuzzActionButton
-                currentPrice={currentPrice}
-                isBlocked={isBlocked}
-                todayCount={stats?.today_count || 0}
-                onSuccess={handleBuzzSuccess}
-              />
             </div>
           </div>
         </div>

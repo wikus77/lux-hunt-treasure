@@ -1,9 +1,12 @@
 
+// ✅ Fix by Lovable AI per Joseph Mulé — M1SSION™
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { User } from "lucide-react";
+import { User, Camera } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ProfileInfoProps {
   profileImage: string | null;
@@ -60,32 +63,60 @@ const ProfileInfo = ({
   return (
     <div className="flex-shrink-0 flex flex-col items-center md:w-1/3">
       <div className="relative">
-        <Avatar className={`${isMobile ? 'w-24 h-24' : 'w-32 h-32'} border-2 border-cyan-500 shadow-lg shadow-cyan-500/20`}>
+        <Avatar className={`${isMobile ? 'w-24 h-24' : 'w-32 h-32'} border-2 border-cyan-500 shadow-lg shadow-cyan-500/20 cursor-pointer`}>
           <AvatarImage src={profileImage || ""} />
           <AvatarFallback className="bg-cyan-900/30">
             <User className={`${isMobile ? 'w-8 h-8' : 'w-12 h-12'} text-cyan-500`} />
           </AvatarFallback>
         </Avatar>
         
-        {isEditing && (
-          <div className="mt-2">
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    setProfileImage(reader.result as string);
-                  };
-                  reader.readAsDataURL(file);
+        {/* Camera icon overlay - always visible */}
+        <div 
+          className="absolute bottom-0 right-0 bg-cyan-500 rounded-full p-1.5 cursor-pointer hover:bg-cyan-400 transition-colors"
+          onClick={() => document.getElementById('profile-image-input')?.click()}
+        >
+          <Camera className="w-3 h-3 text-black" />
+        </div>
+        
+        {/* Hidden file input */}
+        <input
+          id="profile-image-input"
+          type="file"
+          accept="image/*"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              try {
+                // Upload to Supabase Storage
+                const fileName = `avatar-${Date.now()}.${file.name.split('.').pop()}`;
+                const { data, error } = await supabase.storage
+                  .from('avatars')
+                  .upload(fileName, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                  });
+
+                if (error) {
+                  console.error('Upload error:', error);
+                  toast.error('Errore nel caricamento dell\'immagine');
+                  return;
                 }
-              }}
-              className="text-xs w-full max-w-[250px]"
-            />
-          </div>
-        )}
+
+                // Get public URL
+                const { data: publicUrl } = supabase.storage
+                  .from('avatars')
+                  .getPublicUrl(data.path);
+
+                setProfileImage(publicUrl.publicUrl);
+                toast.success('Immagine profilo aggiornata');
+              } catch (error) {
+                console.error('Error uploading image:', error);
+                toast.error('Errore nel caricamento dell\'immagine');
+              }
+            }
+          }}
+          className="hidden"
+        />
       </div>
       
       <div className="mt-4 text-center w-full max-w-[250px] mx-auto">
