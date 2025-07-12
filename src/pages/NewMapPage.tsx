@@ -1,3 +1,5 @@
+// ✅ Fix by Joseph Mulé — M1SSION™
+// ✅ Compatibile Capacitor iOS
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import MapPageHeader from './map/components/MapPageHeader';
@@ -120,19 +122,18 @@ const NewMapPage = () => {
           {/* // fix by Lovable AI per Joseph Mulé – M1SSION™ */}
           {/* // Compatibile Capacitor iOS ✅ */}
           
-          {/* ✅ Fix by Lovable AI per Joseph Mulé — M1SSION™ */}
+          {/* ✅ Fix by Joseph Mulé — M1SSION™ */}
           {/* ✅ Compatibile Capacitor iOS */}
           
-          {/* Titoli sopra la mappa - Ridimensionati e posizionati vicino al container */}
-          <div className="text-center mb-2">
-            <h1 className="text-2xl font-orbitron font-bold mb-1">
-              <span className="text-[#00ffff]">BUZZ</span>
-              <span className="text-white"> MAPPA</span>
-            </h1>
-            <h2 className="text-base text-white/80 font-medium">Mappa Operativa</h2>
-          </div>
-
           <div className="m1ssion-glass-card p-4 sm:p-6 mb-6 mt-[20%]">
+            {/* Titoli sopra la mappa - Posizionati a metà tra topbar e container */}
+            <div className="text-center mb-4 -mt-[15%]">
+              <h1 className="text-2xl font-orbitron font-bold mb-1">
+                <span className="text-[#00ffff]">BUZZ</span>
+                <span className="text-white"> MAPPA</span>
+              </h1>
+              <h2 className="text-base text-white/80 font-medium">Mappa Operativa</h2>
+            </div>
             {/* Container mappa spostato 20% più in basso */}
             <Suspense fallback={<MapLoadingFallback />}>
               <MapContainer
@@ -154,6 +155,7 @@ const NewMapPage = () => {
                 newPoint={newPoint}
                 handleSaveNewPoint={savePoint}
                 handleCancelNewPoint={() => {
+                  // Cancel adding new point by saving with empty title
                   savePoint('', '');
                 }}
                 handleBuzz={handleBuzz}

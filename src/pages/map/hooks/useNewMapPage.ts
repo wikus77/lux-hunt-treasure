@@ -1,3 +1,5 @@
+// ✅ Fix by Joseph Mulé — M1SSION™
+// ✅ Compatibile Capacitor iOS
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -390,9 +392,9 @@ export const useNewMapPage = () => {
     toggleAddingSearchArea,
     setPendingRadius,
     addNewPoint,
-    savePoint: async (title: string, note: string) => {}, // Simplified for now
-    updateMapPoint: async (id: string, title: string, note: string) => true,
-    deleteMapPoint: async (id: string) => true,
+    savePoint,
+    updateMapPoint,
+    deleteMapPoint,
     handleBuzz,
     requestLocationPermission,
     // Nuove proprietà BUZZ MAPPA

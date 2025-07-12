@@ -1,4 +1,6 @@
 
+// ✅ Fix by Joseph Mulé — M1SSION™
+// ✅ Compatibile Capacitor iOS
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
@@ -198,6 +200,7 @@ export const useNewMapPage = () => {
     setIsAddingPoint,
     mapPoints,
     newPoint,
+    setNewPoint,
     activeMapPoint,
     setActiveMapPoint,
     searchAreas,

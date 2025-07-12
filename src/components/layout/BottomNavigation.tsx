@@ -1,3 +1,5 @@
+// ✅ Fix by Joseph Mulé — M1SSION™
+// ✅ Compatibile Capacitor iOS
 // M1SSION™ - Enhanced Bottom Navigation with Haptic Feedback
 import React from "react";
 import { useLocation } from "react-router-dom";
@@ -120,16 +122,18 @@ const BottomNavigationComponent = () => {
       }}
     >
       <motion.div
-        className="h-16 backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70 border-t border-white/10 px-3 bottom-nav-hardware-acceleration"
+        className="backdrop-blur-xl border-t border-white/10 px-3 bottom-nav-hardware-acceleration rounded-t-lg"
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
         style={{
           position: "relative",
           zIndex: "inherit",
-          height: "64px",
+          height: "70px", // Aumento del 10% (da 64px a 70px)
           display: "flex",
           alignItems: "center",
+          backgroundColor: "rgba(0, 0, 0, 0.55)", // Background glossy
+          backdropFilter: "blur(12px)", // Effetto blur
           borderTop: "1px solid rgba(255, 255, 255, 0.1)",
           WebkitTapHighlightColor: "transparent",
           touchAction: "manipulation",
