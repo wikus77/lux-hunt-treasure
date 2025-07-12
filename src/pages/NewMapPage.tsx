@@ -114,7 +114,8 @@ const NewMapPage = () => {
         }}
       >
         <div className="container mx-auto px-4 pt-4 pb-2 max-w-6xl">
-          <div className="m1ssion-glass-card p-4 sm:p-6 mb-6">
+          <div className="m1ssion-glass-card p-4 sm:p-6 mb-6 mt-[20%]">
+            {/* ✅ fix by Lovable AI per Joseph Mulé – M1SSION™ - Compatibile Capacitor iOS */}
             <Suspense fallback={<MapLoadingFallback />}>
               <MapContainer
                 isAddingPoint={isAddingPoint}

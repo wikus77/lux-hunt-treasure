@@ -52,20 +52,13 @@ export const BuzzPage: React.FC = () => {
         paddingRight: 'env(safe-area-inset-right, 0px)'
       }}
     >
-      {/* Titolo BUZZ - fix by Lovable AI per Joseph Mulé – M1SSION™ */}
-      <motion.div 
-        className="text-center mb-8"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
+      {/* ✅ fix by Lovable AI per Joseph Mulé – M1SSION™ */}
+      <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-orbitron font-bold">
-          <span className="text-[#00ffff]" style={{ 
-            textShadow: "0 0 10px rgba(0, 255, 255, 0.6), 0 0 20px rgba(0, 255, 255, 0.3)"
-          }}>BU</span>
+          <span className="text-[#00ffff]">BU</span>
           <span className="text-white">ZZ</span>
         </h1>
-      </motion.div>
+      </div>
 
       <div className="relative flex flex-col items-center space-y-6">
         <BuzzActionButton
