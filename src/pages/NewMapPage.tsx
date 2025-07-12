@@ -1,4 +1,5 @@
-// ✅ Fix by Joseph Mulé — M1SSION™
+// ✅ Fix visivo by Lovable AI per Joseph Mulé — M1SSION™
+// Glossy UI header + bottom nav + container mappa fix
 // ✅ Compatibile Capacitor iOS
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
@@ -94,12 +95,11 @@ const NewMapPage = () => {
       }}
     >
       <header 
-        className="fixed top-0 left-0 right-0 z-50"
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl"
         style={{
           height: '72px',
           paddingTop: 'env(safe-area-inset-top, 47px)',
-          backgroundColor: 'rgba(19, 21, 36, 0.7)',
-          backdropFilter: 'blur(12px)'
+          background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 36, 0.55), rgba(0, 0, 0, 0.55))"
         }}
       >
         <MapPageHeader />
@@ -134,8 +134,10 @@ const NewMapPage = () => {
               </h1>
               <h2 className="text-base text-white/80 font-medium">Mappa Operativa</h2>
             </div>
-            {/* Container mappa spostato 20% più in basso */}
-            <Suspense fallback={<MapLoadingFallback />}>
+            {/* Container mappa con fix overflow */}
+            <div className="relative rounded-lg overflow-hidden border border-white/10" 
+                 style={{ paddingTop: "8px" }}>
+              <Suspense fallback={<MapLoadingFallback />}>
               <MapContainer
                 isAddingPoint={isAddingPoint}
                 setIsAddingPoint={setIsAddingPoint}
@@ -169,8 +171,9 @@ const NewMapPage = () => {
                 toggleAddingSearchArea={toggleAddingSearchArea}
                 showHelpDialog={showHelpDialog}
                 setShowHelpDialog={setShowHelpDialog}
-              />
-            </Suspense>
+                />
+              </Suspense>
+            </div>
           </div>
           
           <SidebarLayout

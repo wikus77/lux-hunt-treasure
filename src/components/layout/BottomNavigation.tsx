@@ -1,4 +1,5 @@
-// ✅ Fix by Joseph Mulé — M1SSION™
+// ✅ Fix visivo by Lovable AI per Joseph Mulé — M1SSION™
+// Glossy UI header + bottom nav + container mappa fix
 // ✅ Compatibile Capacitor iOS
 // M1SSION™ - Enhanced Bottom Navigation with Haptic Feedback
 import React from "react";

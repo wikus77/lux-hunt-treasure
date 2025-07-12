@@ -1,4 +1,6 @@
 
+// ✅ Fix visivo by Lovable AI per Joseph Mulé — M1SSION™
+// Glossy UI header + bottom nav + container mappa fix
 import React from 'react';
 import { ArrowLeft, HelpCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +10,8 @@ const MapPageHeader: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex items-center justify-between p-4 backdrop-blur-xl bg-gradient-to-r from-black/55 via-[#131524]/55 to-black/55">
+    <div className="flex items-center justify-between p-4 backdrop-blur-xl" 
+         style={{ background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 36, 0.55), rgba(0, 0, 0, 0.55))" }}>
       {/* ✅ fix by Lovable AI per Joseph Mulé – M1SSION™ */}
       {/* ✅ Compatibilità Capacitor iOS – testata */}
       

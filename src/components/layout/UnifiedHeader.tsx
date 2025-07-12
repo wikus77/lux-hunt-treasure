@@ -1,4 +1,5 @@
-// ✅ Fix by Lovable AI per Joseph Mulé — M1SSION™
+// ✅ Fix visivo by Lovable AI per Joseph Mulé — M1SSION™
+// Glossy UI header + bottom nav + container mappa fix
 // ✅ Compatibile Capacitor iOS
 import { Link, useLocation } from "react-router-dom";
 import { Bell, Settings, ArrowLeft } from "lucide-react";
@@ -102,8 +103,9 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="fixed left-0 right-0 z-50 backdrop-blur-xl bg-gradient-to-r from-black/55 via-[#131524]/55 to-black/55"
-      style={{ 
+      className="fixed left-0 right-0 z-50 backdrop-blur-xl"
+      style={{
+        background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 36, 0.55), rgba(0, 0, 0, 0.55))",
         top: 'calc(47px + env(safe-area-inset-top, 0px))',
         paddingTop: '0px',
         marginTop: '0px'
