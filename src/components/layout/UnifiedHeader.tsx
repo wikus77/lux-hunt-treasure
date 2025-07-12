@@ -94,7 +94,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const currentPageTitle = pageTitles[location.pathname] || 'M1SSION';
   const isHomePage = location.pathname === '/home';
   
-  // Pages that should NOT show back arrow (accessible only via BottomNavigation)
+  // Fix by Lovable AI per Joseph Mulé – M1SSION™ - Pages that should NOT show back arrow 
   const bottomNavPages = ['/map', '/buzz', '/games', '/notifications', '/leaderboard'];
   const isBottomNavPage = bottomNavPages.includes(location.pathname);
 
@@ -200,22 +200,13 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               </Button>
             )}
 
-            {/* Profile Avatar */}
-            {hasAccess ? (
-              <Link to="/profile">
-                <ProfileAvatar
-                  profileImage={profileImage}
-                  className="w-10 h-10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF] transition-colors cursor-pointer"
-                />
-              </Link>
-            ) : (
-              <div onClick={handleProfileClick} className="cursor-pointer">
-                <ProfileAvatar
-                  profileImage={profileImage}
-                  className="w-10 h-10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF] transition-colors"
-                />
-              </div>
-            )}
+            {/* Profile Avatar - Fix by Lovable AI per Joseph Mulé – M1SSION™ */}
+            <Link to="/profile">
+              <ProfileAvatar
+                profileImage={profileImage}
+                className="w-10 h-10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF] transition-colors cursor-pointer"
+              />
+            </Link>
           </div>
         </div>
 

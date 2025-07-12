@@ -142,14 +142,25 @@ const Leaderboard = () => {
         }}
       >
         <div className="container mx-auto">
+          {/* Fix by Lovable AI per Joseph Mulé – M1SSION™ - Colorazione dinamica titolo */}
           <motion.h1
-            className="text-4xl font-bold text-[#00D1FF] text-center mt-6 mb-8"
+            className="text-4xl font-orbitron font-bold text-center mt-6 mb-8"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}
           >
-            CLASSIFICA
+            <span 
+              className="text-[#00F7FF]"
+              style={{ textShadow: "0 0 10px rgba(0, 247, 255, 0.6), 0 0 20px rgba(0, 247, 255, 0.3)" }}
+            >
+              CLASSI
+            </span>
+            <span 
+              className="text-white"
+              style={{ textShadow: "0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.3)" }}
+            >
+              FICA
+            </span>
           </motion.h1>
           
           <div className="max-w-4xl mx-auto px-3 sm:px-4">

@@ -106,7 +106,7 @@ const NewMapPage = () => {
       <main
         style={{
           paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px) + 20px)',
           height: '100dvh',
           overflowY: 'auto',
           position: 'relative',
