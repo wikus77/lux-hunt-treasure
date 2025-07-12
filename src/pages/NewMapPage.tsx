@@ -97,7 +97,8 @@ const NewMapPage = () => {
         style={{
           height: '72px',
           paddingTop: 'env(safe-area-inset-top, 47px)',
-          background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 35, 0.55), rgba(0, 0, 0, 0.55))"
+          background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 33, 0.55), rgba(0, 0, 0, 0.55))",
+          backdropFilter: "blur(12px)"
         }}
       >
         <MapPageHeader />

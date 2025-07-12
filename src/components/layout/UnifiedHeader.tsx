@@ -14,16 +14,16 @@ interface UnifiedHeaderProps {
   onClickMail?: () => void;
 }
 
-// Page title mapping - breadcrumbs removed
+// Page title mapping - breadcrumbs completely removed
 const pageTitles: Record<string, string> = {
-  '/home': 'Centro Comando',
+  '/home': '',
   '/map': '',
   '/buzz': '',
   '/games': '',
   '/leaderboard': '',
   '/notifications': '',
-  '/profile': 'Profilo Agente',
-  '/settings': 'Impostazioni'
+  '/profile': '',
+  '/settings': ''
 };
 
 const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
@@ -103,7 +103,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="fixed left-0 right-0 z-50 backdrop-blur-xl"
       style={{
-        background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 35, 0.55), rgba(0, 0, 0, 0.55))",
+        background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 33, 0.55), rgba(0, 0, 0, 0.55))",
+        backdropFilter: "blur(12px)",
         top: 'calc(47px + env(safe-area-inset-top, 0px))',
         paddingTop: '0px',
         marginTop: '0px',

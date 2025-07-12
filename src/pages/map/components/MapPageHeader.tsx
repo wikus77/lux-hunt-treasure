@@ -10,7 +10,7 @@ const MapPageHeader: React.FC = () => {
 
   return (
     <div className="flex items-center justify-between p-4 backdrop-blur-xl" 
-         style={{ background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 35, 0.55), rgba(0, 0, 0, 0.55))" }}>
+         style={{ background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 33, 0.55), rgba(0, 0, 0, 0.55))" }}>
       {/* ✅ fix by Lovable AI per Joseph Mulé – M1SSION™ */}
       {/* ✅ Compatibilità Capacitor iOS – testata */}
       

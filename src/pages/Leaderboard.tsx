@@ -123,7 +123,7 @@ const Leaderboard = () => {
         style={{
           height: '72px',
           paddingTop: 'env(safe-area-inset-top, 47px)',
-          backgroundColor: 'rgba(19, 21, 36, 0.7)',
+          background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 33, 0.55), rgba(0, 0, 0, 0.55))",
           backdropFilter: 'blur(12px)'
         }}
       >
@@ -142,55 +142,90 @@ const Leaderboard = () => {
         }}
       >
         <div className="container mx-auto">
-          {/* Fix by Lovable AI per Joseph Mulé – M1SSION™ - Colorazione dinamica titolo */}
-          <motion.h1
-            className="text-4xl font-orbitron font-bold text-center mt-6 mb-8"
+          {/* ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™ - Titolo sezione */}
+          <motion.div
+            className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 mb-6 mx-3"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            <span 
-              className="text-[#00F7FF]"
-              style={{ textShadow: "0 0 10px rgba(0, 247, 255, 0.6), 0 0 20px rgba(0, 247, 255, 0.3)" }}
-            >
-              CLASSI
-            </span>
-            <span 
-              className="text-white"
-              style={{ textShadow: "0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.3)" }}
-            >
-              FICA
-            </span>
-          </motion.h1>
+            <h1 className="text-4xl font-orbitron font-bold text-center">
+              <span 
+                className="text-[#00F7FF]"
+                style={{ textShadow: "0 0 10px rgba(0, 247, 255, 0.6), 0 0 20px rgba(0, 247, 255, 0.3)" }}
+              >
+                CLASSI
+              </span>
+              <span 
+                className="text-white"
+                style={{ textShadow: "0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.3)" }}
+              >
+                FICA
+              </span>
+            </h1>
+          </motion.div>
           
-          <div className="max-w-4xl mx-auto px-3 sm:px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="space-y-4 sm:space-y-6 glass-card"
-            >
-              <LeaderboardHeader 
-                onSimulateRankChange={simulateRankChange}
-                onFilterChange={setFilter}
-              />
-              <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
-              <LeaderboardTopUsers players={samplePlayers.slice(0, 3)} />
-              
-              <LeaderboardTabs 
-                filteredPlayers={filteredPlayers}
-                isLoading={isLoading}
-                hasMorePlayers={hasMorePlayers}
-                sampleTeams={sampleTeams}
-                onLoadMore={handleLoadMore}
-                onInvite={handleInvite}
-                onCreateTeam={handleCreateTeamAndInvite}
-                onTabChange={setActiveTab}
-              />
-              
-              <LeaderboardProgress currentPosition={42} totalPlayers={100} />
-            </motion.div>
-          </div>
+          {/* ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™ - Header filtri */}
+          <motion.div
+            className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6 mx-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <LeaderboardHeader 
+              onSimulateRankChange={simulateRankChange}
+              onFilterChange={setFilter}
+            />
+          </motion.div>
+
+          {/* ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™ - Ricerca */}
+          <motion.div
+            className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6 mx-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
+          </motion.div>
+
+          {/* ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™ - Top 3 Podio */}
+          <motion.div
+            className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 mb-6 mx-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <LeaderboardTopUsers players={samplePlayers.slice(0, 3)} />
+          </motion.div>
+
+          {/* ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™ - Lista principale */}
+          <motion.div
+            className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6 mx-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <LeaderboardTabs 
+              filteredPlayers={filteredPlayers}
+              isLoading={isLoading}
+              hasMorePlayers={hasMorePlayers}
+              sampleTeams={sampleTeams}
+              onLoadMore={handleLoadMore}
+              onInvite={handleInvite}
+              onCreateTeam={handleCreateTeamAndInvite}
+              onTabChange={setActiveTab}
+            />
+          </motion.div>
+
+          {/* ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™ - Progress personale */}
+          <motion.div
+            className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6 mx-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <LeaderboardProgress currentPosition={42} totalPlayers={100} />
+          </motion.div>
         </div>
       </main>
       
