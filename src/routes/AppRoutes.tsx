@@ -26,6 +26,11 @@ import PersonalInfoPage from "@/pages/profile/PersonalInfoPage";
 import SecurityPage from "@/pages/profile/SecurityPage";
 import PaymentsPage from "@/pages/profile/PaymentsPage";
 
+// Subscription plan pages - BY JOSEPH MULE
+import SilverPlanPage from "@/pages/subscriptions/SilverPlanPage";
+import GoldPlanPage from "@/pages/subscriptions/GoldPlanPage";
+import BlackPlanPage from "@/pages/subscriptions/BlackPlanPage";
+
 // Auth routes
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -199,6 +204,40 @@ const AppRoutes: React.FC = () => {
                 <ProtectedRoute>
                   <GlobalLayout>
                     <Subscriptions />
+                  </GlobalLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Subscription plan pages - BY JOSEPH MULE */}
+            <Route
+              path="/subscriptions/silver"
+              element={
+                <ProtectedRoute>
+                  <GlobalLayout>
+                    <SilverPlanPage />
+                  </GlobalLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/subscriptions/gold"
+              element={
+                <ProtectedRoute>
+                  <GlobalLayout>
+                    <GoldPlanPage />
+                  </GlobalLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/subscriptions/black"
+              element={
+                <ProtectedRoute>
+                  <GlobalLayout>
+                    <BlackPlanPage />
                   </GlobalLayout>
                 </ProtectedRoute>
               }

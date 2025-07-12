@@ -118,12 +118,36 @@ const SecurityPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black text-white">
-      <UnifiedHeader leftComponent={<M1ssionText />} />
-      <div className="h-[72px] w-full" />
+    <div 
+      className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
+      style={{ 
+        height: '100dvh',
+        overflow: 'hidden',
+        position: 'relative'
+      }}
+    >
+      <header 
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl"
+        style={{
+          height: '72px',
+          paddingTop: 'env(safe-area-inset-top, 47px)',
+          background: "rgba(19, 21, 33, 0.55)",
+          backdropFilter: "blur(12px)"
+        }}
+      >
+        <UnifiedHeader leftComponent={<M1ssionText />} />
+      </header>
       
       <motion.main 
-        className="pb-20 px-3 sm:px-6 max-w-screen-xl mx-auto"
+        className="text-white"
+        style={{
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px))',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+          height: '100dvh',
+          overflowY: 'auto',
+          position: 'relative',
+          zIndex: 0
+        }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}

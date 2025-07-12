@@ -57,13 +57,13 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       return;
     }
     
-    // Redirect to appropriate payment page based on selected plan
+    // Redirect to appropriate payment page based on selected plan - BY JOSEPH MULE
     if (plan === "Silver") {
-      navigate("/payment-silver");
+      navigate("/subscriptions/silver");
     } else if (plan === "Gold") {
-      navigate("/payment-gold");
+      navigate("/subscriptions/gold");
     } else if (plan === "Black") {
-      navigate("/payment-black");
+      navigate("/subscriptions/black");
     } else {
       // For Base plan (free), just update locally
       localStorage.setItem('subscription_plan', plan);
