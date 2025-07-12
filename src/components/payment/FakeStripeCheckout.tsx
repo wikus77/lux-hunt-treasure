@@ -1,5 +1,4 @@
-// ✅ COMPONENT MODIFICATO
-// BY JOSEPH MULE — 2025-07-12
+// 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,7 +32,7 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // TASK 4 — Upgrade Piano Abbonamento (Stripe/FakeStripe)
+  // TASK B — FLUSSO handleUpgrade(tier)
   const handlePayment = async () => {
     setIsProcessing(true);
     
@@ -55,6 +54,22 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
         updated_at: new Date().toISOString()
       });
 
+      // TASK E — REGISTRAZIONE TRANSAZIONE
+      const planPrices: Record<string, number> = {
+        'Silver': 3.99,
+        'Gold': 6.99,
+        'Black': 9.99
+      };
+      
+      await supabase.from('payment_transactions').insert({
+        user_id: user.id,
+        amount: planPrices[planName] || 0,
+        currency: 'EUR',
+        description: `Upgrade to ${planName} plan`,
+        status: 'success',
+        provider: 'stripe'
+      });
+
       // Save to localStorage for immediate sync
       const subscriptionData = {
         plan: planName,
@@ -71,20 +86,20 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
       setIsSuccess(true);
       
       toast({
-        title: "Pagamento completato!",
+        title: "✅ Upgrade completato con successo!",
         description: `Piano ${planName} attivato con successo.`,
       });
 
-      // Redirect to /profile/payments after success
+      // Redirect to /profile after success with badge update
       setTimeout(() => {
-        navigate('/profile/payments');
+        navigate('/profile');
       }, 2000);
       
     } catch (error) {
       console.error('Payment error:', error);
       setIsProcessing(false);
       toast({
-        title: "Errore nel pagamento",
+        title: "❌ Errore durante l'upgrade. Riprova.",
         description: "Si è verificato un errore durante il processo di pagamento.",
         variant: "destructive",
       });

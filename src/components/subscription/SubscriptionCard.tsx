@@ -1,4 +1,4 @@
-
+// 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
 import React from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -89,7 +89,7 @@ const SubscriptionCard = ({
 
       <Button
         onClick={onClick}
-        disabled={isActive && type !== "Base"}
+        disabled={false}
         className={cn(
           "w-full",
           isActive 
