@@ -1,6 +1,4 @@
-// ✅ Fix visivo by Lovable AI per Joseph Mulé — M1SSION™
-// Glossy UI header + bottom nav + container mappa fix
-// ✅ Compatibile Capacitor iOS
+// ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import MapPageHeader from './map/components/MapPageHeader';
@@ -99,7 +97,7 @@ const NewMapPage = () => {
         style={{
           height: '72px',
           paddingTop: 'env(safe-area-inset-top, 47px)',
-          background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 36, 0.55), rgba(0, 0, 0, 0.55))"
+          background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 35, 0.55), rgba(0, 0, 0, 0.55))"
         }}
       >
         <MapPageHeader />

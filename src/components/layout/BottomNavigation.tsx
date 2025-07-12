@@ -1,6 +1,4 @@
-// ✅ Fix visivo by Lovable AI per Joseph Mulé — M1SSION™
-// Glossy UI header + bottom nav + container mappa fix
-// ✅ Compatibile Capacitor iOS
+// ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™
 // M1SSION™ - Enhanced Bottom Navigation with Haptic Feedback
 import React from "react";
 import { useLocation } from "react-router-dom";
@@ -133,7 +131,7 @@ const BottomNavigationComponent = () => {
           height: "90px", // Aumento del 10% (da 82px a 90px)
           display: "flex",
           alignItems: "center",
-          background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 36, 0.55), rgba(0, 0, 0, 0.55))",
+          background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 35, 0.55), rgba(0, 0, 0, 0.55))",
           backdropFilter: "blur(12px)",
           borderTop: "1px solid rgba(255, 255, 255, 0.1)",
           WebkitTapHighlightColor: "transparent",

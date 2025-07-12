@@ -1,6 +1,4 @@
-// ✅ Fix visivo by Lovable AI per Joseph Mulé — M1SSION™
-// Glossy UI header + bottom nav + container mappa fix
-// ✅ Compatibile Capacitor iOS
+// ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™
 import { Link, useLocation } from "react-router-dom";
 import { Bell, Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,14 +14,14 @@ interface UnifiedHeaderProps {
   onClickMail?: () => void;
 }
 
-// Page title mapping
+// Page title mapping - breadcrumbs removed
 const pageTitles: Record<string, string> = {
   '/home': 'Centro Comando',
-  '/map': 'Mappa Operativa',
-  '/buzz': 'Buzz Radar',
-  '/games': 'Mini Games',
-  '/leaderboard': 'Classifica',
-  '/notifications': 'Notifiche',
+  '/map': '',
+  '/buzz': '',
+  '/games': '',
+  '/leaderboard': '',
+  '/notifications': '',
   '/profile': 'Profilo Agente',
   '/settings': 'Impostazioni'
 };
@@ -105,10 +103,11 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="fixed left-0 right-0 z-50 backdrop-blur-xl"
       style={{
-        background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 36, 0.55), rgba(0, 0, 0, 0.55))",
+        background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 35, 0.55), rgba(0, 0, 0, 0.55))",
         top: 'calc(47px + env(safe-area-inset-top, 0px))',
         paddingTop: '0px',
-        marginTop: '0px'
+        marginTop: '0px',
+        height: '72px'
       }}
     >
       <div className="container mx-auto h-full max-w-screen-xl">
