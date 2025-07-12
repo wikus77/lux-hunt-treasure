@@ -123,7 +123,7 @@ const Leaderboard = () => {
         style={{
           height: '72px',
           paddingTop: 'env(safe-area-inset-top, 47px)',
-          background: "rgba(19, 21, 33, 0.55)",
+          background: 'rgba(19, 21, 33, 0.55)',
           backdropFilter: 'blur(12px)'
         }}
       >

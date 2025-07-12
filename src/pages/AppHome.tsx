@@ -1,4 +1,5 @@
 
+// ✅ Intervento UI eseguito BY JOSEPH MULE — Capacitor iOS Compatible
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CommandCenterHome from "@/components/command-center/CommandCenterHome";
@@ -101,8 +102,11 @@ const AppHome = () => {
   }
 
   return (
-    <div 
+    <motion.div 
       className="bg-[#070818] w-full"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
       style={{ 
         height: '100dvh',
         overflow: 'hidden',
@@ -119,7 +123,7 @@ const AppHome = () => {
         style={{
           height: '72px',
           paddingTop: 'env(safe-area-inset-top, 47px)',
-          backgroundColor: 'rgba(7, 8, 24, 0.95)',
+          background: 'rgba(19, 21, 33, 0.55)',
           backdropFilter: 'blur(12px)'
         }}
       >
@@ -193,7 +197,7 @@ const AppHome = () => {
       </main>
       
       <BottomNavigation />
-    </div>
+    </motion.div>
   );
 };
 

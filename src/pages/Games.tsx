@@ -134,7 +134,7 @@ const Games = () => {
           style={{
             height: '72px',
             paddingTop: 'env(safe-area-inset-top, 47px)',
-            backgroundColor: 'rgba(19, 21, 36, 0.7)',
+            background: 'rgba(19, 21, 33, 0.55)',
             backdropFilter: 'blur(12px)'
           }}
         >
@@ -185,7 +185,7 @@ const Games = () => {
         style={{
           height: '72px',
           paddingTop: 'env(safe-area-inset-top, 47px)',
-          backgroundColor: 'rgba(19, 21, 36, 0.7)',
+          background: 'rgba(19, 21, 33, 0.55)',
           backdropFilter: 'blur(12px)'
         }}
       >
