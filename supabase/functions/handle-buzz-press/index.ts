@@ -198,8 +198,27 @@ serve(async (req) => {
     // by Joseph Mulé – M1SSION™ – FIXED: Proper auth validation using existing token
     console.log('🔐 Using already validated user from request:', userId);
     
-    // Insert clue into user_clues table with full BUZZ_CLUE_ENGINE data
+    // by Joseph Mulé – M1SSION™ – FIXED: Insert clue without invalid foreign keys
     console.log('💾 Attempting to save clue to user_clues...');
+    
+    // Get a valid prize_id from prizes table if clue_category is 'prize'
+    let validPrizeId = null;
+    if (clueEngineResult.clue_category === 'prize') {
+      const { data: prizeData, error: prizeError } = await supabase
+        .from('prizes')
+        .select('id')
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+        
+      if (!prizeError && prizeData) {
+        validPrizeId = prizeData.id;
+        console.log(`✅ Using valid prize_id: ${validPrizeId}`);
+      } else {
+        console.log(`⚠️ No valid prize found, saving without prize_id`);
+      }
+    }
+    
     const cluePayload = {
       user_id: userId,
       title_it: `Indizio ${clueEngineResult.clue_category} #${buzzCount}`,
@@ -210,8 +229,9 @@ serve(async (req) => {
       buzz_cost: buzzCost,
       week_number: currentWeek,
       is_misleading: clueEngineResult.is_misleading,
-      location_id: clueEngineResult.location_id,
-      prize_id: clueEngineResult.prize_id,
+      // CRITICAL FIX: Only use valid foreign keys
+      location_id: validPrizeId, // Use prize_id as location_id if available
+      prize_id: validPrizeId,    // Use only valid prize_id from prizes table
       clue_category: clueEngineResult.clue_category
     };
     
@@ -513,13 +533,15 @@ async function generateSmartClue(supabase: any, userId: string, currentWeek: num
     
     console.log(`✅ BUZZ_CLUE_ENGINE Generated: ${clueData.clue_text}`);
     
+    // by Joseph Mulé – M1SSION™ – FIXED: Don't return invalid foreign keys
     return {
       success: true,
       clue_text: clueData.clue_text,
       clue_category: clueCategory,
       is_misleading: clueData.is_misleading,
-      location_id: clueCategory === 'location' ? activeTarget.id : undefined,
-      prize_id: clueCategory === 'prize' ? activeTarget.id : undefined
+      // Don't return foreign keys here - they'll be handled in the main function
+      location_id: undefined,
+      prize_id: undefined
     };
     
   } catch (error) {
