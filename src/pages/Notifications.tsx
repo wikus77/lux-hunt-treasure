@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
 import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
+import { useDynamicIsland } from "@/hooks/useDynamicIsland";
 import { useMissionManager } from '@/hooks/useMissionManager';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
@@ -15,7 +16,7 @@ const Notifications = () => {
   const [filter, setFilter] = useState<'all' | 'unread' | 'important'>('all');
   const { notifications, markAsRead, deleteNotification, markAllAsRead, reloadNotifications } = useNotifications();
   const { playSound } = useBuzzSound();
-  const { startActivity, updateActivity, endActivity } = { startActivity: () => {}, updateActivity: () => {}, endActivity: () => {} };
+  const { startActivity, updateActivity, endActivity } = useDynamicIsland();
   const { currentMission } = useMissionManager();
 
   useDynamicIslandSafety();

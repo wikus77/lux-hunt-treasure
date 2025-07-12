@@ -7,6 +7,7 @@ import { useGameLogic } from '@/hooks/useGameLogic';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
 import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
+import { useDynamicIsland } from "@/hooks/useDynamicIsland";
 import { useMissionManager } from '@/hooks/useMissionManager';
 import GameErrorBoundary from '@/components/games/GameErrorBoundary';
 import MemoryHackGame from '@/components/games/MemoryHackGame';
@@ -32,7 +33,7 @@ const Games = () => {
   const { addNotification } = useNotifications();
   const { playSound } = useBuzzSound();
   const { score, level, gameStats, updateStats } = useGameLogic();
-  const { startActivity, updateActivity, endActivity } = { startActivity: () => {}, updateActivity: () => {}, endActivity: () => {} };
+  const { startActivity, updateActivity, endActivity } = useDynamicIsland();
   const { currentMission } = useMissionManager();
 
   // Attiva il sistema di sicurezza Dynamic Island
