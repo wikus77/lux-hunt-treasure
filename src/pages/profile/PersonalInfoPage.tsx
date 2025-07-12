@@ -1,4 +1,4 @@
-// FILE CREATO — BY JOSEPH MULE
+// ✅ Update By JOSEPH MULE – 12/07/2025 – Header fix + Avatar upload fix
 import React, { useState, useRef } from 'react';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import M1ssionText from '@/components/logo/M1ssionText';
@@ -38,13 +38,16 @@ const PersonalInfoPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const user = await supabase.auth.getUser();
-      if (!user.data.user) throw new Error('User not authenticated');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
 
-      const fileName = `${user.data.user.id}-${Date.now()}.${file.name.split('.').pop()}`;
+      // Use user folder structure for proper RLS
+      const fileName = `${user.id}/${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
@@ -52,15 +55,22 @@ const PersonalInfoPage: React.FC = () => {
         .from('avatars')
         .getPublicUrl(fileName);
 
+      // Update profile in database
+      await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user.id);
+
       actions.setProfileImage(publicUrl);
       toast({
         title: "Avatar aggiornato",
         description: "Il tuo avatar è stato caricato con successo.",
       });
     } catch (error) {
+      console.error('Avatar upload error:', error);
       toast({
         title: "Errore",
-        description: "Impossibile caricare l'avatar. Riprova.",
+        description: `Impossibile caricare l'avatar: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`,
         variant: "destructive",
       });
     } finally {

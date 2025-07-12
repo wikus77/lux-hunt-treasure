@@ -1,4 +1,4 @@
-// FILE CREATO — BY JOSEPH MULE
+// ✅ Update By JOSEPH MULE – 12/07/2025 – Header fix
 import React, { useState } from 'react';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import M1ssionText from '@/components/logo/M1ssionText';

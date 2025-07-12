@@ -34,24 +34,42 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
   const handlePayment = async () => {
     setIsProcessing(true);
     
-    // Simulated payment processing - BY JOSEPH MULE
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsProcessing(false);
-    setIsSuccess(true);
-    
-    // Mock save plan to localStorage
-    localStorage.setItem('subscription_plan', planName);
-    
-    toast({
-      title: "Pagamento completato!",
-      description: `Piano ${planName} attivato con successo.`,
-    });
+    try {
+      // Simulated payment processing - BY JOSEPH MULE
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Save mock subscription to localStorage
+      const subscriptionData = {
+        plan: planName,
+        price: planPrice,
+        activatedAt: new Date().toISOString(),
+        features: planFeatures
+      };
+      
+      localStorage.setItem('active_subscription', JSON.stringify(subscriptionData));
+      localStorage.setItem('subscription_plan', planName);
+      
+      setIsProcessing(false);
+      setIsSuccess(true);
+      
+      toast({
+        title: "Pagamento completato!",
+        description: `Piano ${planName} attivato con successo.`,
+      });
 
-    // Redirect after success
-    setTimeout(() => {
-      navigate('/profile');
-    }, 2000);
+      // Redirect after success
+      setTimeout(() => {
+        navigate('/profile/payments');
+      }, 2000);
+      
+    } catch (error) {
+      setIsProcessing(false);
+      toast({
+        title: "Errore nel pagamento",
+        description: "Si è verificato un errore durante il processo di pagamento.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isSuccess) {
