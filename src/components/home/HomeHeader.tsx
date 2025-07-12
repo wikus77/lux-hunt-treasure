@@ -1,10 +1,12 @@
 
+// ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT
 import { useState, useEffect } from "react";
 import { Bell, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import RealtimeStatusIndicator from "@/components/notifications/RealtimeStatusIndicator";
 import { Button } from "@/components/ui/button";
+import ProfileDropdown from "@/components/profile/ProfileDropdown";
 
 interface HomeHeaderProps {
   profileImage: string | null;
@@ -51,23 +53,11 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
             )}
           </button>
           
-          {/* Profile image button */}
-          <button 
-            className="h-9 w-9 rounded-full border-2 border-purple-500/50 overflow-hidden"
-            onClick={() => navigate('/profile')}
-          >
-            {profileImage ? (
-              <img 
-                src={profileImage} 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-purple-900/50 flex items-center justify-center">
-                <span className="text-sm text-white">User</span>
-              </div>
-            )}
-          </button>
+          {/* Profile Dropdown - ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT */}
+          <ProfileDropdown
+            profileImage={profileImage}
+            className="cursor-pointer"
+          />
           
           {/* Mobile menu button */}
           <button 

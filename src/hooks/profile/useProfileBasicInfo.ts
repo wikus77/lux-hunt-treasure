@@ -1,4 +1,5 @@
 
+// ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,7 +40,7 @@ export const useProfileBasicInfo = () => {
         if (session?.user) {
           const { data, error } = await supabase
             .from('profiles')
-            .select('full_name, bio, agent_code, agent_title')
+            .select('full_name, bio, agent_code, agent_title, avatar_url')
             .eq('id', session.user.id)
             .single();
             
@@ -49,6 +50,7 @@ export const useProfileBasicInfo = () => {
             if (data.bio) setBio(data.bio);
             if (data.agent_code) setAgentCode(data.agent_code);
             if (data.agent_title) setAgentTitle(data.agent_title);
+            if (data.avatar_url) setProfileImage(data.avatar_url);
           }
         }
       } catch (error) {
@@ -81,6 +83,7 @@ export const useProfileBasicInfo = () => {
             bio: bio,
             agent_code: agentCode,
             agent_title: agentTitle,
+            avatar_url: profileImage,
             updated_at: new Date().toISOString()
           })
           .eq('id', session.user.id);

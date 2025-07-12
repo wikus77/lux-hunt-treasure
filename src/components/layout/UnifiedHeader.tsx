@@ -1,4 +1,4 @@
-// ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™
+// ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT
 import { Link, useLocation } from "react-router-dom";
 import { Bell, Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -92,7 +92,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const currentPageTitle = pageTitles[location.pathname] || 'M1SSION';
   const isHomePage = location.pathname === '/home';
   
-  // Fix by Lovable AI per Joseph Mulé – M1SSION™ - Pages that should NOT show back arrow 
+  // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT - Pages that should NOT show back arrow 
   const bottomNavPages = ['/map', '/buzz', '/games', '/notifications', '/leaderboard'];
   const isBottomNavPage = bottomNavPages.includes(location.pathname);
 
@@ -145,7 +145,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             )}
           </div>
 
-          {/* Center section - MISSION text white only - BY JOSEPH MULE */}
+          {/* Center section - MISSION text white only - ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT */}
           <div className="flex items-center justify-center">
             <motion.h1 
               className="text-lg font-semibold text-white"
@@ -188,7 +188,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               </Button>
             </Link>
 
-            {/* Profile Dropdown - 🔐 FIRMATO: BY JOSEPH MULE — Capacitor iOS Compatible */}
+            {/* Profile Dropdown - ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT */}
             <ProfileDropdown
               profileImage={profileImage}
               className="cursor-pointer"
