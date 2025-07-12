@@ -1,3 +1,4 @@
+// FILE CREATO O MODIFICATO — BY JOSEPH MULE
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { GameCard } from '@/components/games/GameCard';
@@ -5,7 +6,6 @@ import { gameData, GameType } from '@/components/games/memory-hack/gameData';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
-import { useDynamicIsland } from '@/hooks/useDynamicIsland';
 import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
 import { useMissionManager } from '@/hooks/useMissionManager';
 import GameErrorBoundary from '@/components/games/GameErrorBoundary';
@@ -32,7 +32,7 @@ const Games = () => {
   const { addNotification } = useNotifications();
   const { playSound } = useBuzzSound();
   const { score, level, gameStats, updateStats } = useGameLogic();
-  const { startActivity, updateActivity, endActivity } = useDynamicIsland();
+  const { startActivity, updateActivity, endActivity } = { startActivity: () => {}, updateActivity: () => {}, endActivity: () => {} };
   const { currentMission } = useMissionManager();
 
   // Attiva il sistema di sicurezza Dynamic Island

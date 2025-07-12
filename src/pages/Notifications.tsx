@@ -1,10 +1,10 @@
+// FILE CREATO O MODIFICATO — BY JOSEPH MULE
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Trash2, Filter, CheckCircle2, AlertCircle, Info, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
-import { useDynamicIsland } from '@/hooks/useDynamicIsland';
 import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
 import { useMissionManager } from '@/hooks/useMissionManager';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
@@ -15,7 +15,7 @@ const Notifications = () => {
   const [filter, setFilter] = useState<'all' | 'unread' | 'important'>('all');
   const { notifications, markAsRead, deleteNotification, markAllAsRead, reloadNotifications } = useNotifications();
   const { playSound } = useBuzzSound();
-  const { startActivity, updateActivity, endActivity } = useDynamicIsland();
+  const { startActivity, updateActivity, endActivity } = { startActivity: () => {}, updateActivity: () => {}, endActivity: () => {} };
   const { currentMission } = useMissionManager();
 
   useDynamicIslandSafety();

@@ -53,7 +53,7 @@ const MapSection: React.FC<MapSectionProps> = ({
   setShowHelpDialog,
 }) => {
   return (
-    <div className="m1ssion-glass-card p-4 sm:p-6 mb-6 mt-[20%]">
+    <div className="m1ssion-glass-card p-4 sm:p-6 mb-6 mt-8">
       {/* Titoli sopra la mappa - Posizionati a metà tra topbar e container */}
       <div className="text-center mb-4 -mt-[15%]">
         <h1 className="text-2xl font-orbitron font-bold mb-1">

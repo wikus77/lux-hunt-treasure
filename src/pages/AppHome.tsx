@@ -1,5 +1,5 @@
 
-// ✅ Intervento UI eseguito BY JOSEPH MULE — Capacitor iOS Compatible
+// FILE CREATO O MODIFICATO — BY JOSEPH MULE
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CommandCenterHome from "@/components/command-center/CommandCenterHome";

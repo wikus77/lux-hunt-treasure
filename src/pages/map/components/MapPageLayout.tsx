@@ -1,4 +1,4 @@
-// ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™
+// FILE CREATO O MODIFICATO — BY JOSEPH MULE
 import React from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import MapPageHeader from './MapPageHeader';
