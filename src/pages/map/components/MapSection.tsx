@@ -53,18 +53,18 @@ const MapSection: React.FC<MapSectionProps> = ({
   setShowHelpDialog,
 }) => {
   return (
-    <div className="m1ssion-glass-card p-4 sm:p-6 mb-6 mt-8">
-      {/* Titoli sopra la mappa - Posizionati a metà tra topbar e container */}
-      <div className="text-center mb-4 -mt-[15%]">
+    <div className="m1ssion-glass-card p-4 sm:p-6 mb-6" style={{ marginTop: "20px" }}>
+      {/* Titoli sopra la mappa - BY JOSEPH MULE */}
+      <div className="text-center mb-6">
         <h1 className="text-2xl font-orbitron font-bold mb-1">
           <span className="text-[#00ffff]">BUZZ</span>
           <span className="text-white"> MAPPA</span>
         </h1>
         <h2 className="text-base text-white/80 font-medium">Mappa Operativa</h2>
       </div>
-      {/* Container mappa con fix overflow */}
+      {/* Container mappa con fix overflow - BY JOSEPH MULE */}
       <div className="relative rounded-lg overflow-hidden border border-white/10" 
-           style={{ paddingTop: "0px", minHeight: "400px" }}>
+           style={{ minHeight: "400px", marginTop: "0px" }}>
         <Suspense fallback={<MapLoadingFallback />}>
           <MapContainer
             isAddingPoint={isAddingPoint}

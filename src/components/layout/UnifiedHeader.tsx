@@ -14,16 +14,16 @@ interface UnifiedHeaderProps {
   onClickMail?: () => void;
 }
 
-// Page title mapping - breadcrumbs completely removed
+// Page title mapping - MISSION text only - BY JOSEPH MULE
 const pageTitles: Record<string, string> = {
-  '/home': '',
-  '/map': '',
-  '/buzz': '',
-  '/games': '',
-  '/leaderboard': '',
-  '/notifications': '',
-  '/profile': '',
-  '/settings': ''
+  '/home': 'MISSION',
+  '/map': 'MISSION',
+  '/buzz': 'MISSION',
+  '/games': 'MISSION',
+  '/leaderboard': 'MISSION',
+  '/notifications': 'MISSION',
+  '/profile': 'MISSION',
+  '/settings': 'MISSION'
 };
 
 const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
@@ -145,18 +145,16 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             )}
           </div>
 
-          {/* Center section - Page Title */}
+          {/* Center section - MISSION text white only - BY JOSEPH MULE */}
           <div className="flex items-center justify-center">
-            {!isHomePage && (
-              <motion.h1 
-                className="text-lg font-semibold text-white/90"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                {currentPageTitle}
-              </motion.h1>
-            )}
+            <motion.h1 
+              className="text-lg font-semibold text-white"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              {currentPageTitle}
+            </motion.h1>
           </div>
 
           {/* Right Section */}

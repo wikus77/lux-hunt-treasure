@@ -21,6 +21,11 @@ import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import Subscriptions from "@/pages/Subscriptions";
 
+// Profile subpages - BY JOSEPH MULE
+import PersonalInfoPage from "@/pages/profile/PersonalInfoPage";
+import SecurityPage from "@/pages/profile/SecurityPage";
+import PaymentsPage from "@/pages/profile/PaymentsPage";
+
 // Auth routes
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -140,6 +145,40 @@ const AppRoutes: React.FC = () => {
                 <ProtectedRoute>
                   <GlobalLayout>
                     <Profile />
+                  </GlobalLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Profile subpages - BY JOSEPH MULE */}
+            <Route
+              path="/profile/personal-info"
+              element={
+                <ProtectedRoute>
+                  <GlobalLayout>
+                    <PersonalInfoPage />
+                  </GlobalLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/profile/security"
+              element={
+                <ProtectedRoute>
+                  <GlobalLayout>
+                    <SecurityPage />
+                  </GlobalLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/profile/payments"
+              element={
+                <ProtectedRoute>
+                  <GlobalLayout>
+                    <PaymentsPage />
                   </GlobalLayout>
                 </ProtectedRoute>
               }

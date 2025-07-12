@@ -109,11 +109,16 @@ export const ProfilePage: React.FC = () => {
     loadProfileData();
   }, [user]);
 
-  // Handle navigation with haptic feedback
+  // Handle navigation with haptic feedback - BY JOSEPH MULE
   const handleNavigation = preserveFunctionName(async (path: string) => {
     await vibrate(30);
-    if (path === '/home') await toHome();
-    // Add other routes as needed
+    if (path === '/home') {
+      await toHome();
+    } else if (path.startsWith('/profile/')) {
+      window.location.href = path;
+    } else {
+      window.location.href = path;
+    }
   }, 'handleNavigation');
 
   // Handle logout
@@ -182,12 +187,16 @@ export const ProfilePage: React.FC = () => {
         <Card className="glass-card">
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
-              {/* Avatar */}
+              {/* Avatar - BY JOSEPH MULE */}
               <div className="relative">
                 <Avatar className="w-20 h-20 ring-2 ring-[#00D1FF]">
-                  <AvatarImage src={profile.avatar_url} />
-                  <AvatarFallback className="bg-gray-800 text-white text-xl">
-                    {profile.full_name?.charAt(0) || profile.email?.charAt(0) || 'A'}
+                  <AvatarImage 
+                    src={profile.avatar_url || undefined} 
+                    alt="Avatar utente"
+                    onError={() => console.log('Avatar image failed to load')}
+                  />
+                  <AvatarFallback className="bg-[#3e3e3e] text-white text-xl">
+                    <User className="w-8 h-8" />
                   </AvatarFallback>
                 </Avatar>
                 <button className="absolute -bottom-2 -right-2 bg-[#00D1FF] rounded-full p-2 hover:bg-[#00B8E6] transition-colors">
@@ -283,13 +292,40 @@ export const ProfilePage: React.FC = () => {
         </motion.div>
       )}
 
-      {/* Action Buttons */}
+      {/* Action Buttons - BY JOSEPH MULE */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
         className="space-y-4"
       >
+        <Button
+          variant="outline"
+          className="w-full justify-start"
+          onClick={() => handleNavigation('/profile/personal-info')}
+        >
+          <User className="w-5 h-5 mr-3" />
+          Informazioni Personali
+        </Button>
+
+        <Button
+          variant="outline"
+          className="w-full justify-start"
+          onClick={() => handleNavigation('/profile/security')}
+        >
+          <Shield className="w-5 h-5 mr-3" />
+          Password e Sicurezza
+        </Button>
+
+        <Button
+          variant="outline"
+          className="w-full justify-start"
+          onClick={() => handleNavigation('/profile/payments')}
+        >
+          <CreditCard className="w-5 h-5 mr-3" />
+          Metodi di Pagamento
+        </Button>
+
         <Button
           variant="outline"
           className="w-full justify-start"
