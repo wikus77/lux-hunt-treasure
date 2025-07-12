@@ -32,36 +32,68 @@ const PersonalInfoPage: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // TASK 3 — Gestione Avatar (Upload Immagine Profilo)
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Errore",
+        description: "Seleziona solo file immagine (PNG, JPG, JPEG).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast({
+        title: "Errore", 
+        description: "L'immagine deve essere inferiore a 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Use user folder structure for proper RLS
-      const fileName = `${user.id}/${Date.now()}.${file.name.split('.').pop()}`;
+      // Create unique folder for user avatars
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/avatar_${Date.now()}.${fileExt}`;
+      
+      // Upload to avatars bucket
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, {
-          upsert: true
+          upsert: true,
+          cacheControl: '3600'
         });
 
       if (uploadError) throw uploadError;
 
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
 
       // Update profile in database
-      await supabase
+      const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: publicUrl })
+        .update({ 
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', user.id);
 
+      if (updateError) throw updateError;
+
+      // Update local state
       actions.setProfileImage(publicUrl);
+      
       toast({
         title: "Avatar aggiornato",
         description: "Il tuo avatar è stato caricato con successo.",
@@ -78,24 +110,28 @@ const PersonalInfoPage: React.FC = () => {
     }
   };
 
+  // TASK 2 — Salvataggio Info Personali (Fix Form)
   const handleSaveChanges = async () => {
     setIsLoading(true);
     try {
-      const user = await supabase.auth.getUser();
-      if (!user.data.user) throw new Error('User not authenticated');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
 
-      const { error } = await supabase
+      // Update profiles table
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
           full_name: formData.fullName,
           agent_code: formData.username,
           phone: formData.phone,
           city: formData.location,
+          updated_at: new Date().toISOString()
         })
-        .eq('id', user.data.user.id);
+        .eq('id', user.id);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
 
+      // Update local state
       actions.setName(formData.fullName);
       actions.setAgentCode(formData.username);
       
@@ -104,6 +140,7 @@ const PersonalInfoPage: React.FC = () => {
         description: "Le tue informazioni sono state salvate con successo.",
       });
     } catch (error) {
+      console.error('Save error:', error);
       toast({
         title: "Errore",
         description: "Impossibile salvare le modifiche. Riprova.",

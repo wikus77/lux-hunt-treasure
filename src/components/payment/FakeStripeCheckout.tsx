@@ -1,4 +1,5 @@
-// ✅ File conforme M1SSION™ — BY JOSEPH MULE
+// ✅ COMPONENT MODIFICATO
+// BY JOSEPH MULE — 2025-07-12
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { CreditCard, Lock, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FakeStripeCheckoutProps {
   planName: string;
@@ -31,14 +33,29 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // TASK 4 — Upgrade Piano Abbonamento (Stripe/FakeStripe)
   const handlePayment = async () => {
     setIsProcessing(true);
     
     try {
-      // Simulated payment processing - BY JOSEPH MULE
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Simulated payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Save mock subscription to localStorage
+      // Save subscription to Supabase
+      await supabase.from('subscriptions').upsert({
+        user_id: user.id,
+        tier: planName,
+        status: 'active',
+        start_date: new Date().toISOString(),
+        end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        provider: 'stripe',
+        updated_at: new Date().toISOString()
+      });
+
+      // Save to localStorage for immediate sync
       const subscriptionData = {
         plan: planName,
         price: planPrice,
@@ -48,6 +65,7 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
       
       localStorage.setItem('active_subscription', JSON.stringify(subscriptionData));
       localStorage.setItem('subscription_plan', planName);
+      window.dispatchEvent(new Event('storage'));
       
       setIsProcessing(false);
       setIsSuccess(true);
@@ -57,12 +75,13 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
         description: `Piano ${planName} attivato con successo.`,
       });
 
-      // Redirect after success
+      // Redirect to /profile/payments after success
       setTimeout(() => {
         navigate('/profile/payments');
       }, 2000);
       
     } catch (error) {
+      console.error('Payment error:', error);
       setIsProcessing(false);
       toast({
         title: "Errore nel pagamento",
