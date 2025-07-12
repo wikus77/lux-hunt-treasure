@@ -84,23 +84,16 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
-      {/* Profile Avatar Button */}
+      {/* Profile Avatar Button - 🔐 FIRMATO: BY JOSEPH MULE — Capacitor iOS Compatible */}
       <Button
         variant="ghost"
-        className="p-0 rounded-full hover:bg-white/10 transition-colors"
+        className="p-1 rounded-full hover:bg-white/10 transition-colors"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <div className="flex items-center space-x-2">
-          <ProfileAvatar
-            profileImage={profileImage}
-            className="w-10 h-10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF] transition-colors"
-          />
-          <ChevronDown 
-            className={`w-4 h-4 text-white/70 transition-transform duration-200 ${
-              isOpen ? 'rotate-180' : ''
-            }`} 
-          />
-        </div>
+        <ProfileAvatar
+          profileImage={profileImage}
+          className="w-10 h-10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF] transition-colors"
+        />
       </Button>
 
       {/* Dropdown Menu */}
@@ -111,12 +104,13 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute right-0 mt-2 w-80 z-50"
+            className="absolute right-0 mt-2 w-80 z-[9999]"
             style={{
-              top: 'calc(100% + 8px)'
+              top: 'calc(100% + 8px)',
+              maxWidth: 'calc(100vw - 32px)'
             }}
           >
-            <Card className="bg-black/90 border-[#00D1FF]/20 backdrop-blur-xl shadow-2xl">
+            <Card className="bg-black/95 border-[#00D1FF]/30 backdrop-blur-xl shadow-2xl border-2">
               <CardContent className="p-4 space-y-4">
                 {/* User Info Section */}
                 <div className="flex items-center space-x-3 pb-3 border-b border-white/10">
