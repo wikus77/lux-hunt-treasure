@@ -8,7 +8,7 @@ const MapPageHeader: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-black/50 to-[#131524]/50 backdrop-blur-xl">
+    <div className="flex items-center justify-between p-4 backdrop-blur-xl bg-gradient-to-r from-black/55 via-[#131524]/55 to-black/55">
       {/* ✅ fix by Lovable AI per Joseph Mulé – M1SSION™ */}
       {/* ✅ Compatibilità Capacitor iOS – testata */}
       

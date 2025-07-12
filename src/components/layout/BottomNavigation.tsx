@@ -129,11 +129,11 @@ const BottomNavigationComponent = () => {
         style={{
           position: "relative",
           zIndex: "inherit",
-          height: "70px", // Aumento del 10% (da 64px a 70px)
+          height: "90px", // Aumento del 10% (da 82px a 90px)
           display: "flex",
           alignItems: "center",
-          backgroundColor: "rgba(0, 0, 0, 0.55)", // Background glossy
-          backdropFilter: "blur(12px)", // Effetto blur
+          background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 36, 0.55), rgba(0, 0, 0, 0.55))",
+          backdropFilter: "blur(12px)",
           borderTop: "1px solid rgba(255, 255, 255, 0.1)",
           WebkitTapHighlightColor: "transparent",
           touchAction: "manipulation",

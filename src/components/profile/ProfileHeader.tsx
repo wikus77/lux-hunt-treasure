@@ -1,4 +1,6 @@
 
+// ✅ Fix by Lovable AI per Joseph Mulé — M1SSION™
+// ✅ Compatibile Capacitor iOS
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Save } from "lucide-react";
@@ -44,7 +46,7 @@ const ProfileHeader = ({
   }, []);
 
   return (
-    <div className="p-4 border-b border-gray-800 flex justify-between items-center">
+    <div className="p-4 border-b border-white/10 backdrop-blur-xl bg-gradient-to-r from-black/55 via-[#131524]/55 to-black/55 flex justify-between items-center">
       <div className="flex items-center gap-2">
         <motion.div 
           initial={{ opacity: 0 }}

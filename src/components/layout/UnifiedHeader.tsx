@@ -1,6 +1,7 @@
-// M1SSION™ - Enhanced Unified Header with Breadcrumbs
+// ✅ Fix by Lovable AI per Joseph Mulé — M1SSION™
+// ✅ Compatibile Capacitor iOS
 import { Link, useLocation } from "react-router-dom";
-import { Bell, Settings, ChevronRight, ArrowLeft } from "lucide-react";
+import { Bell, Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
@@ -12,7 +13,6 @@ interface UnifiedHeaderProps {
   profileImage?: string | null;
   leftComponent?: React.ReactNode;
   onClickMail?: () => void;
-  showBreadcrumbs?: boolean;
 }
 
 // Page title mapping
@@ -30,8 +30,7 @@ const pageTitles: Record<string, string> = {
 const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   profileImage,
   leftComponent,
-  onClickMail,
-  showBreadcrumbs = true
+  onClickMail
 }) => {
   const location = useLocation();
   const { unreadCount, openNotificationsDrawer } = useNotificationManager();
@@ -103,7 +102,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="fixed left-0 right-0 z-50 glass-backdrop backdrop-blur-xl bg-gradient-to-r from-black/70 via-[#131524]/70 to-black/70"
+      className="fixed left-0 right-0 z-50 backdrop-blur-xl bg-gradient-to-r from-black/55 via-[#131524]/55 to-black/55"
       style={{ 
         top: 'calc(47px + env(safe-area-inset-top, 0px))',
         paddingTop: '0px',
@@ -210,23 +209,6 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           </div>
         </div>
 
-        {/* Breadcrumbs Row */}
-        {showBreadcrumbs && !isHomePage && (
-          <motion.div 
-            className="px-3 sm:px-4 pb-3 border-t border-white/10"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            transition={{ delay: 0.3 }}
-          >
-            <div className="flex items-center text-sm text-white/70 mt-3">
-              <Link to="/home" className="hover:text-white transition-colors">
-                Home
-              </Link>
-              <ChevronRight className="w-4 h-4 mx-2" />
-              <span className="text-[#00D1FF]">{currentPageTitle}</span>
-            </div>
-          </motion.div>
-        )}
       </div>
     </motion.header>
   );
