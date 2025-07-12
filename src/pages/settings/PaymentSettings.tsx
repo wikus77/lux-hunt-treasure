@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { CreditCard, Plus, Trash2, Crown, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import AddCardDialog from '@/components/payments/AddCardDialog';
 
 interface PaymentMethod {
   id: string;
@@ -49,17 +50,26 @@ const PaymentSettings: React.FC = () => {
     }
   };
 
-  const addNewPaymentMethod = async () => {
+  const addNewPaymentMethod = async (cardData: {
+    cardNumber: string;
+    expiryMonth: string;
+    expiryYear: string;
+    cvc: string;
+    nameOnCard: string;
+  }) => {
     if (!user) return;
 
     setLoading(true);
     try {
-      // Simulate adding a new payment method
-      const newMethod: Omit<PaymentMethod, 'id'> = {
-        brand: 'Visa',
-        last4: Math.floor(Math.random() * 9999).toString().padStart(4, '0'),
-        exp_month: Math.floor(Math.random() * 12) + 1,
-        exp_year: new Date().getFullYear() + Math.floor(Math.random() * 5) + 1,
+      // Extract card brand from number (mock logic)
+      const firstDigit = cardData.cardNumber.replace(/\s/g, '')[0];
+      const brand = firstDigit === '4' ? 'Visa' : firstDigit === '5' ? 'Mastercard' : 'Visa';
+      
+      const newMethod = {
+        brand,
+        last4: cardData.cardNumber.replace(/\s/g, '').slice(-4),
+        exp_month: parseInt(cardData.expiryMonth),
+        exp_year: parseInt(cardData.expiryYear),
         is_default: paymentMethods.length === 0
       };
 
@@ -78,8 +88,8 @@ const PaymentSettings: React.FC = () => {
       await loadPaymentMethods();
       
       toast({
-        title: "✅ Carta aggiunta",
-        description: "Il nuovo metodo di pagamento è stato aggiunto con successo."
+        title: "✅ Carta aggiunta con successo",
+        description: `${brand} ••••${newMethod.last4} è stata salvata correttamente.`
       });
     } catch (error) {
       console.error('Error adding payment method:', error);
@@ -220,15 +230,7 @@ const PaymentSettings: React.FC = () => {
               <CreditCard className="w-5 h-5 mr-2" />
               Metodi di Pagamento
             </div>
-            <Button
-              onClick={addNewPaymentMethod}
-              disabled={loading}
-              size="sm"
-              className="bg-[#00D1FF] hover:bg-[#00B8E6] text-black"
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Aggiungi
-            </Button>
+            <AddCardDialog onAddCard={addNewPaymentMethod} loading={loading} />
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -315,14 +317,15 @@ const PaymentSettings: React.FC = () => {
             <div className="text-center py-8">
               <CreditCard className="w-12 h-12 text-white/30 mx-auto mb-4" />
               <p className="text-white/70 mb-4">Nessun metodo di pagamento salvato</p>
-              <Button
-                onClick={addNewPaymentMethod}
-                disabled={loading}
-                className="bg-[#00D1FF] hover:bg-[#00B8E6] text-black"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Aggiungi Prima Carta
-              </Button>
+              <AddCardDialog onAddCard={addNewPaymentMethod} loading={loading}>
+                <Button
+                  disabled={loading}
+                  className="bg-[#00D1FF] hover:bg-[#00B8E6] text-black"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Aggiungi Prima Carta
+                </Button>
+              </AddCardDialog>
             </div>
           )}
         </CardContent>

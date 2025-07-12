@@ -60,9 +60,11 @@ const AgentProfileSettings: React.FC = () => {
         .from('avatars')
         .getPublicUrl(filePath);
 
-      await supabase.from('profiles').update({ 
+      const { error: updateError } = await supabase.from('profiles').update({ 
         avatar_url: publicUrl 
       }).eq('id', user.id);
+
+      if (updateError) throw updateError;
 
       toast({
         title: "✅ Avatar aggiornato",
@@ -169,7 +171,7 @@ const AgentProfileSettings: React.FC = () => {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png"
               capture="environment"
               onChange={handleAvatarUpload}
               className="hidden"

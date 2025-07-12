@@ -21,6 +21,11 @@ import Profile from "@/pages/Profile";
 import SettingsPage from "@/pages/settings/SettingsPage";
 import Subscriptions from "@/pages/Subscriptions";
 
+// Legal pages - BY JOSEPH MULE
+import LegalTerms from "@/pages/legal/Terms";
+import Privacy from "@/pages/legal/Privacy";
+import SafeCreative from "@/pages/legal/SafeCreative";
+
 // Profile subpages - BY JOSEPH MULE
 import PersonalInfoPage from "@/pages/profile/PersonalInfoPage";
 import SecurityPage from "@/pages/profile/SecurityPage";
@@ -199,6 +204,11 @@ const AppRoutes: React.FC = () => {
                 </ProtectedRoute>
               } 
             />
+
+            {/* Legal Routes - BY JOSEPH MULE */}
+            <Route path="/legal/terms" element={<LegalTerms />} />
+            <Route path="/legal/privacy" element={<Privacy />} />
+            <Route path="/legal/safecreative" element={<SafeCreative />} />
 
             <Route
               path="/subscriptions"

@@ -18,19 +18,19 @@ const LegalSettings: React.FC = () => {
     {
       title: 'Termini di Servizio',
       description: 'Condizioni d\'uso dell\'applicazione M1SSION™',
-      url: 'https://example.com/terms',
+      url: '/legal/terms',
       icon: FileText
     },
     {
       title: 'Privacy Policy',
       description: 'Come raccogliamo e utilizziamo i tuoi dati',
-      url: 'https://example.com/privacy',
+      url: '/legal/privacy',
       icon: Shield
     },
     {
       title: 'SafeCreative',
       description: 'Certificazione di proprietà intellettuale',
-      url: 'https://safecreative.org',
+      url: '/legal/safecreative',
       icon: Copyright
     }
   ];
@@ -75,11 +75,14 @@ const LegalSettings: React.FC = () => {
   };
 
   const openExternalLink = (url: string) => {
-    if ((window as any).Capacitor) {
-      // In Capacitor, open in system browser
+    if (url.startsWith('/legal/')) {
+      // Navigate to internal legal pages
+      window.location.href = url;
+    } else if ((window as any).Capacitor) {
+      // In Capacitor, open external URLs in system browser
       (window as any).Capacitor.Plugins.Browser?.open({ url });
     } else {
-      // In web, open in new tab
+      // In web, open external URLs in new tab
       window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
