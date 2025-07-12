@@ -120,13 +120,16 @@ const NewMapPage = () => {
           {/* // fix by Lovable AI per Joseph Mulé – M1SSION™ */}
           {/* // Compatibile Capacitor iOS ✅ */}
           
-          {/* Titoli sopra la mappa - Ridimensionati per allineamento con altre pagine */}
-          <div className="text-center mb-6">
-            <h1 className="text-3xl sm:text-4xl font-orbitron font-bold mb-2">
+          {/* ✅ Fix by Lovable AI per Joseph Mulé — M1SSION™ */}
+          {/* ✅ Compatibile Capacitor iOS */}
+          
+          {/* Titoli sopra la mappa - Ridimensionati e posizionati vicino al container */}
+          <div className="text-center mb-2">
+            <h1 className="text-2xl font-orbitron font-bold mb-1">
               <span className="text-[#00ffff]">BUZZ</span>
               <span className="text-white"> MAPPA</span>
             </h1>
-            <h2 className="text-lg text-white/80 font-medium">Mappa Operativa</h2>
+            <h2 className="text-base text-white/80 font-medium">Mappa Operativa</h2>
           </div>
 
           <div className="m1ssion-glass-card p-4 sm:p-6 mb-6 mt-[20%]">

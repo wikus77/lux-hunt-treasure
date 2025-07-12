@@ -73,8 +73,11 @@ export const BuzzPage: React.FC = () => {
           {/* // fix by Lovable AI per Joseph Mulé – M1SSION™ */}
           {/* // Compatibile Capacitor iOS ✅ */}
           
-          {/* Titolo BUZZ - Spostato fuori dal container */}
-          <div className="text-center mt-6 mb-8">
+          {/* ✅ Fix by Lovable AI per Joseph Mulé — M1SSION™ */}
+          {/* ✅ Compatibile Capacitor iOS */}
+          
+          {/* Titolo BUZZ - Spostato 10% più in basso */}
+          <div className="text-center mt-[10%] mb-8">
             <h1 className="text-4xl font-orbitron font-bold">
               <span className="text-[#00ffff]">BU</span>
               <span className="text-white">ZZ</span>
@@ -103,13 +106,6 @@ export const BuzzPage: React.FC = () => {
                 onSuccess={handleBuzzSuccess}
               />
             </div>
-            
-            {/* Istruzioni */}
-            <BuzzInstructions
-              stats={stats}
-              isBlocked={isBlocked}
-              getCurrentBuzzPrice={getCurrentBuzzPrice}
-            />
           </div>
         </div>
       </main>
