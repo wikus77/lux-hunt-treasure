@@ -334,32 +334,7 @@ export const ProfilePage: React.FC = () => {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="space-y-4"
       >
-        <Button
-          variant="outline"
-          className="w-full justify-start"
-          onClick={() => handleNavigation('/profile/personal-info')}
-        >
-          <User className="w-5 h-5 mr-3" />
-          Informazioni Personali
-        </Button>
-
-        <Button
-          variant="outline"
-          className="w-full justify-start"
-          onClick={() => handleNavigation('/profile/security')}
-        >
-          <Shield className="w-5 h-5 mr-3" />
-          Password e Sicurezza
-        </Button>
-
-        <Button
-          variant="outline"
-          className="w-full justify-start"
-          onClick={() => handleNavigation('/profile/payments')}
-        >
-          <CreditCard className="w-5 h-5 mr-3" />
-          Metodi di Pagamento
-        </Button>
+        {/* Removed duplicate content that's already in /settings - 🔐 FIRMATO: BY JOSEPH MULE — Capacitor iOS Compatible */}
 
         <Button
           variant="outline"

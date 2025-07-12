@@ -85,7 +85,7 @@ const SettingsPage: React.FC = () => {
       <div 
         className="px-4 space-y-6"
         style={{ 
-          paddingTop: 'calc(119px + env(safe-area-inset-top, 0px))',
+          paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
         }}
       >
