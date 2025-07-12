@@ -198,44 +198,32 @@ serve(async (req) => {
     // by Joseph Mulé – M1SSION™ – FIXED: Proper auth validation using existing token
     console.log('🔐 Using already validated user from request:', userId);
     
-    // by Joseph Mulé – M1SSION™ – FIXED: Insert clue without invalid foreign keys
+    // Fix by Lovable AI per Joseph Mulé – M1SSION™ – FINAL DEBUG INSERT CLUE
     console.log('💾 Attempting to save clue to user_clues...');
     
-    // Get a valid prize_id from prizes table if clue_category is 'prize'
-    let validPrizeId = null;
-    if (clueEngineResult.clue_category === 'prize') {
-      const { data: prizeData, error: prizeError } = await supabase
-        .from('prizes')
-        .select('id')
-        .eq('is_active', true)
-        .limit(1)
-        .single();
-        
-      if (!prizeError && prizeData) {
-        validPrizeId = prizeData.id;
-        console.log(`✅ Using valid prize_id: ${validPrizeId}`);
-      } else {
-        console.log(`⚠️ No valid prize found, saving without prize_id`);
-      }
-    }
-    
+    // SIMPLIFIED APPROACH: Use only valid data, no foreign key dependencies
     const cluePayload = {
       user_id: userId,
-      title_it: `Indizio ${clueEngineResult.clue_category} #${buzzCount}`,
+      title_it: `🧩 Indizio BUZZ #${buzzCount}`,
       description_it: clueEngineResult.clue_text,
-      title_en: `${clueEngineResult.clue_category} Clue #${buzzCount}`,
+      title_en: `🧩 BUZZ Clue #${buzzCount}`,
       description_en: translateToEnglish(clueEngineResult.clue_text),
       clue_type: 'buzz',
       buzz_cost: buzzCost,
       week_number: currentWeek,
       is_misleading: clueEngineResult.is_misleading,
-      // CRITICAL FIX: Only use valid foreign keys
-      location_id: validPrizeId, // Use prize_id as location_id if available
-      prize_id: validPrizeId,    // Use only valid prize_id from prizes table
-      clue_category: clueEngineResult.clue_category
+      clue_category: clueEngineResult.clue_category,
+      // Fix by Lovable AI per Joseph Mulé – M1SSION™ - Set nullable fields to null to avoid constraint issues
+      location_id: null,
+      prize_id: null
     };
     
-    console.log('💾 Clue payload:', cluePayload);
+    console.log('💾 Final clue payload:', JSON.stringify(cluePayload, null, 2));
+    
+    console.log('🚨 PRE-INSERT DEBUG - user_clues table check...');
+    // Log the exact state before insert
+    console.log(`🔍 INSERT ATTEMPT - userId: ${userId}, clue_text: "${clueEngineResult.clue_text}", category: ${clueEngineResult.clue_category}`);
+    
     
     const { data: clueData, error: clueError } = await supabase
       .from('user_clues')
@@ -244,31 +232,37 @@ serve(async (req) => {
       .single();
 
     if (clueError) {
-      console.error("❌ Error saving clue - DETAILED:", {
+      console.error("❌ FINAL ERROR saving clue - COMPLETE DEBUG:", {
         error: clueError,
         message: clueError.message,
         details: clueError.details,
         hint: clueError.hint,
-        code: clueError.code
+        code: clueError.code,
+        payload: cluePayload
       });
+      
+      // Fix by Lovable AI per Joseph Mulé – M1SSION™ - Detailed error response
       return new Response(
         JSON.stringify({ 
           success: false, 
           error: true, 
-          errorMessage: `Errore salvataggio indizio: ${clueError.message}`,
-          debugInfo: {
+          errorMessage: `❌ M1SSION™ CLUE SAVE ERROR: ${clueError.message}`,
+          debug: {
             code: clueError.code,
             details: clueError.details,
-            hint: clueError.hint
+            hint: clueError.hint,
+            payload: cluePayload
           }
         }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
     
-    console.log('✅ Clue saved successfully:', clueData);
-
-    console.log(`✅ Clue saved with ID: ${clueData.clue_id}`);
+    
+    // Fix by Lovable AI per Joseph Mulé – M1SSION™ - Success confirmation
+    console.log('✅ M1SSION™ CLUE SAVED SUCCESSFULLY:', clueData);
+    console.log(`✅ Final clue saved with ID: ${clueData.clue_id}, text: "${clueEngineResult.clue_text}"`);
+    console.log(`✅ Clue saved for user: ${userId}, category: ${clueEngineResult.clue_category}`);
 
     // Initialize response with GUARANTEED clue_text propagation
     let response: BuzzResponse = {
