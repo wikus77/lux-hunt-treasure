@@ -23,15 +23,15 @@ const Profile = () => {
   useRealTimeNotifications();
   
   const navigateToPersonalInfo = () => {
-    navigate('/personal-info');
+    navigate('/profile/personal-info');
   };
 
   const navigateToPrivacySecurity = () => {
-    navigate('/privacy-security');
+    navigate('/profile/security');
   };
 
   const navigateToPaymentMethods = () => {
-    navigate('/payment-methods');
+    navigate('/profile/payments');
   };
 
   const navigateToSubscriptions = () => {
@@ -87,9 +87,9 @@ const Profile = () => {
                   isEditing={profileData.isEditing}
                   setPersonalNotes={actions.setPersonalNotes}
                   togglePinBadge={actions.togglePinBadge}
-                  navigateToPersonalInfo={() => navigate('/personal-info')}
-                  navigateToPrivacySecurity={() => navigate('/privacy-security')}
-                  navigateToPaymentMethods={() => navigate('/payment-methods')}
+                  navigateToPersonalInfo={() => navigate('/profile/personal-info')}
+                  navigateToPrivacySecurity={() => navigate('/profile/security')}
+                  navigateToPaymentMethods={() => navigate('/profile/payments')}
                   navigateToSubscriptions={() => navigate('/subscriptions')}
                 />
               </div>
