@@ -28,8 +28,8 @@ const Terms: React.FC = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-orbitron font-bold text-white">Termini di Servizio</h1>
-              <p className="text-white/70">M1SSION™ - Treasure Hunt App</p>
+                <h1 className="text-2xl font-orbitron font-bold text-white">Termini di Servizio</h1>
+                <p className="text-white/70">M1SSION™</p>
             </div>
           </div>
 
@@ -129,6 +129,9 @@ const Terms: React.FC = () => {
               <div className="pt-6 border-t border-white/10 text-center text-white/60">
                 <p>© 2025 M1SSION™ - Tutti i diritti riservati</p>
                 <p className="text-sm">Ultima revisione: 12 Gennaio 2025</p>
+                <p className="text-xs mt-2 text-white/40">
+                  Documento legale pubblicato da NIYVORA KFT, proprietaria dell'applicazione M1SSION™.
+                </p>
               </div>
             </CardContent>
           </Card>

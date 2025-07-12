@@ -156,6 +156,9 @@ const Privacy: React.FC = () => {
               <div className="pt-6 border-t border-white/10 text-center text-white/60">
                 <p>© 2025 M1SSION™ - Conforme GDPR</p>
                 <p className="text-sm">Ultima revisione: 12 Gennaio 2025</p>
+                <p className="text-xs mt-2 text-white/40">
+                  Documento legale pubblicato da NIYVORA KFT, proprietaria dell'applicazione M1SSION™.
+                </p>
               </div>
             </CardContent>
           </Card>

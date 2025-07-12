@@ -35,10 +35,10 @@ const AgentProfileSettings: React.FC = () => {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit for iOS compatibility
       toast({
         title: "File troppo grande",
-        description: "L'immagine deve essere inferiore a 5MB.",
+        description: "L'immagine deve essere inferiore a 2MB.",
         variant: "destructive"
       });
       return;
@@ -46,25 +46,41 @@ const AgentProfileSettings: React.FC = () => {
 
     setLoading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      // Use correct file path format for Supabase storage
+      const fileName = `avatar.jpg`;
+      const filePath = `${user.id}/${fileName}`;
+
+      console.log('Uploading to path:', filePath);
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file, { 
+          upsert: true,
+          contentType: 'image/jpeg'
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
+      console.log('Public URL:', publicUrl);
+
       const { error: updateError } = await supabase.from('profiles').update({ 
         avatar_url: publicUrl 
       }).eq('id', user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+        throw updateError;
+      }
+
+      // Update profileData immediately for visual feedback
+      actions.setProfileImage(publicUrl);
 
       toast({
         title: "✅ Avatar aggiornato",
@@ -75,7 +91,7 @@ const AgentProfileSettings: React.FC = () => {
       console.error('Avatar upload error:', error);
       toast({
         title: "❌ Errore upload",
-        description: "Impossibile aggiornare l'avatar. Riprova.",
+        description: `Impossibile aggiornare l'avatar: ${error.message || 'Errore sconosciuto'}`,
         variant: "destructive"
       });
     } finally {

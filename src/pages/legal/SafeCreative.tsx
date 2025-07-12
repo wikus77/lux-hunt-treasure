@@ -166,6 +166,9 @@ const SafeCreative: React.FC = () => {
                 <p>© 2025 Joseph Mulé - M1SSION™</p>
                 <p className="text-sm">Certificato e Protetto da SafeCreative</p>
                 <p className="text-sm">Ultima revisione: 12 Gennaio 2025</p>
+                <p className="text-xs mt-2 text-white/40">
+                  Documento legale pubblicato da NIYVORA KFT, proprietaria dell'applicazione M1SSION™.
+                </p>
               </div>
             </CardContent>
           </Card>
