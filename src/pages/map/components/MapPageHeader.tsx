@@ -1,5 +1,5 @@
 
-// ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™
+// ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™
 import React from 'react';
 import { ArrowLeft, HelpCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +10,7 @@ const MapPageHeader: React.FC = () => {
 
   return (
     <div className="flex items-center justify-between p-4 backdrop-blur-xl" 
-         style={{ background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 33, 0.55), rgba(0, 0, 0, 0.55))" }}>
+         style={{ background: "rgba(19, 21, 33, 0.55)" }}>
       {/* ✅ fix by Lovable AI per Joseph Mulé – M1SSION™ */}
       {/* ✅ Compatibilità Capacitor iOS – testata */}
       

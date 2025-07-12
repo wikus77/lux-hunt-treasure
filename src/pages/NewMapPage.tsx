@@ -1,4 +1,4 @@
-// ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™
+// ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import MapPageHeader from './map/components/MapPageHeader';
@@ -97,7 +97,7 @@ const NewMapPage = () => {
         style={{
           height: '72px',
           paddingTop: 'env(safe-area-inset-top, 47px)',
-          background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 33, 0.55), rgba(0, 0, 0, 0.55))",
+          background: "rgba(19, 21, 33, 0.55)",
           backdropFilter: "blur(12px)"
         }}
       >
@@ -135,7 +135,7 @@ const NewMapPage = () => {
             </div>
             {/* Container mappa con fix overflow */}
             <div className="relative rounded-lg overflow-hidden border border-white/10" 
-                 style={{ paddingTop: "8px" }}>
+                 style={{ paddingTop: "16px", minHeight: "400px" }}>
               <Suspense fallback={<MapLoadingFallback />}>
               <MapContainer
                 isAddingPoint={isAddingPoint}

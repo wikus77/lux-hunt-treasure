@@ -123,7 +123,7 @@ const Leaderboard = () => {
         style={{
           height: '72px',
           paddingTop: 'env(safe-area-inset-top, 47px)',
-          background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 33, 0.55), rgba(0, 0, 0, 0.55))",
+          background: "rgba(19, 21, 33, 0.55)",
           backdropFilter: 'blur(12px)'
         }}
       >
@@ -142,7 +142,7 @@ const Leaderboard = () => {
         }}
       >
         <div className="container mx-auto">
-          {/* ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™ - Titolo sezione */}
+          {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Titolo sezione */}
           <motion.div
             className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 mb-6 mx-3"
             initial={{ opacity: 0, y: -10 }}
@@ -165,7 +165,7 @@ const Leaderboard = () => {
             </h1>
           </motion.div>
           
-          {/* ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™ - Header filtri */}
+          {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Header filtri */}
           <motion.div
             className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}
@@ -178,7 +178,7 @@ const Leaderboard = () => {
             />
           </motion.div>
 
-          {/* ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™ - Ricerca */}
+          {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Ricerca */}
           <motion.div
             className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}
@@ -188,7 +188,7 @@ const Leaderboard = () => {
             <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
           </motion.div>
 
-          {/* ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™ - Top 3 Podio */}
+          {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Top 3 Podio */}
           <motion.div
             className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}
@@ -198,7 +198,7 @@ const Leaderboard = () => {
             <LeaderboardTopUsers players={samplePlayers.slice(0, 3)} />
           </motion.div>
 
-          {/* ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™ - Lista principale */}
+          {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Lista principale */}
           <motion.div
             className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}
@@ -217,7 +217,7 @@ const Leaderboard = () => {
             />
           </motion.div>
 
-          {/* ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™ - Progress personale */}
+          {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Progress personale */}
           <motion.div
             className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}

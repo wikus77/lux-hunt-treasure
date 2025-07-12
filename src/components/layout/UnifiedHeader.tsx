@@ -1,4 +1,4 @@
-// ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™
+// ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™
 import { Link, useLocation } from "react-router-dom";
 import { Bell, Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -103,7 +103,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="fixed left-0 right-0 z-50 backdrop-blur-xl"
       style={{
-        background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 33, 0.55), rgba(0, 0, 0, 0.55))",
+        background: "rgba(19, 21, 33, 0.55)",
         backdropFilter: "blur(12px)",
         top: 'calc(47px + env(safe-area-inset-top, 0px))',
         paddingTop: '0px',
