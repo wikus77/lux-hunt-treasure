@@ -44,8 +44,11 @@ export const BuzzPage: React.FC = () => {
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background overflow-hidden"
+      className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
       style={{
+        height: '100dvh',
+        overflow: 'hidden',
+        position: 'relative',
         paddingTop: 'env(safe-area-inset-top, 0px)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         paddingLeft: 'env(safe-area-inset-left, 0px)',
@@ -53,27 +56,59 @@ export const BuzzPage: React.FC = () => {
       }}
     >
       {/* ✅ fix by Lovable AI per Joseph Mulé – M1SSION™ */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl sm:text-5xl font-orbitron font-bold">
-          <span className="text-[#00ffff]">BU</span>
-          <span className="text-white">ZZ</span>
-        </h1>
-      </div>
+      {/* ✅ Compatibilità Capacitor iOS – testata */}
+      
+      {/* Main scrollable content */}
+      <main
+        style={{
+          paddingTop: 'calc(40px + env(safe-area-inset-top, 0px))',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+          height: '100dvh',
+          overflowY: 'auto',
+          position: 'relative',
+          zIndex: 0
+        }}
+      >
+        <div className="container mx-auto px-4">
+          {/* Titolo BUZZ */}
+          <div className="text-center mt-6 mb-8">
+            <h1 className="text-4xl sm:text-5xl font-orbitron font-bold">
+              <span className="text-[#00ffff]">BU</span>
+              <span className="text-white">ZZ</span>
+            </h1>
+          </div>
 
-      <div className="relative flex flex-col items-center space-y-6">
-        <BuzzActionButton
-          currentPrice={currentPrice}
-          isBlocked={isBlocked}
-          todayCount={stats?.today_count || 0}
-          onSuccess={handleBuzzSuccess}
-        />
-        
-        <BuzzInstructions
-          stats={stats}
-          isBlocked={isBlocked}
-          getCurrentBuzzPrice={getCurrentBuzzPrice}
-        />
-      </div>
+          {/* Container principale con descrizione e pulsante */}
+          <div className="max-w-3xl mx-auto">
+            <div className="glass-card p-4 sm:p-6 mb-6">
+              <div className="text-center space-y-6">
+                {/* Descrizione BUZZ */}
+                <div className="text-white/80 space-y-2">
+                  <p>Premi il pulsante per inviare un segnale e scoprire nuovi indizi.</p>
+                  <p>Ogni Buzz ti aiuta a trovare indizi nascosti.</p>
+                  <p className="font-semibold">BUZZ oggi: {stats?.today_count || 0}/50</p>
+                  <p className="text-[#00ffff]">Prossimo: €{currentPrice.toFixed(2)}</p>
+                </div>
+
+                {/* Pulsante BUZZ */}
+                <BuzzActionButton
+                  currentPrice={currentPrice}
+                  isBlocked={isBlocked}
+                  todayCount={stats?.today_count || 0}
+                  onSuccess={handleBuzzSuccess}
+                />
+                
+                {/* Istruzioni */}
+                <BuzzInstructions
+                  stats={stats}
+                  isBlocked={isBlocked}
+                  getCurrentBuzzPrice={getCurrentBuzzPrice}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
