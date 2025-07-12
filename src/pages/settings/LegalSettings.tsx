@@ -10,7 +10,7 @@ import { FileText, ExternalLink, Trash2, Shield, Copyright } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client';
 
 const LegalSettings: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 

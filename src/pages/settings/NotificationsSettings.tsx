@@ -54,7 +54,7 @@ const NotificationsSettings: React.FC = () => {
       if (profile) {
         setSettings({
           notifications_enabled: profile.notifications_enabled ?? true,
-          weekly_hints: profile.weekly_hints || 'all',
+          weekly_hints: (profile.weekly_hints as 'all' | 'only-premium' | 'none') || 'all',
           preferred_rewards: profile.preferred_rewards || []
         });
       }

@@ -12,7 +12,7 @@ import { Shield, Key, LogOut, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const SecuritySettings: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPasswords, setShowPasswords] = useState(false);
