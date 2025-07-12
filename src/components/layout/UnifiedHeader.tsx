@@ -177,27 +177,16 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               )}
             </Button>
 
-            {/* Settings */}
-            {hasAccess ? (
-              <Link to="/settings">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full hover:bg-white/10"
-                >
-                  <Settings className="w-5 h-5" />
-                </Button>
-              </Link>
-            ) : (
+            {/* Settings - Always accessible for authenticated users */}
+            <Link to="/settings">
               <Button
                 variant="ghost"
                 size="icon"
                 className="rounded-full hover:bg-white/10"
-                disabled
               >
                 <Settings className="w-5 h-5" />
               </Button>
-            )}
+            </Link>
 
             {/* Profile Avatar - Fix by Lovable AI per Joseph Mulé – M1SSION™ */}
             <Link to="/profile">

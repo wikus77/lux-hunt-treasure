@@ -18,7 +18,7 @@ import Games from "@/pages/Games";
 import Leaderboard from "@/pages/Leaderboard";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
-import Settings from "@/pages/Settings";
+import SettingsPage from "@/pages/settings/SettingsPage";
 import Subscriptions from "@/pages/Subscriptions";
 
 // Profile subpages - BY JOSEPH MULE
@@ -192,9 +192,11 @@ const AppRoutes: React.FC = () => {
             <Route 
               path="/settings" 
               element={
-                <GlobalLayout>
-                  <Settings />
-                </GlobalLayout>
+                <ProtectedRoute>
+                  <GlobalLayout>
+                    <SettingsPage />
+                  </GlobalLayout>
+                </ProtectedRoute>
               } 
             />
 
