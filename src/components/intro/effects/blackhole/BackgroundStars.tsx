@@ -244,15 +244,14 @@ const BackgroundStars: React.FC<BackgroundStarsProps> = ({ stage }) => {
             opacity: 0,
           }}
           animate={{
-            top: [`${Math.random() * 50}%`, `${50 + Math.random() * 50}%`],
-            left: [`${Math.random() * 30}%`, `${30 + Math.random() * 70}%`],
-            opacity: [0, 1, 0]
+            top: `${50 + Math.random() * 50}%`,
+            left: `${30 + Math.random() * 70}%`,
+            opacity: 0
           }}
           transition={{
-            duration: 1.5,
+            duration: 3,
             delay: 2 + i * 3 + Math.random() * 5,
             ease: "easeOut",
-            times: [0, 0.1, 1],
             repeat: Infinity,
             repeatDelay: 10 + Math.random() * 15
           }}
@@ -288,8 +287,8 @@ const BackgroundStars: React.FC<BackgroundStarsProps> = ({ stage }) => {
             zIndex: 1
           }}
           animate={{
-            opacity: [0.4, 0.6, 0.4],
-            scale: [1, 1.1, 1]
+            opacity: 0.6,
+            scale: 1.1
           }}
           transition={{
             duration: 4,

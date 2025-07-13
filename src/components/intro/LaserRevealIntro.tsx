@@ -68,7 +68,7 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
             animate={{ 
               left: "105%", 
               width: "100%", 
-              opacity: [0, 1, 1, 0.8],
+              opacity: 0.8,
               background: [
                 "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)",
                 "linear-gradient(to right, rgba(127, 114, 255, 0) 0%, rgba(127, 114, 255, 1) 50%, rgba(127, 114, 255, 0) 100%)",
@@ -78,8 +78,8 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
             transition={{ 
               left: { duration: 1, ease: "easeInOut" },
               width: { duration: 0.3, ease: "easeOut" },
-              opacity: { times: [0, 0.1, 0.7, 1], duration: 1 },
-              background: { duration: 1, times: [0, 0.5, 1] }
+              opacity: { duration: 1 },
+              background: { duration: 1 }
             }}
           />
         </>
@@ -106,7 +106,7 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
             animate={{ 
               left: "-10%", 
               width: "100%", 
-              opacity: [0, 1, 1, 0.8],
+              opacity: 0.8,
               background: [
                 "linear-gradient(to right, rgba(255, 0, 255, 0) 0%, rgba(255, 0, 255, 1) 50%, rgba(255, 0, 255, 0) 100%)",
                 "linear-gradient(to right, rgba(127, 114, 255, 0) 0%, rgba(127, 114, 255, 1) 50%, rgba(127, 114, 255, 0) 100%)",
@@ -143,7 +143,7 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
             animate={{ 
               left: "105%", 
               width: "100%", 
-              opacity: [0, 1, 1, 0.8, 1, 0.7, 0.4, 0.2],
+              opacity: 0.2,
               background: [
                 "linear-gradient(to right, rgba(0, 229, 255, 0) 0%, rgba(0, 229, 255, 1) 50%, rgba(0, 229, 255, 0) 100%)",
                 "linear-gradient(to right, rgba(127, 114, 255, 0) 0%, rgba(127, 114, 255, 1) 50%, rgba(127, 114, 255, 0) 100%)",
@@ -153,8 +153,8 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
             transition={{ 
               left: { duration: 1.8, ease: "easeInOut" },
               width: { duration: 0.3, ease: "easeOut" },
-              opacity: { times: [0, 0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 1], duration: 1.8 },
-              background: { duration: 1.8, times: [0, 0.5, 1] }
+              opacity: { duration: 1.8 },
+              background: { duration: 1.8 }
             }}
           />
         </>

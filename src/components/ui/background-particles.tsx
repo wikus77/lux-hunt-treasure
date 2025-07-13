@@ -42,14 +42,13 @@ const BackgroundParticles = ({ count = 15 }: ParticleProps) => {
             left: `${particle.left}%`,
           }}
           animate={{
-            y: [0, -30, 0, 30, 0],
-            x: [0, 15, 30, 15, 0],
-            opacity: [0.4, 0.8, 0.6, 0.9, 0.4],
+            y: -30,
+            x: 30,
+            opacity: 0.9,
           }}
           transition={{
-            duration: particle.duration,
+            duration: 10 + Math.random() * 20,
             ease: "easeInOut",
-            times: [0, 0.2, 0.5, 0.8, 1],
             repeat: Infinity,
             delay: particle.delay,
           }}

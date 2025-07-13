@@ -205,8 +205,8 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ stage, visible }) => {
                 strokeDasharray="1,2"
                 opacity={particle.opacity * 0.3}
                 animate={{
-                  r: [particle.size * 2.5, particle.size * 3, particle.size * 2.5],
-                  opacity: [particle.opacity * 0.3, particle.opacity * 0.5, particle.opacity * 0.3]
+                  r: particle.size * 3,
+                  opacity: particle.opacity * 0.5
                 }}
                 transition={{
                   duration: 2 + Math.random() * 2,

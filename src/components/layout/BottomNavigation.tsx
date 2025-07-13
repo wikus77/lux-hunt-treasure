@@ -169,8 +169,8 @@ const BottomNavigationComponent = () => {
                     <motion.div 
                       className="relative"
                       animate={{ 
-                        scale: [1, 1.05, 1], 
-                        opacity: [1, 0.9, 1] 
+                        scale: 1.05, 
+                        opacity: 0.9
                       }}
                       transition={{ 
                         repeat: Infinity, 
@@ -198,7 +198,7 @@ const BottomNavigationComponent = () => {
                   ) : (
                     <motion.div
                       animate={isActive ? {
-                        scale: [1, 1.1, 1],
+                        scale: 1.1,
                         filter: [
                           `drop-shadow(0 0 5px ${link.color}80)`,
                           `drop-shadow(0 0 12px ${link.color}CC)`,
@@ -225,7 +225,7 @@ const BottomNavigationComponent = () => {
                         className="absolute -top-1 -right-1 flex items-center justify-center h-5 w-5 bg-[#FF59F8] rounded-full shadow-[0_0_8px_rgba(240,89,255,0.5)]"
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{ 
-                          scale: [1, 1.2, 1],
+                          scale: 1.2,
                           opacity: 1
                         }}
                         exit={{ scale: 0, opacity: 0 }}
