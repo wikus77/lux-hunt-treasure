@@ -31,7 +31,7 @@ const ApplePayBox = ({ onApplePay }: ApplePayBoxProps) => {
   if (!isApplePayAvailable) {
     return (
       <div className="text-center p-4">
-        <div className="border border-projectx-deep-blue rounded-md p-6 mb-4 bg-gray-900">
+        <div className="border border-gray-700 rounded-md p-6 mb-4 bg-gray-900">
           <CreditCardIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
           <p className="mb-6 text-gray-400">Apple Pay non è disponibile su questo dispositivo</p>
           <Button
@@ -47,7 +47,7 @@ const ApplePayBox = ({ onApplePay }: ApplePayBoxProps) => {
 
   return (
     <div className="text-center p-4">
-      <div className="border border-projectx-deep-blue rounded-md p-6 mb-4">
+      <div className="border border-gray-700 rounded-md p-6 mb-4">
         <div className="flex items-center justify-center mb-4">
           <AppleIcon className="h-12 w-12" />
         </div>

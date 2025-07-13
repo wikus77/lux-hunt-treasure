@@ -76,13 +76,13 @@ const NotificationsDrawer = ({ open, onOpenChange }: NotificationsDrawerProps) =
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md w-full bg-projectx-deep-blue p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-md w-full bg-black p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-4 pb-1">
             <DialogTitle className="flex items-center gap-1 text-lg">
               <Bell className="h-5 w-5 mr-1" />
               Notifiche
               {unreadCount > 0 && (
-                <span className="ml-2 px-2 py-0.5 text-xs bg-projectx-pink rounded-full animate-pulse">
+                <span className="ml-2 px-2 py-0.5 text-xs bg-m1ssion-pink rounded-full animate-pulse">
                   {unreadCount}
                 </span>
               )}
@@ -104,27 +104,27 @@ const NotificationsDrawer = ({ open, onOpenChange }: NotificationsDrawerProps) =
           <div className="px-3 py-2">
             <Tabs defaultValue="all" className="w-full" onValueChange={(value) => setActiveCategory(value as NotificationCategory)}>
               <TabsList className="bg-black/40 p-1 w-full grid grid-cols-6 h-auto">
-                <TabsTrigger value="all" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
+                <TabsTrigger value="all" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-m1ssion-blue data-[state=active]:to-m1ssion-pink">
                   <Bell className="h-3 w-3" />
                   <span className="sr-only sm:not-sr-only sm:ml-1">Tutti</span>
                 </TabsTrigger>
-                <TabsTrigger value="leaderboard" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
+                <TabsTrigger value="leaderboard" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-m1ssion-blue data-[state=active]:to-m1ssion-pink">
                   <Trophy className="h-3 w-3" />
                   <span className="sr-only sm:not-sr-only sm:ml-1">Classifica</span>
                 </TabsTrigger>
-                <TabsTrigger value="buzz" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
+                <TabsTrigger value="buzz" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-m1ssion-blue data-[state=active]:to-m1ssion-pink">
                   <Circle className="h-3 w-3" />
                   <span className="sr-only sm:not-sr-only sm:ml-1">Buzz</span>
                 </TabsTrigger>
-                <TabsTrigger value="map" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
+                <TabsTrigger value="map" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-m1ssion-blue data-[state=active]:to-m1ssion-pink">
                   <MapPin className="h-3 w-3" />
                   <span className="sr-only sm:not-sr-only sm:ml-1">Mappa</span>
                 </TabsTrigger>
-                <TabsTrigger value="weekly" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
+                <TabsTrigger value="weekly" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-m1ssion-blue data-[state=active]:to-m1ssion-pink">
                   <Calendar className="h-3 w-3" />
                   <span className="sr-only sm:not-sr-only sm:ml-1">Settimanale</span>
                 </TabsTrigger>
-                <TabsTrigger value="generic" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-projectx-blue data-[state=active]:to-projectx-pink">
+                <TabsTrigger value="generic" className="text-xs py-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-m1ssion-blue data-[state=active]:to-m1ssion-pink">
                   <Bell className="h-3 w-3" />
                   <span className="sr-only sm:not-sr-only sm:ml-1">Altre</span>
                 </TabsTrigger>
@@ -166,7 +166,7 @@ const NotificationsDrawer = ({ open, onOpenChange }: NotificationsDrawerProps) =
           {notifications.length > 0 && unreadCount > 0 && (
             <div className="text-center mt-2 mb-4">
               <Button size="sm" variant="outline" onClick={handleMarkAllAsRead} 
-                className="bg-gradient-to-r from-projectx-blue/20 to-projectx-pink/20 hover:from-projectx-blue/30 hover:to-projectx-pink/30 border-projectx-deep-blue">
+                className="bg-gradient-to-r from-m1ssion-blue/20 to-m1ssion-pink/20 hover:from-m1ssion-blue/30 hover:to-m1ssion-pink/30 border-gray-700">
                 Segna tutte come lette
               </Button>
             </div>

@@ -15,7 +15,7 @@ const InstagramStyleDrawer = ({ open, onClose }: InstagramStyleDrawerProps) => {
       >
         <div className="text-xl font-bold text-center mb-8">Centro gestione account</div>
         <ul className="space-y-6 px-4">
-          <li className="text-projectx-neon-blue font-semibold">Centro gestione account</li>
+          <li className="text-m1ssion-blue font-semibold">Centro gestione account</li>
           {/* Qui puoi aggiungere altri elementi menu in futuro */}
         </ul>
       </SheetContent>

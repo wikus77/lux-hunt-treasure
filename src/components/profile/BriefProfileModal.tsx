@@ -41,7 +41,7 @@ const BriefProfileModal = ({ open, onClose, profileImage }: BriefProfileModalPro
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-black border border-projectx-deep-blue p-6 text-left max-w-md">
+      <DialogContent className="bg-black border border-gray-700 p-6 text-left max-w-md">
         <DialogClose className="absolute right-4 top-4">
           <Button variant="ghost" size="icon">
             <X className="h-4 w-4" />
@@ -50,12 +50,12 @@ const BriefProfileModal = ({ open, onClose, profileImage }: BriefProfileModalPro
         
         <div className="flex flex-col items-center mt-4 mb-6">
           <span className="instagram-story-ring">
-            <Avatar className="w-20 h-20 border-2 border-projectx-neon-blue">
+            <Avatar className="w-20 h-20 border-2 border-m1ssion-blue">
               {profileImage ? (
                 <AvatarImage src={profileImage} alt={name} />
               ) : (
-                <AvatarFallback className="bg-projectx-deep-blue">
-                  <User className="h-10 w-10 text-projectx-neon-blue" />
+                <AvatarFallback className="bg-gray-900">
+                  <User className="h-10 w-10 text-m1ssion-blue" />
                 </AvatarFallback>
               )}
             </Avatar>
@@ -73,7 +73,7 @@ const BriefProfileModal = ({ open, onClose, profileImage }: BriefProfileModalPro
         
         <div className="mt-4 flex justify-center">
           <Button 
-            className="w-full bg-projectx-neon-blue hover:bg-projectx-pink transition-colors"
+            className="w-full bg-m1ssion-blue hover:bg-m1ssion-pink transition-colors"
             onClick={goToProfile}
           >
             Vai al profilo completo

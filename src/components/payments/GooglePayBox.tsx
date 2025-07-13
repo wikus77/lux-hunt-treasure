@@ -39,7 +39,7 @@ const GooglePayBox = ({ onGooglePay }: GooglePayBoxProps) => {
   if (!isGooglePayAvailable) {
     return (
       <div className="text-center p-4">
-        <div className="border border-projectx-deep-blue rounded-md p-6 mb-4 bg-gray-900">
+        <div className="border border-gray-700 rounded-md p-6 mb-4 bg-gray-900">
           <CreditCardIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
           <p className="mb-6 text-gray-400">Google Pay non è disponibile su questo dispositivo</p>
           <Button
@@ -55,7 +55,7 @@ const GooglePayBox = ({ onGooglePay }: GooglePayBoxProps) => {
 
   return (
     <div className="text-center p-4">
-      <div className="border border-projectx-deep-blue rounded-md p-6 mb-4">
+      <div className="border border-gray-700 rounded-md p-6 mb-4">
         <div className="flex items-center justify-center mb-4">
           {/* Google Pay logo container */}
           <div className="h-12 w-40 bg-white rounded-md flex items-center justify-center">

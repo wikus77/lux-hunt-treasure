@@ -87,7 +87,7 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({ onSubmit }) => {
         </div>
         <Button
           type="submit"
-          className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
+          className="w-full bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
         >
           Salva Carta
         </Button>

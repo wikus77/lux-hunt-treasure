@@ -357,9 +357,9 @@ export function SmartPrizeManager() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'discovered': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'claimed': return <Gift className="h-4 w-4 text-[hsl(var(--projectx-gold))]" />;
+      case 'claimed': return <Gift className="h-4 w-4 text-yellow-400" />;
       case 'expired': return <Clock className="h-4 w-4 text-red-500" />;
-      default: return <Target className="h-4 w-4 text-[hsl(var(--projectx-blue))]" />;
+      default: return <Target className="h-4 w-4 text-m1ssion-blue" />;
     }
   };
 
@@ -369,7 +369,7 @@ export function SmartPrizeManager() {
       <Card className="bg-[hsl(var(--card))] border-[hsl(var(--border))]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-[hsl(var(--projectx-blue))]" />
+            <MapPin className="h-5 w-5 text-m1ssion-blue" />
             Sistema GPS Premi
           </CardTitle>
         </CardHeader>
@@ -383,7 +383,7 @@ export function SmartPrizeManager() {
                 }
               </p>
               {nearbyPrizes.length > 0 && (
-                <p className="text-sm text-[hsl(var(--projectx-blue))] mt-1">
+                <p className="text-sm text-m1ssion-blue mt-1">
                   {nearbyPrizes.length} premi nelle vicinanze
                 </p>
               )}
@@ -404,7 +404,7 @@ export function SmartPrizeManager() {
         <Card className="bg-[hsl(var(--card))] border-[hsl(var(--border))]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-[hsl(var(--projectx-gold))]" />
+              <Zap className="h-5 w-5 text-yellow-400" />
               Premi Nelle Vicinanze
             </CardTitle>
           </CardHeader>
@@ -448,14 +448,14 @@ export function SmartPrizeManager() {
       <Card className="bg-[hsl(var(--card))] border-[hsl(var(--border))]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Gift className="h-5 w-5 text-[hsl(var(--projectx-gold))]" />
+            <Gift className="h-5 w-5 text-yellow-400" />
             Gestione Premi Intelligente
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex justify-center py-10">
-              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[hsl(var(--projectx-blue))]"></div>
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-m1ssion-blue"></div>
             </div>
           ) : (
             <div className="space-y-4">

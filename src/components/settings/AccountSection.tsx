@@ -15,7 +15,7 @@ const AccountSection = () => {
           onClick={() => navigate('/personal-info')}
         >
           <div className="flex items-center">
-            <User className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+            <User className="h-5 w-5 mr-3 text-m1ssion-blue" />
             <span>Informazioni Personali</span>
           </div>
           <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -26,7 +26,7 @@ const AccountSection = () => {
           onClick={() => navigate('/privacy-security')}
         >
           <div className="flex items-center">
-            <Shield className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+            <Shield className="h-5 w-5 mr-3 text-m1ssion-blue" />
             <span>Privacy e Sicurezza</span>
           </div>
           <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -37,7 +37,7 @@ const AccountSection = () => {
           onClick={() => navigate('/payment-methods')}
         >
           <div className="flex items-center">
-            <CreditCard className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+            <CreditCard className="h-5 w-5 mr-3 text-m1ssion-blue" />
             <span>Metodi di Pagamento</span>
           </div>
           <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -48,7 +48,7 @@ const AccountSection = () => {
           onClick={() => navigate('/subscriptions')}
         >
           <div className="flex items-center">
-            <Shield className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+            <Shield className="h-5 w-5 mr-3 text-m1ssion-blue" />
             <span>Abbonamento</span>
           </div>
           <ChevronRight className="h-5 w-5 text-muted-foreground" />

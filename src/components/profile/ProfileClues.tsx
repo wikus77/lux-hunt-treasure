@@ -134,7 +134,7 @@ const ProfileClues = ({ unlockedClues, onClueUnlocked }: ProfileCluesProps) => {
               <AccordionItem 
                 key={category} 
                 value={category}
-                className="border border-projectx-blue/20 rounded-lg overflow-hidden"
+                className="border border-m1ssion-blue/20 rounded-lg overflow-hidden"
               >
                 <AccordionTrigger className={`px-4 py-2 ${CATEGORY_STYLES[category]?.gradient || CATEGORY_STYLES["General"].gradient}`}>
                   <div className="flex items-center gap-2">

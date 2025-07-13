@@ -56,7 +56,7 @@ const SubscriptionStatus = () => {
   return (
     <div className="glass-card mb-4">
       <h3 className="text-lg font-bold mb-2">Stato Abbonamento</h3>
-      <div className="mb-4 p-3 rounded-md bg-gradient-to-r from-projectx-blue to-projectx-neon-blue">
+      <div className="mb-4 p-3 rounded-md bg-gradient-to-r from-m1ssion-blue to-blue-600">
         <div className="flex justify-between items-center">
           <span className="font-bold">{planMap[plan]?.label || "Base"}</span>
           <span className="text-xs px-2 py-1 rounded-full bg-black bg-opacity-30">
@@ -66,7 +66,7 @@ const SubscriptionStatus = () => {
       </div>
 
       <Button
-        className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
+        className="w-full bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
         onClick={handleUpgradeSubscription}
       >
         Aggiorna Abbonamento

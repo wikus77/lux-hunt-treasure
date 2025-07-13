@@ -33,10 +33,10 @@ const PushNotificationRequest: React.FC<PushNotificationRequestProps> = ({
   if (isSupported === false) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md bg-black border border-projectx-blue">
+        <DialogContent className="sm:max-w-md bg-black border border-m1ssion-blue">
           <DialogHeader>
             <DialogTitle className="text-white flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-projectx-pink" />
+              <AlertCircle className="w-5 h-5 text-m1ssion-pink" />
               Notifiche non supportate
             </DialogTitle>
           </DialogHeader>
@@ -56,10 +56,10 @@ const PushNotificationRequest: React.FC<PushNotificationRequestProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-black border border-projectx-blue">
+      <DialogContent className="sm:max-w-md bg-black border border-m1ssion-blue">
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
-            <Bell className="w-5 h-5 text-projectx-blue" />
+            <Bell className="w-5 h-5 text-m1ssion-blue" />
             Attiva le notifiche push
           </DialogTitle>
         </DialogHeader>
@@ -70,8 +70,8 @@ const PushNotificationRequest: React.FC<PushNotificationRequestProps> = ({
           </p>
           
           {permission === 'denied' ? (
-            <div className="p-3 rounded-md bg-projectx-deep-blue/50 border border-projectx-pink/30 flex items-center gap-2">
-              <BellOff className="w-5 h-5 text-projectx-pink flex-shrink-0" />
+            <div className="p-3 rounded-md bg-gray-900/50 border border-m1ssion-pink/30 flex items-center gap-2">
+              <BellOff className="w-5 h-5 text-m1ssion-pink flex-shrink-0" />
               <p className="text-sm text-gray-300">
                 Le notifiche sono state bloccate. Vai nelle impostazioni del browser per abilitarle.
               </p>
@@ -79,8 +79,8 @@ const PushNotificationRequest: React.FC<PushNotificationRequestProps> = ({
           ) : (
             <div className="flex justify-center">
               <div className="relative">
-                <Bell className="w-20 h-20 text-projectx-blue animate-pulse" />
-                <span className="absolute -top-1 -right-1 w-6 h-6 bg-projectx-pink rounded-full flex items-center justify-center text-xs text-white">
+                <Bell className="w-20 h-20 text-m1ssion-blue animate-pulse" />
+                <span className="absolute -top-1 -right-1 w-6 h-6 bg-m1ssion-pink rounded-full flex items-center justify-center text-xs text-white">
                   1
                 </span>
               </div>
@@ -101,7 +101,7 @@ const PushNotificationRequest: React.FC<PushNotificationRequestProps> = ({
             <Button
               onClick={handleRequestPermission}
               disabled={loading || permission === 'granted'}
-              className="bg-gradient-to-r from-projectx-blue to-projectx-pink hover:from-projectx-blue/90 hover:to-projectx-pink/90"
+              className="bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink hover:from-m1ssion-blue/90 hover:to-m1ssion-pink/90"
             >
               {loading ? (
                 <>Attivazione in corso...</>

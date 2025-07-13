@@ -31,13 +31,13 @@ const AppSection = ({
       <div className="space-y-2">
         <div className="glass-card flex justify-between items-center p-4">
           <div className="flex items-center">
-            <Volume2 className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+            <Volume2 className="h-5 w-5 mr-3 text-m1ssion-blue" />
             <span>Effetti Sonori</span>
           </div>
           <Switch 
             checked={soundEffects} 
             onCheckedChange={handleSoundToggle}
-            className="bg-projectx-neon-blue"
+            className="bg-m1ssion-blue"
           />
         </div>
 
@@ -51,7 +51,7 @@ const AppSection = ({
         <div className="glass-card flex justify-between items-center p-4 cursor-pointer" 
           onClick={() => navigate('/language-settings')}>
           <div className="flex items-center">
-            <Languages className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+            <Languages className="h-5 w-5 mr-3 text-m1ssion-blue" />
             <span>Lingua</span>
           </div>
           <span className="text-gray-400">{language}</span>

@@ -101,12 +101,12 @@ const NotificationsBanner: React.FC<NotificationsBannerProps> = ({
       }`}
       style={{ transitionProperty: "transform, opacity" }}
     >
-      <div className="relative w-full max-w-lg mx-auto bg-black border border-projectx-blue rounded-b-2xl shadow-2xl mt-2 px-4 py-4 animate-fade-in">
+      <div className="relative w-full max-w-lg mx-auto bg-black border border-m1ssion-blue rounded-b-2xl shadow-2xl mt-2 px-4 py-4 animate-fade-in">
         <div className="flex items-center mb-2">
-          <Bell className="w-5 h-5 text-projectx-neon-blue mr-2" />
+          <Bell className="w-5 h-5 text-m1ssion-blue mr-2" />
           <span className="font-bold text-lg flex-1">Notifiche</span>
           <button
-            className="text-projectx-neon-blue hover:text-projectx-pink rounded-full p-1 ml-2 border border-projectx-neon-blue hover:bg-projectx-neon-blue/20 transition-colors"
+            className="text-m1ssion-blue hover:text-m1ssion-pink rounded-full p-1 ml-2 border border-m1ssion-blue hover:bg-m1ssion-blue/20 transition-colors"
             onClick={onClose}
             aria-label="Chiudi"
           >
@@ -133,7 +133,7 @@ const NotificationsBanner: React.FC<NotificationsBannerProps> = ({
           <div className="text-center mt-3">
             <button
               onClick={onMarkAllAsRead}
-              className="text-xs px-3 py-1 rounded-lg border border-projectx-neon-blue hover:bg-projectx-neon-blue/10 transition active:scale-95"
+              className="text-xs px-3 py-1 rounded-lg border border-m1ssion-blue hover:bg-m1ssion-blue/10 transition active:scale-95"
             >
               Segna tutte come lette
             </button>

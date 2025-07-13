@@ -162,7 +162,7 @@ const ProfileQuiz = ({ onComplete, userId }: ProfileQuizProps) => {
         <div className="mb-8">
           <div className="h-2 w-full bg-white/10 rounded-full">
             <div 
-              className="h-2 bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-full transition-all duration-500"
+              className="h-2 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
@@ -201,7 +201,7 @@ const ProfileQuiz = ({ onComplete, userId }: ProfileQuizProps) => {
                 <Button
                   onClick={handleNextQuestion}
                   disabled={!selectedOption}
-                  className={`bg-gradient-to-r from-projectx-blue to-projectx-pink ${
+                  className={`bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink ${
                     !selectedOption ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
