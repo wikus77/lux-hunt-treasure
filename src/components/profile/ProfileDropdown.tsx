@@ -61,12 +61,12 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   // Get user display name and email
   const displayName = user?.user_metadata?.full_name || 
                      `${user?.user_metadata?.first_name || ''} ${user?.user_metadata?.last_name || ''}`.trim() ||
-                     'Agente M1SSION';
-  const email = user?.email || 'Utente non identificato';
+                     'Joseph';
+  const email = user?.email || 'wikus77@hotmail.it';
   const userId = user?.id ? user.id.substring(0, 8) : 'N/A';
 
   // Get subscription tier with badges
-  const subscriptionTier = user?.user_metadata?.subscription_tier || 'starter';
+  const subscriptionTier = user?.user_metadata?.subscription_tier || 'm1ssion+';
   const getTierDisplay = () => {
     switch (subscriptionTier.toLowerCase()) {
       case 'black':
@@ -76,7 +76,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
       case 'm1ssion+':
         return { name: 'M1SSION+', color: 'bg-gradient-to-r from-purple-600 to-blue-600 text-white', emoji: '👑' };
       default:
-        return { name: 'Starter', color: 'bg-green-600 text-white', emoji: '🌟' };
+        return { name: 'M1SSION+', color: 'bg-gradient-to-r from-purple-600 to-blue-600 text-white', emoji: '👑' };
     }
   };
 
@@ -104,10 +104,12 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute right-0 mt-2 w-80 z-[9999]"
+            className="absolute right-0 mt-2 w-80 z-[99999]"
             style={{
               top: 'calc(100% + 8px)',
-              maxWidth: 'calc(100vw - 32px)'
+              maxWidth: 'calc(100vw - 32px)',
+              position: 'fixed',
+              right: '16px'
             }}
           >
             <Card className="bg-black/95 border-[#00D1FF]/30 backdrop-blur-xl shadow-2xl border-2">

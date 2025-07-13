@@ -1,5 +1,4 @@
-
-// FILE CREATO O MODIFICATO — BY JOSEPH MULE
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CommandCenterHome from "@/components/command-center/CommandCenterHome";
@@ -102,43 +101,19 @@ const AppHome = () => {
   }
 
   return (
-    <motion.div 
-      className="bg-[#070818] w-full"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      style={{ 
-        height: '100dvh',
-        overflow: 'hidden',
-        position: 'relative'
-      }}
-    >
+    <div className="min-h-screen">
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
       
-      {/* Fixed Header */}
-      <header 
-        className="fixed top-0 left-0 right-0 z-50"
-        style={{
-          height: '72px',
-          paddingTop: 'env(safe-area-inset-top, 47px)',
-          background: 'rgba(19, 21, 33, 0.55)',
-          backdropFilter: 'blur(12px)'
-        }}
-      >
-        <UnifiedHeader profileImage={profileImage} />
-      </header>
+      {/* Unified Header - same as other pages */}
+      <UnifiedHeader profileImage={profileImage} />
       
-      {/* Main scrollable content */}
-      <main
-        style={{
-          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
-          height: '100dvh',
-          overflowY: 'auto',
-          position: 'relative',
-          zIndex: 0
+      <div 
+        className="px-4 space-y-6"
+        style={{ 
+          paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
         }}
       >
         <AnimatePresence>
@@ -157,7 +132,7 @@ const AppHome = () => {
                   transition={{ duration: 0.3 }}
                   className="fixed inset-x-0 z-40 px-2 md:px-4"
                   style={{ 
-                    top: 'calc(72px + env(safe-area-inset-top, 47px))'
+                    top: 'calc(72px + 47px + env(safe-area-inset-top, 0px))'
                   }}
                 >
                   <NotificationsBanner
@@ -194,10 +169,10 @@ const AppHome = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
+      </div>
       
       <BottomNavigation />
-    </motion.div>
+    </div>
   );
 };
 
