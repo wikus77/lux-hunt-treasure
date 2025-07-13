@@ -57,7 +57,6 @@ export default defineConfig(({ mode }) => ({
       compress: {
         drop_console: false, // Keep console for debugging in production
         drop_debugger: mode === 'production',
-        keep_fnames: true,
         keep_classnames: true,
         // Prevent unsafe optimizations
         pure_funcs: [],
@@ -65,7 +64,6 @@ export default defineConfig(({ mode }) => ({
         unsafe_comps: false,
       },
       mangle: {
-        keep_fnames: true,
         keep_classnames: true,
         reserved: [
           // Critical React functions
@@ -84,7 +82,6 @@ export default defineConfig(({ mode }) => ({
       },
       format: {
         comments: false,
-        keep_fnames: true,
         preserve_annotations: true,
       },
     },

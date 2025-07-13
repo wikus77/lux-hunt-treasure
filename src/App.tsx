@@ -12,6 +12,9 @@ import AppRoutes from "./routes/AppRoutes";
 import { SafeAreaToggle } from "./components/debug/SafeAreaToggle";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 
+import { useAuthSessionDebug } from "./hooks/debug/useAuthSessionDebug";
+useAuthSessionDebug();
+
 function App() {
   // Initialize push notifications
   usePushNotifications();

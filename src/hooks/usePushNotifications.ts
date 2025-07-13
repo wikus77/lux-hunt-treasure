@@ -1,9 +1,9 @@
+import { getSupabaseClient } from "@/integrations/supabase/getClient"
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 
 import { useEffect, useState } from 'react';
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export const usePushNotifications = () => {
@@ -22,6 +22,7 @@ export const usePushNotifications = () => {
     }
 
     const setupPushNotifications = async () => {
+  const client = await getSupabaseClient();
       try {
         setLoading(true);
         
@@ -40,7 +41,7 @@ export const usePushNotifications = () => {
             console.log('🔑 Push registration success, token: ', token.value);
             
             try {
-              const { data: { user } } = await supabase.auth.getUser();
+              const { data: { user } } = await client.auth.getUser();
               
               if (user) {
                 // Salva token nel database
@@ -114,17 +115,7 @@ export const usePushNotifications = () => {
   }, []);
 
   // Funzione per richiedere permessi
-  const requestPermission = async (): Promise<{ success: boolean }> => {
-    if (!isSupported) {
-      toast.error('Push notifications non supportate su questa piattaforma');
-      return { success: false };
-    }
 
-    setLoading(true);
-    try {
-      const permissionResult = await PushNotifications.requestPermissions();
-      setPermission(permissionResult.receive);
-      
       if (permissionResult.receive === 'granted') {
         await PushNotifications.register();
         toast.success('Permessi notifiche concessi');
@@ -144,15 +135,16 @@ export const usePushNotifications = () => {
 
   // Funzione per inviare notifica test
   const sendTestNotification = async () => {
+  const client = await getSupabaseClient();
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await client.auth.getUser();
       
       if (!user) {
         toast.error('Utente non autenticato');
         return;
       }
 
-      const { error } = await supabase.functions.invoke('send-push-notification', {
+      const { error } = await client.functions.invoke('send-push-notification', {
         body: {
           userId: user.id,
           title: 'Test M1SSION™',
@@ -184,3 +176,36 @@ export const usePushNotifications = () => {
     sendTestNotification
   };
 };
+// ✅ Re-inserita funzione corretta
+
+// ✅ Funzione corretta con async e await funzionante
+async function requestPermission(): Promise<{ success: boolean }> {
+  const client = await getSupabaseClient();
+
+  if (!isSupported) {
+    return { success: false };
+  }
+
+  try {
+    const permissionResult = await PushNotifications.requestPermissions();
+    setPermission(permissionResult.receive);
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Permission error:", error);
+    return { success: false };
+  }
+}
+
+async function handlePermissionRequest() {
+  const client = await getSupabaseClient();
+  setLoading(true);
+  try {
+    const permissionResult = await PushNotifications.requestPermissions();
+    setPermission(permissionResult.receive);
+  } catch (error) {
+    console.error("❌ Permission error:", error);
+    setPermission('denied');
+  } finally {
+    setLoading(false);
+  }
+}
