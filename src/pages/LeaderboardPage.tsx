@@ -65,7 +65,7 @@ export const LeaderboardPage: React.FC = () => {
       }
 
       // Get clues count for each user
-      const userIds = profiles?.map(p => p.id) || [];
+      const userIds = profiles ? profiles.map(p => p.id) : [];
       
       const [cluesResult, buzzResult] = await Promise.all([
         supabase

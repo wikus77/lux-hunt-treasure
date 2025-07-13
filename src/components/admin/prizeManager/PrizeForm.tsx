@@ -49,7 +49,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
   authDebugInfo = null
 }) => {
   // Extract suggestions from geocode response if present
-  const suggestions = geocodeResponse?.suggestions || [];
+  const suggestions = geocodeResponse?.suggestions ? geocodeResponse.suggestions : [];
   const debugInfo = geocodeResponse?.debug;
   
   return (
