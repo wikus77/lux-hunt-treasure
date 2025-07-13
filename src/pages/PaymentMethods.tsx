@@ -177,7 +177,7 @@ const PaymentMethods = () => {
 
   return (
     <div className="min-h-screen bg-black pb-6">
-      <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue">
+      <header className="px-4 py-6 flex items-center border-b border-m1ssion-deep-blue">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -202,7 +202,7 @@ const PaymentMethods = () => {
                 ? "Genera un'area di ricerca sulla mappa basata sugli indizi che possiedi."
                 : "Sblocca un indizio extra che potrebbe essere la chiave per trovare l'auto!"}
             </p>
-            <div className="bg-projectx-deep-blue/30 p-4 rounded-md border border-projectx-deep-blue/50">
+            <div className="bg-m1ssion-deep-blue/30 p-4 rounded-md border border-m1ssion-deep-blue/50">
               <p className="text-sm text-cyan-400">
                 {isMapBuzz
                   ? "L'area generata sulla mappa ti aiuterà a restringere la zona di ricerca in base agli indizi attuali."
@@ -213,21 +213,21 @@ const PaymentMethods = () => {
 
           <div className="flex justify-between mb-6">
             <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'card' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'card' ? 'bg-m1ssion-deep-blue' : 'bg-gray-800'}`}
               onClick={() => setPaymentMethod('card')}
             >
               <span className="text-sm">Carta</span>
             </button>
             
             <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-m1ssion-deep-blue' : 'bg-gray-800'}`}
               onClick={() => setPaymentMethod('apple')}
             >
               <span className="text-sm">Pagamento Rapido</span>
             </button>
             
             <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-m1ssion-deep-blue' : 'bg-gray-800'}`}
               onClick={() => setPaymentMethod('google')}
             >
               <span className="text-sm">Altro metodo</span>

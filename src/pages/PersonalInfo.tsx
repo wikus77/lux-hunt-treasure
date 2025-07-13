@@ -157,7 +157,7 @@ const PersonalInfo = () => {
 
   return (
     <div className="min-h-screen bg-black pb-6">
-      <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue">
+      <header className="px-4 py-6 flex items-center border-b border-m1ssion-deep-blue">
         <Button 
           variant="ghost" 
           size="icon" 

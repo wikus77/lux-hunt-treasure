@@ -136,7 +136,7 @@ const PaymentSilver = () => {
         fadeOut={fadeOutExplosion}
         onFadeOutEnd={() => {}}
       />
-      <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue">
+      <header className="px-4 py-6 flex items-center border-b border-m1ssion-deep-blue">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -155,19 +155,19 @@ const PaymentSilver = () => {
             <p className="text-muted-foreground">Con questo piano avrai accesso a:</p>
             <ul className="space-y-2">
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-projectx-neon-blue"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
                 <span>Tutti i vantaggi Base</span>
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-projectx-neon-blue"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
                 <span>3 indizi premium aggiuntivi a settimana</span>
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-projectx-neon-blue"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
                 <span>Accesso anticipato ai nuovi eventi</span>
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-projectx-neon-blue"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
                 <span>Badge Silver nel profilo</span>
               </li>
             </ul>
@@ -175,14 +175,14 @@ const PaymentSilver = () => {
 
           <div className="flex justify-between mb-6">
             <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'card' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'card' ? 'bg-m1ssion-deep-blue' : 'bg-gray-800'}`}
               onClick={() => setPaymentMethod('card')}
             >
               <span className="text-sm">Carta</span>
             </button>
             
             <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-m1ssion-deep-blue' : 'bg-gray-800'}`}
               onClick={() => setPaymentMethod('apple')}
               disabled={!paymentMethodsAvailable.applePayAvailable}
             >
@@ -190,7 +190,7 @@ const PaymentSilver = () => {
             </button>
             
             <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-m1ssion-deep-blue' : 'bg-gray-800'}`}
               onClick={() => setPaymentMethod('google')}
               disabled={!paymentMethodsAvailable.googlePayAvailable}
             >

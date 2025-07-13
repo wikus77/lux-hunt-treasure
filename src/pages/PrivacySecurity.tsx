@@ -69,7 +69,7 @@ const PrivacySecurity = () => {
 
   return (
     <div className="min-h-screen bg-black pb-6">
-      <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue">
+      <header className="px-4 py-6 flex items-center border-b border-m1ssion-deep-blue">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -84,7 +84,7 @@ const PrivacySecurity = () => {
       <div className="p-4">
         <div className="glass-card mb-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
-            <ShieldIcon className="mr-2 h-5 w-5 text-projectx-neon-blue" />
+            <ShieldIcon className="mr-2 h-5 w-5 text-m1ssion-blue" />
             Impostazioni di Sicurezza
           </h2>
           
@@ -115,7 +115,7 @@ const PrivacySecurity = () => {
         
         <div className="glass-card mb-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
-            <LockIcon className="mr-2 h-5 w-5 text-projectx-neon-blue" />
+            <LockIcon className="mr-2 h-5 w-5 text-m1ssion-blue" />
             Cambia Password
           </h2>
           
@@ -173,7 +173,7 @@ const PrivacySecurity = () => {
             
             <Button 
               type="submit"
-              className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
+              className="w-full bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
             >
               Aggiorna Password
             </Button>

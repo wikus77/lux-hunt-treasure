@@ -68,7 +68,7 @@ const PaymentSuccess = () => {
           </p>
         </div>
         
-        <div className="bg-projectx-deep-blue/30 p-4 rounded-md border border-projectx-deep-blue/50 mb-6">
+        <div className="bg-m1ssion-deep-blue/30 p-4 rounded-md border border-m1ssion-deep-blue/50 mb-6">
           <h3 className="font-semibold mb-2">Dettagli Abbonamento</h3>
           <div className="flex justify-between mb-2">
             <span>Piano:</span>
@@ -86,7 +86,7 @@ const PaymentSuccess = () => {
         
         <div className="space-y-4">
           <Button 
-            className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
+            className="w-full bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
             onClick={() => navigate("/subscriptions")}
           >
             Gestisci Abbonamento

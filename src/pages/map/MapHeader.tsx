@@ -41,7 +41,7 @@ const MapHeader = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={onHelp}
-                className="bg-black/40 border border-projectx-deep-blue/40 p-1.5 rounded-full flex items-center justify-center hover:bg-black/60 text-xs sm:text-sm press-effect min-h-[40px] min-w-[40px]"
+                className="bg-black/40 border border-m1ssion-deep-blue/40 p-1.5 rounded-full flex items-center justify-center hover:bg-black/60 text-xs sm:text-sm press-effect min-h-[40px] min-w-[40px]"
               >
                 <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="sr-only">Aiuto</span>
@@ -49,7 +49,7 @@ const MapHeader = ({
 
               <button
                 onClick={onBuzz}
-                className="bg-gradient-to-r from-projectx-blue to-projectx-pink w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center hover:opacity-90 shadow-[0_0_10px_rgba(217,70,239,0.5)]"
+                className="bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center hover:opacity-90 shadow-[0_0_10px_rgba(217,70,239,0.5)]"
               >
                 <Zap className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="sr-only">Buzz Map - {buzzMapPrice.toFixed(2)}€</span>

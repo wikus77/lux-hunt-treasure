@@ -70,7 +70,7 @@ const Terms = () => {
         
         <div className="mt-10 mb-10 text-center">
           <Link to="/">
-            <Button className="bg-gradient-to-r from-projectx-blue to-projectx-pink">
+            <Button className="bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink">
               Torna alla Home
             </Button>
           </Link>
