@@ -47,7 +47,7 @@ export const AdminEmailSender = () => {
           subject,
           htmlContent,
           userGroup: test ? undefined : userGroup,
-          to: test ? [{ email: testEmail }] : undefined,
+          to: test ? [{ email: testEmail || '' }] : [],
           trackOpens: true,
           trackClicks: true
         }
