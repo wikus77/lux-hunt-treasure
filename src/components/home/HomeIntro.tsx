@@ -68,8 +68,16 @@ export default function HomeIntro({ onEnd }: { onEnd: () => void }) {
       <motion.div
         className="absolute bottom-24 left-1/2 -translate-x-1/2 h-2 w-48 bg-gradient-to-r from-cyan-400/30 via-cyan-400/70 to-blue-400/30 rounded-full blur-lg"
         initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 1, 0.6, 1, 0.4], scaleX: [1, 1.2, 1, 1.05, 1] }}
-        transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+        animate={{ 
+          opacity: 0.7, 
+          scaleX: 1.1 
+        }}
+        transition={{ 
+          repeat: Infinity, 
+          duration: 4, 
+          ease: "easeInOut",
+          repeatType: "reverse" as const
+        }}
       />
 
       {/* Button to skip intro or auto-proceed */}

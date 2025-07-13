@@ -81,12 +81,13 @@ export const ContextualShortcuts: React.FC<ContextualShortcutsProps> = ({
               className={`w-12 h-12 rounded-full flex items-center justify-center ${shortcut.color} relative`}
               animate={{ 
                 boxShadow: shortcut.highlight 
-                  ? ["0 0 0px rgba(255,255,255,0)", "0 0 20px rgba(255,255,255,0.5)", "0 0 0px rgba(255,255,255,0)"] 
+                  ? "0 0 20px rgba(255,255,255,0.5)" 
                   : "none" 
               }}
               transition={{ 
                 duration: 2,
-                repeat: Infinity
+                repeat: Infinity,
+                repeatType: "reverse" as const
               }}
             >
               <shortcut.icon className={`w-5 h-5 ${shortcut.highlight ? 'text-white' : 'text-white/70'}`} />
@@ -95,11 +96,12 @@ export const ContextualShortcuts: React.FC<ContextualShortcutsProps> = ({
                   className="absolute inset-0 rounded-full"
                   initial={{ opacity: 0 }}
                   animate={{ 
-                    opacity: [0.2, 0.5, 0.2],
+                    opacity: 0.35
                   }}
                   transition={{ 
                     duration: 1.5,
-                    repeat: Infinity
+                    repeat: Infinity,
+                    repeatType: "reverse" as const
                   }}
                   style={{ 
                     background: `radial-gradient(circle, ${shortcut.highlightColor}50 0%, transparent 70%)` 
@@ -112,8 +114,12 @@ export const ContextualShortcuts: React.FC<ContextualShortcutsProps> = ({
               <motion.div
                 className={`h-1 w-1 rounded-full ${shortcut.highlightColor}`}
                 initial={{ opacity: 0.5 }}
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
+                animate={{ opacity: 1 }}
+                transition={{ 
+                  duration: 1.5, 
+                  repeat: Infinity, 
+                  repeatType: "reverse" as const
+                }}
               />
             )}
           </motion.div>

@@ -243,8 +243,12 @@ export default function MissionSelection() {
         {/* Animated scroll arrow */}
         <motion.div 
           className="flex justify-center" 
-          animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
+          animate={{ y: 10 }}
+          transition={{ 
+            repeat: Infinity, 
+            duration: 2,
+            repeatType: "reverse" as const
+          }}
         >
           <ArrowDown className="text-[#00D1FF] w-8 h-8" />
         </motion.div>
