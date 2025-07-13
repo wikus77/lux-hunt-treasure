@@ -34,14 +34,9 @@ export const CurrentEventSection = () => {
     }
   };
 
-  // Animation for the carousel images
-  const imageVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: { 
-      opacity: 1, 
-      scale: 1
-    }
-  };
+  // Animation states for images
+  const imageHidden = { opacity: 0, scale: 0.9 };
+  const imageVisible = { opacity: 1, scale: 1 };
 
   return (
     <motion.section 
@@ -80,10 +75,9 @@ export const CurrentEventSection = () => {
               <CarouselItem key={idx} className="flex flex-col items-center justify-center">
                 <motion.div 
                   className="w-full flex justify-center"
-                  initial="hidden"
-                  whileInView="visible"
+                  initial={imageHidden}
+                  whileInView={imageVisible}
                   transition={{ duration: 0.8, delay: 0.2 + idx * 0.15 }}
-                  variants={imageVariants}
                   whileHover={{ 
                     scale: 1.02,
                     transition: { duration: 0.4, ease: [0.19, 1, 0.22, 1] }

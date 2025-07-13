@@ -58,21 +58,6 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
     }
   };
 
-  const contentVariants = {
-    hidden: {
-      opacity: 0,
-      y: 10
-    },
-    visible: {
-      opacity: 1,
-      y: 0
-    },
-    exit: {
-      opacity: 0,
-      y: 10
-    }
-  };
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -95,6 +80,7 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
             initial="hidden"
             animate="visible"
             exit="exit"
+            variants={dynamicIslandVariants}
             transition={{ duration: 0.4, ease: "easeOut" }}
             style={{
               top: "16px",
@@ -108,8 +94,9 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
           >
             <div className="bg-zinc-900/95 backdrop-blur-md border border-cyan-500/30 rounded-[inherit] overflow-hidden p-6 text-white h-full w-full">
               <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15, duration: 0.3 }}
-                variants={contentVariants}
                 className="flex justify-between items-center mb-4"
               >
                 <h3 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
@@ -125,6 +112,8 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
               </motion.div>
               
               <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.3 }}
                 className="space-y-4"
               >
@@ -165,7 +154,11 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
                 </div>
               </motion.div>
               
-              <motion.div transition={{ delay: 0.25, duration: 0.3 }} variants={contentVariants}>
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25, duration: 0.3 }}
+              >
                 <Button 
                   onClick={onClose} 
                   className="w-full mt-6 bg-gradient-to-r from-cyan-500 to-blue-500 hover:opacity-90 text-black"
