@@ -79,25 +79,27 @@ export const LeaderboardPage: React.FC = () => {
       ]);
 
       // Count clues per user
-      const cluesCount = cluesResult.data?.reduce((acc, clue) => {
+      const cluesCountReducer = (acc: Record<string, number>, clue: any) => {
         acc[clue.user_id] = (acc[clue.user_id] || 0) + 1;
         return acc;
-      }, {} as Record<string, number>) || {};
+      };
+      const cluesCount = cluesResult.data ? cluesResult.data.reduce(cluesCountReducer, {}) : {};
 
       // Count buzz per user
-      const buzzCount = buzzResult.data?.reduce((acc, buzz) => {
+      const buzzCountReducer = (acc: Record<string, number>, buzz: any) => {
         acc[buzz.user_id] = (acc[buzz.user_id] || 0) + buzz.buzz_count;
         return acc;
-      }, {} as Record<string, number>) || {};
+      };
+      const buzzCount = buzzResult.data ? buzzResult.data.reduce(buzzCountReducer, {}) : {};
 
       // Combine data and add rankings
-      const enrichedData = profiles?.map((profile, index) => ({
+      const enrichedData = profiles ? profiles.map((profile, index) => ({
         ...profile,
         clues_unlocked: cluesCount[profile.id] || 0,
         buzz_used: buzzCount[profile.id] || 0,
         rank: index + 1,
         change: Math.floor(Math.random() * 21) - 10 // Mock change data
-      })) || [];
+      })) : [];
 
       // Sort by selected criteria
       const sortedData = enrichedData.sort((a, b) => {

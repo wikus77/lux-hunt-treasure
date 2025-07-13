@@ -58,14 +58,20 @@ const PrizeTableDebug = () => {
       console.log("User Data:", JSON.stringify({ user: sessionData?.session?.user }, null, 2));
       console.log("Access Token:", accessToken ? "Present" : "Missing");
       
+      const headers = {
+        "Content-Type": "application/json"
+      };
+      if (accessToken) {
+        headers["Authorization"] = `Bearer ${accessToken}`;
+      } else {
+        headers["X-No-Auth"] = "true";
+      }
+      
       const response = await fetch(
         "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/create-prize-clues-table",
         {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : { "X-No-Auth": "true" })
-          },
+          headers,
           cache: "no-store"
         }
       );
@@ -153,14 +159,20 @@ const PrizeTableDebug = () => {
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
       
+      const headers = {
+        "Content-Type": "application/json"
+      };
+      if (accessToken) {
+        headers["Authorization"] = `Bearer ${accessToken}`;
+      } else {
+        headers["X-No-Auth"] = "true";
+      }
+      
       const response = await fetch(
         "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/create-prize-clues-table",
         {
           method: "POST", // Using POST to indicate we want to create the table
-          headers: {
-            ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : { "X-No-Auth": "true" }),
-            "Content-Type": "application/json"
-          },
+          headers,
           cache: "no-store"
         }
       );
