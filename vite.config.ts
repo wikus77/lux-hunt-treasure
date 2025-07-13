@@ -1,12 +1,11 @@
 
-// 🔐 Customized for M1SSION™ by Joseph – Cleaned on 2025-07-10
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 // M1SSION™ Treasure Hunt App - Custom Vite Configuration
 // Optimized for Capacitor iOS/Android deployment with enhanced build settings
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -19,8 +18,6 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {

@@ -42,7 +42,7 @@ export const CarDetailsModal: React.FC<CarDetailsModalProps> = ({ isOpen, onClos
             <AnimatePresence>
               <motion.img 
                 key={car.id}
-                src={car.imageUrl || '/lovable-uploads/14f94617-e821-4a59-9b90-32d1dfd615e4.png'}
+                src={car.imageUrl || '/assets/m1ssion/car-placeholder.png'}
                 alt={car.name}
                 className="w-full h-full object-cover"
                 initial={{ opacity: 0 }}
