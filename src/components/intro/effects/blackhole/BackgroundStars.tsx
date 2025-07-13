@@ -192,16 +192,10 @@ const BackgroundStars: React.FC<BackgroundStarsProps> = ({ stage }) => {
         <motion.div
           key={star.id}
           animate={{
-            opacity: star.opacity + 0.2,
-            scale: 1.2,
-            x: stage < 4 ? 2 : 0,
-            y: stage < 4 ? -2 : 0,
-          }}
-          initial={{
-            opacity: star.opacity,
-            scale: 1,
-            x: 0,
-            y: 0,
+            opacity: [star.opacity, star.opacity + 0.2, star.opacity],
+            scale: [1, 1.2, 1],
+            x: stage < 4 ? [0, 2, -2, 0] : 0,
+            y: stage < 4 ? [0, -2, 2, 0] : 0,
           }}
           transition={{
             duration: 2 + Math.random() * 3,
@@ -244,14 +238,15 @@ const BackgroundStars: React.FC<BackgroundStarsProps> = ({ stage }) => {
             opacity: 0,
           }}
           animate={{
-            top: `${50 + Math.random() * 50}%`,
-            left: `${30 + Math.random() * 70}%`,
-            opacity: 0
+            top: [`${Math.random() * 50}%`, `${50 + Math.random() * 50}%`],
+            left: [`${Math.random() * 30}%`, `${30 + Math.random() * 70}%`],
+            opacity: [0, 1, 0]
           }}
           transition={{
-            duration: 3,
+            duration: 1.5,
             delay: 2 + i * 3 + Math.random() * 5,
             ease: "easeOut",
+            times: [0, 0.1, 1],
             repeat: Infinity,
             repeatDelay: 10 + Math.random() * 15
           }}
@@ -287,8 +282,8 @@ const BackgroundStars: React.FC<BackgroundStarsProps> = ({ stage }) => {
             zIndex: 1
           }}
           animate={{
-            opacity: 0.6,
-            scale: 1.1
+            opacity: [0.4, 0.6, 0.4],
+            scale: [1, 1.1, 1]
           }}
           transition={{
             duration: 4,

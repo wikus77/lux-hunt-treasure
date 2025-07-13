@@ -20,12 +20,13 @@ const GravitationalRings: React.FC<GravitationalRingsProps> = ({ stage }) => {
             scale: 0.2,
           }}
           animate={{ 
-            opacity: 0.3,
-            scale: 0.9 + (i * 0.4),
-            rotateZ: i % 2 === 0 ? 45 : -45
+            opacity: [0, 0.6, 0.3],
+            scale: [0.2, 0.6 + (i * 0.3), 0.9 + (i * 0.4)],
+            rotateZ: [0, i % 2 === 0 ? 45 : -45]
           }}
           transition={{ 
-            duration: 2 + (i * 0.5),
+            duration: 2.5,
+            times: [0, 0.6, 1],
             ease: "easeInOut"
           }}
         />

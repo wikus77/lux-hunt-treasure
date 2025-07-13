@@ -20,7 +20,7 @@ export const CarouselHeading: React.FC<CarouselHeadingProps> = ({ title }) => {
           initial={{ y: "100%" }}
           whileInView={{ y: "0%" }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
+          transition={{ duration: 0.7, ease: [0.19, 1, 0.22, 1] }}
         >
           {title}
         </motion.h2>

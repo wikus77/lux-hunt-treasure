@@ -133,7 +133,7 @@ export default function AdminPrizeForm() {
               onChange={handleChange}
               required
               className="bg-gray-800 border-gray-700"
-              placeholder="/assets/m1ssion/placeholder.png"
+              placeholder="/lovable-uploads/your-image-id.png"
             />
           </div>
           

@@ -75,12 +75,8 @@ const CommandModuleCard = ({
       {!unlocked && gradientOverlay && (
         <motion.div 
           className="absolute inset-0 bg-black/70 pointer-events-none"
-          animate={{ opacity: 0.5 }}
-          transition={{ 
-            duration: 4, 
-            repeat: Infinity, 
-            repeatType: "reverse" as const
-          }}
+          animate={{ opacity: [0.7, 0.5, 0.7] }}
+          transition={{ duration: 4, repeat: Infinity }}
         ></motion.div>
       )}
 

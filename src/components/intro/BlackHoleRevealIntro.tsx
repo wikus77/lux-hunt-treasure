@@ -177,9 +177,9 @@ const BlackHoleRevealIntro: React.FC<BlackHoleRevealIntroProps> = ({ onComplete 
       {/* Logo reveal with enhanced transition */}
       <motion.div
         animate={{
-          y: isTransitioningOut ? 20 : 0,
-          scale: isTransitioningOut ? 0.9 : 1,
-          opacity: isTransitioningOut ? 0 : 1
+          y: isTransitioningOut ? [0, 20] : 0,
+          scale: isTransitioningOut ? [1, 0.9] : 1,
+          opacity: isTransitioningOut ? [1, 0] : 1
         }}
         transition={{
           duration: 2.0,

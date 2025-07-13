@@ -57,6 +57,20 @@ const Login = () => {
           </div>
         </div>
 
+        {/* Developer Access Panel */}
+        <motion.div 
+          className="mt-4 p-3 bg-green-900/20 border border-green-500/30 rounded-lg"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <p className="text-green-400 text-sm text-center">
+            🔧 Accesso sviluppatore attivo
+          </p>
+          <p className="text-green-300 text-xs text-center mt-1">
+            Email autorizzata: wikus77@hotmail.it
+          </p>
+        </motion.div>
       </motion.div>
     </div>
   );

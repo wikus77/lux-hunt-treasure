@@ -276,12 +276,8 @@ export const Console: React.FC<ConsoleProps> = ({
                   
                   {/* Cursor */}
                   <motion.div
-                    animate={{ opacity: 0.5 }}
-                    transition={{ 
-                      duration: 1, 
-                      repeat: Infinity, 
-                      repeatType: "reverse" as const
-                    }}
+                    animate={{ opacity: [1, 0, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
                     className="flex items-center gap-2 text-xs"
                   >
                     <span className="text-gray-500">

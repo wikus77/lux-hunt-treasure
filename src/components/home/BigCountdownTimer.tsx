@@ -39,7 +39,7 @@ export default function BigCountdownTimer() {
       className="flex flex-col items-center justify-center w-full mt-8"
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, ease: "easeOut" }}
+      transition={{ duration: 0.7, ease: [0.7, 0.2, 0.2, 1] }}
     >
       <h2 className="font-orbitron neon-text-cyan text-xl sm:text-2xl mb-2 text-center tracking-widest">
         Tempo rimasto alla prossima missione!

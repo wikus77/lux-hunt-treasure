@@ -90,22 +90,21 @@ export const PrizeClueModal: React.FC<PrizeClueModalProps> = ({
       }
 
       // Get user's unlocked clues
-      const clueIds = prizeClues ? prizeClues.map(c => c.id) : [];
+      const clueIds = prizeClues?.map(c => c.id) || [];
       const { data: userClues } = await supabase
         .from('user_clues')
         .select('clue_id')
         .eq('user_id', user.id)
         .in('clue_id', clueIds);
 
-      const userClueIds = userClues ? userClues.map(uc => uc.clue_id) : [];
-      const unlockedClueIds = new Set(userClueIds);
+      const unlockedClueIds = new Set(userClues?.map(uc => uc.clue_id) || []);
 
       // Combine data
-      const enrichedClues = prizeClues ? prizeClues.map(clue => ({
+      const enrichedClues = prizeClues?.map(clue => ({
         ...clue,
         is_unlocked: unlockedClueIds.has(clue.id),
         unlock_cost: getUnlockCost(clue.clue_type)
-      })) : [];
+      })) || [];
 
       setClues(enrichedClues);
     } catch (err) {

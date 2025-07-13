@@ -80,7 +80,7 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
             initial={{ scaleX: 0, filter: "brightness(1)" }}
             animate={{ 
               scaleX: 1, 
-              filter: "brightness(3)"
+              filter: ["brightness(1.5)", "brightness(3)", "brightness(1.5)"]
             }}
             transition={{ 
               duration: 0.5,
@@ -142,18 +142,15 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
         {stage >= 3 && (
           <motion.div 
             className="absolute"
-            initial={{ 
-              opacity: 0,
-              scale: 0.5,
-              filter: "blur(10px)"
-            }}
+            initial={{ opacity: 0, scale: 0.5 }}
             animate={{ 
-              opacity: 0.7, 
-              scale: 1,
-              filter: "blur(0px)"
+              opacity: [0, 0.5, 1, 0.7], 
+              scale: [0.5, 0.8, 1.2, 1],
+              filter: ["blur(10px)", "blur(5px)", "blur(2px)", "blur(0px)"]
             }}
             transition={{ 
-              duration: 1.5,
+              duration: 1,
+              times: [0, 0.3, 0.6, 1],
             }}
           >
             {/* Main M1SSION logo */}

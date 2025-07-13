@@ -58,8 +58,8 @@ export const IntroOverlay: React.FC<IntroOverlayProps> = ({ onComplete }) => {
               opacity: 0 
             }}
             animate={{ 
-              y: -20,
-              opacity: 1
+              y: [null, -20, 20, -10, 0],
+              opacity: [0, 1, 0.8, 0.3, 0]
             }}
             transition={{
               duration: 3,

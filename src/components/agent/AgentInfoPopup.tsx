@@ -46,7 +46,13 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
       borderRadius: "24px",
       opacity: 1,
       scale: 1,
-      y: 0
+      y: 0,
+      transition: {
+        type: "spring",
+        duration: 0.4,
+        bounce: 0,
+        ease: [0.4, 0, 0.2, 1]
+      }
     },
     exit: {
       width: "auto",
@@ -54,7 +60,35 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
       borderRadius: "9999px",
       opacity: 1,
       scale: 0.95,
-      y: 0
+      y: 0,
+      transition: {
+        duration: 0.3,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    }
+  };
+
+  const contentVariants = {
+    hidden: {
+      opacity: 0,
+      y: 10
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: 0.15,
+        duration: 0.3,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    },
+    exit: {
+      opacity: 0,
+      y: 10,
+      transition: {
+        duration: 0.2,
+        ease: [0.4, 0, 0.2, 1]
+      }
     }
   };
 
@@ -81,7 +115,6 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
             animate="visible"
             exit="exit"
             variants={dynamicIslandVariants}
-            transition={{ duration: 0.4, ease: "easeOut" }}
             style={{
               top: "16px",
               left: "50%",
@@ -94,9 +127,7 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
           >
             <div className="bg-zinc-900/95 backdrop-blur-md border border-cyan-500/30 rounded-[inherit] overflow-hidden p-6 text-white h-full w-full">
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, duration: 0.3 }}
+                variants={contentVariants}
                 className="flex justify-between items-center mb-4"
               >
                 <h3 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
@@ -112,10 +143,8 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
               </motion.div>
               
               <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.3 }}
                 className="space-y-4"
+                variants={contentVariants}
               >
                 <div className="flex gap-4 items-center">
                   {/* Placeholder for agent profile image */}
@@ -154,11 +183,7 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
                 </div>
               </motion.div>
               
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25, duration: 0.3 }}
-              >
+              <motion.div variants={contentVariants}>
                 <Button 
                   onClick={onClose} 
                   className="w-full mt-6 bg-gradient-to-r from-cyan-500 to-blue-500 hover:opacity-90 text-black"

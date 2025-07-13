@@ -24,13 +24,14 @@ const ParticleConvergence: React.FC<ParticleConvergenceProps> = ({ stage }) => {
           animate={{ 
             x: 0,
             y: 0,
-            opacity: 0,
-            scale: 0
+            opacity: [0, 0.8, 0],
+            scale: [0, 0.8, 0]
           }}
           transition={{ 
-            duration: 1.8,
+            duration: 2 + Math.random() * 1,
             delay: Math.random() * 0.5,
-            ease: "easeInOut"
+            ease: "easeInOut",
+            times: [0, 0.7, 1]
           }}
           style={{
             backgroundColor: i % 5 === 0 ? "#00BFFF" : 

@@ -52,8 +52,8 @@ export default function AnimatedIntroSection({ onEnd }: { onEnd: () => void }) {
               filter: "blur(1.5px)"
             }}
             animate={{
-              y: -14,
-              opacity: 0.8
+              y: [0, -14, 0, 14, 0],
+              opacity: [0.2, 0.8, 0.4, 0.7, 0.2]
             }}
             transition={{
               duration: Math.random() * 12 + 10,

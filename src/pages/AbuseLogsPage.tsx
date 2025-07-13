@@ -48,8 +48,7 @@ const AbuseLogsPage = () => {
       setLogs(data || []);
       
       // Extract unique event types for filter dropdown
-      const eventTypesList = data ? data.map(log => log.event_type) : [];
-      const uniqueEventTypes = [...new Set(eventTypesList)];
+      const uniqueEventTypes = [...new Set(data?.map(log => log.event_type) || [])];
       setEventTypes(uniqueEventTypes);
 
     } catch (error) {

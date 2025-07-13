@@ -64,7 +64,7 @@ export const AnimatedSection = ({
         transition={{ 
           duration: duration, 
           delay: delay, 
-          ease: "easeOut" // Smooth easing
+          ease: [0.19, 1, 0.22, 1] // Smooth easing
         }}
       >
         {children}

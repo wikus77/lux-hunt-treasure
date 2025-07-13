@@ -20,8 +20,8 @@ const Card = React.forwardRef<
     whileHover={interactive ? { 
       scale: 1.03,
       boxShadow: "0 0 25px rgba(0, 209, 255, 0.4), 0 0 50px rgba(123, 46, 255, 0.2)"
-    } : { scale: 1 }}
-    whileTap={interactive ? { scale: 0.97 } : { scale: 1 }}
+    } : {}}
+    whileTap={interactive ? { scale: 0.97 } : {}}
     transition={{ duration: 0.3, ease: "easeOut" }}
     {...(props as any)}
   >
@@ -30,7 +30,7 @@ const Card = React.forwardRef<
     )}
     <motion.div
       className="relative"
-      whileHover={interactive ? { y: -2 } : { y: 0 }}
+      whileHover={interactive ? { y: -2 } : {}}
       transition={{ duration: 0.2 }}
     >
       {children}

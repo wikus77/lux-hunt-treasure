@@ -41,8 +41,8 @@ export const BuzzRadarOverlay: React.FC<BuzzRadarOverlayProps> = ({
         <motion.div
           className="absolute inset-0 rounded-full border-2 border-cyan-400/30"
           animate={{
-            scale: 4,
-            opacity: 0,
+            scale: [0.5, 4],
+            opacity: [0.6, 0],
           }}
           transition={{
             duration: 2,
@@ -54,8 +54,8 @@ export const BuzzRadarOverlay: React.FC<BuzzRadarOverlayProps> = ({
         <motion.div
           className="absolute inset-0 rounded-full border-2 border-cyan-400/20"
           animate={{
-            scale: 4,
-            opacity: 0,
+            scale: [0.5, 4],
+            opacity: [0.4, 0],
           }}
           transition={{
             duration: 2,
@@ -68,8 +68,8 @@ export const BuzzRadarOverlay: React.FC<BuzzRadarOverlayProps> = ({
         <motion.div
           className="absolute inset-0 rounded-full border-2 border-cyan-400/10"
           animate={{
-            scale: 4,
-            opacity: 0,
+            scale: [0.5, 4],
+            opacity: [0.3, 0],
           }}
           transition={{
             duration: 2,
@@ -110,8 +110,8 @@ export const BuzzRadarOverlay: React.FC<BuzzRadarOverlayProps> = ({
         <motion.div
           className="absolute inset-0 bg-cyan-400 rounded-full"
           animate={{
-            scale: 2,
-            opacity: 0,
+            scale: [1, 2],
+            opacity: [1, 0],
           }}
           transition={{
             duration: 1.5,

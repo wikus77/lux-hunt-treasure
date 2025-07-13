@@ -1,21 +1,19 @@
-import { getSupabaseClient } from "@/integrations/supabase/getClient"
 
-import { useAuthSession } from './use-auth-session';
-
+import { useAuthSessionManager } from './use-auth-session-manager';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 
 export const useAuth = () => {
-  const { session, user, isLoading } = useAuthSession();
+  const sessionManager = useAuthSessionManager();
   const navigate = useNavigate();
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: any; session?: any }> => {
-    const client = await getSupabaseClient();
     console.log('🔐 STANDARD LOGIN STARTING for:', email);
     
     try {
       // Standard Supabase login
       console.log('🔄 Attempting standard Supabase login...');
-      const { data, error } = await client.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -27,7 +25,10 @@ export const useAuth = () => {
 
       if (data.session) {
         console.log('✅ LOGIN SUCCESS - session created');
-        console.log('✅ Session tokens stored successfully');
+        await sessionManager.forceSessionFromTokens(
+          data.session.access_token,
+          data.session.refresh_token
+        );
         return { success: true, session: data.session };
       }
 
@@ -41,11 +42,10 @@ export const useAuth = () => {
   };
 
   const register = async (email: string, password: string): Promise<{ success: boolean; error?: any; data?: any }> => {
-    const client = await getSupabaseClient();
     console.log('📝 REGISTRATION STARTING for:', email);
     
     try {
-      const { data, error } = await client.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -68,19 +68,17 @@ export const useAuth = () => {
   };
 
   const logout = async (): Promise<void> => {
-    const client = await getSupabaseClient();
     console.log('🚪 LOGOUT STARTING');
-    await client.auth.signOut();
-    console.log('🧹 Session cleared');
+    await supabase.auth.signOut();
+    await sessionManager.clearSession();
     console.log('✅ LOGOUT COMPLETE');
   };
 
   const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
-    const client = await getSupabaseClient();
     console.log('🔄 PASSWORD RESET for:', email);
     
     try {
-      const { error } = await client.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`
       });
 
@@ -99,11 +97,10 @@ export const useAuth = () => {
   };
 
   const resendVerificationEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
-    const client = await getSupabaseClient();
     console.log('📧 RESEND VERIFICATION for:', email);
     
     try {
-      const { error } = await client.auth.resend({
+      const { error } = await supabase.auth.resend({
         type: 'signup',
         email,
         options: {
@@ -126,24 +123,23 @@ export const useAuth = () => {
   };
 
   const updateProfile = async (data: any): Promise<void> => {
-    const client = await getSupabaseClient();
     console.log('📝 UPDATE PROFILE:', data);
     // Implementazione updateProfile se necessaria
   };
 
   return {
-    user,
-    session,
-    isAuthenticated: !!session,
-    isLoading,
-    isEmailVerified: user?.email_confirmed_at ? true : false,
+    user: sessionManager.user,
+    session: sessionManager.session,
+    isAuthenticated: sessionManager.isAuthenticated,
+    isLoading: sessionManager.isLoading,
+    isEmailVerified: sessionManager.user?.email_confirmed_at ? true : false,
     login,
     register,
     logout,
     resetPassword,
     resendVerificationEmail,
     updateProfile,
-    getCurrentUser: () => user,
-    getAccessToken: () => session?.access_token || '',
+    getCurrentUser: () => sessionManager.user,
+    getAccessToken: () => sessionManager.session?.access_token || '',
   };
 };

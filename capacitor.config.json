@@ -1,6 +1,21 @@
 {
-  "appId": "com.nyxora.m1ssion",
-  "appName": "m1ssion",
+  "_comment": "🔐 Customized for M1SSION™ by Joseph – Cleaned on 2025-07-10",
+  "_description": "M1SSION™ Treasure Hunt App - Custom Capacitor Configuration", 
+  "appId": "com.m1ssion.app",
+  "appName": "M1SSION",
   "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 3000,
+      "launchAutoHide": true,
+      "backgroundColor": "#000000",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": true,
+      "androidSpinnerStyle": "large",
+      "iosSpinnerStyle": "small",
+      "spinnerColor": "#999999"
+    }
+  },
   "bundledWebRuntime": false
 }

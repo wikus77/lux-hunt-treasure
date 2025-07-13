@@ -88,16 +88,8 @@ const LaunchProgressBar: React.FC<LaunchProgressBarProps> = ({ targetDate, onCou
             {/* Animated glow effect */}
             <motion.div 
               initial={{ opacity: 0, x: '-100%' }}
-              animate={{ 
-                opacity: 0.7, 
-                x: '100%' 
-              }}
-              transition={{ 
-                duration: 3, 
-                repeat: Infinity, 
-                repeatDelay: 1,
-                repeatType: "loop" as const
-              }}
+              animate={{ opacity: [0, 0.7, 0], x: ['0%', '100%', '200%'] }}
+              transition={{ duration: 3, repeat: Infinity, repeatDelay: 1 }}
               className="absolute top-0 left-0 h-full w-[30%] bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"
             />
           </div>

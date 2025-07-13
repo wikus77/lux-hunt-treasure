@@ -16,47 +16,19 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 
-// Generate sample data outside component to avoid Rollup issues
-const generateSamplePlayers = () => {
-  const players = [];
-  for (let i = 0; i < 50; i++) {
-    let team = null;
-    if (i % 5 === 0) team = "Team Alpha";
-    else if (i % 7 === 0) team = "Team Omega"; 
-    else if (i % 3 === 0) team = "Team Gamma";
-    
-    let country = "🇪🇺";
-    if (i % 4 === 0) country = "🇮🇹";
-    else if (i % 3 === 0) country = "🇬🇧";
-    else if (i % 5 === 0) country = "🇺🇸";
-    
-    let badges = [];
-    if (i < 5) badges = ["top10", "explorer"];
-    else if (i < 15) badges = ["explorer"];
-    else if (i % 7 === 0) badges = ["active"];
-    
-    let dailyChange = 0;
-    if (i % 3 === 0) dailyChange = Math.floor(Math.random() * 3) + 1;
-    else if (i % 7 === 0) dailyChange = -Math.floor(Math.random() * 3) - 1;
-    
-    players.push({
-      id: i + 1,
-      name: `Giocatore ${i + 1}`,
-      avatar: `https://avatar.vercel.sh/player${i + 1}`,
-      points: Math.floor(10000 - i * 30 + Math.random() * 20),
-      rank: i + 1,
-      cluesFound: Math.floor(50 - i * 0.3 + Math.random() * 10),
-      areasExplored: Math.floor(20 - i * 0.1 + Math.random() * 5),
-      team,
-      country,
-      badges,
-      dailyChange,
-    });
-  }
-  return players;
-};
-
-const samplePlayers = generateSamplePlayers();
+const samplePlayers = Array.from({ length: 50 }, (_, i) => ({
+  id: i + 1,
+  name: `Giocatore ${i + 1}`,
+  avatar: `https://avatar.vercel.sh/player${i + 1}`,
+  points: Math.floor(10000 - i * 30 + Math.random() * 20),
+  rank: i + 1,
+  cluesFound: Math.floor(50 - i * 0.3 + Math.random() * 10),
+  areasExplored: Math.floor(20 - i * 0.1 + Math.random() * 5),
+  team: i % 5 === 0 ? "Team Alpha" : i % 7 === 0 ? "Team Omega" : i % 3 === 0 ? "Team Gamma" : null,
+  country: i % 4 === 0 ? "🇮🇹" : i % 3 === 0 ? "🇬🇧" : i % 5 === 0 ? "🇺🇸" : "🇪🇺",
+  badges: i < 5 ? ["top10", "explorer"] : i < 15 ? ["explorer"] : i % 7 === 0 ? ["active"] : [],
+  dailyChange: i % 3 === 0 ? Math.floor(Math.random() * 3) + 1 : i % 7 === 0 ? -Math.floor(Math.random() * 3) - 1 : 0,
+}));
 
 const sampleTeams = [
   { id: 1, name: "Team Alpha", members: 12, totalPoints: 42500, rank: 1, badges: ["top"] },

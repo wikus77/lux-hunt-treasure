@@ -15,8 +15,10 @@ const stagger = {
   },
 };
 
-const fadeSlideUpHidden = { opacity: 0, y: 40 };
-const fadeSlideUpShow = { opacity: 1, y: 0 };
+const fadeSlideUp = {
+  hidden: { opacity: 0, y: 40 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
 
 const HeroSection = () => {
   return (
@@ -54,18 +56,14 @@ const HeroSection = () => {
         animate="show"
       >
         <motion.div
-          initial={fadeSlideUpHidden}
-          animate={fadeSlideUpShow}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          variants={fadeSlideUp}
           className="mb-6"
         >
           <h2 className="text-sm md:text-base uppercase tracking-[0.3em] text-cyan-300">Benvenuto in</h2>
         </motion.div>
         
         <motion.div
-          initial={fadeSlideUpHidden}
-          animate={fadeSlideUpShow}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+          variants={fadeSlideUp}
           className="mb-4"
         >
           <h1 className="text-6xl md:text-8xl font-orbitron font-bold gradient-text-cyan mb-4">
@@ -74,9 +72,7 @@ const HeroSection = () => {
         </motion.div>
         
         <motion.div
-          initial={fadeSlideUpHidden}
-          animate={fadeSlideUpShow}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+          variants={fadeSlideUp}
           className="mb-10"
         >
           <h3 className="text-xl md:text-3xl text-white/90 font-light">
@@ -88,9 +84,7 @@ const HeroSection = () => {
         </motion.div>
         
         <motion.div
-          initial={fadeSlideUpHidden}
-          animate={fadeSlideUpShow}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+          variants={fadeSlideUp}
           className="flex flex-col md:flex-row items-center justify-center gap-6"
         >
           <motion.div
@@ -121,17 +115,9 @@ const HeroSection = () => {
         {/* Scroll indicator */}
         <motion.div 
           className="absolute bottom-12 left-1/2 transform -translate-x-1/2"
-          initial={fadeSlideUpHidden}
-          animate={{ 
-            ...fadeSlideUpShow, 
-            y: 10 
-          }}
-          transition={{ 
-            duration: 0.6, 
-            ease: "easeOut",
-            delay: 0.4,
-            y: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-          }}
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          variants={fadeSlideUp}
         >
           <div className="w-8 h-12 rounded-full border-2 border-white/30 flex items-start justify-center p-2">
             <div className="w-1 h-3 bg-white/70 rounded-full"></div>

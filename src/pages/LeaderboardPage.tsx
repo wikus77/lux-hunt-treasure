@@ -65,7 +65,7 @@ export const LeaderboardPage: React.FC = () => {
       }
 
       // Get clues count for each user
-      const userIds = profiles ? profiles.map(p => p.id) : [];
+      const userIds = profiles?.map(p => p.id) || [];
       
       const [cluesResult, buzzResult] = await Promise.all([
         supabase
@@ -79,27 +79,25 @@ export const LeaderboardPage: React.FC = () => {
       ]);
 
       // Count clues per user
-      const cluesCountReducer = (acc: Record<string, number>, clue: any) => {
+      const cluesCount = cluesResult.data?.reduce((acc, clue) => {
         acc[clue.user_id] = (acc[clue.user_id] || 0) + 1;
         return acc;
-      };
-      const cluesCount = cluesResult.data ? cluesResult.data.reduce(cluesCountReducer, {}) : {};
+      }, {} as Record<string, number>) || {};
 
       // Count buzz per user
-      const buzzCountReducer = (acc: Record<string, number>, buzz: any) => {
+      const buzzCount = buzzResult.data?.reduce((acc, buzz) => {
         acc[buzz.user_id] = (acc[buzz.user_id] || 0) + buzz.buzz_count;
         return acc;
-      };
-      const buzzCount = buzzResult.data ? buzzResult.data.reduce(buzzCountReducer, {}) : {};
+      }, {} as Record<string, number>) || {};
 
       // Combine data and add rankings
-      const enrichedData = profiles ? profiles.map((profile, index) => ({
+      const enrichedData = profiles?.map((profile, index) => ({
         ...profile,
         clues_unlocked: cluesCount[profile.id] || 0,
         buzz_used: buzzCount[profile.id] || 0,
         rank: index + 1,
         change: Math.floor(Math.random() * 21) - 10 // Mock change data
-      })) : [];
+      })) || [];
 
       // Sort by selected criteria
       const sortedData = enrichedData.sort((a, b) => {

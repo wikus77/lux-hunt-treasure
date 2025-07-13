@@ -205,8 +205,8 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ stage, visible }) => {
                 strokeDasharray="1,2"
                 opacity={particle.opacity * 0.3}
                 animate={{
-                  r: particle.size * 3,
-                  opacity: particle.opacity * 0.5
+                  r: [particle.size * 2.5, particle.size * 3, particle.size * 2.5],
+                  opacity: [particle.opacity * 0.3, particle.opacity * 0.5, particle.opacity * 0.3]
                 }}
                 transition={{
                   duration: 2 + Math.random() * 2,
@@ -228,8 +228,8 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ stage, visible }) => {
             filter="url(#gravitational-lens)"
             opacity={0.6}
             animate={{
-              r: stage >= 5 ? 100 : 25,
-              opacity: stage >= 5 ? 0 : 0.7
+              r: stage >= 5 ? [20, 50, 100] : [20, 25, 20],
+              opacity: stage >= 5 ? [0.6, 0.3, 0] : [0.6, 0.7, 0.6]
             }}
             transition={{
               duration: stage >= 5 ? 2 : 4,

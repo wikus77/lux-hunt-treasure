@@ -130,12 +130,13 @@ const BlackHoleCenter: React.FC<BlackHoleCenterProps> = ({ stage }) => {
           transition: 'opacity 1s ease-in-out'
         }}
         animate={{
-          scale: stage >= 5 ? 0.8 : 1.05,
-          opacity: stage >= 5 ? 0 : 1
+          scale: stage >= 5 ? [1, 0.9, 0.8] : [1, 1.05, 1],
+          opacity: stage >= 5 ? [1, 0.7, 0] : undefined
         }}
         transition={{
           duration: 2, 
-          ease: "easeInOut"
+          ease: "easeInOut",
+          times: stage >= 5 ? [0, 0.3, 1] : undefined
         }}
       />
       
@@ -156,12 +157,13 @@ const BlackHoleCenter: React.FC<BlackHoleCenterProps> = ({ stage }) => {
           opacity: stage <= 3 ? 1 : Math.max(0, 1 - (stage - 3) * 0.5)
         }}
         animate={{
-          scale: stage >= 5 ? 1.3 : 1.03,
-          opacity: stage >= 5 ? 0 : 1
+          scale: stage >= 5 ? [1, 1.1, 1.3] : [1, 1.03, 1],
+          opacity: stage >= 5 ? [1, 0.5, 0] : undefined
         }}
         transition={{
           duration: 2,
-          ease: "easeInOut"
+          ease: "easeInOut",
+          times: stage >= 5 ? [0, 0.3, 1] : undefined
         }}
       />
       
@@ -192,14 +194,9 @@ const BlackHoleCenter: React.FC<BlackHoleCenterProps> = ({ stage }) => {
                 transform: `translate(-50%, -50%) rotate(${i * 15}deg)`,
               }}
               animate={{
-                scaleX: 1.2,
-                opacity: 0.6,
-                rotate: `${i * 15 + 2}deg`
-              }}
-              initial={{
-                scaleX: 1,
-                opacity: 0.3,
-                rotate: `${i * 15}deg`
+                scaleX: [1, 1.2, 1],
+                opacity: [0.3, 0.6, 0.3],
+                rotate: [`${i * 15}deg`, `${i * 15 + 2}deg`, `${i * 15}deg`]
               }}
               transition={{
                 duration: 3 + i % 5,
@@ -227,8 +224,8 @@ const BlackHoleCenter: React.FC<BlackHoleCenterProps> = ({ stage }) => {
             opacity: stage >= 5 ? Math.max(0, 1 - (stage - 5) * 0.8) : 1
           }}
           animate={{
-            scale: stage >= 5 ? 1.5 : 1.05,
-            opacity: stage >= 5 ? 0 : 0.8
+            scale: stage >= 5 ? [1, 1.2, 1.5] : [1, 1.05, 1],
+            opacity: stage >= 5 ? [1, 0.5, 0] : [0.8, 1, 0.8]
           }}
           transition={{
             duration: stage >= 5 ? 2 : 4,
@@ -278,12 +275,8 @@ const BlackHoleCenter: React.FC<BlackHoleCenterProps> = ({ stage }) => {
                   strokeWidth="0.5"
                   strokeDasharray="3,5"
                   animate={{
-                    r: 45 + i * 15,
-                    opacity: 0.8
-                  }}
-                  initial={{
-                    r: 40 + i * 15,
-                    opacity: 0.6
+                    r: [40 + i * 15, 45 + i * 15, 40 + i * 15],
+                    opacity: [0.6, 0.8, 0.6]
                   }}
                   transition={{
                     duration: 4 + i,
@@ -314,14 +307,14 @@ const BlackHoleCenter: React.FC<BlackHoleCenterProps> = ({ stage }) => {
             opacity: 0
           }}
           animate={{
-            opacity: stage >= 5 ? 0.4 : 0.3,
-            scale: stage >= 5 ? 1.5 : 0.8
+            opacity: stage >= 5 ? [0, 0.6, 0.4] : [0, 0.3, 0],
+            scale: stage >= 5 ? [0.2, 1, 1.5] : [0.5, 0.8, 0.5]
           }}
           transition={{
             duration: 3,
+            times: stage >= 5 ? [0, 0.6, 1] : [0, 0.5, 1],
             ease: "easeInOut",
-            repeat: stage >= 5 ? 0 : Infinity,
-            repeatType: "reverse"
+            repeat: stage >= 5 ? 0 : Infinity
           }}
         />
       )}

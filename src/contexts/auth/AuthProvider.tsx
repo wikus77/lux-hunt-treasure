@@ -1,6 +1,7 @@
-import { getSupabaseClient } from "@/integrations/supabase/getClient"
+
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import AuthContext from './AuthContext';
 import { useAuth } from '@/hooks/use-auth';
 import { AuthContextType } from './types';
@@ -12,41 +13,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
 
-  // Enhanced session monitoring with Capacitor iOS fix
+  // Enhanced session monitoring
   useEffect(() => {
-    let retryCount = 0;
-    const maxRetries = 3;
-    
-    const checkSessionWithRetry = async () => {
-  const client = await getSupabaseClient();
-      try {
-        const { data: { session } } = await client.auth.getSession();
-        console.log("🔄 Session check #" + (retryCount + 1) + ":", !!session);
-        
-        if (!session && retryCount < maxRetries) {
-          retryCount++;
-          setTimeout(checkSessionWithRetry, 500);
-        }
-      } catch (error) {
-        console.error('❌ Session check error:', error);
-      }
-    };
-
-    checkSessionWithRetry();
-
-    const setupAuthStateChange = async () => {
-      const client = await getSupabaseClient();
-      const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
-      console.log('🔍 ENHANCED AUTH STATE CHANGE:', event, 'Session exists:', !!session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('🔍 Auth state change:', event, 'Session exists:', !!session);
       
+      // Handle successful authentication
       if (event === 'SIGNED_IN' && session?.user) {
         console.log("✅ User signed in successfully:", session.user.email);
         
-        if (typeof window !== 'undefined' && window.location.protocol === 'capacitor:') {
-          console.log("📱 Capacitor detected: forcing session refresh");
-          client.auth.refreshSession();
-        }
-
+        // Check if user should be redirected to home
         const currentPath = window.location.pathname;
         if (currentPath === '/login' || currentPath === '/auth' || currentPath === '/') {
           console.log("🏠 Redirecting authenticated user to /home");
@@ -55,23 +31,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }, 1000);
         }
       }
-
+      
+      // Handle sign out
       if (event === 'SIGNED_OUT') {
         console.log("🚪 User signed out");
         setUserRole(null);
         setIsRoleLoading(false);
       }
-      });
+    });
 
-      return () => subscription.unsubscribe();
-    };
-
-    setupAuthStateChange();
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Fetch user role when user changes
   useEffect(() => {
     const fetchUserRole = async () => {
-  const client = await getSupabaseClient();
       if (!auth.user?.id || auth.isLoading) {
         setUserRole(null);
         setIsRoleLoading(false);
@@ -82,7 +56,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsRoleLoading(true);
         console.log("🔍 Fetching role for user:", auth.user.id, auth.user.email);
         
-        const { data: roleData } = await client
+        // Check user_roles table for developer role
+        const { data: roleData } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', auth.user.id)
@@ -92,7 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserRole(roleData.role);
           console.log("✅ User role found:", roleData.role);
         } else {
-          const { data: profileData } = await client
+          // Check profiles table as fallback
+          const { data: profileData } = await supabase
             .from('profiles')
             .select('role')
             .eq('id', auth.user.id)
@@ -103,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error('❌ Error fetching user role:', error);
-        setUserRole('user');
+        setUserRole('user'); // Default to user role
       } finally {
         setIsRoleLoading(false);
       }
@@ -118,10 +94,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
   }, [auth.user?.id]);
 
+  // Check if user has a specific role
   const hasRole = (role: string): boolean => {
     return userRole === role;
   };
 
+  // Create the complete context value
   const authContextValue: AuthContextType = {
     ...auth,
     userRole,

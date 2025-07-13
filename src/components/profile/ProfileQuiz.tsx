@@ -130,7 +130,7 @@ const ProfileQuiz = ({ onComplete, userId }: ProfileQuizProps) => {
 
   const completeQuiz = async () => {
     // Get the most scored profile type
-    const profileType = Object.entries(scores).reduce((a, b) => a[1] > b[1] ? a : b)[0] as string;
+    const profileType = Object.entries(scores).reduce((a, b) => a[1] > b[1] ? a : b)[0];
     
     // Save profile to Supabase if userId is available
     if (userId) {

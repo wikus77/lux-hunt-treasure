@@ -60,7 +60,7 @@ export const PrizeList: React.FC = () => {
       }
 
       // Get user clues for these prizes
-      const prizeIds = prizesData ? prizesData.map(p => p.id) : [];
+      const prizeIds = prizesData?.map(p => p.id) || [];
       
       // Get all clues for these prizes first
       const { data: allClues } = await supabase
@@ -68,7 +68,7 @@ export const PrizeList: React.FC = () => {
         .select('id, prize_id')
         .in('prize_id', prizeIds);
 
-      const clueIds = allClues ? allClues.map(c => c.id) : [];
+      const clueIds = allClues?.map(c => c.id) || [];
 
       // Get user's unlocked clues
       const { data: userClues } = await supabase
@@ -77,8 +77,7 @@ export const PrizeList: React.FC = () => {
         .eq('user_id', user.id)
         .in('clue_id', clueIds);
 
-      const userClueIds = userClues ? userClues.map(uc => uc.clue_id) : [];
-      const unlockedClueIds = new Set(userClueIds);
+      const unlockedClueIds = new Set(userClues?.map(uc => uc.clue_id) || []);
 
       // Create a map of prize_id to unlocked clue count
       const clueCountMap = new Map();
