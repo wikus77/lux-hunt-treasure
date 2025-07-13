@@ -7,7 +7,7 @@
 import { motion } from "framer-motion";
 import FuturisticCarsCarousel from "./FuturisticCarsCarousel";
 
-export const LuxuryCarsSection = () => {
+const LuxuryCarsSection = () => {
   return (
     <div className="mt-8 px-4">
       <motion.h2 
@@ -26,4 +26,10 @@ export const LuxuryCarsSection = () => {
   );
 };
 
+export { LuxuryCarsSection };
 export default LuxuryCarsSection;
+
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * M1SSION™ Luxury Cars Section completamente funzionale e compatibile iOS
+ */
