@@ -65,26 +65,54 @@ const DisarmBombGame: React.FC = () => {
         break;
         
       case 'medium':
+        const firstColorMap = {
+          'red': 'fuoco',
+          'blue': 'cielo', 
+          'green': 'prato',
+          'yellow': 'sole',
+          'purple': 'tramonto'
+        };
         instructions.push({
-          text: `Il primo filo è il colore del ${sequence[0] === 'red' ? 'fuoco' : sequence[0] === 'blue' ? 'cielo' : sequence[0] === 'green' ? 'prato' : sequence[0] === 'yellow' ? 'sole' : sequence[0] === 'purple' ? 'tramonto' : 'autunno'}`,
+          text: `Il primo filo è il colore del ${firstColorMap[sequence[0] as keyof typeof firstColorMap] || 'autunno'}`,
           hint: "Decodifica il colore"
         });
         if (sequence[1]) {
+          const secondColorMap = {
+            'blue': 'freddo come il ghiaccio',
+            'red': 'caldo come il fuoco',
+            'green': 'naturale come la foresta',
+            'yellow': 'brillante come oro',
+            'purple': 'regale come un re'
+          };
           instructions.push({
-            text: `Il secondo è ${sequence[1] === 'blue' ? 'freddo come il ghiaccio' : sequence[1] === 'red' ? 'caldo come il fuoco' : sequence[1] === 'green' ? 'naturale come la foresta' : sequence[1] === 'yellow' ? 'brillante come oro' : sequence[1] === 'purple' ? 'regale come un re' : 'vibrante come un tramonto'}`,
+            text: `Il secondo è ${secondColorMap[sequence[1] as keyof typeof secondColorMap] || 'vibrante come un tramonto'}`,
             hint: "Trova l'associazione"
           });
         }
         break;
         
       case 'hard':
+        const rgbColorMap = {
+          'red': '255,0,0',
+          'blue': '0,0,255',
+          'green': '0,255,0',
+          'yellow': '255,255,0',
+          'purple': '128,0,128'
+        };
         instructions.push({
-          text: `RGB(${sequence[0] === 'red' ? '255,0,0' : sequence[0] === 'blue' ? '0,0,255' : sequence[0] === 'green' ? '0,255,0' : sequence[0] === 'yellow' ? '255,255,0' : sequence[0] === 'purple' ? '128,0,128' : '255,165,0'}) → 1°`,
+          text: `RGB(${rgbColorMap[sequence[0] as keyof typeof rgbColorMap] || '255,165,0'}) → 1°`,
           hint: "Decodifica il codice colore"
         });
         if (sequence[1]) {
+          const wavelengthMap = {
+            'red': '700nm',
+            'blue': '450nm',
+            'green': '550nm',
+            'yellow': '580nm',
+            'purple': '400nm'
+          };
           instructions.push({
-            text: `Lunghezza d'onda ${sequence[1] === 'red' ? '700nm' : sequence[1] === 'blue' ? '450nm' : sequence[1] === 'green' ? '550nm' : sequence[1] === 'yellow' ? '580nm' : sequence[1] === 'purple' ? '400nm' : '600nm'} → 2°`,
+            text: `Lunghezza d'onda ${wavelengthMap[sequence[1] as keyof typeof wavelengthMap] || '600nm'} → 2°`,
             hint: "Spettro elettromagnetico"
           });
         }
