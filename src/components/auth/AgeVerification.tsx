@@ -59,20 +59,20 @@ const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified }) => {
           id="birthdate"
           value={birthdate}
           onChange={(e) => setBirthdate(e.target.value)}
-          className="w-full p-2 rounded-md bg-projectx-deep-blue border border-projectx-neon-blue"
+          className="w-full p-2 rounded-md bg-m1ssion-deep-blue border border-m1ssion-blue"
         />
         {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
       </div>
       
       <button 
-        className="bg-gradient-to-r from-projectx-blue to-projectx-pink px-4 py-2 rounded-md"
+        className="bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink px-4 py-2 rounded-md"
         onClick={handleVerification}
       >
         Verifica
       </button>
       
       <div 
-        className="text-center mt-4 text-projectx-neon-blue hover:underline cursor-pointer select-none"
+        className="text-center mt-4 text-m1ssion-blue hover:underline cursor-pointer select-none"
         onClick={handleLogin}
       >
         Hai già un account? Accedi

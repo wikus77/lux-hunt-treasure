@@ -11,7 +11,7 @@ const Suggestion = ({ text, onClick }: SuggestionProps) => (
     variant="outline"
     size="sm"
     onClick={onClick}
-    className="text-sm bg-black/40 border-projectx-deep-blue/40 hover:bg-black/60 press-effect"
+    className="text-sm bg-black/40 border-m1ssion-deep-blue/40 hover:bg-black/60 press-effect"
   >
     {text}
   </Button>

@@ -154,7 +154,7 @@ const NotificationButtons = ({
     <div className="flex flex-col gap-4 mb-6">
       <Button 
         onClick={generateRandomNotification} 
-        className="w-full flex items-center gap-2 bg-projectx-blue hover:bg-projectx-deep-blue"
+        className="w-full flex items-center gap-2 bg-m1ssion-blue hover:bg-m1ssion-deep-blue"
       >
         <Bell className="h-4 w-4 mr-1" />
         Genera Notifica Locale
@@ -162,7 +162,7 @@ const NotificationButtons = ({
       
       <Button 
         onClick={broadcastRandomNotification} 
-        className="w-full flex items-center gap-2 bg-gradient-to-r from-projectx-blue to-projectx-pink"
+        className="w-full flex items-center gap-2 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
         disabled={!isConnected}
       >
         <Radio className="h-4 w-4 mr-1" />
@@ -180,7 +180,7 @@ const NotificationButtons = ({
       {isSupported && permission !== 'granted' && (
         <Button 
           onClick={onShowNotificationRequest} 
-          className="w-full flex items-center gap-2 bg-gradient-to-r from-projectx-blue to-projectx-pink"
+          className="w-full flex items-center gap-2 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
         >
           <Bell className="h-4 w-4 mr-1" />
           Attiva Notifiche Push

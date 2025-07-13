@@ -350,14 +350,14 @@ export function GameAchievementSystem() {
         <Card className="bg-[hsl(var(--card))] border-[hsl(var(--border))]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-6 w-6 text-[hsl(var(--projectx-gold))]" />
+              <Trophy className="h-6 w-6 text-yellow-400" />
               Statistiche Globali Gaming
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-[hsl(var(--projectx-blue))]">
+                <p className="text-2xl font-bold text-m1ssion-blue">
                   {globalStats.overallLevel}
                 </p>
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">Livello Globale</p>
@@ -368,7 +368,7 @@ export function GameAchievementSystem() {
               </div>
               
               <div className="text-center">
-                <p className="text-2xl font-bold text-[hsl(var(--projectx-gold))]">
+                <p className="text-2xl font-bold text-yellow-400">
                   {globalStats.totalAchievements}
                 </p>
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">Achievement</p>
@@ -382,7 +382,7 @@ export function GameAchievementSystem() {
               </div>
               
               <div className="text-center">
-                <p className="text-2xl font-bold text-[hsl(var(--projectx-blue))]">
+                <p className="text-2xl font-bold text-m1ssion-blue">
                   {globalStats.totalExperience.toLocaleString()}
                 </p>
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">XP Totale</p>
@@ -422,14 +422,14 @@ export function GameAchievementSystem() {
       <Card className="bg-[hsl(var(--card))] border-[hsl(var(--border))]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Award className="h-6 w-6 text-[hsl(var(--projectx-gold))]" />
+            <Award className="h-6 w-6 text-yellow-400" />
             Sistema Achievement
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex justify-center py-10">
-              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[hsl(var(--projectx-blue))]"></div>
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-m1ssion-blue"></div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -438,8 +438,8 @@ export function GameAchievementSystem() {
                   key={achievement.id}
                   className={`p-4 border rounded-lg transition-all duration-300 ${
                     achievement.unlocked 
-                      ? 'border-[hsl(var(--projectx-gold))] bg-[hsl(var(--projectx-gold))]/5' 
-                      : 'border-[hsl(var(--border))] hover:border-[hsl(var(--projectx-blue))]/50'
+                      ? 'border-yellow-400 bg-yellow-400/5' 
+                      : 'border-[hsl(var(--border))] hover:border-m1ssion-blue/50'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -458,7 +458,7 @@ export function GameAchievementSystem() {
                     </div>
                     
                     {achievement.unlocked ? (
-                      <Unlock className="h-5 w-5 text-[hsl(var(--projectx-gold))]" />
+                      <Unlock className="h-5 w-5 text-yellow-400" />
                     ) : (
                       <Lock className="h-5 w-5 text-[hsl(var(--muted-foreground))]" />
                     )}
@@ -486,7 +486,7 @@ export function GameAchievementSystem() {
                       </span>
                     </div>
                     
-                    <div className="text-[hsl(var(--projectx-blue))]">
+                    <div className="text-m1ssion-blue">
                       +{achievement.reward.credits} crediti
                     </div>
                   </div>

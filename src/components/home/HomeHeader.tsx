@@ -20,14 +20,14 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
   const { isConnected } = useRealTimeNotifications();
   
   return (
-    <header className="fixed top-0 left-0 w-full z-50 backdrop-blur-md bg-gradient-to-r from-black/80 to-black/80 border-b border-projectx-deep-blue/30 header-safe-area">
+    <header className="fixed top-0 left-0 w-full z-50 backdrop-blur-md bg-gradient-to-r from-black/80 to-black/80 border-b border-m1ssion-deep-blue/30 header-safe-area">
       <div className="max-w-screen-xl mx-auto flex justify-between items-center px-4 py-3">
         {/* Logo and Brand */}
         <div 
           className="flex items-center cursor-pointer" 
           onClick={() => navigate('/')}
         >
-          <span className="text-white text-lg font-bold bg-gradient-to-r from-purple-400 to-projectx-neon-blue bg-clip-text text-transparent">
+          <span className="text-white text-lg font-bold bg-gradient-to-r from-purple-400 to-m1ssion-blue bg-clip-text text-transparent">
             M1SSION
           </span>
         </div>
@@ -45,9 +45,9 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
             className="relative p-2 rounded-full hover:bg-purple-900/20 active:bg-purple-900/40 transition-colors"
             onClick={onShowNotifications}
           >
-            <Bell className="w-5 h-5 text-projectx-neon-blue" />
+            <Bell className="w-5 h-5 text-m1ssion-blue" />
             {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 bg-projectx-pink text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+              <span className="absolute top-0 right-0 bg-m1ssion-pink text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                 {unreadCount}
               </span>
             )}
@@ -64,14 +64,14 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
             className="sm:hidden p-2 rounded-full hover:bg-purple-900/20 active:bg-purple-900/40 transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            <Menu className="w-5 h-5 text-projectx-neon-blue" />
+            <Menu className="w-5 h-5 text-m1ssion-blue" />
           </button>
         </div>
       </div>
       
       {/* Mobile menu (hidden on larger screens) */}
       {isMenuOpen && (
-        <div className="absolute top-full left-0 w-full bg-black/90 border-b border-projectx-deep-blue/30 py-3 px-4 sm:hidden">
+        <div className="absolute top-full left-0 w-full bg-black/90 border-b border-m1ssion-deep-blue/30 py-3 px-4 sm:hidden">
           <div className="space-y-2">
             <div className="flex items-center justify-center mb-3">
               {/* Removed M1-AGENT badge */}

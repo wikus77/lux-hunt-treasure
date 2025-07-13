@@ -25,7 +25,7 @@ function App() {
               sessionStorage.clear();
               window.location.reload();
             }}
-            className="px-4 py-2 bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-md"
+            className="px-4 py-2 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink rounded-md"
           >
             🔄 RIAVVIA EMERGENZA
           </button>

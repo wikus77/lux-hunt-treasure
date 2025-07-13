@@ -37,7 +37,7 @@ export const EventDetailsDialog = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={() => onClose()}>
-        <DialogContent className="max-w-[90vw] w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto bg-black border-2 border-projectx-blue rounded-xl">
+        <DialogContent className="max-w-[90vw] w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto bg-black border-2 border-m1ssion-blue rounded-xl">
           <DialogHeader>
             <DialogTitle className="text-2xl neon-text">{title}</DialogTitle>
           </DialogHeader>

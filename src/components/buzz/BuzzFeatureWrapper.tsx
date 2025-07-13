@@ -16,7 +16,7 @@ const BuzzFeatureWrapper: React.FC<BuzzFeatureWrapperProps> = ({ children }) => 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="w-12 h-12 border-4 border-t-transparent border-projectx-blue rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-t-transparent border-m1ssion-blue rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -30,7 +30,7 @@ const BuzzFeatureWrapper: React.FC<BuzzFeatureWrapperProps> = ({ children }) => 
           Devi effettuare l'accesso per utilizzare questa funzionalità e sbloccare indizi.
         </p>
         <Link to="/login">
-          <Button className="bg-gradient-to-r from-projectx-blue to-projectx-pink">
+          <Button className="bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink">
             Accedi
           </Button>
         </Link>

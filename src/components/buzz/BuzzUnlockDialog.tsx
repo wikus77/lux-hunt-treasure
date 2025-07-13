@@ -21,7 +21,7 @@ const BuzzUnlockDialog = ({ open, onOpenChange, handlePayment }: BuzzUnlockDialo
       <div className="space-y-4 py-4">
         <div className="bg-black/20 p-4 rounded-lg">
           <div className="flex items-center">
-            <Lock className="mr-2 h-4 w-4 text-projectx-pink" />
+            <Lock className="mr-2 h-4 w-4 text-m1ssion-pink" />
             <span>Indizio Esclusivo</span>
           </div>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -30,7 +30,7 @@ const BuzzUnlockDialog = ({ open, onOpenChange, handlePayment }: BuzzUnlockDialo
         </div>
         <Button
           onClick={handlePayment}
-          className="w-full bg-gradient-to-r from-projectx-blue to-projectx-pink"
+          className="w-full bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
         >
           Sblocca indizio 1,99€
         </Button>

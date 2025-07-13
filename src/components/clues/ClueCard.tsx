@@ -21,11 +21,11 @@ export const ClueCard = ({ title, description, week, isLocked, subscriptionType 
       case "Black":
         return "border-gray-800 bg-gradient-to-r from-gray-900 to-black";
       case "Gold":
-        return "border-projectx-gold bg-gradient-to-r from-yellow-600 to-projectx-gold";
+        return "border-yellow-400 bg-gradient-to-r from-yellow-600 to-yellow-400";
       case "Silver":
         return "border-gray-400 bg-gradient-to-r from-gray-400 to-gray-300";
       default:
-        return "border-projectx-blue";
+        return "border-m1ssion-blue";
     }
   };
 
@@ -43,7 +43,7 @@ export const ClueCard = ({ title, description, week, isLocked, subscriptionType 
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg">{title}</CardTitle>
-          <span className="text-xs px-2 py-1 rounded-full bg-projectx-deep-blue">
+          <span className="text-xs px-2 py-1 rounded-full bg-m1ssion-deep-blue">
             Settimana {week}
           </span>
         </div>
@@ -51,7 +51,7 @@ export const ClueCard = ({ title, description, week, isLocked, subscriptionType 
           {subscriptionType !== "Base" && (
             <span className={`text-xs ${
               subscriptionType === "Black" ? "text-gray-800" : 
-              subscriptionType === "Gold" ? "text-projectx-gold" : 
+              subscriptionType === "Gold" ? "text-yellow-400" : 
               "text-gray-400"
             }`}>
               Indizio {subscriptionType}
@@ -76,7 +76,7 @@ export const ClueCard = ({ title, description, week, isLocked, subscriptionType 
       {isLocked && (
         <CardFooter className="pt-0">
           <button 
-            className="w-full py-2 text-sm bg-gradient-to-r from-projectx-blue to-projectx-pink rounded-md"
+            className="w-full py-2 text-sm bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink rounded-md"
             onClick={handleUnlockClick}
           >
             Sblocca Indizio
