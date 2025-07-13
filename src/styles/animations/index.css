@@ -1,6 +1,12 @@
 
-/* Main animations index file - imports moved to prevent build issues */
-/* All animations are now included in individual components as needed */
+/* Main animations index file */
+@import './basic-animations.css';
+@import './text-effects.css';
+@import './transitions.css';
+@import './hover-effects.css';
+@import './parallax.css';
+@import './flip-card.css';
+@import './radar-effects.css';
 
 /* Additional Awwwards-style animations */
 .gradient-white-text {

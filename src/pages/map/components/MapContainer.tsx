@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
-// import 'leaflet/dist/leaflet.css'; // Moved to index.css
+import 'leaflet/dist/leaflet.css';
 import { DEFAULT_LOCATION } from '../useMapLogic';
 import MapController from './MapController';
 import MapPopupManager from './MapPopupManager';

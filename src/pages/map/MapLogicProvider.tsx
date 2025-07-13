@@ -9,7 +9,7 @@ import MapContent from './components/MapContent';
 import MapControls from './components/MapControls';
 import TechnicalStatus from './components/TechnicalStatus';
 import { useMapStore } from '@/stores/mapStore';
-// import 'leaflet/dist/leaflet.css'; // Moved to index.css
+import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
 // Fix for Leaflet default icon issue

@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MapContainer as LeafletMapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
-// import 'leaflet/dist/leaflet.css'; // Moved to index.css
+import 'leaflet/dist/leaflet.css';
 import './leaflet-fixes.css';
 import MapContent from './MapContent';
 import MapControls from './MapControls';
