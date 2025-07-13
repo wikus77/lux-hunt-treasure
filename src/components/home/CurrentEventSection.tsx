@@ -30,23 +30,17 @@ export const CurrentEventSection = () => {
     hidden: { opacity: 0, y: 30 },
     visible: { 
       opacity: 1, 
-      y: 0,
-      transition: { duration: 0.7, ease: [0.19, 1, 0.22, 1] as const }
+      y: 0
     }
   };
 
   // Animation for the carousel images
   const imageVariants = {
     hidden: { opacity: 0, scale: 0.9 },
-    visible: (i: number) => ({ 
+    visible: { 
       opacity: 1, 
-      scale: 1, 
-      transition: { 
-        duration: 0.8, 
-        delay: 0.2 + i * 0.15,
-        ease: [0.19, 1, 0.22, 1] as const
-      } 
-    })
+      scale: 1
+    }
   };
 
   return (
@@ -86,8 +80,10 @@ export const CurrentEventSection = () => {
               <CarouselItem key={idx} className="flex flex-col items-center justify-center">
                 <motion.div 
                   className="w-full flex justify-center"
+                  initial="hidden"
+                  whileInView="visible"
+                  transition={{ duration: 0.8, delay: 0.2 + idx * 0.15 }}
                   variants={imageVariants}
-                  custom={idx}
                   whileHover={{ 
                     scale: 1.02,
                     transition: { duration: 0.4, ease: [0.19, 1, 0.22, 1] }
