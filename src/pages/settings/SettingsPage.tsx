@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
+import { useProfileImage } from '@/hooks/useProfileImage';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { User, Shield, Target, Bell, CreditCard, FileText } from 'lucide-react';
@@ -18,6 +19,7 @@ type SettingsSection = 'profile' | 'security' | 'mission' | 'notifications' | 'p
 
 const SettingsPage: React.FC = () => {
   const { user } = useAuth();
+  const { profileImage } = useProfileImage();
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
 
   const settingsSections = [
@@ -80,7 +82,7 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <UnifiedHeader profileImage={user?.user_metadata?.avatar_url} />
+      <UnifiedHeader profileImage={profileImage || user?.user_metadata?.avatar_url} />
       
       <div 
         className="px-4 space-y-6"

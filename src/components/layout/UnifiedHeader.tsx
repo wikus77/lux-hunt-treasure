@@ -1,4 +1,4 @@
-// ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import { Link, useLocation } from "react-router-dom";
 import { Bell, Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import ProfileDropdown from "@/components/profile/ProfileDropdown";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
+import { useProfileImage } from "@/hooks/useProfileImage";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -27,15 +28,19 @@ const pageTitles: Record<string, string> = {
 };
 
 const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
-  profileImage,
+  profileImage: propProfileImage,
   leftComponent,
   onClickMail
 }) => {
   const location = useLocation();
   const { unreadCount, openNotificationsDrawer } = useNotificationManager();
   const { goBackWithFeedback, canGoBack } = useEnhancedNavigation();
+  const { profileImage } = useProfileImage();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
+
+  // Use profile image from hook or fallback to prop
+  const currentProfileImage = profileImage || propProfileImage;
 
   // Check for Capacitor environment and device type
   useEffect(() => {
@@ -188,9 +193,9 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               </Button>
             </Link>
 
-            {/* Profile Dropdown - ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT */}
+            {/* Profile Dropdown - 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
             <ProfileDropdown
-              profileImage={profileImage}
+              profileImage={currentProfileImage}
               className="cursor-pointer"
             />
           </div>

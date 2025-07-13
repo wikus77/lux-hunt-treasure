@@ -143,7 +143,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                     onClick={handleSettingsClick}
                   >
                     <Settings className="w-4 h-4 mr-3" />
-                    Vai a impostazioni complete
+                    Modifica profilo
                   </Button>
 
                   <Button
@@ -152,7 +152,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                     onClick={handleLogout}
                   >
                     <LogOut className="w-4 h-4 mr-3" />
-                    Logout
+                    Esci
                   </Button>
                 </div>
               </CardContent>
