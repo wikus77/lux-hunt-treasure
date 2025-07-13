@@ -6,6 +6,8 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuthContext } from '@/contexts/auth';
+
 interface AppleAuthResult {
   success: boolean;
   error?: string;
@@ -14,6 +16,7 @@ interface AppleAuthResult {
 
 export const useAppleAuth = () => {
   const [loading, setLoading] = useState(false);
+  const { setUser, setSession } = useAuthContext();
 
   // Check if Apple Sign In is available
   const isAppleSignInAvailable = useCallback(() => {
@@ -94,6 +97,9 @@ export const useAppleAuth = () => {
       if (session?.user) {
         console.log('✅ Apple auth successful:', session.user.email);
         
+        setSession(session);
+        setUser(session.user);
+        
         // Check if user profile exists, create if needed
         const { data: existingProfile } = await supabase
           .from('profiles')
@@ -140,7 +146,7 @@ export const useAppleAuth = () => {
       toast.error('Errore durante il completamento dell\'accesso');
       return { success: false, error: error.message };
     }
-  }, []);
+  }, [setSession, setUser]);
 
   return {
     signInWithApple,

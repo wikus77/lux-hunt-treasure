@@ -6,6 +6,8 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuthContext } from '@/contexts/auth';
+
 interface GoogleAuthResult {
   success: boolean;
   error?: string;
@@ -14,6 +16,7 @@ interface GoogleAuthResult {
 
 export const useGoogleAuth = () => {
   const [loading, setLoading] = useState(false);
+  const { setUser, setSession } = useAuthContext();
 
   const signInWithGoogle = useCallback(async (): Promise<GoogleAuthResult> => {
     setLoading(true);
@@ -82,6 +85,9 @@ export const useGoogleAuth = () => {
       if (session?.user) {
         console.log('✅ Google auth successful:', session.user.email);
         
+        setSession(session);
+        setUser(session.user);
+        
         // Check if user profile exists, create if needed
         const { data: existingProfile } = await supabase
           .from('profiles')
@@ -126,7 +132,7 @@ export const useGoogleAuth = () => {
       toast.error('Errore durante il completamento dell\'accesso');
       return { success: false, error: error.message };
     }
-  }, []);
+  }, [setSession, setUser]);
 
   return {
     signInWithGoogle,
