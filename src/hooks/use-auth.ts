@@ -1,15 +1,15 @@
 import { getSupabaseClient } from "@/integrations/supabase/getClient"
 
-import { useAuthSessionManager } from './use-auth-session-manager';
+import { useAuthSession } from './use-auth-session';
 
 import { useNavigate } from 'react-router-dom';
 
 export const useAuth = () => {
-  const sessionManager = useAuthSessionManager();
+  const { session, user, isLoading } = useAuthSession();
   const navigate = useNavigate();
 
-  const login = async (email: string, password: string): Promise<{
-  const client = await getSupabaseClient(); success: boolean; error?: any; session?: any }> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: any; session?: any }> => {
+    const client = await getSupabaseClient();
     console.log('🔐 STANDARD LOGIN STARTING for:', email);
     
     try {
@@ -27,10 +27,7 @@ export const useAuth = () => {
 
       if (data.session) {
         console.log('✅ LOGIN SUCCESS - session created');
-        await sessionManager.forceSessionFromTokens(
-          data.session.access_token,
-          data.session.refresh_token
-        );
+        console.log('✅ Session tokens stored successfully');
         return { success: true, session: data.session };
       }
 
@@ -43,8 +40,8 @@ export const useAuth = () => {
     }
   };
 
-  const register = async (email: string, password: string): Promise<{
-  const client = await getSupabaseClient(); success: boolean; error?: any; data?: any }> => {
+  const register = async (email: string, password: string): Promise<{ success: boolean; error?: any; data?: any }> => {
+    const client = await getSupabaseClient();
     console.log('📝 REGISTRATION STARTING for:', email);
     
     try {
@@ -71,15 +68,15 @@ export const useAuth = () => {
   };
 
   const logout = async (): Promise<void> => {
-  const client = await getSupabaseClient();
+    const client = await getSupabaseClient();
     console.log('🚪 LOGOUT STARTING');
     await client.auth.signOut();
-    await sessionManager.clearSession();
+    console.log('🧹 Session cleared');
     console.log('✅ LOGOUT COMPLETE');
   };
 
-  const resetPassword = async (email: string): Promise<{
-  const client = await getSupabaseClient(); success: boolean; error?: string }> => {
+  const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    const client = await getSupabaseClient();
     console.log('🔄 PASSWORD RESET for:', email);
     
     try {
@@ -101,8 +98,8 @@ export const useAuth = () => {
     }
   };
 
-  const resendVerificationEmail = async (email: string): Promise<{
-  const client = await getSupabaseClient(); success: boolean; error?: string }> => {
+  const resendVerificationEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    const client = await getSupabaseClient();
     console.log('📧 RESEND VERIFICATION for:', email);
     
     try {
@@ -129,24 +126,24 @@ export const useAuth = () => {
   };
 
   const updateProfile = async (data: any): Promise<void> => {
-  const client = await getSupabaseClient();
+    const client = await getSupabaseClient();
     console.log('📝 UPDATE PROFILE:', data);
     // Implementazione updateProfile se necessaria
   };
 
   return {
-    user: sessionManager.user,
-    session: sessionManager.session,
-    isAuthenticated: sessionManager.isAuthenticated,
-    isLoading: sessionManager.isLoading,
-    isEmailVerified: sessionManager.user?.email_confirmed_at ? true : false,
+    user,
+    session,
+    isAuthenticated: !!session,
+    isLoading,
+    isEmailVerified: user?.email_confirmed_at ? true : false,
     login,
     register,
     logout,
     resetPassword,
     resendVerificationEmail,
     updateProfile,
-    getCurrentUser: () => sessionManager.user,
-    getAccessToken: () => sessionManager.session?.access_token || '',
+    getCurrentUser: () => user,
+    getAccessToken: () => session?.access_token || '',
   };
 };

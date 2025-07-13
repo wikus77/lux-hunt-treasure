@@ -22,7 +22,7 @@ export const usePushNotifications = () => {
     }
 
     const setupPushNotifications = async () => {
-  const client = await getSupabaseClient();
+      const client = await getSupabaseClient();
       try {
         setLoading(true);
         
@@ -45,7 +45,7 @@ export const usePushNotifications = () => {
               
               if (user) {
                 // Salva token nel database
-                const { error } = await supabase
+                const { error } = await client
                   .from('device_tokens')
                   .upsert({
                     user_id: user.id,
@@ -115,7 +115,16 @@ export const usePushNotifications = () => {
   }, []);
 
   // Funzione per richiedere permessi
+  const requestPermission = async (): Promise<{ success: boolean }> => {
+    if (!isSupported) {
+      return { success: false };
+    }
 
+    setLoading(true);
+    try {
+      const permissionResult = await PushNotifications.requestPermissions();
+      setPermission(permissionResult.receive);
+      
       if (permissionResult.receive === 'granted') {
         await PushNotifications.register();
         toast.success('Permessi notifiche concessi');
@@ -135,7 +144,7 @@ export const usePushNotifications = () => {
 
   // Funzione per inviare notifica test
   const sendTestNotification = async () => {
-  const client = await getSupabaseClient();
+    const client = await getSupabaseClient();
     try {
       const { data: { user } } = await client.auth.getUser();
       
@@ -176,36 +185,3 @@ export const usePushNotifications = () => {
     sendTestNotification
   };
 };
-// ✅ Re-inserita funzione corretta
-
-// ✅ Funzione corretta con async e await funzionante
-async function requestPermission(): Promise<{ success: boolean }> {
-  const client = await getSupabaseClient();
-
-  if (!isSupported) {
-    return { success: false };
-  }
-
-  try {
-    const permissionResult = await PushNotifications.requestPermissions();
-    setPermission(permissionResult.receive);
-    return { success: true };
-  } catch (error) {
-    console.error("❌ Permission error:", error);
-    return { success: false };
-  }
-}
-
-async function handlePermissionRequest() {
-  const client = await getSupabaseClient();
-  setLoading(true);
-  try {
-    const permissionResult = await PushNotifications.requestPermissions();
-    setPermission(permissionResult.receive);
-  } catch (error) {
-    console.error("❌ Permission error:", error);
-    setPermission('denied');
-  } finally {
-    setLoading(false);
-  }
-}
