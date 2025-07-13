@@ -1,7 +1,9 @@
 
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Lock, CreditCard, ChevronRight, LogOut, Bell, Globe } from "lucide-react";
+import { ArrowLeft, User, Lock, CreditCard, ChevronRight, LogOut, Bell, Globe, TestTube } from "lucide-react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import BottomNavigation from "@/components/layout/BottomNavigation";
@@ -14,8 +16,10 @@ import AppSection from "@/components/settings/AppSection";
 import NotificationSection from "@/components/settings/NotificationSection";
 import SupportSection from "@/components/settings/SupportSection";
 import RoleSwitcher from "@/components/auth/RoleSwitcher";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 const Settings = () => {
+  const { sendTestNotification } = usePushNotifications();
   const { profileImage } = useProfileImage();
   const navigate = useNavigate();
   const { logout } = useAuthContext();
@@ -89,6 +93,23 @@ const Settings = () => {
         
         {/* Support & Help */}
         <SupportSection />
+        
+        {/* Test Notifiche Push */}
+        <div className="mt-6 bg-gray-800/50 backdrop-blur border border-gray-700 rounded-lg p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <TestTube className="h-5 w-5 text-cyan-400" />
+            <h3 className="text-white font-medium">Test Push Notifications</h3>
+          </div>
+          <p className="text-gray-400 text-sm mb-4">
+            Invia una notifica push di test al tuo dispositivo
+          </p>
+          <Button 
+            onClick={sendTestNotification}
+            className="w-full bg-cyan-600 hover:bg-cyan-700 text-white"
+          >
+            Invia Notifica Test
+          </Button>
+        </div>
                 
         {/* Logout Button */}
         <div className="mt-8">

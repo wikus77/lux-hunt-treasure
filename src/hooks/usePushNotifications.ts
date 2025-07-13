@@ -1,103 +1,186 @@
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
+import { Capacitor } from '@capacitor/core';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { 
-  requestNotificationPermission, 
-  setupMessageListener,
-  getMessagingInstance
-} from '@/integrations/firebase/firebase-client';
-import { useNotificationManager } from '@/hooks/useNotificationManager';
 
 export const usePushNotifications = () => {
-  const [permission, setPermission] = useState<NotificationPermission>('default');
-  const [isSupported, setIsSupported] = useState<boolean | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [isSupported, setIsSupported] = useState(false);
+  const [permission, setPermission] = useState<string>('prompt');
   const [loading, setLoading] = useState(false);
-  const { createNotification } = useNotificationManager();
 
-  // Check if notifications are supported
   useEffect(() => {
-    const checkSupport = async () => {
-      setIsSupported('Notification' in window);
-      
-      if ('Notification' in window) {
-        setPermission(Notification.permission);
-      }
+    // Check if push notifications are supported
+    const supported = Capacitor.isNativePlatform();
+    setIsSupported(supported);
 
-      // Check if messaging is supported
-      const messaging = await getMessagingInstance();
-      if (!messaging) {
-        setIsSupported(false);
+    if (!supported) {
+      console.log('🔔 Push notifications available only on native platforms');
+      return;
+    }
+
+    const setupPushNotifications = async () => {
+      try {
+        setLoading(true);
+        
+        // Request permission per le notifiche
+        const permissionResult = await PushNotifications.requestPermissions();
+        setPermission(permissionResult.receive);
+        
+        if (permissionResult.receive === 'granted') {
+          console.log('✅ Push notification permission granted');
+          
+          // Registra per ricevere notifiche push
+          await PushNotifications.register();
+          
+          // Event listener per registrazione token
+          PushNotifications.addListener('registration', async (token: Token) => {
+            console.log('🔑 Push registration success, token: ', token.value);
+            
+            try {
+              const { data: { user } } = await supabase.auth.getUser();
+              
+              if (user) {
+                // Salva token nel database
+                const { error } = await supabase
+                  .from('device_tokens')
+                  .upsert({
+                    user_id: user.id,
+                    token: token.value,
+                    device_type: Capacitor.getPlatform(),
+                    last_used: new Date().toISOString()
+                  }, {
+                    onConflict: 'user_id,token'
+                  });
+
+                if (error) {
+                  console.error('❌ Error saving device token:', error);
+                } else {
+                  console.log('✅ Device token saved to database');
+                }
+              }
+            } catch (error) {
+              console.error('❌ Error processing token registration:', error);
+            }
+          });
+
+          // Event listener per errori di registrazione
+          PushNotifications.addListener('registrationError', (error: any) => {
+            console.error('❌ Error on registration: ', error);
+          });
+
+          // Event listener per notifiche ricevute
+          PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
+            console.log('📬 Push notification received: ', notification);
+            
+            // Mostra toast per notifiche ricevute in foreground
+            toast.success(notification.title || 'Nuova notifica', {
+              description: notification.body || 'Hai ricevuto una nuova notifica'
+            });
+          });
+
+          // Event listener per azioni sulle notifiche
+          PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
+            console.log('🔔 Push notification action performed: ', notification);
+            
+            // Gestisci l'azione sulla notifica (es. navigate to specific page)
+            if (notification.notification.data?.route) {
+              // Qui puoi aggiungere logica per navigare a pagine specifiche
+              console.log('Navigate to:', notification.notification.data.route);
+            }
+          });
+
+        } else {
+          console.warn('⚠️ Push notification permission denied');
+          toast.error('Permessi notifiche richiesti', {
+            description: 'Abilita le notifiche nelle impostazioni per ricevere aggiornamenti'
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error setting up push notifications:', error);
+      } finally {
+        setLoading(false);
       }
     };
-    
-    checkSupport();
+
+    setupPushNotifications();
+
+    // Cleanup function
+    return () => {
+      PushNotifications.removeAllListeners();
+    };
   }, []);
 
-  // Setup message listener
-  useEffect(() => {
-    if (isSupported && permission === 'granted') {
-      setupMessageListener((payload) => {
-        // Create an in-app notification
-        if (payload.notification) {
-          const { title, body } = payload.notification;
-          createNotification(title || 'Nuova notifica', body || '');
-          
-          // Show toast
-          toast(title || 'Nuova notifica', {
-            description: body || '',
-            duration: 5000,
-          });
-        }
-      });
-    }
-  }, [isSupported, permission, createNotification]);
-
-  // Request permission
-  const requestPermission = useCallback(async () => {
+  // Funzione per richiedere permessi
+  const requestPermission = async (): Promise<{ success: boolean }> => {
     if (!isSupported) {
-      toast.error('Le notifiche non sono supportate in questo browser');
+      toast.error('Push notifications non supportate su questa piattaforma');
       return { success: false };
     }
-    
+
     setLoading(true);
-    
     try {
-      const result = await requestNotificationPermission();
+      const permissionResult = await PushNotifications.requestPermissions();
+      setPermission(permissionResult.receive);
       
-      if (result.success) {
-        setPermission('granted');
-        // Only set token if it exists in the result
-        if (result.token) {
-          setToken(result.token);
-        }
-        toast.success('Notifiche attivate con successo!');
+      if (permissionResult.receive === 'granted') {
+        await PushNotifications.register();
+        toast.success('Permessi notifiche concessi');
+        return { success: true };
       } else {
-        if (result.reason === 'permission-denied') {
-          setPermission('denied');
-          toast.error('Permesso negato per le notifiche', {
-            description: 'Puoi abilitarle nelle impostazioni del browser'
-          });
-        } else {
-          toast.error('Non è stato possibile attivare le notifiche');
-        }
+        toast.error('Permessi notifiche negati');
+        return { success: false };
       }
-      
-      setLoading(false);
-      return result;
     } catch (error) {
-      console.error('Error in requestPermission:', error);
-      toast.error('Errore durante l\'attivazione delle notifiche');
+      console.error('❌ Error requesting permission:', error);
+      toast.error('Errore durante la richiesta permessi');
+      return { success: false };
+    } finally {
       setLoading(false);
-      return { success: false, error };
     }
-  }, [isSupported, createNotification]);
+  };
+
+  // Funzione per inviare notifica test
+  const sendTestNotification = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error('Utente non autenticato');
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke('send-push-notification', {
+        body: {
+          userId: user.id,
+          title: 'Test M1SSION™',
+          body: 'Notifica push di test funzionante! 🚗',
+          data: {
+            route: '/home'
+          }
+        }
+      });
+
+      if (error) {
+        console.error('❌ Error sending test notification:', error);
+        toast.error('Errore invio notifica test');
+      } else {
+        console.log('✅ Test notification sent');
+        toast.success('Notifica test inviata!');
+      }
+    } catch (error) {
+      console.error('❌ Error in sendTestNotification:', error);
+      toast.error('Errore durante l\'invio della notifica');
+    }
+  };
 
   return {
     isSupported,
     permission,
-    token,
     loading,
     requestPermission,
+    sendTestNotification
   };
 };

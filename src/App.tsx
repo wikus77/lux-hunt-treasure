@@ -1,4 +1,6 @@
 
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { Toaster } from "sonner";
@@ -8,8 +10,12 @@ import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import GlobalLayout from "./components/layout/GlobalLayout";
 import AppRoutes from "./routes/AppRoutes";
 import { SafeAreaToggle } from "./components/debug/SafeAreaToggle";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 function App() {
+  // Initialize push notifications
+  usePushNotifications();
+
   console.log("🚀 App component rendering...");
   
   return (
